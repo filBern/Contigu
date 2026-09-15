@@ -27,11 +27,42 @@ namespace Contigu.Presentation
                 return;
             }
 
-            var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
+            var popup = UIFactory.CreateText(_root, "Popup", text, 20, color);
             popup.fontStyle = FontStyle.Bold;
-            popup.rectTransform.position = anchor.position;
+            // Small random horizontal jitter so several popups landing on the
+            // same cell (e.g. two neighbor-bonus hits in a row) stay legible
+            // instead of perfectly overlapping.
+            float jitterX = Random.Range(-16f, 16f);
+            popup.rectTransform.position = anchor.position + new Vector3(jitterX, 0f, 0f);
             popup.rectTransform.sizeDelta = new Vector2(160f, 40f);
             StartCoroutine(AnimatePopup(popup));
+        }
+
+        /// <summary>
+        /// Same as <see cref="SpawnPopup"/> but waits <paramref name="delaySeconds"/>
+        /// first — used to play a sequence of score events one after another
+        /// instead of dumping them all on screen at once (see GameBootstrap).
+        /// </summary>
+        public void SpawnPopupDelayed(RectTransform anchor, string text, Color color, float delaySeconds)
+        {
+            if (anchor == null)
+            {
+                return;
+            }
+
+            if (delaySeconds <= 0f)
+            {
+                SpawnPopup(anchor, text, color);
+                return;
+            }
+
+            StartCoroutine(SpawnPopupAfterDelay(anchor, text, color, delaySeconds));
+        }
+
+        private IEnumerator SpawnPopupAfterDelay(RectTransform anchor, string text, Color color, float delaySeconds)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+            SpawnPopup(anchor, text, color);
         }
 
         private IEnumerator AnimatePopup(Text text)

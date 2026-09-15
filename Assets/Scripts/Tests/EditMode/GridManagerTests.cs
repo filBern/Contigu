@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -256,6 +257,75 @@ namespace Contigu.Tests
             Assert.IsFalse(grid.GetCell(0, 0).IsFilled);
             Assert.IsFalse(grid.GetCell(1, 1).IsLocked);
             Assert.IsTrue(grid.GetCell(2, 2).IsGolden, "Golden modifier must persist across rounds");
+        }
+
+        [Test]
+        public void PlacePiece_ScoreEvents_OneEntryPerMatchingNeighbor_SummingToNeighborBonus()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 1);
+
+            // Placing at (1,0) is orthogonally adjacent to both earlier cells.
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+
+            var neighborEvents = new List<ScoreEvent>();
+            foreach (var e in result.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.Neighbor) neighborEvents.Add(e);
+            }
+
+            Assert.AreEqual(2, neighborEvents.Count, "One event per matching neighbor direction");
+            foreach (var e in neighborEvents)
+            {
+                Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, e.Amount);
+                Assert.AreEqual(new Vector2Int(1, 0), e.Position);
+            }
+
+            int sum = 0;
+            foreach (var e in neighborEvents) sum += e.Amount;
+            Assert.AreEqual(result.NeighborBonus, sum);
+        }
+
+        [Test]
+        public void PlacePiece_ScoreEvents_OneGoldenEntryPerGoldenCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.GetCell(3, 3).IsGolden = true;
+
+            var result = grid.PlacePiece(single, PieceColor.Lime, 3, 3);
+
+            Assert.AreEqual(1, result.ScoreEvents.Count);
+            var e = result.ScoreEvents[0];
+            Assert.AreEqual(ScoreEventType.Golden, e.Type);
+            Assert.AreEqual(ScoringConstants.GoldenCellBonus, e.Amount);
+            Assert.AreEqual(new Vector2Int(3, 3), e.Position);
+        }
+
+        [Test]
+        public void PlacePiece_ScoreEvents_OneLineClearEntryPerClearedCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0);
+
+            int lineClearEvents = 0;
+            foreach (var e in finalResult.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.LineClear)
+                {
+                    lineClearEvents++;
+                    Assert.AreEqual(ScoringConstants.LineClearBonusPerCell, e.Amount);
+                }
+            }
+            Assert.AreEqual(GridManager.Size, lineClearEvents);
         }
     }
 }

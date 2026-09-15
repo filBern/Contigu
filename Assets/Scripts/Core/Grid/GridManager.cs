@@ -120,6 +120,7 @@ namespace Contigu.Core
             result.Success = true;
             result.PlacedCells = placedCells;
 
+            var events = new List<ScoreEvent>();
             int neighborBonus = 0;
             int goldenBonus = 0;
 
@@ -131,15 +132,8 @@ namespace Contigu.Core
                 if (cell.IsGolden)
                 {
                     goldenBonus += ScoringConstants.GoldenCellBonus;
+                    events.Add(new ScoreEvent(ScoreEventType.Golden, pos, ScoringConstants.GoldenCellBonus));
                 }
-
-                int matches = 0;
-                matches += CountMatchingNeighbor(pos.x - 1, pos.y, cell.FilledColor.Value);
-                matches += CountMatchingNeighbor(pos.x + 1, pos.y, cell.FilledColor.Value);
-                matches += CountMatchingNeighbor(pos.x, pos.y - 1, cell.FilledColor.Value);
-                matches += CountMatchingNeighbor(pos.x, pos.y + 1, cell.FilledColor.Value);
-
-                int cellScore = matches * ScoringConstants.NeighborBonusPerPair;
 
                 int multiplier = 1;
                 if (cell.IsTinted && cell.FilledColor.Value == cell.TintedColor)
@@ -151,8 +145,30 @@ namespace Contigu.Core
                     multiplier *= ScoringConstants.MultiplierZoneMultiplier;
                 }
 
-                cellScore *= multiplier;
-                neighborBonus += cellScore;
+                int perMatchAmount = ScoringConstants.NeighborBonusPerPair * multiplier;
+
+                // One event per matching neighbor direction, rather than a single
+                // summed total, so each point addition can be shown individually.
+                if (IsMatchingNeighbor(pos.x - 1, pos.y, cell.FilledColor.Value))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
+                    neighborBonus += perMatchAmount;
+                }
+                if (IsMatchingNeighbor(pos.x + 1, pos.y, cell.FilledColor.Value))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
+                    neighborBonus += perMatchAmount;
+                }
+                if (IsMatchingNeighbor(pos.x, pos.y - 1, cell.FilledColor.Value))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
+                    neighborBonus += perMatchAmount;
+                }
+                if (IsMatchingNeighbor(pos.x, pos.y + 1, cell.FilledColor.Value))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
+                    neighborBonus += perMatchAmount;
+                }
             }
 
             result.NeighborBonus = neighborBonus;
@@ -163,23 +179,30 @@ namespace Contigu.Core
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             result.LineClearScore = clearInfo.ClearedCells.Count * ScoringConstants.LineClearBonusPerCell;
 
+            for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
+            }
+
+            result.ScoreEvents = events;
+
             return result;
         }
 
-        private int CountMatchingNeighbor(int x, int y, PieceColor placedColor)
+        private bool IsMatchingNeighbor(int x, int y, PieceColor placedColor)
         {
             if (!InBounds(x, y))
             {
-                return 0;
+                return false;
             }
 
             var neighbor = _cells[x, y];
             if (!neighbor.IsFilled || !neighbor.FilledColor.HasValue)
             {
-                return 0;
+                return false;
             }
 
-            return PieceColorUtility.Matches(placedColor, neighbor.FilledColor.Value) ? 1 : 0;
+            return PieceColorUtility.Matches(placedColor, neighbor.FilledColor.Value);
         }
 
         private readonly struct ClearInfo

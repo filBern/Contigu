@@ -14,6 +14,7 @@ namespace Contigu.Presentation
     public sealed class GameBootstrap : MonoBehaviour
     {
         private const float CellSize = 54f;
+        private const float ScoreEventStaggerSeconds = 0.06f;
 
         private RunManager _run;
 
@@ -149,19 +150,7 @@ namespace Contigu.Presentation
                 return;
             }
 
-            var cellAnchor = _gridView.GetCellTransform(x, y);
-            if (outcome.Placement.GoldenBonus > 0)
-            {
-                _feedbackLayer.SpawnPopup(cellAnchor, "+" + outcome.Placement.GoldenBonus, VisualDefaults.GoldenColor);
-            }
-            if (outcome.Placement.NeighborBonus > 0)
-            {
-                _feedbackLayer.SpawnPopup(cellAnchor, "+" + outcome.Placement.NeighborBonus, UITheme.TextPrimary);
-            }
-            if (outcome.Placement.LineClearScore > 0)
-            {
-                _feedbackLayer.SpawnPopup(cellAnchor, "+" + outcome.Placement.LineClearScore + " ligne!", UITheme.Success);
-            }
+            PlayScoreEventSequence(outcome.Placement.ScoreEvents);
 
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
@@ -169,6 +158,40 @@ namespace Contigu.Presentation
             _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
 
             HandleStateTransition(outcome.StateAfter);
+        }
+
+        /// <summary>
+        /// Plays each score contribution as its own staggered "+X" popup at the
+        /// cell it came from, instead of one lump total per placement, so the
+        /// player can see where the points actually came from.
+        /// </summary>
+        private void PlayScoreEventSequence(System.Collections.Generic.IReadOnlyList<ScoreEvent> events)
+        {
+            for (int i = 0; i < events.Count; i++)
+            {
+                var scoreEvent = events[i];
+                var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+
+                Color color;
+                string label;
+                switch (scoreEvent.Type)
+                {
+                    case ScoreEventType.Golden:
+                        color = VisualDefaults.GoldenColor;
+                        label = "+" + scoreEvent.Amount;
+                        break;
+                    case ScoreEventType.LineClear:
+                        color = UITheme.Success;
+                        label = "+" + scoreEvent.Amount + " ligne";
+                        break;
+                    default:
+                        color = UITheme.TextPrimary;
+                        label = "+" + scoreEvent.Amount;
+                        break;
+                }
+
+                _feedbackLayer.SpawnPopupDelayed(anchor, label, color, i * ScoreEventStaggerSeconds);
+            }
         }
 
         private void HandleStateTransition(RunState state)
