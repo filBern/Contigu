@@ -46,6 +46,12 @@ namespace Contigu.Presentation
                 int idx = i;
                 var slot = UIFactory.CreatePanel(container, "Slot" + i, UITheme.ButtonIdle);
                 slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
+                // Plain Image/Button has no ILayoutElement, so without this the
+                // parent HorizontalLayoutGroup has no size to read and collapses
+                // the slot toward zero instead of respecting sizeDelta.
+                var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
+                slotLayout.preferredWidth = 120f;
+                slotLayout.preferredHeight = 140f;
                 var btn = slot.gameObject.AddComponent<Button>();
                 btn.onClick.AddListener(() => OnSlotClicked(idx));
 

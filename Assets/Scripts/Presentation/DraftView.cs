@@ -79,6 +79,11 @@ namespace Contigu.Presentation
         {
             var card = UIFactory.CreatePanel(_cardsContainer, "Card_" + def.Id, UITheme.PanelLight);
             card.rectTransform.sizeDelta = new Vector2(260f, 320f);
+            // Same fix as HandView slots: pin the size explicitly so the parent
+            // HorizontalLayoutGroup doesn't collapse this plain Image toward zero.
+            var cardLayout = card.gameObject.AddComponent<LayoutElement>();
+            cardLayout.preferredWidth = 260f;
+            cardLayout.preferredHeight = 320f;
 
             var poolLabel = UIFactory.CreateText(card.transform, "Pool", def.Pool.ToString(), 13, UITheme.TextMuted);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -252,6 +257,11 @@ namespace Contigu.Presentation
                 }
                 var btn = UIFactory.CreateButton(listContainer, "Color", VisualDefaults.GetColorName(targetColor), VisualDefaults.GetColor(targetColor), 14);
                 btn.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 60f);
+                // Same fix as HandView slots/DraftView cards: pin the size so the
+                // parent HorizontalLayoutGroup doesn't collapse this button.
+                var colorBtnLayout = btn.gameObject.AddComponent<LayoutElement>();
+                colorBtnLayout.preferredWidth = 140f;
+                colorBtnLayout.preferredHeight = 60f;
                 btn.onClick.AddListener(() => Confirm(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
             }
 
