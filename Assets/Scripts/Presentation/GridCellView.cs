@@ -28,15 +28,23 @@ namespace Contigu.Presentation
             _badgeSpecial = badgeSpecial;
         }
 
-        public void ApplyState(Cell cell)
+        /// <summary>
+        /// Renders this cell from <paramref name="cell"/>'s current state, unless
+        /// <paramref name="fillColorOverride"/> is given — then it's painted as
+        /// filled with that color regardless of the cell's actual (possibly
+        /// already-cleared) fill state. Used to hold a just-completed line
+        /// visually filled while its score is still being shown, before the
+        /// clear animation actually empties it (see GridView).
+        /// </summary>
+        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null)
         {
             if (cell.IsLocked)
             {
                 Background.color = VisualDefaults.LockedColor;
             }
-            else if (cell.IsFilled && cell.FilledColor.HasValue)
+            else if (fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue))
             {
-                var baseColor = VisualDefaults.GetColor(cell.FilledColor.Value);
+                var baseColor = VisualDefaults.GetColor(fillColorOverride ?? cell.FilledColor.Value);
                 // Blend in the golden tint even once filled, so a golden cell
                 // stays visually distinct from a normal filled cell of the same
                 // piece color instead of the fill color hiding it completely.

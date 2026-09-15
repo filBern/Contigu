@@ -7,6 +7,9 @@ namespace Contigu.Presentation
     /// <summary>Spawns short-lived floating "+N" popups for score feedback (spec 9.7).</summary>
     public sealed class FeedbackLayer : MonoBehaviour
     {
+        /// <summary>How long one popup stays on screen (float + fade), for callers that need to time a sequence around it (see GameBootstrap).</summary>
+        public const float PopupDurationSeconds = 1.3f;
+
         private RectTransform _root;
 
         public RectTransform Build(Transform parent)
@@ -77,7 +80,7 @@ namespace Contigu.Presentation
             // Slow, readable float+fade — several of these play in a staggered
             // sequence per placement, so each one needs enough time on screen to
             // actually be read before the next appears.
-            const float duration = 1.3f;
+            const float duration = PopupDurationSeconds;
             const float holdFraction = 0.35f; // stay fully opaque before fading
             float t = 0f;
             Vector3 startPos = rect.position;

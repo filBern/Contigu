@@ -15,6 +15,7 @@ namespace Contigu.Presentation
     {
         private const float CellSize = 54f;
         private const float ScoreEventStaggerSeconds = 0.22f;
+        private const float LineClearStaggerSeconds = 0.14f;
 
         private RunManager _run;
 
@@ -150,12 +151,55 @@ namespace Contigu.Presentation
                 return;
             }
 
-            PlayScoreEventSequence(outcome.Placement.ScoreEvents);
-
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
-            RefreshAll();
+
+            // Hold any completed line/column visually filled (instead of
+            // instantly vanishing) while its score is still playing out.
+            _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors);
+            _handView.Refresh();
+            _hudView.Refresh(_run);
             _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
+
+            StartCoroutine(PlayPlacementSequence(outcome));
+        }
+
+        /// <summary>
+        /// Plays a placement's full feedback sequence in order: the golden/group
+        /// score popups first, then — only once that's done — clears any
+        /// completed line/column one cell at a time (each with its own popup),
+        /// and only then advances the run state (draft/victory/defeat), so
+        /// nothing interrupts the player while they're still reading their score.
+        /// </summary>
+        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome)
+        {
+            var placement = outcome.Placement;
+
+            var immediateEvents = new System.Collections.Generic.List<ScoreEvent>();
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                if (placement.ScoreEvents[i].Type != ScoreEventType.LineClear)
+                {
+                    immediateEvents.Add(placement.ScoreEvents[i]);
+                }
+            }
+
+            PlayScoreEventSequence(immediateEvents);
+
+            if (immediateEvents.Count > 0)
+            {
+                float immediatePhaseDuration = (immediateEvents.Count - 1) * ScoreEventStaggerSeconds + FeedbackLayer.PopupDurationSeconds;
+                yield return new WaitForSeconds(immediatePhaseDuration);
+            }
+
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                var pos = placement.ClearedCells[i];
+                var anchor = _gridView.GetCellTransform(pos.x, pos.y);
+                _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell + " ligne", UITheme.Success);
+                _gridView.ClearCellVisual(pos.x, pos.y);
+                yield return new WaitForSeconds(LineClearStaggerSeconds);
+            }
 
             HandleStateTransition(outcome.StateAfter);
         }
@@ -179,10 +223,6 @@ namespace Contigu.Presentation
                     case ScoreEventType.Golden:
                         color = VisualDefaults.GoldenColor;
                         label = "+" + scoreEvent.Amount;
-                        break;
-                    case ScoreEventType.LineClear:
-                        color = UITheme.Success;
-                        label = "+" + scoreEvent.Amount + " ligne";
                         break;
                     case ScoreEventType.Group:
                     default:

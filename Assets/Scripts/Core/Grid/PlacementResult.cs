@@ -24,6 +24,10 @@ namespace Contigu.Core
         public int LineClearScore;
 
         public IReadOnlyList<Vector2Int> ClearedCells = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
+        public IReadOnlyList<PieceColor> ClearedCellColors = System.Array.Empty<PieceColor>();
+
         public int LineClearCellCount;
 
         /// <summary>

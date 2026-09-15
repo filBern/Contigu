@@ -156,6 +156,7 @@ namespace Contigu.Core
 
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
+            result.ClearedCellColors = clearInfo.ClearedCellColors;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             result.LineClearScore = clearInfo.ClearedCells.Count * ScoringConstants.LineClearBonusPerCell;
 
@@ -266,9 +267,13 @@ namespace Contigu.Core
         {
             public readonly IReadOnlyList<Vector2Int> ClearedCells;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells)
+            /// <summary>Each cleared cell's color as it was right before clearing, parallel to <see cref="ClearedCells"/> — the presentation layer needs this to keep rendering a completed line as still-filled while it holds before clearing.</summary>
+            public readonly IReadOnlyList<PieceColor> ClearedCellColors;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors)
             {
                 ClearedCells = clearedCells;
+                ClearedCellColors = clearedCellColors;
             }
         }
 
@@ -310,15 +315,17 @@ namespace Contigu.Core
             }
 
             var cleared = new List<Vector2Int>(cellsToClear.Count);
+            var clearedColors = new List<PieceColor>(cellsToClear.Count);
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
+                clearedColors.Add(cell.FilledColor.Value); // capture before clearing
                 cell.IsFilled = false;
                 cell.FilledColor = null;
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared);
+            return new ClearInfo(cleared, clearedColors);
         }
 
         private bool IsRowComplete(int y)

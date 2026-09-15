@@ -104,6 +104,44 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Same as <see cref="Refresh"/>, except the cells at <paramref name="heldCells"/>
+        /// are painted as still filled with their given color instead of their
+        /// actual (already-cleared) grid state — used to hold a just-completed
+        /// line visually filled while its score is still playing out, before
+        /// <see cref="ClearCellVisual"/> empties each cell in turn.
+        /// </summary>
+        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors)
+        {
+            var overrideColor = new Dictionary<Vector2Int, PieceColor>();
+            for (int i = 0; i < heldCells.Count; i++)
+            {
+                overrideColor[heldCells[i]] = heldColors[i];
+            }
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    var pos = new Vector2Int(x, y);
+                    if (overrideColor.TryGetValue(pos, out var color))
+                    {
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color);
+                    }
+                    else
+                    {
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y));
+                    }
+                }
+            }
+        }
+
+        /// <summary>Re-renders one cell from the grid's actual current state — used to visually empty a single cell of a line as it clears.</summary>
+        public void ClearCellVisual(int x, int y)
+        {
+            RefreshCell(x, y);
+        }
+
         private void RefreshCell(int x, int y)
         {
             if (GridManager.InBounds(x, y))
