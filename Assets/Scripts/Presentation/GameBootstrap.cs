@@ -26,6 +26,7 @@ namespace Contigu.Presentation
         private EndScreenView _endScreenView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
+        private bool _isPlayingPlacementSequence;
 
         private void Awake()
         {
@@ -137,6 +138,15 @@ namespace Contigu.Presentation
 
         private void OnCellClicked(int x, int y)
         {
+            if (_isPlayingPlacementSequence)
+            {
+                // Ignore clicks while a previous placement's hold/clear
+                // animation is still playing — placing again mid-sequence would
+                // refresh the grid from live state and un-hold the still-
+                // animating line early.
+                return;
+            }
+
             int handIndex = _handView.SelectedIndex;
             if (handIndex < 0 || handIndex >= _run.Deck.Hand.Count)
             {
@@ -161,6 +171,7 @@ namespace Contigu.Presentation
             _hudView.Refresh(_run);
             _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
 
+            _isPlayingPlacementSequence = true;
             StartCoroutine(PlayPlacementSequence(outcome));
         }
 
@@ -201,6 +212,7 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
             }
 
+            _isPlayingPlacementSequence = false;
             HandleStateTransition(outcome.StateAfter);
         }
 
@@ -265,6 +277,7 @@ namespace Contigu.Presentation
 
         private void OnRestartRequested()
         {
+            _isPlayingPlacementSequence = false;
             _endScreenView.Hide();
             _run = new RunManager(new SystemRandomProvider());
             _gridView.Rebind(_run.Grid);
