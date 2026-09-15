@@ -28,7 +28,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// Every individual scoring contribution behind this placement's totals,
-        /// in the order they occurred (group cells, then golden bonuses, then one
+        /// in the order they occurred (golden bonuses, then group cells, then one
         /// entry per cleared cell) — lets the presentation layer show each point
         /// addition on its own instead of a single lump total.
         /// </summary>
