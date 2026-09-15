@@ -29,14 +29,14 @@ namespace Contigu.Presentation
 
             var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
             popup.fontStyle = FontStyle.Bold;
-            // Dark outline so light/white popup text (e.g. the neighbor-bonus
+            // Dark outline so light/white popup text (e.g. the group-bonus
             // color) stays legible against light pastel piece colors instead of
             // disappearing into them.
             var outline = popup.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             outline.effectDistance = new Vector2(1.5f, -1.5f);
             // Small random horizontal jitter so several popups landing on the
-            // same cell (e.g. two neighbor-bonus hits in a row) stay legible
+            // same cell (e.g. two group-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
             popup.rectTransform.position = anchor.position + new Vector3(jitterX, 0f, 0f);

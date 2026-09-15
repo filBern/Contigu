@@ -47,11 +47,11 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Cases teintées",
-            "Ajoute 2 cellules teintées ; poser la bonne couleur double le bonus de voisinage.", false);
+            "Ajoute 2 cellules teintées ; poser la bonne couleur double le bonus de groupe de toute la pose.", false);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Zone multiplicatrice",
-            "Ajoute 3 cellules qui doublent le bonus de voisinage à la pose.", false);
+            "Ajoute 3 cellules qui doublent le bonus de groupe de toute la pose.", false);
 
         public static readonly UpgradeDefinition[] All =
         {

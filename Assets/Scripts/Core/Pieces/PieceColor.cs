@@ -25,8 +25,8 @@ namespace Contigu.Core
         };
 
         /// <summary>
-        /// Two colors "match" for neighbor-bonus purposes if they are identical,
-        /// or if either one is the Joker wildcard (spec 3.2).
+        /// Two colors "match" for connected-group purposes if they are identical,
+        /// or if either one is the Joker wildcard.
         /// </summary>
         public static bool Matches(PieceColor a, PieceColor b)
         {

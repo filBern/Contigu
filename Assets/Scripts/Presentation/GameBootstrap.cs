@@ -184,6 +184,7 @@ namespace Contigu.Presentation
                         color = UITheme.Success;
                         label = "+" + scoreEvent.Amount + " ligne";
                         break;
+                    case ScoreEventType.Group:
                     default:
                         color = UITheme.TextPrimary;
                         label = "+" + scoreEvent.Amount;

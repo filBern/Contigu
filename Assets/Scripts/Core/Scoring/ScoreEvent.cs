@@ -5,13 +5,18 @@ namespace Contigu.Core
     /// <summary>What kind of scoring rule produced a <see cref="ScoreEvent"/>.</summary>
     public enum ScoreEventType
     {
-        /// <summary>One matching-color neighbor pair (spec 3.2), already including any tinted/multiplier-zone factor.</summary>
-        Neighbor,
+        /// <summary>
+        /// One cell of a placement's resulting connected same-color group,
+        /// already including any tinted/multiplier-zone group factor. The whole
+        /// group is rescored on every placement that grows it, so this can fire
+        /// for cells placed in an earlier turn too.
+        /// </summary>
+        Group,
 
-        /// <summary>A golden cell filled (spec 3.2).</summary>
+        /// <summary>A golden cell filled — a flat bonus, independent of group size or color.</summary>
         Golden,
 
-        /// <summary>One cell cleared by a completed line/column (spec 3.3).</summary>
+        /// <summary>One cell cleared by a completed line/column.</summary>
         LineClear
     }
 

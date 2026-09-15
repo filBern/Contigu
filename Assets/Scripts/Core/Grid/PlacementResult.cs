@@ -14,7 +14,12 @@ namespace Contigu.Core
 
         public IReadOnlyList<Vector2Int> PlacedCells = System.Array.Empty<Vector2Int>();
 
-        public int NeighborBonus;
+        /// <summary>
+        /// Score from this placement's resulting connected same-color group
+        /// (group size x per-cell value x tinted/multiplier-zone factor),
+        /// rescored in full every time the group grows.
+        /// </summary>
+        public int GroupBonus;
         public int GoldenBonus;
         public int LineClearScore;
 
@@ -23,7 +28,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// Every individual scoring contribution behind this placement's totals,
-        /// in the order they occurred (neighbor/golden bonuses first, then one
+        /// in the order they occurred (group cells, then golden bonuses, then one
         /// entry per cleared cell) — lets the presentation layer show each point
         /// addition on its own instead of a single lump total.
         /// </summary>
@@ -31,7 +36,7 @@ namespace Contigu.Core
 
         public int TotalScore
         {
-            get { return NeighborBonus + GoldenBonus + LineClearScore; }
+            get { return GroupBonus + GoldenBonus + LineClearScore; }
         }
 
         public static PlacementResult Failure(string reason)

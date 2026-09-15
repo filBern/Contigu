@@ -31,7 +31,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_SingleIsolatedCell_HasZeroNeighborBonus()
+        public void PlacePiece_SingleIsolatedCell_ScoresGroupOfOne()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -39,25 +39,40 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0);
 
             Assert.IsTrue(result.Success);
-            Assert.AreEqual(0, result.NeighborBonus);
+            Assert.AreEqual(ScoringConstants.GroupBonusPerCell, result.GroupBonus);
             Assert.AreEqual(0, result.GoldenBonus);
             Assert.AreEqual(0, result.LineClearScore);
         }
 
         [Test]
-        public void PlacePiece_AdjacentMatchingColor_AddsNeighborBonusPerPair()
+        public void PlacePiece_IsolatedMultiCellPiece_ScoresFullPieceSize()
         {
             var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2); // 4 cells, alone on an empty board
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
-            var second = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+            var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, second.NeighborBonus);
+            // A piece's own cells are always mutually connected, so the group is
+            // exactly the piece itself: 4 cells x 1 point/cell.
+            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_AdjacentDifferentColor_NoJoker_NoNeighborBonus()
+        public void PlacePiece_ConnectingToExistingGroup_RescoresWholeMergedGroupInFull()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2); // (0,0),(1,0),(0,1),(1,1)
+
+            grid.PlacePiece(square, PieceColor.Lime, 0, 0); // group of 4
+            var second = grid.PlacePiece(square, PieceColor.Lime, 2, 0); // touches (1,0)/(1,1) -> merges into one group of 8
+
+            // The whole merged group is rescored in full on this placement, not
+            // just the 4 newly placed cells (Scrabble-style word extension).
+            Assert.AreEqual(8 * ScoringConstants.GroupBonusPerCell, second.GroupBonus);
+        }
+
+        [Test]
+        public void PlacePiece_AdjacentDifferentColor_NoJoker_DoesNotMergeGroups()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -65,11 +80,13 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
             var second = grid.PlacePiece(single, PieceColor.Teal, 1, 0);
 
-            Assert.AreEqual(0, second.NeighborBonus);
+            // Different, non-joker colors never connect, so the second cell only
+            // scores its own group of one.
+            Assert.AreEqual(ScoringConstants.GroupBonusPerCell, second.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_JokerColor_AlwaysMatchesNeighbor()
+        public void PlacePiece_JokerColor_MergesWithAnyColor()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -77,42 +94,11 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Lime, 0, 0);
             var second = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, second.NeighborBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, second.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_MultiCellPiece_DoesNotScoreAgainstItsOwnSiblingCells()
-        {
-            var grid = new GridManager();
-            var domino = PieceShapeCatalog.Get(ShapeId.DomH); // (0,0),(1,0) - two same-colored adjacent cells placed together, alone on an empty board
-
-            var result = grid.PlacePiece(domino, PieceColor.Violet, 0, 0);
-
-            // The two cells are adjacent to each other but neither was on the
-            // board before this placement, so a piece never scores a neighbor
-            // bonus purely from its own shape — only connections to already-
-            // filled cells count.
-            Assert.AreEqual(0, result.NeighborBonus);
-        }
-
-        [Test]
-        public void PlacePiece_MultiCellPiece_ScoresAgainstPreExistingNeighborsOnly()
-        {
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-            var domino = PieceShapeCatalog.Get(ShapeId.DomV); // (0,0),(0,1)
-
-            grid.PlacePiece(single, PieceColor.Violet, 2, 0); // pre-existing neighbor of the domino's (1,0) cell
-
-            var result = grid.PlacePiece(domino, PieceColor.Violet, 1, 0);
-
-            // Only the (1,0)->(2,0) connection to the pre-existing cell counts;
-            // the domino's own two cells still don't score against each other.
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, result.NeighborBonus);
-        }
-
-        [Test]
-        public void PlacePiece_OnGoldenCell_AddsFixedBonusRegardlessOfColor()
+        public void PlacePiece_OnGoldenCell_AddsFixedBonusIndependentOfGroup()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -120,11 +106,14 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 2, 2);
 
+            // Golden is a flat bonus, computed separately and just added — never
+            // multiplied by group size or the group's tinted/multiplier factor.
             Assert.AreEqual(ScoringConstants.GoldenCellBonus, result.GoldenBonus);
+            Assert.AreEqual(ScoringConstants.GroupBonusPerCell, result.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_OnTintedCellWithMatchingColor_DoublesNeighborBonus()
+        public void PlacePiece_GroupContainingTintedMatch_DoublesWholeGroupBonus()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -136,7 +125,10 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair * ScoringConstants.TintedMatchMultiplier, result.NeighborBonus);
+            // Group of 2, x2 because the tinted cell (anywhere in the group)
+            // matches — the multiplier applies to the whole group, not just the
+            // tinted cell itself.
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier, result.GroupBonus);
         }
 
         [Test]
@@ -152,11 +144,11 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, result.NeighborBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_InMultiplierZone_DoublesNeighborBonus()
+        public void PlacePiece_GroupContainingMultiplierZone_DoublesWholeGroupBonus()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -165,11 +157,11 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair * ScoringConstants.MultiplierZoneMultiplier, result.NeighborBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier, result.GroupBonus);
         }
 
         [Test]
-        public void PlacePiece_TintedAndMultiplierStack_QuadruplesNeighborBonus()
+        public void PlacePiece_GroupWithTintedAndMultiplierZone_QuadruplesWholeGroupBonus()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -182,7 +174,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair * 4, result.NeighborBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * 4, result.GroupBonus);
         }
 
         [Test]
@@ -278,36 +270,41 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_ScoreEvents_OneEntryPerMatchingNeighbor_SummingToNeighborBonus()
+        public void PlacePiece_ScoreEvents_OneGroupEntryPerCellInTheMergedGroup()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
             grid.PlacePiece(single, PieceColor.Coral, 1, 1);
 
-            // Placing at (1,0) is orthogonally adjacent to both earlier cells.
+            // Placing at (1,0) connects to both earlier cells, merging all three
+            // into one group — every cell in the group gets rescored.
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            var neighborEvents = new List<ScoreEvent>();
+            var groupEvents = new List<ScoreEvent>();
             foreach (var e in result.ScoreEvents)
             {
-                if (e.Type == ScoreEventType.Neighbor) neighborEvents.Add(e);
+                if (e.Type == ScoreEventType.Group) groupEvents.Add(e);
             }
 
-            Assert.AreEqual(2, neighborEvents.Count, "One event per matching neighbor direction");
-            foreach (var e in neighborEvents)
+            Assert.AreEqual(3, groupEvents.Count, "One event per cell in the merged group");
+            var seenPositions = new HashSet<Vector2Int>();
+            foreach (var e in groupEvents)
             {
-                Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, e.Amount);
-                Assert.AreEqual(new Vector2Int(1, 0), e.Position);
+                Assert.AreEqual(ScoringConstants.GroupBonusPerCell, e.Amount);
+                seenPositions.Add(e.Position);
             }
+            Assert.IsTrue(seenPositions.Contains(new Vector2Int(0, 0)));
+            Assert.IsTrue(seenPositions.Contains(new Vector2Int(1, 1)));
+            Assert.IsTrue(seenPositions.Contains(new Vector2Int(1, 0)));
 
             int sum = 0;
-            foreach (var e in neighborEvents) sum += e.Amount;
-            Assert.AreEqual(result.NeighborBonus, sum);
+            foreach (var e in groupEvents) sum += e.Amount;
+            Assert.AreEqual(result.GroupBonus, sum);
         }
 
         [Test]
-        public void PlacePiece_ScoreEvents_OneGoldenEntryPerGoldenCell()
+        public void PlacePiece_ScoreEvents_IncludesOneGoldenEntryAlongsideTheGroupEntry()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -315,11 +312,18 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 3, 3);
 
-            Assert.AreEqual(1, result.ScoreEvents.Count);
-            var e = result.ScoreEvents[0];
-            Assert.AreEqual(ScoreEventType.Golden, e.Type);
-            Assert.AreEqual(ScoringConstants.GoldenCellBonus, e.Amount);
-            Assert.AreEqual(new Vector2Int(3, 3), e.Position);
+            // Golden event for the fixed bonus, plus one group event for this
+            // isolated cell's group of one.
+            Assert.AreEqual(2, result.ScoreEvents.Count);
+
+            ScoreEvent goldenEvent = null;
+            foreach (var e in result.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.Golden) goldenEvent = e;
+            }
+            Assert.IsNotNull(goldenEvent);
+            Assert.AreEqual(ScoringConstants.GoldenCellBonus, goldenEvent.Amount);
+            Assert.AreEqual(new Vector2Int(3, 3), goldenEvent.Position);
         }
 
         [Test]

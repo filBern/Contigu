@@ -1,10 +1,11 @@
 # Contigu
 
 Prototype Unity/C# d'un puzzle de block-fitting façon 1010!/Block Blast, avec
-bonus de voisinage de couleur, deck de pièces persistant, et structure de run
-roguelike-deckbuilder (façon Balatro) avec draft d'améliorations entre les
-manches. Voir la spécification complète dans la description du projet pour le
-détail des règles.
+un bonus de score façon "mot Scrabble" pour les groupes connectés de même
+couleur, deck de pièces persistant, et structure de run roguelike-deckbuilder
+(façon Balatro) avec draft d'améliorations entre les manches. Voir la
+spécification complète dans la description du projet pour le détail des
+règles.
 
 ## Ouvrir le projet
 
@@ -23,7 +24,7 @@ que la scène contienne le GameObject `GameBootstrap`.
 Le code est séparé en 3 assemblies (voir `Assets/Scripts/*/Contigu.*.asmdef`) :
 
 - **`Contigu.Core`** — logique de jeu pure (pas de `MonoBehaviour`), testable
-  unitairement : `GridManager` (grille 8×8, placement, bonus de voisinage,
+  unitairement : `GridManager` (grille 8×8, placement, bonus de groupe connecté,
   clears de ligne/colonne, modificateurs persistants), `DeckManager` (deck,
   pioche, main, upgrades de banque), `RunManager` (manches, quotas, budgets,
   victoire/défaite), `UpgradeSystem` (draft + application des améliorations).
@@ -47,13 +48,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   succès/échec n'est évalué qu'une fois le budget de pièces épuisé, pas dès
   que le quota est atteint (le joueur peut continuer à scorer au-delà du
   quota tant qu'il lui reste des pièces à poser).
-- **Bonus de voisinage sur une pièce multi-cellules** : seules les cellules
-  déjà remplies *avant* la pose comptent comme voisins pour le bonus — les
-  cellules d'une même pièce ne se comptent jamais entre elles. Une pièce de 3
-  cases posée seule sur un plateau vide ne rapporte donc aucun bonus de
-  voisinage par elle-même ; le bonus ne récompense que le fait de connecter à
-  des tuiles déjà posées, ce qui est le seul mécanisme de "plusieurs blocs
-  d'une même couleur ensemble" du jeu. Couvert par des tests.
+- **Bonus de groupe connecté ("mot Scrabble")** : à chaque pose, le groupe de
+  cases connectées de même couleur (orthogonalement, joker inclus en pont
+  transitif) que la pièce touche est entièrement recalculé — chaque case du
+  groupe rapporte `GroupBonusPerCell` (1 pt), pas seulement les cases
+  nouvellement posées. Poser un carré de 4 cases seul rapporte donc 4 pts ;
+  y coller ensuite un autre bloc qui porte le groupe à 8 cases rapporte 8 pts
+  *pour cette seconde pose* (le groupe entier est "rejoué", comme on
+  rescore un mot entier au Scrabble en l'allongeant). Si le groupe contient une
+  case teintée qui matche ou une zone multiplicatrice, le multiplicateur
+  (cumulable ×4) s'applique à tout le groupe, pas juste à cette case — même
+  logique que les cases bonus au Scrabble qui valorisent tout le mot. La case
+  dorée reste un bonus fixe (+18) indépendant, calculé à part et simplement
+  additionné (jamais multiplié par le groupe). Couvert par des tests.
+  ⚠️ Les quotas des manches (300→2500) n'ont pas été retouchés depuis ce
+  changement — ils étaient calibrés pour l'ancien système où une pose isolée
+  ne rapportait rien ; à rebalancer après playtesting si les manches
+  deviennent trop faciles.
 - **Positionnement des cases dorées/teintées/multiplicatrices** : choisi
   aléatoirement parmi les cases libres au moment du pick (comme le prototype
   HTML de référence), plutôt que par sélection manuelle du joueur — point

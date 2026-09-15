@@ -4,10 +4,10 @@ using UnityEngine;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Owns the 8x8 grid state: placement validation, the immediate neighbor-color
+    /// Owns the 8x8 grid state: placement validation, the connected-color-group
     /// bonus, line/column clears, and the persistent cell modifiers (golden,
     /// tinted, multiplier zone) plus the boss round's locked cells. Pure C#, no
-    /// MonoBehaviour dependency, so it is unit-testable in isolation (spec section 8).
+    /// MonoBehaviour dependency, so it is unit-testable in isolation.
     /// </summary>
     public sealed class GridManager
     {
@@ -92,9 +92,9 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Places a piece, applying neighbor bonuses, golden bonus, and any
-        /// resulting line/column clears. Assumes the caller already validated the
-        /// placement (or will inspect the returned failure).
+        /// Places a piece, applying the connected-group bonus, golden bonus, and
+        /// any resulting line/column clears. Assumes the caller already validated
+        /// the placement (or will inspect the returned failure).
         /// </summary>
         public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY)
         {
@@ -121,62 +121,38 @@ namespace Contigu.Core
             result.PlacedCells = placedCells;
 
             var events = new List<ScoreEvent>();
-            int neighborBonus = 0;
-            int goldenBonus = 0;
 
+            // Golden bonus: a flat bonus per golden cell touched by this
+            // placement, computed independently of the group bonus below and
+            // simply added to the total (never multiplied by group size).
+            int goldenBonus = 0;
             for (int i = 0; i < placedCells.Count; i++)
             {
-                var pos = placedCells[i];
-                var cell = _cells[pos.x, pos.y];
-
+                var cell = _cells[placedCells[i].x, placedCells[i].y];
                 if (cell.IsGolden)
                 {
                     goldenBonus += ScoringConstants.GoldenCellBonus;
-                    events.Add(new ScoreEvent(ScoreEventType.Golden, pos, ScoringConstants.GoldenCellBonus));
-                }
-
-                int multiplier = 1;
-                if (cell.IsTinted && cell.FilledColor.Value == cell.TintedColor)
-                {
-                    multiplier *= ScoringConstants.TintedMatchMultiplier;
-                }
-                if (cell.IsMultiplierZone)
-                {
-                    multiplier *= ScoringConstants.MultiplierZoneMultiplier;
-                }
-
-                int perMatchAmount = ScoringConstants.NeighborBonusPerPair * multiplier;
-
-                // One event per matching neighbor direction, rather than a single
-                // summed total, so each point addition can be shown individually.
-                // Only neighbors that were ALREADY filled before this placement
-                // count — sibling cells from the same piece don't score against
-                // each other, so the bonus always rewards connecting to the
-                // existing board rather than a piece's own internal shape.
-                if (IsScorableNeighbor(pos.x - 1, pos.y, cell.FilledColor.Value, placedCells))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
-                    neighborBonus += perMatchAmount;
-                }
-                if (IsScorableNeighbor(pos.x + 1, pos.y, cell.FilledColor.Value, placedCells))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
-                    neighborBonus += perMatchAmount;
-                }
-                if (IsScorableNeighbor(pos.x, pos.y - 1, cell.FilledColor.Value, placedCells))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
-                    neighborBonus += perMatchAmount;
-                }
-                if (IsScorableNeighbor(pos.x, pos.y + 1, cell.FilledColor.Value, placedCells))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
-                    neighborBonus += perMatchAmount;
+                    events.Add(new ScoreEvent(ScoreEventType.Golden, placedCells[i], ScoringConstants.GoldenCellBonus));
                 }
             }
-
-            result.NeighborBonus = neighborBonus;
             result.GoldenBonus = goldenBonus;
+
+            // Group bonus: the whole connected same-color group this placement
+            // touches is rescored in full — every cell in the merged group
+            // contributes again, not just the newly placed ones, like replaying
+            // an extended Scrabble word. All of a piece's own cells are always
+            // mutually connected (every shape in the catalog is edge-connected),
+            // so a single flood-fill from any placed cell finds the whole group.
+            var groupCells = FindConnectedGroup(placedCells[0]);
+            int groupMultiplier = ComputeGroupMultiplier(groupCells);
+            int perCellGroupScore = ScoringConstants.GroupBonusPerCell * groupMultiplier;
+            int groupBonus = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], perCellGroupScore));
+                groupBonus += perCellGroupScore;
+            }
+            result.GroupBonus = groupBonus;
 
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
@@ -193,39 +169,97 @@ namespace Contigu.Core
             return result;
         }
 
-        private bool IsMatchingNeighbor(int x, int y, PieceColor placedColor)
+        /// <summary>
+        /// Flood-fills the connected group of filled cells reachable from
+        /// <paramref name="start"/> by orthogonal steps where each consecutive
+        /// pair's colors match (<see cref="PieceColorUtility.Matches"/>, joker
+        /// included), transitively — so a joker can bridge two different colors
+        /// into one group.
+        /// </summary>
+        private List<Vector2Int> FindConnectedGroup(Vector2Int start)
+        {
+            var visited = new HashSet<Vector2Int> { start };
+            var stack = new Stack<Vector2Int>();
+            stack.Push(start);
+            var group = new List<Vector2Int>();
+
+            while (stack.Count > 0)
+            {
+                var pos = stack.Pop();
+                group.Add(pos);
+                var currentColor = _cells[pos.x, pos.y].FilledColor.Value;
+
+                TryVisitGroupNeighbor(pos.x - 1, pos.y, currentColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x + 1, pos.y, currentColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y - 1, currentColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y + 1, currentColor, visited, stack);
+            }
+
+            return group;
+        }
+
+        private void TryVisitGroupNeighbor(int x, int y, PieceColor fromColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
         {
             if (!InBounds(x, y))
             {
-                return false;
+                return;
             }
 
-            var neighbor = _cells[x, y];
-            if (!neighbor.IsFilled || !neighbor.FilledColor.HasValue)
+            var pos = new Vector2Int(x, y);
+            if (visited.Contains(pos))
             {
-                return false;
+                return;
             }
 
-            return PieceColorUtility.Matches(placedColor, neighbor.FilledColor.Value);
+            var cell = _cells[x, y];
+            if (!cell.IsFilled || !cell.FilledColor.HasValue)
+            {
+                return;
+            }
+
+            if (!PieceColorUtility.Matches(fromColor, cell.FilledColor.Value))
+            {
+                return;
+            }
+
+            visited.Add(pos);
+            stack.Push(pos);
         }
 
         /// <summary>
-        /// Same as <see cref="IsMatchingNeighbor"/>, but excludes cells that are
-        /// part of the SAME piece currently being placed (<paramref name="placedCells"/>)
-        /// — only a color match against the board as it stood before this
-        /// placement counts toward the neighbor bonus.
+        /// Whole-group multiplier from spec-style tinted/multiplier-zone cells:
+        /// presence anywhere in the group is enough (not per-occurrence), the two
+        /// factors stack (max x4), matching the original per-cell rule extended
+        /// to the whole group instead of a single cell.
         /// </summary>
-        private bool IsScorableNeighbor(int x, int y, PieceColor placedColor, List<Vector2Int> placedCells)
+        private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {
-            for (int i = 0; i < placedCells.Count; i++)
+            bool tintedMatch = false;
+            bool multiplierZone = false;
+
+            for (int i = 0; i < groupCells.Count; i++)
             {
-                if (placedCells[i].x == x && placedCells[i].y == y)
+                var cell = _cells[groupCells[i].x, groupCells[i].y];
+                if (cell.IsTinted && cell.FilledColor.HasValue && cell.FilledColor.Value == cell.TintedColor)
                 {
-                    return false;
+                    tintedMatch = true;
+                }
+                if (cell.IsMultiplierZone)
+                {
+                    multiplierZone = true;
                 }
             }
 
-            return IsMatchingNeighbor(x, y, placedColor);
+            int multiplier = 1;
+            if (tintedMatch)
+            {
+                multiplier *= ScoringConstants.TintedMatchMultiplier;
+            }
+            if (multiplierZone)
+            {
+                multiplier *= ScoringConstants.MultiplierZoneMultiplier;
+            }
+            return multiplier;
         }
 
         private readonly struct ClearInfo
