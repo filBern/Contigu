@@ -58,7 +58,12 @@ namespace Contigu.Presentation
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 800f);
-            scaler.matchWidthOrHeight = 0.5f;
+            // Our whole layout is a fixed-height vertical stack (HUD + status +
+            // grid + hand), so match on HEIGHT (1) rather than blend width/height
+            // (0.5): with match=1 the canvas is always exactly 800 units tall
+            // regardless of the window's aspect ratio, so the hand row at the
+            // bottom never gets squeezed off-screen on wide/short windows.
+            scaler.matchWidthOrHeight = 1f;
 
             canvasGo.AddComponent<GraphicRaycaster>();
 
