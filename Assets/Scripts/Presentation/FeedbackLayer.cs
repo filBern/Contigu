@@ -27,15 +27,21 @@ namespace Contigu.Presentation
                 return;
             }
 
-            var popup = UIFactory.CreateText(_root, "Popup", text, 20, color);
+            var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
             popup.fontStyle = FontStyle.Bold;
+            // Dark outline so light/white popup text (e.g. the neighbor-bonus
+            // color) stays legible against light pastel piece colors instead of
+            // disappearing into them.
+            var outline = popup.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
             // Small random horizontal jitter so several popups landing on the
             // same cell (e.g. two neighbor-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
             popup.rectTransform.position = anchor.position + new Vector3(jitterX, 0f, 0f);
             popup.rectTransform.sizeDelta = new Vector2(160f, 40f);
-            StartCoroutine(AnimatePopup(popup));
+            StartCoroutine(AnimatePopup(popup, outline));
         }
 
         /// <summary>
@@ -65,22 +71,36 @@ namespace Contigu.Presentation
             SpawnPopup(anchor, text, color);
         }
 
-        private IEnumerator AnimatePopup(Text text)
+        private IEnumerator AnimatePopup(Text text, Outline outline)
         {
             var rect = text.rectTransform;
-            const float duration = 0.9f;
+            // Slow, readable float+fade — several of these play in a staggered
+            // sequence per placement, so each one needs enough time on screen to
+            // actually be read before the next appears.
+            const float duration = 1.3f;
+            const float holdFraction = 0.35f; // stay fully opaque before fading
             float t = 0f;
             Vector3 startPos = rect.position;
             Color startColor = text.color;
+            Color startOutlineColor = outline.effectColor;
 
             while (t < duration)
             {
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
-                rect.position = startPos + new Vector3(0f, 48f * p, 0f);
+                rect.position = startPos + new Vector3(0f, 60f * p, 0f);
+
+                float fadeP = Mathf.Clamp01((p - holdFraction) / (1f - holdFraction));
+                float alpha = Mathf.Lerp(1f, 0f, fadeP);
+
                 var c = startColor;
-                c.a = Mathf.Lerp(1f, 0f, p);
+                c.a = alpha;
                 text.color = c;
+
+                var oc = startOutlineColor;
+                oc.a = startOutlineColor.a * alpha;
+                outline.effectColor = oc;
+
                 yield return null;
             }
 

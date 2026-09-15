@@ -81,16 +81,34 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_MultiCellPiece_CountsBonusFromBothSidesOfInternalPair()
+        public void PlacePiece_MultiCellPiece_DoesNotScoreAgainstItsOwnSiblingCells()
         {
             var grid = new GridManager();
-            var domino = PieceShapeCatalog.Get(ShapeId.DomH); // (0,0),(1,0) - two same-colored adjacent cells placed together
+            var domino = PieceShapeCatalog.Get(ShapeId.DomH); // (0,0),(1,0) - two same-colored adjacent cells placed together, alone on an empty board
 
             var result = grid.PlacePiece(domino, PieceColor.Violet, 0, 0);
 
-            // Each of the piece's two cells sees the other as a matching neighbor,
-            // so both contribute a pair-bonus (spec 3.2 is evaluated per newly filled cell).
-            Assert.AreEqual(2 * ScoringConstants.NeighborBonusPerPair, result.NeighborBonus);
+            // The two cells are adjacent to each other but neither was on the
+            // board before this placement, so a piece never scores a neighbor
+            // bonus purely from its own shape — only connections to already-
+            // filled cells count.
+            Assert.AreEqual(0, result.NeighborBonus);
+        }
+
+        [Test]
+        public void PlacePiece_MultiCellPiece_ScoresAgainstPreExistingNeighborsOnly()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domino = PieceShapeCatalog.Get(ShapeId.DomV); // (0,0),(0,1)
+
+            grid.PlacePiece(single, PieceColor.Violet, 2, 0); // pre-existing neighbor of the domino's (1,0) cell
+
+            var result = grid.PlacePiece(domino, PieceColor.Violet, 1, 0);
+
+            // Only the (1,0)->(2,0) connection to the pre-existing cell counts;
+            // the domino's own two cells still don't score against each other.
+            Assert.AreEqual(ScoringConstants.NeighborBonusPerPair, result.NeighborBonus);
         }
 
         [Test]

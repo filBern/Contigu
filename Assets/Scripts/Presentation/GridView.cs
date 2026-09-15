@@ -61,15 +61,23 @@ namespace Contigu.Presentation
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
             badgeGolden.rectTransform.pivot = new Vector2(0f, 1f);
-            badgeGolden.rectTransform.sizeDelta = new Vector2(10f, 10f);
-            badgeGolden.rectTransform.anchoredPosition = new Vector2(2f, -2f);
+            badgeGolden.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgeGolden.rectTransform.anchoredPosition = new Vector2(3f, -3f);
+            // Dark outline so the badge stays readable regardless of the cell's
+            // fill color (a plain gold square can blend into a light piece color).
+            var badgeGoldenOutline = badgeGolden.gameObject.AddComponent<Outline>();
+            badgeGoldenOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            badgeGoldenOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeGolden.gameObject.SetActive(false);
 
             var badgeSpecial = UIFactory.CreatePanel(cellGo, "BadgeSpecial", Color.magenta);
             UIFactory.SetAnchor(badgeSpecial.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f));
             badgeSpecial.rectTransform.pivot = new Vector2(1f, 0f);
-            badgeSpecial.rectTransform.sizeDelta = new Vector2(10f, 10f);
-            badgeSpecial.rectTransform.anchoredPosition = new Vector2(-2f, 2f);
+            badgeSpecial.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgeSpecial.rectTransform.anchoredPosition = new Vector2(-3f, 3f);
+            var badgeSpecialOutline = badgeSpecial.gameObject.AddComponent<Outline>();
+            badgeSpecialOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();

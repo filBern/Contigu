@@ -47,10 +47,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   succès/échec n'est évalué qu'une fois le budget de pièces épuisé, pas dès
   que le quota est atteint (le joueur peut continuer à scorer au-delà du
   quota tant qu'il lui reste des pièces à poser).
-- **Bonus de voisinage sur une pièce multi-cellules** : chaque cellule
-  nouvellement posée est évaluée indépendamment (spec 3.2 lue littéralement),
-  donc deux cellules adjacentes de la même couleur posées dans la même pièce
-  comptent chacune la paire — c'est volontaire et couvert par un test.
+- **Bonus de voisinage sur une pièce multi-cellules** : seules les cellules
+  déjà remplies *avant* la pose comptent comme voisins pour le bonus — les
+  cellules d'une même pièce ne se comptent jamais entre elles. Une pièce de 3
+  cases posée seule sur un plateau vide ne rapporte donc aucun bonus de
+  voisinage par elle-même ; le bonus ne récompense que le fait de connecter à
+  des tuiles déjà posées, ce qui est le seul mécanisme de "plusieurs blocs
+  d'une même couleur ensemble" du jeu. Couvert par des tests.
 - **Positionnement des cases dorées/teintées/multiplicatrices** : choisi
   aléatoirement parmi les cases libres au moment du pick (comme le prototype
   HTML de référence), plutôt que par sélection manuelle du joueur — point

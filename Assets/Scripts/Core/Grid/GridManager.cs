@@ -149,22 +149,26 @@ namespace Contigu.Core
 
                 // One event per matching neighbor direction, rather than a single
                 // summed total, so each point addition can be shown individually.
-                if (IsMatchingNeighbor(pos.x - 1, pos.y, cell.FilledColor.Value))
+                // Only neighbors that were ALREADY filled before this placement
+                // count — sibling cells from the same piece don't score against
+                // each other, so the bonus always rewards connecting to the
+                // existing board rather than a piece's own internal shape.
+                if (IsScorableNeighbor(pos.x - 1, pos.y, cell.FilledColor.Value, placedCells))
                 {
                     events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
                     neighborBonus += perMatchAmount;
                 }
-                if (IsMatchingNeighbor(pos.x + 1, pos.y, cell.FilledColor.Value))
+                if (IsScorableNeighbor(pos.x + 1, pos.y, cell.FilledColor.Value, placedCells))
                 {
                     events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
                     neighborBonus += perMatchAmount;
                 }
-                if (IsMatchingNeighbor(pos.x, pos.y - 1, cell.FilledColor.Value))
+                if (IsScorableNeighbor(pos.x, pos.y - 1, cell.FilledColor.Value, placedCells))
                 {
                     events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
                     neighborBonus += perMatchAmount;
                 }
-                if (IsMatchingNeighbor(pos.x, pos.y + 1, cell.FilledColor.Value))
+                if (IsScorableNeighbor(pos.x, pos.y + 1, cell.FilledColor.Value, placedCells))
                 {
                     events.Add(new ScoreEvent(ScoreEventType.Neighbor, pos, perMatchAmount));
                     neighborBonus += perMatchAmount;
@@ -203,6 +207,25 @@ namespace Contigu.Core
             }
 
             return PieceColorUtility.Matches(placedColor, neighbor.FilledColor.Value);
+        }
+
+        /// <summary>
+        /// Same as <see cref="IsMatchingNeighbor"/>, but excludes cells that are
+        /// part of the SAME piece currently being placed (<paramref name="placedCells"/>)
+        /// — only a color match against the board as it stood before this
+        /// placement counts toward the neighbor bonus.
+        /// </summary>
+        private bool IsScorableNeighbor(int x, int y, PieceColor placedColor, List<Vector2Int> placedCells)
+        {
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                if (placedCells[i].x == x && placedCells[i].y == y)
+                {
+                    return false;
+                }
+            }
+
+            return IsMatchingNeighbor(x, y, placedColor);
         }
 
         private readonly struct ClearInfo

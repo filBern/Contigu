@@ -14,7 +14,7 @@ namespace Contigu.Presentation
     public sealed class GameBootstrap : MonoBehaviour
     {
         private const float CellSize = 54f;
-        private const float ScoreEventStaggerSeconds = 0.06f;
+        private const float ScoreEventStaggerSeconds = 0.22f;
 
         private RunManager _run;
 

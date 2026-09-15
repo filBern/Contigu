@@ -36,7 +36,11 @@ namespace Contigu.Presentation
             }
             else if (cell.IsFilled && cell.FilledColor.HasValue)
             {
-                Background.color = VisualDefaults.GetColor(cell.FilledColor.Value);
+                var baseColor = VisualDefaults.GetColor(cell.FilledColor.Value);
+                // Blend in the golden tint even once filled, so a golden cell
+                // stays visually distinct from a normal filled cell of the same
+                // piece color instead of the fill color hiding it completely.
+                Background.color = cell.IsGolden ? Color.Lerp(baseColor, VisualDefaults.GoldenColor, 0.45f) : baseColor;
             }
             else if (cell.IsGolden)
             {
