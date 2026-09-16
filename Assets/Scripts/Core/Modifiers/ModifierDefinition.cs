@@ -74,7 +74,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Puriste = new ModifierDefinition(
             ModifierId.Puriste, ModifierCategory.Roguelike, "Puriste",
-            "Si TOUTES les cases de votre groupe (les jokers ne comptent pas) sont de la même couleur : +50% du bonus de groupe de cette pose.");
+            "+50% des points de groupe si TOUT le groupe est de la même couleur (jokers ignorés). Une seule case d'une autre couleur dans le groupe annule le bonus.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collectionneur",
