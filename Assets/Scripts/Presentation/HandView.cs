@@ -161,7 +161,12 @@ namespace Contigu.Presentation
             var color = VisualDefaults.GetColor(token.Color);
 
             float startX = -(cols * cell) / 2f + cell / 2f;
-            float startY = (rows * cell) / 2f - cell / 2f;
+            // Y increases UPWARD here too, to match GridView's own convention
+            // (see its "y increases upward" comment) — otherwise this preview
+            // renders every shape vertically flipped from how it actually looks
+            // once placed on the grid, which defeats the point of showing the
+            // piece's real (now randomized) rotation.
+            float startY = -(rows * cell) / 2f + cell / 2f;
 
             for (int y = 0; y < rows; y++)
             {
@@ -172,7 +177,7 @@ namespace Contigu.Presentation
                     img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
                     img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY - y * cell);
+                    img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
                 }
             }
         }
