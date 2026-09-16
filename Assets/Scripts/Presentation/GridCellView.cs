@@ -20,12 +20,13 @@ namespace Contigu.Presentation
         public Image Background { get; private set; }
         private Image _badgeGolden;
         private Image _badgeSpecial;
+        private Image _badgeColorIcon;
         private Text _effectLabel;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image badgeGolden, Image badgeSpecial, Text effectLabel)
+        public void Init(GridView owner, int x, int y, Image background, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Text effectLabel)
         {
             _owner = owner;
             X = x;
@@ -33,6 +34,7 @@ namespace Contigu.Presentation
             Background = background;
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
+            _badgeColorIcon = badgeColorIcon;
             _effectLabel = effectLabel;
         }
 
@@ -46,31 +48,66 @@ namespace Contigu.Presentation
         /// </summary>
         public void ApplyState(Cell cell, PieceColor? fillColorOverride = null)
         {
+            bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
+            PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
+
             if (cell.IsLocked)
             {
-                Background.color = VisualDefaults.LockedColor;
+                if (VisualDefaults.LockedTileSprite != null)
+                {
+                    Background.sprite = VisualDefaults.LockedTileSprite;
+                    Background.color = Color.white;
+                }
+                else
+                {
+                    Background.sprite = null;
+                    Background.color = VisualDefaults.LockedColor;
+                }
             }
-            else if (fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue))
+            else if (isFilled)
             {
                 // Always the pure piece color once filled — a golden cell's own
                 // background is never tinted (that would shift the piece's actual
                 // color); its golden status is conveyed by the badge and effect
                 // label below instead, which persist regardless of fill state.
-                Background.color = VisualDefaults.GetColor(fillColorOverride ?? cell.FilledColor.Value);
+                Background.sprite = null;
+                Background.color = VisualDefaults.GetColor(filledColor.Value);
             }
             else if (cell.IsGolden)
             {
+                Background.sprite = null;
                 Background.color = Color.Lerp(VisualDefaults.EmptyCellColor, VisualDefaults.GoldenColor, 0.55f);
             }
             else
             {
+                Background.sprite = null;
                 Background.color = VisualDefaults.EmptyCellColor;
             }
 
             _badgeGolden.gameObject.SetActive(cell.IsGolden);
             if (cell.IsGolden)
             {
-                _badgeGolden.color = VisualDefaults.GoldenColor;
+                if (VisualDefaults.GoldenTileSprite != null)
+                {
+                    _badgeGolden.sprite = VisualDefaults.GoldenTileSprite;
+                    _badgeGolden.color = Color.white;
+                }
+                else
+                {
+                    _badgeGolden.sprite = null;
+                    _badgeGolden.color = VisualDefaults.GoldenColor;
+                }
+            }
+
+            // Colorblind-accessibility badge: shows the piece color's icon on
+            // top of the fill so color isn't the only signal. Hidden for any
+            // color that has no icon yet (e.g. Coral) rather than showing a
+            // blank/broken image.
+            Sprite colorIcon = isFilled && !cell.IsLocked ? VisualDefaults.GetColorIcon(filledColor.Value) : null;
+            _badgeColorIcon.gameObject.SetActive(colorIcon != null);
+            if (colorIcon != null)
+            {
+                _badgeColorIcon.sprite = colorIcon;
             }
 
             bool showSpecial = cell.IsTinted || cell.IsMultiplierZone;

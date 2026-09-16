@@ -80,6 +80,18 @@ namespace Contigu.Presentation
             badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
 
+            // Colorblind-accessibility icon, centered on the fill so a piece's
+            // color is never the only way to tell it apart from another.
+            var badgeColorIcon = UIFactory.CreatePanel(cellGo, "BadgeColorIcon", Color.white);
+            UIFactory.SetAnchor(badgeColorIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            badgeColorIcon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            badgeColorIcon.rectTransform.sizeDelta = new Vector2(24f, 24f);
+            badgeColorIcon.rectTransform.anchoredPosition = Vector2.zero;
+            var badgeColorIconOutline = badgeColorIcon.gameObject.AddComponent<Outline>();
+            badgeColorIconOutline.effectColor = new Color(0f, 0f, 0f, 0.6f);
+            badgeColorIconOutline.effectDistance = new Vector2(1f, -1f);
+            badgeColorIcon.gameObject.SetActive(false);
+
             // Spells out a modifier cell's effect ("+18", "x2", "x4") as text,
             // on top of the color badges above.
             var effectLabel = UIFactory.CreateText(cellGo, "EffectLabel", "", 11, Color.white, TextAnchor.LowerCenter);
@@ -95,7 +107,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, badgeGolden, badgeSpecial, effectLabel);
+            cellView.Init(this, x, y, background, badgeGolden, badgeSpecial, badgeColorIcon, effectLabel);
             _cells[x, y] = cellView;
         }
 

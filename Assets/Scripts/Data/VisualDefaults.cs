@@ -50,9 +50,33 @@ namespace Contigu.Data
             { ShapeId.STetro, "S-Tetromino" }
         };
 
+        // Small per-color badge icons for colorblind accessibility (shown on
+        // filled grid cells alongside the color fill) plus the golden/locked
+        // cell textures, loaded from Assets/Resources/Icons at runtime since
+        // this project builds its whole UI from code with no editor-wired
+        // asset references. Resources.Load returns null for a color that has
+        // no icon yet (e.g. Coral) rather than throwing, so callers must treat
+        // a null sprite as "no icon available" and degrade to color-only.
+        private static readonly Dictionary<PieceColor, Sprite> IconMap = new Dictionary<PieceColor, Sprite>
+        {
+            { PieceColor.Coral, Resources.Load<Sprite>("Icons/Coral") },
+            { PieceColor.Teal, Resources.Load<Sprite>("Icons/Teal") },
+            { PieceColor.Violet, Resources.Load<Sprite>("Icons/Violet") },
+            { PieceColor.Lime, Resources.Load<Sprite>("Icons/Lime") },
+            { PieceColor.Joker, Resources.Load<Sprite>("Icons/Joker") }
+        };
+
+        public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
+        public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
+
         public static Color GetColor(PieceColor color)
         {
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
+        }
+
+        public static Sprite GetColorIcon(PieceColor color)
+        {
+            return IconMap.TryGetValue(color, out var s) ? s : null;
         }
 
         public static string GetColorName(PieceColor color)

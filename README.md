@@ -223,3 +223,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     la palette (une chacune) ; Joker prend la teinte moyenne restante
     (`#5f699c`) pour un rendu délibérément plus sobre, cohérent avec son
     rôle de "wildcard" face aux 4 couleurs vives.
+- **Icônes d'accessibilité daltonisme + textures de tuile** : petites
+  icônes par couleur de pièce (étoile Joker, feuille Lime, goutte Teal,
+  fleur Violet — Coral n'a pas encore d'icône, `coral.png` n'a jamais été
+  commité) affichées au centre de chaque case remplie de la grille, en
+  plus du remplissage de couleur, pour ne jamais dépendre de la couleur
+  seule. Le fichier PNG manquant dégrade proprement : `VisualDefaults
+  .GetColorIcon` retourne `null` pour Coral et `GridCellView` cache
+  simplement le badge plutôt que d'afficher une image cassée.
+  `gold-tile.png`/`DisabledTile.png` remplacent aussi le remplissage plat
+  des cases dorées (badge coin) et verrouillées (texture X) quand la
+  sprite est disponible, avec le même repli sur l'ancienne couleur plate
+  sinon. Les fichiers vivent dans `Assets/Resources/Icons/` (et non
+  `Assets/Sprites/`) car toute l'UI de ce projet est construite par code
+  sans référence d'asset câblée dans l'éditeur — `Resources.Load<Sprite>`
+  au runtime est donc le seul point d'accroche disponible.
