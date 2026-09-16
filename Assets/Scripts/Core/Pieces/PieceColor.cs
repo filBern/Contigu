@@ -23,14 +23,5 @@ namespace Contigu.Core
             PieceColor.Violet,
             PieceColor.Lime
         };
-
-        /// <summary>
-        /// Two colors "match" for connected-group purposes if they are identical,
-        /// or if either one is the Joker wildcard.
-        /// </summary>
-        public static bool Matches(PieceColor a, PieceColor b)
-        {
-            return a == b || a == PieceColor.Joker || b == PieceColor.Joker;
-        }
     }
 }

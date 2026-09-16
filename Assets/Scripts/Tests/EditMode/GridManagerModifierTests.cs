@@ -19,28 +19,45 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Prisme_Fires_WhenGroupHasFourDistinctColors()
+        public void Prisme_Fires_WhenPlacementTouchesFourDistinctColors()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Prisme };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 3, 0, modifiers);
-            var result = grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
+            // Prisme looks at colors touching the placement (itself + its
+            // direct neighbors), not colors inside its scored group — a group
+            // can never mix real colors (see FindConnectedGroup), so "distinct
+            // colors in the group" could never be satisfied otherwise.
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Lime, 2, 3, modifiers);
 
-            // Group so far: Coral, Joker, Teal, Joker, Violet — 3 distinct
-            // non-joker colors + a joker present, so Prisme's "3 + joker"
-            // clause qualifies.
-            Assert.AreEqual(ScoringConstants.PrismeBonus, result.ModifierBonus);
+            var center = grid.PlacePiece(single, PieceColor.Joker, 2, 2, modifiers);
 
-            grid.PlacePiece(single, PieceColor.Joker, 5, 0, modifiers);
-            var finalWithLime = grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.PrismeBonus, center.ModifierBonus);
+        }
 
-            // Now 4 distinct non-joker colors present — still qualifies.
-            Assert.AreEqual(ScoringConstants.PrismeBonus, finalWithLime.ModifierBonus);
+        [Test]
+        public void Prisme_Fires_WhenPlacementTouchesThreeDistinctColorsPlusAJoker()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Prisme };
+
+            grid.PlacePiece(single, PieceColor.Teal, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Lime, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Joker, 2, 3, modifiers);
+
+            // Center's own color (Teal) matches one of the ring colors instead
+            // of introducing a 4th one, so touching colors stay at exactly
+            // {Teal, Violet, Lime} + a joker — the "3 distinct + joker" clause,
+            // not the "4 distinct" one.
+            var center = grid.PlacePiece(single, PieceColor.Teal, 2, 2, modifiers);
+
+            Assert.AreEqual(ScoringConstants.PrismeBonus, center.ModifierBonus);
         }
 
         [Test]
@@ -51,7 +68,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Prisme };
 
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            // 2 distinct colors, no joker: doesn't qualify either clause.
+            // 2 distinct colors touching, no joker: doesn't qualify either clause.
             var result = grid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
 
             Assert.AreEqual(0, result.ModifierBonus);
@@ -171,17 +188,23 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Puriste_DoesNotFire_WhenGroupHasTwoDifferentNonJokerColors()
+        public void Puriste_Fires_ForAnAllJokerGroup()
         {
+            // A connected group can never mix two different real colors (see
+            // GridManager.FindConnectedGroup: a joker never bridges two
+            // different colors together), so Puriste's "not monochrome"
+            // rejection can only ever be exercised by a group made entirely of
+            // jokers — which still counts as vacuously monochrome.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Puriste };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-            var result = grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Joker, 0, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            int expectedGroupBonus = 2 * ScoringConstants.GroupBonusPerCell;
+            Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
+            Assert.AreEqual(expectedGroupBonus / 2, result.ModifierBonus);
         }
 
         [Test]
@@ -253,36 +276,51 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Tricolore_FiresOnlyWithExactlyThreeDistinctColors()
+        public void Tricolore_FiresOnlyWithExactlyThreeDistinctColorsTouchingThePlacement()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Tricolore };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-            var withTwoColors = grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
-            Assert.AreEqual(0, withTwoColors.ModifierBonus, "Only 2 distinct colors so far");
+            // 3 ring cells filled (4th side left empty), center reuses one of
+            // the ring's colors so it doesn't introduce a 4th.
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
+            var withThreeColors = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            grid.PlacePiece(single, PieceColor.Joker, 3, 0, modifiers);
-            var withThreeColors = grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
             Assert.AreEqual(ScoringConstants.TricoloreBonus, withThreeColors.ModifierBonus);
-
-            grid.PlacePiece(single, PieceColor.Joker, 5, 0, modifiers);
-            var withFourColors = grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
-            Assert.AreEqual(0, withFourColors.ModifierBonus, "4 distinct colors no longer qualifies — exactly 3 required");
         }
 
         [Test]
-        public void Complementaire_FiresWhenGroupContainsAKnownPair()
+        public void Tricolore_DoesNotFire_WithTwoOrFourDistinctColorsTouchingThePlacement()
+        {
+            var twoColorsGrid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Tricolore };
+
+            twoColorsGrid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            var withTwoColors = twoColorsGrid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
+            Assert.AreEqual(0, withTwoColors.ModifierBonus, "Only 2 distinct colors touching");
+
+            var fourColorsGrid = new GridManager();
+            fourColorsGrid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            fourColorsGrid.PlacePiece(single, PieceColor.Teal, 1, 2, modifiers);
+            fourColorsGrid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
+            fourColorsGrid.PlacePiece(single, PieceColor.Lime, 2, 3, modifiers);
+            var withFourColors = fourColorsGrid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
+            Assert.AreEqual(0, withFourColors.ModifierBonus, "4 distinct colors touching no longer qualifies — exactly 3 required");
+        }
+
+        [Test]
+        public void Complementaire_FiresWhenPlacementTouchesAKnownPair()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Complementaire };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-            var result = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
             Assert.AreEqual(ScoringConstants.ComplementaireBonus, result.ModifierBonus);
         }
@@ -294,9 +332,8 @@ namespace Contigu.Tests
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Complementaire };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-            var result = grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
             Assert.AreEqual(0, result.ModifierBonus);
         }

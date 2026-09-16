@@ -152,6 +152,41 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_JokerDoesNotBridgeTwoDifferentRealColorsIntoOneGroup()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Lime, 0, 0);
+            var jokerResult = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, jokerResult.GroupBonus, "Joker should still merge with the one real color it's adjacent to");
+
+            var thirdResult = grid.PlacePiece(single, PieceColor.Teal, 2, 0);
+
+            // Teal is a different real color from Lime. Even though Teal is
+            // adjacent to the joker (which is itself adjacent to Lime), the
+            // joker must NOT bridge Lime and Teal into one 3-cell group —
+            // Teal's own group is just {Teal, Joker} = 2 cells, never
+            // {Lime, Joker, Teal} = 3.
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, thirdResult.GroupBonus);
+        }
+
+        [Test]
+        public void PlacePiece_ChainOfOnlyJokers_AllMergeIntoOneGroup()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Joker, 0, 0);
+            grid.PlacePiece(single, PieceColor.Joker, 1, 0);
+            var third = grid.PlacePiece(single, PieceColor.Joker, 2, 0);
+
+            // With no real color anywhere in the chain, there's nothing for a
+            // joker to conflict with, so an all-joker chain still merges fully.
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, third.GroupBonus);
+        }
+
+        [Test]
         public void PlacePiece_OnGoldenCell_AddsFixedBonusIndependentOfGroup()
         {
             var grid = new GridManager();

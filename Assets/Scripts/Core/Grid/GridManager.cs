@@ -224,7 +224,7 @@ namespace Contigu.Core
                 switch (id)
                 {
                     case ModifierId.Prisme:
-                        bonus = ApplyPrisme(groupCells, placedCells, events);
+                        bonus = ApplyPrisme(placedCells, events);
                         break;
                     case ModifierId.Chaine:
                         bonus = ApplyChaine(groupCells, placedCells, events);
@@ -245,10 +245,10 @@ namespace Contigu.Core
                         bonus = ApplyPuriste(groupCells, placedCells, groupBonus, events);
                         break;
                     case ModifierId.Tricolore:
-                        bonus = ApplyTricolore(groupCells, placedCells, events);
+                        bonus = ApplyTricolore(placedCells, events);
                         break;
                     case ModifierId.Complementaire:
-                        bonus = ApplyComplementaire(groupCells, placedCells, events);
+                        bonus = ApplyComplementaire(placedCells, events);
                         break;
                     case ModifierId.Ilot:
                         bonus = ApplyIlot(groupCells, placedCells, events);
@@ -311,23 +311,13 @@ namespace Contigu.Core
             }
         }
 
-        private int ApplyPrisme(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        private int ApplyPrisme(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            var distinctColors = new HashSet<PieceColor>();
-            bool hasJoker = false;
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
-                if (color == PieceColor.Joker)
-                {
-                    hasJoker = true;
-                    continue;
-                }
-                distinctColors.Add(color);
-            }
+            var touching = CollectTouchingColors(placedCells);
+            bool hasJoker = touching.Remove(PieceColor.Joker);
 
-            bool qualifies = distinctColors.Count >= ScoringConstants.PrismeMinDistinctColors
-                || (distinctColors.Count == ScoringConstants.PrismeMinDistinctColors - 1 && hasJoker);
+            bool qualifies = touching.Count >= ScoringConstants.PrismeMinDistinctColors
+                || (touching.Count == ScoringConstants.PrismeMinDistinctColors - 1 && hasJoker);
             if (!qualifies)
             {
                 return 0;
@@ -335,6 +325,41 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.PrismeBonus));
             return ScoringConstants.PrismeBonus;
+        }
+
+        /// <summary>
+        /// Every distinct color among the placement's own cells and every cell
+        /// orthogonally adjacent to any of them — used by Prisme/Tricolore/
+        /// Complémentaire, which measure color diversity AROUND a placement
+        /// rather than within its scored group. This is deliberately different
+        /// from the connected group: since <see cref="FindConnectedGroup"/>
+        /// locks a group onto a single real color (a joker never bridges two
+        /// different colors together, see its doc comment), a scored group can
+        /// never contain more than one non-joker color, so "distinct colors in
+        /// the group" is never satisfiable and these modifiers look at what the
+        /// placement touches instead.
+        /// </summary>
+        private HashSet<PieceColor> CollectTouchingColors(List<Vector2Int> placedCells)
+        {
+            var colors = new HashSet<PieceColor>();
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                colors.Add(_cells[pos.x, pos.y].FilledColor.Value);
+                AddColorIfFilled(colors, pos.x - 1, pos.y);
+                AddColorIfFilled(colors, pos.x + 1, pos.y);
+                AddColorIfFilled(colors, pos.x, pos.y - 1);
+                AddColorIfFilled(colors, pos.x, pos.y + 1);
+            }
+            return colors;
+        }
+
+        private void AddColorIfFilled(HashSet<PieceColor> colors, int x, int y)
+        {
+            if (InBounds(x, y) && _cells[x, y].IsFilled && _cells[x, y].FilledColor.HasValue)
+            {
+                colors.Add(_cells[x, y].FilledColor.Value);
+            }
         }
 
         private int ApplyChaine(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
@@ -485,19 +510,12 @@ namespace Contigu.Core
             return bonus;
         }
 
-        private int ApplyTricolore(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        private int ApplyTricolore(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            var distinctColors = new HashSet<PieceColor>();
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
-                if (color != PieceColor.Joker)
-                {
-                    distinctColors.Add(color);
-                }
-            }
+            var touching = CollectTouchingColors(placedCells);
+            touching.Remove(PieceColor.Joker);
 
-            if (distinctColors.Count != ScoringConstants.TricoloreExactDistinctColors)
+            if (touching.Count != ScoringConstants.TricoloreExactDistinctColors)
             {
                 return 0;
             }
@@ -513,13 +531,9 @@ namespace Contigu.Core
             new[] { PieceColor.Teal, PieceColor.Lime }
         };
 
-        private int ApplyComplementaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        private int ApplyComplementaire(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            var present = new HashSet<PieceColor>();
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                present.Add(_cells[groupCells[i].x, groupCells[i].y].FilledColor.Value);
-            }
+            var present = CollectTouchingColors(placedCells);
 
             bool qualifies = false;
             for (int i = 0; i < ComplementaryPairs.Length; i++)
@@ -666,10 +680,15 @@ namespace Contigu.Core
 
         /// <summary>
         /// Flood-fills the connected group of filled cells reachable from
-        /// <paramref name="start"/> by orthogonal steps where each consecutive
-        /// pair's colors match (<see cref="PieceColorUtility.Matches"/>, joker
-        /// included), transitively — so a joker can bridge two different colors
-        /// into one group.
+        /// <paramref name="start"/> by orthogonal steps. A joker cell always
+        /// joins (it has no color of its own to conflict with), but it does NOT
+        /// bridge two otherwise-incompatible real colors into one group: the
+        /// group locks onto the first non-joker color it discovers (its
+        /// "anchor"), and any other-colored cell — reached directly or through
+        /// a joker — is excluded from then on. So green-joker-blue is two
+        /// separate potential groups sharing that joker cell, never one
+        /// green+joker+blue group; which one the joker actually joins on a
+        /// given placement depends on which color's flood-fill reaches it.
         /// </summary>
         private List<Vector2Int> FindConnectedGroup(Vector2Int start)
         {
@@ -678,22 +697,24 @@ namespace Contigu.Core
             stack.Push(start);
             var group = new List<Vector2Int>();
 
+            var startColor = _cells[start.x, start.y].FilledColor.Value;
+            PieceColor? anchorColor = startColor == PieceColor.Joker ? (PieceColor?)null : startColor;
+
             while (stack.Count > 0)
             {
                 var pos = stack.Pop();
                 group.Add(pos);
-                var currentColor = _cells[pos.x, pos.y].FilledColor.Value;
 
-                TryVisitGroupNeighbor(pos.x - 1, pos.y, currentColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x + 1, pos.y, currentColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x, pos.y - 1, currentColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x, pos.y + 1, currentColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x - 1, pos.y, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x + 1, pos.y, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y - 1, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
             }
 
             return group;
         }
 
-        private void TryVisitGroupNeighbor(int x, int y, PieceColor fromColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
+        private void TryVisitGroupNeighbor(int x, int y, ref PieceColor? anchorColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
         {
             if (!InBounds(x, y))
             {
@@ -712,9 +733,17 @@ namespace Contigu.Core
                 return;
             }
 
-            if (!PieceColorUtility.Matches(fromColor, cell.FilledColor.Value))
+            var neighborColor = cell.FilledColor.Value;
+            if (neighborColor != PieceColor.Joker)
             {
-                return;
+                if (anchorColor.HasValue && anchorColor.Value != neighborColor)
+                {
+                    // A real color that conflicts with the group's already-
+                    // established color — even if reached via a joker — never
+                    // joins.
+                    return;
+                }
+                anchorColor = neighborColor;
             }
 
             visited.Add(pos);

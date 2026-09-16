@@ -53,13 +53,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   grille — `GridManager.HasAnyValidPlacement`), ce qui évite un
   soft-lock si le joueur se retrouve coincé avant d'épuiser son budget.
 - **Bonus de groupe connecté ("mot Scrabble")** : à chaque pose, le groupe de
-  cases connectées de même couleur (orthogonalement, joker inclus en pont
-  transitif) que la pièce touche est entièrement recalculé — chaque case du
-  groupe rapporte `GroupBonusPerCell` (1 pt), pas seulement les cases
-  nouvellement posées. Poser un carré de 4 cases seul rapporte donc 4 pts ;
-  y coller ensuite un autre bloc qui porte le groupe à 8 cases rapporte 8 pts
-  *pour cette seconde pose* (le groupe entier est "rejoué", comme on
-  rescore un mot entier au Scrabble en l'allongeant).
+  cases connectées de même couleur que la pièce touche est entièrement
+  recalculé — chaque case du groupe rapporte `GroupBonusPerCell` (1 pt), pas
+  seulement les cases nouvellement posées. Poser un carré de 4 cases seul
+  rapporte donc 4 pts ; y coller ensuite un autre bloc qui porte le groupe à
+  8 cases rapporte 8 pts *pour cette seconde pose* (le groupe entier est
+  "rejoué", comme on rescore un mot entier au Scrabble en l'allongeant).
+  - **Joker** : rejoint le groupe de la couleur réelle à laquelle il touche,
+    mais un groupe scoré ne contient jamais qu'**une seule** couleur réelle
+    à la fois — un joker ne "ponte" jamais deux couleurs différentes en un
+    seul groupe. **Bug corrigé** : une version antérieure laissait un joker
+    faire transitivement le pont entre deux couleurs incompatibles (ex.
+    vert-joker-bleu comptait comme un seul groupe de 3, alors que vert et
+    bleu ne sont pas la même couleur) — signalé par le joueur, corrigé dans
+    `GridManager.FindConnectedGroup` (la première couleur réelle rencontrée
+    devient l'"ancre" du groupe ; toute autre couleur réelle qui la
+    contredit, même atteinte via un joker, est exclue). Concrètement :
+    vert puis joker collé au vert forment bien un groupe de 2 ; poser
+    ensuite une 3e couleur collée à ce même joker ne rejoint PAS le vert —
+    elle forme son propre groupe de 2 avec le joker (le joker "change de
+    camp" selon la pose qui le touche).
+    ⚠️ Effet de bord sur les modificateurs : un groupe scoré ne pouvant
+    plus jamais mélanger deux couleurs réelles, **Prisme**, **Tricolore** et
+    **Complémentaire** (qui comptaient les couleurs distinctes *dans le
+    groupe*) ont été redéfinis pour compter les couleurs distinctes
+    *touchant la pose* (elle-même + ses 4 voisins directs) à la place —
+    sinon leur condition serait devenue impossible à atteindre. **Puriste**
+    n'a pas eu besoin d'être changé, mais sa branche "groupe non-monochrome"
+    (`return 0` dans `ApplyPuriste`) n'est plus atteignable en jeu normal
+    depuis ce correctif — un groupe est maintenant *toujours* monochrome (à
+    l'exception d'un groupe 100% joker, toujours vacuously monochrome), donc
+    Puriste rapporte désormais son bonus à chaque fois qu'il est actif sur
+    un groupe d'au moins 2 cases avec une couleur réelle. Laissé tel quel
+    (le bonus reste réel et scalé sur la taille du groupe), mais signalé ici
+    si un rééquilibrage est voulu plus tard.
   - **Cases teintées** : chaque case teintée dont la couleur matche, présente
     n'importe où dans le groupe, contribue son propre ×2 — deux cases
     teintées dans le même combo se combinent en ×4, trois en ×8, etc. Une

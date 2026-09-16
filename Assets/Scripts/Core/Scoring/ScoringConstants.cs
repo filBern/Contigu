@@ -29,7 +29,7 @@ namespace Contigu.Core
 
         // ---- Modifier bonuses (see ModifierCatalog) ----
 
-        /// <summary>Prisme: flat bonus when the group has 4 distinct non-joker colors (or 3 + a joker).</summary>
+        /// <summary>Prisme: flat bonus when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker).</summary>
         public const int PrismeBonus = 20;
         public const int PrismeMinDistinctColors = 4;
 
@@ -54,11 +54,11 @@ namespace Contigu.Core
         /// <summary>Collectionneur: bonus per distinct color among this placement's cleared cells.</summary>
         public const int CollectionneurBonusPerColor = 8;
 
-        /// <summary>Tricolore: flat bonus when the group has exactly this many distinct non-joker colors.</summary>
+        /// <summary>Tricolore: flat bonus when the placement (itself + its direct neighbors) touches exactly this many distinct non-joker colors.</summary>
         public const int TricoloreBonus = 14;
         public const int TricoloreExactDistinctColors = 3;
 
-        /// <summary>Complémentaire: flat bonus when the group contains both colors of a complementary pair.</summary>
+        /// <summary>Complémentaire: flat bonus when the placement (itself + its direct neighbors) touches both colors of a complementary pair.</summary>
         public const int ComplementaireBonus = 16;
 
         /// <summary>Îlot: flat bonus when the placement's resulting group is a single isolated cell.</summary>

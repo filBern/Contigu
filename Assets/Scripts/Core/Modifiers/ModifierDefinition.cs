@@ -50,7 +50,7 @@ namespace Contigu.Core
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
             ModifierId.Prisme, ModifierCategory.Couleurs, "Prisme",
-            "+20 pts si le groupe compte 4 couleurs distinctes (ou 3 + un joker).");
+            "+20 pts si cette pose touche (elle-même ou ses voisins directs) 4 couleurs distinctes (ou 3 + un joker).");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chaîne",
@@ -82,11 +82,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolore",
-            "+14 pts si le groupe compte exactement 3 couleurs distinctes (jokers exclus).");
+            "+14 pts si cette pose touche (elle-même ou ses voisins directs) exactement 3 couleurs distinctes (jokers exclus).");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complémentaire",
-            "+16 pts si le groupe contient une paire de couleurs complémentaires (Corail/Violet ou Sarcelle/Citron vert).");
+            "+16 pts si cette pose touche (elle-même ou ses voisins directs) une paire de couleurs complémentaires (Corail/Violet ou Sarcelle/Citron vert).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Îlot",
