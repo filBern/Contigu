@@ -207,6 +207,8 @@ namespace Contigu.Presentation
             var placement = outcome.Placement;
             int displayedRoundScore = roundScoreBefore;
             int displayedTotalScore = totalScoreBefore;
+            int comboTotal = 0;
+            _hudView.ShowCombo(0);
 
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -225,7 +227,9 @@ namespace Contigu.Presentation
 
                 displayedRoundScore += scoreEvent.Amount;
                 displayedTotalScore += scoreEvent.Amount;
+                comboTotal += scoreEvent.Amount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+                _hudView.ShowCombo(comboTotal);
 
                 yield return new WaitForSeconds(ScoreEventStaggerSeconds);
             }
@@ -240,7 +244,9 @@ namespace Contigu.Presentation
 
                 displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
                 displayedTotalScore += ScoringConstants.LineClearBonusPerCell;
+                comboTotal += ScoringConstants.LineClearBonusPerCell;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+                _hudView.ShowCombo(comboTotal);
 
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
             }
@@ -323,6 +329,7 @@ namespace Contigu.Presentation
             _gridView.Refresh();
             _handView.Refresh();
             _hudView.Refresh(_run);
+            _hudView.HideCombo();
             _modifierPanelView.Refresh(_run.ActiveModifiers);
         }
     }

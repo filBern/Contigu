@@ -241,20 +241,46 @@ namespace Contigu.Core
                     case ModifierId.Puriste:
                         total += ApplyPuriste(groupCells, placedCells, groupBonus, events);
                         break;
+                    case ModifierId.Tricolore:
+                        total += ApplyTricolore(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Complementaire:
+                        total += ApplyComplementaire(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Ilot:
+                        total += ApplyIlot(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Couronne:
+                        total += ApplyCouronne(groupCells, events);
+                        break;
+                    case ModifierId.TrouDansLaGrille:
+                        total += ApplyTrouDansLaGrille(groupCells, events);
+                        break;
+                    case ModifierId.Carrefour:
+                        total += ApplyCarrefour(groupCells, events);
+                        break;
                 }
             }
             return total;
         }
 
-        /// <summary>Collectionneur needs the cells this placement actually cleared, so it can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
+        /// <summary>Collectionneur/Maçon/Démolisseur all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
         private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                if (activeModifiers[i] == ModifierId.Collectionneur)
+                switch (activeModifiers[i])
                 {
-                    total += ApplyCollectionneur(clearInfo, placedCells, events);
+                    case ModifierId.Collectionneur:
+                        total += ApplyCollectionneur(clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.Macon:
+                        total += ApplyMacon(clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.Demolisseur:
+                        total += ApplyDemolisseur(clearInfo, placedCells, events);
+                        break;
                 }
             }
             return total;
@@ -434,6 +460,171 @@ namespace Contigu.Core
             return bonus;
         }
 
+        private int ApplyTricolore(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var distinctColors = new HashSet<PieceColor>();
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
+                if (color != PieceColor.Joker)
+                {
+                    distinctColors.Add(color);
+                }
+            }
+
+            if (distinctColors.Count != ScoringConstants.TricoloreExactDistinctColors)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.TricoloreBonus));
+            return ScoringConstants.TricoloreBonus;
+        }
+
+        /// <summary>Arbitrary complementary pairing across the 4 base colors — not derived from a color wheel, just a fixed pairing for this modifier.</summary>
+        private static readonly PieceColor[][] ComplementaryPairs =
+        {
+            new[] { PieceColor.Coral, PieceColor.Violet },
+            new[] { PieceColor.Teal, PieceColor.Lime }
+        };
+
+        private int ApplyComplementaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var present = new HashSet<PieceColor>();
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                present.Add(_cells[groupCells[i].x, groupCells[i].y].FilledColor.Value);
+            }
+
+            bool qualifies = false;
+            for (int i = 0; i < ComplementaryPairs.Length; i++)
+            {
+                if (present.Contains(ComplementaryPairs[i][0]) && present.Contains(ComplementaryPairs[i][1]))
+                {
+                    qualifies = true;
+                    break;
+                }
+            }
+
+            if (!qualifies)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.ComplementaireBonus));
+            return ScoringConstants.ComplementaireBonus;
+        }
+
+        private int ApplyIlot(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (groupCells.Count != 1)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.IlotBonus));
+            return ScoringConstants.IlotBonus;
+        }
+
+        private int ApplyCouronne(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (pos.x != 0 && pos.x != Size - 1 && pos.y != 0 && pos.y != Size - 1)
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.CouronneBonusPerCell));
+                total += ScoringConstants.CouronneBonusPerCell;
+            }
+            return total;
+        }
+
+        private int ApplyTrouDansLaGrille(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!IsAdjacentToLockedCell(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.TrouBonusPerCell));
+                total += ScoringConstants.TrouBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool IsAdjacentToLockedCell(int x, int y)
+        {
+            return (InBounds(x - 1, y) && _cells[x - 1, y].IsLocked)
+                || (InBounds(x + 1, y) && _cells[x + 1, y].IsLocked)
+                || (InBounds(x, y - 1) && _cells[x, y - 1].IsLocked)
+                || (InBounds(x, y + 1) && _cells[x, y + 1].IsLocked);
+        }
+
+        private int ApplyCarrefour(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllNeighborsFilled(pos.x, pos.y, includeDiagonals: false))
+                {
+                    continue;
+                }
+                if (!HasAtLeastTwoDistinctCardinalNeighborColors(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.CarrefourBonusPerCell));
+                total += ScoringConstants.CarrefourBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>Assumes all 4 cardinal neighbors are already known filled (see <see cref="AreAllNeighborsFilled"/>), so each has a non-null <see cref="Cell.FilledColor"/>.</summary>
+        private bool HasAtLeastTwoDistinctCardinalNeighborColors(int x, int y)
+        {
+            var colors = new HashSet<PieceColor>
+            {
+                _cells[x - 1, y].FilledColor.Value,
+                _cells[x + 1, y].FilledColor.Value,
+                _cells[x, y - 1].FilledColor.Value,
+                _cells[x, y + 1].FilledColor.Value
+            };
+            return colors.Count >= 2;
+        }
+
+        private int ApplyMacon(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (clearInfo.ClearedCells.Count > 0)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.MaconBonus));
+            return ScoringConstants.MaconBonus;
+        }
+
+        private int ApplyDemolisseur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (clearInfo.ClearedLineCount < ScoringConstants.DemolisseurMinLines)
+            {
+                return 0;
+            }
+
+            int bonus = clearInfo.ClearedLineCount * ScoringConstants.DemolisseurBonusPerLine;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
         /// <summary>
         /// Flood-fills the connected group of filled cells reachable from
         /// <paramref name="start"/> by orthogonal steps where each consecutive
@@ -530,10 +721,14 @@ namespace Contigu.Core
             /// <summary>Each cleared cell's color as it was right before clearing, parallel to <see cref="ClearedCells"/> — the presentation layer needs this to keep rendering a completed line as still-filled while it holds before clearing.</summary>
             public readonly IReadOnlyList<PieceColor> ClearedCellColors;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors)
+            /// <summary>How many individual rows/columns completed simultaneously by this placement (distinct from <see cref="ClearedCells"/>.Count, which is a cell count) — used by Démolisseur.</summary>
+            public readonly int ClearedLineCount;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
+                ClearedLineCount = clearedLineCount;
             }
         }
 
@@ -545,11 +740,13 @@ namespace Contigu.Core
         private ClearInfo CheckAndClearLines()
         {
             var cellsToClear = new HashSet<Vector2Int>();
+            int clearedLineCount = 0;
 
             for (int y = 0; y < Size; y++)
             {
                 if (IsRowComplete(y))
                 {
+                    clearedLineCount++;
                     for (int x = 0; x < Size; x++)
                     {
                         if (!_cells[x, y].IsLocked)
@@ -564,6 +761,7 @@ namespace Contigu.Core
             {
                 if (IsColumnComplete(x))
                 {
+                    clearedLineCount++;
                     for (int y = 0; y < Size; y++)
                     {
                         if (!_cells[x, y].IsLocked)
@@ -585,7 +783,7 @@ namespace Contigu.Core
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors);
+            return new ClearInfo(cleared, clearedColors, clearedLineCount);
         }
 
         private bool IsRowComplete(int y)

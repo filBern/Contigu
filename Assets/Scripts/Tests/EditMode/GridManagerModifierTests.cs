@@ -251,5 +251,212 @@ namespace Contigu.Tests
             }
             Assert.IsTrue(foundModifierEvent);
         }
+
+        [Test]
+        public void Tricolore_FiresOnlyWithExactlyThreeDistinctColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Tricolore };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
+            var withTwoColors = grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+            Assert.AreEqual(0, withTwoColors.ModifierBonus, "Only 2 distinct colors so far");
+
+            grid.PlacePiece(single, PieceColor.Joker, 3, 0, modifiers);
+            var withThreeColors = grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.TricoloreBonus, withThreeColors.ModifierBonus);
+
+            grid.PlacePiece(single, PieceColor.Joker, 5, 0, modifiers);
+            var withFourColors = grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
+            Assert.AreEqual(0, withFourColors.ModifierBonus, "4 distinct colors no longer qualifies — exactly 3 required");
+        }
+
+        [Test]
+        public void Complementaire_FiresWhenGroupContainsAKnownPair()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Complementaire };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.ComplementaireBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Complementaire_DoesNotFire_WithoutAFullPair()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Complementaire };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Ilot_FiresForLoneSingleCellGroup()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Ilot };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            Assert.AreEqual(ScoringConstants.IlotBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Ilot_DoesNotFire_WhenConnectedToAnotherCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Ilot };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Couronne_FiresForBorderCellsOnly()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Couronne };
+
+            var edgeResult = grid.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers);
+            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, edgeResult.ModifierBonus);
+
+            var centerResult = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(0, centerResult.ModifierBonus);
+        }
+
+        [Test]
+        public void TrouDansLaGrille_FiresForCellsAdjacentToALockedCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.TrouDansLaGrille };
+            grid.GetCell(4, 4).IsLocked = true;
+
+            var adjacentResult = grid.PlacePiece(single, PieceColor.Coral, 4, 5, modifiers);
+            Assert.AreEqual(ScoringConstants.TrouBonusPerCell, adjacentResult.ModifierBonus);
+
+            var farResult = grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
+            Assert.AreEqual(0, farResult.ModifierBonus);
+        }
+
+        [Test]
+        public void Carrefour_FiresForCellSurroundedByAtLeastTwoDifferentColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Carrefour };
+
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Lime, 2, 3, modifiers);
+
+            var center = grid.PlacePiece(single, PieceColor.Joker, 2, 2, modifiers);
+
+            Assert.AreEqual(ScoringConstants.CarrefourBonusPerCell, center.ModifierBonus);
+        }
+
+        [Test]
+        public void Carrefour_DoesNotFire_WhenAllFourNeighborsShareTheSameColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Carrefour };
+
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 2, 3, modifiers);
+
+            var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
+
+            Assert.AreEqual(0, center.ModifierBonus);
+        }
+
+        [Test]
+        public void Macon_FiresWhenPlacementClearsNoLine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Macon };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.MaconBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Macon_DoesNotFire_WhenPlacementClearsALine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Macon };
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
+
+            Assert.AreEqual(0, finalResult.ModifierBonus);
+        }
+
+        [Test]
+        public void Demolisseur_FiresWhenTwoLinesClearSimultaneously()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Demolisseur };
+
+            // Leave (0,0) as the only empty cell shared by both row 0 and
+            // column 0, so the final placement completes both simultaneously.
+            for (int x = 1; x < GridManager.Size; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
+            }
+            for (int y = 1; y < GridManager.Size; y++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, 0, y, modifiers);
+            }
+
+            var finalResult = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            // Row 0 (8 cells) + column 0 (8 cells) share exactly 1 cell (0,0),
+            // so 15 distinct cells clear — confirms both lines completed.
+            Assert.AreEqual(2 * GridManager.Size - 1, finalResult.LineClearCellCount);
+            Assert.AreEqual(2 * ScoringConstants.DemolisseurBonusPerLine, finalResult.ModifierBonus);
+        }
+
+        [Test]
+        public void Demolisseur_DoesNotFire_WhenOnlyOneLineClears()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Demolisseur };
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
+
+            Assert.AreEqual(0, finalResult.ModifierBonus);
+        }
     }
 }

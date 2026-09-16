@@ -14,6 +14,14 @@ namespace Contigu.Core
         Prisonnier,
         Architecte,
         Puriste,
-        Collectionneur
+        Collectionneur,
+        Tricolore,
+        Complementaire,
+        Ilot,
+        Couronne,
+        TrouDansLaGrille,
+        Carrefour,
+        Macon,
+        Demolisseur
     }
 }

@@ -53,5 +53,31 @@ namespace Contigu.Core
 
         /// <summary>Collectionneur: bonus per distinct color among this placement's cleared cells.</summary>
         public const int CollectionneurBonusPerColor = 8;
+
+        /// <summary>Tricolore: flat bonus when the group has exactly this many distinct non-joker colors.</summary>
+        public const int TricoloreBonus = 14;
+        public const int TricoloreExactDistinctColors = 3;
+
+        /// <summary>Complémentaire: flat bonus when the group contains both colors of a complementary pair.</summary>
+        public const int ComplementaireBonus = 16;
+
+        /// <summary>Îlot: flat bonus when the placement's resulting group is a single isolated cell.</summary>
+        public const int IlotBonus = 8;
+
+        /// <summary>Couronne: bonus per group cell sitting on the grid's outer border.</summary>
+        public const int CouronneBonusPerCell = 5;
+
+        /// <summary>Trou dans la grille: bonus per group cell orthogonally adjacent to a locked cell.</summary>
+        public const int TrouBonusPerCell = 10;
+
+        /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 different colors.</summary>
+        public const int CarrefourBonusPerCell = 12;
+
+        /// <summary>Maçon: flat bonus for a placement that clears no line/column at all.</summary>
+        public const int MaconBonus = 5;
+
+        /// <summary>Démolisseur: bonus per line, only once at least this many rows/columns clear simultaneously.</summary>
+        public const int DemolisseurBonusPerLine = 15;
+        public const int DemolisseurMinLines = 2;
     }
 }

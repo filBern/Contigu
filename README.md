@@ -96,29 +96,55 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`ModifierPanelView`) et chaque bonus qu'ils déclenchent apparaît comme un
   `ScoreEvent` de type `Modifier` (popup violet) au même titre que les
   bonus de groupe/dorés/lignes.
-  - Catalogue livré dans cette première passe (8 sur la quarantaine d'idées
-    brainstormées) — choisis parce que calculables avec les données déjà
+  - Catalogue livré (16 sur la quarantaine d'idées brainstormées, en deux
+    passes) — choisis parce que calculables avec les données déjà
     disponibles dans `GridManager.PlacePiece` sans refonte plus profonde :
-    **Prisme** (couleurs), **Chaîne** / **Méga-chaîne** (taille de groupe),
-    **Forteresse** / **Prisonnier** (voisinage 8 cases / 4 cases), **Architecte**
-    (pièce 2x2), **Puriste** (groupe monochrome, adaptation au niveau du
-    *groupe* plutôt que de la *ligne* pour éviter une refonte de
-    `CheckAndClearLines`), **Collectionneur** (couleurs distinctes parmi les
-    cases effacées par la pose).
-  - Non livrés dans cette passe (backlog futur) : tout le reste de la liste
-    brainstormée — modificateurs de ligne (Arc-en-ciel, Alternance,
-    Symétrie, Palindrome, Gradient, Sans doublon, Bloc, Monochrome-ligne),
-    modificateurs de voisinage additionnels (Îlot, Cœur de pierre, Cercle
-    chromatique, Couronne, Diagonale verrouillée, Carrefour, Trou dans la
-    grille, Dernier espace), modificateurs de destruction (Overkill,
-    Cascade, Réaction en chaîne, Combo parfait, Croisement, Nettoyage,
-    Récolte), et le reste des idées couleurs/roguelike (Monochrome,
-    Contraste, Dégradé, Tricolore, Chaos coloré, Complémentaire,
-    Emmitouflée, Chromatique, Maçon, Démolisseur, Jardinier).
+    **Prisme** / **Tricolore** / **Complémentaire** (couleurs du groupe),
+    **Chaîne** / **Méga-chaîne** (taille de groupe), **Forteresse** /
+    **Prisonnier** / **Carrefour** (voisinage 8 cases / 4 cases / 4 cases
+    multicolores), **Îlot** (case isolée, l'inverse de Chaîne), **Couronne**
+    (cases en bordure de grille), **Trou dans la grille** (cases adjacentes
+    à une case verrouillée), **Architecte** (pièce 2x2), **Puriste** (groupe
+    monochrome, adaptation au niveau du *groupe* plutôt que de la *ligne*
+    pour éviter une refonte de `CheckAndClearLines`), **Collectionneur**
+    (couleurs distinctes parmi les cases effacées), **Maçon** (pose sans
+    aucune ligne/colonne complétée) et **Démolisseur** (bonus par ligne
+    quand ≥2 lignes/colonnes se complètent en même temps).
+    ⚠️ Quelques noms de la liste originale (Complémentaire, Maçon,
+    Démolisseur) n'avaient qu'un nom + catégorie à implémenter, pas la règle
+    détaillée d'origine — leur condition exacte est donc une interprétation
+    de ce prototype, documentée directement dans `ModifierCatalog`.
+    *Dernier espace* a été remplacé par **Carrefour** : tel que décrit
+    ("remplir complètement la grille"), il est structurellement
+    inatteignable — dès qu'une ligne/colonne se complète elle se vide
+    aussitôt (`CheckAndClearLines`), donc la grille ne peut jamais être
+    100% pleine en jeu normal.
+  - Non livrés (backlog futur) : les modificateurs de ligne (Arc-en-ciel,
+    Alternance, Symétrie, Palindrome, Gradient, Sans doublon, Bloc,
+    Monochrome-ligne — nécessitent une refonte de `CheckAndClearLines` pour
+    exposer la forme d'une ligne avant son clear), les modificateurs de
+    voisinage restants (Cœur de pierre, Cercle chromatique, Diagonale
+    verrouillée, Dernier espace), les modificateurs de destruction restants
+    (Overkill, Cascade, Réaction en chaîne, Combo parfait, Nettoyage,
+    Récolte — nécessitent de suivre un historique de poses/clears d'une
+    manche à l'autre), et le reste des idées couleurs/roguelike (Monochrome,
+    Contraste, Dégradé, Chaos coloré, Emmitouflée, Chromatique, Jardinier).
 - **Positionnement des cases dorées/teintées/multiplicatrices** : choisi
   aléatoirement parmi les cases libres au moment du pick (comme le prototype
   HTML de référence), plutôt que par sélection manuelle du joueur — point
   explicitement laissé ouvert par la spec (section 5.4) et tranché en faveur
   de la version simple pour rester dans le budget de ce prototype.
+- **Nombre de cases affectées par un upgrade de grille : 1 au lieu de
+  3** (dorées et multiplicatrices) **/ 2** (teintées) — nerf explicite,
+  3 cases dorées/multiplicatrices ou 2 teintées d'un coup était bien trop
+  puissant vu que leur bonus se redéclenche à chaque repassage du groupe.
+  `UpgradeSystem.GoldenCellsCount` / `TintedCellsCount` /
+  `MultiplierZoneCount` valent maintenant tous 1.
+- **Combo en cours affiché dans le HUD** : pendant qu'une pose déroule sa
+  cascade de popups (groupe, doré, modificateurs, clears de ligne), un
+  indicateur "Combo: +N" dans la barre du haut (`HudView.ShowCombo`)
+  additionne en direct tous les points de CETTE pose au fur et à mesure
+  qu'ils s'affichent, séparément du score de manche/total — pour que le
+  joueur voie clairement combien un seul coup vient de rapporter.
 - **Nouvelle main** : une main de 3 n'est retirée que lorsque les 3 pièces
   précédentes ont été posées (spec 4.2, comportement du prototype HTML).

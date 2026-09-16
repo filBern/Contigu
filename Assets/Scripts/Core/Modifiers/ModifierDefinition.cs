@@ -6,6 +6,7 @@ namespace Contigu.Core
         Couleurs,
         Voisinage,
         Connexions,
+        Destruction,
         Roguelike
     }
 
@@ -32,13 +33,18 @@ namespace Contigu.Core
     }
 
     /// <summary>
-    /// First batch of modifiers implemented from the much larger brainstorm list
-    /// (Couleurs / Voisinage / Lignes / Connexions / Destruction / "plus
-    /// roguelike"): 8 chosen because each is computable from data already
-    /// flowing through <see cref="GridManager.PlacePiece"/> without a deeper
-    /// refactor (line-level and destruction-streak modifiers need
-    /// <see cref="GridManager"/>'s clear pipeline reworked first and are left as
-    /// a documented future batch — see README).
+    /// Modifiers implemented from the much larger brainstorm list (Couleurs /
+    /// Voisinage / Lignes / Connexions / Destruction / "plus roguelike"): each
+    /// one here is computable from data already flowing through
+    /// <see cref="GridManager.PlacePiece"/> without a deeper refactor
+    /// (line-level modifiers — row/column-shape rules like Alternance,
+    /// Symétrie, Palindrome, Gradient — need <see cref="GridManager"/>'s clear
+    /// pipeline reworked first and are left as a documented future batch — see
+    /// README). Several names below (Complémentaire's exact color pairing,
+    /// Maçon, Démolisseur) had only a name + category to go on when this batch
+    /// was implemented, not the original detailed rule text, so their exact
+    /// trigger condition is this project's best-effort interpretation of the
+    /// theme — documented per-modifier below and in the README.
     /// </summary>
     public static class ModifierCatalog
     {
@@ -74,9 +80,42 @@ namespace Contigu.Core
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collectionneur",
             "+8 pts par couleur distincte parmi les cases effacées par cette pose.");
 
+        public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
+            ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolore",
+            "+14 pts si le groupe compte exactement 3 couleurs distinctes (jokers exclus).");
+
+        public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
+            ModifierId.Complementaire, ModifierCategory.Couleurs, "Complémentaire",
+            "+16 pts si le groupe contient une paire de couleurs complémentaires (Corail/Violet ou Sarcelle/Citron vert).");
+
+        public static readonly ModifierDefinition Ilot = new ModifierDefinition(
+            ModifierId.Ilot, ModifierCategory.Voisinage, "Îlot",
+            "+8 pts si la pose forme un groupe isolé d'une seule case (aucun voisin de couleur compatible).");
+
+        public static readonly ModifierDefinition Couronne = new ModifierDefinition(
+            ModifierId.Couronne, ModifierCategory.Voisinage, "Couronne",
+            "+5 pts par case du groupe située sur le pourtour de la grille (bord).");
+
+        public static readonly ModifierDefinition TrouDansLaGrille = new ModifierDefinition(
+            ModifierId.TrouDansLaGrille, ModifierCategory.Voisinage, "Trou dans la grille",
+            "+10 pts par case du groupe adjacente à une case verrouillée (manche boss).");
+
+        public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
+            ModifierId.Carrefour, ModifierCategory.Voisinage, "Carrefour",
+            "+12 pts par case du groupe encerclée sur ses 4 côtés par au moins 2 couleurs différentes.");
+
+        public static readonly ModifierDefinition Macon = new ModifierDefinition(
+            ModifierId.Macon, ModifierCategory.Destruction, "Maçon",
+            "+5 pts à chaque pose qui ne complète aucune ligne/colonne (bâtir sans détruire).");
+
+        public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
+            ModifierId.Demolisseur, ModifierCategory.Destruction, "Démolisseur",
+            "+15 pts par ligne/colonne complétée simultanément par cette pose, à partir de 2 lignes à la fois.");
+
         public static readonly ModifierDefinition[] All =
         {
-            Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur
+            Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
+            Tricolore, Complementaire, Ilot, Couronne, TrouDansLaGrille, Carrefour, Macon, Demolisseur
         };
 
         public static ModifierDefinition Get(ModifierId id)
