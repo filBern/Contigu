@@ -26,25 +26,45 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Rolls a round-end draft: 3 distinct Bank (tile) options and 3 Grid
-        /// options (the Grid pool only has 3 entries total, so all of them are
-        /// always offered, in a shuffled order) — the player picks one of each.
+        /// Rolls a round-end draft of exactly 3 options: one guaranteed Bank
+        /// pick, one guaranteed Grid pick, one random pick from either pool
+        /// (Bank and Grid mixed together) — the player picks exactly one.
         /// </summary>
         public UpgradeDraft RollDraft()
         {
-            var tileOptions = PickDistinct(UpgradeCatalog.BankPool, 3);
-            var gridOptions = PickDistinct(UpgradeCatalog.GridPool, 3);
-            return new UpgradeDraft(tileOptions, gridOptions);
+            var bankPick = UpgradeCatalog.BankPool[_rng.Next(UpgradeCatalog.BankPool.Length)];
+            var gridPick = UpgradeCatalog.GridPool[_rng.Next(UpgradeCatalog.GridPool.Length)];
+
+            var remainingPool = new List<UpgradeDefinition>();
+            for (int i = 0; i < UpgradeCatalog.All.Length; i++)
+            {
+                var candidate = UpgradeCatalog.All[i];
+                if (candidate != bankPick && candidate != gridPick)
+                {
+                    remainingPool.Add(candidate);
+                }
+            }
+            // Pools never run out, but keep this defensive in case the catalog
+            // ever shrinks to just 2 entries.
+            if (remainingPool.Count == 0)
+            {
+                remainingPool.AddRange(UpgradeCatalog.All);
+            }
+
+            var thirdPick = remainingPool[_rng.Next(remainingPool.Count)];
+
+            return new UpgradeDraft(new[] { bankPick, gridPick, thirdPick });
         }
 
-        private UpgradeDefinition[] PickDistinct(UpgradeDefinition[] pool, int count)
+        /// <summary>Picks up to <paramref name="count"/> distinct entries at random from <paramref name="pool"/>, without replacement.</summary>
+        public static T[] PickDistinct<T>(IReadOnlyList<T> pool, int count, IRandomProvider rng)
         {
-            var remaining = new List<UpgradeDefinition>(pool);
+            var remaining = new List<T>(pool);
             int take = count < remaining.Count ? count : remaining.Count;
-            var result = new UpgradeDefinition[take];
+            var result = new T[take];
             for (int i = 0; i < take; i++)
             {
-                int idx = _rng.Next(remaining.Count);
+                int idx = rng.Next(remaining.Count);
                 result[i] = remaining[idx];
                 remaining.RemoveAt(idx);
             }

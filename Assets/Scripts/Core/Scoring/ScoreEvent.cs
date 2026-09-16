@@ -17,7 +17,10 @@ namespace Contigu.Core
         Golden,
 
         /// <summary>One cell cleared by a completed line/column.</summary>
-        LineClear
+        LineClear,
+
+        /// <summary>A bonus from one of the player's active modifiers (see <see cref="ModifierId"/>).</summary>
+        Modifier
     }
 
     /// <summary>

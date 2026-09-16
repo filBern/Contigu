@@ -57,14 +57,12 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyUpgradesAndAdvance_Fails_WhenNotAwaitingDraft()
+        public void ApplyUpgradeAndAdvance_Fails_WhenNotAwaitingDraft()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             Assert.AreEqual(RunState.InProgress, run.State);
 
-            bool applied = run.ApplyUpgradesAndAdvance(
-                UpgradeCatalog.JokerPiece, default(UpgradeSubChoice),
-                UpgradeCatalog.GoldenCells, default(UpgradeSubChoice));
+            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
 
             Assert.IsFalse(applied);
             Assert.AreEqual(1, run.CurrentRoundNumber);
@@ -124,18 +122,83 @@ namespace Contigu.Tests
             Assert.Greater(run.PiecesRemainingThisRound, 0, "Round should end with budget still remaining once the quota is reached");
 
             var draft = run.RollDraftOptions();
-            Assert.AreEqual(3, draft.TileOptions.Length);
-            Assert.AreEqual(3, draft.GridOptions.Length);
+            Assert.AreEqual(3, draft.Options.Length);
 
-            bool applied = run.ApplyUpgradesAndAdvance(
-                UpgradeCatalog.JokerPiece, default(UpgradeSubChoice),
-                UpgradeCatalog.GoldenCells, default(UpgradeSubChoice));
-
+            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
             Assert.IsTrue(applied);
+            Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
+            Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — a modifier pick is still pending");
+
+            var modifierOptions = run.RollModifierDraftOptions();
+            Assert.AreEqual(3, modifierOptions.Length);
+
+            bool modifierApplied = run.ApplyModifierPick(modifierOptions[0].Id);
+
+            Assert.IsTrue(modifierApplied);
+            Assert.AreEqual(1, run.ActiveModifiers.Count);
+            Assert.AreEqual(modifierOptions[0].Id, run.ActiveModifiers[0]);
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
             Assert.AreEqual(RunConfig.PieceBudgets[1], run.PiecesRemainingThisRound);
             Assert.AreEqual(RunState.InProgress, run.State);
+        }
+
+        [Test]
+        public void ApplyModifierPick_RequiresRemoval_WhenPushingPastTheFiveSlotCap()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            // Every cell golden so each round's quota is reached almost
+            // instantly, regardless of shape/color/adjacency luck — this test
+            // is about the modifier-slot STATE MACHINE, not scoring.
+            foreach (var pos in GridManager.AllPositions())
+            {
+                run.Grid.GetCell(pos).IsGolden = true;
+            }
+
+            for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
+            {
+                PlayRoundToAwaitingDraft(run);
+                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+                Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
+                var options = run.RollModifierDraftOptions();
+                bool applied = run.ApplyModifierPick(options[0].Id);
+                Assert.IsTrue(applied);
+            }
+
+            Assert.AreEqual(RunManager.MaxActiveModifiers, run.ActiveModifiers.Count);
+            Assert.AreEqual(RunState.InProgress, run.State);
+
+            PlayRoundToAwaitingDraft(run);
+            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            var sixthOptions = run.RollModifierDraftOptions();
+            run.ApplyModifierPick(sixthOptions[0].Id);
+
+            Assert.AreEqual(RunState.AwaitingModifierRemoval, run.State);
+            Assert.AreEqual(RunManager.MaxActiveModifiers + 1, run.ActiveModifiers.Count);
+
+            var toRemove = run.ActiveModifiers[0];
+            bool removed = run.RemoveModifierAndAdvance(toRemove);
+
+            Assert.IsTrue(removed);
+            Assert.AreEqual(RunManager.MaxActiveModifiers, run.ActiveModifiers.Count);
+            Assert.AreEqual(RunState.InProgress, run.State);
+        }
+
+        /// <summary>Places pieces from hand until the round's quota is reached (assumes every cell is already golden, as set up by the caller, so this converges quickly).</summary>
+        private static void PlayRoundToAwaitingDraft(RunManager run)
+        {
+            int guard = 0;
+            while (run.State == RunState.InProgress)
+            {
+                var token = run.Deck.Hand[0];
+                var shape = PieceShapeCatalog.Get(token.Shape);
+                var anchor = FindAnyValidAnchor(run.Grid, shape);
+                Assert.IsTrue(anchor.HasValue, "Ran out of room before reaching the quota");
+                run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                guard++;
+                Assert.Less(guard, 100, "Round should reach its quota well within 100 placements given every cell is golden");
+            }
+            Assert.AreEqual(RunState.AwaitingDraft, run.State);
         }
 
         [Test]

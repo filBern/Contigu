@@ -76,15 +76,45 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   changement — ils étaient calibrés pour l'ancien système où une pose isolée
   ne rapportait rien ; à rebalancer après playtesting si les manches
   deviennent trop faciles.
-- **Draft de fin de manche : deux picks indépendants, pas un seul parmi 3** :
-  écart volontaire par rapport à la spec 5.2 initiale (1 choix parmi 3
-  options mixées), sur demande explicite — le joueur obtient désormais
-  systématiquement **1 amélioration de pièce parmi 3** (tirées sans remise
-  du pool Banque, qui en compte 4) **ET 1 amélioration de grille parmi 3**
-  (le pool Grille n'en compte que 3, donc les 3 sont toujours proposées,
-  dans un ordre mélangé) — les deux sont appliquées avant de passer à la
-  manche suivante. `RunManager.ApplyUpgradesAndAdvance` prend les deux choix
-  en un seul appel atomique.
+- **Draft de fin de manche : 1 choix parmi 3, pools Banque/Grille mélangés**
+  (spec 5.2) — un pick de banque et un pick de grille sont garantis dans les
+  3 options offertes (le 3e est tiré au hasard parmi le reste), le joueur en
+  choisit un seul. Une version antérieure de ce prototype avait
+  temporairement scindé ceci en deux picks indépendants (1 pièce + 1
+  grille) ; revenu en arrière sur demande explicite pour laisser la place au
+  système de modificateurs ci-dessous à la place.
+- **Modificateurs persistants ("Joker" façon Balatro)** : extension du même
+  écran de fin de manche, sur demande explicite — juste après avoir choisi
+  son amélioration (pièce/grille), le joueur choisit en plus **1
+  modificateur parmi 3**, tiré sans remise du catalogue (`ModifierCatalog`).
+  Les modificateurs sont permanents pour le reste du run (jusqu'à
+  **5 actifs simultanément** — `RunManager.MaxActiveModifiers`) ; en choisir
+  un 6e force le joueur à en retirer un immédiatement avant que la manche
+  suivante démarre (`RunManager.State` passe par
+  `AwaitingModifierPick` puis, si besoin, `AwaitingModifierRemoval`). Ils
+  sont affichés en permanence dans un panneau à gauche de l'écran
+  (`ModifierPanelView`) et chaque bonus qu'ils déclenchent apparaît comme un
+  `ScoreEvent` de type `Modifier` (popup violet) au même titre que les
+  bonus de groupe/dorés/lignes.
+  - Catalogue livré dans cette première passe (8 sur la quarantaine d'idées
+    brainstormées) — choisis parce que calculables avec les données déjà
+    disponibles dans `GridManager.PlacePiece` sans refonte plus profonde :
+    **Prisme** (couleurs), **Chaîne** / **Méga-chaîne** (taille de groupe),
+    **Forteresse** / **Prisonnier** (voisinage 8 cases / 4 cases), **Architecte**
+    (pièce 2x2), **Puriste** (groupe monochrome, adaptation au niveau du
+    *groupe* plutôt que de la *ligne* pour éviter une refonte de
+    `CheckAndClearLines`), **Collectionneur** (couleurs distinctes parmi les
+    cases effacées par la pose).
+  - Non livrés dans cette passe (backlog futur) : tout le reste de la liste
+    brainstormée — modificateurs de ligne (Arc-en-ciel, Alternance,
+    Symétrie, Palindrome, Gradient, Sans doublon, Bloc, Monochrome-ligne),
+    modificateurs de voisinage additionnels (Îlot, Cœur de pierre, Cercle
+    chromatique, Couronne, Diagonale verrouillée, Carrefour, Trou dans la
+    grille, Dernier espace), modificateurs de destruction (Overkill,
+    Cascade, Réaction en chaîne, Combo parfait, Croisement, Nettoyage,
+    Récolte), et le reste des idées couleurs/roguelike (Monochrome,
+    Contraste, Dégradé, Tricolore, Chaos coloré, Complémentaire,
+    Emmitouflée, Chromatique, Maçon, Démolisseur, Jardinier).
 - **Positionnement des cases dorées/teintées/multiplicatrices** : choisi
   aléatoirement parmi les cases libres au moment du pick (comme le prototype
   HTML de référence), plutôt que par sélection manuelle du joueur — point

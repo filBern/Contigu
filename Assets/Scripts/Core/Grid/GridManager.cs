@@ -115,11 +115,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Places a piece, applying the connected-group bonus, golden bonus, and
-        /// any resulting line/column clears. Assumes the caller already validated
-        /// the placement (or will inspect the returned failure).
+        /// Places a piece, applying the connected-group bonus, golden bonus, any
+        /// active modifier bonuses, and any resulting line/column clears. Assumes
+        /// the caller already validated the placement (or will inspect the
+        /// returned failure).
         /// </summary>
-        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY)
+        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null)
         {
             if (!CanPlace(shape, anchorX, anchorY))
             {
@@ -177,6 +178,12 @@ namespace Contigu.Core
             result.GroupBonus = groupBonus;
             result.GoldenBonus = goldenBonus;
 
+            int modifierBonus = 0;
+            if (activeModifiers != null && activeModifiers.Count > 0)
+            {
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events);
+            }
+
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
             result.ClearedCellColors = clearInfo.ClearedCellColors;
@@ -188,9 +195,243 @@ namespace Contigu.Core
                 events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
             }
 
+            if (activeModifiers != null && activeModifiers.Count > 0)
+            {
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, events);
+            }
+
+            result.ModifierBonus = modifierBonus;
             result.ScoreEvents = events;
 
             return result;
+        }
+
+        /// <summary>
+        /// Modifiers that need the group/placement state as it stood right before
+        /// line clears wipe completed rows/columns (Prisme/Chaîne/Méga-chaîne need
+        /// the group; Forteresse/Prisonnier need neighbor fill state; Architecte
+        /// only needs the shape). Each active modifier is evaluated once per
+        /// occurrence, so holding the same modifier twice stacks its effect.
+        /// </summary>
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < activeModifiers.Count; i++)
+            {
+                switch (activeModifiers[i])
+                {
+                    case ModifierId.Prisme:
+                        total += ApplyPrisme(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Chaine:
+                        total += ApplyChaine(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.MegaChaine:
+                        total += ApplyMegaChaine(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Forteresse:
+                        total += ApplyForteresse(groupCells, events);
+                        break;
+                    case ModifierId.Prisonnier:
+                        total += ApplyPrisonnier(groupCells, events);
+                        break;
+                    case ModifierId.Architecte:
+                        total += ApplyArchitecte(shape, placedCells, events);
+                        break;
+                    case ModifierId.Puriste:
+                        total += ApplyPuriste(groupCells, placedCells, groupBonus, events);
+                        break;
+                }
+            }
+            return total;
+        }
+
+        /// <summary>Collectionneur needs the cells this placement actually cleared, so it can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < activeModifiers.Count; i++)
+            {
+                if (activeModifiers[i] == ModifierId.Collectionneur)
+                {
+                    total += ApplyCollectionneur(clearInfo, placedCells, events);
+                }
+            }
+            return total;
+        }
+
+        private int ApplyPrisme(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var distinctColors = new HashSet<PieceColor>();
+            bool hasJoker = false;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
+                if (color == PieceColor.Joker)
+                {
+                    hasJoker = true;
+                    continue;
+                }
+                distinctColors.Add(color);
+            }
+
+            bool qualifies = distinctColors.Count >= ScoringConstants.PrismeMinDistinctColors
+                || (distinctColors.Count == ScoringConstants.PrismeMinDistinctColors - 1 && hasJoker);
+            if (!qualifies)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.PrismeBonus));
+            return ScoringConstants.PrismeBonus;
+        }
+
+        private int ApplyChaine(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (groupCells.Count < ScoringConstants.ChaineMinGroupSize)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.ChaineBonus));
+            return ScoringConstants.ChaineBonus;
+        }
+
+        private int ApplyMegaChaine(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (groupCells.Count < ScoringConstants.MegaChaineMinGroupSize)
+            {
+                return 0;
+            }
+
+            int extraCells = groupCells.Count - ScoringConstants.MegaChaineMinGroupSize;
+            int bonus = ScoringConstants.MegaChaineBaseBonus + extraCells * ScoringConstants.MegaChaineBonusPerExtraCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        private int ApplyForteresse(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllNeighborsFilled(pos.x, pos.y, includeDiagonals: true))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ForteresseBonusPerCell));
+                total += ScoringConstants.ForteresseBonusPerCell;
+            }
+            return total;
+        }
+
+        private int ApplyPrisonnier(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllNeighborsFilled(pos.x, pos.y, includeDiagonals: false))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.PrisonnierBonusPerCell));
+                total += ScoringConstants.PrisonnierBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>
+        /// True if every one of a cell's neighbors is in-bounds and filled — an
+        /// out-of-bounds neighbor always fails this, so edge/corner cells can
+        /// never qualify for Forteresse/Prisonnier.
+        /// </summary>
+        private bool AreAllNeighborsFilled(int x, int y, bool includeDiagonals)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+                    if (!includeDiagonals && dx != 0 && dy != 0)
+                    {
+                        continue;
+                    }
+
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (!InBounds(nx, ny) || !_cells[nx, ny].IsFilled)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private int ApplyArchitecte(PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (shape.Id != ShapeId.Sq2)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.ArchitecteBonus));
+            return ScoringConstants.ArchitecteBonus;
+        }
+
+        private int ApplyPuriste(List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        {
+            PieceColor? monoColor = null;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
+                if (color == PieceColor.Joker)
+                {
+                    continue;
+                }
+                if (!monoColor.HasValue)
+                {
+                    monoColor = color;
+                }
+                else if (monoColor.Value != color)
+                {
+                    return 0;
+                }
+            }
+
+            int bonus = groupBonus / 2;
+            if (bonus <= 0)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        private int ApplyCollectionneur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (clearInfo.ClearedCellColors.Count == 0)
+            {
+                return 0;
+            }
+
+            var distinctColors = new HashSet<PieceColor>();
+            for (int i = 0; i < clearInfo.ClearedCellColors.Count; i++)
+            {
+                distinctColors.Add(clearInfo.ClearedCellColors[i]);
+            }
+
+            int bonus = distinctColors.Count * ScoringConstants.CollectionneurBonusPerColor;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
         }
 
         /// <summary>

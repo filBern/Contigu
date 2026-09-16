@@ -23,6 +23,8 @@ namespace Contigu.Presentation
         private HandView _handView;
         private HudView _hudView;
         private DraftView _draftView;
+        private ModifierDraftView _modifierDraftView;
+        private ModifierPanelView _modifierPanelView;
         private EndScreenView _endScreenView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -116,6 +118,12 @@ namespace Contigu.Presentation
             _draftView = gameObject.AddComponent<DraftView>();
             _draftView.Build(mainRoot, _run.Deck);
 
+            _modifierDraftView = gameObject.AddComponent<ModifierDraftView>();
+            _modifierDraftView.Build(mainRoot);
+
+            _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
+            _modifierPanelView.Build(mainRoot);
+
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
         }
@@ -124,7 +132,9 @@ namespace Contigu.Presentation
         {
             _gridView.CellClicked += OnCellClicked;
             _handView.SlotSelected += OnHandSlotSelected;
-            _draftView.DraftConfirmed += OnDraftConfirmed;
+            _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
+            _modifierDraftView.ModifierPicked += OnModifierPicked;
+            _modifierDraftView.ModifierRemoved += OnModifierRemoved;
             _endScreenView.RestartRequested += OnRestartRequested;
         }
 
@@ -207,7 +217,9 @@ namespace Contigu.Presentation
                 }
 
                 var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor : UITheme.TextPrimary;
+                Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
+                    : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.Modifier
+                    : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
                 _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
 
@@ -256,9 +268,38 @@ namespace Contigu.Presentation
             }
         }
 
-        private void OnDraftConfirmed(UpgradeDefinition tileUpgrade, UpgradeSubChoice tileSub, UpgradeDefinition gridUpgrade, UpgradeSubChoice gridSub)
+        private void OnUpgradeConfirmed(UpgradeDefinition upgrade, UpgradeSubChoice subChoice)
         {
-            _run.ApplyUpgradesAndAdvance(tileUpgrade, tileSub, gridUpgrade, gridSub);
+            _run.ApplyUpgradeAndAdvance(upgrade, subChoice);
+            // State is now AwaitingModifierPick — refresh so any golden/tinted/
+            // multiplier cells the upgrade just added are visible right away,
+            // then offer the modifier draft next.
+            RefreshAll();
+            var modifierOptions = _run.RollModifierDraftOptions();
+            _modifierDraftView.ShowPick(modifierOptions);
+        }
+
+        private void OnModifierPicked(ModifierId modifierId)
+        {
+            _run.ApplyModifierPick(modifierId);
+            if (_run.State == RunState.AwaitingModifierRemoval)
+            {
+                _modifierPanelView.Refresh(_run.ActiveModifiers);
+                _modifierDraftView.ShowRemoval(_run.ActiveModifiers);
+                return;
+            }
+
+            FinishModifierFlowAndAdvance();
+        }
+
+        private void OnModifierRemoved(ModifierId modifierId)
+        {
+            _run.RemoveModifierAndAdvance(modifierId);
+            FinishModifierFlowAndAdvance();
+        }
+
+        private void FinishModifierFlowAndAdvance()
+        {
             RefreshAll();
             _statusText.text = _run.IsBossRound
                 ? "Manche boss : la grille gelée verrouille 14 cases."
@@ -282,6 +323,7 @@ namespace Contigu.Presentation
             _gridView.Refresh();
             _handView.Refresh();
             _hudView.Refresh(_run);
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
         }
     }
 }

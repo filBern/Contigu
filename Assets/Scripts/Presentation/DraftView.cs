@@ -7,39 +7,28 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Between-round draft overlay: the player picks exactly one Bank (tile)
-    /// upgrade from 3 AND one Grid upgrade from 3 — two independent picks,
-    /// either one first — walking through a sub-choice flow first for upgrades
-    /// that need one (Retirer/Dupliquer/Recolorer a piece type).
+    /// Between-round draft overlay: the player picks exactly one upgrade from 3
+    /// mixed Bank/Grid options (spec 5.2), walking through a sub-choice flow
+    /// first for upgrades that need one (Retirer/Dupliquer/Recolorer a piece
+    /// type).
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
         private const float CardWidth = 200f;
         private const float CardHeight = 210f;
 
-        /// <summary>Fires once both a tile and a grid upgrade have been chosen and resolved.</summary>
-        public event Action<UpgradeDefinition, UpgradeSubChoice, UpgradeDefinition, UpgradeSubChoice> DraftConfirmed;
+        /// <summary>Fires once the upgrade has been chosen and resolved.</summary>
+        public event Action<UpgradeDefinition, UpgradeSubChoice> UpgradeConfirmed;
 
         private DeckManager _deck;
         private RectTransform _root;
 
-        private Text _tileSectionLabel;
-        private RectTransform _tileCardsContainer;
-        private Text _gridSectionLabel;
-        private RectTransform _gridCardsContainer;
+        private Text _sectionLabel;
+        private RectTransform _cardsContainer;
 
         private RectTransform _subChoiceRoot;
 
         private UpgradeDraft _currentDraft;
-        private bool _tileChosen;
-        private UpgradeDefinition _chosenTileUpgrade;
-        private UpgradeSubChoice _chosenTileSubChoice;
-        private bool _gridChosen;
-        private UpgradeDefinition _chosenGridUpgrade;
-        private UpgradeSubChoice _chosenGridSubChoice;
-
-        /// <summary>Whether the in-progress sub-choice flow belongs to the tile pick (vs. the grid pick).</summary>
-        private bool _subChoiceIsForTile;
 
         public RectTransform Build(Transform parent, DeckManager deck)
         {
@@ -56,23 +45,14 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             header.rectTransform.sizeDelta = new Vector2(900f, 40f);
 
-            _tileSectionLabel = UIFactory.CreateText(_root, "TileSectionLabel", "", 18, UITheme.TextPrimary);
-            _tileSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _tileSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _tileSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _tileSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
-            _tileSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
+            _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "Choisissez une amélioration (1 parmi 3)", 18, UITheme.TextPrimary);
+            _sectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _sectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _sectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _sectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
+            _sectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
 
-            _tileCardsContainer = BuildCardRow("TileCards", -115f);
-
-            _gridSectionLabel = UIFactory.CreateText(_root, "GridSectionLabel", "", 18, UITheme.TextPrimary);
-            _gridSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _gridSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _gridSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _gridSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -350f);
-            _gridSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
-
-            _gridCardsContainer = BuildCardRow("GridCards", -385f);
+            _cardsContainer = BuildCardRow("Cards", -115f);
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -107,8 +87,6 @@ namespace Contigu.Presentation
         public void Show(UpgradeDraft draft)
         {
             _currentDraft = draft;
-            _tileChosen = false;
-            _gridChosen = false;
             _root.gameObject.SetActive(true);
             HideSubChoice();
             RebuildCards();
@@ -116,31 +94,11 @@ namespace Contigu.Presentation
 
         private void RebuildCards()
         {
-            ClearChildren(_tileCardsContainer);
-            ClearChildren(_gridCardsContainer);
-
-            _tileCardsContainer.gameObject.SetActive(!_tileChosen);
-            _tileSectionLabel.text = _tileChosen
-                ? "Pièce : " + _chosenTileUpgrade.Name + "  ✓"
-                : "Choisissez une amélioration de pièce (1 parmi 3)";
-            if (!_tileChosen)
+            ClearChildren(_cardsContainer);
+            _sectionLabel.text = "Choisissez une amélioration (1 parmi 3)";
+            for (int i = 0; i < _currentDraft.Options.Length; i++)
             {
-                for (int i = 0; i < _currentDraft.TileOptions.Length; i++)
-                {
-                    BuildCard(_tileCardsContainer, _currentDraft.TileOptions[i], true);
-                }
-            }
-
-            _gridCardsContainer.gameObject.SetActive(!_gridChosen);
-            _gridSectionLabel.text = _gridChosen
-                ? "Grille : " + _chosenGridUpgrade.Name + "  ✓"
-                : "Choisissez une amélioration de grille (1 parmi 3)";
-            if (!_gridChosen)
-            {
-                for (int i = 0; i < _currentDraft.GridOptions.Length; i++)
-                {
-                    BuildCard(_gridCardsContainer, _currentDraft.GridOptions[i], false);
-                }
+                BuildCard(_cardsContainer, _currentDraft.Options[i]);
             }
         }
 
@@ -152,7 +110,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private void BuildCard(RectTransform parent, UpgradeDefinition def, bool isTile)
+        private void BuildCard(RectTransform parent, UpgradeDefinition def)
         {
             var card = UIFactory.CreatePanel(parent, "Card_" + def.Id, UITheme.PanelLight);
             card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
@@ -183,47 +141,27 @@ namespace Contigu.Presentation
             chooseRect.pivot = new Vector2(0.5f, 0f);
             chooseRect.anchoredPosition = new Vector2(0f, 14f);
             chooseRect.sizeDelta = new Vector2(CardWidth - 30f, 38f);
-            chooseBtn.onClick.AddListener(() => OnChooseClicked(def, isTile));
+            chooseBtn.onClick.AddListener(() => OnChooseClicked(def));
         }
 
-        private void OnChooseClicked(UpgradeDefinition def, bool isTile)
+        private void OnChooseClicked(UpgradeDefinition def)
         {
             if (!def.RequiresSubChoice)
             {
-                FinalizeChoice(def, default(UpgradeSubChoice), isTile);
+                FinalizeChoice(def, default(UpgradeSubChoice));
                 return;
             }
-            ShowTypeChoice(def, isTile);
+            ShowTypeChoice(def);
         }
 
-        private void FinalizeChoice(UpgradeDefinition def, UpgradeSubChoice sub, bool isTile)
+        private void FinalizeChoice(UpgradeDefinition def, UpgradeSubChoice sub)
         {
-            if (isTile)
-            {
-                _chosenTileUpgrade = def;
-                _chosenTileSubChoice = sub;
-                _tileChosen = true;
-            }
-            else
-            {
-                _chosenGridUpgrade = def;
-                _chosenGridSubChoice = sub;
-                _gridChosen = true;
-            }
-
             HideSubChoice();
-
-            if (_tileChosen && _gridChosen)
+            _root.gameObject.SetActive(false);
+            if (UpgradeConfirmed != null)
             {
-                _root.gameObject.SetActive(false);
-                if (DraftConfirmed != null)
-                {
-                    DraftConfirmed(_chosenTileUpgrade, _chosenTileSubChoice, _chosenGridUpgrade, _chosenGridSubChoice);
-                }
-                return;
+                UpgradeConfirmed(def, sub);
             }
-
-            RebuildCards();
         }
 
         private void EnsureSubChoiceRoot()
@@ -254,9 +192,8 @@ namespace Contigu.Presentation
             }
         }
 
-        private void ShowTypeChoice(UpgradeDefinition def, bool isTile)
+        private void ShowTypeChoice(UpgradeDefinition def)
         {
-            _subChoiceIsForTile = isTile;
             EnsureSubChoiceRoot();
             ClearSubChoiceChildren();
             _subChoiceRoot.gameObject.SetActive(true);
@@ -312,7 +249,7 @@ namespace Contigu.Presentation
                 ShowColorChoice(def, shape, color);
                 return;
             }
-            FinalizeChoice(def, new UpgradeSubChoice(shape, color), _subChoiceIsForTile);
+            FinalizeChoice(def, new UpgradeSubChoice(shape, color));
         }
 
         private void ShowColorChoice(UpgradeDefinition def, ShapeId shape, PieceColor fromColor)
@@ -354,7 +291,7 @@ namespace Contigu.Presentation
                 var colorBtnLayout = btn.gameObject.AddComponent<LayoutElement>();
                 colorBtnLayout.preferredWidth = 140f;
                 colorBtnLayout.preferredHeight = 60f;
-                btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor), _subChoiceIsForTile));
+                btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
             }
 
             var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Annuler", UITheme.Danger);

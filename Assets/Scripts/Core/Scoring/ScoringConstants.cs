@@ -26,5 +26,32 @@ namespace Contigu.Core
 
         /// <summary>Multiplier applied to a placement's whole group bonus when the group contains a multiplier-zone cell.</summary>
         public const int MultiplierZoneMultiplier = 2;
+
+        // ---- Modifier bonuses (see ModifierCatalog) ----
+
+        /// <summary>Prisme: flat bonus when the group has 4 distinct non-joker colors (or 3 + a joker).</summary>
+        public const int PrismeBonus = 20;
+        public const int PrismeMinDistinctColors = 4;
+
+        /// <summary>Chaîne: flat bonus once the group reaches this many cells.</summary>
+        public const int ChaineBonus = 10;
+        public const int ChaineMinGroupSize = 5;
+
+        /// <summary>Méga-chaîne: base bonus at the size threshold, plus a per-cell bonus for every cell beyond it.</summary>
+        public const int MegaChaineBaseBonus = 30;
+        public const int MegaChaineMinGroupSize = 10;
+        public const int MegaChaineBonusPerExtraCell = 5;
+
+        /// <summary>Forteresse: bonus per group cell whose 8 surrounding neighbors are all filled.</summary>
+        public const int ForteresseBonusPerCell = 6;
+
+        /// <summary>Prisonnier: bonus per group cell whose 4 cardinal neighbors are all filled.</summary>
+        public const int PrisonnierBonusPerCell = 4;
+
+        /// <summary>Architecte: flat bonus for placing a 2x2 square piece.</summary>
+        public const int ArchitecteBonus = 15;
+
+        /// <summary>Collectionneur: bonus per distinct color among this placement's cleared cells.</summary>
+        public const int CollectionneurBonusPerColor = 8;
     }
 }

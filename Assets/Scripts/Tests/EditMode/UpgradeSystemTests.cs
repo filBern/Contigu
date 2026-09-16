@@ -7,39 +7,46 @@ namespace Contigu.Tests
     public class UpgradeSystemTests
     {
         [Test]
-        public void RollDraft_ReturnsThreeDistinctTileOptions_AllFromBankPool()
+        public void RollDraft_ReturnsThreeOptions_WithAtLeastOneBankAndOneGridPick()
         {
             for (int seed = 0; seed < 20; seed++)
             {
                 var system = new UpgradeSystem(new SystemRandomProvider(seed));
                 var draft = system.RollDraft();
 
-                Assert.AreEqual(3, draft.TileOptions.Length);
-                var seen = new HashSet<UpgradeId>();
-                foreach (var option in draft.TileOptions)
+                Assert.AreEqual(3, draft.Options.Length);
+                bool hasBank = false;
+                bool hasGrid = false;
+                foreach (var option in draft.Options)
                 {
-                    Assert.AreEqual(UpgradePool.Bank, option.Pool);
-                    Assert.IsTrue(seen.Add(option.Id), "Tile options should be distinct");
+                    hasBank |= option.Pool == UpgradePool.Bank;
+                    hasGrid |= option.Pool == UpgradePool.Grid;
                 }
+                Assert.IsTrue(hasBank, "Draft should always guarantee at least one Bank option");
+                Assert.IsTrue(hasGrid, "Draft should always guarantee at least one Grid option");
             }
         }
 
         [Test]
-        public void RollDraft_ReturnsAllThreeGridOptions_SincePoolHasExactlyThree()
+        public void PickDistinct_ReturnsAllEntries_WhenCountExceedsPoolSize()
         {
-            for (int seed = 0; seed < 20; seed++)
-            {
-                var system = new UpgradeSystem(new SystemRandomProvider(seed));
-                var draft = system.RollDraft();
+            var pool = new List<int> { 1, 2, 3 };
+            var picked = UpgradeSystem.PickDistinct(pool, 10, new SystemRandomProvider(1));
 
-                Assert.AreEqual(3, draft.GridOptions.Length);
-                var seen = new HashSet<UpgradeId>();
-                foreach (var option in draft.GridOptions)
-                {
-                    Assert.AreEqual(UpgradePool.Grid, option.Pool);
-                    seen.Add(option.Id);
-                }
-                Assert.AreEqual(3, seen.Count, "All 3 distinct grid upgrades should be offered every time");
+            Assert.AreEqual(3, picked.Length);
+            var seen = new HashSet<int>(picked);
+            Assert.AreEqual(3, seen.Count);
+        }
+
+        [Test]
+        public void PickDistinct_ReturnsRequestedCount_WithoutDuplicates()
+        {
+            var pool = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8 };
+            for (int seed = 0; seed < 10; seed++)
+            {
+                var picked = UpgradeSystem.PickDistinct(pool, 3, new SystemRandomProvider(seed));
+                Assert.AreEqual(3, picked.Length);
+                Assert.AreEqual(3, new HashSet<int>(picked).Count);
             }
         }
 

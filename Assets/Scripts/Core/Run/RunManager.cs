@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Contigu.Core
 {
     /// <summary>
@@ -11,9 +13,23 @@ namespace Contigu.Core
     /// </summary>
     public sealed class RunManager
     {
+        /// <summary>Max number of modifiers a player can hold active at once (spec extension — see ModifierCatalog).</summary>
+        public const int MaxActiveModifiers = 5;
+
+        /// <summary>How many modifier options are offered per draft.</summary>
+        public const int ModifierDraftSize = 3;
+
         public GridManager Grid { get; }
         public DeckManager Deck { get; }
         public UpgradeSystem Upgrades { get; }
+
+        private readonly List<ModifierId> _activeModifiers = new List<ModifierId>();
+
+        /// <summary>Modifiers currently held by the player, persisting for the whole run (never reset between rounds).</summary>
+        public IReadOnlyList<ModifierId> ActiveModifiers
+        {
+            get { return _activeModifiers; }
+        }
 
         private readonly IRandomProvider _rng;
 
@@ -94,7 +110,7 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Invalid placement"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            var placement = Grid.PlacePiece(shape, token.Color, x, y);
+            var placement = Grid.PlacePiece(shape, token.Color, x, y, _activeModifiers);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             Deck.PlayFromHand(handIndex);
@@ -143,22 +159,83 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Applies both drafted upgrades (one tile pick, one grid pick) and
-        /// advances to the next round. Only valid while <see cref="State"/> is
+        /// Applies the single drafted upgrade (tile and grid pools mixed
+        /// together, spec 5.2) and moves on to the modifier pick rather than
+        /// advancing the round directly — <see cref="ApplyModifierPick"/> (or
+        /// <see cref="RemoveModifierAndAdvance"/> if the 5-slot cap is exceeded)
+        /// does that. Only valid while <see cref="State"/> is
         /// <see cref="RunState.AwaitingDraft"/>.
         /// </summary>
-        public bool ApplyUpgradesAndAdvance(UpgradeDefinition tileUpgrade, UpgradeSubChoice tileSubChoice, UpgradeDefinition gridUpgrade, UpgradeSubChoice gridSubChoice)
+        public bool ApplyUpgradeAndAdvance(UpgradeDefinition upgrade, UpgradeSubChoice subChoice)
         {
             if (State != RunState.AwaitingDraft)
             {
                 return false;
             }
 
-            bool tileApplied = Upgrades.Apply(tileUpgrade, tileSubChoice, Grid, Deck);
-            bool gridApplied = Upgrades.Apply(gridUpgrade, gridSubChoice, Grid, Deck);
+            bool applied = Upgrades.Apply(upgrade, subChoice, Grid, Deck);
+            State = RunState.AwaitingModifierPick;
+            return applied;
+        }
+
+        /// <summary>Rolls a modifier draft of up to <see cref="ModifierDraftSize"/> distinct options.</summary>
+        public ModifierDefinition[] RollModifierDraftOptions()
+        {
+            return UpgradeSystem.PickDistinct(ModifierCatalog.All, ModifierDraftSize, _rng);
+        }
+
+        /// <summary>
+        /// Adds the picked modifier to the player's active set. If that pushes
+        /// the count past <see cref="MaxActiveModifiers"/>, the round does not
+        /// advance yet — <see cref="State"/> becomes
+        /// <see cref="RunState.AwaitingModifierRemoval"/> and the player must
+        /// call <see cref="RemoveModifierAndAdvance"/> next. Only valid while
+        /// <see cref="State"/> is <see cref="RunState.AwaitingModifierPick"/>.
+        /// </summary>
+        public bool ApplyModifierPick(ModifierId modifierId)
+        {
+            if (State != RunState.AwaitingModifierPick)
+            {
+                return false;
+            }
+
+            _activeModifiers.Add(modifierId);
+            if (_activeModifiers.Count > MaxActiveModifiers)
+            {
+                State = RunState.AwaitingModifierRemoval;
+            }
+            else
+            {
+                AdvanceRound();
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Removes one active modifier (to get back down to the 5-slot cap) and
+        /// advances to the next round. Only valid while <see cref="State"/> is
+        /// <see cref="RunState.AwaitingModifierRemoval"/>.
+        /// </summary>
+        public bool RemoveModifierAndAdvance(ModifierId modifierId)
+        {
+            if (State != RunState.AwaitingModifierRemoval)
+            {
+                return false;
+            }
+
+            if (!_activeModifiers.Remove(modifierId))
+            {
+                return false;
+            }
+
+            AdvanceRound();
+            return true;
+        }
+
+        private void AdvanceRound()
+        {
             CurrentRoundIndex++;
             StartRound();
-            return tileApplied && gridApplied;
         }
     }
 }
