@@ -199,3 +199,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   main (`HandView`), la prévisualisation au survol de la grille et la pose
   réelle (`RunManager.PlacePiece`) utilisent tous la même forme pivotée,
   donc ce qui est affiché correspond exactement à ce qui sera posé.
+- **Interface entièrement en anglais** : sur demande explicite, tout le
+  texte affiché au joueur (HUD, statuts, écrans de draft/modificateurs,
+  écrans de fin, noms de pièces/couleurs dans `VisualDefaults`, noms et
+  descriptions des upgrades/modificateurs dans `UpgradeCatalog`/
+  `ModifierCatalog`) est en anglais. Les commentaires de code, eux, restent
+  tels quels (majoritairement en français, comme le reste de ce document)
+  puisqu'ils ne font pas partie du jeu tel que vu par le joueur. Le popup
+  de score d'un clear de ligne/colonne a aussi perdu son mot indicatif
+  ("+12 ligne" → "+12"), sur demande explicite.

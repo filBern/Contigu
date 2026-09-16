@@ -49,68 +49,68 @@ namespace Contigu.Core
     public static class ModifierCatalog
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
-            ModifierId.Prisme, ModifierCategory.Couleurs, "Prisme",
-            "+20 pts si cette pose touche (elle-même ou ses voisins directs) 4 couleurs distinctes (ou 3 + un joker).");
+            ModifierId.Prisme, ModifierCategory.Couleurs, "Prism",
+            "+20 pts if this placement touches (itself or its direct neighbors) 4 distinct colors (or 3 + a joker).");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
-            ModifierId.Chaine, ModifierCategory.Connexions, "Chaîne",
-            "+10 pts si le groupe connecté compte au moins 5 cases.");
+            ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
+            "+10 pts if the connected group has at least 5 cells.");
 
         public static readonly ModifierDefinition MegaChaine = new ModifierDefinition(
-            ModifierId.MegaChaine, ModifierCategory.Connexions, "Méga-chaîne",
-            "+30 pts si le groupe compte au moins 10 cases, +5 pts par case au-delà.");
+            ModifierId.MegaChaine, ModifierCategory.Connexions, "Mega Chain",
+            "+30 pts if the group has at least 10 cells, +5 pts per cell beyond that.");
 
         public static readonly ModifierDefinition Forteresse = new ModifierDefinition(
-            ModifierId.Forteresse, ModifierCategory.Voisinage, "Forteresse",
-            "+6 pts par case du groupe entièrement entourée (8 voisins remplis).");
+            ModifierId.Forteresse, ModifierCategory.Voisinage, "Fortress",
+            "+6 pts per group cell fully surrounded (8 filled neighbors).");
 
         public static readonly ModifierDefinition Prisonnier = new ModifierDefinition(
-            ModifierId.Prisonnier, ModifierCategory.Voisinage, "Prisonnier",
-            "+4 pts par case du groupe entourée sur ses 4 côtés orthogonaux.");
+            ModifierId.Prisonnier, ModifierCategory.Voisinage, "Prisoner",
+            "+4 pts per group cell surrounded on its 4 orthogonal sides.");
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
-            ModifierId.Architecte, ModifierCategory.Roguelike, "Architecte",
-            "+15 pts à chaque pose d'un bloc carré 2x2.");
+            ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
+            "+15 pts every time a 2x2 square block is placed.");
 
         public static readonly ModifierDefinition Puriste = new ModifierDefinition(
-            ModifierId.Puriste, ModifierCategory.Roguelike, "Puriste",
-            "+50% des points de groupe si TOUT le groupe est de la même couleur (jokers ignorés). Une seule case d'une autre couleur dans le groupe annule le bonus.");
+            ModifierId.Puriste, ModifierCategory.Roguelike, "Purist",
+            "+50% of the group's points if the ENTIRE group is the same color (jokers ignored). A single cell of a different color anywhere in the group cancels the bonus.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
-            ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collectionneur",
-            "Quand cette pose efface au moins une ligne/colonne : +8 pts par couleur différente parmi les cases effacées (0 si rien n'est effacé).");
+            ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
+            "When this placement clears at least one row/column: +8 pts per distinct color among the cleared cells (0 if nothing is cleared).");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
-            ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolore",
-            "+14 pts si cette pose touche (elle-même ou ses voisins directs) exactement 3 couleurs distinctes (jokers exclus).");
+            ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
+            "+14 pts if this placement touches (itself or its direct neighbors) exactly 3 distinct colors (jokers excluded).");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
-            ModifierId.Complementaire, ModifierCategory.Couleurs, "Complémentaire",
-            "+16 pts si cette pose touche (elle-même ou ses voisins directs) une paire de couleurs complémentaires (Corail/Violet ou Sarcelle/Citron vert).");
+            ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
+            "+16 pts if this placement touches (itself or its direct neighbors) a complementary color pair (Coral/Violet or Teal/Lime).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
-            ModifierId.Ilot, ModifierCategory.Voisinage, "Îlot",
-            "+8 pts si la pose forme un groupe isolé d'une seule case (aucun voisin de couleur compatible).");
+            ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
+            "+8 pts if the placement forms an isolated single-cell group (no compatible-colored neighbor).");
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
-            ModifierId.Couronne, ModifierCategory.Voisinage, "Couronne",
-            "+5 pts par case du groupe située sur le pourtour de la grille (bord).");
+            ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
+            "+5 pts per group cell sitting on the grid's outer edge.");
 
         public static readonly ModifierDefinition TrouDansLaGrille = new ModifierDefinition(
-            ModifierId.TrouDansLaGrille, ModifierCategory.Voisinage, "Trou dans la grille",
-            "+10 pts par case du groupe adjacente à une case verrouillée (manche boss).");
+            ModifierId.TrouDansLaGrille, ModifierCategory.Voisinage, "Hole in the Grid",
+            "+10 pts per group cell adjacent to a locked cell (boss round).");
 
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
-            ModifierId.Carrefour, ModifierCategory.Voisinage, "Carrefour",
-            "+12 pts par case du groupe encerclée sur ses 4 côtés par au moins 2 couleurs différentes, elles-mêmes différentes de sa propre couleur.");
+            ModifierId.Carrefour, ModifierCategory.Voisinage, "Crossroads",
+            "+12 pts per group cell surrounded on all 4 sides by at least 2 different colors, themselves different from its own color.");
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
-            ModifierId.Macon, ModifierCategory.Destruction, "Maçon",
-            "+5 pts à chaque pose qui ne complète aucune ligne/colonne (bâtir sans détruire).");
+            ModifierId.Macon, ModifierCategory.Destruction, "Mason",
+            "+5 pts for every placement that completes no row/column (building without destroying).");
 
         public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
-            ModifierId.Demolisseur, ModifierCategory.Destruction, "Démolisseur",
-            "+15 pts par ligne/colonne complétée simultanément par cette pose, à partir de 2 lignes à la fois.");
+            ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
+            "+15 pts per row/column completed simultaneously by this placement, starting at 2 lines at once.");
 
         public static readonly ModifierDefinition[] All =
         {

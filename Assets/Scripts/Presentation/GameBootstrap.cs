@@ -92,7 +92,7 @@ namespace Contigu.Presentation
             hudRect.sizeDelta = new Vector2(0f, 56f);
             hudRect.anchoredPosition = Vector2.zero;
 
-            _statusText = UIFactory.CreateText(mainRoot, "Status", "Sélectionnez une pièce puis cliquez sur la grille.", 16, UITheme.TextMuted);
+            _statusText = UIFactory.CreateText(mainRoot, "Status", "Select a piece, then click the grid.", 16, UITheme.TextMuted);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -159,7 +159,7 @@ namespace Contigu.Presentation
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape);
-            _statusText.text = "Cliquez sur la grille pour poser : " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
+            _statusText.text = "Click the grid to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
         }
 
         private void OnCellClicked(int x, int y)
@@ -176,7 +176,7 @@ namespace Contigu.Presentation
             int handIndex = _handView.SelectedIndex;
             if (handIndex < 0 || handIndex >= _run.Deck.Hand.Count)
             {
-                _statusText.text = "Sélectionnez d'abord une pièce dans la main.";
+                _statusText.text = "Select a piece from your hand first.";
                 return;
             }
 
@@ -186,7 +186,7 @@ namespace Contigu.Presentation
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
-                _statusText.text = "Placement invalide à cet endroit.";
+                _statusText.text = "Invalid placement there.";
                 return;
             }
 
@@ -202,7 +202,7 @@ namespace Contigu.Presentation
             // them up in step with each popup.
             _hudView.Refresh(_run);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota, totalScoreBefore);
-            _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
+            _statusText.text = "Select a piece, then click the grid.";
 
             _isPlayingPlacementSequence = true;
             StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, totalScoreBefore));
@@ -258,7 +258,7 @@ namespace Contigu.Presentation
             {
                 var pos = placement.ClearedCells[i];
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
-                _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell + " ligne", UITheme.Success);
+                _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell, UITheme.Success);
                 _gridView.PulseCell(pos.x, pos.y);
                 _gridView.ClearCellVisual(pos.x, pos.y);
 
@@ -328,8 +328,8 @@ namespace Contigu.Presentation
         {
             RefreshAll();
             _statusText.text = _run.IsBossRound
-                ? "Manche boss : la grille gelée verrouille 14 cases."
-                : "Nouvelle manche : sélectionnez une pièce puis cliquez sur la grille.";
+                ? "Boss round: the frozen grid locks 14 cells."
+                : "New round: select a piece, then click the grid.";
         }
 
         private void OnRestartRequested()
@@ -341,7 +341,7 @@ namespace Contigu.Presentation
             _handView.Rebind(_run.Deck);
             _draftView.Rebind(_run.Deck);
             RefreshAll();
-            _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
+            _statusText.text = "Select a piece, then click the grid.";
         }
 
         private void RefreshAll()

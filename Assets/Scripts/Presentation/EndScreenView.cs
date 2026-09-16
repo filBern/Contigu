@@ -30,7 +30,7 @@ namespace Contigu.Presentation
             _subtitleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _subtitleText.rectTransform.sizeDelta = new Vector2(700f, 50f);
 
-            var restartBtn = UIFactory.CreateButton(_root, "Restart", "Nouveau run", UITheme.ButtonSelected, 18);
+            var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UITheme.ButtonSelected, 18);
             var rect = restartBtn.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.35f);
             rect.anchorMax = new Vector2(0.5f, 0.35f);
@@ -47,17 +47,17 @@ namespace Contigu.Presentation
 
         public void ShowVictory(int totalScore)
         {
-            _titleText.text = "Victoire !";
+            _titleText.text = "Victory!";
             _titleText.color = UITheme.Success;
-            _subtitleText.text = "Run terminé — score total : " + totalScore;
+            _subtitleText.text = "Run complete — total score: " + totalScore;
             _root.gameObject.SetActive(true);
         }
 
         public void ShowDefeat(int roundNumber, int totalScore)
         {
-            _titleText.text = "Défaite — Manche " + roundNumber;
+            _titleText.text = "Defeat — Round " + roundNumber;
             _titleText.color = UITheme.Danger;
-            _subtitleText.text = "Quota non atteint — score total : " + totalScore;
+            _subtitleText.text = "Quota not reached — total score: " + totalScore;
             _root.gameObject.SetActive(true);
         }
 

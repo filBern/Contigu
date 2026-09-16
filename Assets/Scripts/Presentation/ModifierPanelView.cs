@@ -40,7 +40,7 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, 640f);
             _root.anchoredPosition = new Vector2(10f, 0f);
 
-            var header = UIFactory.CreateText(_root, "Header", "Modificateurs", 15, UITheme.Modifier);
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.Modifier);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);

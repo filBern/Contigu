@@ -26,32 +26,32 @@ namespace Contigu.Core
     public static class UpgradeCatalog
     {
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
-            UpgradeId.RemovePiece, UpgradePool.Bank, "Retirer une pièce",
-            "Choisissez un type de pièce du deck ; une copie est retirée définitivement (plancher de 10).", true);
+            UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
+            "Choose a piece type from the deck; one copy is permanently removed (floor of 10).", true);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
-            UpgradeId.DuplicatePiece, UpgradePool.Bank, "Dupliquer une pièce",
-            "Choisissez un type de pièce du deck ; une copie supplémentaire est ajoutée.", true);
+            UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
+            "Choose a piece type from the deck; one extra copy is added.", true);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
-            UpgradeId.JokerPiece, UpgradePool.Bank, "Pièce joker",
-            "Ajoute une pièce (single, joker) au deck.", false);
+            UpgradeId.JokerPiece, UpgradePool.Bank, "Joker piece",
+            "Adds a piece (single, joker) to the deck.", false);
 
         public static readonly UpgradeDefinition RecolorPiece = new UpgradeDefinition(
-            UpgradeId.RecolorPiece, UpgradePool.Bank, "Recolorer une pièce",
-            "Choisissez un type de pièce et une couleur cible ; une copie change de couleur.", true);
+            UpgradeId.RecolorPiece, UpgradePool.Bank, "Recolor a piece",
+            "Choose a piece type and a target color; one copy changes color.", true);
 
         public static readonly UpgradeDefinition GoldenCells = new UpgradeDefinition(
-            UpgradeId.GoldenCells, UpgradePool.Grid, "Cases dorées",
-            "Ajoute 1 cellule dorée (+18 pts fixes à la pose) à la grille.", false);
+            UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
+            "Adds 1 golden cell (+18 flat points on placement) to the grid.", false);
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
-            UpgradeId.TintedCells, UpgradePool.Grid, "Cases teintées",
-            "Ajoute 1 cellule teintée ; poser la bonne couleur double le bonus de groupe de toute la pose.", false);
+            UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
+            "Adds 1 tinted cell; placing the matching color doubles the whole placement's group bonus.", false);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
-            UpgradeId.MultiplierZone, UpgradePool.Grid, "Zone multiplicatrice",
-            "Ajoute 1 cellule qui double le bonus de groupe de toute la pose.", false);
+            UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
+            "Adds 1 cell that doubles the whole placement's group bonus.", false);
 
         public static readonly UpgradeDefinition[] All =
         {

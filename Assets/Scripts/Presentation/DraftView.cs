@@ -38,14 +38,14 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Manche terminée !", 26, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "Round complete!", 26, UITheme.TextPrimary);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             header.rectTransform.sizeDelta = new Vector2(900f, 40f);
 
-            _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "Choisissez une amélioration (1 parmi 3)", 18, UITheme.TextPrimary);
+            _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "Choose an upgrade (1 of 3)", 18, UITheme.TextPrimary);
             _sectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _sectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _sectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -95,7 +95,7 @@ namespace Contigu.Presentation
         private void RebuildCards()
         {
             ClearChildren(_cardsContainer);
-            _sectionLabel.text = "Choisissez une amélioration (1 parmi 3)";
+            _sectionLabel.text = "Choose an upgrade (1 of 3)";
             for (int i = 0; i < _currentDraft.Options.Length; i++)
             {
                 BuildCard(_cardsContainer, _currentDraft.Options[i]);
@@ -134,7 +134,7 @@ namespace Contigu.Presentation
             descLabel.rectTransform.anchoredPosition = new Vector2(0f, -60f);
             descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 100f);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choisir", UITheme.ButtonSelected, 14);
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UITheme.ButtonSelected, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);
@@ -198,7 +198,7 @@ namespace Contigu.Presentation
             ClearSubChoiceChildren();
             _subChoiceRoot.gameObject.SetActive(true);
 
-            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choisissez un type de pièce", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choose a piece type", 22, UITheme.TextPrimary);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -232,7 +232,7 @@ namespace Contigu.Presentation
                 btn.onClick.AddListener(() => OnTypeChosen(def, shape, color));
             }
 
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Annuler", UITheme.Danger);
+            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UITheme.Danger);
             var cancelRect = cancelBtn.GetComponent<RectTransform>();
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
@@ -256,7 +256,7 @@ namespace Contigu.Presentation
         {
             ClearSubChoiceChildren();
 
-            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choisissez la couleur cible", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choose the target color", 22, UITheme.TextPrimary);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -294,7 +294,7 @@ namespace Contigu.Presentation
                 btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
             }
 
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Annuler", UITheme.Danger);
+            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UITheme.Danger);
             var cancelRect = cancelBtn.GetComponent<RectTransform>();
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);

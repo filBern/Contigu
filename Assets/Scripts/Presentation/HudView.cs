@@ -36,8 +36,8 @@ namespace Contigu.Presentation
 
         public void Refresh(RunManager run)
         {
-            _roundText.text = "Manche " + run.CurrentRoundNumber + "/" + RunConfig.RoundCount + (run.IsBossRound ? " (BOSS)" : "");
-            _budgetText.text = "Pièces restantes: " + run.PiecesRemainingThisRound;
+            _roundText.text = "Round " + run.CurrentRoundNumber + "/" + RunConfig.RoundCount + (run.IsBossRound ? " (BOSS)" : "");
+            _budgetText.text = "Pieces remaining: " + run.PiecesRemainingThisRound;
             SetScores(run.RoundScore, run.CurrentQuota, run.TotalScore);
         }
 
@@ -50,8 +50,8 @@ namespace Contigu.Presentation
         public void SetScores(int roundScore, int quota, int totalScore)
         {
             _quotaText.text = "Quota " + roundScore + " / " + quota;
-            _roundScoreText.text = "Score manche: " + roundScore;
-            _totalScoreText.text = "Score total (run): " + totalScore;
+            _roundScoreText.text = "Round score: " + roundScore;
+            _totalScoreText.text = "Total score (run): " + totalScore;
         }
     }
 }

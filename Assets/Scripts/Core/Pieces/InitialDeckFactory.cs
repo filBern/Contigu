@@ -5,7 +5,7 @@ namespace Contigu.Core
     /// <summary>
     /// Builds the starting ~24 token deck (spec 4.5): a reasonably balanced spread
     /// across the 10 shapes and 4 base colors, with no Joker at the start (Joker is
-    /// only obtainable via the "Pièce joker" upgrade).
+    /// only obtainable via the "Joker piece" upgrade).
     /// </summary>
     public static class InitialDeckFactory
     {

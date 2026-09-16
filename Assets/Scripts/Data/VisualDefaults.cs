@@ -23,8 +23,8 @@ namespace Contigu.Data
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
         {
-            { PieceColor.Coral, "Corail" },
-            { PieceColor.Teal, "Sarcelle" },
+            { PieceColor.Coral, "Coral" },
+            { PieceColor.Teal, "Teal" },
             { PieceColor.Violet, "Violet" },
             { PieceColor.Lime, "Lime" },
             { PieceColor.Joker, "Joker" }
@@ -32,16 +32,16 @@ namespace Contigu.Data
 
         private static readonly Dictionary<ShapeId, string> ShapeNames = new Dictionary<ShapeId, string>
         {
-            { ShapeId.Single, "Solo" },
+            { ShapeId.Single, "Single" },
             { ShapeId.DomH, "Domino H" },
             { ShapeId.DomV, "Domino V" },
-            { ShapeId.TriL, "Tri-L" },
-            { ShapeId.TriIH, "Tri-I H" },
-            { ShapeId.TriIV, "Tri-I V" },
-            { ShapeId.Sq2, "Carré" },
-            { ShapeId.LTetro, "Tétro-L" },
-            { ShapeId.TTetro, "Tétro-T" },
-            { ShapeId.STetro, "Tétro-S" }
+            { ShapeId.TriL, "L-Tromino" },
+            { ShapeId.TriIH, "I-Tromino H" },
+            { ShapeId.TriIV, "I-Tromino V" },
+            { ShapeId.Sq2, "Square" },
+            { ShapeId.LTetro, "L-Tetromino" },
+            { ShapeId.TTetro, "T-Tetromino" },
+            { ShapeId.STetro, "S-Tetromino" }
         };
 
         public static Color GetColor(PieceColor color)

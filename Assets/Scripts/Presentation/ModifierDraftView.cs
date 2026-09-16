@@ -73,24 +73,24 @@ namespace Contigu.Presentation
         public void ShowPick(IReadOnlyList<ModifierDefinition> options)
         {
             _isRemovalMode = false;
-            _header.text = "Choisissez un modificateur !";
-            _sectionLabel.text = "1 parmi " + options.Count + " — se combine avec vos modificateurs actifs";
-            RebuildCards(options, "Choisir");
+            _header.text = "Choose a modifier!";
+            _sectionLabel.text = "1 of " + options.Count + " — stacks with your active modifiers";
+            RebuildCards(options, "Choose");
             _root.gameObject.SetActive(true);
         }
 
         public void ShowRemoval(IReadOnlyList<ModifierId> activeModifiers)
         {
             _isRemovalMode = true;
-            _header.text = "Trop de modificateurs !";
-            _sectionLabel.text = "Vous en avez " + activeModifiers.Count + ", maximum " + RunManager.MaxActiveModifiers + " — choisissez-en un à retirer";
+            _header.text = "Too many modifiers!";
+            _sectionLabel.text = "You have " + activeModifiers.Count + ", maximum " + RunManager.MaxActiveModifiers + " — choose one to remove";
 
             var defs = new List<ModifierDefinition>(activeModifiers.Count);
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 defs.Add(ModifierCatalog.Get(activeModifiers[i]));
             }
-            RebuildCards(defs, "Retirer");
+            RebuildCards(defs, "Remove");
             _root.gameObject.SetActive(true);
         }
 
