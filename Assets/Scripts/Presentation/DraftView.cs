@@ -7,50 +7,95 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Between-round draft overlay: shows the 3 offered upgrades (spec 5.2) and,
-    /// for upgrades that need it, walks the player through picking a piece type
-    /// (and target color for Recolorer) before confirming (spec 5.3).
+    /// Between-round draft overlay: the player picks exactly one Bank (tile)
+    /// upgrade from 3 AND one Grid upgrade from 3 — two independent picks,
+    /// either one first — walking through a sub-choice flow first for upgrades
+    /// that need one (Retirer/Dupliquer/Recolorer a piece type).
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
-        public event Action<UpgradeDefinition, UpgradeSubChoice> UpgradeConfirmed;
+        private const float CardWidth = 200f;
+        private const float CardHeight = 210f;
+
+        /// <summary>Fires once both a tile and a grid upgrade have been chosen and resolved.</summary>
+        public event Action<UpgradeDefinition, UpgradeSubChoice, UpgradeDefinition, UpgradeSubChoice> DraftConfirmed;
 
         private DeckManager _deck;
         private RectTransform _root;
-        private RectTransform _cardsContainer;
+
+        private Text _tileSectionLabel;
+        private RectTransform _tileCardsContainer;
+        private Text _gridSectionLabel;
+        private RectTransform _gridCardsContainer;
+
         private RectTransform _subChoiceRoot;
+
+        private UpgradeDraft _currentDraft;
+        private bool _tileChosen;
+        private UpgradeDefinition _chosenTileUpgrade;
+        private UpgradeSubChoice _chosenTileSubChoice;
+        private bool _gridChosen;
+        private UpgradeDefinition _chosenGridUpgrade;
+        private UpgradeSubChoice _chosenGridSubChoice;
+
+        /// <summary>Whether the in-progress sub-choice flow belongs to the tile pick (vs. the grid pick).</summary>
+        private bool _subChoiceIsForTile;
 
         public RectTransform Build(Transform parent, DeckManager deck)
         {
             _deck = deck;
 
-            var overlay = UIFactory.CreatePanel(parent, "DraftOverlay", new Color(0f, 0f, 0f, 0.78f));
+            var overlay = UIFactory.CreatePanel(parent, "DraftOverlay", new Color(0f, 0f, 0f, 0.82f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var title = UIFactory.CreateText(_root, "Title", "Choisissez une amélioration", 28, UITheme.TextPrimary);
-            title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -40f);
-            title.rectTransform.sizeDelta = new Vector2(900f, 50f);
+            var header = UIFactory.CreateText(_root, "Header", "Manche terminée !", 26, UITheme.TextPrimary);
+            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            header.rectTransform.pivot = new Vector2(0.5f, 1f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
+            header.rectTransform.sizeDelta = new Vector2(900f, 40f);
 
-            _cardsContainer = UIFactory.CreateUIObject("Cards", _root);
-            _cardsContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            _cardsContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            _cardsContainer.pivot = new Vector2(0.5f, 0.5f);
-            _cardsContainer.anchoredPosition = Vector2.zero;
-            var hLayout = _cardsContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 24f;
-            hLayout.childAlignment = TextAnchor.MiddleCenter;
-            hLayout.childForceExpandWidth = false;
-            hLayout.childForceExpandHeight = false;
-            var cardsFitter = _cardsContainer.gameObject.AddComponent<ContentSizeFitter>();
-            cardsFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            cardsFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            _tileSectionLabel = UIFactory.CreateText(_root, "TileSectionLabel", "", 18, UITheme.TextPrimary);
+            _tileSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _tileSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _tileSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _tileSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
+            _tileSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
+
+            _tileCardsContainer = BuildCardRow("TileCards", -115f);
+
+            _gridSectionLabel = UIFactory.CreateText(_root, "GridSectionLabel", "", 18, UITheme.TextPrimary);
+            _gridSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _gridSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _gridSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _gridSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -350f);
+            _gridSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
+
+            _gridCardsContainer = BuildCardRow("GridCards", -385f);
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        private RectTransform BuildCardRow(string name, float topOffset)
+        {
+            var container = UIFactory.CreateUIObject(name, _root);
+            container.anchorMin = new Vector2(0.5f, 1f);
+            container.anchorMax = new Vector2(0.5f, 1f);
+            container.pivot = new Vector2(0.5f, 1f);
+            container.anchoredPosition = new Vector2(0f, topOffset);
+
+            var layout = container.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 20f;
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            var fitter = container.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            return container;
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
@@ -61,78 +106,124 @@ namespace Contigu.Presentation
 
         public void Show(UpgradeDraft draft)
         {
+            _currentDraft = draft;
+            _tileChosen = false;
+            _gridChosen = false;
             _root.gameObject.SetActive(true);
             HideSubChoice();
+            RebuildCards();
+        }
 
-            for (int i = _cardsContainer.childCount - 1; i >= 0; i--)
+        private void RebuildCards()
+        {
+            ClearChildren(_tileCardsContainer);
+            ClearChildren(_gridCardsContainer);
+
+            _tileCardsContainer.gameObject.SetActive(!_tileChosen);
+            _tileSectionLabel.text = _tileChosen
+                ? "Pièce : " + _chosenTileUpgrade.Name + "  ✓"
+                : "Choisissez une amélioration de pièce (1 parmi 3)";
+            if (!_tileChosen)
             {
-                Destroy(_cardsContainer.GetChild(i).gameObject);
+                for (int i = 0; i < _currentDraft.TileOptions.Length; i++)
+                {
+                    BuildCard(_tileCardsContainer, _currentDraft.TileOptions[i], true);
+                }
             }
 
-            for (int i = 0; i < draft.Options.Length; i++)
+            _gridCardsContainer.gameObject.SetActive(!_gridChosen);
+            _gridSectionLabel.text = _gridChosen
+                ? "Grille : " + _chosenGridUpgrade.Name + "  ✓"
+                : "Choisissez une amélioration de grille (1 parmi 3)";
+            if (!_gridChosen)
             {
-                BuildCard(draft.Options[i]);
+                for (int i = 0; i < _currentDraft.GridOptions.Length; i++)
+                {
+                    BuildCard(_gridCardsContainer, _currentDraft.GridOptions[i], false);
+                }
             }
         }
 
-        private void BuildCard(UpgradeDefinition def)
+        private static void ClearChildren(RectTransform container)
         {
-            var card = UIFactory.CreatePanel(_cardsContainer, "Card_" + def.Id, UITheme.PanelLight);
-            card.rectTransform.sizeDelta = new Vector2(260f, 320f);
-            // Same fix as HandView slots: pin the size explicitly so the parent
-            // HorizontalLayoutGroup doesn't collapse this plain Image toward zero.
+            for (int i = container.childCount - 1; i >= 0; i--)
+            {
+                Destroy(container.GetChild(i).gameObject);
+            }
+        }
+
+        private void BuildCard(RectTransform parent, UpgradeDefinition def, bool isTile)
+        {
+            var card = UIFactory.CreatePanel(parent, "Card_" + def.Id, UITheme.PanelLight);
+            card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
+            // Plain Image has no ILayoutElement, so pin the size explicitly or
+            // the parent HorizontalLayoutGroup collapses it toward zero.
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = 260f;
-            cardLayout.preferredHeight = 320f;
+            cardLayout.preferredWidth = CardWidth;
+            cardLayout.preferredHeight = CardHeight;
 
-            var poolLabel = UIFactory.CreateText(card.transform, "Pool", def.Pool.ToString(), 13, UITheme.TextMuted);
-            poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.anchoredPosition = new Vector2(0f, -16f);
-            poolLabel.rectTransform.sizeDelta = new Vector2(220f, 24f);
-
-            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 20, UITheme.TextPrimary);
+            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -46f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(230f, 50f);
+            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
+            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 44f);
 
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, UITheme.TextMuted);
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextMuted);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -110f);
-            descLabel.rectTransform.sizeDelta = new Vector2(230f, 130f);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -60f);
+            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 100f);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choisir", UITheme.ButtonSelected);
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choisir", UITheme.ButtonSelected, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);
             chooseRect.pivot = new Vector2(0.5f, 0f);
-            chooseRect.anchoredPosition = new Vector2(0f, 20f);
-            chooseRect.sizeDelta = new Vector2(180f, 44f);
-            chooseBtn.onClick.AddListener(() => OnChooseClicked(def));
+            chooseRect.anchoredPosition = new Vector2(0f, 14f);
+            chooseRect.sizeDelta = new Vector2(CardWidth - 30f, 38f);
+            chooseBtn.onClick.AddListener(() => OnChooseClicked(def, isTile));
         }
 
-        private void OnChooseClicked(UpgradeDefinition def)
+        private void OnChooseClicked(UpgradeDefinition def, bool isTile)
         {
             if (!def.RequiresSubChoice)
             {
-                Confirm(def, default(UpgradeSubChoice));
+                FinalizeChoice(def, default(UpgradeSubChoice), isTile);
                 return;
             }
-            ShowTypeChoice(def);
+            ShowTypeChoice(def, isTile);
         }
 
-        private void Confirm(UpgradeDefinition def, UpgradeSubChoice sub)
+        private void FinalizeChoice(UpgradeDefinition def, UpgradeSubChoice sub, bool isTile)
         {
-            _root.gameObject.SetActive(false);
-            if (UpgradeConfirmed != null)
+            if (isTile)
             {
-                UpgradeConfirmed(def, sub);
+                _chosenTileUpgrade = def;
+                _chosenTileSubChoice = sub;
+                _tileChosen = true;
             }
+            else
+            {
+                _chosenGridUpgrade = def;
+                _chosenGridSubChoice = sub;
+                _gridChosen = true;
+            }
+
+            HideSubChoice();
+
+            if (_tileChosen && _gridChosen)
+            {
+                _root.gameObject.SetActive(false);
+                if (DraftConfirmed != null)
+                {
+                    DraftConfirmed(_chosenTileUpgrade, _chosenTileSubChoice, _chosenGridUpgrade, _chosenGridSubChoice);
+                }
+                return;
+            }
+
+            RebuildCards();
         }
 
         private void EnsureSubChoiceRoot()
@@ -163,8 +254,9 @@ namespace Contigu.Presentation
             }
         }
 
-        private void ShowTypeChoice(UpgradeDefinition def)
+        private void ShowTypeChoice(UpgradeDefinition def, bool isTile)
         {
+            _subChoiceIsForTile = isTile;
             EnsureSubChoiceRoot();
             ClearSubChoiceChildren();
             _subChoiceRoot.gameObject.SetActive(true);
@@ -220,7 +312,7 @@ namespace Contigu.Presentation
                 ShowColorChoice(def, shape, color);
                 return;
             }
-            Confirm(def, new UpgradeSubChoice(shape, color));
+            FinalizeChoice(def, new UpgradeSubChoice(shape, color), _subChoiceIsForTile);
         }
 
         private void ShowColorChoice(UpgradeDefinition def, ShapeId shape, PieceColor fromColor)
@@ -257,12 +349,12 @@ namespace Contigu.Presentation
                 }
                 var btn = UIFactory.CreateButton(listContainer, "Color", VisualDefaults.GetColorName(targetColor), VisualDefaults.GetColor(targetColor), 14);
                 btn.GetComponent<RectTransform>().sizeDelta = new Vector2(140f, 60f);
-                // Same fix as HandView slots/DraftView cards: pin the size so the
-                // parent HorizontalLayoutGroup doesn't collapse this button.
+                // Same fix as elsewhere: pin the size so the parent
+                // HorizontalLayoutGroup doesn't collapse this button.
                 var colorBtnLayout = btn.gameObject.AddComponent<LayoutElement>();
                 colorBtnLayout.preferredWidth = 140f;
                 colorBtnLayout.preferredHeight = 60f;
-                btn.onClick.AddListener(() => Confirm(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
+                btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor), _subChoiceIsForTile));
             }
 
             var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Annuler", UITheme.Danger);

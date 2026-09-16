@@ -145,21 +145,6 @@ namespace Contigu.Core
 
             var events = new List<ScoreEvent>();
 
-            // Golden bonus: a flat bonus per golden cell touched by this
-            // placement, computed independently of the group bonus below and
-            // simply added to the total (never multiplied by group size).
-            int goldenBonus = 0;
-            for (int i = 0; i < placedCells.Count; i++)
-            {
-                var cell = _cells[placedCells[i].x, placedCells[i].y];
-                if (cell.IsGolden)
-                {
-                    goldenBonus += ScoringConstants.GoldenCellBonus;
-                    events.Add(new ScoreEvent(ScoreEventType.Golden, placedCells[i], ScoringConstants.GoldenCellBonus));
-                }
-            }
-            result.GoldenBonus = goldenBonus;
-
             // Group bonus: the whole connected same-color group this placement
             // touches is rescored in full — every cell in the merged group
             // contributes again, not just the newly placed ones, like replaying
@@ -170,12 +155,27 @@ namespace Contigu.Core
             int groupMultiplier = ComputeGroupMultiplier(groupCells);
             int perCellGroupScore = ScoringConstants.GroupBonusPerCell * groupMultiplier;
             int groupBonus = 0;
+            int goldenBonus = 0;
+
             for (int i = 0; i < groupCells.Count; i++)
             {
                 events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], perCellGroupScore));
                 groupBonus += perCellGroupScore;
+
+                // Golden fires every time the cell is part of a scored group —
+                // not just when it was originally placed — since re-touching a
+                // group rescores every cell in it, golden included. Still a flat
+                // bonus, independent of group size or the group multiplier.
+                var cell = _cells[groupCells[i].x, groupCells[i].y];
+                if (cell.IsGolden)
+                {
+                    goldenBonus += ScoringConstants.GoldenCellBonus;
+                    events.Add(new ScoreEvent(ScoreEventType.Golden, groupCells[i], ScoringConstants.GoldenCellBonus));
+                }
             }
+
             result.GroupBonus = groupBonus;
+            result.GoldenBonus = goldenBonus;
 
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
@@ -251,14 +251,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Whole-group multiplier from spec-style tinted/multiplier-zone cells:
-        /// presence anywhere in the group is enough (not per-occurrence), the two
-        /// factors stack (max x4), matching the original per-cell rule extended
-        /// to the whole group instead of a single cell.
+        /// Whole-group multiplier from tinted/multiplier-zone cells. Each
+        /// matching tinted cell in the group stacks its own x2 (two tinted
+        /// cells in the same combo combine to x4, three to x8, ...); a
+        /// multiplier-zone cell only needs to be present once (not per-
+        /// occurrence) for its own x2. Both kinds of factor multiply together.
         /// </summary>
         private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {
-            bool tintedMatch = false;
+            int multiplier = 1;
             bool multiplierZone = false;
 
             for (int i = 0; i < groupCells.Count; i++)
@@ -266,7 +267,7 @@ namespace Contigu.Core
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
                 if (cell.IsTinted && cell.FilledColor.HasValue && cell.FilledColor.Value == cell.TintedColor)
                 {
-                    tintedMatch = true;
+                    multiplier *= ScoringConstants.TintedMatchMultiplier;
                 }
                 if (cell.IsMultiplierZone)
                 {
@@ -274,11 +275,6 @@ namespace Contigu.Core
                 }
             }
 
-            int multiplier = 1;
-            if (tintedMatch)
-            {
-                multiplier *= ScoringConstants.TintedMatchMultiplier;
-            }
             if (multiplierZone)
             {
                 multiplier *= ScoringConstants.MultiplierZoneMultiplier;

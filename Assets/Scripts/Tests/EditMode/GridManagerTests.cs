@@ -167,6 +167,64 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_GoldenCell_FiresAgainEveryTimeItsGroupIsRescored()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.GetCell(0, 0).IsGolden = true;
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(ScoringConstants.GoldenCellBonus, first.GoldenBonus);
+
+            // Connecting a new same-color cell grows the group and rescores it
+            // in full — the golden cell is part of that group, so it fires
+            // again, not just on its own original placement.
+            var second = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+            Assert.AreEqual(ScoringConstants.GoldenCellBonus, second.GoldenBonus);
+
+            var third = grid.PlacePiece(single, PieceColor.Coral, 2, 0);
+            Assert.AreEqual(ScoringConstants.GoldenCellBonus, third.GoldenBonus);
+        }
+
+        [Test]
+        public void PlacePiece_GoldenCell_DoesNotFire_WhenUnrelatedPlacementElsewhere()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.GetCell(0, 0).IsGolden = true;
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            // Different color, not adjacent to the golden cell's group at all.
+            var elsewhere = grid.PlacePiece(single, PieceColor.Teal, 5, 5);
+
+            Assert.AreEqual(0, elsewhere.GoldenBonus);
+        }
+
+        [Test]
+        public void PlacePiece_TwoTintedCellsInSameGroup_CombineMultiplicatively()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var tintedA = grid.GetCell(0, 0);
+            tintedA.IsTinted = true;
+            tintedA.TintedColor = PieceColor.Coral;
+            var tintedB = grid.GetCell(2, 0);
+            tintedB.IsTinted = true;
+            tintedB.TintedColor = PieceColor.Coral;
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 2, 0);
+
+            // Placing the connecting middle cell merges all 3 into one group
+            // containing BOTH matching tinted cells — their x2 factors stack
+            // (x4), not just one flat x2.
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.GroupBonus);
+        }
+
+        [Test]
         public void PlacePiece_GroupContainingTintedMatch_DoublesWholeGroupBonus()
         {
             var grid = new GridManager();

@@ -1,16 +1,19 @@
 namespace Contigu.Core
 {
     /// <summary>
-    /// A single draft offer of exactly 3 options: one guaranteed Bank pick, one
-    /// guaranteed Grid pick, one random pick from either pool (spec 5.2).
+    /// A round-end draft offer: 3 distinct Bank (tile) options and 3 Grid
+    /// options, presented independently — the player picks exactly one from
+    /// each, ending up with two permanent upgrades per round cleared.
     /// </summary>
     public sealed class UpgradeDraft
     {
-        public readonly UpgradeDefinition[] Options;
+        public readonly UpgradeDefinition[] TileOptions;
+        public readonly UpgradeDefinition[] GridOptions;
 
-        public UpgradeDraft(UpgradeDefinition[] options)
+        public UpgradeDraft(UpgradeDefinition[] tileOptions, UpgradeDefinition[] gridOptions)
         {
-            Options = options;
+            TileOptions = tileOptions;
+            GridOptions = gridOptions;
         }
     }
 }

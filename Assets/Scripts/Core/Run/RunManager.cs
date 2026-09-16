@@ -143,20 +143,22 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Applies the drafted upgrade and advances to the next round. Only valid
-        /// while <see cref="State"/> is <see cref="RunState.AwaitingDraft"/>.
+        /// Applies both drafted upgrades (one tile pick, one grid pick) and
+        /// advances to the next round. Only valid while <see cref="State"/> is
+        /// <see cref="RunState.AwaitingDraft"/>.
         /// </summary>
-        public bool ApplyUpgradeAndAdvance(UpgradeDefinition upgrade, UpgradeSubChoice subChoice)
+        public bool ApplyUpgradesAndAdvance(UpgradeDefinition tileUpgrade, UpgradeSubChoice tileSubChoice, UpgradeDefinition gridUpgrade, UpgradeSubChoice gridSubChoice)
         {
             if (State != RunState.AwaitingDraft)
             {
                 return false;
             }
 
-            bool applied = Upgrades.Apply(upgrade, subChoice, Grid, Deck);
+            bool tileApplied = Upgrades.Apply(tileUpgrade, tileSubChoice, Grid, Deck);
+            bool gridApplied = Upgrades.Apply(gridUpgrade, gridSubChoice, Grid, Deck);
             CurrentRoundIndex++;
             StartRound();
-            return applied;
+            return tileApplied && gridApplied;
         }
     }
 }

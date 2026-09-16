@@ -59,16 +59,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   nouvellement posées. Poser un carré de 4 cases seul rapporte donc 4 pts ;
   y coller ensuite un autre bloc qui porte le groupe à 8 cases rapporte 8 pts
   *pour cette seconde pose* (le groupe entier est "rejoué", comme on
-  rescore un mot entier au Scrabble en l'allongeant). Si le groupe contient une
-  case teintée qui matche ou une zone multiplicatrice, le multiplicateur
-  (cumulable ×4) s'applique à tout le groupe, pas juste à cette case — même
-  logique que les cases bonus au Scrabble qui valorisent tout le mot. La case
-  dorée reste un bonus fixe (+18) indépendant, calculé à part et simplement
-  additionné (jamais multiplié par le groupe). Couvert par des tests.
+  rescore un mot entier au Scrabble en l'allongeant).
+  - **Cases teintées** : chaque case teintée dont la couleur matche, présente
+    n'importe où dans le groupe, contribue son propre ×2 — deux cases
+    teintées dans le même combo se combinent en ×4, trois en ×8, etc. Une
+    zone multiplicatrice reste elle basée sur la présence (une seule case
+    suffit pour son ×2, peu importe combien il y en a dans le groupe), et se
+    multiplie avec le facteur teinté.
+  - **Case dorée** : bonus fixe (+18) indépendant, calculé à part et
+    simplement additionné (jamais multiplié par le groupe). Elle se
+    redéclenche à chaque fois que son groupe est recompté (pas seulement à
+    la pose initiale) — puisque tout le groupe est rejoué à chaque
+    extension, la case dorée qui en fait partie l'est aussi.
+  Couvert par des tests.
   ⚠️ Les quotas des manches (300→2500) n'ont pas été retouchés depuis ce
   changement — ils étaient calibrés pour l'ancien système où une pose isolée
   ne rapportait rien ; à rebalancer après playtesting si les manches
   deviennent trop faciles.
+- **Draft de fin de manche : deux picks indépendants, pas un seul parmi 3** :
+  écart volontaire par rapport à la spec 5.2 initiale (1 choix parmi 3
+  options mixées), sur demande explicite — le joueur obtient désormais
+  systématiquement **1 amélioration de pièce parmi 3** (tirées sans remise
+  du pool Banque, qui en compte 4) **ET 1 amélioration de grille parmi 3**
+  (le pool Grille n'en compte que 3, donc les 3 sont toujours proposées,
+  dans un ordre mélangé) — les deux sont appliquées avant de passer à la
+  manche suivante. `RunManager.ApplyUpgradesAndAdvance` prend les deux choix
+  en un seul appel atomique.
 - **Positionnement des cases dorées/teintées/multiplicatrices** : choisi
   aléatoirement parmi les cases libres au moment du pick (comme le prototype
   HTML de référence), plutôt que par sélection manuelle du joueur — point

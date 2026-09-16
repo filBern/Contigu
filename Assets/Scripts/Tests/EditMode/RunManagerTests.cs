@@ -57,12 +57,14 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyUpgradeAndAdvance_Fails_WhenNotAwaitingDraft()
+        public void ApplyUpgradesAndAdvance_Fails_WhenNotAwaitingDraft()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             Assert.AreEqual(RunState.InProgress, run.State);
 
-            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            bool applied = run.ApplyUpgradesAndAdvance(
+                UpgradeCatalog.JokerPiece, default(UpgradeSubChoice),
+                UpgradeCatalog.GoldenCells, default(UpgradeSubChoice));
 
             Assert.IsFalse(applied);
             Assert.AreEqual(1, run.CurrentRoundNumber);
@@ -122,9 +124,12 @@ namespace Contigu.Tests
             Assert.Greater(run.PiecesRemainingThisRound, 0, "Round should end with budget still remaining once the quota is reached");
 
             var draft = run.RollDraftOptions();
-            Assert.AreEqual(3, draft.Options.Length);
+            Assert.AreEqual(3, draft.TileOptions.Length);
+            Assert.AreEqual(3, draft.GridOptions.Length);
 
-            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            bool applied = run.ApplyUpgradesAndAdvance(
+                UpgradeCatalog.JokerPiece, default(UpgradeSubChoice),
+                UpgradeCatalog.GoldenCells, default(UpgradeSubChoice));
 
             Assert.IsTrue(applied);
             Assert.AreEqual(2, run.CurrentRoundNumber);

@@ -5,7 +5,7 @@ namespace Contigu.Core
     /// <summary>
     /// Rolls draft offers and applies the chosen upgrade's effect. Pools never get
     /// exhausted: the same upgrade can be offered/picked multiple times in a run,
-    /// stacking its effect (spec 5.2).
+    /// stacking its effect.
     /// </summary>
     public sealed class UpgradeSystem
     {
@@ -25,30 +25,30 @@ namespace Contigu.Core
             _rng = rng;
         }
 
+        /// <summary>
+        /// Rolls a round-end draft: 3 distinct Bank (tile) options and 3 Grid
+        /// options (the Grid pool only has 3 entries total, so all of them are
+        /// always offered, in a shuffled order) — the player picks one of each.
+        /// </summary>
         public UpgradeDraft RollDraft()
         {
-            var bankPick = UpgradeCatalog.BankPool[_rng.Next(UpgradeCatalog.BankPool.Length)];
-            var gridPick = UpgradeCatalog.GridPool[_rng.Next(UpgradeCatalog.GridPool.Length)];
+            var tileOptions = PickDistinct(UpgradeCatalog.BankPool, 3);
+            var gridOptions = PickDistinct(UpgradeCatalog.GridPool, 3);
+            return new UpgradeDraft(tileOptions, gridOptions);
+        }
 
-            var remainingPool = new List<UpgradeDefinition>();
-            for (int i = 0; i < UpgradeCatalog.All.Length; i++)
+        private UpgradeDefinition[] PickDistinct(UpgradeDefinition[] pool, int count)
+        {
+            var remaining = new List<UpgradeDefinition>(pool);
+            int take = count < remaining.Count ? count : remaining.Count;
+            var result = new UpgradeDefinition[take];
+            for (int i = 0; i < take; i++)
             {
-                var candidate = UpgradeCatalog.All[i];
-                if (candidate != bankPick && candidate != gridPick)
-                {
-                    remainingPool.Add(candidate);
-                }
+                int idx = _rng.Next(remaining.Count);
+                result[i] = remaining[idx];
+                remaining.RemoveAt(idx);
             }
-            // Pools never run out, but keep this defensive in case the catalog
-            // ever shrinks to just 2 entries.
-            if (remainingPool.Count == 0)
-            {
-                remainingPool.AddRange(UpgradeCatalog.All);
-            }
-
-            var thirdPick = remainingPool[_rng.Next(remainingPool.Count)];
-
-            return new UpgradeDraft(new[] { bankPick, gridPick, thirdPick });
+            return result;
         }
 
         /// <summary>

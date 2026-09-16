@@ -7,31 +7,39 @@ namespace Contigu.Tests
     public class UpgradeSystemTests
     {
         [Test]
-        public void RollDraft_AlwaysReturnsThreeOptions_WithGuaranteedBankAndGridSlots()
+        public void RollDraft_ReturnsThreeDistinctTileOptions_AllFromBankPool()
         {
             for (int seed = 0; seed < 20; seed++)
             {
                 var system = new UpgradeSystem(new SystemRandomProvider(seed));
                 var draft = system.RollDraft();
 
-                Assert.AreEqual(3, draft.Options.Length);
-                Assert.AreEqual(UpgradePool.Bank, draft.Options[0].Pool);
-                Assert.AreEqual(UpgradePool.Grid, draft.Options[1].Pool);
+                Assert.AreEqual(3, draft.TileOptions.Length);
+                var seen = new HashSet<UpgradeId>();
+                foreach (var option in draft.TileOptions)
+                {
+                    Assert.AreEqual(UpgradePool.Bank, option.Pool);
+                    Assert.IsTrue(seen.Add(option.Id), "Tile options should be distinct");
+                }
             }
         }
 
         [Test]
-        public void RollDraft_ThirdOptionIsNeverADuplicateOfTheFirstTwo()
+        public void RollDraft_ReturnsAllThreeGridOptions_SincePoolHasExactlyThree()
         {
-            // The catalog always has more than 2 entries, so the exclusion pool is
-            // never empty and the guarantee (spec 5.2) should hold every time.
-            for (int seed = 0; seed < 50; seed++)
+            for (int seed = 0; seed < 20; seed++)
             {
                 var system = new UpgradeSystem(new SystemRandomProvider(seed));
                 var draft = system.RollDraft();
 
-                Assert.AreNotSame(draft.Options[0], draft.Options[2]);
-                Assert.AreNotSame(draft.Options[1], draft.Options[2]);
+                Assert.AreEqual(3, draft.GridOptions.Length);
+                var seen = new HashSet<UpgradeId>();
+                foreach (var option in draft.GridOptions)
+                {
+                    Assert.AreEqual(UpgradePool.Grid, option.Pool);
+                    seen.Add(option.Id);
+                }
+                Assert.AreEqual(3, seen.Count, "All 3 distinct grid upgrades should be offered every time");
             }
         }
 

@@ -124,7 +124,7 @@ namespace Contigu.Presentation
         {
             _gridView.CellClicked += OnCellClicked;
             _handView.SlotSelected += OnHandSlotSelected;
-            _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
+            _draftView.DraftConfirmed += OnDraftConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
         }
 
@@ -256,9 +256,9 @@ namespace Contigu.Presentation
             }
         }
 
-        private void OnUpgradeConfirmed(UpgradeDefinition def, UpgradeSubChoice sub)
+        private void OnDraftConfirmed(UpgradeDefinition tileUpgrade, UpgradeSubChoice tileSub, UpgradeDefinition gridUpgrade, UpgradeSubChoice gridSub)
         {
-            _run.ApplyUpgradeAndAdvance(def, sub);
+            _run.ApplyUpgradesAndAdvance(tileUpgrade, tileSub, gridUpgrade, gridSub);
             RefreshAll();
             _statusText.text = _run.IsBossRound
                 ? "Manche boss : la grille gelée verrouille 14 cases."
