@@ -208,3 +208,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   puisqu'ils ne font pas partie du jeu tel que vu par le joueur. Le popup
   de score d'un clear de ligne/colonne a aussi perdu son mot indicatif
   ("+12 ligne" → "+12"), sur demande explicite.
+- **Palette v1 (8 couleurs fournies)** : `#372e4d` `#5f699c` `#65aed6`
+  `#a4ebcc` `#effae6` `#f0b38d` `#b56d7f` `#614363`, appliquée à
+  `UITheme` (chrome) et `VisualDefaults` (pièces/grille). Avec 8 couleurs
+  pour ~20 rôles UI, plusieurs rôles réutilisent délibérément le même hex
+  — sans risque là où les deux rôles ne se superposent jamais directement
+  (ex. le fond d'un bouton et une tuile de pièce). Deux décisions à noter :
+  - `TextMuted` réutilise le hex de `TextPrimary` (`#effae6`) réduit à
+    68% d'alpha plutôt qu'un hex distinct — un hex plat pour "muted"
+    serait tombé exactement sur `PanelLight`/`ButtonIdle` (`#5f699c`),
+    rendant le texte secondaire invisible sur une carte ou un bouton de
+    cette couleur.
+  - Les 4 couleurs de pièces prennent les 4 teintes les plus saturées de
+    la palette (une chacune) ; Joker prend la teinte moyenne restante
+    (`#5f699c`) pour un rendu délibérément plus sobre, cohérent avec son
+    rôle de "wildcard" face aux 4 couleurs vives.
