@@ -26,6 +26,7 @@ namespace Contigu.Presentation
         private DraftView _draftView;
         private ModifierDraftView _modifierDraftView;
         private ModifierPanelView _modifierPanelView;
+        private TooltipView _tooltipView;
         private EndScreenView _endScreenView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -133,11 +134,14 @@ namespace Contigu.Presentation
             _draftView = gameObject.AddComponent<DraftView>();
             _draftView.Build(mainRoot, _run.Deck);
 
+            _tooltipView = gameObject.AddComponent<TooltipView>();
+            _tooltipView.Build(mainRoot);
+
             _modifierDraftView = gameObject.AddComponent<ModifierDraftView>();
-            _modifierDraftView.Build(mainRoot);
+            _modifierDraftView.Build(mainRoot, _tooltipView);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
-            _modifierPanelView.Build(mainRoot);
+            _modifierPanelView.Build(mainRoot, _tooltipView);
 
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);

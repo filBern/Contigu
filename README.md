@@ -238,3 +238,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `Assets/Sprites/`) car toute l'UI de ce projet est construite par code
   sans référence d'asset câblée dans l'éditeur — `Resources.Load<Sprite>`
   au runtime est donc le seul point d'accroche disponible.
+- **Cartes/panneau de modificateurs : texte remplacé par un badge +
+  tooltip au survol** : le nom/la description en texte plein sur les
+  cartes de draft et le panneau latéral restaient peu lisibles même après
+  contours + fonds redéfinis (voir plus haut) — `UITheme.Modifier`
+  (`#b56d7f`) et `UITheme.PanelLight` (`#5f699c`) restent trop proches en
+  luminosité pour être vraiment nets ensemble, contour ou pas. À la
+  place : chaque modificateur montre un badge carré coloré par
+  `ModifierCategory` (Couleurs/Voisinage/Connexions/Destruction/
+  Roguelike, chacune une couleur de la palette v1) avec une abréviation à
+  2 lettres (ex. `PR` pour Prism, `MC` pour Mega Chain — voir
+  `ModifierVisualDefaults`), et le nom + la description complète
+  n'apparaissent que dans un tooltip flottant (`TooltipView`, un seul
+  instancié par `GameBootstrap` et partagé par toutes les cartes/lignes)
+  au survol du badge (`ModifierBadgeView`, `IPointerEnterHandler`/
+  `IPointerExitHandler`). Aucun art par-modificateur n'existe encore —
+  `ModifierVisualDefaults` documente comment un futur sprite par icône
+  s'insérerait au même endroit que l'abréviation, sur le même principe de
+  repli que `VisualDefaults.GetColorIcon` (Coral) plus haut.

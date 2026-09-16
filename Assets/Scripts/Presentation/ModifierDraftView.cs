@@ -17,6 +17,7 @@ namespace Contigu.Presentation
     {
         private const float CardWidth = 200f;
         private const float CardHeight = 210f;
+        private const float BadgeSize = 130f;
 
         /// <summary>Fires when the player picks one of the 3 drafted modifiers.</summary>
         public event Action<ModifierId> ModifierPicked;
@@ -28,11 +29,13 @@ namespace Contigu.Presentation
         private Text _header;
         private Text _sectionLabel;
         private RectTransform _cardsContainer;
+        private TooltipView _tooltip;
 
         private bool _isRemovalMode;
 
-        public RectTransform Build(Transform parent)
+        public RectTransform Build(Transform parent, TooltipView tooltip)
         {
+            _tooltip = tooltip;
             var overlay = UIFactory.CreatePanel(parent, "ModifierDraftOverlay", new Color(0f, 0f, 0f, 0.82f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
@@ -129,22 +132,11 @@ namespace Contigu.Presentation
             cardOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             cardOutline.effectDistance = new Vector2(2f, -2f);
 
-            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
-            nameLabel.fontStyle = FontStyle.Bold;
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 44f);
-            AddTextOutline(nameLabel);
-
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextPrimary);
-            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -60f);
-            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 100f);
-            AddTextOutline(descLabel);
+            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip);
+            badge.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            badge.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            badge.rectTransform.pivot = new Vector2(0.5f, 1f);
+            badge.rectTransform.anchoredPosition = new Vector2(0f, -15f);
 
             var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", buttonLabel, UITheme.ButtonSelected, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();

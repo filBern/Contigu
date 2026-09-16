@@ -23,15 +23,17 @@ namespace Contigu.Presentation
 
         private RectTransform _root;
         private RectTransform _rowsContainer;
+        private TooltipView _tooltip;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
         // lets Pulse(id) find every row currently showing that modifier (there
         // can be more than one if the player holds duplicates).
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
-        private readonly List<Text> _rowNameLabels = new List<Text>();
+        private readonly List<Image> _rowBadges = new List<Image>();
 
-        public RectTransform Build(Transform parent)
+        public RectTransform Build(Transform parent, TooltipView tooltip)
         {
+            _tooltip = tooltip;
             var panel = UIFactory.CreatePanel(parent, "ModifierPanel", UITheme.Panel);
             _root = panel.rectTransform;
             _root.anchorMin = new Vector2(0f, 0.5f);
@@ -74,17 +76,17 @@ namespace Contigu.Presentation
                 Destroy(_rowsContainer.GetChild(i).gameObject);
             }
             _rowIds.Clear();
-            _rowNameLabels.Clear();
+            _rowBadges.Clear();
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                var nameLabel = BuildRow(ModifierCatalog.Get(activeModifiers[i]));
+                var badge = BuildRow(ModifierCatalog.Get(activeModifiers[i]));
                 _rowIds.Add(activeModifiers[i]);
-                _rowNameLabels.Add(nameLabel);
+                _rowBadges.Add(badge);
             }
         }
 
-        private Text BuildRow(ModifierDefinition def)
+        private Image BuildRow(ModifierDefinition def)
         {
             var row = UIFactory.CreatePanel(_rowsContainer, "Row_" + def.Id, UITheme.PanelLight);
             row.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, RowHeight);
@@ -93,57 +95,43 @@ namespace Contigu.Presentation
             var rowLayout = row.gameObject.AddComponent<LayoutElement>();
             rowLayout.preferredWidth = PanelWidth - 16f;
             rowLayout.preferredHeight = RowHeight;
-            // The row's own fill is close in luminance to UITheme.Modifier text
-            // and to the panel behind it, so without a rim it reads as a
-            // formless smudge — a dark outline gives the row a defined edge.
             var rowOutline = row.gameObject.AddComponent<Outline>();
             rowOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             rowOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
-            var nameLabel = UIFactory.CreateText(row.transform, "Name", def.Name, 13, UITheme.TextPrimary);
-            nameLabel.fontStyle = FontStyle.Bold;
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -6f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(PanelWidth - 28f, 18f);
-            AddTextOutline(nameLabel);
+            var badge = ModifierBadgeFactory.Create(row.transform, def, RowHeight - 12f, _tooltip);
+            badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            badge.rectTransform.anchoredPosition = Vector2.zero;
 
-            var descLabel = UIFactory.CreateText(row.transform, "Desc", def.Description, 9, UITheme.TextPrimary);
-            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -24f);
-            descLabel.rectTransform.sizeDelta = new Vector2(PanelWidth - 28f, 38f);
-            AddTextOutline(descLabel);
-
-            return nameLabel;
+            return badge;
         }
 
-        /// <summary>Flashes the name text (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>
+        /// <summary>Flashes the badge (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>
         public void Pulse(ModifierId id)
         {
             for (int i = 0; i < _rowIds.Count; i++)
             {
                 if (_rowIds[i] == id)
                 {
-                    StartCoroutine(PulseLabel(_rowNameLabels[i]));
+                    StartCoroutine(PulseBadge(_rowBadges[i]));
                 }
             }
         }
 
-        private IEnumerator PulseLabel(Text label)
+        private IEnumerator PulseBadge(Image badge)
         {
-            var baseColor = UITheme.TextPrimary;
-            var highlightColor = UITheme.Modifier;
-            var rt = label.rectTransform;
+            var baseColor = badge.color;
+            var highlightColor = Color.white;
+            var rt = badge.rectTransform;
             float t = 0f;
             while (t < PulseDuration)
             {
                 // The panel can be refreshed (rows destroyed/rebuilt) mid-pulse
                 // if a new draft/round starts right as this plays — bail out
                 // rather than touching a destroyed row.
-                if (label == null)
+                if (badge == null)
                 {
                     yield break;
                 }
@@ -154,14 +142,14 @@ namespace Contigu.Presentation
                     ? Mathf.Lerp(1f, PulsePeakScale, p / PulsePeakFraction)
                     : Mathf.Lerp(PulsePeakScale, 1f, (p - PulsePeakFraction) / (1f - PulsePeakFraction));
                 rt.localScale = new Vector3(scale, scale, 1f);
-                label.color = Color.Lerp(highlightColor, baseColor, p);
+                badge.color = Color.Lerp(highlightColor, baseColor, p);
                 yield return null;
             }
 
-            if (label != null)
+            if (badge != null)
             {
                 rt.localScale = Vector3.one;
-                label.color = baseColor;
+                badge.color = baseColor;
             }
         }
 
