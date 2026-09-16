@@ -29,8 +29,15 @@ namespace Contigu.Presentation
             var panelImg = UIFactory.CreatePanel(_root, "Panel", UITheme.Panel);
             panelImg.raycastTarget = false;
             _panel = panelImg.rectTransform;
-            _panel.anchorMin = new Vector2(0f, 1f);
-            _panel.anchorMax = new Vector2(0f, 1f);
+            // Anchored to _root's CENTER (matching the center-origin local
+            // space that ScreenPointToLocalPointInRectangle returns points in
+            // — _root itself has pivot (0.5, 0.5) via StretchFull) so the
+            // anchoredPosition computed in PositionNear can be used directly
+            // as an offset from center, without also needing to correct for
+            // a top-left anchor. Pivot stays top-left so the panel grows
+            // right/down from that anchored point, like a normal tooltip.
+            _panel.anchorMin = new Vector2(0.5f, 0.5f);
+            _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0f, 1f);
             _panel.sizeDelta = new Vector2(Width, Height);
             var panelOutline = panelImg.gameObject.AddComponent<Outline>();
