@@ -22,6 +22,7 @@ namespace Contigu.Presentation
         private GridView _gridView;
         private HandView _handView;
         private HudView _hudView;
+        private ComboView _comboView;
         private DraftView _draftView;
         private ModifierDraftView _modifierDraftView;
         private ModifierPanelView _modifierPanelView;
@@ -111,6 +112,20 @@ namespace Contigu.Presentation
             handRect.anchorMax = new Vector2(0.5f, 0f);
             handRect.pivot = new Vector2(0.5f, 0f);
             handRect.anchoredPosition = new Vector2(0f, 24f);
+
+            _comboView = gameObject.AddComponent<ComboView>();
+            var comboRect = _comboView.Build(mainRoot);
+            comboRect.anchorMin = new Vector2(0.5f, 0f);
+            comboRect.anchorMax = new Vector2(0.5f, 0f);
+            comboRect.pivot = new Vector2(0.5f, 0.5f);
+            // Centered in the gap between the grid's bottom edge and the hand's
+            // top edge. Grid bottom is 110 (its own top offset) + 453 (8*54
+            // cells + 7*3 spacing, see GridView.Build) = 563 below the top of a
+            // canvas that's always 800 tall (CanvasScaler matches height), i.e.
+            // 237 above the bottom. Hand top is its own 24 offset + 140 slot
+            // height (see HandView.Build) = 164 above the bottom. Midpoint: 200.5.
+            comboRect.anchoredPosition = new Vector2(0f, 200.5f);
+            comboRect.sizeDelta = new Vector2(400f, 50f);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -208,7 +223,7 @@ namespace Contigu.Presentation
             int displayedRoundScore = roundScoreBefore;
             int displayedTotalScore = totalScoreBefore;
             int comboTotal = 0;
-            _hudView.ShowCombo(0);
+            _comboView.Show(0);
 
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -224,12 +239,16 @@ namespace Contigu.Presentation
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
                 _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+                if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)
+                {
+                    _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                }
 
                 displayedRoundScore += scoreEvent.Amount;
                 displayedTotalScore += scoreEvent.Amount;
                 comboTotal += scoreEvent.Amount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
-                _hudView.ShowCombo(comboTotal);
+                _comboView.Show(comboTotal);
 
                 yield return new WaitForSeconds(ScoreEventStaggerSeconds);
             }
@@ -246,7 +265,7 @@ namespace Contigu.Presentation
                 displayedTotalScore += ScoringConstants.LineClearBonusPerCell;
                 comboTotal += ScoringConstants.LineClearBonusPerCell;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
-                _hudView.ShowCombo(comboTotal);
+                _comboView.Show(comboTotal);
 
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
             }
@@ -329,7 +348,7 @@ namespace Contigu.Presentation
             _gridView.Refresh();
             _handView.Refresh();
             _hudView.Refresh(_run);
-            _hudView.HideCombo();
+            _comboView.Hide();
             _modifierPanelView.Refresh(_run.ActiveModifiers);
         }
     }

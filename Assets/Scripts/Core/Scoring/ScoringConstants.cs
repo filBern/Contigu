@@ -70,7 +70,7 @@ namespace Contigu.Core
         /// <summary>Trou dans la grille: bonus per group cell orthogonally adjacent to a locked cell.</summary>
         public const int TrouBonusPerCell = 10;
 
-        /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 different colors.</summary>
+        /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 colors different from BOTH each other and the cell's own color.</summary>
         public const int CarrefourBonusPerCell = 12;
 
         /// <summary>Maçon: flat bonus for a placement that clears no line/column at all.</summary>

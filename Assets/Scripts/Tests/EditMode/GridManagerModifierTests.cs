@@ -390,6 +390,46 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Carrefour_Fires_WhenTwoNeighborColorsDifferFromOwnColor_DespiteOtherNeighborsMatchingOwnColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Carrefour };
+
+            // 2 of the 4 neighbors share the center's own color (Coral) — they
+            // must not count toward the "2 different colors" requirement, but
+            // the other 2 (Teal, Violet) still qualify it on their own.
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 2, 3, modifiers);
+
+            var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
+
+            Assert.AreEqual(ScoringConstants.CarrefourBonusPerCell, center.ModifierBonus);
+        }
+
+        [Test]
+        public void Carrefour_DoesNotFire_WhenOnlyOneNeighborColorDiffersFromOwnColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Carrefour };
+
+            // Raw neighbor colors are {Coral, Teal} — 2 distinct — but 3 of the
+            // 4 neighbors share the center's own color (Coral) and must be
+            // excluded, leaving only Teal: not enough to qualify.
+            grid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 3, 2, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 2, 3, modifiers);
+
+            var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
+
+            Assert.AreEqual(0, center.ModifierBonus);
+        }
+
+        [Test]
         public void Macon_FiresWhenPlacementClearsNoLine()
         {
             var grid = new GridManager();
@@ -457,6 +497,52 @@ namespace Contigu.Tests
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(0, finalResult.ModifierBonus);
+        }
+
+        [Test]
+        public void ScoreEvents_TagEachModifierEventWithItsTriggeringModifierId()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.Architecte, ModifierId.Puriste };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            ModifierId? architecteTag = null;
+            ModifierId? puristeTag = null;
+            foreach (var e in result.ScoreEvents)
+            {
+                if (e.Type != ScoreEventType.Modifier)
+                {
+                    continue;
+                }
+                if (e.Amount == ScoringConstants.ArchitecteBonus)
+                {
+                    architecteTag = e.TriggeringModifier;
+                }
+                else
+                {
+                    puristeTag = e.TriggeringModifier;
+                }
+            }
+
+            Assert.AreEqual(ModifierId.Architecte, architecteTag);
+            Assert.AreEqual(ModifierId.Puriste, puristeTag);
+        }
+
+        [Test]
+        public void ScoreEvents_NonModifierEvents_LeaveTriggeringModifierNull()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.GetCell(0, 0).IsGolden = true;
+
+            var result = grid.PlacePiece(single, PieceColor.Lime, 0, 0);
+
+            foreach (var e in result.ScoreEvents)
+            {
+                Assert.IsNull(e.TriggeringModifier);
+            }
         }
     }
 }

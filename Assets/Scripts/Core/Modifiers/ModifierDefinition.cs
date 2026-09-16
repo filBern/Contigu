@@ -74,11 +74,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Puriste = new ModifierDefinition(
             ModifierId.Puriste, ModifierCategory.Roguelike, "Puriste",
-            "+50% du bonus de groupe si le groupe est entièrement d'une seule couleur (jokers exclus).");
+            "Si TOUTES les cases de votre groupe (les jokers ne comptent pas) sont de la même couleur : +50% du bonus de groupe de cette pose.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collectionneur",
-            "+8 pts par couleur distincte parmi les cases effacées par cette pose.");
+            "Quand cette pose efface au moins une ligne/colonne : +8 pts par couleur différente parmi les cases effacées (0 si rien n'est effacé).");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolore",
@@ -102,7 +102,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
             ModifierId.Carrefour, ModifierCategory.Voisinage, "Carrefour",
-            "+12 pts par case du groupe encerclée sur ses 4 côtés par au moins 2 couleurs différentes.");
+            "+12 pts par case du groupe encerclée sur ses 4 côtés par au moins 2 couleurs différentes, elles-mêmes différentes de sa propre couleur.");
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Maçon",

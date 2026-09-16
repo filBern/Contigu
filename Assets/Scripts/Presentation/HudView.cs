@@ -12,7 +12,6 @@ namespace Contigu.Presentation
         private Text _roundScoreText;
         private Text _budgetText;
         private Text _totalScoreText;
-        private Text _comboText;
 
         public RectTransform Build(Transform parent)
         {
@@ -31,8 +30,6 @@ namespace Contigu.Presentation
             _roundScoreText = UIFactory.CreateText(container, "RoundScore", "", 18, UITheme.Success, TextAnchor.MiddleLeft);
             _budgetText = UIFactory.CreateText(container, "Budget", "", 18, UITheme.TextMuted, TextAnchor.MiddleLeft);
             _totalScoreText = UIFactory.CreateText(container, "TotalScore", "", 18, UITheme.TextMuted, TextAnchor.MiddleLeft);
-            _comboText = UIFactory.CreateText(container, "Combo", "", 18, UITheme.Modifier, TextAnchor.MiddleLeft);
-            _comboText.gameObject.SetActive(false);
 
             return container;
         }
@@ -55,18 +52,6 @@ namespace Contigu.Presentation
             _quotaText.text = "Quota " + roundScore + " / " + quota;
             _roundScoreText.text = "Score manche: " + roundScore;
             _totalScoreText.text = "Score total (run): " + totalScore;
-        }
-
-        /// <summary>Shows/updates the running total of the placement's combo currently being played out (see GameBootstrap.PlayPlacementSequence).</summary>
-        public void ShowCombo(int amount)
-        {
-            _comboText.gameObject.SetActive(true);
-            _comboText.text = "Combo: +" + amount;
-        }
-
-        public void HideCombo()
-        {
-            _comboText.gameObject.SetActive(false);
         }
     }
 }

@@ -218,48 +218,56 @@ namespace Contigu.Core
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                switch (activeModifiers[i])
+                var id = activeModifiers[i];
+                int eventsBefore = events.Count;
+                int bonus;
+                switch (id)
                 {
                     case ModifierId.Prisme:
-                        total += ApplyPrisme(groupCells, placedCells, events);
+                        bonus = ApplyPrisme(groupCells, placedCells, events);
                         break;
                     case ModifierId.Chaine:
-                        total += ApplyChaine(groupCells, placedCells, events);
+                        bonus = ApplyChaine(groupCells, placedCells, events);
                         break;
                     case ModifierId.MegaChaine:
-                        total += ApplyMegaChaine(groupCells, placedCells, events);
+                        bonus = ApplyMegaChaine(groupCells, placedCells, events);
                         break;
                     case ModifierId.Forteresse:
-                        total += ApplyForteresse(groupCells, events);
+                        bonus = ApplyForteresse(groupCells, events);
                         break;
                     case ModifierId.Prisonnier:
-                        total += ApplyPrisonnier(groupCells, events);
+                        bonus = ApplyPrisonnier(groupCells, events);
                         break;
                     case ModifierId.Architecte:
-                        total += ApplyArchitecte(shape, placedCells, events);
+                        bonus = ApplyArchitecte(shape, placedCells, events);
                         break;
                     case ModifierId.Puriste:
-                        total += ApplyPuriste(groupCells, placedCells, groupBonus, events);
+                        bonus = ApplyPuriste(groupCells, placedCells, groupBonus, events);
                         break;
                     case ModifierId.Tricolore:
-                        total += ApplyTricolore(groupCells, placedCells, events);
+                        bonus = ApplyTricolore(groupCells, placedCells, events);
                         break;
                     case ModifierId.Complementaire:
-                        total += ApplyComplementaire(groupCells, placedCells, events);
+                        bonus = ApplyComplementaire(groupCells, placedCells, events);
                         break;
                     case ModifierId.Ilot:
-                        total += ApplyIlot(groupCells, placedCells, events);
+                        bonus = ApplyIlot(groupCells, placedCells, events);
                         break;
                     case ModifierId.Couronne:
-                        total += ApplyCouronne(groupCells, events);
+                        bonus = ApplyCouronne(groupCells, events);
                         break;
                     case ModifierId.TrouDansLaGrille:
-                        total += ApplyTrouDansLaGrille(groupCells, events);
+                        bonus = ApplyTrouDansLaGrille(groupCells, events);
                         break;
                     case ModifierId.Carrefour:
-                        total += ApplyCarrefour(groupCells, events);
+                        bonus = ApplyCarrefour(groupCells, events);
+                        break;
+                    default:
+                        bonus = 0;
                         break;
                 }
+                TagNewEvents(events, eventsBefore, id);
+                total += bonus;
             }
             return total;
         }
@@ -270,20 +278,37 @@ namespace Contigu.Core
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                switch (activeModifiers[i])
+                var id = activeModifiers[i];
+                int eventsBefore = events.Count;
+                int bonus;
+                switch (id)
                 {
                     case ModifierId.Collectionneur:
-                        total += ApplyCollectionneur(clearInfo, placedCells, events);
+                        bonus = ApplyCollectionneur(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Macon:
-                        total += ApplyMacon(clearInfo, placedCells, events);
+                        bonus = ApplyMacon(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Demolisseur:
-                        total += ApplyDemolisseur(clearInfo, placedCells, events);
+                        bonus = ApplyDemolisseur(clearInfo, placedCells, events);
+                        break;
+                    default:
+                        bonus = 0;
                         break;
                 }
+                TagNewEvents(events, eventsBefore, id);
+                total += bonus;
             }
             return total;
+        }
+
+        /// <summary>Stamps every event appended since <paramref name="startIndex"/> with the modifier that produced it, so the presentation layer knows which one to highlight.</summary>
+        private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id)
+        {
+            for (int i = startIndex; i < events.Count; i++)
+            {
+                events[i].TriggeringModifier = id;
+            }
         }
 
         private int ApplyPrisme(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
@@ -578,7 +603,7 @@ namespace Contigu.Core
                 {
                     continue;
                 }
-                if (!HasAtLeastTwoDistinctCardinalNeighborColors(pos.x, pos.y))
+                if (!HasAtLeastTwoDistinctCardinalNeighborColorsDifferentFromOwn(pos.x, pos.y))
                 {
                     continue;
                 }
@@ -589,17 +614,31 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Assumes all 4 cardinal neighbors are already known filled (see <see cref="AreAllNeighborsFilled"/>), so each has a non-null <see cref="Cell.FilledColor"/>.</summary>
-        private bool HasAtLeastTwoDistinctCardinalNeighborColors(int x, int y)
+        /// <summary>
+        /// Assumes all 4 cardinal neighbors are already known filled (see
+        /// <see cref="AreAllNeighborsFilled"/>), so each has a non-null
+        /// <see cref="Cell.FilledColor"/>. Requires at least 2 distinct neighbor
+        /// colors that ALSO differ from the cell's own color — a neighbor sharing
+        /// the cell's own color doesn't count toward the "crossroads" of
+        /// different colors.
+        /// </summary>
+        private bool HasAtLeastTwoDistinctCardinalNeighborColorsDifferentFromOwn(int x, int y)
         {
-            var colors = new HashSet<PieceColor>
-            {
-                _cells[x - 1, y].FilledColor.Value,
-                _cells[x + 1, y].FilledColor.Value,
-                _cells[x, y - 1].FilledColor.Value,
-                _cells[x, y + 1].FilledColor.Value
-            };
+            var ownColor = _cells[x, y].FilledColor.Value;
+            var colors = new HashSet<PieceColor>();
+            AddIfDifferentFromOwn(colors, _cells[x - 1, y].FilledColor.Value, ownColor);
+            AddIfDifferentFromOwn(colors, _cells[x + 1, y].FilledColor.Value, ownColor);
+            AddIfDifferentFromOwn(colors, _cells[x, y - 1].FilledColor.Value, ownColor);
+            AddIfDifferentFromOwn(colors, _cells[x, y + 1].FilledColor.Value, ownColor);
             return colors.Count >= 2;
+        }
+
+        private static void AddIfDifferentFromOwn(HashSet<PieceColor> colors, PieceColor neighborColor, PieceColor ownColor)
+        {
+            if (neighborColor != ownColor)
+            {
+                colors.Add(neighborColor);
+            }
         }
 
         private int ApplyMacon(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)

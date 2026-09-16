@@ -95,14 +95,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   sont affichés en permanence dans un panneau à gauche de l'écran
   (`ModifierPanelView`) et chaque bonus qu'ils déclenchent apparaît comme un
   `ScoreEvent` de type `Modifier` (popup violet) au même titre que les
-  bonus de groupe/dorés/lignes.
+  bonus de groupe/dorés/lignes. Chaque `ScoreEvent` de type `Modifier`
+  porte aussi `TriggeringModifier` (quel modificateur l'a produit) —
+  `GameBootstrap` s'en sert pour faire un petit effet (flash + pulse) sur
+  le nom du modificateur concerné dans le panneau de gauche à chaque fois
+  qu'il rapporte des points (`ModifierPanelView.Pulse`), pas seulement la
+  première fois.
   - Catalogue livré (16 sur la quarantaine d'idées brainstormées, en deux
     passes) — choisis parce que calculables avec les données déjà
     disponibles dans `GridManager.PlacePiece` sans refonte plus profonde :
     **Prisme** / **Tricolore** / **Complémentaire** (couleurs du groupe),
     **Chaîne** / **Méga-chaîne** (taille de groupe), **Forteresse** /
     **Prisonnier** / **Carrefour** (voisinage 8 cases / 4 cases / 4 cases
-    multicolores), **Îlot** (case isolée, l'inverse de Chaîne), **Couronne**
+    encerclée par ≥2 couleurs différentes de la sienne — les voisins qui
+    partagent la couleur de la case elle-même ne comptent pas), **Îlot**
+    (case isolée, l'inverse de Chaîne), **Couronne**
     (cases en bordure de grille), **Trou dans la grille** (cases adjacentes
     à une case verrouillée), **Architecte** (pièce 2x2), **Puriste** (groupe
     monochrome, adaptation au niveau du *groupe* plutôt que de la *ligne*
@@ -140,11 +147,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   puissant vu que leur bonus se redéclenche à chaque repassage du groupe.
   `UpgradeSystem.GoldenCellsCount` / `TintedCellsCount` /
   `MultiplierZoneCount` valent maintenant tous 1.
-- **Combo en cours affiché dans le HUD** : pendant qu'une pose déroule sa
-  cascade de popups (groupe, doré, modificateurs, clears de ligne), un
-  indicateur "Combo: +N" dans la barre du haut (`HudView.ShowCombo`)
-  additionne en direct tous les points de CETTE pose au fur et à mesure
-  qu'ils s'affichent, séparément du score de manche/total — pour que le
-  joueur voie clairement combien un seul coup vient de rapporter.
+- **Combo en cours affiché en gros entre la grille et la main** : pendant
+  qu'une pose déroule sa cascade de popups (groupe, doré, modificateurs,
+  clears de ligne), un indicateur "Combo: +N" en gros texte violet
+  (`ComboView`, composant dédié plutôt qu'inséré dans `HudView`) additionne
+  en direct tous les points de CETTE pose au fur et à mesure qu'ils
+  s'affichent, séparément du score de manche/total — pour que le joueur
+  voie clairement combien un seul coup vient de rapporter. D'abord placé
+  dans la barre du HUD tout en haut, déplacé sur demande explicite (trop
+  discret là-haut) dans l'espace entre le bas de la grille et le haut de
+  la main, où l'œil du joueur est déjà pendant qu'il joue.
 - **Nouvelle main** : une main de 3 n'est retirée que lorsque les 3 pièces
   précédentes ont été posées (spec 4.2, comportement du prototype HTML).

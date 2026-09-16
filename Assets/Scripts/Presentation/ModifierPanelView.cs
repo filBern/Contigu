@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
 using UnityEngine;
@@ -8,15 +9,26 @@ namespace Contigu.Presentation
     /// <summary>
     /// Persistent panel pinned to the left edge of the screen, listing the
     /// player's currently active modifiers (up to <see cref="RunManager.MaxActiveModifiers"/>).
-    /// Purely a readout — refreshed by the caller whenever the active set changes.
+    /// A readout refreshed by the caller whenever the active set changes, plus
+    /// a <see cref="Pulse"/> effect the caller triggers on a modifier's row
+    /// whenever it actually scores points on a placement.
     /// </summary>
     public sealed class ModifierPanelView : MonoBehaviour
     {
         private const float PanelWidth = 190f;
         private const float RowHeight = 64f;
+        private const float PulseDuration = 0.5f;
+        private const float PulsePeakScale = 1.1f;
+        private const float PulsePeakFraction = 0.3f;
 
         private RectTransform _root;
         private RectTransform _rowsContainer;
+
+        // Parallel to the active-modifiers list passed to the last Refresh —
+        // lets Pulse(id) find every row currently showing that modifier (there
+        // can be more than one if the player holds duplicates).
+        private readonly List<ModifierId> _rowIds = new List<ModifierId>();
+        private readonly List<Text> _rowNameLabels = new List<Text>();
 
         public RectTransform Build(Transform parent)
         {
@@ -59,14 +71,18 @@ namespace Contigu.Presentation
             {
                 Destroy(_rowsContainer.GetChild(i).gameObject);
             }
+            _rowIds.Clear();
+            _rowNameLabels.Clear();
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                BuildRow(ModifierCatalog.Get(activeModifiers[i]));
+                var nameLabel = BuildRow(ModifierCatalog.Get(activeModifiers[i]));
+                _rowIds.Add(activeModifiers[i]);
+                _rowNameLabels.Add(nameLabel);
             }
         }
 
-        private void BuildRow(ModifierDefinition def)
+        private Text BuildRow(ModifierDefinition def)
         {
             var row = UIFactory.CreatePanel(_rowsContainer, "Row_" + def.Id, UITheme.PanelLight);
             row.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, RowHeight);
@@ -89,6 +105,53 @@ namespace Contigu.Presentation
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchoredPosition = new Vector2(0f, -24f);
             descLabel.rectTransform.sizeDelta = new Vector2(PanelWidth - 28f, 38f);
+
+            return nameLabel;
+        }
+
+        /// <summary>Flashes the name text (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>
+        public void Pulse(ModifierId id)
+        {
+            for (int i = 0; i < _rowIds.Count; i++)
+            {
+                if (_rowIds[i] == id)
+                {
+                    StartCoroutine(PulseLabel(_rowNameLabels[i]));
+                }
+            }
+        }
+
+        private IEnumerator PulseLabel(Text label)
+        {
+            var baseColor = UITheme.Modifier;
+            var highlightColor = Color.white;
+            var rt = label.rectTransform;
+            float t = 0f;
+            while (t < PulseDuration)
+            {
+                // The panel can be refreshed (rows destroyed/rebuilt) mid-pulse
+                // if a new draft/round starts right as this plays — bail out
+                // rather than touching a destroyed row.
+                if (label == null)
+                {
+                    yield break;
+                }
+
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / PulseDuration);
+                float scale = p < PulsePeakFraction
+                    ? Mathf.Lerp(1f, PulsePeakScale, p / PulsePeakFraction)
+                    : Mathf.Lerp(PulsePeakScale, 1f, (p - PulsePeakFraction) / (1f - PulsePeakFraction));
+                rt.localScale = new Vector3(scale, scale, 1f);
+                label.color = Color.Lerp(highlightColor, baseColor, p);
+                yield return null;
+            }
+
+            if (label != null)
+            {
+                rt.localScale = Vector3.one;
+                label.color = baseColor;
+            }
         }
     }
 }

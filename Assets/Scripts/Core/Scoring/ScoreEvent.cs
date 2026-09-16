@@ -35,6 +35,18 @@ namespace Contigu.Core
         public readonly Vector2Int Position;
         public readonly int Amount;
 
+        /// <summary>
+        /// Which active modifier produced this event, when <see cref="Type"/> is
+        /// <see cref="ScoreEventType.Modifier"/>. Left null otherwise. Not set by
+        /// the constructor — the individual Apply* methods in
+        /// <see cref="GridManager"/> don't know their own id, so the dispatcher
+        /// (<see cref="GridManager.ApplyPreClearModifiers"/>/
+        /// <see cref="GridManager.ApplyPostClearModifiers"/>) tags newly added
+        /// events with it right after each call, letting the presentation layer
+        /// highlight the specific modifier that just scored.
+        /// </summary>
+        public ModifierId? TriggeringModifier;
+
         public ScoreEvent(ScoreEventType type, Vector2Int position, int amount)
         {
             Type = type;
