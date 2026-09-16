@@ -85,7 +85,7 @@ namespace Contigu.Presentation
             var badgeColorIcon = UIFactory.CreatePanel(cellGo, "BadgeColorIcon", Color.white);
             UIFactory.SetAnchor(badgeColorIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             badgeColorIcon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badgeColorIcon.rectTransform.sizeDelta = new Vector2(38f, 38f);
+            badgeColorIcon.rectTransform.sizeDelta = new Vector2(48f, 48f);
             badgeColorIcon.rectTransform.anchoredPosition = Vector2.zero;
             var badgeColorIconOutline = badgeColorIcon.gameObject.AddComponent<Outline>();
             badgeColorIconOutline.effectColor = new Color(0f, 0f, 0f, 0.6f);
