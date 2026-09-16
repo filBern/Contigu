@@ -129,7 +129,8 @@ namespace Contigu.Presentation
                 if (i < _deck.Hand.Count)
                 {
                     var token = _deck.Hand[i];
-                    BuildShapePreview(preview, token);
+                    var rotation = _deck.HandRotations[i];
+                    BuildShapePreview(preview, token, rotation);
                     _slotLabels[i].text = VisualDefaults.GetShapeName(token.Shape) + "\n" + VisualDefaults.GetColorName(token.Color);
                 }
                 else
@@ -140,9 +141,9 @@ namespace Contigu.Presentation
             UpdateSelectionVisuals();
         }
 
-        private void BuildShapePreview(RectTransform container, PieceToken token)
+        private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation)
         {
-            var shape = PieceShapeCatalog.Get(token.Shape);
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             int maxX = 0;
             int maxY = 0;
             var occupied = new HashSet<Vector2Int>();

@@ -156,7 +156,8 @@ namespace Contigu.Presentation
         private void OnHandSlotSelected(int handIndex)
         {
             var token = _run.Deck.Hand[handIndex];
-            var shape = PieceShapeCatalog.Get(token.Shape);
+            var rotation = _run.Deck.HandRotations[handIndex];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape);
             _statusText.text = "Cliquez sur la grille pour poser : " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
         }

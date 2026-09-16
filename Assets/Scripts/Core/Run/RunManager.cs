@@ -103,7 +103,8 @@ namespace Contigu.Core
             }
 
             var token = Deck.Hand[handIndex];
-            var shape = PieceShapeCatalog.Get(token.Shape);
+            var rotation = Deck.HandRotations[handIndex];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
 
             if (!Grid.CanPlace(shape, x, y))
             {
@@ -141,14 +142,15 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>True if at least one piece currently in hand can be legally placed somewhere on the grid.</summary>
+        /// <summary>True if at least one piece currently in hand, in its actual dealt rotation, can be legally placed somewhere on the grid.</summary>
         private bool HasAnyHandPlacement()
         {
             var hand = Deck.Hand;
-            var shapes = new System.Collections.Generic.List<PieceShape>(hand.Count);
+            var rotations = Deck.HandRotations;
+            var shapes = new List<PieceShape>(hand.Count);
             for (int i = 0; i < hand.Count; i++)
             {
-                shapes.Add(PieceShapeCatalog.Get(hand[i].Shape));
+                shapes.Add(PieceShapeCatalog.GetRotated(hand[i].Shape, rotations[i]));
             }
             return Grid.HasAnyValidPlacement(shapes);
         }

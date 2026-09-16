@@ -186,3 +186,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   la main, où l'œil du joueur est déjà pendant qu'il joue.
 - **Nouvelle main** : une main de 3 n'est retirée que lorsque les 3 pièces
   précédentes ont été posées (spec 4.2, comportement du prototype HTML).
+- **Rotation aléatoire des pièces** : sur demande explicite — chaque pièce
+  qui arrive dans la main obtient une orientation aléatoire parmi les 4
+  quarts de tour (`PieceRotation`, 0°/90°/180°/270°), tirée au moment de la
+  pioche (`DeckManager.DrawNewHand` → `HandRotations`, en parallèle de
+  `Hand`), pas figée sur le type de pièce dans le deck — la même pièce
+  peut donc ressortir dans une orientation différente une prochaine fois.
+  Le joueur ne peut pas faire pivoter une pièce lui-même, il joue
+  l'orientation telle que distribuée. `PieceShapeCatalog.GetRotated`
+  précalcule les 4 rotations de chacune des 10 formes (rotation pure,
+  jamais un miroir — le S-tetromino ne devient jamais un Z) ; le slot de
+  main (`HandView`), la prévisualisation au survol de la grille et la pose
+  réelle (`RunManager.PlacePiece`) utilisent tous la même forme pivotée,
+  donc ce qui est affiché correspond exactement à ce qui sera posé.

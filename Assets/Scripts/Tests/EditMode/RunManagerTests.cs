@@ -107,7 +107,8 @@ namespace Contigu.Tests
             while (run.State == RunState.InProgress)
             {
                 var token = run.Deck.Hand[0];
-                var shape = PieceShapeCatalog.Get(token.Shape);
+                var rotation = run.Deck.HandRotations[0];
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue, "Ran out of room on placement " + piecesPlaced);
 
@@ -191,7 +192,8 @@ namespace Contigu.Tests
             while (run.State == RunState.InProgress)
             {
                 var token = run.Deck.Hand[0];
-                var shape = PieceShapeCatalog.Get(token.Shape);
+                var rotation = run.Deck.HandRotations[0];
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue, "Ran out of room before reaching the quota");
                 run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
@@ -206,18 +208,25 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(7));
             var token = run.Deck.Hand[0];
-            var shape = PieceShapeCatalog.Get(token.Shape);
+            var rotation = run.Deck.HandRotations[0];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
 
             // Lock every cell except exactly the ones this piece will occupy at
-            // (0,0). Note this placement will itself complete (and clear) every
-            // row/column it touches, since the footprint ends up being the only
-            // non-locked cells in each of them — reopening a footprint-shaped
-            // hole right after the placement. For seed 7, the two pieces left in
-            // hand afterward (verified by hand-tracing the deterministic draw)
-            // don't fit that reopened hole, so the board is still genuinely
-            // stuck. This test is therefore tied to this specific seed's hand
-            // composition, not a structural guarantee — if InitialDeckFactory or
-            // the shuffle ever changes, re-verify by hand or pick a new seed.
+            // (0,0) — using its actual DEALT rotation, since that's what
+            // RunManager.PlacePiece will place. Note this placement will itself
+            // complete (and clear) every row/column it touches, since the
+            // footprint ends up being the only non-locked cells in each of them
+            // — reopening a footprint-shaped hole right after the placement.
+            // For seed 7 (verified by hand-tracing the deterministic draw, see
+            // /tmp/dotnet_random_sim.py), hand[0] is an L-tromino (TriL) and the
+            // two pieces left in hand are a T-tetromino (TTetro, 4 cells — can
+            // never fit a 3-cell hole, in any rotation) and a straight tromino
+            // (TriIV — can never fit an L-shaped hole, in any of its 2 distinct
+            // rotations). Both mismatches (cell count, and straight-vs-bent
+            // shape) hold regardless of which rotation each piece was actually
+            // dealt, so this test is robust to random rotation. It's still tied
+            // to seed 7's exact hand *composition* though — if InitialDeckFactory
+            // or the shuffle ever changes, re-verify by hand or pick a new seed.
             var occupied = new HashSet<Vector2Int>();
             for (int i = 0; i < shape.Cells.Count; i++)
             {

@@ -52,6 +52,37 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void HandRotations_StaysInLockstepWithHand_ThroughConstructionAndPlay()
+        {
+            var dm = MakeMinimalDeck();
+
+            Assert.AreEqual(dm.Hand.Count, dm.HandRotations.Count);
+
+            dm.PlayFromHand(1); // remove the middle slot, not just index 0
+            Assert.AreEqual(dm.Hand.Count, dm.HandRotations.Count);
+
+            dm.PlayFromHand(0);
+            dm.PlayFromHand(0); // hand now empty -> triggers a fresh DrawNewHand
+            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count);
+            Assert.AreEqual(DeckManager.HandSize, dm.HandRotations.Count);
+        }
+
+        [Test]
+        public void DrawNewHand_AssignsAValidRotationToEverySlot()
+        {
+            for (int seed = 0; seed < 20; seed++)
+            {
+                var dm = new DeckManager(BuildTwelveUniqueTokens(), new SystemRandomProvider(seed));
+
+                foreach (var rotation in dm.HandRotations)
+                {
+                    Assert.IsTrue(rotation == PieceRotation.Deg0 || rotation == PieceRotation.Deg90
+                        || rotation == PieceRotation.Deg180 || rotation == PieceRotation.Deg270);
+                }
+            }
+        }
+
+        [Test]
         public void PlayFromHand_OnlyRefillsWhenHandFullyEmpty()
         {
             var dm = MakeMinimalDeck();

@@ -22,11 +22,19 @@ namespace Contigu.Core
     }
 
     /// <summary>
-    /// Static registry of the 10 fixed shapes described in spec section 4.3.
+    /// Static registry of the 10 fixed shapes described in spec section 4.3,
+    /// plus every shape pre-rotated at each of the 4 quarter-turns
+    /// (<see cref="GetRotated"/>) for the random per-hand-slot rotation feature.
     /// </summary>
     public static class PieceShapeCatalog
     {
+        private static readonly PieceRotation[] AllRotations =
+        {
+            PieceRotation.Deg0, PieceRotation.Deg90, PieceRotation.Deg180, PieceRotation.Deg270
+        };
+
         private static readonly Dictionary<ShapeId, PieceShape> Shapes = BuildShapes();
+        private static readonly Dictionary<(ShapeId, PieceRotation), PieceShape> RotatedShapes = BuildRotatedShapes();
 
         private static Dictionary<ShapeId, PieceShape> BuildShapes()
         {
@@ -90,9 +98,67 @@ namespace Contigu.Core
             return Shapes[id];
         }
 
+        /// <summary>The shape's cells rotated by the given number of quarter-turns and re-normalized so the bounding box starts at (0, 0) again — the <see cref="PieceShape.Id"/> stays the base <see cref="ShapeId"/> regardless of rotation.</summary>
+        public static PieceShape GetRotated(ShapeId id, PieceRotation rotation)
+        {
+            return RotatedShapes[(id, rotation)];
+        }
+
         public static IReadOnlyCollection<ShapeId> AllIds
         {
             get { return Shapes.Keys; }
+        }
+
+        private static Dictionary<(ShapeId, PieceRotation), PieceShape> BuildRotatedShapes()
+        {
+            var result = new Dictionary<(ShapeId, PieceRotation), PieceShape>();
+            foreach (var kvp in Shapes)
+            {
+                for (int i = 0; i < AllRotations.Length; i++)
+                {
+                    var rotation = AllRotations[i];
+                    result[(kvp.Key, rotation)] = new PieceShape(kvp.Key, RotateAndNormalize(kvp.Value.Cells, rotation));
+                }
+            }
+            return result;
+        }
+
+        private static Vector2Int[] RotateAndNormalize(IReadOnlyList<Vector2Int> baseCells, PieceRotation rotation)
+        {
+            var rotated = new Vector2Int[baseCells.Count];
+            for (int i = 0; i < baseCells.Count; i++)
+            {
+                rotated[i] = RotateCell(baseCells[i], rotation);
+            }
+
+            int minX = int.MaxValue;
+            int minY = int.MaxValue;
+            for (int i = 0; i < rotated.Length; i++)
+            {
+                if (rotated[i].x < minX) minX = rotated[i].x;
+                if (rotated[i].y < minY) minY = rotated[i].y;
+            }
+            for (int i = 0; i < rotated.Length; i++)
+            {
+                rotated[i] = new Vector2Int(rotated[i].x - minX, rotated[i].y - minY);
+            }
+            return rotated;
+        }
+
+        /// <summary>Rotates a single relative cell offset counter-clockwise by the given number of quarter-turns (a proper rotation, never a mirror — S-tetromino never becomes a Z-shape).</summary>
+        private static Vector2Int RotateCell(Vector2Int cell, PieceRotation rotation)
+        {
+            switch (rotation)
+            {
+                case PieceRotation.Deg90:
+                    return new Vector2Int(-cell.y, cell.x);
+                case PieceRotation.Deg180:
+                    return new Vector2Int(-cell.x, -cell.y);
+                case PieceRotation.Deg270:
+                    return new Vector2Int(cell.y, -cell.x);
+                default:
+                    return cell;
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Contigu.Core
         private readonly List<PieceToken> _deck = new List<PieceToken>();
         private readonly List<PieceToken> _drawPile = new List<PieceToken>();
         private readonly List<PieceToken> _hand = new List<PieceToken>();
+        private readonly List<PieceRotation> _handRotations = new List<PieceRotation>();
         private readonly IRandomProvider _rng;
 
         public IReadOnlyList<PieceToken> Deck
@@ -25,6 +26,17 @@ namespace Contigu.Core
         public IReadOnlyList<PieceToken> Hand
         {
             get { return _hand; }
+        }
+
+        /// <summary>
+        /// Each hand slot's random orientation, parallel to <see cref="Hand"/> —
+        /// rolled fresh whenever that slot is (re)dealt, not tied to the token's
+        /// identity in the deck (so the same piece type can come up in a
+        /// different rotation next time it's drawn).
+        /// </summary>
+        public IReadOnlyList<PieceRotation> HandRotations
+        {
+            get { return _handRotations; }
         }
 
         public int DeckCount
@@ -68,11 +80,13 @@ namespace Contigu.Core
 
         /// <summary>
         /// Draws a fresh hand of 3 from the draw pile (without replacement),
-        /// reshuffling from the current deck state first if needed.
+        /// reshuffling from the current deck state first if needed. Each slot
+        /// also gets a fresh random <see cref="PieceRotation"/>.
         /// </summary>
         public void DrawNewHand()
         {
             _hand.Clear();
+            _handRotations.Clear();
             for (int i = 0; i < HandSize; i++)
             {
                 EnsureDrawPileHasEnough(1);
@@ -85,7 +99,13 @@ namespace Contigu.Core
                 var token = _drawPile[lastIndex];
                 _drawPile.RemoveAt(lastIndex);
                 _hand.Add(token);
+                _handRotations.Add(RandomRotation());
             }
+        }
+
+        private PieceRotation RandomRotation()
+        {
+            return (PieceRotation)_rng.Next(4);
         }
 
         /// <summary>
@@ -95,6 +115,7 @@ namespace Contigu.Core
         public void PlayFromHand(int handIndex)
         {
             _hand.RemoveAt(handIndex);
+            _handRotations.RemoveAt(handIndex);
             if (_hand.Count == 0)
             {
                 DrawNewHand();
