@@ -141,9 +141,15 @@ namespace Contigu.Tests
             var shape = PieceShapeCatalog.Get(token.Shape);
 
             // Lock every cell except exactly the ones this piece will occupy at
-            // (0,0), so this single placement fills the board completely,
-            // leaving zero free cells anywhere for whatever ends up in hand next
-            // — a deterministic "stuck" scenario regardless of the actual draw.
+            // (0,0). Note this placement will itself complete (and clear) every
+            // row/column it touches, since the footprint ends up being the only
+            // non-locked cells in each of them — reopening a footprint-shaped
+            // hole right after the placement. For seed 7, the two pieces left in
+            // hand afterward (verified by hand-tracing the deterministic draw)
+            // don't fit that reopened hole, so the board is still genuinely
+            // stuck. This test is therefore tied to this specific seed's hand
+            // composition, not a structural guarantee — if InitialDeckFactory or
+            // the shuffle ever changes, re-verify by hand or pick a new seed.
             var occupied = new HashSet<Vector2Int>();
             for (int i = 0; i < shape.Cells.Count; i++)
             {
