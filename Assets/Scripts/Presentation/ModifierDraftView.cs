@@ -43,6 +43,7 @@ namespace Contigu.Presentation
             _header.rectTransform.pivot = new Vector2(0.5f, 1f);
             _header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             _header.rectTransform.sizeDelta = new Vector2(900f, 40f);
+            AddTextOutline(_header);
 
             _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "", 18, UITheme.TextPrimary);
             _sectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -50,6 +51,7 @@ namespace Contigu.Presentation
             _sectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _sectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
             _sectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
+            AddTextOutline(_sectionLabel);
 
             _cardsContainer = UIFactory.CreateUIObject("Cards", _root);
             _cardsContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -120,20 +122,29 @@ namespace Contigu.Presentation
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
             cardLayout.preferredHeight = CardHeight;
+            // The card's own fill sits close in luminance to the black overlay
+            // behind it, so without a rim the card edge is hard to read — a
+            // dark outline around the panel itself gives it a defined border.
+            var cardOutline = card.gameObject.AddComponent<Outline>();
+            cardOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            cardOutline.effectDistance = new Vector2(2f, -2f);
 
-            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.Modifier);
+            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
+            nameLabel.fontStyle = FontStyle.Bold;
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
             nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 44f);
+            AddTextOutline(nameLabel);
 
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextMuted);
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextPrimary);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchoredPosition = new Vector2(0f, -60f);
             descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 100f);
+            AddTextOutline(descLabel);
 
             var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", buttonLabel, UITheme.ButtonSelected, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
@@ -143,6 +154,13 @@ namespace Contigu.Presentation
             chooseRect.anchoredPosition = new Vector2(0f, 14f);
             chooseRect.sizeDelta = new Vector2(CardWidth - 30f, 38f);
             chooseBtn.onClick.AddListener(() => OnCardChosen(def.Id));
+        }
+
+        private static void AddTextOutline(Text label)
+        {
+            var outline = label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
         private void OnCardChosen(ModifierId id)

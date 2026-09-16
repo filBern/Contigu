@@ -40,12 +40,14 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, 640f);
             _root.anchoredPosition = new Vector2(10f, 0f);
 
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.Modifier);
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.TextPrimary);
+            header.fontStyle = FontStyle.Bold;
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -10f);
             header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 24f);
+            AddTextOutline(header);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -91,20 +93,29 @@ namespace Contigu.Presentation
             var rowLayout = row.gameObject.AddComponent<LayoutElement>();
             rowLayout.preferredWidth = PanelWidth - 16f;
             rowLayout.preferredHeight = RowHeight;
+            // The row's own fill is close in luminance to UITheme.Modifier text
+            // and to the panel behind it, so without a rim it reads as a
+            // formless smudge — a dark outline gives the row a defined edge.
+            var rowOutline = row.gameObject.AddComponent<Outline>();
+            rowOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            rowOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
-            var nameLabel = UIFactory.CreateText(row.transform, "Name", def.Name, 13, UITheme.Modifier);
+            var nameLabel = UIFactory.CreateText(row.transform, "Name", def.Name, 13, UITheme.TextPrimary);
+            nameLabel.fontStyle = FontStyle.Bold;
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -6f);
             nameLabel.rectTransform.sizeDelta = new Vector2(PanelWidth - 28f, 18f);
+            AddTextOutline(nameLabel);
 
-            var descLabel = UIFactory.CreateText(row.transform, "Desc", def.Description, 9, UITheme.TextMuted);
+            var descLabel = UIFactory.CreateText(row.transform, "Desc", def.Description, 9, UITheme.TextPrimary);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchoredPosition = new Vector2(0f, -24f);
             descLabel.rectTransform.sizeDelta = new Vector2(PanelWidth - 28f, 38f);
+            AddTextOutline(descLabel);
 
             return nameLabel;
         }
@@ -123,8 +134,8 @@ namespace Contigu.Presentation
 
         private IEnumerator PulseLabel(Text label)
         {
-            var baseColor = UITheme.Modifier;
-            var highlightColor = Color.white;
+            var baseColor = UITheme.TextPrimary;
+            var highlightColor = UITheme.Modifier;
             var rt = label.rectTransform;
             float t = 0f;
             while (t < PulseDuration)
@@ -152,6 +163,13 @@ namespace Contigu.Presentation
                 rt.localScale = Vector3.one;
                 label.color = baseColor;
             }
+        }
+
+        private static void AddTextOutline(Text label)
+        {
+            var outline = label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
     }
 }
