@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -88,40 +89,37 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Round_EndsOnlyWhenBudgetExhausted_EvenIfQuotaReachedEarly()
+        public void Round_EndsImmediately_WhenQuotaReached_RegardlessOfRemainingBudget()
         {
             var run = new RunManager(new SystemRandomProvider(42));
 
             // Every cell is golden so score accumulates fast regardless of shape,
             // color or adjacency luck — this test is about the round-end STATE
-            // MACHINE (spec 3.4: evaluated only once the budget is exhausted),
-            // not about scoring itself (covered by GridManagerTests).
+            // MACHINE (the quota ends the round the instant it's reached), not
+            // about scoring itself (covered by GridManagerTests).
             foreach (var pos in GridManager.AllPositions())
             {
                 run.Grid.GetCell(pos).IsGolden = true;
             }
 
             int budget = run.CurrentBudget;
-            for (int i = 0; i < budget; i++)
+            int piecesPlaced = 0;
+            while (run.State == RunState.InProgress)
             {
                 var token = run.Deck.Hand[0];
                 var shape = PieceShapeCatalog.Get(token.Shape);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
-                Assert.IsTrue(anchor.HasValue, "Ran out of room on placement " + i + " of " + budget);
+                Assert.IsTrue(anchor.HasValue, "Ran out of room on placement " + piecesPlaced);
 
-                var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
-                Assert.IsTrue(outcome.Placement.Success);
+                run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                piecesPlaced++;
 
-                if (i < budget - 1)
-                {
-                    Assert.AreEqual(RunState.InProgress, outcome.StateAfter,
-                        "Round must not end before its piece budget is exhausted, even if the quota was already reached.");
-                }
+                Assert.Less(piecesPlaced, budget, "Should reach the quota well before exhausting the budget given every cell is golden");
             }
 
-            Assert.AreEqual(0, run.PiecesRemainingThisRound);
-            Assert.GreaterOrEqual(run.RoundScore, run.CurrentQuota);
             Assert.AreEqual(RunState.AwaitingDraft, run.State);
+            Assert.GreaterOrEqual(run.RoundScore, run.CurrentQuota);
+            Assert.Greater(run.PiecesRemainingThisRound, 0, "Round should end with budget still remaining once the quota is reached");
 
             var draft = run.RollDraftOptions();
             Assert.AreEqual(3, draft.Options.Length);
@@ -132,6 +130,47 @@ namespace Contigu.Tests
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
             Assert.AreEqual(RunConfig.PieceBudgets[1], run.PiecesRemainingThisRound);
+            Assert.AreEqual(RunState.InProgress, run.State);
+        }
+
+        [Test]
+        public void PlacePiece_TriggersDefeat_WhenBoardBecomesFullyBlockedAfterThisPlacement()
+        {
+            var run = new RunManager(new SystemRandomProvider(7));
+            var token = run.Deck.Hand[0];
+            var shape = PieceShapeCatalog.Get(token.Shape);
+
+            // Lock every cell except exactly the ones this piece will occupy at
+            // (0,0), so this single placement fills the board completely,
+            // leaving zero free cells anywhere for whatever ends up in hand next
+            // — a deterministic "stuck" scenario regardless of the actual draw.
+            var occupied = new HashSet<Vector2Int>();
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                occupied.Add(shape.Cells[i]);
+            }
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (!occupied.Contains(pos))
+                {
+                    run.Grid.GetCell(pos).IsLocked = true;
+                }
+            }
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(RunState.RunDefeat, run.State);
+        }
+
+        [Test]
+        public void PlacePiece_DoesNotTriggerDefeat_WhenBoardStillHasRoom()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(RunState.InProgress, run.State);
         }
     }

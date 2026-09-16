@@ -154,6 +154,9 @@ namespace Contigu.Presentation
                 return;
             }
 
+            int roundScoreBefore = _run.RoundScore;
+            int totalScoreBefore = _run.TotalScore;
+
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
@@ -168,39 +171,51 @@ namespace Contigu.Presentation
             // instantly vanishing) while its score is still playing out.
             _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors);
             _handView.Refresh();
+            // Round/budget update immediately; the score numbers themselves stay
+            // at their pre-placement values until PlayPlacementSequence catches
+            // them up in step with each popup.
             _hudView.Refresh(_run);
+            _hudView.SetScores(roundScoreBefore, _run.CurrentQuota, totalScoreBefore);
             _statusText.text = "Sélectionnez une pièce puis cliquez sur la grille.";
 
             _isPlayingPlacementSequence = true;
-            StartCoroutine(PlayPlacementSequence(outcome));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, totalScoreBefore));
         }
 
         /// <summary>
-        /// Plays a placement's full feedback sequence in order: the golden/group
-        /// score popups first, then — only once that's done — clears any
-        /// completed line/column one cell at a time (each with its own popup),
+        /// Plays a placement's full feedback sequence in order: each golden/
+        /// group score popup one at a time — pulsing its cell and advancing the
+        /// HUD's round/quota/total score at that exact moment, so the displayed
+        /// score climbs progressively instead of jumping straight to the final
+        /// value — then, only once that's done, clears any completed line/
+        /// column one cell at a time (each with its own popup and score bump),
         /// and only then advances the run state (draft/victory/defeat), so
         /// nothing interrupts the player while they're still reading their score.
         /// </summary>
-        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome)
+        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int totalScoreBefore)
         {
             var placement = outcome.Placement;
+            int displayedRoundScore = roundScoreBefore;
+            int displayedTotalScore = totalScoreBefore;
 
-            var immediateEvents = new System.Collections.Generic.List<ScoreEvent>();
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
-                if (placement.ScoreEvents[i].Type != ScoreEventType.LineClear)
+                var scoreEvent = placement.ScoreEvents[i];
+                if (scoreEvent.Type == ScoreEventType.LineClear)
                 {
-                    immediateEvents.Add(placement.ScoreEvents[i]);
+                    continue; // played below, synced with each cell's visual clear
                 }
-            }
 
-            PlayScoreEventSequence(immediateEvents);
+                var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor : UITheme.TextPrimary;
+                _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
+                _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
 
-            if (immediateEvents.Count > 0)
-            {
-                float immediatePhaseDuration = (immediateEvents.Count - 1) * ScoreEventStaggerSeconds + FeedbackLayer.PopupDurationSeconds;
-                yield return new WaitForSeconds(immediatePhaseDuration);
+                displayedRoundScore += scoreEvent.Amount;
+                displayedTotalScore += scoreEvent.Amount;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+
+                yield return new WaitForSeconds(ScoreEventStaggerSeconds);
             }
 
             for (int i = 0; i < placement.ClearedCells.Count; i++)
@@ -208,43 +223,18 @@ namespace Contigu.Presentation
                 var pos = placement.ClearedCells[i];
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
                 _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell + " ligne", UITheme.Success);
+                _gridView.PulseCell(pos.x, pos.y);
                 _gridView.ClearCellVisual(pos.x, pos.y);
+
+                displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
+                displayedTotalScore += ScoringConstants.LineClearBonusPerCell;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
             }
 
             _isPlayingPlacementSequence = false;
             HandleStateTransition(outcome.StateAfter);
-        }
-
-        /// <summary>
-        /// Plays each score contribution as its own staggered "+X" popup at the
-        /// cell it came from, instead of one lump total per placement, so the
-        /// player can see where the points actually came from.
-        /// </summary>
-        private void PlayScoreEventSequence(System.Collections.Generic.IReadOnlyList<ScoreEvent> events)
-        {
-            for (int i = 0; i < events.Count; i++)
-            {
-                var scoreEvent = events[i];
-                var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-
-                Color color;
-                string label;
-                switch (scoreEvent.Type)
-                {
-                    case ScoreEventType.Golden:
-                        color = VisualDefaults.GoldenColor;
-                        label = "+" + scoreEvent.Amount;
-                        break;
-                    case ScoreEventType.Group:
-                    default:
-                        color = UITheme.TextPrimary;
-                        label = "+" + scoreEvent.Amount;
-                        break;
-                }
-
-                _feedbackLayer.SpawnPopupDelayed(anchor, label, color, i * ScoreEventStaggerSeconds);
-            }
         }
 
         private void HandleStateTransition(RunState state)

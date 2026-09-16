@@ -4,9 +4,10 @@ namespace Contigu.Core
     /// Orchestrates the 8-round run: quotas, piece budgets, boss round locking,
     /// and the win/lose transition into the upgrade draft (spec sections 1 and 6).
     ///
-    /// Per spec 3.4, a round's success/failure is only evaluated once its piece
-    /// budget is exhausted (not the instant the quota is first reached), so the
-    /// player can keep placing budgeted pieces to pad their score.
+    /// A round ends the instant its quota is reached (success), or as soon as
+    /// either its piece budget runs out or its hand becomes unplayable — no
+    /// legal placement left anywhere on the grid for any of the 3 hand pieces —
+    /// without having reached the quota (defeat).
     /// </summary>
     public sealed class RunManager
     {
@@ -106,19 +107,34 @@ namespace Contigu.Core
 
         private void EvaluateRoundEnd()
         {
-            if (PiecesRemainingThisRound > 0)
-            {
-                return;
-            }
-
             if (RoundScore >= CurrentQuota)
             {
                 State = CurrentRoundIndex == RunConfig.RoundCount - 1 ? RunState.RunVictory : RunState.AwaitingDraft;
+                return;
             }
-            else
+
+            if (PiecesRemainingThisRound <= 0)
+            {
+                State = RunState.RunDefeat;
+                return;
+            }
+
+            if (!HasAnyHandPlacement())
             {
                 State = RunState.RunDefeat;
             }
+        }
+
+        /// <summary>True if at least one piece currently in hand can be legally placed somewhere on the grid.</summary>
+        private bool HasAnyHandPlacement()
+        {
+            var hand = Deck.Hand;
+            var shapes = new System.Collections.Generic.List<PieceShape>(hand.Count);
+            for (int i = 0; i < hand.Count; i++)
+            {
+                shapes.Add(PieceShapeCatalog.Get(hand[i].Shape));
+            }
+            return Grid.HasAnyValidPlacement(shapes);
         }
 
         public UpgradeDraft RollDraftOptions()

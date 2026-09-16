@@ -37,10 +37,21 @@ namespace Contigu.Presentation
         public void Refresh(RunManager run)
         {
             _roundText.text = "Manche " + run.CurrentRoundNumber + "/" + RunConfig.RoundCount + (run.IsBossRound ? " (BOSS)" : "");
-            _quotaText.text = "Quota " + run.RoundScore + " / " + run.CurrentQuota;
-            _roundScoreText.text = "Score manche: " + run.RoundScore;
             _budgetText.text = "Pièces restantes: " + run.PiecesRemainingThisRound;
-            _totalScoreText.text = "Score total (run): " + run.TotalScore;
+            SetScores(run.RoundScore, run.CurrentQuota, run.TotalScore);
+        }
+
+        /// <summary>
+        /// Updates just the score-derived texts (quota progress, round score,
+        /// total score) without touching round/budget — lets the presentation
+        /// layer animate these up progressively in sync with score popups
+        /// instead of always jumping straight to the final value.
+        /// </summary>
+        public void SetScores(int roundScore, int quota, int totalScore)
+        {
+            _quotaText.text = "Quota " + roundScore + " / " + quota;
+            _roundScoreText.text = "Score manche: " + roundScore;
+            _totalScoreText.text = "Score total (run): " + totalScore;
         }
     }
 }

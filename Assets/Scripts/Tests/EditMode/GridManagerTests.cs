@@ -31,6 +31,60 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void HasAnyValidPlacement_ReturnsTrue_OnAnEmptyBoard()
+        {
+            var grid = new GridManager();
+            var shapes = new[] { PieceShapeCatalog.Get(ShapeId.Single) };
+
+            Assert.IsTrue(grid.HasAnyValidPlacement(shapes));
+        }
+
+        [Test]
+        public void HasAnyValidPlacement_ReturnsFalse_WhenBoardIsCompletelyBlocked()
+        {
+            var grid = new GridManager();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                grid.GetCell(pos).IsLocked = true;
+            }
+            var shapes = new[] { PieceShapeCatalog.Get(ShapeId.Single), PieceShapeCatalog.Get(ShapeId.Sq2) };
+
+            Assert.IsFalse(grid.HasAnyValidPlacement(shapes));
+        }
+
+        [Test]
+        public void HasAnyValidPlacement_ReturnsFalse_WhenTheOnlyFreeCellIsTooSmallForEveryHandShape()
+        {
+            var grid = new GridManager();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (pos.x != 0 || pos.y != 0)
+                {
+                    grid.GetCell(pos).IsLocked = true;
+                }
+            }
+            var shapes = new[] { PieceShapeCatalog.Get(ShapeId.DomH) }; // needs 2 adjacent free cells; only 1 remains
+
+            Assert.IsFalse(grid.HasAnyValidPlacement(shapes));
+        }
+
+        [Test]
+        public void HasAnyValidPlacement_ReturnsTrue_WhenAtLeastOneHandShapeStillFits()
+        {
+            var grid = new GridManager();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (pos.x != 0 || pos.y != 0)
+                {
+                    grid.GetCell(pos).IsLocked = true;
+                }
+            }
+            var shapes = new[] { PieceShapeCatalog.Get(ShapeId.DomH), PieceShapeCatalog.Get(ShapeId.Single) };
+
+            Assert.IsTrue(grid.HasAnyValidPlacement(shapes)); // Single still fits at (0,0)
+        }
+
+        [Test]
         public void PlacePiece_SingleIsolatedCell_ScoresGroupOfOne()
         {
             var grid = new GridManager();

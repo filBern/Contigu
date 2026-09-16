@@ -7,9 +7,6 @@ namespace Contigu.Presentation
     /// <summary>Spawns short-lived floating "+N" popups for score feedback (spec 9.7).</summary>
     public sealed class FeedbackLayer : MonoBehaviour
     {
-        /// <summary>How long one popup stays on screen (float + fade), for callers that need to time a sequence around it (see GameBootstrap).</summary>
-        public const float PopupDurationSeconds = 1.3f;
-
         private RectTransform _root;
 
         public RectTransform Build(Transform parent)
@@ -47,40 +44,13 @@ namespace Contigu.Presentation
             StartCoroutine(AnimatePopup(popup, outline));
         }
 
-        /// <summary>
-        /// Same as <see cref="SpawnPopup"/> but waits <paramref name="delaySeconds"/>
-        /// first — used to play a sequence of score events one after another
-        /// instead of dumping them all on screen at once (see GameBootstrap).
-        /// </summary>
-        public void SpawnPopupDelayed(RectTransform anchor, string text, Color color, float delaySeconds)
-        {
-            if (anchor == null)
-            {
-                return;
-            }
-
-            if (delaySeconds <= 0f)
-            {
-                SpawnPopup(anchor, text, color);
-                return;
-            }
-
-            StartCoroutine(SpawnPopupAfterDelay(anchor, text, color, delaySeconds));
-        }
-
-        private IEnumerator SpawnPopupAfterDelay(RectTransform anchor, string text, Color color, float delaySeconds)
-        {
-            yield return new WaitForSeconds(delaySeconds);
-            SpawnPopup(anchor, text, color);
-        }
-
         private IEnumerator AnimatePopup(Text text, Outline outline)
         {
             var rect = text.rectTransform;
             // Slow, readable float+fade — several of these play in a staggered
             // sequence per placement, so each one needs enough time on screen to
             // actually be read before the next appears.
-            const float duration = PopupDurationSeconds;
+            const float duration = 1.3f;
             const float holdFraction = 0.35f; // stay fully opaque before fading
             float t = 0f;
             Vector3 startPos = rect.position;

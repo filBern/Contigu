@@ -92,6 +92,29 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// True if at least one of <paramref name="shapes"/> can be placed
+        /// somewhere on the grid right now — used to detect a "stuck" board
+        /// (no legal move left for any piece currently in hand).
+        /// </summary>
+        public bool HasAnyValidPlacement(IEnumerable<PieceShape> shapes)
+        {
+            foreach (var shape in shapes)
+            {
+                for (int x = 0; x < Size; x++)
+                {
+                    for (int y = 0; y < Size; y++)
+                    {
+                        if (CanPlace(shape, x, y))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Places a piece, applying the connected-group bonus, golden bonus, and
         /// any resulting line/column clears. Assumes the caller already validated
         /// the placement (or will inspect the returned failure).

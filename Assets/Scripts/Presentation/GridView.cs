@@ -80,8 +80,22 @@ namespace Contigu.Presentation
             badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
 
+            // Spells out a modifier cell's effect ("+18", "x2", "x4") as text,
+            // on top of the color badges above.
+            var effectLabel = UIFactory.CreateText(cellGo, "EffectLabel", "", 11, Color.white, TextAnchor.LowerCenter);
+            effectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            effectLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            effectLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+            effectLabel.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+            effectLabel.rectTransform.sizeDelta = new Vector2(-4f, 14f);
+            effectLabel.fontStyle = FontStyle.Bold;
+            var effectLabelOutline = effectLabel.gameObject.AddComponent<Outline>();
+            effectLabelOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            effectLabelOutline.effectDistance = new Vector2(1f, -1f);
+            effectLabel.gameObject.SetActive(false);
+
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, badgeGolden, badgeSpecial);
+            cellView.Init(this, x, y, background, badgeGolden, badgeSpecial, effectLabel);
             _cells[x, y] = cellView;
         }
 
@@ -207,6 +221,15 @@ namespace Contigu.Presentation
                 return null;
             }
             return _cells[x, y].GetComponent<RectTransform>();
+        }
+
+        /// <summary>Plays a brief pulse on one cell — used when it scores points.</summary>
+        public void PulseCell(int x, int y)
+        {
+            if (GridManager.InBounds(x, y))
+            {
+                _cells[x, y].Pulse();
+            }
         }
     }
 }

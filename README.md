@@ -44,10 +44,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
 
 ## Décisions d'implémentation notables
 
-- **Évaluation de fin de manche** : suit la spec 3.4 à la lettre — le
-  succès/échec n'est évalué qu'une fois le budget de pièces épuisé, pas dès
-  que le quota est atteint (le joueur peut continuer à scorer au-delà du
-  quota tant qu'il lui reste des pièces à poser).
+- **Évaluation de fin de manche** : écart volontaire par rapport à la spec
+  3.4 initiale, sur demande explicite — la manche se termine dès que le
+  quota est atteint (succès immédiat, peu importe le budget de pièces
+  restant), pas seulement quand le budget est épuisé. L'échec reste évalué
+  au budget épuisé sans avoir atteint le quota, **ou** dès que la main
+  devient injouable (aucune des 3 pièces en main ne rentre nulle part sur la
+  grille — `GridManager.HasAnyValidPlacement`), ce qui évite un
+  soft-lock si le joueur se retrouve coincé avant d'épuiser son budget.
 - **Bonus de groupe connecté ("mot Scrabble")** : à chaque pose, le groupe de
   cases connectées de même couleur (orthogonalement, joker inclus en pont
   transitif) que la pièce touche est entièrement recalculé — chaque case du
