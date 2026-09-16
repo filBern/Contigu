@@ -224,13 +224,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (`#5f699c`) pour un rendu délibérément plus sobre, cohérent avec son
     rôle de "wildcard" face aux 4 couleurs vives.
 - **Icônes d'accessibilité daltonisme + textures de tuile** : petites
-  icônes par couleur de pièce (étoile Joker, feuille Lime, goutte Teal,
-  fleur Violet — Coral n'a pas encore d'icône, `coral.png` n'a jamais été
-  commité) affichées au centre de chaque case remplie de la grille, en
-  plus du remplissage de couleur, pour ne jamais dépendre de la couleur
-  seule. Le fichier PNG manquant dégrade proprement : `VisualDefaults
-  .GetColorIcon` retourne `null` pour Coral et `GridCellView` cache
-  simplement le badge plutôt que d'afficher une image cassée.
+  icônes par couleur de pièce (feu de camp Coral, étoile Joker, feuille
+  Lime, goutte Teal, fleur Violet) affichées au centre de chaque case
+  remplie de la grille, en plus du remplissage de couleur, pour ne jamais
+  dépendre de la couleur seule. `VisualDefaults.GetColorIcon` retourne
+  `null` et `GridCellView` cache simplement le badge pour toute couleur
+  sans icône (le mécanisme reste en place au cas où une future couleur
+  arriverait sans sprite tout de suite).
   `gold-tile.png`/`DisabledTile.png` remplacent aussi le remplissage plat
   des cases dorées (badge coin) et verrouillées (texture X) quand la
   sprite est disponible, avec le même repli sur l'ancienne couleur plate
