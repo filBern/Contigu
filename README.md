@@ -309,3 +309,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   couleur sur chaque case. Le conteneur de preview (`HandView`) est
   agrandi (90x68 → 100x110) et recentré sur tout le slot pour occuper
   l'espace libéré par le label retiré.
+- **Marqueur rouge plus visible pour un placement invalide au survol** :
+  la teinte rouge translucide seule sur le fond était trop discrète.
+  `GridCellView` a maintenant un `_invalidMarker` dédié — un petit
+  carré plein (`UITheme.Danger`, 20px, contour sombre) centré sur
+  chaque case du survol dès que `GridManager.CanPlace` retourne faux,
+  au lieu de l'aperçu de l'icône de couleur (qui suggérerait à tort que
+  la pièce peut atterrir là). `SetHoverTint` prend maintenant un
+  paramètre `isValid` explicite plutôt que de déduire la validité de la
+  couleur de la teinte. Purement décoratif et jamais lié à l'état réel
+  d'une case : `ApplyState` le cache systématiquement, donc
+  `ClearHover` le réinitialise sans code de nettoyage séparé (même
+  principe que l'icône de couleur en survol ci-dessus).

@@ -22,12 +22,13 @@ namespace Contigu.Presentation
         private Image _badgeGolden;
         private Image _badgeSpecial;
         private Image _badgeColorIcon;
+        private Image _invalidMarker;
         private Text _effectLabel;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Text effectLabel)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Image invalidMarker, Text effectLabel)
         {
             _owner = owner;
             X = x;
@@ -37,6 +38,7 @@ namespace Contigu.Presentation
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
             _badgeColorIcon = badgeColorIcon;
+            _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
         }
 
@@ -137,6 +139,11 @@ namespace Contigu.Presentation
             string effectText = BuildEffectLabel(cell);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
+
+            // Hover-only decoration — never part of a cell's actual state, so
+            // every real render (including the one ClearHover triggers) hides
+            // it again.
+            _invalidMarker.gameObject.SetActive(false);
         }
 
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
@@ -164,21 +171,26 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Tints the cell green/red for valid/invalid placement preview, and
-        /// (when given) previews the color-icon badge for the hovered piece's
+        /// Tints the cell green/red for valid/invalid placement preview. When
+        /// valid, also previews the color-icon badge for the hovered piece's
         /// color — the same badge <see cref="ApplyState"/> shows once a cell
         /// is actually filled, so hovering previews exactly what landing
-        /// there would look like. ClearHover's follow-up ApplyState call
-        /// naturally resets both once the hover ends.
+        /// there would look like. When invalid, shows a solid red marker
+        /// instead — the background tint alone was easy to miss, and a
+        /// color-icon preview would misleadingly suggest the piece could
+        /// land there. ClearHover's follow-up ApplyState call resets
+        /// everything once the hover ends.
         /// </summary>
-        public void SetHoverTint(Color? overlay, PieceColor? previewColor = null)
+        public void SetHoverTint(Color? overlay, bool isValid, PieceColor? previewColor = null)
         {
             if (overlay.HasValue)
             {
                 Background.color = Color.Lerp(Background.color, overlay.Value, 0.6f);
             }
 
-            if (previewColor.HasValue)
+            _invalidMarker.gameObject.SetActive(!isValid);
+
+            if (isValid && previewColor.HasValue)
             {
                 Sprite icon = VisualDefaults.GetColorIcon(previewColor.Value);
                 _badgeColorIcon.gameObject.SetActive(icon != null);

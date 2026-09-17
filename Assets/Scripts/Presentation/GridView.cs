@@ -102,6 +102,20 @@ namespace Contigu.Presentation
             badgeColorIconOutline.effectDistance = new Vector2(1f, -1f);
             badgeColorIcon.gameObject.SetActive(false);
 
+            // Solid marker shown instead of the color-icon preview while
+            // hovering an invalid placement — a plain colored square (no
+            // sprite needed), small and central so it reads as a clear "not
+            // here" rather than blending into the red background tint alone.
+            var invalidMarker = UIFactory.CreatePanel(cellGo, "InvalidMarker", UITheme.Danger);
+            UIFactory.SetAnchor(invalidMarker.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            invalidMarker.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            invalidMarker.rectTransform.sizeDelta = new Vector2(20f, 20f);
+            invalidMarker.rectTransform.anchoredPosition = Vector2.zero;
+            var invalidMarkerOutline = invalidMarker.gameObject.AddComponent<Outline>();
+            invalidMarkerOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            invalidMarkerOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            invalidMarker.gameObject.SetActive(false);
+
             // Spells out a modifier cell's effect ("+18", "x2", "x4") as text,
             // on top of the color badges above.
             var effectLabel = UIFactory.CreateText(cellGo, "EffectLabel", "", 11, Color.white, TextAnchor.LowerCenter);
@@ -117,7 +131,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgeColorIcon, effectLabel);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgeColorIcon, invalidMarker, effectLabel);
             _cells[x, y] = cellView;
         }
 
@@ -210,7 +224,7 @@ namespace Contigu.Presentation
                 int cy = y + offsets[i].y;
                 if (GridManager.InBounds(cx, cy))
                 {
-                    _cells[cx, cy].SetHoverTint(overlay, _selectedColor);
+                    _cells[cx, cy].SetHoverTint(overlay, valid, _selectedColor);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                 }
             }
