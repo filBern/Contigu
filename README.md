@@ -267,3 +267,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   jamais le sprite venait à manquer). Le nouvel enfant `FillTile` est
   construit juste avant les badges dans `GridView.CreateCell` pour
   garder le bon ordre d'empilement (Background → FillTile → badges).
+- **Fix : un même modificateur pouvait être obtenu deux fois dans la
+  même run** — `RunManager.RollModifierDraftOptions` tirait ses 3
+  options depuis `ModifierCatalog.All` en entier (16 entrées), sans
+  exclure les modificateurs déjà dans `ActiveModifiers` ; rien
+  n'empêchait donc de se refaire proposer, puis reprendre, un
+  modificateur déjà actif. La méthode filtre maintenant le catalogue
+  aux seuls modificateurs pas encore possédés avant de tirer les 3
+  options — chaque modificateur ne peut plus être actif qu'une seule
+  fois par run. Test de régression :
+  `RollModifierDraftOptions_NeverOffersAModifierAlreadyActive`.

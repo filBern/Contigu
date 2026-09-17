@@ -180,10 +180,23 @@ namespace Contigu.Core
             return applied;
         }
 
-        /// <summary>Rolls a modifier draft of up to <see cref="ModifierDraftSize"/> distinct options.</summary>
+        /// <summary>
+        /// Rolls a modifier draft of up to <see cref="ModifierDraftSize"/>
+        /// distinct options, drawn only from modifiers the player doesn't
+        /// already hold — each modifier can only be active once per run.
+        /// </summary>
         public ModifierDefinition[] RollModifierDraftOptions()
         {
-            return UpgradeSystem.PickDistinct(ModifierCatalog.All, ModifierDraftSize, _rng);
+            var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
+            for (int i = 0; i < ModifierCatalog.All.Length; i++)
+            {
+                var candidate = ModifierCatalog.All[i];
+                if (!_activeModifiers.Contains(candidate.Id))
+                {
+                    available.Add(candidate);
+                }
+            }
+            return UpgradeSystem.PickDistinct(available, ModifierDraftSize, _rng);
         }
 
         /// <summary>

@@ -26,8 +26,9 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
-        // lets Pulse(id) find every row currently showing that modifier (there
-        // can be more than one if the player holds duplicates).
+        // lets Pulse(id) find the row currently showing that modifier (each
+        // modifier can only be active once per run, see
+        // RunManager.RollModifierDraftOptions).
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
         private readonly List<Image> _rowBadges = new List<Image>();
 

@@ -185,6 +185,31 @@ namespace Contigu.Tests
             Assert.AreEqual(RunState.InProgress, run.State);
         }
 
+        [Test]
+        public void RollModifierDraftOptions_NeverOffersAModifierAlreadyActive()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            foreach (var pos in GridManager.AllPositions())
+            {
+                run.Grid.GetCell(pos).IsGolden = true;
+            }
+
+            for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
+            {
+                PlayRoundToAwaitingDraft(run);
+                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+                var options = run.RollModifierDraftOptions();
+
+                foreach (var option in options)
+                {
+                    CollectionAssert.DoesNotContain(run.ActiveModifiers, option.Id,
+                        "A modifier already held should never be offered again in the same run");
+                }
+
+                run.ApplyModifierPick(options[0].Id);
+            }
+        }
+
         /// <summary>Places pieces from hand until the round's quota is reached (assumes every cell is already golden, as set up by the caller, so this converges quickly).</summary>
         private static void PlayRoundToAwaitingDraft(RunManager run)
         {
