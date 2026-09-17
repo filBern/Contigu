@@ -256,3 +256,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `ModifierVisualDefaults` documente comment un futur sprite par icône
   s'insérerait au même endroit que l'abréviation, sur le même principe de
   repli que `VisualDefaults.GetColorIcon` (Coral) plus haut.
+- **Texture de case remplie** (`fill-tile-piece.png`, dans
+  `Assets/Resources/Tiles/`) : une 3e couche insérée entre le
+  remplissage plat de couleur (`Background`) et le badge de couleur
+  (`_badgeColorIcon`) — un cadre/bevel neutre (non teinté) qui donne à
+  chaque case remplie un aspect "bloc" plutôt qu'un simple rectangle
+  plat, quelle que soit la couleur de la pièce. Visible uniquement sur
+  une case réellement remplie et non verrouillée
+  (`VisualDefaults.FillTileSprite`, même repli que golden/locked tile si
+  jamais le sprite venait à manquer). Le nouvel enfant `FillTile` est
+  construit juste avant les badges dans `GridView.CreateCell` pour
+  garder le bon ordre d'empilement (Background → FillTile → badges).

@@ -58,6 +58,15 @@ namespace Contigu.Presentation
             var background = cellGo.gameObject.AddComponent<Image>();
             background.color = Color.white;
 
+            // Neutral overlay drawn on top of the flat color fill and below
+            // every badge — gives a filled piece cell a distinct "block" look
+            // instead of a flat rect. Only shown for an actually-filled cell
+            // (see GridCellView.ApplyState); built as the first child so it
+            // sits above Background but below every badge/label below.
+            var fillTile = UIFactory.CreatePanel(cellGo, "FillTile", Color.white);
+            UIFactory.StretchFull(fillTile.rectTransform);
+            fillTile.gameObject.SetActive(false);
+
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
             badgeGolden.rectTransform.pivot = new Vector2(0f, 1f);
@@ -107,7 +116,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, badgeGolden, badgeSpecial, badgeColorIcon, effectLabel);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgeColorIcon, effectLabel);
             _cells[x, y] = cellView;
         }
 

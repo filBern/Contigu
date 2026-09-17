@@ -69,6 +69,12 @@ namespace Contigu.Data
         public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
         public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
 
+        // Overlay drawn on top of a filled cell's flat color fill and below
+        // its color-icon badge — a neutral (untinted) frame/bevel so a filled
+        // piece cell reads as a distinct "block" rather than a flat rect,
+        // regardless of which of the 5 piece colors fills it.
+        public static readonly Sprite FillTileSprite = Resources.Load<Sprite>("Tiles/fill-tile-piece");
+
         public static Color GetColor(PieceColor color)
         {
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;

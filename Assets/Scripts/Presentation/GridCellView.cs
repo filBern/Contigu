@@ -18,6 +18,7 @@ namespace Contigu.Presentation
         public int Y { get; private set; }
 
         public Image Background { get; private set; }
+        private Image _fillTile;
         private Image _badgeGolden;
         private Image _badgeSpecial;
         private Image _badgeColorIcon;
@@ -26,12 +27,13 @@ namespace Contigu.Presentation
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Text effectLabel)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Text effectLabel)
         {
             _owner = owner;
             X = x;
             Y = y;
             Background = background;
+            _fillTile = fillTile;
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
             _badgeColorIcon = badgeColorIcon;
@@ -82,6 +84,15 @@ namespace Contigu.Presentation
             {
                 Background.sprite = null;
                 Background.color = VisualDefaults.EmptyCellColor;
+            }
+
+            // Neutral frame/bevel overlay on top of the flat fill, below every
+            // badge — only for an actually-filled, unlocked cell.
+            bool showFillTile = isFilled && !cell.IsLocked && VisualDefaults.FillTileSprite != null;
+            _fillTile.gameObject.SetActive(showFillTile);
+            if (showFillTile)
+            {
+                _fillTile.sprite = VisualDefaults.FillTileSprite;
             }
 
             _badgeGolden.gameObject.SetActive(cell.IsGolden);
