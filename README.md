@@ -287,3 +287,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   les cases verrouillées — voir `VisualDefaults.LockedColor`).
   `GameBootstrap` l'appelle avec `false` juste avant de lancer
   `PlayPlacementSequence` et avec `true` juste après qu'elle se termine.
+- **Icône de couleur dans le preview du slot de main + le survol
+  vert/rouge sur la grille** : sur demande explicite, le même badge
+  d'accessibilité daltonisme utilisé sur les cases remplies apparaît
+  maintenant à deux autres endroits où seule la couleur plate indiquait
+  la couleur de la pièce :
+  - `HandView.BuildShapePreview` superpose l'icône sur chaque carré
+    rempli du preview de pièce dans le slot de main.
+  - `GridView`/`GridCellView` : `SetSelectedShape` accepte maintenant
+    la couleur de la pièce sélectionnée (`GameBootstrap` la passe
+    depuis `PieceToken.Color`) et la propage jusqu'à
+    `GridCellView.SetHoverTint`, qui affiche le badge d'icône par-dessus
+    la teinte verte/rouge de survol — un aperçu exact de ce que
+    `ApplyState` afficherait si la case était vraiment remplie.
+    `ClearHover` (qui rappelle `ApplyState` sur chaque case relâchée)
+    réinitialise l'icône automatiquement, sans code de nettoyage
+    séparé. Comme pour les cases remplies, l'icône est simplement
+    absente pour une couleur qui n'en a pas encore (Coral).

@@ -206,6 +206,21 @@ namespace Contigu.Presentation
                     img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
+
+                    // Same colorblind-accessibility icon as a filled grid
+                    // cell (see GridCellView), so the hand preview already
+                    // shows a piece's color both ways before it's even
+                    // placed. Skipped for a color with no icon yet (Coral).
+                    if (filled)
+                    {
+                        var icon = VisualDefaults.GetColorIcon(token.Color);
+                        if (icon != null)
+                        {
+                            var iconImg = UIFactory.CreatePanel(img.transform, "Icon", Color.white);
+                            iconImg.sprite = icon;
+                            UIFactory.StretchFull(iconImg.rectTransform);
+                        }
+                    }
                 }
             }
         }

@@ -17,6 +17,7 @@ namespace Contigu.Presentation
         private GridManager _grid;
         private GridCellView[,] _cells;
         private PieceShape _selectedShape;
+        private PieceColor? _selectedColor;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
 
         public RectTransform Build(Transform parent, GridManager grid, float cellSize)
@@ -185,9 +186,10 @@ namespace Contigu.Presentation
             }
         }
 
-        public void SetSelectedShape(PieceShape shape)
+        public void SetSelectedShape(PieceShape shape, PieceColor? color = null)
         {
             _selectedShape = shape;
+            _selectedColor = color;
             ClearHover();
         }
 
@@ -208,7 +210,7 @@ namespace Contigu.Presentation
                 int cy = y + offsets[i].y;
                 if (GridManager.InBounds(cx, cy))
                 {
-                    _cells[cx, cy].SetHoverTint(overlay);
+                    _cells[cx, cy].SetHoverTint(overlay, _selectedColor);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                 }
             }

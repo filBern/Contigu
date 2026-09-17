@@ -163,11 +163,29 @@ namespace Contigu.Presentation
             return multiplierPart ?? string.Empty;
         }
 
-        public void SetHoverTint(Color? overlay)
+        /// <summary>
+        /// Tints the cell green/red for valid/invalid placement preview, and
+        /// (when given) previews the color-icon badge for the hovered piece's
+        /// color — the same badge <see cref="ApplyState"/> shows once a cell
+        /// is actually filled, so hovering previews exactly what landing
+        /// there would look like. ClearHover's follow-up ApplyState call
+        /// naturally resets both once the hover ends.
+        /// </summary>
+        public void SetHoverTint(Color? overlay, PieceColor? previewColor = null)
         {
             if (overlay.HasValue)
             {
                 Background.color = Color.Lerp(Background.color, overlay.Value, 0.6f);
+            }
+
+            if (previewColor.HasValue)
+            {
+                Sprite icon = VisualDefaults.GetColorIcon(previewColor.Value);
+                _badgeColorIcon.gameObject.SetActive(icon != null);
+                if (icon != null)
+                {
+                    _badgeColorIcon.sprite = icon;
+                }
             }
         }
 

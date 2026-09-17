@@ -162,7 +162,7 @@ namespace Contigu.Presentation
             var token = _run.Deck.Hand[handIndex];
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            _gridView.SetSelectedShape(shape);
+            _gridView.SetSelectedShape(shape, token.Color);
             _statusText.text = "Click the grid to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
         }
 
