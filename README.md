@@ -304,3 +304,8 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     réinitialise l'icône automatiquement, sans code de nettoyage
     séparé. Comme pour les cases remplies, l'icône est simplement
     absente pour une couleur qui n'en a pas encore (Coral).
+- **Retiré le nom de forme + couleur en texte des slots de main** :
+  devenu redondant maintenant que le preview affiche déjà l'icône de
+  couleur sur chaque case. Le conteneur de preview (`HandView`) est
+  agrandi (90x68 → 100x110) et recentré sur tout le slot pour occuper
+  l'espace libéré par le label retiré.

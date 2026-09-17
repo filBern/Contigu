@@ -15,7 +15,6 @@ namespace Contigu.Presentation
         private DeckManager _deck;
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
-        private Text[] _slotLabels;
         private RectTransform[] _previewContainers;
         private int _selectedIndex = -1;
         private bool _interactable = true;
@@ -41,7 +40,6 @@ namespace Contigu.Presentation
 
             _slotBackgrounds = new Image[DeckManager.HandSize];
             _slotButtons = new Button[DeckManager.HandSize];
-            _slotLabels = new Text[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
@@ -59,22 +57,18 @@ namespace Contigu.Presentation
                 btn.onClick.AddListener(() => OnSlotClicked(idx));
                 _slotButtons[i] = btn;
 
+                // Fills most of the slot now that there's no name/color label
+                // below it — the shape + color-icon preview alone (plus the
+                // color-icon badge on each filled square) is clear enough on
+                // its own.
                 var previewContainer = UIFactory.CreateUIObject("Preview", slot.transform);
-                previewContainer.anchorMin = new Vector2(0.5f, 1f);
-                previewContainer.anchorMax = new Vector2(0.5f, 1f);
-                previewContainer.pivot = new Vector2(0.5f, 1f);
-                previewContainer.anchoredPosition = new Vector2(0f, -10f);
-                previewContainer.sizeDelta = new Vector2(90f, 68f);
-
-                var label = UIFactory.CreateText(slot.transform, "Label", "", 13, UITheme.TextPrimary);
-                label.rectTransform.anchorMin = new Vector2(0f, 0f);
-                label.rectTransform.anchorMax = new Vector2(1f, 0f);
-                label.rectTransform.pivot = new Vector2(0.5f, 0f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, 6f);
-                label.rectTransform.sizeDelta = new Vector2(-8f, 40f);
+                previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
+                previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
+                previewContainer.pivot = new Vector2(0.5f, 0.5f);
+                previewContainer.anchoredPosition = Vector2.zero;
+                previewContainer.sizeDelta = new Vector2(100f, 110f);
 
                 _slotBackgrounds[i] = slot;
-                _slotLabels[i] = label;
                 _previewContainers[i] = previewContainer;
             }
 
@@ -159,11 +153,6 @@ namespace Contigu.Presentation
                     var token = _deck.Hand[i];
                     var rotation = _deck.HandRotations[i];
                     BuildShapePreview(preview, token, rotation);
-                    _slotLabels[i].text = VisualDefaults.GetShapeName(token.Shape) + "\n" + VisualDefaults.GetColorName(token.Color);
-                }
-                else
-                {
-                    _slotLabels[i].text = string.Empty;
                 }
             }
             UpdateSelectionVisuals();
