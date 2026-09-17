@@ -277,3 +277,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   options — chaque modificateur ne peut plus être actif qu'une seule
   fois par run. Test de régression :
   `RollModifierDraftOptions_NeverOffersAModifierAlreadyActive`.
+- **Fix : les slots de main restaient cliquables pendant l'animation de
+  placement** — `OnCellClicked` bloquait déjà les clics sur la GRILLE
+  pendant `_isPlayingPlacementSequence`, mais rien n'empêchait de
+  sélectionner un AUTRE slot de main pendant ce temps. `HandView` a
+  maintenant `SetInteractable(bool)` : désactive `Button.interactable`
+  sur les 3 slots (bloque le clic) et grise leur fond en le mélangeant
+  vers `UITheme.Background` (même traitement "recede into the void" que
+  les cases verrouillées — voir `VisualDefaults.LockedColor`).
+  `GameBootstrap` l'appelle avec `false` juste avant de lancer
+  `PlayPlacementSequence` et avec `true` juste après qu'elle se termine.

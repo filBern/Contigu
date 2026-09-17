@@ -14,9 +14,11 @@ namespace Contigu.Presentation
 
         private DeckManager _deck;
         private Image[] _slotBackgrounds;
+        private Button[] _slotButtons;
         private Text[] _slotLabels;
         private RectTransform[] _previewContainers;
         private int _selectedIndex = -1;
+        private bool _interactable = true;
 
         public int SelectedIndex
         {
@@ -38,6 +40,7 @@ namespace Contigu.Presentation
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             _slotBackgrounds = new Image[DeckManager.HandSize];
+            _slotButtons = new Button[DeckManager.HandSize];
             _slotLabels = new Text[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
 
@@ -54,6 +57,7 @@ namespace Contigu.Presentation
                 slotLayout.preferredHeight = 140f;
                 var btn = slot.gameObject.AddComponent<Button>();
                 btn.onClick.AddListener(() => OnSlotClicked(idx));
+                _slotButtons[i] = btn;
 
                 var previewContainer = UIFactory.CreateUIObject("Preview", slot.transform);
                 previewContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -80,7 +84,7 @@ namespace Contigu.Presentation
 
         private void OnSlotClicked(int idx)
         {
-            if (idx >= _deck.Hand.Count)
+            if (!_interactable || idx >= _deck.Hand.Count)
             {
                 return;
             }
@@ -98,11 +102,30 @@ namespace Contigu.Presentation
             UpdateSelectionVisuals();
         }
 
+        /// <summary>
+        /// Blocks (and visually greys out) hand selection — used while a
+        /// placement's feedback sequence is still animating, so a new
+        /// selection can't be made until the player has seen the current one
+        /// resolve. The Button.interactable flag alone already stops clicks;
+        /// this also dims each slot toward UITheme.Background so the state is
+        /// visible, not just enforced.
+        /// </summary>
+        public void SetInteractable(bool interactable)
+        {
+            _interactable = interactable;
+            for (int i = 0; i < _slotButtons.Length; i++)
+            {
+                _slotButtons[i].interactable = interactable;
+            }
+            UpdateSelectionVisuals();
+        }
+
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
         public void Rebind(DeckManager deck)
         {
             _deck = deck;
             _selectedIndex = -1;
+            _interactable = true;
             Refresh();
         }
 
@@ -112,7 +135,12 @@ namespace Contigu.Presentation
             {
                 bool hasPiece = i < _deck.Hand.Count;
                 bool selected = i == _selectedIndex;
-                _slotBackgrounds[i].color = !hasPiece ? UITheme.Panel : (selected ? UITheme.ButtonSelected : UITheme.ButtonIdle);
+                var baseColor = !hasPiece ? UITheme.Panel : (selected ? UITheme.ButtonSelected : UITheme.ButtonIdle);
+                // Same "recede into the void" treatment as locked grid cells
+                // (see VisualDefaults.LockedColor) — dims toward the
+                // background instead of a one-off grey, so it reads as part
+                // of the same visual language rather than a new state.
+                _slotBackgrounds[i].color = _interactable ? baseColor : Color.Lerp(baseColor, UITheme.Background, 0.7f);
             }
         }
 

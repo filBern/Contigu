@@ -209,6 +209,7 @@ namespace Contigu.Presentation
             _statusText.text = "Select a piece, then click the grid.";
 
             _isPlayingPlacementSequence = true;
+            _handView.SetInteractable(false);
             StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, totalScoreBefore));
         }
 
@@ -276,6 +277,7 @@ namespace Contigu.Presentation
             }
 
             _isPlayingPlacementSequence = false;
+            _handView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
         }
 
