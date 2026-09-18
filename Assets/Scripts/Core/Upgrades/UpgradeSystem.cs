@@ -9,14 +9,14 @@ namespace Contigu.Core
     /// </summary>
     public sealed class UpgradeSystem
     {
-        /// <summary>How many free/unmodified cells a Golden-cells upgrade adds. Kept at 1 (down from 3) — 3 at once was overpowered.</summary>
-        public const int GoldenCellsCount = 1;
+        /// <summary>How many distinct deck tokens a Golden-cells upgrade enchants (spec 5.4 redesign — each enchantment is one-shot, fired only when that specific token is placed, so this is no longer the permanent-grid-cell count it used to be).</summary>
+        public const int GoldenCellsCount = 3;
 
-        /// <summary>How many free/unmodified cells a Tinted-cells upgrade adds. Kept at 1 (down from 2) — see GoldenCellsCount.</summary>
-        public const int TintedCellsCount = 1;
+        /// <summary>How many distinct deck tokens a Tinted-cells upgrade enchants. See GoldenCellsCount.</summary>
+        public const int TintedCellsCount = 3;
 
-        /// <summary>How many free/unmodified cells a Multiplier-zone upgrade adds. Kept at 1 (down from 3) — see GoldenCellsCount.</summary>
-        public const int MultiplierZoneCount = 1;
+        /// <summary>How many distinct deck tokens a Multiplier-zone upgrade enchants. See GoldenCellsCount.</summary>
+        public const int MultiplierZoneCount = 3;
 
         private readonly IRandomProvider _rng;
 

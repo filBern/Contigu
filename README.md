@@ -465,3 +465,10 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     grille redevient non-modifiée juste après) ; tests réécrits dans
     `UpgradeSystemTests` (vérifient le tag sur le deck, plus la case de
     grille) et `GridManagerTests` (méthode retirée).
+  - **Ajustement (sur demande explicite)** : chaque upgrade enchante
+    maintenant 3 pièces distinctes du deck au lieu d'une seule
+    (`UpgradeSystem.GoldenCellsCount`/`TintedCellsCount`/`MultiplierZoneCount`
+    passés de 1 à 3) — l'ancien 1 datait du réglage d'équilibrage de
+    l'ancien système "case de grille permanente" et ne s'appliquait
+    plus vraiment à la nouvelle sémantique "enchantement à usage
+    unique par pièce".
