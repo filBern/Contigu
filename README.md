@@ -385,3 +385,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     "X / Y" que la barre du haut) plutôt que la phrase "Remaining
     pieces: N" — `piècesInitiales` est `RunManager.CurrentBudget`, déjà
     disponible en paramètre de `HudView.UpdatePieces`.
+  - **Fix : la barre ne représentait toujours pas vraiment le ratio**
+    (retour explicite après le fix précédent) — `Image.Type.Filled`
+    (fillAmount/fillMethod/fillOrigin sur un `Image` sans sprite)
+    dépend de détails de rendu (mesh/shader) impossibles à vérifier
+    visuellement dans ce bac à sable sans éditeur Unity. Remplacé par
+    une approche 100% mise en page : le rectangle `Fill` est un `Image`
+    tout simple (`Type.Simple`) dont le bord droit est piloté
+    directement par `anchorMax.x` (`HudView.SetRatio`), qui redimensionne
+    le rectangle proportionnellement à la largeur du parent — un pur
+    calcul d'ancrage RectTransform, garanti de fonctionner
+    indépendamment du rendu du shader de remplissage.

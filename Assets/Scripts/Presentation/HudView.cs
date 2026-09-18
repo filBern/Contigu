@@ -17,19 +17,19 @@ namespace Contigu.Presentation
     {
         private const float BarHeight = 68f;
 
-        private Image _scoreFill;
+        private RectTransform _scoreFillRect;
         private Text _scoreLabel;
-        private Image _piecesFill;
+        private RectTransform _piecesFillRect;
         private Text _piecesLabel;
 
         public void Build(Transform parent)
         {
-            BuildBar(parent, "ScoreBar", UITheme.Success, top: true, out _scoreFill, out _scoreLabel);
-            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected, top: false, out _piecesFill, out _piecesLabel);
+            BuildBar(parent, "ScoreBar", UITheme.Success, top: true, out _scoreFillRect, out _scoreLabel);
+            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected, top: false, out _piecesFillRect, out _piecesLabel);
         }
 
         private static void BuildBar(Transform parent, string name, Color fillColor, bool top,
-            out Image fill, out Text label)
+            out RectTransform fillRect, out Text label)
         {
             float edgeY = top ? 1f : 0f;
             // PanelLight rather than Panel for the track: Panel sits too
@@ -47,23 +47,31 @@ namespace Contigu.Presentation
             bg.rectTransform.anchoredPosition = Vector2.zero;
             bg.rectTransform.sizeDelta = new Vector2(0f, BarHeight);
 
+            // The fill is a plain colored rect whose RIGHT edge is driven
+            // directly by anchorMax.x (see SetRatio) — a pure layout resize,
+            // not Image.Type.Filled — so the bar's width is guaranteed to
+            // track the ratio with no dependency on fill-shader/mesh behavior.
             var fillImg = UIFactory.CreatePanel(bg.transform, "Fill", fillColor);
-            fillImg.type = Image.Type.Filled;
-            fillImg.fillMethod = Image.FillMethod.Horizontal;
-            fillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
-            fillImg.fillAmount = 0f;
-            var fillRect = fillImg.rectTransform;
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = Vector2.zero;
-            fillRect.offsetMax = Vector2.zero;
+            var rt = fillImg.rectTransform;
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 1f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
 
             var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextPrimary);
             text.fontStyle = FontStyle.Bold;
             UIFactory.StretchFull(text.rectTransform);
 
-            fill = fillImg;
+            fillRect = rt;
             label = text;
+        }
+
+        /// <summary>Resizes a bar's fill rect so its right edge sits at <paramref name="ratio"/> (0-1) of the bar's width.</summary>
+        private static void SetRatio(RectTransform fillRect, float ratio)
+        {
+            var max = fillRect.anchorMax;
+            max.x = Mathf.Clamp01(ratio);
+            fillRect.anchorMax = max;
         }
 
         public void Refresh(RunManager run)
@@ -81,13 +89,13 @@ namespace Contigu.Presentation
         public void SetScores(int roundScore, int quota)
         {
             _scoreLabel.text = roundScore + " / " + quota;
-            _scoreFill.fillAmount = quota > 0 ? Mathf.Clamp01((float)roundScore / quota) : 0f;
+            SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
         }
 
         private void UpdatePieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;
-            _piecesFill.fillAmount = budget > 0 ? Mathf.Clamp01((float)piecesRemaining / budget) : 0f;
+            SetRatio(_piecesFillRect, budget > 0 ? (float)piecesRemaining / budget : 0f);
         }
     }
 }
