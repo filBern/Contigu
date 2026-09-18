@@ -62,11 +62,17 @@ namespace Contigu.Presentation
             _cardsContainer.pivot = new Vector2(0.5f, 1f);
             _cardsContainer.anchoredPosition = new Vector2(0f, -115f);
 
-            var layout = _cardsContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 20f;
+            // Fixed 2-column grid rather than a single row: the removal
+            // screen can show up to MaxActiveModifiers + 1 = 6 cards, and 6
+            // in a row (6*200 + 5*20 = 1300) ran off the edges of the
+            // screen. 2 columns keeps every screen (3-card pick, 6-card
+            // removal) within a tidy 2-wide block instead.
+            var layout = _cardsContainer.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(CardWidth, CardHeight);
+            layout.spacing = new Vector2(20f, 16f);
             layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 2;
             var fitter = _cardsContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -118,13 +124,10 @@ namespace Contigu.Presentation
 
         private void BuildCard(ModifierDefinition def, string buttonLabel)
         {
+            // GridLayoutGroup drives each child's size directly from its own
+            // cellSize, so unlike a Horizontal/VerticalLayoutGroup the card
+            // doesn't need its own sizeDelta or LayoutElement set.
             var card = UIFactory.CreatePanel(_cardsContainer, "ModCard_" + def.Id, UITheme.PanelLight);
-            card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
-            // Plain Image has no ILayoutElement, so pin the size explicitly or
-            // the parent HorizontalLayoutGroup collapses it toward zero.
-            var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = CardWidth;
-            cardLayout.preferredHeight = CardHeight;
             // The card's own fill sits close in luminance to the black overlay
             // behind it, so without a rim the card edge is hard to read — a
             // dark outline around the panel itself gives it a defined border.

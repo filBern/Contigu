@@ -396,3 +396,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     le rectangle proportionnellement à la largeur du parent — un pur
     calcul d'ancrage RectTransform, garanti de fonctionner
     indépendamment du rendu du shader de remplissage.
+- **Fix : l'écran "Too many modifiers!" débordait de l'écran** —
+  `ModifierDraftView._cardsContainer` utilisait un
+  `HorizontalLayoutGroup`, mettant TOUTES les cartes sur une seule
+  rangée. Ça passait pour l'écran de draft (toujours 3 cartes, 640px),
+  mais l'écran de retrait peut afficher jusqu'à
+  `MaxActiveModifiers + 1 = 6` cartes, soit 1300px sur une seule
+  rangée — bien plus large que l'écran. Remplacé par un
+  `GridLayoutGroup` à 2 colonnes fixes (`FixedColumnCount`), qui donne
+  un bloc 2×2 pour le draft et 2×3 pour le retrait (demandé
+  explicitement) au lieu d'une rangée qui déborde. Comme
+  `GridLayoutGroup` pilote directement la taille de chaque carte via
+  son propre `cellSize`, le `LayoutElement`/`sizeDelta` que chaque
+  carte devait fixer elle-même pour un `HorizontalLayoutGroup` est
+  devenu inutile et a été retiré.
