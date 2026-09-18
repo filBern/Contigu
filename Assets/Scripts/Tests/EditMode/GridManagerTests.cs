@@ -413,19 +413,31 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ResetForNewRound_ClearsFillAndLock_ButKeepsModifiers()
+        public void ResetForNewRound_ClearsFillLockAndModifiers()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
             grid.GetCell(1, 1).IsLocked = true;
             grid.GetCell(2, 2).IsGolden = true;
+            var tinted = grid.GetCell(3, 3);
+            tinted.IsTinted = true;
+            tinted.TintedColor = PieceColor.Coral;
+            grid.GetCell(4, 4).IsMultiplierZone = true;
 
             grid.ResetForNewRound();
 
             Assert.IsFalse(grid.GetCell(0, 0).IsFilled);
             Assert.IsFalse(grid.GetCell(1, 1).IsLocked);
-            Assert.IsTrue(grid.GetCell(2, 2).IsGolden, "Golden modifier must persist across rounds");
+            // A "Seeder"-tagged piece is the only thing that can leave a cell
+            // golden/tinted/multiplier-zone past its own placement, and even
+            // that is only meant to last "for the rest of the round" — a
+            // permanent-for-the-whole-run golden cell was judged too
+            // powerful — so every modifier flag clears here too, unlike fill/
+            // lock's already-established per-round reset.
+            Assert.IsFalse(grid.GetCell(2, 2).IsGolden, "Golden modifier should not survive a round reset");
+            Assert.IsFalse(grid.GetCell(3, 3).IsTinted, "Tinted modifier should not survive a round reset");
+            Assert.IsFalse(grid.GetCell(4, 4).IsMultiplierZone, "Multiplier-zone modifier should not survive a round reset");
         }
 
         [Test]

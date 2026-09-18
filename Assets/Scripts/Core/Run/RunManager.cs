@@ -142,7 +142,8 @@ namespace Contigu.Core
         /// redesign) rather than a permanent cell property. Returns every cell
         /// that should be un-stamped again once scoring is done (see
         /// <see cref="ClearTokenTraitCells"/>) — every kind except
-        /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay)
+        /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay
+        /// until the round itself resets it, see Cell.ResetForNewRound)
         /// and <see cref="PieceTraitKind.Mirror"/> (which stamps no cell at
         /// all; its bonus is computed after scoring, see
         /// <see cref="ApplyMirrorBonus"/>).
@@ -192,10 +193,14 @@ namespace Contigu.Core
                     break;
 
                 case PieceTraitKind.Seeder:
-                    // Permanent: intentionally NOT added to transientCells, so
-                    // ClearTokenTraitCells never un-stamps it — unlike every
-                    // other trait, this one is meant to keep scoring as a
-                    // normal golden grid cell for the rest of the run.
+                    // Intentionally NOT added to transientCells, so
+                    // ClearTokenTraitCells never un-stamps it right after this
+                    // placement's own scoring — unlike every other trait, this
+                    // one keeps scoring as a normal golden grid cell for the
+                    // rest of the CURRENT ROUND. It's Grid.ResetForNewRound
+                    // (via Cell.ResetForNewRound), not this method, that
+                    // eventually clears it — a permanent-for-the-whole-run
+                    // golden cell was judged too powerful.
                     cell.IsGolden = true;
                     break;
 

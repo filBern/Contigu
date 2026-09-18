@@ -21,7 +21,7 @@ namespace Contigu.Core
         /// <summary>"Mirror Tile" — this cell's own group-bonus contribution is duplicated onto the cell symmetrically opposite it in the scored group, if one exists there.</summary>
         Mirror,
 
-        /// <summary>"Seeder" — like <see cref="Golden"/>, but the golden flag is never cleared after scoring: the grid cell stays golden for the rest of the run.</summary>
+        /// <summary>"Seeder" — like <see cref="Golden"/>, but the golden flag isn't cleared right after scoring like every other trait: the grid cell stays golden for the rest of the CURRENT ROUND (cleared at the next round's reset — permanent for the whole run was too powerful).</summary>
         Seeder
     }
 

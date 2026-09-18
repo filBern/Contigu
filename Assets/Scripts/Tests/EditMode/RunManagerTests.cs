@@ -173,13 +173,6 @@ namespace Contigu.Tests
         public void ApplyModifierPick_RequiresRemoval_WhenPushingPastTheFiveSlotCap()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            // Every cell golden so each round's quota is reached almost
-            // instantly, regardless of shape/color/adjacency luck — this test
-            // is about the modifier-slot STATE MACHINE, not scoring.
-            foreach (var pos in GridManager.AllPositions())
-            {
-                run.Grid.GetCell(pos).IsGolden = true;
-            }
 
             for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
             {
@@ -214,10 +207,6 @@ namespace Contigu.Tests
         public void RollModifierDraftOptions_NeverOffersAModifierAlreadyActive()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            foreach (var pos in GridManager.AllPositions())
-            {
-                run.Grid.GetCell(pos).IsGolden = true;
-            }
 
             for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
             {
@@ -235,9 +224,22 @@ namespace Contigu.Tests
             }
         }
 
-        /// <summary>Places pieces from hand until the round's quota is reached (assumes every cell is already golden, as set up by the caller, so this converges quickly).</summary>
+        /// <summary>
+        /// Places pieces from hand until the round's quota is reached. Marks
+        /// every cell golden first so this converges quickly regardless of
+        /// shape/color/adjacency luck — re-applied on every call (not just
+        /// once by the caller) since GridManager.ResetForNewRound now clears
+        /// modifier flags at the start of each round along with fill/lock
+        /// state (a "Seeder"-left golden cell only lasting the rest of ITS
+        /// round, not the whole run, meant every round needs its own reset).
+        /// </summary>
         private static void PlayRoundToAwaitingDraft(RunManager run)
         {
+            foreach (var pos in GridManager.AllPositions())
+            {
+                run.Grid.GetCell(pos).IsGolden = true;
+            }
+
             int guard = 0;
             while (run.State == RunState.InProgress)
             {
@@ -416,7 +418,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_SeederTrait_LeavesTheGridCellPermanentlyGolden()
+        public void PlacePiece_SeederTrait_LeavesTheGridCellGoldenForTheRestOfTheRound()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagSeederTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
@@ -433,7 +435,38 @@ namespace Contigu.Tests
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.IsTrue(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
-                "Seeder's stamp should NOT be cleared after scoring — unlike every other trait, it stays golden for the rest of the run");
+                "Seeder's stamp should NOT be cleared after scoring — unlike every other trait, it stays golden for the rest of THIS round");
+        }
+
+        [Test]
+        public void PlacePiece_SeederTrait_ClearsOnceTheRoundItWasSetInEnds()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagSeederTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+
+            var token = run.Deck.Hand[0];
+            var rotation = run.Deck.HandRotations[0];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            var traitPos = anchor.Value + shape.Cells[token.Trait.Value.LocalCellIndex];
+
+            run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden);
+
+            // Skip straight to the next round via the debug helper (same one
+            // wired to the F9 editor shortcut) rather than grinding out real
+            // placements — a permanent-for-the-whole-run golden cell was
+            // judged too powerful, so it should be gone once round 2 starts.
+            run.DebugForceRoundComplete();
+            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            var options = run.RollModifierDraftOptions();
+            run.ApplyModifierPick(options[0].Id);
+
+            Assert.AreEqual(2, run.CurrentRoundNumber);
+            Assert.IsFalse(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
+                "Seeder's stamp should be cleared once the round it was set in ends");
         }
 
         private static void FillCell(GridManager grid, int x, int y, PieceColor color)

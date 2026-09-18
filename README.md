@@ -577,3 +577,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     aurait quasiment recouvert toute la case.
   - Même tooltip au survol que dans la main (réutilise `TraitBadgeView`),
     avec le même relais de clic vers le bouton de la ligne.
+- **Fix d'équilibrage : la tuile dorée de Seeder redevient normale à la
+  fin de la manche** (sur demande explicite — permanente pour toute la
+  run était jugée beaucoup trop forte). `Cell.ResetForNewRound()`
+  efface maintenant `IsGolden`/`IsTinted`/`IsMultiplierZone` en plus du
+  remplissage/verrouillage (avant, ces 3 flags n'étaient jamais touchés
+  par un reset de manche — un reliquat de l'ancien système où
+  Golden/Tinted/Multiplier taguaient une case de grille en
+  permanence). Puisque Seeder est la SEULE source d'un flag qui
+  survit à son propre placement (tous les autres traits se nettoient
+  dans le même placement), ce changement revient exactement à "Seeder
+  dure jusqu'à la fin de la manche, pas toute la run", sans toucher au
+  reste du système.
+  - Tests : réécriture de `GridManagerTests.ResetForNewRound_...` pour
+    vérifier que les 3 flags sont bien effacés (au lieu de l'inverse) ;
+    nouveau test `RunManagerTests.PlacePiece_SeederTrait_ClearsOnceTheRoundItWasSetInEnds`
+    (utilise le nouveau raccourci `DebugForceRoundComplete` pour sauter
+    directement à la manche suivante) ; les 2 tests qui simulaient
+    plusieurs manches d'affilée en dorant toute la grille UNE SEULE
+    FOIS avant leur boucle (`ApplyModifierPick_RequiresRemoval_...`,
+    `RollModifierDraftOptions_NeverOffersAModifierAlreadyActive`) ont
+    dû être ajustés — `PlayRoundToAwaitingDraft` redore maintenant
+    toute la grille à CHAQUE appel plutôt qu'une fois par l'appelant,
+    sinon les manches 2+ n'auraient plus eu de bonus doré du tout.

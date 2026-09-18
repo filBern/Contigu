@@ -67,7 +67,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
-            "Enchants 3 random pieces in the deck: one tile on each turns permanently golden on the grid when that piece is placed, instead of just scoring once.", false);
+            "Enchants 3 random pieces in the deck: one tile on each turns golden on the grid for the rest of the round when that piece is placed, instead of just scoring once.", false);
 
         public static readonly UpgradeDefinition[] All =
         {

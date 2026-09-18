@@ -56,7 +56,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Mirror:
                     return "When this piece is placed, this tile's own group bonus is duplicated onto the tile symmetrically opposite it in the scored group, if one exists there.";
                 case PieceTraitKind.Seeder:
-                    return "When this piece is placed, this tile turns permanently golden on the grid — it keeps scoring every time its group is rescored, for the rest of the run.";
+                    return "When this piece is placed, this tile turns golden on the grid for the rest of the round — it keeps scoring every time its group is rescored, until the round ends.";
                 default:
                     return string.Empty;
             }

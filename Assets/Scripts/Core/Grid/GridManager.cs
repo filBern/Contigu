@@ -54,9 +54,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Clears fill and lock state for a new round. Modifiers (golden/tinted/
-        /// multiplier) are NOT touched here since the same Cell instances persist
-        /// across rounds for the whole run (spec section 2).
+        /// Clears fill, lock AND modifier state (golden/tinted/multiplier) for
+        /// a new round — see Cell.ResetForNewRound. A "Seeder"-tagged piece's
+        /// golden stamp is the only thing that can still be set here (every
+        /// other trait clears itself within the same placement); this is what
+        /// makes Seeder's effect last "for the rest of the round" rather than
+        /// permanently for the whole run.
         /// </summary>
         public void ResetForNewRound()
         {
