@@ -28,7 +28,9 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), PieceTraitVisualDefaults.GetDescription(_trait), (RectTransform)transform);
+            var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
+            string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
+            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), PieceTraitVisualDefaults.GetDescription(_trait), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
         }
 
         public void OnPointerExit(PointerEventData eventData)

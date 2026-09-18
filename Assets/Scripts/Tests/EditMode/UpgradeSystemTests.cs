@@ -168,6 +168,107 @@ namespace Contigu.Tests
             Assert.AreEqual(UpgradeSystem.SeederCount, CountTagged(deck, PieceTraitKind.Seeder));
         }
 
+        [Test]
+        public void Apply_CatalystTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(9));
+
+            system.Apply(UpgradeCatalog.CatalystTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.CatalystTileCount, CountTagged(deck, PieceTraitKind.Catalyst));
+        }
+
+        [Test]
+        public void Apply_DrillerTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(10));
+
+            system.Apply(UpgradeCatalog.DrillerTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.DrillerTileCount, CountTagged(deck, PieceTraitKind.Driller));
+        }
+
+        [Test]
+        public void Apply_TwinTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(11));
+
+            system.Apply(UpgradeCatalog.TwinTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.TwinTileCount, CountTagged(deck, PieceTraitKind.Twin));
+        }
+
+        [Test]
+        public void Apply_DetonatorTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(12));
+
+            system.Apply(UpgradeCatalog.DetonatorTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.DetonatorTileCount, CountTagged(deck, PieceTraitKind.Detonator));
+        }
+
+        [Test]
+        public void Apply_ChameleonTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(13));
+
+            system.Apply(UpgradeCatalog.ChameleonTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.ChameleonTileCount, CountTagged(deck, PieceTraitKind.Chameleon));
+        }
+
+        [Test]
+        public void Apply_SparkTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(14));
+
+            system.Apply(UpgradeCatalog.SparkTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.SparkTileCount, CountTagged(deck, PieceTraitKind.Spark));
+        }
+
+        [Test]
+        public void Apply_VoidTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(15));
+
+            system.Apply(UpgradeCatalog.VoidTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.VoidTileCount, CountTagged(deck, PieceTraitKind.Void));
+        }
+
+        [Test]
+        public void RollDraft_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
+        {
+            // Statistical check of the weighting itself (see
+            // UpgradeRarityUtility.GetDraftWeight: Common=8, Rare=2, a 4x
+            // gap) rather than any single draw — GoldenCells (Common) should
+            // come up clearly more often than MirrorTile (Rare) across many
+            // rolls, even though both are always eligible for the Grid pick.
+            int goldenCount = 0;
+            int mirrorCount = 0;
+            for (int seed = 0; seed < 500; seed++)
+            {
+                var system = new UpgradeSystem(new SystemRandomProvider(seed));
+                var draft = system.RollDraft();
+                foreach (var option in draft.Options)
+                {
+                    if (option.Id == UpgradeId.GoldenCells) goldenCount++;
+                    if (option.Id == UpgradeId.MirrorTile) mirrorCount++;
+                }
+            }
+
+            Assert.Greater(goldenCount, mirrorCount, "Common-rarity GoldenCells should be drafted more often than Rare-rarity MirrorTile");
+        }
+
         private static DeckManager MakeTwentyTokenDeck()
         {
             var tokens = new List<PieceToken>();

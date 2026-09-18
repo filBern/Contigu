@@ -30,6 +30,27 @@ namespace Contigu.Core
         /// <summary>How many distinct deck tokens a Seeder upgrade enchants. See GoldenCellsCount.</summary>
         public const int SeederCount = 3;
 
+        /// <summary>How many distinct deck tokens a Catalyst-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int CatalystTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Driller-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int DrillerTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Twin-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int TwinTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Detonator-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int DetonatorTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Chameleon-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int ChameleonTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Spark-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int SparkTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Void-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int VoidTileCount = 3;
+
         private readonly IRandomProvider _rng;
 
         public UpgradeSystem(IRandomProvider rng)
@@ -40,12 +61,13 @@ namespace Contigu.Core
         /// <summary>
         /// Rolls a round-end draft of exactly 3 options: one guaranteed Bank
         /// pick, one guaranteed Grid pick, one random pick from either pool
-        /// (Bank and Grid mixed together) — the player picks exactly one.
+        /// (Bank and Grid mixed together) — the player picks exactly one. Each
+        /// pick is weighted by rarity (see PickWeighted), not uniform.
         /// </summary>
         public UpgradeDraft RollDraft()
         {
-            var bankPick = UpgradeCatalog.BankPool[_rng.Next(UpgradeCatalog.BankPool.Length)];
-            var gridPick = UpgradeCatalog.GridPool[_rng.Next(UpgradeCatalog.GridPool.Length)];
+            var bankPick = PickWeighted(UpgradeCatalog.BankPool, _rng);
+            var gridPick = PickWeighted(UpgradeCatalog.GridPool, _rng);
 
             var remainingPool = new List<UpgradeDefinition>();
             for (int i = 0; i < UpgradeCatalog.All.Length; i++)
@@ -63,12 +85,41 @@ namespace Contigu.Core
                 remainingPool.AddRange(UpgradeCatalog.All);
             }
 
-            var thirdPick = remainingPool[_rng.Next(remainingPool.Count)];
+            var thirdPick = PickWeighted(remainingPool, _rng);
 
             return new UpgradeDraft(new[] { bankPick, gridPick, thirdPick });
         }
 
-        /// <summary>Picks up to <paramref name="count"/> distinct entries at random from <paramref name="pool"/>, without replacement.</summary>
+        /// <summary>
+        /// Weighted random pick from <paramref name="pool"/> — each entry's
+        /// odds are proportional to its rarity's draft weight (see
+        /// UpgradeRarityUtility.GetDraftWeight), so Common upgrades come up
+        /// more often than Rare ones. Falls back to the last entry if
+        /// floating-point/rounding somehow leaves the roll unmatched (should
+        /// never happen with integer weights, kept defensive).
+        /// </summary>
+        private static UpgradeDefinition PickWeighted(IReadOnlyList<UpgradeDefinition> pool, IRandomProvider rng)
+        {
+            int totalWeight = 0;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                totalWeight += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
+            }
+
+            int roll = rng.Next(totalWeight);
+            int cumulative = 0;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                cumulative += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
+                if (roll < cumulative)
+                {
+                    return pool[i];
+                }
+            }
+            return pool[pool.Count - 1];
+        }
+
+        /// <summary>Picks up to <paramref name="count"/> distinct entries at random from <paramref name="pool"/>, without replacement (uniform — used for modifiers, which don't carry a rarity).</summary>
         public static T[] PickDistinct<T>(IReadOnlyList<T> pool, int count, IRandomProvider rng)
         {
             var remaining = new List<T>(pool);
@@ -131,6 +182,34 @@ namespace Contigu.Core
 
                 case UpgradeId.Seeder:
                     deck.TagSeederTokensRandom(SeederCount, _rng);
+                    return true;
+
+                case UpgradeId.CatalystTile:
+                    deck.TagCatalystTokensRandom(CatalystTileCount, _rng);
+                    return true;
+
+                case UpgradeId.DrillerTile:
+                    deck.TagDrillerTokensRandom(DrillerTileCount, _rng);
+                    return true;
+
+                case UpgradeId.TwinTile:
+                    deck.TagTwinTokensRandom(TwinTileCount, _rng);
+                    return true;
+
+                case UpgradeId.DetonatorTile:
+                    deck.TagDetonatorTokensRandom(DetonatorTileCount, _rng);
+                    return true;
+
+                case UpgradeId.ChameleonTile:
+                    deck.TagChameleonTokensRandom(ChameleonTileCount, _rng);
+                    return true;
+
+                case UpgradeId.SparkTile:
+                    deck.TagSparkTokensRandom(SparkTileCount, _rng);
+                    return true;
+
+                case UpgradeId.VoidTile:
+                    deck.TagVoidTokensRandom(VoidTileCount, _rng);
                     return true;
 
                 default:

@@ -15,7 +15,7 @@ namespace Contigu.Presentation
     public sealed class DraftView : MonoBehaviour
     {
         private const float CardWidth = 200f;
-        private const float CardHeight = 210f;
+        private const float CardHeight = 234f;
         private const float TypeRowHeight = 56f;
         private const float TypeRowPreviewSize = 44f;
 
@@ -131,12 +131,25 @@ namespace Contigu.Presentation
             nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
             nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 44f);
 
+            // Rarity + pool ("type"), on explicit request — a small colored
+            // subtitle line between the name and description, same idea as
+            // TooltipView's optional subtitle for a tile trait's badge.
+            var rarityLabel = UIFactory.CreateText(card.transform, "Rarity",
+                UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
+                12, UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+            rarityLabel.fontStyle = FontStyle.BoldAndItalic;
+            rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f);
+            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
+
             var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextMuted);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -60f);
-            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 100f);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
+            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 96f);
 
             var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UITheme.ButtonSelected, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();

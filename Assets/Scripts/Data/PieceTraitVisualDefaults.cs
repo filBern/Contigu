@@ -22,6 +22,9 @@ namespace Contigu.Data
         private static readonly Color TintedFallbackColor = new Color(0.937f, 0.980f, 0.902f); // #effae6
         private static readonly Color MirrorBadgeColor = new Color(0.373f, 0.412f, 0.612f); // #5f699c
         private static readonly Color SeederBadgeColor = new Color(0.937f, 0.980f, 0.902f); // #effae6
+        private static readonly Color VoidBadgeColor = new Color(0.216f, 0.180f, 0.302f); // #372e4d
+        private static readonly Color DetonatorBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f
+        private static readonly Color ChameleonBadgeColor = new Color(0.643f, 0.922f, 0.800f); // #a4ebcc
 
         public static string GetName(PieceTraitKind kind)
         {
@@ -34,6 +37,13 @@ namespace Contigu.Data
                 case PieceTraitKind.Beacon: return "Multiplier Beacon";
                 case PieceTraitKind.Mirror: return "Mirror Tile";
                 case PieceTraitKind.Seeder: return "Seeder";
+                case PieceTraitKind.Catalyst: return "Catalyst Tile";
+                case PieceTraitKind.Driller: return "Driller Tile";
+                case PieceTraitKind.Twin: return "Twin Tile";
+                case PieceTraitKind.Detonator: return "Detonator Tile";
+                case PieceTraitKind.Chameleon: return "Chameleon Tile";
+                case PieceTraitKind.Spark: return "Spark Tile";
+                case PieceTraitKind.Void: return "Void Tile";
                 default: return kind.ToString();
             }
         }
@@ -57,8 +67,45 @@ namespace Contigu.Data
                     return "When this piece is placed, this tile's own group bonus is duplicated onto the tile symmetrically opposite it in the scored group, if one exists there.";
                 case PieceTraitKind.Seeder:
                     return "When this piece is placed, this tile turns golden on the grid for the rest of the round — it keeps scoring every time its group is rescored, until the round ends.";
+                case PieceTraitKind.Catalyst:
+                    return "When this piece is placed, this tile scores extra points for every cell in the resulting group that was already on the grid before this placement — the bigger the group it reacts with, the bigger the bonus.";
+                case PieceTraitKind.Driller:
+                    return "When this piece is placed, this tile scores a big flat bonus — but only if it lands next to a locked cell (boss rounds). Does nothing otherwise.";
+                case PieceTraitKind.Twin:
+                    return "When this piece is placed, this tile's own group-bonus share is duplicated onto EVERY other tile in the scored group, not just a symmetric partner.";
+                case PieceTraitKind.Detonator:
+                    return "When this piece is placed, if it clears at least one row or column, this tile doubles that placement's whole line-clear bonus.";
+                case PieceTraitKind.Chameleon:
+                    return "When this piece is placed, if this tile has an already-filled neighbor, the WHOLE piece recolors to match it before scoring — merging into an existing group instead of keeping its own color.";
+                case PieceTraitKind.Spark:
+                    return "When this piece is placed, this tile scores more points the longer it's been since the last row/column clear this round — the bonus resets once a clear happens.";
+                case PieceTraitKind.Void:
+                    return "When this piece is placed, this tile also clears one random already-filled tile elsewhere on the grid — free space, at the risk of undoing a setup you were building.";
                 default:
                     return string.Empty;
+            }
+        }
+
+        /// <summary>How often this trait's upgrade shows up in a draft — mirrors the corresponding UpgradeDefinition.Rarity in UpgradeCatalog (kept separately since a PieceTrait doesn't carry a back-reference to the UpgradeDefinition that created it).</summary>
+        public static UpgradeRarity GetRarity(PieceTraitKind kind)
+        {
+            switch (kind)
+            {
+                case PieceTraitKind.Golden: return UpgradeRarity.Common;
+                case PieceTraitKind.Tinted: return UpgradeRarity.Common;
+                case PieceTraitKind.Multiplier: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Blast: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Beacon: return UpgradeRarity.Rare;
+                case PieceTraitKind.Mirror: return UpgradeRarity.Rare;
+                case PieceTraitKind.Seeder: return UpgradeRarity.Rare;
+                case PieceTraitKind.Catalyst: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Driller: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Twin: return UpgradeRarity.Rare;
+                case PieceTraitKind.Detonator: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Chameleon: return UpgradeRarity.Common;
+                case PieceTraitKind.Spark: return UpgradeRarity.Common;
+                case PieceTraitKind.Void: return UpgradeRarity.Rare;
+                default: return UpgradeRarity.Common;
             }
         }
 
@@ -81,9 +128,20 @@ namespace Contigu.Data
                 case PieceTraitKind.Tinted:
                     return trait.TintedColor.HasValue ? VisualDefaults.GetColor(trait.TintedColor.Value) : TintedFallbackColor;
                 case PieceTraitKind.Mirror:
+                case PieceTraitKind.Twin:
                     return MirrorBadgeColor;
                 case PieceTraitKind.Seeder:
                     return SeederBadgeColor;
+                case PieceTraitKind.Catalyst:
+                case PieceTraitKind.Void:
+                    return VoidBadgeColor;
+                case PieceTraitKind.Driller:
+                case PieceTraitKind.Detonator:
+                    return DetonatorBadgeColor;
+                case PieceTraitKind.Chameleon:
+                    return ChameleonBadgeColor;
+                case PieceTraitKind.Spark:
+                    return GoldenBadgeColor;
                 default:
                     return Color.gray;
             }

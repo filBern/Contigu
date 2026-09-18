@@ -129,5 +129,16 @@ namespace Contigu.Core
 
         /// <summary>Monochrome Ligne: bonus per cleared row/column that is entirely a single color (jokers ignored).</summary>
         public const int MonochromeLigneBonusPerLine = 24;
+
+        // ---- Second batch of tile-upgrade (PieceTrait) bonuses ----
+
+        /// <summary>Catalyst Tile: bonus per pre-existing cell merged into this placement's scored group (group size minus the piece's own cell count).</summary>
+        public const int CatalystBonusPerExistingCell = 3;
+
+        /// <summary>Driller Tile: flat bonus, only when the enchanted cell is adjacent to a locked cell (boss rounds).</summary>
+        public const int DrillerBonus = 35;
+
+        /// <summary>Spark Tile: bonus per consecutive placement since the last line/column clear this round.</summary>
+        public const int SparkBonusPerPlacement = 5;
     }
 }

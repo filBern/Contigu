@@ -252,6 +252,48 @@ namespace Contigu.Core
             return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Seeder, localIndex));
         }
 
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Catalyst" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagCatalystTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Catalyst, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Driller" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagDrillerTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Driller, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Twin" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagTwinTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Twin, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Detonator" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagDetonatorTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Detonator, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Chameleon" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagChameleonTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Chameleon, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Spark" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagSparkTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Spark, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Void" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagVoidTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Void, localIndex));
+        }
+
         /// <summary>
         /// Picks up to <paramref name="count"/> distinct deck indices — preferring
         /// tokens that don't already carry a trait, falling back to any token if

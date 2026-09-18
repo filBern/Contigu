@@ -22,7 +22,30 @@ namespace Contigu.Core
         Mirror,
 
         /// <summary>"Seeder" — like <see cref="Golden"/>, but the golden flag isn't cleared right after scoring like every other trait: the grid cell stays golden for the rest of the CURRENT ROUND (cleared at the next round's reset — permanent for the whole run was too powerful).</summary>
-        Seeder
+        Seeder,
+
+        // ---- Second batch (7 more, on explicit request — see README) ----
+
+        /// <summary>"Catalyst Tile" — scores extra points for every cell in this placement's scored group that was already on the grid before this placement (group size minus this piece's own cell count).</summary>
+        Catalyst,
+
+        /// <summary>"Driller Tile" — a big flat bonus, but only when the enchanted cell is orthogonally adjacent to a locked cell (boss rounds); nothing otherwise.</summary>
+        Driller,
+
+        /// <summary>"Twin Tile" — like <see cref="Mirror"/>, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the scored group, not just a symmetric partner.</summary>
+        Twin,
+
+        /// <summary>"Detonator Tile" — if this placement clears at least one row/column, doubles the WHOLE placement's line-clear bonus.</summary>
+        Detonator,
+
+        /// <summary>"Chameleon Tile" — if the enchanted cell has an already-filled orthogonal neighbor, the WHOLE piece is recolored to match it before scoring, merging into an existing group instead of keeping its own color.</summary>
+        Chameleon,
+
+        /// <summary>"Spark Tile" — scores more points the longer it's been (in placements) since the last row/column clear this round; resets once a clear happens.</summary>
+        Spark,
+
+        /// <summary>"Void Tile" — also clears one random already-filled, unlocked cell elsewhere on the grid (excluding this placement's own cells) when placed. No score of its own.</summary>
+        Void
     }
 
     /// <summary>

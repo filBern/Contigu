@@ -441,6 +441,77 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacementsSinceLastClear_TracksConsecutiveNoClearPlacements_AndResetsOnAClear()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            Assert.AreEqual(0, grid.PlacementsSinceLastClear, "No placements made yet this round");
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 5);
+            Assert.AreEqual(1, grid.PlacementsSinceLastClear);
+
+            grid.PlacePiece(single, PieceColor.Coral, 1, 5);
+            Assert.AreEqual(2, grid.PlacementsSinceLastClear);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Teal, x, 6);
+            }
+            // The row-6 loop above fills every cell of a fresh row (a clear),
+            // so the streak should have reset to 0 by the time it returns here.
+            Assert.AreEqual(0, grid.PlacementsSinceLastClear, "A placement that clears a line/column resets the streak");
+        }
+
+        [Test]
+        public void PlacementsSinceLastClear_ResetsAtResetForNewRound()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+            Assert.AreEqual(2, grid.PlacementsSinceLastClear);
+
+            grid.ResetForNewRound();
+
+            Assert.AreEqual(0, grid.PlacementsSinceLastClear);
+        }
+
+        [Test]
+        public void ClearRandomFilledCell_ClearsTheOnlyEligibleCell_ExcludingGivenPositions()
+        {
+            var grid = new GridManager();
+            grid.GetCell(2, 2).IsFilled = true;
+            grid.GetCell(2, 2).FilledColor = PieceColor.Coral;
+            grid.GetCell(5, 5).IsFilled = true;
+            grid.GetCell(5, 5).FilledColor = PieceColor.Teal;
+
+            var cleared = grid.ClearRandomFilledCell(new SystemRandomProvider(1), new[] { new Vector2Int(2, 2) });
+
+            Assert.AreEqual(new Vector2Int(5, 5), cleared);
+            Assert.IsFalse(grid.GetCell(5, 5).IsFilled);
+            Assert.IsTrue(grid.GetCell(2, 2).IsFilled, "Excluded position should never be touched");
+        }
+
+        [Test]
+        public void ClearRandomFilledCell_NeverPicksALockedCell_EvenIfSomehowFilled()
+        {
+            var grid = new GridManager();
+            // A locked cell is never actually filled through normal play
+            // (CanPlace forbids it), but set both flags directly here to
+            // prove ClearRandomFilledCell's own guard excludes it regardless.
+            var locked = grid.GetCell(3, 3);
+            locked.IsLocked = true;
+            locked.IsFilled = true;
+            locked.FilledColor = PieceColor.Coral;
+
+            var cleared = grid.ClearRandomFilledCell(new SystemRandomProvider(1), System.Array.Empty<Vector2Int>());
+
+            Assert.IsNull(cleared);
+            Assert.IsTrue(locked.IsFilled, "Locked cell must never be cleared");
+        }
+
+        [Test]
         public void PlacePiece_ScoreEvents_OneGroupEntryPerCellInTheMergedGroup()
         {
             var grid = new GridManager();

@@ -126,12 +126,34 @@ namespace Contigu.Core
                 ? new Vector2Int(x, y) + shape.Cells[token.Trait.Value.LocalCellIndex]
                 : (Vector2Int?)null;
 
-            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
-            var placement = Grid.PlacePiece(shape, token.Color, x, y, _activeModifiers);
-            ClearTokenTraitCells(transientTraitCells);
-            if (token.Trait.HasValue && token.Trait.Value.Kind == PieceTraitKind.Mirror)
+            // Two traits need grid state read BEFORE Grid.PlacePiece mutates
+            // it: Chameleon overrides the color the piece actually places
+            // as, and Spark needs the no-clear streak as it stood before
+            // this placement (Grid.PlacePiece itself updates that streak for
+            // the NEXT placement to read, so reading it any later would see
+            // this placement's own outcome instead of the one it's scoring
+            // against).
+            PieceColor placementColor = token.Color;
+            int sparkStreakBeforePlacement = 0;
+            if (token.Trait.HasValue)
             {
-                ApplyMirrorBonus(traitCellPos.Value, placement);
+                var kind = token.Trait.Value.Kind;
+                if (kind == PieceTraitKind.Chameleon)
+                {
+                    placementColor = ResolveChameleonColor(traitCellPos.Value, token.Color);
+                }
+                else if (kind == PieceTraitKind.Spark)
+                {
+                    sparkStreakBeforePlacement = Grid.PlacementsSinceLastClear;
+                }
+            }
+
+            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
+            var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers);
+            ClearTokenTraitCells(transientTraitCells);
+            if (token.Trait.HasValue)
+            {
+                ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
             }
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
@@ -162,10 +184,13 @@ namespace Contigu.Core
         /// that should be un-stamped again once scoring is done (see
         /// <see cref="ClearTokenTraitCells"/>) — every kind except
         /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay
-        /// until the round itself resets it, see Cell.ResetForNewRound)
-        /// and <see cref="PieceTraitKind.Mirror"/> (which stamps no cell at
-        /// all; its bonus is computed after scoring, see
-        /// <see cref="ApplyMirrorBonus"/>).
+        /// until the round itself resets it, see Cell.ResetForNewRound) and
+        /// the second-batch kinds (Mirror, Catalyst, Driller, Twin,
+        /// Detonator, Chameleon, Spark, Void), none of which stamp a cell at
+        /// all — their effects are resolved either before Grid.PlacePiece
+        /// runs (Chameleon) or after it returns, from the resulting
+        /// PlacementResult/grid state (see
+        /// <see cref="ApplyPostPlacementTraitBonus"/>).
         /// </summary>
         private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos)
         {
@@ -224,11 +249,50 @@ namespace Contigu.Core
                     break;
 
                 case PieceTraitKind.Mirror:
-                    // No cell stamp — handled after Grid.PlacePiece returns,
-                    // see ApplyMirrorBonus.
+                case PieceTraitKind.Catalyst:
+                case PieceTraitKind.Driller:
+                case PieceTraitKind.Twin:
+                case PieceTraitKind.Detonator:
+                case PieceTraitKind.Chameleon:
+                case PieceTraitKind.Spark:
+                case PieceTraitKind.Void:
+                    // None of these stamp a Cell flag — every one of them is
+                    // either resolved before Grid.PlacePiece runs (Chameleon,
+                    // via placementColor above) or computed after it returns,
+                    // from the resulting PlacementResult/grid state (see
+                    // ApplyPostPlacementTraitBonus).
                     break;
             }
             return transientCells;
+        }
+
+        /// <summary>
+        /// "Chameleon Tile": resolves the color the WHOLE piece should place
+        /// as — the color of the first already-filled orthogonal neighbor of
+        /// the enchanted cell (fixed scan order: left, right, down, up), so
+        /// the piece merges into an existing group instead of keeping its
+        /// own color. Falls back to the piece's own color when no neighbor
+        /// is filled yet (checked before Grid.PlacePiece runs, so only
+        /// PRE-EXISTING board state can match — never another cell of this
+        /// same about-to-be-placed piece).
+        /// </summary>
+        private PieceColor ResolveChameleonColor(Vector2Int traitCellPos, PieceColor fallbackColor)
+        {
+            var neighborColor = TryGetFilledNeighborColor(traitCellPos.x - 1, traitCellPos.y)
+                ?? TryGetFilledNeighborColor(traitCellPos.x + 1, traitCellPos.y)
+                ?? TryGetFilledNeighborColor(traitCellPos.x, traitCellPos.y - 1)
+                ?? TryGetFilledNeighborColor(traitCellPos.x, traitCellPos.y + 1);
+            return neighborColor ?? fallbackColor;
+        }
+
+        private PieceColor? TryGetFilledNeighborColor(int x, int y)
+        {
+            if (!GridManager.InBounds(x, y))
+            {
+                return null;
+            }
+            var cell = Grid.GetCell(x, y);
+            return cell.IsFilled ? cell.FilledColor : null;
         }
 
         private void StampGoldenIfInBounds(int x, int y, List<Cell> transientCells)
@@ -285,16 +349,77 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Handles every trait kind whose bonus can't be computed by
+        /// GridManager's own per-cell scoring loop (it doesn't know about
+        /// PieceTrait): Mirror/Catalyst/Twin need the group as it stood right
+        /// after scoring, Detonator needs the line-clear outcome, Driller
+        /// needs a lock-adjacency check GridManager doesn't do for traits,
+        /// Spark needs the pre-placement no-clear streak captured earlier in
+        /// PlacePiece, and Void mutates the grid outside this placement's own
+        /// cells entirely (no score of its own). Golden/Tinted/Multiplier/
+        /// Blast/Beacon/Seeder/Chameleon all resolve elsewhere (Cell-flag
+        /// stamping or, for Chameleon, ResolveChameleonColor) and need
+        /// nothing here.
+        /// </summary>
+        private void ApplyPostPlacementTraitBonus(PieceTrait trait, Vector2Int traitCellPos, int sparkStreakBeforePlacement, PlacementResult placement)
+        {
+            switch (trait.Kind)
+            {
+                case PieceTraitKind.Mirror:
+                    ApplyMirrorBonus(traitCellPos, placement);
+                    break;
+                case PieceTraitKind.Catalyst:
+                    ApplyCatalystBonus(placement);
+                    break;
+                case PieceTraitKind.Twin:
+                    ApplyTwinBonus(placement);
+                    break;
+                case PieceTraitKind.Detonator:
+                    ApplyDetonatorBonus(placement);
+                    break;
+                case PieceTraitKind.Driller:
+                    ApplyDrillerBonus(traitCellPos, placement);
+                    break;
+                case PieceTraitKind.Spark:
+                    ApplySparkBonus(sparkStreakBeforePlacement, placement);
+                    break;
+                case PieceTraitKind.Void:
+                    ApplyVoidEffect(placement);
+                    break;
+            }
+        }
+
+        /// <summary>Adds a flat trait bonus to <paramref name="placement"/> and appends a matching <see cref="ScoreEventType.Trait"/> event, mutating it directly (its fields are plain mutable ints/lists) so both the score total and the presentation layer's popup feed see it.</summary>
+        private static void AddTraitBonus(PlacementResult placement, Vector2Int pos, int bonus)
+        {
+            placement.TraitBonus += bonus;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.Trait, pos, bonus));
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>Every cell in a placement's scored group earns the exact same per-cell amount (see GridManager.PlacePiece's perCellGroupScore) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>
+        private static void GetGroupShare(PlacementResult placement, out int groupSize, out int perCellAmount)
+        {
+            groupSize = 0;
+            perCellAmount = 0;
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (scoreEvent.Type != ScoreEventType.Group)
+                {
+                    continue;
+                }
+                groupSize++;
+                perCellAmount = scoreEvent.Amount;
+            }
+        }
+
+        /// <summary>
         /// "Mirror Tile": duplicates the enchanted cell's own group-bonus
         /// contribution onto the cell symmetrically opposite it in the scored
         /// group (reflected through the group's bounding-box center), if one
-        /// exists there. Every cell in a placement's scored group earns the
-        /// exact same per-cell amount (see GridManager.PlacePiece's
-        /// perCellGroupScore), so any one Group-type event's Amount already IS
-        /// the bonus to duplicate — no need to look up the trait cell's own
-        /// event specifically. Mutates <paramref name="placement"/> directly
-        /// (its fields are plain mutable ints/lists) so both the score total
-        /// and the presentation layer's popup feed see the extra bonus.
+        /// exists there.
         /// </summary>
         private static void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
@@ -327,10 +452,82 @@ namespace Contigu.Core
                 return;
             }
 
-            placement.TraitBonus += perCellAmount;
-            var events = new List<ScoreEvent>(placement.ScoreEvents);
-            events.Add(new ScoreEvent(ScoreEventType.Trait, mirrorPos, perCellAmount));
-            placement.ScoreEvents = events;
+            AddTraitBonus(placement, mirrorPos, perCellAmount);
+        }
+
+        /// <summary>"Catalyst Tile": scores extra points for every cell in this placement's scored group that was already on the grid before this placement — the group's size (from GetGroupShare) minus this piece's own cell count.</summary>
+        private static void ApplyCatalystBonus(PlacementResult placement)
+        {
+            GetGroupShare(placement, out int groupSize, out _);
+            int existingCells = groupSize - placement.PlacedCells.Count;
+            if (existingCells <= 0)
+            {
+                return;
+            }
+
+            int bonus = existingCells * ScoringConstants.CatalystBonusPerExistingCell;
+            AddTraitBonus(placement, placement.PlacedCells[0], bonus);
+        }
+
+        /// <summary>"Twin Tile": like Mirror, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the group, not just a symmetric partner — total extra is that shared per-cell amount times (group size - 1).</summary>
+        private static void ApplyTwinBonus(PlacementResult placement)
+        {
+            GetGroupShare(placement, out int groupSize, out int perCellAmount);
+            if (groupSize < 2)
+            {
+                return;
+            }
+
+            int bonus = perCellAmount * (groupSize - 1);
+            AddTraitBonus(placement, placement.PlacedCells[0], bonus);
+        }
+
+        /// <summary>"Detonator Tile": doubles this placement's ENTIRE line-clear bonus, if it clears at least one row/column.</summary>
+        private static void ApplyDetonatorBonus(PlacementResult placement)
+        {
+            if (placement.LineClearScore <= 0)
+            {
+                return;
+            }
+            AddTraitBonus(placement, placement.PlacedCells[0], placement.LineClearScore);
+        }
+
+        /// <summary>"Driller Tile": a big flat bonus, but only when the enchanted cell is orthogonally adjacent to a locked cell (boss rounds).</summary>
+        private void ApplyDrillerBonus(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            if (!IsAdjacentToLockedCell(traitCellPos))
+            {
+                return;
+            }
+            AddTraitBonus(placement, traitCellPos, ScoringConstants.DrillerBonus);
+        }
+
+        private bool IsAdjacentToLockedCell(Vector2Int pos)
+        {
+            return IsLockedAt(pos.x - 1, pos.y) || IsLockedAt(pos.x + 1, pos.y)
+                || IsLockedAt(pos.x, pos.y - 1) || IsLockedAt(pos.x, pos.y + 1);
+        }
+
+        private bool IsLockedAt(int x, int y)
+        {
+            return GridManager.InBounds(x, y) && Grid.GetCell(x, y).IsLocked;
+        }
+
+        /// <summary>"Spark Tile": scores more the longer it's been since the last line/column clear this round — <paramref name="streakBeforePlacement"/> is the streak as captured in PlacePiece BEFORE Grid.PlacePiece ran, so this placement's own clear (if any) doesn't erase the streak it's scoring against.</summary>
+        private static void ApplySparkBonus(int streakBeforePlacement, PlacementResult placement)
+        {
+            if (streakBeforePlacement <= 0)
+            {
+                return;
+            }
+            int bonus = streakBeforePlacement * ScoringConstants.SparkBonusPerPlacement;
+            AddTraitBonus(placement, placement.PlacedCells[0], bonus);
+        }
+
+        /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Pure risk/utility, no score of its own; a no-op if nothing else on the grid is eligible.</summary>
+        private void ApplyVoidEffect(PlacementResult placement)
+        {
+            Grid.ClearRandomFilledCell(_rng, placement.PlacedCells);
         }
 
         /// <summary>

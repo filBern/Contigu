@@ -15,10 +15,13 @@ namespace Contigu.Presentation
         private const float Height = 150f;
         private const float Padding = 10f;
         private const float ShowMargin = 16f;
+        private const float NameHeight = 24f;
+        private const float SubtitleHeight = 18f;
 
         private RectTransform _root;
         private RectTransform _panel;
         private Text _nameLabel;
+        private Text _subtitleLabel;
         private Text _descLabel;
 
         public RectTransform Build(Transform parent)
@@ -54,23 +57,53 @@ namespace Contigu.Presentation
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 22f);
             AddOutline(_nameLabel);
 
+            _subtitleLabel = UIFactory.CreateText(_panel, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
+            _subtitleLabel.fontStyle = FontStyle.BoldAndItalic;
+            _subtitleLabel.raycastTarget = false;
+            _subtitleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _subtitleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _subtitleLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            _subtitleLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - NameHeight);
+            _subtitleLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, SubtitleHeight);
+            AddOutline(_subtitleLabel);
+            _subtitleLabel.gameObject.SetActive(false);
+
             _descLabel = UIFactory.CreateText(_panel, "Desc", "", 12, UITheme.TextPrimary, TextAnchor.UpperLeft);
             _descLabel.raycastTarget = false;
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _descLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - 26f);
-            _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, Height - Padding * 2f - 26f);
             AddOutline(_descLabel);
 
             _root.gameObject.SetActive(false);
             return _root;
         }
 
-        public void Show(string name, string description, RectTransform anchor)
+        /// <summary>
+        /// Shows the tooltip anchored near <paramref name="anchor"/>. An
+        /// optional <paramref name="subtitle"/> (e.g. "Rare · Tile Upgrade")
+        /// renders as a small colored line between the name and description
+        /// — omitted entirely (and the description shifted up to fill the
+        /// gap) when null/empty, so existing callers that don't pass one
+        /// (modifier badges) keep their original, more compact layout.
+        /// </summary>
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null)
         {
             _nameLabel.text = name;
+
+            bool hasSubtitle = !string.IsNullOrEmpty(subtitle);
+            _subtitleLabel.gameObject.SetActive(hasSubtitle);
+            if (hasSubtitle)
+            {
+                _subtitleLabel.text = subtitle;
+                _subtitleLabel.color = subtitleColor ?? UITheme.TextMuted;
+            }
+
+            float usedHeight = NameHeight + (hasSubtitle ? SubtitleHeight : 0f);
+            _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - usedHeight);
+            _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, Height - Padding * 2f - usedHeight);
             _descLabel.text = description;
+
             _root.gameObject.SetActive(true);
             // Always render above whatever else is on screen, including
             // overlays (draft/removal cards) built after this tooltip.

@@ -565,6 +565,248 @@ namespace Contigu.Tests
                 "Seeder's stamp should be cleared once the round it was set in ends");
         }
 
+        [Test]
+        public void PlacePiece_CatalystTrait_ScoresPerPreExistingCellInTheGroup()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagCatalystTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            const int anchorX = 3;
+            const int anchorY = 3;
+            Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
+
+            // 2 pre-existing cells merge with the trait cell into a 3-cell group.
+            FillCell(run.Grid, anchorX - 1, anchorY, token.Color);
+            FillCell(run.Grid, anchorX + 1, anchorY, token.Color);
+
+            var outcome = run.PlacePiece(0, anchorX, anchorY);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2 * ScoringConstants.CatalystBonusPerExistingCell, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_CatalystTrait_DoesNotFire_WhenTheGroupIsOnlyThisPiece()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagCatalystTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_DrillerTrait_FiresOnlyWhenAdjacentToALockedCell()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagDrillerTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            run.Grid.GetCell(4, 4).IsLocked = true;
+
+            var outcome = run.PlacePiece(0, 4, 5);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(ScoringConstants.DrillerBonus, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_DrillerTrait_DoesNotFire_WhenNotAdjacentToALockedCell()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagDrillerTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_TwinTrait_DuplicatesGroupShareOntoEveryOtherCellInTheGroup()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagTwinTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            FillCell(run.Grid, 3, 3, token.Color);
+            FillCell(run.Grid, 4, 3, token.Color);
+            FillCell(run.Grid, 5, 3, token.Color);
+
+            var outcome = run.PlacePiece(0, 2, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            // Group is 4 cells (the trait cell + the 3 pre-filled ones), no
+            // tinted/multiplier factor here, so each cell's share is exactly
+            // GroupBonusPerCell — Twin duplicates it onto the OTHER 3 cells.
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_TwinTrait_DoesNotFire_WhenTheGroupIsOnlyThisSingleCell()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagTwinTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_DetonatorTrait_DoublesTheLineClearBonus()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagDetonatorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                FillCell(run.Grid, x, 0, token.Color);
+            }
+
+            var outcome = run.PlacePiece(0, GridManager.Size - 1, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.Greater(outcome.Placement.LineClearScore, 0);
+            Assert.AreEqual(outcome.Placement.LineClearScore, outcome.Placement.TraitBonus,
+                "Detonator's extra copy of the line-clear bonus should exactly double it");
+        }
+
+        [Test]
+        public void PlacePiece_DetonatorTrait_DoesNotFire_WhenNoLineClears()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagDetonatorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_ChameleonTrait_RecolorsWholePieceToMatchAFilledNeighbor()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            var neighborColor = token.Color == PieceColor.Coral ? PieceColor.Teal : PieceColor.Coral;
+            FillCell(run.Grid, 3, 4, neighborColor); // orthogonal ("up") neighbor of (3,3)
+
+            var outcome = run.PlacePiece(0, 3, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(neighborColor, run.Grid.GetCell(3, 3).FilledColor);
+        }
+
+        [Test]
+        public void PlacePiece_ChameleonTrait_KeepsItsOwnColor_WhenNoNeighborIsFilled()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(token.Color, run.Grid.GetCell(0, 0).FilledColor);
+        }
+
+        [Test]
+        public void PlacePiece_SparkTrait_ScoresMoreTheLongerSinceTheLastClearThisRound()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+
+            // 2 ordinary placements first (neither clearing a line, using
+            // whatever piece actually happens to be in hand[0] each time —
+            // tagging only updates the deck, not the already-dealt hand), so
+            // the streak reaches 2 by the time the Spark-tagged token lands.
+            PlaceWhateverIsInHandSlotZero(run);
+            PlaceWhateverIsInHandSlotZero(run);
+            Assert.AreEqual(2, run.Grid.PlacementsSinceLastClear);
+
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            var anchorC = FindAnyValidAnchor(run.Grid, PieceShapeCatalog.Get(ShapeId.Single));
+            Assert.IsTrue(anchorC.HasValue);
+
+            var outcome = run.PlacePiece(0, anchorC.Value.x, anchorC.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2 * ScoringConstants.SparkBonusPerPlacement, outcome.Placement.TraitBonus);
+        }
+
+        private static void PlaceWhateverIsInHandSlotZero(RunManager run)
+        {
+            var token = run.Deck.Hand[0];
+            var rotation = run.Deck.HandRotations[0];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+        }
+
+        [Test]
+        public void PlacePiece_SparkTrait_DoesNotFire_OnTheFirstPlacementOfTheRound()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_VoidTrait_ClearsOneRandomFilledCellElsewhereOnTheGrid()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            // Only ONE eligible cell elsewhere on the grid, so Void's random
+            // pick is deterministic regardless of the RNG seed.
+            FillCell(run.Grid, 7, 7, token.Color);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsFalse(run.Grid.GetCell(7, 7).IsFilled, "Void should have cleared the only other filled cell on the grid");
+        }
+
+        [Test]
+        public void PlacePiece_VoidTrait_NeverClearsThisPlacementsOwnCells()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            // Nothing else is filled on the grid, so Void has no eligible
+            // target — this placement's own just-filled cell must survive.
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsTrue(run.Grid.GetCell(0, 0).IsFilled);
+        }
+
         private static void FillCell(GridManager grid, int x, int y, PieceColor color)
         {
             var cell = grid.GetCell(x, y);

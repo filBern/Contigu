@@ -717,3 +717,85 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `_lastGroupSize` de Dégradé à `ResetForNewRound`, et un test Symétrie
     qui complète 2 rangées miroir en un seul placement (domino vertical) via
     `ShapeId.DomV`.
+- **7 upgrades de tuiles supplémentaires + système de rareté** (sur demande
+  explicite — brainstorm fourni par l'utilisateur, 7 idées retenues sur les
+  7 proposées). `PieceTraitKind` passe de 7 à 14 valeurs (2 lots), tout comme
+  `UpgradeId`/`UpgradeCatalog.GridPool`.
+  - **Catalyseur** (`Catalyst`) — bonus par case déjà présente sur la grille
+    avant ce placement, fusionnée dans le groupe scoré (taille du groupe
+    moins le nombre de cases propres à la pièce) — récompense de jouer DANS
+    une structure existante plutôt qu'isolément.
+  - **Foreuse** (`Driller`) — gros bonus plat, mais uniquement si la case
+    enchantée est adjacente (orthogonalement) à une case verrouillée (manche
+    boss) ; rien sinon.
+  - **Jumelle** (`Twin`) — comme Miroir, mais duplique la part de bonus de
+    groupe de la case enchantée sur TOUTES les autres cases du groupe scoré,
+    pas seulement sur une case symétrique — scale sans limite avec la taille
+    du groupe (d'où sa rareté "Rare").
+  - **Détonateur** (`Detonator`) — si ce placement complète au moins une
+    ligne/colonne, double le bonus de clear de ligne ENTIER de ce placement
+    (pas seulement celui d'une case précise).
+  - **Caméléon** (`Chameleon`) — si la case enchantée a un voisin
+    orthogonal déjà rempli, la pièce ENTIÈRE se recolore pour matcher cette
+    couleur avant le scoring (au lieu de garder sa propre couleur), fusionnant
+    ainsi dans un groupe existant. Contrairement aux autres traits, ce n'est
+    pas un bonus de score mais une mutation de la couleur de placement —
+    résolue par `RunManager` AVANT d'appeler `GridManager.PlacePiece` (scan
+    fixe gauche/droite/bas/haut du premier voisin rempli, repli sur la
+    couleur propre de la pièce si aucun voisin n'est rempli).
+  - **Étincelle** (`Spark`) — bonus croissant avec le nombre de poses
+    consécutives sans clear de ligne/colonne cette manche (remis à zéro dès
+    qu'un clear survient). Nécessite un nouveau compteur round-scoped,
+    `GridManager.PlacementsSinceLastClear` (mis à jour en fin de
+    `PlacePiece`, remis à zéro par `ResetForNewRound`) — lu par `RunManager`
+    AVANT d'appeler `Grid.PlacePiece` pour ce placement précis, pour que le
+    clear éventuel de CE placement ne remette pas à zéro le streak contre
+    lequel il score.
+  - **Vide** (`Void`) — en plus de scorer normalement, efface aussitôt une
+    case aléatoire déjà remplie ailleurs sur la grille (jamais parmi les
+    cases de ce placement) — premier trait "utilitaire/risque" du jeu, sans
+    aucun bonus de score propre : libère de l'espace, au risque de défaire
+    un combo en cours de construction. Nouvelle primitive
+    `GridManager.ClearRandomFilledCell` (même patron que `LockRandomCells`),
+    invoquée par `RunManager` après le retour de `Grid.PlacePiece`.
+  - Aucun de ces 7 traits ne tamponne de flag sur `Cell` (contrairement à
+    Golden/Tinted/Multiplier/Blast/Beacon/Seeder) : ils sont soit résolus
+    AVANT `Grid.PlacePiece` (Caméléon, en changeant la couleur du placement),
+    soit calculés APRÈS coup à partir du `PlacementResult`/de l'état de la
+    grille (les 6 autres) — même patron que Miroir déjà établi au premier
+    lot, factorisé dans `RunManager.ApplyPostPlacementTraitBonus` (dispatcher
+    unique) + `AddTraitBonus`/`GetGroupShare` (aides partagées).
+  - **Rareté des upgrades** (`UpgradeRarity` — Common/Uncommon/Rare),
+    portée volontairement limitée aux **upgrades** (`UpgradeDefinition`,
+    pools Banque + Grille/tuiles confondus) et PAS aux modificateurs
+    (`ModifierDefinition`), qui restent tirés uniformément — l'utilisateur a
+    demandé "un système de rareté pour les upgrades" juste après une
+    discussion sur les upgrades de tuiles, pas sur les modificateurs.
+    - Affecte maintenant la pondération du tirage de fin de manche
+      (`UpgradeSystem.RollDraft` → `PickWeighted`, poids 8/4/2 pour
+      Common/Uncommon/Rare, soit Common 4x plus probable que Rare) — avant,
+      chaque pool était tiré uniformément. `UpgradeSystem.PickDistinct`
+      (utilisé par les modificateurs) reste inchangé, toujours uniforme.
+    - Affichée avec le "type" de l'upgrade (Banque vs Grille, relabellisé
+      côté joueur en "Piece Upgrade"/"Tile Upgrade" — `UpgradeVisualDefaults.
+      GetPoolLabel`) sur une ligne colorée sous le nom : directement visible
+      sur les cartes de draft (`DraftView.BuildCard`, carte agrandie
+      210→234px de haut pour lui faire de la place) et, pour un trait de
+      tuile, dans son tooltip au survol (`TraitBadgeView`, puisqu'un
+      `PieceTrait` ne porte pas de référence vers l'`UpgradeDefinition` qui
+      l'a créé — sa rareté est donc dupliquée dans
+      `PieceTraitVisualDefaults.GetRarity`, à tenir manuellement synchronisée
+      avec `UpgradeCatalog`, même limitation déjà acceptée pour
+      Name/Description).
+    - `TooltipView.Show` gagne un sous-titre optionnel (`subtitle`,
+      `subtitleColor`) — s'il est omis (cas des badges de modificateurs,
+      inchangés), la description remonte occuper l'espace laissé libre.
+  - Tests : `DeckManagerTests`/`UpgradeSystemTests` gagnent un test par
+    nouvel upgrade (tag en deck) + un test statistique
+    (`RollDraft_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare`,
+    500 seeds) vérifiant que Common sort plus souvent que Rare ;
+    `RunManagerTests` gagne 2 tests par trait (fire / ne fire pas, ou un
+    scénario dédié pour Caméléon/Étincelle) ; `GridManagerTests` gagne des
+    tests directs pour `PlacementsSinceLastClear` et
+    `ClearRandomFilledCell` (y compris la garantie qu'une case verrouillée
+    n'est jamais choisie, même si elle se retrouvait remplie).

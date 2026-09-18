@@ -18,6 +18,22 @@ namespace Contigu.Core
         /// <summary>Scored group size of the last placement made this round, or null before the round's first placement — tracked for "Momentum" (Dégradé), reset by <see cref="ResetForNewRound"/>.</summary>
         private int? _lastGroupSize;
 
+        /// <summary>Consecutive placements made this round without a line/column clear, as of BEFORE the placement currently in progress — see <see cref="PlacementsSinceLastClear"/>.</summary>
+        private int _placementsSinceLastClear;
+
+        /// <summary>
+        /// How many placements in a row this round have gone by without a
+        /// line/column clear, as of right now (i.e. reflecting only
+        /// placements already fully processed by <see cref="PlacePiece"/> —
+        /// read this BEFORE calling PlacePiece for the "Spark Tile" piece
+        /// trait, so a placement's own clear doesn't erase the streak it's
+        /// scoring against). Reset to 0 by <see cref="ResetForNewRound"/>.
+        /// </summary>
+        public int PlacementsSinceLastClear
+        {
+            get { return _placementsSinceLastClear; }
+        }
+
         public GridManager()
         {
             _cells = new Cell[Size, Size];
@@ -74,6 +90,7 @@ namespace Contigu.Core
                 }
             }
             _lastGroupSize = null;
+            _placementsSinceLastClear = 0;
         }
 
         public bool CanPlace(PieceShape shape, int anchorX, int anchorY)
@@ -202,6 +219,11 @@ namespace Contigu.Core
             result.ClearedCellColors = clearInfo.ClearedCellColors;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             result.LineClearScore = clearInfo.ClearedCells.Count * ScoringConstants.LineClearBonusPerCell;
+
+            // Updates the streak for the NEXT placement to read (see
+            // PlacementsSinceLastClear) — this placement's own clear (if any)
+            // resets it, otherwise it extends by one.
+            _placementsSinceLastClear = clearInfo.ClearedCells.Count > 0 ? 0 : _placementsSinceLastClear + 1;
 
             for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
             {
@@ -1464,6 +1486,39 @@ namespace Contigu.Core
             {
                 GetCell(chosen[i]).IsLocked = true;
             }
+            return chosen;
+        }
+
+        /// <summary>
+        /// Clears one random already-filled, unlocked cell not in
+        /// <paramref name="exclude"/> — used by the "Void Tile" piece trait
+        /// (RunManager applies it AFTER this placement's own PlacePiece call
+        /// returns, excluding that placement's own cells, so Void never
+        /// erases the very cells it just scored). Returns the cleared
+        /// position, or null if nothing else on the grid was eligible.
+        /// </summary>
+        public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude)
+        {
+            var excludeSet = new HashSet<Vector2Int>(exclude);
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (cell.IsFilled && !cell.IsLocked && !excludeSet.Contains(pos))
+                {
+                    candidates.Add(pos);
+                }
+            }
+
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+
+            var chosen = candidates[rng.Next(candidates.Count)];
+            var chosenCell = GetCell(chosen);
+            chosenCell.IsFilled = false;
+            chosenCell.FilledColor = null;
             return chosen;
         }
 
