@@ -372,3 +372,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     statut (au-dessus de la grille) et la position du combo ont été
     redécalés pour tenir compte de la barre du haut/bas maintenant deux
     fois plus épaisse.
+  - **Fix : la barre ne fonctionnait pas visuellement** — le fond de la
+    barre (`UITheme.Panel`, `#614363`) était trop proche en luminosité
+    du fond de l'écran (`UITheme.Background`, `#372e4d`), et sans
+    contour (retiré juste avant) la portion non remplie se fondait dans
+    l'écran : la barre ne se lisait pas comme un conteneur avec un
+    remplissage, juste comme une tache de couleur. Le fond passe à
+    `UITheme.PanelLight` (`#5f699c`), nettement plus clair, pour un
+    contraste net avec l'écran sans avoir besoin de contour. Le texte
+    double aussi de taille (16→32), et la barre du bas affiche
+    maintenant `piècesRestantes / piècesInitiales` (même format
+    "X / Y" que la barre du haut) plutôt que la phrase "Remaining
+    pieces: N" — `piècesInitiales` est `RunManager.CurrentBudget`, déjà
+    disponible en paramètre de `HudView.UpdatePieces`.

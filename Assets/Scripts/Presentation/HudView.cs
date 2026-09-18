@@ -32,7 +32,12 @@ namespace Contigu.Presentation
             out Image fill, out Text label)
         {
             float edgeY = top ? 1f : 0f;
-            var bg = UIFactory.CreatePanel(parent, name, UITheme.Panel);
+            // PanelLight rather than Panel for the track: Panel sits too
+            // close in luminance to UITheme.Background, so with no border to
+            // define its edge (removed on request) the unfilled portion just
+            // blended into the screen and the bar read as a shapeless blob
+            // rather than a container with a fill.
+            var bg = UIFactory.CreatePanel(parent, name, UITheme.PanelLight);
             // Stretched full-width (anchor min/max x = 0/1) and flush against
             // the top or bottom edge (anchor, pivot and anchoredPosition all
             // pinned to that same edge — zero anchoredPosition means no gap).
@@ -53,7 +58,7 @@ namespace Contigu.Presentation
             fillRect.offsetMin = Vector2.zero;
             fillRect.offsetMax = Vector2.zero;
 
-            var text = UIFactory.CreateText(bg.transform, "Label", "", 16, UITheme.TextPrimary);
+            var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextPrimary);
             text.fontStyle = FontStyle.Bold;
             UIFactory.StretchFull(text.rectTransform);
 
@@ -81,7 +86,7 @@ namespace Contigu.Presentation
 
         private void UpdatePieces(int piecesRemaining, int budget)
         {
-            _piecesLabel.text = "Remaining pieces: " + piecesRemaining;
+            _piecesLabel.text = piecesRemaining + " / " + budget;
             _piecesFill.fillAmount = budget > 0 ? Mathf.Clamp01((float)piecesRemaining / budget) : 0f;
         }
     }
