@@ -15,7 +15,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class ModifierPanelView : MonoBehaviour
     {
-        private const float PanelWidth = 190f;
+        private const float PanelWidth = 230f;
         private const float RowHeight = 64f;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
@@ -40,8 +40,8 @@ namespace Contigu.Presentation
             _root.anchorMin = new Vector2(0f, 0.5f);
             _root.anchorMax = new Vector2(0f, 0.5f);
             _root.pivot = new Vector2(0f, 0.5f);
-            _root.sizeDelta = new Vector2(PanelWidth, 640f);
-            _root.anchoredPosition = new Vector2(10f, 0f);
+            _root.sizeDelta = new Vector2(PanelWidth, 460f);
+            _root.anchoredPosition = new Vector2(40f, 0f);
 
             var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.TextPrimary);
             header.fontStyle = FontStyle.Bold;

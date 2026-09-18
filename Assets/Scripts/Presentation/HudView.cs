@@ -4,54 +4,93 @@ using UnityEngine.UI;
 
 namespace Contigu.Presentation
 {
-    /// <summary>Top bar showing round number, quota, round score, remaining piece budget and total score.</summary>
+    /// <summary>
+    /// Two progress bars pinned to the top and bottom edges of the screen: the
+    /// top bar tracks round score against the round's quota, the bottom bar
+    /// tracks remaining piece budget for the round. Replaces the old text-only
+    /// readout (round number, round score, total score) — the run's overall
+    /// progress isn't shown moment-to-moment, just what the player needs to
+    /// finish the current round.
+    /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private Text _roundText;
-        private Text _quotaText;
-        private Text _roundScoreText;
-        private Text _budgetText;
-        private Text _totalScoreText;
+        private const float BarWidth = 520f;
+        private const float BarHeight = 34f;
 
-        public RectTransform Build(Transform parent)
+        private Image _scoreFill;
+        private Text _scoreLabel;
+        private Image _piecesFill;
+        private Text _piecesLabel;
+
+        public void Build(Transform parent)
         {
-            var panel = UIFactory.CreatePanel(parent, "Hud", UITheme.Panel);
-            var container = panel.rectTransform;
+            BuildBar(parent, "ScoreBar", UITheme.Success,
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -10f),
+                out _scoreFill, out _scoreLabel);
 
-            var layout = panel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(24, 24, 0, 0);
-            layout.spacing = 32f;
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = true;
+            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected,
+                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f),
+                out _piecesFill, out _piecesLabel);
+        }
 
-            _roundText = UIFactory.CreateText(container, "Round", "", 18, UITheme.TextPrimary, TextAnchor.MiddleLeft);
-            _quotaText = UIFactory.CreateText(container, "Quota", "", 18, UITheme.TextPrimary, TextAnchor.MiddleLeft);
-            _roundScoreText = UIFactory.CreateText(container, "RoundScore", "", 18, UITheme.Success, TextAnchor.MiddleLeft);
-            _budgetText = UIFactory.CreateText(container, "Budget", "", 18, UITheme.TextMuted, TextAnchor.MiddleLeft);
-            _totalScoreText = UIFactory.CreateText(container, "TotalScore", "", 18, UITheme.TextMuted, TextAnchor.MiddleLeft);
+        private static void BuildBar(Transform parent, string name, Color fillColor,
+            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition,
+            out Image fill, out Text label)
+        {
+            var bg = UIFactory.CreatePanel(parent, name, UITheme.Panel);
+            bg.rectTransform.anchorMin = anchorMin;
+            bg.rectTransform.anchorMax = anchorMax;
+            bg.rectTransform.pivot = pivot;
+            bg.rectTransform.anchoredPosition = anchoredPosition;
+            bg.rectTransform.sizeDelta = new Vector2(BarWidth, BarHeight);
+            var bgOutline = bg.gameObject.AddComponent<Outline>();
+            bgOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            bgOutline.effectDistance = new Vector2(2f, -2f);
 
-            return container;
+            var fillImg = UIFactory.CreatePanel(bg.transform, "Fill", fillColor);
+            fillImg.type = Image.Type.Filled;
+            fillImg.fillMethod = Image.FillMethod.Horizontal;
+            fillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            fillImg.fillAmount = 0f;
+            var fillRect = fillImg.rectTransform;
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = new Vector2(3f, 3f);
+            fillRect.offsetMax = new Vector2(-3f, -3f);
+
+            var text = UIFactory.CreateText(bg.transform, "Label", "", 16, UITheme.TextPrimary);
+            text.fontStyle = FontStyle.Bold;
+            UIFactory.StretchFull(text.rectTransform);
+            var textOutline = text.gameObject.AddComponent<Outline>();
+            textOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            textOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+            fill = fillImg;
+            label = text;
         }
 
         public void Refresh(RunManager run)
         {
-            _roundText.text = "Round " + run.CurrentRoundNumber + "/" + RunConfig.RoundCount + (run.IsBossRound ? " (BOSS)" : "");
-            _budgetText.text = "Pieces remaining: " + run.PiecesRemainingThisRound;
-            SetScores(run.RoundScore, run.CurrentQuota, run.TotalScore);
+            UpdatePieces(run.PiecesRemainingThisRound, run.CurrentBudget);
+            SetScores(run.RoundScore, run.CurrentQuota);
         }
 
         /// <summary>
-        /// Updates just the score-derived texts (quota progress, round score,
-        /// total score) without touching round/budget — lets the presentation
-        /// layer animate these up progressively in sync with score popups
-        /// instead of always jumping straight to the final value.
+        /// Updates just the score bar, without touching the pieces bar — lets
+        /// the presentation layer animate the score up progressively in sync
+        /// with score popups instead of always jumping straight to the final
+        /// value.
         /// </summary>
-        public void SetScores(int roundScore, int quota, int totalScore)
+        public void SetScores(int roundScore, int quota)
         {
-            _quotaText.text = "Quota " + roundScore + " / " + quota;
-            _roundScoreText.text = "Round score: " + roundScore;
-            _totalScoreText.text = "Total score (run): " + totalScore;
+            _scoreLabel.text = roundScore + " / " + quota;
+            _scoreFill.fillAmount = quota > 0 ? Mathf.Clamp01((float)roundScore / quota) : 0f;
+        }
+
+        private void UpdatePieces(int piecesRemaining, int budget)
+        {
+            _piecesLabel.text = "Remaining pieces: " + piecesRemaining;
+            _piecesFill.fillAmount = budget > 0 ? Mathf.Clamp01((float)piecesRemaining / budget) : 0f;
         }
     }
 }

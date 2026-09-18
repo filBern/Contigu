@@ -179,11 +179,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   clears de ligne), un indicateur "Combo: +N" en gros texte violet
   (`ComboView`, composant dédié plutôt qu'inséré dans `HudView`) additionne
   en direct tous les points de CETTE pose au fur et à mesure qu'ils
-  s'affichent, séparément du score de manche/total — pour que le joueur
-  voie clairement combien un seul coup vient de rapporter. D'abord placé
-  dans la barre du HUD tout en haut, déplacé sur demande explicite (trop
-  discret là-haut) dans l'espace entre le bas de la grille et le haut de
-  la main, où l'œil du joueur est déjà pendant qu'il joue.
+  s'affichent, séparément du score de manche — pour que le joueur voie
+  clairement combien un seul coup vient de rapporter. D'abord placé dans
+  la barre du HUD tout en haut, déplacé sur demande explicite (trop
+  discret là-haut) dans l'espace sous la grille — la main a depuis
+  déménagé à droite de la grille (voir plus bas), mais ce même espace
+  sous la grille, maintenant entre elle et la barre "pieces restantes",
+  reste l'endroit où l'œil du joueur est déjà pendant qu'il joue.
 - **Nouvelle main** : une main de 3 n'est retirée que lorsque les 3 pièces
   précédentes ont été posées (spec 4.2, comportement du prototype HTML).
 - **Rotation aléatoire des pièces** : sur demande explicite — chaque pièce
@@ -321,3 +323,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   d'une case : `ApplyState` le cache systématiquement, donc
   `ClearHover` le réinitialise sans code de nettoyage séparé (même
   principe que l'icône de couleur en survol ci-dessus).
+- **Réorganisation du HUD** (sur demande explicite) :
+  - `HudView` remplace ses 5 textes (round, quota, score de manche,
+    pièces restantes, score total) par 2 barres de progression, chacune
+    une `Image` en `Type.Filled` (`FillMethod.Horizontal`) avec un
+    texte centré par-dessus. La barre du haut (`UITheme.Success`,
+    verte) affiche `score de manche / quota` — remplace l'ancien
+    "Quota X / Y" texte. La barre du bas (`UITheme.ButtonSelected`,
+    bleue — délibérément une couleur différente de celle du haut) est
+    nouvelle : `remainingPieces / budget` avec le texte "Remaining
+    pieces: N", ancrée au bord inférieur de l'écran. Le round actuel et
+    le score total du run ont été retirés de l'affichage permanent
+    (spec demandée : ne garder que ce qui concerne la manche en cours).
+    `HudView.SetScores` a perdu son paramètre `totalScore` en
+    conséquence (et tout le suivi `displayedTotalScore` /
+    `totalScoreBefore` dans `GameBootstrap`, devenu mort).
+  - Les 3 slots de main (`HandView`) passent d'un `HorizontalLayoutGroup`
+    à un `VerticalLayoutGroup` — empilés à la verticale à droite de la
+    grille (calé sur son centre vertical) plutôt qu'en rangée sous elle.
+  - `ComboView` reste sous la grille (maintenant qu'il n'y a plus de
+    main en dessous) mais recalé pour tenir dans l'espace entre le bas
+    de la grille et la nouvelle barre "pieces restantes".
+  - `ModifierPanelView` (panneau de gauche) : `PanelWidth` 190→230
+    (plus large), hauteur du panneau 640→460 (moins long — 5 lignes de
+    modificateurs max ne remplissaient qu'une fraction des 640 d'avant),
+    décalage horizontal 10→40 (plus vers la droite). Toute cette
+    repositionnement se fait dans `GameBootstrap.BuildUI`, avec les
+    calculs en commentaire pour que les futurs ajustements de mise en
+    page restent faciles à suivre.

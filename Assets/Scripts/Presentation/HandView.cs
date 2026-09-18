@@ -29,7 +29,7 @@ namespace Contigu.Presentation
             _deck = deck;
 
             var container = UIFactory.CreateUIObject("HandContainer", parent);
-            var layout = container.gameObject.AddComponent<HorizontalLayoutGroup>();
+            var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 16f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
@@ -48,7 +48,7 @@ namespace Contigu.Presentation
                 var slot = UIFactory.CreatePanel(container, "Slot" + i, UITheme.ButtonIdle);
                 slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
                 // Plain Image/Button has no ILayoutElement, so without this the
-                // parent HorizontalLayoutGroup has no size to read and collapses
+                // parent VerticalLayoutGroup has no size to read and collapses
                 // the slot toward zero instead of respecting sizeDelta.
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
                 slotLayout.preferredWidth = 120f;

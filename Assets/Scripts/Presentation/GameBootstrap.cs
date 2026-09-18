@@ -85,19 +85,16 @@ namespace Contigu.Presentation
             var mainRoot = UIFactory.CreateUIObject("MainRoot", canvas);
             UIFactory.StretchFull(mainRoot);
 
+            // Both progress bars pin themselves to the top/bottom edges inside
+            // HudView.Build — nothing to position here.
             _hudView = gameObject.AddComponent<HudView>();
-            var hudRect = _hudView.Build(mainRoot);
-            hudRect.anchorMin = new Vector2(0f, 1f);
-            hudRect.anchorMax = new Vector2(1f, 1f);
-            hudRect.pivot = new Vector2(0.5f, 1f);
-            hudRect.sizeDelta = new Vector2(0f, 56f);
-            hudRect.anchoredPosition = Vector2.zero;
+            _hudView.Build(mainRoot);
 
             _statusText = UIFactory.CreateText(mainRoot, "Status", "Select a piece, then click the grid.", 16, UITheme.TextMuted);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -70f);
+            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -56f);
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
 
             _gridView = gameObject.AddComponent<GridView>();
@@ -105,27 +102,36 @@ namespace Contigu.Presentation
             gridRect.anchorMin = new Vector2(0.5f, 1f);
             gridRect.anchorMax = new Vector2(0.5f, 1f);
             gridRect.pivot = new Vector2(0.5f, 1f);
-            gridRect.anchoredPosition = new Vector2(0f, -110f);
+            gridRect.anchoredPosition = new Vector2(0f, -100f);
 
+            // To the right of the grid, vertically centered on it. Grid right
+            // edge sits 226.5 (half of its 453-wide 8x8+spacing footprint, see
+            // GridView.Build) from screen center; the hand's own width is 120
+            // (its slot width, via ContentSizeFitter) so its center needs to
+            // clear the grid by 226.5 + a 24 gap + its own half-width (60).
+            // Grid top is 100 below the screen top and 453 tall, so its
+            // vertical center is 100 + 453/2 = 326.5 below the top, i.e. 400 -
+            // 326.5 = 73.5 above the canvas's vertical center (canvas is
+            // always 800 tall — CanvasScaler matches height).
             _handView = gameObject.AddComponent<HandView>();
             var handRect = _handView.Build(mainRoot, _run.Deck);
-            handRect.anchorMin = new Vector2(0.5f, 0f);
-            handRect.anchorMax = new Vector2(0.5f, 0f);
-            handRect.pivot = new Vector2(0.5f, 0f);
-            handRect.anchoredPosition = new Vector2(0f, 24f);
+            handRect.anchorMin = new Vector2(0.5f, 0.5f);
+            handRect.anchorMax = new Vector2(0.5f, 0.5f);
+            handRect.pivot = new Vector2(0.5f, 0.5f);
+            handRect.anchoredPosition = new Vector2(310f, 73.5f);
 
             _comboView = gameObject.AddComponent<ComboView>();
             var comboRect = _comboView.Build(mainRoot);
             comboRect.anchorMin = new Vector2(0.5f, 0f);
             comboRect.anchorMax = new Vector2(0.5f, 0f);
             comboRect.pivot = new Vector2(0.5f, 0.5f);
-            // Centered in the gap between the grid's bottom edge and the hand's
-            // top edge. Grid bottom is 110 (its own top offset) + 453 (8*54
-            // cells + 7*3 spacing, see GridView.Build) = 563 below the top of a
-            // canvas that's always 800 tall (CanvasScaler matches height), i.e.
-            // 237 above the bottom. Hand top is its own 24 offset + 140 slot
-            // height (see HandView.Build) = 164 above the bottom. Midpoint: 200.5.
-            comboRect.anchoredPosition = new Vector2(0f, 200.5f);
+            // Centered under the grid, in the gap between the grid's bottom
+            // edge and the pieces bar at the screen's bottom edge. Grid bottom
+            // is 100 (its own top offset) + 453 (see GridView.Build) = 553
+            // below the top of the always-800-tall canvas, i.e. 247 above the
+            // bottom. The pieces bar's top edge is its own 10 offset + 34
+            // height (see HudView) = 44 above the bottom. Midpoint: 145.5.
+            comboRect.anchoredPosition = new Vector2(0f, 145.5f);
             comboRect.sizeDelta = new Vector2(400f, 50f);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
@@ -185,7 +191,6 @@ namespace Contigu.Presentation
             }
 
             int roundScoreBefore = _run.RoundScore;
-            int totalScoreBefore = _run.TotalScore;
 
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
@@ -205,29 +210,28 @@ namespace Contigu.Presentation
             // at their pre-placement values until PlayPlacementSequence catches
             // them up in step with each popup.
             _hudView.Refresh(_run);
-            _hudView.SetScores(roundScoreBefore, _run.CurrentQuota, totalScoreBefore);
+            _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
             _statusText.text = "Select a piece, then click the grid.";
 
             _isPlayingPlacementSequence = true;
             _handView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, totalScoreBefore));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore));
         }
 
         /// <summary>
         /// Plays a placement's full feedback sequence in order: each golden/
         /// group score popup one at a time — pulsing its cell and advancing the
-        /// HUD's round/quota/total score at that exact moment, so the displayed
-        /// score climbs progressively instead of jumping straight to the final
-        /// value — then, only once that's done, clears any completed line/
-        /// column one cell at a time (each with its own popup and score bump),
-        /// and only then advances the run state (draft/victory/defeat), so
-        /// nothing interrupts the player while they're still reading their score.
+        /// HUD's score bar at that exact moment, so the displayed score climbs
+        /// progressively instead of jumping straight to the final value — then,
+        /// only once that's done, clears any completed line/column one cell at
+        /// a time (each with its own popup and score bump), and only then
+        /// advances the run state (draft/victory/defeat), so nothing interrupts
+        /// the player while they're still reading their score.
         /// </summary>
-        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int totalScoreBefore)
+        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore)
         {
             var placement = outcome.Placement;
             int displayedRoundScore = roundScoreBefore;
-            int displayedTotalScore = totalScoreBefore;
             int comboTotal = 0;
             _comboView.Show(0);
 
@@ -251,9 +255,8 @@ namespace Contigu.Presentation
                 }
 
                 displayedRoundScore += scoreEvent.Amount;
-                displayedTotalScore += scoreEvent.Amount;
                 comboTotal += scoreEvent.Amount;
-                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 
                 yield return new WaitForSeconds(ScoreEventStaggerSeconds);
@@ -268,9 +271,8 @@ namespace Contigu.Presentation
                 _gridView.ClearCellVisual(pos.x, pos.y);
 
                 displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
-                displayedTotalScore += ScoringConstants.LineClearBonusPerCell;
                 comboTotal += ScoringConstants.LineClearBonusPerCell;
-                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota, displayedTotalScore);
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
