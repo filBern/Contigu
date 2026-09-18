@@ -94,7 +94,8 @@ namespace Contigu.Presentation
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -56f);
+            // Below the top bar (68 tall, see HudView.BarHeight) with a 12px gap.
+            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -80f);
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
 
             // Dead center of the screen — the top/bottom progress bars and the
@@ -129,10 +130,10 @@ namespace Contigu.Presentation
             // edge and the pieces bar flush against the screen's bottom edge.
             // Grid is centered on an always-800-tall canvas (CanvasScaler
             // matches height) and 453 tall, so its bottom edge sits 400 -
-            // 453/2 = 173.5 above the bottom. The pieces bar is 34 tall.
-            // Midpoint between the grid's bottom and the bar's top: (173.5 +
-            // 34) / 2 = 103.75.
-            comboRect.anchoredPosition = new Vector2(0f, 103.75f);
+            // 453/2 = 173.5 above the bottom. The pieces bar is 68 tall (see
+            // HudView.BarHeight). Midpoint between the grid's bottom and the
+            // bar's top: (173.5 + 68) / 2 = 120.75.
+            comboRect.anchoredPosition = new Vector2(0f, 120.75f);
             comboRect.sizeDelta = new Vector2(400f, 50f);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();

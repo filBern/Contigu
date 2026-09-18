@@ -15,7 +15,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private const float BarHeight = 34f;
+        private const float BarHeight = 68f;
 
         private Image _scoreFill;
         private Text _scoreLabel;
@@ -56,9 +56,6 @@ namespace Contigu.Presentation
             var text = UIFactory.CreateText(bg.transform, "Label", "", 16, UITheme.TextPrimary);
             text.fontStyle = FontStyle.Bold;
             UIFactory.StretchFull(text.rectTransform);
-            var textOutline = text.gameObject.AddComponent<Outline>();
-            textOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            textOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
             fill = fillImg;
             label = text;

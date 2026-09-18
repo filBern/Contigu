@@ -367,3 +367,8 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     plutôt que de pousser le contenu). La position de la main (calée
     sur le centre vertical de la grille) et du combo (entre le bas de
     la grille et la barre du bas) ont été recalculées en conséquence.
+  - Barres doublées d'épaisseur (`BarHeight` 34→68) et le contour noir
+    sur le texte des barres retiré (sur demande explicite). Le texte du
+    statut (au-dessus de la grille) et la position du combo ont été
+    redécalés pour tenir compte de la barre du haut/bas maintenant deux
+    fois plus épaisse.
