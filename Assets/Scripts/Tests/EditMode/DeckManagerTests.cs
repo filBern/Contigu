@@ -98,6 +98,21 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlayFromHand_WithRefillIfEmptyFalse_LeavesHandEmptyInstead()
+        {
+            var dm = MakeMinimalDeck();
+
+            dm.PlayFromHand(0);
+            dm.PlayFromHand(0);
+            dm.PlayFromHand(0, refillIfEmpty: false);
+
+            Assert.AreEqual(0, dm.Hand.Count, "Caller opted out of the auto-refill, so the hand should stay empty until DrawNewHand is called explicitly");
+
+            dm.DrawNewHand();
+            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count);
+        }
+
+        [Test]
         public void Draw_IsWithoutReplacement_AcrossOneFullCycle()
         {
             var tokens = BuildTwelveUniqueTokens();

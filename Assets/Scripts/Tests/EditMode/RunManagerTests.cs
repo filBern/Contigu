@@ -224,6 +224,72 @@ namespace Contigu.Tests
             }
         }
 
+        [Test]
+        public void PlacePiece_DefersHandRefill_WhenTheEmptyingPlacementAlsoEndsTheRound()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            // Play 2 of the initial 3 hand pieces at whatever spots are free,
+            // leaving exactly 1.
+            var tokenA = run.Deck.Hand[0];
+            var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[0]);
+            var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
+            Assert.IsTrue(anchorA.HasValue);
+            run.PlacePiece(0, anchorA.Value.x, anchorA.Value.y);
+
+            var tokenB = run.Deck.Hand[0];
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[0]);
+            var anchorB = FindAnyValidAnchor(run.Grid, shapeB);
+            Assert.IsTrue(anchorB.HasValue);
+            run.PlacePiece(0, anchorB.Value.x, anchorB.Value.y);
+
+            Assert.AreEqual(1, run.Deck.Hand.Count, "Exactly 1 piece should remain after playing 2 of the initial 3");
+            Assert.AreEqual(RunState.InProgress, run.State);
+
+            var lastToken = run.Deck.Hand[0];
+            var lastShape = PieceShapeCatalog.GetRotated(lastToken.Shape, run.Deck.HandRotations[0]);
+
+            // Fill the whole board except a 3x3 pocket in the top-right
+            // corner (far from where the first 2 pieces landed, near the
+            // origin) with the last piece's own color, all golden — the last
+            // piece's placement will merge into this huge group and score
+            // well past round 1's quota (300) in one shot, guaranteeing this
+            // single placement both empties the hand (its last piece) AND
+            // ends the round.
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    bool inPocket = x >= 5 && y >= 5;
+                    var cell = run.Grid.GetCell(x, y);
+                    if (!inPocket && !cell.IsFilled)
+                    {
+                        cell.IsFilled = true;
+                        cell.FilledColor = lastToken.Color;
+                        cell.IsGolden = true;
+                    }
+                }
+            }
+
+            var lastAnchor = FindAnyValidAnchor(run.Grid, lastShape);
+            Assert.IsTrue(lastAnchor.HasValue, "The 3x3 pocket should fit any single piece shape");
+
+            var outcome = run.PlacePiece(0, lastAnchor.Value.x, lastAnchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(RunState.AwaitingDraft, outcome.StateAfter);
+            Assert.AreEqual(0, run.Deck.Hand.Count,
+                "Hand should stay empty until the NEW round actually starts, not refill during this round's own ending placement");
+
+            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            var modifierOptions = run.RollModifierDraftOptions();
+            run.ApplyModifierPick(modifierOptions[0].Id);
+
+            Assert.AreEqual(2, run.CurrentRoundNumber);
+            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count,
+                "The deferred hand should only be drawn once the new round actually starts");
+        }
+
         /// <summary>
         /// Places pieces from hand until the round's quota is reached. Marks
         /// every cell golden first so this converges quickly regardless of

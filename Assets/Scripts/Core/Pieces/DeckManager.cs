@@ -110,13 +110,20 @@ namespace Contigu.Core
 
         /// <summary>
         /// Removes the piece at <paramref name="handIndex"/> from the hand. Per
-        /// spec 4.2, a fresh hand of 3 is only drawn once the hand is fully empty.
+        /// spec 4.2, a fresh hand of 3 is only drawn once the hand is fully
+        /// empty — unless <paramref name="refillIfEmpty"/> is false, in which
+        /// case the caller takes responsibility for drawing later (see
+        /// RunManager.PlacePiece: when the placement that empties the hand also
+        /// ends the round, drawing immediately would hand out the NEXT round's
+        /// pieces before the player has even picked their upgrade for THIS one
+        /// — deferred to RunManager.StartRound instead, so the fresh hand
+        /// belongs to the round it's actually drawn for).
         /// </summary>
-        public void PlayFromHand(int handIndex)
+        public void PlayFromHand(int handIndex, bool refillIfEmpty = true)
         {
             _hand.RemoveAt(handIndex);
             _handRotations.RemoveAt(handIndex);
-            if (_hand.Count == 0)
+            if (refillIfEmpty && _hand.Count == 0)
             {
                 DrawNewHand();
             }

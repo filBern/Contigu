@@ -600,3 +600,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     dû être ajustés — `PlayRoundToAwaitingDraft` redore maintenant
     toute la grille à CHAQUE appel plutôt qu'une fois par l'appelant,
     sinon les manches 2+ n'auraient plus eu de bonus doré du tout.
+- **Fix : la main se réinitialisait à 3 pièces aléatoires en changeant de
+  manche** (bug rapporté en jeu normal, pas via F9). Racine du problème :
+  `RunManager.PlacePiece` appelait `DeckManager.PlayFromHand` (qui
+  redessine automatiquement dès que la main tombe à 0) AVANT d'évaluer
+  si la manche se terminait. Quand le placement qui vidait la main
+  était AUSSI celui qui faisait atteindre le quota, la main était
+  redessinée immédiatement — avant même que l'écran de draft
+  n'apparaisse — donnant l'impression que "chaque nouvelle manche
+  démarre avec 3 pièces fraîches" alors que ce tirage appartenait en
+  réalité à la fin de l'ancienne manche.
+  - `DeckManager.PlayFromHand` gagne un paramètre optionnel
+    `refillIfEmpty = true` (défaut inchangé, donc rétro-compatible avec
+    tous les appels existants/tests) : `refillIfEmpty: false` retire la
+    pièce sans redessiner, laissant l'appelant décider quand tirer.
+  - `RunManager.PlacePiece` appelle maintenant `PlayFromHand(handIndex,
+    refillIfEmpty: false)`, évalue la fin de manche, PUIS ne redessine
+    immédiatement que si la manche continue (`State == InProgress`) —
+    sinon le tirage est différé.
+  - `RunManager.StartRound()` gagne un filet de sécurité (`if
+    (Deck.Hand.Count == 0) Deck.DrawNewHand();`) qui effectue ce tirage
+    différé exactement au moment où la nouvelle manche démarre pour de
+    vrai — pas avant.
+  - Effet de bord positif : `HasAnyHandPlacement()` (détection de
+    plateau bloqué) évalue maintenant la vraie main restante au moment
+    du placement au lieu d'une main déjà re-tirée par erreur.
+  - Tests : nouveau `DeckManagerTests.PlayFromHand_WithRefillIfEmptyFalse_LeavesHandEmptyInstead`
+    et nouveau `RunManagerTests.PlacePiece_DefersHandRefill_WhenTheEmptyingPlacementAlsoEndsTheRound`
+    (scénario construit : 2 pièces jouées normalement, puis la grille
+    est remplie/dorée autour d'une poche 3×3 pour garantir qu'un seul
+    placement de la 3e pièce vide la main ET dépasse le quota de la
+    manche 1 — vérifie que la main reste à 0 jusqu'à l'avancement réel
+    de manche).

@@ -80,6 +80,16 @@ namespace Contigu.Core
             {
                 Grid.LockRandomCells(RunConfig.BossLockedCellCount, _rng);
             }
+            // Normally a no-op (the hand carries over from the previous
+            // round untouched) — only fires for the deferred draw PlacePiece
+            // skips when the placement that empties the hand also ends the
+            // round, so the fresh hand is drawn here, for the round it
+            // actually belongs to, rather than during the previous round's
+            // tail end before the player has even picked their upgrade.
+            if (Deck.Hand.Count == 0)
+            {
+                Deck.DrawNewHand();
+            }
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
             State = RunState.InProgress;
@@ -125,10 +135,19 @@ namespace Contigu.Core
             }
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
-            Deck.PlayFromHand(handIndex);
+            // Don't auto-refill yet — if this placement also ends the round,
+            // drawing the next 3 pieces here would hand them out before the
+            // player has even picked this round's upgrade (see StartRound,
+            // which draws instead in that case).
+            Deck.PlayFromHand(handIndex, refillIfEmpty: false);
             PiecesRemainingThisRound--;
 
             EvaluateRoundEnd();
+
+            if (State == RunState.InProgress && Deck.Hand.Count == 0)
+            {
+                Deck.DrawNewHand();
+            }
 
             return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound);
         }
