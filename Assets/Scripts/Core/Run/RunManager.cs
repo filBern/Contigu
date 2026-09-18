@@ -309,6 +309,27 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
+        /// <summary>
+        /// Debug-only helper (wired to an editor-only input shortcut in
+        /// GameBootstrap): instantly completes the current round as if its
+        /// quota had just been reached, so the upgrade draft appears right
+        /// away instead of having to grind out a full round for real — handy
+        /// for manually testing upgrades. No-op if the run isn't currently
+        /// InProgress. Pure core logic (no UnityEditor dependency), so the
+        /// method itself ships in real builds too; only its call site is
+        /// gated behind #if UNITY_EDITOR.
+        /// </summary>
+        public RunState DebugForceRoundComplete()
+        {
+            if (State != RunState.InProgress)
+            {
+                return State;
+            }
+            RoundScore = CurrentQuota;
+            EvaluateRoundEnd();
+            return State;
+        }
+
         private void EvaluateRoundEnd()
         {
             if (RoundScore >= CurrentQuota)

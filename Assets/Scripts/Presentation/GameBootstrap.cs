@@ -44,6 +44,33 @@ namespace Contigu.Presentation
             RefreshAll();
         }
 
+#if UNITY_EDITOR
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F9))
+            {
+                DebugForceRoundWin();
+            }
+        }
+
+        /// <summary>
+        /// Editor-only debug shortcut (F9): instantly completes the current
+        /// round so the upgrade draft appears right away — lets upgrades be
+        /// tested without grinding out a full round for real. Stripped from
+        /// real builds by the UNITY_EDITOR guard around this whole block.
+        /// </summary>
+        private void DebugForceRoundWin()
+        {
+            if (_isPlayingPlacementSequence || _run.State != RunState.InProgress)
+            {
+                return;
+            }
+            var state = _run.DebugForceRoundComplete();
+            RefreshAll();
+            HandleStateTransition(state);
+        }
+#endif
+
         private static void EnsureEventSystem()
         {
             if (FindObjectOfType<EventSystem>() == null)
@@ -145,7 +172,7 @@ namespace Contigu.Presentation
             _feedbackLayer.Build(mainRoot);
 
             _draftView = gameObject.AddComponent<DraftView>();
-            _draftView.Build(mainRoot, _run.Deck);
+            _draftView.Build(mainRoot, _run.Deck, _tooltipView);
 
             _modifierDraftView = gameObject.AddComponent<ModifierDraftView>();
             _modifierDraftView.Build(mainRoot, _tooltipView);

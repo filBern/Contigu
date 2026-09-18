@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using Contigu.Core;
-using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -163,93 +161,7 @@ namespace Contigu.Presentation
         private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation, GameObject clickForwardTarget)
         {
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            int maxX = 0;
-            int maxY = 0;
-            var occupied = new HashSet<Vector2Int>();
-            for (int i = 0; i < shape.Cells.Count; i++)
-            {
-                var c = shape.Cells[i];
-                occupied.Add(c);
-                if (c.x > maxX) maxX = c.x;
-                if (c.y > maxY) maxY = c.y;
-            }
-
-            int cols = maxX + 1;
-            int rows = maxY + 1;
-            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows);
-            var color = VisualDefaults.GetColor(token.Color);
-
-            // Which cell (if any) carries this token's one-time golden/tinted/
-            // multiplier enchantment (see PieceTrait) — LocalCellIndex indexes
-            // into the same rotated shape's cell list used to build this preview,
-            // so it points at the correct square regardless of the piece's dealt
-            // rotation.
-            Vector2Int? traitPos = token.Trait.HasValue ? (Vector2Int?)shape.Cells[token.Trait.Value.LocalCellIndex] : null;
-
-            float startX = -(cols * cell) / 2f + cell / 2f;
-            // Y increases UPWARD here too, to match GridView's own convention
-            // (see its "y increases upward" comment) — otherwise this preview
-            // renders every shape vertically flipped from how it actually looks
-            // once placed on the grid, which defeats the point of showing the
-            // piece's real (now randomized) rotation.
-            float startY = -(rows * cell) / 2f + cell / 2f;
-
-            for (int y = 0; y < rows; y++)
-            {
-                for (int x = 0; x < cols; x++)
-                {
-                    bool filled = occupied.Contains(new Vector2Int(x, y));
-                    var img = UIFactory.CreatePanel(container, "c" + x + "_" + y, filled ? color : new Color(1f, 1f, 1f, 0.05f));
-                    img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
-                    img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
-
-                    // Same colorblind-accessibility icon as a filled grid
-                    // cell (see GridCellView), so the hand preview already
-                    // shows a piece's color both ways before it's even
-                    // placed. Skipped for a color with no icon yet (Coral).
-                    if (filled)
-                    {
-                        var icon = VisualDefaults.GetColorIcon(token.Color);
-                        if (icon != null)
-                        {
-                            var iconImg = UIFactory.CreatePanel(img.transform, "Icon", Color.white);
-                            iconImg.sprite = icon;
-                            UIFactory.StretchFull(iconImg.rectTransform);
-                        }
-
-                        if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
-                        {
-                            BuildTraitBadge(img.transform, token.Trait.Value, _tooltip, clickForwardTarget);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Small corner badge marking a piece's enchanted tile — color comes
-        /// from <see cref="PieceTraitVisualDefaults"/> (shared with the grid's
-        /// hover-preview badge, see GridCellView), and hovering it shows the
-        /// trait's full name/effect via <see cref="TraitBadgeView"/>, since
-        /// several trait kinds share the same badge color and only the
-        /// tooltip actually tells them apart right now.
-        /// </summary>
-        private static void BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget)
-        {
-            var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));
-            badge.rectTransform.anchorMin = new Vector2(0f, 1f);
-            badge.rectTransform.anchorMax = new Vector2(0f, 1f);
-            badge.rectTransform.pivot = new Vector2(0f, 1f);
-            badge.rectTransform.sizeDelta = new Vector2(14f, 14f);
-            badge.rectTransform.anchoredPosition = new Vector2(1f, -1f);
-            var outline = badge.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.2f, -1.2f);
-
-            var badgeView = badge.gameObject.AddComponent<TraitBadgeView>();
-            badgeView.Init(tooltip, trait, clickForwardTarget);
+            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget);
         }
     }
 }

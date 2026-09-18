@@ -16,11 +16,14 @@ namespace Contigu.Presentation
     {
         private const float CardWidth = 200f;
         private const float CardHeight = 210f;
+        private const float TypeRowHeight = 56f;
+        private const float TypeRowPreviewSize = 44f;
 
         /// <summary>Fires once the upgrade has been chosen and resolved.</summary>
         public event Action<UpgradeDefinition, UpgradeSubChoice> UpgradeConfirmed;
 
         private DeckManager _deck;
+        private TooltipView _tooltip;
         private RectTransform _root;
 
         private Text _sectionLabel;
@@ -30,9 +33,10 @@ namespace Contigu.Presentation
 
         private UpgradeDraft _currentDraft;
 
-        public RectTransform Build(Transform parent, DeckManager deck)
+        public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
             _deck = deck;
+            _tooltip = tooltip;
 
             var overlay = UIFactory.CreatePanel(parent, "DraftOverlay", new Color(0f, 0f, 0f, 0.82f));
             _root = overlay.rectTransform;
@@ -210,9 +214,9 @@ namespace Contigu.Presentation
             listContainer.anchorMax = new Vector2(0.5f, 0.5f);
             listContainer.pivot = new Vector2(0.5f, 0.5f);
             listContainer.anchoredPosition = new Vector2(0f, 0f);
-            listContainer.sizeDelta = new Vector2(700f, 440f);
+            listContainer.sizeDelta = new Vector2(700f, 480f);
             var grid = listContainer.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(220f, 46f);
+            grid.cellSize = new Vector2(220f, TypeRowHeight);
             grid.spacing = new Vector2(10f, 10f);
             grid.childAlignment = TextAnchor.UpperCenter;
 
@@ -227,9 +231,7 @@ namespace Contigu.Presentation
                 {
                     continue;
                 }
-                string label = VisualDefaults.GetShapeName(shape) + " / " + VisualDefaults.GetColorName(color) + "  x" + count;
-                var btn = UIFactory.CreateButton(listContainer, "Type", label, UITheme.ButtonIdle, 13);
-                btn.onClick.AddListener(() => OnTypeChosen(def, shape, color));
+                BuildTypeRow(listContainer, def, shape, color, count);
             }
 
             var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UITheme.Danger);
@@ -240,6 +242,61 @@ namespace Contigu.Presentation
             cancelRect.anchoredPosition = new Vector2(0f, 30f);
             cancelRect.sizeDelta = new Vector2(160f, 44f);
             cancelBtn.onClick.AddListener(HideSubChoice);
+        }
+
+        /// <summary>
+        /// One row in the type picker: a shape/color preview (same look as a
+        /// hand slot, see ShapePreviewFactory) instead of a plain "Shape /
+        /// Color" text label — clearer at a glance, and it doubles as a way to
+        /// show whether any copy of this type is currently enchanted (see
+        /// FindRepresentativeTrait), which a text label couldn't convey at all.
+        /// </summary>
+        private void BuildTypeRow(RectTransform parent, UpgradeDefinition def, ShapeId shape, PieceColor color, int count)
+        {
+            var row = UIFactory.CreatePanel(parent, "Type_" + shape + "_" + color, UITheme.ButtonIdle);
+            var rowBtn = row.gameObject.AddComponent<Button>();
+            rowBtn.onClick.AddListener(() => OnTypeChosen(def, shape, color));
+
+            var previewContainer = UIFactory.CreateUIObject("Preview", row.transform);
+            previewContainer.anchorMin = new Vector2(0f, 0.5f);
+            previewContainer.anchorMax = new Vector2(0f, 0.5f);
+            previewContainer.pivot = new Vector2(0f, 0.5f);
+            previewContainer.anchoredPosition = new Vector2(8f, 0f);
+            previewContainer.sizeDelta = new Vector2(TypeRowPreviewSize, TypeRowPreviewSize);
+
+            var trait = FindRepresentativeTrait(shape, color);
+            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject);
+
+            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 15, UITheme.TextPrimary);
+            countLabel.fontStyle = FontStyle.Bold;
+            countLabel.rectTransform.anchorMin = new Vector2(1f, 0.5f);
+            countLabel.rectTransform.anchorMax = new Vector2(1f, 0.5f);
+            countLabel.rectTransform.pivot = new Vector2(1f, 0.5f);
+            countLabel.rectTransform.anchoredPosition = new Vector2(-10f, 0f);
+            countLabel.rectTransform.sizeDelta = new Vector2(44f, 30f);
+        }
+
+        /// <summary>
+        /// The trait carried by the first deck token matching (shape, color)
+        /// that has one, or null if none of that type's copies are enchanted.
+        /// Since Retirer/Dupliquer/Recolorer all operate on a TYPE rather than
+        /// a specific token (see DeckManager.RemoveOneOfType and friends),
+        /// this is necessarily a representative sample when several copies of
+        /// the same type carry different traits — showing "this type has an
+        /// enchanted copy" rather than promising which exact copy an action
+        /// would touch.
+        /// </summary>
+        private PieceTrait? FindRepresentativeTrait(ShapeId shape, PieceColor color)
+        {
+            var tokens = _deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                if (tokens[i].Matches(shape, color) && tokens[i].Trait.HasValue)
+                {
+                    return tokens[i].Trait;
+                }
+            }
+            return null;
         }
 
         private void OnTypeChosen(UpgradeDefinition def, ShapeId shape, PieceColor color)

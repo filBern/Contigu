@@ -32,6 +32,31 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void DebugForceRoundComplete_SetsRoundScoreToQuota_AndAdvancesToAwaitingDraft()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            var state = run.DebugForceRoundComplete();
+
+            Assert.AreEqual(RunState.AwaitingDraft, state);
+            Assert.AreEqual(RunState.AwaitingDraft, run.State);
+            Assert.AreEqual(run.CurrentQuota, run.RoundScore);
+        }
+
+        [Test]
+        public void DebugForceRoundComplete_NoOps_WhenNotInProgress()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugForceRoundComplete(); // now AwaitingDraft
+            int roundScoreBefore = run.RoundScore;
+
+            var state = run.DebugForceRoundComplete();
+
+            Assert.AreEqual(RunState.AwaitingDraft, state);
+            Assert.AreEqual(roundScoreBefore, run.RoundScore, "Calling it again while not InProgress should be a no-op");
+        }
+
+        [Test]
         public void PlacePiece_InvalidCoordinates_ReturnsFailureWithoutMutatingState()
         {
             var run = new RunManager(new SystemRandomProvider(1));

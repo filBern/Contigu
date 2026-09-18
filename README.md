@@ -544,3 +544,36 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (`PlacePiece_TwoMultiplierZoneCellsInSameGroup_CombineMultiplicatively`),
     plus les tests `Apply_*`/`Tag*` habituels dans `UpgradeSystemTests`/
     `DeckManagerTests`.
+- **Raccourci debug éditeur-only pour tester les upgrades plus vite**
+  (sur demande explicite) : touche **F9** force la fin instantanée de la
+  manche en cours (`RunManager.DebugForceRoundComplete` — met
+  `RoundScore` à `CurrentQuota` puis relance l'évaluation normale de fin
+  de manche), déclenchant le draft d'upgrade tout de suite au lieu de
+  devoir vraiment jouer une manche complète. Le raccourci clavier
+  (`GameBootstrap.Update`) est entièrement dans un bloc `#if
+  UNITY_EDITOR` — absent des builds réels. `DebugForceRoundComplete`
+  lui-même reste en C# pur (pas de dépendance UnityEditor) donc reste
+  disponible aux tests ; ne fait rien si la run n'est pas `InProgress`
+  (évite de perturber un draft déjà en cours si on spam la touche).
+- **Le picker de type de pièce (Retirer/Dupliquer/Recolorer) montre
+  maintenant un aperçu visuel de la forme au lieu du texte "Forme /
+  Couleur"** (sur demande explicite, plus clair) :
+  - Nouveau `ShapePreviewFactory` (Presentation) : factorise le rendu
+    grille-de-carrés + icône couleur + badge d'enchantement partagé
+    par `HandView` (main du joueur, forme tournée) et `DraftView`
+    (ligne de la liste de types, forme de base non tournée).
+    `HandView.BuildShapePreview` délègue maintenant entièrement à ce
+    factory (code dupliqué retiré).
+  - Chaque ligne du picker (`DraftView.BuildTypeRow`) montre l'aperçu
+    de la forme/couleur + un badge d'enchantement si AU MOINS une
+    copie de ce type dans le deck est enchantée
+    (`DraftView.FindRepresentativeTrait` — les upgrades Retirer/
+    Dupliquer/Recolorer opèrent sur un TYPE, pas un token précis, donc
+    on ne peut montrer qu'un échantillon représentatif, pas garantir
+    quelle copie exacte serait touchée) + le compte "xN" à droite.
+  - Le badge d'enchantement se redimensionne maintenant proportionnellement
+    à la taille de la case plutôt qu'une taille fixe de 14px — sur
+    l'aperçu compact du picker (case ~15px), un badge fixe de 14px
+    aurait quasiment recouvert toute la case.
+  - Même tooltip au survol que dans la main (réutilise `TraitBadgeView`),
+    avec le même relais de clic vers le bouton de la ligne.
