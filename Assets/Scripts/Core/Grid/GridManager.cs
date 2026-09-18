@@ -15,6 +15,9 @@ namespace Contigu.Core
 
         private readonly Cell[,] _cells;
 
+        /// <summary>Scored group size of the last placement made this round, or null before the round's first placement — tracked for "Momentum" (Dégradé), reset by <see cref="ResetForNewRound"/>.</summary>
+        private int? _lastGroupSize;
+
         public GridManager()
         {
             _cells = new Cell[Size, Size];
@@ -70,6 +73,7 @@ namespace Contigu.Core
                     _cells[x, y].ResetForNewRound();
                 }
             }
+            _lastGroupSize = null;
         }
 
         public bool CanPlace(PieceShape shape, int anchorX, int anchorY)
@@ -156,6 +160,12 @@ namespace Contigu.Core
             // mutually connected (every shape in the catalog is edge-connected),
             // so a single flood-fill from any placed cell finds the whole group.
             var groupCells = FindConnectedGroup(placedCells[0]);
+
+            // Captured before being overwritten below, for "Momentum" (Dégradé)
+            // to compare this placement's group size against the previous one.
+            int? previousGroupSize = _lastGroupSize;
+            _lastGroupSize = groupCells.Count;
+
             int groupMultiplier = ComputeGroupMultiplier(groupCells);
             int perCellGroupScore = ScoringConstants.GroupBonusPerCell * groupMultiplier;
             int groupBonus = 0;
@@ -184,7 +194,7 @@ namespace Contigu.Core
             int modifierBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize);
             }
 
             var clearInfo = CheckAndClearLines();
@@ -216,7 +226,7 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize)
         {
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
@@ -265,6 +275,30 @@ namespace Contigu.Core
                     case ModifierId.Carrefour:
                         bonus = ApplyCarrefour(groupCells, events);
                         break;
+                    case ModifierId.CoeurDePierre:
+                        bonus = ApplyCoeurDePierre(groupCells, events);
+                        break;
+                    case ModifierId.CercleChromatique:
+                        bonus = ApplyCercleChromatique(groupCells, events);
+                        break;
+                    case ModifierId.DiagonaleVerrouillee:
+                        bonus = ApplyDiagonaleVerrouillee(groupCells, events);
+                        break;
+                    case ModifierId.Monochrome:
+                        bonus = ApplyMonochrome(groupCells, events);
+                        break;
+                    case ModifierId.Contraste:
+                        bonus = ApplyContraste(placedCells, events);
+                        break;
+                    case ModifierId.Degrade:
+                        bonus = ApplyDegrade(groupCells.Count, previousGroupSize, placedCells, events);
+                        break;
+                    case ModifierId.Emmitouflee:
+                        bonus = ApplyEmmitouflee(groupCells, events);
+                        break;
+                    case ModifierId.Jardinier:
+                        bonus = ApplyJardinier(groupCells, events);
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -275,7 +309,7 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Collectionneur/Maçon/Démolisseur all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
+        /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
         private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int total = 0;
@@ -294,6 +328,30 @@ namespace Contigu.Core
                         break;
                     case ModifierId.Demolisseur:
                         bonus = ApplyDemolisseur(clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.ArcEnCiel:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, ContainsAllBaseColors, ScoringConstants.ArcEnCielBonusPerLine);
+                        break;
+                    case ModifierId.Alternance:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceBonusPerLine);
+                        break;
+                    case ModifierId.Symetrie:
+                        bonus = ApplySymetrie(clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.Palindrome:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsPalindrome, ScoringConstants.PalindromeBonusPerLine);
+                        break;
+                    case ModifierId.Gradient:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsGradientLine, ScoringConstants.GradientBonusPerLine);
+                        break;
+                    case ModifierId.SansDoublon:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, HasNoDuplicateColor, ScoringConstants.SansDoublonBonusPerLine);
+                        break;
+                    case ModifierId.Bloc:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocBonusPerLine);
+                        break;
+                    case ModifierId.MonochromeLigne:
+                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneBonusPerLine);
                         break;
                     default:
                         bonus = 0;
@@ -658,6 +716,239 @@ namespace Contigu.Core
             }
         }
 
+        private int ApplyCoeurDePierre(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!IsFullyBoxedIn(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.CoeurDePierreBonusPerCell));
+                total += ScoringConstants.CoeurDePierreBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>True if every one of a cell's 8 neighbors is either out of bounds, locked, or filled — no open gap around it at all. Unlike Forteresse's "all filled", an out-of-bounds or locked neighbor also satisfies this, so edge/corner/boss-round cells can qualify too.</summary>
+        private bool IsFullyBoxedIn(int x, int y)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (!InBounds(nx, ny))
+                    {
+                        continue;
+                    }
+
+                    var cell = _cells[nx, ny];
+                    if (!cell.IsLocked && !cell.IsFilled)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private int ApplyCercleChromatique(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllNeighborsFilled(pos.x, pos.y, includeDiagonals: false))
+                {
+                    continue;
+                }
+                if (!CardinalNeighborsCoverAllBaseColors(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.CercleChromatiqueBonusPerCell));
+                total += ScoringConstants.CercleChromatiqueBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>Assumes all 4 cardinal neighbors are already known filled (see <see cref="AreAllNeighborsFilled"/>). A joker neighbor consumes one of the 4 slots without contributing a base color, so it can never complete the wheel on its own.</summary>
+        private bool CardinalNeighborsCoverAllBaseColors(int x, int y)
+        {
+            var colors = new HashSet<PieceColor>
+            {
+                _cells[x - 1, y].FilledColor.Value,
+                _cells[x + 1, y].FilledColor.Value,
+                _cells[x, y - 1].FilledColor.Value,
+                _cells[x, y + 1].FilledColor.Value
+            };
+            colors.Remove(PieceColor.Joker);
+            return colors.Count == PieceColorUtility.BaseColors.Count;
+        }
+
+        private int ApplyDiagonaleVerrouillee(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!IsDiagonallyAdjacentToLockedCell(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.DiagonaleVerrouilleeBonusPerCell));
+                total += ScoringConstants.DiagonaleVerrouilleeBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool IsDiagonallyAdjacentToLockedCell(int x, int y)
+        {
+            return (InBounds(x - 1, y - 1) && _cells[x - 1, y - 1].IsLocked)
+                || (InBounds(x + 1, y - 1) && _cells[x + 1, y - 1].IsLocked)
+                || (InBounds(x - 1, y + 1) && _cells[x - 1, y + 1].IsLocked)
+                || (InBounds(x + 1, y + 1) && _cells[x + 1, y + 1].IsLocked);
+        }
+
+        /// <summary>Stricter sibling of Puriste: the group must be a single real color with ZERO jokers anywhere in it, not just ignoring them.</summary>
+        private int ApplyMonochrome(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            PieceColor? monoColor = null;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
+                if (color == PieceColor.Joker)
+                {
+                    return 0;
+                }
+                if (!monoColor.HasValue)
+                {
+                    monoColor = color;
+                }
+                else if (monoColor.Value != color)
+                {
+                    return 0;
+                }
+            }
+
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, groupCells[i], ScoringConstants.MonochromeBonusPerCell));
+                total += ScoringConstants.MonochromeBonusPerCell;
+            }
+            return total;
+        }
+
+        private int ApplyContraste(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                var ownColor = _cells[pos.x, pos.y].FilledColor.Value;
+                if (!HasContrastingNeighbor(pos.x, pos.y, ownColor))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ContrasteBonusPerCell));
+                total += ScoringConstants.ContrasteBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool HasContrastingNeighbor(int x, int y, PieceColor ownColor)
+        {
+            return IsFilledWithDifferentColor(x - 1, y, ownColor)
+                || IsFilledWithDifferentColor(x + 1, y, ownColor)
+                || IsFilledWithDifferentColor(x, y - 1, ownColor)
+                || IsFilledWithDifferentColor(x, y + 1, ownColor);
+        }
+
+        private bool IsFilledWithDifferentColor(int x, int y, PieceColor ownColor)
+        {
+            return InBounds(x, y) && _cells[x, y].IsFilled && _cells[x, y].FilledColor.HasValue && _cells[x, y].FilledColor.Value != ownColor;
+        }
+
+        private int ApplyDegrade(int currentGroupSize, int? previousGroupSize, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (!previousGroupSize.HasValue || currentGroupSize <= previousGroupSize.Value)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.DegradeBonus));
+            return ScoringConstants.DegradeBonus;
+        }
+
+        private int ApplyEmmitouflee(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllDiagonalNeighborsFilled(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.EmmitoufleeBonusPerCell));
+                total += ScoringConstants.EmmitoufleeBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool AreAllDiagonalNeighborsFilled(int x, int y)
+        {
+            return IsInBoundsAndFilled(x - 1, y - 1) && IsInBoundsAndFilled(x + 1, y - 1)
+                && IsInBoundsAndFilled(x - 1, y + 1) && IsInBoundsAndFilled(x + 1, y + 1);
+        }
+
+        private bool IsInBoundsAndFilled(int x, int y)
+        {
+            return InBounds(x, y) && _cells[x, y].IsFilled;
+        }
+
+        private int ApplyJardinier(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!HasAnyModifierNeighbor(pos.x, pos.y))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.JardinierBonusPerCell));
+                total += ScoringConstants.JardinierBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool HasAnyModifierNeighbor(int x, int y)
+        {
+            return HasModifierAt(x - 1, y) || HasModifierAt(x + 1, y) || HasModifierAt(x, y - 1) || HasModifierAt(x, y + 1);
+        }
+
+        private bool HasModifierAt(int x, int y)
+        {
+            return InBounds(x, y) && _cells[x, y].HasAnyModifier;
+        }
+
         private int ApplyMacon(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (clearInfo.ClearedCells.Count > 0)
@@ -679,6 +970,205 @@ namespace Contigu.Core
             int bonus = clearInfo.ClearedLineCount * ScoringConstants.DemolisseurBonusPerLine;
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
             return bonus;
+        }
+
+        /// <summary>Shared driver for the 7 line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — bonus fires once per qualifying cleared line.</summary>
+        private int ApplyPerLineBonus(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int bonusPerLine)
+        {
+            int total = 0;
+            var lines = clearInfo.ClearedLines;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (!predicate(lines[i].Colors))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonusPerLine));
+                total += bonusPerLine;
+            }
+            return total;
+        }
+
+        /// <summary>Non-joker colors present, ignoring how many times each repeats.</summary>
+        private static bool ContainsAllBaseColors(IReadOnlyList<PieceColor> colors)
+        {
+            var seen = new HashSet<PieceColor>();
+            for (int i = 0; i < colors.Count; i++)
+            {
+                if (colors[i] != PieceColor.Joker)
+                {
+                    seen.Add(colors[i]);
+                }
+            }
+            return seen.Count >= PieceColorUtility.BaseColors.Count;
+        }
+
+        /// <summary>Exactly 2 distinct colors present, AND every adjacent pair differs (ABAB...). A joker anywhere breaks the strict adjacency check, so it never qualifies.</summary>
+        private static bool IsAlternatingTwoColors(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count < 2)
+            {
+                return false;
+            }
+            if (new HashSet<PieceColor>(colors).Count != 2)
+            {
+                return false;
+            }
+            for (int i = 1; i < colors.Count; i++)
+            {
+                if (colors[i] == colors[i - 1])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool IsPalindrome(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count < 2)
+            {
+                return false;
+            }
+            for (int i = 0, j = colors.Count - 1; i < j; i++, j--)
+            {
+                if (colors[i] != colors[j])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>No two ADJACENT cells share a color — a weaker, more general condition than <see cref="IsAlternatingTwoColors"/> (which additionally caps the line at exactly 2 distinct colors), so a 3+ color cycling line can satisfy Gradient without satisfying Alternance.</summary>
+        private static bool IsGradientLine(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count < 2)
+            {
+                return false;
+            }
+            for (int i = 1; i < colors.Count; i++)
+            {
+                if (colors[i] == colors[i - 1])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Every color value appears at most once anywhere in the line — with only 5 possible <see cref="PieceColor"/> values (4 base + Joker), a full 8-cell line can never qualify; only reachable when locked cells shrink it.</summary>
+        private static bool HasNoDuplicateColor(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count == 0)
+            {
+                return false;
+            }
+            var seen = new HashSet<PieceColor>();
+            for (int i = 0; i < colors.Count; i++)
+            {
+                if (!seen.Add(colors[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Every cell shares its color with at least one immediate neighbor in the line — no isolated single-cell color anywhere.</summary>
+        private static bool IsAllBlocksOfAtLeastTwo(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count < 2)
+            {
+                return false;
+            }
+            for (int i = 0; i < colors.Count; i++)
+            {
+                bool matchesLeft = i > 0 && colors[i - 1] == colors[i];
+                bool matchesRight = i < colors.Count - 1 && colors[i + 1] == colors[i];
+                if (!matchesLeft && !matchesRight)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Every non-joker color in the line is the same one (jokers ignored, same convention as Puriste).</summary>
+        private static bool IsMonochromeLine(IReadOnlyList<PieceColor> colors)
+        {
+            if (colors.Count == 0)
+            {
+                return false;
+            }
+            PieceColor? mono = null;
+            for (int i = 0; i < colors.Count; i++)
+            {
+                if (colors[i] == PieceColor.Joker)
+                {
+                    continue;
+                }
+                if (!mono.HasValue)
+                {
+                    mono = colors[i];
+                }
+                else if (mono.Value != colors[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Unlike the other line modifiers, Symétrie compares two DIFFERENT cleared lines against each other rather than a line against itself — bonus fires per line that has a matching mirror also clearing this same placement.</summary>
+        private int ApplySymetrie(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            var lines = clearInfo.ClearedLines;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                int mirrorIndex = Size - 1 - line.Index;
+                bool hasMirror = false;
+                for (int j = 0; j < lines.Count; j++)
+                {
+                    if (j == i)
+                    {
+                        continue;
+                    }
+                    var other = lines[j];
+                    if (other.IsRow == line.IsRow && other.Index == mirrorIndex && ColorsMatch(line.Colors, other.Colors))
+                    {
+                        hasMirror = true;
+                        break;
+                    }
+                }
+                if (!hasMirror)
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.SymetrieBonusPerLine));
+                total += ScoringConstants.SymetrieBonusPerLine;
+            }
+            return total;
+        }
+
+        private static bool ColorsMatch(IReadOnlyList<PieceColor> a, IReadOnlyList<PieceColor> b)
+        {
+            if (a.Count != b.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (a[i] != b[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -786,6 +1276,23 @@ namespace Contigu.Core
             return multiplier;
         }
 
+        /// <summary>One cleared row/column's ordered color sequence (only its non-locked cells), captured right before it's wiped — feeds the 8 line-pattern modifiers (Arc-en-ciel/Alternance/Symétrie/Palindrome/Gradient/Sans doublon/Bloc/Monochrome-ligne).</summary>
+        private readonly struct ClearedLine
+        {
+            public readonly IReadOnlyList<PieceColor> Colors;
+            public readonly bool IsRow;
+
+            /// <summary>y for a row, x for a column.</summary>
+            public readonly int Index;
+
+            public ClearedLine(IReadOnlyList<PieceColor> colors, bool isRow, int index)
+            {
+                Colors = colors;
+                IsRow = isRow;
+                Index = index;
+            }
+        }
+
         private readonly struct ClearInfo
         {
             public readonly IReadOnlyList<Vector2Int> ClearedCells;
@@ -796,11 +1303,15 @@ namespace Contigu.Core
             /// <summary>How many individual rows/columns completed simultaneously by this placement (distinct from <see cref="ClearedCells"/>.Count, which is a cell count) — used by Démolisseur.</summary>
             public readonly int ClearedLineCount;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount)
+            /// <summary>One entry per completed row/column this placement, each with its own pre-clear color sequence — used by the 8 line-pattern modifiers.</summary>
+            public readonly IReadOnlyList<ClearedLine> ClearedLines;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
                 ClearedLineCount = clearedLineCount;
+                ClearedLines = clearedLines;
             }
         }
 
@@ -813,12 +1324,14 @@ namespace Contigu.Core
         {
             var cellsToClear = new HashSet<Vector2Int>();
             int clearedLineCount = 0;
+            var clearedLines = new List<ClearedLine>();
 
             for (int y = 0; y < Size; y++)
             {
                 if (IsRowComplete(y))
                 {
                     clearedLineCount++;
+                    clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: true, index: y), isRow: true, index: y));
                     for (int x = 0; x < Size; x++)
                     {
                         if (!_cells[x, y].IsLocked)
@@ -834,6 +1347,7 @@ namespace Contigu.Core
                 if (IsColumnComplete(x))
                 {
                     clearedLineCount++;
+                    clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: false, index: x), isRow: false, index: x));
                     for (int y = 0; y < Size; y++)
                     {
                         if (!_cells[x, y].IsLocked)
@@ -855,7 +1369,22 @@ namespace Contigu.Core
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedLineCount);
+            return new ClearInfo(cleared, clearedColors, clearedLineCount, clearedLines);
+        }
+
+        /// <summary>Ordered colors along a row (index = y) or column (index = x), skipping locked cells entirely — called before any clearing happens this call, so every relevant cell here is still filled.</summary>
+        private List<PieceColor> ExtractLineColors(bool isRow, int index)
+        {
+            var colors = new List<PieceColor>(Size);
+            for (int i = 0; i < Size; i++)
+            {
+                var cell = isRow ? _cells[i, index] : _cells[index, i];
+                if (!cell.IsLocked && cell.FilledColor.HasValue)
+                {
+                    colors.Add(cell.FilledColor.Value);
+                }
+            }
+            return colors;
         }
 
         private bool IsRowComplete(int y)

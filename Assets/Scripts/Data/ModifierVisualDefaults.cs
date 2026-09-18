@@ -32,7 +32,23 @@ namespace Contigu.Data
             { ModifierId.TrouDansLaGrille, "HL" },
             { ModifierId.Carrefour, "XR" },
             { ModifierId.Macon, "MA" },
-            { ModifierId.Demolisseur, "DM" }
+            { ModifierId.Demolisseur, "DM" },
+            { ModifierId.CoeurDePierre, "CP" },
+            { ModifierId.CercleChromatique, "CC" },
+            { ModifierId.DiagonaleVerrouillee, "DV" },
+            { ModifierId.Monochrome, "MO" },
+            { ModifierId.Contraste, "CN" },
+            { ModifierId.Degrade, "DG" },
+            { ModifierId.Emmitouflee, "EM" },
+            { ModifierId.Jardinier, "JA" },
+            { ModifierId.ArcEnCiel, "AC" },
+            { ModifierId.Alternance, "AL" },
+            { ModifierId.Symetrie, "SY" },
+            { ModifierId.Palindrome, "PA" },
+            { ModifierId.Gradient, "GR" },
+            { ModifierId.SansDoublon, "SD" },
+            { ModifierId.Bloc, "BL" },
+            { ModifierId.MonochromeLigne, "ML" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

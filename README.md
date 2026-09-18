@@ -648,3 +648,72 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   par définition ; le tirage qui suit juste après redonne une vraie
   main que le PROCHAIN placement vérifiera normalement. Nouveau test
   `RunManagerTests.PlacePiece_DoesNotTriggerDefeat_WhenTheHandMerelyEmptiesMidRound`.
+- **16 modificateurs supplémentaires** (deuxième lot, sur demande explicite —
+  le catalogue passe de 16 à 32 entrées, `ModifierCatalog.All`). Piochés dans
+  la même grande liste de brainstorm que le premier lot (voir plus haut) ;
+  comme pour Complémentaire/Maçon/Démolisseur déjà notés, la plupart de ces
+  16 noms n'avaient qu'un nom + catégorie à partir desquels travailler, pas la
+  règle détaillée d'origine — leur condition exacte ci-dessous est
+  l'interprétation de ce prototype, documentée directement dans
+  `ModifierCatalog` et `ScoringConstants`.
+  - **8 modificateurs de voisinage/couleurs/roguelike calculables sans
+    refonte** (évalués en pré-clear comme le premier lot) : **Cœur de
+    Pierre** (bonus par case du groupe totalement encerclée — chacun de ses
+    8 voisins est rempli, verrouillé, OU hors grille — une version de
+    Forteresse qui n'exclut plus les coins/bords), **Cercle Chromatique**
+    (bonus par case dont les 4 voisins cardinaux, tous remplis, montrent
+    ensemble les 4 couleurs de base), **Diagonale Verrouillée** (version
+    diagonale de Trou dans la Grille — case adjacente en diagonale à une
+    case verrouillée), **Monochrome** (variante plus stricte de Puriste :
+    bonus PAR CASE au lieu d'un pourcentage, mais exige ZÉRO joker dans le
+    groupe au lieu de simplement les ignorer), **Contraste** (bonus par
+    case posée ayant au moins un voisin orthogonal rempli d'une couleur
+    différente), **Dégradé** ("Momentum" en anglais pour éviter la
+    confusion avec le Gradient de ligne ci-dessous — bonus quand le groupe
+    scoré par CE placement est strictement plus grand que celui du
+    placement précédent, dans la même manche ; nécessite un petit état
+    supplémentaire, `GridManager._lastGroupSize`, remis à `null` par
+    `ResetForNewRound`), **Emmitouflée** (bonus par case dont les 4 voisins
+    DIAGONAUX — pas cardinaux — sont tous remplis) et **Jardinier** (bonus
+    par case du groupe adjacente orthogonalement à une case dorée/teintée/
+    multiplicatrice — fonctionne aussi bien avec l'enchantement d'une pièce
+    tout juste posée qu'avec une case Semeur restée dorée depuis plus tôt
+    dans la manche).
+  - **8 modificateurs de ligne, le "backlog futur" du premier lot,
+    maintenant livrés** : nécessitaient d'exposer la séquence de couleurs
+    ordonnée de chaque ligne/colonne complétée AVANT qu'elle ne soit
+    effacée — `GridManager.CheckAndClearLines` retourne maintenant aussi
+    `ClearInfo.ClearedLines` (une entrée par ligne/colonne complétée par CE
+    placement, avec sa séquence de couleurs pré-clear, cases verrouillées
+    exclues), évalués en post-clear (`ApplyPostClearModifiers`, comme
+    Collectionneur/Maçon/Démolisseur). **Arc-en-ciel** (ligne contenant les
+    4 couleurs de base), **Alternance** (exactement 2 couleurs qui
+    alternent strictement sur toute la ligne — un joker casse le motif),
+    **Symétrie** (seul modificateur qui compare DEUX lignes différentes
+    entre elles plutôt qu'une ligne à elle-même : bonus si la ligne
+    miroir — rangée y ↔ rangée 7-y, colonne x ↔ colonne 7-x — se complète
+    AUSSI dans ce même placement avec un motif de couleurs identique),
+    **Palindrome** (la ligne se lit pareil dans les deux sens), **Gradient**
+    (aucune paire de cases adjacentes ne partage sa couleur — condition plus
+    large que Alternance, qui plafonne en plus à exactement 2 couleurs),
+    **Sans Doublon** (chaque couleur apparaît au plus une fois — avec
+    seulement 5 valeurs de couleur possibles, dont Joker, une ligne pleine
+    de 8 cases ne peut jamais qualifier ; n'est atteignable que quand des
+    cases verrouillées (manche boss) réduisent la ligne à moins de 6 cases
+    réelles) et **Bloc** (la ligne n'est faite que de blocs contigus d'au
+    moins 2 cases de la même couleur — aucune case isolée).
+  - Toujours pas livrés : les modificateurs de destruction restants
+    (Overkill, Cascade, Réaction en chaîne, Combo parfait, Nettoyage,
+    Récolte — nécessiteraient de suivre un historique de poses/clears
+    d'une manche à l'autre, refonte plus profonde que celle faite ici) et
+    Dernier Espace (toujours structurellement inatteignable, voir plus
+    haut).
+  - Nouveaux badges 2 lettres (`ModifierVisualDefaults.Abbreviations`) :
+    CP/CC/DV/MO/CN/DG/EM/JA/AC/AL/SY/PA/GR/SD/BL/ML — vérifiés uniques par
+    rapport aux 16 du premier lot.
+  - Tests : `GridManagerModifierTests` gagne 2 tests (fire / ne fire pas)
+    par modificateur (sauf quelques cas combinés dans un seul test, comme
+    pour le premier lot), y compris un test dédié pour la remise à zéro de
+    `_lastGroupSize` de Dégradé à `ResetForNewRound`, et un test Symétrie
+    qui complète 2 rangées miroir en un seul placement (domino vertical) via
+    `ShapeId.DomV`.

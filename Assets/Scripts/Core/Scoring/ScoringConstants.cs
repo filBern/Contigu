@@ -79,5 +79,55 @@ namespace Contigu.Core
         /// <summary>Démolisseur: bonus per line, only once at least this many rows/columns clear simultaneously.</summary>
         public const int DemolisseurBonusPerLine = 15;
         public const int DemolisseurMinLines = 2;
+
+        // ---- Second batch of modifier bonuses (see ModifierCatalog) ----
+
+        /// <summary>Cœur de Pierre: bonus per group cell fully boxed in — every one of its 8 neighbors is either filled, locked, or off the grid.</summary>
+        public const int CoeurDePierreBonusPerCell = 7;
+
+        /// <summary>Cercle Chromatique: bonus per group cell whose 4 filled cardinal neighbors together show all 4 base colors.</summary>
+        public const int CercleChromatiqueBonusPerCell = 18;
+
+        /// <summary>Diagonale Verrouillée: bonus per group cell diagonally adjacent to a locked cell (boss round).</summary>
+        public const int DiagonaleVerrouilleeBonusPerCell = 9;
+
+        /// <summary>Monochrome: bonus per group cell when the whole group is a single real color with zero jokers (stricter than Puriste).</summary>
+        public const int MonochromeBonusPerCell = 3;
+
+        /// <summary>Contraste: bonus per placed cell with at least one filled orthogonal neighbor of a different color.</summary>
+        public const int ContrasteBonusPerCell = 6;
+
+        /// <summary>Dégradé: flat bonus whenever this placement's scored group is strictly larger than the previous placement's this round.</summary>
+        public const int DegradeBonus = 10;
+
+        /// <summary>Emmitouflée: bonus per group cell whose 4 diagonal neighbors are all filled.</summary>
+        public const int EmmitoufleeBonusPerCell = 8;
+
+        /// <summary>Jardinier: bonus per group cell orthogonally adjacent to a golden/tinted/multiplier-zone cell.</summary>
+        public const int JardinierBonusPerCell = 6;
+
+        /// <summary>Arc-en-ciel: bonus per cleared row/column containing all 4 base colors.</summary>
+        public const int ArcEnCielBonusPerLine = 25;
+
+        /// <summary>Alternance: bonus per cleared row/column whose colors strictly alternate between exactly 2 colors.</summary>
+        public const int AlternanceBonusPerLine = 16;
+
+        /// <summary>Symétrie: bonus per cleared row/column whose mirror line (across the grid's center) also cleared this placement with an identical color pattern.</summary>
+        public const int SymetrieBonusPerLine = 20;
+
+        /// <summary>Palindrome: bonus per cleared row/column whose color sequence reads the same forwards and backwards.</summary>
+        public const int PalindromeBonusPerLine = 18;
+
+        /// <summary>Gradient: bonus per cleared row/column where no two adjacent cells share the same color.</summary>
+        public const int GradientBonusPerLine = 10;
+
+        /// <summary>Sans Doublon: bonus per cleared row/column where every color appears at most once.</summary>
+        public const int SansDoublonBonusPerLine = 22;
+
+        /// <summary>Bloc: bonus per cleared row/column made only of contiguous same-color runs of at least 2.</summary>
+        public const int BlocBonusPerLine = 9;
+
+        /// <summary>Monochrome Ligne: bonus per cleared row/column that is entirely a single color (jokers ignored).</summary>
+        public const int MonochromeLigneBonusPerLine = 24;
     }
 }

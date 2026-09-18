@@ -22,6 +22,24 @@ namespace Contigu.Core
         TrouDansLaGrille,
         Carrefour,
         Macon,
-        Demolisseur
+        Demolisseur,
+
+        // ---- Second batch (16 more, from the same brainstorm list) ----
+        CoeurDePierre,
+        CercleChromatique,
+        DiagonaleVerrouillee,
+        Monochrome,
+        Contraste,
+        Degrade,
+        Emmitouflee,
+        Jardinier,
+        ArcEnCiel,
+        Alternance,
+        Symetrie,
+        Palindrome,
+        Gradient,
+        SansDoublon,
+        Bloc,
+        MonochromeLigne
     }
 }

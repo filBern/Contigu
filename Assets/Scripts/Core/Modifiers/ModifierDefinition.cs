@@ -34,17 +34,22 @@ namespace Contigu.Core
 
     /// <summary>
     /// Modifiers implemented from the much larger brainstorm list (Couleurs /
-    /// Voisinage / Lignes / Connexions / Destruction / "plus roguelike"): each
-    /// one here is computable from data already flowing through
-    /// <see cref="GridManager.PlacePiece"/> without a deeper refactor
-    /// (line-level modifiers — row/column-shape rules like Alternance,
-    /// Symétrie, Palindrome, Gradient — need <see cref="GridManager"/>'s clear
-    /// pipeline reworked first and are left as a documented future batch — see
-    /// README). Several names below (Complémentaire's exact color pairing,
-    /// Maçon, Démolisseur) had only a name + category to go on when this batch
-    /// was implemented, not the original detailed rule text, so their exact
-    /// trigger condition is this project's best-effort interpretation of the
-    /// theme — documented per-modifier below and in the README.
+    /// Voisinage / Lignes / Connexions / Destruction / "plus roguelike"), in
+    /// two batches (16 + 16). The first batch (Prisme..Démolisseur) is
+    /// computable directly from state <see cref="GridManager.PlacePiece"/>
+    /// already had. The second batch's 8 line-level modifiers (Arc-en-ciel,
+    /// Alternance, Symétrie, Palindrome, Gradient, Sans doublon, Bloc,
+    /// Monochrome-ligne) needed <see cref="GridManager.CheckAndClearLines"/>
+    /// reworked to expose each cleared row/column's ordered color sequence
+    /// BEFORE it's wiped — see README. Several names (Complémentaire's exact
+    /// color pairing, Maçon, Démolisseur, and the whole second batch) had only
+    /// a name + category to go on, not original detailed rule text, so their
+    /// exact trigger condition is this project's best-effort interpretation of
+    /// the theme — documented per-modifier below and in the README. Still not
+    /// delivered: the destruction modifiers needing a placement/clear history
+    /// across a round (Overkill, Cascade, Réaction en chaîne, Combo parfait,
+    /// Nettoyage, Récolte) and "Dernier espace" (structurally unreachable —
+    /// see README).
     /// </summary>
     public static class ModifierCatalog
     {
@@ -112,10 +117,83 @@ namespace Contigu.Core
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
             "+15 pts per row/column completed simultaneously by this placement, starting at 2 lines at once.");
 
+        // ---- Second batch (16 more) — see README for the interpretation notes
+        // on the 8 line-level modifiers below, which needed CheckAndClearLines
+        // reworked to expose each cleared line's ordered color sequence before
+        // it clears. Bonuses only ever apply to a cleared line's UNLOCKED cells
+        // (boss-round locked cells are simply absent from the sequence, so a
+        // line can qualify with fewer than 8 colors when locks shrink it). ----
+
+        public static readonly ModifierDefinition CoeurDePierre = new ModifierDefinition(
+            ModifierId.CoeurDePierre, ModifierCategory.Voisinage, "Stone Heart",
+            "+7 pts per group cell whose 8 surrounding neighbors are each either filled, locked, or off the grid (no open gap around it at all).");
+
+        public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
+            ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
+            "+18 pts per group cell whose 4 cardinal neighbors are filled and together show all 4 base colors.");
+
+        public static readonly ModifierDefinition DiagonaleVerrouillee = new ModifierDefinition(
+            ModifierId.DiagonaleVerrouillee, ModifierCategory.Voisinage, "Locked Diagonal",
+            "+9 pts per group cell diagonally adjacent to a locked cell (boss round).");
+
+        public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
+            ModifierId.Monochrome, ModifierCategory.Roguelike, "Monochrome",
+            "+3 pts per group cell when the whole group is a single real color with ZERO jokers anywhere in it (stricter than Puriste, which still tolerates jokers).");
+
+        public static readonly ModifierDefinition Contraste = new ModifierDefinition(
+            ModifierId.Contraste, ModifierCategory.Couleurs, "Contrast",
+            "+6 pts per placed cell that has at least one filled orthogonal neighbor of a different color.");
+
+        public static readonly ModifierDefinition Degrade = new ModifierDefinition(
+            ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
+            "+10 pts whenever this placement's scored group is strictly larger than the group scored by this round's PREVIOUS placement (tracked per round, resets at round start).");
+
+        public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
+            ModifierId.Emmitouflee, ModifierCategory.Voisinage, "Cocooned",
+            "+8 pts per group cell whose 4 diagonal neighbors are all filled.");
+
+        public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
+            ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
+            "+6 pts per group cell orthogonally adjacent to a golden/tinted/multiplier-zone cell.");
+
+        public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
+            ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
+            "+25 pts per cleared row/column containing all 4 base colors.");
+
+        public static readonly ModifierDefinition Alternance = new ModifierDefinition(
+            ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
+            "+16 pts per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern).");
+
+        public static readonly ModifierDefinition Symetrie = new ModifierDefinition(
+            ModifierId.Symetrie, ModifierCategory.Connexions, "Symmetry",
+            "+20 pts per cleared row/column whose mirror line across the grid's center (row y <-> row 7-y, column x <-> column 7-x) ALSO cleared this same placement with an identical color pattern.");
+
+        public static readonly ModifierDefinition Palindrome = new ModifierDefinition(
+            ModifierId.Palindrome, ModifierCategory.Connexions, "Palindrome",
+            "+18 pts per cleared row/column whose own color sequence reads the same forwards and backwards.");
+
+        public static readonly ModifierDefinition Gradient = new ModifierDefinition(
+            ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
+            "+10 pts per cleared row/column where no two adjacent cells share the same color.");
+
+        public static readonly ModifierDefinition SansDoublon = new ModifierDefinition(
+            ModifierId.SansDoublon, ModifierCategory.Couleurs, "No Duplicate",
+            "+22 pts per cleared row/column where every color appears at most once (only reachable when locked cells shrink the line below 6 cells, since there are just 5 possible colors including Joker).");
+
+        public static readonly ModifierDefinition Bloc = new ModifierDefinition(
+            ModifierId.Bloc, ModifierCategory.Connexions, "Block",
+            "+9 pts per cleared row/column made only of contiguous same-color runs of at least 2 cells (no isolated single cell of its own color).");
+
+        public static readonly ModifierDefinition MonochromeLigne = new ModifierDefinition(
+            ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
+            "+24 pts per cleared row/column that is entirely a single color (jokers ignored).");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
-            Tricolore, Complementaire, Ilot, Couronne, TrouDansLaGrille, Carrefour, Macon, Demolisseur
+            Tricolore, Complementaire, Ilot, Couronne, TrouDansLaGrille, Carrefour, Macon, Demolisseur,
+            CoeurDePierre, CercleChromatique, DiagonaleVerrouillee, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
+            ArcEnCiel, Alternance, Symetrie, Palindrome, Gradient, SansDoublon, Bloc, MonochromeLigne
         };
 
         public static ModifierDefinition Get(ModifierId id)
