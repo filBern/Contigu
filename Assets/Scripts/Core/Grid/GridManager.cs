@@ -892,40 +892,8 @@ namespace Contigu.Core
             return hasUnlockedCell;
         }
 
-        // ---- Persistent modifiers (applied once by upgrades, spec 5.4) ----
-
-        public IReadOnlyList<Vector2Int> ApplyGoldenCellsRandom(int count, IRandomProvider rng)
-        {
-            var chosen = PickRandomUnmodifiedCells(count, rng);
-            for (int i = 0; i < chosen.Count; i++)
-            {
-                GetCell(chosen[i]).IsGolden = true;
-            }
-            return chosen;
-        }
-
-        public IReadOnlyList<Vector2Int> ApplyTintedCellsRandom(int count, IRandomProvider rng)
-        {
-            var chosen = PickRandomUnmodifiedCells(count, rng);
-            var baseColors = PieceColorUtility.BaseColors;
-            for (int i = 0; i < chosen.Count; i++)
-            {
-                var cell = GetCell(chosen[i]);
-                cell.IsTinted = true;
-                cell.TintedColor = baseColors[rng.Next(baseColors.Count)];
-            }
-            return chosen;
-        }
-
-        public IReadOnlyList<Vector2Int> ApplyMultiplierCellsRandom(int count, IRandomProvider rng)
-        {
-            var chosen = PickRandomUnmodifiedCells(count, rng);
-            for (int i = 0; i < chosen.Count; i++)
-            {
-                GetCell(chosen[i]).IsMultiplierZone = true;
-            }
-            return chosen;
-        }
+        // ---- Persistent modifiers (boss round only, spec 6.1 — golden/tinted/
+        // multiplier are no longer applied to fixed grid cells; see PieceTrait) ----
 
         /// <summary>
         /// Locks up to <paramref name="count"/> random cells for the boss round,
@@ -964,20 +932,6 @@ namespace Contigu.Core
                 GetCell(chosen[i]).IsLocked = true;
             }
             return chosen;
-        }
-
-        private List<Vector2Int> PickRandomUnmodifiedCells(int count, IRandomProvider rng)
-        {
-            var candidates = new List<Vector2Int>();
-            foreach (var pos in AllPositions())
-            {
-                var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.HasAnyModifier)
-                {
-                    candidates.Add(pos);
-                }
-            }
-            return PickN(candidates, count, rng);
         }
 
         private static List<Vector2Int> PickN(List<Vector2Int> candidates, int n, IRandomProvider rng)

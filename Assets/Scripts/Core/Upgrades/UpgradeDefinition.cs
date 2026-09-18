@@ -43,15 +43,15 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition GoldenCells = new UpgradeDefinition(
             UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
-            "Adds 1 golden cell (+18 flat points on placement) to the grid.", false);
+            "Enchants 1 random piece in the deck: one of its tiles lands golden (+18 flat points) when that piece is placed.", false);
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "Adds 1 tinted cell; placing the matching color doubles the whole placement's group bonus.", false);
+            "Enchants 1 random piece in the deck: one of its tiles lands tinted, doubling that placement's group bonus if the piece's own color matches.", false);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "Adds 1 cell that doubles the whole placement's group bonus.", false);
+            "Enchants 1 random piece in the deck: one of its tiles lands as a multiplier zone, doubling that placement's group bonus.", false);
 
         public static readonly UpgradeDefinition[] All =
         {

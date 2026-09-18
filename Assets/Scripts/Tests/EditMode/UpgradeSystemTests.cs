@@ -59,10 +59,9 @@ namespace Contigu.Tests
                 tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
             }
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
-            var grid = new GridManager();
             var system = new UpgradeSystem(new SystemRandomProvider(1));
 
-            bool applied = system.Apply(UpgradeCatalog.RemovePiece, new UpgradeSubChoice(ShapeId.Single, PieceColor.Coral), grid, deck);
+            bool applied = system.Apply(UpgradeCatalog.RemovePiece, new UpgradeSubChoice(ShapeId.Single, PieceColor.Coral), deck);
 
             Assert.IsTrue(applied);
             Assert.AreEqual(DeckManager.MinDeckSize, deck.DeckCount);
@@ -73,68 +72,74 @@ namespace Contigu.Tests
         {
             var tokens = new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral) };
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
-            var grid = new GridManager();
             var system = new UpgradeSystem(new SystemRandomProvider(1));
             int before = deck.DeckCount;
 
-            bool applied = system.Apply(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice), grid, deck);
+            bool applied = system.Apply(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice), deck);
 
             Assert.IsTrue(applied);
             Assert.AreEqual(before + 1, deck.DeckCount);
         }
 
         [Test]
-        public void Apply_GoldenCells_Marks3Cells()
+        public void Apply_GoldenCells_TagsTokensInDeck_NotGridCells()
         {
-            var deck = new DeckManager(new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral) }, new SystemRandomProvider(1));
-            var grid = new GridManager();
+            var deck = MakeTwentyTokenDeck();
             var system = new UpgradeSystem(new SystemRandomProvider(2));
 
-            system.Apply(UpgradeCatalog.GoldenCells, default(UpgradeSubChoice), grid, deck);
+            system.Apply(UpgradeCatalog.GoldenCells, default(UpgradeSubChoice), deck);
 
-            Assert.AreEqual(UpgradeSystem.GoldenCellsCount, CountWithModifier(grid, c => c.IsGolden));
+            Assert.AreEqual(UpgradeSystem.GoldenCellsCount, CountTagged(deck, PieceTraitKind.Golden));
         }
 
         [Test]
-        public void Apply_TintedCells_Marks2CellsWithBaseColor()
+        public void Apply_TintedCells_TagsTokensWithABaseColor()
         {
-            var deck = new DeckManager(new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral) }, new SystemRandomProvider(1));
-            var grid = new GridManager();
+            var deck = MakeTwentyTokenDeck();
             var system = new UpgradeSystem(new SystemRandomProvider(3));
 
-            system.Apply(UpgradeCatalog.TintedCells, default(UpgradeSubChoice), grid, deck);
+            system.Apply(UpgradeCatalog.TintedCells, default(UpgradeSubChoice), deck);
 
             int tintedCount = 0;
-            foreach (var pos in GridManager.AllPositions())
+            foreach (var token in deck.Deck)
             {
-                var cell = grid.GetCell(pos);
-                if (cell.IsTinted)
+                if (token.Trait.HasValue && token.Trait.Value.Kind == PieceTraitKind.Tinted)
                 {
                     tintedCount++;
-                    Assert.AreNotEqual(PieceColor.Joker, cell.TintedColor);
+                    Assert.IsTrue(token.Trait.Value.TintedColor.HasValue);
+                    Assert.AreNotEqual(PieceColor.Joker, token.Trait.Value.TintedColor.Value);
                 }
             }
             Assert.AreEqual(UpgradeSystem.TintedCellsCount, tintedCount);
         }
 
         [Test]
-        public void Apply_MultiplierZone_Marks3Cells()
+        public void Apply_MultiplierZone_TagsTokensInDeck()
         {
-            var deck = new DeckManager(new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral) }, new SystemRandomProvider(1));
-            var grid = new GridManager();
+            var deck = MakeTwentyTokenDeck();
             var system = new UpgradeSystem(new SystemRandomProvider(4));
 
-            system.Apply(UpgradeCatalog.MultiplierZone, default(UpgradeSubChoice), grid, deck);
+            system.Apply(UpgradeCatalog.MultiplierZone, default(UpgradeSubChoice), deck);
 
-            Assert.AreEqual(UpgradeSystem.MultiplierZoneCount, CountWithModifier(grid, c => c.IsMultiplierZone));
+            Assert.AreEqual(UpgradeSystem.MultiplierZoneCount, CountTagged(deck, PieceTraitKind.Multiplier));
         }
 
-        private static int CountWithModifier(GridManager grid, System.Func<Cell, bool> predicate)
+        private static DeckManager MakeTwentyTokenDeck()
+        {
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < 20; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Sq2, PieceColor.Coral));
+            }
+            return new DeckManager(tokens, new SystemRandomProvider(1));
+        }
+
+        private static int CountTagged(DeckManager deck, PieceTraitKind kind)
         {
             int count = 0;
-            foreach (var pos in GridManager.AllPositions())
+            foreach (var token in deck.Deck)
             {
-                if (predicate(grid.GetCell(pos))) count++;
+                if (token.Trait.HasValue && token.Trait.Value.Kind == kind) count++;
             }
             return count;
         }

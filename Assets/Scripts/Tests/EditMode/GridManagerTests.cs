@@ -369,28 +369,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyGoldenCellsRandom_MarksExactlyRequestedCount()
-        {
-            var grid = new GridManager();
-            var rng = new SystemRandomProvider(1234);
-
-            var chosen = grid.ApplyGoldenCellsRandom(3, rng);
-
-            Assert.AreEqual(3, chosen.Count);
-            int goldenCount = 0;
-            foreach (var pos in GridManager.AllPositions())
-            {
-                if (grid.GetCell(pos).IsGolden) goldenCount++;
-            }
-            Assert.AreEqual(3, goldenCount);
-        }
-
-        [Test]
         public void LockRandomCells_AvoidsCellsWithExistingModifiers()
         {
             var grid = new GridManager();
             var rng = new SystemRandomProvider(99);
-            grid.ApplyGoldenCellsRandom(10, rng);
+            int i = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (i >= 10) break;
+                grid.GetCell(pos).IsGolden = true;
+                i++;
+            }
 
             var locked = grid.LockRandomCells(14, rng);
 

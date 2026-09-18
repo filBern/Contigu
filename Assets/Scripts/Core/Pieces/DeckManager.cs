@@ -201,5 +201,70 @@ namespace Contigu.Core
         {
             _deck.Add(token);
         }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run golden trait on one random cell each (spec 5.4 redesign).</summary>
+        public IReadOnlyList<int> TagGoldenTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Golden, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run tinted trait (random base color) on one random cell each.</summary>
+        public IReadOnlyList<int> TagTintedTokensRandom(int count, IRandomProvider rng)
+        {
+            var baseColors = PieceColorUtility.BaseColors;
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Tinted, localIndex, baseColors[rng.Next(baseColors.Count)]));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run multiplier trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagMultiplierTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Multiplier, localIndex));
+        }
+
+        /// <summary>
+        /// Picks up to <paramref name="count"/> distinct deck indices — preferring
+        /// tokens that don't already carry a trait, falling back to any token if
+        /// there aren't enough untagged ones — and applies <paramref name="makeTrait"/>
+        /// (given a random valid local cell index for that token's shape) to each.
+        /// Returns the tagged deck indices.
+        /// </summary>
+        private IReadOnlyList<int> TagRandomTokens(int count, IRandomProvider rng, System.Func<int, PieceTrait> makeTrait)
+        {
+            var candidates = new List<int>();
+            for (int i = 0; i < _deck.Count; i++)
+            {
+                if (!_deck[i].Trait.HasValue)
+                {
+                    candidates.Add(i);
+                }
+            }
+            if (candidates.Count < count)
+            {
+                candidates.Clear();
+                for (int i = 0; i < _deck.Count; i++)
+                {
+                    candidates.Add(i);
+                }
+            }
+
+            var chosen = new List<int>();
+            int take = count < candidates.Count ? count : candidates.Count;
+            for (int i = 0; i < take; i++)
+            {
+                int pick = rng.Next(candidates.Count);
+                chosen.Add(candidates[pick]);
+                candidates.RemoveAt(pick);
+            }
+
+            for (int i = 0; i < chosen.Count; i++)
+            {
+                int deckIndex = chosen[i];
+                var token = _deck[deckIndex];
+                int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
+                int localIndex = rng.Next(cellCount);
+                _deck[deckIndex] = token.WithTrait(makeTrait(localIndex));
+            }
+            return chosen;
+        }
     }
 }

@@ -410,3 +410,58 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   son propre `cellSize`, le `LayoutElement`/`sizeDelta` que chaque
   carte devait fixer elle-même pour un `HorizontalLayoutGroup` est
   devenu inutile et a été retiré.
+- **Refonte des upgrades de tuile (Golden/Tinted/Multiplier) : de la
+  case de grille à la pièce enchantée** (demande explicite — l'ancien
+  système "tague une case vide aléatoire de la grille pour toujours"
+  "feelait nul") :
+  - Nouveau modèle : l'upgrade tague maintenant une case précise à
+    l'intérieur d'une pièce du deck plutôt qu'une case fixe de la
+    grille — dans l'esprit de "mets une tuile dorée sur une tuile
+    aléatoire, pour 3 tétrominos". L'effet se déclenche une seule fois,
+    au moment où cette pièce précise est posée.
+  - `PieceTrait` (nouveau, `Core/Pieces/PieceTrait.cs`) : struct
+    `{ PieceTraitKind Kind, int LocalCellIndex, PieceColor? TintedColor }`.
+    `LocalCellIndex` indexe dans la liste `Cells` de la forme de BASE
+    (`Deg0`) de la pièce — comme `PieceShapeCatalog.GetRotated` applique
+    la rotation case par case en conservant l'ordre (`rotated[i]`
+    correspond toujours à `baseCells[i]`), ce même index reste valide
+    quelle que soit la rotation réellement distribuée à la pièce.
+  - `PieceToken` gagne un champ optionnel `Trait` (+ `WithTrait(...)`) ;
+    comme les tokens sont des `readonly struct` copiés par valeur, un
+    trait posé sur une entrée du deck (`DeckManager._deck`, la source
+    de vérité) se propage naturellement à la main/pioche seulement au
+    prochain reshuffle — c'est voulu, cohérent avec "permanent pour
+    toute la run" sans bookkeeping supplémentaire.
+  - `DeckManager.TagGoldenTokensRandom` / `TagTintedTokensRandom` /
+    `TagMultiplierTokensRandom` : taguent N tokens distincts du deck
+    (en préférant les tokens pas encore tagués, avec repli sur
+    n'importe quel token si pas assez de candidats libres), chacun sur
+    une case locale aléatoire de sa propre forme.
+    `UpgradeSystem.Apply` appelle maintenant ces méthodes au lieu des
+    anciennes `GridManager.ApplyGoldenCellsRandom` / `ApplyTintedCellsRandom`
+    / `ApplyMultiplierCellsRandom` (retirées, devenues mortes — avec
+    leur méthode privée `PickRandomUnmodifiedCells`). Comme plus aucun
+    cas de `UpgradeSystem.Apply` n'a besoin de `GridManager`, son
+    paramètre `grid` (devenu inutile) a été retiré de la signature.
+  - `RunManager.PlacePiece` traduit le trait de la pièce posée en un
+    flag `Cell.IsGolden` / `IsTinted` / `IsMultiplierZone` juste avant
+    d'appeler `Grid.PlacePiece` (réutilise tout le moteur de score
+    existant), puis le retire aussitôt après — contrairement à l'ancien
+    système, le flag sur la case de grille est maintenant transitoire
+    (un seul déclenchement, au placement), pas un modificateur
+    permanent de la grille.
+  - Ajout d'un badge visuel sur la tuile enchantée : dans l'aperçu de
+    la main (`HandView.BuildShapePreview`) et dans le survol
+    vert/rouge de la grille (`GridView`/`GridCellView.SetHoverTint`),
+    la case correspondant à `LocalCellIndex` affiche le même badge
+    (sprite doré / couleur teintée / contour multiplicateur) qu'une
+    case réellement dorée/teintée/multiplicatrice sur la grille.
+  - Textes des 3 upgrades (`UpgradeCatalog`) mis à jour pour refléter
+    le nouveau fonctionnement ("Enchants 1 random piece in the deck...").
+  - Tests : nouveaux tests dans `DeckManagerTests` (tag exact count,
+    index de case valide, préférence pour les tokens non tagués, repli
+    quand il n'y en a plus assez) et `RunManagerTests` (le trait produit
+    bien le bonus de score attendu sur ce placement, puis la case de
+    grille redevient non-modifiée juste après) ; tests réécrits dans
+    `UpgradeSystemTests` (vérifient le tag sur le deck, plus la case de
+    grille) et `GridManagerTests` (méthode retirée).

@@ -111,7 +111,9 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Invalid placement"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
+            Cell traitedCell = ApplyTokenTrait(token, shape, x, y);
             var placement = Grid.PlacePiece(shape, token.Color, x, y, _activeModifiers);
+            ClearTokenTrait(traitedCell);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             Deck.PlayFromHand(handIndex);
@@ -120,6 +122,57 @@ namespace Contigu.Core
             EvaluateRoundEnd();
 
             return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound);
+        }
+
+        /// <summary>
+        /// If <paramref name="token"/> carries a <see cref="PieceTrait"/>, stamps
+        /// the corresponding landing cell with the matching golden/tinted/
+        /// multiplier flag just before <see cref="GridManager.PlacePiece"/> scores
+        /// this placement — reusing the grid's existing modifier-scoring
+        /// machinery for what is now a one-time, piece-carried enchantment
+        /// (spec 5.4 redesign) rather than a permanent cell property.
+        /// <paramref name="shape"/> must already be the token's ROTATED shape
+        /// (as dealt), since <see cref="PieceTrait.LocalCellIndex"/> indexes into
+        /// it directly — rotation preserves cell-list order 1:1 (see
+        /// <see cref="PieceShapeCatalog.GetRotated"/>).
+        /// </summary>
+        private Cell ApplyTokenTrait(PieceToken token, PieceShape shape, int anchorX, int anchorY)
+        {
+            if (!token.Trait.HasValue)
+            {
+                return null;
+            }
+
+            var trait = token.Trait.Value;
+            var offset = shape.Cells[trait.LocalCellIndex];
+            var cell = Grid.GetCell(anchorX + offset.x, anchorY + offset.y);
+
+            switch (trait.Kind)
+            {
+                case PieceTraitKind.Golden:
+                    cell.IsGolden = true;
+                    break;
+                case PieceTraitKind.Tinted:
+                    cell.IsTinted = true;
+                    cell.TintedColor = trait.TintedColor.Value;
+                    break;
+                case PieceTraitKind.Multiplier:
+                    cell.IsMultiplierZone = true;
+                    break;
+            }
+            return cell;
+        }
+
+        /// <summary>Reverts the stamp <see cref="ApplyTokenTrait"/> made — the enchantment fires once, on this placement's own scoring, not as a lasting grid modifier.</summary>
+        private static void ClearTokenTrait(Cell cell)
+        {
+            if (cell == null)
+            {
+                return;
+            }
+            cell.IsGolden = false;
+            cell.IsTinted = false;
+            cell.IsMultiplierZone = false;
         }
 
         private void EvaluateRoundEnd()
@@ -175,7 +228,7 @@ namespace Contigu.Core
                 return false;
             }
 
-            bool applied = Upgrades.Apply(upgrade, subChoice, Grid, Deck);
+            bool applied = Upgrades.Apply(upgrade, subChoice, Deck);
             State = RunState.AwaitingModifierPick;
             return applied;
         }

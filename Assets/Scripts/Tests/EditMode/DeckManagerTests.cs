@@ -199,5 +199,83 @@ namespace Contigu.Tests
 
             Assert.IsFalse(dm.RecolorOneOfType(ShapeId.STetro, PieceColor.Coral, PieceColor.Teal));
         }
+
+        private static DeckManager MakeTwentyTokenSq2Deck()
+        {
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < 20; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Sq2, PieceColor.Coral));
+            }
+            return new DeckManager(tokens, new SystemRandomProvider(1));
+        }
+
+        [Test]
+        public void TagGoldenTokensRandom_TagsExactlyRequestedCount_WithValidLocalCellIndex()
+        {
+            var dm = MakeTwentyTokenSq2Deck();
+            int cellCount = PieceShapeCatalog.Get(ShapeId.Sq2).Cells.Count;
+
+            var tagged = dm.TagGoldenTokensRandom(3, new SystemRandomProvider(5));
+
+            Assert.AreEqual(3, tagged.Count);
+            Assert.AreEqual(3, new HashSet<int>(tagged).Count, "Tagged deck indices should be distinct");
+            foreach (int idx in tagged)
+            {
+                var trait = dm.Deck[idx].Trait;
+                Assert.IsTrue(trait.HasValue);
+                Assert.AreEqual(PieceTraitKind.Golden, trait.Value.Kind);
+                Assert.GreaterOrEqual(trait.Value.LocalCellIndex, 0);
+                Assert.Less(trait.Value.LocalCellIndex, cellCount);
+            }
+        }
+
+        [Test]
+        public void TagTintedTokensRandom_AssignsANonJokerBaseColor()
+        {
+            var dm = MakeTwentyTokenSq2Deck();
+
+            var tagged = dm.TagTintedTokensRandom(2, new SystemRandomProvider(6));
+
+            foreach (int idx in tagged)
+            {
+                var trait = dm.Deck[idx].Trait.Value;
+                Assert.AreEqual(PieceTraitKind.Tinted, trait.Kind);
+                Assert.IsTrue(trait.TintedColor.HasValue);
+                Assert.AreNotEqual(PieceColor.Joker, trait.TintedColor.Value);
+            }
+        }
+
+        [Test]
+        public void TagRandomTokens_PrefersUntaggedTokens_WhenEnoughAreAvailable()
+        {
+            var dm = MakeTwentyTokenSq2Deck();
+            var rng = new SystemRandomProvider(7);
+
+            var firstBatch = dm.TagGoldenTokensRandom(5, rng);
+            var secondBatch = dm.TagMultiplierTokensRandom(5, rng);
+
+            foreach (int idx in secondBatch)
+            {
+                CollectionAssert.DoesNotContain(firstBatch, idx,
+                    "With 20 tokens and only 10 tagged so far, the second tag pass should still find untagged tokens");
+            }
+        }
+
+        [Test]
+        public void TagRandomTokens_FallsBackToAlreadyTaggedTokens_WhenNotEnoughUntaggedRemain()
+        {
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < DeckManager.MinDeckSize; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
+            }
+            var dm = new DeckManager(tokens, new SystemRandomProvider(8));
+
+            dm.TagGoldenTokensRandom(DeckManager.MinDeckSize, new SystemRandomProvider(8));
+            var secondPass = dm.TagMultiplierTokensRandom(3, new SystemRandomProvider(9));
+
+            Assert.AreEqual(3, secondPass.Count, "Should still tag the requested count by re-tagging already-golden tokens");
+        }
     }
 }

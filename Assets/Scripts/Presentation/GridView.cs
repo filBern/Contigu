@@ -18,6 +18,7 @@ namespace Contigu.Presentation
         private GridCellView[,] _cells;
         private PieceShape _selectedShape;
         private PieceColor? _selectedColor;
+        private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
 
         public RectTransform Build(Transform parent, GridManager grid, float cellSize)
@@ -200,10 +201,11 @@ namespace Contigu.Presentation
             }
         }
 
-        public void SetSelectedShape(PieceShape shape, PieceColor? color = null)
+        public void SetSelectedShape(PieceShape shape, PieceColor? color = null, PieceTrait? trait = null)
         {
             _selectedShape = shape;
             _selectedColor = color;
+            _selectedTrait = trait;
             ClearHover();
         }
 
@@ -224,7 +226,11 @@ namespace Contigu.Presentation
                 int cy = y + offsets[i].y;
                 if (GridManager.InBounds(cx, cy))
                 {
-                    _cells[cx, cy].SetHoverTint(overlay, valid, _selectedColor);
+                    // Only the one cell matching the selected piece's own
+                    // enchanted local index previews the trait badge — the
+                    // others preview only the color icon.
+                    bool isTraitCell = _selectedTrait.HasValue && _selectedTrait.Value.LocalCellIndex == i;
+                    _cells[cx, cy].SetHoverTint(overlay, valid, _selectedColor, isTraitCell ? _selectedTrait : null);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                 }
             }

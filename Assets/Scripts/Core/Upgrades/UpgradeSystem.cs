@@ -76,7 +76,7 @@ namespace Contigu.Core
         /// sub-choice-requiring upgrade could not be resolved (e.g. removing the
         /// last copy of a type while the deck is at its floor).
         /// </summary>
-        public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, GridManager grid, DeckManager deck)
+        public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, DeckManager deck)
         {
             switch (upgrade.Id)
             {
@@ -94,15 +94,15 @@ namespace Contigu.Core
                     return deck.RecolorOneOfType(subChoice.Shape, subChoice.Color, subChoice.TargetColor);
 
                 case UpgradeId.GoldenCells:
-                    grid.ApplyGoldenCellsRandom(GoldenCellsCount, _rng);
+                    deck.TagGoldenTokensRandom(GoldenCellsCount, _rng);
                     return true;
 
                 case UpgradeId.TintedCells:
-                    grid.ApplyTintedCellsRandom(TintedCellsCount, _rng);
+                    deck.TagTintedTokensRandom(TintedCellsCount, _rng);
                     return true;
 
                 case UpgradeId.MultiplierZone:
-                    grid.ApplyMultiplierCellsRandom(MultiplierZoneCount, _rng);
+                    deck.TagMultiplierTokensRandom(MultiplierZoneCount, _rng);
                     return true;
 
                 default:

@@ -178,10 +178,13 @@ namespace Contigu.Presentation
         /// there would look like. When invalid, shows a solid red marker
         /// instead — the background tint alone was easy to miss, and a
         /// color-icon preview would misleadingly suggest the piece could
-        /// land there. ClearHover's follow-up ApplyState call resets
-        /// everything once the hover ends.
+        /// land there. <paramref name="previewTrait"/> additionally previews
+        /// the golden/tinted/multiplier badge on the one cell that would
+        /// actually carry the placed piece's enchantment (see PieceTrait).
+        /// ClearHover's follow-up ApplyState call resets everything once the
+        /// hover ends.
         /// </summary>
-        public void SetHoverTint(Color? overlay, bool isValid, PieceColor? previewColor = null)
+        public void SetHoverTint(Color? overlay, bool isValid, PieceColor? previewColor = null, PieceTrait? previewTrait = null)
         {
             if (overlay.HasValue)
             {
@@ -197,6 +200,32 @@ namespace Contigu.Presentation
                 if (icon != null)
                 {
                     _badgeColorIcon.sprite = icon;
+                }
+            }
+
+            if (isValid && previewTrait.HasValue)
+            {
+                var trait = previewTrait.Value;
+                if (trait.Kind == PieceTraitKind.Golden)
+                {
+                    _badgeGolden.gameObject.SetActive(true);
+                    if (VisualDefaults.GoldenTileSprite != null)
+                    {
+                        _badgeGolden.sprite = VisualDefaults.GoldenTileSprite;
+                        _badgeGolden.color = Color.white;
+                    }
+                    else
+                    {
+                        _badgeGolden.sprite = null;
+                        _badgeGolden.color = VisualDefaults.GoldenColor;
+                    }
+                }
+                else
+                {
+                    _badgeSpecial.gameObject.SetActive(true);
+                    _badgeSpecial.color = trait.Kind == PieceTraitKind.Multiplier
+                        ? VisualDefaults.MultiplierOutline
+                        : VisualDefaults.GetColor(trait.TintedColor.Value);
                 }
             }
         }

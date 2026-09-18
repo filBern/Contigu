@@ -177,6 +177,13 @@ namespace Contigu.Presentation
             float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows);
             var color = VisualDefaults.GetColor(token.Color);
 
+            // Which cell (if any) carries this token's one-time golden/tinted/
+            // multiplier enchantment (see PieceTrait) — LocalCellIndex indexes
+            // into the same rotated shape's cell list used to build this preview,
+            // so it points at the correct square regardless of the piece's dealt
+            // rotation.
+            Vector2Int? traitPos = token.Trait.HasValue ? (Vector2Int?)shape.Cells[token.Trait.Value.LocalCellIndex] : null;
+
             float startX = -(cols * cell) / 2f + cell / 2f;
             // Y increases UPWARD here too, to match GridView's own convention
             // (see its "y increases upward" comment) — otherwise this preview
@@ -209,9 +216,42 @@ namespace Contigu.Presentation
                             iconImg.sprite = icon;
                             UIFactory.StretchFull(iconImg.rectTransform);
                         }
+
+                        if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
+                        {
+                            BuildTraitBadge(img.transform, token.Trait.Value);
+                        }
                     }
                 }
             }
+        }
+
+        /// <summary>Small corner badge marking a piece's enchanted tile — same color language as a placed cell's own golden/tinted/multiplier badge (see GridCellView).</summary>
+        private static void BuildTraitBadge(Transform parent, PieceTrait trait)
+        {
+            Color badgeColor;
+            switch (trait.Kind)
+            {
+                case PieceTraitKind.Golden:
+                    badgeColor = VisualDefaults.GoldenColor;
+                    break;
+                case PieceTraitKind.Multiplier:
+                    badgeColor = VisualDefaults.MultiplierOutline;
+                    break;
+                default: // Tinted
+                    badgeColor = trait.TintedColor.HasValue ? VisualDefaults.GetColor(trait.TintedColor.Value) : VisualDefaults.TintedOutline;
+                    break;
+            }
+
+            var badge = UIFactory.CreatePanel(parent, "TraitBadge", badgeColor);
+            badge.rectTransform.anchorMin = new Vector2(0f, 1f);
+            badge.rectTransform.anchorMax = new Vector2(0f, 1f);
+            badge.rectTransform.pivot = new Vector2(0f, 1f);
+            badge.rectTransform.sizeDelta = new Vector2(14f, 14f);
+            badge.rectTransform.anchoredPosition = new Vector2(1f, -1f);
+            var outline = badge.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(1.2f, -1.2f);
         }
     }
 }

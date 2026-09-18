@@ -281,5 +281,41 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(RunState.InProgress, run.State);
         }
+
+        [Test]
+        public void PlacePiece_AppliesAGoldenTraitedToken_AsAOneTimeCellBonus_ThenClearsTheCell()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            // Tag every deck token golden — this only updates the deck (the
+            // source of truth), not the hand/draw-pile copies already dealt at
+            // construction time, so churn hand draws (without going through
+            // RunManager, which would touch the grid) until the draw pile
+            // reshuffles from the now-fully-golden deck and a tagged token
+            // actually reaches the hand.
+            run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int guard = 0;
+            while (!run.Deck.Hand[0].Trait.HasValue)
+            {
+                run.Deck.PlayFromHand(0);
+                guard++;
+                Assert.Less(guard, 200, "A golden-tagged token should reach the hand well within a few reshuffle cycles");
+            }
+
+            var token = run.Deck.Hand[0];
+            var rotation = run.Deck.HandRotations[0];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+
+            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.Greater(outcome.Placement.GoldenBonus, 0, "The token's own golden tile should have scored a golden bonus on this placement");
+
+            var offset = shape.Cells[token.Trait.Value.LocalCellIndex];
+            var landedCell = run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y);
+            Assert.IsFalse(landedCell.IsGolden, "Golden is a one-time enchantment on the token, not a permanent grid modifier — it should be cleared right after scoring");
+        }
     }
 }
