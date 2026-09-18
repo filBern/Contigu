@@ -97,28 +97,28 @@ namespace Contigu.Presentation
             _statusText.rectTransform.anchoredPosition = new Vector2(0f, -56f);
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
 
+            // Dead center of the screen — the top/bottom progress bars and the
+            // status text float above it rather than pushing it down, so the
+            // grid itself isn't biased toward the top.
             _gridView = gameObject.AddComponent<GridView>();
             var gridRect = _gridView.Build(mainRoot, _run.Grid, CellSize);
-            gridRect.anchorMin = new Vector2(0.5f, 1f);
-            gridRect.anchorMax = new Vector2(0.5f, 1f);
-            gridRect.pivot = new Vector2(0.5f, 1f);
-            gridRect.anchoredPosition = new Vector2(0f, -100f);
+            gridRect.anchorMin = new Vector2(0.5f, 0.5f);
+            gridRect.anchorMax = new Vector2(0.5f, 0.5f);
+            gridRect.pivot = new Vector2(0.5f, 0.5f);
+            gridRect.anchoredPosition = Vector2.zero;
 
-            // To the right of the grid, vertically centered on it. Grid right
-            // edge sits 226.5 (half of its 453-wide 8x8+spacing footprint, see
-            // GridView.Build) from screen center; the hand's own width is 120
-            // (its slot width, via ContentSizeFitter) so its center needs to
-            // clear the grid by 226.5 + a 24 gap + its own half-width (60).
-            // Grid top is 100 below the screen top and 453 tall, so its
-            // vertical center is 100 + 453/2 = 326.5 below the top, i.e. 400 -
-            // 326.5 = 73.5 above the canvas's vertical center (canvas is
-            // always 800 tall — CanvasScaler matches height).
+            // To the right of the grid, vertically centered on it (which is
+            // now screen center too). Grid right edge sits 226.5 (half of its
+            // 453-wide 8x8+spacing footprint, see GridView.Build) from screen
+            // center; the hand's own width is 120 (its slot width, via
+            // ContentSizeFitter) so its center needs to clear the grid by
+            // 226.5 + a 24 gap + its own half-width (60).
             _handView = gameObject.AddComponent<HandView>();
             var handRect = _handView.Build(mainRoot, _run.Deck);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            handRect.anchoredPosition = new Vector2(310f, 73.5f);
+            handRect.anchoredPosition = new Vector2(310f, 0f);
 
             _comboView = gameObject.AddComponent<ComboView>();
             var comboRect = _comboView.Build(mainRoot);
@@ -126,12 +126,13 @@ namespace Contigu.Presentation
             comboRect.anchorMax = new Vector2(0.5f, 0f);
             comboRect.pivot = new Vector2(0.5f, 0.5f);
             // Centered under the grid, in the gap between the grid's bottom
-            // edge and the pieces bar at the screen's bottom edge. Grid bottom
-            // is 100 (its own top offset) + 453 (see GridView.Build) = 553
-            // below the top of the always-800-tall canvas, i.e. 247 above the
-            // bottom. The pieces bar's top edge is its own 10 offset + 34
-            // height (see HudView) = 44 above the bottom. Midpoint: 145.5.
-            comboRect.anchoredPosition = new Vector2(0f, 145.5f);
+            // edge and the pieces bar flush against the screen's bottom edge.
+            // Grid is centered on an always-800-tall canvas (CanvasScaler
+            // matches height) and 453 tall, so its bottom edge sits 400 -
+            // 453/2 = 173.5 above the bottom. The pieces bar is 34 tall.
+            // Midpoint between the grid's bottom and the bar's top: (173.5 +
+            // 34) / 2 = 103.75.
+            comboRect.anchoredPosition = new Vector2(0f, 103.75f);
             comboRect.sizeDelta = new Vector2(400f, 50f);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();

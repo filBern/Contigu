@@ -5,16 +5,16 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Two progress bars pinned to the top and bottom edges of the screen: the
-    /// top bar tracks round score against the round's quota, the bottom bar
-    /// tracks remaining piece budget for the round. Replaces the old text-only
-    /// readout (round number, round score, total score) — the run's overall
-    /// progress isn't shown moment-to-moment, just what the player needs to
-    /// finish the current round.
+    /// Two progress bars, flush against the top and bottom edges of the
+    /// screen and spanning its full width (no margin, no border) — the top
+    /// bar tracks round score against the round's quota, the bottom bar
+    /// tracks remaining piece budget for the round. Replaces the old
+    /// text-only readout (round number, round score, total score) — the
+    /// run's overall progress isn't shown moment-to-moment, just what the
+    /// player needs to finish the current round.
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private const float BarWidth = 520f;
         private const float BarHeight = 34f;
 
         private Image _scoreFill;
@@ -24,28 +24,23 @@ namespace Contigu.Presentation
 
         public void Build(Transform parent)
         {
-            BuildBar(parent, "ScoreBar", UITheme.Success,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -10f),
-                out _scoreFill, out _scoreLabel);
-
-            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected,
-                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 10f),
-                out _piecesFill, out _piecesLabel);
+            BuildBar(parent, "ScoreBar", UITheme.Success, top: true, out _scoreFill, out _scoreLabel);
+            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected, top: false, out _piecesFill, out _piecesLabel);
         }
 
-        private static void BuildBar(Transform parent, string name, Color fillColor,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition,
+        private static void BuildBar(Transform parent, string name, Color fillColor, bool top,
             out Image fill, out Text label)
         {
+            float edgeY = top ? 1f : 0f;
             var bg = UIFactory.CreatePanel(parent, name, UITheme.Panel);
-            bg.rectTransform.anchorMin = anchorMin;
-            bg.rectTransform.anchorMax = anchorMax;
-            bg.rectTransform.pivot = pivot;
-            bg.rectTransform.anchoredPosition = anchoredPosition;
-            bg.rectTransform.sizeDelta = new Vector2(BarWidth, BarHeight);
-            var bgOutline = bg.gameObject.AddComponent<Outline>();
-            bgOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            bgOutline.effectDistance = new Vector2(2f, -2f);
+            // Stretched full-width (anchor min/max x = 0/1) and flush against
+            // the top or bottom edge (anchor, pivot and anchoredPosition all
+            // pinned to that same edge — zero anchoredPosition means no gap).
+            bg.rectTransform.anchorMin = new Vector2(0f, edgeY);
+            bg.rectTransform.anchorMax = new Vector2(1f, edgeY);
+            bg.rectTransform.pivot = new Vector2(0.5f, edgeY);
+            bg.rectTransform.anchoredPosition = Vector2.zero;
+            bg.rectTransform.sizeDelta = new Vector2(0f, BarHeight);
 
             var fillImg = UIFactory.CreatePanel(bg.transform, "Fill", fillColor);
             fillImg.type = Image.Type.Filled;
@@ -55,8 +50,8 @@ namespace Contigu.Presentation
             var fillRect = fillImg.rectTransform;
             fillRect.anchorMin = Vector2.zero;
             fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = new Vector2(3f, 3f);
-            fillRect.offsetMax = new Vector2(-3f, -3f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
 
             var text = UIFactory.CreateText(bg.transform, "Label", "", 16, UITheme.TextPrimary);
             text.fontStyle = FontStyle.Bold;

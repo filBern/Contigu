@@ -351,3 +351,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     repositionnement se fait dans `GameBootstrap.BuildUI`, avec les
     calculs en commentaire pour que les futurs ajustements de mise en
     page restent faciles à suivre.
+- **Itération sur le HUD** (sur demande explicite) :
+  - Les 2 barres de progression prennent maintenant toute la largeur de
+    l'écran et sont collées à leur bord (haut/bas) sans marge ni
+    contour — `HudView.BuildBar` ancre chaque barre en `(0, edgeY)` à
+    `(1, edgeY)` (stretch horizontal complet) avec `anchoredPosition`
+    à zéro (aucun décalage par rapport au bord), et le contour noir
+    (`Outline`) qui cerclait le fond a été retiré ; le remplissage
+    (`Fill`) colle aussi maintenant exactement au bord du fond (plus
+    d'insertion de 3px) pour une barre bien continue.
+  - La grille est repassée au centre exact de l'écran (ancrée/pivot
+    `(0.5, 0.5)`, `anchoredPosition = Vector2.zero`) au lieu d'être
+    calée en haut — elle paraissait décentrée vers le haut une fois les
+    barres du HUD retirées du flux normal (elles flottent par-dessus
+    plutôt que de pousser le contenu). La position de la main (calée
+    sur le centre vertical de la grille) et du combo (entre le bas de
+    la grille et la barre du bas) ont été recalculées en conséquence.
