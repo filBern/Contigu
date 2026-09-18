@@ -290,6 +290,36 @@ namespace Contigu.Tests
                 "The deferred hand should only be drawn once the new round actually starts");
         }
 
+        [Test]
+        public void PlacePiece_DoesNotTriggerDefeat_WhenTheHandMerelyEmptiesMidRound()
+        {
+            // Regression test: EvaluateRoundEnd's stuck-board check used to
+            // run against Deck.Hand as it stood right after PlayFromHand —
+            // fine when refills were immediate, but once PlacePiece started
+            // deferring the refill (see PlayFromHand_WithRefillIfEmptyFalse),
+            // the 3rd placement of a batch left the hand at 0 pieces for that
+            // one check, and HasAnyHandPlacement's empty-list loop trivially
+            // returns false, so "no piece I don't have can be placed"
+            // incorrectly read as "stuck" and ended the run in defeat.
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                var token = run.Deck.Hand[0];
+                var rotation = run.Deck.HandRotations[0];
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+                var anchor = FindAnyValidAnchor(run.Grid, shape);
+                Assert.IsTrue(anchor.HasValue);
+                var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                Assert.IsTrue(outcome.Placement.Success);
+            }
+
+            Assert.AreEqual(RunState.InProgress, run.State,
+                "Emptying the hand mid-round should never by itself count as a stuck board");
+            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count,
+                "The hand should refill immediately since the round is still in progress");
+        }
+
         /// <summary>
         /// Places pieces from hand until the round's quota is reached. Marks
         /// every cell golden first so this converges quickly regardless of

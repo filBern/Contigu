@@ -632,3 +632,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     placement de la 3e pièce vide la main ET dépasse le quota de la
     manche 1 — vérifie que la main reste à 0 jusqu'à l'avancement réel
     de manche).
+- **Fix : régression — défaite immédiate après avoir placé 3 pièces**
+  (introduite par le fix précédent). `EvaluateRoundEnd`'s détection de
+  plateau bloqué (`HasAnyHandPlacement`) lisait `Deck.Hand` juste après
+  `PlayFromHand` — auparavant toujours repeuplée à 3 avant cet appel,
+  mais depuis le fix du tirage différé, la main reste maintenant à 0
+  pièce exactement le temps de cet appel quand la manche continue.
+  `HasAnyHandPlacement` sur une liste vide retourne `false`
+  ("aucune pièce ne peut être placée" par absence de pièces à
+  vérifier), ce que `!HasAnyHandPlacement()` interprétait à tort comme
+  "plateau bloqué" → défaite immédiate à chaque 3e pièce jouée. Fix :
+  `EvaluateRoundEnd` ignore maintenant complètement ce test quand la
+  main est vide (`Deck.Hand.Count > 0 && !HasAnyHandPlacement()`) — une
+  main vide n'a simplement rien à évaluer, elle n'est jamais "bloquée"
+  par définition ; le tirage qui suit juste après redonne une vraie
+  main que le PROCHAIN placement vérifiera normalement. Nouveau test
+  `RunManagerTests.PlacePiece_DoesNotTriggerDefeat_WhenTheHandMerelyEmptiesMidRound`.

@@ -368,7 +368,13 @@ namespace Contigu.Core
                 return;
             }
 
-            if (!HasAnyHandPlacement())
+            // An empty hand (PlacePiece defers its refill when the round
+            // might be ending — see PlayFromHand's refillIfEmpty) has
+            // nothing to evaluate yet, so it can never count as "stuck":
+            // skip the check and let the round stay InProgress. PlacePiece's
+            // own post-EvaluateRoundEnd check then draws the next hand right
+            // away, which the NEXT placement will correctly check.
+            if (Deck.Hand.Count > 0 && !HasAnyHandPlacement())
             {
                 State = RunState.RunDefeat;
             }
