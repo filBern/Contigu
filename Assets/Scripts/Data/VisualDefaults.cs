@@ -96,8 +96,7 @@ namespace Contigu.Data
         }
 
         public static readonly Color GoldenColor = new Color(0.941f, 0.702f, 0.553f); // #f0b38d — warmest palette color; blends into a pale gold over EmptyCellColor
-        public static readonly Color TintedOutline = new Color(0.937f, 0.980f, 0.902f, 0.85f); // #effae6
-        public static readonly Color MultiplierOutline = new Color(0.396f, 0.682f, 0.839f, 0.85f); // #65aed6 — kept distinct from Golden/Tinted so the 3 badge types stay distinguishable on a cell
+        public static readonly Color MultiplierOutline = new Color(0.396f, 0.682f, 0.839f, 0.85f); // #65aed6 — kept distinct from Golden/Tinted so the badge types stay distinguishable on a cell
         public static readonly Color LockedColor = new Color(0.216f, 0.180f, 0.302f); // #372e4d — same as UITheme.Background: locked cells recede into the void
         public static readonly Color EmptyCellColor = new Color(0.937f, 0.980f, 0.902f); // #effae6
     }

@@ -26,6 +26,9 @@ namespace Contigu.Core
         /// <summary>Sum of every bonus from the player's active modifiers on this placement (see <see cref="ModifierId"/>).</summary>
         public int ModifierBonus;
 
+        /// <summary>Sum of every bonus produced directly by the placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag — see <see cref="ScoreEventType.Trait"/>. Populated by RunManager, not GridManager, since GridManager knows nothing about PieceTrait.</summary>
+        public int TraitBonus;
+
         public IReadOnlyList<Vector2Int> ClearedCells = System.Array.Empty<Vector2Int>();
 
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
@@ -43,7 +46,7 @@ namespace Contigu.Core
 
         public int TotalScore
         {
-            get { return GroupBonus + GoldenBonus + LineClearScore + ModifierBonus; }
+            get { return GroupBonus + GoldenBonus + LineClearScore + ModifierBonus + TraitBonus; }
         }
 
         public static PlacementResult Failure(string reason)

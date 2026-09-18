@@ -13,6 +13,7 @@ namespace Contigu.Presentation
         public event Action<int> SlotSelected;
 
         private DeckManager _deck;
+        private TooltipView _tooltip;
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
@@ -24,9 +25,10 @@ namespace Contigu.Presentation
             get { return _selectedIndex; }
         }
 
-        public RectTransform Build(Transform parent, DeckManager deck)
+        public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
             _deck = deck;
+            _tooltip = tooltip;
 
             var container = UIFactory.CreateUIObject("HandContainer", parent);
             var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -152,13 +154,13 @@ namespace Contigu.Presentation
                 {
                     var token = _deck.Hand[i];
                     var rotation = _deck.HandRotations[i];
-                    BuildShapePreview(preview, token, rotation);
+                    BuildShapePreview(preview, token, rotation, _slotBackgrounds[i].gameObject);
                 }
             }
             UpdateSelectionVisuals();
         }
 
-        private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation)
+        private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation, GameObject clickForwardTarget)
         {
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             int maxX = 0;
@@ -219,31 +221,24 @@ namespace Contigu.Presentation
 
                         if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
                         {
-                            BuildTraitBadge(img.transform, token.Trait.Value);
+                            BuildTraitBadge(img.transform, token.Trait.Value, _tooltip, clickForwardTarget);
                         }
                     }
                 }
             }
         }
 
-        /// <summary>Small corner badge marking a piece's enchanted tile — same color language as a placed cell's own golden/tinted/multiplier badge (see GridCellView).</summary>
-        private static void BuildTraitBadge(Transform parent, PieceTrait trait)
+        /// <summary>
+        /// Small corner badge marking a piece's enchanted tile — color comes
+        /// from <see cref="PieceTraitVisualDefaults"/> (shared with the grid's
+        /// hover-preview badge, see GridCellView), and hovering it shows the
+        /// trait's full name/effect via <see cref="TraitBadgeView"/>, since
+        /// several trait kinds share the same badge color and only the
+        /// tooltip actually tells them apart right now.
+        /// </summary>
+        private static void BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget)
         {
-            Color badgeColor;
-            switch (trait.Kind)
-            {
-                case PieceTraitKind.Golden:
-                    badgeColor = VisualDefaults.GoldenColor;
-                    break;
-                case PieceTraitKind.Multiplier:
-                    badgeColor = VisualDefaults.MultiplierOutline;
-                    break;
-                default: // Tinted
-                    badgeColor = trait.TintedColor.HasValue ? VisualDefaults.GetColor(trait.TintedColor.Value) : VisualDefaults.TintedOutline;
-                    break;
-            }
-
-            var badge = UIFactory.CreatePanel(parent, "TraitBadge", badgeColor);
+            var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));
             badge.rectTransform.anchorMin = new Vector2(0f, 1f);
             badge.rectTransform.anchorMax = new Vector2(0f, 1f);
             badge.rectTransform.pivot = new Vector2(0f, 1f);
@@ -252,6 +247,9 @@ namespace Contigu.Presentation
             var outline = badge.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             outline.effectDistance = new Vector2(1.2f, -1.2f);
+
+            var badgeView = badge.gameObject.AddComponent<TraitBadgeView>();
+            badgeView.Init(tooltip, trait, clickForwardTarget);
         }
     }
 }

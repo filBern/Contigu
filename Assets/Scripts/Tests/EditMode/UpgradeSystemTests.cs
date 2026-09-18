@@ -124,6 +124,50 @@ namespace Contigu.Tests
             Assert.AreEqual(UpgradeSystem.MultiplierZoneCount, CountTagged(deck, PieceTraitKind.Multiplier));
         }
 
+        [Test]
+        public void Apply_BlastTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(5));
+
+            system.Apply(UpgradeCatalog.BlastTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.BlastTileCount, CountTagged(deck, PieceTraitKind.Blast));
+        }
+
+        [Test]
+        public void Apply_MultiplierBeacon_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(6));
+
+            system.Apply(UpgradeCatalog.MultiplierBeacon, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.MultiplierBeaconCount, CountTagged(deck, PieceTraitKind.Beacon));
+        }
+
+        [Test]
+        public void Apply_MirrorTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(7));
+
+            system.Apply(UpgradeCatalog.MirrorTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.MirrorTileCount, CountTagged(deck, PieceTraitKind.Mirror));
+        }
+
+        [Test]
+        public void Apply_Seeder_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(8));
+
+            system.Apply(UpgradeCatalog.Seeder, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.SeederCount, CountTagged(deck, PieceTraitKind.Seeder));
+        }
+
         private static DeckManager MakeTwentyTokenDeck()
         {
             var tokens = new List<PieceToken>();

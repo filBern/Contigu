@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Contigu.Core
 {
@@ -111,9 +112,17 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Invalid placement"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            Cell traitedCell = ApplyTokenTrait(token, shape, x, y);
+            Vector2Int? traitCellPos = token.Trait.HasValue
+                ? new Vector2Int(x, y) + shape.Cells[token.Trait.Value.LocalCellIndex]
+                : (Vector2Int?)null;
+
+            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
             var placement = Grid.PlacePiece(shape, token.Color, x, y, _activeModifiers);
-            ClearTokenTrait(traitedCell);
+            ClearTokenTraitCells(transientTraitCells);
+            if (token.Trait.HasValue && token.Trait.Value.Kind == PieceTraitKind.Mirror)
+            {
+                ApplyMirrorBonus(traitCellPos.Value, placement);
+            }
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             Deck.PlayFromHand(handIndex);
@@ -125,54 +134,179 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// If <paramref name="token"/> carries a <see cref="PieceTrait"/>, stamps
-        /// the corresponding landing cell with the matching golden/tinted/
-        /// multiplier flag just before <see cref="GridManager.PlacePiece"/> scores
-        /// this placement — reusing the grid's existing modifier-scoring
-        /// machinery for what is now a one-time, piece-carried enchantment
-        /// (spec 5.4 redesign) rather than a permanent cell property.
-        /// <paramref name="shape"/> must already be the token's ROTATED shape
-        /// (as dealt), since <see cref="PieceTrait.LocalCellIndex"/> indexes into
-        /// it directly — rotation preserves cell-list order 1:1 (see
-        /// <see cref="PieceShapeCatalog.GetRotated"/>).
+        /// If <paramref name="trait"/> is present, stamps the grid cell(s) its
+        /// effect touches with the matching golden/tinted/multiplier flag(s)
+        /// just before <see cref="GridManager.PlacePiece"/> scores this
+        /// placement — reusing the grid's existing modifier-scoring machinery
+        /// for what is now a one-time, piece-carried enchantment (spec 5.4
+        /// redesign) rather than a permanent cell property. Returns every cell
+        /// that should be un-stamped again once scoring is done (see
+        /// <see cref="ClearTokenTraitCells"/>) — every kind except
+        /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay)
+        /// and <see cref="PieceTraitKind.Mirror"/> (which stamps no cell at
+        /// all; its bonus is computed after scoring, see
+        /// <see cref="ApplyMirrorBonus"/>).
         /// </summary>
-        private Cell ApplyTokenTrait(PieceToken token, PieceShape shape, int anchorX, int anchorY)
+        private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos)
         {
-            if (!token.Trait.HasValue)
+            var transientCells = new List<Cell>();
+            if (!trait.HasValue)
             {
-                return null;
+                return transientCells;
             }
 
-            var trait = token.Trait.Value;
-            var offset = shape.Cells[trait.LocalCellIndex];
-            var cell = Grid.GetCell(anchorX + offset.x, anchorY + offset.y);
+            var pos = traitCellPos.Value;
+            var cell = Grid.GetCell(pos.x, pos.y);
 
-            switch (trait.Kind)
+            switch (trait.Value.Kind)
             {
                 case PieceTraitKind.Golden:
                     cell.IsGolden = true;
+                    transientCells.Add(cell);
                     break;
+
                 case PieceTraitKind.Tinted:
                     cell.IsTinted = true;
-                    cell.TintedColor = trait.TintedColor.Value;
+                    cell.TintedColor = trait.Value.TintedColor.Value;
+                    transientCells.Add(cell);
                     break;
+
                 case PieceTraitKind.Multiplier:
                     cell.IsMultiplierZone = true;
+                    transientCells.Add(cell);
+                    break;
+
+                case PieceTraitKind.Blast:
+                    cell.IsGolden = true;
+                    transientCells.Add(cell);
+                    StampGoldenIfInBounds(pos.x - 1, pos.y, transientCells);
+                    StampGoldenIfInBounds(pos.x + 1, pos.y, transientCells);
+                    StampGoldenIfInBounds(pos.x, pos.y - 1, transientCells);
+                    StampGoldenIfInBounds(pos.x, pos.y + 1, transientCells);
+                    break;
+
+                case PieceTraitKind.Beacon:
+                    cell.IsMultiplierZone = true;
+                    transientCells.Add(cell);
+                    StampMultiplierAlongRowAndColumn(pos, transientCells);
+                    break;
+
+                case PieceTraitKind.Seeder:
+                    // Permanent: intentionally NOT added to transientCells, so
+                    // ClearTokenTraitCells never un-stamps it — unlike every
+                    // other trait, this one is meant to keep scoring as a
+                    // normal golden grid cell for the rest of the run.
+                    cell.IsGolden = true;
+                    break;
+
+                case PieceTraitKind.Mirror:
+                    // No cell stamp — handled after Grid.PlacePiece returns,
+                    // see ApplyMirrorBonus.
                     break;
             }
-            return cell;
+            return transientCells;
         }
 
-        /// <summary>Reverts the stamp <see cref="ApplyTokenTrait"/> made — the enchantment fires once, on this placement's own scoring, not as a lasting grid modifier.</summary>
-        private static void ClearTokenTrait(Cell cell)
+        private void StampGoldenIfInBounds(int x, int y, List<Cell> transientCells)
         {
-            if (cell == null)
+            if (!GridManager.InBounds(x, y))
             {
                 return;
             }
-            cell.IsGolden = false;
-            cell.IsTinted = false;
-            cell.IsMultiplierZone = false;
+            var cell = Grid.GetCell(x, y);
+            cell.IsGolden = true;
+            transientCells.Add(cell);
+        }
+
+        /// <summary>Marks every already-filled cell (pre-existing board state, not this placement's own cells) in <paramref name="origin"/>'s row and column as a multiplier zone, for "Multiplier Beacon".</summary>
+        private void StampMultiplierAlongRowAndColumn(Vector2Int origin, List<Cell> transientCells)
+        {
+            for (int gx = 0; gx < GridManager.Size; gx++)
+            {
+                if (gx == origin.x)
+                {
+                    continue;
+                }
+                var cell = Grid.GetCell(gx, origin.y);
+                if (cell.IsFilled)
+                {
+                    cell.IsMultiplierZone = true;
+                    transientCells.Add(cell);
+                }
+            }
+            for (int gy = 0; gy < GridManager.Size; gy++)
+            {
+                if (gy == origin.y)
+                {
+                    continue;
+                }
+                var cell = Grid.GetCell(origin.x, gy);
+                if (cell.IsFilled)
+                {
+                    cell.IsMultiplierZone = true;
+                    transientCells.Add(cell);
+                }
+            }
+        }
+
+        /// <summary>Reverts every stamp <see cref="ApplyTokenTrait"/> made — most enchantments fire once, on this placement's own scoring, not as a lasting grid modifier.</summary>
+        private static void ClearTokenTraitCells(List<Cell> cells)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                cells[i].IsGolden = false;
+                cells[i].IsTinted = false;
+                cells[i].IsMultiplierZone = false;
+            }
+        }
+
+        /// <summary>
+        /// "Mirror Tile": duplicates the enchanted cell's own group-bonus
+        /// contribution onto the cell symmetrically opposite it in the scored
+        /// group (reflected through the group's bounding-box center), if one
+        /// exists there. Every cell in a placement's scored group earns the
+        /// exact same per-cell amount (see GridManager.PlacePiece's
+        /// perCellGroupScore), so any one Group-type event's Amount already IS
+        /// the bonus to duplicate — no need to look up the trait cell's own
+        /// event specifically. Mutates <paramref name="placement"/> directly
+        /// (its fields are plain mutable ints/lists) so both the score total
+        /// and the presentation layer's popup feed see the extra bonus.
+        /// </summary>
+        private static void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            int minX = int.MaxValue, maxX = int.MinValue, minY = int.MaxValue, maxY = int.MinValue;
+            int perCellAmount = 0;
+            var groupPositions = new HashSet<Vector2Int>();
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (scoreEvent.Type != ScoreEventType.Group)
+                {
+                    continue;
+                }
+                groupPositions.Add(scoreEvent.Position);
+                perCellAmount = scoreEvent.Amount;
+                if (scoreEvent.Position.x < minX) minX = scoreEvent.Position.x;
+                if (scoreEvent.Position.x > maxX) maxX = scoreEvent.Position.x;
+                if (scoreEvent.Position.y < minY) minY = scoreEvent.Position.y;
+                if (scoreEvent.Position.y > maxY) maxY = scoreEvent.Position.y;
+            }
+
+            if (groupPositions.Count == 0)
+            {
+                return;
+            }
+
+            var mirrorPos = new Vector2Int(minX + maxX - traitCellPos.x, minY + maxY - traitCellPos.y);
+            if (mirrorPos == traitCellPos || !groupPositions.Contains(mirrorPos))
+            {
+                return;
+            }
+
+            placement.TraitBonus += perCellAmount;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.Trait, mirrorPos, perCellAmount));
+            placement.ScoreEvents = events;
         }
 
         private void EvaluateRoundEnd()

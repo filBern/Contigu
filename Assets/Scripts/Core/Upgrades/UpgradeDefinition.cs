@@ -53,10 +53,27 @@ namespace Contigu.Core
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
             "Enchants 3 random pieces in the deck: one tile on each lands as a multiplier zone, doubling that placement's group bonus.", false);
 
+        public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
+            UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",
+            "Enchants 3 random pieces in the deck: one tile on each also makes its 4 orthogonal neighbors score golden (+18 each) when that piece is placed.", false);
+
+        public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
+            UpgradeId.MultiplierBeacon, UpgradePool.Grid, "Multiplier Beacon",
+            "Enchants 3 random pieces in the deck: one tile on each turns every already-filled tile in its row and column into a multiplier too, for that one placement.", false);
+
+        public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
+            UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Tile",
+            "Enchants 3 random pieces in the deck: one tile on each duplicates its own group bonus onto the tile symmetrically opposite it in the scored group, if one exists there.", false);
+
+        public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
+            UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
+            "Enchants 3 random pieces in the deck: one tile on each turns permanently golden on the grid when that piece is placed, instead of just scoring once.", false);
+
         public static readonly UpgradeDefinition[] All =
         {
             RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece,
-            GoldenCells, TintedCells, MultiplierZone
+            GoldenCells, TintedCells, MultiplierZone,
+            BlastTile, MultiplierBeacon, MirrorTile, Seeder
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -66,7 +83,8 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] GridPool =
         {
-            GoldenCells, TintedCells, MultiplierZone
+            GoldenCells, TintedCells, MultiplierZone,
+            BlastTile, MultiplierBeacon, MirrorTile, Seeder
         };
     }
 }

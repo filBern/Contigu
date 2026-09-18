@@ -108,6 +108,11 @@ namespace Contigu.Presentation
             gridRect.pivot = new Vector2(0.5f, 0.5f);
             gridRect.anchoredPosition = Vector2.zero;
 
+            // Built before HandView since its trait badges need a live
+            // TooltipView to hover — see below.
+            _tooltipView = gameObject.AddComponent<TooltipView>();
+            _tooltipView.Build(mainRoot);
+
             // To the right of the grid, vertically centered on it (which is
             // now screen center too). Grid right edge sits 226.5 (half of its
             // 453-wide 8x8+spacing footprint, see GridView.Build) from screen
@@ -115,7 +120,7 @@ namespace Contigu.Presentation
             // ContentSizeFitter) so its center needs to clear the grid by
             // 226.5 + a 24 gap + its own half-width (60).
             _handView = gameObject.AddComponent<HandView>();
-            var handRect = _handView.Build(mainRoot, _run.Deck);
+            var handRect = _handView.Build(mainRoot, _run.Deck, _tooltipView);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
@@ -141,9 +146,6 @@ namespace Contigu.Presentation
 
             _draftView = gameObject.AddComponent<DraftView>();
             _draftView.Build(mainRoot, _run.Deck);
-
-            _tooltipView = gameObject.AddComponent<TooltipView>();
-            _tooltipView.Build(mainRoot);
 
             _modifierDraftView = gameObject.AddComponent<ModifierDraftView>();
             _modifierDraftView.Build(mainRoot, _tooltipView);
@@ -248,6 +250,7 @@ namespace Contigu.Presentation
                 var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.Modifier
+                    : scoreEvent.Type == ScoreEventType.Trait ? UITheme.PanelLight
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
                 _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);

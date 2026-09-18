@@ -286,21 +286,8 @@ namespace Contigu.Tests
         public void PlacePiece_AppliesAGoldenTraitedToken_AsAOneTimeCellBonus_ThenClearsTheCell()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-
-            // Tag every deck token golden — this only updates the deck (the
-            // source of truth), not the hand/draw-pile copies already dealt at
-            // construction time, so churn hand draws (without going through
-            // RunManager, which would touch the grid) until the draw pile
-            // reshuffles from the now-fully-golden deck and a tagged token
-            // actually reaches the hand.
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            int guard = 0;
-            while (!run.Deck.Hand[0].Trait.HasValue)
-            {
-                run.Deck.PlayFromHand(0);
-                guard++;
-                Assert.Less(guard, 200, "A golden-tagged token should reach the hand well within a few reshuffle cycles");
-            }
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
 
             var token = run.Deck.Hand[0];
             var rotation = run.Deck.HandRotations[0];
@@ -316,6 +303,138 @@ namespace Contigu.Tests
             var offset = shape.Cells[token.Trait.Value.LocalCellIndex];
             var landedCell = run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y);
             Assert.IsFalse(landedCell.IsGolden, "Golden is a one-time enchantment on the token, not a permanent grid modifier — it should be cleared right after scoring");
+        }
+
+        [Test]
+        public void PlacePiece_BlastTrait_AlsoScoresFilledOrthogonalNeighborsAsGolden()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagBlastTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            const int anchorX = 3;
+            const int anchorY = 3;
+            Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
+
+            FillCell(run.Grid, anchorX - 1, anchorY, token.Color);
+            FillCell(run.Grid, anchorX + 1, anchorY, token.Color);
+            FillCell(run.Grid, anchorX, anchorY - 1, token.Color);
+            FillCell(run.Grid, anchorX, anchorY + 1, token.Color);
+
+            var outcome = run.PlacePiece(0, anchorX, anchorY);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(5 * ScoringConstants.GoldenCellBonus, outcome.Placement.GoldenBonus,
+                "The trait cell plus all 4 filled orthogonal neighbors should each score golden");
+        }
+
+        [Test]
+        public void PlacePiece_BeaconTrait_StacksMultiplierWithFilledRowNeighbors()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagBeaconTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            const int anchorX = 3;
+            const int anchorY = 3;
+            Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
+
+            // Two same-color cells already filled in the trait cell's own
+            // row, both orthogonally adjacent so they merge into one group
+            // with it — Beacon marks the trait cell AND both of these as
+            // multiplier zones, so the group's multiplier stacks x2 three
+            // times (2^3 = 8) instead of the plain single-cell Multiplier
+            // trait's flat x2.
+            FillCell(run.Grid, anchorX - 1, anchorY, token.Color);
+            FillCell(run.Grid, anchorX + 1, anchorY, token.Color);
+
+            var outcome = run.PlacePiece(0, anchorX, anchorY);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            int expectedMultiplier = ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier;
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * expectedMultiplier, outcome.Placement.GroupBonus);
+        }
+
+        [Test]
+        public void PlacePiece_MirrorTrait_DuplicatesGroupBonusOntoSymmetricPartner()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+
+            // Pre-fill an off-center 2-cell run so the Mirror-tagged Single
+            // piece, placed at one end (2,3), has a genuine symmetric partner
+            // at (4,3) once it merges the 3 cells into one group — not itself
+            // (which would be the case if it landed in the middle).
+            FillCell(run.Grid, 3, 3, token.Color);
+            FillCell(run.Grid, 4, 3, token.Color);
+
+            var outcome = run.PlacePiece(0, 2, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            int perCellAmount = ScoringConstants.GroupBonusPerCell; // group multiplier is 1 here — no tinted/multiplier cells involved
+            Assert.AreEqual(perCellAmount, outcome.Placement.TraitBonus);
+
+            bool foundMirrorEvent = false;
+            foreach (var e in outcome.Placement.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.Trait && e.Position == new Vector2Int(4, 3) && e.Amount == perCellAmount)
+                {
+                    foundMirrorEvent = true;
+                }
+            }
+            Assert.IsTrue(foundMirrorEvent, "Mirror's duplicated bonus should appear as its own ScoreEvent at the symmetric partner cell");
+        }
+
+        [Test]
+        public void PlacePiece_SeederTrait_LeavesTheGridCellPermanentlyGolden()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagSeederTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+
+            var token = run.Deck.Hand[0];
+            var rotation = run.Deck.HandRotations[0];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            var traitPos = anchor.Value + shape.Cells[token.Trait.Value.LocalCellIndex];
+
+            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsTrue(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
+                "Seeder's stamp should NOT be cleared after scoring — unlike every other trait, it stays golden for the rest of the run");
+        }
+
+        private static void FillCell(GridManager grid, int x, int y, PieceColor color)
+        {
+            var cell = grid.GetCell(x, y);
+            cell.IsFilled = true;
+            cell.FilledColor = color;
+        }
+
+        /// <summary>
+        /// Tagging a deck token only updates the deck (the source of truth),
+        /// not the hand/draw-pile copies already dealt at construction time,
+        /// so this churns hand draws (without going through RunManager, which
+        /// would touch the grid) until the draw pile reshuffles from the
+        /// now-tagged deck and a token matching <paramref name="predicate"/>
+        /// actually reaches the hand.
+        /// </summary>
+        private static void ChurnUntilHandMatches(RunManager run, System.Func<PieceToken, bool> predicate)
+        {
+            int guard = 0;
+            while (!predicate(run.Deck.Hand[0]))
+            {
+                run.Deck.PlayFromHand(0);
+                guard++;
+                Assert.Less(guard, 300, "A matching token should reach the hand well within a few reshuffle cycles");
+            }
         }
     }
 }

@@ -18,6 +18,18 @@ namespace Contigu.Core
         /// <summary>How many distinct deck tokens a Multiplier-zone upgrade enchants. See GoldenCellsCount.</summary>
         public const int MultiplierZoneCount = 3;
 
+        /// <summary>How many distinct deck tokens a Blast-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int BlastTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Multiplier-beacon upgrade enchants. See GoldenCellsCount.</summary>
+        public const int MultiplierBeaconCount = 3;
+
+        /// <summary>How many distinct deck tokens a Mirror-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int MirrorTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Seeder upgrade enchants. See GoldenCellsCount.</summary>
+        public const int SeederCount = 3;
+
         private readonly IRandomProvider _rng;
 
         public UpgradeSystem(IRandomProvider rng)
@@ -103,6 +115,22 @@ namespace Contigu.Core
 
                 case UpgradeId.MultiplierZone:
                     deck.TagMultiplierTokensRandom(MultiplierZoneCount, _rng);
+                    return true;
+
+                case UpgradeId.BlastTile:
+                    deck.TagBlastTokensRandom(BlastTileCount, _rng);
+                    return true;
+
+                case UpgradeId.MultiplierBeacon:
+                    deck.TagBeaconTokensRandom(MultiplierBeaconCount, _rng);
+                    return true;
+
+                case UpgradeId.MirrorTile:
+                    deck.TagMirrorTokensRandom(MirrorTileCount, _rng);
+                    return true;
+
+                case UpgradeId.Seeder:
+                    deck.TagSeederTokensRandom(SeederCount, _rng);
                     return true;
 
                 default:

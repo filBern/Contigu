@@ -206,7 +206,7 @@ namespace Contigu.Presentation
             if (isValid && previewTrait.HasValue)
             {
                 var trait = previewTrait.Value;
-                if (trait.Kind == PieceTraitKind.Golden)
+                if (PieceTraitVisualDefaults.UsesGoldenSprite(trait.Kind))
                 {
                     _badgeGolden.gameObject.SetActive(true);
                     if (VisualDefaults.GoldenTileSprite != null)
@@ -217,15 +217,13 @@ namespace Contigu.Presentation
                     else
                     {
                         _badgeGolden.sprite = null;
-                        _badgeGolden.color = VisualDefaults.GoldenColor;
+                        _badgeGolden.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
                     }
                 }
                 else
                 {
                     _badgeSpecial.gameObject.SetActive(true);
-                    _badgeSpecial.color = trait.Kind == PieceTraitKind.Multiplier
-                        ? VisualDefaults.MultiplierOutline
-                        : VisualDefaults.GetColor(trait.TintedColor.Value);
+                    _badgeSpecial.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
                 }
             }
         }

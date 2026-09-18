@@ -752,15 +752,20 @@ namespace Contigu.Core
 
         /// <summary>
         /// Whole-group multiplier from tinted/multiplier-zone cells. Each
-        /// matching tinted cell in the group stacks its own x2 (two tinted
-        /// cells in the same combo combine to x4, three to x8, ...); a
-        /// multiplier-zone cell only needs to be present once (not per-
-        /// occurrence) for its own x2. Both kinds of factor multiply together.
+        /// matching tinted cell AND each multiplier-zone cell in the group now
+        /// stacks its own x2 (two of either in the same combo combine to x4,
+        /// three to x8, ...) — multiplier-zone used to only count once
+        /// regardless of how many cells had it, but that made "Multiplier
+        /// Beacon" (which can tag many cells in one row/column at once)
+        /// pointless beyond a single x2, identical to the plain single-cell
+        /// Multiplier trait. Stacking it the same way Tinted already does
+        /// gives Beacon real extra teeth when several of its marked cells land
+        /// in the same scored group, and makes both factors consistent with
+        /// each other.
         /// </summary>
         private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {
             int multiplier = 1;
-            bool multiplierZone = false;
 
             for (int i = 0; i < groupCells.Count; i++)
             {
@@ -771,14 +776,10 @@ namespace Contigu.Core
                 }
                 if (cell.IsMultiplierZone)
                 {
-                    multiplierZone = true;
+                    multiplier *= ScoringConstants.MultiplierZoneMultiplier;
                 }
             }
 
-            if (multiplierZone)
-            {
-                multiplier *= ScoringConstants.MultiplierZoneMultiplier;
-            }
             return multiplier;
         }
 

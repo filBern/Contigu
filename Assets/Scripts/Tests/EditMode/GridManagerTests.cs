@@ -308,6 +308,29 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_TwoMultiplierZoneCellsInSameGroup_CombineMultiplicatively()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.GetCell(0, 0).IsMultiplierZone = true;
+            grid.GetCell(2, 0).IsMultiplierZone = true;
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 2, 0);
+
+            // Placing the connecting middle cell merges all 3 into one group
+            // containing BOTH multiplier-zone cells — their x2 factors stack
+            // (x4), not just one flat x2. This mirrors Tinted's own stacking
+            // (see the test above) and is what gives "Multiplier Beacon" (which
+            // can tag many row/column cells with IsMultiplierZone at once) real
+            // extra teeth beyond the plain single-cell Multiplier trait.
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.GroupBonus);
+        }
+
+        [Test]
         public void PlacePiece_GroupWithTintedAndMultiplierZone_QuadruplesWholeGroupBonus()
         {
             var grid = new GridManager();

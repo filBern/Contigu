@@ -277,5 +277,22 @@ namespace Contigu.Tests
 
             Assert.AreEqual(3, secondPass.Count, "Should still tag the requested count by re-tagging already-golden tokens");
         }
+
+        [Test]
+        public void TagBlastBeaconMirrorSeederTokensRandom_EachProducesItsOwnTraitKind()
+        {
+            var dm = MakeTwentyTokenSq2Deck();
+            var rng = new SystemRandomProvider(10);
+
+            var blast = dm.TagBlastTokensRandom(1, rng);
+            var beacon = dm.TagBeaconTokensRandom(1, rng);
+            var mirror = dm.TagMirrorTokensRandom(1, rng);
+            var seeder = dm.TagSeederTokensRandom(1, rng);
+
+            Assert.AreEqual(PieceTraitKind.Blast, dm.Deck[blast[0]].Trait.Value.Kind);
+            Assert.AreEqual(PieceTraitKind.Beacon, dm.Deck[beacon[0]].Trait.Value.Kind);
+            Assert.AreEqual(PieceTraitKind.Mirror, dm.Deck[mirror[0]].Trait.Value.Kind);
+            Assert.AreEqual(PieceTraitKind.Seeder, dm.Deck[seeder[0]].Trait.Value.Kind);
+        }
     }
 }

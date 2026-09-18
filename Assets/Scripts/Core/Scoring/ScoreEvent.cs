@@ -20,7 +20,10 @@ namespace Contigu.Core
         LineClear,
 
         /// <summary>A bonus from one of the player's active modifiers (see <see cref="ModifierId"/>).</summary>
-        Modifier
+        Modifier,
+
+        /// <summary>A bonus produced directly by a placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag the group-scoring loop picks up on its own.</summary>
+        Trait
     }
 
     /// <summary>

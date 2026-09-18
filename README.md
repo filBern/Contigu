@@ -472,3 +472,75 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     l'ancien système "case de grille permanente" et ne s'appliquait
     plus vraiment à la nouvelle sémantique "enchantement à usage
     unique par pièce".
+- **4 nouveaux upgrades de pièce enchantée** (`BlastTile`/`MultiplierBeacon`/
+  `MirrorTile`/`Seeder`, sur demande explicite — brainstorm initial fourni
+  dans la conversation) + **tooltip au survol du badge d'enchantement** :
+  - `PieceTraitKind` gagne 4 nouvelles valeurs : `Blast`, `Beacon`,
+    `Mirror`, `Seeder`.
+  - **Blast Tile** — au placement, la case enchantée ET ses 4 voisines
+    orthogonales marquent `IsGolden` (jusqu'à 5 cases dorées d'un coup
+    si les voisines sont déjà remplies et rejoignent le même groupe).
+    Contrairement à Beacon (voir plus bas), le marquage des voisines ne
+    vérifie PAS `IsFilled` au préalable — une voisine vide reste
+    inoffensive puisqu'une case vide ne peut jamais entrer dans
+    `groupCells`.
+  - **Multiplier Beacon** — au placement, la case enchantée ET toutes
+    les cases DÉJÀ remplies de sa ligne/colonne marquent
+    `IsMultiplierZone`. Ça n'avait aucun effet utile tant que
+    `GridManager.ComputeGroupMultiplier` ne comptait le facteur
+    multiplicateur qu'une seule fois par groupe (peu importe le nombre
+    de cases marquées) — comportement changé pour empiler chaque case
+    marquée (x2, x4, x8...), exactement comme Tinted le fait déjà.
+    Ça change aussi (légèrement) l'upgrade de base "Multiplier Zone" :
+    si 2 pièces taguées Multiplier finissent par atterrir dans le même
+    groupe scoré, leurs x2 s'empilent maintenant au lieu de plafonner à
+    un seul x2 — cohérent avec Tinted, mais un changement d'équilibrage
+    à noter.
+  - **Mirror Tile** — le bonus de groupe de la case enchantée est
+    dupliqué sur la case symétriquement opposée dans le groupe scoré
+    (réflexion à travers le centre de la bounding box du groupe), si
+    elle existe. Ne pose AUCUN flag de case avant le placement — calculé
+    APRÈS `Grid.PlacePiece` (dans `RunManager.ApplyMirrorBonus`) à
+    partir des `ScoreEvent` de type `Group` déjà renvoyés (toutes les
+    cases d'un même groupe reçoivent le même montant par case, donc
+    n'importe quel événement `Group` donne directement le montant à
+    dupliquer). Nouveau champ `PlacementResult.TraitBonus` (inclus dans
+    `TotalScore`) + nouveau `ScoreEventType.Trait` pour que ce bonus
+    apparaisse comme son propre popup dans la séquence de feedback.
+  - **Seeder** — comme Golden, mais le flag `IsGolden` n'est PAS retiré
+    après le score : la case reste dorée en permanence sur la grille
+    pour le reste de la run (seule trait qui n'entre pas dans la liste
+    `transientCells` nettoyée après coup par `RunManager`).
+  - `RunManager.ApplyTokenTrait` retravaillé pour renvoyer une LISTE de
+    cases transitoires (au lieu d'une seule) — Blast/Beacon touchent
+    plusieurs cases, Seeder n'en nettoie aucune, Mirror n'en pose aucune.
+  - `PieceTraitVisualDefaults` (nouveau, `Data/`) : nom + description +
+    couleur de badge par `PieceTraitKind`, même esprit que
+    `ModifierVisualDefaults` (pas d'art dédié pour l'instant — juste un
+    chip coloré + tooltip). Golden/Blast/Seeder partagent la couleur
+    dorée existante (ils marquent tous `IsGolden`), Multiplier/Beacon
+    partagent le bleu multiplicateur — le badge seul ne les distingue
+    plus, d'où le tooltip.
+  - **Tooltip au survol** (demande explicite) : `TraitBadgeView` (nouveau,
+    même patron que `ModifierBadgeView`) affiche le `TooltipView` déjà
+    partagé au survol d'un badge d'enchantement dans un slot de main,
+    avec le nom + l'effet complet du trait. Comme le badge est un petit
+    carré niché dans un slot qui est lui-même un `Button` (sélection de
+    la pièce), `TraitBadgeView` intercepte aussi le clic et le relaie
+    manuellement (`ExecuteEvents.Execute(...pointerClickHandler)`) vers
+    le `Button` du slot — sinon cliquer précisément sur le badge
+    n'aurait plus sélectionné la pièce. Scope volontairement limité au
+    badge de la main (une pièce y est stable, "survolable" ; le badge
+    de preview au survol de la grille est trop transitoire pour un
+    second niveau de survol imbriqué).
+  - `UpgradeCatalog`/`UpgradeId` gagnent 4 entrées (`BlastTile`,
+    `MultiplierBeacon`, `MirrorTile`, `Seeder`), toutes dans le pool
+    Grid, `RequiresSubChoice = false` (même chemin de draft simple que
+    les 3 upgrades existants).
+  - Tests : nouveaux tests d'intégration dans `RunManagerTests` pour
+    chacun des 4 nouveaux traits (dont un test de stacking pour Beacon
+    et un test vérifiant que Seeder ne nettoie pas son flag), nouveau
+    test de stacking multiplicatif dans `GridManagerTests`
+    (`PlacePiece_TwoMultiplierZoneCellsInSameGroup_CombineMultiplicatively`),
+    plus les tests `Apply_*`/`Tag*` habituels dans `UpgradeSystemTests`/
+    `DeckManagerTests`.

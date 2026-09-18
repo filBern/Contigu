@@ -221,6 +221,30 @@ namespace Contigu.Core
             return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Multiplier, localIndex));
         }
 
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Blast Tile" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagBlastTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Blast, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Multiplier Beacon" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagBeaconTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Beacon, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Mirror Tile" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagMirrorTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Mirror, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Seeder" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagSeederTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Seeder, localIndex));
+        }
+
         /// <summary>
         /// Picks up to <paramref name="count"/> distinct deck indices — preferring
         /// tokens that don't already carry a trait, falling back to any token if
