@@ -35,7 +35,7 @@ namespace Contigu.Presentation
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
             _tooltip = tooltip;
-            var panel = UIFactory.CreatePanel(parent, "ModifierPanel", UITheme.Panel);
+            var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
             _root = panel.rectTransform;
             _root.anchorMin = new Vector2(0f, 0.5f);
             _root.anchorMax = new Vector2(0f, 0.5f);
@@ -89,16 +89,16 @@ namespace Contigu.Presentation
 
         private Image BuildRow(ModifierDefinition def)
         {
-            var row = UIFactory.CreatePanel(_rowsContainer, "Row_" + def.Id, UITheme.PanelLight);
+            var row = UIFactory.CreateSlicedImage(_rowsContainer, "Row_" + def.Id, UISprites.ModifierCardBackground);
             row.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, RowHeight);
             // Plain Image has no ILayoutElement, so pin the size explicitly or
             // the parent VerticalLayoutGroup collapses it toward zero.
             var rowLayout = row.gameObject.AddComponent<LayoutElement>();
             rowLayout.preferredWidth = PanelWidth - 16f;
             rowLayout.preferredHeight = RowHeight;
-            var rowOutline = row.gameObject.AddComponent<Outline>();
-            rowOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            rowOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            // No Outline component here anymore — the card art already
+            // carries its own edge/shadow, and a hard black outline on top
+            // of it just looked muddy.
 
             var badge = ModifierBadgeFactory.Create(row.transform, def, RowHeight - 12f, _tooltip);
             badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);

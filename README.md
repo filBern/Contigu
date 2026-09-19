@@ -958,3 +958,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     pièce, et remonte à `DragGhostAlpha` sinon — le halo vert/rouge de la
     grille reste alors seul visible à l'endroit exact où la pièce
     tomberait.
+- **Habillage avec le pack d'assets "Colorful UI"** (sur demande explicite,
+  asset pack ajouté par l'utilisateur sous `Assets/Resources/Colorful_UI/`).
+  Nouvelle classe `Presentation.UISprites` : mêmes lazy-`Resources.Load`
+  mis en cache que `UIFactory.DefaultFont()`, une propriété par sprite
+  plutôt que de répéter le chemin `Resources` à chaque site d'appel.
+  Nouveau `UIFactory.CreateSlicedImage` (Image 9-sliced, `color` neutre
+  blanc) à côté de `CreatePanel` (couleur plate) pour construire ces
+  panneaux/cartes à partir d'un sprite plutôt que d'une couleur.
+  - Les deux barres de progression du HUD (`HudView`) partagent maintenant
+    `slider/progress_bar (1).png` comme fond ; la barre de score utilise
+    `slider/blueBarFill.png` et la barre de tuiles restantes
+    `slider/purpleBarFill.png` comme remplissage — remplace les
+    rectangles de couleur plate (`UITheme.PanelLight`/`Success`/
+    `ButtonSelected`).
+  - Le panneau des modifiers actifs (`ModifierPanelView`) utilise
+    `gameUI/panel_bg.png` comme fond, et chaque ligne de modifier
+    `gameUI/card_bg_2.png` — l'`Outline` noir de chaque ligne a été
+    retiré, l'art de la carte portant déjà son propre contour/ombre.
+  - Le fond de chaque slot de la main (`HandView`) utilise
+    `gameUI/card_bg_3.png`.
+  - `UIFactory.DefaultFont()` charge maintenant `font/Digitalt.ttf` (avec
+    repli sur `LegacyRuntime.ttf` si le pack n'est pas présent dans le
+    checkout) — comme c'est la seule fonction qui crée des `Text` dans
+    tout le projet (`UIFactory.CreateText`, utilisée partout), la police
+    change globalement sans toucher aux appelants.
+  - `spriteBorder` (9-slice) réglé à la main dans le `.meta` de chacun de
+    ces 6 sprites (0 par défaut à l'import) — les barres et remplissages
+    (forme "pilule") ont un bord réglé sur les 4 côtés pour garder leurs
+    bouts arrondis sous étirement horizontal ET vertical, les panneaux/
+    cartes un bord adapté à leurs coins arrondis. Non vérifié visuellement
+    dans l'éditeur Unity (indisponible dans cet environnement) — à ajuster
+    au besoin via le Sprite Editor si un bord semble mal calé.

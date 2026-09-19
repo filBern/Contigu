@@ -11,11 +11,16 @@ namespace Contigu.Presentation
     {
         private static Font _cachedFont;
 
+        /// <summary>The "Colorful UI" pack's font, used everywhere text is created — falls back to Unity's built-in legacy font if the asset pack isn't present (e.g. a checkout that hasn't pulled it yet).</summary>
         public static Font DefaultFont()
         {
             if (_cachedFont == null)
             {
-                _cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                _cachedFont = Resources.Load<Font>("Colorful_UI/colorful/font/Digitalt");
+                if (_cachedFont == null)
+                {
+                    _cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                }
             }
             return _cachedFont;
         }
@@ -32,6 +37,17 @@ namespace Contigu.Presentation
             var rt = CreateUIObject(name, parent);
             var img = rt.gameObject.AddComponent<Image>();
             img.color = color;
+            return img;
+        }
+
+        /// <summary>A 9-sliced Image built from a "Colorful UI" pack sprite (see UISprites) — the sprite's own art carries the visual weight, so color stays plain white (no tint) unless the caller sets one afterward for a state tint (selected/disabled/etc).</summary>
+        public static Image CreateSlicedImage(Transform parent, string name, Sprite sprite)
+        {
+            var rt = CreateUIObject(name, parent);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = sprite;
+            img.type = Image.Type.Sliced;
+            img.color = Color.white;
             return img;
         }
 

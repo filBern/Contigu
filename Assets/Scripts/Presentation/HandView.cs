@@ -68,7 +68,7 @@ namespace Contigu.Presentation
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
                 int idx = i;
-                var slot = UIFactory.CreatePanel(container, "Slot" + i, UITheme.ButtonIdle);
+                var slot = UIFactory.CreateSlicedImage(container, "Slot" + i, UISprites.HandSlotBackground);
                 slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
                 // Plain Image/Button has no ILayoutElement, so without this the
                 // parent VerticalLayoutGroup has no size to read and collapses

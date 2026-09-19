@@ -6,7 +6,8 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Two progress bars, flush against the top and bottom edges of the
-    /// screen and spanning its full width (no margin, no border) — the top
+    /// screen and spanning its full width (no margin), skinned with the
+    /// "Colorful UI" pack's slider sprites (see UISprites) — the top
     /// bar tracks round score against the round's quota, the bottom bar
     /// tracks remaining piece budget for the round. Replaces the old
     /// text-only readout (round number, round score, total score) — the
@@ -24,20 +25,17 @@ namespace Contigu.Presentation
 
         public void Build(Transform parent)
         {
-            BuildBar(parent, "ScoreBar", UITheme.Success, top: true, out _scoreFillRect, out _scoreLabel);
-            BuildBar(parent, "PiecesBar", UITheme.ButtonSelected, top: false, out _piecesFillRect, out _piecesLabel);
+            BuildBar(parent, "ScoreBar", UISprites.ScoreBarFill, top: true, out _scoreFillRect, out _scoreLabel);
+            BuildBar(parent, "PiecesBar", UISprites.PiecesBarFill, top: false, out _piecesFillRect, out _piecesLabel);
         }
 
-        private static void BuildBar(Transform parent, string name, Color fillColor, bool top,
+        private static void BuildBar(Transform parent, string name, Sprite fillSprite, bool top,
             out RectTransform fillRect, out Text label)
         {
             float edgeY = top ? 1f : 0f;
-            // PanelLight rather than Panel for the track: Panel sits too
-            // close in luminance to UITheme.Background, so with no border to
-            // define its edge (removed on request) the unfilled portion just
-            // blended into the screen and the bar read as a shapeless blob
-            // rather than a container with a fill.
-            var bg = UIFactory.CreatePanel(parent, name, UITheme.PanelLight);
+            // Both bars share the same track art (UISprites.BarTrack) and
+            // only differ by fill sprite/color — see the asset pack's spec.
+            var bg = UIFactory.CreateSlicedImage(parent, name, UISprites.BarTrack);
             // Stretched full-width (anchor min/max x = 0/1) and flush against
             // the top or bottom edge (anchor, pivot and anchoredPosition all
             // pinned to that same edge — zero anchoredPosition means no gap).
@@ -47,11 +45,12 @@ namespace Contigu.Presentation
             bg.rectTransform.anchoredPosition = Vector2.zero;
             bg.rectTransform.sizeDelta = new Vector2(0f, BarHeight);
 
-            // The fill is a plain colored rect whose RIGHT edge is driven
-            // directly by anchorMax.x (see SetRatio) — a pure layout resize,
-            // not Image.Type.Filled — so the bar's width is guaranteed to
-            // track the ratio with no dependency on fill-shader/mesh behavior.
-            var fillImg = UIFactory.CreatePanel(bg.transform, "Fill", fillColor);
+            // The fill's RIGHT edge is driven directly by anchorMax.x (see
+            // SetRatio) — a pure layout resize, not Image.Type.Filled — so
+            // the bar's width is guaranteed to track the ratio with no
+            // dependency on fill-shader/mesh behavior. Sliced (not Simple) so
+            // the fill sprite's own rounded ends stay round as it grows.
+            var fillImg = UIFactory.CreateSlicedImage(bg.transform, "Fill", fillSprite);
             var rt = fillImg.rectTransform;
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(0f, 1f);
