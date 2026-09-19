@@ -183,15 +183,30 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void AddJoker_AddsSingleJokerToken()
+        public void AddJoker_AddsAJokerColoredTokenOfSomeShape()
         {
             var dm = MakeMinimalDeck();
             int before = dm.DeckCount;
 
-            dm.AddJoker();
+            dm.AddJoker(new SystemRandomProvider(1));
 
             Assert.AreEqual(before + 1, dm.DeckCount);
-            Assert.IsTrue(dm.Deck.Any(t => t.Shape == ShapeId.Single && t.Color == PieceColor.Joker));
+            Assert.IsTrue(dm.Deck.Any(t => t.Color == PieceColor.Joker));
+        }
+
+        [Test]
+        public void AddJoker_OverManySeeds_PicksMoreThanJustSingleShape()
+        {
+            var shapesSeen = new HashSet<ShapeId>();
+            for (int seed = 0; seed < 100; seed++)
+            {
+                var dm = MakeMinimalDeck();
+                dm.AddJoker(new SystemRandomProvider(seed));
+                var added = dm.Deck.Last(t => t.Color == PieceColor.Joker);
+                shapesSeen.Add(added.Shape);
+            }
+
+            Assert.Greater(shapesSeen.Count, 1, "AddJoker should pick a random shape, not always Single");
         }
 
         [Test]

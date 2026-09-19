@@ -147,7 +147,7 @@ namespace Contigu.Core
                     return deck.DuplicateOfType(subChoice.Shape, subChoice.Color);
 
                 case UpgradeId.JokerPiece:
-                    deck.AddJoker();
+                    deck.AddJoker(_rng);
                     return true;
 
                 case UpgradeId.RecolorPiece:

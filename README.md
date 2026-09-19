@@ -1181,3 +1181,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     affiché dans le tooltip au survol — seul le badge, l'élément visible
     en permanence dans le panneau/les cartes de draft, ne montre plus le
     nom du polyomino.
+- **Joker piece à forme aléatoire + descriptions d'upgrades de tuile
+  raccourcies** (sur demande explicite).
+  - `DeckManager.AddJoker` prenait toujours `ShapeId.Single` en dur ;
+    prend maintenant un `IRandomProvider` et pioche uniformément parmi
+    les 10 formes (`InitialDeckFactory.ShapeOrder`, rendu `public` pour
+    être réutilisé ici plutôt que de dupliquer la liste des formes).
+    `UpgradeSystem.Apply` lui passe son `_rng` existant. Description de
+    l'upgrade "Joker piece" mise à jour ("random shape" plutôt que
+    "single"). Tests : `AddJoker_AddsSingleJokerToken` remplacé par
+    `AddJoker_AddsAJokerColoredTokenOfSomeShape` (ne vérifie plus la
+    forme) + nouveau `AddJoker_OverManySeeds_PicksMoreThanJustSingleShape`
+    (statistique sur 100 graines, vérifie que plus d'une forme sort).
+  - Les 13 upgrades de tuile ("Golden Cells", "Tinted Cells", etc.)
+    avaient toutes la même intro verbeuse répétée ("Enchants 3 random
+    pieces in the deck: one tile on each ..."), jugée trop longue.
+    Remplacée par un gabarit court et uniforme : "3 pieces get a tile
+    that ...", qui garde l'information essentielle (3 pièces affectées,
+    une tuile enchantée chacune) sans la répéter en toutes lettres à
+    chaque fois — le reste du texte (l'effet propre à chaque upgrade)
+    est inchangé dans le fond, juste débarrassé du superflu.

@@ -9,7 +9,8 @@ namespace Contigu.Core
     /// </summary>
     public static class InitialDeckFactory
     {
-        private static readonly ShapeId[] ShapeOrder =
+        /// <summary>All 10 shapes in a fixed array — also reused by DeckManager.AddJoker to pick a uniformly random shape.</summary>
+        public static readonly ShapeId[] ShapeOrder =
         {
             ShapeId.Single, ShapeId.DomH, ShapeId.DomV,
             ShapeId.TriL, ShapeId.TriIH, ShapeId.TriIV,
