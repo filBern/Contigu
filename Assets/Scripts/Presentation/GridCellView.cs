@@ -7,8 +7,8 @@ using UnityEngine.UI;
 
 namespace Contigu.Presentation
 {
-    /// <summary>One clickable/hoverable cell inside <see cref="GridView"/>.</summary>
-    public sealed class GridCellView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    /// <summary>One clickable/hoverable/droppable cell inside <see cref="GridView"/>.</summary>
+    public sealed class GridCellView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IDropHandler
     {
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
@@ -267,6 +267,12 @@ namespace Contigu.Presentation
         }
 
         public void OnPointerClick(PointerEventData eventData)
+        {
+            if (_owner != null) _owner.OnCellClicked(X, Y);
+        }
+
+        /// <summary>Fired by Unity's EventSystem when a drag (see HandSlotDragHandler) is released over this cell — reuses the exact same placement path as a plain click.</summary>
+        public void OnDrop(PointerEventData eventData)
         {
             if (_owner != null) _owner.OnCellClicked(X, Y);
         }

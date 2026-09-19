@@ -1112,5 +1112,107 @@ namespace Contigu.Tests
 
             Assert.AreEqual(0, finalResult.ModifierBonus);
         }
+
+        // ---- Third batch (basic per-color / per-shape modifiers) ----
+
+        [Test]
+        public void DevotionCoral_DoublesGroupBonus_WhenPlacementColorMatches()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(result.GroupBonus, result.ModifierBonus, "Devotion should exactly double the group bonus (100%, not Puriste's 50%)");
+        }
+
+        [Test]
+        public void DevotionCoral_DoesNotFire_WhenPlacementColorDiffers()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral };
+
+            var result = grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void DevotionModifiers_EachOnlyFiresForItsOwnColor()
+        {
+            AssertDevotionFiresOnlyForColor(ModifierId.DevotionCoral, PieceColor.Coral);
+            AssertDevotionFiresOnlyForColor(ModifierId.DevotionTeal, PieceColor.Teal);
+            AssertDevotionFiresOnlyForColor(ModifierId.DevotionViolet, PieceColor.Violet);
+            AssertDevotionFiresOnlyForColor(ModifierId.DevotionLime, PieceColor.Lime);
+        }
+
+        private static void AssertDevotionFiresOnlyForColor(ModifierId id, PieceColor matchingColor)
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { id };
+            var baseColors = PieceColorUtility.BaseColors;
+            for (int i = 0; i < baseColors.Count; i++)
+            {
+                var grid = new GridManager();
+                var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
+                int expected = baseColors[i] == matchingColor ? ScoringConstants.GroupBonusPerCell : 0;
+                Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + baseColors[i]);
+            }
+        }
+
+        [Test]
+        public void FormeSq2_DoublesGroupBonus_WhenPlacedShapeMatches()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.FormeSq2 };
+
+            var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
+
+            Assert.AreEqual(result.GroupBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void FormeSq2_DoesNotFire_WhenPlacedShapeDiffers()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.FormeSq2 };
+
+            var result = grid.PlacePiece(single, PieceColor.Lime, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void FormeModifiers_EachOnlyFiresForItsOwnShape()
+        {
+            AssertFormeFiresOnlyForShape(ModifierId.FormeSingle, ShapeId.Single);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeDomH, ShapeId.DomH);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeDomV, ShapeId.DomV);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeTriL, ShapeId.TriL);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeTriIH, ShapeId.TriIH);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeTriIV, ShapeId.TriIV);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeSq2, ShapeId.Sq2);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeLTetro, ShapeId.LTetro);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeTTetro, ShapeId.TTetro);
+            AssertFormeFiresOnlyForShape(ModifierId.FormeSTetro, ShapeId.STetro);
+        }
+
+        private static void AssertFormeFiresOnlyForShape(ModifierId id, ShapeId matchingShape)
+        {
+            var modifiers = new List<ModifierId> { id };
+            var otherShape = matchingShape == ShapeId.Single ? ShapeId.DomH : ShapeId.Single;
+
+            var matchGrid = new GridManager();
+            var matchResult = matchGrid.PlacePiece(PieceShapeCatalog.Get(matchingShape), PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(matchResult.GroupBonus, matchResult.ModifierBonus, id + " should double its own shape's group bonus");
+
+            var otherGrid = new GridManager();
+            var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(0, otherResult.ModifierBonus, id + " should not fire for shape " + otherShape);
+        }
     }
 }

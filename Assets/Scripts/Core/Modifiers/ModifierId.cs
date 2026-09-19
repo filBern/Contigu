@@ -40,6 +40,22 @@ namespace Contigu.Core
         Gradient,
         SansDoublon,
         Bloc,
-        MonochromeLigne
+        MonochromeLigne,
+
+        // ---- Third batch (basic per-color / per-shape modifiers, on explicit request) ----
+        DevotionCoral,
+        DevotionTeal,
+        DevotionViolet,
+        DevotionLime,
+        FormeSingle,
+        FormeDomH,
+        FormeDomV,
+        FormeTriL,
+        FormeTriIH,
+        FormeTriIV,
+        FormeSq2,
+        FormeLTetro,
+        FormeTTetro,
+        FormeSTetro
     }
 }

@@ -117,7 +117,7 @@ namespace Contigu.Presentation
             _hudView = gameObject.AddComponent<HudView>();
             _hudView.Build(mainRoot);
 
-            _statusText = UIFactory.CreateText(mainRoot, "Status", "Select a piece, then click the grid.", 16, UITheme.TextMuted);
+            _statusText = UIFactory.CreateText(mainRoot, "Status", "Select or drag a piece onto the grid.", 16, UITheme.TextMuted);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -200,7 +200,7 @@ namespace Contigu.Presentation
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
-            _statusText.text = "Click the grid to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
+            _statusText.text = "Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
         }
 
         private void OnCellClicked(int x, int y)
@@ -242,7 +242,7 @@ namespace Contigu.Presentation
             // them up in step with each popup.
             _hudView.Refresh(_run);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
-            _statusText.text = "Select a piece, then click the grid.";
+            _statusText.text = "Select or drag a piece onto the grid.";
 
             _isPlayingPlacementSequence = true;
             _handView.SetInteractable(false);
@@ -381,7 +381,7 @@ namespace Contigu.Presentation
             _handView.Rebind(_run.Deck);
             _draftView.Rebind(_run.Deck);
             RefreshAll();
-            _statusText.text = "Select a piece, then click the grid.";
+            _statusText.text = "Select or drag a piece onto the grid.";
         }
 
         private void RefreshAll()

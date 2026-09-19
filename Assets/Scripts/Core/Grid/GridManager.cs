@@ -321,6 +321,48 @@ namespace Contigu.Core
                     case ModifierId.Jardinier:
                         bonus = ApplyJardinier(groupCells, events);
                         break;
+                    case ModifierId.DevotionCoral:
+                        bonus = ApplyColorDevotion(PieceColor.Coral, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.DevotionTeal:
+                        bonus = ApplyColorDevotion(PieceColor.Teal, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.DevotionViolet:
+                        bonus = ApplyColorDevotion(PieceColor.Violet, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.DevotionLime:
+                        bonus = ApplyColorDevotion(PieceColor.Lime, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeSingle:
+                        bonus = ApplyShapeSpecialist(ShapeId.Single, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeDomH:
+                        bonus = ApplyShapeSpecialist(ShapeId.DomH, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeDomV:
+                        bonus = ApplyShapeSpecialist(ShapeId.DomV, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeTriL:
+                        bonus = ApplyShapeSpecialist(ShapeId.TriL, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeTriIH:
+                        bonus = ApplyShapeSpecialist(ShapeId.TriIH, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeTriIV:
+                        bonus = ApplyShapeSpecialist(ShapeId.TriIV, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeSq2:
+                        bonus = ApplyShapeSpecialist(ShapeId.Sq2, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeLTetro:
+                        bonus = ApplyShapeSpecialist(ShapeId.LTetro, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeTTetro:
+                        bonus = ApplyShapeSpecialist(ShapeId.TTetro, shape, placedCells, groupBonus, events);
+                        break;
+                    case ModifierId.FormeSTetro:
+                        bonus = ApplyShapeSpecialist(ShapeId.STetro, shape, placedCells, groupBonus, events);
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -329,6 +371,31 @@ namespace Contigu.Core
                 total += bonus;
             }
             return total;
+        }
+
+        /// <summary>"Devotion" (per-color): fully doubles this placement's group bonus when the placement's own fill color matches <paramref name="targetColor"/> — every cell of one placement always shares the same color, so checking the first placed cell is enough.</summary>
+        private int ApplyColorDevotion(PieceColor targetColor, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        {
+            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
+            if (ownColor != targetColor || groupBonus <= 0)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], groupBonus));
+            return groupBonus;
+        }
+
+        /// <summary>"Specialist" (per-shape): fully doubles this placement's group bonus when the placed piece's own shape matches <paramref name="targetShape"/>.</summary>
+        private int ApplyShapeSpecialist(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        {
+            if (shape.Id != targetShape || groupBonus <= 0)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], groupBonus));
+            return groupBonus;
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>

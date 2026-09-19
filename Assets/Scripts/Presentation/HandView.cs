@@ -1,13 +1,28 @@
 using System;
 using Contigu.Core;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
 {
-    /// <summary>Renders the current hand of up to 3 pieces as selectable slots.</summary>
+    /// <summary>
+    /// Renders the current hand of up to 3 pieces as selectable slots — both
+    /// click-to-select (a quick tap, per the original toggle flow) and
+    /// drag-and-drop (dragging a slot onto the grid, on explicit request
+    /// after playtesting) select and place a piece the same way underneath:
+    /// selecting fires <see cref="SlotSelected"/> exactly as before, and a
+    /// drop on a grid cell (see GridCellView.OnDrop) reuses the same
+    /// CellClicked path a plain click on the grid already used.
+    /// </summary>
     public sealed class HandView : MonoBehaviour
     {
+        private const float DragGhostWidth = 120f;
+        private const float DragGhostHeight = 140f;
+        private const float DragGhostPreviewWidth = 100f;
+        private const float DragGhostPreviewHeight = 110f;
+        private const float DragGhostAlpha = 0.85f;
+
         public event Action<int> SlotSelected;
 
         private DeckManager _deck;
@@ -18,6 +33,11 @@ namespace Contigu.Presentation
         private int _selectedIndex = -1;
         private bool _interactable = true;
 
+        private Transform _dragLayerParent;
+        private RectTransform _dragGhost;
+        private RectTransform _dragGhostPreview;
+        private int _draggingIndex = -1;
+
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -27,6 +47,7 @@ namespace Contigu.Presentation
         {
             _deck = deck;
             _tooltip = tooltip;
+            _dragLayerParent = parent;
 
             var container = UIFactory.CreateUIObject("HandContainer", parent);
             var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -57,6 +78,9 @@ namespace Contigu.Presentation
                 btn.onClick.AddListener(() => OnSlotClicked(idx));
                 _slotButtons[i] = btn;
 
+                var dragHandler = slot.gameObject.AddComponent<HandSlotDragHandler>();
+                dragHandler.Init(this, idx);
+
                 // Fills most of the slot now that there's no name/color label
                 // below it — the shape + color-icon preview alone (plus the
                 // color-icon badge on each filled square) is clear enough on
@@ -72,8 +96,94 @@ namespace Contigu.Presentation
                 _previewContainers[i] = previewContainer;
             }
 
+            BuildDragGhost();
+
             Refresh();
             return container;
+        }
+
+        /// <summary>
+        /// Floating preview that follows the pointer while a hand slot is
+        /// being dragged — parented at the same level as the whole HUD
+        /// (<see cref="_dragLayerParent"/>, brought to front on show) so it
+        /// renders above the grid/hand/HUD regardless of where the drag
+        /// started. <see cref="CanvasGroup.blocksRaycasts"/> is off so it
+        /// never steals the drop raycast meant for the grid cell underneath.
+        /// </summary>
+        private void BuildDragGhost()
+        {
+            var ghost = UIFactory.CreatePanel(_dragLayerParent, "HandDragGhost", UITheme.ButtonSelected);
+            _dragGhost = ghost.rectTransform;
+            _dragGhost.sizeDelta = new Vector2(DragGhostWidth, DragGhostHeight);
+            _dragGhost.pivot = new Vector2(0.5f, 0.5f);
+            var canvasGroup = ghost.gameObject.AddComponent<CanvasGroup>();
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.alpha = DragGhostAlpha;
+
+            _dragGhostPreview = UIFactory.CreateUIObject("Preview", _dragGhost);
+            _dragGhostPreview.anchorMin = new Vector2(0.5f, 0.5f);
+            _dragGhostPreview.anchorMax = new Vector2(0.5f, 0.5f);
+            _dragGhostPreview.pivot = new Vector2(0.5f, 0.5f);
+            _dragGhostPreview.anchoredPosition = Vector2.zero;
+            _dragGhostPreview.sizeDelta = new Vector2(DragGhostPreviewWidth, DragGhostPreviewHeight);
+
+            _dragGhost.gameObject.SetActive(false);
+        }
+
+        public void BeginSlotDrag(int index, PointerEventData eventData)
+        {
+            if (!_interactable || index >= _deck.Hand.Count)
+            {
+                return;
+            }
+            OnSlotClicked(index);
+            _draggingIndex = index;
+            ShowDragGhost(index);
+            UpdateGhostPosition(eventData);
+        }
+
+        public void DragSlot(PointerEventData eventData)
+        {
+            if (_draggingIndex < 0)
+            {
+                return;
+            }
+            UpdateGhostPosition(eventData);
+        }
+
+        /// <summary>
+        /// Always safe to call even if the drop already placed the piece
+        /// (GridCellView.OnDrop fires and resolves the placement BEFORE
+        /// Unity calls OnEndDrag on the source, per the standard uGUI event
+        /// order) — this just hides the now-stale ghost either way.
+        /// </summary>
+        public void EndSlotDrag(PointerEventData eventData)
+        {
+            _draggingIndex = -1;
+            _dragGhost.gameObject.SetActive(false);
+        }
+
+        private void ShowDragGhost(int index)
+        {
+            var token = _deck.Hand[index];
+            var rotation = _deck.HandRotations[index];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+
+            for (int c = _dragGhostPreview.childCount - 1; c >= 0; c--)
+            {
+                Destroy(_dragGhostPreview.GetChild(c).gameObject);
+            }
+            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null);
+
+            _dragGhost.gameObject.SetActive(true);
+            _dragGhost.SetAsLastSibling();
+        }
+
+        private void UpdateGhostPosition(PointerEventData eventData)
+        {
+            var parentRect = (RectTransform)_dragLayerParent;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, null, out var localPoint);
+            _dragGhost.anchoredPosition = localPoint;
         }
 
         private void OnSlotClicked(int idx)

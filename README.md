@@ -799,3 +799,64 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     tests directs pour `PlacementsSinceLastClear` et
     `ClearRandomFilledCell` (y compris la garantie qu'une case verrouillée
     n'est jamais choisie, même si elle se retrouvait remplie).
+- **14 modificateurs "basiques" supplémentaires : 1 par couleur + 1 par
+  forme** (sur demande explicite — "il manque beaucoup de modifiers
+  basique: points doublé pour une couleur, un upgrade par couleur. Idem
+  pour les formes de tuiles"). Catalogue 32→46 entrées. Contrairement aux
+  deux premiers lots, aucun n'a nécessité de nouvel état ou de nouvelle
+  donnée — les deux sont calculables directement depuis les paramètres déjà
+  reçus par `GridManager.ApplyPreClearModifiers` (`shape` et `placedCells`).
+  - **4 modificateurs "Dévotion"** (`DevotionCoral`/`Teal`/`Violet`/`Lime`,
+    catégorie `Couleurs`) — double intégralement (100%, pas les 50% de
+    Puriste) le bonus de groupe de CE placement quand la couleur propre de
+    la pièce posée correspond. Une seule case suffit à vérifier (toutes
+    les cases d'un même placement partagent forcément la même couleur).
+  - **10 modificateurs "Spécialiste"** (`FormeSingle`/`FormeDomH`/.../
+    `FormeSTetro`, un par valeur de `ShapeId`), même mécanique (double le
+    bonus de groupe à 100%) mais sur la FORME de la pièce posée plutôt que
+    sa couleur. Nouvelle catégorie dédiée `ModifierCategory.Formes` (aucune
+    des 5 catégories existantes ne correspondait) — accent couleur
+    `#614363`, dernière teinte de la palette v1 encore inutilisée.
+  - Tests : un test dédié fire/ne-fire-pas pour `DevotionCoral` et
+    `FormeSq2` (vérifie explicitement le doublement à 100%, pas 50%), plus
+    un test en boucle par lot (`DevotionModifiers_...`/`FormeModifiers_...`)
+    qui vérifie qu'AUCUN des 4 (ou 10) ne se déclenche pour une couleur/
+    forme différente de la sienne.
+- **Drag-and-drop des pièces de la main** (sur demande explicite, retour de
+  playtesting — "les gens auraient voulu drag and drop les tuiles au lieu
+  de toggle"). Le clic (sélectionner puis cliquer une case) reste
+  fonctionnel en parallèle plutôt que d'être retiré : Unity ne déclenche
+  `OnBeginDrag` qu'une fois le pointeur passé le seuil de drag de
+  l'`EventSystem`, donc un simple tap continue de résoudre comme un clic
+  normal (`Button.onClick`) sans code supplémentaire pour les distinguer.
+  - Nouveau `HandSlotDragHandler` (implémente `IBeginDragHandler`/
+    `IDragHandler`/`IEndDragHandler`), un par slot de main, qui délègue à
+    `HandView` : `BeginSlotDrag` sélectionne le slot exactement comme un
+    clic (réutilise `OnSlotClicked`, donc l'événement `SlotSelected`
+    existant et tout ce qui en dépend côté `GameBootstrap`/`GridView` ne
+    change pas), puis affiche un "ghost" (aperçu flottant de la pièce,
+    construit via `ShapePreviewFactory`, alpha 0.85, `CanvasGroup.
+    blocksRaycasts = false` pour ne jamais voler le raycast de drop destiné
+    à la grille en dessous) qui suit le pointeur.
+  - `GridCellView` gagne `IDropHandler.OnDrop`, qui appelle simplement
+    `OnCellClicked(X, Y)` — exactement le même chemin qu'un clic sur la
+    case, donc toute la logique de placement/animation/erreur existante
+    est réutilisée telle quelle, sans duplication.
+  - L'aperçu de survol case-par-case (vert/rouge, déjà géré par
+    `GridView.OnCellHoverEnter`/`OnCellHoverExit` via `IPointerEnterHandler`
+    / `IPointerExitHandler` sur chaque `GridCellView`) fonctionne sans
+    modification pendant un drag : dans le pipeline d'événements standard
+    d'uGUI, le survol (hover) d'un AUTRE objet continue d'être évalué
+    indépendamment de l'objet en cours de drag — aucune détection de case
+    par raycast manuel n'a été nécessaire.
+  - Ordre d'événements uGUI exploité : au relâchement du pointeur, `OnDrop`
+    (sur la case ciblée) se déclenche TOUJOURS avant `OnEndDrag` (sur le
+    slot source) — donc au moment où `HandView.EndSlotDrag` masque le
+    ghost, le placement (succès ou échec) a déjà été entièrement traité.
+  - Relâcher en dehors de toute case ne place rien (pas de `IDropHandler`
+    sous le pointeur) : le ghost disparaît et la pièce reste sélectionnée,
+    exactement comme après un clic simple — pas de logique d'annulation
+    distincte nécessaire.
+  - Texte de statut (`GameBootstrap`) mis à jour pour mentionner les deux
+    méthodes ("Select or drag a piece onto the grid." / "Drag onto the
+    grid, or click a tile, to place: ...").

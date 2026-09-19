@@ -7,7 +7,10 @@ namespace Contigu.Core
         Voisinage,
         Connexions,
         Destruction,
-        Roguelike
+        Roguelike,
+
+        /// <summary>Third batch only — the 10 per-shape modifiers (Formes.*), none of the first two batches needed their own bucket for this.</summary>
+        Formes
     }
 
     /// <summary>
@@ -188,12 +191,78 @@ namespace Contigu.Core
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
             "+24 pts per cleared row/column that is entirely a single color (jokers ignored).");
 
+        // ---- Third batch (14 more) — basic per-color / per-shape modifiers,
+        // on explicit request ("il manque beaucoup de modifiers basique:
+        // points doublé pour une couleur, un upgrade par couleur. Idem pour
+        // les formes de tuiles"). Each fully doubles this placement's group
+        // bonus (100%, not Puriste's 50%) when the placed piece's own color/
+        // shape matches — computable directly from GridManager.PlacePiece's
+        // existing shape/placedCells parameters, no refactor needed. ----
+
+        public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
+            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Coral Devotion",
+            "Doubles this placement's group bonus when the piece's own color is Coral.");
+
+        public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
+            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Teal Devotion",
+            "Doubles this placement's group bonus when the piece's own color is Teal.");
+
+        public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
+            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Violet Devotion",
+            "Doubles this placement's group bonus when the piece's own color is Violet.");
+
+        public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
+            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Lime Devotion",
+            "Doubles this placement's group bonus when the piece's own color is Lime.");
+
+        public static readonly ModifierDefinition FormeSingle = new ModifierDefinition(
+            ModifierId.FormeSingle, ModifierCategory.Formes, "Single Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is Single.");
+
+        public static readonly ModifierDefinition FormeDomH = new ModifierDefinition(
+            ModifierId.FormeDomH, ModifierCategory.Formes, "Domino H Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is Domino H.");
+
+        public static readonly ModifierDefinition FormeDomV = new ModifierDefinition(
+            ModifierId.FormeDomV, ModifierCategory.Formes, "Domino V Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is Domino V.");
+
+        public static readonly ModifierDefinition FormeTriL = new ModifierDefinition(
+            ModifierId.FormeTriL, ModifierCategory.Formes, "L-Tromino Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is L-Tromino.");
+
+        public static readonly ModifierDefinition FormeTriIH = new ModifierDefinition(
+            ModifierId.FormeTriIH, ModifierCategory.Formes, "I-Tromino H Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is I-Tromino H.");
+
+        public static readonly ModifierDefinition FormeTriIV = new ModifierDefinition(
+            ModifierId.FormeTriIV, ModifierCategory.Formes, "I-Tromino V Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is I-Tromino V.");
+
+        public static readonly ModifierDefinition FormeSq2 = new ModifierDefinition(
+            ModifierId.FormeSq2, ModifierCategory.Formes, "Square Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is the 2x2 Square.");
+
+        public static readonly ModifierDefinition FormeLTetro = new ModifierDefinition(
+            ModifierId.FormeLTetro, ModifierCategory.Formes, "L-Tetromino Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is L-Tetromino.");
+
+        public static readonly ModifierDefinition FormeTTetro = new ModifierDefinition(
+            ModifierId.FormeTTetro, ModifierCategory.Formes, "T-Tetromino Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is T-Tetromino.");
+
+        public static readonly ModifierDefinition FormeSTetro = new ModifierDefinition(
+            ModifierId.FormeSTetro, ModifierCategory.Formes, "S-Tetromino Specialist",
+            "Doubles this placement's group bonus when the placed piece's shape is S-Tetromino.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
             Tricolore, Complementaire, Ilot, Couronne, TrouDansLaGrille, Carrefour, Macon, Demolisseur,
             CoeurDePierre, CercleChromatique, DiagonaleVerrouillee, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
-            ArcEnCiel, Alternance, Symetrie, Palindrome, Gradient, SansDoublon, Bloc, MonochromeLigne
+            ArcEnCiel, Alternance, Symetrie, Palindrome, Gradient, SansDoublon, Bloc, MonochromeLigne,
+            DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
+            FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro
         };
 
         public static ModifierDefinition Get(ModifierId id)

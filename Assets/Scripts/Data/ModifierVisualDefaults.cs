@@ -48,7 +48,21 @@ namespace Contigu.Data
             { ModifierId.Gradient, "GR" },
             { ModifierId.SansDoublon, "SD" },
             { ModifierId.Bloc, "BL" },
-            { ModifierId.MonochromeLigne, "ML" }
+            { ModifierId.MonochromeLigne, "ML" },
+            { ModifierId.DevotionCoral, "OC" },
+            { ModifierId.DevotionTeal, "OT" },
+            { ModifierId.DevotionViolet, "OV" },
+            { ModifierId.DevotionLime, "OL" },
+            { ModifierId.FormeSingle, "S1" },
+            { ModifierId.FormeDomH, "SH" },
+            { ModifierId.FormeDomV, "SV" },
+            { ModifierId.FormeTriL, "S3" },
+            { ModifierId.FormeTriIH, "S4" },
+            { ModifierId.FormeTriIV, "S5" },
+            { ModifierId.FormeSq2, "SQ" },
+            { ModifierId.FormeLTetro, "S6" },
+            { ModifierId.FormeTTetro, "S7" },
+            { ModifierId.FormeSTetro, "S8" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as
@@ -62,7 +76,8 @@ namespace Contigu.Data
             { ModifierCategory.Voisinage, new Color(0.396f, 0.682f, 0.839f) }, // #65aed6
             { ModifierCategory.Connexions, new Color(0.643f, 0.922f, 0.800f) }, // #a4ebcc
             { ModifierCategory.Destruction, new Color(0.710f, 0.427f, 0.498f) }, // #b56d7f
-            { ModifierCategory.Roguelike, new Color(0.216f, 0.180f, 0.302f) } // #372e4d
+            { ModifierCategory.Roguelike, new Color(0.216f, 0.180f, 0.302f) }, // #372e4d
+            { ModifierCategory.Formes, new Color(0.380f, 0.263f, 0.388f) } // #614363
         };
 
         public static string GetAbbreviation(ModifierId id)
