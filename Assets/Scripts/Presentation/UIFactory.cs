@@ -81,6 +81,12 @@ namespace Contigu.Presentation
         private static Button FinishButton(Image img, string label, int fontSize)
         {
             var btn = img.gameObject.AddComponent<Button>();
+            // Selectable normally self-assigns this via Reset(), which Unity
+            // only calls for components added through the Inspector — every
+            // button here is built purely from script via AddComponent, so
+            // without this line targetGraphic silently stays null and NONE
+            // of the hover/press color tint below ever actually renders.
+            btn.targetGraphic = img;
             var colors = btn.colors;
             colors.normalColor = Color.white;
             colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
@@ -88,6 +94,11 @@ namespace Contigu.Presentation
             colors.selectedColor = Color.white;
             colors.disabledColor = new Color(1f, 1f, 1f, 0.4f);
             btn.colors = colors;
+
+            // Quick scale-punch on click, on top of the color tint above —
+            // see ButtonPunchEffect.
+            var punch = img.gameObject.AddComponent<ButtonPunchEffect>();
+            btn.onClick.AddListener(punch.Punch);
 
             var text = CreateText(img.transform, "Label", label, fontSize, UITheme.TextPrimary);
             StretchFull(text.rectTransform);

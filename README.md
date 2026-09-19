@@ -1102,3 +1102,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     description reste inchangée (déjà en noir plein sur fond clair,
     contraste déjà optimal) pour ne pas risquer un débordement sur le
     bouton "Choose" en dessous avec les descriptions les plus longues.
+- **Nouvelle passe de lisibilité sur les cartes d'upgrade + effet de clic
+  sur les boutons** (sur demande explicite).
+  - Nom de l'upgrade (bannière) : 18→27 (+50%). Ligne rareté/type :
+    14→21 (+50%). Les deux décalés/agrandis pour ne pas se chevaucher
+    (bannière 40→46 avant `CardScale`, boîte de la ligne rareté 20→30).
+  - Description : 14→15, plus une bonne partie du "flou" ressenti vient
+    probablement du texte redevenu petit par rapport aux éléments
+    voisins désormais bien plus grands — `CardHeight` gagne +30px fixes
+    (en plus du `CardScale` existant) pour laisser à la description
+    assez de place même dans le pire cas (~190 caractères, la
+    description la plus longue du jeu) sans chevaucher le bouton
+    "Choose" en dessous.
+  - **Fix : effet de survol/clic manquant sur TOUS les boutons** (pas
+    seulement Choose/Cancel — c'est la même fonction partagée). Cause :
+    `Selectable`/`Button` assigne normalement son `targetGraphic` tout
+    seul via `Reset()`, mais Unity n'appelle `Reset()` que pour les
+    composants ajoutés depuis l'Inspector — comme tout ce jeu est
+    construit par script (`AddComponent`), `targetGraphic` restait
+    `null` sur tous les boutons du jeu et la transition de couleur
+    (survol/pression, déjà configurée dans `FinishButton`) ne s'est en
+    fait jamais affichée. `UIFactory.FinishButton` assigne maintenant
+    `btn.targetGraphic` explicitement.
+  - En plus de ce fix, nouveau `ButtonPunchEffect` (même technique de
+    scale-bounce que `GridCellView.Pulse()`/`ComboView.Pulse()`) —
+    petit "squish" au clic, ajouté automatiquement par
+    `UIFactory.FinishButton` à tous les boutons du jeu pour un retour
+    tactile plus net que la seule teinte de couleur.

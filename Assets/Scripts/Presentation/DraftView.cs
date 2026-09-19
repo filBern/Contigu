@@ -22,7 +22,11 @@ namespace Contigu.Presentation
         // smaller relative slice of the bigger card.
         private const float CardScale = 1.25f;
         private const float CardWidth = 200f * CardScale;
-        private const float CardHeight = 234f * CardScale;
+        // +30 flat on top of the 25% scale — name/rarity grew another 50%
+        // on top of that (see BuildCard), which needed more room than a
+        // pure CardScale multiply of the original 234 would leave for the
+        // description above the Choose button.
+        private const float CardHeight = 234f * CardScale + 30f;
         private const float TypeRowHeight = 56f;
         private const float TypeRowPreviewSize = 44f;
 
@@ -136,9 +140,11 @@ namespace Contigu.Presentation
             nameBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
             nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f * CardScale);
-            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f * CardScale, 40f * CardScale);
+            // Height 40->46 (before CardScale) to fit the 50%-bigger name font.
+            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f * CardScale, 46f * CardScale);
 
-            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 18, UITheme.TextPrimary);
+            // 50% bigger (18->27), on explicit request.
+            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 27, UITheme.TextPrimary);
             nameLabel.raycastTarget = false;
             UIFactory.StretchFull(nameLabel.rectTransform);
 
@@ -149,23 +155,32 @@ namespace Contigu.Presentation
             // rarity colors read as near-invisible pale-on-pale against this
             // card's light lavender art; the "OnLight" set is the same hues
             // darkened for contrast here instead.
+            // 50% bigger (14->21), on explicit request — position/height
+            // shifted down and grown accordingly to clear the taller banner
+            // above it without overlapping.
             var rarityLabel = UIFactory.CreateText(card.transform, "Rarity",
                 UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                14, UpgradeVisualDefaults.GetRarityColorOnLight(def.Rarity));
+                21, UpgradeVisualDefaults.GetRarityColorOnLight(def.Rarity));
             rarityLabel.fontStyle = FontStyle.Italic;
             rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f * CardScale);
-            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 20f * CardScale);
+            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -62f * CardScale);
+            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 30f * CardScale);
 
-            // Black (not the usual TextMuted) on explicit request.
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, Color.black);
+            // Black (on explicit request from an earlier pass) and a size
+            // bump (14->15) — the paragraph read as blurry/hard to make out
+            // at the smaller size, more so now that the elements around it
+            // grew. Position/height shifted down to clear the bigger rarity
+            // line above; the flat +30 on CardHeight above is what keeps
+            // this from overlapping the Choose button even for the longest
+            // descriptions (~190 characters).
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 15, Color.black);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f * CardScale);
-            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 96f * CardScale);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -100f * CardScale);
+            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 92f * CardScale);
 
             // Label 50% bigger than the base 14pt, on explicit request.
             var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 21);
