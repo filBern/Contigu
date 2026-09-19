@@ -44,19 +44,15 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Background of the left-edge active-modifiers panel (ModifierPanelView).
-        /// Was "panel_bg" — swapped to "card_bg_2" (on explicit request) because
-        /// panel_bg's art bakes a distinct-looking header band into its 9-slice
-        /// borders, which visibly stretched/squished as the panel's height
-        /// changed with the active modifier count. card_bg_2 is a plain card
-        /// with no such baked-in band, so it stretches cleanly at any height —
-        /// the "Modifiers" title is plain text in the game's own background
-        /// color (see ModifierPanelView), not a separate banner sprite (a
-        /// Union ribbon banner was tried and dropped — its own rounded
-        /// corners never quite lined up with card_bg_2's, on explicit request).
+        /// Was briefly swapped to "card_bg_2" to sidestep panel_bg's header
+        /// band distorting under a dynamically-resizing panel — reverted back
+        /// to "panel_bg" (on explicit request) now that the panel uses a
+        /// static height instead (fits exactly 10 modifiers, 2x5), which
+        /// removes the resizing that caused the distortion in the first place.
         /// </summary>
         public static Sprite ModifierPanelBackground
         {
-            get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_2")); }
+            get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "panel_bg")); }
         }
 
         /// <summary>Background of each hand slot (HandView).</summary>

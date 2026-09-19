@@ -1366,6 +1366,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     panneau (calculée dans `Build` ET dans chaque `Refresh`) ne
     descend plus jamais en dessous, quel que soit le nombre de
     modifiers actifs.
+  - **Refonte finale : retour à `panel_bg.png`, texte dans le bandeau
+    d'en-tête, hauteur STATIQUE pour 10 modifiers (2x5)** (sur demande
+    explicite — "pour éviter les problèmes on va faire autrement").
+    Après une longue série de fixes (#1 à #8) tous liés d'une manière
+    ou d'une autre au fait que le panneau changeait de hauteur à
+    l'exécution, la cause commune est éliminée à la racine : le
+    panneau utilise maintenant une taille FIXE, calculée une fois à la
+    compilation (`PanelHeight = HeaderHeight + 5×BadgeSize +
+    4×BadgeSpacing + BottomPadding`, pour 2 colonnes × 5 lignes = 10
+    badges) et jamais modifiée dans `Refresh`. Ça permet de:
+    - Remettre `panel_bg.png` comme fond (`UISprites.ModifierPanelBackground`
+      repasse de `card_bg_2` à `panel_bg`) — sa bande d'en-tête bleue
+      "cuite" dans les bordures 9-slice, la cause du tout premier bug
+      de cette série, ne pose plus problème puisqu'elle n'a plus jamais
+      besoin de s'étirer/se comprimer à l'exécution.
+    - Remettre le texte "Modifiers" directement DANS cette bande
+      d'en-tête (`UITheme.TextPrimary`, `TextAnchor.UpperCenter`,
+      `anchoredPosition (0, -4)`) — le design d'origine, avant toute
+      cette série de fixes, qui fonctionnait très bien tant que le
+      panneau ne changeait pas de taille.
+    - Ancrage remis au CENTRE vertical (`anchorMin/Max (0, 0.5)`,
+      pivot `(0, 0.5)`) — safe maintenant que la taille ne change
+      plus jamais, le bug de centre-pivot du tout premier fix (#1)
+      ne peut plus se reproduire non plus.
+    Les modifiers actifs restent illimités (`RunManager` n'a toujours
+    aucun plafond) — au-delà de 10, la grille continue simplement de
+    s'étendre par-delà la zone visible de la carte plutôt que de
+    redimensionner le panneau.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
