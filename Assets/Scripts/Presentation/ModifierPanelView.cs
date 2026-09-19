@@ -43,18 +43,18 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, 460f);
             _root.anchoredPosition = new Vector2(40f, 0f);
 
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 30, UITheme.TextPrimary);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -10f);
-            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 24f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -6f);
+            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 48f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -40f);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -62f);
 
             var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8f;

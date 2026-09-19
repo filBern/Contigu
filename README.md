@@ -1022,3 +1022,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     modifier, panneau du tooltip, carte de la modifier draft, marqueur
     "case invalide") sont hors scope de cette demande et restent
     inchangés — seules les bordures DE TEXTE ont été retirées.
+- **Suite de l'habillage Colorful UI + fix du curseur de placement** (sur
+  demande explicite).
+  - Bouton "Choose" (`DraftView` et `ModifierDraftView`, ce dernier
+    partagé avec le mode "Remove") : fond
+    `button/emptyButtons/blueButton.png`. Bouton "Cancel" (les deux
+    écrans de sous-choix dans `DraftView`) : fond `gameUI/red_btn.png`.
+    Nouvelle surcharge `UIFactory.CreateButton(..., Sprite bgSprite, ...)`
+    à côté de celle par couleur plate, les deux déléguant maintenant à un
+    `FinishButton` privé commun (bouton + label) pour éviter la
+    duplication.
+  - Fond des cartes de choix d'upgrade (`DraftView.BuildCard`) :
+    `gameUI/card_bg_3.png` — même sprite que les slots de la main
+    (exposé séparément en tant que `UISprites.UpgradeCardBackground`,
+    plutôt que de réutiliser `HandSlotBackground` directement, pour que
+    chaque site d'appel garde un nom qui documente son propre usage).
+  - Bannière `gameUI/Union.png` ajoutée derrière le nom de l'upgrade sur
+    chaque carte de draft — vu sa forme de ruban à pointes (pas un simple
+    rectangle arrondi), le `spriteBorder` du `.meta` lui donne une marge
+    horizontale généreuse (28px) pour ne pas écraser les pointes en
+    9-slice.
+  - **Fix : curseur excentré lors du placement.** Les formes de pièce
+    stockent toujours leur cellule d'origine en bas-à-gauche de leur
+    boîte englobante (`PieceShapeCatalog`) ; comme la case survolée/
+    cliquée servait directement de cette origine, la pièce apparaissait
+    décalée en haut-à-droite du curseur au lieu d'être centrée dessus.
+    Nouvelle méthode `GridView.GetPlacementOrigin(x, y)` qui décale la
+    case par la moitié (arrondie vers le bas) de la largeur/hauteur de la
+    boîte englobante de la forme sélectionnée — utilisée identiquement
+    par l'aperçu de survol (`OnCellHoverEnter`) ET par le placement réel
+    (`OnCellClicked`), pour que l'aperçu affiché corresponde toujours
+    exactement à ce qui sera posé.
+  - Texte "Modifiers" du panneau de modifiers actifs (`ModifierPanelView`)
+    doublé (15→30) et repositionné légèrement plus haut (`anchoredPosition`
+    -10→-6) ; la liste des lignes en dessous (`_rowsContainer`) décalée en
+    conséquence (-40→-62) pour ne pas chevaucher le titre agrandi.

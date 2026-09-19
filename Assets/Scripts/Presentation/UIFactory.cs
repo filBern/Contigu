@@ -68,6 +68,18 @@ namespace Contigu.Presentation
         public static Button CreateButton(Transform parent, string name, string label, Color bgColor, int fontSize = 16)
         {
             var img = CreatePanel(parent, name, bgColor);
+            return FinishButton(img, label, fontSize);
+        }
+
+        /// <summary>Same as the Color overload, but skinned with a "Colorful UI" pack sprite (see UISprites) instead of a flat fill.</summary>
+        public static Button CreateButton(Transform parent, string name, string label, Sprite bgSprite, int fontSize = 16)
+        {
+            var img = CreateSlicedImage(parent, name, bgSprite);
+            return FinishButton(img, label, fontSize);
+        }
+
+        private static Button FinishButton(Image img, string label, int fontSize)
+        {
             var btn = img.gameObject.AddComponent<Button>();
             var colors = btn.colors;
             colors.normalColor = Color.white;

@@ -139,7 +139,7 @@ namespace Contigu.Presentation
             badge.rectTransform.pivot = new Vector2(0.5f, 1f);
             badge.rectTransform.anchoredPosition = new Vector2(0f, -15f);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", buttonLabel, UITheme.ButtonSelected, 14);
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", buttonLabel, UISprites.ChooseButtonBackground, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);

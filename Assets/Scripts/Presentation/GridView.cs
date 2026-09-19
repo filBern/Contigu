@@ -224,13 +224,14 @@ namespace Contigu.Presentation
                 return;
             }
 
-            bool valid = _grid.CanPlace(_selectedShape, x, y);
+            var origin = GetPlacementOrigin(x, y);
+            bool valid = _grid.CanPlace(_selectedShape, origin.x, origin.y);
             var overlay = valid ? UITheme.HoverValid : UITheme.HoverInvalid;
             var offsets = _selectedShape.Cells;
             for (int i = 0; i < offsets.Count; i++)
             {
-                int cx = x + offsets[i].x;
-                int cy = y + offsets[i].y;
+                int cx = origin.x + offsets[i].x;
+                int cy = origin.y + offsets[i].y;
                 if (GridManager.InBounds(cx, cy))
                 {
                     // Only the one cell matching the selected piece's own
@@ -242,6 +243,34 @@ namespace Contigu.Presentation
                 }
             }
             HoverValidityChanged?.Invoke(valid);
+        }
+
+        /// <summary>
+        /// A shape's cells are always stored with their origin at the
+        /// bottom-left of the bounding box (see PieceShapeCatalog), so using
+        /// the hovered/clicked cell directly as that origin made the piece
+        /// hang up-and-right of the cursor — it read as if the cursor was at
+        /// the piece's bottom-left corner rather than its middle. Shifts by
+        /// half the shape's bounding box (rounded down) so the piece centers
+        /// on the cursor's cell instead. Used identically by the hover
+        /// preview and the click/drop placement path so what's previewed is
+        /// exactly what gets placed.
+        /// </summary>
+        private Vector2Int GetPlacementOrigin(int x, int y)
+        {
+            if (_selectedShape == null)
+            {
+                return new Vector2Int(x, y);
+            }
+            int maxX = 0;
+            int maxY = 0;
+            var offsets = _selectedShape.Cells;
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                if (offsets[i].x > maxX) maxX = offsets[i].x;
+                if (offsets[i].y > maxY) maxY = offsets[i].y;
+            }
+            return new Vector2Int(x - maxX / 2, y - maxY / 2);
         }
 
         public void OnCellHoverExit(int x, int y)
@@ -262,7 +291,8 @@ namespace Contigu.Presentation
 
         public void OnCellClicked(int x, int y)
         {
-            CellClicked?.Invoke(x, y);
+            var origin = GetPlacementOrigin(x, y);
+            CellClicked?.Invoke(origin.x, origin.y);
         }
 
         /// <summary>World/screen anchored position of a cell's center, for spawning floating score popups.</summary>

@@ -116,7 +116,7 @@ namespace Contigu.Presentation
 
         private void BuildCard(RectTransform parent, UpgradeDefinition def)
         {
-            var card = UIFactory.CreatePanel(parent, "Card_" + def.Id, UITheme.PanelLight);
+            var card = UIFactory.CreateSlicedImage(parent, "Card_" + def.Id, UISprites.UpgradeCardBackground);
             card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
             // Plain Image has no ILayoutElement, so pin the size explicitly or
             // the parent HorizontalLayoutGroup collapses it toward zero.
@@ -124,12 +124,16 @@ namespace Contigu.Presentation
             cardLayout.preferredWidth = CardWidth;
             cardLayout.preferredHeight = CardHeight;
 
-            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 44f);
+            var nameBanner = UIFactory.CreateSlicedImage(card.transform, "NameBanner", UISprites.UpgradeNameBanner);
+            nameBanner.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            nameBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            nameBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
+            nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f, 40f);
+
+            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 16, UITheme.TextPrimary);
+            nameLabel.raycastTarget = false;
+            UIFactory.StretchFull(nameLabel.rectTransform);
 
             // Rarity + pool ("type"), on explicit request — a small colored
             // subtitle line between the name and description, same idea as
@@ -151,7 +155,7 @@ namespace Contigu.Presentation
             descLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
             descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 96f);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UITheme.ButtonSelected, 14);
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);
@@ -247,7 +251,7 @@ namespace Contigu.Presentation
                 BuildTypeRow(listContainer, def, shape, color, count);
             }
 
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UITheme.Danger);
+            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UISprites.CancelButtonBackground);
             var cancelRect = cancelBtn.GetComponent<RectTransform>();
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
@@ -363,7 +367,7 @@ namespace Contigu.Presentation
                 btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
             }
 
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UITheme.Danger);
+            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UISprites.CancelButtonBackground);
             var cancelRect = cancelBtn.GetComponent<RectTransform>();
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
