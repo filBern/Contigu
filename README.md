@@ -942,3 +942,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     qui remplit une ligne complète avec une case Multiplier Zone et une
     case golden dans le groupe, et vérifie que `TotalScore` reflète bien
     `(GroupBonus + GoldenBonus + LineClearScore) * 2`.
+- **Fix : ghost du drag-and-drop trop chargé** (sur demande explicite —
+  le carré bleu-mauve de fond faisait doublon avec le halo vert/rouge
+  déjà affiché par `GridView` sur les cases survolées, et restait visible
+  même par-dessus un emplacement valide).
+  - `HandView.BuildDragGhost` construit maintenant le ghost avec
+    `UIFactory.CreateUIObject` au lieu de `CreatePanel` — plus aucun
+    `Image` de fond, seul l'aperçu de la pièce (`ShapePreviewFactory`)
+    reste visible.
+  - Nouvel évènement `GridView.HoverValidityChanged` (fired dans
+    `OnCellHoverEnter`/`OnCellHoverExit`, indépendant du drag comme le
+    reste du hover) câblé dans `GameBootstrap` vers
+    `HandView.SetHoveringValidDrop` : pendant un drag, l'alpha du ghost
+    (`CanvasGroup`) tombe à 0 dès que la case survolée accepterait la
+    pièce, et remonte à `DragGhostAlpha` sinon — le halo vert/rouge de la
+    grille reste alors seul visible à l'endroit exact où la pièce
+    tomberait.
