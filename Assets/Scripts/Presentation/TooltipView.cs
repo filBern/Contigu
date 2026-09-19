@@ -68,12 +68,15 @@ namespace Contigu.Presentation
             AddOutline(_subtitleLabel);
             _subtitleLabel.gameObject.SetActive(false);
 
-            _descLabel = UIFactory.CreateText(_panel, "Desc", "", 12, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            // No outline on the description (unlike Name/Subtitle above) —
+            // on top of a solid opaque panel background it only muddied the
+            // text at this size; bigger + bold reads more clearly instead.
+            _descLabel = UIFactory.CreateText(_panel, "Desc", "", 14, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            _descLabel.fontStyle = FontStyle.Bold;
             _descLabel.raycastTarget = false;
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _descLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            AddOutline(_descLabel);
 
             _root.gameObject.SetActive(false);
             return _root;

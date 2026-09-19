@@ -144,7 +144,8 @@ namespace Contigu.Presentation
             rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f);
             rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
 
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 12, UITheme.TextMuted);
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, UITheme.TextMuted);
+            descLabel.fontStyle = FontStyle.Bold;
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
