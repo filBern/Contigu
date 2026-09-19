@@ -187,6 +187,7 @@ namespace Contigu.Presentation
         private void WireEvents()
         {
             _gridView.CellClicked += OnCellClicked;
+            _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;
             _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
             _modifierDraftView.ModifierPicked += OnModifierPicked;

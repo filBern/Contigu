@@ -14,6 +14,16 @@ namespace Contigu.Presentation
     {
         public event Action<int, int> CellClicked;
 
+        /// <summary>
+        /// Fires whenever the hovered footprint's validity changes (including
+        /// to "false" when hover leaves the grid entirely) — used by
+        /// <see cref="HandView"/> to hide its drag ghost while it sits over a
+        /// droppable spot, since the grid's own green/red footprint tint
+        /// already shows that; the ghost only needs to be visible while the
+        /// player hasn't found a valid spot yet.
+        /// </summary>
+        public event Action<bool> HoverValidityChanged;
+
         private GridManager _grid;
         private GridCellView[,] _cells;
         private PieceShape _selectedShape;
@@ -214,6 +224,7 @@ namespace Contigu.Presentation
             ClearHover();
             if (_selectedShape == null)
             {
+                HoverValidityChanged?.Invoke(false);
                 return;
             }
 
@@ -234,11 +245,13 @@ namespace Contigu.Presentation
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                 }
             }
+            HoverValidityChanged?.Invoke(valid);
         }
 
         public void OnCellHoverExit(int x, int y)
         {
             ClearHover();
+            HoverValidityChanged?.Invoke(false);
         }
 
         private void ClearHover()

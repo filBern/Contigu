@@ -35,8 +35,10 @@ namespace Contigu.Presentation
 
         private Transform _dragLayerParent;
         private RectTransform _dragGhost;
+        private CanvasGroup _dragGhostCanvasGroup;
         private RectTransform _dragGhostPreview;
         private int _draggingIndex = -1;
+        private bool _hoveringValidDrop;
 
         public int SelectedIndex
         {
@@ -109,16 +111,19 @@ namespace Contigu.Presentation
         /// renders above the grid/hand/HUD regardless of where the drag
         /// started. <see cref="CanvasGroup.blocksRaycasts"/> is off so it
         /// never steals the drop raycast meant for the grid cell underneath.
+        /// No background panel — just the shape preview itself — and its
+        /// alpha drops to 0 while hovering a valid drop spot (see
+        /// <see cref="SetHoveringValidDrop"/>), since the grid's own
+        /// green footprint tint already communicates that.
         /// </summary>
         private void BuildDragGhost()
         {
-            var ghost = UIFactory.CreatePanel(_dragLayerParent, "HandDragGhost", UITheme.ButtonSelected);
-            _dragGhost = ghost.rectTransform;
+            _dragGhost = UIFactory.CreateUIObject("HandDragGhost", _dragLayerParent);
             _dragGhost.sizeDelta = new Vector2(DragGhostWidth, DragGhostHeight);
             _dragGhost.pivot = new Vector2(0.5f, 0.5f);
-            var canvasGroup = ghost.gameObject.AddComponent<CanvasGroup>();
-            canvasGroup.blocksRaycasts = false;
-            canvasGroup.alpha = DragGhostAlpha;
+            _dragGhostCanvasGroup = _dragGhost.gameObject.AddComponent<CanvasGroup>();
+            _dragGhostCanvasGroup.blocksRaycasts = false;
+            _dragGhostCanvasGroup.alpha = DragGhostAlpha;
 
             _dragGhostPreview = UIFactory.CreateUIObject("Preview", _dragGhost);
             _dragGhostPreview.anchorMin = new Vector2(0.5f, 0.5f);
@@ -138,8 +143,19 @@ namespace Contigu.Presentation
             }
             OnSlotClicked(index);
             _draggingIndex = index;
+            _hoveringValidDrop = false;
             ShowDragGhost(index);
             UpdateGhostPosition(eventData);
+        }
+
+        /// <summary>Fired by GameBootstrap from GridView.HoverValidityChanged while a drag is in progress.</summary>
+        public void SetHoveringValidDrop(bool valid)
+        {
+            _hoveringValidDrop = valid;
+            if (_draggingIndex >= 0)
+            {
+                _dragGhostCanvasGroup.alpha = valid ? 0f : DragGhostAlpha;
+            }
         }
 
         public void DragSlot(PointerEventData eventData)
@@ -175,6 +191,7 @@ namespace Contigu.Presentation
             }
             ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null);
 
+            _dragGhostCanvasGroup.alpha = DragGhostAlpha;
             _dragGhost.gameObject.SetActive(true);
             _dragGhost.SetAsLastSibling();
         }
