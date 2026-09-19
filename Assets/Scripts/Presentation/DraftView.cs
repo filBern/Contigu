@@ -168,14 +168,16 @@ namespace Contigu.Presentation
             rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -62f * CardScale);
             rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 30f * CardScale);
 
-            // Black (on explicit request from an earlier pass) and a size
-            // bump (14->15) — the paragraph read as blurry/hard to make out
-            // at the smaller size, more so now that the elements around it
-            // grew. Position/height shifted down to clear the bigger rarity
-            // line above; the flat +30 on CardHeight above is what keeps
-            // this from overlapping the Choose button even for the longest
+            // Black (on explicit request from an earlier pass), size bumped
+            // 14->15, and CreateBodyText (not CreateText) — Digitalt is a
+            // very heavy display font (built for short titles, not
+            // paragraphs) that turns into an illegible blur at this size
+            // over a multi-line description; BodyFont() is Unity's plain
+            // built-in font instead, which stays crisp at small sizes. The
+            // flat +30 on CardHeight above is what keeps this from
+            // overlapping the Choose button even for the longest
             // descriptions (~190 characters).
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 15, Color.black);
+            var descLabel = UIFactory.CreateBodyText(card.transform, "Desc", def.Description, 15, Color.black);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
