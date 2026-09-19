@@ -1129,3 +1129,55 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     petit "squish" au clic, ajouté automatiquement par
     `UIFactory.FinishButton` à tous les boutons du jeu pour un retour
     tactile plus net que la seule teinte de couleur.
+- **Retrait des upgrades/modifiers liés aux locked cells (boss round),
+  retrait de Symétrie, buff de Color Wheel, preview visuelle pour les
+  Specialist** (sur demande explicite).
+  - **Driller Tile** (upgrade de tuile) retiré entièrement : `UpgradeId`,
+    `UpgradeDefinition`, `UpgradeSystem` (compteur + case `Apply`),
+    `PieceTraitKind.Driller`, `DeckManager.TagDrillerTokensRandom`,
+    `RunManager` (case de dispatch, `ApplyDrillerBonus` + ses deux
+    helpers de détection de case verrouillée), `PieceTraitVisualDefaults`
+    (nom/description/rareté/couleur de badge), `ScoringConstants.
+    DrillerBonus`, et les tests associés (`DeckManagerTests`,
+    `UpgradeSystemTests`, `RunManagerTests`). Raison : "trop abstrait
+    trop longtemps pour le joueur" — le joueur porte cette pièce
+    enchantée potentiellement plusieurs manches avant qu'une manche boss
+    (avec des cases verrouillées) ne la rende pertinente.
+  - **Trou dans la Grille, Cœur de Pierre, Diagonale Verrouillée, Sans
+    Doublon** (4 modifiers) retirés entièrement — mêmes raisons : leur
+    condition de déclenchement dépend des cases verrouillées des manches
+    boss (Sans Doublon n'a pas de check de verrouillage dans son code,
+    mais est structurellement quasi impossible à déclencher en dehors
+    d'une manche boss — seulement 5 couleurs possibles pour une ligne de
+    8 cases). `ModifierId`, `ModifierDefinition` (+ `All[]`),
+    `GridManager` (cases de dispatch + méthodes `Apply*`/helpers
+    associées : `IsAdjacentToLockedCell`, `IsFullyBoxedIn`,
+    `IsDiagonallyAdjacentToLockedCell`, `HasNoDuplicateColor`),
+    `ScoringConstants`, `ModifierVisualDefaults` (abréviations), et les
+    tests associés (`GridManagerModifierTests`) tous retirés/nettoyés.
+  - **Symétrie** (modifier) retiré entièrement — jugée peu claire et
+    difficile ("je n'aime plus ... trop compliqué à comprendre" pattern
+    déjà vu pour Mirror Tile). Même nettoyage : `ModifierId`,
+    `ModifierDefinition`, `GridManager.ApplySymetrie` + son helper
+    `ColorsMatch`, `ScoringConstants.SymetrieBonusPerLine`,
+    `ModifierVisualDefaults`, tests.
+  - **Color Wheel** (`CercleChromatique`) : bonus par cellule 18→35 (sur
+    demande explicite — très difficile à déclencher, il faut que les 4
+    voisins cardinaux soient remplis ET montrent les 4 couleurs de base
+    à la fois).
+  - **Fix : les modifiers "...Specialist" (Forme\*) montrent maintenant
+    un aperçu de la forme en carrés noirs au lieu d'un nom de
+    domino/tromino/tétromino** (sur demande explicite — "je n'aime pas
+    qu'on ait les nom des tetromino"). Nouveau
+    `ShapePreviewFactory.BuildMono(container, shape, color)` — variante
+    simplifiée de `Build` (pas de couleur de pièce/icône/badge de trait,
+    juste la silhouette de la forme en un carré plein par cellule).
+    Nouveau `ModifierVisualDefaults.GetSpecialistShape(ModifierId)` —
+    associe chacun des 10 modifiers Forme\* à son `ShapeId`.
+    `ModifierBadgeFactory.Create` construit maintenant ce mini-aperçu à
+    la place de l'abréviation 2-lettres sur le badge, uniquement pour
+    ces 10 modifiers (les autres gardent l'abréviation textuelle
+    inchangée). Le nom complet ("L-Tetromino Specialist", etc.) reste
+    affiché dans le tooltip au survol — seul le badge, l'élément visible
+    en permanence dans le panneau/les cartes de draft, ne montre plus le
+    nom du polyomino.

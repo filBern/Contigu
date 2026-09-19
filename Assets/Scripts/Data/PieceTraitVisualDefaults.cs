@@ -38,7 +38,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Mirror: return "Mirror Tile";
                 case PieceTraitKind.Seeder: return "Seeder";
                 case PieceTraitKind.Catalyst: return "Catalyst Tile";
-                case PieceTraitKind.Driller: return "Driller Tile";
                 case PieceTraitKind.Twin: return "Twin Tile";
                 case PieceTraitKind.Detonator: return "Detonator Tile";
                 case PieceTraitKind.Chameleon: return "Chameleon Tile";
@@ -69,8 +68,6 @@ namespace Contigu.Data
                     return "When this piece is placed, this tile turns golden on the grid for the rest of the round — it keeps scoring every time its group is rescored, until the round ends.";
                 case PieceTraitKind.Catalyst:
                     return "When this piece is placed, this tile scores extra points for every cell in the resulting group that was already on the grid before this placement — the bigger the group it reacts with, the bigger the bonus.";
-                case PieceTraitKind.Driller:
-                    return "When this piece is placed, this tile scores a big flat bonus — but only if it lands next to a locked cell (boss rounds). Does nothing otherwise.";
                 case PieceTraitKind.Twin:
                     return "When this piece is placed, this tile's own group-bonus share is duplicated onto EVERY other tile in the scored group, not just one at random like Mirror Tile.";
                 case PieceTraitKind.Detonator:
@@ -99,7 +96,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Mirror: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Seeder: return UpgradeRarity.Rare;
                 case PieceTraitKind.Catalyst: return UpgradeRarity.Uncommon;
-                case PieceTraitKind.Driller: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Twin: return UpgradeRarity.Rare;
                 case PieceTraitKind.Detonator: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Chameleon: return UpgradeRarity.Common;
@@ -135,7 +131,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Catalyst:
                 case PieceTraitKind.Void:
                     return VoidBadgeColor;
-                case PieceTraitKind.Driller:
                 case PieceTraitKind.Detonator:
                     return DetonatorBadgeColor;
                 case PieceTraitKind.Chameleon:

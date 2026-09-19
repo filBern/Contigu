@@ -29,13 +29,10 @@ namespace Contigu.Data
             { ModifierId.Complementaire, "CX" },
             { ModifierId.Ilot, "IL" },
             { ModifierId.Couronne, "CR" },
-            { ModifierId.TrouDansLaGrille, "HL" },
             { ModifierId.Carrefour, "XR" },
             { ModifierId.Macon, "MA" },
             { ModifierId.Demolisseur, "DM" },
-            { ModifierId.CoeurDePierre, "CP" },
             { ModifierId.CercleChromatique, "CC" },
-            { ModifierId.DiagonaleVerrouillee, "DV" },
             { ModifierId.Monochrome, "MO" },
             { ModifierId.Contraste, "CN" },
             { ModifierId.Degrade, "DG" },
@@ -43,10 +40,8 @@ namespace Contigu.Data
             { ModifierId.Jardinier, "JA" },
             { ModifierId.ArcEnCiel, "AC" },
             { ModifierId.Alternance, "AL" },
-            { ModifierId.Symetrie, "SY" },
             { ModifierId.Palindrome, "PA" },
             { ModifierId.Gradient, "GR" },
-            { ModifierId.SansDoublon, "SD" },
             { ModifierId.Bloc, "BL" },
             { ModifierId.MonochromeLigne, "ML" },
             { ModifierId.DevotionCoral, "OC" },
@@ -88,6 +83,26 @@ namespace Contigu.Data
         public static Color GetCategoryColor(ModifierCategory category)
         {
             return CategoryColors.TryGetValue(category, out var c) ? c : Color.gray;
+        }
+
+        private static readonly Dictionary<ModifierId, ShapeId> SpecialistShapes = new Dictionary<ModifierId, ShapeId>
+        {
+            { ModifierId.FormeSingle, ShapeId.Single },
+            { ModifierId.FormeDomH, ShapeId.DomH },
+            { ModifierId.FormeDomV, ShapeId.DomV },
+            { ModifierId.FormeTriL, ShapeId.TriL },
+            { ModifierId.FormeTriIH, ShapeId.TriIH },
+            { ModifierId.FormeTriIV, ShapeId.TriIV },
+            { ModifierId.FormeSq2, ShapeId.Sq2 },
+            { ModifierId.FormeLTetro, ShapeId.LTetro },
+            { ModifierId.FormeTTetro, ShapeId.TTetro },
+            { ModifierId.FormeSTetro, ShapeId.STetro }
+        };
+
+        /// <summary>The shape a Forme* "Specialist" modifier targets, or null for every other modifier — lets the badge show an actual shape preview instead of naming a domino/tromino/tetromino (see Presentation.ModifierBadgeFactory, on explicit request: "je n'aime pas qu'on ait les nom des tetromino").</summary>
+        public static ShapeId? GetSpecialistShape(ModifierId id)
+        {
+            return SpecialistShapes.TryGetValue(id, out var shape) ? shape : (ShapeId?)null;
         }
     }
 }

@@ -67,9 +67,6 @@ namespace Contigu.Core
         /// <summary>Couronne: bonus per group cell sitting on the grid's outer border.</summary>
         public const int CouronneBonusPerCell = 5;
 
-        /// <summary>Trou dans la grille: bonus per group cell orthogonally adjacent to a locked cell.</summary>
-        public const int TrouBonusPerCell = 10;
-
         /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 colors different from BOTH each other and the cell's own color.</summary>
         public const int CarrefourBonusPerCell = 12;
 
@@ -82,14 +79,8 @@ namespace Contigu.Core
 
         // ---- Second batch of modifier bonuses (see ModifierCatalog) ----
 
-        /// <summary>Cœur de Pierre: bonus per group cell fully boxed in — every one of its 8 neighbors is either filled, locked, or off the grid.</summary>
-        public const int CoeurDePierreBonusPerCell = 7;
-
-        /// <summary>Cercle Chromatique: bonus per group cell whose 4 filled cardinal neighbors together show all 4 base colors.</summary>
-        public const int CercleChromatiqueBonusPerCell = 18;
-
-        /// <summary>Diagonale Verrouillée: bonus per group cell diagonally adjacent to a locked cell (boss round).</summary>
-        public const int DiagonaleVerrouilleeBonusPerCell = 9;
+        /// <summary>Cercle Chromatique: bonus per group cell whose 4 filled cardinal neighbors together show all 4 base colors. Raised 18->35 (explicit request) — very hard to actually land.</summary>
+        public const int CercleChromatiqueBonusPerCell = 35;
 
         /// <summary>Monochrome: bonus per group cell when the whole group is a single real color with zero jokers (stricter than Puriste).</summary>
         public const int MonochromeBonusPerCell = 3;
@@ -112,17 +103,11 @@ namespace Contigu.Core
         /// <summary>Alternance: bonus per cleared row/column whose colors strictly alternate between exactly 2 colors.</summary>
         public const int AlternanceBonusPerLine = 16;
 
-        /// <summary>Symétrie: bonus per cleared row/column whose mirror line (across the grid's center) also cleared this placement with an identical color pattern.</summary>
-        public const int SymetrieBonusPerLine = 20;
-
         /// <summary>Palindrome: bonus per cleared row/column whose color sequence reads the same forwards and backwards.</summary>
         public const int PalindromeBonusPerLine = 18;
 
         /// <summary>Gradient: bonus per cleared row/column where no two adjacent cells share the same color.</summary>
         public const int GradientBonusPerLine = 10;
-
-        /// <summary>Sans Doublon: bonus per cleared row/column where every color appears at most once.</summary>
-        public const int SansDoublonBonusPerLine = 22;
 
         /// <summary>Bloc: bonus per cleared row/column made only of contiguous same-color runs of at least 2.</summary>
         public const int BlocBonusPerLine = 9;
@@ -134,9 +119,6 @@ namespace Contigu.Core
 
         /// <summary>Catalyst Tile: bonus per pre-existing cell merged into this placement's scored group (group size minus the piece's own cell count).</summary>
         public const int CatalystBonusPerExistingCell = 3;
-
-        /// <summary>Driller Tile: flat bonus, only when the enchanted cell is adjacent to a locked cell (boss rounds).</summary>
-        public const int DrillerBonus = 35;
 
         /// <summary>Spark Tile: bonus per consecutive placement since the last line/column clear this round.</summary>
         public const int SparkBonusPerPlacement = 5;

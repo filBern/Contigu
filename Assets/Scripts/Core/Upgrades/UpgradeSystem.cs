@@ -33,9 +33,6 @@ namespace Contigu.Core
         /// <summary>How many distinct deck tokens a Catalyst-tile upgrade enchants. See GoldenCellsCount.</summary>
         public const int CatalystTileCount = 3;
 
-        /// <summary>How many distinct deck tokens a Driller-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int DrillerTileCount = 3;
-
         /// <summary>How many distinct deck tokens a Twin-tile upgrade enchants. See GoldenCellsCount.</summary>
         public const int TwinTileCount = 3;
 
@@ -186,10 +183,6 @@ namespace Contigu.Core
 
                 case UpgradeId.CatalystTile:
                     deck.TagCatalystTokensRandom(CatalystTileCount, _rng);
-                    return true;
-
-                case UpgradeId.DrillerTile:
-                    deck.TagDrillerTokensRandom(DrillerTileCount, _rng);
                     return true;
 
                 case UpgradeId.TwinTile:

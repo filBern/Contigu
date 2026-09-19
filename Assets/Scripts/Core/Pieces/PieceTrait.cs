@@ -29,9 +29,6 @@ namespace Contigu.Core
         /// <summary>"Catalyst Tile" — scores extra points for every cell in this placement's scored group that was already on the grid before this placement (group size minus this piece's own cell count).</summary>
         Catalyst,
 
-        /// <summary>"Driller Tile" — a big flat bonus, but only when the enchanted cell is orthogonally adjacent to a locked cell (boss rounds); nothing otherwise.</summary>
-        Driller,
-
         /// <summary>"Twin Tile" — like <see cref="Mirror"/>, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the scored group, not just one at random.</summary>
         Twin,
 

@@ -649,33 +649,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_DrillerTrait_FiresOnlyWhenAdjacentToALockedCell()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.Deck.TagDrillerTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
-            run.Grid.GetCell(4, 4).IsLocked = true;
-
-            var outcome = run.PlacePiece(0, 4, 5);
-
-            Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(ScoringConstants.DrillerBonus, outcome.Placement.TraitBonus);
-        }
-
-        [Test]
-        public void PlacePiece_DrillerTrait_DoesNotFire_WhenNotAdjacentToALockedCell()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.Deck.TagDrillerTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
-
-            var outcome = run.PlacePiece(0, 0, 0);
-
-            Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(0, outcome.Placement.TraitBonus);
-        }
-
-        [Test]
         public void PlacePiece_TwinTrait_DuplicatesGroupShareOntoEveryOtherCellInTheGroup()
         {
             var run = new RunManager(new SystemRandomProvider(1));

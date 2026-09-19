@@ -40,19 +40,21 @@ namespace Contigu.Core
     /// Voisinage / Lignes / Connexions / Destruction / "plus roguelike"), in
     /// two batches (16 + 16). The first batch (Prisme..Démolisseur) is
     /// computable directly from state <see cref="GridManager.PlacePiece"/>
-    /// already had. The second batch's 8 line-level modifiers (Arc-en-ciel,
-    /// Alternance, Symétrie, Palindrome, Gradient, Sans doublon, Bloc,
-    /// Monochrome-ligne) needed <see cref="GridManager.CheckAndClearLines"/>
-    /// reworked to expose each cleared row/column's ordered color sequence
-    /// BEFORE it's wiped — see README. Several names (Complémentaire's exact
-    /// color pairing, Maçon, Démolisseur, and the whole second batch) had only
-    /// a name + category to go on, not original detailed rule text, so their
-    /// exact trigger condition is this project's best-effort interpretation of
-    /// the theme — documented per-modifier below and in the README. Still not
-    /// delivered: the destruction modifiers needing a placement/clear history
-    /// across a round (Overkill, Cascade, Réaction en chaîne, Combo parfait,
-    /// Nettoyage, Récolte) and "Dernier espace" (structurally unreachable —
-    /// see README).
+    /// already had. The second batch's line-level modifiers (Arc-en-ciel,
+    /// Alternance, Palindrome, Gradient, Bloc, Monochrome-ligne) needed
+    /// <see cref="GridManager.CheckAndClearLines"/> reworked to expose each
+    /// cleared row/column's ordered color sequence BEFORE it's wiped — see
+    /// README. Several names (Complémentaire's exact color pairing, Maçon,
+    /// Démolisseur, and the whole second batch) had only a name + category to
+    /// go on, not original detailed rule text, so their exact trigger
+    /// condition is this project's best-effort interpretation of the theme —
+    /// documented per-modifier below and in the README. Still not delivered:
+    /// the destruction modifiers needing a placement/clear history across a
+    /// round (Overkill, Cascade, Réaction en chaîne, Combo parfait, Nettoyage,
+    /// Récolte) and "Dernier espace" (structurally unreachable — see README).
+    /// Trou dans la Grille, Cœur de Pierre, Diagonale Verrouillée and Sans
+    /// Doublon (all tied to boss-round locked cells) and Symétrie (unclear,
+    /// hard to trigger) were removed on explicit request — see README.
     /// </summary>
     public static class ModifierCatalog
     {
@@ -104,10 +106,6 @@ namespace Contigu.Core
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
             "+5 pts per group cell sitting on the grid's outer edge.");
 
-        public static readonly ModifierDefinition TrouDansLaGrille = new ModifierDefinition(
-            ModifierId.TrouDansLaGrille, ModifierCategory.Voisinage, "Hole in the Grid",
-            "+10 pts per group cell adjacent to a locked cell (boss round).");
-
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
             ModifierId.Carrefour, ModifierCategory.Voisinage, "Crossroads",
             "+12 pts per group cell surrounded on all 4 sides by at least 2 different colors, themselves different from its own color.");
@@ -127,17 +125,12 @@ namespace Contigu.Core
         // (boss-round locked cells are simply absent from the sequence, so a
         // line can qualify with fewer than 8 colors when locks shrink it). ----
 
-        public static readonly ModifierDefinition CoeurDePierre = new ModifierDefinition(
-            ModifierId.CoeurDePierre, ModifierCategory.Voisinage, "Stone Heart",
-            "+7 pts per group cell whose 8 surrounding neighbors are each either filled, locked, or off the grid (no open gap around it at all).");
-
+        // Very hard to actually trigger (needs 4 filled cardinal neighbors
+        // showing all 4 base colors at once) — bonus raised 18->35 on
+        // explicit request to make it worth chasing.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
             ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
-            "+18 pts per group cell whose 4 cardinal neighbors are filled and together show all 4 base colors.");
-
-        public static readonly ModifierDefinition DiagonaleVerrouillee = new ModifierDefinition(
-            ModifierId.DiagonaleVerrouillee, ModifierCategory.Voisinage, "Locked Diagonal",
-            "+9 pts per group cell diagonally adjacent to a locked cell (boss round).");
+            "+35 pts per group cell whose 4 cardinal neighbors are filled and together show all 4 base colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
             ModifierId.Monochrome, ModifierCategory.Roguelike, "Monochrome",
@@ -167,10 +160,6 @@ namespace Contigu.Core
             ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
             "+16 pts per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern).");
 
-        public static readonly ModifierDefinition Symetrie = new ModifierDefinition(
-            ModifierId.Symetrie, ModifierCategory.Connexions, "Symmetry",
-            "+20 pts per cleared row/column whose mirror line across the grid's center (row y <-> row 7-y, column x <-> column 7-x) ALSO cleared this same placement with an identical color pattern.");
-
         public static readonly ModifierDefinition Palindrome = new ModifierDefinition(
             ModifierId.Palindrome, ModifierCategory.Connexions, "Palindrome",
             "+18 pts per cleared row/column whose own color sequence reads the same forwards and backwards.");
@@ -178,10 +167,6 @@ namespace Contigu.Core
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
             "+10 pts per cleared row/column where no two adjacent cells share the same color.");
-
-        public static readonly ModifierDefinition SansDoublon = new ModifierDefinition(
-            ModifierId.SansDoublon, ModifierCategory.Couleurs, "No Duplicate",
-            "+22 pts per cleared row/column where every color appears at most once (only reachable when locked cells shrink the line below 6 cells, since there are just 5 possible colors including Joker).");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",
@@ -258,9 +243,9 @@ namespace Contigu.Core
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
-            Tricolore, Complementaire, Ilot, Couronne, TrouDansLaGrille, Carrefour, Macon, Demolisseur,
-            CoeurDePierre, CercleChromatique, DiagonaleVerrouillee, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
-            ArcEnCiel, Alternance, Symetrie, Palindrome, Gradient, SansDoublon, Bloc, MonochromeLigne,
+            Tricolore, Complementaire, Ilot, Couronne, Carrefour, Macon, Demolisseur,
+            CercleChromatique, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
+            ArcEnCiel, Alternance, Palindrome, Gradient, Bloc, MonochromeLigne,
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
             FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro
         };

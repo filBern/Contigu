@@ -299,20 +299,11 @@ namespace Contigu.Core
                     case ModifierId.Couronne:
                         bonus = ApplyCouronne(groupCells, events);
                         break;
-                    case ModifierId.TrouDansLaGrille:
-                        bonus = ApplyTrouDansLaGrille(groupCells, events);
-                        break;
                     case ModifierId.Carrefour:
                         bonus = ApplyCarrefour(groupCells, events);
                         break;
-                    case ModifierId.CoeurDePierre:
-                        bonus = ApplyCoeurDePierre(groupCells, events);
-                        break;
                     case ModifierId.CercleChromatique:
                         bonus = ApplyCercleChromatique(groupCells, events);
-                        break;
-                    case ModifierId.DiagonaleVerrouillee:
-                        bonus = ApplyDiagonaleVerrouillee(groupCells, events);
                         break;
                     case ModifierId.Monochrome:
                         bonus = ApplyMonochrome(groupCells, events);
@@ -432,17 +423,11 @@ namespace Contigu.Core
                     case ModifierId.Alternance:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceBonusPerLine);
                         break;
-                    case ModifierId.Symetrie:
-                        bonus = ApplySymetrie(clearInfo, placedCells, events);
-                        break;
                     case ModifierId.Palindrome:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsPalindrome, ScoringConstants.PalindromeBonusPerLine);
                         break;
                     case ModifierId.Gradient:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsGradientLine, ScoringConstants.GradientBonusPerLine);
-                        break;
-                    case ModifierId.SansDoublon:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, HasNoDuplicateColor, ScoringConstants.SansDoublonBonusPerLine);
                         break;
                     case ModifierId.Bloc:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocBonusPerLine);
@@ -740,31 +725,6 @@ namespace Contigu.Core
             return total;
         }
 
-        private int ApplyTrouDansLaGrille(List<Vector2Int> groupCells, List<ScoreEvent> events)
-        {
-            int total = 0;
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var pos = groupCells[i];
-                if (!IsAdjacentToLockedCell(pos.x, pos.y))
-                {
-                    continue;
-                }
-
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.TrouBonusPerCell));
-                total += ScoringConstants.TrouBonusPerCell;
-            }
-            return total;
-        }
-
-        private bool IsAdjacentToLockedCell(int x, int y)
-        {
-            return (InBounds(x - 1, y) && _cells[x - 1, y].IsLocked)
-                || (InBounds(x + 1, y) && _cells[x + 1, y].IsLocked)
-                || (InBounds(x, y - 1) && _cells[x, y - 1].IsLocked)
-                || (InBounds(x, y + 1) && _cells[x, y + 1].IsLocked);
-        }
-
         private int ApplyCarrefour(List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int total = 0;
@@ -813,52 +773,6 @@ namespace Contigu.Core
             }
         }
 
-        private int ApplyCoeurDePierre(List<Vector2Int> groupCells, List<ScoreEvent> events)
-        {
-            int total = 0;
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var pos = groupCells[i];
-                if (!IsFullyBoxedIn(pos.x, pos.y))
-                {
-                    continue;
-                }
-
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.CoeurDePierreBonusPerCell));
-                total += ScoringConstants.CoeurDePierreBonusPerCell;
-            }
-            return total;
-        }
-
-        /// <summary>True if every one of a cell's 8 neighbors is either out of bounds, locked, or filled — no open gap around it at all. Unlike Forteresse's "all filled", an out-of-bounds or locked neighbor also satisfies this, so edge/corner/boss-round cells can qualify too.</summary>
-        private bool IsFullyBoxedIn(int x, int y)
-        {
-            for (int dx = -1; dx <= 1; dx++)
-            {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    if (dx == 0 && dy == 0)
-                    {
-                        continue;
-                    }
-
-                    int nx = x + dx;
-                    int ny = y + dy;
-                    if (!InBounds(nx, ny))
-                    {
-                        continue;
-                    }
-
-                    var cell = _cells[nx, ny];
-                    if (!cell.IsLocked && !cell.IsFilled)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         private int ApplyCercleChromatique(List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int total = 0;
@@ -892,31 +806,6 @@ namespace Contigu.Core
             };
             colors.Remove(PieceColor.Joker);
             return colors.Count == PieceColorUtility.BaseColors.Count;
-        }
-
-        private int ApplyDiagonaleVerrouillee(List<Vector2Int> groupCells, List<ScoreEvent> events)
-        {
-            int total = 0;
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var pos = groupCells[i];
-                if (!IsDiagonallyAdjacentToLockedCell(pos.x, pos.y))
-                {
-                    continue;
-                }
-
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.DiagonaleVerrouilleeBonusPerCell));
-                total += ScoringConstants.DiagonaleVerrouilleeBonusPerCell;
-            }
-            return total;
-        }
-
-        private bool IsDiagonallyAdjacentToLockedCell(int x, int y)
-        {
-            return (InBounds(x - 1, y - 1) && _cells[x - 1, y - 1].IsLocked)
-                || (InBounds(x + 1, y - 1) && _cells[x + 1, y - 1].IsLocked)
-                || (InBounds(x - 1, y + 1) && _cells[x - 1, y + 1].IsLocked)
-                || (InBounds(x + 1, y + 1) && _cells[x + 1, y + 1].IsLocked);
         }
 
         /// <summary>Stricter sibling of Puriste: the group must be a single real color with ZERO jokers anywhere in it, not just ignoring them.</summary>
@@ -1155,24 +1044,6 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Every color value appears at most once anywhere in the line — with only 5 possible <see cref="PieceColor"/> values (4 base + Joker), a full 8-cell line can never qualify; only reachable when locked cells shrink it.</summary>
-        private static bool HasNoDuplicateColor(IReadOnlyList<PieceColor> colors)
-        {
-            if (colors.Count == 0)
-            {
-                return false;
-            }
-            var seen = new HashSet<PieceColor>();
-            for (int i = 0; i < colors.Count; i++)
-            {
-                if (!seen.Add(colors[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         /// <summary>Every cell shares its color with at least one immediate neighbor in the line — no isolated single-cell color anywhere.</summary>
         private static bool IsAllBlocksOfAtLeastTwo(IReadOnlyList<PieceColor> colors)
         {
@@ -1211,56 +1082,6 @@ namespace Contigu.Core
                     mono = colors[i];
                 }
                 else if (mono.Value != colors[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>Unlike the other line modifiers, Symétrie compares two DIFFERENT cleared lines against each other rather than a line against itself — bonus fires per line that has a matching mirror also clearing this same placement.</summary>
-        private int ApplySymetrie(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
-        {
-            int total = 0;
-            var lines = clearInfo.ClearedLines;
-            for (int i = 0; i < lines.Count; i++)
-            {
-                var line = lines[i];
-                int mirrorIndex = Size - 1 - line.Index;
-                bool hasMirror = false;
-                for (int j = 0; j < lines.Count; j++)
-                {
-                    if (j == i)
-                    {
-                        continue;
-                    }
-                    var other = lines[j];
-                    if (other.IsRow == line.IsRow && other.Index == mirrorIndex && ColorsMatch(line.Colors, other.Colors))
-                    {
-                        hasMirror = true;
-                        break;
-                    }
-                }
-                if (!hasMirror)
-                {
-                    continue;
-                }
-
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.SymetrieBonusPerLine));
-                total += ScoringConstants.SymetrieBonusPerLine;
-            }
-            return total;
-        }
-
-        private static bool ColorsMatch(IReadOnlyList<PieceColor> a, IReadOnlyList<PieceColor> b)
-        {
-            if (a.Count != b.Count)
-            {
-                return false;
-            }
-            for (int i = 0; i < a.Count; i++)
-            {
-                if (a[i] != b[i])
                 {
                     return false;
                 }

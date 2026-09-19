@@ -6,7 +6,7 @@ namespace Contigu.Core
         Grid
     }
 
-    /// <summary>The 4 Bank upgrades + 14 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>
+    /// <summary>The 4 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>
     public enum UpgradeId
     {
         RemovePiece,
@@ -22,8 +22,10 @@ namespace Contigu.Core
         Seeder,
 
         // ---- Second batch (7 more tile upgrades, on explicit request) ----
+        // DrillerTile removed (on explicit request — boss-round locked-cell
+        // upgrades read as too abstract for too long before a player could
+        // act on them).
         CatalystTile,
-        DrillerTile,
         TwinTile,
         DetonatorTile,
         ChameleonTile,

@@ -180,17 +180,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Apply_DrillerTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(10));
-
-            system.Apply(UpgradeCatalog.DrillerTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.DrillerTileCount, CountTagged(deck, PieceTraitKind.Driller));
-        }
-
-        [Test]
         public void Apply_TwinTile_TagsTokensInDeck()
         {
             var deck = MakeTwentyTokenDeck();

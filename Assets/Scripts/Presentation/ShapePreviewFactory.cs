@@ -92,6 +92,44 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Simplified sibling of <see cref="Build"/> — just the shape's
+        /// silhouette as solid squares in one flat color (no piece color,
+        /// colorblind icon or trait badge) — used where something needs to
+        /// show WHICH shape it targets instead of naming it in text (see
+        /// ModifierBadgeFactory, the Forme* "Specialist" modifiers). Only
+        /// filled cells get a square; unlike Build there's no dimmed
+        /// placeholder for empty cells in the bounding box.
+        /// </summary>
+        public static void BuildMono(RectTransform container, PieceShape shape, Color squareColor)
+        {
+            int maxX = 0;
+            int maxY = 0;
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                var c = shape.Cells[i];
+                if (c.x > maxX) maxX = c.x;
+                if (c.y > maxY) maxY = c.y;
+            }
+
+            int cols = maxX + 1;
+            int rows = maxY + 1;
+            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows);
+
+            float startX = -(cols * cell) / 2f + cell / 2f;
+            float startY = -(rows * cell) / 2f + cell / 2f;
+
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                var c = shape.Cells[i];
+                var img = UIFactory.CreatePanel(container, "c" + c.x + "_" + c.y, squareColor);
+                img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
+                img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                img.rectTransform.anchoredPosition = new Vector2(startX + c.x * cell, startY + c.y * cell);
+            }
+        }
+
         private static void BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)
         {
             var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));

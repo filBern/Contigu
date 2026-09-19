@@ -19,15 +19,16 @@ namespace Contigu.Core
         Complementaire,
         Ilot,
         Couronne,
-        TrouDansLaGrille,
         Carrefour,
         Macon,
         Demolisseur,
 
         // ---- Second batch (16 more, from the same brainstorm list) ----
-        CoeurDePierre,
+        // CoeurDePierre, DiagonaleVerrouillee and SansDoublon removed (on
+        // explicit request — locked-cell/boss-round mechanics read as too
+        // abstract for too long before a player could act on them). Symetrie
+        // removed separately (on explicit request — unclear, hard to trigger).
         CercleChromatique,
-        DiagonaleVerrouillee,
         Monochrome,
         Contraste,
         Degrade,
@@ -35,10 +36,8 @@ namespace Contigu.Core
         Jardinier,
         ArcEnCiel,
         Alternance,
-        Symetrie,
         Palindrome,
         Gradient,
-        SansDoublon,
         Bloc,
         MonochromeLigne,
 

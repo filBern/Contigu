@@ -185,7 +185,7 @@ namespace Contigu.Core
         /// <see cref="ClearTokenTraitCells"/>) — every kind except
         /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay
         /// until the round itself resets it, see Cell.ResetForNewRound) and
-        /// the second-batch kinds (Mirror, Catalyst, Driller, Twin,
+        /// the second-batch kinds (Mirror, Catalyst, Twin,
         /// Detonator, Chameleon, Spark, Void), none of which stamp a cell at
         /// all — their effects are resolved either before Grid.PlacePiece
         /// runs (Chameleon) or after it returns, from the resulting
@@ -250,7 +250,6 @@ namespace Contigu.Core
 
                 case PieceTraitKind.Mirror:
                 case PieceTraitKind.Catalyst:
-                case PieceTraitKind.Driller:
                 case PieceTraitKind.Twin:
                 case PieceTraitKind.Detonator:
                 case PieceTraitKind.Chameleon:
@@ -352,14 +351,12 @@ namespace Contigu.Core
         /// Handles every trait kind whose bonus can't be computed by
         /// GridManager's own per-cell scoring loop (it doesn't know about
         /// PieceTrait): Mirror/Catalyst/Twin need the group as it stood right
-        /// after scoring, Detonator needs the line-clear outcome, Driller
-        /// needs a lock-adjacency check GridManager doesn't do for traits,
-        /// Spark needs the pre-placement no-clear streak captured earlier in
-        /// PlacePiece, and Void mutates the grid outside this placement's own
-        /// cells entirely (no score of its own). Golden/Tinted/Multiplier/
-        /// Blast/Beacon/Seeder/Chameleon all resolve elsewhere (Cell-flag
-        /// stamping or, for Chameleon, ResolveChameleonColor) and need
-        /// nothing here.
+        /// after scoring, Detonator needs the line-clear outcome, Spark needs
+        /// the pre-placement no-clear streak captured earlier in PlacePiece,
+        /// and Void mutates the grid outside this placement's own cells
+        /// entirely (no score of its own). Golden/Tinted/Multiplier/Blast/
+        /// Beacon/Seeder/Chameleon all resolve elsewhere (Cell-flag stamping
+        /// or, for Chameleon, ResolveChameleonColor) and need nothing here.
         /// </summary>
         private void ApplyPostPlacementTraitBonus(PieceTrait trait, Vector2Int traitCellPos, int sparkStreakBeforePlacement, PlacementResult placement)
         {
@@ -376,9 +373,6 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Detonator:
                     ApplyDetonatorBonus(placement);
-                    break;
-                case PieceTraitKind.Driller:
-                    ApplyDrillerBonus(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Spark:
                     ApplySparkBonus(sparkStreakBeforePlacement, placement);
@@ -488,27 +482,6 @@ namespace Contigu.Core
                 return;
             }
             AddTraitBonus(placement, placement.PlacedCells[0], placement.LineClearScore);
-        }
-
-        /// <summary>"Driller Tile": a big flat bonus, but only when the enchanted cell is orthogonally adjacent to a locked cell (boss rounds).</summary>
-        private void ApplyDrillerBonus(Vector2Int traitCellPos, PlacementResult placement)
-        {
-            if (!IsAdjacentToLockedCell(traitCellPos))
-            {
-                return;
-            }
-            AddTraitBonus(placement, traitCellPos, ScoringConstants.DrillerBonus);
-        }
-
-        private bool IsAdjacentToLockedCell(Vector2Int pos)
-        {
-            return IsLockedAt(pos.x - 1, pos.y) || IsLockedAt(pos.x + 1, pos.y)
-                || IsLockedAt(pos.x, pos.y - 1) || IsLockedAt(pos.x, pos.y + 1);
-        }
-
-        private bool IsLockedAt(int x, int y)
-        {
-            return GridManager.InBounds(x, y) && Grid.GetCell(x, y).IsLocked;
         }
 
         /// <summary>"Spark Tile": scores more the longer it's been since the last line/column clear this round — <paramref name="streakBeforePlacement"/> is the streak as captured in PlacePiece BEFORE Grid.PlacePiece ran, so this placement's own clear (if any) doesn't erase the streak it's scoring against.</summary>

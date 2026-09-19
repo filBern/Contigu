@@ -311,13 +311,12 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void TagCatalystDrillerTwinDetonatorChameleonSparkVoidTokensRandom_EachProducesItsOwnTraitKind()
+        public void TagCatalystTwinDetonatorChameleonSparkVoidTokensRandom_EachProducesItsOwnTraitKind()
         {
             var dm = MakeTwentyTokenSq2Deck();
             var rng = new SystemRandomProvider(11);
 
             var catalyst = dm.TagCatalystTokensRandom(1, rng);
-            var driller = dm.TagDrillerTokensRandom(1, rng);
             var twin = dm.TagTwinTokensRandom(1, rng);
             var detonator = dm.TagDetonatorTokensRandom(1, rng);
             var chameleon = dm.TagChameleonTokensRandom(1, rng);
@@ -325,7 +324,6 @@ namespace Contigu.Tests
             var voidTag = dm.TagVoidTokensRandom(1, rng);
 
             Assert.AreEqual(PieceTraitKind.Catalyst, dm.Deck[catalyst[0]].Trait.Value.Kind);
-            Assert.AreEqual(PieceTraitKind.Driller, dm.Deck[driller[0]].Trait.Value.Kind);
             Assert.AreEqual(PieceTraitKind.Twin, dm.Deck[twin[0]].Trait.Value.Kind);
             Assert.AreEqual(PieceTraitKind.Detonator, dm.Deck[detonator[0]].Trait.Value.Kind);
             Assert.AreEqual(PieceTraitKind.Chameleon, dm.Deck[chameleon[0]].Trait.Value.Kind);

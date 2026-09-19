@@ -81,10 +81,6 @@ namespace Contigu.Core
             UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Tile",
             "Enchants 3 random pieces in the deck: one tile on each scores extra points for every cell in the resulting group that was already on the grid before this placement.", false, UpgradeRarity.Uncommon);
 
-        public static readonly UpgradeDefinition DrillerTile = new UpgradeDefinition(
-            UpgradeId.DrillerTile, UpgradePool.Grid, "Driller Tile",
-            "Enchants 3 random pieces in the deck: one tile on each scores a big flat bonus, but only when placed next to a locked cell (boss rounds).", false, UpgradeRarity.Uncommon);
-
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
             UpgradeId.TwinTile, UpgradePool.Grid, "Twin Tile",
             "Enchants 3 random pieces in the deck: one tile on each duplicates its own group-bonus share onto EVERY other tile in the scored group, not just one at random like Mirror Tile.", false, UpgradeRarity.Rare);
@@ -110,7 +106,7 @@ namespace Contigu.Core
             RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
-            CatalystTile, DrillerTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
+            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -122,7 +118,7 @@ namespace Contigu.Core
         {
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
-            CatalystTile, DrillerTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
+            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
         };
     }
 }
