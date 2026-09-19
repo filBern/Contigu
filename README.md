@@ -1298,6 +1298,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `DraftView.BuildCard`). La bannière a une taille fixe indépendante
     du panneau, donc son rendu ne varie plus jamais avec le nombre de
     modifiers actifs.
+  - **Fix #3 : coins blancs de la carte visibles aux deux angles
+    supérieurs de la bannière** (capture d'écran à l'appui) — la
+    bannière `Union` avait une marge (`PanelWidth - 16`, décalée de 8px
+    depuis le haut), même pattern que la bannière de nom d'upgrade dans
+    `DraftView`. Mais les coins arrondis du haut de `card_bg_2` sont
+    plus larges que sa bordure 9-slice du haut (seulement 6px), donc un
+    encart de 8px ne suffisait pas à les couvrir — ils dépassaient de
+    chaque côté de la bannière, visibles comme deux formes blanches
+    arrondies. Fix : bannière posée à ras du bord (`anchoredPosition
+    (0, 0)`, largeur = `PanelWidth` pleine, sans marge) pour couvrir
+    entièrement le haut de la carte, coins compris.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
