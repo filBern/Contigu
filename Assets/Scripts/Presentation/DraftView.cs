@@ -14,8 +14,15 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
-        private const float CardWidth = 200f;
-        private const float CardHeight = 234f;
+        // Upgrade-draft cards specifically (not the modifier-draft cards in
+        // ModifierDraftView) are 25% bigger than their original 200x234, on
+        // explicit request — every other pixel offset/size inside BuildCard
+        // is scaled by the same CardScale factor so the card's internal
+        // layout stays proportional rather than getting cramped into a
+        // smaller relative slice of the bigger card.
+        private const float CardScale = 1.25f;
+        private const float CardWidth = 200f * CardScale;
+        private const float CardHeight = 234f * CardScale;
         private const float TypeRowHeight = 56f;
         private const float TypeRowPreviewSize = 44f;
 
@@ -128,8 +135,8 @@ namespace Contigu.Presentation
             nameBanner.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
-            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f, 40f);
+            nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f * CardScale);
+            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f * CardScale, 40f * CardScale);
 
             var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 16, UITheme.TextPrimary);
             nameLabel.raycastTarget = false;
@@ -145,23 +152,25 @@ namespace Contigu.Presentation
             rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f);
-            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
+            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f * CardScale);
+            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 16f * CardScale);
 
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, UITheme.TextMuted);
+            // Black (not the usual TextMuted) on explicit request.
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, Color.black);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
-            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 96f);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f * CardScale);
+            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 96f * CardScale);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 14);
+            // Label 50% bigger than the base 14pt, on explicit request.
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 21);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);
             chooseRect.pivot = new Vector2(0.5f, 0f);
-            chooseRect.anchoredPosition = new Vector2(0f, 14f);
-            chooseRect.sizeDelta = new Vector2(CardWidth - 30f, 38f);
+            chooseRect.anchoredPosition = new Vector2(0f, 14f * CardScale);
+            chooseRect.sizeDelta = new Vector2(CardWidth - 30f * CardScale, 38f * CardScale);
             chooseBtn.onClick.AddListener(() => OnChooseClicked(def));
         }
 

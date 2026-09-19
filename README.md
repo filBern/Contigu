@@ -1057,3 +1057,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     doublé (15→30) et repositionné légèrement plus haut (`anchoredPosition`
     -10→-6) ; la liste des lignes en dessous (`_rowsContainer`) décalée en
     conséquence (-40→-62) pour ne pas chevaucher le titre agrandi.
+- **Nouvelle passe sur le panneau de modifiers et les cartes de draft
+  d'upgrade** (sur demande explicite, avec un screenshot de référence
+  pour le premier point — non reçu côté outils, ajusté au jugé).
+  - Texte "Modifiers" remonté encore un peu plus (`anchoredPosition`
+    -6→-2, aussi proche du bord haut du panneau que l'art le permet sans
+    sortir de la bande d'en-tête de `panel_bg.png`) ; la liste des lignes
+    suit (-62→-58).
+  - Cartes de draft d'upgrade (`DraftView.BuildCard`, PAS les cartes de
+    modifiers dans `ModifierDraftView`, vocabulaire distinct dans le
+    jeu) 25% plus grandes — nouvelle constante `CardScale = 1.25f`,
+    `CardWidth`/`CardHeight` passent de 200x234 à 250x292.5, et chaque
+    autre décalage/taille en pixels à l'intérieur de `BuildCard`
+    (bannière du nom, rareté, description, bouton Choose) multiplié par
+    le même facteur pour garder une mise en page proportionnelle plutôt
+    que de tasser les mêmes marges dans une carte plus grande. Les
+    tailles de police du nom/de la rareté ne changent PAS (non demandé).
+  - Texte de description : couleur passée de `UITheme.TextMuted` à noir
+    plein (`Color.black`).
+  - Texte du bouton "Choose" (sur les cartes d'upgrade) : taille 14→21
+    (+50%).
