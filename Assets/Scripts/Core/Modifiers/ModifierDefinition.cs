@@ -92,7 +92,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
-            "+14 pts if this placement touches 2 distinct colors.");
+            "+14 pts if this placement touches 2 other colors.");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
