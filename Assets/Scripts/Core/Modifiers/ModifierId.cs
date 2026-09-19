@@ -1,0 +1,60 @@
+namespace Contigu.Core
+{
+    /// <summary>
+    /// Identifies one persistent "modifier" (Joker-like passive, spec extension
+    /// from the modifier brainstorm list) that a player can hold. See
+    /// <see cref="ModifierCatalog"/> for the effect of each.
+    /// </summary>
+    public enum ModifierId
+    {
+        Prisme,
+        Chaine,
+        MegaChaine,
+        Forteresse,
+        Prisonnier,
+        Architecte,
+        Puriste,
+        Collectionneur,
+        Tricolore,
+        Complementaire,
+        Ilot,
+        Couronne,
+        Carrefour,
+        Macon,
+        Demolisseur,
+
+        // ---- Second batch (16 more, from the same brainstorm list) ----
+        // CoeurDePierre, DiagonaleVerrouillee and SansDoublon removed (on
+        // explicit request — locked-cell/boss-round mechanics read as too
+        // abstract for too long before a player could act on them). Symetrie
+        // removed separately (on explicit request — unclear, hard to trigger).
+        CercleChromatique,
+        Monochrome,
+        Contraste,
+        Degrade,
+        Emmitouflee,
+        Jardinier,
+        ArcEnCiel,
+        Alternance,
+        Palindrome,
+        Gradient,
+        Bloc,
+        MonochromeLigne,
+
+        // ---- Third batch (basic per-color / per-shape modifiers, on explicit request) ----
+        DevotionCoral,
+        DevotionTeal,
+        DevotionViolet,
+        DevotionLime,
+        FormeSingle,
+        FormeDomH,
+        FormeDomV,
+        FormeTriL,
+        FormeTriIH,
+        FormeTriIV,
+        FormeSq2,
+        FormeLTetro,
+        FormeTTetro,
+        FormeSTetro
+    }
+}
