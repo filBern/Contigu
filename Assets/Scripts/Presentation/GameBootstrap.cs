@@ -285,12 +285,22 @@ namespace Contigu.Presentation
                     continue; // played below, synced with each cell's visual clear
                 }
 
+                // The tile(s) that actually earned this event's points always
+                // pulse — for a Modifier event this is on top of the badge
+                // pulse below, not instead of it (on explicit request). A
+                // per-cell modifier (Forteresse, Carrefour, etc.) gets one
+                // ScoreEvent per qualifying cell, each with its own Position,
+                // so this naturally pulses every one of them in turn as the
+                // sequence plays; a flat-bonus modifier (Prisme, Devotion,
+                // etc.) only ever has the one representative cell to pulse.
+                _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+
                 RectTransform anchor;
                 if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)
                 {
-                    // Shows on the modifier's own badge instead of the tile
-                    // (on explicit request) — falls back to the tile if the
-                    // badge can't be found for some reason, same as before.
+                    // Popup shows on the modifier's own badge instead of the
+                    // tile (on explicit request) — falls back to the tile if
+                    // the badge can't be found for some reason.
                     anchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
                         ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
@@ -298,7 +308,6 @@ namespace Contigu.Presentation
                 else
                 {
                     anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                    _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
                 }
 
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor

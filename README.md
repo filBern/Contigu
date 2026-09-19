@@ -1516,3 +1516,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
       `_root.SetAsLastSibling()` avant de créer chaque popup — même
       fix déjà en place pour `TooltipView`, pour la même raison
       (toujours au-dessus de tout le reste à l'écran).
+- **La ou les tuiles qui ont produit les points d'un modifier pulsent
+  maintenant en même temps que son icône** (sur demande explicite —
+  "j'aime où on s'en va"). Depuis le déplacement du popup de points sur
+  le badge (voir plus haut), `PlayPlacementSequence` n'appelait plus
+  `GridView.PulseCell` du tout pour un `ScoreEvent` de type `Modifier`
+  — seul le badge pulsait. Remis en place : la case correspondant à
+  `scoreEvent.Position` pulse maintenant TOUJOURS (comme pour Golden/
+  Group/Trait), en plus du badge pour un événement de type `Modifier`,
+  pas à sa place. Les modifiers par-cellule (Forteresse, Carrefour,
+  Prisonnier, etc.) génèrent déjà un `ScoreEvent` séparé par case
+  qualifiante — donc chacune pulse à son tour au fil de la séquence,
+  sans changement supplémentaire nécessaire ; les modifiers à bonus
+  plat (Prisme, Devotion, etc.) n'ont qu'une seule case représentative
+  (`placedCells[0]`) à faire pulser.
