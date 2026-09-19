@@ -58,7 +58,6 @@ namespace Contigu.Presentation
             rt.offsetMax = Vector2.zero;
 
             var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextPrimary);
-            text.fontStyle = FontStyle.Bold;
             UIFactory.StretchFull(text.rectTransform);
 
             fillRect = rt;

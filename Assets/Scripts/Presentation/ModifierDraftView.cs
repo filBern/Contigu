@@ -46,7 +46,6 @@ namespace Contigu.Presentation
             _header.rectTransform.pivot = new Vector2(0.5f, 1f);
             _header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             _header.rectTransform.sizeDelta = new Vector2(900f, 40f);
-            AddTextOutline(_header);
 
             _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "", 18, UITheme.TextPrimary);
             _sectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -54,7 +53,6 @@ namespace Contigu.Presentation
             _sectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _sectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
             _sectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
-            AddTextOutline(_sectionLabel);
 
             _cardsContainer = UIFactory.CreateUIObject("Cards", _root);
             _cardsContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -149,13 +147,6 @@ namespace Contigu.Presentation
             chooseRect.anchoredPosition = new Vector2(0f, 14f);
             chooseRect.sizeDelta = new Vector2(CardWidth - 30f, 38f);
             chooseBtn.onClick.AddListener(() => OnCardChosen(def.Id));
-        }
-
-        private static void AddTextOutline(Text label)
-        {
-            var outline = label.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
         private void OnCardChosen(ModifierId id)

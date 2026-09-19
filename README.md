@@ -990,3 +990,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     cartes un bord adapté à leurs coins arrondis. Non vérifié visuellement
     dans l'éditeur Unity (indisponible dans cet environnement) — à ajuster
     au besoin via le Sprite Editor si un bord semble mal calé.
+- **Fix : texte flou + retrait du gras/des bordures de texte** (sur
+  constat que le nouveau texte semblait flou une fois `Digitalt.ttf` en
+  place, + demande explicite de retirer le gras et les bordures des
+  textes). Cause probable : le composant `Outline` d'Unity (utilisé sur
+  la plupart des labels pour rester lisible sur un fond de couleur
+  variable) fonctionne en dupliquant le maillage du texte, décalé de
+  1-2px dans 4 directions, pour simuler un contour — combiné à
+  l'anti-aliasing d'un texte déjà petit, ces copies légèrement décalées
+  se chevauchent et donnent un rendu flou/baveux, d'autant plus visible
+  que `Digitalt.ttf` ne fournit qu'une seule graisse : `FontStyle.Bold`
+  dessus est un gras synthétique (Unity ne fait pas de vrai synthetic-bold
+  sur les polices dynamiques), qui ajoute encore du flou sans gagner de
+  contraste. Les deux étaient déjà présents sur beaucoup de labels avant
+  le changement de police (Arial encaissait mieux ce traitement) — le
+  nouveau look "pilule/carte" du pack Colorful UI ne les rendait plus
+  nécessaires de toute façon (les fonds sont maintenant des panneaux
+  dessinés, pas des couleurs plates changeant sous le texte).
+  - `FontStyle.Bold`/`BoldAndItalic` retiré de tous les `Text` du jeu
+    (HUD, tooltip, cartes de draft, panneau de modifiers, badges,
+    popups de score, texte d'effet sur les tuiles, combo) — le sous-titre
+    de rareté (`DraftView`) et le sous-titre du tooltip
+    (`TooltipView`) gardent `FontStyle.Italic` seul (le style italique
+    n'est pas concerné par le problème, seul le gras l'était).
+  - Le composant `Outline` retiré de tous les `Text` (mêmes emplacements)
+    — les méthodes `AddTextOutline`/`AddOutline` désormais inutilisées
+    supprimées dans `ModifierPanelView`, `ModifierDraftView` et
+    `TooltipView`. `FeedbackLayer.AnimatePopup` simplifié en conséquence
+    (n'anime plus une couleur d'outline en parallèle du fade du texte).
+  - Les `Outline` sur des éléments non-textuels (badges de trait/
+    modifier, panneau du tooltip, carte de la modifier draft, marqueur
+    "case invalide") sont hors scope de cette demande et restent
+    inchangés — seules les bordures DE TEXTE ont été retirées.

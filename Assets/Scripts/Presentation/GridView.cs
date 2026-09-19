@@ -135,10 +135,6 @@ namespace Contigu.Presentation
             effectLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
             effectLabel.rectTransform.anchoredPosition = new Vector2(0f, 2f);
             effectLabel.rectTransform.sizeDelta = new Vector2(-4f, 14f);
-            effectLabel.fontStyle = FontStyle.Bold;
-            var effectLabelOutline = effectLabel.gameObject.AddComponent<Outline>();
-            effectLabelOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            effectLabelOutline.effectDistance = new Vector2(1f, -1f);
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();

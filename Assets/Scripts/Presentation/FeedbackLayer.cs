@@ -28,23 +28,16 @@ namespace Contigu.Presentation
             }
 
             var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
-            popup.fontStyle = FontStyle.Bold;
-            // Dark outline so light/white popup text (e.g. the group-bonus
-            // color) stays legible against light pastel piece colors instead of
-            // disappearing into them.
-            var outline = popup.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
             // Small random horizontal jitter so several popups landing on the
             // same cell (e.g. two group-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
             popup.rectTransform.position = anchor.position + new Vector3(jitterX, 0f, 0f);
             popup.rectTransform.sizeDelta = new Vector2(160f, 40f);
-            StartCoroutine(AnimatePopup(popup, outline));
+            StartCoroutine(AnimatePopup(popup));
         }
 
-        private IEnumerator AnimatePopup(Text text, Outline outline)
+        private IEnumerator AnimatePopup(Text text)
         {
             var rect = text.rectTransform;
             // Slow, readable float+fade — several of these play in a staggered
@@ -55,7 +48,6 @@ namespace Contigu.Presentation
             float t = 0f;
             Vector3 startPos = rect.position;
             Color startColor = text.color;
-            Color startOutlineColor = outline.effectColor;
 
             while (t < duration)
             {
@@ -69,10 +61,6 @@ namespace Contigu.Presentation
                 var c = startColor;
                 c.a = alpha;
                 text.color = c;
-
-                var oc = startOutlineColor;
-                oc.a = startOutlineColor.a * alpha;
-                outline.effectColor = oc;
 
                 yield return null;
             }

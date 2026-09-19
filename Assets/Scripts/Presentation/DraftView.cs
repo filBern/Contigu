@@ -137,7 +137,7 @@ namespace Contigu.Presentation
             var rarityLabel = UIFactory.CreateText(card.transform, "Rarity",
                 UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
                 12, UpgradeVisualDefaults.GetRarityColor(def.Rarity));
-            rarityLabel.fontStyle = FontStyle.BoldAndItalic;
+            rarityLabel.fontStyle = FontStyle.Italic;
             rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -145,7 +145,6 @@ namespace Contigu.Presentation
             rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
 
             var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, UITheme.TextMuted);
-            descLabel.fontStyle = FontStyle.Bold;
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -282,7 +281,6 @@ namespace Contigu.Presentation
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject);
 
             var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 15, UITheme.TextPrimary);
-            countLabel.fontStyle = FontStyle.Bold;
             countLabel.rectTransform.anchorMin = new Vector2(1f, 0.5f);
             countLabel.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             countLabel.rectTransform.pivot = new Vector2(1f, 0.5f);

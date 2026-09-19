@@ -22,12 +22,8 @@ namespace Contigu.Presentation
             badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
             var label = UIFactory.CreateText(badge.transform, "Label", ModifierVisualDefaults.GetAbbreviation(def.Id), Mathf.RoundToInt(size * 0.34f), UITheme.TextPrimary);
-            label.fontStyle = FontStyle.Bold;
             label.raycastTarget = false;
             UIFactory.StretchFull(label.rectTransform);
-            var labelOutline = label.gameObject.AddComponent<Outline>();
-            labelOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            labelOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
             var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
             hover.Init(tooltip, def);

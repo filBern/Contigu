@@ -44,13 +44,11 @@ namespace Contigu.Presentation
             _root.anchoredPosition = new Vector2(40f, 0f);
 
             var header = UIFactory.CreateText(_root, "Header", "Modifiers", 15, UITheme.TextPrimary);
-            header.fontStyle = FontStyle.Bold;
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -10f);
             header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 24f);
-            AddTextOutline(header);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -152,13 +150,6 @@ namespace Contigu.Presentation
                 rt.localScale = Vector3.one;
                 badge.color = baseColor;
             }
-        }
-
-        private static void AddTextOutline(Text label)
-        {
-            var outline = label.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
     }
 }

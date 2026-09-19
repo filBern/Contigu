@@ -23,10 +23,6 @@ namespace Contigu.Presentation
         public RectTransform Build(Transform parent)
         {
             _text = UIFactory.CreateText(parent, "Combo", "", 30, UITheme.Modifier);
-            _text.fontStyle = FontStyle.Bold;
-            var outline = _text.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            outline.effectDistance = new Vector2(2f, -2f);
 
             var rt = _text.rectTransform;
             rt.gameObject.SetActive(false);

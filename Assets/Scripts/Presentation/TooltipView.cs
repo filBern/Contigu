@@ -48,31 +48,24 @@ namespace Contigu.Presentation
             panelOutline.effectDistance = new Vector2(2f, -2f);
 
             _nameLabel = UIFactory.CreateText(_panel, "Name", "", 15, UITheme.TextPrimary, TextAnchor.UpperLeft);
-            _nameLabel.fontStyle = FontStyle.Bold;
             _nameLabel.raycastTarget = false;
             _nameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _nameLabel.rectTransform.pivot = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding);
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 22f);
-            AddOutline(_nameLabel);
 
             _subtitleLabel = UIFactory.CreateText(_panel, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
-            _subtitleLabel.fontStyle = FontStyle.BoldAndItalic;
+            _subtitleLabel.fontStyle = FontStyle.Italic;
             _subtitleLabel.raycastTarget = false;
             _subtitleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _subtitleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _subtitleLabel.rectTransform.pivot = new Vector2(0f, 1f);
             _subtitleLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - NameHeight);
             _subtitleLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, SubtitleHeight);
-            AddOutline(_subtitleLabel);
             _subtitleLabel.gameObject.SetActive(false);
 
-            // No outline on the description (unlike Name/Subtitle above) —
-            // on top of a solid opaque panel background it only muddied the
-            // text at this size; bigger + bold reads more clearly instead.
             _descLabel = UIFactory.CreateText(_panel, "Desc", "", 14, UITheme.TextPrimary, TextAnchor.UpperLeft);
-            _descLabel.fontStyle = FontStyle.Bold;
             _descLabel.raycastTarget = false;
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -131,13 +124,6 @@ namespace Contigu.Presentation
             float x = Mathf.Clamp(localPoint.x + ShowMargin, -halfW, halfW - Width);
             float y = Mathf.Clamp(localPoint.y + ShowMargin, -halfH + Height, halfH);
             _panel.anchoredPosition = new Vector2(x, y);
-        }
-
-        private static void AddOutline(Text label)
-        {
-            var outline = label.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
     }
 }
