@@ -1322,7 +1322,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `UISprites.UpgradeNameBanner` s'en sert encore pour le nom des
     cartes d'upgrade dans `DraftView`, le retirer casserait cette
     fonctionnalité distincte.
-  - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
+  - **Fix #5 : "Modifiers" en blanc, collé au tout haut de la boîte**
+    (sur demande explicite) — couleur passée de `UITheme.Background`
+    (sombre, choisie pour le fix #4) à `Color.white` (blanc pur,
+    pas `TextPrimary` qui est crème `#effae6`), et `anchoredPosition`
+    remis à `(0, 0)` (au lieu de `(0, -8)`) pour que le texte touche
+    directement le bord haut du panneau plutôt que d'en être décalé. — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
     - **Slot 1/2/3 Loyalty** (`SlotUn`/`SlotDeux`/`SlotTrois`) : double

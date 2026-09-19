@@ -57,18 +57,13 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
-            // "Modifiers" in the game's own background color, directly on the
-            // card art (on explicit request — the Union ribbon banner tried
-            // here before kept leaving card_bg_2's rounded corners visibly
-            // poking out past it, however it was sized/positioned). No banner
-            // needed this way — the title just needs to read clearly against
-            // the plain white card, and UITheme.Background gives it that
-            // without adding another sprite/layer to line up.
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 28, UITheme.Background, TextAnchor.UpperCenter);
+            // "Modifiers" in plain white, hugging the very top of the panel
+            // (on explicit request) — directly on the card art, no banner.
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 28, Color.white, TextAnchor.UpperCenter);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            header.rectTransform.anchoredPosition = Vector2.zero;
             header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 40f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
