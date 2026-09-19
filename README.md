@@ -1201,23 +1201,36 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     une tuile enchantée chacune) sans la répéter en toutes lettres à
     chaque fois — le reste du texte (l'effet propre à chaque upgrade)
     est inchangé dans le fond, juste débarrassé du superflu.
-- **Fix : texte flou dans les descriptions d'upgrade** — cause identifiée
-  après consultation de la fiche du pack de polices (`Digitalt_spec.pdf`) :
-  `Digitalt.ttf` est une police d'affichage très grasse/épaisse conçue
-  pour des titres courts en gros caractères (logos, en-têtes), pas pour
-  du texte de paragraphe. À la taille d'une description (14-15pt), ses
-  traits épais mangent l'espace entre les lettres et dans leurs
-  contre-formes (le "trou" du "e", du "a", etc.) — un paragraphe entier
-  finit par se lire comme un bloc flou/brouillé plutôt que des lettres
-  individuellement nettes. Ce n'est pas un bug de rendu, c'est une police
-  mal adaptée à ce rôle précis.
-  - Nouveau `UIFactory.BodyFont()` (police intégrée standard d'Unity,
-    `LegacyRuntime.ttf`) + `UIFactory.CreateBodyText(...)` — même
-    signature que `CreateText`, juste sur cette police au lieu de
-    `Digitalt`. Les titres/labels/boutons restent sur `Digitalt` via
-    `CreateText` (aucun changement là — c'est un bon choix pour du texte
-    court en gros caractères).
-  - Appliqué aux deux endroits où du texte de description
-    multi-lignes s'affiche : `DraftView` (description sur la carte
-    d'upgrade) et `TooltipView` (description au survol, partagée par
-    les badges de modifier et de trait de tuile).
+- **Fix : texte flou dans les descriptions d'upgrade — tentative #1
+  (annulée)** : diagnostic initial via la fiche du pack de polices
+  (`Digitalt_spec.pdf`) — `Digitalt.ttf` est une police d'affichage très
+  grasse/épaisse conçue pour des titres courts en gros caractères, pas
+  pour du texte de paragraphe ; à 14-15pt ses traits épais mangent
+  l'espace entre les lettres. Première tentative : basculer les textes
+  de description sur la police standard d'Unity (`UIFactory.BodyFont()`
+  + `CreateBodyText`). **Annulée sur demande explicite** ("je ne veux
+  pas la font de unity, je veux celle que je t'ai donné") — `BodyFont`/
+  `CreateBodyText` retirés, `DraftView`/`TooltipView` repassés sur
+  `CreateText` (`Digitalt` partout, y compris les descriptions).
+  - **Tentative #2 (en place)** : garder `Digitalt` partout, mais
+    attaquer le flou par les réglages d'import/rendu plutôt que par un
+    changement de police :
+    - `Digitalt.ttf.meta`/`Digitalt.otf.meta` : `fontRenderingMode`
+      0 (Smooth) → 1 (Hinted) — force les contours des glyphes à
+      s'aligner sur la grille de pixels au lieu d'un antialiasing pur,
+      normalement plus net à petite taille pour une police grasse.
+      `characterPadding` 1 → 2 — marge un peu plus généreuse autour de
+      chaque glyphe dans l'atlas de la police, pour éviter tout
+      débordement/bavure entre glyphes voisins à petite taille.
+    - `GameBootstrap.BuildCanvas` : `canvas.pixelPerfect = true` — avec
+      `CanvasScaler.ScaleWithScreenSize`, le facteur d'échelle réel n'est
+      généralement pas un nombre entier, ce qui laisse le texte à des
+      positions sous-pixel (flou d'antialiasing, plus visible sur les
+      traits épais de Digitalt) ; `pixelPerfect` arrondit la position de
+      rendu de chaque élément UI au pixel le plus proche.
+    - Non vérifié visuellement (pas d'éditeur Unity dans cet
+      environnement) — ces trois réglages sont les leviers standards pour
+      ce symptôme sans changer la police elle-même ; si le flou persiste
+      après ça, la cause est probablement la graisse/le style de la
+      police elle-même (un seul poids disponible dans le pack, pas de
+      variante plus fine à utiliser à la place).

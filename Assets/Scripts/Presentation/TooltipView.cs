@@ -65,10 +65,7 @@ namespace Contigu.Presentation
             _subtitleLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, SubtitleHeight);
             _subtitleLabel.gameObject.SetActive(false);
 
-            // CreateBodyText, not CreateText — Digitalt (the default display
-            // font) is too heavy for a multi-line description at this size,
-            // see UIFactory.BodyFont().
-            _descLabel = UIFactory.CreateBodyText(_panel, "Desc", "", 14, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            _descLabel = UIFactory.CreateText(_panel, "Desc", "", 14, UITheme.TextPrimary, TextAnchor.UpperLeft);
             _descLabel.raycastTarget = false;
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);

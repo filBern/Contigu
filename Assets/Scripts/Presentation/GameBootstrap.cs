@@ -88,6 +88,12 @@ namespace Contigu.Presentation
 
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // Rounds every UI element's rendered position to a whole pixel —
+            // without it, ScaleWithScreenSize's non-integer scale factor on
+            // most window sizes leaves text sitting at sub-pixel offsets,
+            // which reads as soft/blurry under anti-aliasing (most visible
+            // on Digitalt's thick strokes at small sizes).
+            canvas.pixelPerfect = true;
 
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

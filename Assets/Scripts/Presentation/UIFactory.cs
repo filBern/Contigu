@@ -10,9 +10,8 @@ namespace Contigu.Presentation
     public static class UIFactory
     {
         private static Font _cachedFont;
-        private static Font _cachedBodyFont;
 
-        /// <summary>The "Colorful UI" pack's font, used everywhere text is created — falls back to Unity's built-in legacy font if the asset pack isn't present (e.g. a checkout that hasn't pulled it yet).</summary>
+        /// <summary>The "Colorful UI" pack's font, used everywhere text is created (titles, labels, buttons, and description paragraphs alike, on explicit request) — falls back to Unity's built-in legacy font if the asset pack isn't present (e.g. a checkout that hasn't pulled it yet).</summary>
         public static Font DefaultFont()
         {
             if (_cachedFont == null)
@@ -24,25 +23,6 @@ namespace Contigu.Presentation
                 }
             }
             return _cachedFont;
-        }
-
-        /// <summary>
-        /// Unity's plain built-in font, used for PARAGRAPH-length text (upgrade/
-        /// modifier descriptions) instead of DefaultFont() — Digitalt is a
-        /// very heavy, chunky display face (built for short titles/logos at
-        /// large sizes, see its spec sheet), and at description-label sizes
-        /// its thick strokes eat into the letterforms' counters/spacing until
-        /// a whole paragraph reads as a blurry/muddy block rather than
-        /// individually crisp letters. Titles, labels and buttons stay on
-        /// Digitalt via CreateText — only sustained body text switches font.
-        /// </summary>
-        public static Font BodyFont()
-        {
-            if (_cachedBodyFont == null)
-            {
-                _cachedBodyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            }
-            return _cachedBodyFont;
         }
 
         public static RectTransform CreateUIObject(string name, Transform parent)
@@ -82,14 +62,6 @@ namespace Contigu.Presentation
             text.alignment = anchor;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
-            return text;
-        }
-
-        /// <summary>Same as CreateText but on BodyFont() — use for multi-line description/paragraph text, never for a short title/label/button (see BodyFont's doc comment for why).</summary>
-        public static Text CreateBodyText(Transform parent, string name, string content, int fontSize, Color color, TextAnchor anchor = TextAnchor.MiddleCenter)
-        {
-            var text = CreateText(parent, name, content, fontSize, color, anchor);
-            text.font = BodyFont();
             return text;
         }
 
