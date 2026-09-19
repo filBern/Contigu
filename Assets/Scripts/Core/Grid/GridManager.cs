@@ -362,6 +362,24 @@ namespace Contigu.Core
                     case ModifierId.FormeSTetro:
                         bonus = ApplyShapeSpecialist(ShapeId.STetro, shape, placedCells, groupBonus, events);
                         break;
+                    case ModifierId.GrandFormat:
+                        bonus = ApplyGrandFormat(placedCells, events);
+                        break;
+                    case ModifierId.HorsNorme:
+                        bonus = ApplyHorsNorme(placedCells, events);
+                        break;
+                    case ModifierId.EclatCoral:
+                        bonus = ApplyEclat(PieceColor.Coral, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.EclatTeal:
+                        bonus = ApplyEclat(PieceColor.Teal, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.EclatViolet:
+                        bonus = ApplyEclat(PieceColor.Violet, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.EclatLime:
+                        bonus = ApplyEclat(PieceColor.Lime, placedCells, groupCells, events);
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -395,6 +413,45 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], groupBonus));
             return groupBonus;
+        }
+
+        /// <summary>Grand Format: bonus per placed cell (the piece's own cell count, not the merged group) once the placed piece is at least ScoringConstants.GrandFormatMinPieceSize cells.</summary>
+        private static int ApplyGrandFormat(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (placedCells.Count < ScoringConstants.GrandFormatMinPieceSize)
+            {
+                return 0;
+            }
+
+            int bonus = placedCells.Count * ScoringConstants.GrandFormatBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>Hors Norme: flat bonus whenever the placed piece's own cell count is anything OTHER than exactly ScoringConstants.HorsNormeExactPieceSize — rewards small or large pieces over "average"-sized ones.</summary>
+        private static int ApplyHorsNorme(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (placedCells.Count == ScoringConstants.HorsNormeExactPieceSize)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.HorsNormeBonus));
+            return ScoringConstants.HorsNormeBonus;
+        }
+
+        /// <summary>"Éclat" (per-color): flat bonus per scored group cell when the placement's own fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a color match means every group cell counts, unlike Devotion this stays a flat per-tile amount rather than doubling the group bonus.</summary>
+        private int ApplyEclat(PieceColor targetColor, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
+            if (ownColor != targetColor)
+            {
+                return 0;
+            }
+
+            int bonus = groupCells.Count * ScoringConstants.EclatBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>

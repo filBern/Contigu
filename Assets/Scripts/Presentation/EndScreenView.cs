@@ -30,7 +30,7 @@ namespace Contigu.Presentation
             _subtitleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _subtitleText.rectTransform.sizeDelta = new Vector2(700f, 50f);
 
-            var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UITheme.ButtonSelected, 18);
+            var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UISprites.ChooseButtonBackground, 18);
             var rect = restartBtn.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.35f);
             rect.anchorMax = new Vector2(0.5f, 0.35f);

@@ -1067,5 +1067,94 @@ namespace Contigu.Tests
             var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
             Assert.AreEqual(0, otherResult.ModifierBonus, id + " should not fire for shape " + otherShape);
         }
+
+        // ---- Fourth batch (hand-slot, piece-size, per-color-tile bonuses) ----
+        // SlotUn/Deux/Trois aren't covered here — GridManager.PlacePiece has no
+        // handIndex parameter to evaluate them with, so they're covered in
+        // RunManagerTests.cs instead (see RunManager.ApplyHandSlotModifierBonus).
+
+        [Test]
+        public void GrandFormat_Fires_WhenPlacedPieceHasAtLeastThreeCells()
+        {
+            var grid = new GridManager();
+            var triL = PieceShapeCatalog.Get(ShapeId.TriL);
+            var modifiers = new List<ModifierId> { ModifierId.GrandFormat };
+
+            var result = grid.PlacePiece(triL, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(triL.Cells.Count * ScoringConstants.GrandFormatBonusPerCell, result.ModifierBonus);
+        }
+
+        [Test]
+        public void GrandFormat_DoesNotFire_WhenPlacedPieceHasFewerThanThreeCells()
+        {
+            var grid = new GridManager();
+            var domino = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.GrandFormat };
+
+            var result = grid.PlacePiece(domino, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void HorsNorme_Fires_WhenPlacedPieceDoesNotHaveExactlyThreeCells()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.HorsNorme };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.HorsNormeBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void HorsNorme_DoesNotFire_WhenPlacedPieceHasExactlyThreeCells()
+        {
+            var grid = new GridManager();
+            var triL = PieceShapeCatalog.Get(ShapeId.TriL);
+            var modifiers = new List<ModifierId> { ModifierId.HorsNorme };
+
+            var result = grid.PlacePiece(triL, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void EclatCoral_GivesFlatPerCellBonus_WhenPlacementColorMatches()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.EclatCoral };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(square.Cells.Count * ScoringConstants.EclatBonusPerCell, result.ModifierBonus,
+                "Éclat should be a flat per-tile bonus, not Devotion's full double");
+        }
+
+        [Test]
+        public void EclatModifiers_EachOnlyFiresForItsOwnColor()
+        {
+            AssertEclatFiresOnlyForColor(ModifierId.EclatCoral, PieceColor.Coral);
+            AssertEclatFiresOnlyForColor(ModifierId.EclatTeal, PieceColor.Teal);
+            AssertEclatFiresOnlyForColor(ModifierId.EclatViolet, PieceColor.Violet);
+            AssertEclatFiresOnlyForColor(ModifierId.EclatLime, PieceColor.Lime);
+        }
+
+        private static void AssertEclatFiresOnlyForColor(ModifierId id, PieceColor matchingColor)
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { id };
+            var baseColors = PieceColorUtility.BaseColors;
+            for (int i = 0; i < baseColors.Count; i++)
+            {
+                var grid = new GridManager();
+                var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
+                int expected = baseColors[i] == matchingColor ? ScoringConstants.EclatBonusPerCell : 0;
+                Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + baseColors[i]);
+            }
+        }
     }
 }

@@ -1234,3 +1234,75 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
       après ça, la cause est probablement la graisse/le style de la
       police elle-même (un seul poids disponible dans le pack, pas de
       variante plus fine à utiliser à la place).
+- **New Run button skinné + cap de 5 modifiers retiré (illimité) +
+  panneau de modifiers en grille 2 colonnes sans fond + 9 nouveaux
+  modifiers (slots de main / taille de pièce / couleur)** (sur demande
+  explicite, un seul message groupant les trois).
+  - **Bouton "New Run"** : `EndScreenView` utilisait encore
+    `UITheme.ButtonSelected` (couleur plate) au lieu du sprite du pack
+    "Colorful UI" comme le bouton "Choose" du draft. Remplacé par
+    `UISprites.ChooseButtonBackground`, même pattern que les boutons
+    Choose/Cancel déjà skinnés plus tôt dans la session.
+  - **Cap de modifiers retiré** : `RunManager.MaxActiveModifiers` (5)
+    supprimé entièrement, avec tout le flux de retrait forcé qu'il
+    déclenchait — `RunState.AwaitingModifierRemoval`,
+    `RunManager.RemoveModifierAndAdvance`,
+    `ModifierDraftView.ShowRemoval`/`ModifierRemoved`/`_isRemovalMode`,
+    et le branchement correspondant dans `GameBootstrap.OnModifierPicked`/
+    `OnModifierRemoved`. `ApplyModifierPick` ajoute maintenant le
+    modifier et avance directement au tour suivant, sans jamais
+    redemander de retrait — le nombre de modifiers actifs n'a plus de
+    plafond. Tests : `ApplyModifierPick_RequiresRemoval_WhenPushing...`
+    remplacé par `ApplyModifierPick_NeverRequiresRemoval_ModifierCount...`
+    (vérifie 7 picks d'affilée, au-delà de l'ancien cap de 5, sans jamais
+    passer par un état de retrait).
+  - **Panneau de modifiers (`ModifierPanelView`)** : le fond
+    9-slice par ligne (`UISprites.ModifierCardBackground`, désormais
+    inutilisé et retiré de `UISprites`) est retiré — chaque modifier
+    n'affiche plus que son badge (icône + abréviation/aperçu de forme).
+    Layout passé de `VerticalLayoutGroup` (1 colonne) à
+    `GridLayoutGroup` 2 colonnes (`constraintCount = 2`), même pattern
+    que `ModifierDraftView`. Le panneau recalcule sa propre hauteur à
+    chaque `Refresh` (`HeaderHeight + lignes×badge + espacements +
+    padding`) pour rester ajusté au contenu quel que soit le nombre de
+    modifiers actifs (désormais illimité).
+  - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
+    pièce, bonus par couleur" demandés sans valeurs numériques précises ;
+    interprétation de ce projet, documentée ici et dans le code :
+    - **Slot 1/2/3 Loyalty** (`SlotUn`/`SlotDeux`/`SlotTrois`) : double
+      le bonus de groupe de ce placement quand la pièce jouée vient du
+      slot de main correspondant (0/1/2). Seul cas parmi tous les
+      modifiers où `GridManager.PlacePiece` ne peut PAS évaluer
+      lui-même l'effet — il ignore totalement de quel slot vient une
+      pièce, seul `RunManager.PlacePiece(handIndex, x, y)` le sait.
+      Résolu après coup dans `RunManager` (nouvelle
+      `ApplyHandSlotModifierBonus`), même pattern déjà utilisé pour les
+      `PieceTrait` du 2ème lot (Mirror/Catalyst/etc.) via
+      `ApplyPostPlacementTraitBonus`.
+    - **Large Format** (`GrandFormat`) : +8 pts par cellule placée
+      quand la pièce jouée a au moins 3 cellules (récompense les
+      pièces moyennes/grosses : tromino et tétromino).
+    - **Off-Size** (`HorsNorme`) : +12 pts flat quand la pièce jouée
+      n'a PAS exactement 3 cellules (récompense les tailles extrêmes —
+      1, 2 ou 4 cellules — plutôt que la taille "moyenne").
+      Interprétation du texte source ambigu ("point bonus lorsqu'il y a
+      plus qu'un exactement un certain nombre de tuile ... point bonus
+      lorsqu'il y a moins ou plus qu'un certain nombre de tuile") comme
+      une paire complémentaire autour d'un seuil à 3 cellules.
+    - **Coral/Teal/Violet/Lime Glow** (`EclatCoral`/`EclatTeal`/
+      `EclatViolet`/`EclatLime`) : +4 pts par cellule du groupe quand la
+      couleur de ce placement correspond — contrairement à
+      "Devotion" (double intégralement le bonus de groupe), un bonus
+      plat par tuile, plus proche du "bonus par tuile d'une certaine
+      couleur" demandé littéralement. Un groupe étant toujours
+      monochrome (`FindConnectedGroup`), ça revient à
+      `groupCells.Count × 4` dès que la couleur correspond.
+    - Fichiers touchés pour ce 4ème lot, suivant la checklist standard :
+      `ModifierId`, `ModifierDefinition` (+ `All[]`),
+      `GridManager` (dispatch pré-clear + `ApplyGrandFormat`/
+      `ApplyHorsNorme`/`ApplyEclat`), `RunManager`
+      (`ApplyHandSlotModifierBonus`), `ScoringConstants`,
+      `ModifierVisualDefaults` (abréviations), tests
+      (`GridManagerModifierTests` pour les 6 modifiers évaluables par
+      `GridManager`, `RunManagerTests` pour les 3 modifiers de slot qui
+      ne le sont pas).

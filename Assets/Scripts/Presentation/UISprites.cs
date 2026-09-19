@@ -18,7 +18,6 @@ namespace Contigu.Presentation
         private static Sprite _scoreBarFill;
         private static Sprite _piecesBarFill;
         private static Sprite _modifierPanelBackground;
-        private static Sprite _modifierCardBackground;
         private static Sprite _handSlotBackground;
         private static Sprite _upgradeCardBackground;
         private static Sprite _upgradeNameBanner;
@@ -47,12 +46,6 @@ namespace Contigu.Presentation
         public static Sprite ModifierPanelBackground
         {
             get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "panel_bg")); }
-        }
-
-        /// <summary>Background of each individual modifier row inside that panel.</summary>
-        public static Sprite ModifierCardBackground
-        {
-            get { return _modifierCardBackground != null ? _modifierCardBackground : (_modifierCardBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_2")); }
         }
 
         /// <summary>Background of each hand slot (HandView).</summary>

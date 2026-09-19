@@ -57,7 +57,16 @@ namespace Contigu.Data
             { ModifierId.FormeSq2, "SQ" },
             { ModifierId.FormeLTetro, "S6" },
             { ModifierId.FormeTTetro, "S7" },
-            { ModifierId.FormeSTetro, "S8" }
+            { ModifierId.FormeSTetro, "S8" },
+            { ModifierId.SlotUn, "1S" },
+            { ModifierId.SlotDeux, "2S" },
+            { ModifierId.SlotTrois, "3S" },
+            { ModifierId.GrandFormat, "GF" },
+            { ModifierId.HorsNorme, "HN" },
+            { ModifierId.EclatCoral, "EC" },
+            { ModifierId.EclatTeal, "ET" },
+            { ModifierId.EclatViolet, "EV" },
+            { ModifierId.EclatLime, "EL" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

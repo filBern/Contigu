@@ -14,9 +14,6 @@ namespace Contigu.Core
     /// </summary>
     public sealed class RunManager
     {
-        /// <summary>Max number of modifiers a player can hold active at once (spec extension — see ModifierCatalog).</summary>
-        public const int MaxActiveModifiers = 5;
-
         /// <summary>How many modifier options are offered per draft.</summary>
         public const int ModifierDraftSize = 3;
 
@@ -155,6 +152,7 @@ namespace Contigu.Core
             {
                 ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
             }
+            ApplyHandSlotModifierBonus(handIndex, placement);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             // Don't auto-refill yet — if this placement also ends the round,
@@ -392,6 +390,40 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
+        // Which SlotUn/Deux/Trois modifier corresponds to each 0-based hand index.
+        private static readonly ModifierId?[] HandSlotModifiers = { ModifierId.SlotUn, ModifierId.SlotDeux, ModifierId.SlotTrois };
+
+        /// <summary>
+        /// "Slot N Loyalty": doubles this placement's group bonus when the piece
+        /// was played from hand slot <paramref name="handIndex"/> (0-based) and
+        /// the matching modifier is active. Unlike every other modifier,
+        /// GridManager.PlacePiece can't evaluate this itself — it has no idea
+        /// which of the 3 hand slots a piece came from, only this method's
+        /// caller (PlacePiece(handIndex, x, y)) does — so it's resolved here,
+        /// the same post-hoc pattern already used for the second-batch
+        /// PieceTrait kinds (see ApplyPostPlacementTraitBonus).
+        /// </summary>
+        private void ApplyHandSlotModifierBonus(int handIndex, PlacementResult placement)
+        {
+            if (handIndex < 0 || handIndex >= HandSlotModifiers.Length || placement.GroupBonus <= 0)
+            {
+                return;
+            }
+
+            var slotModifier = HandSlotModifiers[handIndex];
+            if (!slotModifier.HasValue || !_activeModifiers.Contains(slotModifier.Value))
+            {
+                return;
+            }
+
+            placement.ModifierBonus += placement.GroupBonus;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            var scoreEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], placement.GroupBonus);
+            scoreEvent.TriggeringModifier = slotModifier.Value;
+            events.Add(scoreEvent);
+            placement.ScoreEvents = events;
+        }
+
         /// <summary>Every cell in a placement's scored group earns the exact same flat per-cell amount (ScoringConstants.GroupBonusPerCell — the group multiplier no longer inflates this per-cell, see PlacementResult.GroupMultiplier) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>
         private static void GetGroupShare(PlacementResult placement, out int groupSize, out int perCellAmount)
         {
@@ -569,8 +601,7 @@ namespace Contigu.Core
         /// <summary>
         /// Applies the single drafted upgrade (tile and grid pools mixed
         /// together, spec 5.2) and moves on to the modifier pick rather than
-        /// advancing the round directly — <see cref="ApplyModifierPick"/> (or
-        /// <see cref="RemoveModifierAndAdvance"/> if the 5-slot cap is exceeded)
+        /// advancing the round directly — <see cref="ApplyModifierPick"/>
         /// does that. Only valid while <see cref="State"/> is
         /// <see cref="RunState.AwaitingDraft"/>.
         /// </summary>
@@ -606,12 +637,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Adds the picked modifier to the player's active set. If that pushes
-        /// the count past <see cref="MaxActiveModifiers"/>, the round does not
-        /// advance yet — <see cref="State"/> becomes
-        /// <see cref="RunState.AwaitingModifierRemoval"/> and the player must
-        /// call <see cref="RemoveModifierAndAdvance"/> next. Only valid while
-        /// <see cref="State"/> is <see cref="RunState.AwaitingModifierPick"/>.
+        /// Adds the picked modifier to the player's active set (unlimited —
+        /// no cap on how many a player can hold at once) and advances to the
+        /// next round. Only valid while <see cref="State"/> is
+        /// <see cref="RunState.AwaitingModifierPick"/>.
         /// </summary>
         public bool ApplyModifierPick(ModifierId modifierId)
         {
@@ -621,34 +650,6 @@ namespace Contigu.Core
             }
 
             _activeModifiers.Add(modifierId);
-            if (_activeModifiers.Count > MaxActiveModifiers)
-            {
-                State = RunState.AwaitingModifierRemoval;
-            }
-            else
-            {
-                AdvanceRound();
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Removes one active modifier (to get back down to the 5-slot cap) and
-        /// advances to the next round. Only valid while <see cref="State"/> is
-        /// <see cref="RunState.AwaitingModifierRemoval"/>.
-        /// </summary>
-        public bool RemoveModifierAndAdvance(ModifierId modifierId)
-        {
-            if (State != RunState.AwaitingModifierRemoval)
-            {
-                return false;
-            }
-
-            if (!_activeModifiers.Remove(modifierId))
-            {
-                return false;
-            }
-
             AdvanceRound();
             return true;
         }

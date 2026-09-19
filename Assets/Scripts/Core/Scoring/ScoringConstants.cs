@@ -122,5 +122,18 @@ namespace Contigu.Core
 
         /// <summary>Spark Tile: bonus per consecutive placement since the last line/column clear this round.</summary>
         public const int SparkBonusPerPlacement = 5;
+
+        // ---- Fourth batch of modifier bonuses (see ModifierCatalog) ----
+
+        /// <summary>Grand Format: bonus per placed cell when the piece being placed has at least this many cells.</summary>
+        public const int GrandFormatBonusPerCell = 8;
+        public const int GrandFormatMinPieceSize = 3;
+
+        /// <summary>Hors Norme: flat bonus when the piece being placed does NOT have exactly this many cells.</summary>
+        public const int HorsNormeBonus = 12;
+        public const int HorsNormeExactPieceSize = 3;
+
+        /// <summary>Éclat (per-color): bonus per scored group cell of the matching color — unlike Devotion's full double, a flat per-tile amount.</summary>
+        public const int EclatBonusPerCell = 4;
     }
 }

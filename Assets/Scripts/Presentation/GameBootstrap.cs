@@ -197,7 +197,6 @@ namespace Contigu.Presentation
             _handView.SlotSelected += OnHandSlotSelected;
             _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
             _modifierDraftView.ModifierPicked += OnModifierPicked;
-            _modifierDraftView.ModifierRemoved += OnModifierRemoved;
             _endScreenView.RestartRequested += OnRestartRequested;
         }
 
@@ -377,19 +376,6 @@ namespace Contigu.Presentation
         private void OnModifierPicked(ModifierId modifierId)
         {
             _run.ApplyModifierPick(modifierId);
-            if (_run.State == RunState.AwaitingModifierRemoval)
-            {
-                _modifierPanelView.Refresh(_run.ActiveModifiers);
-                _modifierDraftView.ShowRemoval(_run.ActiveModifiers);
-                return;
-            }
-
-            FinishModifierFlowAndAdvance();
-        }
-
-        private void OnModifierRemoved(ModifierId modifierId)
-        {
-            _run.RemoveModifierAndAdvance(modifierId);
             FinishModifierFlowAndAdvance();
         }
 

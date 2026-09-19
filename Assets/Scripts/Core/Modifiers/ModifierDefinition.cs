@@ -16,8 +16,8 @@ namespace Contigu.Core
     /// <summary>
     /// Static description of one modifier. Unlike <see cref="UpgradeDefinition"/>,
     /// modifiers are never consumed by application — they're held persistently
-    /// (up to <see cref="RunManager.MaxActiveModifiers"/> at once) and re-evaluate
-    /// every placement via <see cref="GridManager.PlacePiece"/>.
+    /// (no cap on how many can be active at once) and re-evaluate every
+    /// placement via <see cref="GridManager.PlacePiece"/>.
     /// </summary>
     public sealed class ModifierDefinition
     {
@@ -225,6 +225,49 @@ namespace Contigu.Core
             ModifierId.FormeSTetro, ModifierCategory.Formes, "S-Tetromino Specialist",
             "Doubles this placement's group bonus when the placed piece's shape is S-Tetromino.");
 
+        // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
+        // The 3 slot modifiers can't be evaluated by GridManager at all — it has
+        // no idea which of the 3 hand slots a piece came from, only RunManager's
+        // PlacePiece(handIndex, x, y) does — so unlike every other modifier here,
+        // they're resolved post-hoc in RunManager, the same pattern already used
+        // for the second-batch PieceTrait kinds (see RunManager.ApplyHandSlotModifierBonus).
+
+        public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
+            ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
+            "Doubles this placement's group bonus when playing from hand slot 1.");
+
+        public static readonly ModifierDefinition SlotDeux = new ModifierDefinition(
+            ModifierId.SlotDeux, ModifierCategory.Roguelike, "Slot 2 Loyalty",
+            "Doubles this placement's group bonus when playing from hand slot 2.");
+
+        public static readonly ModifierDefinition SlotTrois = new ModifierDefinition(
+            ModifierId.SlotTrois, ModifierCategory.Roguelike, "Slot 3 Loyalty",
+            "Doubles this placement's group bonus when playing from hand slot 3.");
+
+        public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
+            ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",
+            "+8 pts per placed cell when the piece has 3 or more cells.");
+
+        public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
+            ModifierId.HorsNorme, ModifierCategory.Roguelike, "Off-Size",
+            "+12 pts when the piece does NOT have exactly 3 cells.");
+
+        public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
+            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Coral Glow",
+            "+4 pts per group cell when placing a Coral piece.");
+
+        public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
+            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Teal Glow",
+            "+4 pts per group cell when placing a Teal piece.");
+
+        public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
+            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Violet Glow",
+            "+4 pts per group cell when placing a Violet piece.");
+
+        public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
+            ModifierId.EclatLime, ModifierCategory.Couleurs, "Lime Glow",
+            "+4 pts per group cell when placing a Lime piece.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -232,7 +275,8 @@ namespace Contigu.Core
             CercleChromatique, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
             ArcEnCiel, Alternance, Palindrome, Gradient, Bloc, MonochromeLigne,
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
-            FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro
+            FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro,
+            SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime
         };
 
         public static ModifierDefinition Get(ModifierId id)

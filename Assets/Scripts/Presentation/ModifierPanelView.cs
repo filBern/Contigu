@@ -8,15 +8,21 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Persistent panel pinned to the left edge of the screen, listing the
-    /// player's currently active modifiers (up to <see cref="RunManager.MaxActiveModifiers"/>).
+    /// player's currently active modifiers (no cap — the active set is
+    /// unlimited). Laid out as a 2-column grid of bare badges (no per-row
+    /// card background) so a long list still fits the panel reasonably —
+    /// the panel itself grows/shrinks to fit however many rows that takes.
     /// A readout refreshed by the caller whenever the active set changes, plus
-    /// a <see cref="Pulse"/> effect the caller triggers on a modifier's row
-    /// whenever it actually scores points on a placement.
+    /// a <see cref="Pulse"/> effect the caller triggers on a badge whenever it
+    /// actually scores points on a placement.
     /// </summary>
     public sealed class ModifierPanelView : MonoBehaviour
     {
         private const float PanelWidth = 230f;
-        private const float RowHeight = 64f;
+        private const float BadgeSize = 90f;
+        private const float BadgeSpacing = 10f;
+        private const float HeaderHeight = 58f;
+        private const float BottomPadding = 16f;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;
@@ -26,7 +32,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
-        // lets Pulse(id) find the row currently showing that modifier (each
+        // lets Pulse(id) find the badge currently showing that modifier (each
         // modifier can only be active once per run, see
         // RunManager.RollModifierDraftOptions).
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
@@ -40,7 +46,7 @@ namespace Contigu.Presentation
             _root.anchorMin = new Vector2(0f, 0.5f);
             _root.anchorMax = new Vector2(0f, 0.5f);
             _root.pivot = new Vector2(0f, 0.5f);
-            _root.sizeDelta = new Vector2(PanelWidth, 460f);
+            _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, 0f);
 
             // UpperCenter (not the default MiddleCenter) so the text hugs the
@@ -58,16 +64,14 @@ namespace Contigu.Presentation
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -58f);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -HeaderHeight);
 
-            var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 8f;
+            var layout = _rowsContainer.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(BadgeSize, BadgeSize);
+            layout.spacing = new Vector2(BadgeSpacing, BadgeSpacing);
             layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = _rowsContainer.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 2;
 
             return _root;
         }
@@ -83,32 +87,14 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                var badge = BuildRow(ModifierCatalog.Get(activeModifiers[i]));
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
             }
-        }
 
-        private Image BuildRow(ModifierDefinition def)
-        {
-            var row = UIFactory.CreateSlicedImage(_rowsContainer, "Row_" + def.Id, UISprites.ModifierCardBackground);
-            row.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, RowHeight);
-            // Plain Image has no ILayoutElement, so pin the size explicitly or
-            // the parent VerticalLayoutGroup collapses it toward zero.
-            var rowLayout = row.gameObject.AddComponent<LayoutElement>();
-            rowLayout.preferredWidth = PanelWidth - 16f;
-            rowLayout.preferredHeight = RowHeight;
-            // No Outline component here anymore — the card art already
-            // carries its own edge/shadow, and a hard black outline on top
-            // of it just looked muddy.
-
-            var badge = ModifierBadgeFactory.Create(row.transform, def, RowHeight - 12f, _tooltip);
-            badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchoredPosition = Vector2.zero;
-
-            return badge;
+            int rowCount = activeModifiers.Count == 0 ? 0 : Mathf.CeilToInt(activeModifiers.Count / 2f);
+            float contentHeight = rowCount == 0 ? 0f : rowCount * BadgeSize + (rowCount - 1) * BadgeSpacing;
+            _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + contentHeight + BottomPadding);
         }
 
         /// <summary>Flashes the badge (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>

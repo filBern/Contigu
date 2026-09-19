@@ -170,11 +170,12 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyModifierPick_RequiresRemoval_WhenPushingPastTheFiveSlotCap()
+        public void ApplyModifierPick_NeverRequiresRemoval_ModifierCountIsUnlimited()
         {
             var run = new RunManager(new SystemRandomProvider(1));
+            const int PicksBeyondOldCap = 7;
 
-            for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
+            for (int i = 0; i < PicksBeyondOldCap; i++)
             {
                 PlayRoundToAwaitingDraft(run);
                 run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
@@ -182,25 +183,10 @@ namespace Contigu.Tests
                 var options = run.RollModifierDraftOptions();
                 bool applied = run.ApplyModifierPick(options[0].Id);
                 Assert.IsTrue(applied);
+                Assert.AreEqual(RunState.InProgress, run.State, "Picking a modifier should never require a removal step");
             }
 
-            Assert.AreEqual(RunManager.MaxActiveModifiers, run.ActiveModifiers.Count);
-            Assert.AreEqual(RunState.InProgress, run.State);
-
-            PlayRoundToAwaitingDraft(run);
-            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-            var sixthOptions = run.RollModifierDraftOptions();
-            run.ApplyModifierPick(sixthOptions[0].Id);
-
-            Assert.AreEqual(RunState.AwaitingModifierRemoval, run.State);
-            Assert.AreEqual(RunManager.MaxActiveModifiers + 1, run.ActiveModifiers.Count);
-
-            var toRemove = run.ActiveModifiers[0];
-            bool removed = run.RemoveModifierAndAdvance(toRemove);
-
-            Assert.IsTrue(removed);
-            Assert.AreEqual(RunManager.MaxActiveModifiers, run.ActiveModifiers.Count);
-            Assert.AreEqual(RunState.InProgress, run.State);
+            Assert.AreEqual(PicksBeyondOldCap, run.ActiveModifiers.Count);
         }
 
         [Test]
@@ -208,7 +194,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
-            for (int i = 0; i < RunManager.MaxActiveModifiers; i++)
+            for (int i = 0; i < 5; i++)
             {
                 PlayRoundToAwaitingDraft(run);
                 run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
@@ -851,6 +837,57 @@ namespace Contigu.Tests
                 run.Deck.PlayFromHand(0);
                 guard++;
                 Assert.Less(guard, 300, "A matching token should reach the hand well within a few reshuffle cycles");
+            }
+        }
+
+        // ---- Fourth batch: SlotUn/Deux/Trois (see GridManagerModifierTests
+        // for GrandFormat/HorsNorme/Éclat*, which don't need handIndex and are
+        // covered there directly against GridManager.PlacePiece) ----
+
+        /// <summary>Plays a full round (quota met via all-golden cells, same trick as PlayRoundToAwaitingDraft), applies a throwaway upgrade, then picks exactly <paramref name="id"/> as the modifier — bypassing the random 3-option draft since ApplyModifierPick doesn't actually validate its argument against RollModifierDraftOptions' output. Also forces a fresh full 3-card hand afterward, since the round-ending placement can leave a partial hand carried into the next round.</summary>
+        private static void GiveActiveModifier(RunManager run, ModifierId id)
+        {
+            PlayRoundToAwaitingDraft(run);
+            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+            run.ApplyModifierPick(id);
+            Assert.AreEqual(RunState.InProgress, run.State);
+            CollectionAssert.Contains(run.ActiveModifiers, id);
+            run.Deck.DrawNewHand();
+        }
+
+        [Test]
+        public void SlotUn_DoublesGroupBonus_WhenPlacingFromHandSlotZero()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.SlotUn);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.Greater(outcome.Placement.GroupBonus, 0);
+            Assert.AreEqual(outcome.Placement.GroupBonus, outcome.Placement.ModifierBonus);
+        }
+
+        [Test]
+        public void SlotModifiers_EachOnlyFiresForItsOwnHandIndex()
+        {
+            AssertSlotFiresOnlyForHandIndex(ModifierId.SlotUn, 0);
+            AssertSlotFiresOnlyForHandIndex(ModifierId.SlotDeux, 1);
+            AssertSlotFiresOnlyForHandIndex(ModifierId.SlotTrois, 2);
+        }
+
+        private static void AssertSlotFiresOnlyForHandIndex(ModifierId id, int matchingHandIndex)
+        {
+            for (int handIndex = 0; handIndex < DeckManager.HandSize; handIndex++)
+            {
+                var run = new RunManager(new SystemRandomProvider(1));
+                GiveActiveModifier(run, id);
+
+                var outcome = run.PlacePiece(handIndex, 0, 0);
+
+                Assert.IsTrue(outcome.Placement.Success, id + " vs hand index " + handIndex);
+                int expected = handIndex == matchingHandIndex ? outcome.Placement.GroupBonus : 0;
+                Assert.AreEqual(expected, outcome.Placement.ModifierBonus, id + " vs hand index " + handIndex);
             }
         }
     }

@@ -8,10 +8,8 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Overlay shown right after the tile/grid upgrade draft: the player picks 1
-    /// of 3 offered modifiers to add to their persistent set. If that pushes the
-    /// active count past <see cref="RunManager.MaxActiveModifiers"/>, the same
-    /// overlay switches to a removal screen (pick 1 of the currently active
-    /// modifiers to discard) before the round can advance.
+    /// of 3 offered modifiers to add to their persistent set (unlimited — no
+    /// cap on how many can be active at once).
     /// </summary>
     public sealed class ModifierDraftView : MonoBehaviour
     {
@@ -22,16 +20,11 @@ namespace Contigu.Presentation
         /// <summary>Fires when the player picks one of the 3 drafted modifiers.</summary>
         public event Action<ModifierId> ModifierPicked;
 
-        /// <summary>Fires when the player picks one active modifier to remove (over the 5-slot cap).</summary>
-        public event Action<ModifierId> ModifierRemoved;
-
         private RectTransform _root;
         private Text _header;
         private Text _sectionLabel;
         private RectTransform _cardsContainer;
         private TooltipView _tooltip;
-
-        private bool _isRemovalMode;
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
@@ -60,11 +53,8 @@ namespace Contigu.Presentation
             _cardsContainer.pivot = new Vector2(0.5f, 1f);
             _cardsContainer.anchoredPosition = new Vector2(0f, -115f);
 
-            // Fixed 2-column grid rather than a single row: the removal
-            // screen can show up to MaxActiveModifiers + 1 = 6 cards, and 6
-            // in a row (6*200 + 5*20 = 1300) ran off the edges of the
-            // screen. 2 columns keeps every screen (3-card pick, 6-card
-            // removal) within a tidy 2-wide block instead.
+            // Fixed 2-column grid rather than a single row of 3, to stay
+            // consistent width-wise regardless of how many options are drafted.
             var layout = _cardsContainer.gameObject.AddComponent<GridLayoutGroup>();
             layout.cellSize = new Vector2(CardWidth, CardHeight);
             layout.spacing = new Vector2(20f, 16f);
@@ -81,35 +71,14 @@ namespace Contigu.Presentation
 
         public void ShowPick(IReadOnlyList<ModifierDefinition> options)
         {
-            _isRemovalMode = false;
             _header.text = "Choose a modifier!";
             _sectionLabel.text = "1 of " + options.Count + " — stacks with your active modifiers";
-            RebuildCards(options, "Choose");
-            _root.gameObject.SetActive(true);
-        }
-
-        public void ShowRemoval(IReadOnlyList<ModifierId> activeModifiers)
-        {
-            _isRemovalMode = true;
-            _header.text = "Too many modifiers!";
-            _sectionLabel.text = "You have " + activeModifiers.Count + ", maximum " + RunManager.MaxActiveModifiers + " — choose one to remove";
-
-            var defs = new List<ModifierDefinition>(activeModifiers.Count);
-            for (int i = 0; i < activeModifiers.Count; i++)
-            {
-                defs.Add(ModifierCatalog.Get(activeModifiers[i]));
-            }
-            RebuildCards(defs, "Remove");
-            _root.gameObject.SetActive(true);
-        }
-
-        private void RebuildCards(IReadOnlyList<ModifierDefinition> options, string buttonLabel)
-        {
             ClearChildren(_cardsContainer);
             for (int i = 0; i < options.Count; i++)
             {
-                BuildCard(options[i], buttonLabel);
+                BuildCard(options[i]);
             }
+            _root.gameObject.SetActive(true);
         }
 
         private static void ClearChildren(RectTransform container)
@@ -120,7 +89,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private void BuildCard(ModifierDefinition def, string buttonLabel)
+        private void BuildCard(ModifierDefinition def)
         {
             // GridLayoutGroup drives each child's size directly from its own
             // cellSize, so unlike a Horizontal/VerticalLayoutGroup the card
@@ -139,7 +108,7 @@ namespace Contigu.Presentation
             badge.rectTransform.pivot = new Vector2(0.5f, 1f);
             badge.rectTransform.anchoredPosition = new Vector2(0f, -15f);
 
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", buttonLabel, UISprites.ChooseButtonBackground, 14);
+            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 14);
             var chooseRect = chooseBtn.GetComponent<RectTransform>();
             chooseRect.anchorMin = new Vector2(0.5f, 0f);
             chooseRect.anchorMax = new Vector2(0.5f, 0f);
@@ -152,19 +121,9 @@ namespace Contigu.Presentation
         private void OnCardChosen(ModifierId id)
         {
             _root.gameObject.SetActive(false);
-            if (_isRemovalMode)
+            if (ModifierPicked != null)
             {
-                if (ModifierRemoved != null)
-                {
-                    ModifierRemoved(id);
-                }
-            }
-            else
-            {
-                if (ModifierPicked != null)
-                {
-                    ModifierPicked(id);
-                }
+                ModifierPicked(id);
             }
         }
     }

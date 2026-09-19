@@ -55,6 +55,17 @@ namespace Contigu.Core
         FormeSq2,
         FormeLTetro,
         FormeTTetro,
-        FormeSTetro
+        FormeSTetro,
+
+        // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
+        SlotUn,
+        SlotDeux,
+        SlotTrois,
+        GrandFormat,
+        HorsNorme,
+        EclatCoral,
+        EclatTeal,
+        EclatViolet,
+        EclatLime
     }
 }
