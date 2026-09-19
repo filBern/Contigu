@@ -1486,13 +1486,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     réel de la grille (aucune mutation), donc utilisable en pur
     aperçu pendant que le joueur choisit encore où déposer. Côté
     présentation : `GridView.OnCellHoverEnter` appelle `PreviewGroup`
-    uniquement quand le placement est valide, puis surligne (nouveau
-    `GridCellView.SetGroupPreviewHighlight`, un lerp plus léger — 0.35
-    au lieu du 0.6 de `SetHoverTint` — vers la même couleur
-    `UITheme.HoverValid`) toutes les cases du groupe résultant qui NE
-    font PAS partie de l'empreinte de la pièce elle-même (celles-ci
-    gardent leur propre highlight vert/rouge existant). Nouvelle liste
-    `_groupPreviewCells` (parallèle à `_hoveredFootprint`), remise à
-    zéro par `ClearHover` comme l'empreinte. Tests :
-    `GridManagerTests` (`PreviewGroup_*`, y compris une vérification
-    explicite qu'aucune mutation de grille ne se produit).
+    uniquement quand le placement est valide, puis surligne toutes les
+    cases du groupe résultant qui NE font PAS partie de l'empreinte de
+    la pièce elle-même (celles-ci gardent leur propre highlight
+    vert/rouge existant). Tests : `GridManagerTests` (`PreviewGroup_*`,
+    y compris une vérification explicite qu'aucune mutation de grille
+    ne se produit).
+  - **Fix : highlight de groupe invisible + popup de modifier invisible**
+    (rapporté juste après coup, sans capture d'écran cette fois) :
+    - **Highlight de groupe** : la première implémentation utilisait un
+      lerp de couleur statique (`GridCellView.SetGroupPreviewHighlight`,
+      0.35 vers `UITheme.HoverValid`) — trop subtil pour être remarqué
+      contre la couleur déjà saturée d'une case remplie ("je ne vois
+      aucun highlight... essaye de les faire pulser un peu au lieu").
+      Remplacé par un simple appel à `GridCellView.Pulse()` (le même
+      rebond d'échelle déjà utilisé pour le feedback de score) sur
+      chaque case du groupe prévisualisé — `SetGroupPreviewHighlight`
+      et la liste `_groupPreviewCells` qu'il fallait réinitialiser dans
+      `ClearHover` sont retirés entièrement, `Pulse()` se réinitialisant
+      déjà tout seul.
+    - **Popup de modifier invisible** : le popup de points ET son
+      animation vers le haut fonctionnaient déjà (voir plus haut) —
+      mais `FeedbackLayer` est construit AVANT `ModifierPanelView` dans
+      `GameBootstrap.BuildUI`, et en uGUI un sibling construit plus tôt
+      se dessine EN DESSOUS d'un sibling construit plus tard. Le popup
+      apparaissait donc bien sur le badge du modifier, mais caché
+      derrière le fond opaque du panneau de modifiers, invisible.
+      `FeedbackLayer.SpawnPopup` appelle maintenant
+      `_root.SetAsLastSibling()` avant de créer chaque popup — même
+      fix déjà en place pour `TooltipView`, pour la même raison
+      (toujours au-dessus de tout le reste à l'écran).

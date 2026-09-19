@@ -27,6 +27,13 @@ namespace Contigu.Presentation
                 return;
             }
 
+            // This layer is built before ModifierPanelView (see GameBootstrap.
+            // BuildUI), so its popups were sitting BEHIND the panel's opaque
+            // background — invisible whenever a modifier's score popup
+            // anchors on its badge. Always render above everything else on
+            // screen, same fix TooltipView already applies to itself.
+            _root.SetAsLastSibling();
+
             var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
             // Small random horizontal jitter so several popups landing on the
             // same cell (e.g. two group-bonus hits in a row) stay legible

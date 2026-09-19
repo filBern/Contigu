@@ -30,7 +30,6 @@ namespace Contigu.Presentation
         private PieceColor? _selectedColor;
         private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
-        private readonly List<Vector2Int> _groupPreviewCells = new List<Vector2Int>();
 
         public RectTransform Build(Transform parent, GridManager grid, float cellSize)
         {
@@ -246,12 +245,16 @@ namespace Contigu.Presentation
                 }
             }
 
-            // Also highlights every pre-existing cell that would be pulled
-            // into the same scored group as this placement (on explicit
-            // request) — lets the player see the full extent of what they're
-            // about to (re)score, not just the piece's own footprint, before
-            // committing to a spot. Only meaningful for a valid placement —
-            // GridManager.PreviewGroup assumes CanPlace already passed.
+            // Also pulses every pre-existing cell that would be pulled into
+            // the same scored group as this placement (on explicit request —
+            // a static color tint here read as too subtle against an
+            // already-saturated piece color) — lets the player see the full
+            // extent of what they're about to (re)score, not just the
+            // piece's own footprint, before committing to a spot. Only
+            // meaningful for a valid placement — GridManager.PreviewGroup
+            // assumes CanPlace already passed. Pulse() is self-resetting, so
+            // unlike the footprint's tint there's nothing to undo in
+            // ClearHover.
             if (valid)
             {
                 var previewGroup = _grid.PreviewGroup(_selectedShape, _selectedColor.Value, origin.x, origin.y);
@@ -262,8 +265,7 @@ namespace Contigu.Presentation
                     {
                         continue;
                     }
-                    _cells[pos.x, pos.y].SetGroupPreviewHighlight();
-                    _groupPreviewCells.Add(pos);
+                    _cells[pos.x, pos.y].Pulse();
                 }
             }
 
@@ -312,13 +314,6 @@ namespace Contigu.Presentation
                 RefreshCell(pos.x, pos.y);
             }
             _hoveredFootprint.Clear();
-
-            for (int i = 0; i < _groupPreviewCells.Count; i++)
-            {
-                var pos = _groupPreviewCells[i];
-                RefreshCell(pos.x, pos.y);
-            }
-            _groupPreviewCells.Clear();
         }
 
         public void OnCellClicked(int x, int y)
