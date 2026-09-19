@@ -16,6 +16,13 @@ namespace Contigu.Presentation
         private const float CellSize = 54f;
         private const float ScoreEventStaggerSeconds = 0.22f;
         private const float LineClearStaggerSeconds = 0.14f;
+        // Each combo addition waits 10% less than the previous one (on
+        // explicit request), so a big combo doesn't make the player sit
+        // through a long, linearly-paced popup sequence — floored so a very
+        // long chain still keeps a perceptible beat instead of collapsing to
+        // an instant dump.
+        private const float ComboSpeedupFactor = 0.9f;
+        private const float MinStaggerSeconds = 0.03f;
 
         private RunManager _run;
 
@@ -276,6 +283,12 @@ namespace Contigu.Presentation
             int displayedRoundScore = roundScoreBefore;
             int comboTotal = 0;
             _comboView.Show(0);
+            // Multiplies every stagger wait below — starts at 1 (full pace)
+            // and shrinks by ComboSpeedupFactor after each combo addition,
+            // shared across score events, line clears AND the multiplier
+            // catch-up, so the whole sequence accelerates together as one
+            // continuous combo rather than each section restarting at full pace.
+            float staggerSpeed = 1f;
 
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -321,7 +334,8 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 
-                yield return new WaitForSeconds(ScoreEventStaggerSeconds);
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+                staggerSpeed *= ComboSpeedupFactor;
             }
 
             for (int i = 0; i < placement.ClearedCells.Count; i++)
@@ -337,7 +351,8 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 
-                yield return new WaitForSeconds(LineClearStaggerSeconds);
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
+                staggerSpeed *= ComboSpeedupFactor;
             }
 
             // GroupMultiplier (from Tinted/Multiplier-Zone cells) is applied once
@@ -359,7 +374,7 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 
-                yield return new WaitForSeconds(ScoreEventStaggerSeconds);
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
             _isPlayingPlacementSequence = false;
