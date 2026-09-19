@@ -23,6 +23,13 @@ namespace Contigu.Presentation
         private const float BadgeSpacing = 10f;
         private const float TopPadding = 16f;
         private const float BottomPadding = 16f;
+        // card_bg_2's own 9-slice border is 24 (bottom) + 6 (top) = 30 tall —
+        // below that the sprite has no room left for its stretchable middle
+        // and the top/bottom border chunks visually overlap/glitch (seen with
+        // zero active modifiers, where TopPadding + BottomPadding alone is
+        // only 32, barely above that). Panel height is clamped to never go
+        // below this, comfortably clear of the glitch threshold.
+        private const float MinPanelHeight = 64f;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;
@@ -51,7 +58,7 @@ namespace Contigu.Presentation
             _root.anchorMin = new Vector2(0f, 1f);
             _root.anchorMax = new Vector2(0f, 1f);
             _root.pivot = new Vector2(0f, 1f);
-            _root.sizeDelta = new Vector2(PanelWidth, TopPadding + BottomPadding);
+            _root.sizeDelta = new Vector2(PanelWidth, MinPanelHeight);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
             // "Modifiers" floats ABOVE the card entirely (on explicit
@@ -103,7 +110,8 @@ namespace Contigu.Presentation
 
             int rowCount = activeModifiers.Count == 0 ? 0 : Mathf.CeilToInt(activeModifiers.Count / 2f);
             float contentHeight = rowCount == 0 ? 0f : rowCount * BadgeSize + (rowCount - 1) * BadgeSpacing;
-            _root.sizeDelta = new Vector2(PanelWidth, TopPadding + contentHeight + BottomPadding);
+            float panelHeight = Mathf.Max(MinPanelHeight, TopPadding + contentHeight + BottomPadding);
+            _root.sizeDelta = new Vector2(PanelWidth, panelHeight);
         }
 
         /// <summary>Flashes the badge (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>

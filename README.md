@@ -1355,6 +1355,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     remplacé par `TopPadding` (16, symétrique à `BottomPadding`) —
     les badges commencent maintenant juste sous le bord haut de la
     carte plutôt que sous un bandeau qui n'existe plus.
+  - **Fix #8 : carte déformée/dédoublée à 0 modifier actif** (capture
+    d'écran à l'appui — "comme si deux images se superposent") — avec
+    zéro modifier, `TopPadding + BottomPadding` seul ne donne que 32 de
+    hauteur, à peine au-dessus des bordures 9-slice de `card_bg_2`
+    elle-même (24 bas + 6 haut = 30) : il ne reste presque plus de
+    place pour la portion étirable du milieu, et les morceaux de
+    bordure haut/bas se chevauchent visuellement (le "dédoublement"
+    observé). Nouvelle constante `MinPanelHeight` (64) — la hauteur du
+    panneau (calculée dans `Build` ET dans chaque `Refresh`) ne
+    descend plus jamais en dessous, quel que soit le nombre de
+    modifiers actifs.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
