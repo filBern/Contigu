@@ -57,16 +57,22 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
-            // UpperCenter (not the default MiddleCenter) so the text hugs the
-            // top of its box directly instead of being centered within it —
-            // the screenshot showed a visible gap above "MODIFIERS" from that
-            // centering slack, which anchoredPosition alone couldn't close.
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 30, UITheme.TextPrimary, TextAnchor.UpperCenter);
-            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -4f);
-            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 48f);
+            // "Modifiers" sits on its own Union ribbon banner instead of being
+            // plain text over the card art (on explicit request) — same
+            // pattern as an upgrade card's name banner (see
+            // DraftView.BuildCard/UISprites.UpgradeNameBanner). Keeps the
+            // title's own visual fixed-size and separate from the panel
+            // background, which now just stretches cleanly at any height.
+            var headerBanner = UIFactory.CreateSlicedImage(_root, "HeaderBanner", UISprites.ModifierHeaderBanner);
+            headerBanner.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            headerBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            headerBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
+            headerBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            headerBanner.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 46f);
+
+            var header = UIFactory.CreateText(headerBanner.transform, "Label", "Modifiers", 28, UITheme.TextPrimary);
+            header.raycastTarget = false;
+            UIFactory.StretchFull(header.rectTransform);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);

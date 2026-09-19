@@ -1279,6 +1279,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     ce lot) — le panneau ne grandit plus que vers le bas, le bord haut
     (et donc le header) reste maintenant à une position écran
     constante quel que soit le nombre de modifiers.
+  - **Fix #2 (cause réelle) : fond du panneau remplacé, "Modifiers" sur
+    sa propre bannière** — le fix d'ancrage ci-dessus n'était qu'une
+    partie du problème ; la vraie cause, signalée avec des captures
+    montrant le titre à des hauteurs différentes selon le nombre de
+    modifiers, c'est qu'on étirait une image 9-slice (`panel_bg.png`)
+    dont l'art contient une bande d'en-tête bleue distincte "cuite"
+    dans ses bordures 9-slice — cette bande se comprime/étire de façon
+    visible quand la hauteur totale du panneau change, faisant bouger
+    le texte par-dessus. Remplacé par le même principe que les cartes
+    d'upgrade : fond du panneau = `card_bg_2.png` (une carte plate sans
+    bande spéciale, s'étire proprement à n'importe quelle hauteur —
+    `UISprites.ModifierPanelBackground` remplace `panel_bg` par
+    `card_bg_2`) + le titre "Modifiers" posé sur sa propre bannière
+    `Union.png` (nouveau `UISprites.ModifierHeaderBanner`, même sprite
+    que `UpgradeNameBanner` mais propriété séparée par convention —
+    même pattern que le nom d'une carte d'upgrade dans
+    `DraftView.BuildCard`). La bannière a une taille fixe indépendante
+    du panneau, donc son rendu ne varie plus jamais avec le nombre de
+    modifiers actifs.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :

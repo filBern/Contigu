@@ -18,6 +18,7 @@ namespace Contigu.Presentation
         private static Sprite _scoreBarFill;
         private static Sprite _piecesBarFill;
         private static Sprite _modifierPanelBackground;
+        private static Sprite _modifierHeaderBanner;
         private static Sprite _handSlotBackground;
         private static Sprite _upgradeCardBackground;
         private static Sprite _upgradeNameBanner;
@@ -42,10 +43,26 @@ namespace Contigu.Presentation
             get { return _piecesBarFill != null ? _piecesBarFill : (_piecesBarFill = Resources.Load<Sprite>(SliderPath + "purpleBarFill")); }
         }
 
-        /// <summary>Background of the left-edge active-modifiers panel (ModifierPanelView).</summary>
+        /// <summary>
+        /// Background of the left-edge active-modifiers panel (ModifierPanelView).
+        /// Was "panel_bg" — swapped to "card_bg_2" (on explicit request) because
+        /// panel_bg's art bakes a distinct-looking header band into its 9-slice
+        /// borders, which visibly stretched/squished as the panel's height
+        /// changed with the active modifier count. card_bg_2 is a plain card
+        /// with no such baked-in band, so it stretches cleanly at any height —
+        /// the "Modifiers" title gets its own separate banner instead (see
+        /// ModifierHeaderBanner), the same way an upgrade card's name sits on
+        /// its own Union banner rather than being part of the card art.
+        /// </summary>
         public static Sprite ModifierPanelBackground
         {
-            get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "panel_bg")); }
+            get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_2")); }
+        }
+
+        /// <summary>Ribbon-shaped banner sat behind the modifier panel's "Modifiers" title — same sprite as UpgradeNameBanner, kept as its own property since the two are conceptually different call sites.</summary>
+        public static Sprite ModifierHeaderBanner
+        {
+            get { return _modifierHeaderBanner != null ? _modifierHeaderBanner : (_modifierHeaderBanner = Resources.Load<Sprite>(GameUIPath + "Union")); }
         }
 
         /// <summary>Background of each hand slot (HandView).</summary>
