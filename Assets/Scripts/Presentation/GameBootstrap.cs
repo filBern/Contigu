@@ -214,7 +214,14 @@ namespace Contigu.Presentation
 
         private void OnHandSlotSelected(int handIndex)
         {
-            var token = _run.Deck.Hand[handIndex];
+            var slot = _run.Deck.Hand[handIndex];
+            if (!slot.HasValue)
+            {
+                // HandView already guards against selecting an empty slot —
+                // this is just defense in depth.
+                return;
+            }
+            var token = slot.Value;
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
@@ -233,7 +240,7 @@ namespace Contigu.Presentation
             }
 
             int handIndex = _handView.SelectedIndex;
-            if (handIndex < 0 || handIndex >= _run.Deck.Hand.Count)
+            if (handIndex < 0 || handIndex >= DeckManager.HandSize || !_run.Deck.Hand[handIndex].HasValue)
             {
                 _statusText.text = "Select a piece from your hand first.";
                 return;

@@ -14,7 +14,14 @@ namespace Contigu.Core
 
         private readonly List<PieceToken> _deck = new List<PieceToken>();
         private readonly List<PieceToken> _drawPile = new List<PieceToken>();
-        private readonly List<PieceToken> _hand = new List<PieceToken>();
+        // Fixed-size — always exactly HandSize entries, a null meaning that
+        // slot is currently empty. Playing a piece never shifts the other
+        // slots (on explicit request: playing slot 1 while slots 2/3 are
+        // still full used to shift them down into slots 1/2, which also kept
+        // undermining "which slot did this piece come from" for the
+        // Slot Loyalty modifiers) — a slot only refills once the WHOLE hand
+        // is empty (see PlayFromHand/DrawNewHand).
+        private readonly List<PieceToken?> _hand = new List<PieceToken?>();
         private readonly List<PieceRotation> _handRotations = new List<PieceRotation>();
         private readonly IRandomProvider _rng;
 
@@ -23,7 +30,8 @@ namespace Contigu.Core
             get { return _deck; }
         }
 
-        public IReadOnlyList<PieceToken> Hand
+        /// <summary>The current hand, one entry per fixed slot (always <see cref="HandSize"/> long) — null means that slot is empty, played but not yet refilled.</summary>
+        public IReadOnlyList<PieceToken?> Hand
         {
             get { return _hand; }
         }
@@ -92,8 +100,12 @@ namespace Contigu.Core
                 EnsureDrawPileHasEnough(1);
                 if (_drawPile.Count == 0)
                 {
-                    // Deck is empty (should not happen given MinDeckSize > 0).
-                    break;
+                    // Deck is empty (should not happen given MinDeckSize > 0)
+                    // — leave this and every remaining slot empty rather than
+                    // shrinking the hand below HandSize entries.
+                    _hand.Add(null);
+                    _handRotations.Add(RandomRotation());
+                    continue;
                 }
                 int lastIndex = _drawPile.Count - 1;
                 var token = _drawPile[lastIndex];
@@ -109,24 +121,38 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Removes the piece at <paramref name="handIndex"/> from the hand. Per
-        /// spec 4.2, a fresh hand of 3 is only drawn once the hand is fully
-        /// empty — unless <paramref name="refillIfEmpty"/> is false, in which
-        /// case the caller takes responsibility for drawing later (see
-        /// RunManager.PlacePiece: when the placement that empties the hand also
-        /// ends the round, drawing immediately would hand out the NEXT round's
-        /// pieces before the player has even picked their upgrade for THIS one
-        /// — deferred to RunManager.StartRound instead, so the fresh hand
-        /// belongs to the round it's actually drawn for).
+        /// Empties the <paramref name="handIndex"/> slot in place — the other
+        /// slots are never shifted (on explicit request; see the field
+        /// comment on <see cref="_hand"/>). Per spec 4.2, a fresh hand of 3
+        /// is only drawn once every slot is empty — unless
+        /// <paramref name="refillIfEmpty"/> is false, in which case the
+        /// caller takes responsibility for drawing later (see
+        /// RunManager.PlacePiece: when the placement that empties the hand
+        /// also ends the round, drawing immediately would hand out the NEXT
+        /// round's pieces before the player has even picked their upgrade
+        /// for THIS one — deferred to RunManager.StartRound instead, so the
+        /// fresh hand belongs to the round it's actually drawn for).
         /// </summary>
         public void PlayFromHand(int handIndex, bool refillIfEmpty = true)
         {
-            _hand.RemoveAt(handIndex);
-            _handRotations.RemoveAt(handIndex);
-            if (refillIfEmpty && _hand.Count == 0)
+            _hand[handIndex] = null;
+            if (refillIfEmpty && IsHandFullyEmpty())
             {
                 DrawNewHand();
             }
+        }
+
+        /// <summary>True once every hand slot is empty — the trigger for PlayFromHand's automatic refill, and for RunManager's own deferred-refill check.</summary>
+        public bool IsHandFullyEmpty()
+        {
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                if (_hand[i].HasValue)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public IReadOnlyDictionary<(ShapeId Shape, PieceColor Color), int> GetDeckComposition()

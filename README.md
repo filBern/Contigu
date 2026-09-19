@@ -1547,3 +1547,49 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   events puis lignes effacées) plutôt qu'une par boucle — le combo
   accélère comme UNE séquence continue, pas deux qui repartiraient
   chacune à pleine vitesse.
+- **Les slots de main ne se décalent plus quand on joue une pièce** (sur
+  demande explicite — "laisse la slot 1 vide au lieu de transférer la
+  slot 2 et 3 vers la slot 1 et 2"). `DeckManager._hand` était un
+  `List<PieceToken>` qui RÉTRÉCISSAIT à chaque `PlayFromHand`
+  (`_hand.RemoveAt(handIndex)`) — retirer l'index 0 décalait
+  automatiquement les pièces des slots 1/2 vers 0/1 (comportement natif
+  de `List.RemoveAt`), une main pleine ne se remplissant qu'une fois
+  totalement vide. Au-delà de contredire la demande explicite, ça
+  minait aussi la clarté des modifiers "Slot N Loyalty" (4ème lot,
+  `SlotUn`/`SlotDeux`/`SlotTrois`) — l'identité "slot" d'une pièce
+  n'était pas stable tant que la main n'était pas complètement vide.
+  - `DeckManager._hand` devient `List<PieceToken?>` — TOUJOURS
+    exactement `HandSize` (3) entrées ; un slot vide vaut `null` plutôt
+    que d'être retiré de la liste. Nouvelle
+    `DeckManager.IsHandFullyEmpty()` (remplace les anciens tests sur
+    `Hand.Count == 0`). `PlayFromHand` fait maintenant
+    `_hand[handIndex] = null;` (aucun décalage) et ne redistribue une
+    main fraîche que quand `IsHandFullyEmpty()` est vrai. `DrawNewHand`
+    laisse aussi chaque slot restant à `null` (plutôt que de
+    raccourcir la liste) si jamais la pioche venait à s'épuiser en
+    cours de tirage.
+  - `Hand` est maintenant `IReadOnlyList<PieceToken?>` — répercuté
+    partout où un appelant lisait directement `Hand[i]`/`Hand.Count` :
+    `RunManager.PlacePiece` (vérifie `.HasValue` avant de déréférencer
+    via `.Value`), `RunManager.HasAnyHandPlacement`/`EvaluateRoundEnd`
+    (ignore les slots vides plutôt que de planter dessus),
+    `GameBootstrap` (mêmes vérifications), et `HandView` — qui, en
+    réalité, construisait DÉJÀ ses 3 emplacements de slot comme des
+    objets fixes et indépendants (`_slotBackgrounds[3]`,
+    `_previewContainers[3]`) en basculant juste leur contenu visible
+    via `i < Hand.Count` : il a suffi de remplacer ce test par
+    `Hand[i].HasValue` pour que l'UI affiche déjà correctement un slot
+    vide à sa vraie position, sans aucun autre changement visuel.
+  - Tests : `DeckManagerTests` (nouveaux
+    `PlayFromHand_LeavesThatSlotEmpty_WithoutShiftingTheOthers`,
+    réécriture de `PlayFromHand_OnlyRefillsWhenHandFullyEmpty`/
+    `..._WithRefillIfEmptyFalse_...`/`Draw_IsWithoutReplacement_...`,
+    nouveau helper `AllSlotsFilled`). `RunManagerTests` — la plupart des
+    tests plaçaient une pièce via `Deck.Hand[0]` en supposant qu'il y
+    en aurait toujours une là après un `PlayFromHand` précédent ; trois
+    nouveaux helpers (`FirstOccupiedHandSlot`, `AllHandSlotsFilled`, et
+    `ChurnUntilHandMatches` qui renvoie maintenant l'INDEX du slot
+    trouvé au lieu de rien, en alternant les slots 0/1/2 plutôt que de
+    ne rejouer que le slot 0) portent cette adaptation à travers la
+    quinzaine de tests concernés, chacun utilisant maintenant l'index
+    réel du slot occupé/trouvé plutôt que de supposer `0`.

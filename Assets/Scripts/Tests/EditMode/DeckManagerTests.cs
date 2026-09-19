@@ -34,6 +34,19 @@ namespace Contigu.Tests
             return t.Shape + ":" + t.Color;
         }
 
+        /// <summary>True when every slot in <paramref name="hand"/> is non-null.</summary>
+        private static bool AllSlotsFilled(IReadOnlyList<PieceToken?> hand)
+        {
+            for (int i = 0; i < hand.Count; i++)
+            {
+                if (!hand[i].HasValue)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         [Test]
         public void InitialDeckFactory_Build_Produces24TokensNoJokers()
         {
@@ -58,13 +71,17 @@ namespace Contigu.Tests
 
             Assert.AreEqual(dm.Hand.Count, dm.HandRotations.Count);
 
-            dm.PlayFromHand(1); // remove the middle slot, not just index 0
+            dm.PlayFromHand(1); // empties the middle slot in place, not index 0
             Assert.AreEqual(dm.Hand.Count, dm.HandRotations.Count);
+            Assert.IsFalse(dm.Hand[1].HasValue, "Slot 1 should be empty, not shifted away");
+            Assert.IsTrue(dm.Hand[0].HasValue, "Slots 0 and 2 should be untouched by playing slot 1");
+            Assert.IsTrue(dm.Hand[2].HasValue);
 
             dm.PlayFromHand(0);
-            dm.PlayFromHand(0); // hand now empty -> triggers a fresh DrawNewHand
+            dm.PlayFromHand(2); // every slot now empty -> triggers a fresh DrawNewHand
             Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count);
             Assert.AreEqual(DeckManager.HandSize, dm.HandRotations.Count);
+            Assert.IsTrue(AllSlotsFilled(dm.Hand));
         }
 
         [Test]
@@ -83,33 +100,51 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlayFromHand_LeavesThatSlotEmpty_WithoutShiftingTheOthers()
+        {
+            var dm = MakeMinimalDeck();
+
+            dm.PlayFromHand(0);
+            Assert.IsFalse(dm.Hand[0].HasValue, "The played slot should stay empty");
+            Assert.IsTrue(dm.Hand[1].HasValue, "Slot 1 should NOT shift down into slot 0 (on explicit request)");
+            Assert.IsTrue(dm.Hand[2].HasValue);
+            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count, "Hand list itself never shrinks — only individual slots empty out");
+
+            dm.PlayFromHand(1);
+            Assert.IsFalse(dm.Hand[1].HasValue);
+            Assert.IsTrue(dm.Hand[2].HasValue, "Slot 2 should NOT shift down into slot 1 either");
+            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count);
+        }
+
+        [Test]
         public void PlayFromHand_OnlyRefillsWhenHandFullyEmpty()
         {
             var dm = MakeMinimalDeck();
 
             dm.PlayFromHand(0);
-            Assert.AreEqual(2, dm.Hand.Count);
+            Assert.IsFalse(dm.IsHandFullyEmpty());
 
-            dm.PlayFromHand(0);
-            Assert.AreEqual(1, dm.Hand.Count);
+            dm.PlayFromHand(1);
+            Assert.IsFalse(dm.IsHandFullyEmpty());
 
-            dm.PlayFromHand(0);
-            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count, "Hand should refill only once fully emptied");
+            dm.PlayFromHand(2);
+            Assert.IsTrue(AllSlotsFilled(dm.Hand), "Hand should refill only once every slot is empty");
         }
 
         [Test]
-        public void PlayFromHand_WithRefillIfEmptyFalse_LeavesHandEmptyInstead()
+        public void PlayFromHand_WithRefillIfEmptyFalse_LeavesEverySlotEmptyInstead()
         {
             var dm = MakeMinimalDeck();
 
             dm.PlayFromHand(0);
-            dm.PlayFromHand(0);
-            dm.PlayFromHand(0, refillIfEmpty: false);
+            dm.PlayFromHand(1);
+            dm.PlayFromHand(2, refillIfEmpty: false);
 
-            Assert.AreEqual(0, dm.Hand.Count, "Caller opted out of the auto-refill, so the hand should stay empty until DrawNewHand is called explicitly");
+            Assert.IsTrue(dm.IsHandFullyEmpty(), "Caller opted out of the auto-refill, so every slot should stay empty until DrawNewHand is called explicitly");
+            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count, "The list itself still has HandSize entries, just all null");
 
             dm.DrawNewHand();
-            Assert.AreEqual(DeckManager.HandSize, dm.Hand.Count);
+            Assert.IsTrue(AllSlotsFilled(dm.Hand));
         }
 
         [Test]
@@ -121,18 +156,21 @@ namespace Contigu.Tests
             var order = new List<string>();
             foreach (var t in dm.Hand)
             {
-                order.Add(Key(t));
+                order.Add(Key(t.Value));
             }
 
             for (int batch = 0; batch < 3; batch++)
             {
+                // Plays each slot by its own index (0, 1, 2) — with slots no
+                // longer shifting, replaying index 0 three times would only
+                // ever touch slot 0.
                 for (int i = 0; i < DeckManager.HandSize; i++)
                 {
-                    dm.PlayFromHand(0);
+                    dm.PlayFromHand(i);
                 }
                 foreach (var t in dm.Hand)
                 {
-                    order.Add(Key(t));
+                    order.Add(Key(t.Value));
                 }
             }
 

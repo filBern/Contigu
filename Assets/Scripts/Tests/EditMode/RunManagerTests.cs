@@ -131,13 +131,14 @@ namespace Contigu.Tests
             int piecesPlaced = 0;
             while (run.State == RunState.InProgress)
             {
-                var token = run.Deck.Hand[0];
-                var rotation = run.Deck.HandRotations[0];
+                int slot = FirstOccupiedHandSlot(run);
+                var token = run.Deck.Hand[slot].Value;
+                var rotation = run.Deck.HandRotations[slot];
                 var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue, "Ran out of room on placement " + piecesPlaced);
 
-                run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
                 piecesPlaced++;
 
                 Assert.Less(piecesPlaced, budget, "Should reach the quota well before exhausting the budget given every cell is golden");
@@ -215,25 +216,29 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
-            // Play 2 of the initial 3 hand pieces at whatever spots are free,
-            // leaving exactly 1.
-            var tokenA = run.Deck.Hand[0];
+            // Play 2 of the initial 3 hand slots (0 and 1) at whatever spots
+            // are free, leaving exactly slot 2 occupied — slots no longer
+            // shift down when an earlier one is played, so this leaves a
+            // genuine hole at 0/1 rather than compacting slot 2 into 0.
+            var tokenA = run.Deck.Hand[0].Value;
             var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[0]);
             var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
             Assert.IsTrue(anchorA.HasValue);
             run.PlacePiece(0, anchorA.Value.x, anchorA.Value.y);
 
-            var tokenB = run.Deck.Hand[0];
-            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[0]);
+            var tokenB = run.Deck.Hand[1].Value;
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[1]);
             var anchorB = FindAnyValidAnchor(run.Grid, shapeB);
             Assert.IsTrue(anchorB.HasValue);
-            run.PlacePiece(0, anchorB.Value.x, anchorB.Value.y);
+            run.PlacePiece(1, anchorB.Value.x, anchorB.Value.y);
 
-            Assert.AreEqual(1, run.Deck.Hand.Count, "Exactly 1 piece should remain after playing 2 of the initial 3");
+            Assert.IsFalse(run.Deck.Hand[0].HasValue);
+            Assert.IsFalse(run.Deck.Hand[1].HasValue);
+            Assert.IsTrue(run.Deck.Hand[2].HasValue, "Slot 2 should still hold its original piece — playing 0 and 1 must not shift it down");
             Assert.AreEqual(RunState.InProgress, run.State);
 
-            var lastToken = run.Deck.Hand[0];
-            var lastShape = PieceShapeCatalog.GetRotated(lastToken.Shape, run.Deck.HandRotations[0]);
+            var lastToken = run.Deck.Hand[2].Value;
+            var lastShape = PieceShapeCatalog.GetRotated(lastToken.Shape, run.Deck.HandRotations[2]);
 
             // Fill the whole board except a 3x3 pocket in the top-right
             // corner (far from where the first 2 pieces landed, near the
@@ -260,11 +265,11 @@ namespace Contigu.Tests
             var lastAnchor = FindAnyValidAnchor(run.Grid, lastShape);
             Assert.IsTrue(lastAnchor.HasValue, "The 3x3 pocket should fit any single piece shape");
 
-            var outcome = run.PlacePiece(0, lastAnchor.Value.x, lastAnchor.Value.y);
+            var outcome = run.PlacePiece(2, lastAnchor.Value.x, lastAnchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(RunState.AwaitingDraft, outcome.StateAfter);
-            Assert.AreEqual(0, run.Deck.Hand.Count,
+            Assert.IsTrue(run.Deck.IsHandFullyEmpty(),
                 "Hand should stay empty until the NEW round actually starts, not refill during this round's own ending placement");
 
             run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
@@ -272,7 +277,7 @@ namespace Contigu.Tests
             run.ApplyModifierPick(modifierOptions[0].Id);
 
             Assert.AreEqual(2, run.CurrentRoundNumber);
-            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count,
+            Assert.IsTrue(AllHandSlotsFilled(run),
                 "The deferred hand should only be drawn once the new round actually starts");
         }
 
@@ -289,20 +294,23 @@ namespace Contigu.Tests
             // incorrectly read as "stuck" and ended the run in defeat.
             var run = new RunManager(new SystemRandomProvider(1));
 
+            // Plays each of the 3 initial slots by its own index — they no
+            // longer shift when an earlier one is played, so slot i always
+            // still holds its original piece until this loop reaches it.
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
-                var token = run.Deck.Hand[0];
-                var rotation = run.Deck.HandRotations[0];
+                var token = run.Deck.Hand[i].Value;
+                var rotation = run.Deck.HandRotations[i];
                 var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue);
-                var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                var outcome = run.PlacePiece(i, anchor.Value.x, anchor.Value.y);
                 Assert.IsTrue(outcome.Placement.Success);
             }
 
             Assert.AreEqual(RunState.InProgress, run.State,
                 "Emptying the hand mid-round should never by itself count as a stuck board");
-            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count,
+            Assert.IsTrue(AllHandSlotsFilled(run),
                 "The hand should refill immediately since the round is still in progress");
         }
 
@@ -325,12 +333,13 @@ namespace Contigu.Tests
             int guard = 0;
             while (run.State == RunState.InProgress)
             {
-                var token = run.Deck.Hand[0];
-                var rotation = run.Deck.HandRotations[0];
+                int slot = FirstOccupiedHandSlot(run);
+                var token = run.Deck.Hand[slot].Value;
+                var rotation = run.Deck.HandRotations[slot];
                 var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue, "Ran out of room before reaching the quota");
-                run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
                 guard++;
                 Assert.Less(guard, 100, "Round should reach its quota well within 100 placements given every cell is golden");
             }
@@ -341,7 +350,7 @@ namespace Contigu.Tests
         public void PlacePiece_TriggersDefeat_WhenBoardBecomesFullyBlockedAfterThisPlacement()
         {
             var run = new RunManager(new SystemRandomProvider(7));
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[0].Value;
             var rotation = run.Deck.HandRotations[0];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
 
@@ -396,15 +405,15 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
 
-            var token = run.Deck.Hand[0];
-            var rotation = run.Deck.HandRotations[0];
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             var anchor = FindAnyValidAnchor(run.Grid, shape);
             Assert.IsTrue(anchor.HasValue);
 
-            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.Greater(outcome.Placement.GoldenBonus, 0, "The token's own golden tile should have scored a golden bonus on this placement");
@@ -419,9 +428,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagBlastTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             const int anchorX = 3;
             const int anchorY = 3;
             Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
@@ -431,7 +440,7 @@ namespace Contigu.Tests
             FillCell(run.Grid, anchorX, anchorY - 1, token.Color);
             FillCell(run.Grid, anchorX, anchorY + 1, token.Color);
 
-            var outcome = run.PlacePiece(0, anchorX, anchorY);
+            var outcome = run.PlacePiece(slot, anchorX, anchorY);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(5 * ScoringConstants.GoldenCellBonus, outcome.Placement.GoldenBonus,
@@ -443,9 +452,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagBeaconTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             const int anchorX = 3;
             const int anchorY = 3;
             Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
@@ -459,7 +468,7 @@ namespace Contigu.Tests
             FillCell(run.Grid, anchorX - 1, anchorY, token.Color);
             FillCell(run.Grid, anchorX + 1, anchorY, token.Color);
 
-            var outcome = run.PlacePiece(0, anchorX, anchorY);
+            var outcome = run.PlacePiece(slot, anchorX, anchorY);
 
             Assert.IsTrue(outcome.Placement.Success);
             int expectedMultiplier = ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier;
@@ -477,9 +486,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
 
             // Simplified mechanic (on explicit request — the old geometric
             // "symmetric partner" rule was too hard to reason about): Mirror
@@ -488,7 +497,7 @@ namespace Contigu.Tests
             // so the target is deterministic regardless of the RNG draw.
             FillCell(run.Grid, 3, 3, token.Color);
 
-            var outcome = run.PlacePiece(0, 2, 3);
+            var outcome = run.PlacePiece(slot, 2, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
             int perCellAmount = ScoringConstants.GroupBonusPerCell; // group multiplier is 1 here — no tinted/multiplier cells involved
@@ -510,9 +519,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.TraitBonus);
@@ -523,14 +532,14 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(3));
             run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(4));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             FillCell(run.Grid, 3, 3, token.Color);
             FillCell(run.Grid, 4, 3, token.Color);
             FillCell(run.Grid, 5, 3, token.Color);
 
-            var outcome = run.PlacePiece(0, 2, 3);
+            var outcome = run.PlacePiece(slot, 2, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
             var validTargets = new HashSet<Vector2Int> { new Vector2Int(3, 3), new Vector2Int(4, 3), new Vector2Int(5, 3) };
@@ -552,16 +561,16 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagSeederTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
 
-            var token = run.Deck.Hand[0];
-            var rotation = run.Deck.HandRotations[0];
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             var anchor = FindAnyValidAnchor(run.Grid, shape);
             Assert.IsTrue(anchor.HasValue);
             var traitPos = anchor.Value + shape.Cells[token.Trait.Value.LocalCellIndex];
 
-            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.IsTrue(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
@@ -573,16 +582,16 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagSeederTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
 
-            var token = run.Deck.Hand[0];
-            var rotation = run.Deck.HandRotations[0];
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             var anchor = FindAnyValidAnchor(run.Grid, shape);
             Assert.IsTrue(anchor.HasValue);
             var traitPos = anchor.Value + shape.Cells[token.Trait.Value.LocalCellIndex];
 
-            run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
             Assert.IsTrue(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden);
 
             // Skip straight to the next round via the debug helper (same one
@@ -604,9 +613,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagCatalystTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             const int anchorX = 3;
             const int anchorY = 3;
             Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
@@ -615,7 +624,7 @@ namespace Contigu.Tests
             FillCell(run.Grid, anchorX - 1, anchorY, token.Color);
             FillCell(run.Grid, anchorX + 1, anchorY, token.Color);
 
-            var outcome = run.PlacePiece(0, anchorX, anchorY);
+            var outcome = run.PlacePiece(slot, anchorX, anchorY);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(2 * ScoringConstants.CatalystBonusPerExistingCell, outcome.Placement.TraitBonus);
@@ -626,9 +635,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagCatalystTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.TraitBonus);
@@ -639,14 +648,14 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagTwinTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             FillCell(run.Grid, 3, 3, token.Color);
             FillCell(run.Grid, 4, 3, token.Color);
             FillCell(run.Grid, 5, 3, token.Color);
 
-            var outcome = run.PlacePiece(0, 2, 3);
+            var outcome = run.PlacePiece(slot, 2, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
             // Group is 4 cells (the trait cell + the 3 pre-filled ones), no
@@ -660,9 +669,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagTwinTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.TraitBonus);
@@ -673,15 +682,15 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagDetonatorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             for (int x = 0; x < GridManager.Size - 1; x++)
             {
                 FillCell(run.Grid, x, 0, token.Color);
             }
 
-            var outcome = run.PlacePiece(0, GridManager.Size - 1, 0);
+            var outcome = run.PlacePiece(slot, GridManager.Size - 1, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.Greater(outcome.Placement.LineClearScore, 0);
@@ -694,9 +703,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagDetonatorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.TraitBonus);
@@ -707,13 +716,13 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             var neighborColor = token.Color == PieceColor.Coral ? PieceColor.Teal : PieceColor.Coral;
             FillCell(run.Grid, 3, 4, neighborColor); // orthogonal ("up") neighbor of (3,3)
 
-            var outcome = run.PlacePiece(0, 3, 3);
+            var outcome = run.PlacePiece(slot, 3, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(neighborColor, run.Grid.GetCell(3, 3).FilledColor);
@@ -724,10 +733,10 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
-            var outcome = run.PlacePiece(0, 0, 0);
+            var token = run.Deck.Hand[slot].Value;
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(token.Color, run.Grid.GetCell(0, 0).FilledColor);
@@ -740,31 +749,34 @@ namespace Contigu.Tests
             run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
 
             // 2 ordinary placements first (neither clearing a line, using
-            // whatever piece actually happens to be in hand[0] each time —
-            // tagging only updates the deck, not the already-dealt hand), so
-            // the streak reaches 2 by the time the Spark-tagged token lands.
-            PlaceWhateverIsInHandSlotZero(run);
-            PlaceWhateverIsInHandSlotZero(run);
+            // whatever piece actually happens to occupy the first available
+            // slot each time — tagging only updates the deck, not the
+            // already-dealt hand), so the streak reaches 2 by the time the
+            // Spark-tagged token lands.
+            PlaceFirstAvailableHandPiece(run);
+            PlaceFirstAvailableHandPiece(run);
             Assert.AreEqual(2, run.Grid.PlacementsSinceLastClear);
 
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
             var anchorC = FindAnyValidAnchor(run.Grid, PieceShapeCatalog.Get(ShapeId.Single));
             Assert.IsTrue(anchorC.HasValue);
 
-            var outcome = run.PlacePiece(0, anchorC.Value.x, anchorC.Value.y);
+            var outcome = run.PlacePiece(slot, anchorC.Value.x, anchorC.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(2 * ScoringConstants.SparkBonusPerPlacement, outcome.Placement.TraitBonus);
         }
 
-        private static void PlaceWhateverIsInHandSlotZero(RunManager run)
+        /// <summary>Plays whichever hand slot happens to be occupied first — used by tests that just need "any piece from hand," not a specific slot (slots no longer shift when played, so replaying slot 0 twice in a row would fail the 2nd time once it's empty).</summary>
+        private static void PlaceFirstAvailableHandPiece(RunManager run)
         {
-            var token = run.Deck.Hand[0];
-            var rotation = run.Deck.HandRotations[0];
+            int slot = FirstOccupiedHandSlot(run);
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             var anchor = FindAnyValidAnchor(run.Grid, shape);
             Assert.IsTrue(anchor.HasValue);
-            var outcome = run.PlacePiece(0, anchor.Value.x, anchor.Value.y);
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
             Assert.IsTrue(outcome.Placement.Success);
         }
 
@@ -773,9 +785,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.TraitBonus);
@@ -786,14 +798,14 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
-            var token = run.Deck.Hand[0];
+            var token = run.Deck.Hand[slot].Value;
             // Only ONE eligible cell elsewhere on the grid, so Void's random
             // pick is deterministic regardless of the RNG seed.
             FillCell(run.Grid, 7, 7, token.Color);
 
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.IsFalse(run.Grid.GetCell(7, 7).IsFilled, "Void should have cleared the only other filled cell on the grid");
@@ -804,11 +816,11 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
-            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
             // Nothing else is filled on the grid, so Void has no eligible
             // target — this placement's own just-filled cell must survive.
-            var outcome = run.PlacePiece(0, 0, 0);
+            var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.IsTrue(run.Grid.GetCell(0, 0).IsFilled);
@@ -825,19 +837,67 @@ namespace Contigu.Tests
         /// Tagging a deck token only updates the deck (the source of truth),
         /// not the hand/draw-pile copies already dealt at construction time,
         /// so this churns hand draws (without going through RunManager, which
-        /// would touch the grid) until the draw pile reshuffles from the
-        /// now-tagged deck and a token matching <paramref name="predicate"/>
-        /// actually reaches the hand.
+        /// would touch the grid) — cycling through slots 0, 1, 2 in turn so
+        /// every 3rd play triggers DeckManager's full-hand refill — until
+        /// some slot matches <paramref name="predicate"/>. Returns that
+        /// slot's index: never assume it's 0, slots no longer shift down
+        /// when an earlier one is played (on explicit request).
         /// </summary>
-        private static void ChurnUntilHandMatches(RunManager run, System.Func<PieceToken, bool> predicate)
+        private static int ChurnUntilHandMatches(RunManager run, System.Func<PieceToken, bool> predicate)
         {
             int guard = 0;
-            while (!predicate(run.Deck.Hand[0]))
+            int nextSlotToPlay = 0;
+            while (true)
             {
-                run.Deck.PlayFromHand(0);
+                int match = FirstMatchingHandSlot(run, predicate);
+                if (match >= 0)
+                {
+                    return match;
+                }
+                run.Deck.PlayFromHand(nextSlotToPlay);
+                nextSlotToPlay = (nextSlotToPlay + 1) % DeckManager.HandSize;
                 guard++;
                 Assert.Less(guard, 300, "A matching token should reach the hand well within a few reshuffle cycles");
             }
+        }
+
+        private static int FirstMatchingHandSlot(RunManager run, System.Func<PieceToken, bool> predicate)
+        {
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                var slot = run.Deck.Hand[i];
+                if (slot.HasValue && predicate(slot.Value))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>The index of the first occupied hand slot — used by tests that just need "any piece from hand," not a specific slot.</summary>
+        private static int FirstOccupiedHandSlot(RunManager run)
+        {
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (run.Deck.Hand[i].HasValue)
+                {
+                    return i;
+                }
+            }
+            Assert.Fail("Hand should have at least one occupied slot while the round is in progress");
+            return -1;
+        }
+
+        private static bool AllHandSlotsFilled(RunManager run)
+        {
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (!run.Deck.Hand[i].HasValue)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         // ---- Fourth batch: SlotUn/Deux/Trois (see GridManagerModifierTests

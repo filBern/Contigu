@@ -137,7 +137,7 @@ namespace Contigu.Presentation
 
         public void BeginSlotDrag(int index, PointerEventData eventData)
         {
-            if (!_interactable || index >= _deck.Hand.Count)
+            if (!_interactable || !_deck.Hand[index].HasValue)
             {
                 return;
             }
@@ -181,7 +181,8 @@ namespace Contigu.Presentation
 
         private void ShowDragGhost(int index)
         {
-            var token = _deck.Hand[index];
+            // BeginSlotDrag already guarded that this slot is occupied.
+            var token = _deck.Hand[index].Value;
             var rotation = _deck.HandRotations[index];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
 
@@ -205,7 +206,7 @@ namespace Contigu.Presentation
 
         private void OnSlotClicked(int idx)
         {
-            if (!_interactable || idx >= _deck.Hand.Count)
+            if (!_interactable || !_deck.Hand[idx].HasValue)
             {
                 return;
             }
@@ -254,7 +255,7 @@ namespace Contigu.Presentation
         {
             for (int i = 0; i < _slotBackgrounds.Length; i++)
             {
-                bool hasPiece = i < _deck.Hand.Count;
+                bool hasPiece = _deck.Hand[i].HasValue;
                 bool selected = i == _selectedIndex;
                 var baseColor = !hasPiece ? UITheme.Panel : (selected ? UITheme.ButtonSelected : UITheme.ButtonIdle);
                 // Same "recede into the void" treatment as locked grid cells
@@ -275,9 +276,9 @@ namespace Contigu.Presentation
                     Destroy(preview.GetChild(c).gameObject);
                 }
 
-                if (i < _deck.Hand.Count)
+                if (_deck.Hand[i].HasValue)
                 {
-                    var token = _deck.Hand[i];
+                    var token = _deck.Hand[i].Value;
                     var rotation = _deck.HandRotations[i];
                     BuildShapePreview(preview, token, rotation, _slotBackgrounds[i].gameObject);
                 }

@@ -92,7 +92,7 @@ namespace Contigu.Core
             // round, so the fresh hand is drawn here, for the round it
             // actually belongs to, rather than during the previous round's
             // tail end before the player has even picked their upgrade.
-            if (Deck.Hand.Count == 0)
+            if (Deck.IsHandFullyEmpty())
             {
                 Deck.DrawNewHand();
             }
@@ -114,12 +114,12 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Run is not in progress"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            if (handIndex < 0 || handIndex >= Deck.Hand.Count)
+            if (handIndex < 0 || handIndex >= DeckManager.HandSize || !Deck.Hand[handIndex].HasValue)
             {
                 return new PlacementOutcome(PlacementResult.Failure("Invalid hand index"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            var token = Deck.Hand[handIndex];
+            var token = Deck.Hand[handIndex].Value;
             var rotation = Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
 
@@ -174,7 +174,7 @@ namespace Contigu.Core
 
             EvaluateRoundEnd();
 
-            if (State == RunState.InProgress && Deck.Hand.Count == 0)
+            if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
             {
                 Deck.DrawNewHand();
             }
@@ -604,19 +604,19 @@ namespace Contigu.Core
                 return;
             }
 
-            // An empty hand (PlacePiece defers its refill when the round
+            // A fully empty hand (PlacePiece defers its refill when the round
             // might be ending — see PlayFromHand's refillIfEmpty) has
             // nothing to evaluate yet, so it can never count as "stuck":
             // skip the check and let the round stay InProgress. PlacePiece's
             // own post-EvaluateRoundEnd check then draws the next hand right
             // away, which the NEXT placement will correctly check.
-            if (Deck.Hand.Count > 0 && !HasAnyHandPlacement())
+            if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement())
             {
                 State = RunState.RunDefeat;
             }
         }
 
-        /// <summary>True if at least one piece currently in hand, in its actual dealt rotation, can be legally placed somewhere on the grid.</summary>
+        /// <summary>True if at least one piece currently in hand, in its actual dealt rotation, can be legally placed somewhere on the grid — empty slots are skipped.</summary>
         private bool HasAnyHandPlacement()
         {
             var hand = Deck.Hand;
@@ -624,7 +624,11 @@ namespace Contigu.Core
             var shapes = new List<PieceShape>(hand.Count);
             for (int i = 0; i < hand.Count; i++)
             {
-                shapes.Add(PieceShapeCatalog.GetRotated(hand[i].Shape, rotations[i]));
+                if (!hand[i].HasValue)
+                {
+                    continue;
+                }
+                shapes.Add(PieceShapeCatalog.GetRotated(hand[i].Value.Shape, rotations[i]));
             }
             return Grid.HasAnyValidPlacement(shapes);
         }
