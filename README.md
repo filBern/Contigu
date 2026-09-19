@@ -1309,6 +1309,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     arrondies. Fix : bannière posée à ras du bord (`anchoredPosition
     (0, 0)`, largeur = `PanelWidth` pleine, sans marge) pour couvrir
     entièrement le haut de la carte, coins compris.
+  - **Fix #4 (abandon de la bannière) : "Modifiers" en texte plat, dans
+    la couleur de fond du jeu** (sur demande explicite — "on essaye
+    autre chose") — après le fix #3, la bannière `Union` couvrait bien
+    les coins mais l'approche restait fragile (dépendante d'un
+    alignement précis entre deux sprites différents). Remplacée par du
+    texte simple directement sur la carte `card_bg_2`, coloré avec
+    `UITheme.Background` (`#372e4d`, la couleur de fond du jeu) plutôt
+    que `TextPrimary` — plus besoin d'aligner une bannière du tout.
+    `UISprites.ModifierHeaderBanner` retiré (propriété plus utilisée).
+    Le fichier `Union.png` lui-même N'A PAS été supprimé du dépôt —
+    `UISprites.UpgradeNameBanner` s'en sert encore pour le nom des
+    cartes d'upgrade dans `DraftView`, le retirer casserait cette
+    fonctionnalité distincte.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :

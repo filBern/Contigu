@@ -57,28 +57,19 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
-            // "Modifiers" sits on its own Union ribbon banner instead of being
-            // plain text over the card art (on explicit request) — same
-            // pattern as an upgrade card's name banner (see
-            // DraftView.BuildCard/UISprites.UpgradeNameBanner). Keeps the
-            // title's own visual fixed-size and separate from the panel
-            // background, which now just stretches cleanly at any height.
-            // Flush with the card's own top/left/right edges (no inset like
-            // DraftView's name banner has) — card_bg_2's rounded top corners
-            // are too large for its own 9-slice top border (screenshot showed
-            // them poking out past an inset banner as stray white shapes), so
-            // the banner needs to fully cover the card's top edge instead of
-            // floating inside it.
-            var headerBanner = UIFactory.CreateSlicedImage(_root, "HeaderBanner", UISprites.ModifierHeaderBanner);
-            headerBanner.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            headerBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            headerBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            headerBanner.rectTransform.anchoredPosition = new Vector2(0f, 0f);
-            headerBanner.rectTransform.sizeDelta = new Vector2(PanelWidth, 46f);
-
-            var header = UIFactory.CreateText(headerBanner.transform, "Label", "Modifiers", 28, UITheme.TextPrimary);
-            header.raycastTarget = false;
-            UIFactory.StretchFull(header.rectTransform);
+            // "Modifiers" in the game's own background color, directly on the
+            // card art (on explicit request — the Union ribbon banner tried
+            // here before kept leaving card_bg_2's rounded corners visibly
+            // poking out past it, however it was sized/positioned). No banner
+            // needed this way — the title just needs to read clearly against
+            // the plain white card, and UITheme.Background gives it that
+            // without adding another sprite/layer to line up.
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 28, UITheme.Background, TextAnchor.UpperCenter);
+            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            header.rectTransform.pivot = new Vector2(0.5f, 1f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 40f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
