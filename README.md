@@ -1201,3 +1201,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     une tuile enchantée chacune) sans la répéter en toutes lettres à
     chaque fois — le reste du texte (l'effet propre à chaque upgrade)
     est inchangé dans le fond, juste débarrassé du superflu.
+- **Fix : texte flou dans les descriptions d'upgrade** — cause identifiée
+  après consultation de la fiche du pack de polices (`Digitalt_spec.pdf`) :
+  `Digitalt.ttf` est une police d'affichage très grasse/épaisse conçue
+  pour des titres courts en gros caractères (logos, en-têtes), pas pour
+  du texte de paragraphe. À la taille d'une description (14-15pt), ses
+  traits épais mangent l'espace entre les lettres et dans leurs
+  contre-formes (le "trou" du "e", du "a", etc.) — un paragraphe entier
+  finit par se lire comme un bloc flou/brouillé plutôt que des lettres
+  individuellement nettes. Ce n'est pas un bug de rendu, c'est une police
+  mal adaptée à ce rôle précis.
+  - Nouveau `UIFactory.BodyFont()` (police intégrée standard d'Unity,
+    `LegacyRuntime.ttf`) + `UIFactory.CreateBodyText(...)` — même
+    signature que `CreateText`, juste sur cette police au lieu de
+    `Digitalt`. Les titres/labels/boutons restent sur `Digitalt` via
+    `CreateText` (aucun changement là — c'est un bon choix pour du texte
+    court en gros caractères).
+  - Appliqué aux deux endroits où du texte de description
+    multi-lignes s'affiche : `DraftView` (description sur la carte
+    d'upgrade) et `TooltipView` (description au survol, partagée par
+    les badges de modifier et de trait de tuile).
