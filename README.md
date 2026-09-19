@@ -1530,23 +1530,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   sans changement supplémentaire nécessaire ; les modifiers à bonus
   plat (Prisme, Devotion, etc.) n'ont qu'une seule case représentative
   (`placedCells[0]`) à faire pulser.
-- **Le combo accélère de 10% à chaque ajout** (sur demande explicite —
-  "pour que le joueur n'ait pas trop à attendre lors d'un gros combo").
+- **Le combo accélère à chaque ajout** (sur demande explicite — "pour
+  que le joueur n'ait pas trop à attendre lors d'un gros combo").
   `PlayPlacementSequence` attendait un délai FIXE (`ScoreEventStaggerSeconds`
   = 0.22s, `LineClearStaggerSeconds` = 0.14s) entre chaque popup — un
   gros combo (beaucoup de cellules de groupe + lignes complétées +
   modifiers) prenait donc un temps qui grandissait linéairement avec sa
   taille. Nouvelle variable locale `staggerSpeed` (démarre à 1, multipliée
-  par `ComboSpeedupFactor` = 0.9 après CHAQUE ajout au combo — que ce
-  soit un événement de score, une cellule de ligne effacée, ou le
-  rattrapage du multiplicateur final) : le délai réel de chaque étape
-  est `délaiDeBase × staggerSpeed`, borné en dessous par
-  `MinStaggerSeconds` (0.03s) pour qu'une très longue chaîne garde un
-  minimum de rythme perceptible plutôt que de s'effondrer en un dump
-  instantané. Une seule variable partagée entre les deux boucles (score
-  events puis lignes effacées) plutôt qu'une par boucle — le combo
-  accélère comme UNE séquence continue, pas deux qui repartiraient
-  chacune à pleine vitesse.
+  par `ComboSpeedupFactor` après CHAQUE ajout au combo — que ce soit un
+  événement de score, une cellule de ligne effacée, ou le rattrapage du
+  multiplicateur final) : le délai réel de chaque étape est
+  `délaiDeBase × staggerSpeed`, borné en dessous par `MinStaggerSeconds`
+  pour qu'une très longue chaîne garde un minimum de rythme perceptible
+  plutôt que de s'effondrer en un dump instantané. Une seule variable
+  partagée entre les deux boucles (score events puis lignes effacées)
+  plutôt qu'une par boucle — le combo accélère comme UNE séquence
+  continue, pas deux qui repartiraient chacune à pleine vitesse.
+  `ComboSpeedupFactor` = 0.9 (10% plus vite par ajout) jugé trop rapide
+  sur premier essai — ramené à 0.97 (3% par ajout), et
+  `MinStaggerSeconds` remonté de 0.03s à 0.1s en même temps (sur
+  explicite demande — "10% c'est trop rapide, faisons 3% et floored
+  plus haut").
 - **Les slots de main ne se décalent plus quand on joue une pièce** (sur
   demande explicite — "laisse la slot 1 vide au lieu de transférer la
   slot 2 et 3 vers la slot 1 et 2"). `DeckManager._hand` était un

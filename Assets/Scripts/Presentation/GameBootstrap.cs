@@ -16,13 +16,13 @@ namespace Contigu.Presentation
         private const float CellSize = 54f;
         private const float ScoreEventStaggerSeconds = 0.22f;
         private const float LineClearStaggerSeconds = 0.14f;
-        // Each combo addition waits 10% less than the previous one (on
-        // explicit request), so a big combo doesn't make the player sit
-        // through a long, linearly-paced popup sequence — floored so a very
-        // long chain still keeps a perceptible beat instead of collapsing to
-        // an instant dump.
-        private const float ComboSpeedupFactor = 0.9f;
-        private const float MinStaggerSeconds = 0.03f;
+        // Each combo addition waits 3% less than the previous one (on
+        // explicit request — 10% was too fast), so a big combo doesn't make
+        // the player sit through a long, linearly-paced popup sequence —
+        // floored so a very long chain still keeps a perceptible beat
+        // instead of collapsing to an instant dump.
+        private const float ComboSpeedupFactor = 0.97f;
+        private const float MinStaggerSeconds = 0.1f;
 
         private RunManager _run;
 
