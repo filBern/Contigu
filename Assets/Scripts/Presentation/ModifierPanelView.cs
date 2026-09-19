@@ -43,11 +43,15 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, 460f);
             _root.anchoredPosition = new Vector2(40f, 0f);
 
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 30, UITheme.TextPrimary);
+            // UpperCenter (not the default MiddleCenter) so the text hugs the
+            // top of its box directly instead of being centered within it —
+            // the screenshot showed a visible gap above "MODIFIERS" from that
+            // centering slack, which anchoredPosition alone couldn't close.
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 30, UITheme.TextPrimary, TextAnchor.UpperCenter);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -2f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -4f);
             header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 48f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
