@@ -1327,7 +1327,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (sombre, choisie pour le fix #4) à `Color.white` (blanc pur,
     pas `TextPrimary` qui est crème `#effae6`), et `anchoredPosition`
     remis à `(0, 0)` (au lieu de `(0, -8)`) pour que le texte touche
-    directement le bord haut du panneau plutôt que d'en être décalé. — "slot de main, taille de
+    directement le bord haut du panneau plutôt que d'en être décalé.
+  - **Fix #6 : texte blanc invisible sur la carte quasi-blanche**
+    ("le texte est disparu", capture d'écran à l'appui) — le fix #5 a
+    rendu le titre littéralement illisible : blanc sur `card_bg_2`
+    (elle-même quasi blanche) = zéro contraste. Fix : petite barre
+    plate (un simple `UIFactory.CreatePanel`, pas un sprite 9-slice)
+    dans la couleur de fond du jeu (`UITheme.Background`) posée à ras
+    du bord haut et sur toute la largeur, DERRIÈRE le texte blanc —
+    donne le contraste nécessaire tout en couvrant les coins arrondis
+    de la carte par-dessus (des coins DROITS n'ont besoin d'aucun
+    alignement avec les coins arrondis de la carte en dessous,
+    contrairement aux tentatives précédentes avec la bannière `Union`,
+    donc ce problème-là ne peut plus revenir). Pas d'`Outline`/contour
+    de texte ajouté (respecte la demande explicite antérieure de
+    retirer bold/outline de tous les textes) — le contraste vient
+    entièrement de la barre derrière, pas du texte lui-même.
+  - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
     - **Slot 1/2/3 Loyalty** (`SlotUn`/`SlotDeux`/`SlotTrois`) : double

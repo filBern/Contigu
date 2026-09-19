@@ -57,14 +57,24 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
-            // "Modifiers" in plain white, hugging the very top of the panel
-            // (on explicit request) — directly on the card art, no banner.
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 28, Color.white, TextAnchor.UpperCenter);
-            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = Vector2.zero;
-            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 40f);
+            // White text needs contrast against card_bg_2's near-white body,
+            // or it's flatly invisible — a plain flat-color bar (the game's
+            // own background color, no sprite/outline) behind it, flush with
+            // the panel's top edge and full width. Being a plain rectangle
+            // rather than a 9-sliced sprite, its hard corners simply cover
+            // card_bg_2's rounded top corners outright instead of needing to
+            // line up with them (the actual problem the earlier Union banner
+            // attempts kept running into).
+            var headerBar = UIFactory.CreatePanel(_root, "HeaderBar", UITheme.Background);
+            headerBar.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            headerBar.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            headerBar.rectTransform.pivot = new Vector2(0.5f, 1f);
+            headerBar.rectTransform.anchoredPosition = Vector2.zero;
+            headerBar.rectTransform.sizeDelta = new Vector2(PanelWidth, 46f);
+
+            var header = UIFactory.CreateText(headerBar.transform, "Label", "Modifiers", 28, Color.white);
+            header.raycastTarget = false;
+            UIFactory.StretchFull(header.rectTransform);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
