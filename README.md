@@ -1266,6 +1266,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     chaque `Refresh` (`HeaderHeight + lignes×badge + espacements +
     padding`) pour rester ajusté au contenu quel que soit le nombre de
     modifiers actifs (désormais illimité).
+  - **Fix : le titre "MODIFIERS" changeait de hauteur à l'écran selon le
+    nombre de modifiers actifs** (rapporté avec captures d'écran à 1, 3
+    et 5 modifiers). Cause : `_root` était ancré/pivoté au CENTRE
+    vertical (`anchorMin/Max = (0, 0.5)`, `pivot = (0, 0.5)`) — un
+    pivot centré fait grandir le panneau symétriquement dans les deux
+    directions quand `sizeDelta.y` change, donc le bord haut (et le
+    header qui y est ancré) se déplaçait de la moitié du delta de
+    hauteur à chaque changement du nombre de modifiers. Fix : ancrage/
+    pivot déplacés au HAUT (`(0, 1)`), avec un `anchoredPosition`
+    équivalent à l'ancien centrage vertical (hauteur fixe 460 d'avant
+    ce lot) — le panneau ne grandit plus que vers le bas, le bord haut
+    (et donc le header) reste maintenant à une position écran
+    constante quel que soit le nombre de modifiers.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :

@@ -43,11 +43,19 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
             var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
             _root = panel.rectTransform;
-            _root.anchorMin = new Vector2(0f, 0.5f);
-            _root.anchorMax = new Vector2(0f, 0.5f);
-            _root.pivot = new Vector2(0f, 0.5f);
+            // Anchored/pivoted from the TOP (not vertically centered like
+            // before) — sizeDelta.y now changes every Refresh to fit however
+            // many modifiers are active, and a center pivot would grow the
+            // panel symmetrically in both directions, shoving the "Modifiers"
+            // header (itself anchored to the panel's top edge) up or down by
+            // half the height delta each time the count changes. Anchoring
+            // from the top instead means only the BOTTOM edge moves, so the
+            // header always renders at the exact same screen position.
+            _root.anchorMin = new Vector2(0f, 1f);
+            _root.anchorMax = new Vector2(0f, 1f);
+            _root.pivot = new Vector2(0f, 1f);
             _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
-            _root.anchoredPosition = new Vector2(40f, 0f);
+            _root.anchoredPosition = new Vector2(40f, -170f);
 
             // UpperCenter (not the default MiddleCenter) so the text hugs the
             // top of its box directly instead of being centered within it —
