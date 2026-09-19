@@ -29,6 +29,15 @@ namespace Contigu.Core
             get { return _activeModifiers; }
         }
 
+        /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
+        private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
+
+        /// <summary>How many times <paramref name="id"/> has fired this run (0 if never, or not currently held).</summary>
+        public int GetModifierUsageCount(ModifierId id)
+        {
+            return _modifierUsageCounts.TryGetValue(id, out var count) ? count : 0;
+        }
+
         private readonly IRandomProvider _rng;
 
         /// <summary>0-based index into <see cref="RunConfig"/> arrays.</summary>
@@ -153,6 +162,7 @@ namespace Contigu.Core
                 ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
+            CountModifierUsage(placement);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             // Don't auto-refill yet — if this placement also ends the round,
@@ -422,6 +432,32 @@ namespace Contigu.Core
             scoreEvent.TriggeringModifier = slotModifier.Value;
             events.Add(scoreEvent);
             placement.ScoreEvents = events;
+        }
+
+        /// <summary>
+        /// Tallies every <see cref="ScoreEventType.Modifier"/> event in this
+        /// placement's final <see cref="PlacementResult.ScoreEvents"/> — called
+        /// last, after every modifier bonus (GridManager's own plus the
+        /// hand-slot ones added above) has already been appended, so it sees
+        /// the complete list regardless of which method actually produced
+        /// each event. Powers the "used N times" tooltip stat (see
+        /// GetModifierUsageCount) — a modifier only counts as "used" the
+        /// instant it actually scores, not just while merely held.
+        /// </summary>
+        private void CountModifierUsage(PlacementResult placement)
+        {
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (scoreEvent.Type != ScoreEventType.Modifier || !scoreEvent.TriggeringModifier.HasValue)
+                {
+                    continue;
+                }
+
+                var id = scoreEvent.TriggeringModifier.Value;
+                _modifierUsageCounts.TryGetValue(id, out var count);
+                _modifierUsageCounts[id] = count + 1;
+            }
         }
 
         /// <summary>Every cell in a placement's scored group earns the exact same flat per-cell amount (ScoringConstants.GroupBonusPerCell — the group multiplier no longer inflates this per-cell, see PlacementResult.GroupMultiplier) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>

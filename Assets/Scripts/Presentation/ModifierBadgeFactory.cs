@@ -18,7 +18,15 @@ namespace Contigu.Presentation
     /// </summary>
     public static class ModifierBadgeFactory
     {
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip)
+        /// <summary>
+        /// <paramref name="usageCountProvider"/> is optional — when given, the
+        /// badge's tooltip additionally shows how many times this modifier
+        /// has fired this run (queried live on each hover, not baked in at
+        /// creation time, since it keeps changing after the badge is built).
+        /// Only the persistent side panel passes one; draft-card badges
+        /// (modifiers not picked yet) leave it null and show no usage line.
+        /// </summary>
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null)
         {
             var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, ModifierVisualDefaults.GetCategoryColor(def.Category));
             badge.rectTransform.sizeDelta = new Vector2(size, size);
@@ -45,7 +53,7 @@ namespace Contigu.Presentation
             }
 
             var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
-            hover.Init(tooltip, def);
+            hover.Init(tooltip, def, usageCountProvider);
 
             return badge;
         }

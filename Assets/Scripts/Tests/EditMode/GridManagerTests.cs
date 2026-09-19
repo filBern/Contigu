@@ -636,5 +636,60 @@ namespace Contigu.Tests
             }
             Assert.AreEqual(GridManager.Size, lineClearEvents);
         }
+
+        [Test]
+        public void PreviewGroup_OnAnEmptyBoard_IsJustThePiecesOwnCells()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+
+            var preview = grid.PreviewGroup(square, PieceColor.Coral, 2, 2);
+
+            Assert.AreEqual(square.Cells.Count, preview.Count);
+            foreach (var offset in square.Cells)
+            {
+                CollectionAssert.Contains(preview, new Vector2Int(2 + offset.x, 2 + offset.y));
+            }
+        }
+
+        [Test]
+        public void PreviewGroup_IncludesAdjacentSameColorCells_WithoutMutatingTheGrid()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+
+            // Placing a 3rd Coral single at (2,0) would join the existing
+            // 2-cell group into a 3-cell one — the preview should show all
+            // 3 positions even though nothing has actually been placed yet.
+            var preview = grid.PreviewGroup(single, PieceColor.Coral, 2, 0);
+
+            Assert.AreEqual(3, preview.Count);
+            CollectionAssert.Contains(preview, new Vector2Int(0, 0));
+            CollectionAssert.Contains(preview, new Vector2Int(1, 0));
+            CollectionAssert.Contains(preview, new Vector2Int(2, 0));
+
+            // Nothing was actually mutated by the preview call.
+            Assert.IsFalse(grid.GetCell(2, 0).IsFilled);
+        }
+
+        [Test]
+        public void PreviewGroup_ExcludesAdjacentCellsOfADifferentColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
+
+            var preview = grid.PreviewGroup(single, PieceColor.Coral, 0, 1);
+
+            // (0,1) is adjacent to (0,0) [Coral, joins] but not to (1,0)
+            // [Teal, diagonal — never adjacent anyway] — regardless, a Teal
+            // cell must never appear in a Coral placement's preview.
+            CollectionAssert.Contains(preview, new Vector2Int(0, 0));
+            CollectionAssert.Contains(preview, new Vector2Int(0, 1));
+            CollectionAssert.DoesNotContain(preview, new Vector2Int(1, 0));
+        }
     }
 }

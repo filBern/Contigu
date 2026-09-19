@@ -1182,6 +1182,52 @@ namespace Contigu.Core
             return group;
         }
 
+        /// <summary>
+        /// Read-only preview of the connected group a placement WOULD produce
+        /// at (anchorX, anchorY) — this piece's own cells plus every
+        /// already-filled same-color cell connected to them, using the exact
+        /// same flood-fill/joker rules as an actual placement's own group
+        /// bonus (see <see cref="FindConnectedGroup"/>/<see cref="TryVisitGroupNeighbor"/>),
+        /// but without mutating any grid state. Lets the presentation layer
+        /// highlight the full prospective group while the player is still
+        /// choosing where to drop a piece, not just the piece's own
+        /// footprint. Assumes the placement is valid (<see cref="CanPlace"/>)
+        /// — callers should check that first, same as <see cref="PlacePiece"/>.
+        /// </summary>
+        public List<Vector2Int> PreviewGroup(PieceShape shape, PieceColor color, int anchorX, int anchorY)
+        {
+            var offsets = shape.Cells;
+            var visited = new HashSet<Vector2Int>();
+            var stack = new Stack<Vector2Int>();
+            var group = new List<Vector2Int>();
+
+            // Seeds the flood-fill with the piece's own cells as if they were
+            // already filled with `color` — mirrors PlacePiece, which marks
+            // them filled in _cells BEFORE calling FindConnectedGroup from
+            // one of them.
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                var pos = new Vector2Int(anchorX + offsets[i].x, anchorY + offsets[i].y);
+                visited.Add(pos);
+                stack.Push(pos);
+            }
+
+            PieceColor? anchorColor = color == PieceColor.Joker ? (PieceColor?)null : color;
+
+            while (stack.Count > 0)
+            {
+                var pos = stack.Pop();
+                group.Add(pos);
+
+                TryVisitGroupNeighbor(pos.x - 1, pos.y, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x + 1, pos.y, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y - 1, ref anchorColor, visited, stack);
+                TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
+            }
+
+            return group;
+        }
+
         private void TryVisitGroupNeighbor(int x, int y, ref PieceColor? anchorColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
         {
             if (!InBounds(x, y))

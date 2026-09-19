@@ -184,7 +184,12 @@ namespace Contigu.Presentation
             _modifierDraftView.Build(mainRoot, _tooltipView);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
-            _modifierPanelView.Build(mainRoot, _tooltipView);
+            // Lambda (not the method group _run.GetModifierUsageCount) so a
+            // restart's new RunManager instance is picked up automatically —
+            // _run is reassigned on restart but this view is never rebuilt,
+            // only Refreshed, so a bound delegate would keep querying the
+            // old, discarded run forever.
+            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id));
 
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
@@ -280,17 +285,27 @@ namespace Contigu.Presentation
                     continue; // played below, synced with each cell's visual clear
                 }
 
-                var anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                RectTransform anchor;
+                if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)
+                {
+                    // Shows on the modifier's own badge instead of the tile
+                    // (on explicit request) — falls back to the tile if the
+                    // badge can't be found for some reason, same as before.
+                    anchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                        ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                    _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                }
+                else
+                {
+                    anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                    _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+                }
+
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.Modifier
                     : scoreEvent.Type == ScoreEventType.Trait ? UITheme.PanelLight
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
-                _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
-                if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)
-                {
-                    _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
-                }
 
                 displayedRoundScore += scoreEvent.Amount;
                 comboTotal += scoreEvent.Amount;

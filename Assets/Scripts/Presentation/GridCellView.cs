@@ -13,6 +13,7 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
         private const float PulsePeakFraction = 0.4f;
+        private const float GroupPreviewBlend = 0.35f;
 
         public int X { get; private set; }
         public int Y { get; private set; }
@@ -226,6 +227,20 @@ namespace Contigu.Presentation
                     _badgeSpecial.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
                 }
             }
+        }
+
+        /// <summary>
+        /// Lightly tints this already-filled cell to show it would join the
+        /// scored group if the piece currently being hovered were dropped
+        /// where it's previewed — for pre-existing cells the piece's own
+        /// footprint doesn't occupy, so it needs a softer/different tint than
+        /// <see cref="SetHoverTint"/> (which blends the footprint itself
+        /// toward green/red) or the two would be indistinguishable.
+        /// ClearHover's follow-up ApplyState call resets it once hover ends.
+        /// </summary>
+        public void SetGroupPreviewHighlight()
+        {
+            Background.color = Color.Lerp(Background.color, UITheme.HoverValid, GroupPreviewBlend);
         }
 
         /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points.</summary>

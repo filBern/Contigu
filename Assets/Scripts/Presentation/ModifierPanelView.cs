@@ -35,6 +35,7 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private RectTransform _rowsContainer;
         private TooltipView _tooltip;
+        private System.Func<ModifierId, int> _usageCountProvider;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
         // lets Pulse(id) find the badge currently showing that modifier (each
@@ -43,9 +44,11 @@ namespace Contigu.Presentation
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
         private readonly List<Image> _rowBadges = new List<Image>();
 
-        public RectTransform Build(Transform parent, TooltipView tooltip)
+        /// <summary><paramref name="usageCountProvider"/> (e.g. RunManager.GetModifierUsageCount) lets each badge's tooltip show how many times it's fired this run — see ModifierBadgeFactory.</summary>
+        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider)
         {
             _tooltip = tooltip;
+            _usageCountProvider = usageCountProvider;
             var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
             _root = panel.rectTransform;
             // Vertically centered, STATIC size — the panel never resizes at
@@ -99,10 +102,23 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip);
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
             }
+        }
+
+        /// <summary>The screen anchor of the badge currently showing <paramref name="id"/>, or null if it isn't active right now — used to spawn that modifier's score popup on its own icon instead of on a grid tile (see GameBootstrap.PlayPlacementSequence). Each modifier can only be active once per run, so at most one badge ever matches.</summary>
+        public RectTransform GetBadgeTransform(ModifierId id)
+        {
+            for (int i = 0; i < _rowIds.Count; i++)
+            {
+                if (_rowIds[i] == id)
+                {
+                    return _rowBadges[i].rectTransform;
+                }
+            }
+            return null;
         }
 
         /// <summary>Flashes the badge (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>

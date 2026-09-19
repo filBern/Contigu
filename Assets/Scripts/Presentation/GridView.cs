@@ -30,6 +30,7 @@ namespace Contigu.Presentation
         private PieceColor? _selectedColor;
         private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
+        private readonly List<Vector2Int> _groupPreviewCells = new List<Vector2Int>();
 
         public RectTransform Build(Transform parent, GridManager grid, float cellSize)
         {
@@ -228,6 +229,7 @@ namespace Contigu.Presentation
             bool valid = _grid.CanPlace(_selectedShape, origin.x, origin.y);
             var overlay = valid ? UITheme.HoverValid : UITheme.HoverInvalid;
             var offsets = _selectedShape.Cells;
+            var footprint = new HashSet<Vector2Int>();
             for (int i = 0; i < offsets.Count; i++)
             {
                 int cx = origin.x + offsets[i].x;
@@ -240,8 +242,31 @@ namespace Contigu.Presentation
                     bool isTraitCell = _selectedTrait.HasValue && _selectedTrait.Value.LocalCellIndex == i;
                     _cells[cx, cy].SetHoverTint(overlay, valid, _selectedColor, isTraitCell ? _selectedTrait : null);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
+                    footprint.Add(new Vector2Int(cx, cy));
                 }
             }
+
+            // Also highlights every pre-existing cell that would be pulled
+            // into the same scored group as this placement (on explicit
+            // request) — lets the player see the full extent of what they're
+            // about to (re)score, not just the piece's own footprint, before
+            // committing to a spot. Only meaningful for a valid placement —
+            // GridManager.PreviewGroup assumes CanPlace already passed.
+            if (valid)
+            {
+                var previewGroup = _grid.PreviewGroup(_selectedShape, _selectedColor.Value, origin.x, origin.y);
+                for (int i = 0; i < previewGroup.Count; i++)
+                {
+                    var pos = previewGroup[i];
+                    if (footprint.Contains(pos))
+                    {
+                        continue;
+                    }
+                    _cells[pos.x, pos.y].SetGroupPreviewHighlight();
+                    _groupPreviewCells.Add(pos);
+                }
+            }
+
             HoverValidityChanged?.Invoke(valid);
         }
 
@@ -287,6 +312,13 @@ namespace Contigu.Presentation
                 RefreshCell(pos.x, pos.y);
             }
             _hoveredFootprint.Clear();
+
+            for (int i = 0; i < _groupPreviewCells.Count; i++)
+            {
+                var pos = _groupPreviewCells[i];
+                RefreshCell(pos.x, pos.y);
+            }
+            _groupPreviewCells.Clear();
         }
 
         public void OnCellClicked(int x, int y)

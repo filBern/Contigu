@@ -9,16 +9,24 @@ namespace Contigu.Presentation
     {
         private TooltipView _tooltip;
         private ModifierDefinition _def;
+        private System.Func<ModifierId, int> _usageCountProvider;
 
-        public void Init(TooltipView tooltip, ModifierDefinition def)
+        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null)
         {
             _tooltip = tooltip;
             _def = def;
+            _usageCountProvider = usageCountProvider;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            _tooltip.Show(_def.Name, _def.Description, (RectTransform)transform);
+            // Queried fresh on every hover rather than passed in at Init —
+            // the count keeps changing (every placement that scores) for as
+            // long as this same badge instance stays on screen.
+            string subtitle = _usageCountProvider != null
+                ? "Used " + _usageCountProvider(_def.Id) + "x this run"
+                : null;
+            _tooltip.Show(_def.Name, _def.Description, (RectTransform)transform, subtitle);
         }
 
         public void OnPointerExit(PointerEventData eventData)

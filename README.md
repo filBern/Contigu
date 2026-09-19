@@ -1434,3 +1434,65 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
       (`GridManagerModifierTests` pour les 6 modifiers évaluables par
       `GridManager`, `RunManagerTests` pour les 3 modifiers de slot qui
       ne le sont pas).
+- **3 upgrades visuels de feedback** (sur demande explicite, un seul
+  message groupant les trois) :
+  - **Popup de points d'un modifier affiché sur son icône, pas sur une
+    tuile** — `GameBootstrap.PlayPlacementSequence` ancrait tous les
+    popups "+X" (y compris ceux des modifiers) sur la case de la
+    grille via `GridView.GetCellTransform`. Nouveau
+    `ModifierPanelView.GetBadgeTransform(ModifierId)` (parcourt les
+    listes parallèles `_rowIds`/`_rowBadges` déjà utilisées par
+    `Pulse`) — pour un `ScoreEvent` de type `Modifier`, le popup et la
+    pulsation de cellule (`GridView.PulseCell`) sont remplacés par une
+    ancre sur le badge du modifier dans le panneau latéral (avec repli
+    sur la case si le badge est introuvable, par prudence). Les
+    événements Golden/Group/Trait ne changent pas — seuls ceux
+    provoqués par un modifier actif changent d'ancre.
+  - **Nombre d'utilisations d'un modifier dans son tooltip** —
+    `RunManager` garde maintenant un `Dictionary<ModifierId, int>`
+    (`_modifierUsageCounts`), incrémenté par une nouvelle
+    `CountModifierUsage(placement)` appelée en toute fin de
+    `PlacePiece` (après le bonus des modifiers de `GridManager` ET
+    celui des modifiers de slot ajouté après coup — elle relit donc la
+    liste finale de `ScoreEvents`, peu importe qui a produit chaque
+    entrée) : chaque `ScoreEvent` de type `Modifier` compte comme une
+    "utilisation". Nouveau `RunManager.GetModifierUsageCount(id)`.
+    Exposé jusqu'au tooltip via un délégué optionnel
+    `System.Func<ModifierId, int>` enfilé à travers
+    `ModifierPanelView.Build` → `ModifierBadgeFactory.Create` →
+    `ModifierBadgeView.Init` — interrogé À CHAQUE survol (pas mis en
+    cache à la construction du badge, puisque le compte change à
+    chaque placement) et affiché comme sous-titre du tooltip ("Used Nx
+    this run"), en réutilisant le slot `subtitle` déjà existant de
+    `TooltipView.Show`. Seul `ModifierPanelView` (modifiers déjà
+    actifs) passe ce délégué ; `ModifierDraftView` (modifiers pas
+    encore choisis) laisse le paramètre à `null`, donc aucun sous-titre
+    ne s'affiche là. `GameBootstrap` passe une LAMBDA
+    (`id => _run.GetModifierUsageCount(id)`), pas la méthode liée
+    `_run.GetModifierUsageCount` directement — `_run` est réaffecté au
+    restart mais `ModifierPanelView` n'est jamais reconstruit (juste
+    `Refresh`), donc un délégué lié à l'ancienne instance aurait
+    continué d'interroger un run abandonné pour toujours.
+  - **Highlight du groupe complet lors du survol d'un emplacement
+    valide** — jusqu'ici, survoler une case avec une pièce en main ne
+    prévisualisait que l'empreinte de la pièce elle-même
+    (`GridView.OnCellHoverEnter`/`SetHoverTint`), pas le reste du
+    groupe connecté qu'elle rejoindrait. Nouveau
+    `GridManager.PreviewGroup(shape, color, x, y)` : réutilise
+    TEL QUEL le flood-fill privé `TryVisitGroupNeighbor` déjà employé
+    par `FindConnectedGroup`/`PlacePiece`, mais amorcé avec les
+    cellules de la pièce elle-même pré-ajoutées à `visited`/`stack`
+    COMME SI elles étaient déjà remplies — sans jamais toucher l'état
+    réel de la grille (aucune mutation), donc utilisable en pur
+    aperçu pendant que le joueur choisit encore où déposer. Côté
+    présentation : `GridView.OnCellHoverEnter` appelle `PreviewGroup`
+    uniquement quand le placement est valide, puis surligne (nouveau
+    `GridCellView.SetGroupPreviewHighlight`, un lerp plus léger — 0.35
+    au lieu du 0.6 de `SetHoverTint` — vers la même couleur
+    `UITheme.HoverValid`) toutes les cases du groupe résultant qui NE
+    font PAS partie de l'empreinte de la pièce elle-même (celles-ci
+    gardent leur propre highlight vert/rouge existant). Nouvelle liste
+    `_groupPreviewCells` (parallèle à `_hoveredFootprint`), remise à
+    zéro par `ClearHover` comme l'empreinte. Tests :
+    `GridManagerTests` (`PreviewGroup_*`, y compris une vérification
+    explicite qu'aucune mutation de grille ne se produit).

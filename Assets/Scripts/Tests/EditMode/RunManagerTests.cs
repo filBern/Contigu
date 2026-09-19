@@ -890,5 +890,37 @@ namespace Contigu.Tests
                 Assert.AreEqual(expected, outcome.Placement.ModifierBonus, id + " vs hand index " + handIndex);
             }
         }
+
+        [Test]
+        public void GetModifierUsageCount_IncrementsEachTimeTheModifierScores()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.SlotUn);
+            Assert.AreEqual(0, run.GetModifierUsageCount(ModifierId.SlotUn));
+
+            var first = run.PlacePiece(0, 0, 0);
+            Assert.IsTrue(first.Placement.Success);
+            Assert.AreEqual(1, run.GetModifierUsageCount(ModifierId.SlotUn));
+
+            run.Deck.DrawNewHand();
+            // Far from (0,0) so the first placement's shape can never overlap
+            // this one, whatever shape/rotation each hand draw happens to be.
+            var second = run.PlacePiece(0, 5, 5);
+            Assert.IsTrue(second.Placement.Success);
+            Assert.AreEqual(2, run.GetModifierUsageCount(ModifierId.SlotUn));
+        }
+
+        [Test]
+        public void GetModifierUsageCount_StaysZero_ForAModifierThatNeverFires()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.SlotUn);
+
+            // Placing from hand slot 1 never triggers SlotUn (matches slot 0 only).
+            var outcome = run.PlacePiece(1, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, run.GetModifierUsageCount(ModifierId.SlotUn));
+        }
     }
 }
