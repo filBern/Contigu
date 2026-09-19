@@ -21,7 +21,7 @@ namespace Contigu.Presentation
         private const float PanelWidth = 230f;
         private const float BadgeSize = 90f;
         private const float BadgeSpacing = 10f;
-        private const float HeaderHeight = 58f;
+        private const float TopPadding = 16f;
         private const float BottomPadding = 16f;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
@@ -46,41 +46,34 @@ namespace Contigu.Presentation
             // Anchored/pivoted from the TOP (not vertically centered like
             // before) — sizeDelta.y now changes every Refresh to fit however
             // many modifiers are active, and a center pivot would grow the
-            // panel symmetrically in both directions, shoving the "Modifiers"
-            // header (itself anchored to the panel's top edge) up or down by
-            // half the height delta each time the count changes. Anchoring
-            // from the top instead means only the BOTTOM edge moves, so the
-            // header always renders at the exact same screen position.
+            // panel symmetrically in both directions instead of just
+            // extending downward as content is added.
             _root.anchorMin = new Vector2(0f, 1f);
             _root.anchorMax = new Vector2(0f, 1f);
             _root.pivot = new Vector2(0f, 1f);
-            _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + BottomPadding);
+            _root.sizeDelta = new Vector2(PanelWidth, TopPadding + BottomPadding);
             _root.anchoredPosition = new Vector2(40f, -170f);
 
-            // White text needs contrast against card_bg_2's near-white body,
-            // or it's flatly invisible — a plain flat-color bar (the game's
-            // own background color, no sprite/outline) behind it, flush with
-            // the panel's top edge and full width. Being a plain rectangle
-            // rather than a 9-sliced sprite, its hard corners simply cover
-            // card_bg_2's rounded top corners outright instead of needing to
-            // line up with them (the actual problem the earlier Union banner
-            // attempts kept running into).
-            var headerBar = UIFactory.CreatePanel(_root, "HeaderBar", UITheme.Background);
-            headerBar.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            headerBar.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            headerBar.rectTransform.pivot = new Vector2(0.5f, 1f);
-            headerBar.rectTransform.anchoredPosition = Vector2.zero;
-            headerBar.rectTransform.sizeDelta = new Vector2(PanelWidth, 46f);
-
-            var header = UIFactory.CreateText(headerBar.transform, "Label", "Modifiers", 28, Color.white);
-            header.raycastTarget = false;
-            UIFactory.StretchFull(header.rectTransform);
+            // "Modifiers" floats ABOVE the card entirely (on explicit
+            // request) instead of sitting on top of it — white text directly
+            // on card_bg_2's near-white body had zero contrast (and a flat
+            // color bar behind it, tried first, was asked to be removed
+            // again). Anchored to the card's top edge with a BOTTOM pivot and
+            // a small positive offset, so the text sits just above the card,
+            // over the game's own dark background, where white reads fine
+            // with no extra element needed at all.
+            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 28, Color.white);
+            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            header.rectTransform.pivot = new Vector2(0.5f, 0f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, 6f);
+            header.rectTransform.sizeDelta = new Vector2(PanelWidth, 36f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -HeaderHeight);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -TopPadding);
 
             var layout = _rowsContainer.gameObject.AddComponent<GridLayoutGroup>();
             layout.cellSize = new Vector2(BadgeSize, BadgeSize);
@@ -110,7 +103,7 @@ namespace Contigu.Presentation
 
             int rowCount = activeModifiers.Count == 0 ? 0 : Mathf.CeilToInt(activeModifiers.Count / 2f);
             float contentHeight = rowCount == 0 ? 0f : rowCount * BadgeSize + (rowCount - 1) * BadgeSpacing;
-            _root.sizeDelta = new Vector2(PanelWidth, HeaderHeight + contentHeight + BottomPadding);
+            _root.sizeDelta = new Vector2(PanelWidth, TopPadding + contentHeight + BottomPadding);
         }
 
         /// <summary>Flashes the badge (and gives its row a small scale pulse) of every row currently showing <paramref name="id"/> — called when that modifier actually scores on a placement.</summary>

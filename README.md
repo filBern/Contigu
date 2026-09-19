@@ -1343,6 +1343,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     de texte ajouté (respecte la demande explicite antérieure de
     retirer bold/outline de tous les textes) — le contraste vient
     entièrement de la barre derrière, pas du texte lui-même.
+  - **Fix #7 : barre retirée, titre flotte au-dessus de la carte** (sur
+    demande explicite — "retire la barre... on va le monter en haut de
+    card_bg_2.png") — `HeaderBar` retiré entièrement ; le texte
+    "Modifiers" est maintenant ancré au bord haut de la carte avec un
+    pivot BAS et un petit décalage positif (`anchoredPosition (0, 6)`,
+    `pivot (0.5, 0)`), donc il se dessine juste AU-DESSUS de la carte,
+    par-dessus le fond sombre du jeu lui-même — le blanc y est
+    parfaitement lisible sans aucun élément supplémentaire. `HeaderHeight`
+    (58, l'espace réservé pour le header À L'INTÉRIEUR de la carte)
+    remplacé par `TopPadding` (16, symétrique à `BottomPadding`) —
+    les badges commencent maintenant juste sous le bord haut de la
+    carte plutôt que sous un bandeau qui n'existe plus.
   - **9 nouveaux modifiers (4ème lot)** — "slot de main, taille de
     pièce, bonus par couleur" demandés sans valeurs numériques précises ;
     interprétation de ce projet, documentée ici et dans le code :
