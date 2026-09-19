@@ -16,12 +16,26 @@ namespace Contigu.Core
 
         /// <summary>
         /// Score from this placement's resulting connected same-color group
-        /// (group size x per-cell value x tinted/multiplier-zone factor),
-        /// rescored in full every time the group grows.
+        /// (group size x per-cell value), UNMULTIPLIED — rescored in full
+        /// every time the group grows. Any tinted/multiplier-zone factor no
+        /// longer inflates this per-cell (see <see cref="GroupMultiplier"/>).
         /// </summary>
         public int GroupBonus;
         public int GoldenBonus;
         public int LineClearScore;
+
+        /// <summary>
+        /// Aggregate multiplier from this placement's tinted-match/
+        /// multiplier-zone cells (see GridManager.ComputeGroupMultiplier),
+        /// applied ONCE to the sum of <see cref="GroupBonus"/> + <see
+        /// cref="GoldenBonus"/> + <see cref="LineClearScore"/> in <see
+        /// cref="TotalScore"/> — Balatro-style "apply the multiplier at the
+        /// end" (explicit request), instead of being baked per-cell into
+        /// GroupBonus alone like before. 1 when nothing in this placement's
+        /// group carried either flag. Never applies to ModifierBonus/
+        /// TraitBonus, which stay fully independent additive amounts.
+        /// </summary>
+        public int GroupMultiplier = 1;
 
         /// <summary>Sum of every bonus from the player's active modifiers on this placement (see <see cref="ModifierId"/>).</summary>
         public int ModifierBonus;
@@ -46,7 +60,7 @@ namespace Contigu.Core
 
         public int TotalScore
         {
-            get { return GroupBonus + GoldenBonus + LineClearScore + ModifierBonus + TraitBonus; }
+            get { return (GroupBonus + GoldenBonus + LineClearScore) * GroupMultiplier + ModifierBonus + TraitBonus; }
         }
 
         public static PlacementResult Failure(string reason)

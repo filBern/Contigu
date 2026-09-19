@@ -398,7 +398,7 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
-        /// <summary>Every cell in a placement's scored group earns the exact same per-cell amount (see GridManager.PlacePiece's perCellGroupScore) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>
+        /// <summary>Every cell in a placement's scored group earns the exact same flat per-cell amount (ScoringConstants.GroupBonusPerCell — the group multiplier no longer inflates this per-cell, see PlacementResult.GroupMultiplier) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>
         private static void GetGroupShare(PlacementResult placement, out int groupSize, out int perCellAmount)
         {
             groupSize = 0;

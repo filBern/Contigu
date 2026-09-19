@@ -53,11 +53,11 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "Enchants 3 random pieces in the deck: one tile on each lands tinted, doubling that placement's group bonus if the piece's own color matches.", false, UpgradeRarity.Common);
+            "Enchants 3 random pieces in the deck: one tile on each lands tinted, doubling that placement's ENTIRE score (group, golden, and line-clear bonuses together) if the piece's own color matches.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "Enchants 3 random pieces in the deck: one tile on each lands as a multiplier zone, doubling that placement's group bonus.", false, UpgradeRarity.Uncommon);
+            "Enchants 3 random pieces in the deck: one tile on each lands as a multiplier zone, doubling that placement's ENTIRE score (group, golden, and line-clear bonuses together).", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
             UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",

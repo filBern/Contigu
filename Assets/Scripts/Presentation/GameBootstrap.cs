@@ -310,6 +310,28 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(LineClearStaggerSeconds);
             }
 
+            // GroupMultiplier (from Tinted/Multiplier-Zone cells) is applied once
+            // over the whole placement's group+golden+line-clear total, Balatro-
+            // style, rather than inflating each individual popup above — so the
+            // "extra" it adds still needs its own catch-up moment here or the
+            // displayed score would end up short of placement.TotalScore.
+            if (placement.GroupMultiplier > 1)
+            {
+                int multipliedBaseTotal = placement.GroupBonus + placement.GoldenBonus + placement.LineClearScore;
+                int multipliedExtra = multipliedBaseTotal * (placement.GroupMultiplier - 1);
+
+                var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
+                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.GroupMultiplier, UITheme.ButtonSelected);
+                _comboView.Pulse();
+
+                displayedRoundScore += multipliedExtra;
+                comboTotal += multipliedExtra;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+                _comboView.Show(comboTotal);
+
+                yield return new WaitForSeconds(ScoreEventStaggerSeconds);
+            }
+
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);

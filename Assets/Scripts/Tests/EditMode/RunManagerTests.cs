@@ -477,7 +477,13 @@ namespace Contigu.Tests
 
             Assert.IsTrue(outcome.Placement.Success);
             int expectedMultiplier = ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier;
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * expectedMultiplier, outcome.Placement.GroupBonus);
+            // GroupBonus itself stays the plain unmultiplied per-cell sum —
+            // the x8 factor lives in GroupMultiplier and is applied once, at
+            // the end, in TotalScore (see "apply the multiplier at the end",
+            // explicit request).
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, outcome.Placement.GroupBonus);
+            Assert.AreEqual(expectedMultiplier, outcome.Placement.GroupMultiplier);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * expectedMultiplier, outcome.Placement.TotalScore);
         }
 
         [Test]

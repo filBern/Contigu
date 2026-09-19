@@ -183,20 +183,27 @@ namespace Contigu.Core
             int? previousGroupSize = _lastGroupSize;
             _lastGroupSize = groupCells.Count;
 
+            // The tinted-match/multiplier-zone factor is no longer baked into
+            // each cell's own score — it's applied ONCE, at the very end of
+            // this whole placement (see PlacementResult.GroupMultiplier and
+            // .TotalScore), Balatro-style, instead of quietly inflating the
+            // group bonus per cell. Every event below carries its plain,
+            // unmultiplied "standard" amount.
             int groupMultiplier = ComputeGroupMultiplier(groupCells);
-            int perCellGroupScore = ScoringConstants.GroupBonusPerCell * groupMultiplier;
             int groupBonus = 0;
             int goldenBonus = 0;
 
             for (int i = 0; i < groupCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], perCellGroupScore));
-                groupBonus += perCellGroupScore;
+                events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], ScoringConstants.GroupBonusPerCell));
+                groupBonus += ScoringConstants.GroupBonusPerCell;
 
                 // Golden fires every time the cell is part of a scored group —
                 // not just when it was originally placed — since re-touching a
                 // group rescores every cell in it, golden included. Still a flat
-                // bonus, independent of group size or the group multiplier.
+                // bonus, independent of group size — but now IS multiplied at
+                // the end along with everything else (see GroupMultiplier),
+                // unlike before when it was deliberately exempt.
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
                 if (cell.IsGolden)
                 {
@@ -207,6 +214,7 @@ namespace Contigu.Core
 
             result.GroupBonus = groupBonus;
             result.GoldenBonus = goldenBonus;
+            result.GroupMultiplier = groupMultiplier;
 
             int modifierBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
@@ -1333,17 +1341,21 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Whole-group multiplier from tinted/multiplier-zone cells. Each
-        /// matching tinted cell AND each multiplier-zone cell in the group now
-        /// stacks its own x2 (two of either in the same combo combine to x4,
-        /// three to x8, ...) — multiplier-zone used to only count once
-        /// regardless of how many cells had it, but that made "Multiplier
-        /// Beacon" (which can tag many cells in one row/column at once)
-        /// pointless beyond a single x2, identical to the plain single-cell
-        /// Multiplier trait. Stacking it the same way Tinted already does
-        /// gives Beacon real extra teeth when several of its marked cells land
-        /// in the same scored group, and makes both factors consistent with
-        /// each other.
+        /// Aggregate multiplier from this placement's tinted/multiplier-zone
+        /// cells — applied ONCE to this whole placement's total (group bonus
+        /// + golden bonus + line-clear bonus, see PlacementResult.
+        /// GroupMultiplier/.TotalScore) rather than baked into the group
+        /// bonus per cell (Balatro-style "multiply at the end", explicit
+        /// request). Each matching tinted cell AND each multiplier-zone cell
+        /// in the group stacks its own x2 (two of either in the same combo
+        /// combine to x4, three to x8, ...) — multiplier-zone used to only
+        /// count once regardless of how many cells had it, but that made
+        /// "Multiplier Beacon" (which can tag many cells in one row/column at
+        /// once) pointless beyond a single x2, identical to the plain
+        /// single-cell Multiplier trait. Stacking it the same way Tinted
+        /// already does gives Beacon real extra teeth when several of its
+        /// marked cells land in the same scored group, and makes both
+        /// factors consistent with each other.
         /// </summary>
         private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {

@@ -898,3 +898,47 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     test statistique de pondération par rareté compare maintenant
     `GoldenCells` (Common) à `VoidTile` (Rare, resté inchangé) plutôt
     qu'à `MirrorTile` (désormais Uncommon).
+- **Scoring "à la Balatro" pour le multiplicateur de groupe** (sur demande
+  explicite — "j'aimerais qu'on mette x2 à la fin comme dans le calcule de
+  balatro... les score seront certe plus gros, mais plus satisfaisant,
+  surtout avec les golden tiles et row clear"). Changement de portée
+  volontairement contenu au multiplicateur de groupe existant (Tinted
+  Tile / Multiplier Zone / Multiplier Beacon) — tous les autres bonus
+  "doublants" (Puriste, Devotion, Twin, Détonateur, etc.) restent des
+  montants additifs totalement indépendants, inchangés.
+  - Avant : le multiplicateur était appliqué case par case, gonflant
+    directement `GroupBonus`, et ne touchait ni le bonus golden ni le
+    bonus de clear de ligne/colonne.
+  - Après : `PlacementResult.GroupBonus` redevient la simple somme non
+    multipliée (cases × `ScoringConstants.GroupBonusPerCell`). Le nouveau
+    champ `PlacementResult.GroupMultiplier` (calculé par
+    `GridManager.ComputeGroupMultiplier`, logique de stacking inchangée)
+    est appliqué UNE SEULE FOIS, à la toute fin, sur la somme complète du
+    placement : `TotalScore = (GroupBonus + GoldenBonus + LineClearScore)
+    * GroupMultiplier + ModifierBonus + TraitBonus`. Les bonus golden et
+    de clear de ligne sont donc désormais eux aussi multipliés, ce qui
+    était explicitement le but ("surtout avec les golden tiles et row
+    clear").
+  - Descriptions de Tinted Tile et Multiplier Tile mises à jour pour
+    refléter que l'effet double "l'ENTIER du score du placement (groupe,
+    golden et clear de ligne ensemble)" plutôt que "le bonus de groupe".
+  - Présentation : comme les popups individuels par `ScoreEvent` portent
+    maintenant des montants non multipliés, une étape finale a été
+    ajoutée à `GameBootstrap.PlayPlacementSequence` (après la boucle de
+    clear de ligne) qui affiche un popup "xN" au centre de la grille,
+    déclenche `ComboView.Pulse()` (nouveau, même pattern de bounce
+    d'échelle que `GridCellView.Pulse()`), puis rattrape le score HUD
+    affiché avec le surplus manquant (`(GroupBonus + GoldenBonus +
+    LineClearScore) * (GroupMultiplier - 1)`) — sans cette étape, le
+    score animé à l'écran aurait fini plus bas que le score réel
+    (`RunManager` ajoute déjà le `TotalScore` complet, déjà multiplié, au
+    score de la manche).
+  - Tests : les 6 tests de `GridManagerTests` sur Tinted/Multiplier Zone
+    (seul(e), stacké, mauvaise couleur, combiné) et le test Beacon de
+    `RunManagerTests` réécrits pour vérifier séparément `GroupBonus` (non
+    multiplié), `GroupMultiplier` et `TotalScore` plutôt qu'un seul
+    `GroupBonus` déjà multiplié. Nouveau test
+    `PlacePiece_GroupMultiplier_AlsoAppliesToGoldenAndLineClearBonuses`
+    qui remplit une ligne complète avec une case Multiplier Zone et une
+    case golden dans le groupe, et vérifie que `TotalScore` reflète bien
+    `(GroupBonus + GoldenBonus + LineClearScore) * 2`.

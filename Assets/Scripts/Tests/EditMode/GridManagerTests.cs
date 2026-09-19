@@ -236,7 +236,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_TwoTintedCellsInSameGroup_CombineMultiplicatively()
+        public void PlacePiece_TwoTintedCellsInSameGroup_StackTheGroupMultiplier()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -253,14 +253,19 @@ namespace Contigu.Tests
 
             // Placing the connecting middle cell merges all 3 into one group
             // containing BOTH matching tinted cells — their x2 factors stack
-            // (x4), not just one flat x2.
+            // (x4), not just one flat x2. GroupBonus itself stays the plain
+            // unmultiplied per-cell sum now — the factor lives in
+            // GroupMultiplier and is only applied once, in TotalScore (see
+            // "apply the multiplier at the end", explicit request).
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.GroupBonus);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.GroupMultiplier);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
         }
 
         [Test]
-        public void PlacePiece_GroupContainingTintedMatch_DoublesWholeGroupBonus()
+        public void PlacePiece_GroupContainingTintedMatch_SetsGroupMultiplierToTwo()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -273,13 +278,15 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
             // Group of 2, x2 because the tinted cell (anywhere in the group)
-            // matches — the multiplier applies to the whole group, not just the
-            // tinted cell itself.
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier, result.GroupBonus);
+            // matches — the multiplier applies to the placement's WHOLE total
+            // at the end (see TotalScore), not baked into GroupBonus itself.
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ScoringConstants.TintedMatchMultiplier, result.GroupMultiplier);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
         }
 
         [Test]
-        public void PlacePiece_OnTintedCellWithWrongColor_DoesNotDoubleBonus()
+        public void PlacePiece_OnTintedCellWithWrongColor_LeavesGroupMultiplierAtOne()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -292,10 +299,11 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
             Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(1, result.GroupMultiplier);
         }
 
         [Test]
-        public void PlacePiece_GroupContainingMultiplierZone_DoublesWholeGroupBonus()
+        public void PlacePiece_GroupContainingMultiplierZone_SetsGroupMultiplierToTwo()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -304,11 +312,13 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier, result.GroupBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier, result.GroupMultiplier);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
         }
 
         [Test]
-        public void PlacePiece_TwoMultiplierZoneCellsInSameGroup_CombineMultiplicatively()
+        public void PlacePiece_TwoMultiplierZoneCellsInSameGroup_StackTheGroupMultiplier()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -327,11 +337,13 @@ namespace Contigu.Tests
             // extra teeth beyond the plain single-cell Multiplier trait.
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.GroupBonus);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.GroupMultiplier);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
         }
 
         [Test]
-        public void PlacePiece_GroupWithTintedAndMultiplierZone_QuadruplesWholeGroupBonus()
+        public void PlacePiece_GroupWithTintedAndMultiplierZone_QuadruplesTheGroupMultiplier()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -344,7 +356,40 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * 4, result.GroupBonus);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(4, result.GroupMultiplier);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * 4, result.TotalScore);
+        }
+
+        [Test]
+        public void PlacePiece_GroupMultiplier_AlsoAppliesToGoldenAndLineClearBonuses()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            // Fill x=0..6 of row 0, with a multiplier-zone AND a golden cell
+            // already in the mix, then complete the row with the final piece —
+            // the x2 group multiplier should now also apply to the golden
+            // bonus and the line-clear bonus, not just the group bonus like
+            // before (explicit request: "surtout avec les golden tiles et row
+            // clear").
+            grid.GetCell(3, 0).IsMultiplierZone = true;
+            grid.GetCell(4, 0).IsGolden = true;
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+
+            var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
+
+            Assert.AreEqual(2, finalResult.GroupMultiplier);
+            int expectedGroupBonus = GridManager.Size * ScoringConstants.GroupBonusPerCell;
+            int expectedGoldenBonus = ScoringConstants.GoldenCellBonus;
+            int expectedLineClearScore = GridManager.Size * ScoringConstants.LineClearBonusPerCell;
+            Assert.AreEqual(expectedGroupBonus, finalResult.GroupBonus);
+            Assert.AreEqual(expectedGoldenBonus, finalResult.GoldenBonus);
+            Assert.AreEqual(expectedLineClearScore, finalResult.LineClearScore);
+            Assert.AreEqual((expectedGroupBonus + expectedGoldenBonus + expectedLineClearScore) * 2, finalResult.TotalScore);
         }
 
         [Test]
