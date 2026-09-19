@@ -64,7 +64,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Beacon:
                     return "When this piece is placed, every already-filled tile in this tile's row and column also becomes a multiplier for that one placement's scoring.";
                 case PieceTraitKind.Mirror:
-                    return "When this piece is placed, this tile's own group bonus is duplicated onto the tile symmetrically opposite it in the scored group, if one exists there.";
+                    return "When this piece is placed, this tile's own group bonus is also duplicated onto one random OTHER tile in the scored group (if there's more than one cell in it).";
                 case PieceTraitKind.Seeder:
                     return "When this piece is placed, this tile turns golden on the grid for the rest of the round — it keeps scoring every time its group is rescored, until the round ends.";
                 case PieceTraitKind.Catalyst:
@@ -72,7 +72,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Driller:
                     return "When this piece is placed, this tile scores a big flat bonus — but only if it lands next to a locked cell (boss rounds). Does nothing otherwise.";
                 case PieceTraitKind.Twin:
-                    return "When this piece is placed, this tile's own group-bonus share is duplicated onto EVERY other tile in the scored group, not just a symmetric partner.";
+                    return "When this piece is placed, this tile's own group-bonus share is duplicated onto EVERY other tile in the scored group, not just one at random like Mirror Tile.";
                 case PieceTraitKind.Detonator:
                     return "When this piece is placed, if it clears at least one row or column, this tile doubles that placement's whole line-clear bonus.";
                 case PieceTraitKind.Chameleon:
@@ -96,7 +96,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Multiplier: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Blast: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Beacon: return UpgradeRarity.Rare;
-                case PieceTraitKind.Mirror: return UpgradeRarity.Rare;
+                case PieceTraitKind.Mirror: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Seeder: return UpgradeRarity.Rare;
                 case PieceTraitKind.Catalyst: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Driller: return UpgradeRarity.Uncommon;

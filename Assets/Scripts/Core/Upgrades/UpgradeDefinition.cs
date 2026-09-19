@@ -69,7 +69,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
             UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Tile",
-            "Enchants 3 random pieces in the deck: one tile on each duplicates its own group bonus onto the tile symmetrically opposite it in the scored group, if one exists there.", false, UpgradeRarity.Rare);
+            "Enchants 3 random pieces in the deck: one tile on each also duplicates its own group-bonus share onto one random OTHER tile in the scored group.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
@@ -87,7 +87,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
             UpgradeId.TwinTile, UpgradePool.Grid, "Twin Tile",
-            "Enchants 3 random pieces in the deck: one tile on each duplicates its own group-bonus share onto EVERY other tile in the scored group, not just a symmetric partner.", false, UpgradeRarity.Rare);
+            "Enchants 3 random pieces in the deck: one tile on each duplicates its own group-bonus share onto EVERY other tile in the scored group, not just one at random like Mirror Tile.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DetonatorTile = new UpgradeDefinition(
             UpgradeId.DetonatorTile, UpgradePool.Grid, "Detonator Tile",

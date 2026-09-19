@@ -481,7 +481,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_MirrorTrait_DuplicatesGroupBonusOntoSymmetricPartner()
+        public void PlacePiece_MirrorTrait_DuplicatesGroupBonusOntoTheOnlyOtherGroupCell()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
@@ -489,12 +489,12 @@ namespace Contigu.Tests
 
             var token = run.Deck.Hand[0];
 
-            // Pre-fill an off-center 2-cell run so the Mirror-tagged Single
-            // piece, placed at one end (2,3), has a genuine symmetric partner
-            // at (4,3) once it merges the 3 cells into one group — not itself
-            // (which would be the case if it landed in the middle).
+            // Simplified mechanic (on explicit request — the old geometric
+            // "symmetric partner" rule was too hard to reason about): Mirror
+            // now duplicates onto a RANDOM other cell in the group. With
+            // exactly one pre-existing neighbor, there's only one candidate,
+            // so the target is deterministic regardless of the RNG draw.
             FillCell(run.Grid, 3, 3, token.Color);
-            FillCell(run.Grid, 4, 3, token.Color);
 
             var outcome = run.PlacePiece(0, 2, 3);
 
@@ -505,12 +505,54 @@ namespace Contigu.Tests
             bool foundMirrorEvent = false;
             foreach (var e in outcome.Placement.ScoreEvents)
             {
-                if (e.Type == ScoreEventType.Trait && e.Position == new Vector2Int(4, 3) && e.Amount == perCellAmount)
+                if (e.Type == ScoreEventType.Trait && e.Position == new Vector2Int(3, 3) && e.Amount == perCellAmount)
                 {
                     foundMirrorEvent = true;
                 }
             }
-            Assert.IsTrue(foundMirrorEvent, "Mirror's duplicated bonus should appear as its own ScoreEvent at the symmetric partner cell");
+            Assert.IsTrue(foundMirrorEvent, "Mirror's duplicated bonus should appear as its own ScoreEvent at the other group cell");
+        }
+
+        [Test]
+        public void PlacePiece_MirrorTrait_DoesNotFire_WhenTheGroupIsOnlyThisSingleCell()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus);
+        }
+
+        [Test]
+        public void PlacePiece_MirrorTrait_AlwaysPicksATargetFromWithinTheGroup()
+        {
+            var run = new RunManager(new SystemRandomProvider(3));
+            run.Deck.TagMirrorTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(4));
+            ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[0];
+            FillCell(run.Grid, 3, 3, token.Color);
+            FillCell(run.Grid, 4, 3, token.Color);
+            FillCell(run.Grid, 5, 3, token.Color);
+
+            var outcome = run.PlacePiece(0, 2, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            var validTargets = new HashSet<Vector2Int> { new Vector2Int(3, 3), new Vector2Int(4, 3), new Vector2Int(5, 3) };
+            bool foundMirrorEvent = false;
+            foreach (var e in outcome.Placement.ScoreEvents)
+            {
+                if (e.Type != ScoreEventType.Trait)
+                {
+                    continue;
+                }
+                Assert.IsTrue(validTargets.Contains(e.Position), "Mirror's target must be one of the other group cells, never outside the group");
+                foundMirrorEvent = true;
+            }
+            Assert.IsTrue(foundMirrorEvent);
         }
 
         [Test]

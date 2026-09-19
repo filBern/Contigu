@@ -18,7 +18,7 @@ namespace Contigu.Core
         /// <summary>"Multiplier Beacon" — the cell, plus every already-filled cell in its row and column, become multiplier zones for this one placement.</summary>
         Beacon,
 
-        /// <summary>"Mirror Tile" — this cell's own group-bonus contribution is duplicated onto the cell symmetrically opposite it in the scored group, if one exists there.</summary>
+        /// <summary>"Mirror Tile" — this cell's own group-bonus contribution is also duplicated onto one random OTHER cell in the scored group.</summary>
         Mirror,
 
         /// <summary>"Seeder" — like <see cref="Golden"/>, but the golden flag isn't cleared right after scoring like every other trait: the grid cell stays golden for the rest of the CURRENT ROUND (cleared at the next round's reset — permanent for the whole run was too powerful).</summary>
@@ -32,7 +32,7 @@ namespace Contigu.Core
         /// <summary>"Driller Tile" — a big flat bonus, but only when the enchanted cell is orthogonally adjacent to a locked cell (boss rounds); nothing otherwise.</summary>
         Driller,
 
-        /// <summary>"Twin Tile" — like <see cref="Mirror"/>, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the scored group, not just a symmetric partner.</summary>
+        /// <summary>"Twin Tile" — like <see cref="Mirror"/>, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the scored group, not just one at random.</summary>
         Twin,
 
         /// <summary>"Detonator Tile" — if this placement clears at least one row/column, doubles the WHOLE placement's line-clear bonus.</summary>

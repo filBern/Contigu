@@ -251,7 +251,7 @@ namespace Contigu.Tests
             // Statistical check of the weighting itself (see
             // UpgradeRarityUtility.GetDraftWeight: Common=8, Rare=2, a 4x
             // gap) rather than any single draw — GoldenCells (Common) should
-            // come up clearly more often than MirrorTile (Rare) across many
+            // come up clearly more often than VoidTile (Rare) across many
             // rolls, even though both are always eligible for the Grid pick.
             int goldenCount = 0;
             int mirrorCount = 0;
@@ -262,7 +262,7 @@ namespace Contigu.Tests
                 foreach (var option in draft.Options)
                 {
                     if (option.Id == UpgradeId.GoldenCells) goldenCount++;
-                    if (option.Id == UpgradeId.MirrorTile) mirrorCount++;
+                    if (option.Id == UpgradeId.VoidTile) mirrorCount++;
                 }
             }
 

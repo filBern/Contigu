@@ -860,3 +860,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Texte de statut (`GameBootstrap`) mis à jour pour mentionner les deux
     méthodes ("Select or drag a piece onto the grid." / "Drag onto the
     grid, or click a tile, to place: ...").
+- **Fix : lisibilité des textes de description** (bordure par-lettre
+  retirée + taille 12→14 + gras) sur le tooltip partagé (`TooltipView`,
+  modificateurs + traits de tuile) et les cartes de draft d'upgrade
+  (`DraftView`).
+- **Mirror Tile simplifiée** (sur demande explicite — "je ne comprend pas
+  l'upgrade mirror, elle est trop compliqué à comprendre"). L'ancienne
+  règle ("duplique le bonus de la case enchantée sur la case
+  symétriquement opposée dans le groupe, calculée par réflexion à travers
+  le centre de la boîte englobante du groupe — si une telle case existe")
+  demandait de visualiser un calcul géométrique abstrait pour savoir si/où
+  l'effet allait se déclencher. Remplacée par une règle simple à énoncer
+  en une phrase : duplique le bonus sur **une case aléatoire parmi les
+  autres cases du groupe scoré** — se déclenche systématiquement dès que
+  le groupe a au moins 2 cases (même condition que Twin Tile), au lieu de
+  ne fonctionner que pour des formes de groupe symétriques par rapport à
+  la case enchantée.
+  - `RunManager.ApplyMirrorBonus` passe de `static` à instance (a besoin
+    de `_rng`) ; collecte les positions des autres cases du groupe (via
+    les `ScoreEvent` de type `Group`, en excluant la case du trait
+    elle-même) et pioche une cible au hasard parmi elles avec
+    `_rng.Next(...)`.
+  - Rareté rétrogradée de Rare à Uncommon (`UpgradeCatalog.MirrorTile`,
+    `PieceTraitVisualDefaults.GetRarity`) — l'effet se déclenche
+    désormais beaucoup plus fiablement qu'avant (quasi tout le temps au
+    lieu de seulement sur des formes symétriques), donc moins "rare" en
+    pratique, même s'il reste plus faible que Twin Tile (une seule case
+    dupliquée au lieu de toutes).
+  - Descriptions de Mirror Tile ET Twin Tile mises à jour (Twin se
+    définissait par contraste avec le "partenaire symétrique" de Mirror —
+    désormais par contraste avec sa cible aléatoire).
+  - Tests : `RunManagerTests.PlacePiece_MirrorTrait_DuplicatesGroupBonusOntoSymmetricPartner`
+    remplacé par 3 tests — cible déterministe quand une seule autre case
+    existe, aucun déclenchement si le groupe ne contient que la pièce
+    posée, et vérification (sur plusieurs graines RNG) que la cible
+    choisie reste toujours une case du groupe. `UpgradeSystemTests`'s
+    test statistique de pondération par rareté compare maintenant
+    `GoldenCells` (Common) à `VoidTile` (Rare, resté inchangé) plutôt
+    qu'à `MirrorTile` (désormais Uncommon).

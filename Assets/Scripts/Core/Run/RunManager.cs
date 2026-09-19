@@ -417,15 +417,19 @@ namespace Contigu.Core
 
         /// <summary>
         /// "Mirror Tile": duplicates the enchanted cell's own group-bonus
-        /// contribution onto the cell symmetrically opposite it in the scored
-        /// group (reflected through the group's bounding-box center), if one
-        /// exists there.
+        /// share onto ONE random OTHER cell in the scored group. Simplified
+        /// (on explicit request — the original geometric-symmetry rule,
+        /// "the cell reflected through the group's bounding-box center, if
+        /// one exists there", was too hard to reason about at a glance) from
+        /// a rule that only fired for specific symmetric group shapes into
+        /// one that always fires whenever the group has another cell to
+        /// target, same firing condition as Twin Tile. No-op if the group is
+        /// just this placement's own cell.
         /// </summary>
-        private static void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
+        private void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
-            int minX = int.MaxValue, maxX = int.MinValue, minY = int.MaxValue, maxY = int.MinValue;
             int perCellAmount = 0;
-            var groupPositions = new HashSet<Vector2Int>();
+            var otherPositions = new List<Vector2Int>();
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
@@ -433,26 +437,20 @@ namespace Contigu.Core
                 {
                     continue;
                 }
-                groupPositions.Add(scoreEvent.Position);
                 perCellAmount = scoreEvent.Amount;
-                if (scoreEvent.Position.x < minX) minX = scoreEvent.Position.x;
-                if (scoreEvent.Position.x > maxX) maxX = scoreEvent.Position.x;
-                if (scoreEvent.Position.y < minY) minY = scoreEvent.Position.y;
-                if (scoreEvent.Position.y > maxY) maxY = scoreEvent.Position.y;
+                if (scoreEvent.Position != traitCellPos)
+                {
+                    otherPositions.Add(scoreEvent.Position);
+                }
             }
 
-            if (groupPositions.Count == 0)
+            if (otherPositions.Count == 0)
             {
                 return;
             }
 
-            var mirrorPos = new Vector2Int(minX + maxX - traitCellPos.x, minY + maxY - traitCellPos.y);
-            if (mirrorPos == traitCellPos || !groupPositions.Contains(mirrorPos))
-            {
-                return;
-            }
-
-            AddTraitBonus(placement, mirrorPos, perCellAmount);
+            var targetPos = otherPositions[_rng.Next(otherPositions.Count)];
+            AddTraitBonus(placement, targetPos, perCellAmount);
         }
 
         /// <summary>"Catalyst Tile": scores extra points for every cell in this placement's scored group that was already on the grid before this placement — the group's size (from GetGroupShare) minus this piece's own cell count.</summary>
@@ -469,7 +467,7 @@ namespace Contigu.Core
             AddTraitBonus(placement, placement.PlacedCells[0], bonus);
         }
 
-        /// <summary>"Twin Tile": like Mirror, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the group, not just a symmetric partner — total extra is that shared per-cell amount times (group size - 1).</summary>
+        /// <summary>"Twin Tile": like Mirror, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the group, not just one at random — total extra is that shared per-cell amount times (group size - 1).</summary>
         private static void ApplyTwinBonus(PlacementResult placement)
         {
             GetGroupShare(placement, out int groupSize, out int perCellAmount);
