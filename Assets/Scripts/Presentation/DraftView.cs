@@ -138,22 +138,26 @@ namespace Contigu.Presentation
             nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f * CardScale);
             nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f * CardScale, 40f * CardScale);
 
-            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 16, UITheme.TextPrimary);
+            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 18, UITheme.TextPrimary);
             nameLabel.raycastTarget = false;
             UIFactory.StretchFull(nameLabel.rectTransform);
 
             // Rarity + pool ("type"), on explicit request — a small colored
             // subtitle line between the name and description, same idea as
             // TooltipView's optional subtitle for a tile trait's badge.
+            // GetRarityColorOnLight (not GetRarityColor) — the dark-panel
+            // rarity colors read as near-invisible pale-on-pale against this
+            // card's light lavender art; the "OnLight" set is the same hues
+            // darkened for contrast here instead.
             var rarityLabel = UIFactory.CreateText(card.transform, "Rarity",
                 UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                12, UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+                14, UpgradeVisualDefaults.GetRarityColorOnLight(def.Rarity));
             rarityLabel.fontStyle = FontStyle.Italic;
             rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f * CardScale);
-            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 16f * CardScale);
+            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 20f * CardScale);
 
             // Black (not the usual TextMuted) on explicit request.
             var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 14, Color.black);

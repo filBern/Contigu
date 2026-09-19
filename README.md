@@ -1077,3 +1077,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     plein (`Color.black`).
   - Texte du bouton "Choose" (sur les cartes d'upgrade) : taille 14→21
     (+50%).
+- **Fix : lisibilité de la ligne rareté/type sur les cartes d'upgrade**
+  (sur demande explicite avec screenshot — "les textes d'upgrades ... difficile
+  à lire ... color theory, la grosseur"). Cause : `UpgradeVisualDefaults.
+  GetRarityColor` (Common = `#effae6` quasi-blanc, Rare = `#f0b38d` pêche
+  pâle) a été conçu pour les fonds SOMBRES où il est utilisé ailleurs
+  (panneau du tooltip, badge de trait) — sur le fond lavande clair de
+  `card_bg_3.png` (`DraftView.BuildCard`), ces teintes pâles sur fond
+  clair devenaient quasiment invisibles (Uncommon, en bleu moyen
+  `#65aed6`, restait le seul à peu près lisible des trois).
+  - Nouveau `UpgradeVisualDefaults.GetRarityColorOnLight` : mêmes trois
+    teintes (gris-ardoise pour Common, bleu pour Uncommon, orange pour
+    Rare) mais assombries/saturées pour contraster sur fond clair au
+    lieu de fond sombre — même famille de teinte donc la rareté reste
+    reconnaissable au premier coup d'œil dans les deux contextes, seule
+    la clarté change selon le fond. `GetRarityColor` (fonds sombres)
+    reste inchangée et toujours utilisée par `TraitBadgeView` pour le
+    tooltip.
+  - `DraftView.BuildCard` utilise maintenant `GetRarityColorOnLight` pour
+    la ligne rareté/type, avec une taille de police augmentée (12→14) et
+    une boîte légèrement plus haute (16→20 avant mise à l'échelle
+    `CardScale`) ; le nom de l'upgrade sur la bannière passe aussi de
+    16 à 18 pour renforcer la hiérarchie visuelle de la carte. La
+    description reste inchangée (déjà en noir plein sur fond clair,
+    contraste déjà optimal) pour ne pas risquer un débordement sur le
+    bouton "Choose" en dessous avec les descriptions les plus longues.
