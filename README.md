@@ -1679,3 +1679,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`GameBootstrap.PlayPlacementSequence`) recalcule maintenant
   `multipliedExtra` à partir des deux facteurs séparément au lieu d'un
   seul `GroupMultiplier` global.
+- **Ghost overlay sur le slot de main sélectionné + dé-sélection au
+  re-clic** (sur demande explicite — "Il faut rajouter un ghost
+  overlay quand on click sur un slot pour savoir qu'on l'a d'actif.
+  Aussi si on re-click sur le même slot, on devrait dé-selectionner la
+  slot"). Le seul signal "sélectionné" existant (`UpdateSelectionVisuals`
+  teinte le SPRITE DE FOND du slot) est posé DERRIÈRE l'aperçu de la
+  pièce — facile à manquer une fois que les couleurs de la pièce
+  couvrent la majorité du slot. `HandView.Build` ajoute maintenant une
+  Image supplémentaire par slot (`SelectionOverlay`, même sprite
+  9-slice `HandSlotBackground` que le fond, teinté `UITheme.
+  ButtonSelected` à 55% d'opacité), posée en DERNIER enfant du slot
+  (donc au-dessus de l'aperçu) et `raycastTarget = false` (ne doit
+  jamais avaler le clic destiné au Button du slot) — activée seulement
+  sur le slot actuellement sélectionné, dans `UpdateSelectionVisuals`.
+  Pour le re-clic : `HandView.OnSlotClicked` vérifie maintenant si
+  `idx == _selectedIndex` et appelle `ClearSelection()` + un nouvel
+  événement `SelectionCleared` (au lieu de re-sélectionner
+  silencieusement le même slot) ; `GameBootstrap` s'y abonne pour vider
+  l'aperçu de la grille (`_gridView.SetSelectedShape(null)`), comme
+  après une pose réussie. La logique de sélection elle-même est
+  extraite dans un nouveau `SelectSlot(idx)` privé (sans le test de
+  toggle) — nécessaire parce que `BeginSlotDrag` appelait auparavant
+  `OnSlotClicked` pour sélectionner le slot au début d'un drag ; avec
+  le toggle en place, démarrer un drag sur un slot DÉJÀ sélectionné
+  l'aurait dé-sélectionné par erreur au lieu de le garder actif pour le
+  drop. `BeginSlotDrag` appelle maintenant `SelectSlot` directement, en
+  contournant le toggle.

@@ -222,6 +222,7 @@ namespace Contigu.Presentation
             _gridView.CellClicked += OnCellClicked;
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;
+            _handView.SelectionCleared += OnHandSelectionCleared;
             _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
             _modifierDraftView.ModifierPicked += OnModifierPicked;
             _endScreenView.RestartRequested += OnRestartRequested;
@@ -241,6 +242,13 @@ namespace Contigu.Presentation
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
             _statusText.text = "Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
+        }
+
+        /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>
+        private void OnHandSelectionCleared()
+        {
+            _gridView.SetSelectedShape(null);
+            _statusText.text = "Select or drag a piece onto the grid.";
         }
 
         private void OnCellClicked(int x, int y)

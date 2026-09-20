@@ -25,11 +25,15 @@ namespace Contigu.Presentation
 
         public event Action<int> SlotSelected;
 
+        /// <summary>Fires when re-clicking the already-selected slot toggles it off (on explicit request) — GameBootstrap uses this to clear the grid's selected-shape preview the same way a successful placement does.</summary>
+        public event Action SelectionCleared;
+
         private DeckManager _deck;
         private TooltipView _tooltip;
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
+        private Image[] _selectionOverlays;
         private int _selectedIndex = -1;
         private bool _interactable = true;
 
@@ -64,6 +68,7 @@ namespace Contigu.Presentation
             _slotBackgrounds = new Image[DeckManager.HandSize];
             _slotButtons = new Button[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
+            _selectionOverlays = new Image[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
@@ -94,8 +99,22 @@ namespace Contigu.Presentation
                 previewContainer.anchoredPosition = Vector2.zero;
                 previewContainer.sizeDelta = new Vector2(100f, 110f);
 
+                // Translucent "ghost" film over the WHOLE slot, including the
+                // piece preview above — on explicit request: the background
+                // sprite's own selected/idle tint sits BEHIND the preview and
+                // was too easy to miss once a piece's own colors cover most
+                // of the slot. Drawn last (topmost) so it reads clearly
+                // regardless of the piece underneath; raycastTarget off so it
+                // never swallows the click meant for the slot's own Button.
+                var selectionOverlay = UIFactory.CreateSlicedImage(slot.transform, "SelectionOverlay", UISprites.HandSlotBackground);
+                UIFactory.StretchFull(selectionOverlay.rectTransform);
+                selectionOverlay.color = new Color(UITheme.ButtonSelected.r, UITheme.ButtonSelected.g, UITheme.ButtonSelected.b, 0.55f);
+                selectionOverlay.raycastTarget = false;
+                selectionOverlay.gameObject.SetActive(false);
+
                 _slotBackgrounds[i] = slot;
                 _previewContainers[i] = previewContainer;
+                _selectionOverlays[i] = selectionOverlay;
             }
 
             BuildDragGhost();
@@ -141,7 +160,10 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            OnSlotClicked(index);
+            // Unconditionally selects (never the OnSlotClicked toggle-off
+            // path below) — starting a drag on the already-selected slot
+            // must keep it selected for the drop, not deselect it.
+            SelectSlot(index);
             _draggingIndex = index;
             _hoveringValidDrop = false;
             ShowDragGhost(index);
@@ -210,6 +232,24 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            if (_selectedIndex == idx)
+            {
+                // Re-clicking the already-selected slot deselects it instead
+                // of just re-firing the same selection (on explicit
+                // request) — mirrors the same clearing GameBootstrap does
+                // after a successful placement.
+                ClearSelection();
+                if (SelectionCleared != null)
+                {
+                    SelectionCleared();
+                }
+                return;
+            }
+            SelectSlot(idx);
+        }
+
+        private void SelectSlot(int idx)
+        {
             _selectedIndex = idx;
             UpdateSelectionVisuals();
             if (SlotSelected != null)
@@ -263,6 +303,7 @@ namespace Contigu.Presentation
                 // background instead of a one-off grey, so it reads as part
                 // of the same visual language rather than a new state.
                 _slotBackgrounds[i].color = _interactable ? baseColor : Color.Lerp(baseColor, UITheme.Background, 0.7f);
+                _selectionOverlays[i].gameObject.SetActive(selected && _interactable);
             }
         }
 
