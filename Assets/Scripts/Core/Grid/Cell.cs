@@ -8,7 +8,12 @@ namespace Contigu.Core
     /// right after, except "Seeder" (PieceTraitKind.Seeder), which leaves its
     /// stamp in place for the REST OF THE CURRENT ROUND only: a permanent
     /// golden cell for a whole run was judged too powerful, so it's cleared
-    /// here like everything else once the round ends.
+    /// here like everything else once the round ends. That "rest of the
+    /// round" only ever means "for as long as this cell stays filled",
+    /// though — a line clear or the "Void Tile" trait emptying it mid-round
+    /// destroys the enchantment right along with the tile (see <see
+    /// cref="ClearFill"/>), rather than leaving it to silently attach
+    /// itself to whatever unrelated piece lands there next.
     /// </summary>
     public sealed class Cell
     {
@@ -39,6 +44,29 @@ namespace Contigu.Core
         public bool HasAnyModifier
         {
             get { return IsGolden || IsTinted || IsMultiplierZone; }
+        }
+
+        /// <summary>
+        /// Empties this cell the way a completed line clear or the "Void
+        /// Tile" trait's random clear does — unlike <see
+        /// cref="ResetForNewRound"/>, <see cref="IsLocked"/> is left alone
+        /// (locking is a boss-round grid property, not tied to whatever
+        /// happened to be filling the cell). Also drops every modifier flag
+        /// and <see cref="OriginTrait"/>: on explicit player report, these
+        /// used to only be reset by ResetForNewRound, so a cell cleared
+        /// mid-round (including a "Seeder" cell, permanently golden for the
+        /// rest of the round otherwise) kept its stamp even once genuinely
+        /// empty — an unrelated piece placed in that same spot later would
+        /// then inherit an enchantment it never actually earned.
+        /// </summary>
+        public void ClearFill()
+        {
+            IsFilled = false;
+            FilledColor = null;
+            IsGolden = false;
+            IsTinted = false;
+            IsMultiplierZone = false;
+            OriginTrait = null;
         }
 
         public void ResetForNewRound()

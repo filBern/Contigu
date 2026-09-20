@@ -1425,8 +1425,7 @@ namespace Contigu.Core
             {
                 var cell = _cells[pos.x, pos.y];
                 clearedColors.Add(cell.FilledColor.Value); // capture before clearing
-                cell.IsFilled = false;
-                cell.FilledColor = null;
+                cell.ClearFill();
                 cleared.Add(pos);
             }
 
@@ -1556,8 +1555,7 @@ namespace Contigu.Core
 
             var chosen = candidates[rng.Next(candidates.Count)];
             var chosenCell = GetCell(chosen);
-            chosenCell.IsFilled = false;
-            chosenCell.FilledColor = null;
+            chosenCell.ClearFill();
             return chosen;
         }
 

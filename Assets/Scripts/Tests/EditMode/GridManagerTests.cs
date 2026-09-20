@@ -524,6 +524,60 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void CompletingALine_AlsoClearsAnyModifierFlagsAndOriginTraitOnThoseCells()
+        {
+            // On explicit player report: a cell used to keep its Golden/
+            // Tinted/MultiplierZone/OriginTrait stamp even once cleared by a
+            // completed line, so an unrelated piece placed in that exact
+            // spot afterward would wrongly inherit an enchantment it never
+            // earned (most notably a "Seeder" cell, otherwise golden for
+            // the rest of the round regardless of what's actually filling it).
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.GetCell(3, 0).IsGolden = true;
+            var tinted = grid.GetCell(4, 0);
+            tinted.IsTinted = true;
+            tinted.TintedColor = PieceColor.Coral;
+            grid.GetCell(5, 0).IsMultiplierZone = true;
+            grid.GetCell(6, 0).OriginTrait = new PieceTrait(PieceTraitKind.Golden, 0);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
+
+            Assert.IsFalse(grid.GetCell(3, 0).IsFilled, "Line should have cleared");
+            Assert.IsFalse(grid.GetCell(3, 0).IsGolden);
+            Assert.IsFalse(grid.GetCell(4, 0).IsTinted);
+            Assert.IsFalse(grid.GetCell(5, 0).IsMultiplierZone);
+            Assert.IsFalse(grid.GetCell(6, 0).OriginTrait.HasValue);
+
+            // An unrelated piece landing on the same spot afterward should
+            // score as a completely plain cell — no leftover golden bonus.
+            var result = grid.PlacePiece(single, PieceColor.Teal, 3, 0);
+            Assert.AreEqual(0, result.GoldenBonus);
+        }
+
+        [Test]
+        public void ClearRandomFilledCell_AlsoClearsAnyModifierFlagsAndOriginTraitOnThatCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.GetCell(3, 3).IsGolden = true;
+            grid.GetCell(3, 3).OriginTrait = new PieceTrait(PieceTraitKind.Golden, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 3, 3);
+
+            var cleared = grid.ClearRandomFilledCell(new SystemRandomProvider(1), System.Array.Empty<Vector2Int>());
+
+            Assert.IsTrue(cleared.HasValue);
+            Assert.AreEqual(new Vector2Int(3, 3), cleared.Value);
+            Assert.IsFalse(grid.GetCell(3, 3).IsGolden);
+            Assert.IsFalse(grid.GetCell(3, 3).OriginTrait.HasValue);
+        }
+
+        [Test]
         public void PlacementsSinceLastClear_TracksConsecutiveNoClearPlacements_AndResetsOnAClear()
         {
             var grid = new GridManager();

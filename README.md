@@ -1771,3 +1771,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   aurait autrement été étirée AU-DELÀ de la vraie taille de case est
   maintenant bridée à 54px, peu importe la taille de sa boîte de
   preview.
+- **Bug corrigé : les upgrades de tuile survivaient à leur propre
+  destruction** (sur signalement explicite — "On oublie de détruire
+  les tile upgrade, lorsque celles-ci sont détruite avec des line
+  clear ou autre"). `GridManager` avait deux endroits qui vident une
+  case (`CheckAndClearLines` pour un line clear, et
+  `ClearRandomFilledCell` pour le trait "Void Tile") — tous les deux
+  ne remettaient à zéro que `IsFilled`/`FilledColor`, en oubliant
+  `IsGolden`/`IsTinted`/`IsMultiplierZone`/`OriginTrait`. Résultat : une
+  case enchantée (notamment "Seeder", golden pour le reste de la manche
+  tant qu'elle reste remplie) gardait son enchantement même une fois
+  vidée — si une pièce complètement différente atterrissait ensuite sur
+  cette même case, elle héritait injustement du bonus (golden, tinted,
+  multiplicateur) d'un enchantement qui ne lui appartenait pas.
+  Nouveau `Cell.ClearFill()` — centralise le vidage d'une case (tout
+  sauf `IsLocked`, propriété de la manche boss et non de ce qui la
+  remplit) et remet À LA FOIS `IsFilled`/`FilledColor` ET les 4 champs
+  d'enchantement à zéro — appelé aux deux endroits ci-dessus à la place
+  du couple `IsFilled = false; FilledColor = null;` répété
+  manuellement. Nouveaux tests (`GridManagerTests`) : compléter une
+  ligne contenant des cases Golden/Tinted/MultiplierZone/OriginTrait
+  vide bien les 4 (et une pièce non-liée posée ensuite au même endroit
+  ne score plus de bonus golden fantôme) ; `ClearRandomFilledCell` fait
+  pareil sur la case qu'il vide.
