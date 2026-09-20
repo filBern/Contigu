@@ -239,6 +239,28 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Apply_BastionTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(16));
+
+            system.Apply(UpgradeCatalog.BastionTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.BastionTileCount, CountTagged(deck, PieceTraitKind.Bastion));
+        }
+
+        [Test]
+        public void Apply_KamikazeTile_TagsTokensInDeck()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(17));
+
+            system.Apply(UpgradeCatalog.KamikazeTile, default(UpgradeSubChoice), deck);
+
+            Assert.AreEqual(UpgradeSystem.KamikazeTileCount, CountTagged(deck, PieceTraitKind.Kamikaze));
+        }
+
+        [Test]
         public void RollDraft_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
         {
             // Statistical check of the weighting itself (see

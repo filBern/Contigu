@@ -1156,5 +1156,199 @@ namespace Contigu.Tests
                 Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + baseColors[i]);
             }
         }
+
+        // ---- Fifth batch: 8 new modifiers (on explicit request) ----
+
+        [Test]
+        public void Diagonale_FiresForGroupCellsOnEitherMainDiagonal()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Diagonale };
+
+            var onMainDiagonal = grid.PlacePiece(single, PieceColor.Coral, 3, 3, modifiers);
+            Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onMainDiagonal.ModifierBonus);
+
+            var onAntiDiagonal = grid.PlacePiece(single, PieceColor.Teal, 5, 2, modifiers); // 5 + 2 == Size - 1
+            Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onAntiDiagonal.ModifierBonus);
+
+            var offDiagonal = grid.PlacePiece(single, PieceColor.Violet, 1, 4, modifiers);
+            Assert.AreEqual(0, offDiagonal.ModifierBonus);
+        }
+
+        [Test]
+        public void Nid_FiresForAGroupCellWithExactlyThreeFilledCardinalNeighbors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Teal, 3, 4);
+            grid.PlacePiece(single, PieceColor.Violet, 5, 4);
+            grid.PlacePiece(single, PieceColor.Lime, 4, 3);
+            // (4, 5) left empty — only 3 of the 4 cardinal neighbors are filled.
+
+            var modifiers = new List<ModifierId> { ModifierId.Nid };
+            var center = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            Assert.AreEqual(ScoringConstants.NidBonusPerCell, center.ModifierBonus);
+        }
+
+        [Test]
+        public void Nid_DoesNotFire_WhenAllFourOrFewerThanThreeCardinalNeighborsAreFilled()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Nid };
+
+            // Zero neighbors filled.
+            var isolated = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(0, isolated.ModifierBonus);
+        }
+
+        [Test]
+        public void Solitaire_FiresOnlyForABrandNewMultiCellGroupThatMergesWithNothing()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Solitaire };
+
+            var first = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.SolitaireBonus, first.ModifierBonus, "Brand new 2-cell group, nothing pre-existing merged in");
+
+            // Adjacent, same color — merges into the existing group, so it's
+            // no longer "solitary".
+            var second = grid.PlacePiece(domH, PieceColor.Coral, 2, 0, modifiers);
+            Assert.AreEqual(0, second.ModifierBonus);
+        }
+
+        [Test]
+        public void Solitaire_DoesNotFire_ForASingleCellPlacement()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Solitaire };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus, "Îlot already covers the size-1 case");
+        }
+
+        [Test]
+        public void PetitFormat_FiresOnlyForPiecesOfAtMostTwoCells()
+        {
+            var grid = new GridManager();
+            var modifiers = new List<ModifierId> { ModifierId.PetitFormat };
+
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var singleResult = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(single.Cells.Count * ScoringConstants.PetitFormatBonusPerCell, singleResult.ModifierBonus);
+
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var domResult = grid.PlacePiece(domH, PieceColor.Teal, 2, 0, modifiers);
+            Assert.AreEqual(domH.Cells.Count * ScoringConstants.PetitFormatBonusPerCell, domResult.ModifierBonus);
+
+            var triL = PieceShapeCatalog.Get(ShapeId.TriL);
+            var triResult = grid.PlacePiece(triL, PieceColor.Violet, 4, 4, modifiers);
+            Assert.AreEqual(0, triResult.ModifierBonus, "3-cell piece should not qualify as small format");
+        }
+
+        [Test]
+        public void Fraicheur_FiresOnlyWhenThisPlacementsColorIsNewToTheBoard()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Fraicheur };
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.FraicheurBonus, first.ModifierBonus, "First Coral tile on an empty board should be fresh");
+
+            var second = grid.PlacePiece(single, PieceColor.Coral, 5, 5, modifiers);
+            Assert.AreEqual(0, second.ModifierBonus, "Coral is already on the board, no longer fresh");
+
+            var third = grid.PlacePiece(single, PieceColor.Teal, 7, 7, modifiers);
+            Assert.AreEqual(ScoringConstants.FraicheurBonus, third.ModifierBonus, "Teal is still new to the board");
+        }
+
+        [Test]
+        public void Imminent_FiresForALineLeftWithExactlyOneEmptyUnlockedCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            // Row 0 now has exactly one empty cell left: (7, 0).
+
+            var modifiers = new List<ModifierId> { ModifierId.Imminent };
+            var trigger = grid.PlacePiece(single, PieceColor.Teal, 0, 7, modifiers);
+
+            Assert.AreEqual(ScoringConstants.ImminentBonusPerLine, trigger.ModifierBonus);
+        }
+
+        [Test]
+        public void EspaceLibre_FiresOnlyWhileBoardIsAtMost25PercentFilled()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.EspaceLibre };
+
+            var early = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
+            Assert.AreEqual(ScoringConstants.EspaceLibreBonus, early.ModifierBonus, "Board is nearly empty, should fire");
+
+            // Fill past the 16-cell (25%) threshold without ever completing a
+            // row/column (each of these 3 rows leaves its last column empty).
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < GridManager.Size - 1; x++)
+                {
+                    grid.PlacePiece(single, PieceColor.Teal, x, y);
+                }
+            }
+
+            var late = grid.PlacePiece(single, PieceColor.Violet, 0, 3, modifiers);
+            Assert.AreEqual(0, late.ModifierBonus, "Board should no longer count as open once past the threshold");
+        }
+
+        [Test]
+        public void Rafale_FiresWhenThisPlacementAndTheImmediatelyPreviousOneBothClearALine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+                grid.PlacePiece(single, PieceColor.Teal, x, 1);
+            }
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 7, 0); // completes row 0
+            Assert.Greater(first.LineClearScore, 0, "Sanity check: row 0 should have cleared");
+
+            var modifiers = new List<ModifierId> { ModifierId.Rafale };
+            var second = grid.PlacePiece(single, PieceColor.Teal, 7, 1, modifiers); // completes row 1, right after another clear
+
+            Assert.AreEqual(ScoringConstants.RafaleBonus, second.ModifierBonus);
+        }
+
+        [Test]
+        public void Rafale_DoesNotFire_WhenThePreviousPlacementDidNotClearALine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 5); // no clear
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Teal, x, 2);
+            }
+            var modifiers = new List<ModifierId> { ModifierId.Rafale };
+            var clearing = grid.PlacePiece(single, PieceColor.Teal, 7, 2, modifiers); // completes row 2
+
+            Assert.Greater(clearing.LineClearScore, 0, "Sanity check: row 2 should have cleared");
+            Assert.AreEqual(0, clearing.ModifierBonus, "Previous placement didn't clear, so Rafale shouldn't fire");
+        }
     }
 }

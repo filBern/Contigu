@@ -5,7 +5,19 @@ namespace Contigu.Core
     {
         public const int RoundCount = 8;
         public const int BossRoundIndex = RoundCount - 1; // round 8 (0-based index 7)
-        public const int BossLockedCellCount = 14;
+
+        /// <summary>
+        /// Boss round mechanic (replaces the old upfront 14-cell lock at
+        /// round start — judged too hard on explicit request: "le boss est
+        /// beaucoup trop difficile, on va faire autre chose"): every
+        /// <see cref="BossLockPiecesInterval"/> pieces played this round,
+        /// the boss locks <see cref="BossLockCellsPerInterval"/> more random
+        /// still-empty cells (see RunManager.ApplyBossLockTick /
+        /// GridManager.LockFreeCellsAndCheckClears) — the board tightens up
+        /// gradually across the whole round instead of all at once.
+        /// </summary>
+        public const int BossLockPiecesInterval = 3;
+        public const int BossLockCellsPerInterval = 2;
 
         public static readonly int[] Quotas =
         {

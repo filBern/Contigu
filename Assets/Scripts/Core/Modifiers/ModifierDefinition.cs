@@ -268,6 +268,40 @@ namespace Contigu.Core
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Lime Glow",
             "+4 pts per group cell when placing a Lime piece.");
 
+        // ---- Fifth batch: 8 new ideas (on explicit request) ----
+
+        public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
+            ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
+            "+5 pts per group cell sitting on either of the board's two main diagonals.");
+
+        public static readonly ModifierDefinition Nid = new ModifierDefinition(
+            ModifierId.Nid, ModifierCategory.Voisinage, "Nest",
+            "+3 pts per group cell with exactly 3 of its 4 orthogonal neighbors filled.");
+
+        public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
+            ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
+            "+12 pts when this placement's group is entirely its own piece (more than 1 cell) — nothing pre-existing merged into it.");
+
+        public static readonly ModifierDefinition Imminent = new ModifierDefinition(
+            ModifierId.Imminent, ModifierCategory.Destruction, "Imminent",
+            "+10 pts per row/column left with exactly one empty tile once this placement is fully resolved.");
+
+        public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
+            ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Open Space",
+            "+15 pts whenever the board is at most 25% filled once this placement is fully resolved.");
+
+        public static readonly ModifierDefinition Rafale = new ModifierDefinition(
+            ModifierId.Rafale, ModifierCategory.Destruction, "Burst",
+            "+20 pts when this placement clears a line AND the immediately previous one this round also did.");
+
+        public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
+            ModifierId.PetitFormat, ModifierCategory.Roguelike, "Small Format",
+            "+5 pts per placed cell when the piece has at most 2 cells.");
+
+        public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
+            ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
+            "+10 pts when this placement's color isn't anywhere else on the board yet.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -276,7 +310,8 @@ namespace Contigu.Core
             ArcEnCiel, Alternance, Palindrome, Gradient, Bloc, MonochromeLigne,
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
             FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro,
-            SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime
+            SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
+            Diagonale, Nid, Solitaire, Imminent, EspaceLibre, Rafale, PetitFormat, Fraicheur
         };
 
         public static ModifierDefinition Get(ModifierId id)

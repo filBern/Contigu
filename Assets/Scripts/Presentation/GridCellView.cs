@@ -61,7 +61,14 @@ namespace Contigu.Presentation
             bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
 
-            if (cell.IsLocked)
+            // A Bastion cell (see Cell.IsBastion) is locked AND filled at the
+            // same time — it renders like any other filled tile (plus its
+            // trait-origin badge below), not like the empty "locked obstacle"
+            // look every other locked cell gets, since it's meant to read as
+            // a permanently-scoring tile rather than dead space.
+            bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion;
+
+            if (renderAsLockedObstacle)
             {
                 if (VisualDefaults.LockedTileSprite != null)
                 {
@@ -95,8 +102,8 @@ namespace Contigu.Presentation
             }
 
             // Neutral frame/bevel overlay on top of the flat fill, below every
-            // badge — only for an actually-filled, unlocked cell.
-            bool showFillTile = isFilled && !cell.IsLocked && VisualDefaults.FillTileSprite != null;
+            // badge — only for an actually-filled, non-obstacle cell.
+            bool showFillTile = isFilled && !renderAsLockedObstacle && VisualDefaults.FillTileSprite != null;
             _fillTile.gameObject.SetActive(showFillTile);
             if (showFillTile)
             {
@@ -122,7 +129,7 @@ namespace Contigu.Presentation
             // top of the fill so color isn't the only signal. Hidden for any
             // color that has no icon yet (e.g. Coral) rather than showing a
             // blank/broken image.
-            Sprite colorIcon = isFilled && !cell.IsLocked ? VisualDefaults.GetColorIcon(filledColor.Value) : null;
+            Sprite colorIcon = isFilled && !renderAsLockedObstacle ? VisualDefaults.GetColorIcon(filledColor.Value) : null;
             _badgeColorIcon.gameObject.SetActive(colorIcon != null);
             if (colorIcon != null)
             {

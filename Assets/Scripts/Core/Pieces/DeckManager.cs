@@ -333,6 +333,18 @@ namespace Contigu.Core
             return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Void, localIndex));
         }
 
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Bastion" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagBastionTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Bastion, localIndex));
+        }
+
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Kamikaze" trait on one random cell each.</summary>
+        public IReadOnlyList<int> TagKamikazeTokensRandom(int count, IRandomProvider rng)
+        {
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Kamikaze, localIndex));
+        }
+
         /// <summary>
         /// Picks up to <paramref name="count"/> distinct deck indices — preferring
         /// tokens that don't already carry a trait, falling back to any token if

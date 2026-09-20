@@ -135,5 +135,38 @@ namespace Contigu.Core
 
         /// <summary>Éclat (per-color): bonus per scored group cell of the matching color — unlike Devotion's full double, a flat per-tile amount.</summary>
         public const int EclatBonusPerCell = 4;
+
+        // ---- Fifth batch of modifier bonuses (see ModifierCatalog) ----
+
+        /// <summary>Diagonale: bonus per group cell sitting on either of the grid's two main diagonals.</summary>
+        public const int DiagonaleBonusPerCell = 5;
+
+        /// <summary>Nid: bonus per group cell with exactly 3 of its 4 cardinal neighbors filled.</summary>
+        public const int NidBonusPerCell = 3;
+
+        /// <summary>Solitaire: flat bonus when this placement's group is entirely its own piece (more than 1 cell), nothing pre-existing merged in.</summary>
+        public const int SolitaireBonus = 12;
+
+        /// <summary>Petit Format: bonus per placed cell when the piece has at most this many cells.</summary>
+        public const int PetitFormatBonusPerCell = 5;
+        public const int PetitFormatMaxPieceSize = 2;
+
+        /// <summary>Fraîcheur: flat bonus when this placement's fill color is nowhere else on the board yet.</summary>
+        public const int FraicheurBonus = 10;
+
+        /// <summary>Imminent: bonus per row/column left with exactly one empty unlocked cell once this placement has fully resolved.</summary>
+        public const int ImminentBonusPerLine = 10;
+
+        /// <summary>Espace Libre: flat bonus once at most this many cells on the whole board are still filled.</summary>
+        public const int EspaceLibreBonus = 15;
+        public const int EspaceLibreMaxFilledCells = 16; // 25% of the 64-cell board
+
+        /// <summary>Rafale: flat bonus when this placement clears a line AND the immediately previous one this round also did.</summary>
+        public const int RafaleBonus = 20;
+
+        // ---- Third batch of tile-upgrade (PieceTrait) bonuses ----
+
+        /// <summary>Kamikaze Tile: bonus per surrounding tile actually destroyed (this placement's own cells excluded).</summary>
+        public const int KamikazeBonusPerDestroyedCell = 6;
     }
 }

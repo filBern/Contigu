@@ -66,7 +66,15 @@ namespace Contigu.Data
             { ModifierId.EclatCoral, "EC" },
             { ModifierId.EclatTeal, "ET" },
             { ModifierId.EclatViolet, "EV" },
-            { ModifierId.EclatLime, "EL" }
+            { ModifierId.EclatLime, "EL" },
+            { ModifierId.Diagonale, "DI" },
+            { ModifierId.Nid, "NI" },
+            { ModifierId.Solitaire, "SO" },
+            { ModifierId.Imminent, "IM" },
+            { ModifierId.EspaceLibre, "SL" },
+            { ModifierId.Rafale, "RA" },
+            { ModifierId.PetitFormat, "PF" },
+            { ModifierId.Fraicheur, "FR" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

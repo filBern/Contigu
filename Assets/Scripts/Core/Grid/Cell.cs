@@ -31,6 +31,19 @@ namespace Contigu.Core
         public bool IsMultiplierZone;
 
         /// <summary>
+        /// "Bastion Tile" stamp (spec extension, explicit request — "Locked
+        /// cell upgraded. N'est pas cleared mais fait quand même les points
+        /// cleared"): set together with <see cref="IsLocked"/> once a
+        /// Bastion-enchanted piece has actually been placed here (see
+        /// RunManager.ApplyBastionEffect). From then on this cell behaves
+        /// like any other locked cell for placement/clearing purposes — see
+        /// <see cref="IsLocked"/> — but GridManager.CheckAndClearLines still
+        /// credits it the line-clear bonus every time its row/column
+        /// completes, without ever actually emptying it.
+        /// </summary>
+        public bool IsBastion;
+
+        /// <summary>
         /// Which tile-upgrade trait (if any) was originally enchanted onto
         /// this cell, stamped by RunManager.ApplyTokenTrait for the rest of
         /// the round regardless of trait kind — purely cosmetic (on explicit
@@ -43,7 +56,7 @@ namespace Contigu.Core
 
         public bool HasAnyModifier
         {
-            get { return IsGolden || IsTinted || IsMultiplierZone; }
+            get { return IsGolden || IsTinted || IsMultiplierZone || IsBastion; }
         }
 
         /// <summary>
@@ -66,6 +79,7 @@ namespace Contigu.Core
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
+            IsBastion = false;
             OriginTrait = null;
         }
 
@@ -77,6 +91,7 @@ namespace Contigu.Core
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
+            IsBastion = false;
             OriginTrait = null;
         }
     }

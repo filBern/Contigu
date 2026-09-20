@@ -30,6 +30,10 @@ namespace Contigu.Core
         DetonatorTile,
         ChameleonTile,
         SparkTile,
-        VoidTile
+        VoidTile,
+
+        // ---- Third batch (2 more, on explicit request) ----
+        BastionTile,
+        KamikazeTile
     }
 }

@@ -356,6 +356,7 @@ namespace Contigu.Presentation
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.Modifier
                     : scoreEvent.Type == ScoreEventType.Trait ? UITheme.PanelLight
+                    : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
 
@@ -411,6 +412,16 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
+            if (outcome.BossLockedCells.Count > 0)
+            {
+                // The boss just locked more cells (see RunConfig.BossLockPiecesInterval)
+                // outside of anything this sequence already animated above —
+                // a full refresh is the simplest way to surface them (and any
+                // Bastion cell they might have grazed) without a bespoke
+                // per-cell lock animation.
+                _gridView.Refresh();
+            }
+
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
@@ -456,7 +467,7 @@ namespace Contigu.Presentation
         {
             RefreshAll();
             _statusText.text = _run.IsBossRound
-                ? "Boss round: the frozen grid locks 14 cells."
+                ? "Boss round: every " + RunConfig.BossLockPiecesInterval + " pieces played, the boss locks " + RunConfig.BossLockCellsPerInterval + " more cells."
                 : "New round: select a piece, then click the grid.";
         }
 

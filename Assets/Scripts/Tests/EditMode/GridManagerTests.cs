@@ -496,6 +496,97 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void LockRandomCells_NeverLocksAnAlreadyFilledCell()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            var locked = grid.LockRandomCells(GridManager.Size * GridManager.Size, new SystemRandomProvider(1));
+
+            CollectionAssert.DoesNotContain(locked, new Vector2Int(0, 0), "A cell the player has actually filled should never become a boss obstacle");
+        }
+
+        [Test]
+        public void LockFreeCellsAndCheckClears_OnlyLocksStillEmptyCells()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            var outcome = grid.LockFreeCellsAndCheckClears(GridManager.Size * GridManager.Size, new SystemRandomProvider(1));
+
+            CollectionAssert.DoesNotContain(outcome.LockedCells, new Vector2Int(0, 0));
+            foreach (var pos in outcome.LockedCells)
+            {
+                Assert.IsTrue(grid.GetCell(pos).IsLocked);
+            }
+        }
+
+        [Test]
+        public void LockFreeCellsAndCheckClears_CompletingALineByLockingItsLastEmptyCell_ScoresAndClears()
+        {
+            // Every cell except (7, 0) is already filled — the single
+            // remaining empty spot is the only `!IsLocked && !IsFilled`
+            // candidate anywhere on the board, so the lock is deterministic
+            // regardless of the RNG seed, and locking it instantly completes
+            // (and clears) both its row and its column.
+            var grid = new GridManager();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (pos.x == 7 && pos.y == 0)
+                {
+                    continue;
+                }
+                var cell = grid.GetCell(pos);
+                cell.IsFilled = true;
+                cell.FilledColor = PieceColor.Coral;
+            }
+
+            var outcome = grid.LockFreeCellsAndCheckClears(1, new SystemRandomProvider(1));
+
+            CollectionAssert.AreEqual(new[] { new Vector2Int(7, 0) }, outcome.LockedCells);
+            Assert.Greater(outcome.LineClearScore, 0, "Locking the board's last empty cell should complete and clear at least its row and column");
+            CollectionAssert.Contains(outcome.ClearedCells, new Vector2Int(0, 0));
+        }
+
+        [Test]
+        public void CompletingALine_CreditsALockedBastionCellTheLineClearBonusWithoutClearingIt()
+        {
+            // "Bastion Tile" (on explicit request — "Locked cell upgraded.
+            // N'est pas cleared mais fait quand même les points cleared"):
+            // GridManager doesn't need to know about PieceTrait to honor
+            // this — it's purely a Cell.IsBastion/IsLocked combination.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var bastionCell = grid.GetCell(3, 0);
+            bastionCell.IsFilled = true;
+            bastionCell.FilledColor = PieceColor.Coral;
+            bastionCell.IsBastion = true;
+            bastionCell.IsLocked = true;
+
+            grid.PlacePiece(single, PieceColor.Teal, 0, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 2, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 4, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 5, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 6, 0);
+            var final = grid.PlacePiece(single, PieceColor.Teal, 7, 0);
+
+            Assert.AreEqual(GridManager.Size - 1, final.LineClearCellCount, "Only the 7 unlocked cells actually clear");
+            Assert.AreEqual(GridManager.Size * ScoringConstants.LineClearBonusPerCell, final.LineClearScore,
+                "The locked Bastion cell still earns the same per-cell bonus as an actually-cleared cell");
+            CollectionAssert.DoesNotContain(final.ClearedCells, new Vector2Int(3, 0));
+
+            var stillThere = grid.GetCell(3, 0);
+            Assert.IsTrue(stillThere.IsFilled, "Bastion cell should never actually be cleared");
+            Assert.IsTrue(stillThere.IsLocked);
+            Assert.IsTrue(stillThere.IsBastion);
+            Assert.AreEqual(PieceColor.Coral, stillThere.FilledColor);
+        }
+
+        [Test]
         public void ResetForNewRound_ClearsFillLockAndModifiers()
         {
             var grid = new GridManager();

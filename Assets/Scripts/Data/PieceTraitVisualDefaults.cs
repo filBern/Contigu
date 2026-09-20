@@ -25,6 +25,8 @@ namespace Contigu.Data
         private static readonly Color VoidBadgeColor = new Color(0.216f, 0.180f, 0.302f); // #372e4d
         private static readonly Color DetonatorBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f
         private static readonly Color ChameleonBadgeColor = new Color(0.643f, 0.922f, 0.800f); // #a4ebcc
+        private static readonly Color BastionBadgeColor = new Color(0.380f, 0.263f, 0.388f); // #614363
+        private static readonly Color KamikazeBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f (same family as Detonator/destruction)
 
         public static string GetName(PieceTraitKind kind)
         {
@@ -43,6 +45,8 @@ namespace Contigu.Data
                 case PieceTraitKind.Chameleon: return "Chameleon Tile";
                 case PieceTraitKind.Spark: return "Spark Tile";
                 case PieceTraitKind.Void: return "Void Tile";
+                case PieceTraitKind.Bastion: return "Bastion Tile";
+                case PieceTraitKind.Kamikaze: return "Kamikaze Tile";
                 default: return kind.ToString();
             }
         }
@@ -78,6 +82,10 @@ namespace Contigu.Data
                     return "When this piece is placed, this tile scores more points the longer it's been since the last row/column clear this round — the bonus resets once a clear happens.";
                 case PieceTraitKind.Void:
                     return "When this piece is placed, this tile also clears one random already-filled tile elsewhere on the grid — free space, at the risk of undoing a setup you were building.";
+                case PieceTraitKind.Bastion:
+                    return "Once placed, this tile locks in place for the rest of the round instead of being cleared — it still scores the line-clear bonus every time its row/column completes, forever, for as long as the round lasts.";
+                case PieceTraitKind.Kamikaze:
+                    return "When this piece is placed, this tile also destroys its 8 surrounding tiles (this placement's own cells excluded), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile actually destroyed.";
                 default:
                     return string.Empty;
             }
@@ -101,6 +109,8 @@ namespace Contigu.Data
                 case PieceTraitKind.Chameleon: return UpgradeRarity.Common;
                 case PieceTraitKind.Spark: return UpgradeRarity.Common;
                 case PieceTraitKind.Void: return UpgradeRarity.Rare;
+                case PieceTraitKind.Bastion: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Kamikaze: return UpgradeRarity.Rare;
                 default: return UpgradeRarity.Common;
             }
         }
@@ -137,6 +147,10 @@ namespace Contigu.Data
                     return ChameleonBadgeColor;
                 case PieceTraitKind.Spark:
                     return GoldenBadgeColor;
+                case PieceTraitKind.Bastion:
+                    return BastionBadgeColor;
+                case PieceTraitKind.Kamikaze:
+                    return KamikazeBadgeColor;
                 default:
                     return Color.gray;
             }

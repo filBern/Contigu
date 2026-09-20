@@ -48,6 +48,12 @@ namespace Contigu.Core
         /// <summary>How many distinct deck tokens a Void-tile upgrade enchants. See GoldenCellsCount.</summary>
         public const int VoidTileCount = 3;
 
+        /// <summary>How many distinct deck tokens a Bastion-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int BastionTileCount = 3;
+
+        /// <summary>How many distinct deck tokens a Kamikaze-tile upgrade enchants. See GoldenCellsCount.</summary>
+        public const int KamikazeTileCount = 3;
+
         private readonly IRandomProvider _rng;
 
         public UpgradeSystem(IRandomProvider rng)
@@ -203,6 +209,14 @@ namespace Contigu.Core
 
                 case UpgradeId.VoidTile:
                     deck.TagVoidTokensRandom(VoidTileCount, _rng);
+                    return true;
+
+                case UpgradeId.BastionTile:
+                    deck.TagBastionTokensRandom(BastionTileCount, _rng);
+                    return true;
+
+                case UpgradeId.KamikazeTile:
+                    deck.TagKamikazeTokensRandom(KamikazeTileCount, _rng);
                     return true;
 
                 default:

@@ -1044,6 +1044,134 @@ namespace Contigu.Tests
             Assert.IsTrue(run.Grid.GetCell(0, 0).IsFilled);
         }
 
+        [Test]
+        public void PlacePiece_BastionTrait_LocksInPlaceAndSurvivesALaterLineClear()
+        {
+            // "Bastion Tile" (on explicit request — "Locked cell upgraded.
+            // N'est pas cleared mais fait quand même les points cleared").
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagBastionTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int bastionSlot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var placeBastion = run.PlacePiece(bastionSlot, 3, 0);
+            Assert.IsTrue(placeBastion.Placement.Success);
+
+            var bastionCell = run.Grid.GetCell(3, 0);
+            Assert.IsTrue(bastionCell.IsLocked, "Bastion cell should lock in place once placed");
+            Assert.IsTrue(bastionCell.IsFilled);
+
+            // Fill the rest of row 0 directly (not through the trait system) —
+            // nothing re-checks for a completed line until the next real
+            // placement anywhere on the board.
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == 3) continue;
+                FillCell(run.Grid, x, 0, PieceColor.Teal);
+            }
+
+            int otherSlot = FirstOccupiedHandSlot(run);
+            var token = run.Deck.Hand[otherSlot].Value;
+            var rotation = run.Deck.HandRotations[otherSlot];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            var outcome = run.PlacePiece(otherSlot, anchor.Value.x, anchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.Greater(outcome.Placement.LineClearScore, 0, "Row 0 should now be recognized as complete");
+            CollectionAssert.DoesNotContain(outcome.Placement.ClearedCells, new Vector2Int(3, 0));
+            Assert.IsTrue(run.Grid.GetCell(3, 0).IsFilled, "Bastion cell should still be there after the clear");
+            Assert.IsTrue(run.Grid.GetCell(3, 0).IsLocked);
+        }
+
+        [Test]
+        public void PlacePiece_KamikazeTrait_DestroysItsEightSurroundingTilesAndScoresPerTileDestroyed()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            FillCell(run.Grid, 3, 3, PieceColor.Teal);
+            FillCell(run.Grid, 4, 3, PieceColor.Teal);
+            FillCell(run.Grid, 5, 3, PieceColor.Teal);
+            FillCell(run.Grid, 3, 4, PieceColor.Teal);
+            FillCell(run.Grid, 5, 4, PieceColor.Teal);
+            FillCell(run.Grid, 3, 5, PieceColor.Teal);
+            FillCell(run.Grid, 4, 5, PieceColor.Teal);
+            FillCell(run.Grid, 5, 5, PieceColor.Teal);
+
+            var outcome = run.PlacePiece(slot, 4, 4);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(8 * ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
+            Assert.IsFalse(run.Grid.GetCell(3, 3).IsFilled);
+            Assert.IsFalse(run.Grid.GetCell(5, 5).IsFilled);
+            Assert.IsTrue(run.Grid.GetCell(4, 4).IsFilled, "The Kamikaze tile itself should survive");
+        }
+
+        [Test]
+        public void PlacePiece_KamikazeTrait_NeverDestroysThisPlacementsOwnCells()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            // A 2-cell piece so its OTHER cell sits right inside whichever
+            // local cell got enchanted's own 8-neighbor blast radius —
+            // survives regardless of which of the two cells got tagged.
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.DomH);
+
+            var outcome = run.PlacePiece(slot, 4, 4);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsTrue(run.Grid.GetCell(4, 4).IsFilled);
+            Assert.IsTrue(run.Grid.GetCell(5, 4).IsFilled);
+        }
+
+        [Test]
+        public void PlacePiece_DuringBossRound_LocksTwoMoreFreeCellsEveryThreePiecesPlayed()
+        {
+            // Boss round rework (on explicit request — "le boss est beaucoup
+            // trop difficile, on va faire autre chose"): no more upfront
+            // lock, instead RunConfig.BossLockCellsPerInterval more empty
+            // cells lock every RunConfig.BossLockPiecesInterval pieces played.
+            var run = new RunManager(new SystemRandomProvider(5));
+            AdvanceToRound(run, RunConfig.BossRoundIndex);
+            Assert.IsTrue(run.IsBossRound);
+            Assert.AreEqual(0, CountLockedCells(run.Grid), "Boss round should no longer lock cells upfront");
+
+            PlaceFirstAvailableHandPiece(run);
+            PlaceFirstAvailableHandPiece(run);
+            Assert.AreEqual(0, CountLockedCells(run.Grid), "No lock tick yet after only 2 pieces");
+
+            PlaceFirstAvailableHandPiece(run);
+            Assert.AreEqual(RunConfig.BossLockCellsPerInterval, CountLockedCells(run.Grid));
+        }
+
+        /// <summary>Drives a fresh run straight to the start of <paramref name="targetRoundIndex"/> via DebugForceRoundComplete, without needing to actually reach each round's real quota — the upgrade/modifier picked each round don't matter for these tests, only reaching the round does.</summary>
+        private static void AdvanceToRound(RunManager run, int targetRoundIndex)
+        {
+            while (run.CurrentRoundIndex < targetRoundIndex)
+            {
+                run.DebugForceRoundComplete();
+                Assert.AreEqual(RunState.AwaitingDraft, run.State);
+                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
+                Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
+                run.ApplyModifierPick(ModifierId.Prisme);
+            }
+        }
+
+        private static int CountLockedCells(GridManager grid)
+        {
+            int count = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (grid.GetCell(pos).IsLocked)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         private static void FillCell(GridManager grid, int x, int y, PieceColor color)
         {
             var cell = grid.GetCell(x, y);

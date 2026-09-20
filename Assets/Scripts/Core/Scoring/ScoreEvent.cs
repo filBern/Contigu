@@ -19,6 +19,9 @@ namespace Contigu.Core
         /// <summary>One cell cleared by a completed line/column.</summary>
         LineClear,
 
+        /// <summary>A Bastion-tile cell whose row/column completed — scores the line-clear bonus like <see cref="LineClear"/>, but the cell itself stays filled/locked instead of being emptied (see Cell.IsBastion).</summary>
+        Bastion,
+
         /// <summary>A bonus from one of the player's active modifiers (see <see cref="ModifierId"/>).</summary>
         Modifier,
 

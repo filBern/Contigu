@@ -82,10 +82,9 @@ namespace Contigu.Core
         private void StartRound()
         {
             Grid.ResetForNewRound();
-            if (IsBossRound)
-            {
-                Grid.LockRandomCells(RunConfig.BossLockedCellCount, _rng);
-            }
+            // No more upfront lock here — the boss round now ratchets up
+            // gradually instead, see ApplyBossLockTick (called from
+            // PlacePiece every RunConfig.BossLockPiecesInterval pieces).
             // Normally a no-op (the hand carries over from the previous
             // round untouched) — only fires for the deferred draw PlacePiece
             // skips when the placement that empties the hand also ends the
@@ -179,6 +178,16 @@ namespace Contigu.Core
             Deck.PlayFromHand(handIndex, refillIfEmpty: false);
             PiecesRemainingThisRound--;
 
+            IReadOnlyList<Vector2Int> bossLockedCells = System.Array.Empty<Vector2Int>();
+            if (IsBossRound)
+            {
+                int piecesPlayedThisRound = CurrentBudget - PiecesRemainingThisRound;
+                if (piecesPlayedThisRound > 0 && piecesPlayedThisRound % RunConfig.BossLockPiecesInterval == 0)
+                {
+                    bossLockedCells = ApplyBossLockTick();
+                }
+            }
+
             EvaluateRoundEnd();
 
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
@@ -195,7 +204,29 @@ namespace Contigu.Core
                 EvaluateRoundEnd();
             }
 
-            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound);
+            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells);
+        }
+
+        /// <summary>
+        /// Boss round mechanic (see RunConfig.BossLockPiecesInterval): locks
+        /// RunConfig.BossLockCellsPerInterval more random empty cells and
+        /// folds in any score that locking happens to produce (see
+        /// GridManager.LockFreeCellsAndCheckClears) — "après avoir compté
+        /// les bonus" this placement's own score is already in RoundScore/
+        /// TotalScore by the time this runs, so the lock's score is simply
+        /// added on top of it, same as any other placement. Returns the
+        /// newly locked cells so the presentation layer can refresh their
+        /// visuals.
+        /// </summary>
+        private IReadOnlyList<Vector2Int> ApplyBossLockTick()
+        {
+            var lockOutcome = Grid.LockFreeCellsAndCheckClears(RunConfig.BossLockCellsPerInterval, _rng);
+            if (lockOutcome.LineClearScore > 0)
+            {
+                RoundScore += lockOutcome.LineClearScore;
+                TotalScore += lockOutcome.LineClearScore;
+            }
+            return lockOutcome.LockedCells;
         }
 
         /// <summary>
@@ -209,11 +240,11 @@ namespace Contigu.Core
         /// <see cref="ClearTokenTraitCells"/>) — every kind except
         /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay
         /// until the round itself resets it, see Cell.ResetForNewRound) and
-        /// the second-batch kinds (Mirror, Catalyst, Twin,
-        /// Detonator, Chameleon, Spark, Void), none of which stamp a cell at
-        /// all — their effects are resolved either before Grid.PlacePiece
-        /// runs (Chameleon) or after it returns, from the resulting
-        /// PlacementResult/grid state (see
+        /// the second/third-batch kinds (Mirror, Catalyst, Twin,
+        /// Detonator, Chameleon, Spark, Void, Bastion, Kamikaze), none of
+        /// which stamp a cell at all — their effects are resolved either
+        /// before Grid.PlacePiece runs (Chameleon) or after it returns, from
+        /// the resulting PlacementResult/grid state (see
         /// <see cref="ApplyPostPlacementTraitBonus"/>).
         /// </summary>
         private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos)
@@ -284,11 +315,17 @@ namespace Contigu.Core
                 case PieceTraitKind.Chameleon:
                 case PieceTraitKind.Spark:
                 case PieceTraitKind.Void:
-                    // None of these stamp a Cell flag — every one of them is
-                    // either resolved before Grid.PlacePiece runs (Chameleon,
-                    // via placementColor above) or computed after it returns,
-                    // from the resulting PlacementResult/grid state (see
-                    // ApplyPostPlacementTraitBonus).
+                case PieceTraitKind.Bastion:
+                case PieceTraitKind.Kamikaze:
+                    // None of these stamp a Cell flag before placement —
+                    // every one of them is either resolved before
+                    // Grid.PlacePiece runs (Chameleon, via placementColor
+                    // above) or computed after it returns, from the
+                    // resulting PlacementResult/grid state (see
+                    // ApplyPostPlacementTraitBonus). Bastion in particular
+                    // can't lock its cell yet: Grid.PlacePiece's own
+                    // internal CanPlace re-check would then see this
+                    // placement's own cell as already locked and reject it.
                     break;
             }
             return transientCells;
@@ -408,6 +445,12 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Void:
                     ApplyVoidEffect(placement);
+                    break;
+                case PieceTraitKind.Bastion:
+                    ApplyBastionEffect(traitCellPos, placement);
+                    break;
+                case PieceTraitKind.Kamikaze:
+                    ApplyKamikazeEffect(traitCellPos, placement);
                     break;
             }
         }
@@ -588,6 +631,85 @@ namespace Contigu.Core
         private void ApplyVoidEffect(PlacementResult placement)
         {
             Grid.ClearRandomFilledCell(_rng, placement.PlacedCells);
+        }
+
+        /// <summary>
+        /// "Bastion Tile" (spec extension, explicit request — "Locked cell
+        /// upgraded. N'est pas cleared mais fait quand même les points
+        /// cleared"): once this placement itself has fully resolved (its own
+        /// line clears included), the enchanted cell locks in place for the
+        /// rest of the round — GridManager.CheckAndClearLines then skips it
+        /// forever after, but still credits it the line-clear bonus every
+        /// time its row/column completes. No-op if this same placement's own
+        /// line clear already wiped the cell before we got here (nothing
+        /// left to lock).
+        /// </summary>
+        private void ApplyBastionEffect(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            var cell = Grid.GetCell(traitCellPos);
+            if (!cell.IsFilled)
+            {
+                return;
+            }
+            cell.IsBastion = true;
+            cell.IsLocked = true;
+        }
+
+        /// <summary>
+        /// "Kamikaze Tile": destroys every already-filled, unlocked cell in
+        /// the enchanted cell's 8 surrounding tiles (Moore neighborhood) —
+        /// this placement's own cells are excluded, same "protect what was
+        /// just placed" convention as Void Tile — scoring
+        /// ScoringConstants.KamikazeBonusPerDestroyedCell per tile actually
+        /// destroyed.
+        /// </summary>
+        private void ApplyKamikazeEffect(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            int destroyed = 0;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+
+                    int x = traitCellPos.x + dx;
+                    int y = traitCellPos.y + dy;
+                    if (!GridManager.InBounds(x, y))
+                    {
+                        continue;
+                    }
+
+                    var pos = new Vector2Int(x, y);
+                    var cell = Grid.GetCell(pos);
+                    if (!cell.IsFilled || cell.IsLocked || ContainsCell(placement.PlacedCells, pos))
+                    {
+                        continue;
+                    }
+
+                    cell.ClearFill();
+                    destroyed++;
+                }
+            }
+
+            if (destroyed > 0)
+            {
+                AddTraitBonus(placement, traitCellPos, destroyed * ScoringConstants.KamikazeBonusPerDestroyedCell);
+            }
+        }
+
+        private static bool ContainsCell(IReadOnlyList<Vector2Int> cells, Vector2Int pos)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i] == pos)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

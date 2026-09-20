@@ -42,7 +42,15 @@ namespace Contigu.Core
         Spark,
 
         /// <summary>"Void Tile" — also clears one random already-filled, unlocked cell elsewhere on the grid (excluding this placement's own cells) when placed. No score of its own.</summary>
-        Void
+        Void,
+
+        // ---- Third batch (2 more, on explicit request) ----
+
+        /// <summary>"Bastion Tile" — once placed, this tile locks in place for the rest of the round: it's never cleared by a completed row/column, but it still scores the line-clear bonus every time one of those completes, as if it actually had been.</summary>
+        Bastion,
+
+        /// <summary>"Kamikaze Tile" — when placed, also destroys its 8 surrounding tiles (this placement's own cells excluded), scoring a flat bonus per tile actually destroyed.</summary>
+        Kamikaze
     }
 
     /// <summary>

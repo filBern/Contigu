@@ -105,12 +105,23 @@ namespace Contigu.Core
             UpgradeId.VoidTile, UpgradePool.Grid, "Void Tile",
             "3 pieces get a tile that also clears one random filled tile elsewhere on the grid.", false, UpgradeRarity.Rare);
 
+        // ---- Third batch (2 more tile upgrades, on explicit request) ----
+
+        public static readonly UpgradeDefinition BastionTile = new UpgradeDefinition(
+            UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Tile",
+            "3 pieces get a tile that locks in place for the rest of the round instead of being cleared, but keeps scoring the line-clear bonus every time its row/column completes.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
+            UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
+            "3 pieces get a tile that also destroys its 8 surrounding tiles when placed (+6 per tile destroyed).", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition[] All =
         {
             RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
-            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
+            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
+            BastionTile, KamikazeTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -122,7 +133,8 @@ namespace Contigu.Core
         {
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
-            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile
+            CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
+            BastionTile, KamikazeTile
         };
     }
 }

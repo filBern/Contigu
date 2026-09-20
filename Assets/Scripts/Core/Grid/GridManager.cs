@@ -183,6 +183,13 @@ namespace Contigu.Core
             int? previousGroupSize = _lastGroupSize;
             _lastGroupSize = groupCells.Count;
 
+            // Captured before this placement's own clear (if any) updates the
+            // streak below — 0 here means either the immediately previous
+            // placement this round cleared a line, OR this is the round's
+            // very first placement (previousGroupSize tells them apart) — see
+            // "Rafale" in ApplyPostClearModifiers.
+            int streakBeforePlacement = _placementsSinceLastClear;
+
             // The tinted-match/multiplier-zone factor is no longer baked into
             // each cell's own score — it's applied ONCE, at the very end of
             // this whole placement (see PlacementResult.GroupMultiplier and
@@ -233,7 +240,10 @@ namespace Contigu.Core
             result.ClearedCells = clearInfo.ClearedCells;
             result.ClearedCellColors = clearInfo.ClearedCellColors;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
-            result.LineClearScore = clearInfo.ClearedCells.Count * ScoringConstants.LineClearBonusPerCell;
+            // Bastion cells (Cell.IsBastion) earn the same per-cell bonus as
+            // an actually-cleared cell without being in ClearedCells (they're
+            // never emptied) — see CollectLineCell/BastionBonusCells.
+            result.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
 
             // Updates the streak for the NEXT placement to read (see
             // PlacementsSinceLastClear) — this placement's own clear (if any)
@@ -244,10 +254,20 @@ namespace Contigu.Core
             {
                 events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
             }
+            for (int i = 0; i < clearInfo.BastionBonusCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], ScoringConstants.LineClearBonusPerCell));
+            }
+
+            // "Rafale": did the immediately previous placement this round
+            // also clear a line? previousGroupSize.HasValue rules out the
+            // round's very first placement, which would otherwise look
+            // identical (streak also starts at 0).
+            bool clearedByPreviousPlacement = previousGroupSize.HasValue && streakBeforePlacement == 0;
 
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, events);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events);
             }
 
             result.ModifierBonus = modifierBonus;
@@ -387,6 +407,21 @@ namespace Contigu.Core
                     case ModifierId.EclatLime:
                         bonus = ApplyEclat(PieceColor.Lime, placedCells, groupCells, events);
                         break;
+                    case ModifierId.Diagonale:
+                        bonus = ApplyDiagonale(groupCells, events);
+                        break;
+                    case ModifierId.Nid:
+                        bonus = ApplyNid(groupCells, events);
+                        break;
+                    case ModifierId.Solitaire:
+                        bonus = ApplySolitaire(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.PetitFormat:
+                        bonus = ApplyPetitFormat(placedCells, events);
+                        break;
+                    case ModifierId.Fraicheur:
+                        bonus = ApplyFraicheur(placedCells, events);
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -461,8 +496,206 @@ namespace Contigu.Core
             return bonus;
         }
 
+        // ---- Fifth batch of modifier bonuses (8 new ideas, on explicit request — see README) ----
+
+        /// <summary>Diagonale: bonus per group cell sitting on either of the grid's two main diagonals (x == y, or x + y == Size - 1).</summary>
+        private static int ApplyDiagonale(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (pos.x != pos.y && pos.x + pos.y != Size - 1)
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.DiagonaleBonusPerCell));
+                total += ScoringConstants.DiagonaleBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>Nid: bonus per group cell with EXACTLY 3 of its 4 cardinal neighbors filled — a softer, more attainable sibling of Prisonnier (needs all 4).</summary>
+        private int ApplyNid(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (CountFilledCardinalNeighbors(pos.x, pos.y) != 3)
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.NidBonusPerCell));
+                total += ScoringConstants.NidBonusPerCell;
+            }
+            return total;
+        }
+
+        private int CountFilledCardinalNeighbors(int x, int y)
+        {
+            int count = 0;
+            if (InBounds(x - 1, y) && _cells[x - 1, y].IsFilled) count++;
+            if (InBounds(x + 1, y) && _cells[x + 1, y].IsFilled) count++;
+            if (InBounds(x, y - 1) && _cells[x, y - 1].IsFilled) count++;
+            if (InBounds(x, y + 1) && _cells[x, y + 1].IsFilled) count++;
+            return count;
+        }
+
+        /// <summary>Solitaire: flat bonus when this placement's scored group is entirely its own piece — nothing pre-existing merged into it — AND the piece itself is more than 1 cell (the opposite condition from Catalyst, which rewards merging with pre-existing cells; the size-1 case is already Îlot's).</summary>
+        private static int ApplySolitaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (placedCells.Count <= 1 || groupCells.Count != placedCells.Count)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.SolitaireBonus));
+            return ScoringConstants.SolitaireBonus;
+        }
+
+        /// <summary>Petit Format: bonus per placed cell when the piece being placed has at most ScoringConstants.PetitFormatMaxPieceSize cells — the small-piece mirror of Grand Format.</summary>
+        private static int ApplyPetitFormat(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (placedCells.Count > ScoringConstants.PetitFormatMaxPieceSize)
+            {
+                return 0;
+            }
+
+            int bonus = placedCells.Count * ScoringConstants.PetitFormatBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>Fraîcheur: flat bonus when this placement's own fill color is not present ANYWHERE else already on the board (a genuinely new color for this board state) — checked against every other cell, this placement's own cells excluded.</summary>
+        private int ApplyFraicheur(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            foreach (var pos in AllPositions())
+            {
+                if (placedSet.Contains(pos))
+                {
+                    continue;
+                }
+                var cell = _cells[pos.x, pos.y];
+                if (cell.IsFilled && cell.FilledColor.HasValue && cell.FilledColor.Value == ownColor)
+                {
+                    return 0;
+                }
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.FraicheurBonus));
+            return ScoringConstants.FraicheurBonus;
+        }
+
+        /// <summary>Imminent: bonus per row/column that, once this placement (and any of its own line clears) has fully resolved, has EXACTLY one empty unlocked cell left — "one tile away" tension, anchored at that very cell.</summary>
+        private int ApplyImminent(List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int y = 0; y < Size; y++)
+            {
+                if (TryGetSingleEmptyUnlockedInRow(y, out var pos))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ImminentBonusPerLine));
+                    total += ScoringConstants.ImminentBonusPerLine;
+                }
+            }
+            for (int x = 0; x < Size; x++)
+            {
+                if (TryGetSingleEmptyUnlockedInColumn(x, out var pos))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ImminentBonusPerLine));
+                    total += ScoringConstants.ImminentBonusPerLine;
+                }
+            }
+            return total;
+        }
+
+        private bool TryGetSingleEmptyUnlockedInRow(int y, out Vector2Int pos)
+        {
+            int count = 0;
+            pos = default;
+            for (int x = 0; x < Size; x++)
+            {
+                var cell = _cells[x, y];
+                if (cell.IsLocked)
+                {
+                    continue;
+                }
+                if (!cell.IsFilled)
+                {
+                    count++;
+                    pos = new Vector2Int(x, y);
+                    if (count > 1)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return count == 1;
+        }
+
+        private bool TryGetSingleEmptyUnlockedInColumn(int x, out Vector2Int pos)
+        {
+            int count = 0;
+            pos = default;
+            for (int y = 0; y < Size; y++)
+            {
+                var cell = _cells[x, y];
+                if (cell.IsLocked)
+                {
+                    continue;
+                }
+                if (!cell.IsFilled)
+                {
+                    count++;
+                    pos = new Vector2Int(x, y);
+                    if (count > 1)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return count == 1;
+        }
+
+        /// <summary>Espace Libre: flat bonus when, right after this placement (and any of its own line clears), at most ScoringConstants.EspaceLibreMaxFilledCells cells on the whole board are still filled — rewards keeping the board deliberately open.</summary>
+        private int ApplyEspaceLibre(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int filled = 0;
+            foreach (var pos in AllPositions())
+            {
+                if (_cells[pos.x, pos.y].IsFilled)
+                {
+                    filled++;
+                }
+            }
+            if (filled > ScoringConstants.EspaceLibreMaxFilledCells)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.EspaceLibreBonus));
+            return ScoringConstants.EspaceLibreBonus;
+        }
+
+        /// <summary>Rafale: flat bonus when this placement clears at least one row/column AND the immediately previous placement this round also did — two clears back to back.</summary>
+        private static int ApplyRafale(bool clearedByPreviousPlacement, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (!clearedByPreviousPlacement || clearInfo.ClearedCells.Count == 0)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.RafaleBonus));
+            return ScoringConstants.RafaleBonus;
+        }
+
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events)
         {
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
@@ -498,6 +731,15 @@ namespace Contigu.Core
                         break;
                     case ModifierId.MonochromeLigne:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneBonusPerLine);
+                        break;
+                    case ModifierId.Imminent:
+                        bonus = ApplyImminent(events);
+                        break;
+                    case ModifierId.EspaceLibre:
+                        bonus = ApplyEspaceLibre(placedCells, events);
+                        break;
+                    case ModifierId.Rafale:
+                        bonus = ApplyRafale(clearedByPreviousPlacement, clearInfo, placedCells, events);
                         break;
                     default:
                         bonus = 0;
@@ -1367,12 +1609,22 @@ namespace Contigu.Core
             /// <summary>One entry per completed row/column this placement, each with its own pre-clear color sequence — used by the 8 line-pattern modifiers.</summary>
             public readonly IReadOnlyList<ClearedLine> ClearedLines;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines)
+            /// <summary>
+            /// Any Bastion-tile cell (Cell.IsBastion) that sat inside a row/column
+            /// completed this placement — unlike <see cref="ClearedCells"/>, these
+            /// are never actually emptied (they're locked, so the clearing loop
+            /// skips them, see <see cref="CheckAndClearLines"/>), but they still
+            /// earn the line-clear bonus for the line they were part of.
+            /// </summary>
+            public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
                 ClearedLineCount = clearedLineCount;
                 ClearedLines = clearedLines;
+                BastionBonusCells = bastionBonusCells;
             }
         }
 
@@ -1384,6 +1636,7 @@ namespace Contigu.Core
         private ClearInfo CheckAndClearLines()
         {
             var cellsToClear = new HashSet<Vector2Int>();
+            var bastionBonus = new HashSet<Vector2Int>();
             int clearedLineCount = 0;
             var clearedLines = new List<ClearedLine>();
 
@@ -1395,10 +1648,7 @@ namespace Contigu.Core
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: true, index: y), isRow: true, index: y));
                     for (int x = 0; x < Size; x++)
                     {
-                        if (!_cells[x, y].IsLocked)
-                        {
-                            cellsToClear.Add(new Vector2Int(x, y));
-                        }
+                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus);
                     }
                 }
             }
@@ -1411,10 +1661,7 @@ namespace Contigu.Core
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: false, index: x), isRow: false, index: x));
                     for (int y = 0; y < Size; y++)
                     {
-                        if (!_cells[x, y].IsLocked)
-                        {
-                            cellsToClear.Add(new Vector2Int(x, y));
-                        }
+                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus);
                     }
                 }
             }
@@ -1429,7 +1676,30 @@ namespace Contigu.Core
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedLineCount, clearedLines);
+            return new ClearInfo(cleared, clearedColors, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
+        }
+
+        /// <summary>
+        /// One cell of a row/column just found complete: an unlocked cell is
+        /// wiped as normal (added to <paramref name="cellsToClear"/>), but a
+        /// locked Bastion cell (Cell.IsBastion — "n'est pas cleared mais fait
+        /// quand même les points cleared") is never added there — it stays
+        /// filled/locked exactly as it was — and instead earns its line-clear
+        /// bonus through <paramref name="bastionBonus"/>. Both are HashSets so
+        /// a cell shared by a completed row AND a completed column in the same
+        /// placement is only ever credited once.
+        /// </summary>
+        private void CollectLineCell(Vector2Int pos, HashSet<Vector2Int> cellsToClear, HashSet<Vector2Int> bastionBonus)
+        {
+            var cell = _cells[pos.x, pos.y];
+            if (!cell.IsLocked)
+            {
+                cellsToClear.Add(pos);
+            }
+            else if (cell.IsBastion)
+            {
+                bastionBonus.Add(pos);
+            }
         }
 
         /// <summary>Ordered colors along a row (index = y) or column (index = x), skipping locked cells entirely — called before any clearing happens this call, so every relevant cell here is still filled.</summary>
@@ -1499,7 +1769,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.HasAnyModifier)
+                if (!cell.IsLocked && !cell.IsFilled && !cell.HasAnyModifier)
                 {
                     candidates.Add(pos);
                 }
@@ -1508,11 +1778,12 @@ namespace Contigu.Core
             if (candidates.Count < count)
             {
                 // Fallback: not enough plain cells, allow modified (but still
-                // unlocked) ones too rather than under-delivering the boss effect.
+                // unlocked and unfilled) ones too rather than under-delivering
+                // the boss effect.
                 foreach (var pos in AllPositions())
                 {
                     var cell = GetCell(pos);
-                    if (!cell.IsLocked && cell.HasAnyModifier)
+                    if (!cell.IsLocked && !cell.IsFilled && cell.HasAnyModifier)
                     {
                         candidates.Add(pos);
                     }
@@ -1525,6 +1796,71 @@ namespace Contigu.Core
                 GetCell(chosen[i]).IsLocked = true;
             }
             return chosen;
+        }
+
+        /// <summary>
+        /// Boss round mechanic (replaces the old upfront-N-cell lock at round
+        /// start — judged too hard on explicit request: "le boss est beaucoup
+        /// trop difficile, on va faire autre chose"): locks up to
+        /// <paramref name="count"/> random still-EMPTY, unlocked cells — never
+        /// a cell the player has actually filled — ratcheting the board's
+        /// playable area down gradually instead of all at once. Locking a cell
+        /// can itself complete a row/column (if every OTHER cell in it was
+        /// already filled or locked) — that's re-validated here via the same
+        /// <see cref="CheckAndClearLines"/> a real placement uses, so it scores
+        /// and clears exactly the same way ("il va falloir valider pour clear
+        /// line si jamais ça permet de clear line").
+        /// </summary>
+        public BossLockOutcome LockFreeCellsAndCheckClears(int count, IRandomProvider rng)
+        {
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (!cell.IsLocked && !cell.IsFilled)
+                {
+                    candidates.Add(pos);
+                }
+            }
+
+            var chosen = PickN(candidates, count, rng);
+            for (int i = 0; i < chosen.Count; i++)
+            {
+                GetCell(chosen[i]).IsLocked = true;
+            }
+
+            var outcome = new BossLockOutcome();
+            outcome.LockedCells = chosen;
+            if (chosen.Count == 0)
+            {
+                return outcome;
+            }
+
+            var clearInfo = CheckAndClearLines();
+            outcome.ClearedCells = clearInfo.ClearedCells;
+            outcome.ClearedCellColors = clearInfo.ClearedCellColors;
+            outcome.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
+
+            if (clearInfo.ClearedCells.Count > 0)
+            {
+                // Same streak this placement's own clear would update — a boss
+                // lock completing a line is still a line clear as far as
+                // "Spark Tile"/"Rafale" are concerned.
+                _placementsSinceLastClear = 0;
+            }
+
+            var events = new List<ScoreEvent>(clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count);
+            for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
+            }
+            for (int i = 0; i < clearInfo.BastionBonusCells.Count; i++)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], ScoringConstants.LineClearBonusPerCell));
+            }
+            outcome.ScoreEvents = events;
+
+            return outcome;
         }
 
         /// <summary>

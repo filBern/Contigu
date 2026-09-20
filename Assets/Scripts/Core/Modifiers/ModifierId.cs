@@ -66,6 +66,16 @@ namespace Contigu.Core
         EclatCoral,
         EclatTeal,
         EclatViolet,
-        EclatLime
+        EclatLime,
+
+        // ---- Fifth batch (8 more, on explicit request) ----
+        Diagonale,
+        Nid,
+        Solitaire,
+        Imminent,
+        EspaceLibre,
+        Rafale,
+        PetitFormat,
+        Fraicheur
     }
 }

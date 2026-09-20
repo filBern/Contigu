@@ -1821,3 +1821,175 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   rotation, pas de seed codé en dur), puis confirme que `State`
   bascule bien sur `RunDefeat` dès cette pose plutôt que de rester
   `InProgress` avec une main fraîche injouable.
+- **Bastion Tile (upgrade de tuile "locked cell")** (sur demande
+  explicite — "Locked cell upgraded. N'est pas cleared mais fait quand
+  même les points cleared"). Nouveau `PieceTraitKind.Bastion` : une
+  fois la pièce enchantée posée, sa case se verrouille en place pour
+  le reste de la manche au lieu d'être vidée par un line clear, mais
+  continue à rapporter le bonus de line clear à chaque fois que sa
+  ligne/colonne se complète — exactement comme si elle avait été
+  vidée, sauf qu'elle ne l'est jamais. Contrairement à la plupart des
+  traits (stampés puis nettoyés dans la même pose via
+  `ClearTokenTraitCells`), Bastion ne peut pas se verrouiller AVANT
+  l'appel à `Grid.PlacePiece` : `CanPlace` la rejetterait comme une
+  case déjà verrouillée. `RunManager.ApplyBastionEffect` s'exécute
+  donc APRÈS que la pose a été résolue (comme "Void Tile"), et vérifie
+  d'abord que la case est bien toujours remplie — si le line clear de
+  cette pose même l'a déjà vidée avant qu'on ait pu la verrouiller,
+  rien à faire cette fois-ci.
+  - Côté `GridManager` : nouveau `Cell.IsBastion`, inclus dans
+    `HasAnyModifier`. `CheckAndClearLines` (via le nouveau helper
+    `CollectLineCell`) distingue maintenant une case verrouillée
+    ordinaire (jamais ajoutée à `cellsToClear`, jamais comptée) d'une
+    case Bastion verrouillée (jamais ajoutée à `cellsToClear` non
+    plus, mais ajoutée à un nouveau `ClearInfo.BastionBonusCells`).
+    `PlacePiece` ajoute ce compte au `LineClearScore` au même tarif
+    que `ClearedCells` (`ScoringConstants.LineClearBonusPerCell`) et
+    émet un nouveau `ScoreEventType.Bastion` par case (au lieu de
+    `LineClear`, pour que la présentation ne tente pas de l'animer
+    comme vidée — voir plus bas).
+  - Côté présentation (`GameBootstrap`) : les événements `Bastion`
+    passent par la boucle normale des popups (pulse + "+N", couleur
+    `UITheme.Success`) mais ne touchent jamais `GridView.ClearCellVisual`
+    (réservé à `ClearedCells`), donc la case reste visuellement remplie.
+    `GridCellView.ApplyState` distinguait jusqu'ici "verrouillé" et
+    "rempli" comme mutuellement exclusifs (une case boss verrouillée
+    n'était jamais aussi remplie) ; nouveau `renderAsLockedObstacle =
+    cell.IsLocked && !cell.IsBastion` pour qu'une case Bastion se
+    rende comme une case normale remplie (couleur, fill tile, icône
+    couleur, badge d'origine) plutôt que comme l'obstacle gris/pattern
+    d'une case verrouillée classique.
+  - `UpgradeId.BastionTile` (pool Grid, rareté Uncommon — entre les
+    upgrades Common et les plus puissants comme Void/Beacon/Twin) +
+    `DeckManager.TagBastionTokensRandom` + wiring `UpgradeSystem`/
+    `PieceTraitVisualDefaults`, même schéma que tous les autres
+    upgrades de tuile.
+  - Nouveaux tests : `GridManagerTests` (une case Bastion verrouillée
+    manuellement survit à un line clear tout en rapportant le bonus,
+    `LockRandomCells`/nouveau `LockFreeCellsAndCheckClears` n'y
+    touchent jamais puisqu'ils ne ciblent que des cases libres),
+    `RunManagerTests` (flux complet via `DeckManager.TagBastionTokensRandom`
+    — la case se verrouille à la pose, survit à un line clear déclenché
+    par une pose complètement différente ailleurs sur le plateau).
+- **Kamikaze Tile (upgrade de tuile destructrice)** (sur demande
+  explicite — "Clear les 8 cell autour. +6 points par tuile détruite
+  sauf tuile kamikaze posé à l'instant"). Nouveau
+  `PieceTraitKind.Kamikaze` : à la pose, détruit (vide, via
+  `Cell.ClearFill()`) chacune des 8 cases environnantes (voisinage de
+  Moore) qui sont remplies et non verrouillées, et rapporte
+  `ScoringConstants.KamikazeBonusPerDestroyedCell` (6) par case
+  effectivement détruite. Comme "Void Tile", les propres cases de
+  cette pose sont exclues de la destruction (même convention "on ne
+  détruit jamais ce qu'on vient tout juste de poser") — géré dans
+  `RunManager.ApplyKamikazeEffect`, résolu après coup comme Bastion
+  (les deux rejoignent la liste des traits "second/troisième lot" qui
+  ne stampent rien avant `Grid.PlacePiece`). `UpgradeId.KamikazeTile`
+  (pool Grid, rareté Rare comme Void Tile — effet destructeur puissant)
+  + `DeckManager.TagKamikazeTokensRandom` + wiring habituel. Nouveaux
+  tests (`RunManagerTests`) : les 8 voisins remplis d'une case
+  enchantée sont bien détruits et rapportent le bonus attendu ; une
+  pièce à 2 cases (Domino H) dont l'autre case tombe dans le rayon de
+  destruction de la case enchantée survit toujours, peu importe
+  laquelle des deux cases a été tirée au sort par l'upgrade.
+- **Refonte de la manche boss : verrouillage progressif au lieu d'un
+  bloc fixe au démarrage** (sur demande explicite — "le boss est
+  beaucoup trop difficile, on va faire autre chose. Chaque 3 pièce
+  joué (après avoir compté les bonus), le boss va lock 2 nouvelle
+  tuile dans un emplacement de la grille qui est libre. Il va falloir
+  valider pour clear line si jamais ça permet de clear line").
+  L'ancien verrouillage de 14 cases dès `StartRound` (avant même la
+  première pose de la manche) est supprimé ; `RunConfig
+  .BossLockedCellCount` disparaît au profit de deux nouvelles
+  constantes, `BossLockPiecesInterval` (3) et `BossLockCellsPerInterval`
+  (2). Pendant la manche boss, une fois tous les
+  `RunConfig.BossLockPiecesInterval` pièces jouées, `RunManager
+  .ApplyBossLockTick` verrouille 2 cases vides de plus — le plateau se
+  resserre donc progressivement sur toute la manche plutôt que d'un
+  coup, et le score de CETTE pose est déjà entièrement compté avant
+  que le verrouillage n'intervienne ("après avoir compté les bonus").
+  - Nouveau `GridManager.LockFreeCellsAndCheckClears` : ne choisit ses
+    candidats QUE parmi les cases encore vides et non verrouillées
+    (jamais une case que le joueur a réellement remplie — "un
+    emplacement de la grille qui est libre"), puis revalide
+    immédiatement pour un clear via le même `CheckAndClearLines` que
+    pour une vraie pose ("il va falloir valider pour clear line si
+    jamais ça permet de clear line") : si verrouiller la toute
+    dernière case vide d'une ligne/colonne la complète, elle se vide
+    et rapporte son score exactement comme d'habitude, y compris pour
+    les cases Bastion. Retourne un nouveau `BossLockOutcome` (cases
+    verrouillées, cases vidées, score, événements) — `LockRandomCells`
+    (utilisée ailleurs pour d'anciens tests) filtre désormais aussi
+    les cases déjà remplies par cohérence, même si son seul site
+    d'appel restant s'exécute toujours sur un plateau tout juste
+    remis à zéro.
+  - `RunManager.PlacePiece` compte les pièces jouées cette manche
+    (`CurrentBudget - PiecesRemainingThisRound`) et déclenche le tick
+    tous les `BossLockPiecesInterval`, ajoutant son éventuel score au
+    round/total AVANT `EvaluateRoundEnd()` (une victoire ou une
+    impasse déclenchée par le verrouillage lui-même est donc bien
+    détectée immédiatement). Nouveau `PlacementOutcome.BossLockedCells`
+    pour que la présentation sache quand rafraîchir la grille
+    (`GameBootstrap` appelle `GridView.Refresh()` seulement quand ce
+    tick a effectivement eu lieu) ; texte de statut de la manche boss
+    mis à jour pour décrire le nouveau mécanisme au lieu de l'ancien
+    nombre fixe.
+  - Nouveaux tests : `GridManagerTests` (`LockFreeCellsAndCheckClears`
+    ne verrouille jamais une case remplie ; verrouiller la toute
+    dernière case vide du plateau complète et vide effectivement ses
+    lignes/colonnes), `RunManagerTests` (une manche boss démarre sans
+    aucune case verrouillée, et exactement 2 nouvelles apparaissent
+    pile après le 3e placement, pas avant — le run est avancé
+    jusqu'à la manche boss via `DebugForceRoundComplete` en boucle
+    plutôt qu'en jouant réellement 7 manches complètes).
+- **8 nouveaux modificateurs** (sur demande explicite, conçus par
+  Claude faute de liste fournie — brainstorm libre suivant les mêmes
+  familles que les lots précédents, en évitant tout ce qui a déjà été
+  retiré pour être "peu clair" comme Symétrie ou lié aux cases
+  verrouillées comme Diagonale Verrouillée) :
+  - **Diagonal** (`Diagonale`, Voisinage) : +5 pts par case du groupe
+    posée sur l'une des deux diagonales principales du plateau
+    (`x == y` ou `x + y == Size - 1`).
+  - **Nest** (`Nid`, Voisinage) : +3 pts par case du groupe dont
+    EXACTEMENT 3 des 4 voisins cardinaux sont remplis — variante plus
+    accessible de Forteresse/Prisonnier (qui exigent respectivement 8
+    et 4 voisins remplis).
+  - **Solitaire** (`Solitaire`, Connexions) : +12 pts quand le groupe
+    obtenu par cette pose est entièrement la pièce elle-même (aucune
+    case préexistante fusionnée dedans) ET fait plus d'une case —
+    l'inverse de Catalyst Tile (qui récompense au contraire la fusion
+    avec l'existant) ; le cas à 1 case reste le pré carré d'Îlot.
+  - **Imminent** (`Imminent`, Destruction) : +10 pts par ligne/colonne
+    qui, une fois cette pose entièrement résolue (ses propres line
+    clears compris), ne compte plus qu'UNE seule case vide et non
+    verrouillée — tension du "à un carré du clear", ancré sur cette
+    case précise plutôt que sur la pose elle-même.
+  - **Open Space** (`EspaceLibre`, Roguelike) : +15 pts tant que le
+    plateau entier compte au plus 16 cases remplies (25%) une fois la
+    pose résolue — récompense un jeu qui garde le plateau dégagé,
+    inspiré directement de "bonus si le plateau est à moins de X% de
+    remplissage".
+  - **Burst** (`Rafale`, Destruction) : +20 pts quand cette pose
+    complète une ligne ET que la pose immédiatement précédente cette
+    manche en avait déjà complété une — deux clears d'affilée,
+    inspiré directement de "bonus pour enchaîner 2 clears sur 2
+    placements consécutifs". Réutilise le compteur de streak déjà
+    suivi pour Spark Tile (`GridManager.PlacementsSinceLastClear`,
+    capturé avant que cette pose ne le mette à jour) plutôt que
+    d'ajouter un nouveau champ : un streak de 0 juste avant cette pose
+    veut dire que la précédente a cleared — sauf sur la toute première
+    pose de la manche, où le streak commence aussi à 0 sans qu'il y ait
+    eu de pose précédente (`previousGroupSize.HasValue` sert à
+    distinguer les deux cas).
+  - **Small Format** (`PetitFormat`, Roguelike) : +5 pts par case
+    posée quand la pièce fait au plus 2 cases — le pendant "petit
+    format" de Grand Format (qui récompense l'inverse, ≥3 cases).
+  - **Freshness** (`Fraicheur`, Couleurs) : +10 pts quand la couleur
+    de cette pose n'est encore nulle part ailleurs sur le plateau —
+    un vrai "nouvel arrivant", distinct des Devotion/Éclat (qui visent
+    toujours une couleur fixe précise) et de Prisme/Tricolore/
+    Complémentaire (qui mesurent la diversité autour de la pose, pas
+    sur tout le plateau).
+  - Wiring complet (`ModifierId`, `ModifierCatalog`, `ModifierVisualDefaults`
+    — abréviations `DI`/`NI`/`SO`/`IM`/`SL`/`RA`/`PF`/`FR`) + tests
+    dédiés par modificateur dans `GridManagerModifierTests` (11 tests,
+    y compris les cas négatifs pour Nid/Solitaire/Rafale).

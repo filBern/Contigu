@@ -410,5 +410,18 @@ namespace Contigu.Tests
             Assert.AreEqual(PieceTraitKind.Spark, dm.Deck[spark[0]].Trait.Value.Kind);
             Assert.AreEqual(PieceTraitKind.Void, dm.Deck[voidTag[0]].Trait.Value.Kind);
         }
+
+        [Test]
+        public void TagBastionAndKamikazeTokensRandom_EachProducesItsOwnTraitKind()
+        {
+            var dm = MakeTwentyTokenSq2Deck();
+            var rng = new SystemRandomProvider(16);
+
+            var bastion = dm.TagBastionTokensRandom(1, rng);
+            var kamikaze = dm.TagKamikazeTokensRandom(1, rng);
+
+            Assert.AreEqual(PieceTraitKind.Bastion, dm.Deck[bastion[0]].Trait.Value.Kind);
+            Assert.AreEqual(PieceTraitKind.Kamikaze, dm.Deck[kamikaze[0]].Trait.Value.Kind);
+        }
     }
 }
