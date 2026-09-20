@@ -34,6 +34,7 @@ namespace Contigu.Presentation
         private ModifierDraftView _modifierDraftView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
+        private DeckView _deckView;
         private EndScreenView _endScreenView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -51,15 +52,25 @@ namespace Contigu.Presentation
             RefreshAll();
         }
 
-#if UNITY_EDITOR
         private void Update()
         {
+#if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.F9))
             {
                 DebugForceRoundWin();
             }
+#endif
+            // Tab toggles the deck-view overlay (on explicit request: an
+            // in-game way to check the deck's composition without waiting
+            // for the next draft) — always available, not an editor-only
+            // debug shortcut like F9 above.
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                _deckView.Toggle();
+            }
         }
 
+#if UNITY_EDITOR
         /// <summary>
         /// Editor-only debug shortcut (F9): instantly completes the current
         /// round so the upgrade draft appears right away — lets upgrades be
@@ -141,17 +152,18 @@ namespace Contigu.Presentation
             // Dead center of the screen — the top/bottom progress bars and the
             // status text float above it rather than pushing it down, so the
             // grid itself isn't biased toward the top.
+            // Built before GridView/HandView since both need a live
+            // TooltipView to hover (grid cells' trait-origin badges and
+            // hand pieces' trait badges, respectively).
+            _tooltipView = gameObject.AddComponent<TooltipView>();
+            _tooltipView.Build(mainRoot);
+
             _gridView = gameObject.AddComponent<GridView>();
-            var gridRect = _gridView.Build(mainRoot, _run.Grid, CellSize);
+            var gridRect = _gridView.Build(mainRoot, _run.Grid, CellSize, _tooltipView);
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
             gridRect.anchoredPosition = Vector2.zero;
-
-            // Built before HandView since its trait badges need a live
-            // TooltipView to hover — see below.
-            _tooltipView = gameObject.AddComponent<TooltipView>();
-            _tooltipView.Build(mainRoot);
 
             // To the right of the grid, vertically centered on it (which is
             // now screen center too). Grid right edge sits 226.5 (half of its
@@ -197,6 +209,9 @@ namespace Contigu.Presentation
             // only Refreshed, so a bound delegate would keep querying the
             // old, discarded run forever.
             _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id));
+
+            _deckView = gameObject.AddComponent<DeckView>();
+            _deckView.Build(mainRoot, _run.Deck, _tooltipView);
 
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
@@ -441,6 +456,8 @@ namespace Contigu.Presentation
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run.Deck);
             _draftView.Rebind(_run.Deck);
+            _deckView.Rebind(_run.Deck);
+            _deckView.Hide();
             RefreshAll();
             _statusText.text = "Select or drag a piece onto the grid.";
         }

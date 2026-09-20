@@ -1597,3 +1597,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     ne rejouer que le slot 0) portent cette adaptation à travers la
     quinzaine de tests concernés, chacun utilisant maintenant l'index
     réel du slot occupé/trouvé plutôt que de supposer `0`.
+- **Badge d'origine des upgrades de tuile + vue de deck en jeu** (sur
+  demande explicite — "j'aimerais qu'on montre les upgrades des tuiles
+  lorsqu'elles sont sur la grille, ça aide à keep track de son deck.
+  Aussi ça me prendrait un input in game pour afficher son deck").
+  - `Cell.OriginTrait` (nouveau champ `PieceTrait?`) : marque, purement
+    cosmétique, du trait ayant enchanté cette case, posée par
+    `RunManager.ApplyTokenTrait` pour TOUS les traits (y compris ceux
+    du 2ème lot — Mirror/Catalyst/Twin/Detonator/Chameleon/Spark/Void —
+    qui ne posent aucun des drapeaux Golden/Tinted/MultiplierZone).
+    Contrairement à ces drapeaux (effacés juste après le score de la
+    pose par `ClearTokenTraitCells`, sauf Seeder), `OriginTrait` n'est
+    jamais dans la liste `transientCells` qu'on efface — il survit donc
+    au score ET aux effacements de ligne (`GridManager.CheckAndClearLines`
+    ne touche déjà pas Golden/Tinted/MultiplierZone), pour rester le
+    seul indice visuel durable du trait posé. Remis à `null` seulement
+    à la fin de la manche (`Cell.ResetForNewRound`), comme le reste.
+  - `GridCellView` : 4ème badge (coin haut-droit, seul coin encore
+    libre — Golden est haut-gauche, le badge spécial Tinted/Multiplier
+    bas-droite, l'icône couleur et le marqueur invalide au centre),
+    coloré via `PieceTraitVisualDefaults.GetBadgeColor` et portant un
+    `TraitBadgeView` pour le tooltip au survol — même composant déjà
+    utilisé par les badges de trait des pièces en main
+    (`ShapePreviewFactory.BuildTraitBadge`). `GridView`/`GameBootstrap`
+    doivent donc maintenant construire le `TooltipView` AVANT le
+    `GridView` (et pas seulement avant `HandView` comme avant), et le
+    lui passer en paramètre de `Build`.
+  - `DeckView` (nouvelle vue) : montre la composition complète du deck
+    persistant (`DeckManager.GetDeckComposition`), une ligne par
+    combo forme/couleur avec son décompte et un badge de trait
+    représentatif — même approche que la liste de types de
+    `DraftView` (Retirer/Dupliquer/Recolorer), réutilisée telle quelle
+    mais sans bouton ni flux de sous-choix puisque cette vue est
+    purement informative. Basculée par la touche **Tab**
+    (`GameBootstrap.Update`, toujours actif — contrairement au
+    raccourci de debug F9 qui reste réservé à l'éditeur).

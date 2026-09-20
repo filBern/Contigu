@@ -211,6 +211,11 @@ namespace Contigu.Core
             var pos = traitCellPos.Value;
             var cell = Grid.GetCell(pos.x, pos.y);
 
+            // Cosmetic, persists for the rest of the round regardless of
+            // trait kind — not added to transientCells, so ClearTokenTraitCells
+            // never touches it (see Cell.OriginTrait).
+            cell.OriginTrait = trait.Value;
+
             switch (trait.Value.Kind)
             {
                 case PieceTraitKind.Golden:

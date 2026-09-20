@@ -30,10 +30,12 @@ namespace Contigu.Presentation
         private PieceColor? _selectedColor;
         private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
+        private TooltipView _tooltip;
 
-        public RectTransform Build(Transform parent, GridManager grid, float cellSize)
+        public RectTransform Build(Transform parent, GridManager grid, float cellSize, TooltipView tooltip)
         {
             _grid = grid;
+            _tooltip = tooltip;
             _cells = new GridCellView[GridManager.Size, GridManager.Size];
 
             var container = UIFactory.CreateUIObject("GridContainer", parent);
@@ -91,6 +93,20 @@ namespace Contigu.Presentation
             badgeGoldenOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeGolden.gameObject.SetActive(false);
 
+            // Persistent reminder of which deck upgrade originally enchanted
+            // this cell (see Cell.OriginTrait) — top-right corner, the one
+            // spot the other three badges (top-left/bottom-right/center)
+            // leave free.
+            var badgeTraitOrigin = UIFactory.CreatePanel(cellGo, "BadgeTraitOrigin", Color.cyan);
+            UIFactory.SetAnchor(badgeTraitOrigin.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f));
+            badgeTraitOrigin.rectTransform.pivot = new Vector2(1f, 1f);
+            badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgeTraitOrigin.rectTransform.anchoredPosition = new Vector2(-3f, -3f);
+            var badgeTraitOriginOutline = badgeTraitOrigin.gameObject.AddComponent<Outline>();
+            badgeTraitOriginOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            badgeTraitOriginOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            badgeTraitOrigin.gameObject.SetActive(false);
+
             var badgeSpecial = UIFactory.CreatePanel(cellGo, "BadgeSpecial", Color.magenta);
             UIFactory.SetAnchor(badgeSpecial.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f));
             badgeSpecial.rectTransform.pivot = new Vector2(1f, 0f);
@@ -138,7 +154,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgeColorIcon, invalidMarker, effectLabel);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgeColorIcon, invalidMarker, effectLabel, badgeTraitOrigin, _tooltip);
             _cells[x, y] = cellView;
         }
 

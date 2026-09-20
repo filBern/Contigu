@@ -25,6 +25,17 @@ namespace Contigu.Core
 
         public bool IsMultiplierZone;
 
+        /// <summary>
+        /// Which tile-upgrade trait (if any) was originally enchanted onto
+        /// this cell, stamped by RunManager.ApplyTokenTrait for the rest of
+        /// the round regardless of trait kind — purely cosmetic (on explicit
+        /// request: showing it on the grid helps the player keep track of
+        /// their deck's upgrades), independent of the Golden/Tinted/
+        /// MultiplierZone flags above, which most trait kinds clear again
+        /// right after the placement that set them scores.
+        /// </summary>
+        public PieceTrait? OriginTrait;
+
         public bool HasAnyModifier
         {
             get { return IsGolden || IsTinted || IsMultiplierZone; }
@@ -38,6 +49,7 @@ namespace Contigu.Core
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
+            OriginTrait = null;
         }
     }
 }

@@ -24,11 +24,14 @@ namespace Contigu.Presentation
         private Image _badgeColorIcon;
         private Image _invalidMarker;
         private Text _effectLabel;
+        private Image _badgeTraitOrigin;
+        private TraitBadgeView _traitOriginBadgeView;
+        private TooltipView _tooltip;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Image invalidMarker, Text effectLabel)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -40,6 +43,9 @@ namespace Contigu.Presentation
             _badgeColorIcon = badgeColorIcon;
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
+            _badgeTraitOrigin = badgeTraitOrigin;
+            _tooltip = tooltip;
+            _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
         }
 
         /// <summary>
@@ -134,6 +140,19 @@ namespace Contigu.Presentation
             else if (cell.IsTinted)
             {
                 _badgeSpecial.color = VisualDefaults.GetColor(cell.TintedColor);
+            }
+
+            // Cosmetic reminder of which deck upgrade originally enchanted
+            // this cell (see Cell.OriginTrait) — independent of the
+            // Golden/Tinted/MultiplierZone badges above, which most trait
+            // kinds only carry for the one placement that scores them, so
+            // this is often the only on-grid trace left of a trait pick.
+            bool showTraitOrigin = cell.OriginTrait.HasValue;
+            _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
+            if (showTraitOrigin)
+            {
+                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(cell.OriginTrait.Value);
+                _traitOriginBadgeView.Init(_tooltip, cell.OriginTrait.Value, gameObject);
             }
 
             string effectText = BuildEffectLabel(cell);

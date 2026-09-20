@@ -421,6 +421,36 @@ namespace Contigu.Tests
             var offset = shape.Cells[token.Trait.Value.LocalCellIndex];
             var landedCell = run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y);
             Assert.IsFalse(landedCell.IsGolden, "Golden is a one-time enchantment on the token, not a permanent grid modifier — it should be cleared right after scoring");
+            Assert.IsTrue(landedCell.OriginTrait.HasValue, "OriginTrait is a purely cosmetic marker and should survive even though IsGolden itself was cleared");
+            Assert.AreEqual(PieceTraitKind.Golden, landedCell.OriginTrait.Value.Kind);
+        }
+
+        [Test]
+        public void PlacePiece_StampsOriginTraitForEveryTraitKind_EvenOnesThatDontStampGoldenTintedOrMultiplier()
+        {
+            // Mirror/Catalyst/Twin/Detonator/Chameleon/Spark/Void never set
+            // IsGolden/IsTinted/IsMultiplierZone (their effects are resolved
+            // elsewhere), but OriginTrait should still be stamped uniformly
+            // for all of them — it's meant to be the one reliable on-grid
+            // trace of a trait pick regardless of kind.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagCatalystTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[slot].Value;
+            const int anchorX = 3;
+            const int anchorY = 3;
+            Assert.IsTrue(run.Grid.CanPlace(PieceShapeCatalog.Get(ShapeId.Single), anchorX, anchorY));
+
+            var outcome = run.PlacePiece(slot, anchorX, anchorY);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            var landedCell = run.Grid.GetCell(anchorX, anchorY);
+            Assert.IsFalse(landedCell.IsGolden);
+            Assert.IsFalse(landedCell.IsTinted);
+            Assert.IsFalse(landedCell.IsMultiplierZone);
+            Assert.IsTrue(landedCell.OriginTrait.HasValue);
+            Assert.AreEqual(PieceTraitKind.Catalyst, landedCell.OriginTrait.Value.Kind);
         }
 
         [Test]
@@ -606,6 +636,8 @@ namespace Contigu.Tests
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.IsFalse(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
                 "Seeder's stamp should be cleared once the round it was set in ends");
+            Assert.IsFalse(run.Grid.GetCell(traitPos.x, traitPos.y).OriginTrait.HasValue,
+                "OriginTrait should reset at the round boundary just like Seeder's own IsGolden stamp (see Cell.ResetForNewRound)");
         }
 
         [Test]
