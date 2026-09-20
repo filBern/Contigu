@@ -99,6 +99,13 @@ namespace Contigu.Core
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
             State = RunState.InProgress;
+
+            // Same stuck-check PlacePiece runs after a mid-round redraw (see
+            // there) — covers the rare case of a boss round's locked cells
+            // leaving zero legal placements for the very first hand of the
+            // round, which would otherwise go undetected until the player
+            // gave up trying.
+            EvaluateRoundEnd();
         }
 
         /// <summary>
@@ -177,6 +184,15 @@ namespace Contigu.Core
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
             {
                 Deck.DrawNewHand();
+                // EvaluateRoundEnd's stuck-check above deliberately skips an
+                // EMPTY hand (nothing to evaluate yet) — but the fresh hand
+                // just drawn is no longer empty, and might itself have no
+                // legal placement anywhere on the board. Without this
+                // second check, that stuck state went undetected entirely
+                // (bug report: "je ne peux pas jouer de tuile et pourtant
+                // je n'ai pas perdu") until the player tried a placement,
+                // which never comes since none is legal.
+                EvaluateRoundEnd();
             }
 
             return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound);

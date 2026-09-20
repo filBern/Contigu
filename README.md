@@ -1794,3 +1794,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   vide bien les 4 (et une pièce non-liée posée ensuite au même endroit
   ne score plus de bonus golden fantôme) ; `ClearRandomFilledCell` fait
   pareil sur la case qu'il vide.
+- **Bug corrigé : impasse non détectée après un redraw de main
+  complète** (sur signalement explicite, avec capture d'écran d'une
+  grille bloquée — "Je suis dans une impasse... je ne peux pas jouer
+  de tuile et pourtant je n'ai pas perdu"). `RunManager.EvaluateRoundEnd`
+  saute volontairement sa vérification d'impasse quand la main est
+  complètement VIDE (rien à évaluer) — mais `PlacePiece` tire
+  IMMÉDIATEMENT une toute nouvelle main de 3 pièces juste après (`Deck.
+  DrawNewHand()`) sans jamais revérifier si CETTE nouvelle main a ne
+  serait-ce qu'un seul emplacement légal sur le plateau. Une grille
+  devenue injouable pile au moment où la main se vidait passait donc
+  inaperçue indéfiniment : le joueur se retrouvait avec 3 pièces qu'il
+  ne pourra jamais poser, l'état restant `InProgress` pour toujours.
+  Même bug (plus rare) dans `StartRound` : le tirage de la toute
+  première main d'une manche boss (grille très verrouillée) n'était
+  pas non plus revérifié. `EvaluateRoundEnd()` est maintenant rappelé
+  juste après chaque `DrawNewHand()` (dans `PlacePiece` ET dans
+  `StartRound`) — la garde "main vide → on saute la vérif" ne
+  s'applique plus puisque la main venant d'être tirée n'est justement
+  plus vide. Nouveau test (`RunManagerTests`) qui construit une grille
+  entièrement verrouillée sauf l'empreinte exacte de la dernière pièce
+  en main, purge du deck (via `RemoveOneOfType`, en respectant
+  `DeckManager.MinDeckSize`) toute forme qui pourrait encore rentrer
+  dans le trou que cette pose va rouvrir en complétant ses lignes/
+  colonnes (vérification géométrique générique — testée à chaque
+  rotation, pas de seed codé en dur), puis confirme que `State`
+  bascule bien sur `RunDefeat` dès cette pose plutôt que de rester
+  `InProgress` avec une main fraîche injouable.

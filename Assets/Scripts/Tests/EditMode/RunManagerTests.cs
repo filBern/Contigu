@@ -401,6 +401,165 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_TriggersDefeat_WhenTheFreshHandDrawnAfterEmptyingItIsItselfUnplaceable()
+        {
+            // On explicit player report ("je ne peux pas jouer de tuile et
+            // pourtant je n'ai pas perdu"): EvaluateRoundEnd deliberately
+            // skips its stuck-check on a fully EMPTY hand (there's nothing
+            // to evaluate yet) — but PlacePiece then immediately draws a
+            // brand new 3-piece hand to replace it, and that redraw never
+            // got checked at all. A board that had gone fully unplaceable
+            // right as the hand ran out stayed InProgress forever, with the
+            // player holding 3 pieces none of which could ever be placed.
+            //
+            // Picks whichever seed's starting hand has a non-tetromino
+            // smallest piece — keeps the set of OTHER deck shapes that could
+            // still fit inside the hole this piece's placement eventually
+            // reopens (see below) small enough to fully strip from the deck
+            // without hitting DeckManager.MinDeckSize. A fixed literal seed
+            // would work just as well for the actual RNG implementation
+            // this repo ships, but searching keeps the test correct even if
+            // that implementation ever changes.
+            RunManager run = null;
+            int smallestSlot = -1;
+            for (int seed = 1; seed <= 50; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                int bestCount = int.MaxValue;
+                int bestSlot = -1;
+                for (int i = 0; i < DeckManager.HandSize; i++)
+                {
+                    int count = PieceShapeCatalog.Get(candidate.Deck.Hand[i].Value.Shape).Cells.Count;
+                    if (count < bestCount)
+                    {
+                        bestCount = count;
+                        bestSlot = i;
+                    }
+                }
+                if (bestCount < 4)
+                {
+                    run = candidate;
+                    smallestSlot = bestSlot;
+                    break;
+                }
+            }
+            Assert.IsNotNull(run, "Could not find a seed whose starting hand isn't 3 tetrominoes within 50 tries");
+
+            // Play every OTHER slot anywhere legal first, leaving only
+            // smallestSlot occupied — so THIS test's placement is the one
+            // that empties the hand and triggers the redraw.
+            for (int slot = 0; slot < DeckManager.HandSize; slot++)
+            {
+                if (slot == smallestSlot)
+                {
+                    continue;
+                }
+                var token = run.Deck.Hand[slot].Value;
+                var rotation = run.Deck.HandRotations[slot];
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+                var anchor = FindAnyValidAnchor(run.Grid, shape);
+                Assert.IsTrue(anchor.HasValue);
+                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            }
+
+            var lastToken = run.Deck.Hand[smallestSlot].Value;
+            var lastRotation = run.Deck.HandRotations[smallestSlot];
+            var lastShape = PieceShapeCatalog.GetRotated(lastToken.Shape, lastRotation);
+            var lastAnchor = FindAnyValidAnchor(run.Grid, lastShape);
+            Assert.IsTrue(lastAnchor.HasValue);
+
+            var footprint = new HashSet<Vector2Int>();
+            for (int i = 0; i < lastShape.Cells.Count; i++)
+            {
+                footprint.Add(lastAnchor.Value + lastShape.Cells[i]);
+            }
+
+            // Same trick as PlacePiece_TriggersDefeat_WhenBoardBecomesFullyBlockedAfterThisPlacement:
+            // lock every OTHER cell (including ones slot0/1's placements
+            // already filled — a locked cell is unusable regardless of fill
+            // state, and it must also never complete/clear a DIFFERENT
+            // line), so this placement's own footprint is the only thing
+            // that can ever complete a line — reopening exactly (and only)
+            // its own shape once cleared.
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (!footprint.Contains(pos))
+                {
+                    run.Grid.GetCell(pos).IsLocked = true;
+                }
+            }
+
+            // Strip every deck shape that could still fit inside that
+            // reopened hole (any rotation, any offset) — otherwise the
+            // random redraw might legitimately have somewhere to go, which
+            // isn't the scenario under test. Verifies afterward that this
+            // fully succeeded rather than silently stopping at MinDeckSize.
+            var dangerousKeys = new List<(ShapeId Shape, PieceColor Color)>();
+            foreach (var kvp in run.Deck.GetDeckComposition())
+            {
+                if (ShapeCanFitWithinCells(kvp.Key.Shape, footprint))
+                {
+                    dangerousKeys.Add(kvp.Key);
+                }
+            }
+            foreach (var key in dangerousKeys)
+            {
+                while (run.Deck.RemoveOneOfType(key.Shape, key.Color)) { }
+            }
+            foreach (var kvp in run.Deck.GetDeckComposition())
+            {
+                Assert.IsFalse(ShapeCanFitWithinCells(kvp.Key.Shape, footprint),
+                    kvp.Key.Shape + " still fits the reopened hole and couldn't be fully stripped without hitting DeckManager.MinDeckSize");
+            }
+
+            var outcome = run.PlacePiece(smallestSlot, lastAnchor.Value.x, lastAnchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsTrue(run.Deck.Hand[0].HasValue, "A fresh hand should have been drawn to replace the now-fully-empty one");
+            Assert.AreEqual(RunState.RunDefeat, run.State,
+                "The freshly-drawn hand has nowhere left to go on this fully locked board — this should be detected immediately, not left InProgress forever");
+        }
+
+        /// <summary>True if <paramref name="shapeId"/>, at any of its 4 rotations, has some translation where every one of its cells lands inside <paramref name="targetCells"/>.</summary>
+        private static bool ShapeCanFitWithinCells(ShapeId shapeId, HashSet<Vector2Int> targetCells)
+        {
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var c in targetCells)
+            {
+                if (c.x < minX) minX = c.x;
+                if (c.y < minY) minY = c.y;
+                if (c.x > maxX) maxX = c.x;
+                if (c.y > maxY) maxY = c.y;
+            }
+
+            for (int r = 0; r < 4; r++)
+            {
+                var shape = PieceShapeCatalog.GetRotated(shapeId, (PieceRotation)r);
+                for (int dx = minX; dx <= maxX; dx++)
+                {
+                    for (int dy = minY; dy <= maxY; dy++)
+                    {
+                        bool allFit = true;
+                        for (int i = 0; i < shape.Cells.Count; i++)
+                        {
+                            var c = shape.Cells[i];
+                            if (!targetCells.Contains(new Vector2Int(c.x + dx, c.y + dy)))
+                            {
+                                allFit = false;
+                                break;
+                            }
+                        }
+                        if (allFit)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        [Test]
         public void PlacePiece_AppliesAGoldenTraitedToken_AsAOneTimeCellBonus_ThenClearsTheCell()
         {
             var run = new RunManager(new SystemRandomProvider(1));
