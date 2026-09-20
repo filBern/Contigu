@@ -25,12 +25,14 @@ namespace Contigu.Presentation
         private const float DragGhostHeight = 140f;
         private const float DragGhostPreviewWidth = 100f;
         private const float DragGhostPreviewHeight = 110f;
-        // On explicit request: the cursor ghost now reads its opacity
-        // directly off placement validity (fully opaque once valid, faded
-        // while not) instead of vanishing outright over a valid spot — the
-        // grid's own green footprint tint is a secondary cue, not the only
-        // one anymore.
-        private const float CursorGhostValidAlpha = 1f;
+        // On explicit clarification: the "100%" the player wants over a
+        // valid spot is the GRID's own footprint preview (GridCellView.
+        // SetHoverTint, already exactly cell-snapped) — not the cursor
+        // ghost itself, which only ever loosely follows the raw pointer.
+        // So the ghost fully hides once valid (0f) rather than trying to
+        // compete with that already-correct preview, and stays a faded 50%
+        // everywhere else as the "not placed yet" cue.
+        private const float CursorGhostValidAlpha = 0f;
         private const float CursorGhostInvalidAlpha = 0.5f;
 
         public event Action<int> SlotSelected;
@@ -142,9 +144,11 @@ namespace Contigu.Presentation
         /// steals a click/drop raycast meant for whatever's underneath. No
         /// background panel — just the shape preview itself — and its alpha
         /// reflects placement validity (see <see cref="SetHoveringValidDrop"/>):
-        /// full opacity over a valid spot, faded everywhere else (on
-        /// explicit request — it used to vanish entirely over a valid spot
-        /// instead, relying on the grid's own green footprint tint alone).
+        /// fully hidden over a valid spot, since the grid's own footprint
+        /// preview (GridCellView.SetHoverTint) is already exactly
+        /// cell-snapped and at full opacity there — this loosely-cursor-
+        /// following ghost would only compete with it; faded (50%) as the
+        /// "not placed yet" cue everywhere else.
         /// </summary>
         private void BuildDragGhost()
         {

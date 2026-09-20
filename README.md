@@ -1730,15 +1730,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   plus le ghost inconditionnellement (il ne fait plus rien) : un drop
   raté doit laisser la pièce sélectionnée ET son ghost visible, prêts à
   retenter, au lieu de tout effacer silencieusement. Opacité :
-  `CursorGhostValidAlpha = 1f` / `CursorGhostInvalidAlpha = 0.5f`
-  remplacent l'ancien `DragGhostAlpha = 0.85f` + "invisible (alpha 0) si
-  valide" — `SetHoveringValidDrop` (toujours branché sur
-  `GridView.HoverValidityChanged`, qui se déclenche pareil qu'on soit
-  en train de driver ou juste survoler en ayant cliqué) choisit
-  maintenant directement entre les deux au lieu de cacher le ghost sur
-  une position valide. Champ `_hoveringValidDrop` supprimé au passage
-  (jamais lu nulle part, mort depuis le départ). `BeginSlotDrag` perd
-  son paramètre `PointerEventData` (plus utilisé, la position initiale
-  du ghost vient maintenant de `Input.mousePosition` dans
-  `ShowCursorGhost`) — `HandSlotDragHandler.OnBeginDrag` mis à jour en
-  conséquence.
+  `CursorGhostValidAlpha` / `CursorGhostInvalidAlpha` remplacent
+  l'ancien `DragGhostAlpha = 0.85f` — `SetHoveringValidDrop` (toujours
+  branché sur `GridView.HoverValidityChanged`, qui se déclenche pareil
+  qu'on soit en train de driver ou juste survoler en ayant cliqué)
+  choisit maintenant directement entre les deux. Champ
+  `_hoveringValidDrop` supprimé au passage (jamais lu nulle part, mort
+  depuis le départ). `BeginSlotDrag` perd son paramètre
+  `PointerEventData` (plus utilisé, la position initiale du ghost vient
+  maintenant de `Input.mousePosition` dans `ShowCursorGhost`) —
+  `HandSlotDragHandler.OnBeginDrag` mis à jour en conséquence.
+  - **Clarification immédiate** : le premier jet mettait
+    `CursorGhostValidAlpha = 1f` (opaque sur une position valide,
+    fondu à 50% sinon), mais le joueur voulait dire autre chose par
+    "100% d'opacité sur une position valide" — le preview DÉJÀ
+    parfaitement aligné sur la grille (`GridCellView.SetHoverTint`,
+    icône couleur sur chaque case du footprint), pas le ghost lui-même
+    qui ne fait que suivre le curseur brut sans jamais vraiment
+    s'aligner sur les cases. `CursorGhostValidAlpha` repassé à `0f`
+    (le ghost redevient invisible sur une position valide, comme
+    avant `DragGhostAlpha`) — seul `CursorGhostInvalidAlpha = 0.5f`
+    (au lieu de l'ancien 0.85f) reste du changement précédent.
