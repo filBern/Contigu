@@ -41,7 +41,13 @@ namespace Contigu.Presentation
 
             int cols = maxX + 1;
             int rows = maxY + 1;
-            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows);
+            // Capped at the real grid's own cell size (on explicit player
+            // report — a small shape, most visibly Single, used to stretch
+            // to fill the whole preview box, several times bigger than it
+            // actually renders once placed) — fits within the box exactly
+            // as before for a shape that already needs more room than that,
+            // just never stretches to a size the grid itself never shows.
+            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
             var fillColor = VisualDefaults.GetColor(color);
 
             Vector2Int? traitPos = trait.HasValue ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
@@ -114,7 +120,8 @@ namespace Contigu.Presentation
 
             int cols = maxX + 1;
             int rows = maxY + 1;
-            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows);
+            // Same real-size cap as Build above.
+            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
 
             float startX = -(cols * cell) / 2f + cell / 2f;
             float startY = -(rows * cell) / 2f + cell / 2f;

@@ -13,7 +13,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
-        private const float CellSize = 54f;
+        private const float CellSize = VisualDefaults.GridCellSize;
         private const float ScoreEventStaggerSeconds = 0.22f;
         private const float LineClearStaggerSeconds = 0.14f;
         // Each combo addition waits 3% less than the previous one (on

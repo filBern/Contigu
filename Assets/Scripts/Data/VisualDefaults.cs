@@ -18,6 +18,22 @@ namespace Contigu.Data
     /// </summary>
     public static class VisualDefaults
     {
+        /// <summary>
+        /// Pixel size of one actual grid cell (see GameBootstrap.CellSize,
+        /// which reads this instead of its own literal) — the single source
+        /// of truth Presentation.ShapePreviewFactory caps its own per-cell
+        /// size at (Data must not depend on Presentation, so it can't
+        /// reference that type directly, only document the relationship
+        /// here), so a piece preview (hand slot, cursor ghost, draft/deck
+        /// rows) never renders a square LARGER than it will actually be
+        /// once placed on the grid. Without the cap, a small shape (most
+        /// visibly Single, a lone 1x1 cell) stretched to fill its whole
+        /// preview box instead, several times too big — on explicit player
+        /// report ("le preview dans la slot et le ghost ne sont pas à
+        /// taille réelle").
+        /// </summary>
+        public const float GridCellSize = 54f;
+
         private static readonly Dictionary<PieceColor, Color> ColorMap = new Dictionary<PieceColor, Color>
         {
             { PieceColor.Coral, new Color(0.941f, 0.702f, 0.553f) }, // #f0b38d

@@ -1751,3 +1751,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (le ghost redevient invisible sur une position valide, comme
     avant `DragGhostAlpha`) — seul `CursorGhostInvalidAlpha = 0.5f`
     (au lieu de l'ancien 0.85f) reste du changement précédent.
+- **Preview de pièce à taille réelle** (sur signalement explicite —
+  "J'ai un problème avec la single cell, le preview dans la slot et le
+  ghost ne sont pas à taille réelle, j'aimerais que ce le soit").
+  `ShapePreviewFactory.Build`/`BuildMono` calculaient la taille d'une
+  case en divisant simplement la boîte du conteneur par le nombre de
+  colonnes/lignes de la pièce (`Mathf.Min(container.sizeDelta.x / cols,
+  container.sizeDelta.y / rows)`) — sans aucun plafond. Pour une pièce
+  à 2+ cellules ça reste proche de la vraie taille de case (54px), mais
+  pour **Single** (1x1), ça remplissait toute la boîte de preview
+  (100x110 dans un slot de main ou le ghost) : ~100px, presque le
+  double de la vraie taille de case sur la grille. Nouveau
+  `VisualDefaults.GridCellSize = 54f` (Data ne pouvant pas dépendre de
+  Presentation, la constante vit côté Data — même valeur que
+  `GameBootstrap.CellSize`, qui la référence maintenant au lieu de
+  dupliquer le littéral `54f`) sert de plafond supplémentaire dans le
+  `Mathf.Min` des deux méthodes : une pièce qui a déjà besoin de plus
+  de place garde exactement le même rendu qu'avant, seule une pièce qui
+  aurait autrement été étirée AU-DELÀ de la vraie taille de case est
+  maintenant bridée à 54px, peu importe la taille de sa boîte de
+  preview.
