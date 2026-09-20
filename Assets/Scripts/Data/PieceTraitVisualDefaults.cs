@@ -54,10 +54,10 @@ namespace Contigu.Data
                 case PieceTraitKind.Golden:
                     return "When this piece is placed, this tile scores a flat golden bonus.";
                 case PieceTraitKind.Tinted:
-                    return "When this piece is placed, this tile doubles the placement's ENTIRE score (group, golden, and line-clear bonuses together) — it's tinted to this piece's own color ("
+                    return "When this piece is placed, this tile doubles the placement's group and golden bonuses (not the line-clear bonus) — it's tinted to this piece's own color ("
                         + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + "), so it always fires.";
                 case PieceTraitKind.Multiplier:
-                    return "When this piece is placed, this tile doubles the placement's ENTIRE score (group, golden, and line-clear bonuses together).";
+                    return "When this piece is placed, this tile doubles the placement's ENTIRE score (group, golden, and line-clear bonuses together) — broader than Tinted Tile, which skips the line-clear bonus.";
                 case PieceTraitKind.Blast:
                     return "When this piece is placed, this tile AND its 4 orthogonal neighbors score golden if they end up in the same scored group.";
                 case PieceTraitKind.Beacon:

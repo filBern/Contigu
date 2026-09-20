@@ -57,11 +57,11 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "3 pieces get a tile that doubles the placement's ENTIRE score if it lands as the piece's own color.", false, UpgradeRarity.Common);
+            "3 pieces get a tile that always doubles the placement's group and golden score (not the line-clear bonus) — tinted to match the piece's own color.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "3 pieces get a tile that doubles the placement's ENTIRE score.", false, UpgradeRarity.Uncommon);
+            "3 pieces get a tile that doubles the placement's ENTIRE score, line-clear bonus included.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
             UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",

@@ -1653,3 +1653,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   TintedColor non-Joker ne pourrait jamais la matcher — l'enchantement
   serait resté mort de la même façon. Texte de tooltip
   (`PieceTraitVisualDefaults.GetDescription`) mis à jour en conséquence.
+- **Différenciation Tinted Tile / Multiplier Zone** (sur remarque
+  explicite du joueur, juste après le correctif ci-dessus : "A ce
+  moment elle a le même effet que MultiplierZone, il faudrait trouver
+  une manière de les différencier"). Une fois Tinted garanti de
+  toujours matcher, les deux traits doublaient tous les deux
+  intégralement le score de la pose (`(GroupBonus + GoldenBonus +
+  LineClearScore) * multiplicateur`) — Tinted (Common) devenait donc
+  une version strictement moins chère de Multiplier Zone (Uncommon),
+  sans aucune différence mécanique. Le multiplicateur est maintenant
+  scindé en deux sur `PlacementResult` : `GroupMultiplier` (inchangé,
+  cumule Tinted ET Multiplier Zone) s'applique seulement à `GroupBonus
+  + GoldenBonus` ; un nouveau `LineClearMultiplier` — qui ne compte
+  QUE les cellules Multiplier Zone, jamais Tinted — s'applique
+  seulement à `LineClearScore`. `Multiplier Zone` reste donc "double
+  tout, bonus de ligne inclus" (portée large, rareté Uncommon) tandis
+  que `Tinted Tile` devient "double le groupe et le golden, mais
+  jamais le bonus de ligne" (portée plus étroite, rareté Common) —
+  toujours garanti de se déclencher, juste plus faible. Aucun test
+  existant n'a dû changer (`LineClearScore` valait 0 dans tous les cas
+  déjà couverts, donc `TotalScore` reste identique) ; deux nouveaux
+  tests (`GridManagerTests`) posent une ligne complète avec une
+  cellule Tinted d'un côté et Multiplier Zone de l'autre pour figer la
+  différence. Le popup de rattrapage du multiplicateur
+  (`GameBootstrap.PlayPlacementSequence`) recalcule maintenant
+  `multipliedExtra` à partir des deux facteurs séparément au lieu d'un
+  seul `GroupMultiplier` global.

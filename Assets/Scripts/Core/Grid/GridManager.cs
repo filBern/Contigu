@@ -190,6 +190,12 @@ namespace Contigu.Core
             // group bonus per cell. Every event below carries its plain,
             // unmultiplied "standard" amount.
             int groupMultiplier = ComputeGroupMultiplier(groupCells);
+            // Computed from the SAME groupCells but only multiplier-zone
+            // cells count (see ComputeLineClearMultiplier) — Tinted no
+            // longer reaches the line-clear bonus, which is what keeps it
+            // distinct from Multiplier Zone now that its color always
+            // matches its own piece.
+            int lineClearMultiplier = ComputeLineClearMultiplier(groupCells);
             int groupBonus = 0;
             int goldenBonus = 0;
 
@@ -215,6 +221,7 @@ namespace Contigu.Core
             result.GroupBonus = groupBonus;
             result.GoldenBonus = goldenBonus;
             result.GroupMultiplier = groupMultiplier;
+            result.LineClearMultiplier = lineClearMultiplier;
 
             int modifierBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
@@ -1266,20 +1273,22 @@ namespace Contigu.Core
 
         /// <summary>
         /// Aggregate multiplier from this placement's tinted/multiplier-zone
-        /// cells — applied ONCE to this whole placement's total (group bonus
-        /// + golden bonus + line-clear bonus, see PlacementResult.
-        /// GroupMultiplier/.TotalScore) rather than baked into the group
-        /// bonus per cell (Balatro-style "multiply at the end", explicit
-        /// request). Each matching tinted cell AND each multiplier-zone cell
-        /// in the group stacks its own x2 (two of either in the same combo
-        /// combine to x4, three to x8, ...) — multiplier-zone used to only
-        /// count once regardless of how many cells had it, but that made
-        /// "Multiplier Beacon" (which can tag many cells in one row/column at
-        /// once) pointless beyond a single x2, identical to the plain
-        /// single-cell Multiplier trait. Stacking it the same way Tinted
-        /// already does gives Beacon real extra teeth when several of its
-        /// marked cells land in the same scored group, and makes both
-        /// factors consistent with each other.
+        /// cells — applied ONCE to this whole placement's group bonus +
+        /// golden bonus (see PlacementResult.GroupMultiplier/.TotalScore)
+        /// rather than baked into the group bonus per cell (Balatro-style
+        /// "multiply at the end", explicit request). Each matching tinted
+        /// cell AND each multiplier-zone cell in the group stacks its own x2
+        /// (two of either in the same combo combine to x4, three to x8,
+        /// ...) — multiplier-zone used to only count once regardless of how
+        /// many cells had it, but that made "Multiplier Beacon" (which can
+        /// tag many cells in one row/column at once) pointless beyond a
+        /// single x2, identical to the plain single-cell Multiplier trait.
+        /// Stacking it the same way Tinted already does gives Beacon real
+        /// extra teeth when several of its marked cells land in the same
+        /// scored group, and makes both factors consistent with each other.
+        /// Does NOT reach the line-clear bonus — see
+        /// <see cref="ComputeLineClearMultiplier"/> for that, which is the
+        /// one place Tinted and Multiplier Zone now actually differ.
         /// </summary>
         private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {
@@ -1292,6 +1301,33 @@ namespace Contigu.Core
                 {
                     multiplier *= ScoringConstants.TintedMatchMultiplier;
                 }
+                if (cell.IsMultiplierZone)
+                {
+                    multiplier *= ScoringConstants.MultiplierZoneMultiplier;
+                }
+            }
+
+            return multiplier;
+        }
+
+        /// <summary>
+        /// Same idea as <see cref="ComputeGroupMultiplier"/>, but counts ONLY
+        /// multiplier-zone cells — Tinted deliberately never reaches
+        /// <see cref="PlacementResult.LineClearScore"/> (see
+        /// <see cref="PlacementResult.LineClearMultiplier"/>). On explicit
+        /// player feedback: once Tinted's target color always matched its
+        /// own piece (see DeckManager.TagTintedTokensRandom), it became
+        /// functionally identical to Multiplier Zone despite being the
+        /// cheaper Common-rarity pick — this is what keeps it a real but
+        /// narrower effect instead of a strictly-better duplicate.
+        /// </summary>
+        private int ComputeLineClearMultiplier(List<Vector2Int> groupCells)
+        {
+            int multiplier = 1;
+
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var cell = _cells[groupCells[i].x, groupCells[i].y];
                 if (cell.IsMultiplierZone)
                 {
                     multiplier *= ScoringConstants.MultiplierZoneMultiplier;

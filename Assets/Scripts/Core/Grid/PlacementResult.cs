@@ -28,14 +28,32 @@ namespace Contigu.Core
         /// Aggregate multiplier from this placement's tinted-match/
         /// multiplier-zone cells (see GridManager.ComputeGroupMultiplier),
         /// applied ONCE to the sum of <see cref="GroupBonus"/> + <see
-        /// cref="GoldenBonus"/> + <see cref="LineClearScore"/> in <see
-        /// cref="TotalScore"/> — Balatro-style "apply the multiplier at the
-        /// end" (explicit request), instead of being baked per-cell into
-        /// GroupBonus alone like before. 1 when nothing in this placement's
-        /// group carried either flag. Never applies to ModifierBonus/
-        /// TraitBonus, which stay fully independent additive amounts.
+        /// cref="GoldenBonus"/> in <see cref="TotalScore"/> — Balatro-style
+        /// "apply the multiplier at the end" (explicit request), instead of
+        /// being baked per-cell into GroupBonus alone like before. 1 when
+        /// nothing in this placement's group carried either flag. Never
+        /// applies to ModifierBonus/TraitBonus, which stay fully
+        /// independent additive amounts.
         /// </summary>
         public int GroupMultiplier = 1;
+
+        /// <summary>
+        /// Aggregate multiplier from this placement's multiplier-zone cells
+        /// ONLY (see GridManager.ComputeLineClearMultiplier) — applied to
+        /// <see cref="LineClearScore"/> alone in <see cref="TotalScore"/>.
+        /// Deliberately excludes Tinted cells, unlike <see
+        /// cref="GroupMultiplier"/>: Tinted Tile and Multiplier Zone were
+        /// functionally identical once Tinted's color always matched its
+        /// own piece (see DeckManager.TagTintedTokensRandom), which made the
+        /// cheaper Common-rarity Tinted strictly redundant with the
+        /// Uncommon-rarity Multiplier Zone (explicit player feedback: "A ce
+        /// moment elle a le même effet que MultiplierZone, il faudrait
+        /// trouver une manière de les différencier"). Splitting the
+        /// line-clear bonus out keeps Tinted a real, always-firing, but
+        /// narrower effect. 1 when nothing in this placement's group is a
+        /// multiplier zone.
+        /// </summary>
+        public int LineClearMultiplier = 1;
 
         /// <summary>Sum of every bonus from the player's active modifiers on this placement (see <see cref="ModifierId"/>).</summary>
         public int ModifierBonus;
@@ -60,7 +78,7 @@ namespace Contigu.Core
 
         public int TotalScore
         {
-            get { return (GroupBonus + GoldenBonus + LineClearScore) * GroupMultiplier + ModifierBonus + TraitBonus; }
+            get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus; }
         }
 
         public static PlacementResult Failure(string reason)

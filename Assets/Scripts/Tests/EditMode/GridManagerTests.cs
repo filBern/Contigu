@@ -358,7 +358,45 @@ namespace Contigu.Tests
 
             Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
             Assert.AreEqual(4, result.GroupMultiplier);
+            // Only the multiplier-zone half of this stacked x4 reaches the
+            // line-clear bonus — Tinted's own contribution never does (see
+            // PlacePiece_TintedMatch_DoublesGroupAndGoldenBonusesButNotLineClear_UnlikeMultiplierZone).
+            Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier, result.LineClearMultiplier);
             Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * 4, result.TotalScore);
+        }
+
+        [Test]
+        public void PlacePiece_TintedMatch_DoublesGroupAndGoldenBonusesButNotLineClear_UnlikeMultiplierZone()
+        {
+            // On explicit player feedback that Tinted and Multiplier Zone had
+            // become functionally identical once Tinted always matches its
+            // own piece's color: Tinted's multiplier stops at the group and
+            // golden bonuses and never reaches the line-clear bonus, unlike
+            // Multiplier Zone (see PlacePiece_GroupMultiplier_AlsoAppliesToGoldenAndLineClearBonuses,
+            // same setup but with IsMultiplierZone instead of IsTinted).
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var tinted = grid.GetCell(3, 0);
+            tinted.IsTinted = true;
+            tinted.TintedColor = PieceColor.Coral;
+            grid.GetCell(4, 0).IsGolden = true;
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+
+            var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
+
+            int expectedGroupBonus = GridManager.Size * ScoringConstants.GroupBonusPerCell;
+            int expectedGoldenBonus = ScoringConstants.GoldenCellBonus;
+            int expectedLineClearScore = GridManager.Size * ScoringConstants.LineClearBonusPerCell;
+            Assert.AreEqual(expectedGroupBonus, finalResult.GroupBonus);
+            Assert.AreEqual(expectedGoldenBonus, finalResult.GoldenBonus);
+            Assert.AreEqual(expectedLineClearScore, finalResult.LineClearScore);
+            Assert.AreEqual(ScoringConstants.TintedMatchMultiplier, finalResult.GroupMultiplier);
+            Assert.AreEqual(1, finalResult.LineClearMultiplier, "Tinted alone should leave LineClearMultiplier at 1 — no multiplier-zone cell is involved");
+            Assert.AreEqual((expectedGroupBonus + expectedGoldenBonus) * ScoringConstants.TintedMatchMultiplier + expectedLineClearScore, finalResult.TotalScore);
         }
 
         [Test]

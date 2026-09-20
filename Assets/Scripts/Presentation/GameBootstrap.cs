@@ -377,18 +377,22 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
-            // GroupMultiplier (from Tinted/Multiplier-Zone cells) is applied once
-            // over the whole placement's group+golden+line-clear total, Balatro-
-            // style, rather than inflating each individual popup above — so the
-            // "extra" it adds still needs its own catch-up moment here or the
-            // displayed score would end up short of placement.TotalScore.
-            if (placement.GroupMultiplier > 1)
+            // GroupMultiplier (Tinted+Multiplier-Zone cells) and LineClearMultiplier
+            // (Multiplier-Zone cells only — see PlacementResult.LineClearMultiplier
+            // for why Tinted stops short of the line-clear bonus) are each applied
+            // once over their own share of the placement's total, Balatro-style,
+            // rather than inflating each individual popup above — so the "extra"
+            // they add still needs its own catch-up moment here or the displayed
+            // score would end up short of placement.TotalScore.
+            int multipliedExtra = (placement.GroupBonus + placement.GoldenBonus) * (placement.GroupMultiplier - 1)
+                + placement.LineClearScore * (placement.LineClearMultiplier - 1);
+            if (multipliedExtra > 0)
             {
-                int multipliedBaseTotal = placement.GroupBonus + placement.GoldenBonus + placement.LineClearScore;
-                int multipliedExtra = multipliedBaseTotal * (placement.GroupMultiplier - 1);
-
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.GroupMultiplier, UITheme.ButtonSelected);
+                // GroupMultiplier is always >= LineClearMultiplier (multiplier-zone
+                // cells count toward both, Tinted only toward GroupMultiplier), so
+                // it's the more informative single label even when the two differ.
+                _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
                 _comboView.Pulse();
 
                 displayedRoundScore += multipliedExtra;

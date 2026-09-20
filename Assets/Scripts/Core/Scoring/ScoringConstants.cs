@@ -21,10 +21,10 @@ namespace Contigu.Core
         /// <summary>Points per cell cleared by a completed line/column.</summary>
         public const int LineClearBonusPerCell = 12;
 
-        /// <summary>Multiplier contributed by EACH matching tinted cell in a placement's group — two tinted cells in the same group stack to x4, three to x8, and so on.</summary>
+        /// <summary>Multiplier contributed by EACH matching tinted cell in a placement's group — two tinted cells in the same group stack to x4, three to x8, and so on. Only reaches the group+golden bonus, never the line-clear bonus (see PlacementResult.LineClearMultiplier) — the one thing that still tells it apart from MultiplierZoneMultiplier now that Tinted's target color always matches its own piece.</summary>
         public const int TintedMatchMultiplier = 2;
 
-        /// <summary>Multiplier applied to a placement's whole group bonus when the group contains a multiplier-zone cell.</summary>
+        /// <summary>Multiplier applied to a placement's whole group+golden bonus AND its line-clear bonus when the group contains a multiplier-zone cell — broader reach than TintedMatchMultiplier, matching its higher (Uncommon vs Common) rarity.</summary>
         public const int MultiplierZoneMultiplier = 2;
 
         // ---- Modifier bonuses (see ModifierCatalog) ----
