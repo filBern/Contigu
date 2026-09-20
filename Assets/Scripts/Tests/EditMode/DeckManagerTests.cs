@@ -299,8 +299,14 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void TagTintedTokensRandom_AssignsANonJokerBaseColor()
+        public void TagTintedTokensRandom_AlwaysTargetsTheTokensOwnColor()
         {
+            // On explicit player feedback that tinted tiles felt "chiantes"
+            // and sometimes useless: an earlier version rolled TintedColor
+            // independently of the token's own (fixed) color, so most
+            // tinted tiles could never actually match and fire. The target
+            // is now always the token's own color, which never changes on
+            // its own, so a tinted tile always matches once placed.
             var dm = MakeTwentyTokenSq2Deck();
 
             var tagged = dm.TagTintedTokensRandom(2, new SystemRandomProvider(6));
@@ -310,7 +316,28 @@ namespace Contigu.Tests
                 var trait = dm.Deck[idx].Trait.Value;
                 Assert.AreEqual(PieceTraitKind.Tinted, trait.Kind);
                 Assert.IsTrue(trait.TintedColor.HasValue);
+                Assert.AreEqual(dm.Deck[idx].Color, trait.TintedColor.Value);
                 Assert.AreNotEqual(PieceColor.Joker, trait.TintedColor.Value);
+            }
+        }
+
+        [Test]
+        public void TagTintedTokensRandom_NeverTagsAJokerToken()
+        {
+            // A placed Joker cell's own FilledColor always stays
+            // PieceColor.Joker (see GridManager.PlacePiece) — no non-Joker
+            // TintedColor could ever match it, so Joker tokens are excluded
+            // from candidacy entirely rather than getting a permanently
+            // dead enchantment.
+            var dm = MakeMinimalDeck();
+            dm.AddJoker(new SystemRandomProvider(1));
+            dm.AddJoker(new SystemRandomProvider(2));
+
+            var tagged = dm.TagTintedTokensRandom(dm.DeckCount, new SystemRandomProvider(6));
+
+            foreach (int idx in tagged)
+            {
+                Assert.AreNotEqual(PieceColor.Joker, dm.Deck[idx].Color);
             }
         }
 

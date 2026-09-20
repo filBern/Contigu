@@ -1632,3 +1632,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     purement informative. Basculée par la touche **Tab**
     (`GameBootstrap.Update`, toujours actif — contrairement au
     raccourci de debug F9 qui reste réservé à l'éditeur).
+- **Bug corrigé : les tiles Tinted ne matchaient presque jamais** (sur
+  signalement explicite du joueur — "les tinted tiles sont vraiment
+  chiantes, il se peut qu'elle serve a rien parfois"). La description
+  affichée en draft (`UpgradeDefinition.TintedCells`) a toujours promis
+  "doubles the placement's ENTIRE score if it lands as **the piece's
+  own color**", mais l'implémentation (`DeckManager.TagTintedTokensRandom`)
+  tirait la couleur cible au hasard, **indépendamment** de la couleur
+  réelle (fixe) de la pièce — un bug d'implémentation, pas un choix de
+  design : la couleur d'une pièce ne change jamais d'elle-même, donc
+  dans l'écrasante majorité des cas (toutes les couleurs sauf une sur
+  ~7-8) la tuile ne pouvait plus JAMAIS matcher pour le reste de la
+  partie, pas juste "parfois". `TagTintedTokensRandom` cible maintenant
+  toujours la couleur propre du token — la tuile matche donc
+  systématiquement. Les tokens Joker sont exclus de la sélection
+  (nouveau paramètre `eligible` sur `TagRandomTokens`, partagé par tous
+  les `Tag*TokensRandom`) : une cellule Joker posée garde `FilledColor
+  = PieceColor.Joker` telle quelle en mémoire (jamais résolue vers la
+  couleur d'un voisin, voir `GridManager.PlacePiece`), donc aucune
+  TintedColor non-Joker ne pourrait jamais la matcher — l'enchantement
+  serait resté mort de la même façon. Texte de tooltip
+  (`PieceTraitVisualDefaults.GetDescription`) mis à jour en conséquence.

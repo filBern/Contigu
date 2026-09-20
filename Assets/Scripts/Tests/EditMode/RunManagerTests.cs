@@ -454,6 +454,33 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_TintedTrait_AlwaysMatchesTheTokensOwnColor_SoItAlwaysDoublesTheScore()
+        {
+            // On explicit player feedback ("les tinted tiles sont vraiment
+            // chiantes, il se peut qu'elle serve a rien parfois"): the
+            // target color used to be rolled independently of the token's
+            // own (fixed) color, so a tinted tile usually could never
+            // match. It's now always the token's own color, which never
+            // changes on its own — so placing it should always double the
+            // score, every single time, not just "sometimes".
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagTintedTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(ScoringConstants.TintedMatchMultiplier, outcome.Placement.GroupMultiplier,
+                "A tinted tile should always match its own piece's color and double the score now — it should never be a dead enchantment");
+        }
+
+        [Test]
         public void PlacePiece_BlastTrait_AlsoScoresFilledOrthogonalNeighborsAsGolden()
         {
             var run = new RunManager(new SystemRandomProvider(1));

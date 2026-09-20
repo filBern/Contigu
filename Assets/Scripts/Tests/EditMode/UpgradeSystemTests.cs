@@ -93,7 +93,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Apply_TintedCells_TagsTokensWithABaseColor()
+        public void Apply_TintedCells_TagsTokensWithTheirOwnColor()
         {
             var deck = MakeTwentyTokenDeck();
             var system = new UpgradeSystem(new SystemRandomProvider(3));
@@ -107,6 +107,10 @@ namespace Contigu.Tests
                 {
                     tintedCount++;
                     Assert.IsTrue(token.Trait.Value.TintedColor.HasValue);
+                    // Always the token's own color (never an independently
+                    // rolled one) so the tile is always achievable — see
+                    // DeckManager.TagTintedTokensRandom.
+                    Assert.AreEqual(token.Color, token.Trait.Value.TintedColor.Value);
                     Assert.AreNotEqual(PieceColor.Joker, token.Trait.Value.TintedColor.Value);
                 }
             }

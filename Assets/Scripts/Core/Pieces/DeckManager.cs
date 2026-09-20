@@ -240,95 +240,117 @@ namespace Contigu.Core
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run golden trait on one random cell each (spec 5.4 redesign).</summary>
         public IReadOnlyList<int> TagGoldenTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Golden, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Golden, localIndex));
         }
 
-        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run tinted trait (random base color) on one random cell each.</summary>
+        /// <summary>
+        /// Tags up to <paramref name="count"/> distinct deck tokens with a
+        /// permanent-for-the-run tinted trait on one random cell each. The
+        /// target color is always the TOKEN'S OWN color (never rolled
+        /// independently) — a token's color never changes on its own, so a
+        /// tinted tile always matches and always fires; the earlier
+        /// independent-random-color version left most tinted tiles
+        /// permanently unable to ever match (on explicit player feedback:
+        /// "les tinted tiles sont vraiment chiantes, il se peut qu'elle
+        /// serve a rien parfois" — it wasn't "sometimes", a mismatched tile
+        /// could never trigger for the rest of the run short of a
+        /// Recolorer pick landing on that exact type). Joker tokens are
+        /// excluded from candidacy entirely: a placed Joker cell's own
+        /// FilledColor always stays PieceColor.Joker (never resolved to a
+        /// neighbor's color in storage, see GridManager.PlacePiece), so no
+        /// non-Joker TintedColor could ever match it either — tagging one
+        /// would just recreate the same dead-enchantment problem this fix
+        /// is for.
+        /// </summary>
         public IReadOnlyList<int> TagTintedTokensRandom(int count, IRandomProvider rng)
         {
-            var baseColors = PieceColorUtility.BaseColors;
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Tinted, localIndex, baseColors[rng.Next(baseColors.Count)]));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Tinted, localIndex, token.Color), token => token.Color != PieceColor.Joker);
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run multiplier trait on one random cell each.</summary>
         public IReadOnlyList<int> TagMultiplierTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Multiplier, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Multiplier, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Blast Tile" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagBlastTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Blast, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Blast, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Multiplier Beacon" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagBeaconTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Beacon, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Beacon, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Mirror Tile" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagMirrorTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Mirror, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Mirror, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Seeder" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagSeederTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Seeder, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Seeder, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Catalyst" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagCatalystTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Catalyst, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Catalyst, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Twin" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagTwinTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Twin, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Twin, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Detonator" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagDetonatorTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Detonator, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Detonator, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Chameleon" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagChameleonTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Chameleon, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Chameleon, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Spark" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagSparkTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Spark, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Spark, localIndex));
         }
 
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run "Void" trait on one random cell each.</summary>
         public IReadOnlyList<int> TagVoidTokensRandom(int count, IRandomProvider rng)
         {
-            return TagRandomTokens(count, rng, localIndex => new PieceTrait(PieceTraitKind.Void, localIndex));
+            return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Void, localIndex));
         }
 
         /// <summary>
         /// Picks up to <paramref name="count"/> distinct deck indices — preferring
         /// tokens that don't already carry a trait, falling back to any token if
         /// there aren't enough untagged ones — and applies <paramref name="makeTrait"/>
-        /// (given a random valid local cell index for that token's shape) to each.
-        /// Returns the tagged deck indices.
+        /// (given the token itself and a random valid local cell index for its
+        /// shape) to each. <paramref name="eligible"/>, when given, excludes any
+        /// token it returns false for from candidacy entirely (both the
+        /// untagged-preferred pass and the any-token fallback) — used by
+        /// <see cref="TagTintedTokensRandom"/> to keep Joker tokens out, since
+        /// their trait could never fire either way (see there). Returns the
+        /// tagged deck indices.
         /// </summary>
-        private IReadOnlyList<int> TagRandomTokens(int count, IRandomProvider rng, System.Func<int, PieceTrait> makeTrait)
+        private IReadOnlyList<int> TagRandomTokens(int count, IRandomProvider rng, System.Func<PieceToken, int, PieceTrait> makeTrait, System.Func<PieceToken, bool> eligible = null)
         {
             var candidates = new List<int>();
             for (int i = 0; i < _deck.Count; i++)
             {
-                if (!_deck[i].Trait.HasValue)
+                if (!_deck[i].Trait.HasValue && (eligible == null || eligible(_deck[i])))
                 {
                     candidates.Add(i);
                 }
@@ -338,7 +360,10 @@ namespace Contigu.Core
                 candidates.Clear();
                 for (int i = 0; i < _deck.Count; i++)
                 {
-                    candidates.Add(i);
+                    if (eligible == null || eligible(_deck[i]))
+                    {
+                        candidates.Add(i);
+                    }
                 }
             }
 
@@ -357,7 +382,7 @@ namespace Contigu.Core
                 var token = _deck[deckIndex];
                 int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
                 int localIndex = rng.Next(cellCount);
-                _deck[deckIndex] = token.WithTrait(makeTrait(localIndex));
+                _deck[deckIndex] = token.WithTrait(makeTrait(token, localIndex));
             }
             return chosen;
         }
