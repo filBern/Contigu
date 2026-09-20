@@ -21,6 +21,12 @@ namespace Contigu.Core
         /// <summary>Consecutive placements made this round without a line/column clear, as of BEFORE the placement currently in progress — see <see cref="PlacementsSinceLastClear"/>.</summary>
         private int _placementsSinceLastClear;
 
+        /// <summary>Shape of the last piece placed this round, or null before the round's first placement — tracked for "Repetition", reset by <see cref="ResetForNewRound"/>.</summary>
+        private ShapeId? _lastPlacedShapeId;
+
+        /// <summary>Fill color of the last piece placed this round, or null before the round's first placement — tracked for "Color Switch" (Alternance des pièces), reset by <see cref="ResetForNewRound"/>.</summary>
+        private PieceColor? _lastPlacedColor;
+
         /// <summary>
         /// How many placements in a row this round have gone by without a
         /// line/column clear, as of right now (i.e. reflecting only
@@ -91,6 +97,8 @@ namespace Contigu.Core
             }
             _lastGroupSize = null;
             _placementsSinceLastClear = 0;
+            _lastPlacedShapeId = null;
+            _lastPlacedColor = null;
         }
 
         public bool CanPlace(PieceShape shape, int anchorX, int anchorY)
@@ -190,6 +198,14 @@ namespace Contigu.Core
             // "Rafale" in ApplyPostClearModifiers.
             int streakBeforePlacement = _placementsSinceLastClear;
 
+            // Captured before being overwritten below, for "Repetition"
+            // (same shape as last time) and "Color Switch" (different color
+            // from last time).
+            ShapeId? previousShapeId = _lastPlacedShapeId;
+            _lastPlacedShapeId = shape.Id;
+            PieceColor? previousPlacedColor = _lastPlacedColor;
+            _lastPlacedColor = color;
+
             // The tinted-match/multiplier-zone factor is no longer baked into
             // each cell's own score — it's applied ONCE, at the very end of
             // this whole placement (see PlacementResult.GroupMultiplier and
@@ -233,7 +249,7 @@ namespace Contigu.Core
             int modifierBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, previousShapeId, previousPlacedColor);
             }
 
             var clearInfo = CheckAndClearLines();
@@ -271,9 +287,34 @@ namespace Contigu.Core
             }
 
             result.ModifierBonus = modifierBonus;
+            // "Combo": reuses the exact same "did the previous placement
+            // clear?" signal as Rafale, but multiplies the WHOLE placement's
+            // total instead of adding a flat bonus (see
+            // PlacementResult.ComboMultiplier/.TotalScore) — the one
+            // modifier here that isn't a flat/per-cell bonus.
+            result.ComboMultiplier = ComputeComboMultiplier(activeModifiers, clearedByPreviousPlacement);
             result.ScoreEvents = events;
 
             return result;
+        }
+
+        /// <summary>Stacks x2 per copy of "Combo" held, same convention as <see cref="ComputeGroupMultiplier"/> — 1 (no-op) unless the previous placement this round cleared a line.</summary>
+        private static int ComputeComboMultiplier(IReadOnlyList<ModifierId> activeModifiers, bool clearedByPreviousPlacement)
+        {
+            if (activeModifiers == null || !clearedByPreviousPlacement)
+            {
+                return 1;
+            }
+
+            int multiplier = 1;
+            for (int i = 0; i < activeModifiers.Count; i++)
+            {
+                if (activeModifiers[i] == ModifierId.Combo)
+                {
+                    multiplier *= ScoringConstants.ComboMultiplierFactor;
+                }
+            }
+            return multiplier;
         }
 
         /// <summary>
@@ -283,8 +324,18 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, ShapeId? previousShapeId, PieceColor? previousPlacedColor)
         {
+            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
+            // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
+            // storage (see FindConnectedGroup) — every color-conditional
+            // modifier below normally just never matches it. When Joker is
+            // held, this instead resolves to whichever of the 4 base colors
+            // would score the most from the Devotion/Éclat modifiers
+            // currently active, so ApplyColorDevotion/ApplyEclat below use
+            // THIS instead of re-reading the cell directly.
+            var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
+
             int total = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
@@ -348,16 +399,16 @@ namespace Contigu.Core
                         bonus = ApplyJardinier(groupCells, events);
                         break;
                     case ModifierId.DevotionCoral:
-                        bonus = ApplyColorDevotion(PieceColor.Coral, placedCells, groupBonus, events);
+                        bonus = ApplyColorDevotion(PieceColor.Coral, jokerResolvedColor, placedCells, groupBonus, events);
                         break;
                     case ModifierId.DevotionTeal:
-                        bonus = ApplyColorDevotion(PieceColor.Teal, placedCells, groupBonus, events);
+                        bonus = ApplyColorDevotion(PieceColor.Teal, jokerResolvedColor, placedCells, groupBonus, events);
                         break;
                     case ModifierId.DevotionViolet:
-                        bonus = ApplyColorDevotion(PieceColor.Violet, placedCells, groupBonus, events);
+                        bonus = ApplyColorDevotion(PieceColor.Violet, jokerResolvedColor, placedCells, groupBonus, events);
                         break;
                     case ModifierId.DevotionLime:
-                        bonus = ApplyColorDevotion(PieceColor.Lime, placedCells, groupBonus, events);
+                        bonus = ApplyColorDevotion(PieceColor.Lime, jokerResolvedColor, placedCells, groupBonus, events);
                         break;
                     case ModifierId.FormeSingle:
                         bonus = ApplyShapeSpecialist(ShapeId.Single, shape, placedCells, groupBonus, events);
@@ -396,16 +447,16 @@ namespace Contigu.Core
                         bonus = ApplyHorsNorme(placedCells, events);
                         break;
                     case ModifierId.EclatCoral:
-                        bonus = ApplyEclat(PieceColor.Coral, placedCells, groupCells, events);
+                        bonus = ApplyEclat(PieceColor.Coral, jokerResolvedColor, placedCells, groupCells, events);
                         break;
                     case ModifierId.EclatTeal:
-                        bonus = ApplyEclat(PieceColor.Teal, placedCells, groupCells, events);
+                        bonus = ApplyEclat(PieceColor.Teal, jokerResolvedColor, placedCells, groupCells, events);
                         break;
                     case ModifierId.EclatViolet:
-                        bonus = ApplyEclat(PieceColor.Violet, placedCells, groupCells, events);
+                        bonus = ApplyEclat(PieceColor.Violet, jokerResolvedColor, placedCells, groupCells, events);
                         break;
                     case ModifierId.EclatLime:
-                        bonus = ApplyEclat(PieceColor.Lime, placedCells, groupCells, events);
+                        bonus = ApplyEclat(PieceColor.Lime, jokerResolvedColor, placedCells, groupCells, events);
                         break;
                     case ModifierId.Diagonale:
                         bonus = ApplyDiagonale(groupCells, events);
@@ -422,6 +473,44 @@ namespace Contigu.Core
                     case ModifierId.Fraicheur:
                         bonus = ApplyFraicheur(placedCells, events);
                         break;
+                    case ModifierId.Pont:
+                        bonus = ApplyPont(ownColor, placedCells, events);
+                        break;
+                    case ModifierId.Encerclement:
+                        bonus = ApplyEncerclement(groupCells, events);
+                        break;
+                    case ModifierId.Boucher:
+                        bonus = ApplyBoucher(placedCells, events);
+                        break;
+                    case ModifierId.GrosseFamille:
+                        bonus = ApplyGrosseFamille(groupCells, placedCells, events);
+                        break;
+                    case ModifierId.Repetition:
+                        bonus = ApplyRepetition(shape.Id, previousShapeId, placedCells, events);
+                        break;
+                    case ModifierId.AlternancePieces:
+                        bonus = ApplyAlternancePieces(ownColor, previousPlacedColor, placedCells, events);
+                        break;
+                    case ModifierId.Precision:
+                        bonus = ApplyPrecision(placedCells, events);
+                        break;
+                    case ModifierId.Surpopulation:
+                        bonus = ApplySurpopulation(placedCells, events);
+                        break;
+                    case ModifierId.Minimaliste:
+                        bonus = ApplyMinimaliste(placedCells, events);
+                        break;
+                    case ModifierId.Joker:
+                        // No score of its own — purely a passive rule change
+                        // resolved above (see jokerResolvedColor) for
+                        // Devotion/Éclat.
+                        bonus = 0;
+                        break;
+                    case ModifierId.Combo:
+                        // Not a flat/per-cell bonus — resolved separately as
+                        // PlacementResult.ComboMultiplier (see ComputeComboMultiplier).
+                        bonus = 0;
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -432,10 +521,9 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>"Devotion" (per-color): fully doubles this placement's group bonus when the placement's own fill color matches <paramref name="targetColor"/> — every cell of one placement always shares the same color, so checking the first placed cell is enough.</summary>
-        private int ApplyColorDevotion(PieceColor targetColor, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        /// <summary>"Devotion" (per-color): fully doubles this placement's group bonus when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers).</summary>
+        private static int ApplyColorDevotion(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
         {
-            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             if (ownColor != targetColor || groupBonus <= 0)
             {
                 return 0;
@@ -482,10 +570,9 @@ namespace Contigu.Core
             return ScoringConstants.HorsNormeBonus;
         }
 
-        /// <summary>"Éclat" (per-color): flat bonus per scored group cell when the placement's own fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a color match means every group cell counts, unlike Devotion this stays a flat per-tile amount rather than doubling the group bonus.</summary>
-        private int ApplyEclat(PieceColor targetColor, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
+        /// <summary>"Éclat" (per-color): flat bonus per scored group cell when the placement's own fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a color match means every group cell counts, unlike Devotion this stays a flat per-tile amount rather than doubling the group bonus. <paramref name="ownColor"/> is the placement's REAL color unless "Joker" resolves it to a different one first (see ResolveJokerColorForModifiers).</summary>
+        private static int ApplyEclat(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
-            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             if (ownColor != targetColor)
             {
                 return 0;
@@ -692,6 +779,438 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.RafaleBonus));
             return ScoringConstants.RafaleBonus;
+        }
+
+        // ---- Sixth batch of modifier bonuses (11 more, player-authored brainstorm — see README) ----
+
+        /// <summary>Bridge (Pont): bonus per pre-existing group this placement bridges together beyond the first one — bridging 2 formerly-separate groups scores once, 3 groups scores twice, etc. 0 if this placement touches at most one pre-existing group (nothing to bridge).</summary>
+        private int ApplyPont(PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int groupsTouched = CountDistinctPreExistingGroupsTouched(placedCells, ownColor);
+            if (groupsTouched < 2)
+            {
+                return 0;
+            }
+
+            int bonus = (groupsTouched - 1) * ScoringConstants.PontBonusPerBridge;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>
+        /// How many DISTINCT already-existing connected components (using
+        /// the same color/joker compatibility rule as <see
+        /// cref="FindConnectedGroup"/>) touch this placement's own cells —
+        /// this placement's own cells are excluded from every flood-fill, so
+        /// two pre-existing groups on opposite sides of the piece are
+        /// counted separately even though placing the piece would merge
+        /// them into one (that's exactly what "bridging" means for Pont).
+        /// Each distinct component is only ever counted once even if
+        /// several of the piece's own cells touch it.
+        /// </summary>
+        private int CountDistinctPreExistingGroupsTouched(List<Vector2Int> placedCells, PieceColor pieceColor)
+        {
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            var globallyVisited = new HashSet<Vector2Int>();
+            int distinctGroups = 0;
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                distinctGroups += TryCountNeighborGroup(pos.x - 1, pos.y, placedSet, globallyVisited, pieceColor);
+                distinctGroups += TryCountNeighborGroup(pos.x + 1, pos.y, placedSet, globallyVisited, pieceColor);
+                distinctGroups += TryCountNeighborGroup(pos.x, pos.y - 1, placedSet, globallyVisited, pieceColor);
+                distinctGroups += TryCountNeighborGroup(pos.x, pos.y + 1, placedSet, globallyVisited, pieceColor);
+            }
+            return distinctGroups;
+        }
+
+        private int TryCountNeighborGroup(int x, int y, HashSet<Vector2Int> placedSet, HashSet<Vector2Int> globallyVisited, PieceColor pieceColor)
+        {
+            if (!InBounds(x, y))
+            {
+                return 0;
+            }
+            var pos = new Vector2Int(x, y);
+            if (placedSet.Contains(pos) || globallyVisited.Contains(pos))
+            {
+                return 0;
+            }
+            var cell = _cells[x, y];
+            if (!cell.IsFilled || !cell.FilledColor.HasValue)
+            {
+                return 0;
+            }
+
+            var neighborColor = cell.FilledColor.Value;
+            if (pieceColor != PieceColor.Joker && neighborColor != PieceColor.Joker && neighborColor != pieceColor)
+            {
+                return 0;
+            }
+
+            var visited = new HashSet<Vector2Int> { pos };
+            var stack = new Stack<Vector2Int>();
+            stack.Push(pos);
+            PieceColor? anchor = neighborColor == PieceColor.Joker ? (PieceColor?)null : neighborColor;
+            while (stack.Count > 0)
+            {
+                var cur = stack.Pop();
+                FloodVisitExcludingPiece(cur.x - 1, cur.y, placedSet, ref anchor, visited, stack);
+                FloodVisitExcludingPiece(cur.x + 1, cur.y, placedSet, ref anchor, visited, stack);
+                FloodVisitExcludingPiece(cur.x, cur.y - 1, placedSet, ref anchor, visited, stack);
+                FloodVisitExcludingPiece(cur.x, cur.y + 1, placedSet, ref anchor, visited, stack);
+            }
+            globallyVisited.UnionWith(visited);
+            return 1;
+        }
+
+        /// <summary>Same neighbor/anchor-color rules as <see cref="TryVisitGroupNeighbor"/>, but additionally never steps into <paramref name="placedSet"/> — used to flood-fill a PRE-existing component's true extent without the flood leaking through the piece currently being placed into a different, unrelated component on its other side.</summary>
+        private void FloodVisitExcludingPiece(int x, int y, HashSet<Vector2Int> placedSet, ref PieceColor? anchorColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
+        {
+            if (!InBounds(x, y))
+            {
+                return;
+            }
+            var pos = new Vector2Int(x, y);
+            if (placedSet.Contains(pos) || visited.Contains(pos))
+            {
+                return;
+            }
+            var cell = _cells[x, y];
+            if (!cell.IsFilled || !cell.FilledColor.HasValue)
+            {
+                return;
+            }
+
+            var color = cell.FilledColor.Value;
+            if (color != PieceColor.Joker)
+            {
+                if (anchorColor.HasValue && anchorColor.Value != color)
+                {
+                    return;
+                }
+                anchorColor = color;
+            }
+
+            visited.Add(pos);
+            stack.Push(pos);
+        }
+
+        /// <summary>Encirclement: bonus per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid — a softer sibling of Fortress, which never credits an edge/corner cell (out of bounds always fails its check).</summary>
+        private int ApplyEncerclement(List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            int total = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                if (!AreAllNeighborsFilledOrOffGrid(pos.x, pos.y))
+                {
+                    continue;
+                }
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.EncerclementBonusPerCell));
+                total += ScoringConstants.EncerclementBonusPerCell;
+            }
+            return total;
+        }
+
+        private bool AreAllNeighborsFilledOrOffGrid(int x, int y)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (!InBounds(nx, ny))
+                    {
+                        continue; // off the grid counts as "filled" for Encerclement
+                    }
+                    if (!_cells[nx, ny].IsFilled)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Sealer (Boucher): bonus per PRE-EXISTING tile that this placement
+        /// itself causes to become "encircled" (see Encerclement/
+        /// AreAllNeighborsFilledOrOffGrid) — any already-filled tile that
+        /// borders one of this placement's own cells was, by definition, NOT
+        /// fully encircled before this placement (that very neighbor slot
+        /// was still empty), so if it qualifies now, this placement is what
+        /// just sealed it.
+        /// </summary>
+        private int ApplyBoucher(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            var candidates = new HashSet<Vector2Int>();
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        if (dx == 0 && dy == 0)
+                        {
+                            continue;
+                        }
+                        int x = pos.x + dx;
+                        int y = pos.y + dy;
+                        if (!InBounds(x, y))
+                        {
+                            continue;
+                        }
+                        var npos = new Vector2Int(x, y);
+                        if (placedSet.Contains(npos) || !_cells[x, y].IsFilled)
+                        {
+                            continue;
+                        }
+                        candidates.Add(npos);
+                    }
+                }
+            }
+
+            int total = 0;
+            foreach (var pos in candidates)
+            {
+                if (!AreAllNeighborsFilledOrOffGrid(pos.x, pos.y))
+                {
+                    continue;
+                }
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.BoucherBonusPerCell));
+                total += ScoringConstants.BoucherBonusPerCell;
+            }
+            return total;
+        }
+
+        /// <summary>Big Family (Grosse Famille): flat bonus when this placement's color exists in exactly ONE connected group on the whole board — no other same-color cell anywhere outside this placement's own scored group.</summary>
+        private int ApplyGrosseFamille(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
+            var groupSet = new HashSet<Vector2Int>(groupCells);
+            foreach (var pos in AllPositions())
+            {
+                if (groupSet.Contains(pos))
+                {
+                    continue;
+                }
+                var cell = _cells[pos.x, pos.y];
+                if (cell.IsFilled && cell.FilledColor.HasValue && cell.FilledColor.Value == ownColor)
+                {
+                    return 0;
+                }
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.GrosseFamilleBonus));
+            return ScoringConstants.GrosseFamilleBonus;
+        }
+
+        /// <summary>Repetition: flat bonus when this piece is the same shape as the immediately previous placement this round.</summary>
+        private static int ApplyRepetition(ShapeId currentShapeId, ShapeId? previousShapeId, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (!previousShapeId.HasValue || previousShapeId.Value != currentShapeId)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.RepetitionBonus));
+            return ScoringConstants.RepetitionBonus;
+        }
+
+        /// <summary>Color Switch (Alternance des pièces): flat bonus when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier.</summary>
+        private static int ApplyAlternancePieces(PieceColor ownColor, PieceColor? previousPlacedColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (!previousPlacedColor.HasValue || previousPlacedColor.Value == ownColor)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.AlternancePiecesBonus));
+            return ScoringConstants.AlternancePiecesBonus;
+        }
+
+        /// <summary>Precision: bonus per placed cell when EVERY one of this placement's own cells has at least one pre-existing filled orthogonal neighbor (this placement's own other cells don't count).</summary>
+        private int ApplyPrecision(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                if (CountExistingOrthogonalNeighbors(placedCells[i], placedSet) < 1)
+                {
+                    return 0;
+                }
+            }
+
+            int bonus = placedCells.Count * ScoringConstants.PrecisionBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>Overcrowding (Surpopulation): bonus per placed cell when EVERY one of this placement's own cells has at least 2 pre-existing filled orthogonal neighbors — a stricter sibling of Precision.</summary>
+        private int ApplySurpopulation(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                if (CountExistingOrthogonalNeighbors(placedCells[i], placedSet) < 2)
+                {
+                    return 0;
+                }
+            }
+
+            int bonus = placedCells.Count * ScoringConstants.SurpopulationBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        private int CountExistingOrthogonalNeighbors(Vector2Int pos, HashSet<Vector2Int> placedSet)
+        {
+            int count = 0;
+            if (IsExistingFilledNeighbor(pos.x - 1, pos.y, placedSet)) count++;
+            if (IsExistingFilledNeighbor(pos.x + 1, pos.y, placedSet)) count++;
+            if (IsExistingFilledNeighbor(pos.x, pos.y - 1, placedSet)) count++;
+            if (IsExistingFilledNeighbor(pos.x, pos.y + 1, placedSet)) count++;
+            return count;
+        }
+
+        private bool IsExistingFilledNeighbor(int x, int y, HashSet<Vector2Int> placedSet)
+        {
+            if (!InBounds(x, y))
+            {
+                return false;
+            }
+            var pos = new Vector2Int(x, y);
+            if (placedSet.Contains(pos))
+            {
+                return false; // part of this same piece, doesn't count as "pre-existing"
+            }
+            return _cells[x, y].IsFilled;
+        }
+
+        /// <summary>Minimalist (Minimaliste): flat bonus when this placement's WHOLE footprint touches EXACTLY one distinct pre-existing filled cell in total — the "just barely touching" middle ground between Îlot (zero neighbors, isolated) and Precision (one or more, checked per cell).</summary>
+        private int ApplyMinimaliste(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var placedSet = new HashSet<Vector2Int>(placedCells);
+            var distinctNeighbors = new HashSet<Vector2Int>();
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                AddIfExistingFilledNeighbor(pos.x - 1, pos.y, placedSet, distinctNeighbors);
+                AddIfExistingFilledNeighbor(pos.x + 1, pos.y, placedSet, distinctNeighbors);
+                AddIfExistingFilledNeighbor(pos.x, pos.y - 1, placedSet, distinctNeighbors);
+                AddIfExistingFilledNeighbor(pos.x, pos.y + 1, placedSet, distinctNeighbors);
+            }
+            if (distinctNeighbors.Count != 1)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.MinimalisteBonus));
+            return ScoringConstants.MinimalisteBonus;
+        }
+
+        private void AddIfExistingFilledNeighbor(int x, int y, HashSet<Vector2Int> placedSet, HashSet<Vector2Int> result)
+        {
+            if (!InBounds(x, y))
+            {
+                return;
+            }
+            var pos = new Vector2Int(x, y);
+            if (placedSet.Contains(pos))
+            {
+                return;
+            }
+            if (_cells[x, y].IsFilled)
+            {
+                result.Add(pos);
+            }
+        }
+
+        /// <summary>
+        /// "Joker" (spec extension, player-authored): when this placement's
+        /// own color is actually <see cref="PieceColor.Joker"/> and the
+        /// "Joker" modifier is held, resolves to whichever of the 4 base
+        /// colors would score the most from the Devotion/Éclat modifiers
+        /// currently active — those are the two families where "this
+        /// placement's own color" directly gates a bonus. Falls back to the
+        /// piece's real color (Joker stays Joker) whenever the modifier
+        /// isn't held, the piece isn't actually a Joker, or no candidate
+        /// color would score anything anyway.
+        /// </summary>
+        private static PieceColor ResolveJokerColorForModifiers(PieceColor actualColor, IReadOnlyList<ModifierId> activeModifiers, int groupBonus, int groupCellCount)
+        {
+            if (actualColor != PieceColor.Joker || !ContainsModifier(activeModifiers, ModifierId.Joker))
+            {
+                return actualColor;
+            }
+
+            var baseColors = PieceColorUtility.BaseColors;
+            PieceColor best = actualColor;
+            int bestScore = 0;
+            for (int i = 0; i < baseColors.Count; i++)
+            {
+                var candidate = baseColors[i];
+                int score = 0;
+                if (ContainsModifier(activeModifiers, DevotionModifierFor(candidate)))
+                {
+                    score += groupBonus;
+                }
+                if (ContainsModifier(activeModifiers, EclatModifierFor(candidate)))
+                {
+                    score += groupCellCount * ScoringConstants.EclatBonusPerCell;
+                }
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = candidate;
+                }
+            }
+            return bestScore > 0 ? best : actualColor;
+        }
+
+        private static ModifierId DevotionModifierFor(PieceColor color)
+        {
+            switch (color)
+            {
+                case PieceColor.Coral: return ModifierId.DevotionCoral;
+                case PieceColor.Teal: return ModifierId.DevotionTeal;
+                case PieceColor.Violet: return ModifierId.DevotionViolet;
+                default: return ModifierId.DevotionLime;
+            }
+        }
+
+        private static ModifierId EclatModifierFor(PieceColor color)
+        {
+            switch (color)
+            {
+                case PieceColor.Coral: return ModifierId.EclatCoral;
+                case PieceColor.Teal: return ModifierId.EclatTeal;
+                case PieceColor.Violet: return ModifierId.EclatViolet;
+                default: return ModifierId.EclatLime;
+            }
+        }
+
+        private static bool ContainsModifier(IReadOnlyList<ModifierId> modifiers, ModifierId id)
+        {
+            if (modifiers == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                if (modifiers[i] == id)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>

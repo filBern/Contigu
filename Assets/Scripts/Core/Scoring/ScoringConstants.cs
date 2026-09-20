@@ -168,5 +168,37 @@ namespace Contigu.Core
 
         /// <summary>Kamikaze Tile: bonus per surrounding tile actually destroyed (this placement's own cells excluded).</summary>
         public const int KamikazeBonusPerDestroyedCell = 6;
+
+        // ---- Sixth batch of modifier bonuses (player-authored brainstorm, see ModifierCatalog) ----
+
+        /// <summary>Bridge (Pont): bonus per pre-existing group bridged together by this placement beyond the first (bridging 2 groups scores once, 3 groups twice, ...).</summary>
+        public const int PontBonusPerBridge = 15;
+
+        /// <summary>Encirclement (Encerclement): bonus per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid — softer than Fortress, which never gives edge/corner cells any credit.</summary>
+        public const int EncerclementBonusPerCell = 6;
+
+        /// <summary>Sealer (Boucher): bonus per pre-existing tile that this placement itself causes to become "encircled" (see Encerclement) — i.e. this placement fills the one missing neighbor that was keeping it from qualifying.</summary>
+        public const int BoucherBonusPerCell = 10;
+
+        /// <summary>Big Family (Grosse Famille): flat bonus when this placement's color exists in exactly one connected group on the whole board — no other same-color cell anywhere else.</summary>
+        public const int GrosseFamilleBonus = 15;
+
+        /// <summary>Repetition: flat bonus when this piece is the same shape as the immediately previous placement this round.</summary>
+        public const int RepetitionBonus = 10;
+
+        /// <summary>Color Switch (Alternance des pièces): flat bonus when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier.</summary>
+        public const int AlternancePiecesBonus = 10;
+
+        /// <summary>Combo: multiplies this placement's ENTIRE total score (see PlacementResult.ComboMultiplier) when the immediately previous placement this round cleared a line — the only modifier that's a true multiplier rather than a flat/per-cell bonus, on explicit request.</summary>
+        public const int ComboMultiplierFactor = 2;
+
+        /// <summary>Precision: bonus per placed cell when EVERY one of this placement's own cells has at least one pre-existing filled orthogonal neighbor.</summary>
+        public const int PrecisionBonusPerCell = 5;
+
+        /// <summary>Overcrowding (Surpopulation): bonus per placed cell when EVERY one of this placement's own cells has at least 2 pre-existing filled orthogonal neighbors — a stricter sibling of Precision.</summary>
+        public const int SurpopulationBonusPerCell = 8;
+
+        /// <summary>Minimalist (Minimaliste): flat bonus when this placement's whole footprint touches EXACTLY one distinct pre-existing filled cell, total — the "just barely touching" middle ground between Îlot (zero) and Precision (one or more, per cell).</summary>
+        public const int MinimalisteBonus = 12;
     }
 }

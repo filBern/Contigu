@@ -76,6 +76,21 @@ namespace Contigu.Core
         EspaceLibre,
         Rafale,
         PetitFormat,
-        Fraicheur
+        Fraicheur,
+
+        // ---- Sixth batch (11 more, from a player-authored brainstorm list —
+        // Équilibriste, Longue série and a second "Solitaire" idea were
+        // dropped, see README) ----
+        Pont,
+        Encerclement,
+        Boucher,
+        GrosseFamille,
+        Repetition,
+        AlternancePieces,
+        Combo,
+        Precision,
+        Surpopulation,
+        Minimaliste,
+        Joker
     }
 }

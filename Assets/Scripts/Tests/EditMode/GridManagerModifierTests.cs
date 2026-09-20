@@ -1350,5 +1350,276 @@ namespace Contigu.Tests
             Assert.Greater(clearing.LineClearScore, 0, "Sanity check: row 2 should have cleared");
             Assert.AreEqual(0, clearing.ModifierBonus, "Previous placement didn't clear, so Rafale shouldn't fire");
         }
+
+        // ---- Sixth batch: 11 more modifiers (player-authored brainstorm, on explicit request) ----
+
+        [Test]
+        public void Pont_ScoresPerPreExistingGroupBridgedBeyondTheFirst()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 2, 0);
+            // (0,0) and (2,0) are two separate Coral groups with a gap at (1,0).
+
+            var modifiers = new List<ModifierId> { ModifierId.Pont };
+            var bridge = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.PontBonusPerBridge, bridge.ModifierBonus);
+        }
+
+        [Test]
+        public void Pont_DoesNotFire_WhenTouchingAtMostOnePreExistingGroup()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Pont };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Encerclement_FiresForACornerCellWhoseRemainingNeighborsAreAllFilled()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 0, 1);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 1);
+
+            var modifiers = new List<ModifierId> { ModifierId.Encerclement };
+            var corner = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.EncerclementBonusPerCell, corner.ModifierBonus);
+        }
+
+        [Test]
+        public void Encerclement_DoesNotFire_WhenACellHasAnEmptyNeighbor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Encerclement };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Boucher_ScoresForAPreExistingTileThisPlacementCausesToBecomeEncircled()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Teal, 0, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 0, 1);
+            // (0,0)'s only remaining missing neighbor is (1,1).
+
+            var modifiers = new List<ModifierId> { ModifierId.Boucher };
+            var sealing = grid.PlacePiece(single, PieceColor.Coral, 1, 1, modifiers);
+
+            Assert.AreEqual(ScoringConstants.BoucherBonusPerCell, sealing.ModifierBonus);
+        }
+
+        [Test]
+        public void GrosseFamille_FiresOnlyWhenThisColorFormsExactlyOneGroupOnTheBoard()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.GrosseFamille };
+
+            var solo = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.GrosseFamilleBonus, solo.ModifierBonus, "Only Coral group on the board");
+
+            // A second, disconnected Coral group elsewhere breaks the "single group" condition.
+            var second = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
+            Assert.AreEqual(0, second.ModifierBonus);
+        }
+
+        [Test]
+        public void Repetition_FiresOnlyWhenThisPieceIsTheSameShapeAsThePreviousPlacement()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            var modifiers = new List<ModifierId> { ModifierId.Repetition };
+            var sameShape = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(ScoringConstants.RepetitionBonus, sameShape.ModifierBonus);
+
+            var differentShape = grid.PlacePiece(domH, PieceColor.Violet, 5, 5, modifiers);
+            Assert.AreEqual(0, differentShape.ModifierBonus);
+        }
+
+        [Test]
+        public void AlternancePieces_FiresOnlyWhenThisPiecesColorDiffersFromThePreviousPlacement()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.AlternancePieces };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            var differentColor = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(ScoringConstants.AlternancePiecesBonus, differentColor.ModifierBonus);
+
+            var sameColor = grid.PlacePiece(single, PieceColor.Teal, 5, 5, modifiers);
+            Assert.AreEqual(0, sameColor.ModifierBonus);
+        }
+
+        [Test]
+        public void Combo_DoublesTheWholePlacementScore_WhenThePreviousPlacementClearedALine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+                grid.PlacePiece(single, PieceColor.Teal, x, 1);
+            }
+            grid.PlacePiece(single, PieceColor.Coral, 7, 0); // completes row 0
+
+            var modifiers = new List<ModifierId> { ModifierId.Combo };
+            var second = grid.PlacePiece(single, PieceColor.Teal, 7, 1, modifiers); // completes row 1, right after another clear
+
+            Assert.AreEqual(ScoringConstants.ComboMultiplierFactor, second.ComboMultiplier);
+            int baseSubtotal = (second.GroupBonus + second.GoldenBonus) * second.GroupMultiplier
+                + second.LineClearScore * second.LineClearMultiplier + second.ModifierBonus + second.TraitBonus;
+            Assert.AreEqual(baseSubtotal * ScoringConstants.ComboMultiplierFactor, second.TotalScore);
+        }
+
+        [Test]
+        public void Combo_DoesNotMultiply_WhenThePreviousPlacementDidNotClearALine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Combo };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(1, result.ComboMultiplier);
+        }
+
+        [Test]
+        public void Precision_DoesNotFire_WhenAnyPlacedCellHasNoPreExistingNeighbor()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Precision };
+
+            var isolated = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
+
+            Assert.AreEqual(0, isolated.ModifierBonus);
+        }
+
+        [Test]
+        public void Precision_Fires_WhenEveryCellOfTheDominoTouchesAPreExistingTile()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Precision };
+
+            grid.PlacePiece(single, PieceColor.Teal, 3, 2);
+            grid.PlacePiece(single, PieceColor.Violet, 4, 2);
+
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
+
+            Assert.AreEqual(domH.Cells.Count * ScoringConstants.PrecisionBonusPerCell, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Surpopulation_FiresOnlyWhenEveryPlacedCellTouchesAtLeastTwoPreExistingTiles()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Surpopulation };
+
+            grid.PlacePiece(single, PieceColor.Teal, 3, 4);
+            grid.PlacePiece(single, PieceColor.Violet, 4, 3);
+            grid.PlacePiece(single, PieceColor.Lime, 4, 5);
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            Assert.AreEqual(ScoringConstants.SurpopulationBonusPerCell, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Surpopulation_DoesNotFire_WhenOnlyOnePreExistingNeighbor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Surpopulation };
+
+            grid.PlacePiece(single, PieceColor.Teal, 3, 4);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Minimaliste_FiresWhenTheWholePieceTouchesExactlyOnePreExistingTile()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Minimaliste };
+
+            grid.PlacePiece(single, PieceColor.Teal, 3, 2);
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
+
+            Assert.AreEqual(ScoringConstants.MinimalisteBonus, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Minimaliste_DoesNotFire_WhenTouchingZeroPreExistingTiles()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Minimaliste };
+
+            var zero = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(0, zero.ModifierBonus, "Zero neighbors is Îlot's territory, not Minimaliste's");
+        }
+
+        [Test]
+        public void Joker_ResolvesAJokerPieceToWhicheverColorMaximizesDevotionOrEclat()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Joker, ModifierId.DevotionCoral, ModifierId.EclatLime };
+
+            var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
+
+            // Devotion(Coral) would only add the group bonus (2 cells); Éclat(Lime)
+            // adds group-size * EclatBonusPerCell (2*4=8) — Lime wins, so only
+            // Éclat actually fires, not Devotion.
+            int devotionWouldGive = domH.Cells.Count * ScoringConstants.GroupBonusPerCell;
+            int eclatWouldGive = domH.Cells.Count * ScoringConstants.EclatBonusPerCell;
+            Assert.Greater(eclatWouldGive, devotionWouldGive, "Test setup sanity: Éclat should be the bigger prize here");
+            Assert.AreEqual(eclatWouldGive, result.ModifierBonus);
+        }
+
+        [Test]
+        public void Joker_DoesNotResolve_WhenTheModifierIsNotHeld()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatLime };
+
+            var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierBonus, "Without the Joker modifier, a Joker piece can't match any specific color");
+        }
     }
 }

@@ -74,7 +74,18 @@ namespace Contigu.Data
             { ModifierId.EspaceLibre, "SL" },
             { ModifierId.Rafale, "RA" },
             { ModifierId.PetitFormat, "PF" },
-            { ModifierId.Fraicheur, "FR" }
+            { ModifierId.Fraicheur, "FR" },
+            { ModifierId.Pont, "PT" },
+            { ModifierId.Encerclement, "EN" },
+            { ModifierId.Boucher, "BO" },
+            { ModifierId.GrosseFamille, "GX" },
+            { ModifierId.Repetition, "RE" },
+            { ModifierId.AlternancePieces, "AP" },
+            { ModifierId.Combo, "CB" },
+            { ModifierId.Precision, "PC" },
+            { ModifierId.Surpopulation, "SP" },
+            { ModifierId.Minimaliste, "MN" },
+            { ModifierId.Joker, "JK" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

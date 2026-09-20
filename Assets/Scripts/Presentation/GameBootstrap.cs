@@ -412,6 +412,27 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
+            // "Combo" multiplies the WHOLE placement total (see
+            // PlacementResult.ComboMultiplier) rather than one term of it
+            // like GroupMultiplier/LineClearMultiplier above — its own
+            // catch-up runs last, over everything already displayed so far
+            // this placement (displayedRoundScore - roundScoreBefore is
+            // exactly that pre-Combo subtotal at this point).
+            if (placement.ComboMultiplier > 1)
+            {
+                int comboExtra = (displayedRoundScore - roundScoreBefore) * (placement.ComboMultiplier - 1);
+                var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
+                _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.Success);
+                _comboView.Pulse();
+
+                displayedRoundScore += comboExtra;
+                comboTotal += comboExtra;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+                _comboView.Show(comboTotal);
+
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+            }
+
             if (outcome.BossLockedCells.Count > 0)
             {
                 // The boss just locked more cells (see RunConfig.BossLockPiecesInterval)

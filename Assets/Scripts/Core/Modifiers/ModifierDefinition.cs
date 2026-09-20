@@ -302,6 +302,54 @@ namespace Contigu.Core
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
             "+10 pts when this placement's color isn't anywhere else on the board yet.");
 
+        // ---- Sixth batch: 11 more, from a player-authored brainstorm list
+        // (Équilibriste, Longue série and a second "Solitaire" idea were
+        // dropped — see README) ----
+
+        public static readonly ModifierDefinition Pont = new ModifierDefinition(
+            ModifierId.Pont, ModifierCategory.Connexions, "Bridge",
+            "+15 pts per pre-existing group this placement bridges together beyond the first one.");
+
+        public static readonly ModifierDefinition Encerclement = new ModifierDefinition(
+            ModifierId.Encerclement, ModifierCategory.Voisinage, "Encirclement",
+            "+6 pts per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid.");
+
+        public static readonly ModifierDefinition Boucher = new ModifierDefinition(
+            ModifierId.Boucher, ModifierCategory.Voisinage, "Sealer",
+            "+10 pts per pre-existing tile that this placement itself causes to become encircled (see Encirclement).");
+
+        public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
+            ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Big Family",
+            "+15 pts when this placement's color exists in exactly one connected group on the whole board.");
+
+        public static readonly ModifierDefinition Repetition = new ModifierDefinition(
+            ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
+            "+10 pts when this piece is the same shape as the immediately previous placement this round.");
+
+        public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
+            ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
+            "+10 pts when this piece's color differs from the immediately previous placement's color this round.");
+
+        public static readonly ModifierDefinition Combo = new ModifierDefinition(
+            ModifierId.Combo, ModifierCategory.Destruction, "Combo",
+            "x2 this placement's ENTIRE score when the immediately previous placement this round cleared a line.");
+
+        public static readonly ModifierDefinition Precision = new ModifierDefinition(
+            ModifierId.Precision, ModifierCategory.Voisinage, "Precision",
+            "+5 pts per placed cell when EVERY cell of this piece touches at least one pre-existing filled tile.");
+
+        public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
+            ModifierId.Surpopulation, ModifierCategory.Voisinage, "Overcrowding",
+            "+8 pts per placed cell when EVERY cell of this piece touches at least 2 pre-existing filled tiles.");
+
+        public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
+            ModifierId.Minimaliste, ModifierCategory.Voisinage, "Minimalist",
+            "+12 pts when this piece's whole footprint touches EXACTLY one pre-existing filled tile, total.");
+
+        public static readonly ModifierDefinition Joker = new ModifierDefinition(
+            ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
+            "A placed Joker tile counts as whichever base color would score the most from your Devotion/Glow modifiers.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -311,7 +359,8 @@ namespace Contigu.Core
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
             FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro,
             SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
-            Diagonale, Nid, Solitaire, Imminent, EspaceLibre, Rafale, PetitFormat, Fraicheur
+            Diagonale, Nid, Solitaire, Imminent, EspaceLibre, Rafale, PetitFormat, Fraicheur,
+            Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker
         };
 
         public static ModifierDefinition Get(ModifierId id)

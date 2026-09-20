@@ -55,6 +55,17 @@ namespace Contigu.Core
         /// </summary>
         public int LineClearMultiplier = 1;
 
+        /// <summary>
+        /// Multiplies this placement's WHOLE total score (see <see
+        /// cref="TotalScore"/>) — the "Combo" modifier's doing (on explicit
+        /// request: "x2 sur le score TOTAL de la pose"), the only modifier
+        /// that's a true multiplier rather than a flat/per-cell bonus like
+        /// every other one (see <see cref="ModifierBonus"/>). 1 when Combo
+        /// isn't held or didn't fire; stacks (x4, x8, ...) if held more than
+        /// once, same convention as <see cref="GroupMultiplier"/>.
+        /// </summary>
+        public int ComboMultiplier = 1;
+
         /// <summary>Sum of every bonus from the player's active modifiers on this placement (see <see cref="ModifierId"/>).</summary>
         public int ModifierBonus;
 
@@ -78,7 +89,7 @@ namespace Contigu.Core
 
         public int TotalScore
         {
-            get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus; }
+            get { return ((GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus) * ComboMultiplier; }
         }
 
         public static PlacementResult Failure(string reason)

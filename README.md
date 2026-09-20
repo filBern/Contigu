@@ -1993,3 +1993,105 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     — abréviations `DI`/`NI`/`SO`/`IM`/`SL`/`RA`/`PF`/`FR`) + tests
     dédiés par modificateur dans `GridManagerModifierTests` (11 tests,
     y compris les cas négatifs pour Nid/Solitaire/Rafale).
+- **11 modificateurs de plus, d'un brainstorm fourni cette fois par
+  l'utilisateur (14 idées au départ)** — 3 écartées avant implémentation :
+  - **Équilibriste** retirée sur demande explicite ("je ne le trouve pas
+    bon finalement") après une question de clarification sur ce que
+    "chaque côté de la pièce" voulait dire pour une forme non
+    rectangulaire.
+  - **Longue série** (+1 pt par pose consécutive sans line clear)
+    retirée sur demande explicite — trop proche du trait de pièce
+    "Spark Tile" déjà existant (même idée de streak sans clear), une
+    fois la question posée sur la coexistence des deux.
+  - **Solitaire** (+X pts si aucune case de la pièce ne touche une case
+    de même couleur) retirée par Claude sans même demander : c'est
+    exactement ce que fait déjà le modificateur `Solitaire` ajouté
+    juste avant dans ce même lot (mêmes règles de fusion de groupe que
+    `FindConnectedGroup`), jusqu'au nom identique.
+  - Les 11 restantes, avec les décisions prises pour les points encore
+    ambigus dans le texte original (jamais posées comme question,
+    documentées ici à la place — même convention que Complémentaire/
+    Maçon/Démolisseur en tout début de projet) :
+  - **Bridge** (`Pont`, Connexions) : "+X pts pour chaque groupe que
+    cette pièce relie à un autre groupe" — interprété comme :
+    +15 pts par groupe préexistant fusionné AU-DELÀ du premier (relier
+    2 groupes score une fois, 3 groupes deux fois). Nouveau
+    `GridManager.CountDistinctPreExistingGroupsTouched` : flood-fill
+    depuis chaque voisin de la pièce en excluant les propres cases de
+    la pièce (`TryCountNeighborGroup`/`FloodVisitExcludingPiece`, même
+    règle de compatibilité couleur/joker que `FindConnectedGroup`),
+    pour compter combien de composantes DISTINCTES et déjà existantes
+    touchent la pièce — chacune n'est comptée qu'une fois même si
+    plusieurs cases de la pièce la touchent.
+  - **Encirclement** (`Encerclement`, Voisinage) : +6 pts par case du
+    groupe dont les 8 voisins sont tous remplis OU hors de la grille
+    (contrairement à Forteresse, qui n'accorde jamais aucun crédit à
+    une case de bord/coin — hors-grille échoue toujours son test).
+    Choix (jamais posé en question, tranché directement) : 8 directions
+    (Moore), pas 4 — "encerclé" au sens propre implique tous les côtés,
+    cohérent avec la convention déjà établie par Forteresse.
+  - **Sealer** (`Boucher`, Voisinage) : +10 pts par case préexistante
+    que CETTE pose fait devenir "encerclée" (voir Encirclement).
+    Optimisation clé : toute case déjà remplie voisine d'une case de
+    cette pièce ne pouvait PAS être encerclée avant cette pose (ce
+    voisin précis était encore vide) — donc si elle qualifie
+    maintenant, cette pose vient forcément de la sceller ; pas besoin
+    de comparer avant/après.
+  - **Big Family** (`GrosseFamille`, Couleurs) : +15 pts quand la
+    couleur de cette pose forme EXACTEMENT un seul groupe connecté sur
+    tout le plateau — aucune autre case de cette couleur nulle part
+    ailleurs.
+  - **Repetition** (Roguelike) : +10 pts quand cette pièce a la même
+    FORME que la pose immédiatement précédente cette manche. Nouveau
+    `GridManager._lastPlacedShapeId`, même pattern que `_lastGroupSize`
+    pour Dégradé (capturé avant d'être écrasé, remis à zéro par
+    `ResetForNewRound`).
+  - **Color Switch** (`AlternancePieces`, Couleurs) : "+X pts si la
+    couleur de cette pièce est différente de celle de la pièce
+    précédente" — renommé (le nom `Alternance` existe déjà pour le
+    modificateur de PATTERN DE LIGNE : 2 couleurs qui alternent sur
+    toute une ligne complétée). Même pattern que Repetition, nouveau
+    `GridManager._lastPlacedColor`.
+  - **Combo** (Destruction) : x2 sur le score TOTAL de cette pose si la
+    pose immédiatement précédente cette manche a complété une ligne.
+    Seul modificateur qui soit un vrai MULTIPLICATEUR plutôt qu'un
+    bonus plat/par-case (sur demande explicite, après une question sur
+    l'architecture) — nouveau `PlacementResult.ComboMultiplier`,
+    appliqué en dernier dans `TotalScore` (après `GroupMultiplier` et
+    `LineClearMultiplier`, qui ne portent chacun que sur une partie du
+    score). Réutilise le même signal "la pose précédente a-t-elle
+    cleared ?" que Rafale plutôt que de dupliquer le tracking. Stack
+    en x4/x8/... si tenu plusieurs fois, même convention que
+    `GroupMultiplier`. Côté présentation (`GameBootstrap`), un nouveau
+    popup "COMBO x2" rattrape le score affiché après le rattrapage
+    existant de `GroupMultiplier`/`LineClearMultiplier`, en
+    multipliant tout ce qui a déjà été affiché pour cette pose.
+  - **Precision** (Voisinage) : +5 pts par case posée quand CHAQUE
+    case de la pièce touche au moins une case préexistante remplie
+    (orthogonal seulement, comme le reste du projet).
+  - **Overcrowding** (`Surpopulation`, Voisinage) : même chose que
+    Precision mais avec un seuil de 2 voisins préexistants minimum par
+    case — variante plus stricte, du coup mieux payée (+8/case).
+  - **Minimalist** (`Minimaliste`, Voisinage) : +12 pts quand
+    l'ENSEMBLE de l'empreinte de la pièce ne touche qu'UNE SEULE case
+    préexistante distincte, au total (pas par case) — le juste milieu
+    entre Îlot (zéro voisin, groupe isolé) et Precision (un ou plus,
+    vérifié par case).
+  - **Wildcard** (`Joker`, Roguelike) : "Les Jokers comptent comme la
+    couleur qui maximise le bonus de cette pose." Portée décidée
+    directement (jamais posée en question) : seulement Devotion (x4
+    couleurs) et Éclat (x4 couleurs) — les deux familles où "la couleur
+    de cette pose" détermine directement un bonus ; Prisme/Puriste/
+    Monochrome/Cercle Chromatique etc., qui ont chacun leur propre
+    logique Joker déjà intentionnelle (Puriste les ignore, Monochrome
+    les interdit complètement), restent inchangés. N'altère jamais la
+    vraie couleur stockée sur la case (`Cell.FilledColor` reste
+    `PieceColor.Joker`, donc `FindConnectedGroup` continue à le traiter
+    comme un joker pour les poses futures) : `ApplyColorDevotion`/
+    `ApplyEclat` sont passés de méthodes lisant `FilledColor`
+    directement à des méthodes statiques recevant une couleur déjà
+    résolue (`ResolveJokerColorForModifiers`, calculée une fois en
+    tête d'`ApplyPreClearModifiers`), qui ne change quoi que ce soit
+    que si "Joker" est effectivement tenu.
+  - Tests dédiés par modificateur (19 tests au total, y compris les cas
+    négatifs) dans `GridManagerModifierTests`.
