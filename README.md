@@ -1706,3 +1706,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   l'aurait dé-sélectionné par erreur au lieu de le garder actif pour le
   drop. `BeginSlotDrag` appelle maintenant `SelectSlot` directement, en
   contournant le toggle.
+- **Le "ghost" suit maintenant le curseur en click-select, pas
+  seulement en drag-and-drop + opacité liée à la validité** (sur
+  demande explicite — "Lorsque je récupère une pièce d'une des slots,
+  j'ai une tuile avec mon curseur seulement lors du drag and drop,
+  j'aimerais que ce soit le cas pour les deux. Aussi j'aimerais que
+  cette tuile là soit en 50% d'opacité lorsque le placement n'est pas
+  règlementaire et 100% lorsque la position est valide"). Avant, le
+  ghost (`HandView._dragGhost`) n'était montré/déplacé que pendant un
+  drag actif (`BeginSlotDrag`/`DragSlot`/`EndSlotDrag`, via
+  `HandSlotDragHandler`) ; un simple clic sélectionnait la pièce sans
+  aucun aperçu suivant le curseur. Sa visibilité est maintenant purement
+  fonction de la SÉLECTION (`HandView._selectedIndex >= 0`), plus de la
+  présence d'un drag : `SelectSlot` (appelé aussi bien par
+  `OnSlotClicked` que par `BeginSlotDrag`) affiche le ghost via le
+  nouveau `ShowCursorGhost`, et un nouveau `Update()` le fait suivre
+  `Input.mousePosition` à chaque frame tant qu'une pièce est
+  sélectionnée — plus besoin d'un drag actif pour ça.
+  `DragSlot`/`OnDrag` reste branché (et met toujours à jour la
+  position depuis `eventData.position`) uniquement pour éviter un
+  retard d'une frame pendant un drag réel — Update() ferait
+  sensiblement la même chose de toute façon. `EndSlotDrag` ne cache
+  plus le ghost inconditionnellement (il ne fait plus rien) : un drop
+  raté doit laisser la pièce sélectionnée ET son ghost visible, prêts à
+  retenter, au lieu de tout effacer silencieusement. Opacité :
+  `CursorGhostValidAlpha = 1f` / `CursorGhostInvalidAlpha = 0.5f`
+  remplacent l'ancien `DragGhostAlpha = 0.85f` + "invisible (alpha 0) si
+  valide" — `SetHoveringValidDrop` (toujours branché sur
+  `GridView.HoverValidityChanged`, qui se déclenche pareil qu'on soit
+  en train de driver ou juste survoler en ayant cliqué) choisit
+  maintenant directement entre les deux au lieu de cacher le ghost sur
+  une position valide. Champ `_hoveringValidDrop` supprimé au passage
+  (jamais lu nulle part, mort depuis le départ). `BeginSlotDrag` perd
+  son paramètre `PointerEventData` (plus utilisé, la position initiale
+  du ghost vient maintenant de `Input.mousePosition` dans
+  `ShowCursorGhost`) — `HandSlotDragHandler.OnBeginDrag` mis à jour en
+  conséquence.

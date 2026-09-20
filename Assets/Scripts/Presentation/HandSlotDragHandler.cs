@@ -26,7 +26,7 @@ namespace Contigu.Presentation
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            _owner.BeginSlotDrag(_index, eventData);
+            _owner.BeginSlotDrag(_index);
         }
 
         public void OnDrag(PointerEventData eventData)

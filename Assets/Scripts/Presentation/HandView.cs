@@ -13,7 +13,11 @@ namespace Contigu.Presentation
     /// after playtesting) select and place a piece the same way underneath:
     /// selecting fires <see cref="SlotSelected"/> exactly as before, and a
     /// drop on a grid cell (see GridCellView.OnDrop) reuses the same
-    /// CellClicked path a plain click on the grid already used.
+    /// CellClicked path a plain click on the grid already used. As soon as
+    /// EITHER path selects a slot, a cursor-following ghost of that piece
+    /// appears and tracks the pointer every frame (see Update()) — on
+    /// explicit request, this used to only happen while actively dragging;
+    /// now click-select gets the exact same live preview.
     /// </summary>
     public sealed class HandView : MonoBehaviour
     {
@@ -21,7 +25,13 @@ namespace Contigu.Presentation
         private const float DragGhostHeight = 140f;
         private const float DragGhostPreviewWidth = 100f;
         private const float DragGhostPreviewHeight = 110f;
-        private const float DragGhostAlpha = 0.85f;
+        // On explicit request: the cursor ghost now reads its opacity
+        // directly off placement validity (fully opaque once valid, faded
+        // while not) instead of vanishing outright over a valid spot — the
+        // grid's own green footprint tint is a secondary cue, not the only
+        // one anymore.
+        private const float CursorGhostValidAlpha = 1f;
+        private const float CursorGhostInvalidAlpha = 0.5f;
 
         public event Action<int> SlotSelected;
 
@@ -41,8 +51,6 @@ namespace Contigu.Presentation
         private RectTransform _dragGhost;
         private CanvasGroup _dragGhostCanvasGroup;
         private RectTransform _dragGhostPreview;
-        private int _draggingIndex = -1;
-        private bool _hoveringValidDrop;
 
         public int SelectedIndex
         {
@@ -124,16 +132,19 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Floating preview that follows the pointer while a hand slot is
-        /// being dragged — parented at the same level as the whole HUD
+        /// Floating preview that follows the pointer for as long as a hand
+        /// slot is selected — whether that selection came from a plain
+        /// click or an active drag, they're the same thing to this ghost
+        /// (see Update()) — parented at the same level as the whole HUD
         /// (<see cref="_dragLayerParent"/>, brought to front on show) so it
-        /// renders above the grid/hand/HUD regardless of where the drag
-        /// started. <see cref="CanvasGroup.blocksRaycasts"/> is off so it
-        /// never steals the drop raycast meant for the grid cell underneath.
-        /// No background panel — just the shape preview itself — and its
-        /// alpha drops to 0 while hovering a valid drop spot (see
-        /// <see cref="SetHoveringValidDrop"/>), since the grid's own
-        /// green footprint tint already communicates that.
+        /// renders above the grid/hand/HUD regardless of where the pointer
+        /// is. <see cref="CanvasGroup.blocksRaycasts"/> is off so it never
+        /// steals a click/drop raycast meant for whatever's underneath. No
+        /// background panel — just the shape preview itself — and its alpha
+        /// reflects placement validity (see <see cref="SetHoveringValidDrop"/>):
+        /// full opacity over a valid spot, faded everywhere else (on
+        /// explicit request — it used to vanish entirely over a valid spot
+        /// instead, relying on the grid's own green footprint tint alone).
         /// </summary>
         private void BuildDragGhost()
         {
@@ -142,7 +153,7 @@ namespace Contigu.Presentation
             _dragGhost.pivot = new Vector2(0.5f, 0.5f);
             _dragGhostCanvasGroup = _dragGhost.gameObject.AddComponent<CanvasGroup>();
             _dragGhostCanvasGroup.blocksRaycasts = false;
-            _dragGhostCanvasGroup.alpha = DragGhostAlpha;
+            _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
 
             _dragGhostPreview = UIFactory.CreateUIObject("Preview", _dragGhost);
             _dragGhostPreview.anchorMin = new Vector2(0.5f, 0.5f);
@@ -154,7 +165,7 @@ namespace Contigu.Presentation
             _dragGhost.gameObject.SetActive(false);
         }
 
-        public void BeginSlotDrag(int index, PointerEventData eventData)
+        public void BeginSlotDrag(int index)
         {
             if (!_interactable || !_deck.Hand[index].HasValue)
             {
@@ -162,48 +173,56 @@ namespace Contigu.Presentation
             }
             // Unconditionally selects (never the OnSlotClicked toggle-off
             // path below) — starting a drag on the already-selected slot
-            // must keep it selected for the drop, not deselect it.
+            // must keep it selected for the drop, not deselect it. The
+            // ghost is already shown/tracking the cursor as soon as ANY
+            // selection happens (see SelectSlot) — a drag doesn't need to
+            // do anything extra for it anymore.
             SelectSlot(index);
-            _draggingIndex = index;
-            _hoveringValidDrop = false;
-            ShowDragGhost(index);
-            UpdateGhostPosition(eventData);
         }
 
-        /// <summary>Fired by GameBootstrap from GridView.HoverValidityChanged while a drag is in progress.</summary>
+        /// <summary>Fired by GameBootstrap from GridView.HoverValidityChanged whenever hover validity changes over the grid — updates the cursor ghost's opacity (see CursorGhostValidAlpha/CursorGhostInvalidAlpha) regardless of whether the current selection came from a click or a drag.</summary>
         public void SetHoveringValidDrop(bool valid)
         {
-            _hoveringValidDrop = valid;
-            if (_draggingIndex >= 0)
+            if (_selectedIndex >= 0)
             {
-                _dragGhostCanvasGroup.alpha = valid ? 0f : DragGhostAlpha;
+                _dragGhostCanvasGroup.alpha = valid ? CursorGhostValidAlpha : CursorGhostInvalidAlpha;
             }
         }
 
+        /// <summary>Kept for immediacy during an actual drag gesture — Update() already tracks the cursor every frame regardless of drag state, but forwarding the drag's own event here avoids a single-frame lag while the pointer is moving fast.</summary>
         public void DragSlot(PointerEventData eventData)
         {
-            if (_draggingIndex < 0)
+            if (_selectedIndex < 0)
             {
                 return;
             }
-            UpdateGhostPosition(eventData);
+            UpdateGhostPosition(eventData.position);
         }
 
         /// <summary>
-        /// Always safe to call even if the drop already placed the piece
-        /// (GridCellView.OnDrop fires and resolves the placement BEFORE
-        /// Unity calls OnEndDrag on the source, per the standard uGUI event
-        /// order) — this just hides the now-stale ghost either way.
+        /// No longer hides the ghost unconditionally — its visibility is now
+        /// purely a function of whether a piece is SELECTED (see
+        /// SelectSlot/ClearSelection), not whether a drag happens to still
+        /// be in progress, so a drag that ends without a valid drop
+        /// correctly leaves the ghost (and the piece) selected and ready to
+        /// place again instead of stranding the player with no visual cue.
         /// </summary>
         public void EndSlotDrag(PointerEventData eventData)
         {
-            _draggingIndex = -1;
-            _dragGhost.gameObject.SetActive(false);
         }
 
-        private void ShowDragGhost(int index)
+        private void Update()
         {
-            // BeginSlotDrag already guarded that this slot is occupied.
+            if (_selectedIndex < 0)
+            {
+                return;
+            }
+            UpdateGhostPosition(Input.mousePosition);
+        }
+
+        private void ShowCursorGhost(int index)
+        {
+            // SelectSlot already guarded that this slot is occupied.
             var token = _deck.Hand[index].Value;
             var rotation = _deck.HandRotations[index];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
@@ -214,15 +233,21 @@ namespace Contigu.Presentation
             }
             ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null);
 
-            _dragGhostCanvasGroup.alpha = DragGhostAlpha;
+            // Not yet known to be over a valid spot — starts faded until the
+            // next grid hover event says otherwise (see SetHoveringValidDrop).
+            _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
             _dragGhost.gameObject.SetActive(true);
             _dragGhost.SetAsLastSibling();
+            // Snaps to the current cursor position immediately rather than
+            // waiting for the next Update() tick, so it doesn't visibly lag
+            // one frame behind a fresh selection.
+            UpdateGhostPosition(Input.mousePosition);
         }
 
-        private void UpdateGhostPosition(PointerEventData eventData)
+        private void UpdateGhostPosition(Vector2 screenPosition)
         {
             var parentRect = (RectTransform)_dragLayerParent;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, null, out var localPoint);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPosition, null, out var localPoint);
             _dragGhost.anchoredPosition = localPoint;
         }
 
@@ -252,6 +277,7 @@ namespace Contigu.Presentation
         {
             _selectedIndex = idx;
             UpdateSelectionVisuals();
+            ShowCursorGhost(idx);
             if (SlotSelected != null)
             {
                 SlotSelected(idx);
@@ -262,6 +288,7 @@ namespace Contigu.Presentation
         {
             _selectedIndex = -1;
             UpdateSelectionVisuals();
+            _dragGhost.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -288,6 +315,10 @@ namespace Contigu.Presentation
             _deck = deck;
             _selectedIndex = -1;
             _interactable = true;
+            // In case a piece was still selected (and its cursor ghost
+            // still showing) at the moment of the restart — Refresh() below
+            // doesn't touch the ghost on its own.
+            _dragGhost.gameObject.SetActive(false);
             Refresh();
         }
 
