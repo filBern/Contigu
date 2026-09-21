@@ -32,14 +32,14 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void DebugForceRoundComplete_SetsRoundScoreToQuota_AndAdvancesToAwaitingDraft()
+        public void DebugForceRoundComplete_SetsRoundScoreToQuota_AndAdvancesToAwaitingShop()
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
             var state = run.DebugForceRoundComplete();
 
-            Assert.AreEqual(RunState.AwaitingDraft, state);
-            Assert.AreEqual(RunState.AwaitingDraft, run.State);
+            Assert.AreEqual(RunState.AwaitingShop, state);
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
             Assert.AreEqual(run.CurrentQuota, run.RoundScore);
         }
 
@@ -47,12 +47,12 @@ namespace Contigu.Tests
         public void DebugForceRoundComplete_NoOps_WhenNotInProgress()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugForceRoundComplete(); // now AwaitingDraft
+            run.DebugForceRoundComplete(); // now AwaitingShop
             int roundScoreBefore = run.RoundScore;
 
             var state = run.DebugForceRoundComplete();
 
-            Assert.AreEqual(RunState.AwaitingDraft, state);
+            Assert.AreEqual(RunState.AwaitingShop, state);
             Assert.AreEqual(roundScoreBefore, run.RoundScore, "Calling it again while not InProgress should be a no-op");
         }
 
@@ -82,14 +82,15 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyUpgradeAndAdvance_Fails_WhenNotAwaitingDraft()
+        public void ShopActions_Fail_WhenNotAwaitingShop()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             Assert.AreEqual(RunState.InProgress, run.State);
 
-            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-
-            Assert.IsFalse(applied);
+            Assert.IsFalse(run.BuyModifierSlot(0));
+            Assert.IsFalse(run.BuyUpgradeSlot(0));
+            Assert.IsFalse(run.RerollShop());
+            Assert.IsFalse(run.LeaveShop());
             Assert.AreEqual(1, run.CurrentRoundNumber);
         }
 
@@ -144,26 +145,20 @@ namespace Contigu.Tests
                 Assert.Less(piecesPlaced, budget, "Should reach the quota well before exhausting the budget given every cell is golden");
             }
 
-            Assert.AreEqual(RunState.AwaitingDraft, run.State);
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
             Assert.GreaterOrEqual(run.RoundScore, run.CurrentQuota);
             Assert.Greater(run.PiecesRemainingThisRound, 0, "Round should end with budget still remaining once the quota is reached");
 
-            var draft = run.RollDraftOptions();
-            Assert.AreEqual(3, draft.Options.Length);
+            Assert.AreEqual(EconomyConstants.ShopModifierSlotCount, run.ShopModifierSlots.Count);
+            Assert.AreEqual(EconomyConstants.ShopUpgradeSlotCount, run.ShopUpgradeSlots.Count);
+            Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
 
-            bool applied = run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-            Assert.IsTrue(applied);
-            Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
-            Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — a modifier pick is still pending");
+            run.DebugGrantModifier(ModifierId.Prisme);
+            bool left = run.LeaveShop();
 
-            var modifierOptions = run.RollModifierDraftOptions();
-            Assert.AreEqual(3, modifierOptions.Length);
-
-            bool modifierApplied = run.ApplyModifierPick(modifierOptions[0].Id);
-
-            Assert.IsTrue(modifierApplied);
+            Assert.IsTrue(left);
             Assert.AreEqual(1, run.ActiveModifiers.Count);
-            Assert.AreEqual(modifierOptions[0].Id, run.ActiveModifiers[0]);
+            Assert.AreEqual(ModifierId.Prisme, run.ActiveModifiers[0]);
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
             Assert.AreEqual(RunConfig.PieceBudgets[1], run.PiecesRemainingThisRound);
@@ -171,44 +166,292 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void ApplyModifierPick_NeverRequiresRemoval_ModifierCountIsUnlimited()
+        public void ActiveModifiers_StopsAcceptingMore_OnceAtTheCap()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            const int PicksBeyondOldCap = 7;
 
-            for (int i = 0; i < PicksBeyondOldCap; i++)
+            for (int i = 0; i < ModifierCatalog.All.Length && run.ActiveModifiers.Count < EconomyConstants.MaxActiveModifiers; i++)
             {
-                PlayRoundToAwaitingDraft(run);
-                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-                Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
-                var options = run.RollModifierDraftOptions();
-                bool applied = run.ApplyModifierPick(options[0].Id);
-                Assert.IsTrue(applied);
-                Assert.AreEqual(RunState.InProgress, run.State, "Picking a modifier should never require a removal step");
+                bool granted = run.DebugGrantModifier(ModifierCatalog.All[i].Id);
+                Assert.IsTrue(granted, "Granting should never require a removal step below the cap");
             }
 
-            Assert.AreEqual(PicksBeyondOldCap, run.ActiveModifiers.Count);
+            Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
+
+            // Any further modifier — including one not already held — is refused now that the cap is reached.
+            var stillMissing = ModifierCatalog.All[EconomyConstants.MaxActiveModifiers].Id;
+            CollectionAssert.DoesNotContain(run.ActiveModifiers, stillMissing);
+            Assert.IsFalse(run.DebugGrantModifier(stillMissing));
+            Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
         }
 
         [Test]
-        public void RollModifierDraftOptions_NeverOffersAModifierAlreadyActive()
+        public void ShopModifierSlots_NeverOffersAModifierAlreadyActive()
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
             for (int i = 0; i < 5; i++)
             {
-                PlayRoundToAwaitingDraft(run);
-                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-                var options = run.RollModifierDraftOptions();
+                PlayRoundToAwaitingShop(run);
 
-                foreach (var option in options)
+                foreach (var slot in run.ShopModifierSlots)
                 {
-                    CollectionAssert.DoesNotContain(run.ActiveModifiers, option.Id,
+                    CollectionAssert.DoesNotContain(run.ActiveModifiers, slot.ModifierId,
                         "A modifier already held should never be offered again in the same run");
                 }
 
-                run.ApplyModifierPick(options[0].Id);
+                run.DebugGrantModifier(run.ShopModifierSlots[0].ModifierId);
+                run.LeaveShop();
             }
+        }
+
+        [Test]
+        public void BuyModifierSlot_Succeeds_DeductsLueurAndActivatesTheModifier()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            var targetId = run.ShopModifierSlots[0].ModifierId;
+            int price = run.GetModifierSlotPrice(0);
+            run.DebugGrantLueur(price);
+
+            bool bought = run.BuyModifierSlot(0);
+
+            Assert.IsTrue(bought);
+            Assert.AreEqual(0, run.Lueur);
+            CollectionAssert.Contains(run.ActiveModifiers, targetId);
+            Assert.IsTrue(run.ShopModifierSlots[0].Purchased);
+        }
+
+        [Test]
+        public void BuyModifierSlot_Fails_WhenLueurIsInsufficient()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            int price = run.GetModifierSlotPrice(0);
+            run.DebugGrantLueur(price - 1);
+
+            bool bought = run.BuyModifierSlot(0);
+
+            Assert.IsFalse(bought);
+            Assert.AreEqual(price - 1, run.Lueur);
+            Assert.AreEqual(0, run.ActiveModifiers.Count);
+        }
+
+        [Test]
+        public void BuyModifierSlot_Fails_OnceAlreadyPurchased()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(100000);
+            Assert.IsTrue(run.BuyModifierSlot(0));
+
+            bool boughtAgain = run.BuyModifierSlot(0);
+
+            Assert.IsFalse(boughtAgain);
+        }
+
+        [Test]
+        public void BuyModifierSlot_Fails_AtTheModifierCap()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            for (int i = 0; i < EconomyConstants.MaxActiveModifiers; i++)
+            {
+                run.DebugGrantModifier(ModifierCatalog.All[i].Id);
+            }
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(100000);
+
+            bool bought = run.BuyModifierSlot(0);
+
+            Assert.IsFalse(bought);
+            Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
+        }
+
+        [Test]
+        public void ModifierSlotPrice_EscalatesWithEachPurchaseThisVisit()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            int firstPrice = run.GetModifierSlotPrice(1);
+            run.DebugGrantLueur(1000000);
+            run.BuyModifierSlot(0);
+
+            int secondPrice = run.GetModifierSlotPrice(1);
+
+            Assert.Greater(secondPrice, firstPrice, "Every purchase this visit should raise the price of what's still on offer");
+        }
+
+        [Test]
+        public void RerollShop_OnlyReplacesStillUnsoldSlots()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(1000000);
+            Assert.IsTrue(run.BuyModifierSlot(0));
+            var purchasedId = run.ShopModifierSlots[0].ModifierId;
+            var otherSlotBefore = run.ShopModifierSlots[1].ModifierId;
+
+            bool rerolled = run.RerollShop();
+
+            Assert.IsTrue(rerolled);
+            Assert.AreEqual(purchasedId, run.ShopModifierSlots[0].ModifierId, "A purchased slot should never change on reroll");
+            Assert.IsTrue(run.ShopModifierSlots[0].Purchased);
+            // The unsold slot may or may not roll the same id again by chance,
+            // but it must always come back unpurchased either way.
+            Assert.IsFalse(run.ShopModifierSlots[1].Purchased);
+        }
+
+        [Test]
+        public void RerollShop_Fails_WhenLueurIsInsufficient()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            bool rerolled = run.RerollShop();
+
+            Assert.IsFalse(rerolled);
+            Assert.AreEqual(0, run.Lueur);
+        }
+
+        [Test]
+        public void LeaveShop_AdvancesToTheNextRound()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            bool left = run.LeaveShop();
+
+            Assert.IsTrue(left);
+            Assert.AreEqual(RunState.InProgress, run.State);
+            Assert.AreEqual(2, run.CurrentRoundNumber);
+        }
+
+        [Test]
+        public void PlacePiece_LueurCarriesOverAcrossRounds_LikeTotalScore()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantLueur(42);
+            PlayRoundToAwaitingShop(run);
+
+            Assert.GreaterOrEqual(run.Lueur, 42, "Lueur earned mid-round should add on top of anything already held, never reset");
+
+            run.LeaveShop();
+
+            Assert.GreaterOrEqual(run.Lueur, 42, "Lueur should persist across the round boundary just like TotalScore, unlike RoundScore");
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_GridPool_SetsPendingUpgradeWithTileCandidates_ThenResolveApplies()
+        {
+            // Bounded seed search (same style as the stuck-board regression
+            // test) for a shop whose slot 0 happens to roll a Grid-pool
+            // upgrade — exercises the real roll instead of bypassing it.
+            RunManager run = null;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid)
+                {
+                    run = candidate;
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Grid-pool upgrade slot within 500 seeds");
+
+            var hiddenUpgrade = run.ShopUpgradeSlots[0].HiddenUpgrade;
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(0);
+
+            Assert.IsTrue(bought);
+            Assert.IsTrue(run.ShopUpgradeSlots[0].Purchased);
+            Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
+            Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
+            // Nothing else in the shop can happen while a purchase is pending.
+            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.RerollShop());
+            Assert.IsFalse(run.LeaveShop());
+
+            var chosen = new List<int> { run.PendingUpgradeTileCandidates[0] };
+            bool resolved = run.ResolveUpgradeTileChoice(chosen);
+
+            Assert.IsTrue(resolved);
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradeTileCandidates.Count);
+            Assert.IsTrue(run.LeaveShop(), "The shop should be usable again once the pending upgrade is resolved");
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_BankPoolWithSubChoice_SetsPendingUpgrade_ThenResolveApplies()
+        {
+            // Narrowed to specifically Dupliquer (not Retirer, which can fail
+            // at the deck floor, and not Recolorer, whose sub-choice needs a
+            // real target color) so the resolve step below is unconditional.
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.DuplicatePiece)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Dupliquer upgrade slot within 500 seeds");
+
+            var hiddenUpgrade = run.ShopUpgradeSlots[foundSlot].HiddenUpgrade;
+            run.DebugGrantLueur(1000000);
+            int deckCountBefore = run.Deck.DeckCount;
+
+            bool bought = run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsTrue(bought);
+            Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradeTileCandidates.Count, "A Bank-pool upgrade never needs a tile choice");
+
+            PieceToken firstType = default(PieceToken);
+            foreach (var kvp in run.Deck.GetDeckComposition())
+            {
+                firstType = kvp.Key;
+                break;
+            }
+            var subChoice = new UpgradeSubChoice(firstType.Shape, firstType.Color);
+
+            bool resolved = run.ResolveUpgradeSubChoice(subChoice);
+
+            Assert.IsTrue(resolved);
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(deckCountBefore + 1, run.Deck.DeckCount);
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
+        {
+            RunManager run = null;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid)
+                {
+                    run = candidate;
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Grid-pool upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+            run.BuyUpgradeSlot(0);
+
+            // A Grid-pool pending upgrade needs a tile choice, not a sub-choice.
+            bool resolved = run.ResolveUpgradeSubChoice(new UpgradeSubChoice(ShapeId.Single, PieceColor.Coral));
+
+            Assert.IsFalse(resolved);
+            Assert.IsNotNull(run.PendingUpgrade, "A failed resolve of the wrong kind should leave the pending upgrade untouched");
         }
 
         [Test]
@@ -268,13 +511,11 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(2, lastAnchor.Value.x, lastAnchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(RunState.AwaitingDraft, outcome.StateAfter);
+            Assert.AreEqual(RunState.AwaitingShop, outcome.StateAfter);
             Assert.IsTrue(run.Deck.IsHandFullyEmpty(),
                 "Hand should stay empty until the NEW round actually starts, not refill during this round's own ending placement");
 
-            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-            var modifierOptions = run.RollModifierDraftOptions();
-            run.ApplyModifierPick(modifierOptions[0].Id);
+            run.LeaveShop();
 
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.IsTrue(AllHandSlotsFilled(run),
@@ -323,7 +564,7 @@ namespace Contigu.Tests
         /// state (a "Seeder"-left golden cell only lasting the rest of ITS
         /// round, not the whole run, meant every round needs its own reset).
         /// </summary>
-        private static void PlayRoundToAwaitingDraft(RunManager run)
+        private static void PlayRoundToAwaitingShop(RunManager run)
         {
             foreach (var pos in GridManager.AllPositions())
             {
@@ -343,8 +584,9 @@ namespace Contigu.Tests
                 guard++;
                 Assert.Less(guard, 100, "Round should reach its quota well within 100 placements given every cell is golden");
             }
-            Assert.AreEqual(RunState.AwaitingDraft, run.State);
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
         }
+
 
         [Test]
         public void PlacePiece_TriggersDefeat_WhenBoardBecomesFullyBlockedAfterThisPlacement()
@@ -815,9 +1057,7 @@ namespace Contigu.Tests
             // placements — a permanent-for-the-whole-run golden cell was
             // judged too powerful, so it should be gone once round 2 starts.
             run.DebugForceRoundComplete();
-            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-            var options = run.RollModifierDraftOptions();
-            run.ApplyModifierPick(options[0].Id);
+            run.LeaveShop();
 
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.IsFalse(run.Grid.GetCell(traitPos.x, traitPos.y).IsGolden,
@@ -1152,10 +1392,8 @@ namespace Contigu.Tests
             while (run.CurrentRoundIndex < targetRoundIndex)
             {
                 run.DebugForceRoundComplete();
-                Assert.AreEqual(RunState.AwaitingDraft, run.State);
-                run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-                Assert.AreEqual(RunState.AwaitingModifierPick, run.State);
-                run.ApplyModifierPick(ModifierId.Prisme);
+                Assert.AreEqual(RunState.AwaitingShop, run.State);
+                run.LeaveShop();
             }
         }
 
@@ -1250,12 +1488,12 @@ namespace Contigu.Tests
         // for GrandFormat/HorsNorme/Éclat*, which don't need handIndex and are
         // covered there directly against GridManager.PlacePiece) ----
 
-        /// <summary>Plays a full round (quota met via all-golden cells, same trick as PlayRoundToAwaitingDraft), applies a throwaway upgrade, then picks exactly <paramref name="id"/> as the modifier — bypassing the random 3-option draft since ApplyModifierPick doesn't actually validate its argument against RollModifierDraftOptions' output. Also forces a fresh full 3-card hand afterward, since the round-ending placement can leave a partial hand carried into the next round.</summary>
+        /// <summary>Plays a full round (quota met via all-golden cells, same trick as PlayRoundToAwaitingShop), then grants exactly <paramref name="id"/> via the DebugGrantModifier test-only bypass (skips the shop's random slot rolls and Lueur cost entirely) and closes the shop. Also forces a fresh full 3-card hand afterward, since the round-ending placement can leave a partial hand carried into the next round.</summary>
         private static void GiveActiveModifier(RunManager run, ModifierId id)
         {
-            PlayRoundToAwaitingDraft(run);
-            run.ApplyUpgradeAndAdvance(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice));
-            run.ApplyModifierPick(id);
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantModifier(id);
+            run.LeaveShop();
             Assert.AreEqual(RunState.InProgress, run.State);
             CollectionAssert.Contains(run.ActiveModifiers, id);
             run.Deck.DrawNewHand();

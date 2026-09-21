@@ -2095,3 +2095,121 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     que si "Joker" est effectivement tenu.
   - Tests dédiés par modificateur (19 tests au total, y compris les cas
     négatifs) dans `GridManagerModifierTests`.
+- **"Lueur" — monnaie façon Balatro, boutique entre les manches, refonte
+  complète de la progression méta** (sur demande explicite — "j'aimerais
+  qu'on ait un shot avec une currency comme Balatro. Mais il faut penser
+  a une manière unique de le représenter et de l'implémenter"). L'ancien
+  système (draft de 3 upgrades → pick 1 → draft de 3 modifiers → pick 1,
+  gratuit, une seule fois par manche) est entièrement retiré — remplacé
+  par une vraie boutique où le joueur achète ce qu'il veut avec une
+  monnaie accumulée pendant la partie.
+  - **Concept retenu pour la monnaie** (discuté et confirmé avec
+    l'utilisateur avant l'implémentation) : contrairement au score, qui
+    récompense surtout les gros groupes monochromes (Chaîne/Éclat/le
+    bonus de groupe), la Lueur récompense la DIVERSITÉ de couleur d'une
+    ligne/colonne complétée — +1 pt pour 1 couleur, +3 pour 2, +6 pour
+    3, +10 pour 4 (toutes les couleurs de base à la fois), une
+    progression disproportionnée pour que compléter une ligne
+    arc-en-ciel se sente comme un jackpot plutôt qu'un simple bonus
+    linéaire (`EconomyConstants.LueurByDistinctColors`). Crée une vraie
+    tension stratégique avec le score (qui pousse plutôt vers le
+    monochrome) sans dupliquer aucun modificateur existant. Calculée
+    dans `GridManager.ComputeLueurEarned`, qui réutilise directement
+    `ClearedLine.Colors` — la même donnée déjà exposée pour les 8
+    modificateurs de pattern de ligne (Arc-en-ciel, Alternance, ...),
+    donc aucun nouveau suivi d'état nécessaire côté grille. Exposée via
+    `PlacementResult.LueurEarned`, accumulée dans `RunManager.Lueur`
+    (persiste pour TOUTE la partie, comme `TotalScore` — jamais remise
+    à zéro entre les manches, sur confirmation explicite). Le
+    verrouillage du boss (`GridManager.LockFreeCellsAndCheckClears`) en
+    rapporte aussi s'il complète une ligne par lui-même, pour rester
+    cohérent avec le reste du système de clear.
+  - **La boutique** (`RunState.AwaitingShop`, remplace `AwaitingDraft`/
+    `AwaitingModifierPick`) : 5 emplacements simultanés — 3 modifiers
+    (affichés précisément, "les modifiers sont précis, pas de type") et
+    2 upgrades (mystère : seul le `UpgradePool` — Bank ou Grid — est
+    visible avant achat, "tout ce que tu sais c'est l'upgrade se situe
+    dans quel UpgradePool"). Le joueur achète autant d'emplacements
+    qu'il peut se permettre, dans n'importe quel ordre — plus de choix
+    forcé "1 parmi 3". Un bouton "Rafraîchir" (nom retenu après
+    discussion — l'utilisateur cherchait mieux que "reset") re-tire
+    tous les emplacements encore NON vendus contre de la Lueur (un
+    emplacement déjà acheté ne change jamais), même prix croissant que
+    les achats. Prix croissants à chaque achat de la visite (emplacement
+    OU rafraîchissement, sur demande explicite — "prix qui montent à
+    chaque achat"), `EconomyConstants.ShopPriceEscalationPerPurchase`
+    (+50% par achat déjà fait cette visite), remis à zéro à chaque
+    nouvelle ouverture de boutique.
+    - Nouveau `Core/Economy/` : `EconomyConstants` (tous les prix/
+      valeurs de Lueur, séparé de `ScoringConstants` qui reste focalisé
+      sur le score d'une pose) et `ShopSlot` (un emplacement — modifier
+      précis OU upgrade mystère avec son `UpgradeDefinition` caché
+      jusqu'à l'achat).
+    - `RunManager` : `Lueur`, `ShopModifierSlots`/`ShopUpgradeSlots`,
+      `GetModifierSlotPrice`/`GetUpgradeSlotPrice`/`GetRerollPrice`,
+      `BuyModifierSlot`/`BuyUpgradeSlot`/`RerollShop`/`LeaveShop`.
+      `PendingUpgrade`/`PendingUpgradeTileCandidates` suivent un achat
+      d'upgrade qui a encore besoin d'un choix de suivi (voir plus bas)
+      — tant qu'un achat est en attente, rien d'autre n'est utilisable
+      dans la boutique (pas de nouvel achat, pas de rafraîchissement,
+      pas de sortie).
+  - **Cap de modificateurs : 10** (`EconomyConstants.MaxActiveModifiers`,
+    sur demande explicite). Le cap de 5 avait déjà été retiré plus tôt
+    dans le projet (uncapped) quand un seul modificateur gratuit par
+    manche rendait ça inoffensif ; maintenant que la Lueur permet d'en
+    acheter plusieurs par visite sur toute une partie, un plafond
+    redevient nécessaire. `BuyModifierSlot` refuse l'achat une fois le
+    cap atteint (bouton grisé "Full (10)" côté boutique) plutôt que
+    d'exiger un retrait.
+  - **Upgrades mystère + choix de tuile** (sur demande explicite) :
+    acheter un emplacement d'upgrade révèle immédiatement quel upgrade
+    précis se cachait dedans (déjà tiré au sort — pondéré par rareté,
+    `UpgradeSystem.RollFromPool` — au moment où l'emplacement a été
+    généré, jamais au moment de l'achat) :
+    - **Pool Bank** (Retirer/Dupliquer/Recolorer/Joker) : passe par le
+      même flux de sous-choix qu'avant (type de pièce, puis couleur
+      cible pour Recolorer) — `DraftView`, largement simplifiée (elle
+      ne dessine plus les 3 cartes de l'ancien draft, seulement ce
+      sous-choix, ouvert directement via `ShowForPendingUpgrade`).
+      Joker (sans sous-choix) s'applique immédiatement à l'achat.
+    - **Pool Grid** (upgrade de tuile) : au lieu de taguer 3 pièces du
+      deck au hasard comme avant, le joueur voit maintenant 5 pièces
+      candidates (`EconomyConstants.ShopTileCandidateCount`, nouveau
+      `DeckManager.GetCandidateTokenIndices` — même règle de sélection
+      que l'ancien tirage aléatoire : préfère les pièces pas encore
+      enchantées) et en choisit 3
+      (`EconomyConstants.ShopTileChoiceCount`, nouveau
+      `DeckManager.TagSpecificTokens`) — nouvelle vue dédiée
+      `TileChoiceView`. Le nombre choisi (3) reste identique à l'ancien
+      tirage aléatoire pour ne pas changer l'équilibrage, seul le
+      hasard devient un choix.
+    - `UpgradeSystem` largement réduit : `Apply` ne gère plus que les 4
+      upgrades Bank (les 15 upgrades Grid ne passent plus jamais par
+      là) ; `RollDraft`/`PickDistinct`/`UpgradeDraft` (classe) et les 15
+      constantes `XCount` individuelles supprimés entièrement (plus
+      besoin, `ShopTileChoiceCount` unique suffit puisqu'elles valaient
+      toutes 3). Nouveaux `RollFromPool`, `GetCandidateTilesFor`,
+      `ApplyToChosenTiles`, `TraitKindFor` (table de correspondance
+      UpgradeId → PieceTraitKind).
+  - **Présentation** : nouvelles `ShopView` (les 5 emplacements + solde
+    de Lueur + rafraîchir + bouton "Next round"), `TileChoiceView` (les
+    5 candidats, sélection multiple avec confirmation à exactement 3) ;
+    `DraftView` réduite au sous-choix seul ; `ModifierDraftView`
+    supprimée entièrement (les modifiers ne se piochent plus, ils
+    s'achètent). `HudView` affiche désormais la Lueur en permanence
+    (coin haut-droit). `GameBootstrap` entièrement rebranché sur le
+    nouveau flux (`OnModifierBuyRequested`/`OnUpgradeBuyRequested`/
+    `OnRerollRequested`/`OnLeaveShopRequested`/`OnSubChoiceConfirmed`/
+    `OnTileChoiceConfirmed`).
+  - **Aides de test** : `RunManager.DebugGrantModifier`/
+    `DebugGrantLueur` (jamais reliées à un raccourci en jeu, contrairement
+    à `DebugForceRoundComplete` qui a F9 — elles n'existent que pour les
+    tests EditMode, qui ont maintenant besoin de contourner le tirage
+    aléatoire de la boutique et le coût en Lueur pour rester
+    déterministes) documentées comme telles. Tests réécrits en
+    conséquence dans `RunManagerTests`/`UpgradeSystemTests` (recherche
+    de seed bornée, même technique que le test de plateau bloqué, pour
+    les scénarios où un emplacement précis doit être Bank ou Grid) plus
+    les nouveaux tests dédiés à la boutique (achat, prix croissants,
+    rafraîchissement, cap de modificateurs, flux upgrade mystère
+    complet) et à la Lueur (`GridManagerTests`).

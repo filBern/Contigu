@@ -14,20 +14,56 @@ namespace Contigu.Core
     /// </summary>
     public sealed class RunManager
     {
-        /// <summary>How many modifier options are offered per draft.</summary>
-        public const int ModifierDraftSize = 3;
-
         public GridManager Grid { get; }
         public DeckManager Deck { get; }
         public UpgradeSystem Upgrades { get; }
 
         private readonly List<ModifierId> _activeModifiers = new List<ModifierId>();
 
-        /// <summary>Modifiers currently held by the player, persisting for the whole run (never reset between rounds).</summary>
+        /// <summary>Modifiers currently held by the player, persisting for the whole run (never reset between rounds). Capped at EconomyConstants.MaxActiveModifiers now that the shop lets Lueur buy them far more freely than the old one-per-round draft ever could.</summary>
         public IReadOnlyList<ModifierId> ActiveModifiers
         {
             get { return _activeModifiers; }
         }
+
+        /// <summary>
+        /// "Lueur" currency (spec extension, explicit request — a Balatro-
+        /// style economy): earned by clearing lines with DIVERSE colors (see
+        /// GridManager.PlacementResult.LueurEarned), persists for the whole
+        /// run like <see cref="TotalScore"/>, and spent in the between-round
+        /// shop (see <see cref="ShopModifierSlots"/>/<see cref="ShopUpgradeSlots"/>).
+        /// </summary>
+        public int Lueur { get; private set; }
+
+        private readonly ShopSlot[] _modifierSlots = new ShopSlot[EconomyConstants.ShopModifierSlotCount];
+        private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
+
+        /// <summary>How many purchases (slot buys AND rerolls) have happened in the CURRENT shop visit — every one raises the price of everything else still on offer (see GetSlotPrice/GetRerollPrice), reset to 0 each time the shop opens.</summary>
+        private int _purchasesThisVisit;
+
+        public IReadOnlyList<ShopSlot> ShopModifierSlots
+        {
+            get { return _modifierSlots; }
+        }
+
+        public IReadOnlyList<ShopSlot> ShopUpgradeSlots
+        {
+            get { return _upgradeSlots; }
+        }
+
+        /// <summary>
+        /// Non-null while a purchased Upgrade slot still needs a follow-up
+        /// from the player before the shop can be used for anything else —
+        /// a sub-choice (Bank pool: which piece type, and for Recolorer
+        /// which target color) or a tile choice (Grid pool: which of
+        /// <see cref="PendingUpgradeTileCandidates"/> receive the trait).
+        /// Cleared once <see cref="ResolveUpgradeSubChoice"/> or
+        /// <see cref="ResolveUpgradeTileChoice"/> succeeds.
+        /// </summary>
+        public UpgradeDefinition PendingUpgrade { get; private set; }
+
+        /// <summary>Candidate deck token indices for <see cref="PendingUpgrade"/> — only populated (non-empty) when it's a Grid-pool upgrade; empty for a Bank-pool one, which needs a sub-choice instead.</summary>
+        public IReadOnlyList<int> PendingUpgradeTileCandidates { get; private set; }
 
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
@@ -75,6 +111,7 @@ namespace Contigu.Core
             Grid = new GridManager();
             Deck = new DeckManager(InitialDeckFactory.Build(), rng);
             Upgrades = new UpgradeSystem(rng);
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
             CurrentRoundIndex = 0;
             StartRound();
         }
@@ -171,6 +208,7 @@ namespace Contigu.Core
             CountModifierUsage(placement);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
+            Lueur += placement.LueurEarned;
             // Don't auto-refill yet — if this placement also ends the round,
             // drawing the next 3 pieces here would hand them out before the
             // player has even picked this round's upgrade (see StartRound,
@@ -226,6 +264,7 @@ namespace Contigu.Core
                 RoundScore += lockOutcome.LineClearScore;
                 TotalScore += lockOutcome.LineClearScore;
             }
+            Lueur += lockOutcome.LueurEarned;
             return lockOutcome.LockedCells;
         }
 
@@ -733,11 +772,44 @@ namespace Contigu.Core
             return State;
         }
 
+        /// <summary>
+        /// Debug-only helper: adds <paramref name="modifierId"/> straight to
+        /// the player's active set, bypassing the shop's random slot roll
+        /// and its Lueur cost entirely — same "skip the grind" spirit as
+        /// <see cref="DebugForceRoundComplete"/>, but with no in-game
+        /// shortcut wired to it (no gameplay reason to skip paying for a
+        /// specific modifier) — used by EditMode tests that need a specific
+        /// modifier active without fighting shop RNG. Still respects
+        /// EconomyConstants.MaxActiveModifiers and never duplicates a
+        /// modifier already held.
+        /// </summary>
+        public bool DebugGrantModifier(ModifierId modifierId)
+        {
+            if (_activeModifiers.Contains(modifierId) || _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
+            {
+                return false;
+            }
+            _activeModifiers.Add(modifierId);
+            return true;
+        }
+
+        /// <summary>Debug-only helper: adds Lueur directly, bypassing gameplay entirely — same "skip the grind" spirit as <see cref="DebugGrantModifier"/>, used by EditMode tests that need to exercise shop purchases without earning real Lueur from line clears first.</summary>
+        public void DebugGrantLueur(int amount)
+        {
+            Lueur += amount;
+        }
+
         private void EvaluateRoundEnd()
         {
             if (RoundScore >= CurrentQuota)
             {
-                State = CurrentRoundIndex == RunConfig.RoundCount - 1 ? RunState.RunVictory : RunState.AwaitingDraft;
+                if (CurrentRoundIndex == RunConfig.RoundCount - 1)
+                {
+                    State = RunState.RunVictory;
+                    return;
+                }
+                State = RunState.AwaitingShop;
+                OpenShop();
                 return;
             }
 
@@ -776,63 +848,264 @@ namespace Contigu.Core
             return Grid.HasAnyValidPlacement(shapes);
         }
 
-        public UpgradeDraft RollDraftOptions()
-        {
-            return Upgrades.RollDraft();
-        }
+        // ---- Lueur shop (replaces the old round-end draft entirely — spec
+        // extension, explicit request: "je ne veux plus du tout du système
+        // actuel") ----
 
-        /// <summary>
-        /// Applies the single drafted upgrade (tile and grid pools mixed
-        /// together, spec 5.2) and moves on to the modifier pick rather than
-        /// advancing the round directly — <see cref="ApplyModifierPick"/>
-        /// does that. Only valid while <see cref="State"/> is
-        /// <see cref="RunState.AwaitingDraft"/>.
-        /// </summary>
-        public bool ApplyUpgradeAndAdvance(UpgradeDefinition upgrade, UpgradeSubChoice subChoice)
+        /// <summary>Rolls every slot fresh — called once, the instant the shop opens (see EvaluateRoundEnd).</summary>
+        private void OpenShop()
         {
-            if (State != RunState.AwaitingDraft)
+            _purchasesThisVisit = 0;
+            PendingUpgrade = null;
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            for (int i = 0; i < _modifierSlots.Length; i++)
             {
-                return false;
+                _modifierSlots[i] = RollModifierSlot();
             }
-
-            bool applied = Upgrades.Apply(upgrade, subChoice, Deck);
-            State = RunState.AwaitingModifierPick;
-            return applied;
+            for (int i = 0; i < _upgradeSlots.Length; i++)
+            {
+                _upgradeSlots[i] = RollUpgradeSlot();
+            }
         }
 
-        /// <summary>
-        /// Rolls a modifier draft of up to <see cref="ModifierDraftSize"/>
-        /// distinct options, drawn only from modifiers the player doesn't
-        /// already hold — each modifier can only be active once per run.
-        /// </summary>
-        public ModifierDefinition[] RollModifierDraftOptions()
+        private ShopSlot RollModifierSlot()
         {
             var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
                 var candidate = ModifierCatalog.All[i];
-                if (!_activeModifiers.Contains(candidate.Id))
+                if (_activeModifiers.Contains(candidate.Id) || IsAlreadyOfferedThisVisit(candidate.Id))
                 {
-                    available.Add(candidate);
+                    continue;
+                }
+                available.Add(candidate);
+            }
+            if (available.Count == 0)
+            {
+                // Only possible once held+offered modifiers together cover
+                // the whole catalog — extremely unlikely at the 10-modifier
+                // cap with 68+ entries, but stay defensive rather than throw.
+                for (int i = 0; i < ModifierCatalog.All.Length; i++)
+                {
+                    if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id))
+                    {
+                        available.Add(ModifierCatalog.All[i]);
+                    }
                 }
             }
-            return UpgradeSystem.PickDistinct(available, ModifierDraftSize, _rng);
+
+            var picked = available[_rng.Next(available.Count)];
+            return ShopSlot.ForModifier(picked.Id);
+        }
+
+        private bool IsAlreadyOfferedThisVisit(ModifierId id)
+        {
+            for (int i = 0; i < _modifierSlots.Length; i++)
+            {
+                if (_modifierSlots[i] != null && _modifierSlots[i].ModifierId == id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private ShopSlot RollUpgradeSlot()
+        {
+            var pool = _rng.Next(2) == 0 ? UpgradePool.Bank : UpgradePool.Grid;
+            var upgrade = Upgrades.RollFromPool(pool);
+            return ShopSlot.ForUpgrade(upgrade);
+        }
+
+        /// <summary>Current Lueur price of modifier slot <paramref name="index"/>, including this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
+        public int GetModifierSlotPrice(int index)
+        {
+            return ComputePrice(EconomyConstants.ModifierShopBasePrice);
+        }
+
+        /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation.</summary>
+        public int GetUpgradeSlotPrice(int index)
+        {
+            if (index < 0 || index >= _upgradeSlots.Length || _upgradeSlots[index] == null)
+            {
+                return 0;
+            }
+            int basePrice = _upgradeSlots[index].Pool == UpgradePool.Grid
+                ? EconomyConstants.GridUpgradeShopBasePrice
+                : EconomyConstants.BankUpgradeShopBasePrice;
+            return ComputePrice(basePrice);
+        }
+
+        public int GetRerollPrice()
+        {
+            return ComputePrice(EconomyConstants.ShopRerollBasePrice);
+        }
+
+        private int ComputePrice(int basePrice)
+        {
+            return Mathf.RoundToInt(basePrice * (1f + EconomyConstants.ShopPriceEscalationPerPurchase * _purchasesThisVisit));
         }
 
         /// <summary>
-        /// Adds the picked modifier to the player's active set (unlimited —
-        /// no cap on how many a player can hold at once) and advances to the
-        /// next round. Only valid while <see cref="State"/> is
-        /// <see cref="RunState.AwaitingModifierPick"/>.
+        /// Buys modifier slot <paramref name="index"/> outright — modifiers
+        /// are never a mystery, so this is the whole purchase, no follow-up
+        /// needed. Fails (no charge, no state change) if the shop isn't
+        /// open, the slot is invalid/already bought, the player can't
+        /// afford it, or they're already at EconomyConstants.MaxActiveModifiers.
         /// </summary>
-        public bool ApplyModifierPick(ModifierId modifierId)
+        public bool BuyModifierSlot(int index)
         {
-            if (State != RunState.AwaitingModifierPick)
+            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            {
+                return false;
+            }
+            if (index < 0 || index >= _modifierSlots.Length || _modifierSlots[index] == null || _modifierSlots[index].Purchased)
+            {
+                return false;
+            }
+            if (_activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
+            {
+                return false;
+            }
+            int price = GetModifierSlotPrice(index);
+            if (Lueur < price)
             {
                 return false;
             }
 
-            _activeModifiers.Add(modifierId);
+            Lueur -= price;
+            _purchasesThisVisit++;
+            var slot = _modifierSlots[index];
+            slot.Purchased = true;
+            _activeModifiers.Add(slot.ModifierId);
+            return true;
+        }
+
+        /// <summary>
+        /// Buys upgrade slot <paramref name="index"/> — the specific upgrade
+        /// underneath (only its <see cref="UpgradePool"/> was ever shown)
+        /// gets revealed as <see cref="PendingUpgrade"/>. A Bank-pool
+        /// upgrade with no sub-choice (Joker) applies immediately and leaves
+        /// PendingUpgrade null; one that needs a sub-choice (Retirer/
+        /// Dupliquer/Recolorer) or a Grid-pool upgrade (needs a tile choice,
+        /// see PendingUpgradeTileCandidates) leaves PendingUpgrade set until
+        /// <see cref="ResolveUpgradeSubChoice"/>/<see cref="ResolveUpgradeTileChoice"/>
+        /// finishes it — nothing else in the shop can be done meanwhile.
+        /// Fails (no charge) under the same conditions as
+        /// <see cref="BuyModifierSlot"/> (minus the modifier cap, which
+        /// doesn't apply to upgrades).
+        /// </summary>
+        public bool BuyUpgradeSlot(int index)
+        {
+            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            {
+                return false;
+            }
+            if (index < 0 || index >= _upgradeSlots.Length || _upgradeSlots[index] == null || _upgradeSlots[index].Purchased)
+            {
+                return false;
+            }
+            int price = GetUpgradeSlotPrice(index);
+            if (Lueur < price)
+            {
+                return false;
+            }
+
+            Lueur -= price;
+            _purchasesThisVisit++;
+            var slot = _upgradeSlots[index];
+            slot.Purchased = true;
+            var upgrade = slot.HiddenUpgrade;
+
+            if (upgrade.Pool == UpgradePool.Grid)
+            {
+                PendingUpgrade = upgrade;
+                PendingUpgradeTileCandidates = Upgrades.GetCandidateTilesFor(upgrade, Deck);
+                return true;
+            }
+
+            if (upgrade.RequiresSubChoice)
+            {
+                PendingUpgrade = upgrade;
+                return true;
+            }
+
+            Upgrades.Apply(upgrade, default(UpgradeSubChoice), Deck);
+            return true;
+        }
+
+        /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>
+        public bool ResolveUpgradeSubChoice(UpgradeSubChoice subChoice)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Pool != UpgradePool.Bank)
+            {
+                return false;
+            }
+
+            bool applied = Upgrades.Apply(PendingUpgrade, subChoice, Deck);
+            PendingUpgrade = null;
+            return applied;
+        }
+
+        /// <summary>Resolves a Grid-pool <see cref="PendingUpgrade"/> — <paramref name="chosenDeckIndices"/> must come from <see cref="PendingUpgradeTileCandidates"/> (not validated beyond that here; the presentation layer only ever offers those). No-op (false) if nothing is pending or it's actually a Bank-pool upgrade.</summary>
+        public bool ResolveUpgradeTileChoice(IReadOnlyList<int> chosenDeckIndices)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Pool != UpgradePool.Grid)
+            {
+                return false;
+            }
+
+            bool applied = Upgrades.ApplyToChosenTiles(PendingUpgrade, chosenDeckIndices, Deck);
+            PendingUpgrade = null;
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            return applied;
+        }
+
+        /// <summary>
+        /// Refreshes every still-UNSOLD slot with a new random offer — a
+        /// purchased slot stays exactly as it is (spec: "on retire les
+        /// modifiers et upgrades restantes dans la lueur et re-remplir les
+        /// cases"). Costs Lueur (see GetRerollPrice), and itself counts
+        /// toward this visit's price escalation like any other purchase.
+        /// </summary>
+        public bool RerollShop()
+        {
+            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            {
+                return false;
+            }
+            int price = GetRerollPrice();
+            if (Lueur < price)
+            {
+                return false;
+            }
+
+            Lueur -= price;
+            _purchasesThisVisit++;
+            for (int i = 0; i < _modifierSlots.Length; i++)
+            {
+                if (_modifierSlots[i] == null || !_modifierSlots[i].Purchased)
+                {
+                    _modifierSlots[i] = RollModifierSlot();
+                }
+            }
+            for (int i = 0; i < _upgradeSlots.Length; i++)
+            {
+                if (_upgradeSlots[i] == null || !_upgradeSlots[i].Purchased)
+                {
+                    _upgradeSlots[i] = RollUpgradeSlot();
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Closes the shop and starts the next round. Only valid while the shop is open and nothing is pending a follow-up.</summary>
+        public bool LeaveShop()
+        {
+            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            {
+                return false;
+            }
             AdvanceRound();
             return true;
         }

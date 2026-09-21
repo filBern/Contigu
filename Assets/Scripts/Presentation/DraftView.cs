@@ -7,90 +7,37 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Between-round draft overlay: the player picks exactly one upgrade from 3
-    /// mixed Bank/Grid options (spec 5.2), walking through a sub-choice flow
-    /// first for upgrades that need one (Retirer/Dupliquer/Recolorer a piece
-    /// type).
+    /// Sub-choice overlay for a Bank-pool upgrade the shop just revealed
+    /// (Retirer/Dupliquer/Recolorer need a piece type, and Recolorer also a
+    /// target color — Joker has no sub-choice and never reaches this view at
+    /// all, see RunManager.BuyUpgradeSlot). Used to be the whole round-end
+    /// draft (a grid of 3 cards to pick from) before the Lueur shop replaced
+    /// that entirely (spec extension, explicit request) — this is now only
+    /// the piece/color picker half of that old flow, entered directly via
+    /// <see cref="ShowForPendingUpgrade"/> instead of by choosing a card.
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
-        // Upgrade-draft cards specifically (not the modifier-draft cards in
-        // ModifierDraftView) are 25% bigger than their original 200x234, on
-        // explicit request — every other pixel offset/size inside BuildCard
-        // is scaled by the same CardScale factor so the card's internal
-        // layout stays proportional rather than getting cramped into a
-        // smaller relative slice of the bigger card.
-        private const float CardScale = 1.25f;
-        private const float CardWidth = 200f * CardScale;
-        // +30 flat on top of the 25% scale — name/rarity grew another 50%
-        // on top of that (see BuildCard), which needed more room than a
-        // pure CardScale multiply of the original 234 would leave for the
-        // description above the Choose button.
-        private const float CardHeight = 234f * CardScale + 30f;
         private const float TypeRowHeight = 56f;
         private const float TypeRowPreviewSize = 44f;
 
-        /// <summary>Fires once the upgrade has been chosen and resolved.</summary>
-        public event Action<UpgradeDefinition, UpgradeSubChoice> UpgradeConfirmed;
+        /// <summary>Fires once the sub-choice has been made and the upgrade should be resolved.</summary>
+        public event Action<UpgradeSubChoice> SubChoiceConfirmed;
 
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
-
-        private Text _sectionLabel;
-        private RectTransform _cardsContainer;
-
-        private RectTransform _subChoiceRoot;
-
-        private UpgradeDraft _currentDraft;
 
         public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
             _deck = deck;
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "DraftOverlay", new Color(0f, 0f, 0f, 0.82f));
+            var overlay = UIFactory.CreatePanel(parent, "SubChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
-
-            var header = UIFactory.CreateText(_root, "Header", "Round complete!", 26, UITheme.TextPrimary);
-            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
-            header.rectTransform.sizeDelta = new Vector2(900f, 40f);
-
-            _sectionLabel = UIFactory.CreateText(_root, "SectionLabel", "Choose an upgrade (1 of 3)", 18, UITheme.TextPrimary);
-            _sectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _sectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _sectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _sectionLabel.rectTransform.anchoredPosition = new Vector2(0f, -80f);
-            _sectionLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
-
-            _cardsContainer = BuildCardRow("Cards", -115f);
-
             _root.gameObject.SetActive(false);
             return _root;
-        }
-
-        private RectTransform BuildCardRow(string name, float topOffset)
-        {
-            var container = UIFactory.CreateUIObject(name, _root);
-            container.anchorMin = new Vector2(0.5f, 1f);
-            container.anchorMax = new Vector2(0.5f, 1f);
-            container.pivot = new Vector2(0.5f, 1f);
-            container.anchoredPosition = new Vector2(0f, topOffset);
-
-            var layout = container.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 20f;
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = container.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            return container;
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
@@ -99,162 +46,45 @@ namespace Contigu.Presentation
             _deck = deck;
         }
 
-        public void Show(UpgradeDraft draft)
+        /// <summary>
+        /// Opens straight to the sub-choice this upgrade needs — the piece
+        /// type for Retirer/Dupliquer/Recolorer, then (Recolorer only) the
+        /// target color. <paramref name="def"/> must be a Bank-pool upgrade
+        /// with <see cref="UpgradeDefinition.RequiresSubChoice"/> true (the
+        /// shop never calls this for anything else).
+        /// </summary>
+        public void ShowForPendingUpgrade(UpgradeDefinition def)
         {
-            _currentDraft = draft;
             _root.gameObject.SetActive(true);
-            HideSubChoice();
-            RebuildCards();
-        }
-
-        private void RebuildCards()
-        {
-            ClearChildren(_cardsContainer);
-            _sectionLabel.text = "Choose an upgrade (1 of 3)";
-            for (int i = 0; i < _currentDraft.Options.Length; i++)
-            {
-                BuildCard(_cardsContainer, _currentDraft.Options[i]);
-            }
-        }
-
-        private static void ClearChildren(RectTransform container)
-        {
-            for (int i = container.childCount - 1; i >= 0; i--)
-            {
-                Destroy(container.GetChild(i).gameObject);
-            }
-        }
-
-        private void BuildCard(RectTransform parent, UpgradeDefinition def)
-        {
-            var card = UIFactory.CreateSlicedImage(parent, "Card_" + def.Id, UISprites.UpgradeCardBackground);
-            card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
-            // Plain Image has no ILayoutElement, so pin the size explicitly or
-            // the parent HorizontalLayoutGroup collapses it toward zero.
-            var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = CardWidth;
-            cardLayout.preferredHeight = CardHeight;
-
-            var nameBanner = UIFactory.CreateSlicedImage(card.transform, "NameBanner", UISprites.UpgradeNameBanner);
-            nameBanner.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameBanner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f * CardScale);
-            // Height 40->46 (before CardScale) to fit the 50%-bigger name font.
-            nameBanner.rectTransform.sizeDelta = new Vector2(CardWidth - 12f * CardScale, 46f * CardScale);
-
-            // 50% bigger (18->27), on explicit request.
-            var nameLabel = UIFactory.CreateText(nameBanner.transform, "Name", def.Name, 27, UITheme.TextPrimary);
-            nameLabel.raycastTarget = false;
-            UIFactory.StretchFull(nameLabel.rectTransform);
-
-            // Rarity + pool ("type"), on explicit request — a small colored
-            // subtitle line between the name and description, same idea as
-            // TooltipView's optional subtitle for a tile trait's badge.
-            // GetRarityColorOnLight (not GetRarityColor) — the dark-panel
-            // rarity colors read as near-invisible pale-on-pale against this
-            // card's light lavender art; the "OnLight" set is the same hues
-            // darkened for contrast here instead.
-            // 50% bigger (14->21), on explicit request — position/height
-            // shifted down and grown accordingly to clear the taller banner
-            // above it without overlapping.
-            var rarityLabel = UIFactory.CreateText(card.transform, "Rarity",
-                UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                21, UpgradeVisualDefaults.GetRarityColorOnLight(def.Rarity));
-            rarityLabel.fontStyle = FontStyle.Italic;
-            rarityLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            rarityLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            rarityLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            rarityLabel.rectTransform.anchoredPosition = new Vector2(0f, -62f * CardScale);
-            rarityLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 30f * CardScale);
-
-            // Black (on explicit request from an earlier pass) and a size
-            // bump (14->15) — stays on the Colorful UI pack's own Digitalt
-            // font (on explicit request — see UIFactory.DefaultFont and the
-            // Digitalt.ttf/.otf import-setting fix for the font's own
-            // crispness at small sizes). The flat +30 on CardHeight above is
-            // what keeps this from overlapping the Choose button even for
-            // the longest descriptions (~190 characters).
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", def.Description, 15, Color.black);
-            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, -100f * CardScale);
-            descLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f * CardScale, 92f * CardScale);
-
-            // Label 50% bigger than the base 14pt, on explicit request.
-            var chooseBtn = UIFactory.CreateButton(card.transform, "Choose", "Choose", UISprites.ChooseButtonBackground, 21);
-            var chooseRect = chooseBtn.GetComponent<RectTransform>();
-            chooseRect.anchorMin = new Vector2(0.5f, 0f);
-            chooseRect.anchorMax = new Vector2(0.5f, 0f);
-            chooseRect.pivot = new Vector2(0.5f, 0f);
-            chooseRect.anchoredPosition = new Vector2(0f, 14f * CardScale);
-            chooseRect.sizeDelta = new Vector2(CardWidth - 30f * CardScale, 38f * CardScale);
-            chooseBtn.onClick.AddListener(() => OnChooseClicked(def));
-        }
-
-        private void OnChooseClicked(UpgradeDefinition def)
-        {
-            if (!def.RequiresSubChoice)
-            {
-                FinalizeChoice(def, default(UpgradeSubChoice));
-                return;
-            }
+            ClearChildren();
             ShowTypeChoice(def);
         }
 
-        private void FinalizeChoice(UpgradeDefinition def, UpgradeSubChoice sub)
+        public void Hide()
         {
-            HideSubChoice();
             _root.gameObject.SetActive(false);
-            if (UpgradeConfirmed != null)
-            {
-                UpgradeConfirmed(def, sub);
-            }
         }
 
-        private void EnsureSubChoiceRoot()
+        private void ClearChildren()
         {
-            if (_subChoiceRoot != null)
+            for (int i = _root.childCount - 1; i >= 0; i--)
             {
-                return;
-            }
-            var overlay = UIFactory.CreatePanel(_root, "SubChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
-            _subChoiceRoot = overlay.rectTransform;
-            UIFactory.StretchFull(_subChoiceRoot);
-            _subChoiceRoot.gameObject.SetActive(false);
-        }
-
-        private void HideSubChoice()
-        {
-            if (_subChoiceRoot != null)
-            {
-                _subChoiceRoot.gameObject.SetActive(false);
-            }
-        }
-
-        private void ClearSubChoiceChildren()
-        {
-            for (int i = _subChoiceRoot.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_subChoiceRoot.GetChild(i).gameObject);
+                Destroy(_root.GetChild(i).gameObject);
             }
         }
 
         private void ShowTypeChoice(UpgradeDefinition def)
         {
-            EnsureSubChoiceRoot();
-            ClearSubChoiceChildren();
-            _subChoiceRoot.gameObject.SetActive(true);
+            ClearChildren();
 
-            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choose a piece type", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Choose a piece type", 22, UITheme.TextPrimary);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
             title.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
-            var listContainer = UIFactory.CreateUIObject("List", _subChoiceRoot);
+            var listContainer = UIFactory.CreateUIObject("List", _root);
             listContainer.anchorMin = new Vector2(0.5f, 0.5f);
             listContainer.anchorMax = new Vector2(0.5f, 0.5f);
             listContainer.pivot = new Vector2(0.5f, 0.5f);
@@ -278,15 +108,6 @@ namespace Contigu.Presentation
                 }
                 BuildTypeRow(listContainer, def, shape, color, count);
             }
-
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UISprites.CancelButtonBackground);
-            var cancelRect = cancelBtn.GetComponent<RectTransform>();
-            cancelRect.anchorMin = new Vector2(0.5f, 0f);
-            cancelRect.anchorMax = new Vector2(0.5f, 0f);
-            cancelRect.pivot = new Vector2(0.5f, 0f);
-            cancelRect.anchoredPosition = new Vector2(0f, 30f);
-            cancelRect.sizeDelta = new Vector2(160f, 44f);
-            cancelBtn.onClick.AddListener(HideSubChoice);
         }
 
         /// <summary>
@@ -347,24 +168,24 @@ namespace Contigu.Presentation
         {
             if (def.Id == UpgradeId.RecolorPiece)
             {
-                ShowColorChoice(def, shape, color);
+                ShowColorChoice(shape, color);
                 return;
             }
-            FinalizeChoice(def, new UpgradeSubChoice(shape, color));
+            FinalizeChoice(new UpgradeSubChoice(shape, color));
         }
 
-        private void ShowColorChoice(UpgradeDefinition def, ShapeId shape, PieceColor fromColor)
+        private void ShowColorChoice(ShapeId shape, PieceColor fromColor)
         {
-            ClearSubChoiceChildren();
+            ClearChildren();
 
-            var title = UIFactory.CreateText(_subChoiceRoot, "Title", "Choose the target color", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Choose the target color", 22, UITheme.TextPrimary);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
             title.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
-            var listContainer = UIFactory.CreateUIObject("Colors", _subChoiceRoot);
+            var listContainer = UIFactory.CreateUIObject("Colors", _root);
             listContainer.anchorMin = new Vector2(0.5f, 0.5f);
             listContainer.anchorMax = new Vector2(0.5f, 0.5f);
             listContainer.pivot = new Vector2(0.5f, 0.5f);
@@ -392,17 +213,17 @@ namespace Contigu.Presentation
                 var colorBtnLayout = btn.gameObject.AddComponent<LayoutElement>();
                 colorBtnLayout.preferredWidth = 140f;
                 colorBtnLayout.preferredHeight = 60f;
-                btn.onClick.AddListener(() => FinalizeChoice(def, new UpgradeSubChoice(shape, fromColor, targetColor)));
+                btn.onClick.AddListener(() => FinalizeChoice(new UpgradeSubChoice(shape, fromColor, targetColor)));
             }
+        }
 
-            var cancelBtn = UIFactory.CreateButton(_subChoiceRoot, "Cancel", "Cancel", UISprites.CancelButtonBackground);
-            var cancelRect = cancelBtn.GetComponent<RectTransform>();
-            cancelRect.anchorMin = new Vector2(0.5f, 0f);
-            cancelRect.anchorMax = new Vector2(0.5f, 0f);
-            cancelRect.pivot = new Vector2(0.5f, 0f);
-            cancelRect.anchoredPosition = new Vector2(0f, 30f);
-            cancelRect.sizeDelta = new Vector2(160f, 44f);
-            cancelBtn.onClick.AddListener(HideSubChoice);
+        private void FinalizeChoice(UpgradeSubChoice sub)
+        {
+            _root.gameObject.SetActive(false);
+            if (SubChoiceConfirmed != null)
+            {
+                SubChoiceConfirmed(sub);
+            }
         }
     }
 }

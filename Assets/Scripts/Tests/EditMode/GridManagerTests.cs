@@ -8,6 +8,49 @@ namespace Contigu.Tests
     public class GridManagerTests
     {
         [Test]
+        public void PlacePiece_ClearingAMonochromeLine_EarnsTheMinimumLueur()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var final = grid.PlacePiece(single, PieceColor.Coral, 7, 0);
+
+            Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
+            Assert.AreEqual(EconomyConstants.LueurByDistinctColors[1], final.LueurEarned);
+        }
+
+        [Test]
+        public void PlacePiece_ClearingARainbowLine_EarnsTheMaximumLueur()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var colors = new[] { PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime };
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, colors[x % colors.Length], x, 0);
+            }
+            var final = grid.PlacePiece(single, colors[(GridManager.Size - 1) % colors.Length], 7, 0);
+
+            Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
+            Assert.AreEqual(EconomyConstants.LueurByDistinctColors[4], final.LueurEarned,
+                "A line touching all 4 base colors should earn the disproportionately larger jackpot value");
+        }
+
+        [Test]
+        public void PlacePiece_NoLineClear_EarnsNoLueur()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+
+            Assert.AreEqual(0, result.LueurEarned);
+        }
+
+        [Test]
         public void CanPlace_ReturnsFalse_WhenOutOfBounds()
         {
             var grid = new GridManager();

@@ -80,6 +80,18 @@ namespace Contigu.Core
         public int LineClearCellCount;
 
         /// <summary>
+        /// "Lueur" currency earned by this placement's own line clears (see
+        /// GridManager.ComputeLueurEarned and RunManager.Lueur) — completely
+        /// independent of <see cref="TotalScore"/>: it's driven by how many
+        /// DISTINCT colors each cleared line contained, not by how many
+        /// points it scored, so a small mixed-color clear can out-earn a
+        /// huge monochrome one. Never multiplied by ComboMultiplier or
+        /// anything else — a flat sum across every line this placement
+        /// cleared.
+        /// </summary>
+        public int LueurEarned;
+
+        /// <summary>
         /// Every individual scoring contribution behind this placement's totals,
         /// in the order they occurred (golden bonuses, then group cells, then one
         /// entry per cleared cell) — lets the presentation layer show each point

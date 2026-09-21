@@ -260,6 +260,10 @@ namespace Contigu.Core
             // an actually-cleared cell without being in ClearedCells (they're
             // never emptied) — see CollectLineCell/BastionBonusCells.
             result.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
+            // "Lueur" currency — a completely separate axis from score,
+            // driven by color DIVERSITY per cleared line rather than points
+            // (see PlacementResult.LueurEarned).
+            result.LueurEarned = ComputeLueurEarned(clearInfo.ClearedLines);
 
             // Updates the streak for the NEXT placement to read (see
             // PlacementsSinceLastClear) — this placement's own clear (if any)
@@ -296,6 +300,35 @@ namespace Contigu.Core
             result.ScoreEvents = events;
 
             return result;
+        }
+
+        /// <summary>
+        /// "Lueur" currency (see PlacementResult.LueurEarned): sums, over
+        /// every line this placement cleared, EconomyConstants.LueurByDistinctColors
+        /// indexed by that one line's own count of distinct non-joker colors
+        /// — a line's color sequence is exactly what the 8 line-pattern
+        /// modifiers (Arc-en-ciel, Alternance, ...) already read off
+        /// <see cref="ClearedLine.Colors"/>, so this reuses that same data
+        /// with no extra bookkeeping.
+        /// </summary>
+        private static int ComputeLueurEarned(IReadOnlyList<ClearedLine> clearedLines)
+        {
+            int total = 0;
+            for (int i = 0; i < clearedLines.Count; i++)
+            {
+                var distinctColors = new HashSet<PieceColor>();
+                var colors = clearedLines[i].Colors;
+                for (int c = 0; c < colors.Count; c++)
+                {
+                    if (colors[c] != PieceColor.Joker)
+                    {
+                        distinctColors.Add(colors[c]);
+                    }
+                }
+                int index = Mathf.Clamp(distinctColors.Count, 0, EconomyConstants.LueurByDistinctColors.Length - 1);
+                total += EconomyConstants.LueurByDistinctColors[index];
+            }
+            return total;
         }
 
         /// <summary>Stacks x2 per copy of "Combo" held, same convention as <see cref="ComputeGroupMultiplier"/> — 1 (no-op) unless the previous placement this round cleared a line.</summary>
@@ -2359,6 +2392,7 @@ namespace Contigu.Core
             outcome.ClearedCells = clearInfo.ClearedCells;
             outcome.ClearedCellColors = clearInfo.ClearedCellColors;
             outcome.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
+            outcome.LueurEarned = ComputeLueurEarned(clearInfo.ClearedLines);
 
             if (clearInfo.ClearedCells.Count > 0)
             {

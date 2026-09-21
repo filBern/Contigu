@@ -1,4 +1,5 @@
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,11 +23,24 @@ namespace Contigu.Presentation
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
         private Text _piecesLabel;
+        private Text _lueurLabel;
 
         public void Build(Transform parent)
         {
             BuildBar(parent, "ScoreBar", UISprites.ScoreBarFill, top: true, out _scoreFillRect, out _scoreLabel);
             BuildBar(parent, "PiecesBar", UISprites.PiecesBarFill, top: false, out _piecesFillRect, out _piecesLabel);
+
+            // Small persistent readout in the top-right corner — Lueur is a
+            // whole-run currency (see RunManager.Lueur), not tied to either
+            // bar's own round-scoped progress, so it gets its own spot
+            // rather than folding into the score bar's label.
+            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 18, VisualDefaults.GoldenColor);
+            _lueurLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
+            _lueurLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _lueurLabel.rectTransform.pivot = new Vector2(1f, 1f);
+            _lueurLabel.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
+            _lueurLabel.rectTransform.sizeDelta = new Vector2(180f, 26f);
+            _lueurLabel.alignment = TextAnchor.MiddleRight;
         }
 
         private static void BuildBar(Transform parent, string name, Sprite fillSprite, bool top,
@@ -76,6 +90,7 @@ namespace Contigu.Presentation
         {
             UpdatePieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             SetScores(run.RoundScore, run.CurrentQuota);
+            _lueurLabel.text = "Lueur: " + run.Lueur;
         }
 
         /// <summary>

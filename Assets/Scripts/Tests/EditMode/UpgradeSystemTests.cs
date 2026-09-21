@@ -7,47 +7,45 @@ namespace Contigu.Tests
     public class UpgradeSystemTests
     {
         [Test]
-        public void RollDraft_ReturnsThreeOptions_WithAtLeastOneBankAndOneGridPick()
+        public void RollFromPool_Bank_OnlyReturnsBankUpgrades()
         {
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
             for (int seed = 0; seed < 20; seed++)
             {
-                var system = new UpgradeSystem(new SystemRandomProvider(seed));
-                var draft = system.RollDraft();
-
-                Assert.AreEqual(3, draft.Options.Length);
-                bool hasBank = false;
-                bool hasGrid = false;
-                foreach (var option in draft.Options)
-                {
-                    hasBank |= option.Pool == UpgradePool.Bank;
-                    hasGrid |= option.Pool == UpgradePool.Grid;
-                }
-                Assert.IsTrue(hasBank, "Draft should always guarantee at least one Bank option");
-                Assert.IsTrue(hasGrid, "Draft should always guarantee at least one Grid option");
+                var picked = system.RollFromPool(UpgradePool.Bank);
+                Assert.AreEqual(UpgradePool.Bank, picked.Pool);
             }
         }
 
         [Test]
-        public void PickDistinct_ReturnsAllEntries_WhenCountExceedsPoolSize()
+        public void RollFromPool_Grid_OnlyReturnsGridUpgrades()
         {
-            var pool = new List<int> { 1, 2, 3 };
-            var picked = UpgradeSystem.PickDistinct(pool, 10, new SystemRandomProvider(1));
-
-            Assert.AreEqual(3, picked.Length);
-            var seen = new HashSet<int>(picked);
-            Assert.AreEqual(3, seen.Count);
-        }
-
-        [Test]
-        public void PickDistinct_ReturnsRequestedCount_WithoutDuplicates()
-        {
-            var pool = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8 };
-            for (int seed = 0; seed < 10; seed++)
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+            for (int seed = 0; seed < 20; seed++)
             {
-                var picked = UpgradeSystem.PickDistinct(pool, 3, new SystemRandomProvider(seed));
-                Assert.AreEqual(3, picked.Length);
-                Assert.AreEqual(3, new HashSet<int>(picked).Count);
+                var picked = system.RollFromPool(UpgradePool.Grid);
+                Assert.AreEqual(UpgradePool.Grid, picked.Pool);
             }
+        }
+
+        [Test]
+        public void RollFromPool_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
+        {
+            // Statistical check of the weighting itself (see
+            // UpgradeRarityUtility.GetDraftWeight: Common=8, Rare=2, a 4x
+            // gap) rather than any single draw — GoldenCells (Common) should
+            // come up clearly more often than VoidTile (Rare).
+            int goldenCount = 0;
+            int voidCount = 0;
+            for (int seed = 0; seed < 500; seed++)
+            {
+                var system = new UpgradeSystem(new SystemRandomProvider(seed));
+                var picked = system.RollFromPool(UpgradePool.Grid);
+                if (picked.Id == UpgradeId.GoldenCells) goldenCount++;
+                if (picked.Id == UpgradeId.VoidTile) voidCount++;
+            }
+
+            Assert.Greater(goldenCount, voidCount, "Common-rarity GoldenCells should come up more often than Rare-rarity VoidTile");
         }
 
         [Test]
@@ -82,206 +80,106 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Apply_GoldenCells_TagsTokensInDeck_NotGridCells()
+        public void Apply_GridPoolUpgrade_ReturnsFalse_NeverTagsAnything()
         {
+            // Grid-pool upgrades no longer go through Apply at all — the shop
+            // always resolves them via GetCandidateTilesFor/ApplyToChosenTiles
+            // instead, since the player picks which tokens get the trait.
             var deck = MakeTwentyTokenDeck();
             var system = new UpgradeSystem(new SystemRandomProvider(2));
 
-            system.Apply(UpgradeCatalog.GoldenCells, default(UpgradeSubChoice), deck);
+            bool applied = system.Apply(UpgradeCatalog.GoldenCells, default(UpgradeSubChoice), deck);
 
-            Assert.AreEqual(UpgradeSystem.GoldenCellsCount, CountTagged(deck, PieceTraitKind.Golden));
+            Assert.IsFalse(applied);
+            Assert.AreEqual(0, CountTagged(deck, PieceTraitKind.Golden));
         }
 
         [Test]
-        public void Apply_TintedCells_TagsTokensWithTheirOwnColor()
+        public void GetCandidateTilesFor_BankUpgrade_ReturnsNoCandidates()
         {
             var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(3));
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
 
-            system.Apply(UpgradeCatalog.TintedCells, default(UpgradeSubChoice), deck);
+            var candidates = system.GetCandidateTilesFor(UpgradeCatalog.JokerPiece, deck);
 
-            int tintedCount = 0;
-            foreach (var token in deck.Deck)
+            Assert.AreEqual(0, candidates.Count);
+        }
+
+        [Test]
+        public void GetCandidateTilesFor_GridUpgrade_ReturnsUpToShopTileCandidateCount()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidateTilesFor(UpgradeCatalog.GoldenCells, deck);
+
+            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, candidates.Count);
+            Assert.AreEqual(candidates.Count, new HashSet<int>(candidates).Count, "Candidates should be distinct deck indices");
+        }
+
+        [Test]
+        public void GetCandidateTilesFor_Tinted_ExcludesJokerTokens()
+        {
+            var tokens = new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Joker) };
+            for (int i = 0; i < 10; i++)
             {
-                if (token.Trait.HasValue && token.Trait.Value.Kind == PieceTraitKind.Tinted)
-                {
-                    tintedCount++;
-                    Assert.IsTrue(token.Trait.Value.TintedColor.HasValue);
-                    // Always the token's own color (never an independently
-                    // rolled one) so the tile is always achievable — see
-                    // DeckManager.TagTintedTokensRandom.
-                    Assert.AreEqual(token.Color, token.Trait.Value.TintedColor.Value);
-                    Assert.AreNotEqual(PieceColor.Joker, token.Trait.Value.TintedColor.Value);
-                }
+                tokens.Add(new PieceToken(ShapeId.Sq2, PieceColor.Coral));
             }
-            Assert.AreEqual(UpgradeSystem.TintedCellsCount, tintedCount);
-        }
+            var deck = new DeckManager(tokens, new SystemRandomProvider(1));
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
 
-        [Test]
-        public void Apply_MultiplierZone_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(4));
+            var candidates = system.GetCandidateTilesFor(UpgradeCatalog.TintedCells, deck);
 
-            system.Apply(UpgradeCatalog.MultiplierZone, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.MultiplierZoneCount, CountTagged(deck, PieceTraitKind.Multiplier));
-        }
-
-        [Test]
-        public void Apply_BlastTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(5));
-
-            system.Apply(UpgradeCatalog.BlastTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.BlastTileCount, CountTagged(deck, PieceTraitKind.Blast));
-        }
-
-        [Test]
-        public void Apply_MultiplierBeacon_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(6));
-
-            system.Apply(UpgradeCatalog.MultiplierBeacon, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.MultiplierBeaconCount, CountTagged(deck, PieceTraitKind.Beacon));
-        }
-
-        [Test]
-        public void Apply_MirrorTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(7));
-
-            system.Apply(UpgradeCatalog.MirrorTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.MirrorTileCount, CountTagged(deck, PieceTraitKind.Mirror));
-        }
-
-        [Test]
-        public void Apply_Seeder_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(8));
-
-            system.Apply(UpgradeCatalog.Seeder, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.SeederCount, CountTagged(deck, PieceTraitKind.Seeder));
-        }
-
-        [Test]
-        public void Apply_CatalystTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(9));
-
-            system.Apply(UpgradeCatalog.CatalystTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.CatalystTileCount, CountTagged(deck, PieceTraitKind.Catalyst));
-        }
-
-        [Test]
-        public void Apply_TwinTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(11));
-
-            system.Apply(UpgradeCatalog.TwinTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.TwinTileCount, CountTagged(deck, PieceTraitKind.Twin));
-        }
-
-        [Test]
-        public void Apply_DetonatorTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(12));
-
-            system.Apply(UpgradeCatalog.DetonatorTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.DetonatorTileCount, CountTagged(deck, PieceTraitKind.Detonator));
-        }
-
-        [Test]
-        public void Apply_ChameleonTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(13));
-
-            system.Apply(UpgradeCatalog.ChameleonTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.ChameleonTileCount, CountTagged(deck, PieceTraitKind.Chameleon));
-        }
-
-        [Test]
-        public void Apply_SparkTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(14));
-
-            system.Apply(UpgradeCatalog.SparkTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.SparkTileCount, CountTagged(deck, PieceTraitKind.Spark));
-        }
-
-        [Test]
-        public void Apply_VoidTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(15));
-
-            system.Apply(UpgradeCatalog.VoidTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.VoidTileCount, CountTagged(deck, PieceTraitKind.Void));
-        }
-
-        [Test]
-        public void Apply_BastionTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(16));
-
-            system.Apply(UpgradeCatalog.BastionTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.BastionTileCount, CountTagged(deck, PieceTraitKind.Bastion));
-        }
-
-        [Test]
-        public void Apply_KamikazeTile_TagsTokensInDeck()
-        {
-            var deck = MakeTwentyTokenDeck();
-            var system = new UpgradeSystem(new SystemRandomProvider(17));
-
-            system.Apply(UpgradeCatalog.KamikazeTile, default(UpgradeSubChoice), deck);
-
-            Assert.AreEqual(UpgradeSystem.KamikazeTileCount, CountTagged(deck, PieceTraitKind.Kamikaze));
-        }
-
-        [Test]
-        public void RollDraft_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
-        {
-            // Statistical check of the weighting itself (see
-            // UpgradeRarityUtility.GetDraftWeight: Common=8, Rare=2, a 4x
-            // gap) rather than any single draw — GoldenCells (Common) should
-            // come up clearly more often than VoidTile (Rare) across many
-            // rolls, even though both are always eligible for the Grid pick.
-            int goldenCount = 0;
-            int mirrorCount = 0;
-            for (int seed = 0; seed < 500; seed++)
+            foreach (var index in candidates)
             {
-                var system = new UpgradeSystem(new SystemRandomProvider(seed));
-                var draft = system.RollDraft();
-                foreach (var option in draft.Options)
-                {
-                    if (option.Id == UpgradeId.GoldenCells) goldenCount++;
-                    if (option.Id == UpgradeId.VoidTile) mirrorCount++;
-                }
+                Assert.AreNotEqual(PieceColor.Joker, deck.Deck[index].Color,
+                    "A Joker token's stored color never resolves to a real one, so Tinted could never fire on it either way");
             }
+        }
 
-            Assert.Greater(goldenCount, mirrorCount, "Common-rarity GoldenCells should be drafted more often than Rare-rarity MirrorTile");
+        [Test]
+        public void ApplyToChosenTiles_TagsExactlyTheGivenIndices()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+            var candidates = system.GetCandidateTilesFor(UpgradeCatalog.GoldenCells, deck);
+            var chosen = new List<int> { candidates[0], candidates[1] };
+
+            bool applied = system.ApplyToChosenTiles(UpgradeCatalog.GoldenCells, chosen, deck);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual(2, CountTagged(deck, PieceTraitKind.Golden));
+            foreach (var index in chosen)
+            {
+                Assert.AreEqual(PieceTraitKind.Golden, deck.Deck[index].Trait.Value.Kind);
+            }
+        }
+
+        [Test]
+        public void ApplyToChosenTiles_Tinted_UsesTheTokensOwnColor()
+        {
+            var deck = MakeTwentyTokenDeck(); // all Coral
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+            var candidates = system.GetCandidateTilesFor(UpgradeCatalog.TintedCells, deck);
+            var chosen = new List<int> { candidates[0] };
+
+            system.ApplyToChosenTiles(UpgradeCatalog.TintedCells, chosen, deck);
+
+            var trait = deck.Deck[chosen[0]].Trait.Value;
+            Assert.AreEqual(PieceTraitKind.Tinted, trait.Kind);
+            Assert.AreEqual(PieceColor.Coral, trait.TintedColor.Value);
+        }
+
+        [Test]
+        public void ApplyToChosenTiles_BankUpgrade_ReturnsFalse_NeverTagsAnything()
+        {
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            bool applied = system.ApplyToChosenTiles(UpgradeCatalog.JokerPiece, new List<int> { 0 }, deck);
+
+            Assert.IsFalse(applied);
+            Assert.AreEqual(0, CountTagged(deck, PieceTraitKind.Golden));
         }
 
         private static DeckManager MakeTwentyTokenDeck()

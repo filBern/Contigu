@@ -20,6 +20,9 @@ namespace Contigu.Core
 
         public int LineClearScore;
 
+        /// <summary>Lueur earned if the lock itself completed a line — same rule as PlacementResult.LueurEarned.</summary>
+        public int LueurEarned;
+
         public IReadOnlyList<ScoreEvent> ScoreEvents = System.Array.Empty<ScoreEvent>();
     }
 }

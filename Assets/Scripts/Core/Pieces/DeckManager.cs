@@ -398,5 +398,74 @@ namespace Contigu.Core
             }
             return chosen;
         }
+
+        /// <summary>
+        /// Up to <paramref name="count"/> random distinct deck indices, using
+        /// the EXACT same candidate-selection rule as <see cref="TagRandomTokens"/>
+        /// (prefer untagged tokens, fall back to any token if there aren't
+        /// enough) — but these are only SHOWN to the player, not tagged. Feeds
+        /// the shop's "choose which tiles get this upgrade" flow (spec: "un
+        /// choix de 5 tiles") — see <see cref="TagSpecificTokens"/> for the
+        /// other half.
+        /// </summary>
+        public IReadOnlyList<int> GetCandidateTokenIndices(int count, IRandomProvider rng, System.Func<PieceToken, bool> eligible = null)
+        {
+            var candidates = new List<int>();
+            for (int i = 0; i < _deck.Count; i++)
+            {
+                if (!_deck[i].Trait.HasValue && (eligible == null || eligible(_deck[i])))
+                {
+                    candidates.Add(i);
+                }
+            }
+            if (candidates.Count < count)
+            {
+                candidates.Clear();
+                for (int i = 0; i < _deck.Count; i++)
+                {
+                    if (eligible == null || eligible(_deck[i]))
+                    {
+                        candidates.Add(i);
+                    }
+                }
+            }
+
+            var chosen = new List<int>();
+            int take = count < candidates.Count ? count : candidates.Count;
+            for (int i = 0; i < take; i++)
+            {
+                int pick = rng.Next(candidates.Count);
+                chosen.Add(candidates[pick]);
+                candidates.RemoveAt(pick);
+            }
+            return chosen;
+        }
+
+        /// <summary>
+        /// Tags EXACTLY the given deck indices with a trait of <paramref
+        /// name="kind"/> — the player-chosen counterpart to the random
+        /// Tag*TokensRandom methods above, used once the shop reveals which
+        /// Grid-pool upgrade a purchased slot actually grants and the player
+        /// picks which of the shown candidates (see
+        /// <see cref="GetCandidateTokenIndices"/>) receive it. One random
+        /// valid local cell index per token, same convention as every
+        /// Tag*TokensRandom method — Tinted is the one kind that also needs
+        /// its target color pinned to the token's own (see
+        /// TagTintedTokensRandom), handled the same way here.
+        /// </summary>
+        public void TagSpecificTokens(IReadOnlyList<int> deckIndices, PieceTraitKind kind, IRandomProvider rng)
+        {
+            for (int i = 0; i < deckIndices.Count; i++)
+            {
+                int deckIndex = deckIndices[i];
+                var token = _deck[deckIndex];
+                int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
+                int localIndex = rng.Next(cellCount);
+                var trait = kind == PieceTraitKind.Tinted
+                    ? new PieceTrait(kind, localIndex, token.Color)
+                    : new PieceTrait(kind, localIndex);
+                _deck[deckIndex] = token.WithTrait(trait);
+            }
+        }
     }
 }

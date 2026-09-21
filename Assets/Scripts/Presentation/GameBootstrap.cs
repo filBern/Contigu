@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -30,8 +31,9 @@ namespace Contigu.Presentation
         private HandView _handView;
         private HudView _hudView;
         private ComboView _comboView;
+        private ShopView _shopView;
         private DraftView _draftView;
-        private ModifierDraftView _modifierDraftView;
+        private TileChoiceView _tileChoiceView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
@@ -196,11 +198,17 @@ namespace Contigu.Presentation
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
 
+            // Layered in this order so later ones render on top: the shop
+            // is the base screen, the sub-choice/tile-choice overlays cover
+            // it once a purchase needs a follow-up.
+            _shopView = gameObject.AddComponent<ShopView>();
+            _shopView.Build(mainRoot, _tooltipView);
+
             _draftView = gameObject.AddComponent<DraftView>();
             _draftView.Build(mainRoot, _run.Deck, _tooltipView);
 
-            _modifierDraftView = gameObject.AddComponent<ModifierDraftView>();
-            _modifierDraftView.Build(mainRoot, _tooltipView);
+            _tileChoiceView = gameObject.AddComponent<TileChoiceView>();
+            _tileChoiceView.Build(mainRoot, _tooltipView);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
@@ -223,8 +231,12 @@ namespace Contigu.Presentation
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;
             _handView.SelectionCleared += OnHandSelectionCleared;
-            _draftView.UpgradeConfirmed += OnUpgradeConfirmed;
-            _modifierDraftView.ModifierPicked += OnModifierPicked;
+            _shopView.ModifierBuyRequested += OnModifierBuyRequested;
+            _shopView.UpgradeBuyRequested += OnUpgradeBuyRequested;
+            _shopView.RerollRequested += OnRerollRequested;
+            _shopView.LeaveRequested += OnLeaveShopRequested;
+            _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
+            _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
         }
 
@@ -452,9 +464,8 @@ namespace Contigu.Presentation
         {
             switch (state)
             {
-                case RunState.AwaitingDraft:
-                    var draft = _run.RollDraftOptions();
-                    _draftView.Show(draft);
+                case RunState.AwaitingShop:
+                    _shopView.Show(_run);
                     break;
 
                 case RunState.RunVictory:
@@ -467,25 +478,69 @@ namespace Contigu.Presentation
             }
         }
 
-        private void OnUpgradeConfirmed(UpgradeDefinition upgrade, UpgradeSubChoice subChoice)
+        // ---- Lueur shop (spec extension, explicit request — replaces the
+        // old draft/modifier-pick screens entirely) ----
+
+        private void OnModifierBuyRequested(int index)
         {
-            _run.ApplyUpgradeAndAdvance(upgrade, subChoice);
-            // State is now AwaitingModifierPick — refresh so any golden/tinted/
-            // multiplier cells the upgrade just added are visible right away,
-            // then offer the modifier draft next.
+            _run.BuyModifierSlot(index);
             RefreshAll();
-            var modifierOptions = _run.RollModifierDraftOptions();
-            _modifierDraftView.ShowPick(modifierOptions);
+            _shopView.Refresh(_run);
         }
 
-        private void OnModifierPicked(ModifierId modifierId)
+        private void OnUpgradeBuyRequested(int index)
         {
-            _run.ApplyModifierPick(modifierId);
-            FinishModifierFlowAndAdvance();
+            if (!_run.BuyUpgradeSlot(index))
+            {
+                return;
+            }
+            RefreshAll();
+            _shopView.Refresh(_run);
+
+            var pending = _run.PendingUpgrade;
+            if (pending == null)
+            {
+                // Bank upgrade with no sub-choice (Joker) — already applied.
+                return;
+            }
+            if (pending.Pool == UpgradePool.Grid)
+            {
+                _tileChoiceView.Show(_run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending.Name);
+            }
+            else
+            {
+                _draftView.ShowForPendingUpgrade(pending);
+            }
         }
 
-        private void FinishModifierFlowAndAdvance()
+        private void OnSubChoiceConfirmed(UpgradeSubChoice subChoice)
         {
+            _run.ResolveUpgradeSubChoice(subChoice);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnTileChoiceConfirmed(IReadOnlyList<int> chosenDeckIndices)
+        {
+            _run.ResolveUpgradeTileChoice(chosenDeckIndices);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnRerollRequested()
+        {
+            _run.RerollShop();
+            _shopView.Refresh(_run);
+            _hudView.Refresh(_run);
+        }
+
+        private void OnLeaveShopRequested()
+        {
+            if (!_run.LeaveShop())
+            {
+                return;
+            }
+            _shopView.Hide();
             RefreshAll();
             _statusText.text = _run.IsBossRound
                 ? "Boss round: every " + RunConfig.BossLockPiecesInterval + " pieces played, the boss locks " + RunConfig.BossLockCellsPerInterval + " more cells."
@@ -500,6 +555,7 @@ namespace Contigu.Presentation
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run.Deck);
             _draftView.Rebind(_run.Deck);
+            _tileChoiceView.Rebind(_run.Deck);
             _deckView.Rebind(_run.Deck);
             _deckView.Hide();
             RefreshAll();

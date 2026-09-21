@@ -40,7 +40,7 @@ namespace Contigu.Presentation
         // Parallel to the active-modifiers list passed to the last Refresh —
         // lets Pulse(id) find the badge currently showing that modifier (each
         // modifier can only be active once per run, see
-        // RunManager.RollModifierDraftOptions).
+        // RunManager.RollModifierSlot).
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
         private readonly List<Image> _rowBadges = new List<Image>();
 

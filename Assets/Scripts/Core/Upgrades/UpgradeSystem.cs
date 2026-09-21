@@ -3,57 +3,14 @@ using System.Collections.Generic;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Rolls draft offers and applies the chosen upgrade's effect. Pools never get
-    /// exhausted: the same upgrade can be offered/picked multiple times in a run,
-    /// stacking its effect.
+    /// Resolves upgrades for the Lueur shop (see RunManager.ShopUpgradeSlots)
+    /// and applies a chosen one's effect. The old round-end draft (RollDraft,
+    /// a guaranteed-Bank/guaranteed-Grid/wildcard pick of 3) is gone — every
+    /// upgrade now comes from a purchased shop slot instead (spec extension,
+    /// explicit request: "je ne veux plus du tout du système actuel").
     /// </summary>
     public sealed class UpgradeSystem
     {
-        /// <summary>How many distinct deck tokens a Golden-cells upgrade enchants (spec 5.4 redesign — each enchantment is one-shot, fired only when that specific token is placed, so this is no longer the permanent-grid-cell count it used to be).</summary>
-        public const int GoldenCellsCount = 3;
-
-        /// <summary>How many distinct deck tokens a Tinted-cells upgrade enchants. See GoldenCellsCount.</summary>
-        public const int TintedCellsCount = 3;
-
-        /// <summary>How many distinct deck tokens a Multiplier-zone upgrade enchants. See GoldenCellsCount.</summary>
-        public const int MultiplierZoneCount = 3;
-
-        /// <summary>How many distinct deck tokens a Blast-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int BlastTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Multiplier-beacon upgrade enchants. See GoldenCellsCount.</summary>
-        public const int MultiplierBeaconCount = 3;
-
-        /// <summary>How many distinct deck tokens a Mirror-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int MirrorTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Seeder upgrade enchants. See GoldenCellsCount.</summary>
-        public const int SeederCount = 3;
-
-        /// <summary>How many distinct deck tokens a Catalyst-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int CatalystTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Twin-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int TwinTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Detonator-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int DetonatorTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Chameleon-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int ChameleonTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Spark-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int SparkTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Void-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int VoidTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Bastion-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int BastionTileCount = 3;
-
-        /// <summary>How many distinct deck tokens a Kamikaze-tile upgrade enchants. See GoldenCellsCount.</summary>
-        public const int KamikazeTileCount = 3;
-
         private readonly IRandomProvider _rng;
 
         public UpgradeSystem(IRandomProvider rng)
@@ -62,35 +19,16 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Rolls a round-end draft of exactly 3 options: one guaranteed Bank
-        /// pick, one guaranteed Grid pick, one random pick from either pool
-        /// (Bank and Grid mixed together) — the player picks exactly one. Each
-        /// pick is weighted by rarity (see PickWeighted), not uniform.
+        /// Rolls one specific upgrade from <paramref name="pool"/>, weighted
+        /// by rarity (see UpgradeRarityUtility.GetDraftWeight) — used to
+        /// decide what a shop Upgrade slot actually grants the moment it's
+        /// rolled (see RunManager.RollUpgradeSlot), independent of whether
+        /// the player ever sees which one it is before buying.
         /// </summary>
-        public UpgradeDraft RollDraft()
+        public UpgradeDefinition RollFromPool(UpgradePool pool)
         {
-            var bankPick = PickWeighted(UpgradeCatalog.BankPool, _rng);
-            var gridPick = PickWeighted(UpgradeCatalog.GridPool, _rng);
-
-            var remainingPool = new List<UpgradeDefinition>();
-            for (int i = 0; i < UpgradeCatalog.All.Length; i++)
-            {
-                var candidate = UpgradeCatalog.All[i];
-                if (candidate != bankPick && candidate != gridPick)
-                {
-                    remainingPool.Add(candidate);
-                }
-            }
-            // Pools never run out, but keep this defensive in case the catalog
-            // ever shrinks to just 2 entries.
-            if (remainingPool.Count == 0)
-            {
-                remainingPool.AddRange(UpgradeCatalog.All);
-            }
-
-            var thirdPick = PickWeighted(remainingPool, _rng);
-
-            return new UpgradeDraft(new[] { bankPick, gridPick, thirdPick });
+            var options = pool == UpgradePool.Bank ? UpgradeCatalog.BankPool : UpgradeCatalog.GridPool;
+            return PickWeighted(options, _rng);
         }
 
         /// <summary>
@@ -122,25 +60,16 @@ namespace Contigu.Core
             return pool[pool.Count - 1];
         }
 
-        /// <summary>Picks up to <paramref name="count"/> distinct entries at random from <paramref name="pool"/>, without replacement (uniform — used for modifiers, which don't carry a rarity).</summary>
-        public static T[] PickDistinct<T>(IReadOnlyList<T> pool, int count, IRandomProvider rng)
-        {
-            var remaining = new List<T>(pool);
-            int take = count < remaining.Count ? count : remaining.Count;
-            var result = new T[take];
-            for (int i = 0; i < take; i++)
-            {
-                int idx = rng.Next(remaining.Count);
-                result[i] = remaining[idx];
-                remaining.RemoveAt(idx);
-            }
-            return result;
-        }
-
         /// <summary>
-        /// Applies the chosen upgrade's permanent effect. Returns false if a
-        /// sub-choice-requiring upgrade could not be resolved (e.g. removing the
-        /// last copy of a type while the deck is at its floor).
+        /// Applies a Bank-pool upgrade's permanent effect (Retirer/Dupliquer/
+        /// Recolorer/Joker) directly to the deck. Grid-pool (tile-trait)
+        /// upgrades no longer go through here at all — the shop always
+        /// resolves them via <see cref="ApplyToChosenTiles"/> instead, since
+        /// the player picks which deck tokens receive the trait rather than
+        /// it being assigned at random (spec: "un choix de 5 tiles"). Returns
+        /// false if a sub-choice-requiring upgrade could not be resolved
+        /// (e.g. removing the last copy of a type while the deck is at its
+        /// floor) or if <paramref name="upgrade"/> isn't a Bank upgrade.
         /// </summary>
         public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, DeckManager deck)
         {
@@ -159,68 +88,70 @@ namespace Contigu.Core
                 case UpgradeId.RecolorPiece:
                     return deck.RecolorOneOfType(subChoice.Shape, subChoice.Color, subChoice.TargetColor);
 
-                case UpgradeId.GoldenCells:
-                    deck.TagGoldenTokensRandom(GoldenCellsCount, _rng);
-                    return true;
-
-                case UpgradeId.TintedCells:
-                    deck.TagTintedTokensRandom(TintedCellsCount, _rng);
-                    return true;
-
-                case UpgradeId.MultiplierZone:
-                    deck.TagMultiplierTokensRandom(MultiplierZoneCount, _rng);
-                    return true;
-
-                case UpgradeId.BlastTile:
-                    deck.TagBlastTokensRandom(BlastTileCount, _rng);
-                    return true;
-
-                case UpgradeId.MultiplierBeacon:
-                    deck.TagBeaconTokensRandom(MultiplierBeaconCount, _rng);
-                    return true;
-
-                case UpgradeId.MirrorTile:
-                    deck.TagMirrorTokensRandom(MirrorTileCount, _rng);
-                    return true;
-
-                case UpgradeId.Seeder:
-                    deck.TagSeederTokensRandom(SeederCount, _rng);
-                    return true;
-
-                case UpgradeId.CatalystTile:
-                    deck.TagCatalystTokensRandom(CatalystTileCount, _rng);
-                    return true;
-
-                case UpgradeId.TwinTile:
-                    deck.TagTwinTokensRandom(TwinTileCount, _rng);
-                    return true;
-
-                case UpgradeId.DetonatorTile:
-                    deck.TagDetonatorTokensRandom(DetonatorTileCount, _rng);
-                    return true;
-
-                case UpgradeId.ChameleonTile:
-                    deck.TagChameleonTokensRandom(ChameleonTileCount, _rng);
-                    return true;
-
-                case UpgradeId.SparkTile:
-                    deck.TagSparkTokensRandom(SparkTileCount, _rng);
-                    return true;
-
-                case UpgradeId.VoidTile:
-                    deck.TagVoidTokensRandom(VoidTileCount, _rng);
-                    return true;
-
-                case UpgradeId.BastionTile:
-                    deck.TagBastionTokensRandom(BastionTileCount, _rng);
-                    return true;
-
-                case UpgradeId.KamikazeTile:
-                    deck.TagKamikazeTokensRandom(KamikazeTileCount, _rng);
-                    return true;
-
                 default:
                     return false;
+            }
+        }
+
+        /// <summary>
+        /// Tags EXACTLY <paramref name="deckIndices"/> (the tokens the player
+        /// picked from the candidates <see cref="GetCandidateTilesFor"/>
+        /// offered) with the <see cref="PieceTrait"/> that <paramref
+        /// name="upgrade"/> grants. False (no-op) for a Bank-pool upgrade,
+        /// which has no trait to apply this way at all.
+        /// </summary>
+        public bool ApplyToChosenTiles(UpgradeDefinition upgrade, IReadOnlyList<int> deckIndices, DeckManager deck)
+        {
+            var kind = TraitKindFor(upgrade.Id);
+            if (!kind.HasValue)
+            {
+                return false;
+            }
+            deck.TagSpecificTokens(deckIndices, kind.Value, _rng);
+            return true;
+        }
+
+        /// <summary>
+        /// The candidate deck tokens to show the player for <paramref
+        /// name="upgrade"/> (see <see cref="DeckManager.GetCandidateTokenIndices"/>)
+        /// — empty for a Bank-pool upgrade, which never needs a tile choice.
+        /// Tinted excludes Joker-colored tokens from candidacy, same as the
+        /// old random tagging did (a Joker cell's stored color never resolves
+        /// to a real one, so Tinted could never fire on it either way).
+        /// </summary>
+        public IReadOnlyList<int> GetCandidateTilesFor(UpgradeDefinition upgrade, DeckManager deck)
+        {
+            var kind = TraitKindFor(upgrade.Id);
+            if (!kind.HasValue)
+            {
+                return System.Array.Empty<int>();
+            }
+            System.Func<PieceToken, bool> eligible = kind.Value == PieceTraitKind.Tinted
+                ? (System.Func<PieceToken, bool>)(token => token.Color != PieceColor.Joker)
+                : null;
+            return deck.GetCandidateTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
+        }
+
+        private static PieceTraitKind? TraitKindFor(UpgradeId id)
+        {
+            switch (id)
+            {
+                case UpgradeId.GoldenCells: return PieceTraitKind.Golden;
+                case UpgradeId.TintedCells: return PieceTraitKind.Tinted;
+                case UpgradeId.MultiplierZone: return PieceTraitKind.Multiplier;
+                case UpgradeId.BlastTile: return PieceTraitKind.Blast;
+                case UpgradeId.MultiplierBeacon: return PieceTraitKind.Beacon;
+                case UpgradeId.MirrorTile: return PieceTraitKind.Mirror;
+                case UpgradeId.Seeder: return PieceTraitKind.Seeder;
+                case UpgradeId.CatalystTile: return PieceTraitKind.Catalyst;
+                case UpgradeId.TwinTile: return PieceTraitKind.Twin;
+                case UpgradeId.DetonatorTile: return PieceTraitKind.Detonator;
+                case UpgradeId.ChameleonTile: return PieceTraitKind.Chameleon;
+                case UpgradeId.SparkTile: return PieceTraitKind.Spark;
+                case UpgradeId.VoidTile: return PieceTraitKind.Void;
+                case UpgradeId.BastionTile: return PieceTraitKind.Bastion;
+                case UpgradeId.KamikazeTile: return PieceTraitKind.Kamikaze;
+                default: return null; // Bank pool — no trait
             }
         }
     }
