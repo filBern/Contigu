@@ -270,6 +270,47 @@ namespace Contigu.Core
             _deck.Add(token);
         }
 
+        /// <summary>
+        /// Mirrors a _deck token edit (<paramref name="before"/> becoming
+        /// <paramref name="after"/>, same shape/color) into whichever of
+        /// _drawPile/_hand currently holds a live copy of it — same idea
+        /// RemoveOneOfType/RecolorOneOfType already follow for their own
+        /// _deck edits. Every Tag* trait-tagging method used to skip this
+        /// entirely (bug report: a shop-purchased tile-upgrade's origin
+        /// badge never actually showed up on the grid) — the tag landed in
+        /// _deck, but the actual PieceToken instance sitting in the draw
+        /// pile or hand (structs are copied by value, so tagging _deck
+        /// doesn't retroactively touch a copy already drawn out of it) kept
+        /// scoring as if untagged until the deck's next full reshuffle,
+        /// which doesn't happen every round — only once _drawPile actually
+        /// runs low (see ReshuffleDrawPile/EnsureDrawPileHasEnough). No-op
+        /// if neither currently holds a matching token — the deck-level tag
+        /// alone is enough then, since that reshuffle will pick it up
+        /// correctly from _deck whenever it does happen.
+        /// </summary>
+        private void SyncTagIntoLiveCopy(PieceToken before, PieceToken after)
+        {
+            int dpIndex = _drawPile.FindIndex(t => t.Shape == before.Shape && t.Color == before.Color && Equals(t.Trait, before.Trait));
+            if (dpIndex >= 0)
+            {
+                _drawPile[dpIndex] = after;
+                return;
+            }
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                if (!_hand[i].HasValue)
+                {
+                    continue;
+                }
+                var handToken = _hand[i].Value;
+                if (handToken.Shape == before.Shape && handToken.Color == before.Color && Equals(handToken.Trait, before.Trait))
+                {
+                    _hand[i] = after;
+                    return;
+                }
+            }
+        }
+
         /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run golden trait on one random cell each (spec 5.4 redesign).</summary>
         public IReadOnlyList<int> TagGoldenTokensRandom(int count, IRandomProvider rng)
         {
@@ -427,7 +468,9 @@ namespace Contigu.Core
                 var token = _deck[deckIndex];
                 int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
                 int localIndex = rng.Next(cellCount);
-                _deck[deckIndex] = token.WithTrait(makeTrait(token, localIndex));
+                var taggedToken = token.WithTrait(makeTrait(token, localIndex));
+                _deck[deckIndex] = taggedToken;
+                SyncTagIntoLiveCopy(token, taggedToken);
             }
             return chosen;
         }
@@ -497,7 +540,9 @@ namespace Contigu.Core
                 var trait = kind == PieceTraitKind.Tinted
                     ? new PieceTrait(kind, localIndex, token.Color)
                     : new PieceTrait(kind, localIndex);
-                _deck[deckIndex] = token.WithTrait(trait);
+                var taggedToken = token.WithTrait(trait);
+                _deck[deckIndex] = taggedToken;
+                SyncTagIntoLiveCopy(token, taggedToken);
             }
         }
     }

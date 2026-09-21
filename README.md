@@ -2427,3 +2427,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Tests réécrits dans `GridManagerTests`.
 - **Score de clear de ligne : 12 → 6 points par tuile**
   (`ScoringConstants.LineClearBonusPerCell`, sur demande explicite).
+- **Fix : le badge d'upgrade de tuile n'apparaissait jamais sur la
+  grille** (sur demande explicite — "j'aimerais qu'on affiche les
+  upgrades des tuiles lorsque celles-ci sont sur la grille et que
+  lorsque ces tuiles sont cleared, on clear aussi les upgrades
+  nécessaire"). La fonctionnalité elle-même existait déjà entièrement
+  côté Core (`Cell.OriginTrait`, effacé par `ClearFill`) et Presentation
+  (badge en coin de `GridCellView`) — clarifié avec le joueur via
+  question directe ("le badge n'apparaît pas du tout en jeu") avant de
+  chercher plus loin, ce qui a permis de trouver le vrai bug plutôt que
+  de re-livrer une fonctionnalité déjà présente. Cause réelle : les
+  upgrades de boutique qui taguent des tuiles existantes
+  (`DeckManager.TagSpecificTokens`/`TagRandomTokens`, utilisés par les
+  upgrades Bastion/Kamikaze/Golden/Tinted/etc.) ne modifiaient que
+  `_deck`, la liste persistante — or `PieceToken` est un `struct`
+  immuable, donc taguer l'entrée dans `_deck` ne se répercutait jamais
+  sur la copie de ce même jeton déjà présente dans `_drawPile` ou en
+  main (`_hand`), contrairement au pattern déjà établi par
+  `RemoveOneOfType`/`RecolorOneOfType` qui synchronisent toujours les
+  deux. Comme `_drawPile` n'est re-tiré de `_deck` qu'en cas de
+  réapprovisionnement (pas à chaque manche) et que la boutique peut
+  s'ouvrir alors qu'il reste encore des pièces en main
+  (`RunState.AwaitingShop` se déclenche dès que le quota est atteint,
+  sans attendre que la main soit vide), une tuile taguée en boutique
+  pouvait rester invisible pendant plusieurs manches. Fix : nouvelle
+  méthode privée `DeckManager.SyncTagIntoLiveCopy` qui recherche la
+  copie vivante correspondante (par forme+couleur+trait d'origine)
+  d'abord dans `_drawPile` puis dans `_hand` et la remplace par la
+  version taguée ; appelée depuis `TagRandomTokens` et
+  `TagSpecificTokens`. Nouveaux tests dans `DeckManagerTests` :
+  `TagSpecificTokens_SyncsTheTagIntoLiveHandAndDrawPileCopies_NotJustDeck`
+  et `TagRandomTokens_AlsoSyncsTheTagIntoTheHand_NotJustDeck`.

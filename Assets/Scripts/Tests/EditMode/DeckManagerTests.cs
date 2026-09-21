@@ -423,5 +423,73 @@ namespace Contigu.Tests
             Assert.AreEqual(PieceTraitKind.Bastion, dm.Deck[bastion[0]].Trait.Value.Kind);
             Assert.AreEqual(PieceTraitKind.Kamikaze, dm.Deck[kamikaze[0]].Trait.Value.Kind);
         }
+
+        [Test]
+        public void TagSpecificTokens_SyncsTheTagIntoLiveHandAndDrawPileCopies_NotJustDeck()
+        {
+            // Regression test (bug report: a shop-purchased tile upgrade's
+            // origin badge never showed up on the grid). TagSpecificTokens
+            // used to only ever touch _deck — since PieceToken is a struct,
+            // that never retroactively reached whatever live copy of that
+            // exact token was already sitting in _hand or _drawPile at the
+            // time, which then kept scoring/rendering as if untagged until
+            // the deck's next full reshuffle (only triggered once _drawPile
+            // actually runs low, not every round — see
+            // ReshuffleDrawPile/EnsureDrawPileHasEnough).
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < 20; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
+            }
+            var dm = new DeckManager(tokens, new SystemRandomProvider(1));
+            // Constructor already drew an initial hand of 3, leaving 17 in
+            // the draw pile — every one of those 20 live tokens is still
+            // untagged Single/Coral at this point.
+
+            var allIndices = new List<int>();
+            for (int i = 0; i < dm.DeckCount; i++)
+            {
+                allIndices.Add(i);
+            }
+            dm.TagSpecificTokens(allIndices, PieceTraitKind.Golden, new SystemRandomProvider(2));
+
+            for (int i = 0; i < dm.Hand.Count; i++)
+            {
+                Assert.IsTrue(dm.Hand[i].HasValue);
+                Assert.IsTrue(dm.Hand[i].Value.Trait.HasValue, "A hand token drawn BEFORE tagging should still end up tagged");
+            }
+
+            // Draws straight from the still-plentiful draw pile (17 left,
+            // nowhere near needing a reshuffle) — these were also already
+            // sitting there before tagging happened.
+            dm.DrawNewHand();
+            for (int i = 0; i < dm.Hand.Count; i++)
+            {
+                Assert.IsTrue(dm.Hand[i].HasValue);
+                Assert.IsTrue(dm.Hand[i].Value.Trait.HasValue, "A draw-pile token drawn BEFORE tagging should still end up tagged, without needing a reshuffle");
+            }
+        }
+
+        [Test]
+        public void TagRandomTokens_AlsoSyncsTheTagIntoTheHand_NotJustDeck()
+        {
+            // Same fix as TagSpecificTokens above (shared SyncTagIntoLiveCopy
+            // helper) — checked here too since every TagXTokensRandom method
+            // goes through the same private TagRandomTokens.
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < DeckManager.MinDeckSize; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
+            }
+            var dm = new DeckManager(tokens, new SystemRandomProvider(1));
+
+            dm.TagGoldenTokensRandom(dm.DeckCount, new SystemRandomProvider(2));
+
+            for (int i = 0; i < dm.Hand.Count; i++)
+            {
+                Assert.IsTrue(dm.Hand[i].HasValue);
+                Assert.IsTrue(dm.Hand[i].Value.Trait.HasValue, "A hand token drawn BEFORE tagging should still end up tagged");
+            }
+        }
     }
 }
