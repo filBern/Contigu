@@ -2287,3 +2287,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `UpgradeSystem.TraitKindFor` rendue publique pour que la
     Présentation puisse prévisualiser quel trait un upgrade Grid donne
     avant qu'il soit réellement appliqué.
+  - Bug signalé : désélectionner une pièce dans `TileChoiceView`
+    pendant qu'on survole son badge de trait laissait le tooltip
+    affiché — `RebuildPreview` détruit le badge au clic sans jamais
+    déclencher `OnPointerExit`. Corrigé à la source dans
+    `TraitBadgeView.OnDestroy` (même `Hide()` inconditionnel que
+    `OnPointerExit`), donc valable pour n'importe quel badge détruit
+    pendant qu'il est survolé, pas seulement ce cas précis.
+  - Bug signalé : la popup "You got:" (Joker) se retrouvait mal
+    positionnée depuis les changements de hauteur du texte de
+    révélation, cachant les emplacements de la boutique derrière elle.
+    Cause : `UpgradeCardFactory.Build` ancre son conteneur renvoyé en
+    (0.5, 1) (haut-centre) de son parent — ça ne marche que si le
+    pivot du parent est LUI AUSSI (0.5, 1) ; celui d'`UpgradeRevealView`
+    était resté à (0.5, 0.5), donc avec sa taille par défaut arbitraire
+    (100x100, jamais fixée) la carte se retrouvait décalée de 50
+    unités sans rapport avec le contenu réel. `DraftView`/
+    `TileChoiceView` avaient déjà le bon pivot, d'où le bug limité à
+    cette seule vue. Corrigé, et `UpgradeRevealView` a reçu au passage
+    le même layout mesuré/centré que `TileChoiceView.LayoutBlock`.
+  - **Reroll** (sur demande explicite) : ne touchait auparavant que
+    les emplacements encore invendus ("on retire les modifiers et
+    upgrades restantes dans la lueur") — un emplacement déjà acheté
+    restait marqué "SOLD" pour le reste de la visite. Changé sur
+    retour explicite ("mes upgrades et modifiers que j'ai acheté sont
+    encore marqué sold, il faut que j'aie tout de disponible") :
+    `RerollShop` retire maintenant la garde `!Purchased` et retire les
+    5 emplacements systématiquement. Ça ne reprend rien de déjà
+    accordé — acheter un emplacement applique déjà le modifier/upgrade
+    de façon permanente ; le reroll ne remplace que l'OFFRE affichée
+    dans cet emplacement. Test `RerollShop_OnlyReplacesStillUnsoldSlots`
+    renommé/réécrit en `RerollShop_ReplacesEverySlot_IncludingAlreadyPurchasedOnes`.

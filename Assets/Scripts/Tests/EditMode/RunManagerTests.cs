@@ -282,23 +282,27 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RerollShop_OnlyReplacesStillUnsoldSlots()
+        public void RerollShop_ReplacesEverySlot_IncludingAlreadyPurchasedOnes()
         {
+            // Used to leave a purchased slot exactly as it was ("SOLD"
+            // forever, for the rest of that shop visit) — changed on
+            // explicit feedback that this read as reroll doing nothing:
+            // "mes upgrades et modifiers que j'ai acheté sont encore
+            // marqué sold, il faut que j'aie tout de disponible".
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
             Assert.IsTrue(run.BuyModifierSlot(0));
             var purchasedId = run.ShopModifierSlots[0].ModifierId;
-            var otherSlotBefore = run.ShopModifierSlots[1].ModifierId;
 
             bool rerolled = run.RerollShop();
 
             Assert.IsTrue(rerolled);
-            Assert.AreEqual(purchasedId, run.ShopModifierSlots[0].ModifierId, "A purchased slot should never change on reroll");
-            Assert.IsTrue(run.ShopModifierSlots[0].Purchased);
-            // The unsold slot may or may not roll the same id again by chance,
-            // but it must always come back unpurchased either way.
+            Assert.IsFalse(run.ShopModifierSlots[0].Purchased, "A previously-sold slot should come back purchasable after a reroll");
             Assert.IsFalse(run.ShopModifierSlots[1].Purchased);
+            // Buying it already permanently granted the modifier — rerolling
+            // the SLOT later must not take that back.
+            CollectionAssert.Contains(run.ActiveModifiers, purchasedId);
         }
 
         [Test]

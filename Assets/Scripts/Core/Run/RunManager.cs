@@ -1069,11 +1069,18 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Refreshes every still-UNSOLD slot with a new random offer — a
-        /// purchased slot stays exactly as it is (spec: "on retire les
-        /// modifiers et upgrades restantes dans la lueur et re-remplir les
-        /// cases"). Costs Lueur (see GetRerollPrice), and itself counts
-        /// toward this visit's price escalation like any other purchase.
+        /// Refreshes every slot — modifier AND upgrade, purchased or not —
+        /// with a new random offer. Used to only touch still-unsold slots
+        /// (leaving a "SOLD" one exactly as it was), but on explicit
+        /// feedback that read as reroll silently doing nothing whenever
+        /// most of the shop had already been bought: "mes upgrades et
+        /// modifiers que j'ai acheté sont encore marqué sold, il faut que
+        /// j'aie tout de disponible". Buying a slot still permanently
+        /// grants whatever it held (the modifier/upgrade is already applied
+        /// by then) — this only replaces the SLOT OFFER itself, giving the
+        /// player a fresh purchasable pick where a spent one used to sit.
+        /// Costs Lueur (see GetRerollPrice), and itself counts toward this
+        /// visit's price escalation like any other purchase.
         /// </summary>
         public bool RerollShop()
         {
@@ -1091,17 +1098,11 @@ namespace Contigu.Core
             _purchasesThisVisit++;
             for (int i = 0; i < _modifierSlots.Length; i++)
             {
-                if (_modifierSlots[i] == null || !_modifierSlots[i].Purchased)
-                {
-                    _modifierSlots[i] = RollModifierSlot();
-                }
+                _modifierSlots[i] = RollModifierSlot();
             }
             for (int i = 0; i < _upgradeSlots.Length; i++)
             {
-                if (_upgradeSlots[i] == null || !_upgradeSlots[i].Purchased)
-                {
-                    _upgradeSlots[i] = RollUpgradeSlot();
-                }
+                _upgradeSlots[i] = RollUpgradeSlot();
             }
             return true;
         }
