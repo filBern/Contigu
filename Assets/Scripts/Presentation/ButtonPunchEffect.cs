@@ -5,7 +5,7 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Brief scale-punch (squish down, spring back) played on click — same
-    /// scale-bounce technique as GridCellView.Pulse()/ComboView.Pulse(), just
+    /// scale-bounce technique as GridCellView.Pulse()/ComboView.PulseChips(), just
     /// triggered by a button click instead of a score event. Added to every
     /// button by UIFactory.FinishButton so all of them (Choose, Cancel,
     /// color picks, restart, ...) get the same tactile click feedback

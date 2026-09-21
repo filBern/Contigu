@@ -476,6 +476,7 @@ namespace Contigu.Presentation
                 chipsTotal += scoreEvent.Amount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
+                _comboView.PulseChips();
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;
@@ -493,6 +494,7 @@ namespace Contigu.Presentation
                 chipsTotal += ScoringConstants.LineClearBonusPerCell;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
+                _comboView.PulseChips();
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;
@@ -514,7 +516,6 @@ namespace Contigu.Presentation
                 // cells count toward both, Tinted only toward GroupMultiplier), so
                 // it's the more informative single label even when the two differ.
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
-                _comboView.Pulse();
 
                 // GroupMultiplier/LineClearMultiplier land on the CHIPS side
                 // of the Balatro-style split (see PlacementResult.Chips),
@@ -525,6 +526,7 @@ namespace Contigu.Presentation
                 chipsTotal += multipliedExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
+                _comboView.PulseChips();
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }

@@ -2713,3 +2713,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     modifier), `TraitBadgeView` (tooltip de trait de pièce) et
     `UpgradeCardFactory` (carte d'upgrade, partagée par la boutique, le
     choix de tuiles et la révélation Joker).
+- **`ComboView` (suite) : pulse séparé sur chips/mult + total du
+  placement affiché au-dessus** (sur demande explicite : "faisons
+  pulse le texte pour point et mult lorsque ceux-ci sont augmenté" +
+  "on peut rajouter en dessous ou en haut de ces deux chiffres le
+  score total du placement").
+  - `ComboView.Pulse()` (rebond sur tout le bloc) supprimée —
+    remplacée entièrement par `PulseChips()`/`PulseMult()`, chacune ne
+    faisant rebondir QUE sa propre pastille. `PulseChips()` est
+    maintenant appelée à chaque fois que `chipsTotal` augmente
+    réellement dans `GameBootstrap.PlayPlacementSequence` (boucle des
+    `ScoreEvent`, boucle des cellules de ligne clearée, et le
+    rattrapage `GroupMultiplier`/`LineClearMultiplier`, qui vit côté
+    chips — voir le point précédent), au même titre que `PulseMult()`
+    était déjà appelée aux rattrapages `ModifierMultiplier`/Combo.
+  - Nouveau texte `TotalText` au-dessus de la rangée chips/mult,
+    affichant `chips * mult` (le score total de la pose en cours,
+    identique à ce que `HudView` finira par refléter dans le score de
+    manche cumulé une fois la séquence terminée) — mis à jour à chaque
+    appel de `Show(chips, mult)`, donc suit exactement le même rythme
+    progressif que les deux pastilles. `ComboView.Build` réorganisé en
+    `VerticalLayoutGroup` (total en haut, rangée chips×mult en bas) au
+    lieu du simple `HorizontalLayoutGroup` d'avant.
