@@ -197,6 +197,17 @@ namespace Contigu.Core
                 if (kind == PieceTraitKind.Chameleon)
                 {
                     placementColor = ResolveChameleonColor(shape, x, y, traitCellPos.Value, token.Color);
+                    if (placementColor != token.Color)
+                    {
+                        // "Si une pièce est recolorée, elle est recolorée
+                        // dans le deck aussi" — see DeckManager.RecolorHandToken.
+                        // Must run before Deck.PlayFromHand below clears this
+                        // slot (harmless either way — PlayFromHand never
+                        // touches the deck itself — but this is the one spot
+                        // that still has both handIndex and the resolved
+                        // color in scope together).
+                        Deck.RecolorHandToken(handIndex, placementColor);
+                    }
                 }
                 else if (kind == PieceTraitKind.Spark)
                 {

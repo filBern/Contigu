@@ -2735,3 +2735,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     progressif que les deux pastilles. `ComboView.Build` réorganisé en
     `VerticalLayoutGroup` (total en haut, rangée chips×mult en bas) au
     lieu du simple `HorizontalLayoutGroup` d'avant.
+- **Chameleon Tile recolore aussi son entrée dans le deck** (idée du
+  joueur : "si une pièce est recolorée, elle est recolorée dans le deck
+  aussi (on garde l'upgrade sur la pièce recolorée)"). Jusqu'ici, la
+  couleur dynamiquement résolue par Chameleon (voir le point plus haut
+  sur le choix du groupe le plus payant) ne s'appliquait qu'à LA POSE —
+  le jeton d'origine dans `_deck` gardait sa couleur de départ pour
+  toujours, donc à chaque nouveau tirage de ce même jeton, Chameleon
+  repartait de zéro sans "mémoire" de la dernière couleur adoptée.
+  - Nouveau `DeckManager.RecolorHandToken(int handIndex, PieceColor
+    newColor)` : recolore le jeton de CET emplacement de main précis
+    (pas de recherche par shape/couleur ambiguë comme
+    `RecolorOneOfType`, qui en plus perd le trait) et propage le même
+    changement vers l'entrée correspondante dans `_deck` — trait
+    conservé intact. `RunManager.PlacePiece` l'appelle juste après
+    `ResolveChameleonColor`, uniquement quand la couleur résolue
+    diffère réellement de la couleur d'origine du jeton (aucun-op si
+    Chameleon garde sa propre couleur faute de voisin).
+  - Résultat : la prochaine fois que ce même jeton est retiré du deck
+    et posé sans voisin rempli à côté, il prend par défaut la DERNIÈRE
+    couleur qu'il a effectivement adoptée plutôt que sa couleur de
+    départ — Chameleon continue bien sûr de préférer un voisin rempli
+    quand il y en a un.
+  - Nouveaux tests : `DeckManagerTests.RecolorHandToken_UpdatesTheHandSlotAndItsOwnDeckEntry_KeepingTrait`,
+    `DeckManagerTests.RecolorHandToken_NoOp_WhenSlotIsEmpty`, et
+    `RunManagerTests.PlacePiece_ChameleonTrait_AlsoRecolorsItsOwnDeckEntry_KeepingItsTrait`.

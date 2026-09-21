@@ -265,6 +265,41 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>
+        /// Chameleon Tile (explicit request — "si une pièce est recolorée,
+        /// elle est recolorée dans le deck aussi (on garde l'upgrade sur la
+        /// pièce recolorée)"): once RunManager.ResolveChameleonColor
+        /// dynamically resolves this hand token's placement color to
+        /// something other than its own, permanently recolors this exact
+        /// deck entry to match — unlike <see cref="RecolorOneOfType"/>
+        /// (the player-chosen Bank-pool upgrade, which targets an arbitrary
+        /// same-shape/color token and always clears its trait), this keeps
+        /// <see cref="PieceToken.Trait"/> intact, and targets the specific
+        /// hand slot's own token rather than searching by shape/color alone
+        /// (no ambiguity with any other identical token elsewhere in the
+        /// deck). So the next time this same entry is drawn with no filled
+        /// neighbor to react to, it "remembers" the last color it actually
+        /// took on instead of reverting to whatever it started as. No-op if
+        /// the slot is empty.
+        /// </summary>
+        public void RecolorHandToken(int handIndex, PieceColor newColor)
+        {
+            if (!_hand[handIndex].HasValue)
+            {
+                return;
+            }
+
+            var current = _hand[handIndex].Value;
+            var recolored = new PieceToken(current.Shape, newColor, current.Trait);
+            _hand[handIndex] = recolored;
+
+            int deckIdx = _deck.FindIndex(t => t.Shape == current.Shape && t.Color == current.Color && Equals(t.Trait, current.Trait));
+            if (deckIdx >= 0)
+            {
+                _deck[deckIdx] = recolored;
+            }
+        }
+
         private void AddToken(PieceToken token)
         {
             _deck.Add(token);

@@ -268,6 +268,66 @@ namespace Contigu.Tests
             Assert.IsFalse(dm.RecolorOneOfType(ShapeId.STetro, PieceColor.Coral, PieceColor.Teal));
         }
 
+        [Test]
+        public void RecolorHandToken_UpdatesTheHandSlotAndItsOwnDeckEntry_KeepingTrait()
+        {
+            // Chameleon Tile (explicit request — "si une pièce est
+            // recolorée, elle est recolorée dans le deck aussi (on garde
+            // l'upgrade sur la pièce recolorée)"). Tags EVERY entry so the
+            // whole deck/draw-pile/hand is uniformly Single/Coral/Chameleon,
+            // removing any ambiguity about which physical copy hand slot 0
+            // actually is.
+            var dm = MakeMinimalDeck(); // 10x Single/Coral
+            var allIndices = new List<int>();
+            for (int i = 0; i < dm.DeckCount; i++)
+            {
+                allIndices.Add(i);
+            }
+            dm.TagSpecificTokens(allIndices, PieceTraitKind.Chameleon, new SystemRandomProvider(2));
+
+            Assert.IsTrue(dm.Hand[0].HasValue);
+            Assert.AreEqual(PieceColor.Coral, dm.Hand[0].Value.Color);
+
+            dm.RecolorHandToken(0, PieceColor.Teal);
+
+            Assert.AreEqual(PieceColor.Teal, dm.Hand[0].Value.Color);
+            Assert.IsTrue(dm.Hand[0].Value.Trait.HasValue, "Recoloring must not drop the trait");
+            Assert.AreEqual(PieceTraitKind.Chameleon, dm.Hand[0].Value.Trait.Value.Kind);
+
+            // Exactly one deck entry moved from Coral to Teal (trait
+            // intact) — unlike RecolorOneOfType, every other entry stays
+            // untouched.
+            int tealCount = 0;
+            int coralCount = 0;
+            for (int i = 0; i < dm.DeckCount; i++)
+            {
+                var t = dm.Deck[i];
+                Assert.IsTrue(t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Chameleon);
+                if (t.Color == PieceColor.Teal)
+                {
+                    tealCount++;
+                }
+                if (t.Color == PieceColor.Coral)
+                {
+                    coralCount++;
+                }
+            }
+            Assert.AreEqual(1, tealCount);
+            Assert.AreEqual(DeckManager.MinDeckSize - 1, coralCount);
+        }
+
+        [Test]
+        public void RecolorHandToken_NoOp_WhenSlotIsEmpty()
+        {
+            var dm = MakeMinimalDeck();
+            dm.PlayFromHand(0, refillIfEmpty: false);
+            Assert.IsFalse(dm.Hand[0].HasValue);
+
+            dm.RecolorHandToken(0, PieceColor.Teal);
+
+            Assert.IsFalse(dm.Hand[0].HasValue);
+        }
+
         private static DeckManager MakeTwentyTokenSq2Deck()
         {
             var tokens = new List<PieceToken>();

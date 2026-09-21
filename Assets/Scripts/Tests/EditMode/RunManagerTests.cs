@@ -1265,6 +1265,55 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_ChameleonTrait_AlsoRecolorsItsOwnDeckEntry_KeepingItsTrait()
+        {
+            // Explicit request: "si une pièce est recolorée, elle est
+            // recolorée dans le deck aussi (on garde l'upgrade sur la
+            // pièce recolorée)" — so the next time this exact deck entry
+            // is drawn with no filled neighbor to react to, it defaults to
+            // the color it last actually took on instead of reverting to
+            // whatever it started as.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var token = run.Deck.Hand[slot].Value;
+            var neighborColor = token.Color == PieceColor.Coral ? PieceColor.Teal : PieceColor.Coral;
+            FillCell(run.Grid, 3, 4, neighborColor); // orthogonal ("up") neighbor of (3,3)
+
+            int originalColorCountBefore = CountChameleonSingles(run.Deck, token.Color);
+            int neighborColorCountBefore = CountChameleonSingles(run.Deck, neighborColor);
+
+            var outcome = run.PlacePiece(slot, 3, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(neighborColor, run.Grid.GetCell(3, 3).FilledColor);
+
+            // Exactly the one token that was actually placed and recolored
+            // moved from the original-color bucket to the neighbor-color
+            // bucket, trait intact — not a whole-type recolor like the
+            // Bank-pool "Recolor a piece" upgrade.
+            Assert.AreEqual(originalColorCountBefore - 1, CountChameleonSingles(run.Deck, token.Color),
+                "The placed token's own deck entry should no longer show the old color");
+            Assert.AreEqual(neighborColorCountBefore + 1, CountChameleonSingles(run.Deck, neighborColor),
+                "The placed token's own deck entry should now show the neighbor's color, Chameleon trait intact");
+        }
+
+        private static int CountChameleonSingles(DeckManager deck, PieceColor color)
+        {
+            int count = 0;
+            for (int i = 0; i < deck.DeckCount; i++)
+            {
+                var t = deck.Deck[i];
+                if (t.Shape == ShapeId.Single && t.Color == color && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Chameleon)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        [Test]
         public void PlacePiece_SparkTrait_ScoresMoreTheLongerSinceTheLastClearThisRound()
         {
             var run = new RunManager(new SystemRandomProvider(1));
