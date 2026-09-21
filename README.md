@@ -2214,16 +2214,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     insuffisant pour acheter quoi que ce soit aux prix d'origine) :
     modifier 20→8, upgrade Bank/Grid 25/40→3 chacun, reroll 15→5
     (`EconomyConstants`).
-  - Révélation d'un upgrade d'emplacement mystère : réutilise désormais
-    la carte visuelle de l'ancien draft (bannière de nom, sous-titre
-    rareté+pool, description — extraite dans `UpgradeCardFactory`,
-    partagée par les 3 points de révélation) au lieu d'un simple nom ou
-    de rien du tout — sur demande explicite ("il faut pouvoir
-    comprendre l'upgrade, on peut réutiliser le visuel qu'on avait
-    avant"). `DraftView` (sous-choix Bank) et `TileChoiceView` (choix
-    de tuiles Grid) l'affichent en en-tête fixe ; nouvelle
-    `UpgradeRevealView` pour Joker, le seul cas qui s'appliquait déjà
-    sans jamais rien montrer au joueur.
+  - Révélation d'un upgrade d'emplacement mystère : affiche désormais
+    nom, rareté+pool et description (`UpgradeCardFactory`, partagée par
+    les 3 points de révélation) au lieu d'un simple nom ou de rien du
+    tout — sur demande explicite ("il faut pouvoir comprendre
+    l'upgrade, on peut réutiliser le visuel qu'on avait avant").
+    `DraftView` (sous-choix Bank) et `TileChoiceView` (choix de tuiles
+    Grid) l'affichent en en-tête fixe ; nouvelle `UpgradeRevealView`
+    pour Joker, le seul cas qui s'appliquait déjà sans jamais rien
+    montrer au joueur. Le premier essai réutilisait littéralement la
+    carte visuelle bordée de l'ancien draft (bannière de nom, fond
+    illustré, hauteur fixe de 234px) mais elle débordait en haut de
+    l'écran par-dessus le reste de la boutique — remplacée sur demande
+    explicite ("c'est trop gros comme écran, au lieu d'une carte on va
+    juste mettre la description en texte blanc") par du texte blanc
+    simple sans fond ni bannière, dont la hauteur réelle est calculée
+    via `Text.cachedTextGenerator` plutôt que fixée à l'avance.
   - Modificateur "Imminent" retiré entièrement (sur demande explicite) :
     `ModifierId`, `ModifierDefinition`, hook de scoring dans
     `GridManager` (plus les deux méthodes utilitaires de ligne/colonne
