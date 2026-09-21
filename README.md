@@ -2458,3 +2458,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `TagSpecificTokens`. Nouveaux tests dans `DeckManagerTests` :
   `TagSpecificTokens_SyncsTheTagIntoLiveHandAndDrawPileCopies_NotJustDeck`
   et `TagRandomTokens_AlsoSyncsTheTagIntoTheHand_NotJustDeck`.
+- **Fix : le badge d'upgrade de tuile n'apparaissait TOUJOURS pas** après
+  le fix ci-dessus (retour explicite : "Les badges ne s'affichent
+  toujours pas"). Cause réelle, cette fois côté rendu pur : dans
+  `GridView.CreateCell`, le badge colorblind `BadgeColorIcon` (icône de
+  54x54 sans aucun pixel transparent, affiché à 48x48 centré sur la
+  cellule) était construit APRÈS les 3 badges de coin
+  (`BadgeGolden`/`BadgeTraitOrigin`/`BadgeSpecial`, 16x16 chacun) — en
+  UI Unity, un enfant construit plus tard s'affiche PAR-DESSUS les
+  précédents, donc ce badge plein et opaque recouvrait entièrement les
+  trois autres dès qu'une cellule était remplie d'une couleur ayant une
+  icône (les 5 couleurs en ont une). Ce bug préexistait déjà pour
+  Golden/Special avant même l'ajout du badge d'origine de trait, mais
+  passait inaperçu car ces deux-là ont un texte de secours redondant
+  (`EffectLabel`, "+18"/"x2"/"x4", construit en tout dernier donc
+  toujours visible) — le badge d'origine de trait, lui, n'a aucun texte
+  de secours, ce qui en a fait le premier cas où la perte est
+  réellement remarquée par le joueur. Fix : `BadgeColorIcon` est
+  maintenant construit en premier (juste après `FillTile`), avant les 3
+  badges de coin, qui s'affichent donc désormais correctement par-dessus
+  lui. Purement un changement d'ordre de construction dans `GridView.cs`
+  (aucun test EditMode possible pour de l'ordre de rendu uGUI — à
+  vérifier visuellement en jeu).

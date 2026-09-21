@@ -81,6 +81,31 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(fillTile.rectTransform);
             fillTile.gameObject.SetActive(false);
 
+            // Colorblind-accessibility icon, centered on the fill so a piece's
+            // color is never the only way to tell it apart from another.
+            // Built BEFORE every corner badge below (Golden/BadgeTraitOrigin/
+            // BadgeSpecial) so they always draw on top of it: its source art
+            // is a fully opaque 54x54 square (no transparent padding), and at
+            // 48x48 centered it geometrically covers all three corners —
+            // created any later, it silently hides every corner badge behind
+            // it on any filled cell with a color that has an icon (all 5 do).
+            // Bug report ("le badge n'apparaît pas du tout en jeu" for the
+            // trait-origin badge specifically): Golden/Tinted/Multiplier
+            // stayed readable regardless via their own redundant EffectLabel
+            // text ("+18", "x2"...), which masked this same pre-existing
+            // ordering bug for them — the trait-origin badge has no such
+            // fallback, so it was the first badge whose loss actually got
+            // noticed.
+            var badgeColorIcon = UIFactory.CreatePanel(cellGo, "BadgeColorIcon", Color.white);
+            UIFactory.SetAnchor(badgeColorIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            badgeColorIcon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            badgeColorIcon.rectTransform.sizeDelta = new Vector2(48f, 48f);
+            badgeColorIcon.rectTransform.anchoredPosition = Vector2.zero;
+            var badgeColorIconOutline = badgeColorIcon.gameObject.AddComponent<Outline>();
+            badgeColorIconOutline.effectColor = new Color(0f, 0f, 0f, 0.6f);
+            badgeColorIconOutline.effectDistance = new Vector2(1f, -1f);
+            badgeColorIcon.gameObject.SetActive(false);
+
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
             badgeGolden.rectTransform.pivot = new Vector2(0f, 1f);
@@ -116,18 +141,6 @@ namespace Contigu.Presentation
             badgeSpecialOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
             badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
-
-            // Colorblind-accessibility icon, centered on the fill so a piece's
-            // color is never the only way to tell it apart from another.
-            var badgeColorIcon = UIFactory.CreatePanel(cellGo, "BadgeColorIcon", Color.white);
-            UIFactory.SetAnchor(badgeColorIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            badgeColorIcon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badgeColorIcon.rectTransform.sizeDelta = new Vector2(48f, 48f);
-            badgeColorIcon.rectTransform.anchoredPosition = Vector2.zero;
-            var badgeColorIconOutline = badgeColorIcon.gameObject.AddComponent<Outline>();
-            badgeColorIconOutline.effectColor = new Color(0f, 0f, 0f, 0.6f);
-            badgeColorIconOutline.effectDistance = new Vector2(1f, -1f);
-            badgeColorIcon.gameObject.SetActive(false);
 
             // Solid marker shown instead of the color-icon preview while
             // hovering an invalid placement — a plain colored square (no
