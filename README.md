@@ -2760,3 +2760,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Nouveaux tests : `DeckManagerTests.RecolorHandToken_UpdatesTheHandSlotAndItsOwnDeckEntry_KeepingTrait`,
     `DeckManagerTests.RecolorHandToken_NoOp_WhenSlotIsEmpty`, et
     `RunManagerTests.PlacePiece_ChameleonTrait_AlsoRecolorsItsOwnDeckEntry_KeepingItsTrait`.
+- **Badges des 4 modificateurs "Devotion" (Coral/Teal/Violet/Lime
+  Devotion)** : montrent maintenant eux aussi une tuile de leur propre
+  couleur, au lieu de leur code à 2 lettres opaque (OC/OT/OV/OL) — sur
+  demande explicite ("Violet devotion manque le preview single piece comme
+  icon de modifier"). Une entrée précédente de ce journal disait
+  Devotion "non concerné" par ce traitement — corrigé ici : Devotion et
+  Glow/Éclat sont en fait la même sorte de modificateur "par couleur" et
+  se lisent exactement pareil (une vraie tuile colorée plutôt qu'un code
+  opaque), donc `ModifierVisualDefaults.GlowColors`/`GetGlowColor` ont été
+  renommés en `ColorTileColors`/`GetColorTileColor` et étendus avec les 4
+  entrées Devotion en plus des 4 Éclat existantes.
+  `ModifierBadgeFactory.Create` appelle `GetColorTileColor` au lieu de
+  l'ancien `GetGlowColor`. Les abréviations OC/OT/OV/OL restent définies
+  dans `Abbreviations` mais ne sont plus utilisées pour ces 4 IDs
+  (même précédent que EC/ET/EV/EL, gardées comme donnée de repli
+  inoffensive).

@@ -132,18 +132,28 @@ namespace Contigu.Data
             return SpecialistShapes.TryGetValue(id, out var shape) ? shape : (ShapeId?)null;
         }
 
-        private static readonly Dictionary<ModifierId, PieceColor> GlowColors = new Dictionary<ModifierId, PieceColor>
+        // Originally just the 4 "Glow" (Éclat) modifiers — extended to the 4
+        // "Devotion" ones too (explicit request: "Violet devotion manque le
+        // preview single piece comme icon de modifier", i.e. Devotion was
+        // missing the same treatment its Éclat sibling already got) since
+        // both families are per-color and read exactly the same way: an
+        // actual colored tile instead of an opaque 2-letter code.
+        private static readonly Dictionary<ModifierId, PieceColor> ColorTileColors = new Dictionary<ModifierId, PieceColor>
         {
             { ModifierId.EclatCoral, PieceColor.Coral },
             { ModifierId.EclatTeal, PieceColor.Teal },
             { ModifierId.EclatViolet, PieceColor.Violet },
-            { ModifierId.EclatLime, PieceColor.Lime }
+            { ModifierId.EclatLime, PieceColor.Lime },
+            { ModifierId.DevotionCoral, PieceColor.Coral },
+            { ModifierId.DevotionTeal, PieceColor.Teal },
+            { ModifierId.DevotionViolet, PieceColor.Violet },
+            { ModifierId.DevotionLime, PieceColor.Lime }
         };
 
-        /// <summary>The color a "Glow" (Éclat) modifier is about, or null for every other modifier — same idea as <see cref="GetSpecialistShape"/>: the badge shows an actual colored tile instead of an opaque 2-letter code, on explicit request ("Coral glow et les 3 autres du genre, on peut mettre l'icon d'une simple tuile... ce sera rapidement clair").</summary>
-        public static PieceColor? GetGlowColor(ModifierId id)
+        /// <summary>The color an Éclat/Devotion (per-color) modifier is about, or null for every other modifier — same idea as <see cref="GetSpecialistShape"/>: the badge shows an actual colored tile instead of an opaque 2-letter code, on explicit request ("Coral glow et les 3 autres du genre, on peut mettre l'icon d'une simple tuile... ce sera rapidement clair", later extended to Devotion the same way).</summary>
+        public static PieceColor? GetColorTileColor(ModifierId id)
         {
-            return GlowColors.TryGetValue(id, out var color) ? color : (PieceColor?)null;
+            return ColorTileColors.TryGetValue(id, out var color) ? color : (PieceColor?)null;
         }
     }
 }

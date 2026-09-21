@@ -14,10 +14,10 @@ namespace Contigu.Presentation
     /// modifiers show a literal black-square preview of the shape they
     /// target (see ModifierVisualDefaults.GetSpecialistShape) instead of an
     /// abbreviation — spelling out a domino/tromino/tetromino name read as
-    /// unclear jargon — and the 4 "Glow" (Éclat) modifiers show an actual
-    /// colored tile in their own color (see
-    /// ModifierVisualDefaults.GetGlowColor) instead of their opaque 2-letter
-    /// code, for the same reason.
+    /// unclear jargon — and the "Glow" (Éclat) and "Devotion" per-color
+    /// modifiers show an actual colored tile in their own color (see
+    /// ModifierVisualDefaults.GetColorTileColor) instead of their opaque
+    /// 2-letter code, for the same reason.
     /// </summary>
     public static class ModifierBadgeFactory
     {
@@ -38,7 +38,7 @@ namespace Contigu.Presentation
             badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
             var specialistShape = ModifierVisualDefaults.GetSpecialistShape(def.Id);
-            var glowColor = ModifierVisualDefaults.GetGlowColor(def.Id);
+            var colorTileColor = ModifierVisualDefaults.GetColorTileColor(def.Id);
             if (specialistShape.HasValue)
             {
                 var preview = UIFactory.CreateUIObject("ShapePreview", badge.transform);
@@ -49,7 +49,7 @@ namespace Contigu.Presentation
                 preview.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
                 ShapePreviewFactory.BuildMono(preview, PieceShapeCatalog.Get(specialistShape.Value), Color.black);
             }
-            else if (glowColor.HasValue)
+            else if (colorTileColor.HasValue)
             {
                 var preview = UIFactory.CreateUIObject("TilePreview", badge.transform);
                 preview.anchorMin = new Vector2(0.5f, 0.5f);
@@ -57,7 +57,7 @@ namespace Contigu.Presentation
                 preview.pivot = new Vector2(0.5f, 0.5f);
                 preview.anchoredPosition = Vector2.zero;
                 preview.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
-                ShapePreviewFactory.Build(preview, PieceShapeCatalog.Get(ShapeId.Single), glowColor.Value, null, tooltip, badge.gameObject);
+                ShapePreviewFactory.Build(preview, PieceShapeCatalog.Get(ShapeId.Single), colorTileColor.Value, null, tooltip, badge.gameObject);
             }
             else
             {
