@@ -62,6 +62,10 @@ namespace Contigu.Presentation
             {
                 DebugForceRoundWin();
             }
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                DebugGrantLueurShortcut();
+            }
 #endif
             // Tab toggles the deck-view overlay (on explicit request: an
             // in-game way to check the deck's composition without waiting
@@ -89,6 +93,20 @@ namespace Contigu.Presentation
             var state = _run.DebugForceRoundComplete();
             RefreshAll();
             HandleStateTransition(state);
+        }
+
+        /// <summary>
+        /// Editor-only debug shortcut (F10): grants 100 Lueur instantly, on
+        /// explicit request — lets the shop be tested (or just played with)
+        /// without grinding out real line clears for it first. Same
+        /// "skip the grind" spirit as F9 above, and likewise stripped from
+        /// real builds by the UNITY_EDITOR guard around this whole block.
+        /// </summary>
+        private void DebugGrantLueurShortcut()
+        {
+            _run.DebugGrantLueur(100);
+            RefreshAll();
+            _shopView.Refresh(_run);
         }
 #endif
 
