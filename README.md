@@ -2395,3 +2395,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     groupe), ligne alternée (8 groupes), plusieurs séquences de la
     même couleur (compte les séquences, pas les couleurs distinctes),
     séquence de Joker (aucun gain mais coupe la contiguïté).
+- **Badges des 4 modificateurs "Glow" (Coral/Teal/Violet/Lime Glow)** :
+  montrent maintenant une tuile de leur propre couleur au lieu de leur
+  code à 2 lettres opaque (EC/ET/EV/EL) — sur demande explicite
+  ("on peut mettre l'icon d'une simple tuile comme icon de modifier,
+  ce sera rapidement clair"). Même mécanisme que les badges Forme*
+  (`ModifierVisualDefaults.GetSpecialistShape`) : nouveau
+  `GetGlowColor` dans `ModifierBadgeFactory.Create`, une tuile Single
+  de la bonne couleur via `ShapePreviewFactory.Build` au lieu du label
+  texte. Partagé par `ShopView` et `ModifierPanelView` (les deux
+  passent par `ModifierBadgeFactory`), donc aucun câblage
+  supplémentaire nécessaire. Les 4 modificateurs "Devotion"
+  (Coral/Teal/Violet/Lime Devotion) sont une famille différente, non
+  concernée — gardent leur code à 2 lettres (OC/OT/OV/OL).

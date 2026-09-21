@@ -131,5 +131,19 @@ namespace Contigu.Data
         {
             return SpecialistShapes.TryGetValue(id, out var shape) ? shape : (ShapeId?)null;
         }
+
+        private static readonly Dictionary<ModifierId, PieceColor> GlowColors = new Dictionary<ModifierId, PieceColor>
+        {
+            { ModifierId.EclatCoral, PieceColor.Coral },
+            { ModifierId.EclatTeal, PieceColor.Teal },
+            { ModifierId.EclatViolet, PieceColor.Violet },
+            { ModifierId.EclatLime, PieceColor.Lime }
+        };
+
+        /// <summary>The color a "Glow" (Éclat) modifier is about, or null for every other modifier — same idea as <see cref="GetSpecialistShape"/>: the badge shows an actual colored tile instead of an opaque 2-letter code, on explicit request ("Coral glow et les 3 autres du genre, on peut mettre l'icon d'une simple tuile... ce sera rapidement clair").</summary>
+        public static PieceColor? GetGlowColor(ModifierId id)
+        {
+            return GlowColors.TryGetValue(id, out var color) ? color : (PieceColor?)null;
+        }
     }
 }

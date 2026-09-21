@@ -10,11 +10,14 @@ namespace Contigu.Presentation
     /// abbreviation, wired to reveal a hover tooltip with the full name/
     /// description) — shared by the modifier draft cards and the persistent
     /// modifier side panel so both stay visually and behaviorally consistent.
-    /// The Forme* "Specialist" modifiers are the one exception: instead of an
-    /// abbreviation they show a literal black-square preview of the shape
-    /// they target (see ModifierVisualDefaults.GetSpecialistShape), on
-    /// explicit request — spelling out a domino/tromino/tetromino name read
-    /// as unclear jargon.
+    /// Two exceptions, both on explicit request: the Forme* "Specialist"
+    /// modifiers show a literal black-square preview of the shape they
+    /// target (see ModifierVisualDefaults.GetSpecialistShape) instead of an
+    /// abbreviation — spelling out a domino/tromino/tetromino name read as
+    /// unclear jargon — and the 4 "Glow" (Éclat) modifiers show an actual
+    /// colored tile in their own color (see
+    /// ModifierVisualDefaults.GetGlowColor) instead of their opaque 2-letter
+    /// code, for the same reason.
     /// </summary>
     public static class ModifierBadgeFactory
     {
@@ -35,6 +38,7 @@ namespace Contigu.Presentation
             badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
             var specialistShape = ModifierVisualDefaults.GetSpecialistShape(def.Id);
+            var glowColor = ModifierVisualDefaults.GetGlowColor(def.Id);
             if (specialistShape.HasValue)
             {
                 var preview = UIFactory.CreateUIObject("ShapePreview", badge.transform);
@@ -44,6 +48,16 @@ namespace Contigu.Presentation
                 preview.anchoredPosition = Vector2.zero;
                 preview.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
                 ShapePreviewFactory.BuildMono(preview, PieceShapeCatalog.Get(specialistShape.Value), Color.black);
+            }
+            else if (glowColor.HasValue)
+            {
+                var preview = UIFactory.CreateUIObject("TilePreview", badge.transform);
+                preview.anchorMin = new Vector2(0.5f, 0.5f);
+                preview.anchorMax = new Vector2(0.5f, 0.5f);
+                preview.pivot = new Vector2(0.5f, 0.5f);
+                preview.anchoredPosition = Vector2.zero;
+                preview.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
+                ShapePreviewFactory.Build(preview, PieceShapeCatalog.Get(ShapeId.Single), glowColor.Value, null, tooltip, badge.gameObject);
             }
             else
             {
