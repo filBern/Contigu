@@ -412,6 +412,27 @@ namespace Contigu.Presentation
                     continue; // played below, synced with each cell's visual clear
                 }
 
+                if (scoreEvent.Type == ScoreEventType.ModifierMultiplier)
+                {
+                    // Amount here is a FACTOR (2, 3...), not points — pulse
+                    // the modifier's own badge with an "xN" popup for
+                    // immediate per-modifier feedback, but the actual score
+                    // catch-up for every ModifierMultiplier combined happens
+                    // once, after this loop (see placement.ModifierMultiplier
+                    // below) — same reasoning as the pre-existing
+                    // GroupMultiplier/ComboMultiplier catch-ups.
+                    if (scoreEvent.TriggeringModifier.HasValue)
+                    {
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                            ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                        _feedbackLayer.SpawnPopup(badgeAnchor, "x" + scoreEvent.Amount, UITheme.ButtonSelected);
+                        _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                    }
+                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+                    staggerSpeed *= ComboSpeedupFactor;
+                    continue;
+                }
+
                 // The tile(s) that actually earned this event's points always
                 // pulse — for a Modifier event this is on top of the badge
                 // pulse below, not instead of it (on explicit request). A
@@ -490,6 +511,32 @@ namespace Contigu.Presentation
 
                 displayedRoundScore += multipliedExtra;
                 comboTotal += multipliedExtra;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+                _comboView.Show(comboTotal);
+
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+            }
+
+            // "ModifierMultiplier" — every xN modifier converted from a flat
+            // bonus to a real multiplier (Prisme, Architecte, Puriste,
+            // Tricolore, Complémentaire, Îlot, Maçon, Démolisseur, Dégradé,
+            // Solitaire, Espace Libre, Rafale, Pont, Grosse Famille,
+            // Repetition, Alternance des pièces, Minimaliste, and the 6
+            // line-pattern modifiers — see PlacementResult.ModifierMultiplier)
+            // — applied the same "catch-up" way as GroupMultiplier/
+            // LineClearMultiplier above, over the whole placement subtotal
+            // so far. Each individual ModifierMultiplier ScoreEvent already
+            // pulsed its own badge above with its own "xN" popup — this is
+            // just the combined score catch-up, same as Combo's below.
+            if (placement.ModifierMultiplier > 1)
+            {
+                int modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (placement.ModifierMultiplier - 1);
+                var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
+                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.ButtonSelected);
+                _comboView.Pulse();
+
+                displayedRoundScore += modifierMultiplierExtra;
+                comboTotal += modifierMultiplierExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(comboTotal);
 

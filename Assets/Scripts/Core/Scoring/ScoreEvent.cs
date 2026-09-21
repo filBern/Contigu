@@ -22,8 +22,11 @@ namespace Contigu.Core
         /// <summary>A Bastion-tile cell whose row/column completed — scores the line-clear bonus like <see cref="LineClear"/>, but the cell itself stays filled/locked instead of being emptied (see Cell.IsBastion).</summary>
         Bastion,
 
-        /// <summary>A bonus from one of the player's active modifiers (see <see cref="ModifierId"/>).</summary>
+        /// <summary>A flat/per-cell bonus from one of the player's active modifiers (see <see cref="ModifierId"/>).</summary>
         Modifier,
+
+        /// <summary>An "xN" placement-wide multiplier contribution from one of the player's active modifiers (see <see cref="ModifierId"/>/<see cref="PlacementResult.ModifierMultiplier"/>) — <see cref="ScoreEvent.Amount"/> is the factor itself (2 for x2, 3 for x3), not a point value.</summary>
+        ModifierMultiplier,
 
         /// <summary>A bonus produced directly by a placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag the group-scoring loop picks up on its own.</summary>
         Trait

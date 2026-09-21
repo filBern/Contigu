@@ -28,9 +28,30 @@ namespace Contigu.Core
         public const int MultiplierZoneMultiplier = 2;
 
         // ---- Modifier bonuses (see ModifierCatalog) ----
+        // A good number of the modifiers below were converted from a flat
+        // "+X pts" bonus to a "xN" MULTIPLIER (feeding
+        // PlacementResult.ModifierMultiplier instead of .ModifierBonus) on
+        // explicit request — "j'aimerais qu'on utilise plus de multiplicateur
+        // dans les modifiers... changer de point vers multiplicateur". Picked
+        // for conversion: every ONE-SHOT conditional bonus (fires at most
+        // once per placement, or once per cleared LINE, never scaling with
+        // group/piece cell count) — kept as flat +pts: every bonus that
+        // already scales per group cell or per placed cell (Forteresse,
+        // Prisonnier, Couronne, Carrefour, Contraste, Emmitouflée, Jardinier,
+        // Cercle Chromatique, Monochrome, Collectionneur, Diagonale, Nid,
+        // Encerclement, Boucher, Éclat x4, Grand/Petit/Hors-Norme Format,
+        // Precision, Surpopulation, Chaîne/Méga-chaîne) — multiplying THOSE
+        // too would let one placement's multiplier scale unboundedly with
+        // however big its group happens to be, which reads as a bug rather
+        // than a feature. The converted ones use xN factors here instead of
+        // pts values — mostly x2 (matching the existing Devotion/Forme/Slot
+        // "doubles" convention), x3 for the rarer/harder-to-trigger ones
+        // (Prisme, Rafale, Puriste). On explicit request, round score quotas
+        // (see RunConfig) were raised to scale exponentially to match the
+        // resulting much bigger placement totals once several of these stack.
 
-        /// <summary>Prisme: flat bonus when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker).</summary>
-        public const int PrismeBonus = 20;
+        /// <summary>Prisme: xN multiplier when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker).</summary>
+        public const int PrismeMultiplier = 3;
         public const int PrismeMinDistinctColors = 4;
 
         /// <summary>Chaîne: flat bonus once the group reaches this many cells.</summary>
@@ -48,21 +69,21 @@ namespace Contigu.Core
         /// <summary>Prisonnier: bonus per group cell whose 4 cardinal neighbors are all filled.</summary>
         public const int PrisonnierBonusPerCell = 4;
 
-        /// <summary>Architecte: flat bonus for placing a 2x2 square piece.</summary>
-        public const int ArchitecteBonus = 15;
+        /// <summary>Architecte: xN multiplier for placing a 2x2 square piece.</summary>
+        public const int ArchitecteMultiplier = 2;
 
         /// <summary>Collectionneur: bonus per distinct color among this placement's cleared cells.</summary>
         public const int CollectionneurBonusPerColor = 8;
 
-        /// <summary>Tricolore: flat bonus when the placement (itself + its direct neighbors) touches exactly this many distinct non-joker colors.</summary>
-        public const int TricoloreBonus = 14;
+        /// <summary>Tricolore: xN multiplier when the placement (itself + its direct neighbors) touches exactly this many distinct non-joker colors.</summary>
+        public const int TricoloreMultiplier = 2;
         public const int TricoloreExactDistinctColors = 3;
 
-        /// <summary>Complémentaire: flat bonus when the placement (itself + its direct neighbors) touches both colors of a complementary pair.</summary>
-        public const int ComplementaireBonus = 16;
+        /// <summary>Complémentaire: xN multiplier when the placement (itself + its direct neighbors) touches both colors of a complementary pair.</summary>
+        public const int ComplementaireMultiplier = 2;
 
-        /// <summary>Îlot: flat bonus when the placement's resulting group is a single isolated cell.</summary>
-        public const int IlotBonus = 8;
+        /// <summary>Îlot: xN multiplier when the placement's resulting group is a single isolated cell.</summary>
+        public const int IlotMultiplier = 2;
 
         /// <summary>Couronne: bonus per group cell sitting on the grid's outer border.</summary>
         public const int CouronneBonusPerCell = 5;
@@ -70,11 +91,11 @@ namespace Contigu.Core
         /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 colors different from BOTH each other and the cell's own color.</summary>
         public const int CarrefourBonusPerCell = 12;
 
-        /// <summary>Maçon: flat bonus for a placement that clears no line/column at all.</summary>
-        public const int MaconBonus = 5;
+        /// <summary>Maçon: xN multiplier for a placement that clears no line/column at all.</summary>
+        public const int MaconMultiplier = 2;
 
-        /// <summary>Démolisseur: bonus per line, only once at least this many rows/columns clear simultaneously.</summary>
-        public const int DemolisseurBonusPerLine = 15;
+        /// <summary>Démolisseur: xN multiplier PER LINE, only once at least this many rows/columns clear simultaneously (stacks — 3 lines at once is xN*xN*xN).</summary>
+        public const int DemolisseurMultiplierPerLine = 2;
         public const int DemolisseurMinLines = 2;
 
         // ---- Second batch of modifier bonuses (see ModifierCatalog) ----
@@ -88,8 +109,8 @@ namespace Contigu.Core
         /// <summary>Contraste: bonus per placed cell with at least one filled orthogonal neighbor of a different color.</summary>
         public const int ContrasteBonusPerCell = 6;
 
-        /// <summary>Dégradé: flat bonus whenever this placement's scored group is strictly larger than the previous placement's this round.</summary>
-        public const int DegradeBonus = 10;
+        /// <summary>Dégradé: xN multiplier whenever this placement's scored group is strictly larger than the previous placement's this round.</summary>
+        public const int DegradeMultiplier = 2;
 
         /// <summary>Emmitouflée: bonus per group cell whose 4 diagonal neighbors are all filled.</summary>
         public const int EmmitoufleeBonusPerCell = 8;
@@ -97,23 +118,23 @@ namespace Contigu.Core
         /// <summary>Jardinier: bonus per group cell orthogonally adjacent to a golden/tinted/multiplier-zone cell.</summary>
         public const int JardinierBonusPerCell = 6;
 
-        /// <summary>Arc-en-ciel: bonus per cleared row/column containing all 4 base colors.</summary>
-        public const int ArcEnCielBonusPerLine = 25;
+        /// <summary>Arc-en-ciel: xN multiplier PER cleared row/column containing all 4 base colors (stacks across simultaneous lines).</summary>
+        public const int ArcEnCielMultiplierPerLine = 2;
 
-        /// <summary>Alternance: bonus per cleared row/column whose colors strictly alternate between exactly 2 colors.</summary>
-        public const int AlternanceBonusPerLine = 16;
+        /// <summary>Alternance: xN multiplier PER cleared row/column whose colors strictly alternate between exactly 2 colors.</summary>
+        public const int AlternanceMultiplierPerLine = 2;
 
-        /// <summary>Palindrome: bonus per cleared row/column whose color sequence reads the same forwards and backwards.</summary>
-        public const int PalindromeBonusPerLine = 18;
+        /// <summary>Palindrome: xN multiplier PER cleared row/column whose color sequence reads the same forwards and backwards.</summary>
+        public const int PalindromeMultiplierPerLine = 2;
 
-        /// <summary>Gradient: bonus per cleared row/column where no two adjacent cells share the same color.</summary>
-        public const int GradientBonusPerLine = 10;
+        /// <summary>Gradient: xN multiplier PER cleared row/column where no two adjacent cells share the same color.</summary>
+        public const int GradientMultiplierPerLine = 2;
 
-        /// <summary>Bloc: bonus per cleared row/column made only of contiguous same-color runs of at least 2.</summary>
-        public const int BlocBonusPerLine = 9;
+        /// <summary>Bloc: xN multiplier PER cleared row/column made only of contiguous same-color runs of at least 2.</summary>
+        public const int BlocMultiplierPerLine = 2;
 
-        /// <summary>Monochrome Ligne: bonus per cleared row/column that is entirely a single color (jokers ignored).</summary>
-        public const int MonochromeLigneBonusPerLine = 24;
+        /// <summary>Monochrome Ligne: xN multiplier PER cleared row/column that is entirely a single color (jokers ignored).</summary>
+        public const int MonochromeLigneMultiplierPerLine = 2;
 
         // ---- Second batch of tile-upgrade (PieceTrait) bonuses ----
 
@@ -144,22 +165,22 @@ namespace Contigu.Core
         /// <summary>Nid: bonus per group cell with exactly 3 of its 4 cardinal neighbors filled.</summary>
         public const int NidBonusPerCell = 3;
 
-        /// <summary>Solitaire: flat bonus when this placement's group is entirely its own piece (more than 1 cell), nothing pre-existing merged in.</summary>
-        public const int SolitaireBonus = 12;
+        /// <summary>Solitaire: xN multiplier when this placement's group is entirely its own piece (more than 1 cell), nothing pre-existing merged in.</summary>
+        public const int SolitaireMultiplier = 2;
 
         /// <summary>Petit Format: bonus per placed cell when the piece has at most this many cells.</summary>
         public const int PetitFormatBonusPerCell = 5;
         public const int PetitFormatMaxPieceSize = 2;
 
-        /// <summary>Fraîcheur: flat bonus when this placement's fill color is nowhere else on the board yet.</summary>
-        public const int FraicheurBonus = 10;
+        /// <summary>Fraîcheur: xN multiplier when this placement's fill color is nowhere else on the board yet.</summary>
+        public const int FraicheurMultiplier = 2;
 
-        /// <summary>Espace Libre: flat bonus once at most this many cells on the whole board are still filled.</summary>
-        public const int EspaceLibreBonus = 15;
+        /// <summary>Espace Libre: xN multiplier once at most this many cells on the whole board are still filled.</summary>
+        public const int EspaceLibreMultiplier = 2;
         public const int EspaceLibreMaxFilledCells = 16; // 25% of the 64-cell board
 
-        /// <summary>Rafale: flat bonus when this placement clears a line AND the immediately previous one this round also did.</summary>
-        public const int RafaleBonus = 20;
+        /// <summary>Rafale: xN multiplier when this placement clears a line AND the immediately previous one this round also did.</summary>
+        public const int RafaleMultiplier = 3;
 
         // ---- Third batch of tile-upgrade (PieceTrait) bonuses ----
 
@@ -168,8 +189,8 @@ namespace Contigu.Core
 
         // ---- Sixth batch of modifier bonuses (player-authored brainstorm, see ModifierCatalog) ----
 
-        /// <summary>Bridge (Pont): bonus per pre-existing group bridged together by this placement beyond the first (bridging 2 groups scores once, 3 groups twice, ...).</summary>
-        public const int PontBonusPerBridge = 15;
+        /// <summary>Bridge (Pont): xN multiplier PER pre-existing group bridged together by this placement beyond the first (bridging 2 groups applies once, 3 groups twice, stacking multiplicatively).</summary>
+        public const int PontMultiplierPerBridge = 2;
 
         /// <summary>Encirclement (Encerclement): bonus per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid — softer than Fortress, which never gives edge/corner cells any credit.</summary>
         public const int EncerclementBonusPerCell = 6;
@@ -177,14 +198,14 @@ namespace Contigu.Core
         /// <summary>Sealer (Boucher): bonus per pre-existing tile that this placement itself causes to become "encircled" (see Encerclement) — i.e. this placement fills the one missing neighbor that was keeping it from qualifying.</summary>
         public const int BoucherBonusPerCell = 10;
 
-        /// <summary>Big Family (Grosse Famille): flat bonus when this placement's color exists in exactly one connected group on the whole board — no other same-color cell anywhere else.</summary>
-        public const int GrosseFamilleBonus = 15;
+        /// <summary>Big Family (Grosse Famille): xN multiplier when this placement's color exists in exactly one connected group on the whole board — no other same-color cell anywhere else.</summary>
+        public const int GrosseFamilleMultiplier = 2;
 
-        /// <summary>Repetition: flat bonus when this piece is the same shape as the immediately previous placement this round.</summary>
-        public const int RepetitionBonus = 10;
+        /// <summary>Repetition: xN multiplier when this piece is the same shape as the immediately previous placement this round.</summary>
+        public const int RepetitionMultiplier = 2;
 
-        /// <summary>Color Switch (Alternance des pièces): flat bonus when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier.</summary>
-        public const int AlternancePiecesBonus = 10;
+        /// <summary>Color Switch (Alternance des pièces): xN multiplier when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier.</summary>
+        public const int AlternancePiecesMultiplier = 2;
 
         /// <summary>Combo: multiplies this placement's ENTIRE total score (see PlacementResult.ComboMultiplier) when the immediately previous placement this round cleared a line — the only modifier that's a true multiplier rather than a flat/per-cell bonus, on explicit request.</summary>
         public const int ComboMultiplierFactor = 2;
@@ -195,7 +216,10 @@ namespace Contigu.Core
         /// <summary>Overcrowding (Surpopulation): bonus per placed cell when EVERY one of this placement's own cells has at least 2 pre-existing filled orthogonal neighbors — a stricter sibling of Precision.</summary>
         public const int SurpopulationBonusPerCell = 8;
 
-        /// <summary>Minimalist (Minimaliste): flat bonus when this placement's whole footprint touches EXACTLY one distinct pre-existing filled cell, total — the "just barely touching" middle ground between Îlot (zero) and Precision (one or more, per cell).</summary>
-        public const int MinimalisteBonus = 12;
+        /// <summary>Minimalist (Minimaliste): xN multiplier when this placement's whole footprint touches EXACTLY one distinct pre-existing filled cell, total — the "just barely touching" middle ground between Îlot (zero) and Precision (one or more, per cell).</summary>
+        public const int MinimalisteMultiplier = 2;
+
+        /// <summary>Puriste: xN multiplier when the placement's scored group is monochrome (jokers ignored) — was "+50% of the group's points" (a de facto x1.5), now a clean xN like every other converted modifier.</summary>
+        public const int PuristeMultiplier = 3;
     }
 }

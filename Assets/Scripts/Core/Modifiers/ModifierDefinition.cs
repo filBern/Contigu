@@ -60,7 +60,7 @@ namespace Contigu.Core
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
             ModifierId.Prisme, ModifierCategory.Couleurs, "Prism",
-            "+20 pts if this placement touches 3 distinct colors.");
+            "x3 multiplier if this placement touches 3 distinct colors.");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
@@ -80,11 +80,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
             ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
-            "+15 pts every time a 2x2 square block is placed.");
+            "x2 multiplier every time a 2x2 square block is placed.");
 
         public static readonly ModifierDefinition Puriste = new ModifierDefinition(
             ModifierId.Puriste, ModifierCategory.Roguelike, "Purist",
-            "+50% of the group's points before bonus.");
+            "x3 multiplier when the placed group is a single color (jokers ignored).");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
@@ -92,15 +92,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
-            "+14 pts if this placement touches 2 other colors.");
+            "x2 multiplier if this placement touches 2 other colors.");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
-            "+16 pts if this placement touches a complementary color pair (Coral/Violet or Teal/Lime).");
+            "x2 multiplier if this placement touches a complementary color pair (Coral/Violet or Teal/Lime).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
-            "+8 pts if the placement forms an isolated single-cell group.");
+            "x2 multiplier if the placement forms an isolated single-cell group.");
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
@@ -112,11 +112,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Mason",
-            "+5 pts for every placement that completes no row/column.");
+            "x2 multiplier for every placement that completes no row/column.");
 
         public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
-            "+15 pts per row/column completed simultaneously by this placement. (Minimum 2)");
+            "x2 multiplier per row/column completed simultaneously by this placement, stacking. (Minimum 2)");
 
         // Very hard to actually trigger (needs 4 filled cardinal neighbors
         // showing all 4 base colors at once) — bonus raised 18->35 on
@@ -135,7 +135,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
             ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
-            "+10 pts whenever this placement's scored group is larger than the group scored by previous placement.");
+            "x2 multiplier whenever this placement's scored group is larger than the group scored by previous placement.");
 
         public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
             ModifierId.Emmitouflee, ModifierCategory.Voisinage, "Cocooned",
@@ -147,27 +147,27 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
-            "+25 pts per cleared row/column containing all 4 base colors.");
+            "x2 multiplier per cleared row/column containing all 4 base colors, stacking.");
 
         public static readonly ModifierDefinition Alternance = new ModifierDefinition(
             ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
-            "+16 pts per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern).");
+            "x2 multiplier per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern), stacking.");
 
         public static readonly ModifierDefinition Palindrome = new ModifierDefinition(
             ModifierId.Palindrome, ModifierCategory.Connexions, "Palindrome",
-            "+18 pts per cleared row/column whose own color sequence reads the same forwards and backwards.");
+            "x2 multiplier per cleared row/column whose own color sequence reads the same forwards and backwards, stacking.");
 
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
-            "+10 pts per cleared row/column where no two adjacent cells share the same color.");
+            "x2 multiplier per cleared row/column where no two adjacent cells share the same color, stacking.");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",
-            "+9 pts per cleared row/column without isolated single cell of its own color.");
+            "x2 multiplier per cleared row/column without isolated single cell of its own color, stacking.");
 
         public static readonly ModifierDefinition MonochromeLigne = new ModifierDefinition(
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
-            "+24 pts per cleared row/column that is entirely a single color.");
+            "x2 multiplier per cleared row/column that is entirely a single color, stacking.");
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Coral Devotion",
@@ -280,15 +280,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
-            "+12 pts when this placement's group is entirely its own piece (more than 1 cell) — nothing pre-existing merged into it.");
+            "x2 multiplier when this placement's group is entirely its own piece (more than 1 cell) — nothing pre-existing merged into it.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Open Space",
-            "+15 pts whenever the board is at most 25% filled once this placement is fully resolved.");
+            "x2 multiplier whenever the board is at most 25% filled once this placement is fully resolved.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
             ModifierId.Rafale, ModifierCategory.Destruction, "Burst",
-            "+20 pts when this placement clears a line AND the immediately previous one this round also did.");
+            "x3 multiplier when this placement clears a line AND the immediately previous one this round also did.");
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
             ModifierId.PetitFormat, ModifierCategory.Roguelike, "Small Format",
@@ -296,7 +296,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
-            "+10 pts when this placement's color isn't anywhere else on the board yet.");
+            "x2 multiplier when this placement's color isn't anywhere else on the board yet.");
 
         // ---- Sixth batch: 11 more, from a player-authored brainstorm list
         // (Équilibriste, Longue série and a second "Solitaire" idea were
@@ -304,7 +304,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Pont = new ModifierDefinition(
             ModifierId.Pont, ModifierCategory.Connexions, "Bridge",
-            "+15 pts per pre-existing group this placement bridges together beyond the first one.");
+            "x2 multiplier per pre-existing group this placement bridges together beyond the first one, stacking.");
 
         public static readonly ModifierDefinition Encerclement = new ModifierDefinition(
             ModifierId.Encerclement, ModifierCategory.Voisinage, "Encirclement",
@@ -316,15 +316,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
             ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Big Family",
-            "+15 pts when this placement's color exists in exactly one connected group on the whole board.");
+            "x2 multiplier when this placement's color exists in exactly one connected group on the whole board.");
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
             ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
-            "+10 pts when this piece is the same shape as the immediately previous placement this round.");
+            "x2 multiplier when this piece is the same shape as the immediately previous placement this round.");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
-            "+10 pts when this piece's color differs from the immediately previous placement's color this round.");
+            "x2 multiplier when this piece's color differs from the immediately previous placement's color this round.");
 
         public static readonly ModifierDefinition Combo = new ModifierDefinition(
             ModifierId.Combo, ModifierCategory.Destruction, "Combo",
@@ -340,7 +340,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
             ModifierId.Minimaliste, ModifierCategory.Voisinage, "Minimalist",
-            "+12 pts when this piece's whole footprint touches EXACTLY one pre-existing filled tile, total.");
+            "x2 multiplier when this piece's whole footprint touches EXACTLY one pre-existing filled tile, total.");
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",

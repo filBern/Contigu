@@ -36,7 +36,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Joker, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.PrismeBonus, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PrismeMultiplier, center.ModifierMultiplier);
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace Contigu.Tests
             // not the "4 distinct" one.
             var center = grid.PlacePiece(single, PieceColor.Teal, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.PrismeBonus, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PrismeMultiplier, center.ModifierMultiplier);
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace Contigu.Tests
             // 2 distinct colors touching, no joker: doesn't qualify either clause.
             var result = grid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -167,14 +167,14 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Architecte };
 
             var squareResult = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.ArchitecteBonus, squareResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.ArchitecteMultiplier, squareResult.ModifierMultiplier);
 
             var singleResult = grid.PlacePiece(single, PieceColor.Lime, 3, 3, modifiers);
-            Assert.AreEqual(0, singleResult.ModifierBonus);
+            Assert.AreEqual(1, singleResult.ModifierMultiplier);
         }
 
         [Test]
-        public void Puriste_AddsHalfGroupBonus_WhenGroupIsMonochromeExcludingJokers()
+        public void Puriste_AppliesItsMultiplier_WhenGroupIsMonochromeExcludingJokers()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2); // 4 cells, alone
@@ -184,7 +184,7 @@ namespace Contigu.Tests
 
             int expectedGroupBonus = 4 * ScoringConstants.GroupBonusPerCell;
             Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
-            Assert.AreEqual(expectedGroupBonus / 2, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace Contigu.Tests
 
             int expectedGroupBonus = 2 * ScoringConstants.GroupBonusPerCell;
             Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
-            Assert.AreEqual(expectedGroupBonus / 2, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -242,7 +242,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void MultipleActiveModifiers_StackTheirBonusesInTheSamePlacement()
+        public void MultipleActiveModifiers_StackTheirMultipliersMultiplicatively()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
@@ -250,13 +250,11 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            int expectedGroupBonus = 4 * ScoringConstants.GroupBonusPerCell;
-            int expectedPuriste = expectedGroupBonus / 2;
-            Assert.AreEqual(ScoringConstants.ArchitecteBonus + expectedPuriste, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.ArchitecteMultiplier * ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
-        public void ScoreEvents_IncludeModifierEntry_WhenAModifierFires()
+        public void ScoreEvents_IncludeModifierMultiplierEntry_WhenAModifierFires()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
@@ -267,7 +265,7 @@ namespace Contigu.Tests
             bool foundModifierEvent = false;
             foreach (var e in result.ScoreEvents)
             {
-                if (e.Type == ScoreEventType.Modifier && e.Amount == ScoringConstants.ArchitecteBonus)
+                if (e.Type == ScoreEventType.ModifierMultiplier && e.Amount == ScoringConstants.ArchitecteMultiplier)
                 {
                     foundModifierEvent = true;
                 }
@@ -289,7 +287,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
             var withThreeColors = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.TricoloreBonus, withThreeColors.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.TricoloreMultiplier, withThreeColors.ModifierMultiplier);
         }
 
         [Test]
@@ -301,7 +299,7 @@ namespace Contigu.Tests
 
             twoColorsGrid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var withTwoColors = twoColorsGrid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
-            Assert.AreEqual(0, withTwoColors.ModifierBonus, "Only 2 distinct colors touching");
+            Assert.AreEqual(1, withTwoColors.ModifierMultiplier, "Only 2 distinct colors touching");
 
             var fourColorsGrid = new GridManager();
             fourColorsGrid.PlacePiece(single, PieceColor.Coral, 2, 1, modifiers);
@@ -309,7 +307,7 @@ namespace Contigu.Tests
             fourColorsGrid.PlacePiece(single, PieceColor.Violet, 3, 2, modifiers);
             fourColorsGrid.PlacePiece(single, PieceColor.Lime, 2, 3, modifiers);
             var withFourColors = fourColorsGrid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
-            Assert.AreEqual(0, withFourColors.ModifierBonus, "4 distinct colors touching no longer qualifies — exactly 3 required");
+            Assert.AreEqual(1, withFourColors.ModifierMultiplier, "4 distinct colors touching no longer qualifies — exactly 3 required");
         }
 
         [Test]
@@ -322,7 +320,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.ComplementaireBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.ComplementaireMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -335,7 +333,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -347,7 +345,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
 
-            Assert.AreEqual(ScoringConstants.IlotBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.IlotMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -360,7 +358,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -460,7 +458,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.MaconBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.MaconMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -476,7 +474,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -502,7 +500,7 @@ namespace Contigu.Tests
             // Row 0 (8 cells) + column 0 (8 cells) share exactly 1 cell (0,0),
             // so 15 distinct cells clear — confirms both lines completed.
             Assert.AreEqual(2 * GridManager.Size - 1, finalResult.LineClearCellCount);
-            Assert.AreEqual(2 * ScoringConstants.DemolisseurBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.DemolisseurMultiplierPerLine * ScoringConstants.DemolisseurMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -518,7 +516,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -534,11 +532,11 @@ namespace Contigu.Tests
             ModifierId? puristeTag = null;
             foreach (var e in result.ScoreEvents)
             {
-                if (e.Type != ScoreEventType.Modifier)
+                if (e.Type != ScoreEventType.ModifierMultiplier)
                 {
                     continue;
                 }
-                if (e.Amount == ScoringConstants.ArchitecteBonus)
+                if (e.Amount == ScoringConstants.ArchitecteMultiplier)
                 {
                     architecteTag = e.TriggeringModifier;
                 }
@@ -662,15 +660,15 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Degrade };
 
             var first = grid.PlacePiece(single, PieceColor.Coral, 0, 5, modifiers);
-            Assert.AreEqual(0, first.ModifierBonus, "No previous placement this round to compare against yet");
+            Assert.AreEqual(1, first.ModifierMultiplier, "No previous placement this round to compare against yet");
 
             // Merges with the first cell: group grows from 1 to 2 -> strictly bigger.
             var second = grid.PlacePiece(single, PieceColor.Coral, 1, 5, modifiers);
-            Assert.AreEqual(ScoringConstants.DegradeBonus, second.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.DegradeMultiplier, second.ModifierMultiplier);
 
             // A fresh, unconnected single-cell group (size 1) isn't bigger than the previous placement's 2.
             var third = grid.PlacePiece(single, PieceColor.Teal, 7, 7, modifiers);
-            Assert.AreEqual(0, third.ModifierBonus);
+            Assert.AreEqual(1, third.ModifierMultiplier);
         }
 
         [Test]
@@ -686,7 +684,7 @@ namespace Contigu.Tests
             grid.ResetForNewRound();
 
             var afterReset = grid.PlacePiece(single, PieceColor.Teal, 4, 4, modifiers);
-            Assert.AreEqual(0, afterReset.ModifierBonus, "ResetForNewRound should clear the tracked previous group size");
+            Assert.AreEqual(1, afterReset.ModifierMultiplier, "ResetForNewRound should clear the tracked previous group size");
         }
 
         [Test]
@@ -757,7 +755,7 @@ namespace Contigu.Tests
             var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
-            Assert.AreEqual(ScoringConstants.ArcEnCielBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.ArcEnCielMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -773,7 +771,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -794,7 +792,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, 7, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.AlternanceBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.AlternanceMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -815,7 +813,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -836,7 +834,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.PalindromeBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PalindromeMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -852,7 +850,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -873,7 +871,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.GradientBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.GradientMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -889,7 +887,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -910,7 +908,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.BlocBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.BlocMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -931,7 +929,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus, "The lone Teal cell at index 2 has no matching neighbor on either side");
+            Assert.AreEqual(1, finalResult.ModifierMultiplier, "The lone Teal cell at index 2 has no matching neighbor on either side");
         }
 
         [Test]
@@ -947,7 +945,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.MonochromeLigneBonusPerLine, finalResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.MonochromeLigneMultiplierPerLine, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -963,7 +961,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(0, finalResult.ModifierBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
 
         // ---- Third batch (basic per-color / per-shape modifiers) ----
@@ -977,7 +975,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(result.GroupBonus, result.ModifierBonus, "Devotion should exactly double the group bonus (100%, not Puriste's 50%)");
+            Assert.AreEqual(result.GroupBonus, result.ModifierBonus, "Devotion adds a flat bonus equal to the group bonus (still additive, unlike Puriste's xN multiplier)");
         }
 
         [Test]
@@ -1213,12 +1211,12 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Solitaire };
 
             var first = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.SolitaireBonus, first.ModifierBonus, "Brand new 2-cell group, nothing pre-existing merged in");
+            Assert.AreEqual(ScoringConstants.SolitaireMultiplier, first.ModifierMultiplier, "Brand new 2-cell group, nothing pre-existing merged in");
 
             // Adjacent, same color — merges into the existing group, so it's
             // no longer "solitary".
             var second = grid.PlacePiece(domH, PieceColor.Coral, 2, 0, modifiers);
-            Assert.AreEqual(0, second.ModifierBonus);
+            Assert.AreEqual(1, second.ModifierMultiplier);
         }
 
         [Test]
@@ -1230,7 +1228,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus, "Îlot already covers the size-1 case");
+            Assert.AreEqual(1, result.ModifierMultiplier, "Îlot already covers the size-1 case");
         }
 
         [Test]
@@ -1260,13 +1258,13 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Fraicheur };
 
             var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.FraicheurBonus, first.ModifierBonus, "First Coral tile on an empty board should be fresh");
+            Assert.AreEqual(ScoringConstants.FraicheurMultiplier, first.ModifierMultiplier, "First Coral tile on an empty board should be fresh");
 
             var second = grid.PlacePiece(single, PieceColor.Coral, 5, 5, modifiers);
-            Assert.AreEqual(0, second.ModifierBonus, "Coral is already on the board, no longer fresh");
+            Assert.AreEqual(1, second.ModifierMultiplier, "Coral is already on the board, no longer fresh");
 
             var third = grid.PlacePiece(single, PieceColor.Teal, 7, 7, modifiers);
-            Assert.AreEqual(ScoringConstants.FraicheurBonus, third.ModifierBonus, "Teal is still new to the board");
+            Assert.AreEqual(ScoringConstants.FraicheurMultiplier, third.ModifierMultiplier, "Teal is still new to the board");
         }
 
         [Test]
@@ -1277,7 +1275,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.EspaceLibre };
 
             var early = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
-            Assert.AreEqual(ScoringConstants.EspaceLibreBonus, early.ModifierBonus, "Board is nearly empty, should fire");
+            Assert.AreEqual(ScoringConstants.EspaceLibreMultiplier, early.ModifierMultiplier, "Board is nearly empty, should fire");
 
             // Fill past the 16-cell (25%) threshold without ever completing a
             // row/column (each of these 3 rows leaves its last column empty).
@@ -1290,7 +1288,7 @@ namespace Contigu.Tests
             }
 
             var late = grid.PlacePiece(single, PieceColor.Violet, 0, 3, modifiers);
-            Assert.AreEqual(0, late.ModifierBonus, "Board should no longer count as open once past the threshold");
+            Assert.AreEqual(1, late.ModifierMultiplier, "Board should no longer count as open once past the threshold");
         }
 
         [Test]
@@ -1311,7 +1309,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Rafale };
             var second = grid.PlacePiece(single, PieceColor.Teal, 7, 1, modifiers); // completes row 1, right after another clear
 
-            Assert.AreEqual(ScoringConstants.RafaleBonus, second.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.RafaleMultiplier, second.ModifierMultiplier);
         }
 
         [Test]
@@ -1330,7 +1328,7 @@ namespace Contigu.Tests
             var clearing = grid.PlacePiece(single, PieceColor.Teal, 7, 2, modifiers); // completes row 2
 
             Assert.Greater(clearing.LineClearScore, 0, "Sanity check: row 2 should have cleared");
-            Assert.AreEqual(0, clearing.ModifierBonus, "Previous placement didn't clear, so Rafale shouldn't fire");
+            Assert.AreEqual(1, clearing.ModifierMultiplier, "Previous placement didn't clear, so Rafale shouldn't fire");
         }
 
         // ---- Sixth batch: 11 more modifiers (player-authored brainstorm, on explicit request) ----
@@ -1348,7 +1346,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Pont };
             var bridge = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.PontBonusPerBridge, bridge.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PontMultiplierPerBridge, bridge.ModifierMultiplier);
         }
 
         [Test]
@@ -1361,7 +1359,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -1417,11 +1415,11 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.GrosseFamille };
 
             var solo = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.GrosseFamilleBonus, solo.ModifierBonus, "Only Coral group on the board");
+            Assert.AreEqual(ScoringConstants.GrosseFamilleMultiplier, solo.ModifierMultiplier, "Only Coral group on the board");
 
             // A second, disconnected Coral group elsewhere breaks the "single group" condition.
             var second = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
-            Assert.AreEqual(0, second.ModifierBonus);
+            Assert.AreEqual(1, second.ModifierMultiplier);
         }
 
         [Test]
@@ -1435,10 +1433,10 @@ namespace Contigu.Tests
 
             var modifiers = new List<ModifierId> { ModifierId.Repetition };
             var sameShape = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.RepetitionBonus, sameShape.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.RepetitionMultiplier, sameShape.ModifierMultiplier);
 
             var differentShape = grid.PlacePiece(domH, PieceColor.Violet, 5, 5, modifiers);
-            Assert.AreEqual(0, differentShape.ModifierBonus);
+            Assert.AreEqual(1, differentShape.ModifierMultiplier);
         }
 
         [Test]
@@ -1451,10 +1449,10 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
 
             var differentColor = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.AlternancePiecesBonus, differentColor.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.AlternancePiecesMultiplier, differentColor.ModifierMultiplier);
 
             var sameColor = grid.PlacePiece(single, PieceColor.Teal, 5, 5, modifiers);
-            Assert.AreEqual(0, sameColor.ModifierBonus);
+            Assert.AreEqual(1, sameColor.ModifierMultiplier);
         }
 
         [Test]
@@ -1559,7 +1557,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 3, 2);
             var result = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
 
-            Assert.AreEqual(ScoringConstants.MinimalisteBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.MinimalisteMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -1571,7 +1569,7 @@ namespace Contigu.Tests
 
             var zero = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(0, zero.ModifierBonus, "Zero neighbors is Îlot's territory, not Minimaliste's");
+            Assert.AreEqual(1, zero.ModifierMultiplier, "Zero neighbors is Îlot's territory, not Minimaliste's");
         }
 
         [Test]

@@ -2578,3 +2578,69 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     de balayage ; voisin de droite = groupe de 3 cellules déjà
     connectées — les deux vérifient que le résultat rejoint bien le
     plus gros groupe, pas le premier trouvé).
+- **24 modifiers convertis de bonus fixe (+X pts) vers multiplicateur
+  (xN)** (sur demande explicite : "j'aimerais qu'on utilise plus de
+  multiplicateur dans les modifiers, peut-être en changer pour changer
+  de point vers multiplicateur" — question de suivi sur l'ampleur
+  répondue "une bonne partie" avec "remplace entièrement" plutôt que
+  cumuler bonus+multiplicateur). Choix des 24 (sur ~45 additifs) :
+  uniquement les bonus CONDITIONNELS ONE-SHOT (au plus une fois par
+  pose, ou une fois par LIGNE cleared) — Prisme, Architecte, Puriste,
+  Tricolore, Complémentaire, Îlot, Maçon, Démolisseur, Dégradé,
+  Solitaire, Espace Libre, Rafale, Pont, Grosse Famille, Repetition,
+  Alternance des pièces, Minimaliste, et les 6 modifiers "par ligne"
+  (Arc-en-ciel, Alternance, Palindrome, Gradient, Bloc, Monochrome
+  Ligne). Gardés en +X pts : tout ce qui scale déjà avec la taille du
+  groupe/de la pièce (Forteresse, Prisonnier, Couronne, Carrefour,
+  Contraste, Emmitouflée, Jardinier, Cercle Chromatique, Monochrome,
+  Collectionneur, Diagonale, Nid, Encerclement, Boucher, Éclat x4,
+  Grand/Petit/Hors-Norme Format, Precision, Surpopulation,
+  Chaîne/Méga-chaîne) — un multiplicateur qui grossirait avec le
+  nombre de cellules aurait un plafond totalement imprévisible.
+  Facteurs : xN mostly = x2 (même convention que Devotion/Forme/Slot
+  qui doublent déjà), x3 pour les plus rares/puissants (Prisme, Rafale,
+  Puriste — qui était "+50% des points du groupe", devient un x3 propre
+  plutôt qu'un ×1.5 cousu à la main).
+  - Nouveau `PlacementResult.ModifierMultiplier` (parallèle à
+    `GroupMultiplier`/`LineClearMultiplier`/`ComboMultiplier`, stacke
+    multiplicativement comme eux) ; `TotalScore` refactorisé en
+    `Chips * Mult` (nouvelles propriétés `Chips`/`Mult`, exactement le
+    split Balatro "score de base" / "multiplicateur final" —
+    prépare le prochain point sur l'affichage façon Balatro).
+  - `GridManager.ApplyPreClearModifiers`/`ApplyPostClearModifiers`
+    renvoient maintenant aussi un `out int modifierMultiplier` (stack
+    multiplicatif de chaque modifier converti qui a fait mouche cette
+    pose), en plus du bonus additif existant (`total`) pour les
+    modifiers non-convertis. Les 24 méthodes `ApplyXxx` correspondantes
+    renvoient désormais un FACTEUR (1 = no-op, N = déclenché) au lieu
+    d'un bonus (0 = no-op, N = déclenché) ; `ApplyPerLineBonus` (les 6
+    modifiers de ligne) renommée `ApplyPerLineMultiplier` avec la même
+    logique.
+  - Nouveau `ScoreEventType.ModifierMultiplier` (Amount = le facteur,
+    pas des points) pour que la présentation distingue un événement
+    "+X points" d'un événement "×N".
+  - `GameBootstrap.PlayPlacementSequence` : chaque événement
+    `ModifierMultiplier` pulse le badge du modifier concerné avec un
+    popup "xN" immédiat (feedback par-modifier, comme avant pour les
+    bonus fixes), mais son montant n'est PAS ajouté directement au
+    score affiché (ce serait faux : c'est un facteur, pas des points) —
+    un unique rattrapage combiné après la boucle (même mécanique que
+    les rattrapages `GroupMultiplier`/`ComboMultiplier` déjà en place)
+    applique `placement.ModifierMultiplier` sur tout le sous-total
+    affiché jusque-là.
+  - Fix collatéral découvert en cours de route :
+    `RunManager.CountModifierUsage` (stat "utilisé N fois" du tooltip)
+    ne comptait que les événements `ScoreEventType.Modifier` — les 24
+    modifiers convertis auraient donc arrêté d'incrémenter ce compteur
+    silencieusement. Corrigé pour compter aussi
+    `ScoreEventType.ModifierMultiplier`. Nouveau test
+    `RunManagerTests.GetModifierUsageCount_AlsoIncrements_ForAModifierMultiplierEvent`.
+  - Descriptions des 24 modifiers dans `ModifierCatalog` réécrites de
+    "+X pts" vers "xN multiplier".
+  - Tests : les ~45 assertions de `GridManagerModifierTests` touchant
+    ces 24 modifiers réécrites (`ModifierBonus`→`ModifierMultiplier`,
+    valeurs attendues recalculées), y compris les tests "ne se
+    déclenche pas" qui vérifiaient auparavant `ModifierBonus == 0` —
+    une assertion devenue vide de sens pour un modifier qui n'écrit
+    plus jamais dans `ModifierBonus`, corrigée en
+    `ModifierMultiplier == 1`.

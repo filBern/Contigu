@@ -579,21 +579,26 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Tallies every <see cref="ScoreEventType.Modifier"/> event in this
+        /// Tallies every <see cref="ScoreEventType.Modifier"/> AND <see
+        /// cref="ScoreEventType.ModifierMultiplier"/> event in this
         /// placement's final <see cref="PlacementResult.ScoreEvents"/> — called
         /// last, after every modifier bonus (GridManager's own plus the
         /// hand-slot ones added above) has already been appended, so it sees
         /// the complete list regardless of which method actually produced
         /// each event. Powers the "used N times" tooltip stat (see
         /// GetModifierUsageCount) — a modifier only counts as "used" the
-        /// instant it actually scores, not just while merely held.
+        /// instant it actually scores, not just while merely held. Counts
+        /// ModifierMultiplier too since converting a modifier from a flat
+        /// bonus to a multiplier (see PlacementResult.ModifierMultiplier)
+        /// shouldn't silently stop it from ever incrementing this stat again.
         /// </summary>
         private void CountModifierUsage(PlacementResult placement)
         {
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                if (scoreEvent.Type != ScoreEventType.Modifier || !scoreEvent.TriggeringModifier.HasValue)
+                bool isModifierEvent = scoreEvent.Type == ScoreEventType.Modifier || scoreEvent.Type == ScoreEventType.ModifierMultiplier;
+                if (!isModifierEvent || !scoreEvent.TriggeringModifier.HasValue)
                 {
                     continue;
                 }

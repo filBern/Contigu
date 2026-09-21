@@ -1630,5 +1630,25 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, run.GetModifierUsageCount(ModifierId.SlotUn));
         }
+
+        [Test]
+        public void GetModifierUsageCount_AlsoIncrements_ForAModifierMultiplierEvent()
+        {
+            // Regression test: CountModifierUsage used to only tally
+            // ScoreEventType.Modifier events, so a modifier converted from a
+            // flat bonus to a multiplier (ScoreEventType.ModifierMultiplier —
+            // see PlacementResult.ModifierMultiplier) would silently stop
+            // ever incrementing this stat, even though it still fires every
+            // placement it qualifies for.
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Architecte);
+
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Sq2);
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.Greater(outcome.Placement.ModifierMultiplier, 1);
+            Assert.AreEqual(1, run.GetModifierUsageCount(ModifierId.Architecte));
+        }
     }
 }

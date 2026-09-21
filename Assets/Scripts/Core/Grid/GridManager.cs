@@ -247,9 +247,11 @@ namespace Contigu.Core
             result.LineClearMultiplier = lineClearMultiplier;
 
             int modifierBonus = 0;
+            int modifierMultiplier = 1;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, previousShapeId, previousPlacedColor);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, previousShapeId, previousPlacedColor, out int preMultiplier);
+                modifierMultiplier *= preMultiplier;
             }
 
             var clearInfo = CheckAndClearLines();
@@ -290,15 +292,18 @@ namespace Contigu.Core
 
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier);
+                modifierMultiplier *= postMultiplier;
             }
 
             result.ModifierBonus = modifierBonus;
+            result.ModifierMultiplier = modifierMultiplier;
             // "Combo": reuses the exact same "did the previous placement
             // clear?" signal as Rafale, but multiplies the WHOLE placement's
-            // total instead of adding a flat bonus (see
-            // PlacementResult.ComboMultiplier/.TotalScore) — the one
-            // modifier here that isn't a flat/per-cell bonus.
+            // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
+            // tier as ModifierMultiplier above, kept as its own field since
+            // it's resolved from round-streak state Compute*Modifiers above
+            // doesn't otherwise need.
             result.ComboMultiplier = ComputeComboMultiplier(activeModifiers, clearedByPreviousPlacement);
             result.ScoreEvents = events;
 
@@ -391,7 +396,7 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, ShapeId? previousShapeId, PieceColor? previousPlacedColor)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, ShapeId? previousShapeId, PieceColor? previousPlacedColor, out int modifierMultiplier)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
@@ -404,6 +409,7 @@ namespace Contigu.Core
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
             int total = 0;
+            int multiplier = 1;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -412,7 +418,8 @@ namespace Contigu.Core
                 switch (id)
                 {
                     case ModifierId.Prisme:
-                        bonus = ApplyPrisme(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyPrisme(placedCells, events);
                         break;
                     case ModifierId.Chaine:
                         bonus = ApplyChaine(groupCells, placedCells, events);
@@ -427,19 +434,24 @@ namespace Contigu.Core
                         bonus = ApplyPrisonnier(groupCells, events);
                         break;
                     case ModifierId.Architecte:
-                        bonus = ApplyArchitecte(shape, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyArchitecte(shape, placedCells, events);
                         break;
                     case ModifierId.Puriste:
-                        bonus = ApplyPuriste(groupCells, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyPuriste(groupCells, placedCells, groupBonus, events);
                         break;
                     case ModifierId.Tricolore:
-                        bonus = ApplyTricolore(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyTricolore(placedCells, events);
                         break;
                     case ModifierId.Complementaire:
-                        bonus = ApplyComplementaire(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyComplementaire(placedCells, events);
                         break;
                     case ModifierId.Ilot:
-                        bonus = ApplyIlot(groupCells, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyIlot(groupCells, placedCells, events);
                         break;
                     case ModifierId.Couronne:
                         bonus = ApplyCouronne(groupCells, events);
@@ -457,7 +469,8 @@ namespace Contigu.Core
                         bonus = ApplyContraste(placedCells, events);
                         break;
                     case ModifierId.Degrade:
-                        bonus = ApplyDegrade(groupCells.Count, previousGroupSize, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyDegrade(groupCells.Count, previousGroupSize, placedCells, events);
                         break;
                     case ModifierId.Emmitouflee:
                         bonus = ApplyEmmitouflee(groupCells, events);
@@ -532,16 +545,19 @@ namespace Contigu.Core
                         bonus = ApplyNid(groupCells, events);
                         break;
                     case ModifierId.Solitaire:
-                        bonus = ApplySolitaire(groupCells, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplySolitaire(groupCells, placedCells, events);
                         break;
                     case ModifierId.PetitFormat:
                         bonus = ApplyPetitFormat(placedCells, events);
                         break;
                     case ModifierId.Fraicheur:
-                        bonus = ApplyFraicheur(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyFraicheur(placedCells, events);
                         break;
                     case ModifierId.Pont:
-                        bonus = ApplyPont(ownColor, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyPont(ownColor, placedCells, events);
                         break;
                     case ModifierId.Encerclement:
                         bonus = ApplyEncerclement(groupCells, events);
@@ -550,13 +566,16 @@ namespace Contigu.Core
                         bonus = ApplyBoucher(placedCells, events);
                         break;
                     case ModifierId.GrosseFamille:
-                        bonus = ApplyGrosseFamille(groupCells, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyGrosseFamille(groupCells, placedCells, events);
                         break;
                     case ModifierId.Repetition:
-                        bonus = ApplyRepetition(shape.Id, previousShapeId, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyRepetition(shape.Id, previousShapeId, placedCells, events);
                         break;
                     case ModifierId.AlternancePieces:
-                        bonus = ApplyAlternancePieces(ownColor, previousPlacedColor, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyAlternancePieces(ownColor, previousPlacedColor, placedCells, events);
                         break;
                     case ModifierId.Precision:
                         bonus = ApplyPrecision(placedCells, events);
@@ -565,7 +584,8 @@ namespace Contigu.Core
                         bonus = ApplySurpopulation(placedCells, events);
                         break;
                     case ModifierId.Minimaliste:
-                        bonus = ApplyMinimaliste(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyMinimaliste(placedCells, events);
                         break;
                     case ModifierId.Joker:
                         // No score of its own — purely a passive rule change
@@ -585,6 +605,7 @@ namespace Contigu.Core
                 TagNewEvents(events, eventsBefore, id);
                 total += bonus;
             }
+            modifierMultiplier = multiplier;
             return total;
         }
 
@@ -698,16 +719,16 @@ namespace Contigu.Core
             return count;
         }
 
-        /// <summary>Solitaire: flat bonus when this placement's scored group is entirely its own piece — nothing pre-existing merged into it — AND the piece itself is more than 1 cell (the opposite condition from Catalyst, which rewards merging with pre-existing cells; the size-1 case is already Îlot's).</summary>
+        /// <summary>Solitaire: xN multiplier (see ScoringConstants.SolitaireMultiplier) when this placement's scored group is entirely its own piece — nothing pre-existing merged into it — AND the piece itself is more than 1 cell (the opposite condition from Catalyst, which rewards merging with pre-existing cells; the size-1 case is already Îlot's). Returns 1 (no-op) otherwise.</summary>
         private static int ApplySolitaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (placedCells.Count <= 1 || groupCells.Count != placedCells.Count)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.SolitaireBonus));
-            return ScoringConstants.SolitaireBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.SolitaireMultiplier));
+            return ScoringConstants.SolitaireMultiplier;
         }
 
         /// <summary>Petit Format: bonus per placed cell when the piece being placed has at most ScoringConstants.PetitFormatMaxPieceSize cells — the small-piece mirror of Grand Format.</summary>
@@ -723,7 +744,7 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Fraîcheur: flat bonus when this placement's own fill color is not present ANYWHERE else already on the board (a genuinely new color for this board state) — checked against every other cell, this placement's own cells excluded.</summary>
+        /// <summary>Fraîcheur: xN multiplier (see ScoringConstants.FraicheurMultiplier) when this placement's own fill color is not present ANYWHERE else already on the board (a genuinely new color for this board state) — checked against every other cell, this placement's own cells excluded. Returns 1 (no-op) otherwise.</summary>
         private int ApplyFraicheur(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
@@ -737,15 +758,15 @@ namespace Contigu.Core
                 var cell = _cells[pos.x, pos.y];
                 if (cell.IsFilled && cell.FilledColor.HasValue && cell.FilledColor.Value == ownColor)
                 {
-                    return 0;
+                    return 1;
                 }
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.FraicheurBonus));
-            return ScoringConstants.FraicheurBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.FraicheurMultiplier));
+            return ScoringConstants.FraicheurMultiplier;
         }
 
-        /// <summary>Espace Libre: flat bonus when, right after this placement (and any of its own line clears), at most ScoringConstants.EspaceLibreMaxFilledCells cells on the whole board are still filled — rewards keeping the board deliberately open.</summary>
+        /// <summary>Espace Libre: xN multiplier (see ScoringConstants.EspaceLibreMultiplier) when, right after this placement (and any of its own line clears), at most ScoringConstants.EspaceLibreMaxFilledCells cells on the whole board are still filled — rewards keeping the board deliberately open. Returns 1 (no-op) otherwise.</summary>
         private int ApplyEspaceLibre(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int filled = 0;
@@ -758,39 +779,43 @@ namespace Contigu.Core
             }
             if (filled > ScoringConstants.EspaceLibreMaxFilledCells)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.EspaceLibreBonus));
-            return ScoringConstants.EspaceLibreBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.EspaceLibreMultiplier));
+            return ScoringConstants.EspaceLibreMultiplier;
         }
 
-        /// <summary>Rafale: flat bonus when this placement clears at least one row/column AND the immediately previous placement this round also did — two clears back to back.</summary>
+        /// <summary>Rafale: xN multiplier (see ScoringConstants.RafaleMultiplier) when this placement clears at least one row/column AND the immediately previous placement this round also did — two clears back to back. Returns 1 (no-op) otherwise.</summary>
         private static int ApplyRafale(bool clearedByPreviousPlacement, ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (!clearedByPreviousPlacement || clearInfo.ClearedCells.Count == 0)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.RafaleBonus));
-            return ScoringConstants.RafaleBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.RafaleMultiplier));
+            return ScoringConstants.RafaleMultiplier;
         }
 
         // ---- Sixth batch of modifier bonuses (11 more, player-authored brainstorm — see README) ----
 
-        /// <summary>Bridge (Pont): bonus per pre-existing group this placement bridges together beyond the first one — bridging 2 formerly-separate groups scores once, 3 groups scores twice, etc. 0 if this placement touches at most one pre-existing group (nothing to bridge).</summary>
+        /// <summary>Bridge (Pont): xN multiplier (see ScoringConstants.PontMultiplierPerBridge) PER pre-existing group this placement bridges together beyond the first one — bridging 2 formerly-separate groups applies once, 3 groups applies twice (stacking multiplicatively), etc. Returns 1 (no-op) if this placement touches at most one pre-existing group (nothing to bridge).</summary>
         private int ApplyPont(PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int groupsTouched = CountDistinctPreExistingGroupsTouched(placedCells, ownColor);
             if (groupsTouched < 2)
             {
-                return 0;
+                return 1;
             }
 
-            int bonus = (groupsTouched - 1) * ScoringConstants.PontBonusPerBridge;
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
-            return bonus;
+            int multiplier = 1;
+            for (int i = 1; i < groupsTouched; i++)
+            {
+                multiplier *= ScoringConstants.PontMultiplierPerBridge;
+            }
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplier));
+            return multiplier;
         }
 
         /// <summary>
@@ -986,7 +1011,7 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Big Family (Grosse Famille): flat bonus when this placement's color exists in exactly ONE connected group on the whole board — no other same-color cell anywhere outside this placement's own scored group.</summary>
+        /// <summary>Big Family (Grosse Famille): xN multiplier (see ScoringConstants.GrosseFamilleMultiplier) when this placement's color exists in exactly ONE connected group on the whole board — no other same-color cell anywhere outside this placement's own scored group. Returns 1 (no-op) otherwise.</summary>
         private int ApplyGrosseFamille(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
@@ -1000,36 +1025,36 @@ namespace Contigu.Core
                 var cell = _cells[pos.x, pos.y];
                 if (cell.IsFilled && cell.FilledColor.HasValue && cell.FilledColor.Value == ownColor)
                 {
-                    return 0;
+                    return 1;
                 }
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.GrosseFamilleBonus));
-            return ScoringConstants.GrosseFamilleBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.GrosseFamilleMultiplier));
+            return ScoringConstants.GrosseFamilleMultiplier;
         }
 
-        /// <summary>Repetition: flat bonus when this piece is the same shape as the immediately previous placement this round.</summary>
+        /// <summary>Repetition: xN multiplier (see ScoringConstants.RepetitionMultiplier) when this piece is the same shape as the immediately previous placement this round. Returns 1 (no-op) otherwise.</summary>
         private static int ApplyRepetition(ShapeId currentShapeId, ShapeId? previousShapeId, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (!previousShapeId.HasValue || previousShapeId.Value != currentShapeId)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.RepetitionBonus));
-            return ScoringConstants.RepetitionBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.RepetitionMultiplier));
+            return ScoringConstants.RepetitionMultiplier;
         }
 
-        /// <summary>Color Switch (Alternance des pièces): flat bonus when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier.</summary>
+        /// <summary>Color Switch (Alternance des pièces): xN multiplier (see ScoringConstants.AlternancePiecesMultiplier) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier. Returns 1 (no-op) otherwise.</summary>
         private static int ApplyAlternancePieces(PieceColor ownColor, PieceColor? previousPlacedColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (!previousPlacedColor.HasValue || previousPlacedColor.Value == ownColor)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.AlternancePiecesBonus));
-            return ScoringConstants.AlternancePiecesBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.AlternancePiecesMultiplier));
+            return ScoringConstants.AlternancePiecesMultiplier;
         }
 
         /// <summary>Precision: bonus per placed cell when EVERY one of this placement's own cells has at least one pre-existing filled orthogonal neighbor (this placement's own other cells don't count).</summary>
@@ -1090,7 +1115,7 @@ namespace Contigu.Core
             return _cells[x, y].IsFilled;
         }
 
-        /// <summary>Minimalist (Minimaliste): flat bonus when this placement's WHOLE footprint touches EXACTLY one distinct pre-existing filled cell in total — the "just barely touching" middle ground between Îlot (zero neighbors, isolated) and Precision (one or more, checked per cell).</summary>
+        /// <summary>Minimalist (Minimaliste): xN multiplier (see ScoringConstants.MinimalisteMultiplier) when this placement's WHOLE footprint touches EXACTLY one distinct pre-existing filled cell in total — the "just barely touching" middle ground between Îlot (zero neighbors, isolated) and Precision (one or more, checked per cell). Returns 1 (no-op) otherwise.</summary>
         private int ApplyMinimaliste(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var placedSet = new HashSet<Vector2Int>(placedCells);
@@ -1105,11 +1130,11 @@ namespace Contigu.Core
             }
             if (distinctNeighbors.Count != 1)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.MinimalisteBonus));
-            return ScoringConstants.MinimalisteBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.MinimalisteMultiplier));
+            return ScoringConstants.MinimalisteMultiplier;
         }
 
         private void AddIfExistingFilledNeighbor(int x, int y, HashSet<Vector2Int> placedSet, HashSet<Vector2Int> result)
@@ -1210,9 +1235,10 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier)
         {
             int total = 0;
+            int multiplier = 1;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -1224,34 +1250,44 @@ namespace Contigu.Core
                         bonus = ApplyCollectionneur(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Macon:
-                        bonus = ApplyMacon(clearInfo, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyMacon(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Demolisseur:
-                        bonus = ApplyDemolisseur(clearInfo, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyDemolisseur(clearInfo, placedCells, events);
                         break;
                     case ModifierId.ArcEnCiel:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, ContainsAllBaseColors, ScoringConstants.ArcEnCielBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine);
                         break;
                     case ModifierId.Alternance:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceMultiplierPerLine);
                         break;
                     case ModifierId.Palindrome:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsPalindrome, ScoringConstants.PalindromeBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsPalindrome, ScoringConstants.PalindromeMultiplierPerLine);
                         break;
                     case ModifierId.Gradient:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsGradientLine, ScoringConstants.GradientBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsGradientLine, ScoringConstants.GradientMultiplierPerLine);
                         break;
                     case ModifierId.Bloc:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocMultiplierPerLine);
                         break;
                     case ModifierId.MonochromeLigne:
-                        bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneBonusPerLine);
+                        bonus = 0;
+                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneMultiplierPerLine);
                         break;
                     case ModifierId.EspaceLibre:
-                        bonus = ApplyEspaceLibre(placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyEspaceLibre(placedCells, events);
                         break;
                     case ModifierId.Rafale:
-                        bonus = ApplyRafale(clearedByPreviousPlacement, clearInfo, placedCells, events);
+                        bonus = 0;
+                        multiplier *= ApplyRafale(clearedByPreviousPlacement, clearInfo, placedCells, events);
                         break;
                     default:
                         bonus = 0;
@@ -1260,6 +1296,7 @@ namespace Contigu.Core
                 TagNewEvents(events, eventsBefore, id);
                 total += bonus;
             }
+            modifierMultiplier = multiplier;
             return total;
         }
 
@@ -1272,6 +1309,7 @@ namespace Contigu.Core
             }
         }
 
+        /// <summary>Prisme: xN multiplier (see ScoringConstants.PrismeMultiplier) when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker). Returns 1 (no-op) when it doesn't qualify.</summary>
         private int ApplyPrisme(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var touching = CollectTouchingColors(placedCells);
@@ -1281,11 +1319,11 @@ namespace Contigu.Core
                 || (touching.Count == ScoringConstants.PrismeMinDistinctColors - 1 && hasJoker);
             if (!qualifies)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.PrismeBonus));
-            return ScoringConstants.PrismeBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.PrismeMultiplier));
+            return ScoringConstants.PrismeMultiplier;
         }
 
         /// <summary>
@@ -1412,17 +1450,19 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>Architecte: xN multiplier (see ScoringConstants.ArchitecteMultiplier) for placing a 2x2 square piece. Returns 1 (no-op) otherwise.</summary>
         private int ApplyArchitecte(PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (shape.Id != ShapeId.Sq2)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.ArchitecteBonus));
-            return ScoringConstants.ArchitecteBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.ArchitecteMultiplier));
+            return ScoringConstants.ArchitecteMultiplier;
         }
 
+        /// <summary>Puriste: xN multiplier (see ScoringConstants.PuristeMultiplier) when the placement's scored group is monochrome (jokers ignored) and actually scored something. Returns 1 (no-op) otherwise.</summary>
         private int ApplyPuriste(List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
         {
             PieceColor? monoColor = null;
@@ -1439,18 +1479,17 @@ namespace Contigu.Core
                 }
                 else if (monoColor.Value != color)
                 {
-                    return 0;
+                    return 1;
                 }
             }
 
-            int bonus = groupBonus / 2;
-            if (bonus <= 0)
+            if (groupBonus <= 0)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
-            return bonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.PuristeMultiplier));
+            return ScoringConstants.PuristeMultiplier;
         }
 
         private int ApplyCollectionneur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
@@ -1471,6 +1510,7 @@ namespace Contigu.Core
             return bonus;
         }
 
+        /// <summary>Tricolore: xN multiplier (see ScoringConstants.TricoloreMultiplier) when the placement (itself + its direct neighbors) touches exactly TricoloreExactDistinctColors distinct non-joker colors. Returns 1 (no-op) otherwise.</summary>
         private int ApplyTricolore(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var touching = CollectTouchingColors(placedCells);
@@ -1478,11 +1518,11 @@ namespace Contigu.Core
 
             if (touching.Count != ScoringConstants.TricoloreExactDistinctColors)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.TricoloreBonus));
-            return ScoringConstants.TricoloreBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.TricoloreMultiplier));
+            return ScoringConstants.TricoloreMultiplier;
         }
 
         /// <summary>Arbitrary complementary pairing across the 4 base colors — not derived from a color wheel, just a fixed pairing for this modifier.</summary>
@@ -1492,6 +1532,7 @@ namespace Contigu.Core
             new[] { PieceColor.Teal, PieceColor.Lime }
         };
 
+        /// <summary>Complémentaire: xN multiplier (see ScoringConstants.ComplementaireMultiplier) when the placement (itself + its direct neighbors) touches both colors of a complementary pair. Returns 1 (no-op) otherwise.</summary>
         private int ApplyComplementaire(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var present = CollectTouchingColors(placedCells);
@@ -1508,22 +1549,23 @@ namespace Contigu.Core
 
             if (!qualifies)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.ComplementaireBonus));
-            return ScoringConstants.ComplementaireBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.ComplementaireMultiplier));
+            return ScoringConstants.ComplementaireMultiplier;
         }
 
+        /// <summary>Îlot: xN multiplier (see ScoringConstants.IlotMultiplier) when the placement's resulting group is a single isolated cell. Returns 1 (no-op) otherwise.</summary>
         private int ApplyIlot(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (groupCells.Count != 1)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.IlotBonus));
-            return ScoringConstants.IlotBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.IlotMultiplier));
+            return ScoringConstants.IlotMultiplier;
         }
 
         private int ApplyCouronne(List<Vector2Int> groupCells, List<ScoreEvent> events)
@@ -1687,15 +1729,16 @@ namespace Contigu.Core
             return InBounds(x, y) && _cells[x, y].IsFilled && _cells[x, y].FilledColor.HasValue && _cells[x, y].FilledColor.Value != ownColor;
         }
 
+        /// <summary>Dégradé (Momentum): xN multiplier (see ScoringConstants.DegradeMultiplier) whenever this placement's scored group is strictly larger than the previous placement's this round. Returns 1 (no-op) otherwise.</summary>
         private int ApplyDegrade(int currentGroupSize, int? previousGroupSize, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (!previousGroupSize.HasValue || currentGroupSize <= previousGroupSize.Value)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.DegradeBonus));
-            return ScoringConstants.DegradeBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.DegradeMultiplier));
+            return ScoringConstants.DegradeMultiplier;
         }
 
         private int ApplyEmmitouflee(List<Vector2Int> groupCells, List<ScoreEvent> events)
@@ -1753,33 +1796,39 @@ namespace Contigu.Core
             return InBounds(x, y) && _cells[x, y].HasAnyModifier;
         }
 
+        /// <summary>Maçon: xN multiplier (see ScoringConstants.MaconMultiplier) for a placement that clears no line/column at all. Returns 1 (no-op) otherwise.</summary>
         private int ApplyMacon(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (clearInfo.ClearedCells.Count > 0)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.MaconBonus));
-            return ScoringConstants.MaconBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.MaconMultiplier));
+            return ScoringConstants.MaconMultiplier;
         }
 
+        /// <summary>Démolisseur: xN multiplier (see ScoringConstants.DemolisseurMultiplierPerLine) PER simultaneously-cleared line, once at least DemolisseurMinLines rows/columns clear at once — stacks multiplicatively (3 lines at once is xN*xN*xN). Returns 1 (no-op) otherwise.</summary>
         private int ApplyDemolisseur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (clearInfo.ClearedLineCount < ScoringConstants.DemolisseurMinLines)
             {
-                return 0;
+                return 1;
             }
 
-            int bonus = clearInfo.ClearedLineCount * ScoringConstants.DemolisseurBonusPerLine;
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
-            return bonus;
+            int multiplier = 1;
+            for (int i = 0; i < clearInfo.ClearedLineCount; i++)
+            {
+                multiplier *= ScoringConstants.DemolisseurMultiplierPerLine;
+            }
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplier));
+            return multiplier;
         }
 
-        /// <summary>Shared driver for the 7 line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — bonus fires once per qualifying cleared line.</summary>
-        private int ApplyPerLineBonus(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int bonusPerLine)
+        /// <summary>Shared driver for the 6 line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — xN multiplier fires once per qualifying cleared line, stacking multiplicatively (2 qualifying lines at once is xN*xN). Was a flat per-line bonus (ApplyPerLineBonus) before these were converted to multipliers.</summary>
+        private int ApplyPerLineMultiplier(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int multiplierPerLine)
         {
-            int total = 0;
+            int multiplier = 1;
             var lines = clearInfo.ClearedLines;
             for (int i = 0; i < lines.Count; i++)
             {
@@ -1788,10 +1837,10 @@ namespace Contigu.Core
                     continue;
                 }
 
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonusPerLine));
-                total += bonusPerLine;
+                events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplierPerLine));
+                multiplier *= multiplierPerLine;
             }
-            return total;
+            return multiplier;
         }
 
         /// <summary>Non-joker colors present, ignoring how many times each repeats.</summary>

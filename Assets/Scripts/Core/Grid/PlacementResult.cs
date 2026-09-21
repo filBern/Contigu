@@ -58,15 +58,31 @@ namespace Contigu.Core
         /// <summary>
         /// Multiplies this placement's WHOLE total score (see <see
         /// cref="TotalScore"/>) — the "Combo" modifier's doing (on explicit
-        /// request: "x2 sur le score TOTAL de la pose"), the only modifier
-        /// that's a true multiplier rather than a flat/per-cell bonus like
-        /// every other one (see <see cref="ModifierBonus"/>). 1 when Combo
-        /// isn't held or didn't fire; stacks (x4, x8, ...) if held more than
-        /// once, same convention as <see cref="GroupMultiplier"/>.
+        /// request: "x2 sur le score TOTAL de la pose"). 1 when Combo isn't
+        /// held or didn't fire; stacks (x4, x8, ...) if held more than once,
+        /// same convention as <see cref="GroupMultiplier"/>. Combo used to be
+        /// the only true placement-wide multiplier modifier — see <see
+        /// cref="ModifierMultiplier"/>, which now covers many more.
         /// </summary>
         public int ComboMultiplier = 1;
 
-        /// <summary>Sum of every bonus from the player's active modifiers on this placement (see <see cref="ModifierId"/>).</summary>
+        /// <summary>
+        /// Multiplies this placement's WHOLE total score (see <see
+        /// cref="TotalScore"/>), same tier as <see cref="ComboMultiplier"/>
+        /// — the aggregate of every "xN"-style modifier now held (Prisme,
+        /// Architecte, Puriste, Tricolore, Complémentaire, Îlot, Maçon,
+        /// Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale, Pont,
+        /// Grosse Famille, Repetition, Alternance des pièces, Minimaliste,
+        /// and the 6 line-pattern modifiers), converted from a flat +pts
+        /// bonus to a real multiplier on explicit request ("j'aimerais qu'on
+        /// utilise plus de multiplicateur dans les modifiers"). 1 when none
+        /// of them fired this placement; stacks multiplicatively with itself
+        /// (several firing at once, or a "per line"/"per bridge" one firing
+        /// more than once) same as every other multiplier field here.
+        /// </summary>
+        public int ModifierMultiplier = 1;
+
+        /// <summary>Sum of every bonus from the player's active modifiers on this placement that's still a flat/per-cell bonus rather than a multiplier (see <see cref="ModifierId"/>/<see cref="ModifierMultiplier"/>).</summary>
         public int ModifierBonus;
 
         /// <summary>Sum of every bonus produced directly by the placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag — see <see cref="ScoreEventType.Trait"/>. Populated by RunManager, not GridManager, since GridManager knows nothing about PieceTrait.</summary>
@@ -111,9 +127,29 @@ namespace Contigu.Core
         /// </summary>
         public IReadOnlyList<ScoreEvent> ScoreEvents = System.Array.Empty<ScoreEvent>();
 
+        /// <summary>
+        /// Balatro-style "chips" — every additive scoring source folded
+        /// together, including the per-cell <see cref="GroupMultiplier"/>/
+        /// <see cref="LineClearMultiplier"/> (Tinted/Multiplier Zone cells)
+        /// but NOT the placement-wide <see cref="ModifierMultiplier"/>/<see
+        /// cref="ComboMultiplier"/> (see <see cref="Mult"/> for those).
+        /// <see cref="TotalScore"/> is always exactly Chips * <see
+        /// cref="Mult"/>.
+        /// </summary>
+        public int Chips
+        {
+            get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus; }
+        }
+
+        /// <summary>Balatro-style "mult" — every placement-wide multiplier stacked together. <see cref="TotalScore"/> is always exactly <see cref="Chips"/> * Mult.</summary>
+        public int Mult
+        {
+            get { return ModifierMultiplier * ComboMultiplier; }
+        }
+
         public int TotalScore
         {
-            get { return ((GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus) * ComboMultiplier; }
+            get { return Chips * Mult; }
         }
 
         public static PlacementResult Failure(string reason)
