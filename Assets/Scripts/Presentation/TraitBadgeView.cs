@@ -38,6 +38,21 @@ namespace Contigu.Presentation
             _tooltip.Hide();
         }
 
+        /// <summary>
+        /// A badge can be destroyed while still hovered — e.g.
+        /// TileChoiceView rebuilds a preview the instant its cell is
+        /// clicked to deselect it, which never fires OnPointerExit first —
+        /// leaving the tooltip stuck open for a trait that's no longer even
+        /// there. Same unconditional Hide() as OnPointerExit above.
+        /// </summary>
+        private void OnDestroy()
+        {
+            if (_tooltip != null)
+            {
+                _tooltip.Hide();
+            }
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_clickForwardTarget != null)
