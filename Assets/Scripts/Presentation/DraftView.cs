@@ -115,14 +115,14 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("List", _root);
             listContainer.anchorMin = new Vector2(0.5f, 1f);
             listContainer.anchorMax = new Vector2(0.5f, 1f);
             listContainer.pivot = new Vector2(0.5f, 1f);
-            listContainer.anchoredPosition = new Vector2(0f, -310f);
+            listContainer.anchoredPosition = new Vector2(0f, -210f);
             listContainer.sizeDelta = new Vector2(700f, 460f);
             var grid = listContainer.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(220f, TypeRowHeight);
@@ -215,14 +215,14 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("Colors", _root);
             listContainer.anchorMin = new Vector2(0.5f, 1f);
             listContainer.anchorMax = new Vector2(0.5f, 1f);
             listContainer.pivot = new Vector2(0.5f, 1f);
-            listContainer.anchoredPosition = new Vector2(0f, -320f);
+            listContainer.anchoredPosition = new Vector2(0f, -220f);
             var hLayout = listContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 12f;
             hLayout.childAlignment = TextAnchor.MiddleCenter;

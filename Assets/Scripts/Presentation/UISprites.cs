@@ -19,8 +19,6 @@ namespace Contigu.Presentation
         private static Sprite _piecesBarFill;
         private static Sprite _modifierPanelBackground;
         private static Sprite _handSlotBackground;
-        private static Sprite _upgradeCardBackground;
-        private static Sprite _upgradeNameBanner;
         private static Sprite _chooseButtonBackground;
         private static Sprite _cancelButtonBackground;
 
@@ -59,18 +57,6 @@ namespace Contigu.Presentation
         public static Sprite HandSlotBackground
         {
             get { return _handSlotBackground != null ? _handSlotBackground : (_handSlotBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
-        }
-
-        /// <summary>Background of each upgrade-draft card (DraftView) — same sprite as HandSlotBackground, kept as its own property since the two are conceptually different call sites.</summary>
-        public static Sprite UpgradeCardBackground
-        {
-            get { return _upgradeCardBackground != null ? _upgradeCardBackground : (_upgradeCardBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
-        }
-
-        /// <summary>Ribbon-shaped banner sat behind an upgrade card's name label.</summary>
-        public static Sprite UpgradeNameBanner
-        {
-            get { return _upgradeNameBanner != null ? _upgradeNameBanner : (_upgradeNameBanner = Resources.Load<Sprite>(GameUIPath + "Union")); }
         }
 
         /// <summary>Background for a primary "Choose"/confirm action button on a draft card.</summary>

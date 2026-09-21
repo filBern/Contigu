@@ -58,14 +58,14 @@ namespace Contigu.Presentation
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+            _title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -310f);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -210f);
             var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8f;
             layout.childAlignment = TextAnchor.UpperCenter;
