@@ -1912,35 +1912,20 @@ namespace Contigu.Core
         /// <paramref name="start"/> by orthogonal steps. A joker cell always
         /// joins (it has no color of its own to conflict with), but it does NOT
         /// bridge two otherwise-incompatible real colors into one group: the
-        /// group locks onto the first non-joker color it discovers (its
-        /// "anchor"), and any other-colored cell — reached directly or through
-        /// a joker — is excluded from then on. So green-joker-blue is two
-        /// separate potential groups sharing that joker cell, never one
-        /// green+joker+blue group; which one the joker actually joins on a
-        /// given placement depends on which color's flood-fill reaches it.
+        /// group anchors on a single non-joker color, and any other-colored
+        /// cell — reached directly or through a joker — is excluded from then
+        /// on. So green-joker-blue is two separate potential groups sharing
+        /// that joker cell, never one green+joker+blue group.
         /// </summary>
         private List<Vector2Int> FindConnectedGroup(Vector2Int start)
         {
-            var visited = new HashSet<Vector2Int> { start };
-            var stack = new Stack<Vector2Int>();
-            stack.Push(start);
-            var group = new List<Vector2Int>();
-
             var startColor = _cells[start.x, start.y].FilledColor.Value;
-            PieceColor? anchorColor = startColor == PieceColor.Joker ? (PieceColor?)null : startColor;
-
-            while (stack.Count > 0)
+            var seed = new List<Vector2Int> { start };
+            if (startColor != PieceColor.Joker)
             {
-                var pos = stack.Pop();
-                group.Add(pos);
-
-                TryVisitGroupNeighbor(pos.x - 1, pos.y, ref anchorColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x + 1, pos.y, ref anchorColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x, pos.y - 1, ref anchorColor, visited, stack);
-                TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
+                return FloodFillGroup(seed, startColor);
             }
-
-            return group;
+            return ResolveBestJokerGroup(seed);
         }
 
         /// <summary>
@@ -1958,22 +1943,137 @@ namespace Contigu.Core
         public List<Vector2Int> PreviewGroup(PieceShape shape, PieceColor color, int anchorX, int anchorY)
         {
             var offsets = shape.Cells;
-            var visited = new HashSet<Vector2Int>();
-            var stack = new Stack<Vector2Int>();
-            var group = new List<Vector2Int>();
-
+            var footprint = new List<Vector2Int>(offsets.Count);
             // Seeds the flood-fill with the piece's own cells as if they were
             // already filled with `color` — mirrors PlacePiece, which marks
             // them filled in _cells BEFORE calling FindConnectedGroup from
             // one of them.
             for (int i = 0; i < offsets.Count; i++)
             {
-                var pos = new Vector2Int(anchorX + offsets[i].x, anchorY + offsets[i].y);
-                visited.Add(pos);
-                stack.Push(pos);
+                footprint.Add(new Vector2Int(anchorX + offsets[i].x, anchorY + offsets[i].y));
             }
 
-            PieceColor? anchorColor = color == PieceColor.Joker ? (PieceColor?)null : color;
+            if (color != PieceColor.Joker)
+            {
+                return FloodFillGroup(footprint, color);
+            }
+            return ResolveBestJokerGroup(footprint);
+        }
+
+        /// <summary>Same as <see cref="PreviewGroup"/>, but returns the resulting group's own estimated score (see <see cref="EstimateGroupScore"/>) instead of its cells — lets a caller outside GridManager (RunManager.ResolveChameleonColor) compare hypothetical placement colors without needing the private scoring helper itself exposed.</summary>
+        public int PreviewGroupScore(PieceShape shape, PieceColor color, int anchorX, int anchorY)
+        {
+            return EstimateGroupScore(PreviewGroup(shape, color, anchorX, anchorY));
+        }
+
+        /// <summary>
+        /// A joker piece's own cells have no fixed color of their own, so
+        /// they can potentially anchor the resulting group on ANY distinct
+        /// real color reachable through them (through other jokers too — see
+        /// <see cref="FindCandidateAnchorColors"/>). On explicit request
+        /// ("lorsqu'un joker est posé, il devrait être jumelé avec le groupe
+        /// faisant le plus de points"), tries every such candidate color and
+        /// keeps whichever resulting group scores the most (see <see
+        /// cref="EstimateGroupScore"/>), instead of whichever one a fixed
+        /// traversal order happened to reach first. No real-colored neighbor
+        /// anywhere reachable just returns the connected cluster of joker
+        /// cells itself, same as before.
+        /// </summary>
+        private List<Vector2Int> ResolveBestJokerGroup(List<Vector2Int> seedCells)
+        {
+            var candidateColors = FindCandidateAnchorColors(seedCells);
+            if (candidateColors.Count == 0)
+            {
+                return FloodFillGroup(seedCells, null);
+            }
+
+            List<Vector2Int> bestGroup = null;
+            int bestScore = -1;
+            for (int i = 0; i < candidateColors.Count; i++)
+            {
+                var group = FloodFillGroup(seedCells, candidateColors[i]);
+                int score = EstimateGroupScore(group);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestGroup = group;
+                }
+            }
+            return bestGroup;
+        }
+
+        /// <summary>Every distinct real color orthogonally reachable from <paramref name="seedCells"/> through joker cells only (never through a real-colored cell, which would already anchor its own separate group) — the set of colors a joker placement could pick as its anchor.</summary>
+        private List<PieceColor> FindCandidateAnchorColors(List<Vector2Int> seedCells)
+        {
+            var jokerCluster = new HashSet<Vector2Int>(seedCells);
+            var stack = new Stack<Vector2Int>(seedCells);
+            var candidates = new List<PieceColor>();
+            var seenColors = new HashSet<PieceColor>();
+
+            while (stack.Count > 0)
+            {
+                var pos = stack.Pop();
+                CollectJokerNeighbor(pos.x - 1, pos.y, jokerCluster, stack, candidates, seenColors);
+                CollectJokerNeighbor(pos.x + 1, pos.y, jokerCluster, stack, candidates, seenColors);
+                CollectJokerNeighbor(pos.x, pos.y - 1, jokerCluster, stack, candidates, seenColors);
+                CollectJokerNeighbor(pos.x, pos.y + 1, jokerCluster, stack, candidates, seenColors);
+            }
+
+            return candidates;
+        }
+
+        private void CollectJokerNeighbor(int x, int y, HashSet<Vector2Int> jokerCluster, Stack<Vector2Int> stack, List<PieceColor> candidates, HashSet<PieceColor> seenColors)
+        {
+            if (!InBounds(x, y))
+            {
+                return;
+            }
+
+            var pos = new Vector2Int(x, y);
+            if (jokerCluster.Contains(pos))
+            {
+                return;
+            }
+
+            var cell = _cells[x, y];
+            if (!cell.IsFilled || !cell.FilledColor.HasValue)
+            {
+                return;
+            }
+
+            if (cell.FilledColor.Value == PieceColor.Joker)
+            {
+                jokerCluster.Add(pos);
+                stack.Push(pos);
+                return;
+            }
+
+            if (seenColors.Add(cell.FilledColor.Value))
+            {
+                candidates.Add(cell.FilledColor.Value);
+            }
+        }
+
+        /// <summary>(groupBonus + goldenBonus) * groupMultiplier for a hypothetical group — same formula PlacePiece uses for its own PlacementResult, reused to compare candidate anchor colors (see <see cref="ResolveBestJokerGroup"/>).</summary>
+        private int EstimateGroupScore(List<Vector2Int> groupCells)
+        {
+            int score = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                score += ScoringConstants.GroupBonusPerCell;
+                if (_cells[groupCells[i].x, groupCells[i].y].IsGolden)
+                {
+                    score += ScoringConstants.GoldenCellBonus;
+                }
+            }
+            return score * ComputeGroupMultiplier(groupCells);
+        }
+
+        private List<Vector2Int> FloodFillGroup(List<Vector2Int> seedCells, PieceColor? anchorColor)
+        {
+            var visited = new HashSet<Vector2Int>(seedCells);
+            var stack = new Stack<Vector2Int>(seedCells);
+            var group = new List<Vector2Int>();
 
             while (stack.Count > 0)
             {

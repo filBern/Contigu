@@ -1223,6 +1223,34 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_ChameleonTrait_PicksTheNeighborColorThatScoresTheMost()
+        {
+            // Explicit request: same treatment as Joker (see
+            // GridManagerTests.PlacePiece_JokerJoinsWhicheverAdjacentGroupScoresTheMost)
+            // — "il devrait être jumelé avec le groupe faisant le plus de
+            // points" — instead of just the first neighbor color found in
+            // the old fixed scan order (left, right, down, up).
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagChameleonTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            // Left ("first" in the old scan order) neighbor is a lone Coral
+            // cell — joining it would only make a 2-cell group. The right
+            // neighbor is part of a 3-cell Teal group — joining it makes a
+            // 4-cell group, which scores more.
+            FillCell(run.Grid, 2, 3, PieceColor.Coral);
+            FillCell(run.Grid, 4, 3, PieceColor.Teal);
+            FillCell(run.Grid, 5, 3, PieceColor.Teal);
+            FillCell(run.Grid, 6, 3, PieceColor.Teal);
+
+            var outcome = run.PlacePiece(slot, 3, 3);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(PieceColor.Teal, run.Grid.GetCell(3, 3).FilledColor);
+            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, outcome.Placement.GroupBonus);
+        }
+
+        [Test]
         public void PlacePiece_ChameleonTrait_KeepsItsOwnColor_WhenNoNeighborIsFilled()
         {
             var run = new RunManager(new SystemRandomProvider(1));

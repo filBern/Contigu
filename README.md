@@ -2536,3 +2536,45 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   et `OnPointerExit`, sans toucher au comportement du preview lui-même
   (le survol ne montre toujours pas de tooltip, exactement comme avant
   ce point précédent).
+- **Joker et Chameleon Tile rejoignent le groupe qui rapporte le plus de
+  points** (sur demande explicite : "lorsqu'un joker est posé, il
+  devrait être jumelé avec le groupe faisant le plus de points, idem
+  pour une tuile caméléon"). Avant, les deux se contentaient du premier
+  voisin réel trouvé selon un ordre de balayage fixe (gauche, droite,
+  bas, haut) :
+  - **Joker** : `GridManager.FindConnectedGroup`/`PreviewGroup` ne
+    verrouillaient plus dynamiquement leur couleur d'ancrage sur la
+    première couleur réelle rencontrée pendant le flood-fill (ordre
+    arbitraire dépendant du DFS) — désormais, quand la cellule de
+    départ est Joker, `FindCandidateAnchorColors` explore d'abord tout
+    l'amas de cellules Joker transitivement connectées et recense
+    CHAQUE couleur réelle distincte à sa frontière, puis
+    `ResolveBestJokerGroup` fait un flood-fill séparé pour chaque
+    candidate (ancrage fixé dès le départ, plus de verrouillage
+    dynamique) et garde celui dont le score estimé
+    (`EstimateGroupScore` : bonus de groupe + bonus doré, multiplié
+    comme `PlacePiece` le ferait réellement) est le plus élevé. Sans
+    aucune couleur réelle atteignable, comportement inchangé (l'amas de
+    Joker forme son propre groupe). `FindConnectedGroup` (placement
+    réel) et `PreviewGroup` (aperçu au survol, utilisé par `GridView`)
+    partagent maintenant la même logique via un nouveau
+    `FloodFillGroup` commun, donc l'aperçu au survol montre déjà le
+    groupe qui sera réellement choisi.
+  - **Chameleon Tile** : `RunManager.ResolveChameleonColor` recense
+    maintenant les couleurs réelles distinctes parmi les 4 voisins
+    orthogonaux de la cellule enchantée (au lieu de s'arrêter à la
+    première), puis compare leur score via le nouveau
+    `GridManager.PreviewGroupScore(shape, couleur, x, y)` (wrapper
+    public autour de `PreviewGroup` + `EstimateGroupScore`, pour ne pas
+    exposer directement le helper de score privé de GridManager) et
+    choisit la couleur qui rapporterait le plus. Comportement de repli
+    inchangé si aucun voisin n'est encore rempli (garde sa propre
+    couleur).
+  - Nouveaux tests :
+    `GridManagerTests.PlacePiece_JokerJoinsWhicheverAdjacentGroupScoresTheMost`
+    et
+    `RunManagerTests.PlacePiece_ChameleonTrait_PicksTheNeighborColorThatScoresTheMost`
+    (voisin de gauche = petit groupe isolé, premier dans l'ancien ordre
+    de balayage ; voisin de droite = groupe de 3 cellules déjà
+    connectées — les deux vérifient que le résultat rejoint bien le
+    plus gros groupe, pas le premier trouvé).

@@ -295,6 +295,31 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_JokerJoinsWhicheverAdjacentGroupScoresTheMost()
+        {
+            // Explicit request: "lorsqu'un joker est posé, il devrait être
+            // jumelé avec le groupe faisant le plus de points" — when a
+            // joker piece touches two different real colors at once, it
+            // must anchor on whichever one's resulting group would score
+            // higher, not whichever a fixed traversal order happens to
+            // reach first.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Lime, 0, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 2, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 3, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 4, 0);
+
+            // The joker at (1,0) touches the lone Lime cell on its left
+            // (2-cell result) and the 3-cell Teal group on its right
+            // (4-cell result) — it should join Teal.
+            var jokerResult = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
+
+            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, jokerResult.GroupBonus);
+        }
+
+        [Test]
         public void PlacePiece_OnGoldenCell_AddsFixedBonusIndependentOfGroup()
         {
             var grid = new GridManager();

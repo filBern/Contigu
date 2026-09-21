@@ -196,7 +196,7 @@ namespace Contigu.Core
                 var kind = token.Trait.Value.Kind;
                 if (kind == PieceTraitKind.Chameleon)
                 {
-                    placementColor = ResolveChameleonColor(traitCellPos.Value, token.Color);
+                    placementColor = ResolveChameleonColor(shape, x, y, traitCellPos.Value, token.Color);
                 }
                 else if (kind == PieceTraitKind.Spark)
                 {
@@ -379,21 +379,55 @@ namespace Contigu.Core
 
         /// <summary>
         /// "Chameleon Tile": resolves the color the WHOLE piece should place
-        /// as — the color of the first already-filled orthogonal neighbor of
-        /// the enchanted cell (fixed scan order: left, right, down, up), so
-        /// the piece merges into an existing group instead of keeping its
-        /// own color. Falls back to the piece's own color when no neighbor
-        /// is filled yet (checked before Grid.PlacePiece runs, so only
-        /// PRE-EXISTING board state can match — never another cell of this
-        /// same about-to-be-placed piece).
+        /// as — of every already-filled orthogonal neighbor color around the
+        /// enchanted cell, picks whichever would make this placement's own
+        /// resulting group score the most (explicit request: "il devrait
+        /// être jumelé avec le groupe faisant le plus de points", same
+        /// treatment as Joker — see GridManager.ResolveBestJokerGroup),
+        /// instead of just the first one found in a fixed scan order (left,
+        /// right, down, up). Falls back to the piece's own color when no
+        /// neighbor is filled yet (checked before Grid.PlacePiece runs, so
+        /// only PRE-EXISTING board state can match — never another cell of
+        /// this same about-to-be-placed piece).
         /// </summary>
-        private PieceColor ResolveChameleonColor(Vector2Int traitCellPos, PieceColor fallbackColor)
+        private PieceColor ResolveChameleonColor(PieceShape shape, int anchorX, int anchorY, Vector2Int traitCellPos, PieceColor fallbackColor)
         {
-            var neighborColor = TryGetFilledNeighborColor(traitCellPos.x - 1, traitCellPos.y)
-                ?? TryGetFilledNeighborColor(traitCellPos.x + 1, traitCellPos.y)
-                ?? TryGetFilledNeighborColor(traitCellPos.x, traitCellPos.y - 1)
-                ?? TryGetFilledNeighborColor(traitCellPos.x, traitCellPos.y + 1);
-            return neighborColor ?? fallbackColor;
+            var candidates = new List<PieceColor>();
+            AddDistinctNeighborColor(traitCellPos.x - 1, traitCellPos.y, candidates);
+            AddDistinctNeighborColor(traitCellPos.x + 1, traitCellPos.y, candidates);
+            AddDistinctNeighborColor(traitCellPos.x, traitCellPos.y - 1, candidates);
+            AddDistinctNeighborColor(traitCellPos.x, traitCellPos.y + 1, candidates);
+
+            if (candidates.Count == 0)
+            {
+                return fallbackColor;
+            }
+            if (candidates.Count == 1)
+            {
+                return candidates[0];
+            }
+
+            PieceColor bestColor = candidates[0];
+            int bestScore = Grid.PreviewGroupScore(shape, candidates[0], anchorX, anchorY);
+            for (int i = 1; i < candidates.Count; i++)
+            {
+                int score = Grid.PreviewGroupScore(shape, candidates[i], anchorX, anchorY);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestColor = candidates[i];
+                }
+            }
+            return bestColor;
+        }
+
+        private void AddDistinctNeighborColor(int x, int y, List<PieceColor> candidates)
+        {
+            var color = TryGetFilledNeighborColor(x, y);
+            if (color.HasValue && !candidates.Contains(color.Value))
+            {
+                candidates.Add(color.Value);
+            }
         }
 
         private PieceColor? TryGetFilledNeighborColor(int x, int y)
