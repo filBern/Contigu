@@ -26,7 +26,7 @@ namespace Contigu.Presentation
             string subtitle = _usageCountProvider != null
                 ? "Used " + _usageCountProvider(_def.Id) + "x this run"
                 : null;
-            _tooltip.Show(_def.Name, _def.Description, (RectTransform)transform, subtitle);
+            _tooltip.Show(_def.Name, DescriptionTextFormatter.Colorize(_def.Description), (RectTransform)transform, subtitle);
         }
 
         public void OnPointerExit(PointerEventData eventData)

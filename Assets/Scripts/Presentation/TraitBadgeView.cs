@@ -41,7 +41,7 @@ namespace Contigu.Presentation
             }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
             string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
-            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), PieceTraitVisualDefaults.GetDescription(_trait), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
+            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait)), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
         }
 
         public void OnPointerExit(PointerEventData eventData)

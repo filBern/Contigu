@@ -2690,3 +2690,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     vérifié à la main : `chipsTotal * multTotal` égale toujours le
     sous-total déjà affiché à chaque étape, exactement comme `Chips *
     Mult == TotalScore` côté Core.
+- **Coloration des mots "points"/"multiplicateur" dans les descriptions**
+  (sur demande explicite : "à chaque fois que le mot point apparait
+  dans les description, que le mot soit bleu et idem pour le rouge et
+  le multiplicateur"). Nouveau `DescriptionTextFormatter.Colorize`
+  (Presentation) : découpe la description mot par mot (pas de regex,
+  cohérent avec le reste du projet) et entoure chaque occurrence de
+  "pts"/"pt"/"point"/"points" d'un tag `<color=#65AED6>` (bleu,
+  `UITheme.ButtonSelected`) et chaque occurrence de
+  "multiplier"/"multipliers" ou du facteur littéral lui-même
+  ("x2", "x3"...) d'un `<color=#B56D7F>` (rouge, `UITheme.Danger`) —
+  mêmes couleurs que les nouvelles pastilles chips/mult de `ComboView`
+  ci-dessus, pour une convention bleu=score/rouge=multiplicateur
+  cohérente dans tout le jeu. Repose sur le support rich-text natif du
+  composant `Text` d'Unity (`<color>`, actif par défaut, jamais
+  désactivé dans `UIFactory`), donc aucun changement de rendu requis.
+  Reconnaît uniquement les mots littéraux, pas tous les synonymes
+  ("doubles", "+18 flat" restent non colorés) — une interprétation
+  volontairement littérale de la demande.
+  - Branché aux 3 seuls endroits de tout le projet qui affichent une
+    description telle quelle : `ModifierBadgeView` (tooltip de
+    modifier), `TraitBadgeView` (tooltip de trait de pièce) et
+    `UpgradeCardFactory` (carte d'upgrade, partagée par la boutique, le
+    choix de tuiles et la révélation Joker).
