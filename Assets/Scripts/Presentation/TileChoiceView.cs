@@ -24,6 +24,14 @@ namespace Contigu.Presentation
         private const float CellSize = 140f;
         private const float PreviewSize = 116f;
         private const float BadgeFadeDuration = 0.35f;
+        private const float TitleHeight = 40f;
+        private const float ConfirmHeight = 46f;
+        private const float BlockSpacing = 24f;
+        // The canvas is always exactly this tall in its own local units
+        // regardless of actual window size (CanvasScaler matches on height —
+        // see GameBootstrap.BuildCanvas), so centering math done in this
+        // space holds for any resolution.
+        private const float CanvasHeight = 800f;
 
         /// <summary>Fires with the chosen deck indices once the player confirms.</summary>
         public event Action<IReadOnlyList<int>> TileChoiceConfirmed;
@@ -35,6 +43,7 @@ namespace Contigu.Presentation
         private Text _title;
         private RectTransform _previewsContainer;
         private Button _confirmButton;
+        private RectTransform _confirmRect;
 
         private readonly List<int> _candidates = new List<int>();
         private readonly HashSet<int> _selected = new HashSet<int>();
@@ -59,15 +68,15 @@ namespace Contigu.Presentation
             _cardContainer.anchorMin = new Vector2(0.5f, 1f);
             _cardContainer.anchorMax = new Vector2(0.5f, 1f);
             _cardContainer.pivot = new Vector2(0.5f, 1f);
-            _cardContainer.anchoredPosition = new Vector2(0f, -20f);
+            // Vertical position set in Show(), as part of the whole block's
+            // layout — see LayoutBlock.
 
             _title = UIFactory.CreateText(_root, "Title", "", 22, UITheme.TextPrimary);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), once the card above it (see
-            // UpgradeCardFactory) is built and its real height known — see
-            // the comment there.
+            // Vertical position set in Show(), as part of the whole block's
+            // layout — see LayoutBlock.
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
             // Horizontal instead of the old vertical list (explicit request:
@@ -88,12 +97,14 @@ namespace Contigu.Presentation
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             _confirmButton = UIFactory.CreateButton(_root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
-            var confirmRect = _confirmButton.GetComponent<RectTransform>();
-            confirmRect.anchorMin = new Vector2(0.5f, 0f);
-            confirmRect.anchorMax = new Vector2(0.5f, 0f);
-            confirmRect.pivot = new Vector2(0.5f, 0f);
-            confirmRect.anchoredPosition = new Vector2(0f, 40f);
-            confirmRect.sizeDelta = new Vector2(200f, 46f);
+            _confirmRect = _confirmButton.GetComponent<RectTransform>();
+            _confirmRect.anchorMin = new Vector2(0.5f, 1f);
+            _confirmRect.anchorMax = new Vector2(0.5f, 1f);
+            _confirmRect.pivot = new Vector2(0.5f, 1f);
+            // Vertical position set in Show(), as part of the same
+            // measured, vertically-centered block as everything else above
+            // it — see the comment there.
+            _confirmRect.sizeDelta = new Vector2(200f, ConfirmHeight);
             _confirmButton.onClick.AddListener(OnConfirmClicked);
 
             _root.gameObject.SetActive(false);
@@ -122,16 +133,6 @@ namespace Contigu.Presentation
             }
             var card = UpgradeCardFactory.Build(_cardContainer, def);
 
-            // Measured, not guessed — see UpgradeCardFactory's own comment.
-            // _cardContainer itself sits at a fixed -20; the card built
-            // inside it starts at (0,0) relative to that, so its own
-            // sizeDelta.y is exactly how far down the card actually goes.
-            const float cardTopY = -20f;
-            const float gapBelowCard = 24f;
-            float bodyTopY = cardTopY - card.sizeDelta.y - gapBelowCard;
-            _title.rectTransform.anchoredPosition = new Vector2(0f, bodyTopY);
-            _previewsContainer.anchoredPosition = new Vector2(0f, bodyTopY - 40f);
-
             _title.text = "Select " + _requiredCount + " pieces";
 
             for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
@@ -143,8 +144,37 @@ namespace Contigu.Presentation
                 BuildPreviewCell(_candidates[i]);
             }
 
+            LayoutBlock(card.sizeDelta.y);
+
             RefreshConfirmInteractable();
             _root.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Stacks card/title/previews/Confirm as one block and centers that
+        /// whole block vertically in the overlay, instead of hanging it from
+        /// the top — explicit request, now that previews are a compact
+        /// single row (see BuildPreviewCell) rather than the old vertical
+        /// list, top-anchoring left a big dead gap above Confirm. Every
+        /// height here is either measured (the card, via
+        /// UpgradeCardFactory) or a fixed known constant (everything else),
+        /// never guessed.
+        /// </summary>
+        private void LayoutBlock(float cardHeight)
+        {
+            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + CellSize + BlockSpacing + ConfirmHeight;
+            float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
+
+            _cardContainer.anchoredPosition = new Vector2(0f, topY);
+            float y = topY - cardHeight - BlockSpacing;
+
+            _title.rectTransform.anchoredPosition = new Vector2(0f, y);
+            y -= TitleHeight + BlockSpacing;
+
+            _previewsContainer.anchoredPosition = new Vector2(0f, y);
+            y -= CellSize + BlockSpacing;
+
+            _confirmRect.anchoredPosition = new Vector2(0f, y);
         }
 
         private void BuildPreviewCell(int deckIndex)
