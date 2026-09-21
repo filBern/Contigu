@@ -1423,20 +1423,72 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Repetition_FiresOnlyWhenThisPieceIsTheSameShapeAsThePreviousPlacement()
+        public void Repetition_MultiplierGrowsWithConsecutiveSameShapePlacements()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
-
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
-
             var modifiers = new List<ModifierId> { ModifierId.Repetition };
-            var sameShape = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.RepetitionMultiplier, sameShape.ModifierMultiplier);
 
-            var differentShape = grid.PlacePiece(domH, PieceColor.Violet, 5, 5, modifiers);
-            Assert.AreEqual(1, differentShape.ModifierMultiplier);
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(1, first.ModifierMultiplier, "Round's first placement starts no streak yet");
+
+            var second = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(2, second.ModifierMultiplier, "2nd consecutive Single in a row");
+
+            var third = grid.PlacePiece(single, PieceColor.Violet, 5, 5, modifiers);
+            Assert.AreEqual(3, third.ModifierMultiplier, "3rd consecutive Single in a row");
+
+            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 6, modifiers);
+            Assert.AreEqual(1, broken.ModifierMultiplier, "A different shape breaks and restarts the streak");
+
+            var restarted = grid.PlacePiece(single, PieceColor.Coral, 6, 6, modifiers);
+            Assert.AreEqual(1, restarted.ModifierMultiplier, "Streak restarts at 1 (no bonus yet) right after it broke");
+        }
+
+        [Test]
+        public void Synergie_MultipliesByTheTotalNumberOfModifiersHeld()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var alone = new List<ModifierId> { ModifierId.Synergie };
+            var solo = grid.PlacePiece(single, PieceColor.Coral, 0, 0, alone);
+            Assert.AreEqual(1, solo.ModifierMultiplier, "Synergie alone counts only itself");
+
+            // Couronne/Encerclement are purely additive (ModifierBonus), never
+            // touch ModifierMultiplier, so they can't contaminate this count.
+            var withOthers = new List<ModifierId> { ModifierId.Synergie, ModifierId.Couronne, ModifierId.Encerclement };
+            var withThree = grid.PlacePiece(single, PieceColor.Teal, 3, 3, withOthers);
+            Assert.AreEqual(3, withThree.ModifierMultiplier, "3 modifiers held in total");
+
+            var duplicated = new List<ModifierId> { ModifierId.Synergie, ModifierId.Synergie };
+            var stacked = grid.PlacePiece(single, PieceColor.Violet, 5, 5, duplicated);
+            Assert.AreEqual(4, stacked.ModifierMultiplier, "Each of the 2 held copies independently multiplies by the count (2), stacking to 4");
+        }
+
+        [Test]
+        public void Densite_MultiplierGrowsWithHowManyCellsAreFilledOnTheBoard()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Densite };
+
+            var early = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(1, early.ModifierMultiplier, "Only 1 cell filled, well under the 10-cell step");
+
+            // Fill 18 more cells without completing any row/column (3 rows of
+            // 6, none reaching the 8-cell width), for 19 filled cells total.
+            for (int y = 1; y <= 3; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    grid.PlacePiece(single, PieceColor.Teal, x, y);
+                }
+            }
+
+            var late = grid.PlacePiece(single, PieceColor.Violet, 6, 1, modifiers);
+            Assert.AreEqual(2, late.ModifierMultiplier, "20 cells filled / 10 per step = x2");
         }
 
         [Test]

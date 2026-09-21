@@ -320,7 +320,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
             ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
-            "x2 multiplier when this piece is the same shape as the immediately previous placement this round.");
+            "xN multiplier where N is how many placements in a row share this piece's shape: x2 on the 2nd consecutive placement of the same shape, x3 on the 3rd, and so on (resets to x1 the moment a different shape is placed).");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
@@ -346,6 +346,21 @@ namespace Contigu.Core
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
             "A placed Joker tile counts as whichever base color would score the most from your Devotion/Glow modifiers.");
 
+        // ---- Seventh batch: progressive modifiers that scale with a
+        // running counter instead of a fixed strength, on explicit request
+        // ("+5 ou x1 pour chaque pièce d'un même type de suite, +10 ou x2
+        // pour la 2e de suite, etc... (x1 par modifiers possédé) (x0.1 par
+        // tuile sur la grille)") — Repetition (above) was adapted the same
+        // way instead of being duplicated. ----
+
+        public static readonly ModifierDefinition Synergie = new ModifierDefinition(
+            ModifierId.Synergie, ModifierCategory.Roguelike, "Synergy",
+            "xN multiplier where N is your total number of modifiers held, this one included.");
+
+        public static readonly ModifierDefinition Densite = new ModifierDefinition(
+            ModifierId.Densite, ModifierCategory.Roguelike, "Density",
+            "xN multiplier where N is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -356,7 +371,8 @@ namespace Contigu.Core
             FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro,
             SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
-            Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker
+            Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
+            Synergie, Densite
         };
 
         public static ModifierDefinition Get(ModifierId id)

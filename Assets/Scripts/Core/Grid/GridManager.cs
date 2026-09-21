@@ -24,6 +24,9 @@ namespace Contigu.Core
         /// <summary>Shape of the last piece placed this round, or null before the round's first placement — tracked for "Repetition", reset by <see cref="ResetForNewRound"/>.</summary>
         private ShapeId? _lastPlacedShapeId;
 
+        /// <summary>How many placements in a row this round (ending at, and including, the most recent one) share the same shape — 1 means no repeat yet (either the round's first placement, or this shape differs from the previous one). Tracked for the progressive "Repetition" modifier, reset by <see cref="ResetForNewRound"/>.</summary>
+        private int _repetitionStreak;
+
         /// <summary>Fill color of the last piece placed this round, or null before the round's first placement — tracked for "Color Switch" (Alternance des pièces), reset by <see cref="ResetForNewRound"/>.</summary>
         private PieceColor? _lastPlacedColor;
 
@@ -98,6 +101,7 @@ namespace Contigu.Core
             _lastGroupSize = null;
             _placementsSinceLastClear = 0;
             _lastPlacedShapeId = null;
+            _repetitionStreak = 0;
             _lastPlacedColor = null;
         }
 
@@ -198,11 +202,15 @@ namespace Contigu.Core
             // "Rafale" in ApplyPostClearModifiers.
             int streakBeforePlacement = _placementsSinceLastClear;
 
-            // Captured before being overwritten below, for "Repetition"
-            // (same shape as last time) and "Color Switch" (different color
-            // from last time).
-            ShapeId? previousShapeId = _lastPlacedShapeId;
+            // "Repetition" needs how many placements in a row (ending at THIS
+            // one) share the same shape, not just whether the immediately
+            // previous one matches, so its bonus can scale with streak length
+            // (2nd consecutive same-shape placement is x2, 3rd is x3, etc).
+            bool continuesShapeStreak = _lastPlacedShapeId.HasValue && _lastPlacedShapeId.Value == shape.Id;
+            _repetitionStreak = continuesShapeStreak ? _repetitionStreak + 1 : 1;
             _lastPlacedShapeId = shape.Id;
+            // Captured before being overwritten below, for "Color Switch"
+            // (different color from last time).
             PieceColor? previousPlacedColor = _lastPlacedColor;
             _lastPlacedColor = color;
 
@@ -250,7 +258,7 @@ namespace Contigu.Core
             int modifierMultiplier = 1;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, previousShapeId, previousPlacedColor, out int preMultiplier);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier);
                 modifierMultiplier *= preMultiplier;
             }
 
@@ -396,7 +404,7 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, ShapeId? previousShapeId, PieceColor? previousPlacedColor, out int modifierMultiplier)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
@@ -571,7 +579,11 @@ namespace Contigu.Core
                         break;
                     case ModifierId.Repetition:
                         bonus = 0;
-                        multiplier *= ApplyRepetition(shape.Id, previousShapeId, placedCells, events);
+                        multiplier *= ApplyRepetition(repetitionStreak, placedCells, events);
+                        break;
+                    case ModifierId.Synergie:
+                        bonus = 0;
+                        multiplier *= ApplySynergie(activeModifiers.Count, placedCells, events);
                         break;
                     case ModifierId.AlternancePieces:
                         bonus = 0;
@@ -784,6 +796,28 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.EspaceLibreMultiplier));
             return ScoringConstants.EspaceLibreMultiplier;
+        }
+
+        /// <summary>Density (Densité): progressive xN multiplier, the opposite of Espace Libre — N is how many cells are filled on the board right after this placement (and any of its own line clears), divided by ScoringConstants.DensiteFilledCellsPerMultiplierStep and rounded down. Returns 1 (no-op) while fewer than one step's worth of cells are filled.</summary>
+        private int ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int filled = 0;
+            foreach (var pos in AllPositions())
+            {
+                if (_cells[pos.x, pos.y].IsFilled)
+                {
+                    filled++;
+                }
+            }
+
+            int multiplier = filled / ScoringConstants.DensiteFilledCellsPerMultiplierStep;
+            if (multiplier < 1)
+            {
+                return 1;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplier));
+            return multiplier;
         }
 
         /// <summary>Rafale: xN multiplier (see ScoringConstants.RafaleMultiplier) when this placement clears at least one row/column AND the immediately previous placement this round also did — two clears back to back. Returns 1 (no-op) otherwise.</summary>
@@ -1033,16 +1067,23 @@ namespace Contigu.Core
             return ScoringConstants.GrosseFamilleMultiplier;
         }
 
-        /// <summary>Repetition: xN multiplier (see ScoringConstants.RepetitionMultiplier) when this piece is the same shape as the immediately previous placement this round. Returns 1 (no-op) otherwise.</summary>
-        private static int ApplyRepetition(ShapeId currentShapeId, ShapeId? previousShapeId, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        /// <summary>Repetition (progressive): xN multiplier where N is <paramref name="repetitionStreak"/>, the number of placements in a row (this one included) sharing the same shape — x2 on the 2nd consecutive same-shape placement, x3 on the 3rd, and so on. Returns 1 (no-op) on the first placement of a new streak.</summary>
+        private static int ApplyRepetition(int repetitionStreak, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            if (!previousShapeId.HasValue || previousShapeId.Value != currentShapeId)
+            if (repetitionStreak < 2)
             {
                 return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.RepetitionMultiplier));
-            return ScoringConstants.RepetitionMultiplier;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], repetitionStreak));
+            return repetitionStreak;
+        }
+
+        /// <summary>Synergy (Synergie): xN multiplier where N is the total number of modifiers currently held (this one included, and every duplicate copy of any modifier counts separately) — grows automatically as the player picks up more modifiers.</summary>
+        private static int ApplySynergie(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], modifierCount));
+            return modifierCount;
         }
 
         /// <summary>Color Switch (Alternance des pièces): xN multiplier (see ScoringConstants.AlternancePiecesMultiplier) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier. Returns 1 (no-op) otherwise.</summary>
@@ -1288,6 +1329,10 @@ namespace Contigu.Core
                     case ModifierId.Rafale:
                         bonus = 0;
                         multiplier *= ApplyRafale(clearedByPreviousPlacement, clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.Densite:
+                        bonus = 0;
+                        multiplier *= ApplyDensite(placedCells, events);
                         break;
                     default:
                         bonus = 0;

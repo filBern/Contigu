@@ -90,6 +90,12 @@ namespace Contigu.Core
         Precision,
         Surpopulation,
         Minimaliste,
-        Joker
+        Joker,
+
+        // ---- Seventh batch: progressive modifiers that scale with a
+        // running counter instead of firing at a fixed strength (on
+        // explicit request) ----
+        Synergie,
+        Densite
     }
 }

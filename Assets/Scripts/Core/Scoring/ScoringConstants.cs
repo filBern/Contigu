@@ -201,9 +201,6 @@ namespace Contigu.Core
         /// <summary>Big Family (Grosse Famille): xN multiplier when this placement's color exists in exactly one connected group on the whole board — no other same-color cell anywhere else.</summary>
         public const int GrosseFamilleMultiplier = 2;
 
-        /// <summary>Repetition: xN multiplier when this piece is the same shape as the immediately previous placement this round.</summary>
-        public const int RepetitionMultiplier = 2;
-
         /// <summary>Color Switch (Alternance des pièces): xN multiplier when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier.</summary>
         public const int AlternancePiecesMultiplier = 2;
 
@@ -221,5 +218,10 @@ namespace Contigu.Core
 
         /// <summary>Puriste: xN multiplier when the placement's scored group is monochrome (jokers ignored) — was "+50% of the group's points" (a de facto x1.5), now a clean xN like every other converted modifier.</summary>
         public const int PuristeMultiplier = 3;
+
+        // ---- Seventh batch: progressive modifiers (on explicit request) ----
+
+        /// <summary>Density (Densité): filled cells on the board (after this placement's own clears) are divided by this many, floored, to get the xN multiplier — i.e. +0.1x per filled tile, kept as a clean integer step instead of introducing fractional multipliers.</summary>
+        public const int DensiteFilledCellsPerMultiplierStep = 10;
     }
 }

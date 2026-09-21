@@ -2776,3 +2776,49 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   dans `Abbreviations` mais ne sont plus utilisées pour ces 4 IDs
   (même précédent que EC/ET/EV/EL, gardées comme donnée de repli
   inoffensive).
+- **3 modificateurs progressifs** (demande explicite : "Il manque
+  d'upgrade progressif (+5 ou x1 pour chaque pièce d'un même type de
+  suite, +10 ou x2 pour la 2e de suite, etc...) (x1 par modifiers possédé)
+  (x0.1 par tuile sur la grille) On peut soit adapter des modifiers déjà
+  présent ou en faire des nouveaux") — jusqu'ici, chaque modificateur
+  avait une force FIXE (toujours xN, ou toujours +X pts). Ces 3
+  modificateurs scalent plutôt avec un compteur qui grandit pendant la
+  partie, sur le même modèle multiplicateur (xN) que la conversion
+  Balatro de cette session :
+  - **Répétition (adaptée)** : n'était qu'un x2 plat quand la pièce posée
+    avait la même forme que la précédente. Devient progressive :
+    `GridManager` garde maintenant `_repetitionStreak`, la longueur de la
+    série de poses consécutives de même forme (this-round), mise à jour à
+    CHAQUE pose (que Répétition soit possédée ou non, comme
+    `_lastPlacedShapeId`/`_lastGroupSize`). Le multiplicateur devient
+    directement cette longueur : x1 (aucun bonus) à la 1ère pose d'une
+    série, x2 à la 2e forme identique d'affilée, x3 à la 3e, etc. — sans
+    plafond, comme les autres modificateurs "stacking" du jeu (Démolisseur,
+    Arc-en-ciel...). L'ancienne constante `ScoringConstants.RepetitionMultiplier`
+    (toujours 2) a été retirée, la valeur venant maintenant directement du
+    compteur.
+  - **Synergie (nouveau, `x1 par modifiers possédé`)** : xN où N est le
+    nombre TOTAL de modificateurs actuellement possédés (elle-même
+    incluse, et chaque copie compte séparément si le joueur en possède
+    plusieurs exemplaires — comme "posséder 2x le même modificateur
+    double son effet" déjà établi pour les autres). Lue directement depuis
+    `activeModifiers.Count` dans `GridManager.ApplyPreClearModifiers`
+    (déjà disponible, aucun nouvel état à tracker) — récompense
+    directement le fait d'accumuler des modificateurs, effet roguelike
+    "boule de neige" volontaire.
+  - **Densité (nouveau, `x0.1 par tuile sur la grille`)** : xN où N est le
+    nombre de cases remplies sur la grille (après la pose et ses clears
+    éventuels) divisé par 10, arrondi à l'entier inférieur — donc
+    mathématiquement identique à "+0.1x par tuile" mais en gardant un
+    multiplicateur entier plutôt que d'introduire des fractions dans tout
+    le système de score (`PlacementResult.ModifierMultiplier`,
+    `ScoreEvent.Amount`, l'affichage "xN" du pill mult, etc. sont tous des
+    `int`). Opposé thématique d'Espace Libre (qui récompense un plateau
+    presque vide) — réutilise le même scan `AllPositions()`/`IsFilled`.
+    Ne se déclenche pas tant que moins de 10 cases sont remplies.
+  - Les 3 sont catégorie Roguelike, enregistrés dans
+    `ModifierCatalog.All` (donc piochables normalement dans le draft, rien
+    d'autre à câbler). Nouveaux tests :
+    `GridManagerModifierTests.Repetition_MultiplierGrowsWithConsecutiveSameShapePlacements`,
+    `.Synergie_MultipliesByTheTotalNumberOfModifiersHeld`,
+    `.Densite_MultiplierGrowsWithHowManyCellsAreFilledOnTheBoard`.

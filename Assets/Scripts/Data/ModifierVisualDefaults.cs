@@ -84,7 +84,9 @@ namespace Contigu.Data
             { ModifierId.Precision, "PC" },
             { ModifierId.Surpopulation, "SP" },
             { ModifierId.Minimaliste, "MN" },
-            { ModifierId.Joker, "JK" }
+            { ModifierId.Joker, "JK" },
+            { ModifierId.Synergie, "SY" },
+            { ModifierId.Densite, "DS" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as
