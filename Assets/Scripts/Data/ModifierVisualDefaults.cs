@@ -70,7 +70,6 @@ namespace Contigu.Data
             { ModifierId.Diagonale, "DI" },
             { ModifierId.Nid, "NI" },
             { ModifierId.Solitaire, "SO" },
-            { ModifierId.Imminent, "IM" },
             { ModifierId.EspaceLibre, "SL" },
             { ModifierId.Rafale, "RA" },
             { ModifierId.PetitFormat, "PF" },

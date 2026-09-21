@@ -1270,24 +1270,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Imminent_FiresForALineLeftWithExactlyOneEmptyUnlockedCell()
-        {
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-
-            for (int x = 0; x < GridManager.Size - 1; x++)
-            {
-                grid.PlacePiece(single, PieceColor.Coral, x, 0);
-            }
-            // Row 0 now has exactly one empty cell left: (7, 0).
-
-            var modifiers = new List<ModifierId> { ModifierId.Imminent };
-            var trigger = grid.PlacePiece(single, PieceColor.Teal, 0, 7, modifiers);
-
-            Assert.AreEqual(ScoringConstants.ImminentBonusPerLine, trigger.ModifierBonus);
-        }
-
-        [Test]
         public void EspaceLibre_FiresOnlyWhileBoardIsAtMost25PercentFilled()
         {
             var grid = new GridManager();

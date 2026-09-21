@@ -68,11 +68,10 @@ namespace Contigu.Core
         EclatViolet,
         EclatLime,
 
-        // ---- Fifth batch (8 more, on explicit request) ----
+        // ---- Fifth batch (7 more, on explicit request — originally 8, Imminent later removed) ----
         Diagonale,
         Nid,
         Solitaire,
-        Imminent,
         EspaceLibre,
         Rafale,
         PetitFormat,

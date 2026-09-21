@@ -711,77 +711,6 @@ namespace Contigu.Core
             return ScoringConstants.FraicheurBonus;
         }
 
-        /// <summary>Imminent: bonus per row/column that, once this placement (and any of its own line clears) has fully resolved, has EXACTLY one empty unlocked cell left — "one tile away" tension, anchored at that very cell.</summary>
-        private int ApplyImminent(List<ScoreEvent> events)
-        {
-            int total = 0;
-            for (int y = 0; y < Size; y++)
-            {
-                if (TryGetSingleEmptyUnlockedInRow(y, out var pos))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ImminentBonusPerLine));
-                    total += ScoringConstants.ImminentBonusPerLine;
-                }
-            }
-            for (int x = 0; x < Size; x++)
-            {
-                if (TryGetSingleEmptyUnlockedInColumn(x, out var pos))
-                {
-                    events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ImminentBonusPerLine));
-                    total += ScoringConstants.ImminentBonusPerLine;
-                }
-            }
-            return total;
-        }
-
-        private bool TryGetSingleEmptyUnlockedInRow(int y, out Vector2Int pos)
-        {
-            int count = 0;
-            pos = default;
-            for (int x = 0; x < Size; x++)
-            {
-                var cell = _cells[x, y];
-                if (cell.IsLocked)
-                {
-                    continue;
-                }
-                if (!cell.IsFilled)
-                {
-                    count++;
-                    pos = new Vector2Int(x, y);
-                    if (count > 1)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return count == 1;
-        }
-
-        private bool TryGetSingleEmptyUnlockedInColumn(int x, out Vector2Int pos)
-        {
-            int count = 0;
-            pos = default;
-            for (int y = 0; y < Size; y++)
-            {
-                var cell = _cells[x, y];
-                if (cell.IsLocked)
-                {
-                    continue;
-                }
-                if (!cell.IsFilled)
-                {
-                    count++;
-                    pos = new Vector2Int(x, y);
-                    if (count > 1)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return count == 1;
-        }
-
         /// <summary>Espace Libre: flat bonus when, right after this placement (and any of its own line clears), at most ScoringConstants.EspaceLibreMaxFilledCells cells on the whole board are still filled — rewards keeping the board deliberately open.</summary>
         private int ApplyEspaceLibre(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -1283,9 +1212,6 @@ namespace Contigu.Core
                         break;
                     case ModifierId.MonochromeLigne:
                         bonus = ApplyPerLineBonus(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneBonusPerLine);
-                        break;
-                    case ModifierId.Imminent:
-                        bonus = ApplyImminent(events);
                         break;
                     case ModifierId.EspaceLibre:
                         bonus = ApplyEspaceLibre(placedCells, events);

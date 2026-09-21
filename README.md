@@ -1958,11 +1958,6 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     case préexistante fusionnée dedans) ET fait plus d'une case —
     l'inverse de Catalyst Tile (qui récompense au contraire la fusion
     avec l'existant) ; le cas à 1 case reste le pré carré d'Îlot.
-  - **Imminent** (`Imminent`, Destruction) : +10 pts par ligne/colonne
-    qui, une fois cette pose entièrement résolue (ses propres line
-    clears compris), ne compte plus qu'UNE seule case vide et non
-    verrouillée — tension du "à un carré du clear", ancré sur cette
-    case précise plutôt que sur la pose elle-même.
   - **Open Space** (`EspaceLibre`, Roguelike) : +15 pts tant que le
     plateau entier compte au plus 16 cases remplies (25%) une fois la
     pose résolue — récompense un jeu qui garde le plateau dégagé,

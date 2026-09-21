@@ -282,10 +282,6 @@ namespace Contigu.Core
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
             "+12 pts when this placement's group is entirely its own piece (more than 1 cell) — nothing pre-existing merged into it.");
 
-        public static readonly ModifierDefinition Imminent = new ModifierDefinition(
-            ModifierId.Imminent, ModifierCategory.Destruction, "Imminent",
-            "+10 pts per row/column left with exactly one empty tile once this placement is fully resolved.");
-
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Open Space",
             "+15 pts whenever the board is at most 25% filled once this placement is fully resolved.");
@@ -359,7 +355,7 @@ namespace Contigu.Core
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
             FormeSingle, FormeDomH, FormeDomV, FormeTriL, FormeTriIH, FormeTriIV, FormeSq2, FormeLTetro, FormeTTetro, FormeSTetro,
             SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
-            Diagonale, Nid, Solitaire, Imminent, EspaceLibre, Rafale, PetitFormat, Fraicheur,
+            Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker
         };
 

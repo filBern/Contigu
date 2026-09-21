@@ -154,9 +154,6 @@ namespace Contigu.Core
         /// <summary>Fraîcheur: flat bonus when this placement's fill color is nowhere else on the board yet.</summary>
         public const int FraicheurBonus = 10;
 
-        /// <summary>Imminent: bonus per row/column left with exactly one empty unlocked cell once this placement has fully resolved.</summary>
-        public const int ImminentBonusPerLine = 10;
-
         /// <summary>Espace Libre: flat bonus once at most this many cells on the whole board are still filled.</summary>
         public const int EspaceLibreBonus = 15;
         public const int EspaceLibreMaxFilledCells = 16; // 25% of the 64-cell board
