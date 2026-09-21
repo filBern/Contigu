@@ -28,6 +28,17 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            // GridCellView.SetHoverTint activates this badge to preview the
+            // trait a valid placement would grant, without ever calling
+            // Init() on it (only ApplyState does, once the trait is
+            // actually placed) — so _tooltip can still be null here if the
+            // player's cursor happens to sit on the badge's corner while
+            // only hovering a placement preview (NullReferenceException
+            // bug report).
+            if (_tooltip == null)
+            {
+                return;
+            }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
             string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
             _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), PieceTraitVisualDefaults.GetDescription(_trait), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
@@ -35,6 +46,10 @@ namespace Contigu.Presentation
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            if (_tooltip == null)
+            {
+                return;
+            }
             _tooltip.Hide();
         }
 

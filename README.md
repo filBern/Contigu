@@ -2521,3 +2521,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`ScoringConstants.LineClearBonusPerCell`, sur demande explicite —
   revient sur le changement précédent "passons de 12 à 6 points par
   tuile").
+- **Fix : NullReferenceException dans `TraitBadgeView.OnPointerEnter`**
+  (crash report avec stack trace). Cause : en unifiant la position du
+  badge de trait sur le coin haut-droite (voir point précédent),
+  `GridCellView.SetHoverTint` a été changé pour activer
+  `_badgeTraitOrigin` (qui porte le composant `TraitBadgeView`) pendant
+  le preview de survol, mais sans jamais appeler `Init()` dessus — seul
+  `ApplyState` le fait, une fois le trait réellement posé. Si le
+  curseur reste sur ce coin pendant le survol d'un preview, Unity
+  déclenche `OnPointerEnter` sur un `TraitBadgeView` dont `_tooltip` est
+  encore `null`. Sur demande explicite ("il ne faut pas changer le
+  design, probablement juste rajouter une validation") : simple garde
+  `if (_tooltip == null) return;` ajoutée en tête de `OnPointerEnter`
+  et `OnPointerExit`, sans toucher au comportement du preview lui-même
+  (le survol ne montre toujours pas de tooltip, exactement comme avant
+  ce point précédent).
