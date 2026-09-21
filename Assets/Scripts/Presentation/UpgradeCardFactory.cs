@@ -12,51 +12,66 @@ namespace Contigu.Presentation
     /// regardless of content and ran off the top of the screen on top of
     /// the shop content still showing behind it (explicit request: "c'est
     /// trop gros comme écran, au lieu d'une carte on va juste mettre la
-    /// description en texte blanc"). No background image or banner sprite,
-    /// so the block's actual height is just whatever the text needs —
-    /// computed via Text.cachedTextGenerator rather than guessed, since
-    /// descriptions vary a lot in length (~190 characters at the longest).
+    /// description en texte blanc"). Positioned and measured entirely by
+    /// hand (no VerticalLayoutGroup/ContentSizeFitter, which only resolve
+    /// on a later layout pass) so <see cref="Build"/> hands back the real
+    /// total height synchronously (in the returned RectTransform's own
+    /// sizeDelta.y) — callers use it to place whatever comes below without
+    /// guessing at a fixed offset, since descriptions vary a lot in length
+    /// (~190 characters at the longest) and text sizes have grown since the
+    /// first version of this (see below). Text sizes are 1.5x that first
+    /// version's (explicit request); Width stays fixed rather than growing
+    /// with them, on the same request ("le texte de la description ne soit
+    /// pas trop large") — the description just wraps to more lines instead
+    /// of wider ones.
     /// </summary>
     public static class UpgradeCardFactory
     {
         public const float Width = 560f;
+        private const float NameHeight = 42f;
+        private const float RarityHeight = 30f;
+        private const float LineSpacing = 6f;
 
         public static RectTransform Build(Transform parent, UpgradeDefinition def)
         {
             var container = UIFactory.CreateUIObject("UpgradeReveal_" + def.Id, parent);
-            var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.spacing = 4f;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = container.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            container.sizeDelta = new Vector2(Width, 0f);
+            container.anchorMin = new Vector2(0.5f, 1f);
+            container.anchorMax = new Vector2(0.5f, 1f);
+            container.pivot = new Vector2(0.5f, 1f);
 
-            var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 22, Color.white);
-            nameLabel.fontStyle = FontStyle.Bold;
-            PinSize(nameLabel, Width, 28f);
+            // No FontStyle.Bold here (used nowhere else in the codebase) —
+            // the Digitalt font has no true bold face, so Unity's legacy
+            // Text synthesizes one by double-drawing a shifted copy, which
+            // is what was actually making the name read as blurry rather
+            // than bold. Size alone (already the largest of the three
+            // lines) carries the emphasis instead, same convention as
+            // every other label in the game.
+            var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 33, Color.white);
+            PositionRow(nameLabel, 0f, NameHeight);
 
             var rarityLabel = UIFactory.CreateText(container, "Rarity",
                 UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                14, Color.white);
+                21, Color.white);
             rarityLabel.fontStyle = FontStyle.Italic;
-            PinSize(rarityLabel, Width, 20f);
+            float rarityY = -(NameHeight + LineSpacing);
+            PositionRow(rarityLabel, rarityY, RarityHeight);
 
-            var descLabel = UIFactory.CreateText(container, "Desc", def.Description, 15, Color.white);
-            PinSize(descLabel, Width, PreferredHeight(descLabel, Width));
+            var descLabel = UIFactory.CreateText(container, "Desc", def.Description, 23, Color.white);
+            float descY = rarityY - (RarityHeight + LineSpacing);
+            float descHeight = PreferredHeight(descLabel, Width);
+            PositionRow(descLabel, descY, descHeight);
 
+            container.sizeDelta = new Vector2(Width, -descY + descHeight);
             return container;
         }
 
-        // Plain Text has no ILayoutElement, so a parent VerticalLayoutGroup
-        // would otherwise collapse each line toward zero width/height.
-        private static void PinSize(Text text, float width, float height)
+        private static void PositionRow(Text text, float y, float height)
         {
-            var layoutElement = text.gameObject.AddComponent<LayoutElement>();
-            layoutElement.preferredWidth = width;
-            layoutElement.preferredHeight = height;
+            text.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            text.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            text.rectTransform.pivot = new Vector2(0.5f, 1f);
+            text.rectTransform.anchoredPosition = new Vector2(0f, y);
+            text.rectTransform.sizeDelta = new Vector2(Width, height);
         }
 
         private static float PreferredHeight(Text text, float width)

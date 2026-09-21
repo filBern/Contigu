@@ -33,6 +33,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private RectTransform _root;
         private RectTransform _cardInstance;
+        private float _bodyTopY;
         private IReadOnlyList<(ShapeId Shape, PieceColor Color)> _typeCandidates;
 
         public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
@@ -84,7 +85,16 @@ namespace Contigu.Presentation
             _cardInstance.anchorMin = new Vector2(0.5f, 1f);
             _cardInstance.anchorMax = new Vector2(0.5f, 1f);
             _cardInstance.pivot = new Vector2(0.5f, 1f);
-            _cardInstance.anchoredPosition = new Vector2(0f, -20f);
+            const float cardTopY = -20f;
+            const float gapBelowCard = 24f;
+            _cardInstance.anchoredPosition = new Vector2(0f, cardTopY);
+            // Measured, not guessed — UpgradeCardFactory.Build already
+            // computed the card's real height (it varies with the
+            // description's length), so everything below it is placed
+            // relative to that instead of a fixed offset that would either
+            // overlap a long description or leave a big gap under a short
+            // one.
+            _bodyTopY = cardTopY - _cardInstance.sizeDelta.y - gapBelowCard;
 
             ShowTypeChoice(def);
         }
@@ -115,14 +125,14 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, _bodyTopY);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("List", _root);
             listContainer.anchorMin = new Vector2(0.5f, 1f);
             listContainer.anchorMax = new Vector2(0.5f, 1f);
             listContainer.pivot = new Vector2(0.5f, 1f);
-            listContainer.anchoredPosition = new Vector2(0f, -210f);
+            listContainer.anchoredPosition = new Vector2(0f, _bodyTopY - 40f);
             listContainer.sizeDelta = new Vector2(700f, 460f);
             var grid = listContainer.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(220f, TypeRowHeight);
@@ -215,14 +225,14 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, _bodyTopY);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("Colors", _root);
             listContainer.anchorMin = new Vector2(0.5f, 1f);
             listContainer.anchorMax = new Vector2(0.5f, 1f);
             listContainer.pivot = new Vector2(0.5f, 1f);
-            listContainer.anchoredPosition = new Vector2(0f, -220f);
+            listContainer.anchoredPosition = new Vector2(0f, _bodyTopY - 50f);
             var hLayout = listContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 12f;
             hLayout.childAlignment = TextAnchor.MiddleCenter;

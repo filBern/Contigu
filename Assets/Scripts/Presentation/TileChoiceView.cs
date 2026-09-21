@@ -58,14 +58,15 @@ namespace Contigu.Presentation
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _title.rectTransform.anchoredPosition = new Vector2(0f, -170f);
+            // Vertical position set in Show(), once the card above it (see
+            // UpgradeCardFactory) is built and its real height known — see
+            // the comment there.
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -210f);
             var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8f;
             layout.childAlignment = TextAnchor.UpperCenter;
@@ -106,7 +107,17 @@ namespace Contigu.Presentation
             {
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
-            UpgradeCardFactory.Build(_cardContainer, def);
+            var card = UpgradeCardFactory.Build(_cardContainer, def);
+
+            // Measured, not guessed — see UpgradeCardFactory's own comment.
+            // _cardContainer itself sits at a fixed -20; the card built
+            // inside it starts at (0,0) relative to that, so its own
+            // sizeDelta.y is exactly how far down the card actually goes.
+            const float cardTopY = -20f;
+            const float gapBelowCard = 24f;
+            float bodyTopY = cardTopY - card.sizeDelta.y - gapBelowCard;
+            _title.rectTransform.anchoredPosition = new Vector2(0f, bodyTopY);
+            _rowsContainer.anchoredPosition = new Vector2(0f, bodyTopY - 40f);
 
             _title.text = "Choose " + _requiredCount + " of " + _candidates.Count + " pieces";
 
