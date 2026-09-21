@@ -192,17 +192,21 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Same as <see cref="Refresh"/>, except the cells at <paramref name="heldCells"/>
-        /// are painted as still filled with their given color instead of their
-        /// actual (already-cleared) grid state — used to hold a just-completed
-        /// line visually filled while its score is still playing out, before
+        /// are painted as still filled with their given color (and, if it had
+        /// one, its pre-clear trait-origin badge — see <see
+        /// cref="GridCellView.ApplyState"/>) instead of their actual
+        /// (already-cleared) grid state — used to hold a just-completed line
+        /// visually filled while its score is still playing out, before
         /// <see cref="ClearCellVisual"/> empties each cell in turn.
         /// </summary>
-        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors)
+        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits)
         {
             var overrideColor = new Dictionary<Vector2Int, PieceColor>();
+            var overrideTrait = new Dictionary<Vector2Int, PieceTrait?>();
             for (int i = 0; i < heldCells.Count; i++)
             {
                 overrideColor[heldCells[i]] = heldColors[i];
+                overrideTrait[heldCells[i]] = heldTraits[i];
             }
 
             for (int x = 0; x < GridManager.Size; x++)
@@ -212,7 +216,7 @@ namespace Contigu.Presentation
                     var pos = new Vector2Int(x, y);
                     if (overrideColor.TryGetValue(pos, out var color))
                     {
-                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color);
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos]);
                     }
                     else
                     {

@@ -2480,3 +2480,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   lui. Purement un changement d'ordre de construction dans `GridView.cs`
   (aucun test EditMode possible pour de l'ordre de rendu uGUI — à
   vérifier visuellement en jeu).
+- **Badge d'upgrade de tuile : position incohérente + destruction trop
+  tôt au clear de ligne** (retour explicite : "dans la slot le badge
+  est en haut a gauche, dans le preview de position valide sur la
+  grille il est en bas a droite et lorsqu'il est déposé il devient en
+  haut a droite. Il faut que ce soit uniform" + "lorsqu'on clear une
+  ligne, le badge doit se détruire en même temps que sa tuile, pas au
+  début du décomptage de point").
+  - Position : les 3 endroits où ce badge apparaît utilisaient chacun un
+    coin différent — la pièce en main (`ShapePreviewFactory.BuildTraitBadge`,
+    codé en dur en haut-à-gauche), le preview de survol sur la grille
+    (`GridCellView.SetHoverTint`, qui réutilisait `_badgeGolden`
+    haut-gauche ou `_badgeSpecial` bas-droite selon le type de trait) et
+    la tuile réellement posée (`_badgeTraitOrigin`, haut-droite —
+    voir GridCellView.ApplyState). Uniformisé sur haut-droite partout :
+    `BuildTraitBadge` ancré en `(1,1)`/pivot `(1,1)` comme
+    `_badgeTraitOrigin`, et `SetHoverTint` affiche désormais lui aussi
+    `_badgeTraitOrigin` (avec sa couleur de rareté) au lieu de
+    golden/special — ce qui simplifie au passage la logique de preview
+    (plus besoin de distinguer les traits "golden sprite" des autres) ;
+    `PieceTraitVisualDefaults.UsesGoldenSprite`, devenu inutilisé,
+    supprimé.
+  - Timing au clear : `GridCellView.ApplyState` lisait `cell.OriginTrait`
+    directement, qui est déjà remis à `null` par `Cell.ClearFill()` dans
+    `GridManager.CheckAndClearLines` — AVANT même que la présentation ne
+    commence à jouer l'animation de score (`GridView.RefreshHoldingClearedCells`
+    tient la ligne visuellement remplie avec `fillColorOverride`
+    pendant que le score s'anime, mais ne recevait aucun équivalent
+    pour le trait, donc le badge disparaissait au tout début du
+    décompte plutôt qu'au moment où `ClearCellVisual` vide vraiment
+    cette cellule). Même principe que `ClearedCellColors` : nouveau
+    `PlacementResult.ClearedCellTraits` (parallèle à `ClearedCells`,
+    capturé dans `GridManager.CheckAndClearLines` juste avant
+    `cell.ClearFill()`), propagé par `GridView.RefreshHoldingClearedCells`
+    (nouveau paramètre) jusqu'à `GridCellView.ApplyState` (nouveau
+    paramètre `originTraitOverride`, suivant la même convention que
+    `fillColorOverride` : actif seulement pendant le "hold"). Nouveau
+    test `GridManagerTests.PlacePiece_ClearedCellTraits_CapturesEachClearedCellsOriginTraitBeforeWipingIt`.

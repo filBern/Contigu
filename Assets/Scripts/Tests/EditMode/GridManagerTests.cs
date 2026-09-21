@@ -760,6 +760,59 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_ClearedCellTraits_CapturesEachClearedCellsOriginTraitBeforeWipingIt()
+        {
+            // Regression test (bug report: "lorsqu'on clear une ligne, le
+            // badge doit se détruire en même temps que sa tuile, pas au
+            // début du décomptage de point") — the presentation layer holds
+            // a just-completed line visually filled while its score plays
+            // out (see GridView.RefreshHoldingClearedCells) and needs each
+            // cleared cell's pre-clear OriginTrait, parallel to
+            // ClearedCells/ClearedCellColors, so the trait badge keeps
+            // showing during that hold instead of disappearing the instant
+            // Core clears the line (Cell.OriginTrait itself is still wiped
+            // immediately, same as before — only this extra parallel list
+            // is new).
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.GetCell(2, 0).OriginTrait = new PieceTrait(PieceTraitKind.Bastion, 0);
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var result = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
+
+            Assert.AreEqual(GridManager.Size, result.ClearedCells.Count);
+            Assert.AreEqual(GridManager.Size, result.ClearedCellTraits.Count);
+
+            int taggedIndex = -1;
+            for (int i = 0; i < result.ClearedCells.Count; i++)
+            {
+                if (result.ClearedCells[i] == new Vector2Int(2, 0))
+                {
+                    taggedIndex = i;
+                    break;
+                }
+            }
+            Assert.AreNotEqual(-1, taggedIndex, "The tagged cell should be among the cleared cells");
+            Assert.IsTrue(result.ClearedCellTraits[taggedIndex].HasValue);
+            Assert.AreEqual(PieceTraitKind.Bastion, result.ClearedCellTraits[taggedIndex].Value.Kind);
+
+            for (int i = 0; i < result.ClearedCells.Count; i++)
+            {
+                if (i == taggedIndex)
+                {
+                    continue;
+                }
+                Assert.IsFalse(result.ClearedCellTraits[i].HasValue, "Every other cleared cell never had a trait");
+            }
+
+            Assert.IsFalse(grid.GetCell(2, 0).OriginTrait.HasValue, "Core state itself is still wiped immediately");
+        }
+
+        [Test]
         public void ClearRandomFilledCell_AlsoClearsAnyModifierFlagsAndOriginTraitOnThatCell()
         {
             var grid = new GridManager();

@@ -115,12 +115,6 @@ namespace Contigu.Data
             }
         }
 
-        /// <summary>True for the trait kinds that reuse the same golden badge look (Golden, Blast, Seeder) as the actual golden grid-cell badge (see GridCellView) — false for the flat color-chip kinds.</summary>
-        public static bool UsesGoldenSprite(PieceTraitKind kind)
-        {
-            return kind == PieceTraitKind.Golden || kind == PieceTraitKind.Blast || kind == PieceTraitKind.Seeder;
-        }
-
         public static Color GetBadgeColor(PieceTrait trait)
         {
             switch (trait.Kind)

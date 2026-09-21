@@ -325,7 +325,7 @@ namespace Contigu.Presentation
 
             // Hold any completed line/column visually filled (instead of
             // instantly vanishing) while its score is still playing out.
-            _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors);
+            _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors, outcome.Placement.ClearedCellTraits);
             _handView.Refresh();
             // Round/budget update immediately; the score AND Lueur numbers
             // themselves stay at their pre-placement values until

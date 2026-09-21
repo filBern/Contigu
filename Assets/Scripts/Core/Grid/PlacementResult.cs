@@ -77,6 +77,9 @@ namespace Contigu.Core
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
         public IReadOnlyList<PieceColor> ClearedCellColors = System.Array.Empty<PieceColor>();
 
+        /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> right before it was cleared (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>, so a tile's trait badge disappears in step with the tile itself instead of at the start of the score cascade.</summary>
+        public IReadOnlyList<PieceTrait?> ClearedCellTraits = System.Array.Empty<PieceTrait?>();
+
         public int LineClearCellCount;
 
         /// <summary>

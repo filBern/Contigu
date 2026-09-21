@@ -145,12 +145,16 @@ namespace Contigu.Presentation
 
         private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)
         {
+            // Top-right corner — same convention as GridCellView's placed
+            // trait-origin badge and its hover-preview equivalent, on
+            // explicit request that all three badge positions match instead
+            // of each living in a different corner.
             var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));
-            badge.rectTransform.anchorMin = new Vector2(0f, 1f);
-            badge.rectTransform.anchorMax = new Vector2(0f, 1f);
-            badge.rectTransform.pivot = new Vector2(0f, 1f);
+            badge.rectTransform.anchorMin = new Vector2(1f, 1f);
+            badge.rectTransform.anchorMax = new Vector2(1f, 1f);
+            badge.rectTransform.pivot = new Vector2(1f, 1f);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
-            badge.rectTransform.anchoredPosition = new Vector2(1f, -1f);
+            badge.rectTransform.anchoredPosition = new Vector2(-1f, -1f);
             var outline = badge.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             outline.effectDistance = new Vector2(size * 0.09f, -size * 0.09f);

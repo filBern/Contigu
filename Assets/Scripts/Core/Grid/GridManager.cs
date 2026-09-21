@@ -255,6 +255,7 @@ namespace Contigu.Core
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
             result.ClearedCellColors = clearInfo.ClearedCellColors;
+            result.ClearedCellTraits = clearInfo.ClearedCellTraits;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             // Bastion cells (Cell.IsBastion) earn the same per-cell bonus as
             // an actually-cleared cell without being in ClearedCells (they're
@@ -2114,6 +2115,9 @@ namespace Contigu.Core
             /// <summary>Each cleared cell's color as it was right before clearing, parallel to <see cref="ClearedCells"/> — the presentation layer needs this to keep rendering a completed line as still-filled while it holds before clearing.</summary>
             public readonly IReadOnlyList<PieceColor> ClearedCellColors;
 
+            /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> as it was right before clearing (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>.</summary>
+            public readonly IReadOnlyList<PieceTrait?> ClearedCellTraits;
+
             /// <summary>How many individual rows/columns completed simultaneously by this placement (distinct from <see cref="ClearedCells"/>.Count, which is a cell count) — used by Démolisseur.</summary>
             public readonly int ClearedLineCount;
 
@@ -2129,10 +2133,11 @@ namespace Contigu.Core
             /// </summary>
             public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
+                ClearedCellTraits = clearedCellTraits;
                 ClearedLineCount = clearedLineCount;
                 ClearedLines = clearedLines;
                 BastionBonusCells = bastionBonusCells;
@@ -2179,15 +2184,17 @@ namespace Contigu.Core
 
             var cleared = new List<Vector2Int>(cellsToClear.Count);
             var clearedColors = new List<PieceColor>(cellsToClear.Count);
+            var clearedTraits = new List<PieceTrait?>(cellsToClear.Count);
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
                 clearedColors.Add(cell.FilledColor.Value); // capture before clearing
+                clearedTraits.Add(cell.OriginTrait); // capture before clearing
                 cell.ClearFill();
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
+            return new ClearInfo(cleared, clearedColors, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
         }
 
         /// <summary>

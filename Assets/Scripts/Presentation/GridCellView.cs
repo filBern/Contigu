@@ -55,11 +55,20 @@ namespace Contigu.Presentation
         /// already-cleared) fill state. Used to hold a just-completed line
         /// visually filled while its score is still being shown, before the
         /// clear animation actually empties it (see GridView).
+        /// <paramref name="originTraitOverride"/> follows the same "held"
+        /// convention: whenever <paramref name="fillColorOverride"/> is given,
+        /// this is used instead of the cell's own (possibly already-cleared)
+        /// OriginTrait, so the trait badge disappears exactly when the clear
+        /// animation empties THIS cell rather than the instant the line clear
+        /// actually happened in Core (bug report: the badge used to vanish at
+        /// the very start of the score cascade, before the tile itself
+        /// visually cleared).
         /// </summary>
-        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null)
+        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null)
         {
             bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
+            PieceTrait? originTrait = fillColorOverride.HasValue ? originTraitOverride : cell.OriginTrait;
 
             // A Bastion cell (see Cell.IsBastion) is locked AND filled at the
             // same time — it renders like any other filled tile (plus its
@@ -154,12 +163,12 @@ namespace Contigu.Presentation
             // Golden/Tinted/MultiplierZone badges above, which most trait
             // kinds only carry for the one placement that scores them, so
             // this is often the only on-grid trace left of a trait pick.
-            bool showTraitOrigin = cell.OriginTrait.HasValue;
+            bool showTraitOrigin = originTrait.HasValue;
             _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
             if (showTraitOrigin)
             {
-                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(cell.OriginTrait.Value);
-                _traitOriginBadgeView.Init(_tooltip, cell.OriginTrait.Value, gameObject);
+                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(originTrait.Value);
+                _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
             }
 
             string effectText = BuildEffectLabel(cell);
@@ -205,10 +214,16 @@ namespace Contigu.Presentation
         /// instead — the background tint alone was easy to miss, and a
         /// color-icon preview would misleadingly suggest the piece could
         /// land there. <paramref name="previewTrait"/> additionally previews
-        /// the golden/tinted/multiplier badge on the one cell that would
-        /// actually carry the placed piece's enchantment (see PieceTrait).
-        /// ClearHover's follow-up ApplyState call resets everything once the
-        /// hover ends.
+        /// the SAME top-right trait-origin badge <see cref="ApplyState"/>
+        /// shows once placed, on the one cell that would actually carry the
+        /// placed piece's enchantment (see PieceTrait) — used to show the
+        /// old top-left/bottom-right badges instead (whichever of
+        /// Golden/Special matched the trait kind), which put the preview in
+        /// a different corner than both the hand-slot badge and the actual
+        /// placed badge (bug report: "dans la slot le badge est en haut a
+        /// gauche, dans le preview ... en bas a droite et lorsqu'il est
+        /// déposé il devient en haut a droite"). ClearHover's follow-up
+        /// ApplyState call resets everything once the hover ends.
         /// </summary>
         public void SetHoverTint(Color? overlay, bool isValid, PieceColor? previewColor = null, PieceTrait? previewTrait = null)
         {
@@ -232,25 +247,8 @@ namespace Contigu.Presentation
             if (isValid && previewTrait.HasValue)
             {
                 var trait = previewTrait.Value;
-                if (PieceTraitVisualDefaults.UsesGoldenSprite(trait.Kind))
-                {
-                    _badgeGolden.gameObject.SetActive(true);
-                    if (VisualDefaults.GoldenTileSprite != null)
-                    {
-                        _badgeGolden.sprite = VisualDefaults.GoldenTileSprite;
-                        _badgeGolden.color = Color.white;
-                    }
-                    else
-                    {
-                        _badgeGolden.sprite = null;
-                        _badgeGolden.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
-                    }
-                }
-                else
-                {
-                    _badgeSpecial.gameObject.SetActive(true);
-                    _badgeSpecial.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
-                }
+                _badgeTraitOrigin.gameObject.SetActive(true);
+                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
             }
         }
 
