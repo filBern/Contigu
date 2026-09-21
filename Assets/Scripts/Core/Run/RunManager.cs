@@ -559,18 +559,23 @@ namespace Contigu.Core
         private static readonly ModifierId?[] HandSlotModifiers = { ModifierId.SlotUn, ModifierId.SlotDeux, ModifierId.SlotTrois };
 
         /// <summary>
-        /// "Slot N Loyalty": doubles this placement's group bonus when the piece
-        /// was played from hand slot <paramref name="handIndex"/> (0-based) and
-        /// the matching modifier is active. Unlike every other modifier,
-        /// GridManager.PlacePiece can't evaluate this itself — it has no idea
-        /// which of the 3 hand slots a piece came from, only this method's
-        /// caller (PlacePiece(handIndex, x, y)) does — so it's resolved here,
-        /// the same post-hoc pattern already used for the second-batch
-        /// PieceTrait kinds (see ApplyPostPlacementTraitBonus).
+        /// "Slot N Loyalty": xN multiplier (see ScoringConstants.SlotLoyaltyMultiplier)
+        /// on this placement's ENTIRE score when the piece was played from hand
+        /// slot <paramref name="handIndex"/> (0-based) and the matching modifier
+        /// is active — was "doubles just the group bonus", changed to double
+        /// everything on explicit request ("au lieu de double group placement,
+        /// on va tout doubler"), so it now multiplies the same
+        /// PlacementResult.ModifierMultiplier field GridManager's own xN
+        /// modifiers use instead of adding to ModifierBonus. Unlike every other
+        /// modifier, GridManager.PlacePiece can't evaluate this itself — it has
+        /// no idea which of the 3 hand slots a piece came from, only this
+        /// method's caller (PlacePiece(handIndex, x, y)) does — so it's
+        /// resolved here, the same post-hoc pattern already used for the
+        /// second-batch PieceTrait kinds (see ApplyPostPlacementTraitBonus).
         /// </summary>
         private void ApplyHandSlotModifierBonus(int handIndex, PlacementResult placement)
         {
-            if (handIndex < 0 || handIndex >= HandSlotModifiers.Length || placement.GroupBonus <= 0)
+            if (handIndex < 0 || handIndex >= HandSlotModifiers.Length)
             {
                 return;
             }
@@ -581,9 +586,9 @@ namespace Contigu.Core
                 return;
             }
 
-            placement.ModifierBonus += placement.GroupBonus;
+            placement.ModifierMultiplier *= ScoringConstants.SlotLoyaltyMultiplier;
             var events = new List<ScoreEvent>(placement.ScoreEvents);
-            var scoreEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], placement.GroupBonus);
+            var scoreEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], ScoringConstants.SlotLoyaltyMultiplier);
             scoreEvent.TriggeringModifier = slotModifier.Value;
             events.Add(scoreEvent);
             placement.ScoreEvents = events;

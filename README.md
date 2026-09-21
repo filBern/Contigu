@@ -2822,3 +2822,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `GridManagerModifierTests.Repetition_MultiplierGrowsWithConsecutiveSameShapePlacements`,
     `.Synergie_MultipliesByTheTotalNumberOfModifiersHeld`,
     `.Densite_MultiplierGrowsWithHowManyCellsAreFilledOnTheBoard`.
+- **Slot N Loyalty (SlotUn/Deux/Trois) : "tout doubler" au lieu de
+  "doubler le group bonus"** (demande explicite : "Les slots loyalty
+  modifier au lieu de double group placement, on va tout doubler") —
+  jusqu'ici, `RunManager.ApplyHandSlotModifierBonus` doublait
+  spécifiquement `PlacementResult.GroupBonus` en le rajoutant une 2e fois
+  dans `ModifierBonus` (un event `ScoreEventType.Modifier`). Devient un
+  vrai x2 sur le score ENTIER de la pose : la méthode multiplie
+  maintenant directement `placement.ModifierMultiplier` (le même champ
+  que les modificateurs xN de GridManager utilisent) et émet un event
+  `ScoreEventType.ModifierMultiplier` à la place — donc `Chips * Mult`
+  double bien tout (bonus de groupe, golden, ligne clearée, bonus des
+  AUTRES modificateurs...), pas seulement le bonus de groupe. Le garde-fou
+  `placement.GroupBonus <= 0` a aussi été retiré : ça n'a plus de sens de
+  conditionner un doublement "de tout" sur la valeur d'UNE seule
+  composante. Nouvelle constante `ScoringConstants.SlotLoyaltyMultiplier`
+  (2) remplace l'ancien doublement implicite. Tests mis à jour dans
+  `RunManagerTests.cs` (`SlotUn_MultipliesEntireScore_WhenPlacingFromHandSlotZero`,
+  `AssertSlotFiresOnlyForHandIndex`) pour vérifier `ModifierMultiplier`
+  au lieu de `ModifierBonus`.

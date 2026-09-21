@@ -234,15 +234,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
             ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
-            "Doubles this placement's group bonus when playing from hand slot 1.");
+            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 1.");
 
         public static readonly ModifierDefinition SlotDeux = new ModifierDefinition(
             ModifierId.SlotDeux, ModifierCategory.Roguelike, "Slot 2 Loyalty",
-            "Doubles this placement's group bonus when playing from hand slot 2.");
+            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 2.");
 
         public static readonly ModifierDefinition SlotTrois = new ModifierDefinition(
             ModifierId.SlotTrois, ModifierCategory.Roguelike, "Slot 3 Loyalty",
-            "Doubles this placement's group bonus when playing from hand slot 3.");
+            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 3.");
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",

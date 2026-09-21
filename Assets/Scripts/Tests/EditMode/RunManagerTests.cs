@@ -1613,7 +1613,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void SlotUn_DoublesGroupBonus_WhenPlacingFromHandSlotZero()
+        public void SlotUn_MultipliesEntireScore_WhenPlacingFromHandSlotZero()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.SlotUn);
@@ -1621,8 +1621,7 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.Greater(outcome.Placement.GroupBonus, 0);
-            Assert.AreEqual(outcome.Placement.GroupBonus, outcome.Placement.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.SlotLoyaltyMultiplier, outcome.Placement.ModifierMultiplier);
         }
 
         [Test]
@@ -1643,8 +1642,8 @@ namespace Contigu.Tests
                 var outcome = run.PlacePiece(handIndex, 0, 0);
 
                 Assert.IsTrue(outcome.Placement.Success, id + " vs hand index " + handIndex);
-                int expected = handIndex == matchingHandIndex ? outcome.Placement.GroupBonus : 0;
-                Assert.AreEqual(expected, outcome.Placement.ModifierBonus, id + " vs hand index " + handIndex);
+                int expected = handIndex == matchingHandIndex ? ScoringConstants.SlotLoyaltyMultiplier : 1;
+                Assert.AreEqual(expected, outcome.Placement.ModifierMultiplier, id + " vs hand index " + handIndex);
             }
         }
 

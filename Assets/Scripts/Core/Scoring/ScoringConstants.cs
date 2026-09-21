@@ -146,6 +146,9 @@ namespace Contigu.Core
 
         // ---- Fourth batch of modifier bonuses (see ModifierCatalog) ----
 
+        /// <summary>Slot N Loyalty: xN multiplier on this placement's ENTIRE score (see RunManager.ApplyHandSlotModifierBonus) when played from the matching hand slot — was "doubles just the group bonus", changed to double everything on explicit request ("au lieu de double group placement, on va tout doubler").</summary>
+        public const int SlotLoyaltyMultiplier = 2;
+
         /// <summary>Grand Format: bonus per placed cell when the piece being placed has at least this many cells.</summary>
         public const int GrandFormatBonusPerCell = 8;
         public const int GrandFormatMinPieceSize = 3;
