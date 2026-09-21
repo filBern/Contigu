@@ -68,6 +68,9 @@ namespace Contigu.Core
         /// <summary>Candidate piece TYPES for <see cref="PendingUpgrade"/>'s sub-choice — only populated (non-empty) for a Bank-pool upgrade that needs one (Retirer/Dupliquer/Recolorer); empty otherwise. Capped the same way PendingUpgradeTileCandidates is, so the type picker never lists the whole deck composition at once.</summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> PendingUpgradeTypeCandidates { get; private set; }
 
+        /// <summary>The shape most recently rolled by a Joker purchase (see BuyUpgradeSlot/UpgradeSystem.ApplyJoker) — read once by the presentation layer (UpgradeRevealView) right after the purchase to show the real piece that got added instead of just describing the upgrade in text. Meaningless before any Joker purchase this run.</summary>
+        public ShapeId LastJokerShapeAdded { get; private set; }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -1036,7 +1039,12 @@ namespace Contigu.Core
                 return true;
             }
 
-            Upgrades.Apply(upgrade, default(UpgradeSubChoice), Deck);
+            // The only Bank-pool upgrade left with RequiresSubChoice false —
+            // see UpgradeCatalog.BankPool — is Joker, so this is always it.
+            // ApplyJoker (not the generic Apply) so the actual shape rolled
+            // can be surfaced via LastJokerShapeAdded for the reveal to show
+            // (see UpgradeRevealView) instead of just naming the upgrade.
+            LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
             return true;
         }
 

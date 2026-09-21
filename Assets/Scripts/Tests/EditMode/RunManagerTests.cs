@@ -433,6 +433,40 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded()
+        {
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.JokerPiece)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Joker upgrade slot within 500 seeds");
+
+            run.DebugGrantLueur(1000000);
+            int deckCountBefore = run.Deck.DeckCount;
+
+            bool bought = run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "Joker has no sub-choice, so it should apply immediately");
+            Assert.AreEqual(deckCountBefore + 1, run.Deck.DeckCount);
+            var addedToken = run.Deck.Deck[run.Deck.Deck.Count - 1];
+            Assert.AreEqual(PieceColor.Joker, addedToken.Color);
+            Assert.AreEqual(run.LastJokerShapeAdded, addedToken.Shape, "LastJokerShapeAdded should match the piece actually added, for UpgradeRevealView to preview");
+        }
+
+        [Test]
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
             RunManager run = null;

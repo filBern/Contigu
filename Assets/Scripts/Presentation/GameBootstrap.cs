@@ -230,7 +230,7 @@ namespace Contigu.Presentation
             _tileChoiceView.Build(mainRoot, _tooltipView);
 
             _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
-            _upgradeRevealView.Build(mainRoot);
+            _upgradeRevealView.Build(mainRoot, _tooltipView);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
@@ -533,8 +533,10 @@ namespace Contigu.Presentation
             if (pending == null)
             {
                 // Bank upgrade with no sub-choice (Joker) — already applied;
-                // still show the reveal card so the player can see what it was.
-                _upgradeRevealView.Show(revealedUpgrade);
+                // still show the reveal card (plus a preview of the actual
+                // piece added, see RunManager.LastJokerShapeAdded) so the
+                // player can see what it was.
+                _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
                 return;
             }
             if (pending.Pool == UpgradePool.Grid)

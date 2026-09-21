@@ -66,17 +66,34 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Apply_JokerPiece_AddsJokerIgnoringSubChoice()
+        public void Apply_JokerPiece_ReturnsFalse_JokerGoesThroughApplyJokerInstead()
+        {
+            // Joker is the one Bank upgrade with no sub-choice, so unlike
+            // RemovePiece/DuplicatePiece/RecolorPiece it never actually goes
+            // through Apply in production (see RunManager.BuyUpgradeSlot) —
+            // ApplyJoker below is its real path.
+            var deck = MakeTwentyTokenDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            bool applied = system.Apply(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice), deck);
+
+            Assert.IsFalse(applied);
+        }
+
+        [Test]
+        public void ApplyJoker_AddsAJokerTokenAndReturnsItsShape()
         {
             var tokens = new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral) };
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
             var system = new UpgradeSystem(new SystemRandomProvider(1));
             int before = deck.DeckCount;
 
-            bool applied = system.Apply(UpgradeCatalog.JokerPiece, default(UpgradeSubChoice), deck);
+            ShapeId addedShape = system.ApplyJoker(deck);
 
-            Assert.IsTrue(applied);
             Assert.AreEqual(before + 1, deck.DeckCount);
+            var addedToken = deck.Deck[deck.Deck.Count - 1];
+            Assert.AreEqual(addedShape, addedToken.Shape);
+            Assert.AreEqual(PieceColor.Joker, addedToken.Color);
         }
 
         [Test]

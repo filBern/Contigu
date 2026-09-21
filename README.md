@@ -2318,3 +2318,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     de façon permanente ; le reroll ne remplace que l'OFFRE affichée
     dans cet emplacement. Test `RerollShop_OnlyReplacesStillUnsoldSlots`
     renommé/réécrit en `RerollShop_ReplacesEverySlot_IncludingAlreadyPurchasedOnes`.
+  - **Sous-choix Bank (Retirer/Dupliquer/Recolorer/Joker) — refonte
+    complète sur demandes explicites groupées** :
+    - Le sélecteur de type (`DraftView.ShowTypeChoice`) n'affiche plus
+      que le preview de la pièce (plus de nom/compteur), les
+      candidats côte à côte horizontalement — même traitement que
+      `TileChoiceView`. Sélection exclusive (un seul type nécessaire,
+      style bouton radio) suivie d'un bouton Confirm plutôt qu'un
+      effet immédiat au clic ("il faut un confirm au lieu d'un
+      immediate effect").
+    - **Retirer** : la mention "(floor of 10)" retirée de la
+      description ; Confirm déclenche un fondu de sortie (~0.4s) sur
+      le preview de la pièce choisie avant de résoudre l'upgrade, pour
+      montrer qu'elle quitte le deck.
+    - **Dupliquer** : Confirm fait apparaître en fondu (~0.4s) une
+      copie de la pièce choisie juste à côté, pour montrer l'ajout,
+      avant de résoudre l'upgrade — purement visuel, c'est toujours
+      `DeckManager.DuplicateOfType` (déclenché par `ResolveUpgradeSubChoice`
+      une fois le fondu terminé) qui ajoute la vraie copie.
+    - **Recolorer** : Confirm au premier écran avance simplement vers
+      le choix de couleur (pas encore un effet, il manque toujours la
+      couleur cible) ; le second écran (choix de couleur) reste
+      inchangé.
+    - **Joker** : `UpgradeRevealView` affiche maintenant un preview de
+      la pièce réellement ajoutée (forme + couleur Joker) sous la
+      carte de révélation, plutôt que la description seule. Nouveau
+      `DeckManager.AddJoker` renvoie la forme tirée ;
+      `UpgradeSystem.ApplyJoker` (remplace le cas Joker dans `Apply`,
+      qui ne le gère plus) et `RunManager.LastJokerShapeAdded`
+      exposent cette forme jusqu'à la Présentation.
+    - Tests : `UpgradeSystemTests` (`ApplyJoker_...`,
+      `Apply_JokerPiece_ReturnsFalse_...`),
+      `RunManagerTests.BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded`.

@@ -33,7 +33,7 @@ namespace Contigu.Core
     {
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
             UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose a piece type from the deck; one copy is permanently removed (floor of 10).", true, UpgradeRarity.Common);
+            "Choose a piece type from the deck; one copy is permanently removed.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",

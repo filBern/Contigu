@@ -240,11 +240,12 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Adds a joker-colored piece in a uniformly random shape (on explicit request — used to always be a fixed Single tile).</summary>
-        public void AddJoker(IRandomProvider rng)
+        /// <summary>Adds a joker-colored piece in a uniformly random shape (on explicit request — used to always be a fixed Single tile). Returns the shape actually rolled so the caller (see UpgradeSystem.ApplyJoker) can show the player what was really added instead of just naming the upgrade.</summary>
+        public ShapeId AddJoker(IRandomProvider rng)
         {
             var shape = InitialDeckFactory.ShapeOrder[rng.Next(InitialDeckFactory.ShapeOrder.Length)];
             AddToken(new PieceToken(shape, PieceColor.Joker));
+            return shape;
         }
 
         public bool RecolorOneOfType(ShapeId shape, PieceColor fromColor, PieceColor toColor)

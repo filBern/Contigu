@@ -61,15 +61,17 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Applies a Bank-pool upgrade's permanent effect (Retirer/Dupliquer/
-        /// Recolorer/Joker) directly to the deck. Grid-pool (tile-trait)
-        /// upgrades no longer go through here at all — the shop always
-        /// resolves them via <see cref="ApplyToChosenTiles"/> instead, since
-        /// the player picks which deck tokens receive the trait rather than
-        /// it being assigned at random (spec: "un choix de 5 tiles"). Returns
-        /// false if a sub-choice-requiring upgrade could not be resolved
-        /// (e.g. removing the last copy of a type while the deck is at its
-        /// floor) or if <paramref name="upgrade"/> isn't a Bank upgrade.
+        /// Applies a Bank-pool upgrade that needs a sub-choice (Retirer/
+        /// Dupliquer/Recolorer) directly to the deck. Joker — the one Bank
+        /// upgrade with no sub-choice — goes through <see cref="ApplyJoker"/>
+        /// instead, not here (see RunManager.BuyUpgradeSlot). Grid-pool
+        /// (tile-trait) upgrades never go through here either — the shop
+        /// always resolves them via <see cref="ApplyToChosenTiles"/> instead,
+        /// since the player picks which deck tokens receive the trait rather
+        /// than it being assigned at random (spec: "un choix de 5 tiles").
+        /// Returns false if the sub-choice couldn't be resolved (e.g.
+        /// removing the last copy of a type while the deck is at its floor)
+        /// or if <paramref name="upgrade"/> isn't one of the three above.
         /// </summary>
         public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, DeckManager deck)
         {
@@ -81,16 +83,24 @@ namespace Contigu.Core
                 case UpgradeId.DuplicatePiece:
                     return deck.DuplicateOfType(subChoice.Shape, subChoice.Color);
 
-                case UpgradeId.JokerPiece:
-                    deck.AddJoker(_rng);
-                    return true;
-
                 case UpgradeId.RecolorPiece:
                     return deck.RecolorOneOfType(subChoice.Shape, subChoice.Color, subChoice.TargetColor);
 
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Applies Joker — returns the shape actually rolled (see
+        /// DeckManager.AddJoker) so RunManager can surface it as
+        /// LastJokerShapeAdded, letting the reveal (UpgradeRevealView) show
+        /// the real piece that got added instead of just naming the
+        /// upgrade.
+        /// </summary>
+        public ShapeId ApplyJoker(DeckManager deck)
+        {
+            return deck.AddJoker(_rng);
         }
 
         /// <summary>
