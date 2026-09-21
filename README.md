@@ -2655,3 +2655,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   convertis en multiplicateur peuvent s'empiler sur une même pose
   (multiplicativement avec `GroupMultiplier`/`ComboMultiplier` en plus)
   et faire largement exploser les anciens objectifs de fin de run.
+- **Décompte du score façon Balatro (chips bleus x multiplicateur
+  rouge)** (sur demande explicite, avec capture d'écran de Balatro à
+  l'appui — "le bleu est le score et le rouge le multiplicateur").
+  - Nouvelles propriétés `PlacementResult.Chips`/`.Mult`, qui
+    reprennent exactement le split Balatro "score de base" /
+    "multiplicateur" : `Chips` = tout ce qui est additif (groupe, doré,
+    ligne clearée, bonus des modifiers non-convertis, trait), avec les
+    facteurs PAR-CELLULE (`GroupMultiplier`/`LineClearMultiplier`,
+    Tinted/Multiplier Zone) déjà appliqués dedans ; `Mult` =
+    `ModifierMultiplier * ComboMultiplier`, les deux seuls facteurs qui
+    s'appliquent à TOUTE la pose. `TotalScore` devient simplement
+    `Chips * Mult`.
+  - `ComboView` (l'ancien simple texte "Combo: +N" entre la grille et
+    la main) refondu en deux pastilles arrondies côte à côte — bleue
+    pour les chips, rouge pour le multiplicateur — en réutilisant les
+    sprites de bouton déjà présents dans le pack "Colorful UI"
+    (`blueButton`/`red_btn`, via `UISprites.ChooseButtonBackground`/
+    `CancelButtonBackground`) plutôt que de dessiner un nouvel élément
+    d'art. `Show(int chips, int mult)` remplace l'ancien `Show(int
+    amount)` ; nouveau `PulseMult()` qui ne fait rebondir QUE la
+    pastille rouge (distinct de `Pulse()` sur tout le bloc), pour que
+    le moment où le multiplicateur augmente se voie clairement,
+    séparément d'un simple gain de chips.
+  - `GameBootstrap.PlayPlacementSequence` reconstruit `chipsTotal`/
+    `multTotal` progressivement pendant toute la séquence (au lieu
+    d'un seul total agrégé "Combo" comme avant) : chaque `ScoreEvent`
+    (hors `LineClear`/`ModifierMultiplier`, déjà traités à part) et
+    chaque cellule de ligne clearée alimentent `chipsTotal` ; le
+    rattrapage `GroupMultiplier`/`LineClearMultiplier` alimente aussi
+    `chipsTotal` (ces facteurs vivent côté Chips dans le split Core,
+    pas côté Mult) ; les rattrapages `ModifierMultiplier` et Combo
+    alimentent `multTotal` et déclenchent `PulseMult()`. Invariant
+    vérifié à la main : `chipsTotal * multTotal` égale toujours le
+    sous-total déjà affiché à chaque étape, exactement comme `Chips *
+    Mult == TotalScore` côté Core.

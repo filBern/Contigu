@@ -219,7 +219,8 @@ namespace Contigu.Presentation
             // HudView.BarHeight). Midpoint between the grid's bottom and the
             // bar's top: (173.5 + 68) / 2 = 120.75.
             comboRect.anchoredPosition = new Vector2(0f, 120.75f);
-            comboRect.sizeDelta = new Vector2(400f, 50f);
+            // No explicit sizeDelta — ComboView's own ContentSizeFitter
+            // sizes it to fit its two pills (chips + mult).
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -395,8 +396,14 @@ namespace Contigu.Presentation
             }
 
             int displayedRoundScore = roundScoreBefore;
-            int comboTotal = 0;
-            _comboView.Show(0);
+            // Mirrors PlacementResult.Chips/.Mult progressively as the
+            // sequence plays, rather than only computing them at the very
+            // end — chipsTotal * multTotal always equals the placement's
+            // own subtotal so far (displayedRoundScore - roundScoreBefore),
+            // same invariant as Chips * Mult == TotalScore in Core.
+            int chipsTotal = 0;
+            int multTotal = 1;
+            _comboView.Show(0, 1);
             // Multiplies every stagger wait below — starts at 1 (full pace)
             // and shrinks by ComboSpeedupFactor after each combo addition,
             // shared across score events, line clears AND the multiplier
@@ -466,9 +473,9 @@ namespace Contigu.Presentation
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
 
                 displayedRoundScore += scoreEvent.Amount;
-                comboTotal += scoreEvent.Amount;
+                chipsTotal += scoreEvent.Amount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                _comboView.Show(comboTotal);
+                _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;
@@ -483,9 +490,9 @@ namespace Contigu.Presentation
                 _gridView.ClearCellVisual(pos.x, pos.y);
 
                 displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
-                comboTotal += ScoringConstants.LineClearBonusPerCell;
+                chipsTotal += ScoringConstants.LineClearBonusPerCell;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                _comboView.Show(comboTotal);
+                _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;
@@ -509,10 +516,15 @@ namespace Contigu.Presentation
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
                 _comboView.Pulse();
 
+                // GroupMultiplier/LineClearMultiplier land on the CHIPS side
+                // of the Balatro-style split (see PlacementResult.Chips),
+                // not the red mult pill — they're baked per-cell into a
+                // group/line-clear term rather than a placement-wide factor
+                // like ModifierMultiplier/ComboMultiplier below.
                 displayedRoundScore += multipliedExtra;
-                comboTotal += multipliedExtra;
+                chipsTotal += multipliedExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                _comboView.Show(comboTotal);
+                _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
@@ -533,12 +545,15 @@ namespace Contigu.Presentation
                 int modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (placement.ModifierMultiplier - 1);
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.ButtonSelected);
-                _comboView.Pulse();
+                // multTotal was still 1 up to now (only Combo can raise it
+                // further below), so assigning rather than multiplying is
+                // exactly placement.ModifierMultiplier here.
+                multTotal = placement.ModifierMultiplier;
+                _comboView.PulseMult();
 
                 displayedRoundScore += modifierMultiplierExtra;
-                comboTotal += modifierMultiplierExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                _comboView.Show(comboTotal);
+                _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
@@ -554,12 +569,12 @@ namespace Contigu.Presentation
                 int comboExtra = (displayedRoundScore - roundScoreBefore) * (placement.ComboMultiplier - 1);
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
                 _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.Success);
-                _comboView.Pulse();
+                multTotal *= placement.ComboMultiplier;
+                _comboView.PulseMult();
 
                 displayedRoundScore += comboExtra;
-                comboTotal += comboExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                _comboView.Show(comboTotal);
+                _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
