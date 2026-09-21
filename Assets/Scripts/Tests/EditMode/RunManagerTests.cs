@@ -415,7 +415,7 @@ namespace Contigu.Tests
             Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
             Assert.AreEqual(0, run.PendingUpgradeTileCandidates.Count, "A Bank-pool upgrade never needs a tile choice");
 
-            PieceToken firstType = default(PieceToken);
+            (ShapeId Shape, PieceColor Color) firstType = (ShapeId.Single, PieceColor.Coral);
             foreach (var kvp in run.Deck.GetDeckComposition())
             {
                 firstType = kvp.Key;
