@@ -2250,3 +2250,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     l'achat et réutilisé tel quel pour toute la durée du sous-choix
     (y compris l'étape couleur de Recolorer, qui n'en a pas besoin
     elle-même). Tests dans `UpgradeSystemTests`/`RunManagerTests`.
+  - Titre du nom d'upgrade flou dans la révélation : c'était
+    `FontStyle.Bold` sur la police Digitalt (qui n'a pas de vraie
+    graisse grasse, donc Unity la simule en redessinant une copie
+    décalée — d'où le flou plutôt qu'un vrai gras) — retiré, la taille
+    seule porte l'emphase. Les 3 lignes de la révélation (nom,
+    rareté+pool, description) sont passées à 1.5x leur taille (sur
+    demande explicite) ; la largeur reste fixe pour que la description
+    passe sur plus de lignes plutôt que de s'élargir ("le texte de la
+    description ne soit pas trop large"). `UpgradeCardFactory.Build`
+    positionne désormais ses lignes à la main (plus de
+    VerticalLayoutGroup/ContentSizeFitter, qui ne se résolvent qu'au
+    prochain passage de layout) pour renvoyer la hauteur réelle du bloc
+    de façon synchrone ; `DraftView`/`TileChoiceView` placent le
+    titre/la liste en dessous à partir de cette hauteur mesurée plutôt
+    qu'un offset fixe deviné.
+  - Raccourci éditeur F10 (`UNITY_EDITOR`, même garde que F9) : accorde
+    100 Lueur instantanément (sur demande explicite), pour tester la
+    boutique sans passer par un vrai clear de ligne.
+  - Choix de tuiles Grid — 3 retouches sur demandes explicites
+    successives : (1) les descriptions des 15 upgrades Grid ne
+    mentionnent plus "3 pieces" (le nombre est un détail de la
+    boutique — `EconomyConstants.ShopTileChoiceCount` — pas une
+    propriété de l'upgrade elle-même) ; (2) le titre "Choose 3 of 5
+    pieces" devient "Select 3 pieces" ; (3) chaque candidat n'affiche
+    plus qu'un preview de pièce agrandi (plus de nom en texte), les 5
+    côte à côte horizontalement au lieu d'empilés verticalement — en
+    plus de prendre beaucoup moins de place à l'écran. Sélectionner un
+    candidat fait maintenant apparaître PROGRESSIVEMENT (fondu, ~0.35s)
+    un aperçu du vrai badge de trait que l'upgrade donnerait sur ce
+    preview, au lieu d'un simple surlignage générique, pour que le
+    joueur voie concrètement ce que choisir cette pièce va faire (sur
+    demande explicite : "animer le fait qu'on améliore une tuile").
+    `ShapePreviewFactory.Build` renvoie maintenant le RectTransform du
+    badge qu'il construit (pour permettre ce fondu) ;
+    `UpgradeSystem.TraitKindFor` rendue publique pour que la
+    Présentation puisse prévisualiser quel trait un upgrade Grid donne
+    avant qu'il soit réellement appliqué.

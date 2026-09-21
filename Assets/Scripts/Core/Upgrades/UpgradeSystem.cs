@@ -151,7 +151,8 @@ namespace Contigu.Core
             return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
         }
 
-        private static PieceTraitKind? TraitKindFor(UpgradeId id)
+        /// <summary>Public so Presentation can preview a Grid upgrade's trait on a candidate piece before it's actually applied (see TileChoiceView) — everything else about resolving/applying an upgrade still goes through an UpgradeSystem instance.</summary>
+        public static PieceTraitKind? TraitKindFor(UpgradeId id)
         {
             switch (id)
             {

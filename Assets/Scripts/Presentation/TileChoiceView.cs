@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
-using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,17 +12,18 @@ namespace Contigu.Presentation
     /// (piece-trait) upgrade: the player picks which of a handful of
     /// candidate deck tokens actually receive it (spec: "un choix de 5
     /// tiles"), instead of the old random assignment. Toggle any candidate
-    /// row on/off; Confirm enables once exactly
+    /// preview on/off; Confirm enables once exactly
     /// EconomyConstants.ShopTileChoiceCount are selected (or fewer, if the
     /// deck didn't even have that many candidates to offer). Shows the
-    /// upgrade's own card (see UpgradeCardFactory) above the row list, on
+    /// upgrade's own card (see UpgradeCardFactory) above the previews, on
     /// explicit request, so a mystery shop slot's reveal is actually
     /// readable and not just a name.
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float RowHeight = 56f;
-        private const float RowPreviewSize = 44f;
+        private const float CellSize = 140f;
+        private const float PreviewSize = 116f;
+        private const float BadgeFadeDuration = 0.35f;
 
         /// <summary>Fires with the chosen deck indices once the player confirms.</summary>
         public event Action<IReadOnlyList<int>> TileChoiceConfirmed;
@@ -32,13 +33,19 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private RectTransform _cardContainer;
         private Text _title;
-        private RectTransform _rowsContainer;
+        private RectTransform _previewsContainer;
         private Button _confirmButton;
 
         private readonly List<int> _candidates = new List<int>();
         private readonly HashSet<int> _selected = new HashSet<int>();
-        private readonly Dictionary<int, Image> _rowBackgroundByIndex = new Dictionary<int, Image>();
+        private readonly Dictionary<int, Image> _cellBackgroundByIndex = new Dictionary<int, Image>();
+        private readonly Dictionary<int, RectTransform> _previewContainerByIndex = new Dictionary<int, RectTransform>();
         private int _requiredCount;
+
+        // Which trait a selected preview should show taking shape on it —
+        // set once per Show() call from the upgrade being resolved, so
+        // OnCellClicked doesn't need to know anything about upgrades itself.
+        private PieceTraitKind? _previewTraitKind;
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
@@ -63,16 +70,20 @@ namespace Contigu.Presentation
             // the comment there.
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
-            _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
-            _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
-            _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
-            _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 8f;
+            // Horizontal instead of the old vertical list (explicit request:
+            // "avoir seulement le preview... et mettre les 5 un a côté de
+            // l'autre") — 5 previews side by side read faster than 5 stacked
+            // rows, and take a lot less vertical space besides.
+            _previewsContainer = UIFactory.CreateUIObject("Previews", _root);
+            _previewsContainer.anchorMin = new Vector2(0.5f, 1f);
+            _previewsContainer.anchorMax = new Vector2(0.5f, 1f);
+            _previewsContainer.pivot = new Vector2(0.5f, 1f);
+            var layout = _previewsContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12f;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
-            var fitter = _rowsContainer.gameObject.AddComponent<ContentSizeFitter>();
+            var fitter = _previewsContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -100,8 +111,10 @@ namespace Contigu.Presentation
             _candidates.Clear();
             _candidates.AddRange(candidateDeckIndices);
             _selected.Clear();
-            _rowBackgroundByIndex.Clear();
+            _cellBackgroundByIndex.Clear();
+            _previewContainerByIndex.Clear();
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
+            _previewTraitKind = UpgradeSystem.TraitKindFor(def.Id);
 
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
             {
@@ -117,56 +130,112 @@ namespace Contigu.Presentation
             const float gapBelowCard = 24f;
             float bodyTopY = cardTopY - card.sizeDelta.y - gapBelowCard;
             _title.rectTransform.anchoredPosition = new Vector2(0f, bodyTopY);
-            _rowsContainer.anchoredPosition = new Vector2(0f, bodyTopY - 40f);
+            _previewsContainer.anchoredPosition = new Vector2(0f, bodyTopY - 40f);
 
-            _title.text = "Choose " + _requiredCount + " of " + _candidates.Count + " pieces";
+            _title.text = "Select " + _requiredCount + " pieces";
 
-            for (int i = _rowsContainer.childCount - 1; i >= 0; i--)
+            for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
             {
-                Destroy(_rowsContainer.GetChild(i).gameObject);
+                Destroy(_previewsContainer.GetChild(i).gameObject);
             }
             for (int i = 0; i < _candidates.Count; i++)
             {
-                BuildRow(_candidates[i]);
+                BuildPreviewCell(_candidates[i]);
             }
 
             RefreshConfirmInteractable();
             _root.gameObject.SetActive(true);
         }
 
-        private void BuildRow(int deckIndex)
+        private void BuildPreviewCell(int deckIndex)
         {
-            var token = _deck.Deck[deckIndex];
-            var row = UIFactory.CreatePanel(_rowsContainer, "Tile_" + deckIndex, UITheme.ButtonIdle);
-            row.rectTransform.sizeDelta = new Vector2(340f, RowHeight);
-            var rowLayout = row.gameObject.AddComponent<LayoutElement>();
-            rowLayout.preferredWidth = 340f;
-            rowLayout.preferredHeight = RowHeight;
-            _rowBackgroundByIndex[deckIndex] = row;
+            var cell = UIFactory.CreatePanel(_previewsContainer, "Tile_" + deckIndex, UITheme.ButtonIdle);
+            cell.rectTransform.sizeDelta = new Vector2(CellSize, CellSize);
+            var cellLayout = cell.gameObject.AddComponent<LayoutElement>();
+            cellLayout.preferredWidth = CellSize;
+            cellLayout.preferredHeight = CellSize;
+            _cellBackgroundByIndex[deckIndex] = cell;
 
-            var rowBtn = row.gameObject.AddComponent<Button>();
-            rowBtn.onClick.AddListener(() => OnRowClicked(deckIndex));
+            var cellBtn = cell.gameObject.AddComponent<Button>();
+            cellBtn.onClick.AddListener(() => OnCellClicked(deckIndex));
 
-            var previewContainer = UIFactory.CreateUIObject("Preview", row.transform);
-            previewContainer.anchorMin = new Vector2(0f, 0.5f);
-            previewContainer.anchorMax = new Vector2(0f, 0.5f);
-            previewContainer.pivot = new Vector2(0f, 0.5f);
-            previewContainer.anchoredPosition = new Vector2(8f, 0f);
-            previewContainer.sizeDelta = new Vector2(RowPreviewSize, RowPreviewSize);
-            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, token.Trait, _tooltip, row.gameObject);
+            var previewContainer = UIFactory.CreateUIObject("Preview", cell.transform);
+            previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
+            previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
+            previewContainer.pivot = new Vector2(0.5f, 0.5f);
+            previewContainer.anchoredPosition = Vector2.zero;
+            previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
+            _previewContainerByIndex[deckIndex] = previewContainer;
 
-            var label = UIFactory.CreateText(row.transform, "Label", VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")", 15, UITheme.TextPrimary);
-            label.raycastTarget = false;
-            label.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            label.rectTransform.anchorMax = new Vector2(1f, 0.5f);
-            label.rectTransform.pivot = new Vector2(0f, 0.5f);
-            label.rectTransform.anchoredPosition = new Vector2(RowPreviewSize + 18f, 0f);
-            label.rectTransform.sizeDelta = new Vector2(-(RowPreviewSize + 90f), 30f);
+            RebuildPreview(deckIndex, showTrait: false, animate: false);
         }
 
-        private void OnRowClicked(int deckIndex)
+        /// <summary>
+        /// (Re)draws the piece preview for <paramref name="deckIndex"/> —
+        /// plain when not selected, or with a preview of the actual trait
+        /// this upgrade grants when <paramref name="showTrait"/> is true, so
+        /// the player can see exactly what selecting this piece does rather
+        /// than just a generic highlight (explicit request: "faire
+        /// apparaître progressivement le visuel de la tuile upgradée pour
+        /// que le joueur comprenne quelle tuile exactement est affectée").
+        /// The trait shown is a preview only — DeckManager.TagSpecificTokens
+        /// still picks the real cell/color once the choice is confirmed.
+        /// </summary>
+        private void RebuildPreview(int deckIndex, bool showTrait, bool animate)
         {
-            if (_selected.Contains(deckIndex))
+            var token = _deck.Deck[deckIndex];
+            var previewContainer = _previewContainerByIndex[deckIndex];
+            for (int i = previewContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(previewContainer.GetChild(i).gameObject);
+            }
+
+            PieceTrait? previewTrait = null;
+            if (showTrait && _previewTraitKind.HasValue)
+            {
+                // Tinted always tints to the token's own color (see
+                // UpgradeSystem.ApplyToChosenTiles/DeckManager.TagSpecificTokens)
+                // — cell index 0 is just any real cell of the shape, since the
+                // exact cell is likewise only decided for real on confirm.
+                PieceColor? tintedColor = _previewTraitKind.Value == PieceTraitKind.Tinted ? (PieceColor?)token.Color : null;
+                previewTrait = new PieceTrait(_previewTraitKind.Value, 0, tintedColor);
+            }
+
+            var badge = ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, previewTrait, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject);
+            if (animate && badge != null)
+            {
+                StartCoroutine(FadeInBadge(badge));
+            }
+        }
+
+        private static IEnumerator FadeInBadge(RectTransform badge)
+        {
+            var canvasGroup = badge.gameObject.AddComponent<CanvasGroup>();
+            canvasGroup.alpha = 0f;
+            float elapsed = 0f;
+            while (elapsed < BadgeFadeDuration)
+            {
+                // Selecting a different piece before this one finishes fading
+                // in rebuilds (and destroys) this exact badge — bail out
+                // rather than touch a destroyed component.
+                if (badge == null)
+                {
+                    yield break;
+                }
+                elapsed += Time.deltaTime;
+                canvasGroup.alpha = Mathf.Clamp01(elapsed / BadgeFadeDuration);
+                yield return null;
+            }
+            if (badge != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+        }
+
+        private void OnCellClicked(int deckIndex)
+        {
+            bool wasSelected = _selected.Contains(deckIndex);
+            if (wasSelected)
             {
                 _selected.Remove(deckIndex);
             }
@@ -175,7 +244,12 @@ namespace Contigu.Presentation
                 _selected.Add(deckIndex);
             }
 
-            _rowBackgroundByIndex[deckIndex].color = _selected.Contains(deckIndex) ? UITheme.ButtonSelected : UITheme.ButtonIdle;
+            bool nowSelected = _selected.Contains(deckIndex);
+            _cellBackgroundByIndex[deckIndex].color = nowSelected ? UITheme.ButtonSelected : UITheme.ButtonIdle;
+            if (nowSelected != wasSelected)
+            {
+                RebuildPreview(deckIndex, showTrait: nowSelected, animate: nowSelected);
+            }
             RefreshConfirmInteractable();
         }
 

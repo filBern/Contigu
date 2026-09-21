@@ -25,9 +25,13 @@ namespace Contigu.Presentation
         /// with the trait's name/effect, and clicking it forwards the click to
         /// <paramref name="clickForwardTarget"/> so the badge never swallows a
         /// click meant for whatever bigger clickable element it sits inside.
+        /// Returns that badge's RectTransform (null if <paramref name="trait"/>
+        /// is null) — TileChoiceView uses it to fade a preview badge in when
+        /// the player selects that piece, rather than having it just appear.
         /// </summary>
-        public static void Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget)
+        public static RectTransform Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget)
         {
+            RectTransform builtBadge = null;
             int maxX = 0;
             int maxY = 0;
             var occupied = new HashSet<Vector2Int>();
@@ -91,11 +95,13 @@ namespace Contigu.Presentation
                             // fixed 14px badge would nearly cover the whole
                             // (~15px) cell.
                             float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
-                            BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
+                            builtBadge = BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
                         }
                     }
                 }
             }
+
+            return builtBadge;
         }
 
         /// <summary>
@@ -137,7 +143,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private static void BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)
+        private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)
         {
             var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));
             badge.rectTransform.anchorMin = new Vector2(0f, 1f);
@@ -151,6 +157,7 @@ namespace Contigu.Presentation
 
             var badgeView = badge.gameObject.AddComponent<TraitBadgeView>();
             badgeView.Init(tooltip, trait, clickForwardTarget);
+            return badge.rectTransform;
         }
     }
 }
