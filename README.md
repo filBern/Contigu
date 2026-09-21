@@ -2350,3 +2350,48 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     - Tests : `UpgradeSystemTests` (`ApplyJoker_...`,
       `Apply_JokerPiece_ReturnsFalse_...`),
       `RunManagerTests.BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded`.
+- **Refonte du calcul de la Lueur + animation dédiée** (sur demande
+  explicite) :
+  - Nouvelle formule : "chaque groupe d'une couleur sur la ligne = 2
+    points" (`EconomyConstants.LueurPerColorGroup`), remplace l'ancien
+    barème indexé sur le nombre de couleurs DISTINCTES
+    (`LueurByDistinctColors`, supprimé). Un "groupe" est une suite
+    contiguë de cellules de même couleur au sein d'une ligne clearée —
+    même notion que `GridManager.IsAllBlocksOfAtLeastTwo` (le
+    modificateur Bloc), pas juste "cette couleur est présente" :
+    une ligne monochrome de 8 cases = 1 groupe (2 Lueur) ; une ligne où
+    chaque case diffère de sa voisine = 8 groupes (16 Lueur, le
+    maximum) ; 3 couleurs mais 4 séquences (ex.
+    Coral,Coral,Teal,Teal,Teal,Lime,Lime,Coral) = 4 groupes (8 Lueur),
+    pas 3. Les Joker n'ont jamais gagné de Lueur (inchangé), mais une
+    suite de Joker coupe quand même la contiguïté entre les groupes de
+    part et d'autre au lieu de les fusionner.
+  - Nouveau `GridManager.ComputeLueurGroups` (remplace
+    `ComputeLueurEarned`) renvoie la liste détaillée des groupes
+    (`LueurGroup` : cellules + montant), pas juste le total — nécessaire
+    pour l'animation ci-dessous. `PlacementResult.LueurGroups` expose
+    cette liste ; `LueurEarned` reste la somme, inchangé pour
+    `RunManager.Lueur`.
+  - **Animation** (sur demande explicite : "je veux que les points se
+    comptent au début du décompte du score", "chaque groupe pulse un a
+    la fois", "les points lueur soient progressif et non d'un coup",
+    "les points lueur partent du milieu du groupe... et aillent vers
+    le texte du score de lueur") : dans
+    `GameBootstrap.PlayPlacementSequence`, une nouvelle boucle sur
+    `placement.LueurGroups` joue EN PREMIER, avant la cascade de score
+    existante. Pour chaque groupe : pulse toutes ses cellules
+    d'un coup, calcule le centre du groupe (moyenne des positions
+    monde des cellules), fait voler un popup "+N" de ce centre vers le
+    label Lueur du HUD (nouveau
+    `FeedbackLayer.SpawnFlyingPopup` — accélération plutôt que le
+    flottement linéaire de `SpawnPopup`, fondu seulement dans les 30%
+    finaux du trajet), puis avance l'affichage du Lueur du HUD
+    (nouveau `HudView.SetLueur`, même principe que `SetScores` pour le
+    score) — un groupe à la fois, avec une pause entre chaque. Le HUD
+    est ramené à sa valeur AVANT la pose juste après `Refresh` (comme
+    `SetScores(roundScoreBefore, ...)` le fait déjà pour le score) pour
+    que la boucle ait vraiment quelque chose à animer.
+  - Tests réécrits dans `GridManagerTests` : ligne monochrome (1
+    groupe), ligne alternée (8 groupes), plusieurs séquences de la
+    même couleur (compte les séquences, pas les couleurs distinctes),
+    séquence de Joker (aucun gain mais coupe la contiguïté).

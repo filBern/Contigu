@@ -13,14 +13,16 @@ namespace Contigu.Core
     public static class EconomyConstants
     {
         /// <summary>
-        /// Lueur earned per cleared line, indexed by how many DISTINCT colors
-        /// (jokers excluded, same convention as every other line-diversity
-        /// modifier) it contained — index 0 is unused (a line always has at
-        /// least 1 color once it's complete), 1 distinct color pays the
-        /// least, 4 (the max, one of each base color) pays disproportionately
-        /// more than linear to make a genuine rainbow line feel like a jackpot.
+        /// Lueur earned per contiguous same-color group within a cleared
+        /// line (see GridManager.ComputeLueurGroups/LueurGroup) — on
+        /// explicit request ("chaque groupe d'une couleur sur la ligne = 2
+        /// points"), replacing the old formula keyed on distinct color
+        /// count. A fully monochrome line is one group (2 Lueur); a line
+        /// that alternates color every cell is 8 groups (16 Lueur) — still
+        /// rewarding mixing over monochrome, just linearly per group instead
+        /// of a lookup table. Jokers never form an earning group.
         /// </summary>
-        public static readonly int[] LueurByDistinctColors = { 0, 1, 3, 6, 10 };
+        public const int LueurPerColorGroup = 2;
 
         /// <summary>How many modifier slots the shop offers per visit.</summary>
         public const int ShopModifierSlotCount = 3;

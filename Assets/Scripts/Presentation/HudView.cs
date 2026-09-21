@@ -86,11 +86,28 @@ namespace Contigu.Presentation
             fillRect.anchorMax = max;
         }
 
+        /// <summary>Anchor for the Lueur label — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence) instead of just adding the total in one lump sum.</summary>
+        public RectTransform LueurLabelTransform
+        {
+            get { return _lueurLabel.rectTransform; }
+        }
+
         public void Refresh(RunManager run)
         {
             UpdatePieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             SetScores(run.RoundScore, run.CurrentQuota);
-            _lueurLabel.text = "Lueur: " + run.Lueur;
+            SetLueur(run.Lueur);
+        }
+
+        /// <summary>
+        /// Updates just the Lueur label, without touching anything else —
+        /// same idea as <see cref="SetScores"/>, lets the presentation layer
+        /// animate Lueur up progressively (one group at a time) instead of
+        /// always jumping straight to the final value.
+        /// </summary>
+        public void SetLueur(int lueur)
+        {
+            _lueurLabel.text = "Lueur: " + lueur;
         }
 
         /// <summary>

@@ -262,8 +262,10 @@ namespace Contigu.Core
             result.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
             // "Lueur" currency — a completely separate axis from score,
             // driven by color DIVERSITY per cleared line rather than points
-            // (see PlacementResult.LueurEarned).
-            result.LueurEarned = ComputeLueurEarned(clearInfo.ClearedLines);
+            // (see PlacementResult.LueurEarned/LueurGroups).
+            var lueurGroups = ComputeLueurGroups(clearInfo.ClearedLines);
+            result.LueurGroups = lueurGroups;
+            result.LueurEarned = SumLueur(lueurGroups);
 
             // Updates the streak for the NEXT placement to read (see
             // PlacementsSinceLastClear) — this placement's own clear (if any)
@@ -303,30 +305,53 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Lueur" currency (see PlacementResult.LueurEarned): sums, over
-        /// every line this placement cleared, EconomyConstants.LueurByDistinctColors
-        /// indexed by that one line's own count of distinct non-joker colors
-        /// — a line's color sequence is exactly what the 8 line-pattern
-        /// modifiers (Arc-en-ciel, Alternance, ...) already read off
-        /// <see cref="ClearedLine.Colors"/>, so this reuses that same data
-        /// with no extra bookkeeping.
+        /// "Lueur" currency (see PlacementResult.LueurGroups): every
+        /// contiguous same-color run within each line this placement
+        /// cleared becomes its own <see cref="LueurGroup"/> worth
+        /// EconomyConstants.LueurPerColorGroup — a line's color sequence is
+        /// exactly what the 8 line-pattern modifiers (Arc-en-ciel,
+        /// Alternance, ...) already read off <see cref="ClearedLine.Colors"/>,
+        /// so this reuses that same data with no extra bookkeeping. A run of
+        /// Joker cells still breaks contiguity between its neighbors but
+        /// never becomes an earning group itself (Jokers excluded, same
+        /// convention as before).
         /// </summary>
-        private static int ComputeLueurEarned(IReadOnlyList<ClearedLine> clearedLines)
+        private static List<LueurGroup> ComputeLueurGroups(IReadOnlyList<ClearedLine> clearedLines)
         {
-            int total = 0;
+            var groups = new List<LueurGroup>();
             for (int i = 0; i < clearedLines.Count; i++)
             {
-                var distinctColors = new HashSet<PieceColor>();
-                var colors = clearedLines[i].Colors;
-                for (int c = 0; c < colors.Count; c++)
+                var line = clearedLines[i];
+                var colors = line.Colors;
+                int runStart = 0;
+                for (int c = 1; c <= colors.Count; c++)
                 {
-                    if (colors[c] != PieceColor.Joker)
+                    bool runEnds = c == colors.Count || colors[c] != colors[runStart];
+                    if (!runEnds)
                     {
-                        distinctColors.Add(colors[c]);
+                        continue;
                     }
+                    if (colors[runStart] != PieceColor.Joker)
+                    {
+                        var cells = new List<Vector2Int>(c - runStart);
+                        for (int k = runStart; k < c; k++)
+                        {
+                            cells.Add(line.IsRow ? new Vector2Int(k, line.Index) : new Vector2Int(line.Index, k));
+                        }
+                        groups.Add(new LueurGroup(cells, EconomyConstants.LueurPerColorGroup));
+                    }
+                    runStart = c;
                 }
-                int index = Mathf.Clamp(distinctColors.Count, 0, EconomyConstants.LueurByDistinctColors.Length - 1);
-                total += EconomyConstants.LueurByDistinctColors[index];
+            }
+            return groups;
+        }
+
+        private static int SumLueur(IReadOnlyList<LueurGroup> groups)
+        {
+            int total = 0;
+            for (int i = 0; i < groups.Count; i++)
+            {
+                total += groups[i].Amount;
             }
             return total;
         }
@@ -2318,7 +2343,7 @@ namespace Contigu.Core
             outcome.ClearedCells = clearInfo.ClearedCells;
             outcome.ClearedCellColors = clearInfo.ClearedCellColors;
             outcome.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
-            outcome.LueurEarned = ComputeLueurEarned(clearInfo.ClearedLines);
+            outcome.LueurEarned = SumLueur(ComputeLueurGroups(clearInfo.ClearedLines));
 
             if (clearInfo.ClearedCells.Count > 0)
             {

@@ -44,6 +44,68 @@ namespace Contigu.Presentation
             StartCoroutine(AnimatePopup(popup));
         }
 
+        /// <summary>
+        /// Spawns a popup at <paramref name="fromWorldPosition"/> that flies
+        /// toward <paramref name="toAnchor"/> and fades out on arrival —
+        /// used for Lueur group popups, which travel from the middle of the
+        /// scoring group to the Lueur HUD label (explicit request: "les
+        /// points lueur partent du milieu du groupe... et aillent vers le
+        /// texte du score de lueur"), unlike <see cref="SpawnPopup"/>'s
+        /// float-up-in-place.
+        /// </summary>
+        public void SpawnFlyingPopup(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color)
+        {
+            if (toAnchor == null)
+            {
+                return;
+            }
+
+            _root.SetAsLastSibling();
+
+            var popup = UIFactory.CreateText(_root, "FlyingPopup", text, 20, color);
+            popup.rectTransform.position = fromWorldPosition;
+            popup.rectTransform.sizeDelta = new Vector2(120f, 36f);
+            StartCoroutine(AnimateFlyingPopup(popup, toAnchor));
+        }
+
+        private IEnumerator AnimateFlyingPopup(Text text, RectTransform toAnchor)
+        {
+            var rect = text.rectTransform;
+            // Faster and ease-IN (accelerating) rather than SpawnPopup's slow
+            // linear float — this one is chasing a fixed destination, so it
+            // should read as being pulled in rather than drifting.
+            const float duration = 0.5f;
+            float t = 0f;
+            Vector3 startPos = rect.position;
+            Color startColor = text.color;
+
+            while (t < duration)
+            {
+                if (rect == null || toAnchor == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float eased = p * p;
+                rect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
+
+                // Only starts fading in the final stretch, so it reads clearly
+                // for most of the flight and just disappears on arrival.
+                float fadeP = Mathf.Clamp01((p - 0.7f) / 0.3f);
+                var c = startColor;
+                c.a = Mathf.Lerp(1f, 0f, fadeP);
+                text.color = c;
+
+                yield return null;
+            }
+
+            if (text != null)
+            {
+                Destroy(text.gameObject);
+            }
+        }
+
         private IEnumerator AnimatePopup(Text text)
         {
             var rect = text.rectTransform;

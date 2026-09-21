@@ -80,16 +80,25 @@ namespace Contigu.Core
         public int LineClearCellCount;
 
         /// <summary>
-        /// "Lueur" currency earned by this placement's own line clears (see
-        /// GridManager.ComputeLueurEarned and RunManager.Lueur) — completely
-        /// independent of <see cref="TotalScore"/>: it's driven by how many
-        /// DISTINCT colors each cleared line contained, not by how many
-        /// points it scored, so a small mixed-color clear can out-earn a
-        /// huge monochrome one. Never multiplied by ComboMultiplier or
-        /// anything else — a flat sum across every line this placement
-        /// cleared.
+        /// "Lueur" currency earned by this placement's own line clears —
+        /// completely independent of <see cref="TotalScore"/>: it's driven
+        /// by color GROUPING within each cleared line (see <see
+        /// cref="LueurGroups"/>) rather than by how many points the
+        /// placement scored, so a mixed-color clear can out-earn a huge
+        /// monochrome one. Never multiplied by ComboMultiplier or anything
+        /// else — always exactly the sum of <see cref="LueurGroups"/>.
         /// </summary>
         public int LueurEarned;
+
+        /// <summary>
+        /// Every individual Lueur-earning group behind <see
+        /// cref="LueurEarned"/> — one entry per contiguous same-color run
+        /// within a cleared line (see GridManager.ComputeLueurGroups) — so
+        /// the presentation layer can pulse/animate each group's own Lueur
+        /// on its own instead of only ever adding the placement's total in
+        /// one lump sum.
+        /// </summary>
+        public IReadOnlyList<LueurGroup> LueurGroups = System.Array.Empty<LueurGroup>();
 
         /// <summary>
         /// Every individual scoring contribution behind this placement's totals,

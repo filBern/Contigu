@@ -17,6 +17,13 @@ namespace Contigu.Presentation
         private const float CellSize = VisualDefaults.GridCellSize;
         private const float ScoreEventStaggerSeconds = 0.22f;
         private const float LineClearStaggerSeconds = 0.14f;
+        // Lueur groups play before anything else in the sequence (explicit
+        // request: "au début du décompte du score") and don't share the
+        // score cascade's own combo speedup ramp — a flat, slightly slower
+        // pace since each one also has to wait for its flying popup to
+        // actually land (see FeedbackLayer.SpawnFlyingPopup) before the
+        // reveal reads clearly.
+        private const float LueurGroupStaggerSeconds = 0.3f;
         // Each combo addition waits 3% less than the previous one (on
         // explicit request — 10% was too fast), so a big combo doesn't make
         // the player sit through a long, linearly-paced popup sequence —
@@ -304,6 +311,7 @@ namespace Contigu.Presentation
             }
 
             int roundScoreBefore = _run.RoundScore;
+            int lueurBefore = _run.Lueur;
 
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
@@ -319,31 +327,73 @@ namespace Contigu.Presentation
             // instantly vanishing) while its score is still playing out.
             _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors);
             _handView.Refresh();
-            // Round/budget update immediately; the score numbers themselves stay
-            // at their pre-placement values until PlayPlacementSequence catches
-            // them up in step with each popup.
+            // Round/budget update immediately; the score AND Lueur numbers
+            // themselves stay at their pre-placement values until
+            // PlayPlacementSequence catches them up in step with each popup.
             _hudView.Refresh(_run);
+            _hudView.SetLueur(lueurBefore);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
             _statusText.text = "Select or drag a piece onto the grid.";
 
             _isPlayingPlacementSequence = true;
             _handView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore));
         }
 
         /// <summary>
-        /// Plays a placement's full feedback sequence in order: each golden/
-        /// group score popup one at a time — pulsing its cell and advancing the
-        /// HUD's score bar at that exact moment, so the displayed score climbs
-        /// progressively instead of jumping straight to the final value — then,
-        /// only once that's done, clears any completed line/column one cell at
-        /// a time (each with its own popup and score bump), and only then
-        /// advances the run state (draft/victory/defeat), so nothing interrupts
-        /// the player while they're still reading their score.
+        /// Plays a placement's full feedback sequence in order: first each
+        /// Lueur group, one at a time — pulsing its cells and flying a popup
+        /// to the Lueur label, advancing that display progressively as it
+        /// goes (explicit request: "au début du décompte du score" — before
+        /// anything else, and "progressif et non d'un coup") — then each
+        /// golden/group score popup one at a time, pulsing its cell and
+        /// advancing the HUD's score bar at that exact moment, so the
+        /// displayed score climbs progressively instead of jumping straight
+        /// to the final value — then, only once that's done, clears any
+        /// completed line/column one cell at a time (each with its own
+        /// popup and score bump), and only then advances the run state
+        /// (draft/victory/defeat), so nothing interrupts the player while
+        /// they're still reading their score.
         /// </summary>
-        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore)
+        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore)
         {
             var placement = outcome.Placement;
+
+            // Lueur groups play first, ahead of the score cascade below (on
+            // explicit request) — each group pulses its own cells, flies a
+            // "+N" popup from the group's own center to the Lueur label
+            // (see FeedbackLayer.SpawnFlyingPopup), and only then bumps the
+            // displayed Lueur total, so it visibly climbs one group at a
+            // time instead of jumping straight to the final value.
+            int displayedLueur = lueurBefore;
+            for (int i = 0; i < placement.LueurGroups.Count; i++)
+            {
+                var group = placement.LueurGroups[i];
+                Vector3 centerSum = Vector3.zero;
+                int cellsWithTransform = 0;
+                for (int c = 0; c < group.Cells.Count; c++)
+                {
+                    var cell = group.Cells[c];
+                    _gridView.PulseCell(cell.x, cell.y);
+                    var cellRect = _gridView.GetCellTransform(cell.x, cell.y);
+                    if (cellRect != null)
+                    {
+                        centerSum += cellRect.position;
+                        cellsWithTransform++;
+                    }
+                }
+                if (cellsWithTransform > 0)
+                {
+                    Vector3 center = centerSum / cellsWithTransform;
+                    _feedbackLayer.SpawnFlyingPopup(center, _hudView.LueurLabelTransform, "+" + group.Amount, VisualDefaults.GoldenColor);
+                }
+
+                displayedLueur += group.Amount;
+                _hudView.SetLueur(displayedLueur);
+
+                yield return new WaitForSeconds(LueurGroupStaggerSeconds);
+            }
+
             int displayedRoundScore = roundScoreBefore;
             int comboTotal = 0;
             _comboView.Show(0);

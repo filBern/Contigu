@@ -8,7 +8,7 @@ namespace Contigu.Tests
     public class GridManagerTests
     {
         [Test]
-        public void PlacePiece_ClearingAMonochromeLine_EarnsTheMinimumLueur()
+        public void PlacePiece_ClearingAMonochromeLine_IsOneGroupWorthOfLueur()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -19,12 +19,19 @@ namespace Contigu.Tests
             var final = grid.PlacePiece(single, PieceColor.Coral, 7, 0);
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
-            Assert.AreEqual(EconomyConstants.LueurByDistinctColors[1], final.LueurEarned);
+            Assert.AreEqual(EconomyConstants.LueurPerColorGroup, final.LueurEarned,
+                "A fully monochrome line is one contiguous group, however long");
+            Assert.AreEqual(1, final.LueurGroups.Count);
+            Assert.AreEqual(GridManager.Size, final.LueurGroups[0].Cells.Count, "The single group should span the whole line");
         }
 
         [Test]
-        public void PlacePiece_ClearingARainbowLine_EarnsTheMaximumLueur()
+        public void PlacePiece_ClearingAnAlternatingLine_EarnsOneGroupPerCell()
         {
+            // Every cell differs from both neighbors, so this is the
+            // opposite extreme from a monochrome line: 8 singleton groups
+            // instead of 1 — still rewards mixing over monochrome, just
+            // linearly per group now instead of a distinct-color lookup.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var colors = new[] { PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime };
@@ -35,8 +42,55 @@ namespace Contigu.Tests
             var final = grid.PlacePiece(single, colors[(GridManager.Size - 1) % colors.Length], 7, 0);
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
-            Assert.AreEqual(EconomyConstants.LueurByDistinctColors[4], final.LueurEarned,
-                "A line touching all 4 base colors should earn the disproportionately larger jackpot value");
+            Assert.AreEqual(GridManager.Size, final.LueurGroups.Count, "Each cell should be its own group");
+            Assert.AreEqual(GridManager.Size * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+        }
+
+        [Test]
+        public void PlacePiece_LineWithMultipleRunsOfTheSameColor_CountsEachRunSeparately()
+        {
+            // 3 distinct colors but 4 contiguous runs (Coral, Teal, Lime,
+            // Coral again) — proves grouping counts RUNS, not distinct
+            // colors present (which would only be 3).
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var colors = new[]
+            {
+                PieceColor.Coral, PieceColor.Coral, PieceColor.Teal, PieceColor.Teal,
+                PieceColor.Teal, PieceColor.Lime, PieceColor.Lime, PieceColor.Coral
+            };
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, colors[x], x, 0);
+            }
+            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
+
+            Assert.AreEqual(4, final.LueurGroups.Count);
+            Assert.AreEqual(4 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+        }
+
+        [Test]
+        public void PlacePiece_JokerRunInLine_NeverEarnsButStillBreaksContiguity()
+        {
+            // A single Joker cell splits an otherwise-monochrome line into
+            // two Coral runs either side of it — the Joker's own run earns
+            // nothing (jokers excluded), and critically the two Coral runs
+            // do NOT merge into one just because the joker is "between" them.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var colors = new[]
+            {
+                PieceColor.Coral, PieceColor.Coral, PieceColor.Coral, PieceColor.Joker,
+                PieceColor.Coral, PieceColor.Coral, PieceColor.Coral, PieceColor.Coral
+            };
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, colors[x], x, 0);
+            }
+            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
+
+            Assert.AreEqual(2, final.LueurGroups.Count, "Only the two non-Joker runs should earn — the Joker run itself doesn't");
+            Assert.AreEqual(2 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
         }
 
         [Test]
@@ -48,6 +102,7 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0);
 
             Assert.AreEqual(0, result.LueurEarned);
+            Assert.AreEqual(0, result.LueurGroups.Count);
         }
 
         [Test]
