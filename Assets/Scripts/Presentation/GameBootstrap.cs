@@ -34,6 +34,7 @@ namespace Contigu.Presentation
         private ShopView _shopView;
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
+        private UpgradeRevealView _upgradeRevealView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
@@ -209,6 +210,9 @@ namespace Contigu.Presentation
 
             _tileChoiceView = gameObject.AddComponent<TileChoiceView>();
             _tileChoiceView.Build(mainRoot, _tooltipView);
+
+            _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
+            _upgradeRevealView.Build(mainRoot);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
@@ -490,6 +494,16 @@ namespace Contigu.Presentation
 
         private void OnUpgradeBuyRequested(int index)
         {
+            if (index < 0 || index >= _run.ShopUpgradeSlots.Count || _run.ShopUpgradeSlots[index] == null)
+            {
+                return;
+            }
+            // HiddenUpgrade stays readable on the ShopSlot object itself
+            // after purchase (RunManager only flips Purchased, never clears
+            // it) — grabbed here so the Joker case (applies immediately,
+            // leaves PendingUpgrade null) still has something to reveal.
+            var revealedUpgrade = _run.ShopUpgradeSlots[index].HiddenUpgrade;
+
             if (!_run.BuyUpgradeSlot(index))
             {
                 return;
@@ -500,12 +514,14 @@ namespace Contigu.Presentation
             var pending = _run.PendingUpgrade;
             if (pending == null)
             {
-                // Bank upgrade with no sub-choice (Joker) — already applied.
+                // Bank upgrade with no sub-choice (Joker) — already applied;
+                // still show the reveal card so the player can see what it was.
+                _upgradeRevealView.Show(revealedUpgrade);
                 return;
             }
             if (pending.Pool == UpgradePool.Grid)
             {
-                _tileChoiceView.Show(_run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending.Name);
+                _tileChoiceView.Show(_run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending);
             }
             else
             {

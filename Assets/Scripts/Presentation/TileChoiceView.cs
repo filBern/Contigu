@@ -14,7 +14,10 @@ namespace Contigu.Presentation
     /// tiles"), instead of the old random assignment. Toggle any candidate
     /// row on/off; Confirm enables once exactly
     /// EconomyConstants.ShopTileChoiceCount are selected (or fewer, if the
-    /// deck didn't even have that many candidates to offer).
+    /// deck didn't even have that many candidates to offer). Shows the
+    /// upgrade's own card (see UpgradeCardFactory) above the row list, on
+    /// explicit request, so a mystery shop slot's reveal is actually
+    /// readable and not just a name.
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
@@ -27,6 +30,7 @@ namespace Contigu.Presentation
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
+        private RectTransform _cardContainer;
         private Text _title;
         private RectTransform _rowsContainer;
         private Button _confirmButton;
@@ -44,18 +48,24 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
+            _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
+            _cardContainer.anchorMin = new Vector2(0.5f, 1f);
+            _cardContainer.anchorMax = new Vector2(0.5f, 1f);
+            _cardContainer.pivot = new Vector2(0.5f, 1f);
+            _cardContainer.anchoredPosition = new Vector2(0f, -20f);
+
             _title = UIFactory.CreateText(_root, "Title", "", 22, UITheme.TextPrimary);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _title.rectTransform.anchoredPosition = new Vector2(0f, -30f);
+            _title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
-            _rowsContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            _rowsContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            _rowsContainer.pivot = new Vector2(0.5f, 0.5f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, 20f);
+            _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
+            _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
+            _rowsContainer.pivot = new Vector2(0.5f, 1f);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -310f);
             var layout = _rowsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8f;
             layout.childAlignment = TextAnchor.UpperCenter;
@@ -83,7 +93,7 @@ namespace Contigu.Presentation
             _deck = deck;
         }
 
-        public void Show(DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, string upgradeName)
+        public void Show(DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def)
         {
             _deck = deck;
             _candidates.Clear();
@@ -92,7 +102,13 @@ namespace Contigu.Presentation
             _rowBackgroundByIndex.Clear();
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
 
-            _title.text = "You got " + upgradeName + "! Choose " + _requiredCount + " of " + _candidates.Count + " pieces";
+            for (int i = _cardContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_cardContainer.GetChild(i).gameObject);
+            }
+            UpgradeCardFactory.Build(_cardContainer, def);
+
+            _title.text = "Choose " + _requiredCount + " of " + _candidates.Count + " pieces";
 
             for (int i = _rowsContainer.childCount - 1; i >= 0; i--)
             {

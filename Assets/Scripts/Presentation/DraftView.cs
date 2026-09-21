@@ -15,6 +15,10 @@ namespace Contigu.Presentation
     /// that entirely (spec extension, explicit request) — this is now only
     /// the piece/color picker half of that old flow, entered directly via
     /// <see cref="ShowForPendingUpgrade"/> instead of by choosing a card.
+    /// Still shows the upgrade's own card (see UpgradeCardFactory) as a
+    /// fixed header above the picker, on explicit request — a mystery shop
+    /// slot only ever showed its UpgradePool before purchase, so this is the
+    /// first moment the player can actually read what they got.
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
@@ -27,6 +31,7 @@ namespace Contigu.Presentation
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
+        private RectTransform _cardInstance;
 
         public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
@@ -57,6 +62,23 @@ namespace Contigu.Presentation
         {
             _root.gameObject.SetActive(true);
             ClearChildren();
+
+            // Reveal card (see UpgradeCardFactory) so the player can actually
+            // read what they bought — the sub-choice screens below used to
+            // just say "Choose a piece type" with no indication of which
+            // upgrade that was for. Held in its own field so ClearChildren
+            // (called again by ShowColorChoice, e.g. Recolorer's 2nd step)
+            // never tears it down mid-flow.
+            if (_cardInstance != null)
+            {
+                Destroy(_cardInstance.gameObject);
+            }
+            _cardInstance = UpgradeCardFactory.Build(_root, def);
+            _cardInstance.anchorMin = new Vector2(0.5f, 1f);
+            _cardInstance.anchorMax = new Vector2(0.5f, 1f);
+            _cardInstance.pivot = new Vector2(0.5f, 1f);
+            _cardInstance.anchoredPosition = new Vector2(0f, -20f);
+
             ShowTypeChoice(def);
         }
 
@@ -69,7 +91,12 @@ namespace Contigu.Presentation
         {
             for (int i = _root.childCount - 1; i >= 0; i--)
             {
-                Destroy(_root.GetChild(i).gameObject);
+                var child = _root.GetChild(i);
+                if (_cardInstance != null && child == _cardInstance)
+                {
+                    continue;
+                }
+                Destroy(child.gameObject);
             }
         }
 
@@ -81,15 +108,15 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -30f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("List", _root);
-            listContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            listContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            listContainer.pivot = new Vector2(0.5f, 0.5f);
-            listContainer.anchoredPosition = new Vector2(0f, 0f);
-            listContainer.sizeDelta = new Vector2(700f, 480f);
+            listContainer.anchorMin = new Vector2(0.5f, 1f);
+            listContainer.anchorMax = new Vector2(0.5f, 1f);
+            listContainer.pivot = new Vector2(0.5f, 1f);
+            listContainer.anchoredPosition = new Vector2(0f, -310f);
+            listContainer.sizeDelta = new Vector2(700f, 460f);
             var grid = listContainer.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(220f, TypeRowHeight);
             grid.spacing = new Vector2(10f, 10f);
@@ -182,13 +209,14 @@ namespace Contigu.Presentation
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, -30f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, -270f);
             title.rectTransform.sizeDelta = new Vector2(600f, 40f);
 
             var listContainer = UIFactory.CreateUIObject("Colors", _root);
-            listContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            listContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            listContainer.pivot = new Vector2(0.5f, 0.5f);
+            listContainer.anchorMin = new Vector2(0.5f, 1f);
+            listContainer.anchorMax = new Vector2(0.5f, 1f);
+            listContainer.pivot = new Vector2(0.5f, 1f);
+            listContainer.anchoredPosition = new Vector2(0f, -320f);
             var hLayout = listContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             hLayout.spacing = 12f;
             hLayout.childAlignment = TextAnchor.MiddleCenter;
