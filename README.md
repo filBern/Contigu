@@ -2517,3 +2517,7 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     paramètre `originTraitOverride`, suivant la même convention que
     `fillColorOverride` : actif seulement pendant le "hold"). Nouveau
     test `GridManagerTests.PlacePiece_ClearedCellTraits_CapturesEachClearedCellsOriginTraitBeforeWipingIt`.
+- **Score de clear de ligne : retour de 6 à 12 points par tuile**
+  (`ScoringConstants.LineClearBonusPerCell`, sur demande explicite —
+  revient sur le changement précédent "passons de 12 à 6 points par
+  tuile").
