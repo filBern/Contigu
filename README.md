@@ -2408,3 +2408,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   supplémentaire nécessaire. Les 4 modificateurs "Devotion"
   (Coral/Teal/Violet/Lime Devotion) sont une famille différente, non
   concernée — gardent leur code à 2 lettres (OC/OT/OV/OL).
+- **Lueur : "par groupe" → "par couleur"** (sur demande explicite,
+  revient sur le tout dernier changement) : `GridManager.ComputeLueurGroups`
+  groupe maintenant les cellules d'une ligne clearée par COULEUR
+  DISTINCTE (toutes les cellules de cette couleur dans la ligne,
+  adjacentes ou non), plutôt que par suite contiguë. Une couleur
+  éclatée en plusieurs segments non-adjacents ne paie donc plus qu'une
+  fois — ex. Coral,Coral,Teal,Teal,Teal,Lime,Lime,Coral (Coral en 2
+  segments) : 3 groupes/6 Lueur maintenant, contre 4 groupes/8 Lueur
+  avec la formule "par groupe" juste précédente. Une ligne monochrome
+  reste 1 groupe (2 Lueur) ; une ligne touchant les 4 couleurs de base
+  reste 4 groupes (8 Lueur), que ce soit en segments contigus ou
+  éparpillés. `EconomyConstants.LueurPerColorGroup` (toujours 2) et la
+  structure `LueurGroup` (toujours utilisée par l'animation —
+  `GameBootstrap.PlayPlacementSequence` n'a pas eu besoin de changer,
+  la logique de pulse/vol de popup par groupe ne suppose pas la
+  contiguïté) sont inchangés dans leur rôle, seul le découpage change.
+  Tests réécrits dans `GridManagerTests`.
+- **Score de clear de ligne : 12 → 6 points par tuile**
+  (`ScoringConstants.LineClearBonusPerCell`, sur demande explicite).

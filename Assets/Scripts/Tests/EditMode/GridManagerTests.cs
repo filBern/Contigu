@@ -8,7 +8,7 @@ namespace Contigu.Tests
     public class GridManagerTests
     {
         [Test]
-        public void PlacePiece_ClearingAMonochromeLine_IsOneGroupWorthOfLueur()
+        public void PlacePiece_ClearingAMonochromeLine_IsOneColorWorthOfLueur()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -20,18 +20,18 @@ namespace Contigu.Tests
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
             Assert.AreEqual(EconomyConstants.LueurPerColorGroup, final.LueurEarned,
-                "A fully monochrome line is one contiguous group, however long");
+                "A fully monochrome line is one color, however many cells it spans");
             Assert.AreEqual(1, final.LueurGroups.Count);
-            Assert.AreEqual(GridManager.Size, final.LueurGroups[0].Cells.Count, "The single group should span the whole line");
+            Assert.AreEqual(GridManager.Size, final.LueurGroups[0].Cells.Count, "The single group should cover every cell of that color");
         }
 
         [Test]
-        public void PlacePiece_ClearingAnAlternatingLine_EarnsOneGroupPerCell()
+        public void PlacePiece_ClearingAllFourBaseColors_EarnsOneGroupPerColor()
         {
-            // Every cell differs from both neighbors, so this is the
-            // opposite extreme from a monochrome line: 8 singleton groups
-            // instead of 1 — still rewards mixing over monochrome, just
-            // linearly per group now instead of a distinct-color lookup.
+            // Each color appears twice, and never in two ADJACENT cells —
+            // proves grouping is keyed on distinct color across the whole
+            // line, not contiguous runs: this is 4 groups (one per color),
+            // not 8 (one per run), even though no run is longer than 1 cell.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var colors = new[] { PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime };
@@ -42,16 +42,17 @@ namespace Contigu.Tests
             var final = grid.PlacePiece(single, colors[(GridManager.Size - 1) % colors.Length], 7, 0);
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
-            Assert.AreEqual(GridManager.Size, final.LueurGroups.Count, "Each cell should be its own group");
-            Assert.AreEqual(GridManager.Size * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+            Assert.AreEqual(colors.Length, final.LueurGroups.Count, "One group per distinct color, not per run");
+            Assert.AreEqual(colors.Length * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
         }
 
         [Test]
-        public void PlacePiece_LineWithMultipleRunsOfTheSameColor_CountsEachRunSeparately()
+        public void PlacePiece_ColorSplitAcrossMultipleRuns_StillCountsAsOneGroup()
         {
-            // 3 distinct colors but 4 contiguous runs (Coral, Teal, Lime,
-            // Coral again) — proves grouping counts RUNS, not distinct
-            // colors present (which would only be 3).
+            // Coral appears in two separate runs (start and end) with Teal
+            // and Lime in between — only 3 distinct colors, so 3 groups
+            // (was briefly 4 under a contiguous-run formula, since that
+            // would have counted the two Coral runs separately).
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var colors = new[]
@@ -65,17 +66,25 @@ namespace Contigu.Tests
             }
             var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
 
-            Assert.AreEqual(4, final.LueurGroups.Count);
-            Assert.AreEqual(4 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+            Assert.AreEqual(3, final.LueurGroups.Count);
+            Assert.AreEqual(3 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+
+            LueurGroup coralGroup = default;
+            bool foundCoralGroup = false;
+            for (int i = 0; i < final.LueurGroups.Count; i++)
+            {
+                if (final.LueurGroups[i].Cells.Count == 3)
+                {
+                    coralGroup = final.LueurGroups[i];
+                    foundCoralGroup = true;
+                }
+            }
+            Assert.IsTrue(foundCoralGroup, "The 3 Coral cells (split across two runs) should all end up in one group");
         }
 
         [Test]
-        public void PlacePiece_JokerRunInLine_NeverEarnsButStillBreaksContiguity()
+        public void PlacePiece_JokerCellsInLine_NeverCountTowardAnyColorsGroup()
         {
-            // A single Joker cell splits an otherwise-monochrome line into
-            // two Coral runs either side of it — the Joker's own run earns
-            // nothing (jokers excluded), and critically the two Coral runs
-            // do NOT merge into one just because the joker is "between" them.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var colors = new[]
@@ -89,8 +98,9 @@ namespace Contigu.Tests
             }
             var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
 
-            Assert.AreEqual(2, final.LueurGroups.Count, "Only the two non-Joker runs should earn — the Joker run itself doesn't");
-            Assert.AreEqual(2 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+            Assert.AreEqual(1, final.LueurGroups.Count, "Only the Coral color earns — the Joker cell doesn't start a group of its own");
+            Assert.AreEqual(EconomyConstants.LueurPerColorGroup, final.LueurEarned);
+            Assert.AreEqual(GridManager.Size - 1, final.LueurGroups[0].Cells.Count, "All 7 non-Joker cells should be in the one Coral group");
         }
 
         [Test]

@@ -305,16 +305,18 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Lueur" currency (see PlacementResult.LueurGroups): every
-        /// contiguous same-color run within each line this placement
-        /// cleared becomes its own <see cref="LueurGroup"/> worth
-        /// EconomyConstants.LueurPerColorGroup — a line's color sequence is
+        /// "Lueur" currency (see PlacementResult.LueurGroups): every DISTINCT
+        /// non-Joker color within each line this placement cleared becomes
+        /// its own <see cref="LueurGroup"/> (every cell of that color in the
+        /// line, whether or not they're actually adjacent) worth
+        /// EconomyConstants.LueurPerColorGroup — "2 points par couleur", on
+        /// explicit request (was briefly "2 points par groupe", i.e. per
+        /// CONTIGUOUS same-color run instead of per color; changed back to
+        /// per color since that split one color into several paying entries
+        /// whenever it wasn't all adjacent). A line's color sequence is
         /// exactly what the 8 line-pattern modifiers (Arc-en-ciel,
         /// Alternance, ...) already read off <see cref="ClearedLine.Colors"/>,
-        /// so this reuses that same data with no extra bookkeeping. A run of
-        /// Joker cells still breaks contiguity between its neighbors but
-        /// never becomes an earning group itself (Jokers excluded, same
-        /// convention as before).
+        /// so this reuses that same data with no extra bookkeeping.
         /// </summary>
         private static List<LueurGroup> ComputeLueurGroups(IReadOnlyList<ClearedLine> clearedLines)
         {
@@ -323,24 +325,30 @@ namespace Contigu.Core
             {
                 var line = clearedLines[i];
                 var colors = line.Colors;
-                int runStart = 0;
-                for (int c = 1; c <= colors.Count; c++)
+                var cellsByColor = new Dictionary<PieceColor, List<Vector2Int>>();
+                for (int c = 0; c < colors.Count; c++)
                 {
-                    bool runEnds = c == colors.Count || colors[c] != colors[runStart];
-                    if (!runEnds)
+                    if (colors[c] == PieceColor.Joker)
                     {
                         continue;
                     }
-                    if (colors[runStart] != PieceColor.Joker)
+                    if (!cellsByColor.TryGetValue(colors[c], out var cells))
                     {
-                        var cells = new List<Vector2Int>(c - runStart);
-                        for (int k = runStart; k < c; k++)
-                        {
-                            cells.Add(line.IsRow ? new Vector2Int(k, line.Index) : new Vector2Int(line.Index, k));
-                        }
+                        cells = new List<Vector2Int>();
+                        cellsByColor[colors[c]] = cells;
+                    }
+                    cells.Add(line.IsRow ? new Vector2Int(c, line.Index) : new Vector2Int(line.Index, c));
+                }
+                // Fixed color order (not Dictionary enumeration order, which
+                // isn't guaranteed) so the animation's group-by-group reveal
+                // is consistent from one clear to the next.
+                var baseColors = PieceColorUtility.BaseColors;
+                for (int b = 0; b < baseColors.Count; b++)
+                {
+                    if (cellsByColor.TryGetValue(baseColors[b], out var cells))
+                    {
                         groups.Add(new LueurGroup(cells, EconomyConstants.LueurPerColorGroup));
                     }
-                    runStart = c;
                 }
             }
             return groups;

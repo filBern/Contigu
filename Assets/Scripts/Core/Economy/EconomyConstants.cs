@@ -13,14 +13,16 @@ namespace Contigu.Core
     public static class EconomyConstants
     {
         /// <summary>
-        /// Lueur earned per contiguous same-color group within a cleared
-        /// line (see GridManager.ComputeLueurGroups/LueurGroup) — on
-        /// explicit request ("chaque groupe d'une couleur sur la ligne = 2
-        /// points"), replacing the old formula keyed on distinct color
-        /// count. A fully monochrome line is one group (2 Lueur); a line
-        /// that alternates color every cell is 8 groups (16 Lueur) — still
-        /// rewarding mixing over monochrome, just linearly per group instead
-        /// of a lookup table. Jokers never form an earning group.
+        /// Lueur earned per DISTINCT non-Joker color within a cleared line
+        /// (see GridManager.ComputeLueurGroups/LueurGroup) — "2 points par
+        /// couleur", on explicit request. Was briefly "2 points par groupe"
+        /// (per contiguous same-color RUN instead, so a color split across
+        /// several non-adjacent runs in the same line paid more than once);
+        /// changed back to a flat rate per color regardless of how many runs
+        /// it's split into. A fully monochrome line is 1 color (2 Lueur); a
+        /// line touching all 4 base colors is 4 (8 Lueur) — still rewarding
+        /// mixing over monochrome, just linearly per color instead of the
+        /// original escalating lookup table. Jokers never count.
         /// </summary>
         public const int LueurPerColorGroup = 2;
 

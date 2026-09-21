@@ -92,11 +92,11 @@ namespace Contigu.Core
 
         /// <summary>
         /// Every individual Lueur-earning group behind <see
-        /// cref="LueurEarned"/> — one entry per contiguous same-color run
-        /// within a cleared line (see GridManager.ComputeLueurGroups) — so
-        /// the presentation layer can pulse/animate each group's own Lueur
-        /// on its own instead of only ever adding the placement's total in
-        /// one lump sum.
+        /// cref="LueurEarned"/> — one entry per DISTINCT color within a
+        /// cleared line (see GridManager.ComputeLueurGroups) — so the
+        /// presentation layer can pulse/animate each color's own Lueur on
+        /// its own instead of only ever adding the placement's total in one
+        /// lump sum.
         /// </summary>
         public IReadOnlyList<LueurGroup> LueurGroups = System.Array.Empty<LueurGroup>();
 
