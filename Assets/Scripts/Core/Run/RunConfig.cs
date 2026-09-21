@@ -19,9 +19,21 @@ namespace Contigu.Core
         public const int BossLockPiecesInterval = 3;
         public const int BossLockCellsPerInterval = 2;
 
+        /// <summary>
+        /// Round score targets — a geometric progression (~x1.7 per round)
+        /// rather than the previous roughly-quadratic one, on explicit
+        /// request to match how much bigger placement totals can now get
+        /// once several of the 24 modifiers converted to "xN multiplier"
+        /// (see ScoringConstants/PlacementResult.ModifierMultiplier) stack
+        /// together on the same placement — a couple of those compounding
+        /// multiplicatively with GroupMultiplier/ComboMultiplier can already
+        /// dwarf the old late-round targets, so those needed to climb
+        /// exponentially too or the back half of a run would stop being any
+        /// kind of challenge.
+        /// </summary>
         public static readonly int[] Quotas =
         {
-            300, 450, 650, 900, 1200, 1550, 1950, 2500
+            300, 500, 850, 1450, 2450, 4150, 7050, 12000
         };
 
         public static readonly int[] PieceBudgets =

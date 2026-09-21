@@ -2644,3 +2644,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     une assertion devenue vide de sens pour un modifier qui n'écrit
     plus jamais dans `ModifierBonus`, corrigée en
     `ModifierMultiplier == 1`.
+- **Objectifs de score (`RunConfig.Quotas`) : progression exponentielle**
+  (sur demande explicite, en accompagnement direct du point précédent —
+  "je te laisse faire monter les objectifs de points en exponentiels").
+  L'ancienne progression (300, 450, 650, 900, 1200, 1550, 1950, 2500)
+  était grosso modo quadratique (écarts croissant arithmétiquement :
+  +150, +200, +250...) — remplacée par une vraie progression
+  géométrique (~x1,7 par manche) : 300, 500, 850, 1450, 2450, 4150,
+  7050, 12000. Nécessaire maintenant que plusieurs des 24 modifiers
+  convertis en multiplicateur peuvent s'empiler sur une même pose
+  (multiplicativement avec `GroupMultiplier`/`ComboMultiplier` en plus)
+  et faire largement exploser les anciens objectifs de fin de run.
