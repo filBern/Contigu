@@ -36,7 +36,7 @@ namespace Contigu.Core
         public const int GridUpgradeShopBasePrice = 3;
 
         /// <summary>Flat Lueur cost to refresh every still-unsold slot in the current shop visit (see RunManager.RerollShop) — escalates with every other purchase this visit exactly like a slot's own price does.</summary>
-        public const int ShopRerollBasePrice = 15;
+        public const int ShopRerollBasePrice = 5;
 
         /// <summary>Every purchase (a slot OR a reroll) made in the SAME shop visit raises the price of everything else still on offer by this fraction — on explicit request ("prix qui montent à chaque achat"), so a big Lueur balance can't just clear the whole shop at face value.</summary>
         public const float ShopPriceEscalationPerPurchase = 0.5f;
