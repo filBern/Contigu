@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -32,6 +33,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private RectTransform _root;
         private RectTransform _cardInstance;
+        private IReadOnlyList<(ShapeId Shape, PieceColor Color)> _typeCandidates;
 
         public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
@@ -56,10 +58,15 @@ namespace Contigu.Presentation
         /// type for Retirer/Dupliquer/Recolorer, then (Recolorer only) the
         /// target color. <paramref name="def"/> must be a Bank-pool upgrade
         /// with <see cref="UpgradeDefinition.RequiresSubChoice"/> true (the
-        /// shop never calls this for anything else).
+        /// shop never calls this for anything else). <paramref
+        /// name="candidateTypes"/> (RunManager.PendingUpgradeTypeCandidates)
+        /// is the up-to-5 subset of the deck's composition to actually offer
+        /// — explicit request, the type picker used to list every distinct
+        /// type in the deck at once.
         /// </summary>
-        public void ShowForPendingUpgrade(UpgradeDefinition def)
+        public void ShowForPendingUpgrade(UpgradeDefinition def, IReadOnlyList<(ShapeId Shape, PieceColor Color)> candidateTypes)
         {
+            _typeCandidates = candidateTypes;
             _root.gameObject.SetActive(true);
             ClearChildren();
 
@@ -122,17 +129,16 @@ namespace Contigu.Presentation
             grid.spacing = new Vector2(10f, 10f);
             grid.childAlignment = TextAnchor.UpperCenter;
 
-            bool removeMode = def.Id == UpgradeId.RemovePiece;
+            // _typeCandidates is already the (up-to-5, eligibility-filtered)
+            // subset RunManager rolled — see UpgradeSystem.GetCandidateTypesFor
+            // — so no further filtering needed here, just a count per type
+            // for the "x{count}" label.
             var composition = _deck.GetDeckComposition();
-            foreach (var kvp in composition)
+            for (int i = 0; i < _typeCandidates.Count; i++)
             {
-                var shape = kvp.Key.Shape;
-                var color = kvp.Key.Color;
-                int count = kvp.Value;
-                if (removeMode && !_deck.CanRemove(shape, color))
-                {
-                    continue;
-                }
+                var shape = _typeCandidates[i].Shape;
+                var color = _typeCandidates[i].Color;
+                composition.TryGetValue((shape, color), out int count);
                 BuildTypeRow(listContainer, def, shape, color, count);
             }
         }

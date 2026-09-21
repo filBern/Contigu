@@ -138,6 +138,84 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void GetCandidateTypesFor_GridUpgrade_ReturnsNoCandidates()
+        {
+            var deck = MakeManyDistinctTypesDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.GoldenCells, deck);
+
+            Assert.AreEqual(0, candidates.Count);
+        }
+
+        [Test]
+        public void GetCandidateTypesFor_JokerUpgrade_ReturnsNoCandidates()
+        {
+            // Joker is the one Bank upgrade with no sub-choice at all.
+            var deck = MakeManyDistinctTypesDeck();
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.JokerPiece, deck);
+
+            Assert.AreEqual(0, candidates.Count);
+        }
+
+        [Test]
+        public void GetCandidateTypesFor_DuplicatePiece_CapsAtShopTileCandidateCountAndStaysDistinct()
+        {
+            var deck = MakeManyDistinctTypesDeck(); // 8 distinct types, well over the cap
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.DuplicatePiece, deck);
+
+            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, candidates.Count);
+            Assert.AreEqual(candidates.Count, new HashSet<(ShapeId, PieceColor)>(candidates).Count, "Candidates should be distinct types");
+        }
+
+        [Test]
+        public void GetCandidateTypesFor_RemovePiece_ExcludesTypesTheDeckCantActuallyRemove()
+        {
+            // Exactly MinDeckSize, one copy of each of 10 distinct types —
+            // CanRemove is false for every one of them (removing any copy
+            // would drop the deck below its floor), so none should qualify.
+            var tokens = new List<PieceToken>();
+            var allShapes = new[]
+            {
+                ShapeId.Single, ShapeId.DomH, ShapeId.DomV, ShapeId.TriL, ShapeId.TriIH,
+                ShapeId.TriIV, ShapeId.Sq2, ShapeId.LTetro, ShapeId.TTetro, ShapeId.STetro
+            };
+            foreach (var shape in allShapes)
+            {
+                tokens.Add(new PieceToken(shape, PieceColor.Coral));
+            }
+            Assert.AreEqual(DeckManager.MinDeckSize, tokens.Count);
+            var deck = new DeckManager(tokens, new SystemRandomProvider(1));
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.RemovePiece, deck);
+
+            Assert.AreEqual(0, candidates.Count);
+        }
+
+        private static DeckManager MakeManyDistinctTypesDeck()
+        {
+            var tokens = new List<PieceToken>();
+            var shapes = new[]
+            {
+                ShapeId.Single, ShapeId.DomH, ShapeId.DomV, ShapeId.TriL,
+                ShapeId.TriIH, ShapeId.TriIV, ShapeId.Sq2, ShapeId.LTetro
+            };
+            foreach (var shape in shapes)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    tokens.Add(new PieceToken(shape, PieceColor.Coral));
+                }
+            }
+            return new DeckManager(tokens, new SystemRandomProvider(1));
+        }
+
+        [Test]
         public void ApplyToChosenTiles_TagsExactlyTheGivenIndices()
         {
             var deck = MakeTwentyTokenDeck();

@@ -132,6 +132,25 @@ namespace Contigu.Core
             return deck.GetCandidateTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
         }
 
+        /// <summary>
+        /// The candidate piece TYPES to show for <paramref name="upgrade"/>'s
+        /// sub-choice (Retirer/Dupliquer/Recolorer) — empty for anything else
+        /// (Grid-pool, or Bank with no sub-choice like Joker). Retirer
+        /// additionally filters to types the deck can actually still remove
+        /// (see DeckManager.CanRemove), same floor Apply itself enforces.
+        /// </summary>
+        public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetCandidateTypesFor(UpgradeDefinition upgrade, DeckManager deck)
+        {
+            if (upgrade.Pool != UpgradePool.Bank || !upgrade.RequiresSubChoice)
+            {
+                return System.Array.Empty<(ShapeId, PieceColor)>();
+            }
+            System.Func<(ShapeId Shape, PieceColor Color), bool> eligible = upgrade.Id == UpgradeId.RemovePiece
+                ? (System.Func<(ShapeId Shape, PieceColor Color), bool>)(t => deck.CanRemove(t.Shape, t.Color))
+                : null;
+            return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
+        }
+
         private static PieceTraitKind? TraitKindFor(UpgradeId id)
         {
             switch (id)

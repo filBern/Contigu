@@ -525,7 +525,7 @@ namespace Contigu.Presentation
             }
             else
             {
-                _draftView.ShowForPendingUpgrade(pending);
+                _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates);
             }
         }
 

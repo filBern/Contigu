@@ -2208,3 +2208,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     les nouveaux tests dédiés à la boutique (achat, prix croissants,
     rafraîchissement, cap de modificateurs, flux upgrade mystère
     complet) et à la Lueur (`GridManagerTests`).
+- **Boutique Lueur — suite de retours de gameplay** (sur demandes
+  explicites successives) :
+  - Prix de base rééquilibrés (une manche moyenne rapportait ~15 Lueur,
+    insuffisant pour acheter quoi que ce soit aux prix d'origine) :
+    modifier 20→8, upgrade Bank/Grid 25/40→3 chacun, reroll 15→5
+    (`EconomyConstants`).
+  - Révélation d'un upgrade d'emplacement mystère : réutilise désormais
+    la carte visuelle de l'ancien draft (bannière de nom, sous-titre
+    rareté+pool, description — extraite dans `UpgradeCardFactory`,
+    partagée par les 3 points de révélation) au lieu d'un simple nom ou
+    de rien du tout — sur demande explicite ("il faut pouvoir
+    comprendre l'upgrade, on peut réutiliser le visuel qu'on avait
+    avant"). `DraftView` (sous-choix Bank) et `TileChoiceView` (choix
+    de tuiles Grid) l'affichent en en-tête fixe ; nouvelle
+    `UpgradeRevealView` pour Joker, le seul cas qui s'appliquait déjà
+    sans jamais rien montrer au joueur.
+  - Modificateur "Imminent" retiré entièrement (sur demande explicite) :
+    `ModifierId`, `ModifierDefinition`, hook de scoring dans
+    `GridManager` (plus les deux méthodes utilitaires de ligne/colonne
+    qui n'étaient utilisées que par lui), abréviation d'icône et test
+    dédié.
+  - Le sélecteur de type de pièce du sous-choix Bank (Retirer/
+    Dupliquer/Recolorer) listait tous les types distincts du deck à la
+    fois, sans limite — sur demande explicite ("il faut seulement en
+    afficher 5"), plafonné à `EconomyConstants.ShopTileCandidateCount`
+    comme le choix de tuiles Grid l'était déjà. Nouveau
+    `DeckManager.GetCandidateTypes` (même principe que
+    `GetCandidateTokenIndices` mais par TYPE plutôt que par jeton
+    individuel, puisque ces upgrades agissent sur un type entier) et
+    `UpgradeSystem.GetCandidateTypesFor` (filtre en plus Retirer aux
+    types que le deck peut encore réellement retirer, via
+    `DeckManager.CanRemove`) ; nouveau
+    `RunManager.PendingUpgradeTypeCandidates`, tiré une seule fois à
+    l'achat et réutilisé tel quel pour toute la durée du sous-choix
+    (y compris l'étape couleur de Recolorer, qui n'en a pas besoin
+    elle-même). Tests dans `UpgradeSystemTests`/`RunManagerTests`.

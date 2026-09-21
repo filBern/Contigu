@@ -167,6 +167,38 @@ namespace Contigu.Core
             return composition;
         }
 
+        /// <summary>
+        /// Up to <paramref name="count"/> distinct (shape, color) types from
+        /// the deck's composition, randomly sampled — same idea as
+        /// <see cref="GetCandidateTokenIndices"/> but per-TYPE rather than
+        /// per-token, since a Bank sub-choice (Retirer/Dupliquer/Recolorer)
+        /// acts on a whole type at once. Explicit request: the piece-type
+        /// picker used to list every distinct type in the deck, which could
+        /// run well past a screenful; capped the same way the Grid-pool tile
+        /// choice already was.
+        /// </summary>
+        public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetCandidateTypes(int count, IRandomProvider rng, System.Func<(ShapeId Shape, PieceColor Color), bool> eligible = null)
+        {
+            var candidates = new List<(ShapeId Shape, PieceColor Color)>();
+            foreach (var kvp in GetDeckComposition())
+            {
+                if (eligible == null || eligible(kvp.Key))
+                {
+                    candidates.Add(kvp.Key);
+                }
+            }
+
+            var chosen = new List<(ShapeId Shape, PieceColor Color)>();
+            int take = count < candidates.Count ? count : candidates.Count;
+            for (int i = 0; i < take; i++)
+            {
+                int pick = rng.Next(candidates.Count);
+                chosen.Add(candidates[pick]);
+                candidates.RemoveAt(pick);
+            }
+            return chosen;
+        }
+
         public bool CanRemove(ShapeId shape, PieceColor color)
         {
             if (_deck.Count <= MinDeckSize)

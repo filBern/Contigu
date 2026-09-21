@@ -414,19 +414,17 @@ namespace Contigu.Tests
             Assert.IsTrue(bought);
             Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
             Assert.AreEqual(0, run.PendingUpgradeTileCandidates.Count, "A Bank-pool upgrade never needs a tile choice");
+            Assert.Greater(run.PendingUpgradeTypeCandidates.Count, 0, "A sub-choice Bank upgrade should offer at least one candidate type");
+            Assert.LessOrEqual(run.PendingUpgradeTypeCandidates.Count, EconomyConstants.ShopTileCandidateCount, "The type picker should be capped, not list the whole deck composition");
 
-            (ShapeId Shape, PieceColor Color) firstType = (ShapeId.Single, PieceColor.Coral);
-            foreach (var kvp in run.Deck.GetDeckComposition())
-            {
-                firstType = kvp.Key;
-                break;
-            }
+            var firstType = run.PendingUpgradeTypeCandidates[0];
             var subChoice = new UpgradeSubChoice(firstType.Shape, firstType.Color);
 
             bool resolved = run.ResolveUpgradeSubChoice(subChoice);
 
             Assert.IsTrue(resolved);
             Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradeTypeCandidates.Count, "Candidates should be cleared once the sub-choice is resolved");
             Assert.AreEqual(deckCountBefore + 1, run.Deck.DeckCount);
         }
 

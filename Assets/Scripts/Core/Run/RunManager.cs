@@ -65,6 +65,9 @@ namespace Contigu.Core
         /// <summary>Candidate deck token indices for <see cref="PendingUpgrade"/> — only populated (non-empty) when it's a Grid-pool upgrade; empty for a Bank-pool one, which needs a sub-choice instead.</summary>
         public IReadOnlyList<int> PendingUpgradeTileCandidates { get; private set; }
 
+        /// <summary>Candidate piece TYPES for <see cref="PendingUpgrade"/>'s sub-choice — only populated (non-empty) for a Bank-pool upgrade that needs one (Retirer/Dupliquer/Recolorer); empty otherwise. Capped the same way PendingUpgradeTileCandidates is, so the type picker never lists the whole deck composition at once.</summary>
+        public IReadOnlyList<(ShapeId Shape, PieceColor Color)> PendingUpgradeTypeCandidates { get; private set; }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -112,6 +115,7 @@ namespace Contigu.Core
             Deck = new DeckManager(InitialDeckFactory.Build(), rng);
             Upgrades = new UpgradeSystem(rng);
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             CurrentRoundIndex = 0;
             StartRound();
         }
@@ -858,6 +862,7 @@ namespace Contigu.Core
             _purchasesThisVisit = 0;
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             for (int i = 0; i < _modifierSlots.Length; i++)
             {
                 _modifierSlots[i] = RollModifierSlot();
@@ -1027,6 +1032,7 @@ namespace Contigu.Core
             if (upgrade.RequiresSubChoice)
             {
                 PendingUpgrade = upgrade;
+                PendingUpgradeTypeCandidates = Upgrades.GetCandidateTypesFor(upgrade, Deck);
                 return true;
             }
 
@@ -1044,6 +1050,7 @@ namespace Contigu.Core
 
             bool applied = Upgrades.Apply(PendingUpgrade, subChoice, Deck);
             PendingUpgrade = null;
+            PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             return applied;
         }
 
