@@ -62,6 +62,41 @@ namespace Contigu.Core
             get { return _placementsSinceLastClear; }
         }
 
+        /// <summary>Gradient's current permanent multiplier (1 + <see cref="_gradientPermanentBonus"/>) — what it would apply RIGHT NOW if a qualifying line were cleared this instant. Read by the tooltip's progressive-state line (see RunManager.GetProgressiveModifierStateText).</summary>
+        public int GradientCurrentMultiplier
+        {
+            get { return 1 + _gradientPermanentBonus; }
+        }
+
+        /// <summary>Repetition's current same-shape streak (see <see cref="_repetitionStreak"/>) — the xN multiplier it would apply RIGHT NOW if the next placement kept the streak alive, clamped to 1 (its actual no-op floor) while below the 2-in-a-row threshold.</summary>
+        public int RepetitionCurrentMultiplier
+        {
+            get { return _repetitionStreak < 2 ? 1 : _repetitionStreak; }
+        }
+
+        /// <summary>Dwindling's current flat points bonus (see <see cref="_epuisementValue"/>) — exactly what the NEXT placement would earn from it right now.</summary>
+        public int EpuisementCurrentBonus
+        {
+            get { return _epuisementValue; }
+        }
+
+        /// <summary>How many cells are filled on the board right now — Density's driver (see <see cref="ApplyDensite"/>), exposed for the tooltip's progressive-state line.</summary>
+        public int FilledCellCount
+        {
+            get
+            {
+                int filled = 0;
+                foreach (var pos in AllPositions())
+                {
+                    if (_cells[pos.x, pos.y].IsFilled)
+                    {
+                        filled++;
+                    }
+                }
+                return filled;
+            }
+        }
+
         public GridManager()
         {
             _cells = new Cell[Size, Size];

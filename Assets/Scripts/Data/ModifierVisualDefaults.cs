@@ -115,7 +115,8 @@ namespace Contigu.Data
             { ModifierId.MultCinqRisque, "M5" },
             { ModifierId.CartesEnchantees, "CE" },
             { ModifierId.Epuisement, "EP" },
-            { ModifierId.Multitude, "MT" }
+            { ModifierId.Multitude, "MT" },
+            { ModifierId.Experience, "XP" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

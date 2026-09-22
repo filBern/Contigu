@@ -83,6 +83,61 @@ namespace Contigu.Core
             return _modifierUsageCounts.TryGetValue(id, out var count) ? count : 0;
         }
 
+        /// <summary>How many pieces carrying a trait ("special" pieces) have been PLACED so far this run — Experience's driver, the played-count counterpart to CountUpgradedDeckCards' "currently in deck" count. Permanent for the whole run, same as Gradient's counter (nothing in the spec calls for resetting it, and it isn't tied to round-scoped grid state the way Epuisement is).</summary>
+        private int _specialPiecesPlayedCount;
+
+        /// <summary>
+        /// The CURRENT effective state of a progressive/incremental modifier,
+        /// formatted for its tooltip (on explicit request: "Tous les
+        /// modifiers avec des bonus incrémentaux, il faut afficher dans le
+        /// tooltip l'état progressif du modifier (ex: Currently x2.3)") —
+        /// null for every modifier whose bonus is fixed and doesn't grow or
+        /// shrink over the round/run (that's most of them). "xN" modifiers
+        /// show the exact integer multiplier they'd apply right now;
+        /// CartesEnchantees/Experience show the CONCEPTUAL continuous
+        /// "+0.1 per card" value with one decimal (e.g. "x2.3") even though
+        /// the actual applied bonus is integer-stepped (see
+        /// ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep) — the
+        /// decimal is purely a display nicety here, never fed back into
+        /// scoring.
+        /// </summary>
+        public string GetProgressiveModifierStateText(ModifierId id)
+        {
+            switch (id)
+            {
+                case ModifierId.Gradient:
+                    return "Currently x" + Grid.GradientCurrentMultiplier;
+                case ModifierId.Repetition:
+                    return "Currently x" + Grid.RepetitionCurrentMultiplier;
+                case ModifierId.Synergie:
+                    return "Currently x" + _activeModifiers.Count;
+                case ModifierId.Densite:
+                    return "Currently x" + Mathf.Max(1, Grid.FilledCellCount / ScoringConstants.DensiteFilledCellsPerMultiplierStep);
+                case ModifierId.Epuisement:
+                    return "Currently +" + Grid.EpuisementCurrentBonus + " pts";
+                case ModifierId.Solidarite:
+                    return "Currently +" + _activeModifiers.Count + " Mult";
+                case ModifierId.Multitude:
+                    return "Currently +" + (Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts";
+                case ModifierId.CartesEnchantees:
+                    return "Currently x" + FormatFractionalMult(CountUpgradedDeckCards());
+                case ModifierId.Experience:
+                    return "Currently x" + FormatFractionalMult(_specialPiecesPlayedCount);
+                default:
+                    return null;
+            }
+        }
+
+        private static string FormatFractionalMult(int count)
+        {
+            float value = 1f + 0.1f * count;
+            // Invariant culture — "F1" would otherwise render with a comma
+            // decimal separator ("2,3") under a French system locale, and
+            // this string is also parsed back out nowhere, so there's no
+            // reason to let it vary.
+            return value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         private readonly IRandomProvider _rng;
 
         /// <summary>0-based index into <see cref="RunConfig"/> arrays.</summary>
@@ -196,6 +251,11 @@ namespace Contigu.Core
             int sparkStreakBeforePlacement = 0;
             if (token.Trait.HasValue)
             {
+                // Experience's driver — every trait kind counts as "special",
+                // incremented here regardless of which branch below fires
+                // (on explicit request: "un modifier +0.1 mult pour chaque
+                // carte spéciale joué").
+                _specialPiecesPlayedCount++;
                 var kind = token.Trait.Value.Kind;
                 if (kind == PieceTraitKind.Chameleon)
                 {
@@ -602,19 +662,21 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Enchanted Cards (CartesEnchantees) and Multitude (ninth batch, on
-        /// explicit request) both depend on DECK state (upgraded-card count,
-        /// total deck size), not grid/placement state — like
+        /// Enchanted Cards (CartesEnchantees), Multitude (ninth batch) and
+        /// Experience (tenth batch, its "played" counterpart to Enchanted
+        /// Cards' "currently in deck" count) all depend on RunManager-only
+        /// state (upgraded-card count, total deck size, special-pieces-
+        /// played count), not grid/placement state — like
         /// ApplyHandSlotModifierBonus above, GridManager can't evaluate
-        /// these itself since it knows nothing about the deck, so they're
-        /// resolved here instead, the same post-hoc pattern. Loops over
-        /// every held copy of each (rather than just checking Contains) so
-        /// holding either one more than once stacks, same convention as
-        /// every other modifier.
+        /// these itself since it knows nothing about the deck (or this
+        /// counter), so they're resolved here instead, the same post-hoc
+        /// pattern. Loops over every held copy of each (rather than just
+        /// checking Contains) so holding any one of them more than once
+        /// stacks, same convention as every other modifier.
         /// </summary>
         private void ApplyDeckStateModifierBonuses(PlacementResult placement)
         {
-            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude))
+            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude) && !_activeModifiers.Contains(ModifierId.Experience))
             {
                 return;
             }
@@ -642,6 +704,18 @@ namespace Contigu.Core
                     var ptsEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus);
                     ptsEvent.TriggeringModifier = ModifierId.Multitude;
                     events.Add(ptsEvent);
+                }
+                else if (_activeModifiers[i] == ModifierId.Experience)
+                {
+                    int mult = (1 + _specialPiecesPlayedCount) / ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep;
+                    if (mult <= 0)
+                    {
+                        continue;
+                    }
+                    placement.AdditiveMultBonus += mult;
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], mult);
+                    multEvent.TriggeringModifier = ModifierId.Experience;
+                    events.Add(multEvent);
                 }
             }
             placement.ScoreEvents = events;

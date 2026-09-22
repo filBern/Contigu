@@ -478,6 +478,10 @@ namespace Contigu.Core
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
             "+1 pt per piece currently in your deck.");
 
+        public static readonly ModifierDefinition Experience = new ModifierDefinition(
+            ModifierId.Experience, ModifierCategory.Roguelike, "Experience",
+            "+0.1 Mult per special (upgraded) piece you've PLAYED this run, counting from a baseline of 1 — Enchanted Cards' played-count counterpart.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -493,7 +497,8 @@ namespace Contigu.Core
             ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur,
             MultUn, MultDeux, MultQuatre,
             FormeSinglePoints, FormeDomHPoints, FormeDomVPoints, FormeTriLPoints, FormeTriIHPoints, FormeTriIVPoints, FormeSq2Points, FormeLTetroPoints, FormeTTetroPoints, FormeSTetroPoints,
-            Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude
+            Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude,
+            Experience
         };
 
         public static ModifierDefinition Get(ModifierId id)

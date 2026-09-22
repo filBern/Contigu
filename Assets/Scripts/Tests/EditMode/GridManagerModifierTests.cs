@@ -1533,6 +1533,81 @@ namespace Contigu.Tests
             Assert.AreEqual(2, late.ModifierMultiplier, "20 cells filled / 10 per step = x2");
         }
 
+        // ---- Tenth batch: public getters exposing progressive-modifier
+        // state for the tooltip's "Currently ..." line (on explicit
+        // request) — see RunManager.GetProgressiveModifierStateText.
+
+        [Test]
+        public void GradientCurrentMultiplier_TracksTheAppliedModifierMultiplier()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Gradient };
+
+            Assert.AreEqual(1, grid.GradientCurrentMultiplier, "No Gradient line cleared yet");
+
+            var pattern = new[]
+            {
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+            };
+            for (int x = 0; x < pattern.Length; x++)
+            {
+                grid.PlacePiece(single, pattern[x], x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+
+            Assert.AreEqual(finalResult.ModifierMultiplier, grid.GradientCurrentMultiplier);
+        }
+
+        [Test]
+        public void RepetitionCurrentMultiplier_TracksTheAppliedModifierMultiplier_AndFloorsAtOne()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Repetition };
+
+            Assert.AreEqual(1, grid.RepetitionCurrentMultiplier, "No placement yet");
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(first.ModifierMultiplier, grid.RepetitionCurrentMultiplier);
+
+            var second = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(second.ModifierMultiplier, grid.RepetitionCurrentMultiplier);
+            Assert.AreEqual(2, grid.RepetitionCurrentMultiplier);
+        }
+
+        [Test]
+        public void EpuisementCurrentBonus_TracksTheAppliedBonus_AndResetsWithTheRound()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Epuisement };
+
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, grid.EpuisementCurrentBonus);
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, first.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, grid.EpuisementCurrentBonus, "Already decayed for the NEXT placement");
+
+            grid.ResetForNewRound();
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, grid.EpuisementCurrentBonus);
+        }
+
+        [Test]
+        public void FilledCellCount_ReflectsCellsCurrentlyOccupied()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            Assert.AreEqual(0, grid.FilledCellCount);
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
+
+            Assert.AreEqual(2, grid.FilledCellCount);
+        }
+
         [Test]
         public void AlternancePieces_FiresOnlyWhenThisPiecesColorDiffersFromThePreviousPlacement()
         {

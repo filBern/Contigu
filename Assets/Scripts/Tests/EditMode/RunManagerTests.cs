@@ -1930,5 +1930,157 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(2 * run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard, outcome.Placement.ModifierBonus, "Holding Multitude twice (via Copieur) should stack additively");
         }
+
+        // ---- Tenth batch: Experience (mult scaling with special pieces
+        // PLAYED this run, CartesEnchantees' played-count counterpart) and
+        // RunManager.GetProgressiveModifierStateText (the tooltip's
+        // "Currently ..." line for every progressive/incremental modifier,
+        // on explicit request).
+
+        /// <summary>Plays one piece guaranteed to carry a trait (every deck token must already be tagged, e.g. via TagGoldenTokensRandom(Deck.DeckCount, ...)) and returns the outcome — used to drive Experience's _specialPiecesPlayedCount counter up by exactly 1 per call.</summary>
+        private static PlacementOutcome PlaceOneSpecialPiece(RunManager run)
+        {
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
+            var token = run.Deck.Hand[slot].Value;
+            var rotation = run.Deck.HandRotations[slot];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue, "Ran out of room while playing special pieces");
+            return run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+        }
+
+        [Test]
+        public void Experience_GivesNoBonus_BelowTenSpecialPiecesPlayed()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Experience);
+            run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+
+            var outcome = PlaceOneSpecialPiece(run);
+            for (int i = 1; i < 8; i++)
+            {
+                outcome = PlaceOneSpecialPiece(run);
+            }
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.AdditiveMultBonus, "1 (baseline) + 8 played = 9 -> 9/10 = 0");
+        }
+
+        [Test]
+        public void Experience_GivesOneMult_AtNineSpecialPiecesPlayed_CountingFromABaselineOfOne()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Experience);
+            run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+
+            var outcome = PlaceOneSpecialPiece(run);
+            for (int i = 1; i < 9; i++)
+            {
+                outcome = PlaceOneSpecialPiece(run);
+            }
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(1, outcome.Placement.AdditiveMultBonus, "1 (baseline) + 9 played = 10 -> 10/10 = 1");
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_ReturnsNull_ForANonProgressiveModifier()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            Assert.IsNull(run.GetProgressiveModifierStateText(ModifierId.MultUn));
+            Assert.IsNull(run.GetProgressiveModifierStateText(ModifierId.Prisme));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Gradient_MatchesGridsCurrentMultiplier()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            Assert.AreEqual("Currently x1", run.GetProgressiveModifierStateText(ModifierId.Gradient));
+
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Gradient };
+            var pattern = new[]
+            {
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+            };
+            for (int x = 0; x < pattern.Length; x++)
+            {
+                run.Grid.PlacePiece(single, pattern[x], x, 0, modifiers);
+            }
+            run.Grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+
+            Assert.AreEqual("Currently x" + run.Grid.GradientCurrentMultiplier, run.GetProgressiveModifierStateText(ModifierId.Gradient));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Synergie_ReflectsTotalModifiersHeld()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.Synergie);
+            run.DebugGrantModifier(ModifierId.MultUn);
+            run.DebugGrantModifier(ModifierId.MultDeux);
+
+            Assert.AreEqual("Currently x3", run.GetProgressiveModifierStateText(ModifierId.Synergie));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Solidarite_ReflectsTotalModifiersHeld()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.Solidarite);
+            run.DebugGrantModifier(ModifierId.MultUn);
+
+            Assert.AreEqual("Currently +2 Mult", run.GetProgressiveModifierStateText(ModifierId.Solidarite));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Epuisement_MatchesGridsCurrentBonus()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            Assert.AreEqual("Currently +" + ScoringConstants.EpuisementStartingBonus + " pts", run.GetProgressiveModifierStateText(ModifierId.Epuisement));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Multitude_ReflectsCurrentDeckSize()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            Assert.AreEqual("Currently +" + (run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts", run.GetProgressiveModifierStateText(ModifierId.Multitude));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_CartesEnchantees_ShowsTheConceptualFractionalValue()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            // No upgraded cards yet: baseline of 1 -> "x1.0".
+            Assert.AreEqual("Currently x1.0", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+
+            run.Deck.TagGoldenTokensRandom(13, new SystemRandomProvider(2));
+
+            // 1 + 0.1 * 13 = 2.3 — the exact "Currently x2.3" example from the request.
+            Assert.AreEqual("Currently x2.3", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+        }
+
+        [Test]
+        public void GetProgressiveModifierStateText_Experience_ShowsTheConceptualFractionalValue()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Experience);
+
+            Assert.AreEqual("Currently x1.0", run.GetProgressiveModifierStateText(ModifierId.Experience));
+
+            run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            PlaceOneSpecialPiece(run);
+            PlaceOneSpecialPiece(run);
+            PlaceOneSpecialPiece(run);
+
+            // 1 + 0.1 * 3 = 1.3.
+            Assert.AreEqual("Currently x1.3", run.GetProgressiveModifierStateText(ModifierId.Experience));
+        }
     }
 }

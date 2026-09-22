@@ -36,8 +36,20 @@ namespace Contigu.Presentation
         /// instead, on explicit request ("Peux-tu enlever le carré coloré
         /// derrière l'icon aussi?" — the card now carries the name/
         /// description as its own text, so the chip read as redundant).
+        /// <paramref name="attachTooltip"/> defaults to true; the shop's
+        /// modifier cards pass false to skip it entirely, on explicit
+        /// request ("Pas besoin du tooltip sur les modifiers qu'on peut
+        /// acheter dans le shop, seulement dans notre liste de modifiers
+        /// possédé") — a shop card already shows its own name/description
+        /// as static text, so a hover tooltip there was pure redundancy;
+        /// only the persistent side panel (badges with no text of their
+        /// own) still needs it. <paramref name="progressiveStateProvider"/>
+        /// mirrors <paramref name="usageCountProvider"/> — only the side
+        /// panel passes one, so a progressive/incremental modifier's
+        /// tooltip can show its current live state (see
+        /// RunManager.GetProgressiveModifierStateText).
         /// </summary>
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true)
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null)
         {
             var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
@@ -88,8 +100,11 @@ namespace Contigu.Presentation
                 UIFactory.StretchFull(label.rectTransform);
             }
 
-            var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
-            hover.Init(tooltip, def, usageCountProvider);
+            if (attachTooltip)
+            {
+                var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
+                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider);
+            }
 
             return badge;
         }

@@ -271,8 +271,12 @@ namespace Contigu.Presentation
             // No colored background (explicit request: "enlever le carré
             // coloré derrière l'icon") — the card now carries the name and
             // description as its own text, so the category-colored chip
-            // read as redundant clutter.
-            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip, showBackground: false);
+            // read as redundant clutter. No hover tooltip either (explicit
+            // request: "Pas besoin du tooltip sur les modifiers qu'on peut
+            // acheter dans le shop, seulement dans notre liste de modifiers
+            // possédé") — same reasoning, the card already shows its own
+            // name/description right there.
+            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip, showBackground: false, attachTooltip: false);
             badge.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             badge.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             badge.rectTransform.pivot = new Vector2(0.5f, 1f);

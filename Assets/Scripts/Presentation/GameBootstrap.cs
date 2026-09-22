@@ -246,7 +246,7 @@ namespace Contigu.Presentation
             // _run is reassigned on restart but this view is never rebuilt,
             // only Refreshed, so a bound delegate would keep querying the
             // old, discarded run forever.
-            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id));
+            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), id => _run.GetProgressiveModifierStateText(id));
 
             _deckView = gameObject.AddComponent<DeckView>();
             _deckView.Build(mainRoot, _run.Deck, _tooltipView);

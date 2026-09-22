@@ -36,6 +36,7 @@ namespace Contigu.Presentation
         private RectTransform _rowsContainer;
         private TooltipView _tooltip;
         private System.Func<ModifierId, int> _usageCountProvider;
+        private System.Func<ModifierId, string> _progressiveStateProvider;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
         // lets Pulse(id) find the badge currently showing that modifier (each
@@ -44,11 +45,21 @@ namespace Contigu.Presentation
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
         private readonly List<Image> _rowBadges = new List<Image>();
 
-        /// <summary><paramref name="usageCountProvider"/> (e.g. RunManager.GetModifierUsageCount) lets each badge's tooltip show how many times it's fired this run — see ModifierBadgeFactory.</summary>
-        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider)
+        /// <summary>
+        /// <paramref name="usageCountProvider"/> (e.g. RunManager.GetModifierUsageCount)
+        /// lets each badge's tooltip show how many times it's fired this
+        /// run — see ModifierBadgeFactory. <paramref name="progressiveStateProvider"/>
+        /// (RunManager.GetProgressiveModifierStateText) lets a progressive/
+        /// incremental modifier's tooltip show its current live state (on
+        /// explicit request, e.g. "Currently x2.3") — null for every other
+        /// modifier. Only this owned-modifiers panel passes either one; the
+        /// shop's own cards skip the tooltip entirely (see ShopView).
+        /// </summary>
+        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, string> progressiveStateProvider = null)
         {
             _tooltip = tooltip;
             _usageCountProvider = usageCountProvider;
+            _progressiveStateProvider = progressiveStateProvider;
             var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
             _root = panel.rectTransform;
             // Vertically centered, STATIC size — the panel never resizes at
@@ -102,7 +113,7 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider);
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: _progressiveStateProvider);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
             }

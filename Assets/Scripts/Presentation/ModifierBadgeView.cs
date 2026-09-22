@@ -10,23 +10,40 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private ModifierDefinition _def;
         private System.Func<ModifierId, int> _usageCountProvider;
+        private System.Func<ModifierId, string> _progressiveStateProvider;
 
-        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null)
+        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null)
         {
             _tooltip = tooltip;
             _def = def;
             _usageCountProvider = usageCountProvider;
+            _progressiveStateProvider = progressiveStateProvider;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
             // Queried fresh on every hover rather than passed in at Init —
-            // the count keeps changing (every placement that scores) for as
-            // long as this same badge instance stays on screen.
+            // both keep changing (every placement that scores, or for the
+            // progressive line every placement at all) for as long as this
+            // same badge instance stays on screen.
             string subtitle = _usageCountProvider != null
                 ? "Used " + _usageCountProvider(_def.Id) + "x this run"
                 : null;
-            _tooltip.Show(_def.Name, DescriptionTextFormatter.Colorize(_def.Description), (RectTransform)transform, subtitle);
+            string description = DescriptionTextFormatter.Colorize(_def.Description);
+            // Progressive/incremental modifiers (Gradient, Repetition,
+            // Synergie, Densité, Épuisement, Cartes Enchantées, Multitude,
+            // Solidarité, Experience) get an extra line showing their
+            // CURRENT effective state (on explicit request: "il faut
+            // afficher dans le tooltip l'état progressif du modifier (ex:
+            // Currently x2.3)") — appended to the description rather than
+            // the fixed-height subtitle slot, since the description label
+            // already auto-sizes its height around whatever text it holds.
+            string progressiveState = _progressiveStateProvider != null ? _progressiveStateProvider(_def.Id) : null;
+            if (!string.IsNullOrEmpty(progressiveState))
+            {
+                description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState);
+            }
+            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle);
         }
 
         public void OnPointerExit(PointerEventData eventData)

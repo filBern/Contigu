@@ -3126,3 +3126,61 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     Forme\* (`GridManagerModifierTests.cs`) mis à jour pour vérifier
     `ModifierMultiplier` au lieu de `ModifierBonus`, suite à leur
     conversion en xN.
+- **Tooltip retiré du shop, nouveau modifier Expérience, et affichage de
+  l'état progressif des modifiers incrémentaux** (demande explicite, en
+  un seul message : "Pas besoin du tooltip sur les modifiers qu'on peut
+  acheter dans le shop, seulement dans notre liste de modifiers
+  possédé. Il faut un modifier +0.1 mult pour chaque carte spéciale
+  joué (commence a 1). Tous les modifiers avec des bonus incrémentaux,
+  il faut afficher dans le tooltip l'état progressif du modifier (ex:
+  Currently x2.3)").
+  - **Tooltip retiré des cartes du shop** : `ModifierBadgeFactory.Create`
+    gagne un paramètre `attachTooltip` (défaut `true`) — quand `false`,
+    le composant `ModifierBadgeView` (le seul point d'attache du hover
+    dans toute la codebase) n'est simplement jamais ajouté au badge.
+    `ShopView.BuildModifierCard` passe maintenant `attachTooltip: false`
+    — les cartes affichent déjà leur nom/description en texte statique,
+    donc le tooltip y était redondant ; seul le panneau des modifiers
+    possédés (badges sans texte propre) le garde.
+  - **Expérience** (`Experience`) : +0.1 Mult par carte spéciale (avec
+    un trait) JOUÉE ce run, en partant de 1 — le pendant "jouée" de
+    Cartes Enchantées ("actuellement dans le deck"). Nouveau compteur
+    `RunManager._specialPiecesPlayedCount`, permanent pour tout le run
+    (jamais reset — même raisonnement que le compteur de Gradient,
+    puisqu'il dépend du deck/de la main, pas de l'état de la grille),
+    incrémenté dans `PlacePiece` dès que `token.Trait.HasValue`. Même
+    astuce de division entière que Cartes Enchantées
+    (`(1 + compteur) / 10`) pour éviter le `float` dans le pipeline de
+    score ; résolu dans le même `ApplyDeckStateModifierBonuses`.
+  - **État progressif dans le tooltip** : chaque modifier dont le bonus
+    change au fil de la partie (Gradient, Répétition, Synergie,
+    Densité, Épuisement, Solidarité, Multitude, Cartes Enchantées,
+    Expérience) affiche maintenant une ligne "Currently ..." dans son
+    tooltip, calculée en direct à chaque survol (pas figée à la
+    création du badge). Nouveau `RunManager.GetProgressiveModifierStateText(ModifierId)`,
+    qui retourne `null` pour tout modifier non-progressif (la grande
+    majorité), et sinon un texte formaté selon le type de bonus : "xN"
+    pour un multiplicateur entier (Gradient/Répétition via 2 nouveaux
+    getters `GridManager.GradientCurrentMultiplier`/
+    `RepetitionCurrentMultiplier`, Synergie/Densité recalculés
+    directement, Densité via un nouveau `GridManager.FilledCellCount`),
+    "+N pts" pour un bonus de points (Épuisement via un nouveau
+    `GridManager.EpuisementCurrentBonus`, Multitude), "+N Mult" pour
+    Solidarité, et pour Cartes Enchantées/Expérience — les deux
+    modifiers "+0.1 Mult" — la valeur CONCEPTUELLE continue avec une
+    décimale (ex : "Currently x2.3" pour 13 cartes upgradées, l'exemple
+    exact de la demande), même si le bonus réellement appliqué au score
+    reste l'entier obtenu par division entière (le `.1` est un pur
+    affichage, jamais réinjecté dans le calcul de score) — formaté avec
+    `CultureInfo.InvariantCulture` pour éviter une virgule décimale sous
+    une locale système française. La nouvelle ligne s'ajoute à la
+    description du tooltip (qui s'auto-dimensionne déjà) plutôt qu'au
+    sous-titre "Used Nx this run" (hauteur fixe). `DescriptionTextFormatter.IsMultiplierFactor`
+    étendu pour reconnaître aussi un facteur décimal ("x2.3", un seul
+    "." entouré de chiffres) et le colorer en rouge comme tout "xN".
+  - Nouveaux tests : `GridManagerModifierTests.cs` pour les 4 nouveaux
+    getters (`GradientCurrentMultiplier`, `RepetitionCurrentMultiplier`,
+    `EpuisementCurrentBonus`, `FilledCellCount`) ; `RunManagerTests.cs`
+    pour Expérience (paliers de cartes spéciales jouées) et pour
+    `GetProgressiveModifierStateText` sur chacun des 9 modifiers
+    progressifs plus le cas `null`.

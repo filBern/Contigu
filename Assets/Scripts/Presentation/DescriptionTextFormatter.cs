@@ -81,7 +81,11 @@ namespace Contigu.Presentation
         /// Synergie, Densite), on explicit request: "X et N collé ne devrait
         /// pas arriver dans un mot normal" — "x" immediately followed by a
         /// single "n" and nothing else never occurs in normal English text,
-        /// so it's safe to always treat it as this same token.
+        /// so it's safe to always treat it as this same token. Also catches
+        /// a decimal factor like "x2.3" (a single "." with at least one
+        /// digit on each side) — the progressive-modifier tooltip's
+        /// "Currently xY.Z" line (see RunManager.GetProgressiveModifierStateText)
+        /// uses exactly this format for CartesEnchantees/Experience.
         /// </summary>
         private static bool IsMultiplierFactor(string lower)
         {
@@ -93,9 +97,16 @@ namespace Contigu.Presentation
             {
                 return true;
             }
+            bool seenDot = false;
             for (int i = 1; i < lower.Length; i++)
             {
-                if (!char.IsDigit(lower[i]))
+                char c = lower[i];
+                if (c == '.' && !seenDot && i > 1 && i < lower.Length - 1)
+                {
+                    seenDot = true;
+                    continue;
+                }
+                if (!char.IsDigit(c))
                 {
                     return false;
                 }

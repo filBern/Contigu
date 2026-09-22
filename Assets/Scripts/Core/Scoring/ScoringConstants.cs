@@ -254,5 +254,8 @@ namespace Contigu.Core
 
         /// <summary>Multitude: points per piece currently in the deck (see DeckManager.DeckCount) — counts every token regardless of pile (hand/draw pile/discard), the deck's true total size.</summary>
         public const int MultitudeBonusPerDeckCard = 1;
+
+        /// <summary>Experience: special (trait-carrying) pieces PLAYED this run so far, PLUS 1 (same "starting at one" baseline as Enchanted Cards), divided by this many and floored, to get the +Mult contributed — i.e. +0.1 Mult per special piece played, counting from a baseline of 1, same integer-step trick as CartesEnchanteesUpgradedCardsPerMultStep, just keyed on PLAYED count instead of current deck count.</summary>
+        public const int ExperienceSpecialPiecesPlayedPerMultStep = 10;
     }
 }

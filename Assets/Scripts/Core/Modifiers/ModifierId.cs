@@ -138,6 +138,12 @@ namespace Contigu.Core
         MultCinqRisque,
         CartesEnchantees,
         Epuisement,
-        Multitude
+        Multitude,
+
+        // ---- Tenth batch (on explicit request) — a mult bonus scaling
+        // with how many special (trait-carrying) pieces have been PLAYED
+        // this run, CartesEnchantees' "played" counterpart to its own
+        // "currently in deck" count.
+        Experience
     }
 }
