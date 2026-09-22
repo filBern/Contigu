@@ -223,5 +223,36 @@ namespace Contigu.Core
 
         /// <summary>Density (Densité): filled cells on the board (after this placement's own clears) are divided by this many, floored, to get the xN multiplier — i.e. +0.1x per filled tile, kept as a clean integer step instead of introducing fractional multipliers.</summary>
         public const int DensiteFilledCellsPerMultiplierStep = 10;
+
+        // ---- Ninth batch (on explicit request) ----
+
+        /// <summary>The 3 flat, unconditional "+Mult" modifiers (see PlacementResult.AdditiveMultBonus) — always fire, no condition to satisfy.</summary>
+        public const int MultUnBonus = 1;
+        public const int MultDeuxBonus = 2;
+        public const int MultQuatreBonus = 4;
+
+        /// <summary>Devotion (per-color): xN multiplier when placing a piece of the matching color — was "doubles this placement's group bonus" (additive), converted to a genuine multiplier like every other "+mult"-style modifier, on explicit request that every color/shape modifier have both a +pts version (Éclat/the new Forme*Points siblings) and a +mult version.</summary>
+        public const int DevotionMultiplier = 2;
+
+        /// <summary>Forme* "Specialist" (per-shape): xN multiplier when the placed piece's own shape matches — same conversion, and for the same reason, as Devotion above.</summary>
+        public const int FormeSpecialistMultiplier = 2;
+
+        /// <summary>The new "+pts" sibling of each Forme* "Specialist" modifier — bonus per scored group cell when the placed piece's shape matches, same pattern as Éclat's per-color bonus.</summary>
+        public const int FormeGlowBonusPerCell = 4;
+
+        /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
+        public const int MultCinqRisqueBonus = 5;
+
+        /// <summary>Enchanted Cards: upgraded (enchanted) cards currently in the deck, PLUS 1 (so it's never literally zero — "starting at one"), divided by this many and floored, to get the +Mult contributed — i.e. +0.1 Mult per upgraded card, counting from a baseline of 1, kept as a clean integer step instead of introducing fractional Mult (same reasoning as Density above).</summary>
+        public const int CartesEnchanteesUpgradedCardsPerMultStep = 10;
+
+        /// <summary>Dwindling: starting flat points bonus, reset to this at the start of every round.</summary>
+        public const int EpuisementStartingBonus = 100;
+
+        /// <summary>Dwindling: how much the current bonus drops after EACH placement it's held for (floored at 0, never negative).</summary>
+        public const int EpuisementDecayPerPlacement = 5;
+
+        /// <summary>Multitude: points per piece currently in the deck (see DeckManager.DeckCount) — counts every token regardless of pile (hand/draw pile/discard), the deck's true total size.</summary>
+        public const int MultitudeBonusPerDeckCard = 1;
     }
 }

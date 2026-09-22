@@ -440,6 +440,29 @@ namespace Contigu.Presentation
                     continue;
                 }
 
+                if (scoreEvent.Type == ScoreEventType.MultBonus)
+                {
+                    // A genuine ADDITIVE "+Mult" contribution (ninth batch,
+                    // Balatro-style — see PlacementResult.AdditiveMultBonus),
+                    // distinct from ModifierMultiplier's "xN" factor above.
+                    // Amount here is how much this modifier ADDS to the pool,
+                    // not points — pulse the modifier's own badge with a
+                    // "+N" popup for immediate per-modifier feedback, but the
+                    // actual score catch-up for the whole AdditiveMultBonus
+                    // pool happens once, after this loop (mirrors the
+                    // ModifierMultiplier catch-up just above).
+                    if (scoreEvent.TriggeringModifier.HasValue)
+                    {
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                            ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                        _feedbackLayer.SpawnPopup(badgeAnchor, "+" + scoreEvent.Amount, UITheme.ButtonSelected);
+                        _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                    }
+                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+                    staggerSpeed *= ComboSpeedupFactor;
+                    continue;
+                }
+
                 if (scoreEvent.Type == ScoreEventType.LueurBonus)
                 {
                     // Lueur (not score) from one of the player's active
@@ -553,6 +576,31 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
+            // "AdditiveMultBonus" — the genuine ADDITIVE "+Mult" pool
+            // (ninth batch, on explicit request: "+1 mult, +2 mult et +4
+            // mult", "+1 mult chaque modifier possédé", etc.), applied as
+            // (1 + AdditiveMultBonus) BEFORE every "xN" ModifierMultiplier
+            // below — see PlacementResult.Mult. Each individual MultBonus
+            // ScoreEvent already pulsed its own badge above with its own
+            // "+N" popup — this is just the combined score catch-up.
+            if (placement.AdditiveMultBonus > 0)
+            {
+                int additiveMultFactor = 1 + placement.AdditiveMultBonus;
+                int additiveMultExtra = (displayedRoundScore - roundScoreBefore) * (additiveMultFactor - 1);
+                var additiveCenterAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
+                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + placement.AdditiveMultBonus + " Mult", UITheme.ButtonSelected);
+                // multTotal is still 1 here (nothing before this point ever
+                // touches it), so multiplying is exactly additiveMultFactor.
+                multTotal *= additiveMultFactor;
+                _comboView.PulseMult();
+
+                displayedRoundScore += additiveMultExtra;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+                _comboView.Show(chipsTotal, multTotal);
+
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+            }
+
             // "ModifierMultiplier" — every xN modifier converted from a flat
             // bonus to a real multiplier (Prisme, Architecte, Puriste,
             // Tricolore, Complémentaire, Îlot, Maçon, Démolisseur, Dégradé,
@@ -569,10 +617,10 @@ namespace Contigu.Presentation
                 int modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (placement.ModifierMultiplier - 1);
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.ButtonSelected);
-                // multTotal was still 1 up to now (only Combo can raise it
-                // further below), so assigning rather than multiplying is
-                // exactly placement.ModifierMultiplier here.
-                multTotal = placement.ModifierMultiplier;
+                // multTotal might already be > 1 from the AdditiveMultBonus
+                // catch-up just above, so this multiplies rather than
+                // assigns (identical result when it's still 1).
+                multTotal *= placement.ModifierMultiplier;
                 _comboView.PulseMult();
 
                 displayedRoundScore += modifierMultiplierExtra;

@@ -26,6 +26,9 @@ namespace Contigu.Core
             get { return _activeModifiers; }
         }
 
+        /// <summary>The last REAL modifier actually added by a shop purchase this run (never Copieur/Mimic itself, see BuyModifierSlot) — null until the player's first purchase. "Mimic" (Copieur) reads this to decide which modifier it copies.</summary>
+        private ModifierId? _lastPurchasedModifierId;
+
         /// <summary>
         /// "Lueur" currency (spec extension, explicit request — a Balatro-
         /// style economy): earned by clearing lines with DIVERSE colors (see
@@ -223,6 +226,7 @@ namespace Contigu.Core
                 ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
+            ApplyDeckStateModifierBonuses(placement);
             CountModifierUsage(placement);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
@@ -598,6 +602,67 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Enchanted Cards (CartesEnchantees) and Multitude (ninth batch, on
+        /// explicit request) both depend on DECK state (upgraded-card count,
+        /// total deck size), not grid/placement state — like
+        /// ApplyHandSlotModifierBonus above, GridManager can't evaluate
+        /// these itself since it knows nothing about the deck, so they're
+        /// resolved here instead, the same post-hoc pattern. Loops over
+        /// every held copy of each (rather than just checking Contains) so
+        /// holding either one more than once stacks, same convention as
+        /// every other modifier.
+        /// </summary>
+        private void ApplyDeckStateModifierBonuses(PlacementResult placement)
+        {
+            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude))
+            {
+                return;
+            }
+
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                if (_activeModifiers[i] == ModifierId.CartesEnchantees)
+                {
+                    int upgradedCount = CountUpgradedDeckCards();
+                    int mult = (1 + upgradedCount) / ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep;
+                    if (mult <= 0)
+                    {
+                        continue;
+                    }
+                    placement.AdditiveMultBonus += mult;
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], mult);
+                    multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
+                    events.Add(multEvent);
+                }
+                else if (_activeModifiers[i] == ModifierId.Multitude)
+                {
+                    int bonus = Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard;
+                    placement.ModifierBonus += bonus;
+                    var ptsEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus);
+                    ptsEvent.TriggeringModifier = ModifierId.Multitude;
+                    events.Add(ptsEvent);
+                }
+            }
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>How many tokens in the whole deck (any pile) currently carry a PieceTrait — the "upgraded card" count Enchanted Cards scales with.</summary>
+        private int CountUpgradedDeckCards()
+        {
+            int count = 0;
+            var deck = Deck.Deck;
+            for (int i = 0; i < deck.Count; i++)
+            {
+                if (deck[i].Trait.HasValue)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
         /// Tallies every <see cref="ScoreEventType.Modifier"/> AND <see
         /// cref="ScoreEventType.ModifierMultiplier"/> event in this
         /// placement's final <see cref="PlacementResult.ScoreEvents"/> — called
@@ -616,7 +681,7 @@ namespace Contigu.Core
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                bool isModifierEvent = scoreEvent.Type == ScoreEventType.Modifier || scoreEvent.Type == ScoreEventType.ModifierMultiplier || scoreEvent.Type == ScoreEventType.LueurBonus;
+                bool isModifierEvent = scoreEvent.Type == ScoreEventType.Modifier || scoreEvent.Type == ScoreEventType.ModifierMultiplier || scoreEvent.Type == ScoreEventType.LueurBonus || scoreEvent.Type == ScoreEventType.MultBonus;
                 if (!isModifierEvent || !scoreEvent.TriggeringModifier.HasValue)
                 {
                     continue;
@@ -868,6 +933,7 @@ namespace Contigu.Core
         {
             if (RoundScore >= CurrentQuota)
             {
+                ApplyMultCinqRisqueLossChance();
                 if (CurrentRoundIndex == RunConfig.RoundCount - 1)
                 {
                     State = RunState.RunVictory;
@@ -893,6 +959,22 @@ namespace Contigu.Core
             if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement())
             {
                 State = RunState.RunDefeat;
+            }
+        }
+
+        /// <summary>Risky Mult (MultCinqRisque): rolled once PER held copy, right at the end of a successfully completed round (see EvaluateRoundEnd) — on explicit request ("un modifier +5 mult avec une chance sur 5 de perdre le modifier a la fin de la round"). Each copy independently has a 1-in-EconomyConstants.MultCinqRisqueLossChanceDenominator chance to be removed.</summary>
+        private void ApplyMultCinqRisqueLossChance()
+        {
+            for (int i = _activeModifiers.Count - 1; i >= 0; i--)
+            {
+                if (_activeModifiers[i] != ModifierId.MultCinqRisque)
+                {
+                    continue;
+                }
+                if (_rng.Next(EconomyConstants.MultCinqRisqueLossChanceDenominator) == 0)
+                {
+                    _activeModifiers.RemoveAt(i);
+                }
             }
         }
 
@@ -1043,7 +1125,28 @@ namespace Contigu.Core
             _purchasesThisVisit++;
             var slot = _modifierSlots[index];
             slot.Purchased = true;
-            _activeModifiers.Add(slot.ModifierId);
+
+            // "Mimic" (Copieur) isn't a real modifier of its own — buying it
+            // adds another copy of whichever modifier was purchased
+            // immediately before it instead (on explicit request: "un
+            // modifier qui copy le modifier précédemment acheté"). A no-op
+            // (still costs Lueur, still marks the slot sold) if nothing has
+            // been purchased yet this run. _lastPurchasedModifierId only
+            // ever tracks a REAL purchase, never Copieur itself, so buying
+            // several Mimics in a row all copy the same underlying modifier
+            // rather than chaining off each other.
+            if (slot.ModifierId == ModifierId.Copieur)
+            {
+                if (_lastPurchasedModifierId.HasValue)
+                {
+                    _activeModifiers.Add(_lastPurchasedModifierId.Value);
+                }
+            }
+            else
+            {
+                _activeModifiers.Add(slot.ModifierId);
+                _lastPurchasedModifierId = slot.ModifierId;
+            }
             return true;
         }
 

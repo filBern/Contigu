@@ -32,7 +32,10 @@ namespace Contigu.Core
         Trait,
 
         /// <summary>Lueur (not score) earned from one of the player's active modifiers — see <see cref="PlacementResult.ModifierLueurBonus"/>. Amount is Lueur, not points; flies to the Lueur label like <see cref="PlacementResult.LueurGroups"/> instead of adding to the score cascade.</summary>
-        LueurBonus
+        LueurBonus,
+
+        /// <summary>A genuine ADDITIVE "+Mult" contribution (Balatro-style), as opposed to <see cref="ModifierMultiplier"/>'s multiplicative "xN" — see <see cref="PlacementResult.AdditiveMultBonus"/>. Amount is how much this modifier ADDS to that pool (1 for a "+1 Mult" modifier), not a point value and not a factor to multiply by.</summary>
+        MultBonus
     }
 
     /// <summary>

@@ -96,7 +96,26 @@ namespace Contigu.Data
             { ModifierId.AlternanceLueur, "GA" },
             { ModifierId.MonochromeLigneLueur, "RD" },
             { ModifierId.CollectionneurLueur, "GC" },
-            { ModifierId.RepetitionLueur, "GL" }
+            { ModifierId.RepetitionLueur, "GL" },
+            { ModifierId.MultUn, "M1" },
+            { ModifierId.MultDeux, "M2" },
+            { ModifierId.MultQuatre, "M4" },
+            { ModifierId.FormeSinglePoints, "P1" },
+            { ModifierId.FormeDomHPoints, "PH" },
+            { ModifierId.FormeDomVPoints, "PV" },
+            { ModifierId.FormeTriLPoints, "P3" },
+            { ModifierId.FormeTriIHPoints, "P4" },
+            { ModifierId.FormeTriIVPoints, "P5" },
+            { ModifierId.FormeSq2Points, "PQ" },
+            { ModifierId.FormeLTetroPoints, "P6" },
+            { ModifierId.FormeTTetroPoints, "P7" },
+            { ModifierId.FormeSTetroPoints, "P8" },
+            { ModifierId.Solidarite, "SD" },
+            { ModifierId.Copieur, "CP" },
+            { ModifierId.MultCinqRisque, "M5" },
+            { ModifierId.CartesEnchantees, "CE" },
+            { ModifierId.Epuisement, "EP" },
+            { ModifierId.Multitude, "MT" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as
@@ -135,10 +154,22 @@ namespace Contigu.Data
             { ModifierId.FormeSq2, ShapeId.Sq2 },
             { ModifierId.FormeLTetro, ShapeId.LTetro },
             { ModifierId.FormeTTetro, ShapeId.TTetro },
-            { ModifierId.FormeSTetro, ShapeId.STetro }
+            { ModifierId.FormeSTetro, ShapeId.STetro },
+            // The "+pts" sibling of each shape above (ninth batch) is about
+            // the exact same shape, so it gets the exact same silhouette.
+            { ModifierId.FormeSinglePoints, ShapeId.Single },
+            { ModifierId.FormeDomHPoints, ShapeId.DomH },
+            { ModifierId.FormeDomVPoints, ShapeId.DomV },
+            { ModifierId.FormeTriLPoints, ShapeId.TriL },
+            { ModifierId.FormeTriIHPoints, ShapeId.TriIH },
+            { ModifierId.FormeTriIVPoints, ShapeId.TriIV },
+            { ModifierId.FormeSq2Points, ShapeId.Sq2 },
+            { ModifierId.FormeLTetroPoints, ShapeId.LTetro },
+            { ModifierId.FormeTTetroPoints, ShapeId.TTetro },
+            { ModifierId.FormeSTetroPoints, ShapeId.STetro }
         };
 
-        /// <summary>The shape a Forme* "Specialist" modifier targets, or null for every other modifier — lets the badge show an actual shape preview instead of naming a domino/tromino/tetromino (see Presentation.ModifierBadgeFactory, on explicit request: "je n'aime pas qu'on ait les nom des tetromino").</summary>
+        /// <summary>The shape a Forme* "Specialist" modifier (or its "+pts" sibling) targets, or null for every other modifier — lets the badge show an actual shape preview instead of naming a domino/tromino/tetromino (see Presentation.ModifierBadgeFactory, on explicit request: "je n'aime pas qu'on ait les nom des tetromino").</summary>
         public static ShapeId? GetSpecialistShape(ModifierId id)
         {
             return SpecialistShapes.TryGetValue(id, out var shape) ? shape : (ShapeId?)null;

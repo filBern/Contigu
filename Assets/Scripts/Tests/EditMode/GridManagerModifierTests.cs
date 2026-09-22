@@ -1009,7 +1009,7 @@ namespace Contigu.Tests
         // ---- Third batch (basic per-color / per-shape modifiers) ----
 
         [Test]
-        public void DevotionCoral_DoublesGroupBonus_WhenPlacementColorMatches()
+        public void DevotionCoral_AppliesX2Multiplier_WhenPlacementColorMatches()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
@@ -1017,7 +1017,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(result.GroupBonus, result.ModifierBonus, "Devotion adds a flat bonus equal to the group bonus (still additive, unlike Puriste's xN multiplier)");
+            Assert.AreEqual(ScoringConstants.DevotionMultiplier, result.ModifierMultiplier, "Devotion is now a genuine xN multiplier (ninth batch), not an additive bonus — Éclat is the +pts version");
         }
 
         [Test]
@@ -1029,7 +1029,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -1050,13 +1050,13 @@ namespace Contigu.Tests
             {
                 var grid = new GridManager();
                 var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
-                int expected = baseColors[i] == matchingColor ? ScoringConstants.GroupBonusPerCell : 0;
-                Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + baseColors[i]);
+                int expected = baseColors[i] == matchingColor ? ScoringConstants.DevotionMultiplier : 1;
+                Assert.AreEqual(expected, result.ModifierMultiplier, id + " vs " + baseColors[i]);
             }
         }
 
         [Test]
-        public void FormeSq2_DoublesGroupBonus_WhenPlacedShapeMatches()
+        public void FormeSq2_AppliesX2Multiplier_WhenPlacedShapeMatches()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
@@ -1064,7 +1064,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
 
-            Assert.AreEqual(result.GroupBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.FormeSpecialistMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -1076,7 +1076,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
@@ -1101,11 +1101,11 @@ namespace Contigu.Tests
 
             var matchGrid = new GridManager();
             var matchResult = matchGrid.PlacePiece(PieceShapeCatalog.Get(matchingShape), PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(matchResult.GroupBonus, matchResult.ModifierBonus, id + " should double its own shape's group bonus");
+            Assert.AreEqual(ScoringConstants.FormeSpecialistMultiplier, matchResult.ModifierMultiplier, id + " should apply its xN multiplier to its own shape");
 
             var otherGrid = new GridManager();
             var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(0, otherResult.ModifierBonus, id + " should not fire for shape " + otherShape);
+            Assert.AreEqual(1, otherResult.ModifierMultiplier, id + " should not fire for shape " + otherShape);
         }
 
         // ---- Fourth batch (hand-slot, piece-size, per-color-tile bonuses) ----
@@ -1829,6 +1829,164 @@ namespace Contigu.Tests
 
             var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 6, modifiers);
             Assert.AreEqual(0, broken.ModifierLueurBonus, "A different shape breaks the streak");
+        }
+
+        // ---- Ninth batch (on explicit request: "+1 mult, +2 mult et +4
+        // mult", per-shape "+pts" siblings for the Forme* multipliers,
+        // "+1 mult chaque modifier possédé", and "+100pts, réduit de 5 a
+        // chaque coup") — see ModifierId's ninth batch and
+        // PlacementResult.AdditiveMultBonus.
+
+        [Test]
+        public void MultUnDeuxQuatre_EachAddsItsOwnFlatAmountToAdditiveMultBonus()
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var gridUn = new GridManager();
+            var resultUn = gridUn.PlacePiece(single, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.MultUn });
+            Assert.AreEqual(ScoringConstants.MultUnBonus, resultUn.AdditiveMultBonus);
+
+            var gridDeux = new GridManager();
+            var resultDeux = gridDeux.PlacePiece(single, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.MultDeux });
+            Assert.AreEqual(ScoringConstants.MultDeuxBonus, resultDeux.AdditiveMultBonus);
+
+            var gridQuatre = new GridManager();
+            var resultQuatre = gridQuatre.PlacePiece(single, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.MultQuatre });
+            Assert.AreEqual(ScoringConstants.MultQuatreBonus, resultQuatre.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void MultModifiers_StackAdditively_WhenHeldTogether()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MultUn, ModifierId.MultDeux, ModifierId.MultQuatre };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.MultUnBonus + ScoringConstants.MultDeuxBonus + ScoringConstants.MultQuatreBonus, result.AdditiveMultBonus);
+            Assert.AreEqual(1 + result.AdditiveMultBonus, result.Mult);
+        }
+
+        [Test]
+        public void FormeSq2Points_GivesFlatPerCellBonus_WhenPlacedShapeMatches()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.FormeSq2Points };
+
+            var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
+
+            Assert.AreEqual(square.Cells.Count * ScoringConstants.FormeGlowBonusPerCell, result.ModifierBonus,
+                "Forme*Points should be a flat per-tile bonus (the +pts sibling of the Forme* xN multiplier), not a multiplier itself");
+        }
+
+        [Test]
+        public void FormePointsModifiers_EachOnlyFiresForItsOwnShape()
+        {
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSinglePoints, ShapeId.Single);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeDomHPoints, ShapeId.DomH);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeDomVPoints, ShapeId.DomV);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriLPoints, ShapeId.TriL);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriIHPoints, ShapeId.TriIH);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriIVPoints, ShapeId.TriIV);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSq2Points, ShapeId.Sq2);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeLTetroPoints, ShapeId.LTetro);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTTetroPoints, ShapeId.TTetro);
+            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSTetroPoints, ShapeId.STetro);
+        }
+
+        private static void AssertFormePointsFiresOnlyForShape(ModifierId id, ShapeId matchingShape)
+        {
+            var modifiers = new List<ModifierId> { id };
+            var otherShape = matchingShape == ShapeId.Single ? ShapeId.DomH : ShapeId.Single;
+
+            var matchGrid = new GridManager();
+            var matchShape = PieceShapeCatalog.Get(matchingShape);
+            var matchResult = matchGrid.PlacePiece(matchShape, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(matchShape.Cells.Count * ScoringConstants.FormeGlowBonusPerCell, matchResult.ModifierBonus, id + " should give its flat per-cell bonus for its own shape");
+
+            var otherGrid = new GridManager();
+            var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(0, otherResult.ModifierBonus, id + " should not fire for shape " + otherShape);
+        }
+
+        [Test]
+        public void Solidarite_AddsMultEqualToTotalModifierCountHeld()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Solidarite, ModifierId.MultUn, ModifierId.MultDeux };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            // Solidarite adds Mult equal to activeModifiers.Count (3 held here,
+            // itself included) on top of MultUn/MultDeux's own contributions.
+            Assert.AreEqual(3 + ScoringConstants.MultUnBonus + ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void Solidarite_CountsEachDuplicateCopySeparately()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Solidarite, ModifierId.Solidarite };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(4, result.AdditiveMultBonus, "Each of the 2 Solidarite copies adds Mult equal to the full 2-modifier count");
+        }
+
+        [Test]
+        public void Epuisement_StartsAtFullBonusAndDecaysByAFixedAmountEachPlacement()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Epuisement };
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, first.ModifierBonus);
+
+            var second = grid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, second.ModifierBonus);
+
+            var third = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement, third.ModifierBonus);
+        }
+
+        [Test]
+        public void Epuisement_FloorsAtZero_AndNeverEmitsAZeroScoreEvent()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Epuisement };
+
+            int placements = ScoringConstants.EpuisementStartingBonus / ScoringConstants.EpuisementDecayPerPlacement + 2;
+            PlacementResult last = null;
+            for (int i = 0; i < placements; i++)
+            {
+                int x = i % GridManager.Size;
+                int y = (i / GridManager.Size) * 2;
+                last = grid.PlacePiece(single, PieceColor.Coral, x, y, modifiers);
+            }
+
+            Assert.AreEqual(0, last.ModifierBonus, "Epuisement floors at 0 and stays there");
+        }
+
+        [Test]
+        public void Epuisement_ResetsToStartingBonus_OnResetForNewRound()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Epuisement };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
+
+            grid.ResetForNewRound();
+            var afterReset = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, afterReset.ModifierBonus, "A fresh round-long burst, unlike Gradient's permanent counter");
         }
     }
 }

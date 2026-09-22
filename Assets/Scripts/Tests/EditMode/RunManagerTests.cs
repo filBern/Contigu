@@ -1729,5 +1729,206 @@ namespace Contigu.Tests
             Assert.AreEqual(lueurAfterFirst + second.Placement.LueurEarned + EconomyConstants.RepetitionLueurBonus, run.Lueur, "RunManager.Lueur adds both LueurEarned and ModifierLueurBonus");
             Assert.AreEqual(1, run.GetModifierUsageCount(ModifierId.RepetitionLueur));
         }
+
+        // ---- Ninth batch: Copieur (purchase-time mimic), MultCinqRisque
+        // (round-end risk/reward), CartesEnchantees/Multitude (deck-state
+        // dependent bonuses via RunManager.ApplyDeckStateModifierBonuses) —
+        // see ModifierId's ninth batch. Devotion/Forme* conversion to a
+        // genuine xN ModifierMultiplier and the 3 flat MultUn/Deux/Quatre +
+        // 10 Forme*Points modifiers are covered in GridManagerModifierTests
+        // instead, since GridManager.PlacePiece already exercises them
+        // directly without needing a whole RunManager/shop around them.
+
+        /// <summary>Always returns 0 — every roll it feeds picks index 0 of whatever range it's asked for (a valid choice for any maxExclusive &gt;= 1), so a "1-in-N" chance rolled via <c>rng.Next(N) == 0</c> always hits. Used to force MultCinqRisque's round-end loss roll deterministically.</summary>
+        private sealed class AlwaysZeroRandomProvider : IRandomProvider
+        {
+            public int Next(int maxExclusive)
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>The opposite of <see cref="AlwaysZeroRandomProvider"/> — returns 1 whenever the range allows it (falling back to the only valid choice, 0, when maxExclusive is 1), so a "1-in-N" chance rolled via <c>rng.Next(N) == 0</c> (N &gt;= 2) never hits.</summary>
+        private sealed class NeverZeroRandomProvider : IRandomProvider
+        {
+            public int Next(int maxExclusive)
+            {
+                return maxExclusive > 1 ? 1 : 0;
+            }
+        }
+
+        /// <summary>Finds <paramref name="target"/> among the open shop's modifier slots and buys it, rerolling (funded by a large Lueur grant) until it shows up — modifier slots are randomly rolled, so this is the only way to buy a SPECIFIC modifier without relying on <see cref="RunManager.DebugGrantModifier"/>, which can't exercise purchase-time behavior like Copieur's. The shop must already be open (see PlayRoundToAwaitingShop).</summary>
+        private static void BuyModifierByIdViaShop(RunManager run, ModifierId target)
+        {
+            run.DebugGrantLueur(1000000);
+            int guard = 0;
+            while (true)
+            {
+                for (int i = 0; i < run.ShopModifierSlots.Count; i++)
+                {
+                    if (run.ShopModifierSlots[i].ModifierId == target && !run.ShopModifierSlots[i].Purchased)
+                    {
+                        Assert.IsTrue(run.BuyModifierSlot(i), "Buying " + target + " should succeed with ample Lueur granted");
+                        return;
+                    }
+                }
+                Assert.IsTrue(run.RerollShop(), "Reroll should always succeed with ample Lueur granted");
+                guard++;
+                Assert.Less(guard, 2000, target + " never appeared in the shop after many rerolls");
+            }
+        }
+
+        private static int CountOccurrences(IReadOnlyList<ModifierId> modifiers, ModifierId id)
+        {
+            int count = 0;
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                if (modifiers[i] == id)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        [Test]
+        public void Copieur_AddsAnotherCopyOfThePreviouslyPurchasedModifier()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            BuyModifierByIdViaShop(run, ModifierId.MultUn);
+            Assert.AreEqual(1, CountOccurrences(run.ActiveModifiers, ModifierId.MultUn));
+
+            BuyModifierByIdViaShop(run, ModifierId.Copieur);
+
+            Assert.AreEqual(2, CountOccurrences(run.ActiveModifiers, ModifierId.MultUn), "Copieur should add another copy of MultUn, the modifier bought immediately before it");
+            CollectionAssert.DoesNotContain(run.ActiveModifiers, ModifierId.Copieur, "Copieur itself never becomes an active modifier");
+        }
+
+        [Test]
+        public void Copieur_IsANoOp_WhenNothingHasBeenPurchasedYetThisRun()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            BuyModifierByIdViaShop(run, ModifierId.Copieur);
+
+            Assert.AreEqual(0, run.ActiveModifiers.Count, "Buying Copieur first, before anything else, has nothing to copy yet");
+        }
+
+        [Test]
+        public void Copieur_ChainedPurchases_AllCopyTheSameUnderlyingModifier_NotEachOther()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            BuyModifierByIdViaShop(run, ModifierId.MultDeux);
+            BuyModifierByIdViaShop(run, ModifierId.Copieur);
+            BuyModifierByIdViaShop(run, ModifierId.Copieur);
+
+            Assert.AreEqual(3, CountOccurrences(run.ActiveModifiers, ModifierId.MultDeux), "Both Copieur purchases should copy MultDeux — _lastPurchasedModifierId only ever updates on a real purchase, never on Copieur itself");
+        }
+
+        [Test]
+        public void MultCinqRisque_CanBeLost_AtRoundEnd_WhenTheLossRollHits()
+        {
+            var run = new RunManager(new AlwaysZeroRandomProvider());
+            GiveActiveModifier(run, ModifierId.MultCinqRisque);
+
+            PlayRoundToAwaitingShop(run);
+
+            CollectionAssert.DoesNotContain(run.ActiveModifiers, ModifierId.MultCinqRisque, "A guaranteed-hit 1-in-5 roll should remove it at round end");
+        }
+
+        [Test]
+        public void MultCinqRisque_Survives_AtRoundEnd_WhenTheLossRollMisses()
+        {
+            var run = new RunManager(new NeverZeroRandomProvider());
+            GiveActiveModifier(run, ModifierId.MultCinqRisque);
+
+            PlayRoundToAwaitingShop(run);
+
+            CollectionAssert.Contains(run.ActiveModifiers, ModifierId.MultCinqRisque, "A guaranteed-miss roll should leave it held");
+        }
+
+        [Test]
+        public void MultCinqRisque_GivesFlatAdditiveMultBonus_LikeMultUn()
+        {
+            var run = new RunManager(new NeverZeroRandomProvider());
+            GiveActiveModifier(run, ModifierId.MultCinqRisque);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(ScoringConstants.MultCinqRisqueBonus, outcome.Placement.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void CartesEnchantees_GivesNoBonus_BelowTenUpgradedCards()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.CartesEnchantees);
+            run.Deck.TagGoldenTokensRandom(8, new SystemRandomProvider(2)); // 1 (baseline) + 8 = 9 -> 9/10 = 0
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void CartesEnchantees_GivesOneMult_AtTenUpgradedCards_CountingFromABaselineOfOne()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.CartesEnchantees);
+            run.Deck.TagGoldenTokensRandom(9, new SystemRandomProvider(2)); // 1 (baseline) + 9 = 10 -> 10/10 = 1
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(1, outcome.Placement.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void CartesEnchantees_GivesTwoMult_AtTwentyUpgradedCards()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.CartesEnchantees);
+            run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2)); // 1 (baseline) + 19 = 20 -> 20/10 = 2
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2, outcome.Placement.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void Multitude_GivesFlatPointsEqualToDeckSize()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Multitude);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard, outcome.Placement.ModifierBonus);
+        }
+
+        [Test]
+        public void Multitude_StacksWhenHeldTwice_ViaCopieur()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            BuyModifierByIdViaShop(run, ModifierId.Multitude);
+            BuyModifierByIdViaShop(run, ModifierId.Copieur);
+            run.LeaveShop();
+            run.Deck.DrawNewHand();
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2 * run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard, outcome.Placement.ModifierBonus, "Holding Multitude twice (via Copieur) should stack additively");
+        }
     }
 }

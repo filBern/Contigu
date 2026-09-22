@@ -72,5 +72,8 @@ namespace Contigu.Core
 
         /// <summary>Golden Repetition (adapted from Repetition): flat Lueur when this piece is the same shape as the immediately previous placement this round — unlike its score counterpart, not progressive.</summary>
         public const int RepetitionLueurBonus = 5;
+
+        /// <summary>Risky Mult: 1-in-this-many chance, rolled once per round at round end (see RunManager.EvaluateRoundEnd), to lose ONE held copy of the modifier — on explicit request ("chance sur 5 de perdre le modifier a la fin de la round").</summary>
+        public const int MultCinqRisqueLossChanceDenominator = 5;
     }
 }

@@ -169,61 +169,69 @@ namespace Contigu.Core
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
             "x2 multiplier per cleared row/column that is entirely a single color, stacking.");
 
+        // Devotion/Forme* converted from "doubles this placement's group
+        // bonus" (additive) to a genuine xN ModifierMultiplier, on explicit
+        // request ("Tous les modifiers par rapport à la couleur de pièce ou
+        // type de pièce doivent une version +pts et une version +mult") —
+        // Éclat (below) already covers the +pts side for colors; the 10 new
+        // Forme*Points modifiers (ninth batch, further down) now cover it
+        // for shapes.
+
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Coral Devotion",
-            "Doubles this placement's group bonus when placing a Coral piece.");
+            "x2 multiplier when placing a Coral piece.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
             ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Teal Devotion",
-            "Doubles this placement's group bonus when placing a Teal piece.");
+            "x2 multiplier when placing a Teal piece.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
             ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Violet Devotion",
-            "Doubles this placement's group bonus when placing a Violet piece.");
+            "x2 multiplier when placing a Violet piece.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
             ModifierId.DevotionLime, ModifierCategory.Couleurs, "Lime Devotion",
-            "Doubles this placement's group bonus when placing a Lime piece.");
+            "x2 multiplier when placing a Lime piece.");
 
         public static readonly ModifierDefinition FormeSingle = new ModifierDefinition(
             ModifierId.FormeSingle, ModifierCategory.Formes, "Single Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is Single.");
+            "x2 multiplier when the placed piece's shape is Single.");
 
         public static readonly ModifierDefinition FormeDomH = new ModifierDefinition(
             ModifierId.FormeDomH, ModifierCategory.Formes, "Domino H Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is Domino H.");
+            "x2 multiplier when the placed piece's shape is Domino H.");
 
         public static readonly ModifierDefinition FormeDomV = new ModifierDefinition(
             ModifierId.FormeDomV, ModifierCategory.Formes, "Domino V Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is Domino V.");
+            "x2 multiplier when the placed piece's shape is Domino V.");
 
         public static readonly ModifierDefinition FormeTriL = new ModifierDefinition(
             ModifierId.FormeTriL, ModifierCategory.Formes, "L-Tromino Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is L-Tromino.");
+            "x2 multiplier when the placed piece's shape is L-Tromino.");
 
         public static readonly ModifierDefinition FormeTriIH = new ModifierDefinition(
             ModifierId.FormeTriIH, ModifierCategory.Formes, "I-Tromino H Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is I-Tromino H.");
+            "x2 multiplier when the placed piece's shape is I-Tromino H.");
 
         public static readonly ModifierDefinition FormeTriIV = new ModifierDefinition(
             ModifierId.FormeTriIV, ModifierCategory.Formes, "I-Tromino V Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is I-Tromino V.");
+            "x2 multiplier when the placed piece's shape is I-Tromino V.");
 
         public static readonly ModifierDefinition FormeSq2 = new ModifierDefinition(
             ModifierId.FormeSq2, ModifierCategory.Formes, "Square Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is the 2x2 Square.");
+            "x2 multiplier when the placed piece's shape is the 2x2 Square.");
 
         public static readonly ModifierDefinition FormeLTetro = new ModifierDefinition(
             ModifierId.FormeLTetro, ModifierCategory.Formes, "L-Tetromino Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is L-Tetromino.");
+            "x2 multiplier when the placed piece's shape is L-Tetromino.");
 
         public static readonly ModifierDefinition FormeTTetro = new ModifierDefinition(
             ModifierId.FormeTTetro, ModifierCategory.Formes, "T-Tetromino Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is T-Tetromino.");
+            "x2 multiplier when the placed piece's shape is T-Tetromino.");
 
         public static readonly ModifierDefinition FormeSTetro = new ModifierDefinition(
             ModifierId.FormeSTetro, ModifierCategory.Formes, "S-Tetromino Specialist",
-            "Doubles this placement's group bonus when the placed piece's shape is S-Tetromino.");
+            "x2 multiplier when the placed piece's shape is S-Tetromino.");
 
         // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
         // The 3 slot modifiers can't be evaluated by GridManager at all — it has
@@ -389,6 +397,87 @@ namespace Contigu.Core
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
             "+5 Lueur when this piece is the same shape as the immediately previous placement this round.");
 
+        // ---- Ninth batch, on explicit request ----
+
+        public static readonly ModifierDefinition MultUn = new ModifierDefinition(
+            ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
+            "+1 Mult. No condition.");
+
+        public static readonly ModifierDefinition MultDeux = new ModifierDefinition(
+            ModifierId.MultDeux, ModifierCategory.Roguelike, "Mult +2",
+            "+2 Mult. No condition.");
+
+        public static readonly ModifierDefinition MultQuatre = new ModifierDefinition(
+            ModifierId.MultQuatre, ModifierCategory.Roguelike, "Mult +4",
+            "+4 Mult. No condition.");
+
+        // The "+pts" sibling of each Forme* "Specialist" (now a "+mult"
+        // modifier, see above) — same shape condition, flat points per
+        // group cell instead, mirroring Éclat's role for colors.
+        public static readonly ModifierDefinition FormeSinglePoints = new ModifierDefinition(
+            ModifierId.FormeSinglePoints, ModifierCategory.Formes, "Single Glow",
+            "+4 pts per scored group cell when the placed piece's shape is Single.");
+
+        public static readonly ModifierDefinition FormeDomHPoints = new ModifierDefinition(
+            ModifierId.FormeDomHPoints, ModifierCategory.Formes, "Domino H Glow",
+            "+4 pts per scored group cell when the placed piece's shape is Domino H.");
+
+        public static readonly ModifierDefinition FormeDomVPoints = new ModifierDefinition(
+            ModifierId.FormeDomVPoints, ModifierCategory.Formes, "Domino V Glow",
+            "+4 pts per scored group cell when the placed piece's shape is Domino V.");
+
+        public static readonly ModifierDefinition FormeTriLPoints = new ModifierDefinition(
+            ModifierId.FormeTriLPoints, ModifierCategory.Formes, "L-Tromino Glow",
+            "+4 pts per scored group cell when the placed piece's shape is L-Tromino.");
+
+        public static readonly ModifierDefinition FormeTriIHPoints = new ModifierDefinition(
+            ModifierId.FormeTriIHPoints, ModifierCategory.Formes, "I-Tromino H Glow",
+            "+4 pts per scored group cell when the placed piece's shape is I-Tromino H.");
+
+        public static readonly ModifierDefinition FormeTriIVPoints = new ModifierDefinition(
+            ModifierId.FormeTriIVPoints, ModifierCategory.Formes, "I-Tromino V Glow",
+            "+4 pts per scored group cell when the placed piece's shape is I-Tromino V.");
+
+        public static readonly ModifierDefinition FormeSq2Points = new ModifierDefinition(
+            ModifierId.FormeSq2Points, ModifierCategory.Formes, "Square Glow",
+            "+4 pts per scored group cell when the placed piece's shape is the 2x2 Square.");
+
+        public static readonly ModifierDefinition FormeLTetroPoints = new ModifierDefinition(
+            ModifierId.FormeLTetroPoints, ModifierCategory.Formes, "L-Tetromino Glow",
+            "+4 pts per scored group cell when the placed piece's shape is L-Tetromino.");
+
+        public static readonly ModifierDefinition FormeTTetroPoints = new ModifierDefinition(
+            ModifierId.FormeTTetroPoints, ModifierCategory.Formes, "T-Tetromino Glow",
+            "+4 pts per scored group cell when the placed piece's shape is T-Tetromino.");
+
+        public static readonly ModifierDefinition FormeSTetroPoints = new ModifierDefinition(
+            ModifierId.FormeSTetroPoints, ModifierCategory.Formes, "S-Tetromino Glow",
+            "+4 pts per scored group cell when the placed piece's shape is S-Tetromino.");
+
+        public static readonly ModifierDefinition Solidarite = new ModifierDefinition(
+            ModifierId.Solidarite, ModifierCategory.Roguelike, "Solidarity",
+            "+1 Mult per modifier held, this one included.");
+
+        public static readonly ModifierDefinition Copieur = new ModifierDefinition(
+            ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
+            "The instant you buy this, it's replaced by another copy of whichever modifier you bought immediately before it. Does nothing if it's the very first modifier you buy this run.");
+
+        public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
+            ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Risky Mult",
+            "+5 Mult. No condition — but a 1-in-5 chance to lose this modifier at the end of every round.");
+
+        public static readonly ModifierDefinition CartesEnchantees = new ModifierDefinition(
+            ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Cards",
+            "+0.1 Mult per upgraded card in your deck, counting from a baseline of 1 (so it's never quite zero).");
+
+        public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
+            ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
+            "+100 pts, dropping by 5 after every placement (down to 0) — resets to 100 at the start of each round.");
+
+        public static readonly ModifierDefinition Multitude = new ModifierDefinition(
+            ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
+            "+1 pt per piece currently in your deck.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -401,7 +490,10 @@ namespace Contigu.Core
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
             Synergie, Densite,
-            ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur
+            ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur,
+            MultUn, MultDeux, MultQuatre,
+            FormeSinglePoints, FormeDomHPoints, FormeDomVPoints, FormeTriLPoints, FormeTriIHPoints, FormeTriIVPoints, FormeSq2Points, FormeLTetroPoints, FormeTTetroPoints, FormeSTetroPoints,
+            Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude
         };
 
         public static ModifierDefinition Get(ModifierId id)

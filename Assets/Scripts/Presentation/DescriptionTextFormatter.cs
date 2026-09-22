@@ -2,8 +2,10 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Wraps every mention of points (pts/point/points) in blue, every
-    /// mention of a multiplier (multiplier/multipliers/xN) in red, and every
-    /// mention of Lueur in gold, across an upgrade/modifier/piece-trait
+    /// mention of a multiplier (multiplier/multipliers/mult/xN — "mult"
+    /// added once the genuine additive "+Mult" modifiers arrived, ninth
+    /// batch) in red, and every mention of Lueur in gold, across an
+    /// upgrade/modifier/piece-trait
     /// description — on explicit request ("à chaque fois que le mot point
     /// apparait dans les description, que le mot soit bleu et idem pour le
     /// rouge et le multiplicateur"), matching the same blue=score/red=
@@ -56,7 +58,7 @@ namespace Contigu.Presentation
             {
                 return Wrap(core, PointsColorHex) + trailing;
             }
-            if (lower == "multiplier" || lower == "multipliers" || IsMultiplierFactor(lower))
+            if (lower == "multiplier" || lower == "multipliers" || lower == "mult" || IsMultiplierFactor(lower))
             {
                 return Wrap(core, MultiplierColorHex) + trailing;
             }

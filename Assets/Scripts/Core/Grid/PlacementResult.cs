@@ -82,6 +82,20 @@ namespace Contigu.Core
         /// </summary>
         public int ModifierMultiplier = 1;
 
+        /// <summary>
+        /// A genuine ADDITIVE "+Mult" pool (Balatro-style), distinct from
+        /// <see cref="ModifierMultiplier"/>'s multiplicative "xN" family —
+        /// spec extension, explicit request ("+1 mult, +2 mult et +4 mult",
+        /// "+1 mult chaque modifier possédé", etc., phrased with a literal
+        /// "+" rather than "x"). 0 when nothing contributed. <see
+        /// cref="Mult"/> applies it as (1 + AdditiveMultBonus) — e.g. a
+        /// single "+1 Mult" modifier makes Mult exactly double, matching
+        /// how a lone "x2" ModifierMultiplier modifier would, but this pool
+        /// adds instead of multiplying when more than one contributes (two
+        /// "+1 Mult" modifiers together are (1+1+1)=x3, not x2*x2=x4).
+        /// </summary>
+        public int AdditiveMultBonus;
+
         /// <summary>Sum of every bonus from the player's active modifiers on this placement that's still a flat/per-cell bonus rather than a multiplier (see <see cref="ModifierId"/>/<see cref="ModifierMultiplier"/>).</summary>
         public int ModifierBonus;
 
@@ -157,10 +171,10 @@ namespace Contigu.Core
             get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus; }
         }
 
-        /// <summary>Balatro-style "mult" — every placement-wide multiplier stacked together. <see cref="TotalScore"/> is always exactly <see cref="Chips"/> * Mult.</summary>
+        /// <summary>Balatro-style "mult" — the additive "+Mult" pool (see <see cref="AdditiveMultBonus"/>) applied as (1 + that pool), then every placement-wide "xN" multiplier stacked on top. <see cref="TotalScore"/> is always exactly <see cref="Chips"/> * Mult.</summary>
         public int Mult
         {
-            get { return ModifierMultiplier * ComboMultiplier; }
+            get { return (1 + AdditiveMultBonus) * ModifierMultiplier * ComboMultiplier; }
         }
 
         public int TotalScore

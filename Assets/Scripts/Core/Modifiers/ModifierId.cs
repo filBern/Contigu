@@ -106,6 +106,38 @@ namespace Contigu.Core
         AlternanceLueur,
         MonochromeLigneLueur,
         CollectionneurLueur,
-        RepetitionLueur
+        RepetitionLueur,
+
+        // ---- Ninth batch (on explicit request) — 3 flat, unconditional
+        // "+Mult" modifiers (a genuine ADDITIVE mult pool, see
+        // PlacementResult.AdditiveMultBonus, distinct from every "xN"
+        // ModifierMultiplier modifier above); a new "+pts" counterpart for
+        // each of the 10 Forme* shapes (Devotion/Éclat already covered
+        // this split for colors, Forme* only had one version); Solidarite
+        // (Synergie's additive-mult twin); Copieur (copies whichever
+        // modifier was bought immediately before it); a risk/reward +5
+        // mult with a chance to be lost at round end; a mult bonus scaling
+        // with upgraded cards in the deck; a decaying flat points bonus;
+        // and a flat points bonus scaling with total deck size. See
+        // ModifierCatalog for each one's exact effect.
+        MultUn,
+        MultDeux,
+        MultQuatre,
+        FormeSinglePoints,
+        FormeDomHPoints,
+        FormeDomVPoints,
+        FormeTriLPoints,
+        FormeTriIHPoints,
+        FormeTriIVPoints,
+        FormeSq2Points,
+        FormeLTetroPoints,
+        FormeTTetroPoints,
+        FormeSTetroPoints,
+        Solidarite,
+        Copieur,
+        MultCinqRisque,
+        CartesEnchantees,
+        Epuisement,
+        Multitude
     }
 }

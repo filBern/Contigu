@@ -3034,3 +3034,95 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (régression de bout en bout : `RunManager.Lueur` ET
     `GetModifierUsageCount` réagissent bien au nouveau type d'event, même
     piège que celui déjà rencontré avec `ModifierMultiplier`).
+- **9 nouveaux modificateurs + conversion Dévotion/Forme\* en +pts/+mult**
+  (demande explicite, en un seul message : "On peut rajouter 3
+  modifiers: +1 mult, +2 mult et +4 mult (sans prérequis). Tous les
+  modifiers par rapport à la couleur de pièce ou type de pièce doivent
+  une version +pts et une version +mult. Il faut aussi un modifier +1
+  mult chaque modifier possédé. Il faut un modifier qui copy le modifier
+  précédemment acheté. Il faut aussi un modifier +5 mult avec une chance
+  sur 5 de perdre le modifier a la fin de la round. Un modifier +0.1
+  mult pour chaque upgraded card dans notre deck (starting at one). Un
+  modifier +100pts, réduit de 5 a chaque coup. Un modifier +1 points par
+  pièce dans le deck").
+  - **Un vrai pool "+Mult" additif, à la Balatro** : jusqu'ici, tout
+    modificateur "xN" du jeu était un facteur MULTIPLICATIF
+    (`PlacementResult.ModifierMultiplier`). "+1 mult" (avec un "+", pas
+    un "x", contrairement à toute la convention établie cette session)
+    demandait un mécanisme différent — un nouveau champ
+    `PlacementResult.AdditiveMultBonus` et `ScoreEventType.MultBonus`,
+    avec `Mult = (1 + AdditiveMultBonus) * ModifierMultiplier *
+    ComboMultiplier` (au lieu de juste `ModifierMultiplier *
+    ComboMultiplier`) — le pool additif s'applique AVANT tout multiplicateur
+    "xN", comme dans Balatro. Trois nouveaux modificateurs plats sans
+    prérequis : **Mult +1** (`MultUn`), **Mult +2** (`MultDeux`), **Mult
+    +4** (`MultQuatre`).
+  - **Dévotion/Forme\* convertis en vrai xN** : Dévotion (par couleur) et
+    les 10 "Forme\*" (par type de pièce) ajoutaient jusqu'ici un bonus
+    ADDITIF égal au bonus de groupe (`ApplyColorDevotion`/
+    `ApplyShapeSpecialist`). Convertis en un vrai multiplicateur x2
+    (`ApplyColorDevotionMultiplier`/`ApplyShapeSpecialistMultiplier`, via
+    `ScoreEventType.ModifierMultiplier`) pour satisfaire "chaque modifier
+    couleur/type doit avoir +pts ET +mult" — Éclat restait déjà la
+    version +pts pour les couleurs ; 10 nouveaux **Forme\*Points** (ex.
+    "Sq2 Glow") ajoutés comme version +pts pour les formes, calqués sur
+    `ApplyEclat` (`cellules du groupe × constante`), partageant le même
+    aperçu de silhouette spécialiste que leur jumeau multiplicatif.
+    Effet de bord découvert en cours de route : l'heuristique de
+    résolution de couleur du Joker (`ResolveJokerColorForModifiers`)
+    comparait Dévotion à Éclat via `score += groupBonus`, une hypothèse
+    devenue fausse une fois Dévotion multiplicatif — corrigé en
+    `score += groupBonus * (DevotionMultiplier - 1)`, mathématiquement
+    identique tant que le multiplicateur vaut 2 (donc aucun changement
+    de comportement réel, juste une formule qui reste correcte si la
+    constante change un jour).
+  - **Solidarité** (`Solidarite`) : +1 Mult (additif) par modificateur
+    actuellement possédé (lui-même inclus, chaque copie comptant
+    séparément) — jumeau additif de Synergie, même comptage.
+  - **Mimic** (`Copieur`) : n'est jamais lui-même un modificateur actif —
+    résolu entièrement au moment de l'ACHAT (`RunManager.BuyModifierSlot`) :
+    acheter Mimic ajoute une copie du DERNIER modificateur réellement
+    acheté (`_lastPurchasedModifierId`, mis à jour uniquement par un
+    achat réel, jamais par Mimic lui-même — acheter plusieurs Mimic
+    d'affilée copie donc tous la même cible au lieu de se copier entre
+    eux). Ne fait rien (mais coûte quand même la Lueur, et marque
+    l'emplacement comme vendu) si rien n'a encore été acheté ce run.
+  - **Mult Risqué** (`MultCinqRisque`) : +5 Mult (additif), avec 1 chance
+    sur 5 de perdre CETTE copie à la fin de chaque manche où le score
+    atteint le quota (`RunManager.ApplyMultCinqRisqueLossChance`, appelé
+    au tout début de `EvaluateRoundEnd`, avant la bifurcation
+    victoire/shop) — chaque copie possédée est roulée indépendamment.
+  - **Cartes Enchantées** (`CartesEnchantees`) : +0.1 Mult par carte
+    upgradée du deck, en partant de 1. Pour éviter d'introduire du
+    `float` dans tout le pipeline de score (qui aurait dû se propager
+    jusqu'à `PlacementResult.TotalScore`, `RunManager.RoundScore`/
+    `TotalScore`, `ComboView`...), implémenté par division entière
+    `(1 + nombre de cartes upgradées) / 10` — identique mathématiquement
+    à "+0.1 par carte en partant de 1", même technique que Densité plus
+    tôt cette session.
+  - **Multitude** (`Multitude`) : +1 point flat par carte dans le deck
+    (`Deck.DeckCount`, deck complet de 24 cartes en général, pas juste la
+    main).
+  - Architecture pour Cartes Enchantées/Multitude : résolues après coup
+    dans un nouveau `RunManager.ApplyDeckStateModifierBonuses`, puisque
+    `GridManager` n'a pas accès au `Deck` — même pattern que
+    `ApplyHandSlotModifierBonus` déjà existant. Boucle sur tous les
+    modificateurs actifs, donc posséder l'un ou l'autre en double (via
+    Mimic) stack normalement.
+  - **Épuisement** (`Epuisement`) : +100 points flat, qui diminue de 5 à
+    chaque pose (plancher à 0) — contrairement au compteur PERMANENT de
+    Gradient, celui-ci est réinitialisé à 100 au début de CHAQUE manche
+    (`GridManager.ResetForNewRound`), donc une nouvelle "salve" à chaque
+    fois.
+  - Nouveaux tests : dans `GridManagerModifierTests.cs` pour MultUn/
+    Deux/Quatre (stacking additif), les 10 Forme\*Points, Solidarité, et
+    Épuisement (décroissance, plancher à 0, reset par manche) ; dans
+    `RunManagerTests.cs` pour Mimic (copie, no-op initial, chaînage),
+    Mult Risqué (perte/survie déterministe via deux `IRandomProvider`
+    factices toujours-0/jamais-0, injectés directement dans le
+    constructeur de `RunManager` plutôt que de dépendre d'une seed
+    porte-bonheur), Cartes Enchantées (paliers de 10 cartes upgradées) et
+    Multitude (stacking via Mimic). Les tests existants de Dévotion/
+    Forme\* (`GridManagerModifierTests.cs`) mis à jour pour vérifier
+    `ModifierMultiplier` au lieu de `ModifierBonus`, suite à leur
+    conversion en xN.

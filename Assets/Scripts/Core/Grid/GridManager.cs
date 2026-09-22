@@ -46,6 +46,9 @@ namespace Contigu.Core
         /// </summary>
         private int _gradientPermanentBonus;
 
+        /// <summary>Dwindling (Epuisement): the flat points bonus this placement's own instance of the modifier would grant right now — starts at ScoringConstants.EpuisementStartingBonus, drops by ScoringConstants.EpuisementDecayPerPlacement after every placement (floored at 0), reset to the starting value by <see cref="ResetForNewRound"/> (a fresh round-long "burst", unlike Gradient's permanent counter above).</summary>
+        private int _epuisementValue = ScoringConstants.EpuisementStartingBonus;
+
         /// <summary>
         /// How many placements in a row this round have gone by without a
         /// line/column clear, as of right now (i.e. reflecting only
@@ -119,6 +122,7 @@ namespace Contigu.Core
             _lastPlacedShapeId = null;
             _repetitionStreak = 0;
             _lastPlacedColor = null;
+            _epuisementValue = ScoringConstants.EpuisementStartingBonus;
         }
 
         public bool CanPlace(PieceShape shape, int anchorX, int anchorY)
@@ -273,11 +277,13 @@ namespace Contigu.Core
             int modifierBonus = 0;
             int modifierMultiplier = 1;
             int modifierLueurBonus = 0;
+            int modifierAdditiveMultBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur, out int preAdditiveMult);
                 modifierMultiplier *= preMultiplier;
                 modifierLueurBonus += preLueur;
+                modifierAdditiveMultBonus += preAdditiveMult;
             }
 
             var clearInfo = CheckAndClearLines();
@@ -326,6 +332,7 @@ namespace Contigu.Core
             result.ModifierBonus = modifierBonus;
             result.ModifierMultiplier = modifierMultiplier;
             result.ModifierLueurBonus = modifierLueurBonus;
+            result.AdditiveMultBonus = modifierAdditiveMultBonus;
             // "Combo": reuses the exact same "did the previous placement
             // clear?" signal as Rafale, but multiplies the WHOLE placement's
             // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
@@ -424,7 +431,7 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
@@ -432,13 +439,14 @@ namespace Contigu.Core
             // modifier below normally just never matches it. When Joker is
             // held, this instead resolves to whichever of the 4 base colors
             // would score the most from the Devotion/Éclat modifiers
-            // currently active, so ApplyColorDevotion/ApplyEclat below use
-            // THIS instead of re-reading the cell directly.
+            // currently active, so ApplyColorDevotionMultiplier/ApplyEclat
+            // below use THIS instead of re-reading the cell directly.
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
             int total = 0;
             int multiplier = 1;
             int lueur = 0;
+            int additiveMult = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -508,46 +516,90 @@ namespace Contigu.Core
                         bonus = ApplyJardinier(groupCells, events);
                         break;
                     case ModifierId.DevotionCoral:
-                        bonus = ApplyColorDevotion(PieceColor.Coral, jokerResolvedColor, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Coral, jokerResolvedColor, placedCells, events);
                         break;
                     case ModifierId.DevotionTeal:
-                        bonus = ApplyColorDevotion(PieceColor.Teal, jokerResolvedColor, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Teal, jokerResolvedColor, placedCells, events);
                         break;
                     case ModifierId.DevotionViolet:
-                        bonus = ApplyColorDevotion(PieceColor.Violet, jokerResolvedColor, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Violet, jokerResolvedColor, placedCells, events);
                         break;
                     case ModifierId.DevotionLime:
-                        bonus = ApplyColorDevotion(PieceColor.Lime, jokerResolvedColor, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Lime, jokerResolvedColor, placedCells, events);
                         break;
                     case ModifierId.FormeSingle:
-                        bonus = ApplyShapeSpecialist(ShapeId.Single, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.Single, shape, placedCells, events);
                         break;
                     case ModifierId.FormeDomH:
-                        bonus = ApplyShapeSpecialist(ShapeId.DomH, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.DomH, shape, placedCells, events);
                         break;
                     case ModifierId.FormeDomV:
-                        bonus = ApplyShapeSpecialist(ShapeId.DomV, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.DomV, shape, placedCells, events);
                         break;
                     case ModifierId.FormeTriL:
-                        bonus = ApplyShapeSpecialist(ShapeId.TriL, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriL, shape, placedCells, events);
                         break;
                     case ModifierId.FormeTriIH:
-                        bonus = ApplyShapeSpecialist(ShapeId.TriIH, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriIH, shape, placedCells, events);
                         break;
                     case ModifierId.FormeTriIV:
-                        bonus = ApplyShapeSpecialist(ShapeId.TriIV, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriIV, shape, placedCells, events);
                         break;
                     case ModifierId.FormeSq2:
-                        bonus = ApplyShapeSpecialist(ShapeId.Sq2, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.Sq2, shape, placedCells, events);
                         break;
                     case ModifierId.FormeLTetro:
-                        bonus = ApplyShapeSpecialist(ShapeId.LTetro, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.LTetro, shape, placedCells, events);
                         break;
                     case ModifierId.FormeTTetro:
-                        bonus = ApplyShapeSpecialist(ShapeId.TTetro, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TTetro, shape, placedCells, events);
                         break;
                     case ModifierId.FormeSTetro:
-                        bonus = ApplyShapeSpecialist(ShapeId.STetro, shape, placedCells, groupBonus, events);
+                        bonus = 0;
+                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.STetro, shape, placedCells, events);
+                        break;
+                    case ModifierId.FormeSinglePoints:
+                        bonus = ApplyShapeGlow(ShapeId.Single, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeDomHPoints:
+                        bonus = ApplyShapeGlow(ShapeId.DomH, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeDomVPoints:
+                        bonus = ApplyShapeGlow(ShapeId.DomV, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeTriLPoints:
+                        bonus = ApplyShapeGlow(ShapeId.TriL, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeTriIHPoints:
+                        bonus = ApplyShapeGlow(ShapeId.TriIH, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeTriIVPoints:
+                        bonus = ApplyShapeGlow(ShapeId.TriIV, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeSq2Points:
+                        bonus = ApplyShapeGlow(ShapeId.Sq2, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeLTetroPoints:
+                        bonus = ApplyShapeGlow(ShapeId.LTetro, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeTTetroPoints:
+                        bonus = ApplyShapeGlow(ShapeId.TTetro, shape, placedCells, groupCells, events);
+                        break;
+                    case ModifierId.FormeSTetroPoints:
+                        bonus = ApplyShapeGlow(ShapeId.STetro, shape, placedCells, groupCells, events);
                         break;
                     case ModifierId.GrandFormat:
                         bonus = ApplyGrandFormat(placedCells, events);
@@ -635,6 +687,37 @@ namespace Contigu.Core
                         // PlacementResult.ComboMultiplier (see ComputeComboMultiplier).
                         bonus = 0;
                         break;
+                    case ModifierId.MultUn:
+                        bonus = 0;
+                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultUnBonus, placedCells, events);
+                        break;
+                    case ModifierId.MultDeux:
+                        bonus = 0;
+                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultDeuxBonus, placedCells, events);
+                        break;
+                    case ModifierId.MultQuatre:
+                        bonus = 0;
+                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultQuatreBonus, placedCells, events);
+                        break;
+                    case ModifierId.MultCinqRisque:
+                        bonus = 0;
+                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultCinqRisqueBonus, placedCells, events);
+                        break;
+                    case ModifierId.Solidarite:
+                        bonus = 0;
+                        additiveMult += ApplySolidarite(activeModifiers.Count, placedCells, events);
+                        break;
+                    case ModifierId.Epuisement:
+                        bonus = ApplyEpuisement(placedCells, events);
+                        break;
+                    case ModifierId.Copieur:
+                        // Never actually held — buying it in the shop adds
+                        // another copy of whichever modifier was purchased
+                        // right before it instead of adding Copieur itself
+                        // (see RunManager.BuyModifierSlot), so this case
+                        // should never be reached in practice.
+                        bonus = 0;
+                        break;
                     default:
                         bonus = 0;
                         break;
@@ -644,31 +727,32 @@ namespace Contigu.Core
             }
             modifierMultiplier = multiplier;
             lueurBonus = lueur;
+            additiveMultBonus = additiveMult;
             return total;
         }
 
-        /// <summary>"Devotion" (per-color): fully doubles this placement's group bonus when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers).</summary>
-        private static int ApplyColorDevotion(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        /// <summary>"Devotion" (per-color): xN multiplier (see ScoringConstants.DevotionMultiplier) when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers). Was "fully doubles this placement's group bonus" (additive); converted to a genuine multiplier so every color/shape modifier has both a +pts version (Éclat below/the new Forme*Points siblings) and a +mult one, on explicit request. Returns 1 (no-op) otherwise.</summary>
+        private static int ApplyColorDevotionMultiplier(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            if (ownColor != targetColor || groupBonus <= 0)
+            if (ownColor != targetColor)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], groupBonus));
-            return groupBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.DevotionMultiplier));
+            return ScoringConstants.DevotionMultiplier;
         }
 
-        /// <summary>"Specialist" (per-shape): fully doubles this placement's group bonus when the placed piece's own shape matches <paramref name="targetShape"/>.</summary>
-        private int ApplyShapeSpecialist(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
+        /// <summary>"Specialist" (per-shape): xN multiplier (see ScoringConstants.FormeSpecialistMultiplier) when the placed piece's own shape matches <paramref name="targetShape"/> — same conversion, and for the same reason, as Devotion above. Returns 1 (no-op) otherwise.</summary>
+        private static int ApplyShapeSpecialistMultiplier(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            if (shape.Id != targetShape || groupBonus <= 0)
+            if (shape.Id != targetShape)
             {
-                return 0;
+                return 1;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], groupBonus));
-            return groupBonus;
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.FormeSpecialistMultiplier));
+            return ScoringConstants.FormeSpecialistMultiplier;
         }
 
         /// <summary>Grand Format: bonus per placed cell (the piece's own cell count, not the merged group) once the placed piece is at least ScoringConstants.GrandFormatMinPieceSize cells.</summary>
@@ -705,6 +789,19 @@ namespace Contigu.Core
             }
 
             int bonus = groupCells.Count * ScoringConstants.EclatBonusPerCell;
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>The "+pts" sibling of ApplyShapeSpecialistMultiplier (ninth batch, on explicit request) — flat bonus (see ScoringConstants.FormeGlowBonusPerCell) per scored group cell when the placed piece's own shape matches <paramref name="targetShape"/>, mirroring ApplyEclat's per-color role above but for shape instead of color.</summary>
+        private static int ApplyShapeGlow(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
+        {
+            if (shape.Id != targetShape)
+            {
+                return 0;
+            }
+
+            int bonus = groupCells.Count * ScoringConstants.FormeGlowBonusPerCell;
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
             return bonus;
         }
@@ -1124,6 +1221,32 @@ namespace Contigu.Core
             return modifierCount;
         }
 
+        /// <summary>Shared by the 3 flat, unconditional "+Mult" modifiers (Mult +1/+2/+4) and Risky Mult (ninth batch, on explicit request) — always fires, adds <paramref name="amount"/> to PlacementResult.AdditiveMultBonus (a genuine ADDITIVE pool, unlike every ModifierMultiplier modifier above).</summary>
+        private static int ApplyFlatAdditiveMult(int amount, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], amount));
+            return amount;
+        }
+
+        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately) — Synergy's additive twin, same count, on explicit request ("un modifier +1 mult chaque modifier possédé").</summary>
+        private static int ApplySolidarite(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], modifierCount));
+            return modifierCount;
+        }
+
+        /// <summary>Dwindling (Epuisement): the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the NEXT placement (floored at 0) — on explicit request ("+100pts, réduit de 5 a chaque coup"). Reset to ScoringConstants.EpuisementStartingBonus at the start of every round (see ResetForNewRound), unlike Gradient's permanent counter.</summary>
+        private int ApplyEpuisement(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int bonus = _epuisementValue;
+            if (bonus > 0)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
+            }
+            _epuisementValue = Mathf.Max(0, _epuisementValue - ScoringConstants.EpuisementDecayPerPlacement);
+            return bonus;
+        }
+
         /// <summary>Color Switch (Alternance des pièces): xN multiplier (see ScoringConstants.AlternancePiecesMultiplier) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier. Returns 1 (no-op) otherwise.</summary>
         private static int ApplyAlternancePieces(PieceColor ownColor, PieceColor? previousPlacedColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -1260,7 +1383,15 @@ namespace Contigu.Core
                 int score = 0;
                 if (ContainsModifier(activeModifiers, DevotionModifierFor(candidate)))
                 {
-                    score += groupBonus;
+                    // Devotion is now a genuine xN multiplier (see
+                    // ApplyColorDevotionMultiplier), not an additive
+                    // "doubles the group bonus" — its points-equivalent
+                    // "extra" for this comparison is groupBonus times
+                    // (multiplier - 1), same as every other xN catch-up
+                    // elsewhere (e.g. GameBootstrap's multipliedExtra).
+                    // With the multiplier at 2 this is still exactly
+                    // groupBonus, so this heuristic's behavior is unchanged.
+                    score += groupBonus * (ScoringConstants.DevotionMultiplier - 1);
                 }
                 if (ContainsModifier(activeModifiers, EclatModifierFor(candidate)))
                 {
