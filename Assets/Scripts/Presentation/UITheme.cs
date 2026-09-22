@@ -28,6 +28,5 @@ namespace Contigu.Presentation
         public static readonly Color Danger = new Color(0.710f, 0.427f, 0.498f); // #b56d7f
         public static readonly Color HoverValid = new Color(0.643f, 0.922f, 0.800f, 0.85f); // #a4ebcc
         public static readonly Color HoverInvalid = new Color(0.710f, 0.427f, 0.498f, 0.85f); // #b56d7f
-        public static readonly Color Modifier = new Color(0.710f, 0.427f, 0.498f); // #b56d7f
     }
 }

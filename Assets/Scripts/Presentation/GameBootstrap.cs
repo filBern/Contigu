@@ -510,8 +510,15 @@ namespace Contigu.Presentation
                     anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                 }
 
+                // A Modifier event is always a POINTS bonus (see
+                // PlacementResult.ModifierBonus) — blue like every other
+                // points popup, never red (on explicit report: "+100 pts du
+                // dweling et le texte est apparu rouge... c'est par rapport
+                // au points et non au mult"). ModifierMultiplier/MultBonus
+                // events (genuinely Mult) get their own red popups on their
+                // own badge, handled earlier in this loop, not here.
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
-                    : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.Modifier
+                    : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
                     : scoreEvent.Type == ScoreEventType.Trait ? UITheme.PanelLight
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;

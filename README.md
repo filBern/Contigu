@@ -3225,3 +3225,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   [4, 10] — un modifier qui manquerait son propre cas tomberait sur un
   `default` sentinelle (-1), hors intervalle, faisant échouer le test
   plutôt que de silencieusement réutiliser le prix d'un autre modifier.
+- **Fix : popup de points d'un modifier apparaissait en rouge au lieu
+  de bleu** (signalé explicitement : "Je viens d'avoir +100 pts du
+  dwelding et le texte est apparu rouge, il devrait être bleu étant
+  donné que c'est par rapport au points et non au mult. Les mult
+  rester rouge") — dans `GameBootstrap.PlayPlacementSequence`, la
+  branche générique gérant tout `ScoreEventType.Modifier` (un bonus de
+  POINTS par définition — `PlacementResult.ModifierBonus`, ex.
+  Épuisement, Forteresse, Multitude...) utilisait `UITheme.Modifier`,
+  une couleur qui se trouvait être EXACTEMENT la même que
+  `UITheme.Danger` (`#b56d7f`, le rouge du Mult) — un oubli du fix
+  précédent, qui n'avait touché que les branches `ModifierMultiplier`/
+  `MultBonus` dédiées plus haut dans la même boucle. Changé pour
+  `UITheme.ButtonSelected` (le bleu des points, même couleur que
+  `PointsColorHex` dans `DescriptionTextFormatter`). `UITheme.Modifier`
+  (devenu sans utilisation ailleurs dans la codebase) supprimé plutôt
+  que laissé mort.
