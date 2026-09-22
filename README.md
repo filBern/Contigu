@@ -3184,3 +3184,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     pour Expérience (paliers de cartes spéciales jouées) et pour
     `GetProgressiveModifierStateText` sur chacun des 9 modifiers
     progressifs plus le cas `null`.
+- **Popups de Mult venant des modifiers en rouge, pas bleu** (demande
+  explicite : "Les mult ajouté au score qui proviennent des modifiers
+  devrait être rouge au lieu de bleu") — dans `GameBootstrap.PlayPlacementSequence`,
+  les 4 popups qui affichent un bonus de Mult provenant spécifiquement
+  d'un modifier (badge "xN" pour un `ScoreEventType.ModifierMultiplier`,
+  badge "+N" pour un `ScoreEventType.MultBonus`, et leurs 2 catch-ups de
+  score combinés "+N Mult"/"xN") passent de `UITheme.ButtonSelected`
+  (bleu, la couleur des points) à `UITheme.Danger` (rouge, la même
+  couleur que le mot "multiplier" dans les descriptions — voir
+  `DescriptionTextFormatter`). Le popup "xN" de
+  GroupMultiplier/LineClearMultiplier (case dorée / zone multiplicateur
+  — un effet de TUILE, pas un modifier acheté) reste bleu, hors du
+  périmètre de la demande.

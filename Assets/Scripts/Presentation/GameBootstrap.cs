@@ -432,7 +432,7 @@ namespace Contigu.Presentation
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPopup(badgeAnchor, "x" + scoreEvent.Amount, UITheme.ButtonSelected);
+                        _feedbackLayer.SpawnPopup(badgeAnchor, "x" + scoreEvent.Amount, UITheme.Danger);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
                     yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
@@ -455,7 +455,7 @@ namespace Contigu.Presentation
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPopup(badgeAnchor, "+" + scoreEvent.Amount, UITheme.ButtonSelected);
+                        _feedbackLayer.SpawnPopup(badgeAnchor, "+" + scoreEvent.Amount, UITheme.Danger);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
                     yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
@@ -588,7 +588,7 @@ namespace Contigu.Presentation
                 int additiveMultFactor = 1 + placement.AdditiveMultBonus;
                 int additiveMultExtra = (displayedRoundScore - roundScoreBefore) * (additiveMultFactor - 1);
                 var additiveCenterAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + placement.AdditiveMultBonus + " Mult", UITheme.ButtonSelected);
+                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + placement.AdditiveMultBonus + " Mult", UITheme.Danger);
                 // multTotal is still 1 here (nothing before this point ever
                 // touches it), so multiplying is exactly additiveMultFactor.
                 multTotal *= additiveMultFactor;
@@ -616,7 +616,7 @@ namespace Contigu.Presentation
             {
                 int modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (placement.ModifierMultiplier - 1);
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.ButtonSelected);
+                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.Danger);
                 // multTotal might already be > 1 from the AdditiveMultBonus
                 // catch-up just above, so this multiplies rather than
                 // assigns (identical result when it's still 1).
