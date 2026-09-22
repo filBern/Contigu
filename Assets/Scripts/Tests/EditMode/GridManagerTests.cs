@@ -7,6 +7,12 @@ namespace Contigu.Tests
 {
     public class GridManagerTests
     {
+        /// <summary>Group scoring is progressive (the Nth cell scored, 1-indexed, is worth N*GroupBonusPerCell — see GridManager.PlacePiece's group loop), so a full group of <paramref name="cellCount"/> cells earns the triangular number cellCount*(cellCount+1)/2 * GroupBonusPerCell, not a flat cellCount*GroupBonusPerCell.</summary>
+        private static int ExpectedGroupBonus(int cellCount)
+        {
+            return cellCount * (cellCount + 1) / 2 * ScoringConstants.GroupBonusPerCell;
+        }
+
         [Test]
         public void PlacePiece_ClearingAMonochromeLine_IsOneColorWorthOfLueur()
         {
@@ -215,8 +221,8 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0);
 
             // A piece's own cells are always mutually connected, so the group is
-            // exactly the piece itself: 4 cells x 1 point/cell.
-            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            // exactly the piece itself: progressive scoring over 4 cells.
+            Assert.AreEqual(ExpectedGroupBonus(4), result.GroupBonus);
         }
 
         [Test]
@@ -230,7 +236,7 @@ namespace Contigu.Tests
 
             // The whole merged group is rescored in full on this placement, not
             // just the 4 newly placed cells (Scrabble-style word extension).
-            Assert.AreEqual(8 * ScoringConstants.GroupBonusPerCell, second.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(8), second.GroupBonus);
         }
 
         [Test]
@@ -256,7 +262,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Lime, 0, 0);
             var second = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, second.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), second.GroupBonus);
         }
 
         [Test]
@@ -267,7 +273,7 @@ namespace Contigu.Tests
 
             grid.PlacePiece(single, PieceColor.Lime, 0, 0);
             var jokerResult = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, jokerResult.GroupBonus, "Joker should still merge with the one real color it's adjacent to");
+            Assert.AreEqual(ExpectedGroupBonus(2), jokerResult.GroupBonus, "Joker should still merge with the one real color it's adjacent to");
 
             var thirdResult = grid.PlacePiece(single, PieceColor.Teal, 2, 0);
 
@@ -276,7 +282,7 @@ namespace Contigu.Tests
             // joker must NOT bridge Lime and Teal into one 3-cell group —
             // Teal's own group is just {Teal, Joker} = 2 cells, never
             // {Lime, Joker, Teal} = 3.
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, thirdResult.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), thirdResult.GroupBonus);
         }
 
         [Test]
@@ -291,7 +297,7 @@ namespace Contigu.Tests
 
             // With no real color anywhere in the chain, there's nothing for a
             // joker to conflict with, so an all-joker chain still merges fully.
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, third.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(3), third.GroupBonus);
         }
 
         [Test]
@@ -316,7 +322,7 @@ namespace Contigu.Tests
             // (4-cell result) — it should join Teal.
             var jokerResult = grid.PlacePiece(single, PieceColor.Joker, 1, 0);
 
-            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, jokerResult.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(4), jokerResult.GroupBonus);
         }
 
         [Test]
@@ -392,9 +398,9 @@ namespace Contigu.Tests
             // "apply the multiplier at the end", explicit request).
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(3), result.GroupBonus);
             Assert.AreEqual(ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.GroupMultiplier);
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(3) * ScoringConstants.TintedMatchMultiplier * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
         }
 
         [Test]
@@ -413,9 +419,9 @@ namespace Contigu.Tests
             // Group of 2, x2 because the tinted cell (anywhere in the group)
             // matches — the multiplier applies to the placement's WHOLE total
             // at the end (see TotalScore), not baked into GroupBonus itself.
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), result.GroupBonus);
             Assert.AreEqual(ScoringConstants.TintedMatchMultiplier, result.GroupMultiplier);
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(2) * ScoringConstants.TintedMatchMultiplier, result.TotalScore);
         }
 
         [Test]
@@ -431,7 +437,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), result.GroupBonus);
             Assert.AreEqual(1, result.GroupMultiplier);
         }
 
@@ -445,9 +451,9 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), result.GroupBonus);
             Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier, result.GroupMultiplier);
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(2) * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
         }
 
         [Test]
@@ -470,9 +476,9 @@ namespace Contigu.Tests
             // extra teeth beyond the plain single-cell Multiplier trait.
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0);
 
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(3), result.GroupBonus);
             Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.GroupMultiplier);
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(3) * ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
         }
 
         [Test]
@@ -489,13 +495,13 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
 
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, result.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(2), result.GroupBonus);
             Assert.AreEqual(4, result.GroupMultiplier);
             // Only the multiplier-zone half of this stacked x4 reaches the
             // line-clear bonus — Tinted's own contribution never does (see
             // PlacePiece_TintedMatch_DoublesGroupAndGoldenBonusesButNotLineClear_UnlikeMultiplierZone).
             Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier, result.LineClearMultiplier);
-            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell * 4, result.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(2) * 4, result.TotalScore);
         }
 
         [Test]
@@ -521,7 +527,7 @@ namespace Contigu.Tests
 
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
 
-            int expectedGroupBonus = GridManager.Size * ScoringConstants.GroupBonusPerCell;
+            int expectedGroupBonus = ExpectedGroupBonus(GridManager.Size);
             int expectedGoldenBonus = ScoringConstants.GoldenCellBonus;
             int expectedLineClearScore = GridManager.Size * ScoringConstants.LineClearBonusPerCell;
             Assert.AreEqual(expectedGroupBonus, finalResult.GroupBonus);
@@ -554,7 +560,7 @@ namespace Contigu.Tests
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
 
             Assert.AreEqual(2, finalResult.GroupMultiplier);
-            int expectedGroupBonus = GridManager.Size * ScoringConstants.GroupBonusPerCell;
+            int expectedGroupBonus = ExpectedGroupBonus(GridManager.Size);
             int expectedGoldenBonus = ScoringConstants.GoldenCellBonus;
             int expectedLineClearScore = GridManager.Size * ScoringConstants.LineClearBonusPerCell;
             Assert.AreEqual(expectedGroupBonus, finalResult.GroupBonus);
@@ -945,18 +951,30 @@ namespace Contigu.Tests
 
             Assert.AreEqual(3, groupEvents.Count, "One event per cell in the merged group");
             var seenPositions = new HashSet<Vector2Int>();
+            var seenAmounts = new List<int>();
             foreach (var e in groupEvents)
             {
-                Assert.AreEqual(ScoringConstants.GroupBonusPerCell, e.Amount);
                 seenPositions.Add(e.Position);
+                seenAmounts.Add(e.Amount);
             }
             Assert.IsTrue(seenPositions.Contains(new Vector2Int(0, 0)));
             Assert.IsTrue(seenPositions.Contains(new Vector2Int(1, 1)));
             Assert.IsTrue(seenPositions.Contains(new Vector2Int(1, 0)));
 
+            // Group scoring is progressive (see ExpectedGroupBonus's doc
+            // comment), so the 3 cells don't share one flat amount anymore —
+            // each earns its scan-order index (1, 2 or 3) times
+            // GroupBonusPerCell, in whatever order the flood fill visits
+            // them. Check the multiset of amounts rather than a fixed order.
+            seenAmounts.Sort();
+            Assert.AreEqual(1 * ScoringConstants.GroupBonusPerCell, seenAmounts[0]);
+            Assert.AreEqual(2 * ScoringConstants.GroupBonusPerCell, seenAmounts[1]);
+            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, seenAmounts[2]);
+
             int sum = 0;
             foreach (var e in groupEvents) sum += e.Amount;
             Assert.AreEqual(result.GroupBonus, sum);
+            Assert.AreEqual(ExpectedGroupBonus(3), sum);
         }
 
         [Test]

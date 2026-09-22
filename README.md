@@ -3403,3 +3403,75 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   GroupMultiplier/LineClearMultiplier (case dorée/zone multiplicateur,
   bleu) restent inchangés — ce sont des effets distincts, hors du
   périmètre de la demande.
+- **Synergie xN → +N, et scoring de groupe rendu progressif contre le
+  clear de ligne** (demande explicite : "Le modifier synerge, on devrait
+  faire +N au lieu de xN (additionner des mult au lieu de multiplier. On
+  va changer la manière de faire des points aussi, en ce moment clear des
+  ligne est beaucoup plus payant que de faire des groupes. Donc on va
+  descendre le nombre de points par tuile à 3 lorsqu'on clear une ligne.
+  En échange la manière de compter les points pour les groupes seront,
+  plus tu fais un gros groupe, plus ça fait de points, la première tuile
+  fait 1 point, la 2e fait 2 points, la 3e fait 3 points, etc.").
+  - **Synergie devient additif** : convertie de `ModifierMultiplier`
+    ("xN" où N = nombre total de modifiers détenus) vers
+    `AdditiveMultBonus` ("+N Mult") — devient donc le jumeau exact de
+    Solidarité (`GridManager.ApplySynergie`, même signature/logique que
+    `ApplySolidarite`, seul le nom du champ retourné change de
+    `multiplier *=` à `additiveMult +=` dans le switch d'
+    `ApplyPreClearModifiers`). Prix inchangé (8 Lueur) puisque c'est
+    désormais le même effet que Solidarité au même prix.
+    `RunManager.GetProgressiveModifierStateText` affiche maintenant
+    "Currently +3 Mult" au lieu de "Currently x3".
+  - **`LineClearBonusPerCell` : 12 → 3** (`ScoringConstants`) — descendu
+    sur demande explicite pour rééquilibrer contre le nouveau scoring de
+    groupe progressif ci-dessous, qui rendait le clear de ligne bien plus
+    payant que les groupes jusqu'ici.
+  - **Scoring de groupe devient progressif (triangulaire)** au lieu de
+    plat : la Nième case scorée du groupe (1-indexée, dans l'ordre de
+    parcours du flood-fill `GridManager.FindConnectedGroup`/
+    `FloodFillGroup`) rapporte maintenant `N × GroupBonusPerCell` au lieu
+    d'un flat `GroupBonusPerCell` par case — un groupe complet de N cases
+    rapporte donc le nombre triangulaire `N×(N+1)/2 × GroupBonusPerCell`
+    plutôt que `N × GroupBonusPerCell`, ce qui croît plus vite que la
+    taille du groupe au lieu de linéairement. `GroupBonusPerCell` reste à
+    1, mais s'interprète maintenant comme un "pas" (step) plutôt qu'un
+    montant plat par case. Comme pour le bonus de groupe existant, TOUT
+    le groupe est rejoué à chaque pose qui l'agrandit (voir "Bonus de
+    groupe connecté" plus haut) — donc un gros groupe déjà formé
+    rapporte disproportionnellement plus à chaque fois qu'on le touche
+    à nouveau, pas seulement une fois. `GridManager.EstimateGroupScore`
+    (heuristique de résolution du Joker) suit la même formule
+    progressive pour rester cohérente avec le scoring réel.
+    - **Effet de bord sur Miroir/Jumeau/Catalyseur** : ces traits de
+      pièce enchantée (`RunManager.ApplyMirrorBonus`/`ApplyTwinBonus`/
+      `ApplyCatalystBonus`, via `GetGroupShare`) supposaient jusqu'ici
+      que toutes les cases d'un groupe scoré rapportaient le même
+      montant plat, donc n'importe quel event `Group` du placement
+      suffisait à lire "la" part de la case enchantée. Cette hypothèse
+      ne tient plus avec le scoring progressif (chaque case a maintenant
+      un montant différent selon son rang de parcours) — `GetGroupShare`
+      prend maintenant explicitement la position de la case enchantée en
+      paramètre et va chercher SON event précis au lieu d'un event
+      quelconque du groupe.
+    - **Invariant utilisé pour ne PAS changer certains tests** : le
+      flood-fill (`FloodFillGroup`) utilise une pile (LIFO), initialisée
+      avec `placedCells[0]` — cette case est donc TOUJOURS dépilée et
+      ajoutée au groupe en premier, c.-à-d. toujours à l'index 0 du
+      groupe résultant, peu importe la taille ou la forme du groupe. Sa
+      propre part de bonus de groupe est donc toujours exactement
+      `1 × GroupBonusPerCell`, quelle que soit la taille du groupe final
+      — c'est pourquoi les tests Miroir/Jumeau existants (dont la case à
+      effet est justement `placedCells[0]`, une pièce Single) n'ont eu
+      besoin d'aucun changement de valeur, seulement de commentaires mis
+      à jour.
+  - Nouveaux tests/tests réécrits : un helper privé
+    `ExpectedGroupBonus(int cellCount)` (nombre triangulaire) ajouté à
+    `GridManagerTests.cs`, `GridManagerModifierTests.cs` et
+    `RunManagerTests.cs`, remplaçant les anciennes assertions
+    `cellCount * GroupBonusPerCell` ; `Synergie_AddsMultEqualToTheTotalNumberOfModifiersHeld`
+    (renommé depuis `..._MultipliesBy...`) vérifie `AdditiveMultBonus` au
+    lieu de `ModifierMultiplier` ;
+    `PlacePiece_ScoreEvents_OneGroupEntryPerCellInTheMergedGroup` vérifie
+    maintenant le multiset des montants (1, 2, 3 × GroupBonusPerCell) au
+    lieu d'un montant unique partagé, puisque l'ordre exact de parcours
+    du flood-fill n'est pas garanti.

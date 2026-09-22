@@ -32,7 +32,7 @@ namespace Contigu.Core
     /// per-line multipliers, or a strong unconditional effect; 9-10 for the
     /// rarest/most powerful — permanent effects (Gradient), extremely hard
     /// triggers with a huge payout (Cercle Chromatique), and the strongest
-    /// run-long engine pieces (Synergie, Copieur, Mult +4).
+    /// run-long engine pieces (Copieur, Mult +4).
     /// </summary>
     public static class ModifierPricing
     {
@@ -123,7 +123,7 @@ namespace Contigu.Core
                 case ModifierId.Joker: return 7;
 
                 // ---- Seventh batch: progressive engine pieces ----
-                case ModifierId.Synergie: return 9; // scales with total modifiers held
+                case ModifierId.Synergie: return 8; // +N Mult scaling with total modifiers held — Solidarite's exact twin, same price
                 case ModifierId.Densite: return 8;
 
                 // ---- Eighth batch: Lueur-earning (economy, not score) ----

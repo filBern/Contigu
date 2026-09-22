@@ -7,6 +7,12 @@ namespace Contigu.Tests
 {
     public class RunManagerTests
     {
+        /// <summary>Group scoring is progressive (the Nth cell scored, 1-indexed, is worth N*GroupBonusPerCell — see GridManager.PlacePiece's group loop), so a full group of <paramref name="cellCount"/> cells earns the triangular number cellCount*(cellCount+1)/2 * GroupBonusPerCell, not a flat cellCount*GroupBonusPerCell.</summary>
+        private static int ExpectedGroupBonus(int cellCount)
+        {
+            return cellCount * (cellCount + 1) / 2 * ScoringConstants.GroupBonusPerCell;
+        }
+
         [Test]
         public void RunConfig_ArraysHaveEightEntries()
         {
@@ -996,9 +1002,9 @@ namespace Contigu.Tests
             // the x8 factor lives in GroupMultiplier and is applied once, at
             // the end, in TotalScore (see "apply the multiplier at the end",
             // explicit request).
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, outcome.Placement.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(3), outcome.Placement.GroupBonus);
             Assert.AreEqual(expectedMultiplier, outcome.Placement.GroupMultiplier);
-            Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell * expectedMultiplier, outcome.Placement.TotalScore);
+            Assert.AreEqual(ExpectedGroupBonus(3) * expectedMultiplier, outcome.Placement.TotalScore);
         }
 
         [Test]
@@ -1020,7 +1026,12 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(slot, 2, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
-            int perCellAmount = ScoringConstants.GroupBonusPerCell; // group multiplier is 1 here — no tinted/multiplier cells involved
+            // Group scoring is progressive by scan order (see
+            // ScoringConstants.GroupBonusPerCell), but the trait cell here
+            // IS the piece's own only cell, which is always FindConnectedGroup's
+            // flood-fill seed — always index 0, so its own share is always
+            // exactly GroupBonusPerCell regardless of the group's total size.
+            int perCellAmount = ScoringConstants.GroupBonusPerCell;
             Assert.AreEqual(perCellAmount, outcome.Placement.TraitBonus);
 
             bool foundMirrorEvent = false;
@@ -1178,9 +1189,11 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(slot, 2, 3);
 
             Assert.IsTrue(outcome.Placement.Success);
-            // Group is 4 cells (the trait cell + the 3 pre-filled ones), no
-            // tinted/multiplier factor here, so each cell's share is exactly
-            // GroupBonusPerCell — Twin duplicates it onto the OTHER 3 cells.
+            // Group is 4 cells (the trait cell + the 3 pre-filled ones). The
+            // trait cell is the piece's own only cell, always
+            // FindConnectedGroup's flood-fill seed (index 0), so its own
+            // share is exactly GroupBonusPerCell regardless of group size —
+            // Twin duplicates THAT specific share onto the OTHER 3 cells.
             Assert.AreEqual(3 * ScoringConstants.GroupBonusPerCell, outcome.Placement.TraitBonus);
         }
 
@@ -1273,7 +1286,7 @@ namespace Contigu.Tests
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(PieceColor.Teal, run.Grid.GetCell(3, 3).FilledColor);
-            Assert.AreEqual(4 * ScoringConstants.GroupBonusPerCell, outcome.Placement.GroupBonus);
+            Assert.AreEqual(ExpectedGroupBonus(4), outcome.Placement.GroupBonus);
         }
 
         [Test]
@@ -2088,7 +2101,7 @@ namespace Contigu.Tests
             run.DebugGrantModifier(ModifierId.MultUn);
             run.DebugGrantModifier(ModifierId.MultDeux);
 
-            Assert.AreEqual("Currently x3", run.GetProgressiveModifierStateText(ModifierId.Synergie));
+            Assert.AreEqual("Currently +3 Mult", run.GetProgressiveModifierStateText(ModifierId.Synergie));
         }
 
         [Test]

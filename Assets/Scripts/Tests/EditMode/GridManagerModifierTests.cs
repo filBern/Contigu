@@ -7,6 +7,12 @@ namespace Contigu.Tests
     /// <summary>Covers the first batch of persistent modifiers (see ModifierCatalog) via GridManager.PlacePiece's optional activeModifiers parameter.</summary>
     public class GridManagerModifierTests
     {
+        /// <summary>Group scoring is progressive (the Nth cell scored, 1-indexed, is worth N*GroupBonusPerCell — see GridManager.PlacePiece's group loop), so a full group of <paramref name="cellCount"/> cells earns the triangular number cellCount*(cellCount+1)/2 * GroupBonusPerCell, not a flat cellCount*GroupBonusPerCell.</summary>
+        private static int ExpectedGroupBonus(int cellCount)
+        {
+            return cellCount * (cellCount + 1) / 2 * ScoringConstants.GroupBonusPerCell;
+        }
+
         [Test]
         public void PlacePiece_NoActiveModifiers_LeavesModifierBonusAtZero()
         {
@@ -182,7 +188,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            int expectedGroupBonus = 4 * ScoringConstants.GroupBonusPerCell;
+            int expectedGroupBonus = ExpectedGroupBonus(4);
             Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
             Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
         }
@@ -202,7 +208,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Joker, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
 
-            int expectedGroupBonus = 2 * ScoringConstants.GroupBonusPerCell;
+            int expectedGroupBonus = ExpectedGroupBonus(2);
             Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
             Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
         }
@@ -1489,24 +1495,29 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Synergie_MultipliesByTheTotalNumberOfModifiersHeld()
+        public void Synergie_AddsMultEqualToTheTotalNumberOfModifiersHeld()
         {
+            // +N Mult (additive, see PlacementResult.AdditiveMultBonus),
+            // not "xN" — converted on explicit request ("le modifier
+            // synerge, on devrait faire +N au lieu de xN"), making it
+            // Solidarite's exact twin (see Solidarite_AddsMultEqualTo...
+            // further down, same math).
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
 
             var alone = new List<ModifierId> { ModifierId.Synergie };
             var solo = grid.PlacePiece(single, PieceColor.Coral, 0, 0, alone);
-            Assert.AreEqual(1, solo.ModifierMultiplier, "Synergie alone counts only itself");
+            Assert.AreEqual(1, solo.AdditiveMultBonus, "Synergie alone counts only itself");
 
             // Couronne/Encerclement are purely additive (ModifierBonus), never
-            // touch ModifierMultiplier, so they can't contaminate this count.
+            // touch AdditiveMultBonus, so they can't contaminate this count.
             var withOthers = new List<ModifierId> { ModifierId.Synergie, ModifierId.Couronne, ModifierId.Encerclement };
             var withThree = grid.PlacePiece(single, PieceColor.Teal, 3, 3, withOthers);
-            Assert.AreEqual(3, withThree.ModifierMultiplier, "3 modifiers held in total");
+            Assert.AreEqual(3, withThree.AdditiveMultBonus, "3 modifiers held in total");
 
             var duplicated = new List<ModifierId> { ModifierId.Synergie, ModifierId.Synergie };
             var stacked = grid.PlacePiece(single, PieceColor.Violet, 5, 5, duplicated);
-            Assert.AreEqual(4, stacked.ModifierMultiplier, "Each of the 2 held copies independently multiplies by the count (2), stacking to 4");
+            Assert.AreEqual(4, stacked.AdditiveMultBonus, "Each of the 2 held copies independently adds the count (2), stacking to 4");
         }
 
         [Test]
@@ -1823,10 +1834,12 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
 
-            // Devotion(Coral) would only add the group bonus (2 cells); Éclat(Lime)
-            // adds group-size * EclatBonusPerCell (2*4=8) — Lime wins, so only
-            // Éclat actually fires, not Devotion.
-            int devotionWouldGive = domH.Cells.Count * ScoringConstants.GroupBonusPerCell;
+            // Devotion(Coral) would only add groupBonus*(DevotionMultiplier-1)
+            // (see ResolveJokerColorForModifiers, the group's own triangular
+            // bonus for 2 cells); Éclat(Lime) adds group-size *
+            // EclatBonusPerCell (2*4=8) — Lime wins, so only Éclat actually
+            // fires, not Devotion.
+            int devotionWouldGive = ExpectedGroupBonus(domH.Cells.Count) * (ScoringConstants.DevotionMultiplier - 1);
             int eclatWouldGive = domH.Cells.Count * ScoringConstants.EclatBonusPerCell;
             Assert.Greater(eclatWouldGive, devotionWouldGive, "Test setup sanity: Éclat should be the bigger prize here");
             Assert.AreEqual(eclatWouldGive, result.ModifierBonus);

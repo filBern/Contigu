@@ -78,7 +78,7 @@ namespace Contigu.Presentation
         /// "x2", "x3", ... — the literal multiplier factor token itself, e.g.
         /// in "x3 multiplier if...". Also catches the placeholder form "xn"
         /// (e.g. "xn multiplier where n is..." — Repetition, Gradient,
-        /// Synergie, Densite), on explicit request: "X et N collé ne devrait
+        /// Densite), on explicit request: "X et N collé ne devrait
         /// pas arriver dans un mot normal" — "x" immediately followed by a
         /// single "n" and nothing else never occurs in normal English text,
         /// so it's safe to always treat it as this same token. Also catches

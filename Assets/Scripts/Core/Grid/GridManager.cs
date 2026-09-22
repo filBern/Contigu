@@ -299,8 +299,11 @@ namespace Contigu.Core
 
             for (int i = 0; i < groupCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], ScoringConstants.GroupBonusPerCell));
-                groupBonus += ScoringConstants.GroupBonusPerCell;
+                // Progressive: the Nth cell scored (1-indexed) is worth
+                // N * GroupBonusPerCell — see that constant's doc comment.
+                int cellScore = (i + 1) * ScoringConstants.GroupBonusPerCell;
+                events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], cellScore));
+                groupBonus += cellScore;
 
                 // Golden fires every time the cell is part of a scored group —
                 // not just when it was originally placed — since re-touching a
@@ -710,7 +713,7 @@ namespace Contigu.Core
                         break;
                     case ModifierId.Synergie:
                         bonus = 0;
-                        multiplier *= ApplySynergie(activeModifiers.Count, placedCells, events);
+                        additiveMult += ApplySynergie(activeModifiers.Count, placedCells, events);
                         break;
                     case ModifierId.AlternancePieces:
                         bonus = 0;
@@ -1277,10 +1280,10 @@ namespace Contigu.Core
             return EconomyConstants.RepetitionLueurBonus;
         }
 
-        /// <summary>Synergy (Synergie): xN multiplier where N is the total number of modifiers currently held (this one included, and every duplicate copy of any modifier counts separately) — grows automatically as the player picks up more modifiers.</summary>
+        /// <summary>Synergy (Synergie): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, and every duplicate copy of any modifier counts separately) — grows automatically as the player picks up more modifiers. Was a "xN" ModifierMultiplier; converted to additive on explicit request ("le modifier synerge, on devrait faire +N au lieu de xN"), making it Solidarite's exact twin (see ApplySolidarite).</summary>
         private static int ApplySynergie(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], modifierCount));
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], modifierCount));
             return modifierCount;
         }
 
@@ -2477,7 +2480,7 @@ namespace Contigu.Core
             int score = 0;
             for (int i = 0; i < groupCells.Count; i++)
             {
-                score += ScoringConstants.GroupBonusPerCell;
+                score += (i + 1) * ScoringConstants.GroupBonusPerCell;
                 if (_cells[groupCells[i].x, groupCells[i].y].IsGolden)
                 {
                     score += ScoringConstants.GoldenCellBonus;

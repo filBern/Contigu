@@ -7,19 +7,28 @@ namespace Contigu.Core
     public static class ScoringConstants
     {
         /// <summary>
-        /// Points per cell in a placement's resulting connected same-color group
-        /// (see <see cref="GridManager"/> group scoring). The WHOLE group is
-        /// rescored in full every time a placement grows it — like replaying an
-        /// extended Scrabble word — so a bigger connected blob is worth more
-        /// every time it's touched again, not just once.
+        /// Step size for a placement's resulting connected same-color
+        /// group's PROGRESSIVE per-cell scoring — the Nth cell scored in
+        /// the group (1-indexed, in scan order) is worth N * this
+        /// constant, so a full group of N cells scores the triangular
+        /// number N*(N+1)/2 * GroupBonusPerCell in total, growing FASTER
+        /// than group size instead of linearly with it (on explicit
+        /// request: "plus tu fais un gros groupe, plus ça fait de points,
+        /// la première tuile fait 1 point, la 2e fait 2 points, la 3e fait
+        /// 3 points, etc." — rebalancing groups against line clears, which
+        /// used to be far more lucrative). The WHOLE group is rescored in
+        /// full every time a placement grows it — like replaying an
+        /// extended Scrabble word — so a bigger connected blob is worth
+        /// disproportionately more every time it's touched again, not
+        /// just once.
         /// </summary>
         public const int GroupBonusPerCell = 1;
 
         /// <summary>Fixed bonus for filling a golden cell, independent of color. Computed separately and simply added to the total — never multiplied by group size or the group multiplier. Fires again every time the cell is part of a rescored group, not just when first placed.</summary>
         public const int GoldenCellBonus = 18;
 
-        /// <summary>Points per cell cleared by a completed line/column.</summary>
-        public const int LineClearBonusPerCell = 12;
+        /// <summary>Points per cell cleared by a completed line/column — dropped from 12 (on explicit request: "on va descendre le nombre de points par tuile à 3 lorsqu'on clear une ligne", rebalancing against the new progressive group scoring above, which used to be far less lucrative than clearing lines).</summary>
+        public const int LineClearBonusPerCell = 3;
 
         /// <summary>Multiplier contributed by EACH matching tinted cell in a placement's group — two tinted cells in the same group stack to x4, three to x8, and so on. Only reaches the group+golden bonus, never the line-clear bonus (see PlacementResult.LineClearMultiplier) — the one thing that still tells it apart from MultiplierZoneMultiplier now that Tinted's target color always matches its own piece.</summary>
         public const int TintedMatchMultiplier = 2;

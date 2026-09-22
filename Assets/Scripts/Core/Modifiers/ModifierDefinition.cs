@@ -363,7 +363,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Synergie = new ModifierDefinition(
             ModifierId.Synergie, ModifierCategory.Roguelike, "Synergy",
-            "xn multiplier where n is your total number of modifiers held, this one included.");
+            "+n Mult where n is your total number of modifiers held, this one included.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",

@@ -120,7 +120,7 @@ namespace Contigu.Core
                 case ModifierId.Repetition:
                     return "Currently x" + Grid.RepetitionCurrentMultiplier;
                 case ModifierId.Synergie:
-                    return "Currently x" + _activeModifiers.Count;
+                    return "Currently +" + _activeModifiers.Count + " Mult";
                 case ModifierId.Densite:
                     return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep));
                 case ModifierId.Epuisement:
@@ -605,10 +605,10 @@ namespace Contigu.Core
                     ApplyMirrorBonus(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Catalyst:
-                    ApplyCatalystBonus(placement);
+                    ApplyCatalystBonus(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Twin:
-                    ApplyTwinBonus(placement);
+                    ApplyTwinBonus(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Detonator:
                     ApplyDetonatorBonus(placement);
@@ -786,11 +786,20 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Every cell in a placement's scored group earns the exact same flat per-cell amount (ScoringConstants.GroupBonusPerCell — the group multiplier no longer inflates this per-cell, see PlacementResult.GroupMultiplier) — so any one Group-type event's Amount already IS that shared amount, and counting Group events gives the group's size.</summary>
-        private static void GetGroupShare(PlacementResult placement, out int groupSize, out int perCellAmount)
+        /// <summary>
+        /// The scored group's total cell count, and the SPECIFIC amount the
+        /// cell at <paramref name="cellPos"/> itself earned (0 if that
+        /// position isn't part of the scored group) — group scoring is now
+        /// progressive (the Nth cell scored is worth N*GroupBonusPerCell,
+        /// not a flat shared amount, see GridManager.PlacePiece's group
+        /// loop), so unlike before, a specific cell's own share can no
+        /// longer be read off ANY Group event; it has to be the one at
+        /// that exact position.
+        /// </summary>
+        private static void GetGroupShare(PlacementResult placement, Vector2Int cellPos, out int groupSize, out int cellAmount)
         {
             groupSize = 0;
-            perCellAmount = 0;
+            cellAmount = 0;
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
@@ -799,7 +808,10 @@ namespace Contigu.Core
                     continue;
                 }
                 groupSize++;
-                perCellAmount = scoreEvent.Amount;
+                if (scoreEvent.Position == cellPos)
+                {
+                    cellAmount = scoreEvent.Amount;
+                }
             }
         }
 
@@ -816,17 +828,12 @@ namespace Contigu.Core
         /// </summary>
         private void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
-            int perCellAmount = 0;
+            GetGroupShare(placement, traitCellPos, out _, out int enchantedCellAmount);
             var otherPositions = new List<Vector2Int>();
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                if (scoreEvent.Type != ScoreEventType.Group)
-                {
-                    continue;
-                }
-                perCellAmount = scoreEvent.Amount;
-                if (scoreEvent.Position != traitCellPos)
+                if (scoreEvent.Type == ScoreEventType.Group && scoreEvent.Position != traitCellPos)
                 {
                     otherPositions.Add(scoreEvent.Position);
                 }
@@ -838,13 +845,13 @@ namespace Contigu.Core
             }
 
             var targetPos = otherPositions[_rng.Next(otherPositions.Count)];
-            AddTraitBonus(placement, targetPos, perCellAmount);
+            AddTraitBonus(placement, targetPos, enchantedCellAmount);
         }
 
         /// <summary>"Catalyst Tile": scores extra points for every cell in this placement's scored group that was already on the grid before this placement — the group's size (from GetGroupShare) minus this piece's own cell count.</summary>
-        private static void ApplyCatalystBonus(PlacementResult placement)
+        private static void ApplyCatalystBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
-            GetGroupShare(placement, out int groupSize, out _);
+            GetGroupShare(placement, traitCellPos, out int groupSize, out _);
             int existingCells = groupSize - placement.PlacedCells.Count;
             if (existingCells <= 0)
             {
@@ -855,16 +862,16 @@ namespace Contigu.Core
             AddTraitBonus(placement, placement.PlacedCells[0], bonus);
         }
 
-        /// <summary>"Twin Tile": like Mirror, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the group, not just one at random — total extra is that shared per-cell amount times (group size - 1).</summary>
-        private static void ApplyTwinBonus(PlacementResult placement)
+        /// <summary>"Twin Tile": like Mirror, but duplicates the enchanted cell's own group-bonus share onto EVERY other cell in the group, not just one at random — total extra is that specific cell's own amount times (group size - 1).</summary>
+        private static void ApplyTwinBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
-            GetGroupShare(placement, out int groupSize, out int perCellAmount);
+            GetGroupShare(placement, traitCellPos, out int groupSize, out int enchantedCellAmount);
             if (groupSize < 2)
             {
                 return;
             }
 
-            int bonus = perCellAmount * (groupSize - 1);
+            int bonus = enchantedCellAmount * (groupSize - 1);
             AddTraitBonus(placement, placement.PlacedCells[0], bonus);
         }
 
