@@ -31,6 +31,22 @@ namespace Contigu.Core
         private PieceColor? _lastPlacedColor;
 
         /// <summary>
+        /// Permanent RUN-long counter for "Gradient" — how many cleared
+        /// rows/columns have EVER satisfied its no-two-adjacent-same-color
+        /// condition, across every round played so far this run. Unlike
+        /// every other tracked field on this class, this one is deliberately
+        /// NOT reset by <see cref="ResetForNewRound"/> (explicit request:
+        /// "Gradiant modifier est tellement difficile a faire... Ajoute x1 a
+        /// ton multiplier pour toutes les round a chaque fois que tu réussi
+        /// a accomplir le modifier. Ne se reset jamais.") — Gradient used to
+        /// be a per-placement xN that reset every placement like its 5
+        /// line-pattern siblings (Arc-en-ciel, Alternance...); it's now a
+        /// standalone permanent multiplier that only ever grows for the rest
+        /// of the run, see <see cref="ApplyGradient"/>.
+        /// </summary>
+        private int _gradientPermanentBonus;
+
+        /// <summary>
         /// How many placements in a row this round have gone by without a
         /// line/column clear, as of right now (i.e. reflecting only
         /// placements already fully processed by <see cref="PlacePiece"/> —
@@ -1312,7 +1328,7 @@ namespace Contigu.Core
                         break;
                     case ModifierId.Gradient:
                         bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsGradientLine, ScoringConstants.GradientMultiplierPerLine);
+                        multiplier *= ApplyGradient(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Bloc:
                         bonus = 0;
@@ -1870,7 +1886,7 @@ namespace Contigu.Core
             return multiplier;
         }
 
-        /// <summary>Shared driver for the 6 line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — xN multiplier fires once per qualifying cleared line, stacking multiplicatively (2 qualifying lines at once is xN*xN). Was a flat per-line bonus (ApplyPerLineBonus) before these were converted to multipliers.</summary>
+        /// <summary>Shared driver for the 5 remaining line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — xN multiplier fires once per qualifying cleared line, stacking multiplicatively (2 qualifying lines at once is xN*xN), reset every placement. Was a flat per-line bonus (ApplyPerLineBonus) before these were converted to multipliers. Gradient used to be the 6th (see <see cref="ApplyGradient"/> for why it's no longer here).</summary>
         private int ApplyPerLineMultiplier(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int multiplierPerLine)
         {
             int multiplier = 1;
@@ -1885,6 +1901,40 @@ namespace Contigu.Core
                 events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplierPerLine));
                 multiplier *= multiplierPerLine;
             }
+            return multiplier;
+        }
+
+        /// <summary>
+        /// Gradient (permanent, on explicit request): unlike its 5
+        /// line-pattern siblings above, this one never resets. Every cleared
+        /// row/column in THIS placement satisfying <see cref="IsGradientLine"/>
+        /// PERMANENTLY increments <see cref="_gradientPermanentBonus"/> by 1
+        /// (once per qualifying line, so 2 qualifying lines at once still
+        /// add +2). The returned multiplier is always (1 + that counter) —
+        /// applied to THIS placement immediately (including the very line
+        /// clear that just grew it), and to every placement for the rest of
+        /// the run from then on, whether or not it clears any line at all.
+        /// Returns 1 (no-op) only while the counter is still 0, i.e. Gradient
+        /// has never fired yet this run.
+        /// </summary>
+        private int ApplyGradient(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var lines = clearInfo.ClearedLines;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (IsGradientLine(lines[i].Colors))
+                {
+                    _gradientPermanentBonus++;
+                }
+            }
+
+            int multiplier = 1 + _gradientPermanentBonus;
+            if (multiplier <= 1)
+            {
+                return 1;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplier));
             return multiplier;
         }
 

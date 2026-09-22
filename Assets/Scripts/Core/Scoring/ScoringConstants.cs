@@ -127,9 +127,6 @@ namespace Contigu.Core
         /// <summary>Palindrome: xN multiplier PER cleared row/column whose color sequence reads the same forwards and backwards.</summary>
         public const int PalindromeMultiplierPerLine = 2;
 
-        /// <summary>Gradient: xN multiplier PER cleared row/column where no two adjacent cells share the same color.</summary>
-        public const int GradientMultiplierPerLine = 2;
-
         /// <summary>Bloc: xN multiplier PER cleared row/column made only of contiguous same-color runs of at least 2.</summary>
         public const int BlocMultiplierPerLine = 2;
 

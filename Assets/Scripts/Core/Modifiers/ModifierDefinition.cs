@@ -159,7 +159,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
-            "x2 multiplier per cleared row/column where no two adjacent cells share the same color, stacking.");
+            "PERMANENT: every cleared row/column where no two adjacent cells share the same color adds +1 to a multiplier that never resets, not even between rounds — applies as xN to every placement for the rest of the run.");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",

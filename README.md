@@ -2841,3 +2841,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `RunManagerTests.cs` (`SlotUn_MultipliesEntireScore_WhenPlacingFromHandSlotZero`,
   `AssertSlotFiresOnlyForHandIndex`) pour vérifier `ModifierMultiplier`
   au lieu de `ModifierBonus`.
+- **Gradient devient un modificateur PERMANENT** (demande explicite :
+  "Gradiant modifier est tellement difficile a faire que je pense que ça
+  devrait plus être genre: Ajoute x1 a ton multiplier pour toutes les
+  round a chaque fois que tu réussi a accomplir le modifier. Ne se reset
+  jamais.") — jusqu'ici, Gradient était un des 6 modificateurs "de ligne"
+  génériques (`ApplyPerLineMultiplier`) : xN par ligne clearée qualifiante
+  (aucune paire de cases adjacentes de la même couleur), remis à zéro à
+  chaque pose comme ses 5 cousins (Arc-en-ciel, Alternance, Palindrome,
+  Bloc, Monochrome-ligne).
+  - Gradient sort de ce mécanisme partagé et obtient sa propre méthode
+    `GridManager.ApplyGradient`, adossée à un nouveau compteur d'instance
+    `_gradientPermanentBonus` (int) — **jamais remis à zéro**, y compris
+    par `ResetForNewRound` (délibérément exclu, contrairement à TOUS les
+    autres compteurs de la classe). Chaque ligne clearée qui satisfait la
+    condition de Gradient l'incrémente de +1, pour toujours (+2 si 2
+    lignes qualifiantes clearent en même temps, etc.).
+  - Le multiplicateur retourné à CHAQUE pose (même celles qui ne clearent
+    aucune ligne) est désormais `1 + _gradientPermanentBonus` — donc x1
+    tant que Gradient n'a jamais encore été accompli ce run, x2 dès le
+    tout premier succès (appliqué immédiatement, sur cette même pose), x3
+    au 2e succès (potentiellement plusieurs runs/manches plus tard), etc.,
+    sans jamais redescendre.
+  - `GridManager` crée une seule instance de `GridManager` par run (dans
+    le constructeur de `RunManager`), donc "ne se reset jamais" veut
+    concrètement dire : survit à `ResetForNewRound` (changement de
+    manche) mais repart bien de 0 sur un tout nouveau run (New Run crée
+    un nouveau `RunManager`/`GridManager`).
+  - Ancienne constante `ScoringConstants.GradientMultiplierPerLine`
+    (toujours 2) retirée, plus aucun besoin d'une valeur fixe par ligne
+    puisque le pas est toujours de +1 par construction ("ajoute x1").
+  - Nouveau test `GridManagerModifierTests.Gradient_PermanentlyGrowsAndNeverResets_EvenAcrossRounds`
+    couvrant : no-op avant le premier succès, application immédiate à la
+    pose qui vient de déclencher Gradient, application à une pose
+    suivante qui ne cleare rien du tout, et survie à `ResetForNewRound`.

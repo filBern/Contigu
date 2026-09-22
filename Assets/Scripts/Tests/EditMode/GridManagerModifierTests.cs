@@ -871,7 +871,10 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.GradientMultiplierPerLine, finalResult.ModifierMultiplier);
+            // First-ever Gradient line this run: permanent counter goes 0 -> 1,
+            // so the multiplier is (1 + 1) = x2 (see Gradient_Permanently...
+            // below for the "never resets" behavior this now exists for).
+            Assert.AreEqual(2, finalResult.ModifierMultiplier);
         }
 
         [Test]
@@ -888,6 +891,45 @@ namespace Contigu.Tests
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(1, finalResult.ModifierMultiplier);
+        }
+
+        [Test]
+        public void Gradient_PermanentlyGrowsAndNeverResets_EvenAcrossRounds()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Gradient };
+
+            // Before Gradient has ever fired, even a placement that clears
+            // nothing is still a no-op multiplier.
+            var beforeAnyClear = grid.PlacePiece(single, PieceColor.Coral, 0, 5, modifiers);
+            Assert.AreEqual(1, beforeAnyClear.ModifierMultiplier);
+
+            // Clear one Gradient-qualifying line: fires for the first time
+            // this run, so the permanent counter goes 0 -> 1 and this SAME
+            // placement is already multiplied by (1 + 1) = x2.
+            var pattern = new[]
+            {
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+            };
+            for (int x = 0; x < pattern.Length; x++)
+            {
+                grid.PlacePiece(single, pattern[x], x, 0, modifiers);
+            }
+            var firstClear = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            Assert.AreEqual(2, firstClear.ModifierMultiplier, "First-ever Gradient line: counter 0->1, so x(1+1)");
+
+            // A later placement that clears NOTHING still benefits from the
+            // permanently-grown multiplier — no longer a per-placement effect.
+            var afterFirstClear = grid.PlacePiece(single, PieceColor.Coral, 1, 5, modifiers);
+            Assert.AreEqual(2, afterFirstClear.ModifierMultiplier, "Permanent bonus keeps applying to a placement that clears nothing");
+
+            // Starting a new round must NOT reset the counter (explicit
+            // request: "Ne se reset jamais").
+            grid.ResetForNewRound();
+            var afterNewRound = grid.PlacePiece(single, PieceColor.Violet, 3, 3, modifiers);
+            Assert.AreEqual(2, afterNewRound.ModifierMultiplier, "Gradient's permanent bonus survives ResetForNewRound");
         }
 
         [Test]
