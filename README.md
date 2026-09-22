@@ -2957,3 +2957,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Les cartes d'upgrade (mystery box) ne sont pas concernées — elles
     gardent leur `CardHeight` fixe existante (elles n'ont ni nom ni
     description avant achat).
+- **2 corrections suite au screenshot des nouvelles cartes de shop**
+  (demande explicite : "Il y a des overlaps entre modifiers et
+  upgrades" + "Dans le modifier Repetition XN devrait être en rouge.
+  Normalement X et N collé ne devrait pas arriver dans un mot normal,
+  on peut créer une règle pour toutes les description. Aussi le N
+  devrais être en minuscule") :
+  - **Overlap modifiers/upgrades** : la section "Upgrades" avait un Y
+    fixe (`-344f`) calculé pour l'ancienne hauteur fixe des cartes
+    modificateur (200px) — une fois les cartes rendues dynamiques (voir
+    entrée précédente), une description longue (ex. Répétition, la plus
+    longue du catalogue) pousse la rangée bien plus bas que ça, et la
+    section Upgrades se retrouvait recouverte. `ShopView.Refresh`
+    récupère maintenant la hauteur réelle retournée par
+    `BuildModifierCards` et repositionne `_upgradeSectionLabel`/
+    `_upgradeCardsContainer` juste en dessous à chaque refresh, au lieu
+    d'un offset figé.
+  - **"xN" non coloré + minuscule** : `DescriptionTextFormatter.
+    IsMultiplierFactor` ne reconnaissait que "x" + chiffres ("x2", "x3"...)
+    comme token de multiplicateur, pas le placeholder "xN" utilisé dans
+    les 4 descriptions progressives (Répétition, Gradient, Synergie,
+    Densité). Étendu pour aussi reconnaître "x" + exactement "n" — sur
+    l'observation du joueur que "x" collé à une lettre n'arrive jamais
+    dans un mot anglais normal, donc sans risque de faux positif. En
+    parallèle, les 4 descriptions concernées remplacent tous leurs "N"
+    (dans "xN" et dans "where N is...") par un "n" minuscule.

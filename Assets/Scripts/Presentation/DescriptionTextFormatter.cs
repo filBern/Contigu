@@ -63,12 +63,24 @@ namespace Contigu.Presentation
             return c == '.' || c == ',' || c == ')' || c == ';' || c == ':';
         }
 
-        /// <summary>"x2", "x3", ... — the literal multiplier factor token itself, e.g. in "x3 multiplier if...".</summary>
+        /// <summary>
+        /// "x2", "x3", ... — the literal multiplier factor token itself, e.g.
+        /// in "x3 multiplier if...". Also catches the placeholder form "xn"
+        /// (e.g. "xn multiplier where n is..." — Repetition, Gradient,
+        /// Synergie, Densite), on explicit request: "X et N collé ne devrait
+        /// pas arriver dans un mot normal" — "x" immediately followed by a
+        /// single "n" and nothing else never occurs in normal English text,
+        /// so it's safe to always treat it as this same token.
+        /// </summary>
         private static bool IsMultiplierFactor(string lower)
         {
             if (lower.Length < 2 || lower[0] != 'x')
             {
                 return false;
+            }
+            if (lower.Length == 2 && lower[1] == 'n')
+            {
+                return true;
             }
             for (int i = 1; i < lower.Length; i++)
             {

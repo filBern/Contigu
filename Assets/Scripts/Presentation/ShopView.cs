@@ -45,10 +45,22 @@ namespace Contigu.Presentation
         public event Action RerollRequested;
         public event Action LeaveRequested;
 
+        // Where the modifier card row starts (top pivot), and the 2 gaps
+        // reused below to place the "Upgrades" section under it — its own Y
+        // used to be a fixed -344f assuming a fixed CardHeight, which
+        // overlapped the modifier cards once those grew tall enough to fit
+        // a name + description (bug report: "il y a des overlaps entre
+        // modifiers et upgrades"). It's now placed right after however
+        // tall the modifier row actually turns out to be this refresh.
+        private const float ModifierCardsTopY = -124f;
+        private const float SectionGap = 20f;
+        private const float LabelToCardsGap = 24f;
+
         private TooltipView _tooltip;
         private RectTransform _root;
         private Text _lueurLabel;
         private RectTransform _modifierCardsContainer;
+        private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
         private Button _rerollButton;
         private Text _rerollLabel;
@@ -83,16 +95,17 @@ namespace Contigu.Presentation
             modifierSection.rectTransform.anchoredPosition = new Vector2(0f, -100f);
             modifierSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
 
-            _modifierCardsContainer = BuildCardRow("ModifierCards", -124f);
+            _modifierCardsContainer = BuildCardRow("ModifierCards", ModifierCardsTopY);
 
-            var upgradeSection = UIFactory.CreateText(_root, "UpgradeLabel", "Upgrades", 16, UITheme.TextMuted);
-            upgradeSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            upgradeSection.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            upgradeSection.rectTransform.pivot = new Vector2(0.5f, 1f);
-            upgradeSection.rectTransform.anchoredPosition = new Vector2(0f, -344f);
-            upgradeSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
+            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Upgrades", 16, UITheme.TextMuted);
+            _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _upgradeSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 22f);
 
-            _upgradeCardsContainer = BuildCardRow("UpgradeCards", -368f);
+            // Real Y positions set every Refresh(), once the modifier row's
+            // actual (dynamic) height for this shop visit is known.
+            _upgradeCardsContainer = BuildCardRow("UpgradeCards", 0f);
 
             _rerollButton = UIFactory.CreateButton(_root, "Reroll", "", UISprites.CancelButtonBackground, 16);
             _rerollLabel = _rerollButton.GetComponentInChildren<Text>();
@@ -153,7 +166,10 @@ namespace Contigu.Presentation
         {
             _lueurLabel.text = "Lueur: " + run.Lueur;
 
-            BuildModifierCards(run);
+            float modifierCardHeight = BuildModifierCards(run);
+            float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
+            _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, upgradeSectionY);
+            _upgradeCardsContainer.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap);
 
             ClearChildren(_upgradeCardsContainer);
             for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
@@ -184,9 +200,11 @@ namespace Contigu.Presentation
         /// UpgradeCardFactory.PreferredHeight); pass 2 applies the tallest
         /// one found to every card and its description box, so the buy
         /// button always lands at the same Y across the row regardless of
-        /// which modifiers are currently offered.
+        /// which modifiers are currently offered. Returns that shared card
+        /// height so the caller can place whatever comes below the row
+        /// (the "Upgrades" section) without overlapping it.
         /// </summary>
-        private void BuildModifierCards(RunManager run)
+        private float BuildModifierCards(RunManager run)
         {
             ClearChildren(_modifierCardsContainer);
 
@@ -218,6 +236,8 @@ namespace Contigu.Presentation
                     descRects[i].sizeDelta = new Vector2(descRects[i].sizeDelta.x, maxDescHeight);
                 }
             }
+
+            return cardHeight;
         }
 
         /// <summary>Builds one modifier card's contents (name, bare icon, description, buy button) and returns its description's own natural height — <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildModifierCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height.</summary>

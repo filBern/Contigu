@@ -159,7 +159,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
-            "PERMANENT: every cleared row/column where no two adjacent cells share the same color adds +1 to a multiplier that never resets, not even between rounds — applies as xN to every placement for the rest of the run.");
+            "PERMANENT: every cleared row/column where no two adjacent cells share the same color adds +1 to a multiplier that never resets, not even between rounds — applies as xn to every placement for the rest of the run.");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",
@@ -320,7 +320,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
             ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
-            "xN multiplier where N is how many placements in a row share this piece's shape: x2 on the 2nd consecutive placement of the same shape, x3 on the 3rd, and so on (resets to x1 the moment a different shape is placed).");
+            "xn multiplier where n is how many placements in a row share this piece's shape: x2 on the 2nd consecutive placement of the same shape, x3 on the 3rd, and so on (resets to x1 the moment a different shape is placed).");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
@@ -355,11 +355,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Synergie = new ModifierDefinition(
             ModifierId.Synergie, ModifierCategory.Roguelike, "Synergy",
-            "xN multiplier where N is your total number of modifiers held, this one included.");
+            "xn multiplier where n is your total number of modifiers held, this one included.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
-            "xN multiplier where N is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
+            "xn multiplier where n is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
 
         public static readonly ModifierDefinition[] All =
         {
