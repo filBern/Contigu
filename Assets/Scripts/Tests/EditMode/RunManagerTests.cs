@@ -1935,6 +1935,36 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void CartesEnchantees_ScoreEventCarriesThePreciseFractionalAmount_NotJustTheRoundedInt()
+        {
+            // On explicit report: "le popup de score qui apparait est un
+            // int et non un float donc au lieu de voir +1.3 je vois +1
+            // malgré le fait que le mult est bien augmenté de 1.3" —
+            // Amount stays a rounded int (chip/usage bookkeeping still
+            // wants a whole number), but PreciseAmount now carries the
+            // exact value for the popup to show instead.
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.CartesEnchantees);
+            run.Deck.TagGoldenTokensRandom(11, new SystemRandomProvider(2)); // 1 (baseline) + 11 = 12 -> 12/10 = 1.2
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            ScoreEvent multEvent = null;
+            foreach (var scoreEvent in outcome.Placement.ScoreEvents)
+            {
+                if (scoreEvent.Type == ScoreEventType.MultBonus && scoreEvent.TriggeringModifier == ModifierId.CartesEnchantees)
+                {
+                    multEvent = scoreEvent;
+                    break;
+                }
+            }
+            Assert.IsNotNull(multEvent, "CartesEnchantees should always fire a MultBonus event, even below the old int-rounding threshold");
+            Assert.AreEqual(1, multEvent.Amount, "Amount stays a rounded int for chip/usage bookkeeping");
+            Assert.AreEqual(1.2f, multEvent.PreciseAmount.Value, 0.0001f);
+        }
+
+        [Test]
         public void Multitude_GivesFlatPointsEqualToDeckSize()
         {
             var run = new RunManager(new SystemRandomProvider(1));
@@ -2088,35 +2118,43 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GetProgressiveModifierStateText_CartesEnchantees_ShowsTheConceptualFractionalValue()
+        public void GetProgressiveModifierStateText_CartesEnchantees_ShowsItsAdditiveContributionWithABaselineOfOne()
         {
+            // Additive style ("+N Mult"), matching Solidarite, since this
+            // modifier contributes to the SAME "+Mult" pool rather than
+            // being a multiplier of its own — on explicit report: "tu as
+            // oublié la baseline de 1 et non de 0" (showing this with an
+            // "x" prefix made a below-1 value like 0.1 read as a NERF
+            // instead of the bonus it actually is; the "baseline of 1" is
+            // in the CARD COUNT ((1+count)/10), not a separate flat
+            // addition on top).
             var run = new RunManager(new SystemRandomProvider(1));
 
-            // No upgraded cards yet: baseline of 1 -> a clean "x1" (whole
-            // numbers never show a needless ".0" — see FormatMultDisplay).
-            Assert.AreEqual("Currently x1", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+            // No upgraded cards yet: still +0.1, never +0 ("counting from
+            // a baseline of 1" card).
+            Assert.AreEqual("Currently +0.1 Mult", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
 
-            run.Deck.TagGoldenTokensRandom(13, new SystemRandomProvider(2));
+            run.Deck.TagGoldenTokensRandom(22, new SystemRandomProvider(2));
 
-            // 1 + 0.1 * 13 = 2.3 — the exact "Currently x2.3" example from the request.
-            Assert.AreEqual("Currently x2.3", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+            // (1 + 22) / 10 = 2.3.
+            Assert.AreEqual("Currently +2.3 Mult", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
         }
 
         [Test]
-        public void GetProgressiveModifierStateText_Experience_ShowsTheConceptualFractionalValue()
+        public void GetProgressiveModifierStateText_Experience_ShowsItsAdditiveContributionWithABaselineOfOne()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.Experience);
 
-            Assert.AreEqual("Currently x1", run.GetProgressiveModifierStateText(ModifierId.Experience));
+            Assert.AreEqual("Currently +0.1 Mult", run.GetProgressiveModifierStateText(ModifierId.Experience));
 
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
             PlaceOneSpecialPiece(run);
             PlaceOneSpecialPiece(run);
             PlaceOneSpecialPiece(run);
 
-            // 1 + 0.1 * 3 = 1.3.
-            Assert.AreEqual("Currently x1.3", run.GetProgressiveModifierStateText(ModifierId.Experience));
+            // (1 + 3) / 10 = 0.4.
+            Assert.AreEqual("Currently +0.4 Mult", run.GetProgressiveModifierStateText(ModifierId.Experience));
         }
     }
 }

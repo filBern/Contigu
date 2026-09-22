@@ -94,15 +94,22 @@ namespace Contigu.Core
         /// null for every modifier whose bonus is fixed and doesn't grow or
         /// shrink over the round/run (that's most of them). Modifiers whose
         /// counter is a genuine whole number (Gradient, Repetition, Synergie,
-        /// Solidarite, Epuisement, Multitude) show a plain integer; Densite/
-        /// CartesEnchantees/Experience show the exact same TRUE float value
-        /// now actually applied to the score (see
-        /// PlacementResult.ProgressiveMultiplier/.ProgressiveAdditiveMult —
-        /// on explicit request, these no longer round down mid-calculation:
-        /// "on doit multiplier comme si c'était un float au lieu d'arrondir
-        /// a la baisse. On arrondit le score total de la pièce posé par la
-        /// suite"), formatted with one decimal only when it isn't already a
-        /// whole number.
+        /// Solidarite, Epuisement, Multitude) show a plain integer; Densite
+        /// shows its TRUE float multiplicative factor now actually applied
+        /// to the score (see PlacementResult.ProgressiveMultiplier — on
+        /// explicit request, no longer rounded down mid-calculation: "on
+        /// doit multiplier comme si c'était un float"). CartesEnchantees/
+        /// Experience are ADDITIVE contributors to the SAME "+Mult" pool as
+        /// Solidarite/MultUn (see PlacementResult.ProgressiveAdditiveMult),
+        /// not a multiplier of their own, so they show "+N Mult" the same
+        /// way Solidarite does, NOT "xN" — showing "x" here was a bug (on
+        /// explicit report: "tu as oublié la baseline de 1 et non de 0"):
+        /// their own raw contribution starts at +0.1 (never +0, "counting
+        /// from a baseline of 1" card), which read as a NERF ("x0.1") under
+        /// the old "x" phrasing instead of the bonus it actually is — the
+        /// separate "+1" that makes the OVERALL Mult never drop below x1 is
+        /// PlacementResult.Mult's own baseline, added once, game-wide, not
+        /// specific to either of these two modifiers.
         /// </summary>
         public string GetProgressiveModifierStateText(ModifierId id)
         {
@@ -123,9 +130,9 @@ namespace Contigu.Core
                 case ModifierId.Multitude:
                     return "Currently +" + (Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts";
                 case ModifierId.CartesEnchantees:
-                    return "Currently x" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep);
+                    return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep) + " Mult";
                 case ModifierId.Experience:
-                    return "Currently x" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep);
+                    return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep) + " Mult";
                 default:
                     return null;
             }
@@ -698,18 +705,18 @@ namespace Contigu.Core
                     // TRUE float — no longer floored to a whole "+1 Mult"
                     // step (on explicit request: "on doit multiplier comme
                     // si c'était un float au lieu d'arrondir a la baisse").
-                    // The badge popup still shows a rounded whole number;
-                    // only PlacementResult.ProgressiveAdditiveMult needs the
-                    // full precision.
+                    // Always at least 0.1 ("counting from a baseline of
+                    // 1"), so this always fires, and PreciseAmount lets the
+                    // badge popup show the exact value (e.g. "+1.3") instead
+                    // of a misleadingly rounded "+1" (on explicit report:
+                    // "le popup de score qui apparait est un int et non un
+                    // float").
                     float trueMult = (1 + upgradedCount) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep;
                     placement.ProgressiveAdditiveMult += trueMult;
-                    int displayAmount = Mathf.RoundToInt(trueMult);
-                    if (displayAmount > 0)
-                    {
-                        var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], displayAmount);
-                        multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
-                        events.Add(multEvent);
-                    }
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
+                    multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
+                    multEvent.PreciseAmount = trueMult;
+                    events.Add(multEvent);
                 }
                 else if (_activeModifiers[i] == ModifierId.Multitude)
                 {
@@ -724,13 +731,10 @@ namespace Contigu.Core
                     // Same TRUE-float treatment as CartesEnchantees above.
                     float trueMult = (1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep;
                     placement.ProgressiveAdditiveMult += trueMult;
-                    int displayAmount = Mathf.RoundToInt(trueMult);
-                    if (displayAmount > 0)
-                    {
-                        var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], displayAmount);
-                        multEvent.TriggeringModifier = ModifierId.Experience;
-                        events.Add(multEvent);
-                    }
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
+                    multEvent.TriggeringModifier = ModifierId.Experience;
+                    multEvent.PreciseAmount = trueMult;
+                    events.Add(multEvent);
                 }
             }
             placement.ScoreEvents = events;

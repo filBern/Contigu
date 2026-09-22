@@ -62,6 +62,19 @@ namespace Contigu.Core
         /// </summary>
         public ModifierId? TriggeringModifier;
 
+        /// <summary>
+        /// The TRUE, unrounded contribution behind <see cref="Amount"/> — only
+        /// set for a <see cref="ScoreEventType.MultBonus"/> event from a
+        /// genuinely fractional modifier (Enchanted Cards/Experience, see
+        /// RunManager.ApplyDeckStateModifierBonuses), null everywhere else.
+        /// <see cref="Amount"/> stays a rounded int (still used for chip/usage
+        /// bookkeeping that expects a whole number); this lets the popup show
+        /// the precise value instead (on explicit report: "le popup de score
+        /// qui apparait est un int et non un float donc au lieu de voir +1.3
+        /// je vois +1 malgré le fait que le mult est bien augmenté de 1.3").
+        /// </summary>
+        public float? PreciseAmount;
+
         public ScoreEvent(ScoreEventType type, Vector2Int position, int amount)
         {
             Type = type;

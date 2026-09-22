@@ -454,12 +454,17 @@ namespace Contigu.Presentation
                     // "+N" popup for immediate per-modifier feedback, but the
                     // actual score catch-up for the whole AdditiveMultBonus
                     // pool happens once, after this loop (mirrors the
-                    // ModifierMultiplier catch-up just above).
+                    // ModifierMultiplier catch-up just above). PreciseAmount
+                    // (Enchanted Cards/Experience) shows the true fractional
+                    // value instead of Amount's rounded int, on explicit
+                    // report: "le popup de score qui apparait est un int et
+                    // non un float donc au lieu de voir +1.3 je vois +1".
                     if (scoreEvent.TriggeringModifier.HasValue)
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPopup(badgeAnchor, "+" + scoreEvent.Amount, UITheme.Danger);
+                        string amountText = scoreEvent.PreciseAmount.HasValue ? FormatMultAmount(scoreEvent.PreciseAmount.Value) : scoreEvent.Amount.ToString();
+                        _feedbackLayer.SpawnPopup(badgeAnchor, "+" + amountText, UITheme.Danger);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
                     yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));

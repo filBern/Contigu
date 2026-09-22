@@ -3342,3 +3342,46 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
       réécrits pour vérifier `ProgressiveAdditiveMult` au lieu de
       `AdditiveMultBonus`, y compris le cas sous le seuil de 10 qui
       donnait 0 avant et donne maintenant 0.9 en entier).
+- **Fix : baseline de Cartes Enchantées/Expérience mal affichée, et
+  popup de score en int au lieu de float** (signalé explicitement :
+  "Pour le modifier Enchented Cards tu as oublié la baseline de 1 et
+  non de 0. Aussi le pop up de score qui apparait est un int et non un
+  float donc au lieu de voir +1.3 je vois +1 malgré le fait que le
+  mult est bien augmenté de 1.3").
+  - **Baseline mal affichée** : `RunManager.GetProgressiveModifierStateText`
+    affichait Cartes Enchantées/Expérience avec le préfixe "x" (ex.
+    "Currently x0.1" à 0 carte upgradée) — un reste de l'ANCIENNE
+    formule d'affichage (`1 + 0.1*count`, qui donnait bien x1.0 à la
+    baseline) datant d'avant le passage au calcul en vrai float
+    (formule réelle : `(1+count)/10`, qui donne 0.1 à la baseline, pas
+    1.0). Afficher 0.1 avec un "x" se lisait comme un NERF ("multiplie
+    le score par 0.1") au lieu du bonus que c'est réellement — ces deux
+    modifiers contribuent au MÊME pool additif "+Mult" que Solidarité/
+    MultUn (voir `PlacementResult.ProgressiveAdditiveMult`), pas un
+    multiplicateur à eux. Corrigé pour utiliser le même style "+N Mult"
+    que Solidarité (`"Currently +0.1 Mult"`, `"Currently +2.3 Mult"`
+    pour 22 cartes upgradées, etc.) — le "baseline de 1" reste exactement
+    où il était (dans le compte de cartes, `(1+count)/10`), le bug était
+    uniquement dans le PRÉFIXE d'affichage ("x" au lieu de "+... Mult"),
+    pas dans le calcul de score lui-même (resté correct).
+  - **Popup de score en int** : `ScoreEvent` gagne un nouveau champ
+    optionnel `float? PreciseAmount`, rempli uniquement pour les events
+    `MultBonus` de Cartes Enchantées/Expérience (`Amount` reste un
+    `int` arrondi, toujours utilisé pour la comptabilité chips/usage).
+    Le popup individuel sur le badge du modifier
+    (`GameBootstrap.PlayPlacementSequence`) utilise maintenant
+    `PreciseAmount` quand il est présent, affichant "+1.3" au lieu de
+    "+1" arrondi. Retiré au passage le garde-fou qui sautait l'event
+    entièrement quand la valeur arrondie tombait à 0 (en dessous de
+    ~5 cartes) — puisque le popup affiche maintenant la vraie valeur,
+    même "+0.1" est significatif et vaut la peine d'être montré (bonus
+    secondaire : le compteur "Used Nx this run" de ces deux modifiers
+    est maintenant plus précis, il ne sous-comptait plus les poses à
+    faible valeur).
+  - Nouveaux tests : `RunManagerTests.cs`
+    (`GetProgressiveModifierStateText_CartesEnchantees_ShowsItsAdditiveContributionWithABaselineOfOne`/
+    `..._Experience_...` réécrits avec les vraies valeurs de la formule
+    `(1+count)/10` et le nouveau préfixe "+... Mult" ;
+    `CartesEnchantees_ScoreEventCarriesThePreciseFractionalAmount_NotJustTheRoundedInt`
+    vérifie que `Amount` reste arrondi mais que `PreciseAmount` porte
+    la vraie valeur, ex. 1.2 pour 12 cartes upgradées).
