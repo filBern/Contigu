@@ -5,13 +5,18 @@ using UnityEngine;
 namespace Contigu.Data
 {
     /// <summary>
-    /// Display defaults for modifier badges. There is no bespoke icon art for
-    /// any modifier yet, so each badge is a colored chip (accent = its
-    /// <see cref="ModifierCategory"/>) showing a 2-letter abbreviation instead
-    /// of a picture — the full name/description only shows in a hover tooltip
-    /// (see Presentation.TooltipView). Swapping in real per-modifier art later
-    /// only needs a sprite lookup added alongside GetAbbreviation, the same way
-    /// VisualDefaults.GetColorIcon falls back cleanly for a color with no icon.
+    /// Display defaults for modifier badges. Most modifiers still have no
+    /// bespoke icon art, so their badge falls back to a colored chip (accent
+    /// = its <see cref="ModifierCategory"/>) showing a 2-letter abbreviation
+    /// instead of a picture — the full name/description only shows in a
+    /// hover tooltip (see Presentation.TooltipView). The first 9 catalog
+    /// entries (Prisme..Tricolore) DO have real art now (player-supplied
+    /// PNGs dropped into Assets/Resources/Icons/Modifiers, named after each
+    /// one's own <see cref="ModifierDefinition.Name"/> with spaces
+    /// stripped), loaded via <see cref="GetIcon"/> — same null-means-no-icon-
+    /// yet fallback convention as VisualDefaults.GetColorIcon. Adding art
+    /// for another modifier later only needs one more entry in the
+    /// <see cref="Icons"/> dictionary below.
     /// </summary>
     public static class ModifierVisualDefaults
     {
@@ -156,6 +161,34 @@ namespace Contigu.Data
         public static PieceColor? GetColorTileColor(ModifierId id)
         {
             return ColorTileColors.TryGetValue(id, out var color) ? color : (PieceColor?)null;
+        }
+
+        // Real per-modifier icon art (player-authored, on explicit request:
+        // "J'ai fait un icon pour les 9 premier modifiers, je les ai nommé
+        // par leur nom dans le dossier Assets/Resources/Icons/Modifiers") —
+        // one PNG per modifier, named after its own ModifierDefinition.Name
+        // with spaces stripped (e.g. "Mega Chain" -> MegaChain.png). Loaded
+        // once here, same lazy-at-startup convention as VisualDefaults'
+        // IconMap; Resources.Load returns null for any modifier without art
+        // yet rather than throwing, so GetIcon below can be called for every
+        // modifier unconditionally.
+        private static readonly Dictionary<ModifierId, Sprite> Icons = new Dictionary<ModifierId, Sprite>
+        {
+            { ModifierId.Prisme, Resources.Load<Sprite>("Icons/Modifiers/Prism") },
+            { ModifierId.Chaine, Resources.Load<Sprite>("Icons/Modifiers/Chain") },
+            { ModifierId.MegaChaine, Resources.Load<Sprite>("Icons/Modifiers/MegaChain") },
+            { ModifierId.Forteresse, Resources.Load<Sprite>("Icons/Modifiers/Fortress") },
+            { ModifierId.Prisonnier, Resources.Load<Sprite>("Icons/Modifiers/Prisoner") },
+            { ModifierId.Architecte, Resources.Load<Sprite>("Icons/Modifiers/Architect") },
+            { ModifierId.Puriste, Resources.Load<Sprite>("Icons/Modifiers/Purist") },
+            { ModifierId.Collectionneur, Resources.Load<Sprite>("Icons/Modifiers/Collector") },
+            { ModifierId.Tricolore, Resources.Load<Sprite>("Icons/Modifiers/Tricolor") }
+        };
+
+        /// <summary>Real icon art for a modifier, or null when none exists yet — takes priority over every placeholder treatment below (Forme* specialist shape, Éclat/Devotion color tile, plain abbreviation) in <see cref="Presentation.ModifierBadgeFactory"/>.</summary>
+        public static Sprite GetIcon(ModifierId id)
+        {
+            return Icons.TryGetValue(id, out var sprite) ? sprite : null;
         }
     }
 }

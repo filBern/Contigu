@@ -2875,3 +2875,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     couvrant : no-op avant le premier succès, application immédiate à la
     pose qui vient de déclencher Gradient, application à une pose
     suivante qui ne cleare rien du tout, et survie à `ResetForNewRound`.
+- **Icons des 9 premiers modificateurs** (le joueur a déposé les PNG
+  lui-même : "J'ai fait un icon pour les 9 premier modifiers, je les ai
+  nommé par leur nom dans le dossier
+  Assets/Resources/Icons/Modifiers") — Prisme, Chaîne, Méga-chaîne,
+  Forteresse, Prisonnier, Architecte, Puriste, Collectionneur et
+  Tricolore montrent maintenant leur propre icône au lieu du chip
+  coloré + abréviation à 2 lettres, chaque PNG étant nommé d'après le
+  `Name` anglais du modificateur sans espace (ex. "Mega Chain" →
+  `MegaChain.png`).
+  - Nouveau `ModifierVisualDefaults.Icons`/`GetIcon(ModifierId)` : même
+    mécanisme lazy-au-démarrage que `VisualDefaults.IconMap`
+    (`Resources.Load<Sprite>("Icons/Modifiers/...")`, `null` = pas encore
+    d'icône pour ce modificateur plutôt qu'une exception) — exactement le
+    point d'extension que le commentaire de classe annonçait déjà
+    ("Swapping in real per-modifier art later only needs a sprite lookup
+    added alongside GetAbbreviation").
+  - `ModifierBadgeFactory.Create` vérifie `GetIcon` EN PREMIER, avant les
+    2 exceptions existantes (silhouette Forme*, tuile colorée
+    Éclat/Devotion) et avant le fallback abréviation — donc une icône
+    réelle gagne toujours quand elle existe. Même cadrage que les autres
+    previews (80% de la taille du badge, centré).
+  - Les ~60 autres modificateurs n'ont pas encore d'art et continuent de
+    montrer leur chip/abréviation comme avant — ajouter une icône plus
+    tard ne demande qu'une entrée de plus dans `Icons`.

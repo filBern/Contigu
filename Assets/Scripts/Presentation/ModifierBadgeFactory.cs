@@ -10,7 +10,9 @@ namespace Contigu.Presentation
     /// abbreviation, wired to reveal a hover tooltip with the full name/
     /// description) — shared by the modifier draft cards and the persistent
     /// modifier side panel so both stay visually and behaviorally consistent.
-    /// Two exceptions, both on explicit request: the Forme* "Specialist"
+    /// A modifier with real icon art (see ModifierVisualDefaults.GetIcon)
+    /// shows that instead, taking priority over everything else below. Absent
+    /// that, two exceptions, both on explicit request: the Forme* "Specialist"
     /// modifiers show a literal black-square preview of the shape they
     /// target (see ModifierVisualDefaults.GetSpecialistShape) instead of an
     /// abbreviation — spelling out a domino/tromino/tetromino name read as
@@ -37,9 +39,20 @@ namespace Contigu.Presentation
             badgeOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
+            var icon = ModifierVisualDefaults.GetIcon(def.Id);
             var specialistShape = ModifierVisualDefaults.GetSpecialistShape(def.Id);
             var colorTileColor = ModifierVisualDefaults.GetColorTileColor(def.Id);
-            if (specialistShape.HasValue)
+            if (icon != null)
+            {
+                var iconImage = UIFactory.CreatePanel(badge.transform, "Icon", Color.white);
+                iconImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                iconImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                iconImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                iconImage.rectTransform.anchoredPosition = Vector2.zero;
+                iconImage.rectTransform.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
+                iconImage.sprite = icon;
+            }
+            else if (specialistShape.HasValue)
             {
                 var preview = UIFactory.CreateUIObject("ShapePreview", badge.transform);
                 preview.anchorMin = new Vector2(0.5f, 0.5f);
