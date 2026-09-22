@@ -28,7 +28,6 @@ namespace Contigu.Data
             { ModifierId.Forteresse, "FT" },
             { ModifierId.Prisonnier, "PN" },
             { ModifierId.Architecte, "AR" },
-            { ModifierId.Puriste, "PU" },
             { ModifierId.Collectionneur, "CO" },
             { ModifierId.Tricolore, "TC" },
             { ModifierId.Complementaire, "CX" },
@@ -216,7 +215,6 @@ namespace Contigu.Data
             { ModifierId.Forteresse, Resources.Load<Sprite>("Icons/Modifiers/Fortress") },
             { ModifierId.Prisonnier, Resources.Load<Sprite>("Icons/Modifiers/Prisoner") },
             { ModifierId.Architecte, Resources.Load<Sprite>("Icons/Modifiers/Architect") },
-            { ModifierId.Puriste, Resources.Load<Sprite>("Icons/Modifiers/Purist") },
             { ModifierId.Collectionneur, Resources.Load<Sprite>("Icons/Modifiers/Collector") },
             { ModifierId.Tricolore, Resources.Load<Sprite>("Icons/Modifiers/Tricolor") }
         };

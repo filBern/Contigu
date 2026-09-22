@@ -70,7 +70,7 @@ namespace Contigu.Core
         /// Multiplies this placement's WHOLE total score (see <see
         /// cref="TotalScore"/>), same tier as <see cref="ComboMultiplier"/>
         /// — the aggregate of every "xN"-style modifier now held (Prisme,
-        /// Architecte, Puriste, Tricolore, Complémentaire, Îlot, Maçon,
+        /// Architecte, Tricolore, Complémentaire, Îlot, Maçon,
         /// Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale, Pont,
         /// Grosse Famille, Repetition, Alternance des pièces, Minimaliste,
         /// and the 6 line-pattern modifiers), converted from a flat +pts

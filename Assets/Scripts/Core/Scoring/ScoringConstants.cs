@@ -55,7 +55,7 @@ namespace Contigu.Core
         // than a feature. The converted ones use xN factors here instead of
         // pts values — mostly x2 (matching the existing Devotion/Forme/Slot
         // "doubles" convention), x3 for the rarer/harder-to-trigger ones
-        // (Prisme, Rafale, Puriste). On explicit request, round score quotas
+        // (Prisme, Rafale). On explicit request, round score quotas
         // (see RunConfig) were raised to scale exponentially to match the
         // resulting much bigger placement totals once several of these stack.
 
@@ -112,7 +112,7 @@ namespace Contigu.Core
         /// <summary>Cercle Chromatique: bonus per group cell whose 4 filled cardinal neighbors together show all 4 base colors. Raised 18->35 (explicit request) — very hard to actually land.</summary>
         public const int CercleChromatiqueBonusPerCell = 35;
 
-        /// <summary>Monochrome: bonus per group cell when the whole group is a single real color with zero jokers (stricter than Puriste).</summary>
+        /// <summary>Monochrome: bonus per group cell when the whole group is a single real color with zero jokers.</summary>
         public const int MonochromeBonusPerCell = 3;
 
         /// <summary>Contraste: bonus per placed cell with at least one filled orthogonal neighbor of a different color.</summary>
@@ -224,9 +224,6 @@ namespace Contigu.Core
 
         /// <summary>Minimalist (Minimaliste): xN multiplier when this placement's whole footprint touches EXACTLY one distinct pre-existing filled cell, total — the "just barely touching" middle ground between Îlot (zero) and Precision (one or more, per cell).</summary>
         public const int MinimalisteMultiplier = 2;
-
-        /// <summary>Puriste: xN multiplier when the placement's scored group is monochrome (jokers ignored) — was "+50% of the group's points" (a de facto x1.5), now a clean xN like every other converted modifier.</summary>
-        public const int PuristeMultiplier = 3;
 
         // ---- Seventh batch: progressive modifiers (on explicit request) ----
 

@@ -628,7 +628,7 @@ namespace Contigu.Presentation
 
             // "ModifierMultiplier"/"ProgressiveMultiplier" — every xN
             // modifier converted from a flat bonus to a real multiplier
-            // (Prisme, Architecte, Puriste, Tricolore, Complémentaire, Îlot,
+            // (Prisme, Architecte, Tricolore, Complémentaire, Îlot,
             // Maçon, Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale,
             // Pont, Grosse Famille, Repetition, Alternance des pièces,
             // Minimaliste, and the 6 line-pattern modifiers — see

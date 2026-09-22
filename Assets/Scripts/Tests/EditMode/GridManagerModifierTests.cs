@@ -180,40 +180,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Puriste_AppliesItsMultiplier_WhenGroupIsMonochromeExcludingJokers()
-        {
-            var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2); // 4 cells, alone
-            var modifiers = new List<ModifierId> { ModifierId.Puriste };
-
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
-
-            int expectedGroupBonus = ExpectedGroupBonus(4);
-            Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
-            Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
-        }
-
-        [Test]
-        public void Puriste_Fires_ForAnAllJokerGroup()
-        {
-            // A connected group can never mix two different real colors (see
-            // GridManager.FindConnectedGroup: a joker never bridges two
-            // different colors together), so Puriste's "not monochrome"
-            // rejection can only ever be exercised by a group made entirely of
-            // jokers — which still counts as vacuously monochrome.
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-            var modifiers = new List<ModifierId> { ModifierId.Puriste };
-
-            grid.PlacePiece(single, PieceColor.Joker, 0, 0, modifiers);
-            var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
-
-            int expectedGroupBonus = ExpectedGroupBonus(2);
-            Assert.AreEqual(expectedGroupBonus, result.GroupBonus);
-            Assert.AreEqual(ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
-        }
-
-        [Test]
         public void Collectionneur_ScoresPerDistinctClearedColor()
         {
             var grid = new GridManager();
@@ -250,13 +216,17 @@ namespace Contigu.Tests
         [Test]
         public void MultipleActiveModifiers_StackTheirMultipliersMultiplicatively()
         {
+            // Two independently-held copies of the same xN modifier apply
+            // separately (activeModifiers is a plain list, iterated once per
+            // entry), so this also proves stacking without needing two
+            // different modifiers to coincidentally both fire on one placement.
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.Architecte, ModifierId.Puriste };
+            var modifiers = new List<ModifierId> { ModifierId.Architecte, ModifierId.Architecte };
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.ArchitecteMultiplier * ScoringConstants.PuristeMultiplier, result.ModifierMultiplier);
+            Assert.AreEqual(ScoringConstants.ArchitecteMultiplier * ScoringConstants.ArchitecteMultiplier, result.ModifierMultiplier);
         }
 
         [Test]
@@ -529,31 +499,36 @@ namespace Contigu.Tests
         public void ScoreEvents_TagEachModifierEventWithItsTriggeringModifierId()
         {
             var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.Architecte, ModifierId.Puriste };
+            var modifiers = new List<ModifierId> { ModifierId.Architecte, ModifierId.Minimaliste };
 
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+            // Set up a single pre-existing filled cell at (0,1), then place a
+            // 2x2 square at (1,0)-(2,1): its only pre-existing filled
+            // neighbor, across the whole footprint, is that one cell — so
+            // this single placement fires BOTH Architecte (any 2x2 square)
+            // AND Minimaliste (footprint touches exactly 1 distinct
+            // pre-existing filled cell), each tagging its own event.
+            grid.PlacePiece(single, PieceColor.Teal, 0, 1);
+            var result = grid.PlacePiece(square, PieceColor.Coral, 1, 0, modifiers);
 
-            ModifierId? architecteTag = null;
-            ModifierId? puristeTag = null;
+            // Both multipliers happen to be x2 (can't tell them apart by
+            // Amount), but activeModifiers is processed in list order
+            // ({Architecte, Minimaliste}) and each case appends its own
+            // event as it fires, so the resulting ModifierMultiplier events
+            // land in that same order.
+            var multiplierEvents = new List<ScoreEvent>();
             foreach (var e in result.ScoreEvents)
             {
-                if (e.Type != ScoreEventType.ModifierMultiplier)
+                if (e.Type == ScoreEventType.ModifierMultiplier)
                 {
-                    continue;
-                }
-                if (e.Amount == ScoringConstants.ArchitecteMultiplier)
-                {
-                    architecteTag = e.TriggeringModifier;
-                }
-                else
-                {
-                    puristeTag = e.TriggeringModifier;
+                    multiplierEvents.Add(e);
                 }
             }
 
-            Assert.AreEqual(ModifierId.Architecte, architecteTag);
-            Assert.AreEqual(ModifierId.Puriste, puristeTag);
+            Assert.AreEqual(2, multiplierEvents.Count);
+            Assert.AreEqual(ModifierId.Architecte, multiplierEvents[0].TriggeringModifier);
+            Assert.AreEqual(ModifierId.Minimaliste, multiplierEvents[1].TriggeringModifier);
         }
 
         [Test]
@@ -629,7 +604,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus, "Puriste would tolerate this joker, but Monochrome requires zero jokers anywhere in the group");
+            Assert.AreEqual(0, result.ModifierBonus, "Monochrome requires zero jokers anywhere in the group");
         }
 
         [Test]

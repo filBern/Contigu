@@ -13,7 +13,6 @@ namespace Contigu.Core
         Forteresse,
         Prisonnier,
         Architecte,
-        Puriste,
         Collectionneur,
         Tricolore,
         Complementaire,

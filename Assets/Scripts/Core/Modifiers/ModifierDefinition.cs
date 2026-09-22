@@ -82,10 +82,6 @@ namespace Contigu.Core
             ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
             "x2 multiplier every time a 2x2 square block is placed.");
 
-        public static readonly ModifierDefinition Puriste = new ModifierDefinition(
-            ModifierId.Puriste, ModifierCategory.Roguelike, "Purist",
-            "x3 multiplier when the placed group is a single color (jokers ignored).");
-
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
             "+8 pts per distinct color among cleared cells.");
@@ -480,7 +476,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition[] All =
         {
-            Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
+            Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
             Tricolore, Complementaire, Ilot, Couronne, Carrefour, Macon, Demolisseur,
             CercleChromatique, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
             ArcEnCiel, Alternance, Palindrome, Gradient, Bloc, MonochromeLigne,

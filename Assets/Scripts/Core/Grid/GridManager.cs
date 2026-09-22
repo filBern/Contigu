@@ -527,10 +527,6 @@ namespace Contigu.Core
                         bonus = 0;
                         multiplier *= ApplyArchitecte(shape, placedCells, events);
                         break;
-                    case ModifierId.Puriste:
-                        bonus = 0;
-                        multiplier *= ApplyPuriste(groupCells, placedCells, groupBonus, events);
-                        break;
                     case ModifierId.Tricolore:
                         bonus = 0;
                         multiplier *= ApplyTricolore(placedCells, events);
@@ -1751,36 +1747,6 @@ namespace Contigu.Core
             return ScoringConstants.ArchitecteMultiplier;
         }
 
-        /// <summary>Puriste: xN multiplier (see ScoringConstants.PuristeMultiplier) when the placement's scored group is monochrome (jokers ignored) and actually scored something. Returns 1 (no-op) otherwise.</summary>
-        private int ApplyPuriste(List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events)
-        {
-            PieceColor? monoColor = null;
-            for (int i = 0; i < groupCells.Count; i++)
-            {
-                var color = _cells[groupCells[i].x, groupCells[i].y].FilledColor.Value;
-                if (color == PieceColor.Joker)
-                {
-                    continue;
-                }
-                if (!monoColor.HasValue)
-                {
-                    monoColor = color;
-                }
-                else if (monoColor.Value != color)
-                {
-                    return 1;
-                }
-            }
-
-            if (groupBonus <= 0)
-            {
-                return 1;
-            }
-
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.PuristeMultiplier));
-            return ScoringConstants.PuristeMultiplier;
-        }
-
         private int ApplyCollectionneur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (clearInfo.ClearedCellColors.Count == 0)
@@ -1976,7 +1942,7 @@ namespace Contigu.Core
             return colors.Count == PieceColorUtility.BaseColors.Count;
         }
 
-        /// <summary>Stricter sibling of Puriste: the group must be a single real color with ZERO jokers anywhere in it, not just ignoring them.</summary>
+        /// <summary>The group must be a single real color with ZERO jokers anywhere in it (jokers not merely ignored, disqualifying).</summary>
         private int ApplyMonochrome(List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             PieceColor? monoColor = null;
@@ -2290,7 +2256,7 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Every non-joker color in the line is the same one (jokers ignored, same convention as Puriste).</summary>
+        /// <summary>Every non-joker color in the line is the same one (jokers ignored).</summary>
         private static bool IsMonochromeLine(IReadOnlyList<PieceColor> colors)
         {
             if (colors.Count == 0)

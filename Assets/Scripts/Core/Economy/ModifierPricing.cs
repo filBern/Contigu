@@ -47,7 +47,6 @@ namespace Contigu.Core
                 case ModifierId.Forteresse: return 6;
                 case ModifierId.Prisonnier: return 5;
                 case ModifierId.Architecte: return 5;
-                case ModifierId.Puriste: return 8;
                 case ModifierId.Collectionneur: return 6;
                 case ModifierId.Tricolore: return 5;
                 case ModifierId.Complementaire: return 6;

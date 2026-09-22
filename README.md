@@ -3497,3 +3497,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `GetProgressiveModifierStateText_Solidarite_ReflectsTotalModifiersHeld`),
   qui avait exactement la même mécanique depuis la conversion xN→+N
   ci-dessus.
+- **Retrait complet du modifier Puriste** (demande explicite : "Purist
+  can be removed, it's way too strong") — x3 sur tout le score dès que
+  le groupe scoré est monochrome (jokers ignorés) était jugé trop fort
+  pour sa condition de déclenchement peu restrictive. Retiré plutôt que
+  désactivé, sur toute la chaîne, même traitement que Synergie
+  ci-dessus : `ModifierId.Puriste` (enum), sa `ModifierDefinition` et
+  son entrée dans `ModifierCatalog.All`, son prix dans
+  `ModifierPricing`, son abréviation `"PU"` et son icône dans
+  `ModifierVisualDefaults`, son `case` de scoring et sa méthode
+  `GridManager.ApplyPuriste`, et sa constante
+  `ScoringConstants.PuristeMultiplier` — n'apparaît donc plus nulle
+  part. Les commentaires qui le citaient comme point de comparaison
+  (Monochrome — "stricter than Puriste" —, `IsMonochromeLine`, la liste
+  des modifiers xN dans `PlacementResult`/`GameBootstrap`) ont été mis à
+  jour pour ne plus le mentionner. Deux tests dédiés supprimés
+  (`Puriste_AppliesItsMultiplier_WhenGroupIsMonochromeExcludingJokers`,
+  `Puriste_Fires_ForAnAllJokerGroup`) ; deux tests qui le combinaient
+  avec Architecte pour vérifier le stacking multiplicatif et le tagging
+  par `TriggeringModifier` (`MultipleActiveModifiers_StackTheirMultipliersMultiplicatively`,
+  `ScoreEvents_TagEachModifierEventWithItsTriggeringModifierId`) ont été
+  réécrits avec d'autres modifiers pour préserver la même couverture :
+  le premier utilise maintenant deux copies d'Architecte (prouve le
+  stacking sans dépendre d'un second modifier précis) ; le second
+  utilise Architecte + Minimaliste (un cas où deux modifiers xN
+  différents, de même valeur x2, se déclenchent sur la même pose — donc
+  ne peuvent plus être distingués par `Amount` comme avant, distingués
+  à la place par l'ordre d'apparition des events, qui suit l'ordre de
+  `activeModifiers`).
