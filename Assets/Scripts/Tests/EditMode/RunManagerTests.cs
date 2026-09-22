@@ -1698,5 +1698,36 @@ namespace Contigu.Tests
             Assert.Greater(outcome.Placement.ModifierMultiplier, 1);
             Assert.AreEqual(1, run.GetModifierUsageCount(ModifierId.Architecte));
         }
+
+        [Test]
+        public void RepetitionLueur_CreditsTheRunsLueurAndCountsAsUsed()
+        {
+            // Same "does the generic wiring pick up a new event type" risk
+            // as the ModifierMultiplier regression test above, here for
+            // RunManager.Lueur (see PlacementResult.ModifierLueurBonus —
+            // the first of the 5 Lueur-earning modifiers, spec extension)
+            // and GetModifierUsageCount (ScoreEventType.LueurBonus).
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.RepetitionLueur);
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            int firstSlot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+            var firstAnchor = FindAnyValidAnchor(run.Grid, single);
+            Assert.IsTrue(firstAnchor.HasValue);
+            var first = run.PlacePiece(firstSlot, firstAnchor.Value.x, firstAnchor.Value.y);
+            Assert.IsTrue(first.Placement.Success);
+            Assert.AreEqual(0, first.Placement.ModifierLueurBonus, "Round's first placement starts no streak yet");
+            int lueurAfterFirst = run.Lueur;
+
+            int secondSlot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+            var secondAnchor = FindAnyValidAnchor(run.Grid, single);
+            Assert.IsTrue(secondAnchor.HasValue);
+            var second = run.PlacePiece(secondSlot, secondAnchor.Value.x, secondAnchor.Value.y);
+
+            Assert.IsTrue(second.Placement.Success);
+            Assert.AreEqual(EconomyConstants.RepetitionLueurBonus, second.Placement.ModifierLueurBonus, "2nd consecutive Single in a row");
+            Assert.AreEqual(lueurAfterFirst + second.Placement.LueurEarned + EconomyConstants.RepetitionLueurBonus, run.Lueur, "RunManager.Lueur adds both LueurEarned and ModifierLueurBonus");
+            Assert.AreEqual(1, run.GetModifierUsageCount(ModifierId.RepetitionLueur));
+        }
     }
 }

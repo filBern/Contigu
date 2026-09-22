@@ -50,5 +50,27 @@ namespace Contigu.Core
 
         /// <summary>How many of the ShopTileCandidateCount candidates the player actually picks — same count every Grid upgrade used to tag randomly, just player-chosen now instead of random.</summary>
         public const int ShopTileChoiceCount = 3;
+
+        // ---- Lueur-earning modifiers (see ModifierId's eighth batch) —
+        // each adapted from an existing SCORE modifier of the same shape,
+        // paying Lueur instead (on explicit request). Values are roughly
+        // scaled against LueurPerColorGroup (2) — a per-line one is worth
+        // more than a single color group since it needs a specific
+        // pattern, not just any clear.
+
+        /// <summary>Rainbow Glow (adapted from Arc-en-ciel): Lueur PER cleared row/column containing all 4 base colors, stacking.</summary>
+        public const int ArcEnCielLueurPerLine = 6;
+
+        /// <summary>Glowing Alternation (adapted from Alternance): Lueur PER cleared row/column whose colors strictly alternate between exactly 2 colors, stacking.</summary>
+        public const int AlternanceLueurPerLine = 4;
+
+        /// <summary>Radiant Line (adapted from Monochrome Ligne): Lueur PER cleared row/column that is entirely a single color, stacking — the odd one out among these, rewarding the opposite of what Lueur normally favors (a monochrome line is worth the least base Lueur), as a deliberate counter-play option.</summary>
+        public const int MonochromeLigneLueurPerLine = 4;
+
+        /// <summary>Glowing Collector (adapted from Collectionneur): Lueur per distinct color among this placement's cleared cells.</summary>
+        public const int CollectionneurLueurPerColor = 2;
+
+        /// <summary>Golden Repetition (adapted from Repetition): flat Lueur when this piece is the same shape as the immediately previous placement this round — unlike its score counterpart, not progressive.</summary>
+        public const int RepetitionLueurBonus = 5;
     }
 }

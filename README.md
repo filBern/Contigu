@@ -2982,3 +2982,55 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     dans un mot anglais normal, donc sans risque de faux positif. En
     parallèle, les 4 descriptions concernées remplacent tous leurs "N"
     (dans "xN" et dans "where N is...") par un "n" minuscule.
+- **5 nouveaux modificateurs qui rapportent de la Lueur** (demande
+  explicite : "Maintenant il faut ajouter quelques modifiers qui
+  rapportent des lueur. Tu peux t'inspirer des modifiers qu'on a déjà et
+  les adapter en version bonus lueur") — jusqu'ici, la Lueur (monnaie du
+  shop) ne venait QUE de `GridManager.ComputeLueurGroups` (diversité de
+  couleur dans une ligne clearée), aucun modificateur n'y touchait.
+  Chacun des 5 nouveaux est adapté d'un modificateur SCORE existant :
+  même condition de déclenchement exacte (mêmes prédicats/logique
+  réutilisés tel quel), mais rapportant de la Lueur au lieu de points/un
+  multiplicateur.
+  - **Rainbow Glow** (`ArcEnCielLueur`, adapté d'Arc-en-ciel) : +6 Lueur
+    par ligne/colonne clearée contenant les 4 couleurs de base, stacking.
+  - **Glowing Alternation** (`AlternanceLueur`, adapté d'Alternance) : +4
+    Lueur par ligne/colonne clearée alternant entre exactement 2 couleurs.
+  - **Radiant Line** (`MonochromeLigneLueur`, adapté de Monochrome Ligne) :
+    +4 Lueur par ligne/colonne clearée entièrement d'une seule couleur —
+    le seul des 5 à récompenser l'INVERSE de ce que la Lueur favorise
+    normalement (une ligne monochrome ne vaut que peu de Lueur de base),
+    en contre-jeu délibéré.
+  - **Glowing Collector** (`CollectionneurLueur`, adapté de Collectionneur) :
+    +2 Lueur par couleur distincte parmi les cases clearées par cette pose.
+  - **Golden Repetition** (`RepetitionLueur`, adapté de Repetition) : +5
+    Lueur flat quand cette pièce a la même forme que la pose précédente
+    — contrairement à son homologue score (devenu progressif plus tôt
+    cette session), celui-ci reste volontairement plat.
+  - Architecture : nouveau champ `PlacementResult.ModifierLueurBonus`
+    (distinct de `LueurEarned`, dont le contrat "toujours exactement la
+    somme de LueurGroups" reste vrai) et nouveau
+    `ScoreEventType.LueurBonus`. `ApplyPreClearModifiers`/
+    `ApplyPostClearModifiers` gagnent un `out int lueurBonus` en plus du
+    `out int modifierMultiplier` existant. Nouveaux
+    `GridManager.ApplyPerLineLueur` (pendant Lueur de
+    `ApplyPerLineMultiplier`, mêmes prédicats réutilisés) et
+    `ApplyCollectionneurLueur`/`ApplyRepetitionLueur`. `RunManager.PlacePiece`
+    crédite `Lueur += placement.LueurEarned + placement.ModifierLueurBonus`
+    (au lieu de juste `LueurEarned`), et `CountModifierUsage` compte
+    aussi les events `LueurBonus` pour le tooltip "used N times".
+  - Présentation : `GameBootstrap.PlayPlacementSequence` gère
+    `ScoreEventType.LueurBonus` comme les autres events de modificateur
+    (pulse du badge) mais fait voler le popup "+N" vers le label Lueur du
+    HUD au lieu de l'ajouter au score — réutilise exactement le visuel
+    déjà utilisé par la boucle `LueurGroups` existante
+    (`FeedbackLayer.SpawnFlyingPopup`).
+  - `DescriptionTextFormatter` colore maintenant aussi le mot "Lueur" en
+    doré (`VisualDefaults.GoldenColor`), même logique que
+    points=bleu/multiplicateur=rouge.
+  - Nouveaux tests : 7 dans `GridManagerModifierTests.cs` (un par
+    modificateur + 2 cas "ne se déclenche pas") et
+    `RunManagerTests.RepetitionLueur_CreditsTheRunsLueurAndCountsAsUsed`
+    (régression de bout en bout : `RunManager.Lueur` ET
+    `GetModifierUsageCount` réagissent bien au nouveau type d'event, même
+    piège que celui déjà rencontré avec `ModifierMultiplier`).

@@ -91,7 +91,12 @@ namespace Contigu.Data
             { ModifierId.Minimaliste, "MN" },
             { ModifierId.Joker, "JK" },
             { ModifierId.Synergie, "SY" },
-            { ModifierId.Densite, "DS" }
+            { ModifierId.Densite, "DS" },
+            { ModifierId.ArcEnCielLueur, "RG" },
+            { ModifierId.AlternanceLueur, "GA" },
+            { ModifierId.MonochromeLigneLueur, "RD" },
+            { ModifierId.CollectionneurLueur, "GC" },
+            { ModifierId.RepetitionLueur, "GL" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

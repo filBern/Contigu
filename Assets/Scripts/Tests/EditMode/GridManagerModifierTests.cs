@@ -1695,5 +1695,140 @@ namespace Contigu.Tests
 
             Assert.AreEqual(0, result.ModifierBonus, "Without the Joker modifier, a Joker piece can't match any specific color");
         }
+
+        // ---- Eighth batch: Lueur-earning modifiers, each adapted from an
+        // existing score modifier above (same trigger condition, same board
+        // setups reused here) but paying PlacementResult.ModifierLueurBonus
+        // instead of ModifierBonus/ModifierMultiplier — see ModifierId's
+        // eighth batch.
+
+        [Test]
+        public void ArcEnCielLueur_EarnsLueurWhenAClearedLineContainsAllFourBaseColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.ArcEnCielLueur };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+
+            Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
+            Assert.AreEqual(EconomyConstants.ArcEnCielLueurPerLine, finalResult.ModifierLueurBonus);
+            Assert.AreEqual(1, finalResult.ModifierMultiplier, "Pays Lueur, not a score multiplier");
+        }
+
+        [Test]
+        public void ArcEnCielLueur_DoesNotFire_WhenClearedLineHasOnlyThreeDistinctColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.ArcEnCielLueur };
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
+
+            Assert.AreEqual(0, finalResult.ModifierLueurBonus);
+        }
+
+        [Test]
+        public void AlternanceLueur_EarnsLueurWhenClearedLineStrictlyAlternatesBetweenTwoColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.AlternanceLueur };
+
+            var pattern = new[]
+            {
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Coral, PieceColor.Teal,
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Coral
+            };
+            for (int x = 0; x < pattern.Length; x++)
+            {
+                grid.PlacePiece(single, pattern[x], x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, 7, 0, modifiers);
+
+            Assert.AreEqual(EconomyConstants.AlternanceLueurPerLine, finalResult.ModifierLueurBonus);
+        }
+
+        [Test]
+        public void MonochromeLigneLueur_EarnsLueurWhenTheEntireClearedLineIsOneColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MonochromeLigneLueur };
+
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
+            }
+            var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0, modifiers);
+
+            Assert.AreEqual(EconomyConstants.MonochromeLigneLueurPerLine, finalResult.ModifierLueurBonus);
+        }
+
+        [Test]
+        public void CollectionneurLueur_EarnsLueurPerDistinctClearedColor()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.CollectionneurLueur };
+
+            // Fill x=0..6 with 3 distinct colors, leaving x=7 to complete the row.
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 6, 0, modifiers);
+
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+
+            Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
+            Assert.AreEqual(4 * EconomyConstants.CollectionneurLueurPerColor, finalResult.ModifierLueurBonus);
+        }
+
+        [Test]
+        public void CollectionneurLueur_DoesNotFire_WhenPlacementClearsNoLine()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.CollectionneurLueur };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(0, result.ModifierLueurBonus);
+        }
+
+        [Test]
+        public void RepetitionLueur_EarnsAFlatBonusOnEachConsecutiveSameShapePlacement()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.RepetitionLueur };
+
+            var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(0, first.ModifierLueurBonus, "Round's first placement starts no streak yet");
+
+            var second = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
+            Assert.AreEqual(EconomyConstants.RepetitionLueurBonus, second.ModifierLueurBonus, "2nd consecutive Single in a row");
+
+            var third = grid.PlacePiece(single, PieceColor.Violet, 5, 5, modifiers);
+            Assert.AreEqual(EconomyConstants.RepetitionLueurBonus, third.ModifierLueurBonus, "3rd consecutive Single in a row too — flat, not progressive like Repetition's own score version");
+
+            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 6, modifiers);
+            Assert.AreEqual(0, broken.ModifierLueurBonus, "A different shape breaks the streak");
+        }
     }
 }

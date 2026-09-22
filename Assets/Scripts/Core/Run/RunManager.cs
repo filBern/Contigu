@@ -226,7 +226,10 @@ namespace Contigu.Core
             CountModifierUsage(placement);
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
-            Lueur += placement.LueurEarned;
+            // ModifierLueurBonus is a second, independent source of Lueur
+            // (see PlacementResult.ModifierLueurBonus) — the 5 Lueur-earning
+            // modifiers, on top of the line-clearing LueurEarned above.
+            Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
             // Don't auto-refill yet — if this placement also ends the round,
             // drawing the next 3 pieces here would hand them out before the
             // player has even picked this round's upgrade (see StartRound,
@@ -613,7 +616,7 @@ namespace Contigu.Core
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                bool isModifierEvent = scoreEvent.Type == ScoreEventType.Modifier || scoreEvent.Type == ScoreEventType.ModifierMultiplier;
+                bool isModifierEvent = scoreEvent.Type == ScoreEventType.Modifier || scoreEvent.Type == ScoreEventType.ModifierMultiplier || scoreEvent.Type == ScoreEventType.LueurBonus;
                 if (!isModifierEvent || !scoreEvent.TriggeringModifier.HasValue)
                 {
                     continue;

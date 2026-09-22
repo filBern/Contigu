@@ -120,6 +120,22 @@ namespace Contigu.Core
         public IReadOnlyList<LueurGroup> LueurGroups = System.Array.Empty<LueurGroup>();
 
         /// <summary>
+        /// Lueur earned from the player's active modifiers this placement —
+        /// a second, independent source of Lueur alongside <see
+        /// cref="LueurEarned"/> (spec extension, explicit request: "quelques
+        /// modifiers qui rapportent des lueur"). Kept as its own field
+        /// rather than folded into LueurEarned so that field's own
+        /// contract ("always exactly the sum of LueurGroups") stays true —
+        /// RunManager adds both together when crediting the run's Lueur
+        /// total. See <see cref="ScoreEventType.LueurBonus"/> for the
+        /// individual events behind this sum (one per qualifying
+        /// modifier occurrence, tagged with which one via <see
+        /// cref="ScoreEvent.TriggeringModifier"/>, same as <see
+        /// cref="ModifierBonus"/>/<see cref="ModifierMultiplier"/>).
+        /// </summary>
+        public int ModifierLueurBonus;
+
+        /// <summary>
         /// Every individual scoring contribution behind this placement's totals,
         /// in the order they occurred (golden bonuses, then group cells, then one
         /// entry per cleared cell) — lets the presentation layer show each point

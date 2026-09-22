@@ -361,6 +361,34 @@ namespace Contigu.Core
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
             "xn multiplier where n is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
 
+        // ---- Eighth batch: Lueur-earning modifiers, each adapted from an
+        // existing score modifier of the same shape instead of a new
+        // condition (on explicit request: "il faut ajouter quelques
+        // modifiers qui rapportent des lueur... tu peux t'inspirer des
+        // modifiers qu'on a déjà et les adapter en version bonus lueur") —
+        // same trigger condition as their inspiration, paying Lueur (the
+        // shop currency) instead of points/a multiplier.
+
+        public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
+            ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
+            "+6 Lueur per cleared row/column containing all 4 base colors, stacking.");
+
+        public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
+            ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
+            "+4 Lueur per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern), stacking.");
+
+        public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
+            ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
+            "+4 Lueur per cleared row/column that is entirely a single color, stacking.");
+
+        public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
+            ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Collector",
+            "+2 Lueur per distinct color among this placement's cleared cells.");
+
+        public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
+            ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
+            "+5 Lueur when this piece is the same shape as the immediately previous placement this round.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Puriste, Collectionneur,
@@ -372,7 +400,8 @@ namespace Contigu.Core
             SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
-            Synergie, Densite
+            Synergie, Densite,
+            ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur
         };
 
         public static ModifierDefinition Get(ModifierId id)

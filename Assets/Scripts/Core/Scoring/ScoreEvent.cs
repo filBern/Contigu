@@ -29,7 +29,10 @@ namespace Contigu.Core
         ModifierMultiplier,
 
         /// <summary>A bonus produced directly by a placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag the group-scoring loop picks up on its own.</summary>
-        Trait
+        Trait,
+
+        /// <summary>Lueur (not score) earned from one of the player's active modifiers — see <see cref="PlacementResult.ModifierLueurBonus"/>. Amount is Lueur, not points; flies to the Lueur label like <see cref="PlacementResult.LueurGroups"/> instead of adding to the score cascade.</summary>
+        LueurBonus
     }
 
     /// <summary>

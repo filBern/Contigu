@@ -1,23 +1,28 @@
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Wraps every mention of points (pts/point/points) in blue and every
-    /// mention of a multiplier (multiplier/multipliers/xN) in red across an
-    /// upgrade/modifier/piece-trait description — on explicit request ("à
-    /// chaque fois que le mot point apparait dans les description, que le
-    /// mot soit bleu et idem pour le rouge et le multiplicateur"), matching
-    /// the same blue=score/red=multiplier convention as the Balatro-style
-    /// chips/mult pills (see ComboView). Relies on Unity's legacy Text
-    /// component rich-text support (&lt;color=#RRGGBB&gt;...&lt;/color&gt;),
-    /// on by default and never disabled anywhere in this project's
-    /// UIFactory. Only recognizes the literal words themselves, not every
-    /// synonym ("doubles", "+18 flat") — a handful of upgrade descriptions
-    /// that phrase things differently simply stay uncolored.
+    /// Wraps every mention of points (pts/point/points) in blue, every
+    /// mention of a multiplier (multiplier/multipliers/xN) in red, and every
+    /// mention of Lueur in gold, across an upgrade/modifier/piece-trait
+    /// description — on explicit request ("à chaque fois que le mot point
+    /// apparait dans les description, que le mot soit bleu et idem pour le
+    /// rouge et le multiplicateur"), matching the same blue=score/red=
+    /// multiplier convention as the Balatro-style chips/mult pills (see
+    /// ComboView); Lueur added the same way once the currency got its own
+    /// modifiers to describe (see ModifierId's eighth batch), gold matching
+    /// VisualDefaults.GoldenColor/the HUD's own Lueur label. Relies on
+    /// Unity's legacy Text component rich-text support
+    /// (&lt;color=#RRGGBB&gt;...&lt;/color&gt;), on by default and never
+    /// disabled anywhere in this project's UIFactory. Only recognizes the
+    /// literal words themselves, not every synonym ("doubles", "+18 flat")
+    /// — a handful of upgrade descriptions that phrase things differently
+    /// simply stay uncolored.
     /// </summary>
     public static class DescriptionTextFormatter
     {
         private const string PointsColorHex = "65AED6"; // UITheme.ButtonSelected
         private const string MultiplierColorHex = "B56D7F"; // UITheme.Danger
+        private const string LueurColorHex = "F0B38D"; // VisualDefaults.GoldenColor
 
         public static string Colorize(string description)
         {
@@ -54,6 +59,10 @@ namespace Contigu.Presentation
             if (lower == "multiplier" || lower == "multipliers" || IsMultiplierFactor(lower))
             {
                 return Wrap(core, MultiplierColorHex) + trailing;
+            }
+            if (lower == "lueur")
+            {
+                return Wrap(core, LueurColorHex) + trailing;
             }
             return word;
         }

@@ -440,6 +440,28 @@ namespace Contigu.Presentation
                     continue;
                 }
 
+                if (scoreEvent.Type == ScoreEventType.LueurBonus)
+                {
+                    // Lueur (not score) from one of the player's active
+                    // modifiers (see PlacementResult.ModifierLueurBonus) — a
+                    // second, independent source of the same currency as the
+                    // LueurGroups loop above, so it reuses the exact same
+                    // flying-popup-to-the-Lueur-label visual, plus the usual
+                    // badge pulse every other modifier event gets.
+                    if (scoreEvent.TriggeringModifier.HasValue)
+                    {
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                            ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                        _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
+                        _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                    }
+                    displayedLueur += scoreEvent.Amount;
+                    _hudView.SetLueur(displayedLueur);
+                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+                    staggerSpeed *= ComboSpeedupFactor;
+                    continue;
+                }
+
                 // The tile(s) that actually earned this event's points always
                 // pulse — for a Modifier event this is on top of the badge
                 // pulse below, not instead of it (on explicit request). A

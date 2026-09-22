@@ -96,6 +96,16 @@ namespace Contigu.Core
         // running counter instead of firing at a fixed strength (on
         // explicit request) ----
         Synergie,
-        Densite
+        Densite,
+
+        // ---- Eighth batch: Lueur-earning modifiers, adapted from 5
+        // existing score modifiers (on explicit request: "il faut ajouter
+        // quelques modifiers qui rapportent des lueur... adapter [les
+        // modifiers qu'on a déjà] en version bonus lueur") ----
+        ArcEnCielLueur,
+        AlternanceLueur,
+        MonochromeLigneLueur,
+        CollectionneurLueur,
+        RepetitionLueur
     }
 }

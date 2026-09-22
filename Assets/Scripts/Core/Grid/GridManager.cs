@@ -272,10 +272,12 @@ namespace Contigu.Core
 
             int modifierBonus = 0;
             int modifierMultiplier = 1;
+            int modifierLueurBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur);
                 modifierMultiplier *= preMultiplier;
+                modifierLueurBonus += preLueur;
             }
 
             var clearInfo = CheckAndClearLines();
@@ -316,12 +318,14 @@ namespace Contigu.Core
 
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur);
                 modifierMultiplier *= postMultiplier;
+                modifierLueurBonus += postLueur;
             }
 
             result.ModifierBonus = modifierBonus;
             result.ModifierMultiplier = modifierMultiplier;
+            result.ModifierLueurBonus = modifierLueurBonus;
             // "Combo": reuses the exact same "did the previous placement
             // clear?" signal as Rafale, but multiplies the WHOLE placement's
             // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
@@ -420,7 +424,7 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
@@ -434,6 +438,7 @@ namespace Contigu.Core
 
             int total = 0;
             int multiplier = 1;
+            int lueur = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -597,6 +602,10 @@ namespace Contigu.Core
                         bonus = 0;
                         multiplier *= ApplyRepetition(repetitionStreak, placedCells, events);
                         break;
+                    case ModifierId.RepetitionLueur:
+                        bonus = 0;
+                        lueur += ApplyRepetitionLueur(repetitionStreak, placedCells, events);
+                        break;
                     case ModifierId.Synergie:
                         bonus = 0;
                         multiplier *= ApplySynergie(activeModifiers.Count, placedCells, events);
@@ -634,6 +643,7 @@ namespace Contigu.Core
                 total += bonus;
             }
             modifierMultiplier = multiplier;
+            lueurBonus = lueur;
             return total;
         }
 
@@ -1095,6 +1105,18 @@ namespace Contigu.Core
             return repetitionStreak;
         }
 
+        /// <summary>Golden Repetition (RepetitionLueur): flat Lueur (see EconomyConstants.RepetitionLueurBonus) when this piece is the same shape as the immediately previous placement this round — the Lueur-earning sibling of Repetition, on the same "does this streak continue" condition but unlike it, not progressive (repeats the same flat amount every time it fires rather than scaling with streak length). Returns 0 (no-op) on the first placement of a new streak.</summary>
+        private static int ApplyRepetitionLueur(int repetitionStreak, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (repetitionStreak < 2)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], EconomyConstants.RepetitionLueurBonus));
+            return EconomyConstants.RepetitionLueurBonus;
+        }
+
         /// <summary>Synergy (Synergie): xN multiplier where N is the total number of modifiers currently held (this one included, and every duplicate copy of any modifier counts separately) — grows automatically as the player picks up more modifiers.</summary>
         private static int ApplySynergie(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -1292,10 +1314,11 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus)
         {
             int total = 0;
             int multiplier = 1;
+            int lueur = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -1305,6 +1328,10 @@ namespace Contigu.Core
                 {
                     case ModifierId.Collectionneur:
                         bonus = ApplyCollectionneur(clearInfo, placedCells, events);
+                        break;
+                    case ModifierId.CollectionneurLueur:
+                        bonus = 0;
+                        lueur += ApplyCollectionneurLueur(clearInfo, placedCells, events);
                         break;
                     case ModifierId.Macon:
                         bonus = 0;
@@ -1318,9 +1345,17 @@ namespace Contigu.Core
                         bonus = 0;
                         multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine);
                         break;
+                    case ModifierId.ArcEnCielLueur:
+                        bonus = 0;
+                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, ContainsAllBaseColors, EconomyConstants.ArcEnCielLueurPerLine);
+                        break;
                     case ModifierId.Alternance:
                         bonus = 0;
                         multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceMultiplierPerLine);
+                        break;
+                    case ModifierId.AlternanceLueur:
+                        bonus = 0;
+                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, IsAlternatingTwoColors, EconomyConstants.AlternanceLueurPerLine);
                         break;
                     case ModifierId.Palindrome:
                         bonus = 0;
@@ -1337,6 +1372,10 @@ namespace Contigu.Core
                     case ModifierId.MonochromeLigne:
                         bonus = 0;
                         multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneMultiplierPerLine);
+                        break;
+                    case ModifierId.MonochromeLigneLueur:
+                        bonus = 0;
+                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine);
                         break;
                     case ModifierId.EspaceLibre:
                         bonus = 0;
@@ -1358,6 +1397,7 @@ namespace Contigu.Core
                 total += bonus;
             }
             modifierMultiplier = multiplier;
+            lueurBonus = lueur;
             return total;
         }
 
@@ -1569,6 +1609,25 @@ namespace Contigu.Core
             int bonus = distinctColors.Count * ScoringConstants.CollectionneurBonusPerColor;
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
             return bonus;
+        }
+
+        /// <summary>Glowing Collector (CollectionneurLueur): Lueur (see EconomyConstants.CollectionneurLueurPerColor) per distinct color among this placement's cleared cells — the Lueur-earning sibling of Collectionneur, same distinct-color count, same trigger condition (no cleared cells this placement = 0, no event).</summary>
+        private int ApplyCollectionneurLueur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (clearInfo.ClearedCellColors.Count == 0)
+            {
+                return 0;
+            }
+
+            var distinctColors = new HashSet<PieceColor>();
+            for (int i = 0; i < clearInfo.ClearedCellColors.Count; i++)
+            {
+                distinctColors.Add(clearInfo.ClearedCellColors[i]);
+            }
+
+            int lueur = distinctColors.Count * EconomyConstants.CollectionneurLueurPerColor;
+            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], lueur));
+            return lueur;
         }
 
         /// <summary>Tricolore: xN multiplier (see ScoringConstants.TricoloreMultiplier) when the placement (itself + its direct neighbors) touches exactly TricoloreExactDistinctColors distinct non-joker colors. Returns 1 (no-op) otherwise.</summary>
@@ -1902,6 +1961,24 @@ namespace Contigu.Core
                 multiplier *= multiplierPerLine;
             }
             return multiplier;
+        }
+
+        /// <summary>Shared driver for the 3 Lueur-earning line-pattern modifiers (ArcEnCielLueur/AlternanceLueur/MonochromeLigneLueur) — same idea as ApplyPerLineMultiplier above, reusing the exact same predicates, but adds flat Lueur per qualifying cleared line instead of multiplying a score factor.</summary>
+        private int ApplyPerLineLueur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int lueurPerLine)
+        {
+            int total = 0;
+            var lines = clearInfo.ClearedLines;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (!predicate(lines[i].Colors))
+                {
+                    continue;
+                }
+
+                events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], lueurPerLine));
+                total += lueurPerLine;
+            }
+            return total;
         }
 
         /// <summary>
