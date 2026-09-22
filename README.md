@@ -2899,3 +2899,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Les ~60 autres modificateurs n'ont pas encore d'art et continuent de
     montrer leur chip/abréviation comme avant — ajouter une icône plus
     tard ne demande qu'une entrée de plus dans `Icons`.
+- **`TooltipView` : ne cache plus jamais l'icône survolée + hauteur
+  dynamique** (demande explicite : "Le tooltip est dans le chemin et
+  moche. Je propose qu'il ne soit jamais pas dessus l'icon qu'on est en
+  train d'essayer de comprendre. Aussi, j'aimerais que la hauteur du
+  tooltip soit dynamique pour qu'il 'fit' avec la longueur du texte") —
+  deux problèmes distincts, corrigés ensemble dans `TooltipView.cs` :
+  - **Recouvrement** : `PositionNear` décalait le panneau d'une simple
+    marge fixe (16px) depuis le CENTRE de l'icône survolée (badge
+    `anchor.position`) — pour une icône de ~40-56px, ce décalage plaçait
+    le coin du tooltip encore À L'INTÉRIEUR de l'icône. Le calcul tient
+    maintenant compte de la taille réelle de l'ancre (`anchor.rect`) : le
+    tooltip démarre entièrement à DROITE de l'icône (bord droit de
+    l'icône + marge), et bascule à GAUCHE si la place manque à droite —
+    pour ne jamais se faire repousser par-dessus l'icône par l'ancien
+    clamp de bord d'écran.
+  - **Hauteur dynamique** : la hauteur du panneau (et de la zone de
+    description) n'est plus la constante fixe `Height = 150f` mais
+    calculée à chaque `Show()` via `Text.preferredHeight` de la
+    description — `UIFactory.CreateText` met déjà `horizontalOverflow =
+    Wrap` sur tout texte créé, donc `preferredHeight` reflète le
+    wrapping réel à la largeur fixe du panneau (300px). La largeur reste
+    fixe (seule la hauteur devait "fit"), et est réglée une seule fois
+    au `Build()` pour que le tout premier `Show()` mesure déjà avec la
+    bonne largeur.

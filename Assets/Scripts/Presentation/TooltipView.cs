@@ -12,7 +12,9 @@ namespace Contigu.Presentation
     public sealed class TooltipView : MonoBehaviour
     {
         private const float Width = 300f;
-        private const float Height = 150f;
+        // Only used as a placeholder before the first real Show() call sets
+        // an actual (dynamic) height — see Show().
+        private const float InitialHeight = 150f;
         private const float Padding = 10f;
         private const float ShowMargin = 16f;
         private const float NameHeight = 24f;
@@ -42,7 +44,7 @@ namespace Contigu.Presentation
             _panel.anchorMin = new Vector2(0.5f, 0.5f);
             _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0f, 1f);
-            _panel.sizeDelta = new Vector2(Width, Height);
+            _panel.sizeDelta = new Vector2(Width, InitialHeight);
             var panelOutline = panelImg.gameObject.AddComponent<Outline>();
             panelOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             panelOutline.effectDistance = new Vector2(2f, -2f);
@@ -70,6 +72,10 @@ namespace Contigu.Presentation
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _descLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            // Width fixed here (never changes — only height varies per Show()
+            // call) so it's already correct the very first time Show() reads
+            // preferredHeight, before that call gets to set it itself.
+            _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -97,8 +103,18 @@ namespace Contigu.Presentation
 
             float usedHeight = NameHeight + (hasSubtitle ? SubtitleHeight : 0f);
             _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - usedHeight);
-            _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, Height - Padding * 2f - usedHeight);
             _descLabel.text = description;
+
+            // Height fits the actual description length instead of a fixed
+            // constant (explicit request: "j'aimerais que la hauteur du
+            // tooltip soit dynamique pour qu'il fit avec la longueur du
+            // texte"). Text.preferredHeight already reflects wrapping at the
+            // label's current (fixed) width, since UIFactory.CreateText sets
+            // horizontalOverflow = Wrap on every Text it builds — the panel's
+            // own width never changes, only its height.
+            float descHeight = _descLabel.preferredHeight;
+            _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, descHeight);
+            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight);
 
             _root.gameObject.SetActive(true);
             // Always render above whatever else is on screen, including
@@ -118,11 +134,26 @@ namespace Contigu.Presentation
             var screenPoint = RectTransformUtility.WorldToScreenPoint(null, anchor.position);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, screenPoint, null, out var localPoint);
 
+            float panelHeight = _panel.rect.height;
             float halfW = _root.rect.width / 2f;
             float halfH = _root.rect.height / 2f;
 
-            float x = Mathf.Clamp(localPoint.x + ShowMargin, -halfW, halfW - Width);
-            float y = Mathf.Clamp(localPoint.y + ShowMargin, -halfH + Height, halfH);
+            // Never sit on top of the icon being inspected (explicit
+            // request: "je propose qu'il ne soit jamais dessus l'icon qu'on
+            // est en train d'essayer de comprendre") — clear the anchor's
+            // own bounds entirely rather than just nudging by a flat margin
+            // from its center, and flip to its left side when there isn't
+            // room to its right, so it's never pushed back over the anchor
+            // by the screen-edge clamp below.
+            float anchorHalfW = anchor.rect.width * 0.5f;
+            float anchorHalfH = anchor.rect.height * 0.5f;
+
+            float rightX = localPoint.x + anchorHalfW + ShowMargin;
+            float leftX = localPoint.x - anchorHalfW - ShowMargin - Width;
+            float x = rightX + Width <= halfW ? rightX : leftX;
+            x = Mathf.Clamp(x, -halfW, halfW - Width);
+
+            float y = Mathf.Clamp(localPoint.y + anchorHalfH + ShowMargin, -halfH + panelHeight, halfH);
             _panel.anchoredPosition = new Vector2(x, y);
         }
     }
