@@ -2923,3 +2923,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     fixe (seule la hauteur devait "fit"), et est réglée une seule fois
     au `Build()` pour que le tout premier `Show()` mesure déjà avec la
     bonne largeur.
+- **Cartes de modificateurs du shop : nom + description sur la carte,
+  fond coloré retiré** (demande explicite : "dans le shop, les 'cartes'
+  de modifiers on peut rajouter le nom en haut de l'icon et sa
+  description sous son icon. Peux-tu enlever le carré coloré derrière
+  l'icon aussi?") — jusqu'ici une carte modificateur du shop ne montrait
+  que le badge (chip coloré + icône/abréviation) et le bouton Acheter ;
+  nom et description n'apparaissaient que dans le tooltip au survol.
+  - `ModifierBadgeFactory.Create` gagne un paramètre optionnel
+    `showBackground = true` : à `false`, ni le chip category-coloré ni
+    son contour ne sont créés — seule l'icône/silhouette/tuile/
+    abréviation brute reste. Les autres appelants (panneau latéral
+    persistant) ne passent pas ce paramètre et gardent leur chip coloré
+    inchangé.
+  - `ShopView.BuildModifierCard` ajoute un label `Name` (16pt) juste
+    au-dessus de l'icône et un label `Desc` (12pt, coloré via
+    `DescriptionTextFormatter.Colorize` comme partout ailleurs) juste en
+    dessous, et appelle `ModifierBadgeFactory.Create(..., showBackground:
+    false)`.
+  - **Hauteur de carte dynamique en 2 passes** (même philosophie que le
+    fix du tooltip juste au-dessus, et même technique que
+    `UpgradeCardFactory.PreferredHeight` déjà utilisée ailleurs dans le
+    projet) : les descriptions vont de ~30 à ~210 caractères selon le
+    modificateur (ex. Répétition/Gradient, les 2 plus récents, sont les
+    plus longues), donc une hauteur fixe aurait soit gâché de l'espace
+    soit fait déborder le texte par-dessus le bouton Acheter. Passe 1 :
+    `BuildModifierCard` construit chaque carte et mesure la hauteur
+    naturelle (wrappée) de SA propre description sans dépendre de l'ordre
+    d'exécution. Passe 2 : `BuildModifierCards` applique la plus grande
+    hauteur trouvée à TOUTES les cartes de la rangée (et à leur zone de
+    description), pour que le bouton Acheter reste toujours à la même
+    hauteur peu importe quels 3 modificateurs sont actuellement proposés.
+  - Les cartes d'upgrade (mystery box) ne sont pas concernées — elles
+    gardent leur `CardHeight` fixe existante (elles n'ont ni nom ni
+    description avant achat).

@@ -30,14 +30,23 @@ namespace Contigu.Presentation
         /// creation time, since it keeps changing after the badge is built).
         /// Only the persistent side panel passes one; draft-card badges
         /// (modifiers not picked yet) leave it null and show no usage line.
+        /// <paramref name="showBackground"/> defaults to true (the usual
+        /// category-colored chip + outline); the shop's own modifier cards
+        /// pass false to show just the bare icon/preview/abbreviation
+        /// instead, on explicit request ("Peux-tu enlever le carré coloré
+        /// derrière l'icon aussi?" — the card now carries the name/
+        /// description as its own text, so the chip read as redundant).
         /// </summary>
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null)
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true)
         {
-            var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, ModifierVisualDefaults.GetCategoryColor(def.Category));
+            var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
-            var badgeOutline = badge.gameObject.AddComponent<Outline>();
-            badgeOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            if (showBackground)
+            {
+                var badgeOutline = badge.gameObject.AddComponent<Outline>();
+                badgeOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                badgeOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            }
 
             var icon = ModifierVisualDefaults.GetIcon(def.Id);
             var specialistShape = ModifierVisualDefaults.GetSpecialistShape(def.Id);

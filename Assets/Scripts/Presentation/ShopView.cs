@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -18,8 +19,26 @@ namespace Contigu.Presentation
     public sealed class ShopView : MonoBehaviour
     {
         private const float CardWidth = 190f;
+        // Upgrade ("mystery box") cards only — modifier cards now size
+        // themselves dynamically to fit their name/description, see
+        // BuildModifierCards.
         private const float CardHeight = 200f;
         private const float BadgeSize = 90f;
+        private const float BuyButtonHeight = 36f;
+        private const float BuyButtonBottomMargin = 12f;
+
+        // Modifier card layout (on explicit request: "on peut rajouter le
+        // nom en haut de l'icon et sa description sous son icon" — the card
+        // used to show only the badge + buy button, name/description only
+        // ever appeared in the hover tooltip).
+        private const float ModifierCardTopPadding = 10f;
+        private const float ModifierCardGap = 6f;
+        private const float ModifierNameHeight = 26f;
+        private const int ModifierDescFontSize = 12;
+        // Floor for the description box even when every current slot's
+        // description happens to be very short, so the card never looks
+        // collapsed.
+        private const float ModifierDescMinHeight = 40f;
 
         public event Action<int> ModifierBuyRequested;
         public event Action<int> UpgradeBuyRequested;
@@ -134,11 +153,7 @@ namespace Contigu.Presentation
         {
             _lueurLabel.text = "Lueur: " + run.Lueur;
 
-            ClearChildren(_modifierCardsContainer);
-            for (int i = 0; i < run.ShopModifierSlots.Count; i++)
-            {
-                BuildModifierCard(run, i);
-            }
+            BuildModifierCards(run);
 
             ClearChildren(_upgradeCardsContainer);
             for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
@@ -160,35 +175,113 @@ namespace Contigu.Presentation
             }
         }
 
-        private void BuildModifierCard(RunManager run, int index)
+        /// <summary>
+        /// Builds all modifier cards in 2 passes so they share one uniform
+        /// height even though each card's description text is a different
+        /// length: pass 1 builds every card and measures its own
+        /// description's natural (wrapped) height via Text.preferredHeight-
+        /// style generation settings (same technique as
+        /// UpgradeCardFactory.PreferredHeight); pass 2 applies the tallest
+        /// one found to every card and its description box, so the buy
+        /// button always lands at the same Y across the row regardless of
+        /// which modifiers are currently offered.
+        /// </summary>
+        private void BuildModifierCards(RunManager run)
+        {
+            ClearChildren(_modifierCardsContainer);
+
+            var cardRects = new List<RectTransform>(run.ShopModifierSlots.Count);
+            var descRects = new List<RectTransform>(run.ShopModifierSlots.Count);
+            float maxDescHeight = ModifierDescMinHeight;
+
+            for (int i = 0; i < run.ShopModifierSlots.Count; i++)
+            {
+                float descHeight = BuildModifierCard(run, i, out var cardRect, out var descRect);
+                cardRects.Add(cardRect);
+                descRects.Add(descRect);
+                if (descHeight > maxDescHeight)
+                {
+                    maxDescHeight = descHeight;
+                }
+            }
+
+            float cardHeight = ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap
+                + BadgeSize + ModifierCardGap + maxDescHeight + ModifierCardGap
+                + BuyButtonHeight + BuyButtonBottomMargin;
+
+            for (int i = 0; i < cardRects.Count; i++)
+            {
+                cardRects[i].sizeDelta = new Vector2(CardWidth, cardHeight);
+                cardRects[i].GetComponent<LayoutElement>().preferredHeight = cardHeight;
+                if (descRects[i] != null)
+                {
+                    descRects[i].sizeDelta = new Vector2(descRects[i].sizeDelta.x, maxDescHeight);
+                }
+            }
+        }
+
+        /// <summary>Builds one modifier card's contents (name, bare icon, description, buy button) and returns its description's own natural height — <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildModifierCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height.</summary>
+        private float BuildModifierCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
         {
             var slot = run.ShopModifierSlots[index];
             var card = UIFactory.CreatePanel(_modifierCardsContainer, "ModSlot_" + index, UITheme.PanelLight);
-            card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
+            cardRect = card.rectTransform;
+            cardRect.sizeDelta = new Vector2(CardWidth, 0f);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
-            cardLayout.preferredHeight = CardHeight;
             var outline = card.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
             outline.effectDistance = new Vector2(2f, -2f);
 
+            descRect = null;
             if (slot == null)
             {
-                return;
+                return 0f;
             }
 
             var def = ModifierCatalog.Get(slot.ModifierId);
-            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip);
+
+            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
+            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -ModifierCardTopPadding);
+            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, ModifierNameHeight);
+
+            // No colored background (explicit request: "enlever le carré
+            // coloré derrière l'icon") — the card now carries the name and
+            // description as its own text, so the category-colored chip
+            // read as redundant clutter.
+            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip, showBackground: false);
             badge.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             badge.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             badge.rectTransform.pivot = new Vector2(0.5f, 1f);
-            badge.rectTransform.anchoredPosition = new Vector2(0f, -14f);
+            float badgeY = -(ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap);
+            badge.rectTransform.anchoredPosition = new Vector2(0f, badgeY);
+
+            float descWidth = CardWidth - 16f;
+            var descLabel = UIFactory.CreateText(card.transform, "Desc", DescriptionTextFormatter.Colorize(def.Description), ModifierDescFontSize, UITheme.TextPrimary);
+            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, badgeY - (BadgeSize + ModifierCardGap));
+            descLabel.rectTransform.sizeDelta = new Vector2(descWidth, 0f);
+            descRect = descLabel.rectTransform;
 
             int price = run.GetModifierSlotPrice(index);
             bool atCap = run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             BuildBuyButton(card.transform, slot.Purchased, atCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(),
                 !slot.Purchased && !atCap && run.PendingUpgrade == null && run.Lueur >= price,
                 () => OnModifierBuyClicked(index));
+
+            return PreferredHeight(descLabel, descWidth);
+        }
+
+        /// <summary>Same technique as UpgradeCardFactory.PreferredHeight — the wrapped text height a Text component would need at a given width, without requiring its RectTransform to already have that width applied.</summary>
+        private static float PreferredHeight(Text text, float width)
+        {
+            var settings = text.GetGenerationSettings(new Vector2(width, 0f));
+            return text.cachedTextGenerator.GetPreferredHeight(text.text, settings);
         }
 
         private void BuildUpgradeCard(RunManager run, int index)
@@ -272,8 +365,8 @@ namespace Contigu.Presentation
             buyRect.anchorMin = new Vector2(0.5f, 0f);
             buyRect.anchorMax = new Vector2(0.5f, 0f);
             buyRect.pivot = new Vector2(0.5f, 0f);
-            buyRect.anchoredPosition = new Vector2(0f, 12f);
-            buyRect.sizeDelta = new Vector2(CardWidth - 24f, 36f);
+            buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
+            buyRect.sizeDelta = new Vector2(CardWidth - 24f, BuyButtonHeight);
             buyBtn.interactable = !purchased && interactable;
             buyBtn.onClick.AddListener(() => onClick());
         }
