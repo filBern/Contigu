@@ -35,7 +35,6 @@ namespace Contigu.Core
         /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling.</summary>
         public const int MaxActiveModifiers = 10;
 
-        public const int ModifierShopBasePrice = 8;
         public const int BankUpgradeShopBasePrice = 3;
         public const int GridUpgradeShopBasePrice = 3;
 

@@ -3197,3 +3197,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   GroupMultiplier/LineClearMultiplier (case dorée / zone multiplicateur
   — un effet de TUILE, pas un modifier acheté) reste bleu, hors du
   périmètre de la demande.
+- **Prix des modifiers variable selon rareté/puissance (4 à 10)**
+  (demande explicite : "à force de jouer, il faudrait que les
+  modifiers ne soient pas tous le même prix, en fonction de leur
+  rareté et de leur puissance (entre 4 et 10)") — jusqu'ici, TOUS les
+  ~95 modifiers coûtaient le même prix de base fixe
+  (`EconomyConstants.ModifierShopBasePrice = 8`, maintenant retiré).
+  Nouveau `ModifierPricing.GetPrice(ModifierId)` : une table exhaustive
+  (switch couvrant les 95 IDs) plutôt qu'un 5e paramètre sur les ~95
+  appels de constructeur `ModifierDefinition` existants — garde le
+  pricing comme un souci autonome, facile à re-régler séparément.
+  Chaque prix est une note de jugement de design (4-5 = déclenchement
+  facile/courant avec un gain modeste ; 6-7 = x2 solide sous une
+  condition assez courante, ou un gros bonus plat sous une plus dure ;
+  8 = multiplicateurs x3, multiplicateurs de ligne qui stack, ou effet
+  inconditionnel fort ; 9-10 = les plus rares/puissants — effets
+  permanents (Gradient), conditions extrêmement dures à gros gain
+  (Cercle Chromatique), et les pièces moteur les plus fortes sur toute
+  la durée du run (Synergie, Copieur, Mult +4)). `RunManager.GetModifierSlotPrice`
+  utilise maintenant ce prix comme base, avec la même escalade par
+  achat qu'avant (`ComputePrice`) — exactement le même pattern que
+  `GetUpgradeSlotPrice` fait déjà varier son prix de base selon le pool
+  (Bank/Grid). Comme le switch de `ModifierPricing` ne peut pas être
+  vérifié exhaustif par le compilateur C#, un nouveau test
+  (`ModifierPricingTests.GetPrice_CoversEveryCatalogEntry_WithAValidPrice`)
+  vérifie que chaque entrée de `ModifierCatalog.All` a un prix dans
+  [4, 10] — un modifier qui manquerait son propre cas tomberait sur un
+  `default` sentinelle (-1), hors intervalle, faisant échouer le test
+  plutôt que de silencieusement réutiliser le prix d'un autre modifier.

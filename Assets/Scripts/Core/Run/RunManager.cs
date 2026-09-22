@@ -1139,10 +1139,14 @@ namespace Contigu.Core
             return ShopSlot.ForUpgrade(upgrade);
         }
 
-        /// <summary>Current Lueur price of modifier slot <paramref name="index"/>, including this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
+        /// <summary>Current Lueur price of modifier slot <paramref name="index"/> — varies per modifier (see ModifierPricing, on explicit request), including this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
         public int GetModifierSlotPrice(int index)
         {
-            return ComputePrice(EconomyConstants.ModifierShopBasePrice);
+            if (index < 0 || index >= _modifierSlots.Length || _modifierSlots[index] == null)
+            {
+                return 0;
+            }
+            return ComputePrice(ModifierPricing.GetPrice(_modifierSlots[index].ModifierId));
         }
 
         /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation.</summary>

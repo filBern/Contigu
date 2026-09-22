@@ -282,6 +282,32 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void GetModifierSlotPrice_MatchesModifierPricing_BeforeAnyPurchaseThisVisit()
+        {
+            // No purchase yet this visit, so the usual escalation is a no-op
+            // (see RunManager.ComputePrice) and the slot's price should be
+            // exactly ModifierPricing's base price for whatever it's offering.
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            for (int i = 0; i < run.ShopModifierSlots.Count; i++)
+            {
+                int expected = ModifierPricing.GetPrice(run.ShopModifierSlots[i].ModifierId);
+                Assert.AreEqual(expected, run.GetModifierSlotPrice(i), "Slot " + i);
+            }
+        }
+
+        [Test]
+        public void GetModifierSlotPrice_ReturnsZero_ForAnOutOfRangeIndex()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+
+            Assert.AreEqual(0, run.GetModifierSlotPrice(-1));
+            Assert.AreEqual(0, run.GetModifierSlotPrice(run.ShopModifierSlots.Count));
+        }
+
+        [Test]
         public void RerollShop_ReplacesEverySlot_IncludingAlreadyPurchasedOnes()
         {
             // Used to leave a purchased slot exactly as it was ("SOLD"
