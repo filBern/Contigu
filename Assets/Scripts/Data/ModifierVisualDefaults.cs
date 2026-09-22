@@ -90,7 +90,6 @@ namespace Contigu.Data
             { ModifierId.Surpopulation, "SP" },
             { ModifierId.Minimaliste, "MN" },
             { ModifierId.Joker, "JK" },
-            { ModifierId.Synergie, "SY" },
             { ModifierId.Densite, "DS" },
             { ModifierId.ArcEnCielLueur, "RG" },
             { ModifierId.AlternanceLueur, "GA" },

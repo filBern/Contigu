@@ -2094,17 +2094,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GetProgressiveModifierStateText_Synergie_ReflectsTotalModifiersHeld()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugGrantModifier(ModifierId.Synergie);
-            run.DebugGrantModifier(ModifierId.MultUn);
-            run.DebugGrantModifier(ModifierId.MultDeux);
-
-            Assert.AreEqual("Currently +3 Mult", run.GetProgressiveModifierStateText(ModifierId.Synergie));
-        }
-
-        [Test]
         public void GetProgressiveModifierStateText_Solidarite_ReflectsTotalModifiersHeld()
         {
             var run = new RunManager(new SystemRandomProvider(1));

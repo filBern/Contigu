@@ -1495,32 +1495,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Synergie_AddsMultEqualToTheTotalNumberOfModifiersHeld()
-        {
-            // +N Mult (additive, see PlacementResult.AdditiveMultBonus),
-            // not "xN" — converted on explicit request ("le modifier
-            // synerge, on devrait faire +N au lieu de xN"), making it
-            // Solidarite's exact twin (see Solidarite_AddsMultEqualTo...
-            // further down, same math).
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-
-            var alone = new List<ModifierId> { ModifierId.Synergie };
-            var solo = grid.PlacePiece(single, PieceColor.Coral, 0, 0, alone);
-            Assert.AreEqual(1, solo.AdditiveMultBonus, "Synergie alone counts only itself");
-
-            // Couronne/Encerclement are purely additive (ModifierBonus), never
-            // touch AdditiveMultBonus, so they can't contaminate this count.
-            var withOthers = new List<ModifierId> { ModifierId.Synergie, ModifierId.Couronne, ModifierId.Encerclement };
-            var withThree = grid.PlacePiece(single, PieceColor.Teal, 3, 3, withOthers);
-            Assert.AreEqual(3, withThree.AdditiveMultBonus, "3 modifiers held in total");
-
-            var duplicated = new List<ModifierId> { ModifierId.Synergie, ModifierId.Synergie };
-            var stacked = grid.PlacePiece(single, PieceColor.Violet, 5, 5, duplicated);
-            Assert.AreEqual(4, stacked.AdditiveMultBonus, "Each of the 2 held copies independently adds the count (2), stacking to 4");
-        }
-
-        [Test]
         public void Densite_MultiplierGrowsWithHowManyCellsAreFilledOnTheBoard()
         {
             var grid = new GridManager();

@@ -3475,3 +3475,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     maintenant le multiset des montants (1, 2, 3 × GroupBonusPerCell) au
     lieu d'un montant unique partagé, puisque l'ordre exact de parcours
     du flood-fill n'est pas garanti.
+- **Retrait complet du modifier Synergie** (demande explicite : "On peut
+  retirer le modifier Synergie") — supprimé plutôt que désactivé, sur
+  toute la chaîne : `ModifierId.Synergie` (enum), sa
+  `ModifierDefinition` et son entrée dans `ModifierCatalog.All`, son
+  prix dans `ModifierPricing`, son abréviation `"SY"` dans
+  `ModifierVisualDefaults`, son `case` de scoring et sa méthode
+  `GridManager.ApplySynergie`, et son `case` d'affichage progressif
+  dans `RunManager.GetProgressiveModifierStateText` — n'apparaît donc
+  plus nulle part : ni en draft, ni en shop, ni chez un run existant qui
+  en aurait déjà une copie (elle disparaît simplement de la liste de
+  modifiers actifs, `ActiveModifiers` étant une `List<ModifierId>`
+  quelconque plutôt qu'indexée sur l'enum). Les tests qui la
+  couvraient (`Synergie_AddsMultEqualToTheTotalNumberOfModifiersHeld`
+  dans `GridManagerModifierTests.cs`,
+  `GetProgressiveModifierStateText_Synergie_ReflectsTotalModifiersHeld`
+  dans `RunManagerTests.cs`) sont retirés — la couverture de son
+  ancienne mécanique "+N Mult scalant avec le nombre de modifiers
+  détenus" reste assurée par les tests équivalents de Solidarité
+  (`Solidarite_AddsMultEqualToTotalModifierCountHeld`,
+  `GetProgressiveModifierStateText_Solidarite_ReflectsTotalModifiersHeld`),
+  qui avait exactement la même mécanique depuis la conversion xN→+N
+  ci-dessus.

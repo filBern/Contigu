@@ -361,10 +361,6 @@ namespace Contigu.Core
         // tuile sur la grille)") — Repetition (above) was adapted the same
         // way instead of being duplicated. ----
 
-        public static readonly ModifierDefinition Synergie = new ModifierDefinition(
-            ModifierId.Synergie, ModifierCategory.Roguelike, "Synergy",
-            "+n Mult where n is your total number of modifiers held, this one included.");
-
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
             "xn multiplier where n is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
@@ -493,7 +489,7 @@ namespace Contigu.Core
             SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
-            Synergie, Densite,
+            Densite,
             ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur,
             MultUn, MultDeux, MultQuatre,
             FormeSinglePoints, FormeDomHPoints, FormeDomVPoints, FormeTriLPoints, FormeTriIHPoints, FormeTriIVPoints, FormeSq2Points, FormeLTetroPoints, FormeTTetroPoints, FormeSTetroPoints,

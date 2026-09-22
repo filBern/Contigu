@@ -64,7 +64,7 @@ namespace Contigu.Presentation
                 : null;
             string description = DescriptionTextFormatter.Colorize(_def.Description);
             // Progressive/incremental modifiers (Gradient, Repetition,
-            // Synergie, Densité, Épuisement, Cartes Enchantées, Multitude,
+            // Densité, Épuisement, Cartes Enchantées, Multitude,
             // Solidarité, Experience) get an extra line showing their
             // CURRENT effective state (on explicit request: "il faut
             // afficher dans le tooltip l'état progressif du modifier (ex:

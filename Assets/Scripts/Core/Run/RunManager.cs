@@ -93,7 +93,7 @@ namespace Contigu.Core
         /// tooltip l'état progressif du modifier (ex: Currently x2.3)") —
         /// null for every modifier whose bonus is fixed and doesn't grow or
         /// shrink over the round/run (that's most of them). Modifiers whose
-        /// counter is a genuine whole number (Gradient, Repetition, Synergie,
+        /// counter is a genuine whole number (Gradient, Repetition,
         /// Solidarite, Epuisement, Multitude) show a plain integer; Densite
         /// shows its TRUE float multiplicative factor now actually applied
         /// to the score (see PlacementResult.ProgressiveMultiplier — on
@@ -119,8 +119,6 @@ namespace Contigu.Core
                     return "Currently x" + Grid.GradientCurrentMultiplier;
                 case ModifierId.Repetition:
                     return "Currently x" + Grid.RepetitionCurrentMultiplier;
-                case ModifierId.Synergie:
-                    return "Currently +" + _activeModifiers.Count + " Mult";
                 case ModifierId.Densite:
                     return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep));
                 case ModifierId.Epuisement:

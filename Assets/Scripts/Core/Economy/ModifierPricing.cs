@@ -123,7 +123,6 @@ namespace Contigu.Core
                 case ModifierId.Joker: return 7;
 
                 // ---- Seventh batch: progressive engine pieces ----
-                case ModifierId.Synergie: return 8; // +N Mult scaling with total modifiers held — Solidarite's exact twin, same price
                 case ModifierId.Densite: return 8;
 
                 // ---- Eighth batch: Lueur-earning (economy, not score) ----

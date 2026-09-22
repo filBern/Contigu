@@ -95,7 +95,6 @@ namespace Contigu.Core
         // ---- Seventh batch: progressive modifiers that scale with a
         // running counter instead of firing at a fixed strength (on
         // explicit request) ----
-        Synergie,
         Densite,
 
         // ---- Eighth batch: Lueur-earning modifiers, adapted from 5
@@ -114,8 +113,8 @@ namespace Contigu.Core
         // ModifierMultiplier modifier above); a new "+pts" counterpart for
         // each of the 10 Forme* shapes (Devotion/Éclat already covered
         // this split for colors, Forme* only had one version); Solidarite
-        // (Synergie's additive-mult twin); Copieur (copies whichever
-        // modifier was bought immediately before it); a risk/reward +5
+        // (+N Mult scaling with total modifiers held); Copieur (copies
+        // whichever modifier was bought immediately before it); a risk/reward +5
         // mult with a chance to be lost at round end; a mult bonus scaling
         // with upgraded cards in the deck; a decaying flat points bonus;
         // and a flat points bonus scaling with total deck size. See

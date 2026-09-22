@@ -711,10 +711,6 @@ namespace Contigu.Core
                         bonus = 0;
                         lueur += ApplyRepetitionLueur(repetitionStreak, placedCells, events);
                         break;
-                    case ModifierId.Synergie:
-                        bonus = 0;
-                        additiveMult += ApplySynergie(activeModifiers.Count, placedCells, events);
-                        break;
                     case ModifierId.AlternancePieces:
                         bonus = 0;
                         multiplier *= ApplyAlternancePieces(ownColor, previousPlacedColor, placedCells, events);
@@ -1280,13 +1276,6 @@ namespace Contigu.Core
             return EconomyConstants.RepetitionLueurBonus;
         }
 
-        /// <summary>Synergy (Synergie): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, and every duplicate copy of any modifier counts separately) — grows automatically as the player picks up more modifiers. Was a "xN" ModifierMultiplier; converted to additive on explicit request ("le modifier synerge, on devrait faire +N au lieu de xN"), making it Solidarite's exact twin (see ApplySolidarite).</summary>
-        private static int ApplySynergie(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
-        {
-            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], modifierCount));
-            return modifierCount;
-        }
-
         /// <summary>Shared by the 3 flat, unconditional "+Mult" modifiers (Mult +1/+2/+4) and Risky Mult (ninth batch, on explicit request) — always fires, adds <paramref name="amount"/> to PlacementResult.AdditiveMultBonus (a genuine ADDITIVE pool, unlike every ModifierMultiplier modifier above).</summary>
         private static int ApplyFlatAdditiveMult(int amount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -1294,7 +1283,7 @@ namespace Contigu.Core
             return amount;
         }
 
-        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately) — Synergy's additive twin, same count, on explicit request ("un modifier +1 mult chaque modifier possédé").</summary>
+        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately), on explicit request ("un modifier +1 mult chaque modifier possédé").</summary>
         private static int ApplySolidarite(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], modifierCount));
