@@ -1517,7 +1517,8 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Densite };
 
             var early = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(1, early.ModifierMultiplier, "Only 1 cell filled, well under the 10-cell step");
+            Assert.AreEqual(1f, early.ProgressiveMultiplier, "Only 1 cell filled, well under the 10-cell step");
+            Assert.AreEqual(1, early.ModifierMultiplier, "Densite contributes to ProgressiveMultiplier, not the plain integer ModifierMultiplier — see next test for why");
 
             // Fill 18 more cells without completing any row/column (3 rows of
             // 6, none reaching the 8-cell width), for 19 filled cells total.
@@ -1530,7 +1531,74 @@ namespace Contigu.Tests
             }
 
             var late = grid.PlacePiece(single, PieceColor.Violet, 6, 1, modifiers);
-            Assert.AreEqual(2, late.ModifierMultiplier, "20 cells filled / 10 per step = x2");
+            Assert.AreEqual(2f, late.ProgressiveMultiplier, "20 cells filled / 10 per step = x2.0 exactly");
+            Assert.AreEqual(1, late.ModifierMultiplier);
+        }
+
+        [Test]
+        public void Densite_UsesTheTrueFractionalMultiplier_NotFlooredToTheNearestStep()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Densite };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0); // 1 filled
+            for (int y = 1; y <= 3; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    grid.PlacePiece(single, PieceColor.Teal, x, y); // +18 (19 total)
+                }
+            }
+            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 20
+            grid.PlacePiece(single, PieceColor.Lime, 1, 4); // 21
+            grid.PlacePiece(single, PieceColor.Lime, 2, 4); // 22
+
+            // 23 filled cells total (well short of a clean multiple of 10) —
+            // on explicit request: "on doit multiplier comme si c'était un
+            // float au lieu d'arrondir a la baisse". The OLD integer-floor
+            // behavior would have given a flat x2 here; the true value is
+            // x2.3.
+            var result = grid.PlacePiece(single, PieceColor.Violet, 3, 4, modifiers);
+
+            Assert.AreEqual(23, grid.FilledCellCount);
+            Assert.AreEqual(2.3f, result.ProgressiveMultiplier, 0.0001f);
+            Assert.AreEqual(1, result.ModifierMultiplier);
+        }
+
+        [Test]
+        public void TotalScore_UsesTheTrueFractionalMult_InsteadOfFlooringItBeforeMultiplyingByChips()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Densite };
+
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0); // 1
+            for (int y = 1; y <= 3; y++)
+            {
+                for (int x = 0; x < 6; x++)
+                {
+                    grid.PlacePiece(single, PieceColor.Teal, x, y); // +18 (19 total)
+                }
+            }
+            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 20
+            grid.PlacePiece(single, PieceColor.Lime, 1, 4); // 21
+
+            // Placing this 2-cell domino brings the board to 23 filled
+            // cells — Densite's true multiplier is 2.3, not the old
+            // floored x2.
+            var result = grid.PlacePiece(domH, PieceColor.Violet, 2, 4, modifiers);
+
+            Assert.AreEqual(23, grid.FilledCellCount);
+            Assert.AreEqual(2, result.Chips, "A lone 2-cell group, no golden/line-clear bonus");
+            Assert.AreEqual(2.3f, result.Mult, 0.0001f);
+            // round(2 * 2.3) = round(4.6) = 5 — the OLD integer-floor
+            // behavior would have given floor(2.3) = x2 for a total of
+            // 2*2=4 instead. On explicit request: "on arrondit le score
+            // total de la pièce posé par la suite" — only the FINAL total
+            // rounds, not the multiplier itself along the way.
+            Assert.AreEqual(5, result.TotalScore);
         }
 
         // ---- Tenth batch: public getters exposing progressive-modifier

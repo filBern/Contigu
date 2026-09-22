@@ -400,10 +400,14 @@ namespace Contigu.Presentation
             // sequence plays, rather than only computing them at the very
             // end — chipsTotal * multTotal always equals the placement's
             // own subtotal so far (displayedRoundScore - roundScoreBefore),
-            // same invariant as Chips * Mult == TotalScore in Core.
+            // same invariant as Chips * Mult == TotalScore in Core. multTotal
+            // is a float, not an int, since Mult itself is now (progressive
+            // modifiers keep full precision — see PlacementResult.Mult); a
+            // final sync below guards against any float-rounding drift
+            // across the individual catch-up steps.
             int chipsTotal = 0;
-            int multTotal = 1;
-            _comboView.Show(0, 1);
+            float multTotal = 1f;
+            _comboView.Show(0, 1f);
             // Multiplies every stagger wait below — starts at 1 (full pace)
             // and shrinks by ComboSpeedupFactor after each combo addition,
             // shared across score events, line clears AND the multiplier
@@ -583,54 +587,66 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
-            // "AdditiveMultBonus" — the genuine ADDITIVE "+Mult" pool
-            // (ninth batch, on explicit request: "+1 mult, +2 mult et +4
-            // mult", "+1 mult chaque modifier possédé", etc.), applied as
-            // (1 + AdditiveMultBonus) BEFORE every "xN" ModifierMultiplier
-            // below — see PlacementResult.Mult. Each individual MultBonus
-            // ScoreEvent already pulsed its own badge above with its own
-            // "+N" popup — this is just the combined score catch-up.
-            if (placement.AdditiveMultBonus > 0)
+            // "AdditiveMultBonus"/"ProgressiveAdditiveMult" — the genuine
+            // ADDITIVE "+Mult" pool (ninth batch, on explicit request: "+1
+            // mult, +2 mult et +4 mult", "+1 mult chaque modifier possédé",
+            // etc.), applied as (1 + that pool) BEFORE every "xN"
+            // ModifierMultiplier below — see PlacementResult.Mult.
+            // ProgressiveAdditiveMult (Cartes Enchantées/Expérience) folds
+            // into the SAME catch-up as the plain int pool rather than
+            // getting its own separate moment, since together they're one
+            // conceptual "+Mult" total — its true fractional value is what
+            // actually gets applied now (on explicit request: "on doit
+            // multiplier comme si c'était un float"), only rounded once
+            // it's baked into displayedRoundScore below. Each individual
+            // MultBonus ScoreEvent already pulsed its own badge above with
+            // its own "+N" popup — this is just the combined score catch-up.
+            float additivePool = placement.AdditiveMultBonus + placement.ProgressiveAdditiveMult;
+            if (additivePool > 0f)
             {
-                int additiveMultFactor = 1 + placement.AdditiveMultBonus;
-                int additiveMultExtra = (displayedRoundScore - roundScoreBefore) * (additiveMultFactor - 1);
+                float additiveMultFactor = 1f + additivePool;
+                float additiveMultExtra = (displayedRoundScore - roundScoreBefore) * (additiveMultFactor - 1f);
                 var additiveCenterAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + placement.AdditiveMultBonus + " Mult", UITheme.Danger);
+                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + FormatMultAmount(additivePool) + " Mult", UITheme.Danger);
                 // multTotal is still 1 here (nothing before this point ever
                 // touches it), so multiplying is exactly additiveMultFactor.
                 multTotal *= additiveMultFactor;
                 _comboView.PulseMult();
 
-                displayedRoundScore += additiveMultExtra;
+                displayedRoundScore += Mathf.RoundToInt(additiveMultExtra);
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
-            // "ModifierMultiplier" — every xN modifier converted from a flat
-            // bonus to a real multiplier (Prisme, Architecte, Puriste,
-            // Tricolore, Complémentaire, Îlot, Maçon, Démolisseur, Dégradé,
-            // Solitaire, Espace Libre, Rafale, Pont, Grosse Famille,
-            // Repetition, Alternance des pièces, Minimaliste, and the 6
-            // line-pattern modifiers — see PlacementResult.ModifierMultiplier)
-            // — applied the same "catch-up" way as GroupMultiplier/
-            // LineClearMultiplier above, over the whole placement subtotal
-            // so far. Each individual ModifierMultiplier ScoreEvent already
+            // "ModifierMultiplier"/"ProgressiveMultiplier" — every xN
+            // modifier converted from a flat bonus to a real multiplier
+            // (Prisme, Architecte, Puriste, Tricolore, Complémentaire, Îlot,
+            // Maçon, Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale,
+            // Pont, Grosse Famille, Repetition, Alternance des pièces,
+            // Minimaliste, and the 6 line-pattern modifiers — see
+            // PlacementResult.ModifierMultiplier) — applied the same
+            // "catch-up" way as GroupMultiplier/LineClearMultiplier above,
+            // over the whole placement subtotal so far. ProgressiveMultiplier
+            // (Densité's true fractional factor, same explicit request as
+            // above) folds into this SAME catch-up rather than a separate
+            // one. Each individual ModifierMultiplier ScoreEvent already
             // pulsed its own badge above with its own "xN" popup — this is
             // just the combined score catch-up, same as Combo's below.
-            if (placement.ModifierMultiplier > 1)
+            float combinedModifierFactor = placement.ModifierMultiplier * placement.ProgressiveMultiplier;
+            if (combinedModifierFactor > 1f)
             {
-                int modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (placement.ModifierMultiplier - 1);
+                float modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (combinedModifierFactor - 1f);
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(centerAnchor, "x" + placement.ModifierMultiplier, UITheme.Danger);
+                _feedbackLayer.SpawnPopup(centerAnchor, "x" + FormatMultAmount(combinedModifierFactor), UITheme.Danger);
                 // multTotal might already be > 1 from the AdditiveMultBonus
                 // catch-up just above, so this multiplies rather than
                 // assigns (identical result when it's still 1).
-                multTotal *= placement.ModifierMultiplier;
+                multTotal *= combinedModifierFactor;
                 _comboView.PulseMult();
 
-                displayedRoundScore += modifierMultiplierExtra;
+                displayedRoundScore += Mathf.RoundToInt(modifierMultiplierExtra);
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
 
@@ -658,6 +674,18 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
+            // Force-sync to the authoritative total — a no-op whenever
+            // nothing progressive fired (the catch-ups above stayed exact
+            // integer math, as before), but guards against the float
+            // rounding in the two catch-ups above ever drifting the
+            // displayed running total away from placement.TotalScore by a
+            // point or two.
+            if (displayedRoundScore != roundScoreBefore + placement.TotalScore)
+            {
+                displayedRoundScore = roundScoreBefore + placement.TotalScore;
+                _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+            }
+
             if (outcome.BossLockedCells.Count > 0)
             {
                 // The boss just locked more cells (see RunConfig.BossLockPiecesInterval)
@@ -671,6 +699,17 @@ namespace Contigu.Presentation
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
+        }
+
+        /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — used by the two Mult catch-up popups above so a progressive modifier's true fractional contribution (Densité, Cartes Enchantées, Expérience) reads clearly without cluttering the common case (every other modifier, always a whole number) with a needless ".0".</summary>
+        private static string FormatMultAmount(float value)
+        {
+            float rounded = Mathf.Round(value);
+            if (Mathf.Abs(value - rounded) < 0.05f)
+            {
+                return Mathf.RoundToInt(value).ToString();
+            }
+            return value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private void HandleStateTransition(RunState state)

@@ -3271,3 +3271,74 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      progressive) à chaque frame tant que le curseur reste dessus — la
      même correction bénéficie aussi au compteur "Used Nx this run",
      sujet à la même staleness.
+- **"Remove a piece" rendue plus rare, et calcul en vrai float pour les
+  modifiers progressifs** (demande explicite, en un seul message :
+  "L'upgrade ''remove a piece'' est beaucoup trop fréquente et surtout
+  chiante en début de partie. Les upgrade progressive, on doit
+  multiplier comme si c'était un float au lieu d'arrondir a la baisse.
+  On arrondit le score total de la pièce posé par la suite").
+  - **Remove a piece moins fréquente** : rareté passée de `Common` à
+    `Rare` dans `UpgradeCatalog` — un facteur 4x sur son poids de tirage
+    (`UpgradeRarityUtility.GetDraftWeight` : Common=8, Rare=2), donc
+    dans le pool Bank (RemovePiece/DuplicatePiece/JokerPiece/RecolorPiece)
+    sa probabilité tombe d'environ 28.6% à environ 9.1% à chaque tirage
+    d'upgrade Bank. Nouveau test statistique
+    (`UpgradeSystemTests.RollFromPool_OverManySeeds_PicksRemovePieceFarLessOftenThanDuplicatePiece`)
+    sur le même modèle que le test existant pour Common vs Rare.
+  - **Calcul en float pour les modifiers progressifs** : jusqu'ici,
+    Densité (`filled/10`) et les deux modifiers "+0.1 Mult" (Cartes
+    Enchantées, Expérience, `(1+count)/10`) utilisaient une division
+    ENTIÈRE, perdant la partie fractionnaire à chaque calcul — un choix
+    délibéré (documenté à l'époque) pour éviter d'introduire du `float`
+    dans le pipeline de score. Le joueur a maintenant explicitement
+    demandé l'inverse : garder la précision complète tout du long, et
+    n'arrondir qu'une seule fois, à la toute fin, sur le score total de
+    la pièce posée.
+    - `PlacementResult` gagne deux nouveaux champs `float` :
+      `ProgressiveMultiplier` (le facteur fractionnaire réel de
+      Densité, ex. x2.3 pour 23 cases remplies au lieu de x2) et
+      `ProgressiveAdditiveMult` (la contribution fractionnaire réelle
+      de Cartes Enchantées/Expérience au pool "+Mult", ex. +0.9 pour 9
+      cartes au lieu d'être arrondi à 0). Gardés SÉPARÉS de
+      `ModifierMultiplier`/`AdditiveMultBonus` (restés `int`) pour que
+      ces champs restent des comptes entiers propres pour leurs propres
+      lecteurs/tests existants (Devotion, Puriste, MultUn/Deux/Quatre,
+      Solidarité...) — ils se multiplient/additionnent séparément dans
+      le calcul final.
+    - `PlacementResult.Mult` est maintenant un `float` (calculé comme
+      `(1 + AdditiveMultBonus + ProgressiveAdditiveMult) *
+      ModifierMultiplier * ComboMultiplier * ProgressiveMultiplier`) et
+      `TotalScore` arrondit UNE SEULE FOIS, à la toute fin
+      (`Mathf.RoundToInt(Chips * Mult)`) — jamais avant.
+    - `GridManager.ApplyDensite` retourne maintenant un `float` (plus
+      un `int` arrondi vers le bas) et alimente
+      `PlacementResult.ProgressiveMultiplier` au lieu de
+      `ModifierMultiplier`. `RunManager.ApplyDeckStateModifierBonuses`
+      calcule la vraie fraction pour Cartes Enchantées/Expérience et
+      l'ajoute à `ProgressiveAdditiveMult`. Le popup individuel de
+      chaque modifier (badge "xN"/"+N") continue d'afficher un nombre
+      entier arrondi — seul le calcul final a besoin de la pleine
+      précision.
+    - Présentation : `GameBootstrap.PlayPlacementSequence` fusionne
+      `ProgressiveAdditiveMult`/`ProgressiveMultiplier` dans les 2
+      catch-up existants (`AdditiveMultBonus` et `ModifierMultiplier`)
+      plutôt que d'ajouter de nouveaux moments séparés, `multTotal`
+      devient `float`, et un filet de sécurité resynchronise
+      `displayedRoundScore` sur `placement.TotalScore` juste après le
+      catch-up Combo pour absorber toute dérive d'arrondi intermédiaire
+      (un no-op dans l'immense majorité des cas, sans modifier
+      progressif). `ComboView.Show` accepte maintenant `float mult` et
+      affiche un nombre entier propre quand la valeur est (presque)
+      un entier, sinon une décimale (ex. "2.3") — même logique
+      d'affichage conditionnel réutilisée dans le tooltip
+      (`RunManager.GetProgressiveModifierStateText`, dont Densité
+      affiche maintenant aussi la vraie valeur fractionnaire au lieu
+      de l'ancien floor).
+    - Nouveaux tests : `GridManagerModifierTests.cs`
+      (`Densite_UsesTheTrueFractionalMultiplier_NotFlooredToTheNearestStep`,
+      `TotalScore_UsesTheTrueFractionalMult_InsteadOfFlooringItBeforeMultiplyingByChips`
+      — démontre concrètement round(2×2.3)=5 contre l'ancien floor(2.3)×2=4) ;
+      `RunManagerTests.cs` (les tests Cartes Enchantées/Expérience
+      réécrits pour vérifier `ProgressiveAdditiveMult` au lieu de
+      `AdditiveMultBonus`, y compris le cas sous le seuil de 10 qui
+      donnait 0 avant et donne maintenant 0.9 en entier).

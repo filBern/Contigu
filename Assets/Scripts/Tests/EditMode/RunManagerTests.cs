@@ -1891,16 +1891,21 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void CartesEnchantees_GivesNoBonus_BelowTenUpgradedCards()
+        public void CartesEnchantees_GivesTheTrueFractionalMult_NotFlooredToZero_BelowTenUpgradedCards()
         {
+            // On explicit request: "on doit multiplier comme si c'était un
+            // float au lieu d'arrondir a la baisse" — the OLD integer-step
+            // behavior floored this to 0 (no bonus at all); the true value
+            // is 0.9, and it now applies in full via ProgressiveAdditiveMult.
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
-            run.Deck.TagGoldenTokensRandom(8, new SystemRandomProvider(2)); // 1 (baseline) + 8 = 9 -> 9/10 = 0
+            run.Deck.TagGoldenTokensRandom(8, new SystemRandomProvider(2)); // 1 (baseline) + 8 = 9 -> 9/10 = 0.9
 
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(0, outcome.Placement.AdditiveMultBonus);
+            Assert.AreEqual(0f, outcome.Placement.AdditiveMultBonus, "The plain integer pool stays untouched by CartesEnchantees now");
+            Assert.AreEqual(0.9f, outcome.Placement.ProgressiveAdditiveMult, 0.0001f);
         }
 
         [Test]
@@ -1908,12 +1913,12 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
-            run.Deck.TagGoldenTokensRandom(9, new SystemRandomProvider(2)); // 1 (baseline) + 9 = 10 -> 10/10 = 1
+            run.Deck.TagGoldenTokensRandom(9, new SystemRandomProvider(2)); // 1 (baseline) + 9 = 10 -> 10/10 = 1.0
 
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(1, outcome.Placement.AdditiveMultBonus);
+            Assert.AreEqual(1f, outcome.Placement.ProgressiveAdditiveMult, 0.0001f);
         }
 
         [Test]
@@ -1921,12 +1926,12 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
-            run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2)); // 1 (baseline) + 19 = 20 -> 20/10 = 2
+            run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2)); // 1 (baseline) + 19 = 20 -> 20/10 = 2.0
 
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(2, outcome.Placement.AdditiveMultBonus);
+            Assert.AreEqual(2f, outcome.Placement.ProgressiveAdditiveMult, 0.0001f);
         }
 
         [Test]
@@ -1976,8 +1981,11 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Experience_GivesNoBonus_BelowTenSpecialPiecesPlayed()
+        public void Experience_GivesTheTrueFractionalMult_NotFlooredToZero_BelowTenSpecialPiecesPlayed()
         {
+            // Same explicit request as CartesEnchantees above — the true
+            // value (0.9) now applies in full via ProgressiveAdditiveMult,
+            // instead of the old integer-step behavior flooring it to 0.
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.Experience);
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
@@ -1989,7 +1997,8 @@ namespace Contigu.Tests
             }
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(0, outcome.Placement.AdditiveMultBonus, "1 (baseline) + 8 played = 9 -> 9/10 = 0");
+            Assert.AreEqual(0f, outcome.Placement.AdditiveMultBonus, "The plain integer pool stays untouched by Experience now");
+            Assert.AreEqual(0.9f, outcome.Placement.ProgressiveAdditiveMult, 0.0001f, "1 (baseline) + 8 played = 9 -> 9/10 = 0.9");
         }
 
         [Test]
@@ -2006,7 +2015,7 @@ namespace Contigu.Tests
             }
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(1, outcome.Placement.AdditiveMultBonus, "1 (baseline) + 9 played = 10 -> 10/10 = 1");
+            Assert.AreEqual(1f, outcome.Placement.ProgressiveAdditiveMult, 0.0001f, "1 (baseline) + 9 played = 10 -> 10/10 = 1.0");
         }
 
         [Test]
@@ -2083,8 +2092,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
-            // No upgraded cards yet: baseline of 1 -> "x1.0".
-            Assert.AreEqual("Currently x1.0", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+            // No upgraded cards yet: baseline of 1 -> a clean "x1" (whole
+            // numbers never show a needless ".0" — see FormatMultDisplay).
+            Assert.AreEqual("Currently x1", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
 
             run.Deck.TagGoldenTokensRandom(13, new SystemRandomProvider(2));
 
@@ -2098,7 +2108,7 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.Experience);
 
-            Assert.AreEqual("Currently x1.0", run.GetProgressiveModifierStateText(ModifierId.Experience));
+            Assert.AreEqual("Currently x1", run.GetProgressiveModifierStateText(ModifierId.Experience));
 
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
             PlaceOneSpecialPiece(run);

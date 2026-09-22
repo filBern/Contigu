@@ -92,14 +92,17 @@ namespace Contigu.Core
         /// modifiers avec des bonus incrémentaux, il faut afficher dans le
         /// tooltip l'état progressif du modifier (ex: Currently x2.3)") —
         /// null for every modifier whose bonus is fixed and doesn't grow or
-        /// shrink over the round/run (that's most of them). "xN" modifiers
-        /// show the exact integer multiplier they'd apply right now;
-        /// CartesEnchantees/Experience show the CONCEPTUAL continuous
-        /// "+0.1 per card" value with one decimal (e.g. "x2.3") even though
-        /// the actual applied bonus is integer-stepped (see
-        /// ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep) — the
-        /// decimal is purely a display nicety here, never fed back into
-        /// scoring.
+        /// shrink over the round/run (that's most of them). Modifiers whose
+        /// counter is a genuine whole number (Gradient, Repetition, Synergie,
+        /// Solidarite, Epuisement, Multitude) show a plain integer; Densite/
+        /// CartesEnchantees/Experience show the exact same TRUE float value
+        /// now actually applied to the score (see
+        /// PlacementResult.ProgressiveMultiplier/.ProgressiveAdditiveMult —
+        /// on explicit request, these no longer round down mid-calculation:
+        /// "on doit multiplier comme si c'était un float au lieu d'arrondir
+        /// a la baisse. On arrondit le score total de la pièce posé par la
+        /// suite"), formatted with one decimal only when it isn't already a
+        /// whole number.
         /// </summary>
         public string GetProgressiveModifierStateText(ModifierId id)
         {
@@ -112,7 +115,7 @@ namespace Contigu.Core
                 case ModifierId.Synergie:
                     return "Currently x" + _activeModifiers.Count;
                 case ModifierId.Densite:
-                    return "Currently x" + Mathf.Max(1, Grid.FilledCellCount / ScoringConstants.DensiteFilledCellsPerMultiplierStep);
+                    return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep));
                 case ModifierId.Epuisement:
                     return "Currently +" + Grid.EpuisementCurrentBonus + " pts";
                 case ModifierId.Solidarite:
@@ -120,17 +123,22 @@ namespace Contigu.Core
                 case ModifierId.Multitude:
                     return "Currently +" + (Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts";
                 case ModifierId.CartesEnchantees:
-                    return "Currently x" + FormatFractionalMult(CountUpgradedDeckCards());
+                    return "Currently x" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep);
                 case ModifierId.Experience:
-                    return "Currently x" + FormatFractionalMult(_specialPiecesPlayedCount);
+                    return "Currently x" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep);
                 default:
                     return null;
             }
         }
 
-        private static string FormatFractionalMult(int count)
+        /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — same conditional formatting as ComboView's mult pill, so the tooltip and the in-placement popups never disagree on how a given value reads.</summary>
+        private static string FormatMultDisplay(float value)
         {
-            float value = 1f + 0.1f * count;
+            float rounded = Mathf.Round(value);
+            if (Mathf.Abs(value - rounded) < 0.05f)
+            {
+                return Mathf.RoundToInt(value).ToString();
+            }
             // Invariant culture — "F1" would otherwise render with a comma
             // decimal separator ("2,3") under a French system locale, and
             // this string is also parsed back out nowhere, so there's no
@@ -687,15 +695,21 @@ namespace Contigu.Core
                 if (_activeModifiers[i] == ModifierId.CartesEnchantees)
                 {
                     int upgradedCount = CountUpgradedDeckCards();
-                    int mult = (1 + upgradedCount) / ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep;
-                    if (mult <= 0)
+                    // TRUE float — no longer floored to a whole "+1 Mult"
+                    // step (on explicit request: "on doit multiplier comme
+                    // si c'était un float au lieu d'arrondir a la baisse").
+                    // The badge popup still shows a rounded whole number;
+                    // only PlacementResult.ProgressiveAdditiveMult needs the
+                    // full precision.
+                    float trueMult = (1 + upgradedCount) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep;
+                    placement.ProgressiveAdditiveMult += trueMult;
+                    int displayAmount = Mathf.RoundToInt(trueMult);
+                    if (displayAmount > 0)
                     {
-                        continue;
+                        var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], displayAmount);
+                        multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
+                        events.Add(multEvent);
                     }
-                    placement.AdditiveMultBonus += mult;
-                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], mult);
-                    multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
-                    events.Add(multEvent);
                 }
                 else if (_activeModifiers[i] == ModifierId.Multitude)
                 {
@@ -707,15 +721,16 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Experience)
                 {
-                    int mult = (1 + _specialPiecesPlayedCount) / ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep;
-                    if (mult <= 0)
+                    // Same TRUE-float treatment as CartesEnchantees above.
+                    float trueMult = (1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep;
+                    placement.ProgressiveAdditiveMult += trueMult;
+                    int displayAmount = Mathf.RoundToInt(trueMult);
+                    if (displayAmount > 0)
                     {
-                        continue;
+                        var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], displayAmount);
+                        multEvent.TriggeringModifier = ModifierId.Experience;
+                        events.Add(multEvent);
                     }
-                    placement.AdditiveMultBonus += mult;
-                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], mult);
-                    multEvent.TriggeringModifier = ModifierId.Experience;
-                    events.Add(multEvent);
                 }
             }
             placement.ScoreEvents = events;

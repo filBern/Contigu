@@ -49,6 +49,27 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void RollFromPool_OverManySeeds_PicksRemovePieceFarLessOftenThanDuplicatePiece()
+        {
+            // RemovePiece was dropped from Common to Rare (on explicit
+            // report: "L'upgrade 'remove a piece' est beaucoup trop
+            // fréquente et surtout chiante en début de partie") — a 4x cut
+            // in its draft weight relative to its still-Common Bank-pool
+            // sibling DuplicatePiece.
+            int removeCount = 0;
+            int duplicateCount = 0;
+            for (int seed = 0; seed < 500; seed++)
+            {
+                var system = new UpgradeSystem(new SystemRandomProvider(seed));
+                var picked = system.RollFromPool(UpgradePool.Bank);
+                if (picked.Id == UpgradeId.RemovePiece) removeCount++;
+                if (picked.Id == UpgradeId.DuplicatePiece) duplicateCount++;
+            }
+
+            Assert.Greater(duplicateCount, removeCount, "Common-rarity DuplicatePiece should come up more often than Rare-rarity RemovePiece");
+        }
+
+        [Test]
         public void Apply_RemovePiece_DelegatesToDeck()
         {
             var tokens = new List<PieceToken>();

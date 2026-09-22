@@ -31,9 +31,16 @@ namespace Contigu.Core
 
     public static class UpgradeCatalog
     {
+        // Rarity dropped Common -> Rare (on explicit report: "L'upgrade
+        // 'remove a piece' est beaucoup trop fréquente et surtout chiante en
+        // début de partie") — a 4x cut in its draft weight (8 -> 2, see
+        // UpgradeRarityUtility.GetDraftWeight), same tier as the most
+        // situational Grid-pool upgrades, since permanently shrinking the
+        // deck is the one Bank-pool pick that can backfire rather than just
+        // being weaker than another option.
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
             UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose a piece type from the deck; one copy is permanently removed.", true, UpgradeRarity.Common);
+            "Choose a piece type from the deck; one copy is permanently removed.", true, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",

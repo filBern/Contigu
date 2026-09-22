@@ -101,13 +101,36 @@ namespace Contigu.Presentation
             return _root;
         }
 
-        /// <summary>Updates both pills plus the total readout above them (chips * mult) — <paramref name="chips"/> mirrors <see cref="Core.PlacementResult.Chips"/>, <paramref name="mult"/> mirrors <see cref="Core.PlacementResult.Mult"/>, both accumulated progressively by the placement sequence rather than only shown at the very end.</summary>
-        public void Show(int chips, int mult)
+        /// <summary>
+        /// Updates both pills plus the total readout above them (chips *
+        /// mult) — <paramref name="chips"/> mirrors <see
+        /// cref="Core.PlacementResult.Chips"/>, <paramref name="mult"/>
+        /// mirrors <see cref="Core.PlacementResult.Mult"/>, both accumulated
+        /// progressively by the placement sequence rather than only shown
+        /// at the very end. <paramref name="mult"/> is a float (progressive
+        /// modifiers — Densité, Cartes Enchantées, Expérience — keep their
+        /// true fractional value all the way through, on explicit request:
+        /// "on doit multiplier comme si c'était un float"); the pill shows
+        /// it as a plain whole number when it happens to be one, one
+        /// decimal otherwise, and the total readout rounds the product
+        /// ONCE, matching <see cref="Core.PlacementResult.TotalScore"/>.
+        /// </summary>
+        public void Show(int chips, float mult)
         {
             _root.gameObject.SetActive(true);
             _chipsText.text = chips.ToString();
-            _multText.text = mult.ToString();
-            _totalText.text = (chips * mult).ToString();
+            _multText.text = FormatMult(mult);
+            _totalText.text = Mathf.RoundToInt(chips * mult).ToString();
+        }
+
+        private static string FormatMult(float mult)
+        {
+            float rounded = Mathf.Round(mult);
+            if (Mathf.Abs(mult - rounded) < 0.05f)
+            {
+                return Mathf.RoundToInt(mult).ToString();
+            }
+            return mult.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         public void Hide()

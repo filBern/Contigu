@@ -369,17 +369,20 @@ namespace Contigu.Core
             // identical (streak also starts at 0).
             bool clearedByPreviousPlacement = previousGroupSize.HasValue && streakBeforePlacement == 0;
 
+            float modifierProgressiveMultiplier = 1f;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveMultiplier);
                 modifierMultiplier *= postMultiplier;
                 modifierLueurBonus += postLueur;
+                modifierProgressiveMultiplier *= postProgressiveMultiplier;
             }
 
             result.ModifierBonus = modifierBonus;
             result.ModifierMultiplier = modifierMultiplier;
             result.ModifierLueurBonus = modifierLueurBonus;
             result.AdditiveMultBonus = modifierAdditiveMultBonus;
+            result.ProgressiveMultiplier = modifierProgressiveMultiplier;
             // "Combo": reuses the exact same "did the previous placement
             // clear?" signal as Rafale, but multiplies the WHOLE placement's
             // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
@@ -968,8 +971,21 @@ namespace Contigu.Core
             return ScoringConstants.EspaceLibreMultiplier;
         }
 
-        /// <summary>Density (Densité): progressive xN multiplier, the opposite of Espace Libre — N is how many cells are filled on the board right after this placement (and any of its own line clears), divided by ScoringConstants.DensiteFilledCellsPerMultiplierStep and rounded down. Returns 1 (no-op) while fewer than one step's worth of cells are filled.</summary>
-        private int ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        /// <summary>
+        /// Density (Densité): progressive xN multiplier, the opposite of
+        /// Espace Libre — N is how many cells are filled on the board right
+        /// after this placement (and any of its own line clears), divided
+        /// by ScoringConstants.DensiteFilledCellsPerMultiplierStep as a
+        /// TRUE float (never floored mid-calculation — on explicit
+        /// request: "on doit multiplier comme si c'était un float au lieu
+        /// d'arrondir a la baisse"). Returns 1 (no-op, never a debuff)
+        /// while fewer than one step's worth of cells are filled. The
+        /// per-modifier badge popup still shows a rounded whole number
+        /// (ScoreEvent.Amount stays int) — only <see
+        /// cref="PlacementResult.TotalScore"/> needs the full precision,
+        /// via <see cref="PlacementResult.ProgressiveMultiplier"/>.
+        /// </summary>
+        private float ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int filled = 0;
             foreach (var pos in AllPositions())
@@ -980,13 +996,13 @@ namespace Contigu.Core
                 }
             }
 
-            int multiplier = filled / ScoringConstants.DensiteFilledCellsPerMultiplierStep;
-            if (multiplier < 1)
+            float multiplier = filled / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep;
+            if (multiplier < 1f)
             {
-                return 1;
+                return 1f;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], multiplier));
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], Mathf.RoundToInt(multiplier)));
             return multiplier;
         }
 
@@ -1492,11 +1508,12 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveMultiplier)
         {
             int total = 0;
             int multiplier = 1;
             int lueur = 0;
+            float progressiveMult = 1f;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
@@ -1565,7 +1582,7 @@ namespace Contigu.Core
                         break;
                     case ModifierId.Densite:
                         bonus = 0;
-                        multiplier *= ApplyDensite(placedCells, events);
+                        progressiveMult *= ApplyDensite(placedCells, events);
                         break;
                     default:
                         bonus = 0;
@@ -1576,6 +1593,7 @@ namespace Contigu.Core
             }
             modifierMultiplier = multiplier;
             lueurBonus = lueur;
+            progressiveMultiplier = progressiveMult;
             return total;
         }
 
