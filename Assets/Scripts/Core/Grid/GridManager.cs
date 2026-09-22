@@ -81,10 +81,10 @@ namespace Contigu.Core
             get { return 1 + _gradientPermanentBonus; }
         }
 
-        /// <summary>Repetition's current same-shape streak (see <see cref="_repetitionStreak"/>) — the xN multiplier it would apply RIGHT NOW if the next placement kept the streak alive, clamped to 1 (its actual no-op floor) while below the 2-in-a-row threshold.</summary>
+        /// <summary>Preview of the xN multiplier the NEXT placement would apply if it kept this same-shape streak alive — <see cref="_repetitionStreak"/> + 1 (the streak length that next placement would reach), which is always &gt;= 1 on its own so no extra floor is needed. Read by the tooltip's progressive-state line (see RunManager.GetProgressiveModifierStateText). Fixed on explicit report ("Repitition modifier devrait commencer à 1 au lieu de 0... j'obtiens 2 lorsque je pose ma 3e répétition") — it used to return <see cref="_repetitionStreak"/> directly, i.e. what the LAST placement already applied, one step behind what a player checking it before placing their next piece expects to see.</summary>
         public int RepetitionCurrentMultiplier
         {
-            get { return _repetitionStreak < 2 ? 1 : _repetitionStreak; }
+            get { return _repetitionStreak + 1; }
         }
 
         /// <summary>Dwindling's current flat points bonus (see <see cref="_epuisementValue"/>) — exactly what the NEXT placement would earn from it right now.</summary>

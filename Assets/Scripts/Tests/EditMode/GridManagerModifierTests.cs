@@ -1589,20 +1589,28 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RepetitionCurrentMultiplier_TracksTheAppliedModifierMultiplier_AndFloorsAtOne()
+        public void RepetitionCurrentMultiplier_PreviewsWhatTheNextConsecutivePlacementWouldApply()
         {
+            // On explicit bug report ("j'obtiens 2 lorsque je pose ma 3e
+            // répétition, probablement parce qu'on ajoute une itération
+            // après avoir compté les points et non avant") — checking this
+            // BEFORE each placement used to read one step behind what that
+            // placement was about to score, because the getter returned the
+            // streak as it stood after the LAST placement instead of
+            // previewing the one a continuing NEXT placement would reach.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Repetition };
 
-            Assert.AreEqual(1, grid.RepetitionCurrentMultiplier, "No placement yet");
+            Assert.AreEqual(1, grid.RepetitionCurrentMultiplier, "No placement yet — even a first placement always starts at x1");
 
             var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(first.ModifierMultiplier, grid.RepetitionCurrentMultiplier);
+            Assert.AreEqual(1, first.ModifierMultiplier, "This placement itself got no bonus yet — no streak before it");
+            Assert.AreEqual(2, grid.RepetitionCurrentMultiplier, "But placing the same shape again right now would already score x2");
 
             var second = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(second.ModifierMultiplier, grid.RepetitionCurrentMultiplier);
-            Assert.AreEqual(2, grid.RepetitionCurrentMultiplier);
+            Assert.AreEqual(2, second.ModifierMultiplier, "Confirms the x2 preview above was correct");
+            Assert.AreEqual(3, grid.RepetitionCurrentMultiplier, "A 3rd consecutive placement would now score x3");
         }
 
         [Test]

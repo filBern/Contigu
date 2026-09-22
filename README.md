@@ -3525,3 +3525,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ne peuvent plus être distingués par `Amount` comme avant, distingués
   à la place par l'ordre d'apparition des events, qui suit l'ordre de
   `activeModifiers`).
+- **Fix : le tooltip de Repetition affichait un multiplicateur en retard
+  d'une pose** (signalé explicitement : "Repitition modifier devrait
+  commencer à 1 au lieu de 0", précisé ensuite : "j'obtiens 2 lorsque je
+  pose ma 3e répétition, probablement parce qu'on ajoute une itération
+  après avoir compté les points et non avant"). Investigation : le score
+  RÉELLEMENT appliqué à chaque pose était déjà correct (1re pose de
+  suite = x1 (aucun bonus, pas encore de série), 2e = x2, 3e = x3 —
+  confirmé par le test existant `Repetition_MultiplierGrowsWithConsecutiveSameShapePlacements`
+  et en retraçant `GridManager.PlacePiece` : `_repetitionStreak` est
+  bien incrémenté AVANT le calcul du multiplicateur, pas après). Le vrai
+  bug était dans `GridManager.RepetitionCurrentMultiplier` — lu par le
+  tooltip progressif (`RunManager.GetProgressiveModifierStateText`) —
+  dont le commentaire disait déjà qu'il devait prévisualiser "le
+  multiplicateur que la PROCHAINE pose appliquerait si elle continue la
+  série", mais qui retournait en réalité `_repetitionStreak` tel quel,
+  c'est-à-dire ce que la DERNIÈRE pose venait d'appliquer — en retard
+  d'une pose par rapport à ce que quelqu'un vérifiant le tooltip juste
+  avant de reposer la même forme s'attend à voir (d'où la séquence
+  observée x1, x1, x2 au lieu de x1, x2, x3 en consultant le tooltip
+  avant chacune des 3 premières poses). Corrigé en `_repetitionStreak +
+  1` (toujours ≥ 1 tout seul, plus besoin du floor explicite `< 2 ? 1`).
+  Test réécrit et renommé
+  (`RepetitionCurrentMultiplier_PreviewsWhatTheNextConsecutivePlacementWouldApply`,
+  remplace `..._TracksTheAppliedModifierMultiplier_AndFloorsAtOne` dont
+  les assertions verrouillaient l'ancien comportement bugué) pour
+  vérifier explicitement la prévisualisation : après la 1re pose (elle-
+  même à x1), le tooltip doit déjà annoncer x2 pour la suivante ; après
+  la 2e pose (x2 appliqué), il doit annoncer x3.

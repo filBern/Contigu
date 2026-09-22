@@ -94,7 +94,11 @@ namespace Contigu.Core
         /// null for every modifier whose bonus is fixed and doesn't grow or
         /// shrink over the round/run (that's most of them). Modifiers whose
         /// counter is a genuine whole number (Gradient, Repetition,
-        /// Solidarite, Epuisement, Multitude) show a plain integer; Densite
+        /// Solidarite, Epuisement, Multitude) show a plain integer — Repetition's
+        /// is a PREVIEW of what its own NEXT placement would score if it kept
+        /// the streak alive (see GridManager.RepetitionCurrentMultiplier),
+        /// unlike the others here which report what their OWN LAST
+        /// placement already applied; Densite
         /// shows its TRUE float multiplicative factor now actually applied
         /// to the score (see PlacementResult.ProgressiveMultiplier — on
         /// explicit request, no longer rounded down mid-calculation: "on
