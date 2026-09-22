@@ -1578,7 +1578,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void EpuisementCurrentBonus_TracksTheAppliedBonus_AndResetsWithTheRound()
+        public void EpuisementCurrentBonus_TracksTheAppliedBonus_AndSurvivesANewRound()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -1590,8 +1590,13 @@ namespace Contigu.Tests
             Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, first.ModifierBonus);
             Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, grid.EpuisementCurrentBonus, "Already decayed for the NEXT placement");
 
+            // Permanent for the whole run, same as Gradient — a round
+            // boundary should NOT undo the decay (on explicit report: "ne
+            // descend pas sous 95... il devrait descendre de 5 a chaque
+            // pièce joué", which used to plateau near its starting value
+            // whenever a round only fit a placement or two).
             grid.ResetForNewRound();
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, grid.EpuisementCurrentBonus);
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, grid.EpuisementCurrentBonus);
         }
 
         [Test]
@@ -2049,7 +2054,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Epuisement_ResetsToStartingBonus_OnResetForNewRound()
+        public void Epuisement_SurvivesResetForNewRound_PermanentLikeGradient()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -2061,7 +2066,7 @@ namespace Contigu.Tests
             grid.ResetForNewRound();
             var afterReset = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, afterReset.ModifierBonus, "A fresh round-long burst, unlike Gradient's permanent counter");
+            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement, afterReset.ModifierBonus, "A round boundary should not undo the decay — permanent for the whole run, same as Gradient's counter");
         }
     }
 }

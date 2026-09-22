@@ -46,7 +46,20 @@ namespace Contigu.Core
         /// </summary>
         private int _gradientPermanentBonus;
 
-        /// <summary>Dwindling (Epuisement): the flat points bonus this placement's own instance of the modifier would grant right now — starts at ScoringConstants.EpuisementStartingBonus, drops by ScoringConstants.EpuisementDecayPerPlacement after every placement (floored at 0), reset to the starting value by <see cref="ResetForNewRound"/> (a fresh round-long "burst", unlike Gradient's permanent counter above).</summary>
+        /// <summary>
+        /// Dwindling (Epuisement): the flat points bonus this placement's
+        /// own instance of the modifier would grant right now — starts at
+        /// ScoringConstants.EpuisementStartingBonus, drops by
+        /// ScoringConstants.EpuisementDecayPerPlacement after EVERY
+        /// placement this modifier is held for, floored at 0. PERMANENT for
+        /// the whole run, same as <see cref="_gradientPermanentBonus"/>
+        /// above — used to reset every round, but that made it plateau
+        /// around its starting value for players whose rounds only fit a
+        /// placement or two before the quota was reached (on explicit
+        /// report: "Dwelding upgrade ne descend pas sous 95, il devrait
+        /// descendre de 5 a chaque pièce joué" — the request's own wording,
+        /// "à chaque pièce joué", has no round-boundary exception).
+        /// </summary>
         private int _epuisementValue = ScoringConstants.EpuisementStartingBonus;
 
         /// <summary>
@@ -157,7 +170,6 @@ namespace Contigu.Core
             _lastPlacedShapeId = null;
             _repetitionStreak = 0;
             _lastPlacedColor = null;
-            _epuisementValue = ScoringConstants.EpuisementStartingBonus;
         }
 
         public bool CanPlace(PieceShape shape, int anchorX, int anchorY)
@@ -1270,7 +1282,7 @@ namespace Contigu.Core
             return modifierCount;
         }
 
-        /// <summary>Dwindling (Epuisement): the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the NEXT placement (floored at 0) — on explicit request ("+100pts, réduit de 5 a chaque coup"). Reset to ScoringConstants.EpuisementStartingBonus at the start of every round (see ResetForNewRound), unlike Gradient's permanent counter.</summary>
+        /// <summary>Dwindling (Epuisement): the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the NEXT placement (floored at 0) — on explicit request ("+100pts, réduit de 5 a chaque coup"). Permanent for the whole run, same as Gradient's counter — NOT reset by ResetForNewRound (see _epuisementValue's own doc comment for why the earlier per-round reset was removed).</summary>
         private int ApplyEpuisement(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int bonus = _epuisementValue;

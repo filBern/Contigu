@@ -12,6 +12,19 @@ namespace Contigu.Presentation
         private System.Func<ModifierId, int> _usageCountProvider;
         private System.Func<ModifierId, string> _progressiveStateProvider;
 
+        // Whether the pointer is currently resting over this badge — while
+        // true, Update() below keeps re-pushing fresh content into the
+        // tooltip every frame. Without this, a badge's "Used Nx this run"/
+        // "Currently ..." line only ever reflected whatever was true the
+        // INSTANT the pointer entered (OnPointerEnter fires once, not
+        // continuously) — the tooltip would show a stale, frozen number for
+        // as long as the player kept hovering, even as more placements kept
+        // changing the real value underneath (on explicit report, for
+        // Épuisement/Dwindling: "ne descend pas sous 95... il devrait
+        // descendre de 5 a chaque pièce joué" — it does, this was purely a
+        // display staleness bug, not a scoring one).
+        private bool _hovering;
+
         public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null)
         {
             _tooltip = tooltip;
@@ -22,8 +35,28 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            // Queried fresh on every hover rather than passed in at Init —
-            // both keep changing (every placement that scores, or for the
+            _hovering = true;
+            ShowTooltip();
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _hovering = false;
+            _tooltip.Hide();
+        }
+
+        private void Update()
+        {
+            if (_hovering)
+            {
+                ShowTooltip();
+            }
+        }
+
+        private void ShowTooltip()
+        {
+            // Queried fresh every time this runs rather than cached — both
+            // keep changing (every placement that scores, or for the
             // progressive line every placement at all) for as long as this
             // same badge instance stays on screen.
             string subtitle = _usageCountProvider != null
@@ -44,11 +77,6 @@ namespace Contigu.Presentation
                 description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState);
             }
             _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            _tooltip.Hide();
         }
     }
 }

@@ -3241,3 +3241,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `PointsColorHex` dans `DescriptionTextFormatter`). `UITheme.Modifier`
   (devenu sans utilisation ailleurs dans la codebase) supprimé plutôt
   que laissé mort.
+- **Fix : Épuisement (Dwindling) rendu permanent pour tout le run,
+  au lieu de se réinitialiser chaque manche** (signalé explicitement :
+  "Dwelding upgrade ne descend pas sous 95, il devrait descendre de 5 a
+  chaque pièce joué") — deux causes possibles identifiées et corrigées :
+  1. **La vraie cause probable** : `GridManager.ResetForNewRound`
+     remettait `_epuisementValue` à 100 au début de CHAQUE manche (un
+     choix de design ajouté de mon propre chef lors de son
+     implémentation, jamais demandé explicitement). Si une manche ne
+     tient qu'une ou deux poses avant d'atteindre le quota — plausible
+     avec ce modifier actif, qui donne un gros bonus de points tôt —
+     le joueur ne voit jamais la valeur descendre sous ~90-95 avant
+     qu'elle ne soit remise à 100. La formulation de la demande ("à
+     chaque pièce joué", sans exception de manche) ne laissait aucune
+     place à un reset : `_epuisementValue` est maintenant PERMANENT
+     pour tout le run, exactement comme le compteur de Gradient (plus
+     de ligne de reset dans `ResetForNewRound`). Tests, descriptions et
+     commentaires mis à jour en conséquence (`GridManagerModifierTests.cs`,
+     `ModifierDefinition.Epuisement`, `ScoringConstants.EpuisementStartingBonus`).
+  2. **Un vrai bug latent, corrigé en même temps** : le tooltip d'un
+     modifier (la ligne "Currently ...", voir l'entrée précédente sur
+     l'état progressif) n'était rafraîchi qu'au moment où le curseur
+     ENTRAIT dans le badge (`ModifierBadgeView.OnPointerEnter`), jamais
+     pendant qu'il restait affiché — si le joueur gardait la souris
+     immobile sur le badge en jouant, le texte affiché restait figé sur
+     la valeur lue à l'entrée. `ModifierBadgeView` garde maintenant un
+     flag `_hovering` et un `Update()` qui re-pousse le contenu du
+     tooltip (nom, description, sous-titre "Used Nx", ligne
+     progressive) à chaque frame tant que le curseur reste dessus — la
+     même correction bénéficie aussi au compteur "Used Nx this run",
+     sujet à la même staleness.

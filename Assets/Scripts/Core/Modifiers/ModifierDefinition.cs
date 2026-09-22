@@ -472,7 +472,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+100 pts, dropping by 5 after every placement (down to 0) — resets to 100 at the start of each round.");
+            "+100 pts, dropping by 5 after every placement for the rest of the run (down to 0, permanent, never resets).");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",

@@ -246,7 +246,7 @@ namespace Contigu.Core
         /// <summary>Enchanted Cards: upgraded (enchanted) cards currently in the deck, PLUS 1 (so it's never literally zero — "starting at one"), divided by this many and floored, to get the +Mult contributed — i.e. +0.1 Mult per upgraded card, counting from a baseline of 1, kept as a clean integer step instead of introducing fractional Mult (same reasoning as Density above).</summary>
         public const int CartesEnchanteesUpgradedCardsPerMultStep = 10;
 
-        /// <summary>Dwindling: starting flat points bonus, reset to this at the start of every round.</summary>
+        /// <summary>Dwindling: starting flat points bonus — permanent for the whole run, never reset back to this once it starts decaying.</summary>
         public const int EpuisementStartingBonus = 100;
 
         /// <summary>Dwindling: how much the current bonus drops after EACH placement it's held for (floored at 0, never negative).</summary>
