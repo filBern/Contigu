@@ -605,14 +605,15 @@ namespace Contigu.Presentation
             // multiplier comme si c'était un float"), only rounded once
             // it's baked into displayedRoundScore below. Each individual
             // MultBonus ScoreEvent already pulsed its own badge above with
-            // its own "+N" popup — this is just the combined score catch-up.
+            // its own "+N" popup, and the Combo pill already mirrors the
+            // running Mult live — no center-screen popup here too (removed
+            // on explicit report: "je vois en plein milieu de l'écran un
+            // pop du total mult apparaitre... peut être enlevé").
             float additivePool = placement.AdditiveMultBonus + placement.ProgressiveAdditiveMult;
             if (additivePool > 0f)
             {
                 float additiveMultFactor = 1f + additivePool;
                 float additiveMultExtra = (displayedRoundScore - roundScoreBefore) * (additiveMultFactor - 1f);
-                var additiveCenterAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(additiveCenterAnchor, "+" + FormatMultAmount(additivePool) + " Mult", UITheme.Danger);
                 // multTotal is still 1 here (nothing before this point ever
                 // touches it), so multiplying is exactly additiveMultFactor.
                 multTotal *= additiveMultFactor;
@@ -637,14 +638,13 @@ namespace Contigu.Presentation
             // (Densité's true fractional factor, same explicit request as
             // above) folds into this SAME catch-up rather than a separate
             // one. Each individual ModifierMultiplier ScoreEvent already
-            // pulsed its own badge above with its own "xN" popup — this is
-            // just the combined score catch-up, same as Combo's below.
+            // pulsed its own badge above with its own "xN" popup — no
+            // center-screen popup here either, same explicit report as
+            // above.
             float combinedModifierFactor = placement.ModifierMultiplier * placement.ProgressiveMultiplier;
             if (combinedModifierFactor > 1f)
             {
                 float modifierMultiplierExtra = (displayedRoundScore - roundScoreBefore) * (combinedModifierFactor - 1f);
-                var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(centerAnchor, "x" + FormatMultAmount(combinedModifierFactor), UITheme.Danger);
                 // multTotal might already be > 1 from the AdditiveMultBonus
                 // catch-up just above, so this multiplies rather than
                 // assigns (identical result when it's still 1).

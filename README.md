@@ -3385,3 +3385,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `CartesEnchantees_ScoreEventCarriesThePreciseFractionalAmount_NotJustTheRoundedInt`
     vérifie que `Amount` reste arrondi mais que `PreciseAmount` porte
     la vraie valeur, ex. 1.2 pour 12 cartes upgradées).
+- **Fix : popup "total mult" retiré du centre de l'écran** (signalé
+  explicitement : "Je vois en plein milieu de l'écran un pop du total
+  mult apparaitre. Il n'est pas nécessaire et peut être enlevé") —
+  dans `GameBootstrap.PlayPlacementSequence`, les deux catch-ups
+  "AdditiveMultBonus/ProgressiveAdditiveMult" ("+N Mult") et
+  "ModifierMultiplier/ProgressiveMultiplier" ("xN") affichaient chacun
+  un popup au centre de la grille en plus du popup déjà affiché sur le
+  badge de chaque modifier individuel — redondant avec ces badges et
+  avec la pastille Mult de `ComboView` qui reflète déjà la valeur en
+  direct. Les deux `_feedbackLayer.SpawnPopup(...)` correspondants
+  (et leurs `centerAnchor`/`additiveCenterAnchor` devenus inutiles)
+  retirés ; tout le reste du catch-up (mise à jour de `multTotal`,
+  `displayedRoundScore`, `_comboView.Show`/`PulseMult`) reste
+  inchangé, donc le score et la pastille Mult continuent de se mettre
+  à jour correctement. Le popup "COMBO xN" (vert) et le popup de
+  GroupMultiplier/LineClearMultiplier (case dorée/zone multiplicateur,
+  bleu) restent inchangés — ce sont des effets distincts, hors du
+  périmètre de la demande.
