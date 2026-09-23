@@ -39,11 +39,32 @@ namespace Contigu.Presentation
         private System.Func<ModifierId, string> _progressiveStateProvider;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
-        // lets Pulse(id) find the badge currently showing that modifier (each
-        // modifier can only be active once per run, see
-        // RunManager.RollModifierSlot).
+        // lets Pulse(id)/GetBadgeTransform find the badge(s) currently
+        // showing that modifier. Copieur ("Mimic") duplicates an existing
+        // modifier id in RunManager.ActiveModifiers rather than being its
+        // own distinct id, so a given id CAN appear more than once here —
+        // see GetBadgeTransform's own doc comment for how that's resolved.
         private readonly List<ModifierId> _rowIds = new List<ModifierId>();
         private readonly List<Image> _rowBadges = new List<Image>();
+        // Each row's TRUE resting color, captured once when its badge is
+        // built — PulseBadge lerps against THIS, never against the badge's
+        // own live .color, because that can be mid-lerp from a still-running
+        // earlier pulse on the same badge (see _rowPulseCoroutines).
+        private readonly List<Color> _rowBaseColors = new List<Color>();
+        // The currently-running pulse coroutine for each row, if any — a
+        // modifier that scores more than once in a single placement (e.g. a
+        // per-cell bonus with several qualifying cells) fires Pulse(id)
+        // once per event, and without this, a new pulse starting before the
+        // previous one finished would capture the badge's CURRENT (already
+        // part-way-to-white) color as its own "base" and restore THAT
+        // instead of the true color when it ends — each overlapping pulse
+        // nudging the badge permanently whiter. Fixed on explicit report
+        // ("des modifiers qui deviennent progressivement plus blanc à force
+        // d'être utilisé"): a new pulse now stops any pulse already running
+        // on that same row first, so at most one ever animates a row's
+        // color at a time and _rowBaseColors' true value is always what
+        // gets restored.
+        private readonly List<Coroutine> _rowPulseCoroutines = new List<Coroutine>();
 
         /// <summary>
         /// <paramref name="usageCountProvider"/> (e.g. RunManager.GetModifierUsageCount)
@@ -110,18 +131,42 @@ namespace Contigu.Presentation
             }
             _rowIds.Clear();
             _rowBadges.Clear();
+            _rowBaseColors.Clear();
+            _rowPulseCoroutines.Clear();
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: _progressiveStateProvider);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
+                _rowBaseColors.Add(badge.color);
+                _rowPulseCoroutines.Add(null);
             }
         }
 
-        /// <summary>The screen anchor of the badge currently showing <paramref name="id"/>, or null if it isn't active right now — used to spawn that modifier's score popup on its own icon instead of on a grid tile (see GameBootstrap.PlayPlacementSequence). Each modifier can only be active once per run, so at most one badge ever matches.</summary>
-        public RectTransform GetBadgeTransform(ModifierId id)
+        /// <summary>
+        /// The screen anchor of the badge showing <paramref name="id"/> at
+        /// row <paramref name="occurrenceIndex"/> — the modifier's position
+        /// within RunManager.ActiveModifiers, i.e. the same index GridManager's
+        /// own activeModifiers[i] loop used when it produced this event (see
+        /// <see cref="ScoreEvent.TriggeringModifierIndex"/>). Rows are built
+        /// from that exact list in that exact order (see <see cref="Refresh"/>),
+        /// so the index lines up directly; falls back to the first badge
+        /// showing <paramref name="id"/> if it doesn't (a stale index from a
+        /// Refresh that happened in between), or null if none is active.
+        /// Copieur ("Mimic") duplicates an existing id rather than being its
+        /// own, so the SAME id can occupy more than one row — without this
+        /// index every copy's popup would always land on the very first row
+        /// showing that id instead of the specific copy that actually scored
+        /// (on explicit report: "le texte de bonus est sur le modifier copié
+        /// et non la copie créé").
+        /// </summary>
+        public RectTransform GetBadgeTransform(ModifierId id, int occurrenceIndex)
         {
+            if (occurrenceIndex >= 0 && occurrenceIndex < _rowIds.Count && _rowIds[occurrenceIndex] == id)
+            {
+                return _rowBadges[occurrenceIndex].rectTransform;
+            }
             for (int i = 0; i < _rowIds.Count; i++)
             {
                 if (_rowIds[i] == id)
@@ -139,14 +184,30 @@ namespace Contigu.Presentation
             {
                 if (_rowIds[i] == id)
                 {
-                    StartCoroutine(PulseBadge(_rowBadges[i]));
+                    PulseRow(i);
                 }
             }
         }
 
-        private IEnumerator PulseBadge(Image badge)
+        private void PulseRow(int rowIndex)
         {
-            var baseColor = badge.color;
+            // A modifier that scores more than once in one placement (e.g. a
+            // per-cell bonus with several qualifying cells) pulses its row
+            // once per event — stop any pulse already running on it first,
+            // rather than letting two coroutines animate the same Image at
+            // once (see _rowPulseCoroutines' own doc comment for why that
+            // used to permanently whiten the badge).
+            if (_rowPulseCoroutines[rowIndex] != null)
+            {
+                StopCoroutine(_rowPulseCoroutines[rowIndex]);
+            }
+            _rowPulseCoroutines[rowIndex] = StartCoroutine(PulseBadge(rowIndex));
+        }
+
+        private IEnumerator PulseBadge(int rowIndex)
+        {
+            var badge = _rowBadges[rowIndex];
+            var baseColor = _rowBaseColors[rowIndex];
             var highlightColor = Color.white;
             var rt = badge.rectTransform;
             float t = 0f;
@@ -175,6 +236,7 @@ namespace Contigu.Presentation
                 rt.localScale = Vector3.one;
                 badge.color = baseColor;
             }
+            _rowPulseCoroutines[rowIndex] = null;
         }
     }
 }

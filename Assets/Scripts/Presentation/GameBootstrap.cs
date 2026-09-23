@@ -434,7 +434,7 @@ namespace Contigu.Presentation
                     // GroupMultiplier/ComboMultiplier catch-ups.
                     if (scoreEvent.TriggeringModifier.HasValue)
                     {
-                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                         _feedbackLayer.SpawnPopup(badgeAnchor, "x" + scoreEvent.Amount, UITheme.Danger);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
@@ -461,7 +461,7 @@ namespace Contigu.Presentation
                     // non un float donc au lieu de voir +1.3 je vois +1".
                     if (scoreEvent.TriggeringModifier.HasValue)
                     {
-                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                         string amountText = scoreEvent.PreciseAmount.HasValue ? FormatMultAmount(scoreEvent.PreciseAmount.Value) : scoreEvent.Amount.ToString();
                         _feedbackLayer.SpawnPopup(badgeAnchor, "+" + amountText, UITheme.Danger);
@@ -482,7 +482,7 @@ namespace Contigu.Presentation
                     // badge pulse every other modifier event gets.
                     if (scoreEvent.TriggeringModifier.HasValue)
                     {
-                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                         _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
@@ -510,7 +510,7 @@ namespace Contigu.Presentation
                     // Popup shows on the modifier's own badge instead of the
                     // tile (on explicit request) — falls back to the tile if
                     // the badge can't be found for some reason.
-                    anchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value)
+                    anchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                         ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                 }

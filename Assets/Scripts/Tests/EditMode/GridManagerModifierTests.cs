@@ -2056,6 +2056,42 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void ScoreEvents_DuplicateModifierCopies_AreTaggedWithTheirOwnDistinctIndex()
+        {
+            // Copieur ("Mimic") duplicates an existing modifier id rather
+            // than being its own distinct one, so the SAME id can occupy
+            // more than one position in activeModifiers. Without its own
+            // per-event index, the presentation layer couldn't tell which
+            // one of two identical-id copies actually produced a given
+            // event, and always anchored its popup on the first copy's
+            // badge instead of the one that scored (on explicit report:
+            // "le texte de bonus est sur le modifier copié et non la copie
+            // créé"). TriggeringModifierIndex is what fixes that — verify
+            // each duplicate's event carries ITS OWN position in the list,
+            // not just the shared id.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Solidarite, ModifierId.Solidarite };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            var multBonusEvents = new List<ScoreEvent>();
+            foreach (var e in result.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.MultBonus)
+                {
+                    multBonusEvents.Add(e);
+                }
+            }
+
+            Assert.AreEqual(2, multBonusEvents.Count, "One event per Solidarite copy");
+            Assert.AreEqual(ModifierId.Solidarite, multBonusEvents[0].TriggeringModifier);
+            Assert.AreEqual(ModifierId.Solidarite, multBonusEvents[1].TriggeringModifier);
+            Assert.AreEqual(0, multBonusEvents[0].TriggeringModifierIndex, "The 1st copy's own position in activeModifiers");
+            Assert.AreEqual(1, multBonusEvents[1].TriggeringModifierIndex, "The 2nd copy's own position in activeModifiers");
+        }
+
+        [Test]
         public void Epuisement_StartsAtFullBonusAndDecaysByAFixedAmountEachPlacement()
         {
             var grid = new GridManager();

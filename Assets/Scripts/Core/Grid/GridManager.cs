@@ -767,7 +767,7 @@ namespace Contigu.Core
                         bonus = 0;
                         break;
                 }
-                TagNewEvents(events, eventsBefore, id);
+                TagNewEvents(events, eventsBefore, id, i);
                 total += bonus;
             }
             modifierMultiplier = multiplier;
@@ -1576,7 +1576,7 @@ namespace Contigu.Core
                         bonus = 0;
                         break;
                 }
-                TagNewEvents(events, eventsBefore, id);
+                TagNewEvents(events, eventsBefore, id, i);
                 total += bonus;
             }
             modifierMultiplier = multiplier;
@@ -1585,12 +1585,13 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Stamps every event appended since <paramref name="startIndex"/> with the modifier that produced it, so the presentation layer knows which one to highlight.</summary>
-        private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id)
+        /// <summary>Stamps every event appended since <paramref name="startIndex"/> with the modifier that produced it — <paramref name="modifierIndex"/> is that modifier's own position within activeModifiers (see ScoreEvent.TriggeringModifierIndex), needed because Copieur can make the same id occupy more than one position — so the presentation layer knows which one to highlight.</summary>
+        private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id, int modifierIndex)
         {
             for (int i = startIndex; i < events.Count; i++)
             {
                 events[i].TriggeringModifier = id;
+                events[i].TriggeringModifierIndex = modifierIndex;
             }
         }
 

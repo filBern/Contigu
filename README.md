@@ -3553,3 +3553,57 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   vérifier explicitement la prévisualisation : après la 1re pose (elle-
   même à x1), le tooltip doit déjà annoncer x2 pour la suivante ; après
   la 2e pose (x2 appliqué), il doit annoncer x3.
+- **Fix : badges de modifiers qui deviennent progressivement blancs à
+  l'usage, et popup de Copieur sur le mauvais badge** (signalé
+  explicitement : "J'ai des modifiers qui deviennent progressivement
+  plus blanc a force d'être utilisé... Aussi le modifier qui copie un
+  autre, le texte de bonus est sur le modifier copié et non la copie
+  créé").
+  - **Badges qui blanchissent** : `ModifierPanelView.PulseBadge` (le
+    flash blanc joué à chaque fois qu'un modifier score) lisait
+    `badge.color` comme "couleur de base" à restaurer en fin d'anim —
+    mais un modifier qui score PLUSIEURS fois sur une seule pose (ex. un
+    bonus par case avec plusieurs cases qualifiées, comme Forteresse/
+    Carrefour) déclenche `Pulse(id)` une fois par event, et si la
+    précédente coroutine de pulse tournait ENCORE sur le même badge
+    (`PulseDuration` = 0.5s, souvent plus long que le délai entre 2
+    events de la cascade), la nouvelle coroutine capturait `badge.color`
+    en PLEIN MILIEU du lerp précédent (déjà partiellement blanchi) comme
+    étant sa propre "couleur de base" — et la restaurait telle quelle à
+    la fin, un peu plus blanche qu'avant. Chaque pulse qui chevauche le
+    précédent pousse donc la couleur un peu plus vers le blanc,
+    PERMANENTMENT, d'où le blanchiment progressif observé au fil des
+    parties. Corrigé en stockant la VRAIE couleur de base de chaque
+    badge une seule fois à sa création (`_rowBaseColors`, jamais
+    relue depuis `.color` ensuite) et en arrêtant explicitement toute
+    coroutine de pulse déjà en cours sur ce badge avant d'en démarrer
+    une nouvelle (`_rowPulseCoroutines`), pour qu'au plus une seule
+    anime la couleur d'un badge à la fois.
+  - **Popup de Copieur sur le mauvais badge** : Copieur ("Mimic") ne
+    crée pas un modifier distinct — acheter Copieur ajoute simplement
+    une DEUXIÈME COPIE du même `ModifierId` que le dernier modifier
+    réellement acheté (`RunManager.BuyModifierSlot`). Le même id peut
+    donc occuper 2 positions (ou plus) dans `activeModifiers`.
+    `ModifierPanelView.GetBadgeTransform(id)` retournait toujours le
+    PREMIER badge trouvé avec cet id (son propre commentaire supposait
+    à tort "chaque modifier ne peut être actif qu'une fois par run") —
+    donc le popup de score de la copie créée par Copieur s'affichait
+    systématiquement sur le badge de l'ORIGINAL, jamais sur le sien.
+    Corrigé en ajoutant `ScoreEvent.TriggeringModifierIndex` — la
+    position exacte du modifier déclencheur dans `activeModifiers`
+    (celle que la boucle `GridManager.ApplyPreClearModifiers`/
+    `ApplyPostClearModifiers` utilisait déjà pour l'itérer,
+    maintenant aussi transmise à `GridManager.TagNewEvents`) — et en
+    faisant transiter cet index jusqu'à
+    `ModifierPanelView.GetBadgeTransform(id, occurrenceIndex)`, qui
+    peut désormais cibler exactement la bonne rangée (les rangées du
+    panneau sont construites depuis la MÊME liste `activeModifiers`
+    dans le MÊME ordre, donc l'index correspond directement) plutôt que
+    toujours la première occurrence, avec un repli sur l'ancien
+    comportement (premier match) si l'index ne correspond pas (ex. un
+    `Refresh` survenu entre-temps).
+  - Nouveau test :
+    `ScoreEvents_DuplicateModifierCopies_AreTaggedWithTheirOwnDistinctIndex`
+    (`GridManagerModifierTests.cs`) vérifie que 2 copies de Solidarite
+    produisent bien 2 events `MultBonus` avec `TriggeringModifierIndex`
+    0 et 1 respectivement, et non le même index pour les deux.

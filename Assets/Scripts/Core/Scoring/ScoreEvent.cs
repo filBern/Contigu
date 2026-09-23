@@ -63,6 +63,22 @@ namespace Contigu.Core
         public ModifierId? TriggeringModifier;
 
         /// <summary>
+        /// <see cref="TriggeringModifier"/>'s position within the
+        /// activeModifiers list that produced this event (GridManager's own
+        /// loop index when it dispatched to that modifier's Apply* method —
+        /// see GridManager.TagNewEvents) — 0 when <see cref="TriggeringModifier"/>
+        /// is null. Distinct copies of the SAME modifier id can coexist
+        /// (Copieur/"Mimic" duplicates an id rather than being its own), so
+        /// the id alone can't tell two of them apart; this lets the
+        /// presentation layer (ModifierPanelView.GetBadgeTransform) anchor
+        /// this event's popup on the specific badge that actually produced
+        /// it instead of always the first one showing that id (on explicit
+        /// report: "le texte de bonus est sur le modifier copié et non la
+        /// copie créé").
+        /// </summary>
+        public int TriggeringModifierIndex;
+
+        /// <summary>
         /// The TRUE, unrounded contribution behind <see cref="Amount"/> — only
         /// set for a <see cref="ScoreEventType.MultBonus"/> event from a
         /// genuinely fractional modifier (Enchanted Cards/Experience, see
