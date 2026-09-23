@@ -4129,3 +4129,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   même patron que les autres tests de ce fichier utilisant
   `ChurnUntilHandMatches`. Les 318 tests EditMode passent maintenant
   sur la CI.
+- **Dette technique #1 : les deux gros switch de `GridManager.cs`
+  remplacés par des dictionnaires de dispatch** (demande explicite :
+  "j'aimerais qu'on assess la dette technique" -> "Fait celui que tu
+  trouve le plus important" -> "Dès que tu as terminé on passe à la
+  dette technique", repris juste après la CI ci-dessus). L'audit avait
+  identifié `ApplyPreClearModifiers` (56 cases, ~240 lignes) et
+  `ApplyPostClearModifiers` (16 cases, ~90 lignes) comme le point le
+  plus dangereux du fichier : chaque nouveau modifier ajoute un `case`
+  de plus dans une fonction déjà énorme, et rien ne garantit qu'un
+  `ModifierId` ne soit pas oublié dans un des deux switch (silencieux :
+  `default: bonus = 0;` ne compile pas en erreur). Remplacés par
+  `BuildPreClearEffects()`/`BuildPostClearEffects()`, deux méthodes
+  construisant chacune un `Dictionary<ModifierId, ...Effect>` — une
+  entrée par modifier, une ligne par entrée, appelant la fonction
+  `ApplyXxx` déjà existante sans en changer le corps. Les deux
+  dictionnaires sont des champs D'INSTANCE (`_preClearEffects`/
+  `_postClearEffects`, construits dans le constructeur), pas `static`,
+  parce que la plupart des `ApplyXxx` sont des méthodes d'instance qui
+  lisent l'état de la grille via `_cells`. Deux petites classes de
+  contexte (`PreClearModifierContext`/`PostClearModifierContext`)
+  portent les paramètres partagés (cellules du groupe/de la pose,
+  events, couleur...) ainsi que les accumulateurs que les anciens
+  switch construisaient au fil de l'itération (`Multiplier`/`Lueur`/
+  `AdditiveMult` côté pre-clear, `Multiplier`/`Lueur`/
+  `ProgressiveMultiplier` côté post-clear) — un seul objet construit
+  par pose et réutilisé pour chaque modifier actif, plutôt que de
+  faire transiter 9 paramètres à travers 56 petites lambdas. Portée
+  volontairement limitée à ces deux switch : les quelques dizaines de
+  lignes de gestion de modifiers dans `RunManager.cs`
+  (`ApplyHandSlotModifierBonus`/`ApplyDeckStateModifierBonuses`, pour
+  SlotUn/Deux/Trois + CartesEnchantées/Multitude/Expérience) et
+  `ComputeComboMultiplier` (un seul `if` sur un seul modifier) sont
+  trop petits pour justifier la même conversion. Aucune fonction
+  `ApplyXxx` individuelle n'est modifiée — seul le mécanisme de
+  routage change — pour limiter le risque de régression à une pure
+  erreur de retranscription, que les 318 tests EditMode de la CI
+  (mise en place juste avant, voir l'entrée précédente) vérifient
+  immédiatement à chaque push.

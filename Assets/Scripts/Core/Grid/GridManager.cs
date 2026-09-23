@@ -15,6 +15,12 @@ namespace Contigu.Core
 
         private readonly Cell[,] _cells;
 
+        /// <summary>Dispatch table for <see cref="ApplyPreClearModifiers"/> — built once per instance (not static: most entries call INSTANCE ApplyXxx helpers that read <see cref="_cells"/>), replacing what used to be a ~240-line switch statement (tech-debt pass, on explicit request: "j'aimerais qu'on assess la dette technique" -> "fait celui que tu trouve le plus important"). Every individual ApplyXxx helper body is unchanged; only the routing changed.</summary>
+        private readonly Dictionary<ModifierId, PreClearModifierEffect> _preClearEffects;
+
+        /// <summary>Same rationale as <see cref="_preClearEffects"/>, for <see cref="ApplyPostClearModifiers"/>'s ~90-line switch statement.</summary>
+        private readonly Dictionary<ModifierId, PostClearModifierEffect> _postClearEffects;
+
         /// <summary>Scored group size of the last placement made this round, or null before the round's first placement — tracked for "Momentum" (Dégradé), reset by <see cref="ResetForNewRound"/>.</summary>
         private int? _lastGroupSize;
 
@@ -120,6 +126,8 @@ namespace Contigu.Core
                     _cells[x, y] = new Cell();
                 }
             }
+            _preClearEffects = BuildPreClearEffects();
+            _postClearEffects = BuildPostClearEffects();
         }
 
         public static bool InBounds(int x, int y)
@@ -501,6 +509,130 @@ namespace Contigu.Core
         /// only needs the shape). Each active modifier is evaluated once per
         /// occurrence, so holding the same modifier twice stacks its effect.
         /// </summary>
+        /// <summary>
+        /// Everything a pre-clear modifier's effect delegate (see <see
+        /// cref="_preClearEffects"/>) might need to read, plus the
+        /// accumulators it mutates as a side effect (Multiplier/Lueur/
+        /// AdditiveMult — <see cref="ApplyPreClearModifiers"/> reads these
+        /// back out once the whole dispatch loop finishes). One instance is
+        /// built per placement and reused across every active modifier —
+        /// cheaper than threading 9 separate parameters through 56 tiny
+        /// lambdas, and the single obvious place to add a new field the
+        /// next time some future modifier needs one.
+        /// </summary>
+        private sealed class PreClearModifierContext
+        {
+            public PieceShape Shape;
+            public List<Vector2Int> GroupCells;
+            public List<Vector2Int> PlacedCells;
+            public List<ScoreEvent> Events;
+            public int? PreviousGroupSize;
+            public int RepetitionStreak;
+            public PieceColor? PreviousPlacedColor;
+            public PieceColor OwnColor;
+            public PieceColor JokerResolvedColor;
+            public int ActiveModifierCount;
+            public int Multiplier = 1;
+            public int Lueur;
+            public int AdditiveMult;
+        }
+
+        private delegate int PreClearModifierEffect(PreClearModifierContext ctx);
+
+        /// <summary>
+        /// One entry per pre-clear-evaluable modifier (curation/tech-debt
+        /// pass, on explicit request — "j'aimerais qu'on assess la dette
+        /// technique" -> "Fait celui que tu trouve le plus important"):
+        /// replaces what used to be a 56-case, ~240-line switch statement
+        /// with a lookup table, one line per modifier, built once per
+        /// GridManager instance (needs "this" — most Apply* helpers read
+        /// grid state via <see cref="_cells"/>, so this can't be a static
+        /// table). Every individual Apply* modifier function below is
+        /// UNCHANGED — this only replaces how a <see cref="ModifierId"/>
+        /// gets routed to its own function and how its result (a flat
+        /// bonus, or a multiplier/lueur/mult mutation on the shared <see
+        /// cref="PreClearModifierContext"/>) feeds back into the dispatch
+        /// loop, so it carries none of the actual scoring-logic risk a
+        /// rewrite would. A modifier missing from this table (there
+        /// shouldn't be any within this pre-clear/post-clear/RunManager
+        /// three-way split — see ModifierId's own doc comments on each
+        /// batch) silently contributes 0, matching the old switch's
+        /// `default: bonus = 0;` fallback.
+        /// </summary>
+        private Dictionary<ModifierId, PreClearModifierEffect> BuildPreClearEffects()
+        {
+            return new Dictionary<ModifierId, PreClearModifierEffect>
+            {
+                { ModifierId.Prisme, ctx => { ctx.Multiplier *= ApplyPrisme(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Chaine, ctx => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MegaChaine, ctx => ApplyMegaChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Forteresse, ctx => ApplyForteresse(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Prisonnier, ctx => ApplyPrisonnier(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Architecte, ctx => { ctx.Multiplier *= ApplyArchitecte(ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Tricolore, ctx => { ctx.Multiplier *= ApplyTricolore(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Complementaire, ctx => { ctx.Multiplier *= ApplyComplementaire(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Ilot, ctx => { ctx.Multiplier *= ApplyIlot(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Couronne, ctx => ApplyCouronne(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Carrefour, ctx => ApplyCarrefour(ctx.GroupCells, ctx.Events) },
+                { ModifierId.CercleChromatique, ctx => ApplyCercleChromatique(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Monochrome, ctx => ApplyMonochrome(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Contraste, ctx => ApplyContraste(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Emmitouflee, ctx => ApplyEmmitouflee(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Jardinier, ctx => ApplyJardinier(ctx.GroupCells, ctx.Events) },
+                { ModifierId.DevotionCoral, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionTeal, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionViolet, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionLime, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.FormatPetitSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.FormatMoyenSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.FormatGrandSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.FormatPetitGlow, ctx => ApplyFormatGlow(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.FormatMoyenGlow, ctx => ApplyFormatGlow(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.FormatGrandGlow, ctx => ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.GrandFormat, ctx => ApplyGrandFormat(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.HorsNorme, ctx => ApplyHorsNorme(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.EclatCoral, ctx => ApplyEclat(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.EclatTeal, ctx => ApplyEclat(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.EclatViolet, ctx => ApplyEclat(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.EclatLime, ctx => ApplyEclat(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.Diagonale, ctx => ApplyDiagonale(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Nid, ctx => ApplyNid(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Solitaire, ctx => { ctx.Multiplier *= ApplySolitaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.PetitFormat, ctx => ApplyPetitFormat(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Fraicheur, ctx => { ctx.Multiplier *= ApplyFraicheur(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Pont, ctx => { ctx.Multiplier *= ApplyPont(ctx.OwnColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Encerclement, ctx => ApplyEncerclement(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Boucher, ctx => ApplyBoucher(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.GrosseFamille, ctx => { ctx.Multiplier *= ApplyGrosseFamille(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Repetition, ctx => { ctx.Multiplier *= ApplyRepetition(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.RepetitionLueur, ctx => { ctx.Lueur += ApplyRepetitionLueur(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.AlternancePieces, ctx => { ctx.Multiplier *= ApplyAlternancePieces(ctx.OwnColor, ctx.PreviousPlacedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Precision, ctx => ApplyPrecision(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Surpopulation, ctx => ApplySurpopulation(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
+                // Joker: no score of its own — purely a passive rule change
+                // resolved before the loop starts (see JokerResolvedColor)
+                // for Devotion/Éclat to read.
+                { ModifierId.Joker, ctx => 0 },
+                // Combo: not a flat/per-cell bonus — resolved separately as
+                // PlacementResult.ComboMultiplier (see ComputeComboMultiplier).
+                { ModifierId.Combo, ctx => 0 },
+                { ModifierId.MultUn, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultUnBonus, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.MultDeux, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultDeuxBonus, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.MultQuatre, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultQuatreBonus, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.MultCinqRisque, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultCinqRisqueBonus, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Solidarite, ctx => { ctx.AdditiveMult += ApplySolidarite(ctx.ActiveModifierCount, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Epuisement, ctx => ApplyEpuisement(ctx.PlacedCells, ctx.Events) },
+                // Copieur: never actually held — buying it in the shop adds
+                // another copy of whichever modifier was purchased right
+                // before it instead of adding Copieur itself (see
+                // RunManager.BuyModifierSlot), so this entry should never
+                // actually be looked up in practice.
+                { ModifierId.Copieur, ctx => 0 }
+            };
+        }
+
         private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
@@ -513,234 +645,32 @@ namespace Contigu.Core
             // below use THIS instead of re-reading the cell directly.
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
+            var ctx = new PreClearModifierContext
+            {
+                Shape = shape,
+                GroupCells = groupCells,
+                PlacedCells = placedCells,
+                Events = events,
+                PreviousGroupSize = previousGroupSize,
+                RepetitionStreak = repetitionStreak,
+                PreviousPlacedColor = previousPlacedColor,
+                OwnColor = ownColor,
+                JokerResolvedColor = jokerResolvedColor,
+                ActiveModifierCount = activeModifiers.Count
+            };
+
             int total = 0;
-            int multiplier = 1;
-            int lueur = 0;
-            int additiveMult = 0;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
                 int eventsBefore = events.Count;
-                int bonus;
-                switch (id)
-                {
-                    case ModifierId.Prisme:
-                        bonus = 0;
-                        multiplier *= ApplyPrisme(placedCells, events);
-                        break;
-                    case ModifierId.Chaine:
-                        bonus = ApplyChaine(groupCells, placedCells, events);
-                        break;
-                    case ModifierId.MegaChaine:
-                        bonus = ApplyMegaChaine(groupCells, placedCells, events);
-                        break;
-                    case ModifierId.Forteresse:
-                        bonus = ApplyForteresse(groupCells, events);
-                        break;
-                    case ModifierId.Prisonnier:
-                        bonus = ApplyPrisonnier(groupCells, events);
-                        break;
-                    case ModifierId.Architecte:
-                        bonus = 0;
-                        multiplier *= ApplyArchitecte(shape, placedCells, events);
-                        break;
-                    case ModifierId.Tricolore:
-                        bonus = 0;
-                        multiplier *= ApplyTricolore(placedCells, events);
-                        break;
-                    case ModifierId.Complementaire:
-                        bonus = 0;
-                        multiplier *= ApplyComplementaire(placedCells, events);
-                        break;
-                    case ModifierId.Ilot:
-                        bonus = 0;
-                        multiplier *= ApplyIlot(groupCells, placedCells, events);
-                        break;
-                    case ModifierId.Couronne:
-                        bonus = ApplyCouronne(groupCells, events);
-                        break;
-                    case ModifierId.Carrefour:
-                        bonus = ApplyCarrefour(groupCells, events);
-                        break;
-                    case ModifierId.CercleChromatique:
-                        bonus = ApplyCercleChromatique(groupCells, events);
-                        break;
-                    case ModifierId.Monochrome:
-                        bonus = ApplyMonochrome(groupCells, events);
-                        break;
-                    case ModifierId.Contraste:
-                        bonus = ApplyContraste(placedCells, events);
-                        break;
-                    case ModifierId.Degrade:
-                        bonus = 0;
-                        multiplier *= ApplyDegrade(groupCells.Count, previousGroupSize, placedCells, events);
-                        break;
-                    case ModifierId.Emmitouflee:
-                        bonus = ApplyEmmitouflee(groupCells, events);
-                        break;
-                    case ModifierId.Jardinier:
-                        bonus = ApplyJardinier(groupCells, events);
-                        break;
-                    case ModifierId.DevotionCoral:
-                        bonus = 0;
-                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Coral, jokerResolvedColor, placedCells, events);
-                        break;
-                    case ModifierId.DevotionTeal:
-                        bonus = 0;
-                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Teal, jokerResolvedColor, placedCells, events);
-                        break;
-                    case ModifierId.DevotionViolet:
-                        bonus = 0;
-                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Violet, jokerResolvedColor, placedCells, events);
-                        break;
-                    case ModifierId.DevotionLime:
-                        bonus = 0;
-                        multiplier *= ApplyColorDevotionMultiplier(PieceColor.Lime, jokerResolvedColor, placedCells, events);
-                        break;
-                    case ModifierId.FormatPetitSpecialiste:
-                        bonus = 0;
-                        multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormatMoyenSpecialiste:
-                        bonus = 0;
-                        multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormatGrandSpecialiste:
-                        bonus = 0;
-                        multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormatPetitGlow:
-                        bonus = ApplyFormatGlow(1, ScoringConstants.FormatPetitMaxCells, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormatMoyenGlow:
-                        bonus = ApplyFormatGlow(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormatGrandGlow:
-                        bonus = ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.GrandFormat:
-                        bonus = ApplyGrandFormat(placedCells, events);
-                        break;
-                    case ModifierId.HorsNorme:
-                        bonus = ApplyHorsNorme(placedCells, events);
-                        break;
-                    case ModifierId.EclatCoral:
-                        bonus = ApplyEclat(PieceColor.Coral, jokerResolvedColor, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.EclatTeal:
-                        bonus = ApplyEclat(PieceColor.Teal, jokerResolvedColor, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.EclatViolet:
-                        bonus = ApplyEclat(PieceColor.Violet, jokerResolvedColor, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.EclatLime:
-                        bonus = ApplyEclat(PieceColor.Lime, jokerResolvedColor, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.Diagonale:
-                        bonus = ApplyDiagonale(groupCells, events);
-                        break;
-                    case ModifierId.Nid:
-                        bonus = ApplyNid(groupCells, events);
-                        break;
-                    case ModifierId.Solitaire:
-                        bonus = 0;
-                        multiplier *= ApplySolitaire(groupCells, placedCells, events);
-                        break;
-                    case ModifierId.PetitFormat:
-                        bonus = ApplyPetitFormat(placedCells, events);
-                        break;
-                    case ModifierId.Fraicheur:
-                        bonus = 0;
-                        multiplier *= ApplyFraicheur(placedCells, events);
-                        break;
-                    case ModifierId.Pont:
-                        bonus = 0;
-                        multiplier *= ApplyPont(ownColor, placedCells, events);
-                        break;
-                    case ModifierId.Encerclement:
-                        bonus = ApplyEncerclement(groupCells, events);
-                        break;
-                    case ModifierId.Boucher:
-                        bonus = ApplyBoucher(placedCells, events);
-                        break;
-                    case ModifierId.GrosseFamille:
-                        bonus = 0;
-                        multiplier *= ApplyGrosseFamille(groupCells, placedCells, events);
-                        break;
-                    case ModifierId.Repetition:
-                        bonus = 0;
-                        multiplier *= ApplyRepetition(repetitionStreak, placedCells, events);
-                        break;
-                    case ModifierId.RepetitionLueur:
-                        bonus = 0;
-                        lueur += ApplyRepetitionLueur(repetitionStreak, placedCells, events);
-                        break;
-                    case ModifierId.AlternancePieces:
-                        bonus = 0;
-                        multiplier *= ApplyAlternancePieces(ownColor, previousPlacedColor, placedCells, events);
-                        break;
-                    case ModifierId.Precision:
-                        bonus = ApplyPrecision(placedCells, events);
-                        break;
-                    case ModifierId.Surpopulation:
-                        bonus = ApplySurpopulation(placedCells, events);
-                        break;
-                    case ModifierId.Minimaliste:
-                        bonus = 0;
-                        multiplier *= ApplyMinimaliste(placedCells, events);
-                        break;
-                    case ModifierId.Joker:
-                        // No score of its own — purely a passive rule change
-                        // resolved above (see jokerResolvedColor) for
-                        // Devotion/Éclat.
-                        bonus = 0;
-                        break;
-                    case ModifierId.Combo:
-                        // Not a flat/per-cell bonus — resolved separately as
-                        // PlacementResult.ComboMultiplier (see ComputeComboMultiplier).
-                        bonus = 0;
-                        break;
-                    case ModifierId.MultUn:
-                        bonus = 0;
-                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultUnBonus, placedCells, events);
-                        break;
-                    case ModifierId.MultDeux:
-                        bonus = 0;
-                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultDeuxBonus, placedCells, events);
-                        break;
-                    case ModifierId.MultQuatre:
-                        bonus = 0;
-                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultQuatreBonus, placedCells, events);
-                        break;
-                    case ModifierId.MultCinqRisque:
-                        bonus = 0;
-                        additiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultCinqRisqueBonus, placedCells, events);
-                        break;
-                    case ModifierId.Solidarite:
-                        bonus = 0;
-                        additiveMult += ApplySolidarite(activeModifiers.Count, placedCells, events);
-                        break;
-                    case ModifierId.Epuisement:
-                        bonus = ApplyEpuisement(placedCells, events);
-                        break;
-                    case ModifierId.Copieur:
-                        // Never actually held — buying it in the shop adds
-                        // another copy of whichever modifier was purchased
-                        // right before it instead of adding Copieur itself
-                        // (see RunManager.BuyModifierSlot), so this case
-                        // should never be reached in practice.
-                        bonus = 0;
-                        break;
-                    default:
-                        bonus = 0;
-                        break;
-                }
+                int bonus = _preClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
                 TagNewEvents(events, eventsBefore, id, i);
                 total += bonus;
             }
-            modifierMultiplier = multiplier;
-            lueurBonus = lueur;
-            additiveMultBonus = additiveMult;
+            modifierMultiplier = ctx.Multiplier;
+            lueurBonus = ctx.Lueur;
+            additiveMultBonus = ctx.AdditiveMult;
             return total;
         }
 
@@ -1479,93 +1409,79 @@ namespace Contigu.Core
             return false;
         }
 
+        /// <summary>
+        /// Everything a post-clear modifier's effect delegate (see <see
+        /// cref="_postClearEffects"/>) might need to read, plus the
+        /// accumulators it mutates as a side effect (Multiplier/Lueur/
+        /// ProgressiveMultiplier — <see cref="ApplyPostClearModifiers"/>
+        /// reads these back out once the whole dispatch loop finishes).
+        /// Same rationale as <see cref="PreClearModifierContext"/>.
+        /// </summary>
+        private sealed class PostClearModifierContext
+        {
+            public ClearInfo ClearInfo;
+            public List<Vector2Int> PlacedCells;
+            public List<ScoreEvent> Events;
+            public bool ClearedByPreviousPlacement;
+            public int Multiplier = 1;
+            public int Lueur;
+            public float ProgressiveMultiplier = 1f;
+        }
+
+        private delegate int PostClearModifierEffect(PostClearModifierContext ctx);
+
+        /// <summary>
+        /// One entry per post-clear-evaluable modifier — same tech-debt
+        /// pass and same rationale as <see cref="BuildPreClearEffects"/>,
+        /// replacing what used to be a 16-case switch statement. Every
+        /// individual Apply* modifier function below is UNCHANGED.
+        /// </summary>
+        private Dictionary<ModifierId, PostClearModifierEffect> BuildPostClearEffects()
+        {
+            return new Dictionary<ModifierId, PostClearModifierEffect>
+            {
+                { ModifierId.Collectionneur, ctx => ApplyCollectionneur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.CollectionneurLueur, ctx => { ctx.Lueur += ApplyCollectionneurLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Macon, ctx => { ctx.Multiplier *= ApplyMacon(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Demolisseur, ctx => { ctx.Multiplier *= ApplyDemolisseur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.ArcEnCiel, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine); return 0; } },
+                { ModifierId.ArcEnCielLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, EconomyConstants.ArcEnCielLueurPerLine); return 0; } },
+                { ModifierId.Alternance, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAlternatingTwoColors, ScoringConstants.AlternanceMultiplierPerLine); return 0; } },
+                { ModifierId.AlternanceLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAlternatingTwoColors, EconomyConstants.AlternanceLueurPerLine); return 0; } },
+                { ModifierId.Palindrome, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsPalindrome, ScoringConstants.PalindromeMultiplierPerLine); return 0; } },
+                { ModifierId.Gradient, ctx => { ctx.Multiplier *= ApplyGradient(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Bloc, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocMultiplierPerLine); return 0; } },
+                { ModifierId.MonochromeLigne, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, ScoringConstants.MonochromeLigneMultiplierPerLine); return 0; } },
+                { ModifierId.MonochromeLigneLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine); return 0; } },
+                { ModifierId.EspaceLibre, ctx => { ctx.Multiplier *= ApplyEspaceLibre(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Rafale, ctx => { ctx.Multiplier *= ApplyRafale(ctx.ClearedByPreviousPlacement, ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Densite, ctx => { ctx.ProgressiveMultiplier *= ApplyDensite(ctx.PlacedCells, ctx.Events); return 0; } }
+            };
+        }
+
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
         private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveMultiplier)
         {
+            var ctx = new PostClearModifierContext
+            {
+                ClearInfo = clearInfo,
+                PlacedCells = placedCells,
+                Events = events,
+                ClearedByPreviousPlacement = clearedByPreviousPlacement
+            };
+
             int total = 0;
-            int multiplier = 1;
-            int lueur = 0;
-            float progressiveMult = 1f;
             for (int i = 0; i < activeModifiers.Count; i++)
             {
                 var id = activeModifiers[i];
                 int eventsBefore = events.Count;
-                int bonus;
-                switch (id)
-                {
-                    case ModifierId.Collectionneur:
-                        bonus = ApplyCollectionneur(clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.CollectionneurLueur:
-                        bonus = 0;
-                        lueur += ApplyCollectionneurLueur(clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.Macon:
-                        bonus = 0;
-                        multiplier *= ApplyMacon(clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.Demolisseur:
-                        bonus = 0;
-                        multiplier *= ApplyDemolisseur(clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.ArcEnCiel:
-                        bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine);
-                        break;
-                    case ModifierId.ArcEnCielLueur:
-                        bonus = 0;
-                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, ContainsAllBaseColors, EconomyConstants.ArcEnCielLueurPerLine);
-                        break;
-                    case ModifierId.Alternance:
-                        bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsAlternatingTwoColors, ScoringConstants.AlternanceMultiplierPerLine);
-                        break;
-                    case ModifierId.AlternanceLueur:
-                        bonus = 0;
-                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, IsAlternatingTwoColors, EconomyConstants.AlternanceLueurPerLine);
-                        break;
-                    case ModifierId.Palindrome:
-                        bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsPalindrome, ScoringConstants.PalindromeMultiplierPerLine);
-                        break;
-                    case ModifierId.Gradient:
-                        bonus = 0;
-                        multiplier *= ApplyGradient(clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.Bloc:
-                        bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocMultiplierPerLine);
-                        break;
-                    case ModifierId.MonochromeLigne:
-                        bonus = 0;
-                        multiplier *= ApplyPerLineMultiplier(clearInfo, placedCells, events, IsMonochromeLine, ScoringConstants.MonochromeLigneMultiplierPerLine);
-                        break;
-                    case ModifierId.MonochromeLigneLueur:
-                        bonus = 0;
-                        lueur += ApplyPerLineLueur(clearInfo, placedCells, events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine);
-                        break;
-                    case ModifierId.EspaceLibre:
-                        bonus = 0;
-                        multiplier *= ApplyEspaceLibre(placedCells, events);
-                        break;
-                    case ModifierId.Rafale:
-                        bonus = 0;
-                        multiplier *= ApplyRafale(clearedByPreviousPlacement, clearInfo, placedCells, events);
-                        break;
-                    case ModifierId.Densite:
-                        bonus = 0;
-                        progressiveMult *= ApplyDensite(placedCells, events);
-                        break;
-                    default:
-                        bonus = 0;
-                        break;
-                }
+                int bonus = _postClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
                 TagNewEvents(events, eventsBefore, id, i);
                 total += bonus;
             }
-            modifierMultiplier = multiplier;
-            lueurBonus = lueur;
-            progressiveMultiplier = progressiveMult;
+            modifierMultiplier = ctx.Multiplier;
+            lueurBonus = ctx.Lueur;
+            progressiveMultiplier = ctx.ProgressiveMultiplier;
             return total;
         }
 
