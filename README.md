@@ -4464,3 +4464,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   horizontal PARTAGÉ par toutes les sections, basé sur la section qui a
   le plus de types distincts (plafonné à 6 colonnes) : les colonnes
   restent alignées entre les sections tout en centrant le bloc entier.
+- **Deck de départ (Classic) : couverture complète 40 pièces (10 formes
+  x 4 couleurs) au lieu de 24 incomplètes** (repéré grâce à la
+  nouvelle vue groupée par couleur du deck : "Il manque des pièces
+  dans le deck non? Single tile green, etc." — root cause tracée et
+  confirmée avant de toucher au code : `InitialDeckFactory.Build()`
+  faisait tourner un curseur de couleur À TRAVERS toutes les formes
+  d'affilée plutôt que par forme, et la plupart des formes n'avaient
+  que 2-3 exemplaires — pas un multiple de 4 — donc certaines formes
+  ne pouvaient structurellement jamais atteindre les 4 couleurs, ex.
+  Single (3 exemplaires) n'obtenait jamais Vert. Confirmé par retour
+  explicite : "J'aimerais que toutes les couleurs aient toutes les
+  formes". `Build()` simplifié en une double boucle directe (10 formes
+  x 4 couleurs, un exemplaire de chaque, sans curseur ni table de
+  copies) — 40 pièces de départ au lieu de 24, aucune combinaison
+  forme/couleur absente. Le deck plus petit de Marathon
+  (`BuildMarathon`, 16 pièces) n'est PAS touché : rester volontairement
+  incomplet fait partie de ce qui rend ce challenge plus difficile.
+  Nouveau test `InitialDeckFactory_Build_HasExactlyOneCopyOfEveryShapeColorCombination`
+  vérifiant les 40 combinaisons une par une.

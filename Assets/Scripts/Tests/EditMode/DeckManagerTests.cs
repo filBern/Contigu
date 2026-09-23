@@ -48,12 +48,31 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void InitialDeckFactory_Build_Produces24TokensNoJokers()
+        public void InitialDeckFactory_Build_Produces40TokensNoJokers()
         {
             var tokens = InitialDeckFactory.Build();
 
-            Assert.AreEqual(24, tokens.Count);
+            Assert.AreEqual(40, tokens.Count);
             Assert.IsFalse(tokens.Exists(t => t.Color == PieceColor.Joker));
+        }
+
+        [Test]
+        public void InitialDeckFactory_Build_HasExactlyOneCopyOfEveryShapeColorCombination()
+        {
+            // On explicit request ("J'aimerais que toutes les couleurs aient
+            // toutes les formes"): every one of the 10 shapes must exist in
+            // every one of the 4 base colors, exactly once — nothing missing,
+            // nothing doubled up.
+            var tokens = InitialDeckFactory.Build();
+
+            foreach (var shape in InitialDeckFactory.ShapeOrder)
+            {
+                foreach (var color in PieceColorUtility.BaseColors)
+                {
+                    int count = tokens.Count(t => t.Shape == shape && t.Color == color);
+                    Assert.AreEqual(1, count, "Expected exactly one " + shape + "/" + color + " token.");
+                }
+            }
         }
 
         [Test]

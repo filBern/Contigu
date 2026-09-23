@@ -3,9 +3,10 @@ using System.Collections.Generic;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Builds the starting ~24 token deck (spec 4.5): a reasonably balanced spread
-    /// across the 10 shapes and 4 base colors, with no Joker at the start (Joker is
-    /// only obtainable via the "Joker piece" upgrade).
+    /// Builds the starting 40-token deck (spec 4.5, revised — see Build's own
+    /// doc comment): every one of the 10 shapes in every one of the 4 base
+    /// colors, exactly once each, no Joker at the start (Joker is only
+    /// obtainable via the "Joker piece" upgrade).
     /// </summary>
     public static class InitialDeckFactory
     {
@@ -17,22 +18,7 @@ namespace Contigu.Core
             ShapeId.Sq2, ShapeId.LTetro, ShapeId.TTetro, ShapeId.STetro
         };
 
-        // Copies per shape, sums to 24.
-        private static readonly Dictionary<ShapeId, int> CopiesPerShape = new Dictionary<ShapeId, int>
-        {
-            { ShapeId.Single, 3 },
-            { ShapeId.DomH, 3 },
-            { ShapeId.DomV, 3 },
-            { ShapeId.TriL, 2 },
-            { ShapeId.TriIH, 2 },
-            { ShapeId.TriIV, 2 },
-            { ShapeId.Sq2, 3 },
-            { ShapeId.LTetro, 2 },
-            { ShapeId.TTetro, 2 },
-            { ShapeId.STetro, 2 }
-        };
-
-        /// <summary>The "Marathon" challenge's smaller starting deck (spec extension, explicit request — see ChallengeCatalog.Marathon), sums to 16: every shape still gets at least 1 copy (never below DeckManager.MinDeckSize=10, kept well above it), just fewer of each than the 24-token standard deck.</summary>
+        /// <summary>The "Marathon" challenge's smaller starting deck (spec extension, explicit request — see ChallengeCatalog.Marathon), sums to 16: every shape still gets at least 1 copy (never below DeckManager.MinDeckSize=10, kept well above it), just fewer of each than the standard deck, and — unlike Build() below — not every shape reaches every color, on purpose: a smaller, less complete deck is exactly what makes Marathon harder.</summary>
         private static readonly Dictionary<ShapeId, int> MarathonCopiesPerShape = new Dictionary<ShapeId, int>
         {
             { ShapeId.Single, 2 },
@@ -47,9 +33,32 @@ namespace Contigu.Core
             { ShapeId.STetro, 1 }
         };
 
+        /// <summary>
+        /// One copy of every (shape, color) combination — 10 x 4 = 40
+        /// tokens. Previously a fixed 24-token deck with an uneven number
+        /// of copies per shape (3 for Single/DomH/DomV/Sq2, 2 for
+        /// everything else) cycled across colors via a running cursor —
+        /// which meant a shape with only 2 or 3 copies could never reach
+        /// all 4 colors, so a given color could be missing shapes
+        /// entirely (on explicit report, spotted via the new color-
+        /// grouped DeckView: "Il manque des pièces dans le deck non?
+        /// Single tile green, etc." -> "J'aimerais que toutes les
+        /// couleurs aient toutes les formes"). Full, uniform coverage
+        /// instead: no shape/color combination is ever absent from the
+        /// starting deck.
+        /// </summary>
         public static List<PieceToken> Build()
         {
-            return BuildFrom(CopiesPerShape);
+            var tokens = new List<PieceToken>();
+            var baseColors = PieceColorUtility.BaseColors;
+            for (int s = 0; s < ShapeOrder.Length; s++)
+            {
+                for (int c = 0; c < baseColors.Count; c++)
+                {
+                    tokens.Add(new PieceToken(ShapeOrder[s], baseColors[c]));
+                }
+            }
+            return tokens;
         }
 
         public static List<PieceToken> BuildMarathon()

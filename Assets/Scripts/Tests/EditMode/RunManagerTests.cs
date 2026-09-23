@@ -1588,7 +1588,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
 
-            Assert.AreEqual(16, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 16-token one, not the standard 24.");
+            Assert.AreEqual(16, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 16-token one, not the standard 40.");
             Assert.AreEqual(ChallengeCatalog.Marathon.Quotas[0], run.CurrentQuota);
             Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[0], run.CurrentBudget);
         }
