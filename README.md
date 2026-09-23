@@ -4337,3 +4337,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Dérive toujours en boucle sinus/cosinus (même mécanisme qu'avant),
   avec en plus une lente rotation propre à chaque forme pour renforcer
   le côté géométrique.
+- **Bug : carré vide visible dans les previews de pièce (ex. L-tromino)**
+  (retour explicite, capture à l'appui : "Pour ces pièces la plus le
+  plus grand L j'aimerais qu'on ait pas le carré en haut a gauche plus
+  clair, il peut être invisible"). `ShapePreviewFactory.Build` donnait
+  à chaque case VIDE de la boîte englobante d'une forme (un L-tromino
+  n'occupe que 3 des 4 cases de son carré 2x2) un placeholder
+  translucide (`Color(1,1,1,0.05)`) plutôt que rien — censé être
+  quasi invisible, mais visiblement pas assez une fois superposé au
+  fond d'un panneau/carte qui n'est déjà pas noir pur (shop, draft,
+  main). Corrigé en ne dessinant tout simplement RIEN pour une case
+  non occupée par la forme, au lieu d'un placeholder à peine
+  transparent.

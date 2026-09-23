@@ -66,42 +66,41 @@ namespace Contigu.Presentation
             {
                 for (int x = 0; x < cols; x++)
                 {
-                    bool filled = occupied.Contains(new Vector2Int(x, y));
-                    // Same shared card art/tint as a filled grid cell (see
-                    // GridCellView.ApplyState) — an unfilled bounding-box
-                    // square (a shape like an L-tromino has some) stays the
-                    // plain translucent placeholder, since it isn't an
-                    // actual tile.
-                    var img = filled
-                        ? UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.TileSprite)
-                        : UIFactory.CreatePanel(container, "c" + x + "_" + y, new Color(1f, 1f, 1f, 0.05f));
-                    if (filled)
+                    // An unfilled bounding-box square (a shape like an
+                    // L-tromino has some) draws nothing at all — on
+                    // explicit report, its old translucent placeholder
+                    // still read as a distinctly lighter square against a
+                    // card/panel background lighter than pure black:
+                    // "j'aimerais qu'on ait pas le carré ... plus clair,
+                    // il peut être invisible".
+                    if (!occupied.Contains(new Vector2Int(x, y)))
                     {
-                        img.color = fillColor;
+                        continue;
                     }
+
+                    // Same shared card art/tint as a filled grid cell (see GridCellView.ApplyState).
+                    var img = UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.TileSprite);
+                    img.color = fillColor;
                     img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
                     img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
 
-                    if (filled)
+                    if (ColorblindMode.IsEnabled)
                     {
-                        if (ColorblindMode.IsEnabled)
-                        {
-                            BuildColorblindShape(img.transform, color, cell);
-                        }
+                        BuildColorblindShape(img.transform, color, cell);
+                    }
 
-                        if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
-                        {
-                            // Sized relative to the cell itself rather than a
-                            // fixed 14px — at HandView's larger preview box
-                            // that clamps out to the same 14px as before, but
-                            // at DraftView's much smaller type-row preview a
-                            // fixed 14px badge would nearly cover the whole
-                            // (~15px) cell.
-                            float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
-                            builtBadge = BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
-                        }
+                    if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
+                    {
+                        // Sized relative to the cell itself rather than a
+                        // fixed 14px — at HandView's larger preview box
+                        // that clamps out to the same 14px as before, but
+                        // at DraftView's much smaller type-row preview a
+                        // fixed 14px badge would nearly cover the whole
+                        // (~15px) cell.
+                        float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
+                        builtBadge = BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
                     }
                 }
             }
