@@ -4089,10 +4089,43 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   compilation dans Presentation fait maintenant échouer la CI bruyamment
   au lieu de dormir silencieusement dans le repo. Version Unity
   (2022.3.62f3) lue depuis `ProjectSettings/ProjectVersion.txt` pour que
-  le workflow matche exactement l'éditeur du projet. Limite honnête :
-  ce workflow ne peut pas encore tourner vert tout seul — `game-ci`
-  exige une licence Unity activée fournie via les secrets GitHub
-  (`UNITY_LICENSE`, ou `UNITY_EMAIL`+`UNITY_PASSWORD` pour une licence
-  Personal), que je n'ai pas et ne peux pas créer à la place du joueur ;
-  reste une étape manuelle de sa part avant que la CI soit réellement
-  active.
+  le workflow matche exactement l'éditeur du projet.
+
+  Mise en route mouvementée, entièrement côté compte Unity du joueur
+  (rien de tout ça n'était un problème de code) : mot de passe absent
+  (compte connecté par SSO, sans mot de passe à donner à la CI) ->
+  mot de passe ajouté, mais siège Unity Personal jamais réellement
+  activé côté serveur (RESTRICTED_SEAT) -> activation manuelle via
+  Unity Hub -> nouvelle tentative où même le mot de passe n'était plus
+  accepté (avait changé entre-temps) -> remis à jour -> **premier run
+  réel : compile tout le projet ET exécute les 318 tests EditMode avec
+  succès**. Au passage, ce tout premier run a immédiatement justifié
+  la démarche en trouvant 2 bugs pré-existants dans les tests
+  eux-mêmes, invisibles depuis toujours faute d'avoir jamais tourné
+  (voir l'entrée suivante). Dernier accroc, cette fois un vrai défaut
+  du workflow : `game-ci/unity-test-runner` poste son propre check run
+  "Test Results" via l'API GitHub après les tests, ce qui exige la
+  permission `checks: write` — absente du `GITHUB_TOKEN` par défaut de
+  ce repo, donc le tout premier run à 318/318 passants s'est quand même
+  affiché comme échoué (403 Resource not accessible by integration).
+  Corrigé en ajoutant un bloc `permissions: { contents: read, checks:
+  write }` explicite au workflow.
+
+- **2 bugs de tests pré-existants trouvés au premier run réel de la
+  CI** — invisibles jusqu'ici faute d'avoir jamais compilé/exécuté la
+  suite EditMode (voir l'entrée CI ci-dessus). `GridManagerModifierTests.
+  TotalScore_UsesTheTrueFractionalMult_InsteadOfFlooringItBeforeMultiplyingByChips`
+  attendait `Chips == 2` pour un groupe de 2 cellules alors que le
+  scoring de groupe est progressif partout ailleurs dans la suite
+  (1ère cellule=1pt, 2e=2pts, donc 1+2=3, pas 2) — mauvaise valeur
+  attendue dans le test, corrigée à 3 (et `TotalScore` à 7 en
+  conséquence). `RunManagerTests.
+  PlacePiece_KamikazeTrait_NeverDestroysThisPlacementsOwnCells`
+  codait en dur les cellules d'atterrissage de la pièce comme si elle
+  était toujours posée à l'horizontale, alors que chaque pièce en main
+  tire une rotation initiale ALÉATOIRE (`DeckManager.RandomRotation`)
+  — ne tenait que pour 2 des 4 rotations possibles d'un domino, donc
+  flaky selon la graine ; corrigé en calculant la vraie forme tournée,
+  même patron que les autres tests de ce fichier utilisant
+  `ChurnUntilHandMatches`. Les 318 tests EditMode passent maintenant
+  sur la CI.

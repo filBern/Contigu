@@ -14,6 +14,16 @@ on:
   pull_request:
     branches: [main]
 
+# game-ci/unity-test-runner posts its own "Test Results" check run via the
+# GitHub API after the tests finish — needs checks:write, which this repo's
+# default GITHUB_TOKEN doesn't grant on its own (found the hard way: the
+# very first real green test run, 318/318 passed, still reported as a
+# failed job because this POST came back 403 "Resource not accessible by
+# integration"). contents:read is only what checkout already needed.
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   test:
     name: EditMode tests (compiles the whole project as a side effect)
