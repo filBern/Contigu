@@ -4262,3 +4262,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   autrement — puis réaccessible à tout moment via la touche `H`, même
   raison "toujours disponible, pas seulement dans l'éditeur" que
   `Tab`/`C`.
+- **Fond d'écran dynamique : 4 taches de couleur douces qui dérivent
+  lentement** (demande explicite : "je veux que le fond d'écran
+  dynamique, qui bouge un peu, un peu comme pour le jeu WordPlay" —
+  recherche rapide faute de référence visuelle précise en main : les
+  fonds de jeux de mots façon "WordPlay" utilisent typiquement des
+  taches de gradient doux en mouvement lent plutôt qu'un fond plat).
+  Jusqu'ici le fond entier était un simple panneau plat
+  `UITheme.Background` (#372e4d). `AnimatedBackgroundView` (nouveau)
+  s'intercale entre ce panneau plat et `MainRoot` dans
+  `GameBootstrap.BuildCanvas` — au-dessus du fond plat, en-dessous de
+  tout élément d'UI réel, donc les taches ne se voient QUE dans
+  l'espace négatif autour de la grille/HUD/main, jamais par-dessus.
+  Chaque tache est le même sprite cercle-flou partagé
+  (`BackgroundBlobFactory`, un dégradé radial "smoothstep" généré au
+  runtime dans un petit `Texture2D`, même approche que
+  `ColorblindShapeFactory` — aucun asset chargé), teinté avec une des
+  4 couleurs de pièce du jeu à faible opacité (0.16) pour rester de
+  l'ambiance plutôt que de concurrencer le contraste du premier plan.
+  Le mouvement est une simple boucle sinus/cosinus par tache (période,
+  amplitude et phase propres à chacune, pour qu'elles ne bougent
+  jamais en synchronisation) — aucun asset d'animation, juste
+  `Time.time` lu chaque frame dans `Update()`, et la boucle ne
+  redémarre jamais visiblement puisqu'un sinus/cosinus n'a pas de fin.

@@ -57,6 +57,7 @@ namespace Contigu.Presentation
         private DeckView _deckView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
+        private AnimatedBackgroundView _animatedBackgroundView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
@@ -268,6 +269,12 @@ namespace Contigu.Presentation
 
             var bg = UIFactory.CreatePanel(canvasGo.transform, "Background", UITheme.Background);
             UIFactory.StretchFull(bg.rectTransform);
+
+            // Sits directly above the flat fill and below everything built
+            // in BuildUI below (MainRoot, added as canvasGo's next child
+            // after this) — see AnimatedBackgroundView's own doc comment.
+            _animatedBackgroundView = gameObject.AddComponent<AnimatedBackgroundView>();
+            _animatedBackgroundView.Build(canvasGo.transform);
 
             return canvasGo.GetComponent<RectTransform>();
         }
