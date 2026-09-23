@@ -3848,3 +3848,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   placed"), donc l'aperçu (vert/rouge, pulse du groupe prévisualisé) et
   le placement réel restent automatiquement synchronisés sans logique
   dupliquée.
+- **Fix : le survol/clic des boutons du shop n'affichait aucune nuance
+  visuelle** (demande explicite : "ajoute une nuance visuelle pour le
+  hover et le click (ou pressed) pour les boutons") — en creusant, ce
+  n'était pas un manque, c'était un bug déjà présent dans
+  `UIFactory.FinishButton` (l'infra PARTAGÉE par tous les boutons du
+  jeu, pas seulement ceux du shop) : `highlightedColor` valait
+  `(1.15,1.15,1.15)`, cherchant à ÉCLAIRCIR au survol — mais un canal
+  de couleur d'un `Image` UI non-HDR ne peut pas dépasser 1, et tous
+  les boutons habillés d'un sprite (Buy/Reroll/Leave du shop, et en
+  fait la quasi-totalité des boutons du jeu) partent d'une teinte
+  blanche pure (`Color.white`, voir `CreateSlicedImage`) — 1.15×1
+  se re-clampait donc exactement à blanc, sans AUCUN changement visible
+  au survol. Seul `pressedColor` (0.85, un assombrissement) avait un
+  effet, et assez léger. Corrigé en faisant plutôt ASSOMBRIR les deux
+  états depuis la teinte normale (`highlightedColor` → 0.88,
+  `pressedColor` → 0.7, plus prononcé pour rester distinct du survol)
+  — visible sur n'importe quelle teinte de base, jamais de clipping
+  possible puisqu'on ne dépasse plus jamais 1. Un seul point de
+  correction (`UIFactory.FinishButton`) bénéficie à tous les boutons du
+  jeu, le shop étant juste l'endroit où le problème avait été
+  remarqué.

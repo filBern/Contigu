@@ -89,8 +89,19 @@ namespace Contigu.Presentation
             btn.targetGraphic = img;
             var colors = btn.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-            colors.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+            // Both states DARKEN from normal instead of highlighted trying to
+            // brighten PAST it — every sprite-skinned button (the vast
+            // majority, e.g. every shop Buy/Reroll/Leave button) starts at a
+            // plain white tint (see CreateSlicedImage), and a color channel
+            // can't exceed 1 on a non-HDR UI Image: the old highlightedColor
+            // of (1.15,1.15,1.15) just clamped back down to white, so hover
+            // showed no visible change at all (bug report, shop buttons:
+            // "ajoute une nuance visuelle pour le hover et le click"). Now
+            // both hover and pressed are always visible regardless of the
+            // button's own base tint, pressed darker than highlighted so the
+            // two stay distinguishable from each other too.
+            colors.highlightedColor = new Color(0.88f, 0.88f, 0.88f, 1f);
+            colors.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
             colors.selectedColor = Color.white;
             colors.disabledColor = new Color(1f, 1f, 1f, 0.4f);
             btn.colors = colors;
