@@ -66,23 +66,12 @@ namespace Contigu.Tests
             }
         }
 
-        [Test]
-        public void GetRotated_RotatingAHorizontalTromino90Degrees_ProducesTheVerticalTrominosShape()
-        {
-            var horizontal90 = PieceShapeCatalog.GetRotated(ShapeId.TriIH, PieceRotation.Deg90);
-            var verticalBase = PieceShapeCatalog.Get(ShapeId.TriIV);
-
-            CollectionAssert.AreEquivalent(verticalBase.Cells, horizontal90.Cells);
-        }
-
-        [Test]
-        public void GetRotated_RotatingADomino90Degrees_ProducesTheOtherDominosShape()
-        {
-            var domH90 = PieceShapeCatalog.GetRotated(ShapeId.DomH, PieceRotation.Deg90);
-            var domVBase = PieceShapeCatalog.Get(ShapeId.DomV);
-
-            CollectionAssert.AreEquivalent(domVBase.Cells, domH90.Cells);
-        }
+        // GetRotated_RotatingAHorizontalTromino90Degrees_ProducesTheVerticalTrominosShape
+        // and GetRotated_RotatingADomino90Degrees_ProducesTheOtherDominosShape used to
+        // live here, proving TriIH/DomH's 90°-rotated cells exactly matched TriIV's/
+        // DomV's base cells — which is exactly why TriIV and DomV were removed as
+        // separate ShapeIds entirely (see ShapeId's own doc comment): they were
+        // redundant with TriIH/DomH under the rotation every piece already gets.
 
         [Test]
         public void GetRotated_Sq2IsRotationInvariant()

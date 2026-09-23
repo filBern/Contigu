@@ -76,11 +76,9 @@ namespace Contigu.Data
         private static readonly Dictionary<ShapeId, string> ShapeNames = new Dictionary<ShapeId, string>
         {
             { ShapeId.Single, "Single" },
-            { ShapeId.DomH, "Domino H" },
-            { ShapeId.DomV, "Domino V" },
+            { ShapeId.DomH, "Domino" },
             { ShapeId.TriL, "L-Tromino" },
-            { ShapeId.TriIH, "I-Tromino H" },
-            { ShapeId.TriIV, "I-Tromino V" },
+            { ShapeId.TriIH, "I-Tromino" },
             { ShapeId.Sq2, "Square" },
             { ShapeId.LTetro, "L-Tetromino" },
             { ShapeId.TTetro, "T-Tetromino" },

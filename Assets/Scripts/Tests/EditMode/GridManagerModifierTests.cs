@@ -1043,28 +1043,26 @@ namespace Contigu.Tests
         // per-SIZE-TIER ones, since 10
         // near-identical xN-if-this-exact-shape modifiers diluted the shop
         // pool for a fairly minor axis compared to color. Grouped by piece
-        // cell count: Petit (<=2 cells: Single/DomH/DomV), Moyen (exactly 3:
-        // the 3 Trominoes), Grand (>=4 cells: Sq2/LTetro/TTetro/STetro) —
-        // same ScoringConstants.FormeSpecialistMultiplier value as every
+        // cell count: Petit (<=2 cells: Single/DomH), Moyen (exactly 3: the
+        // 2 remaining Trominoes), Grand (>=4 cells: Sq2/LTetro/TTetro/STetro)
+        // — same ScoringConstants.FormeSpecialistMultiplier value as every
         // one of the 10 it replaces, so this is a pure count reduction, not
         // a numeric rebalance. ----
 
         [Test]
-        public void FormatPetitSpecialiste_FiresForSingleAndBothDominoes_NotForBiggerShapes()
+        public void FormatPetitSpecialiste_FiresForSingleAndDomino_NotForBiggerShapes()
         {
             AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.Single, true);
             AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.DomH, true);
-            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.DomV, true);
             AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.TriL, false);
             AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.Sq2, false);
         }
 
         [Test]
-        public void FormatMoyenSpecialiste_FiresOnlyForTheThreeTrominoes()
+        public void FormatMoyenSpecialiste_FiresOnlyForTheTrominoes()
         {
             AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriL, true);
             AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriIH, true);
-            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriIV, true);
             AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.Single, false);
             AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.Sq2, false);
         }
@@ -2085,11 +2083,11 @@ namespace Contigu.Tests
         public void FormatGlowModifiers_EachOnlyFireForTheirOwnSizeTier()
         {
             AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.Single, true);
-            AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.DomV, true);
+            AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.DomH, true);
             AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.TriL, false);
 
             AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.TriIH, true);
-            AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.TriIV, true);
+            AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.TriL, true);
             AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.Sq2, false);
 
             AssertFormatGlowFires(ModifierId.FormatGrandGlow, ShapeId.LTetro, true);

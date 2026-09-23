@@ -213,19 +213,18 @@ namespace Contigu.Tests
         [Test]
         public void GetCandidateTypesFor_RemovePiece_ExcludesTypesTheDeckCantActuallyRemove()
         {
-            // Exactly MinDeckSize, one copy of each of 10 distinct types —
-            // CanRemove is false for every one of them (removing any copy
-            // would drop the deck below its floor), so none should qualify.
+            // Exactly MinDeckSize tokens — CanRemove is false for every type
+            // present (removing any copy would drop the deck below its
+            // floor), so none should qualify. One copy each of all 8
+            // distinct shapes (8 tokens) plus 2 extra copies (Single,
+            // DomH) to reach exactly MinDeckSize=10.
             var tokens = new List<PieceToken>();
-            var allShapes = new[]
-            {
-                ShapeId.Single, ShapeId.DomH, ShapeId.DomV, ShapeId.TriL, ShapeId.TriIH,
-                ShapeId.TriIV, ShapeId.Sq2, ShapeId.LTetro, ShapeId.TTetro, ShapeId.STetro
-            };
-            foreach (var shape in allShapes)
+            foreach (var shape in InitialDeckFactory.ShapeOrder)
             {
                 tokens.Add(new PieceToken(shape, PieceColor.Coral));
             }
+            tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
+            tokens.Add(new PieceToken(ShapeId.DomH, PieceColor.Coral));
             Assert.AreEqual(DeckManager.MinDeckSize, tokens.Count);
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
             var system = new UpgradeSystem(new SystemRandomProvider(1));
@@ -238,12 +237,7 @@ namespace Contigu.Tests
         private static DeckManager MakeManyDistinctTypesDeck()
         {
             var tokens = new List<PieceToken>();
-            var shapes = new[]
-            {
-                ShapeId.Single, ShapeId.DomH, ShapeId.DomV, ShapeId.TriL,
-                ShapeId.TriIH, ShapeId.TriIV, ShapeId.Sq2, ShapeId.LTetro
-            };
-            foreach (var shape in shapes)
+            foreach (var shape in InitialDeckFactory.ShapeOrder)
             {
                 for (int i = 0; i < 3; i++)
                 {

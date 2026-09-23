@@ -674,15 +674,17 @@ namespace Contigu.Tests
             // footprint ends up being the only non-locked cells in each of them
             // — reopening a footprint-shaped hole right after the placement.
             // For seed 7 (verified by hand-tracing the deterministic draw, see
-            // /tmp/dotnet_random_sim.py), hand[0] is an L-tromino (TriL) and the
-            // two pieces left in hand are a T-tetromino (TTetro, 4 cells — can
-            // never fit a 3-cell hole, in any rotation) and a straight tromino
-            // (TriIV — can never fit an L-shaped hole, in any of its 2 distinct
-            // rotations). Both mismatches (cell count, and straight-vs-bent
-            // shape) hold regardless of which rotation each piece was actually
-            // dealt, so this test is robust to random rotation. It's still tied
-            // to seed 7's exact hand *composition* though — if InitialDeckFactory
-            // or the shuffle ever changes, re-verify by hand or pick a new seed.
+            // /tmp/dotnet_random_sim.py — re-run after DomV/TriIV were removed
+            // from ShapeId, since that changed the deck and reshuffled this
+            // exact draw), hand[0] is a straight tromino (TriIH, dealt rotated
+            // 90° so its footprint is a 3-cell vertical line) and the two
+            // pieces left in hand are a T-tetromino and a square (TTetro and
+            // Sq2, both 4 cells — neither can ever fit a 3-cell hole, in any
+            // rotation). That cell-count mismatch holds regardless of which
+            // rotation each piece was actually dealt, so this test is robust
+            // to random rotation. It's still tied to seed 7's exact hand
+            // *composition* though — if InitialDeckFactory or the shuffle
+            // ever changes, re-verify by hand or pick a new seed.
             var occupied = new HashSet<Vector2Int>();
             for (int i = 0; i < shape.Cells.Count; i++)
             {
@@ -1591,7 +1593,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
 
-            Assert.AreEqual(16, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 16-token one, not the standard 40.");
+            Assert.AreEqual(13, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 13-token one, not the standard 32.");
             Assert.AreEqual(ChallengeCatalog.Marathon.Quotas[0], run.CurrentQuota);
             Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[0], run.CurrentBudget);
         }

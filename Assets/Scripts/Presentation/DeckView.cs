@@ -178,66 +178,16 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// DomH/DomV (a 2-cell "domino") and TriIH/TriIV (a 3-cell straight
-        /// line) are the same piece rotated 90° — shown here as a single
-        /// merged row per color rather than two, since seeing both
-        /// orientations listed separately reads as duplicate entries in this
-        /// read-only summary (explicit report with a screenshot circling
-        /// exactly these two pairs: "on peut donc retirer les doublons dans
-        /// l'écran de deck"). This is purely a display grouping — the deck
-        /// itself, DraftView's picker, and gameplay are untouched; both
-        /// orientations remain separately drawable pieces.
-        /// </summary>
-        private static readonly Dictionary<ShapeId, ShapeId> OrientationDuplicateOf = new Dictionary<ShapeId, ShapeId>
-        {
-            { ShapeId.DomV, ShapeId.DomH },
-            { ShapeId.TriIV, ShapeId.TriIH }
-        };
-
-        private static List<ShapeId> GetOrientationDuplicates(ShapeId representative)
-        {
-            var duplicates = new List<ShapeId>();
-            foreach (var kvp in OrientationDuplicateOf)
-            {
-                if (kvp.Value == representative)
-                {
-                    duplicates.Add(kvp.Key);
-                }
-            }
-            return duplicates;
-        }
-
-        /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order — GetDeckComposition's own Dictionary iteration order isn't guaranteed and, in practice, mixes shapes unpredictably (see this class's own doc comment on the original bug report). Orientation duplicates (see OrientationDuplicateOf) are folded into their representative shape's count.</summary>
+        /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order — GetDeckComposition's own Dictionary iteration order isn't guaranteed and, in practice, mixes shapes unpredictably (see this class's own doc comment on the original bug report).</summary>
         private List<(ShapeId Shape, int Count)> CollectTypesForColor(IReadOnlyDictionary<(ShapeId Shape, PieceColor Color), int> composition, PieceColor color)
         {
             var result = new List<(ShapeId, int)>();
             var shapeOrder = InitialDeckFactory.ShapeOrder;
             for (int i = 0; i < shapeOrder.Length; i++)
             {
-                var shape = shapeOrder[i];
-                if (OrientationDuplicateOf.ContainsKey(shape))
+                if (composition.TryGetValue((shapeOrder[i], color), out int count))
                 {
-                    continue;
-                }
-
-                int count = 0;
-                if (composition.TryGetValue((shape, color), out int own))
-                {
-                    count += own;
-                }
-                var duplicates = GetOrientationDuplicates(shape);
-                for (int d = 0; d < duplicates.Count; d++)
-                {
-                    if (composition.TryGetValue((duplicates[d], color), out int duplicateCount))
-                    {
-                        count += duplicateCount;
-                    }
-                }
-
-                if (count > 0)
-                {
-                    result.Add((shape, count));
+                    result.Add((shapeOrder[i], count));
                 }
             }
             return result;
@@ -308,28 +258,8 @@ namespace Contigu.Presentation
             countLabel.rectTransform.sizeDelta = new Vector2(34f, 26f);
         }
 
-        /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait. Also checks <paramref name="shape"/>'s orientation duplicate (if any), since a merged row represents both orientations' tokens.</summary>
+        /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait.</summary>
         private PieceTrait? FindRepresentativeTrait(ShapeId shape, PieceColor color)
-        {
-            var trait = FindTraitForExactType(shape, color);
-            if (trait.HasValue)
-            {
-                return trait;
-            }
-
-            var duplicates = GetOrientationDuplicates(shape);
-            for (int d = 0; d < duplicates.Count; d++)
-            {
-                trait = FindTraitForExactType(duplicates[d], color);
-                if (trait.HasValue)
-                {
-                    return trait;
-                }
-            }
-            return null;
-        }
-
-        private PieceTrait? FindTraitForExactType(ShapeId shape, PieceColor color)
         {
             var tokens = _deck.Deck;
             for (int i = 0; i < tokens.Count; i++)

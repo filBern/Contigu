@@ -50,11 +50,6 @@ namespace Contigu.Core
                 new Vector2Int(0, 0), new Vector2Int(1, 0)
             });
 
-            shapes[ShapeId.DomV] = new PieceShape(ShapeId.DomV, new[]
-            {
-                new Vector2Int(0, 0), new Vector2Int(0, 1)
-            });
-
             shapes[ShapeId.TriL] = new PieceShape(ShapeId.TriL, new[]
             {
                 new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(0, 1)
@@ -63,11 +58,6 @@ namespace Contigu.Core
             shapes[ShapeId.TriIH] = new PieceShape(ShapeId.TriIH, new[]
             {
                 new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0)
-            });
-
-            shapes[ShapeId.TriIV] = new PieceShape(ShapeId.TriIV, new[]
-            {
-                new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2)
             });
 
             shapes[ShapeId.Sq2] = new PieceShape(ShapeId.Sq2, new[]

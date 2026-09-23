@@ -4519,3 +4519,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   à 0 avant d'asserter — rend ces tests robustes à tout futur changement
   du deck de départ ou du shuffle, au lieu de dépendre d'un effet de
   bord incident.
+- **DomV et TriIV supprimés en tant que `ShapeId` distincts, plutôt que
+  simplement fusionnés dans l'affichage du point précédent** (retour
+  explicite : "J'aimerais vraiment que les deux versions soulignées ne
+  soit qu'un seul et qu'il n'y ait qu'une seule version entre
+  horizontal et verticale"). Vérifié avant de coder : chaque pièce
+  reçoit déjà une `PieceRotation` aléatoire au tirage (voir
+  `PieceRotation`), et `PieceShapeCatalog.GetRotated` fait tourner
+  `DomH`/`TriIH` de 90° pour produire EXACTEMENT les cellules de base
+  de `DomV`/`TriIV` — deux tests (`GetRotated_RotatingADomino90Degrees_
+  ProducesTheOtherDominosShape`, `GetRotated_RotatingAHorizontalTromino
+  90Degrees_ProducesTheVerticalTrominosShape`) existaient déjà
+  précisément pour le prouver. `DomV`/`TriIV` étaient donc de vrais
+  doublons de données, pas seulement des doublons visuels dans l'écran
+  du deck. Le deck de départ passe de 40 à 32 pièces (8 formes x 4
+  couleurs) et celui de Marathon de 16 à 13 (`InitialDeckFactory`,
+  `ShapeId`, `PieceShapeCatalog`, `VisualDefaults`). La fusion
+  d'affichage du point précédent (`DeckView.OrientationDuplicateOf`)
+  est redevenue inutile et a été retirée — il n'y a plus qu'une seule
+  ligne par forme par construction. Tous les tests qui référençaient
+  `DomV`/`TriIV` directement ou supposaient une composition de deck à
+  seed fixe (ex. `PlacePiece_TriggersDefeat_...` avec seed=7) ont été
+  mis à jour en retraçant le tirage déterministe (`/tmp/
+  dotnet_random_sim.py`, ré-exécuté avec le nouveau deck à 32 pièces).
