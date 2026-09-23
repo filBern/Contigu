@@ -126,6 +126,19 @@ namespace Contigu.Presentation
             leaveRect.sizeDelta = new Vector2(220f, 46f);
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
+            // Tab opens the deck view from the shop too (on explicit
+            // request: the hint shown on the main game screen — see
+            // HudView — needed here as well since the shop is its own
+            // separate overlay).
+            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view piece deck", 14, UITheme.TextMuted);
+            var deckHintRect = deckHint.rectTransform;
+            deckHintRect.anchorMin = new Vector2(0f, 0f);
+            deckHintRect.anchorMax = new Vector2(0f, 0f);
+            deckHintRect.pivot = new Vector2(0f, 0f);
+            deckHintRect.anchoredPosition = new Vector2(16f, 16f);
+            deckHintRect.sizeDelta = new Vector2(220f, 22f);
+            deckHint.alignment = TextAnchor.MiddleLeft;
+
             _root.gameObject.SetActive(false);
             return _root;
         }

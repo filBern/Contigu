@@ -41,6 +41,39 @@ namespace Contigu.Presentation
             _lueurLabel.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
             _lueurLabel.rectTransform.sizeDelta = new Vector2(180f, 26f);
             _lueurLabel.alignment = TextAnchor.MiddleRight;
+
+            BuildScoringBaseline(parent);
+        }
+
+        /// <summary>
+        /// Static bullet-point reference for the scoring rules that always
+        /// apply (independent of any modifier), plus the deck-view hint, in
+        /// the empty space below the Lueur readout (on explicit request: "un
+        /// texte bullet point avec la baseline du pointage" + "une mention
+        /// tab to open piece deck ... quelque part dans l'écran"). Built
+        /// once and never refreshed — none of this ever changes mid-run.
+        /// </summary>
+        private static void BuildScoringBaseline(Transform parent)
+        {
+            string[] lines =
+            {
+                "• Group: 1st tile 1 pt, 2nd 2 pts, 3rd 3 pts...",
+                "• Line/column clear: 3 pts per tile",
+                "• Golden tile: +18 pts",
+                "• Tab: view piece deck"
+            };
+            string text = DescriptionTextFormatter.Colorize(lines[0]);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                text += "\n" + DescriptionTextFormatter.Colorize(lines[i]);
+            }
+
+            var label = UIFactory.CreateText(parent, "ScoringBaseline", text, 15, UITheme.TextMuted, TextAnchor.UpperRight);
+            label.rectTransform.anchorMin = new Vector2(1f, 1f);
+            label.rectTransform.anchorMax = new Vector2(1f, 1f);
+            label.rectTransform.pivot = new Vector2(1f, 1f);
+            label.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f + 26f + 12f));
+            label.rectTransform.sizeDelta = new Vector2(260f, 160f);
         }
 
         private static void BuildBar(Transform parent, string name, Sprite fillSprite, bool top,

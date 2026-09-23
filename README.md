@@ -3624,3 +3624,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (même sprite `card_bg_3`, maintenant partagé entre la main et le
   shop plutôt que nommé pour un seul de ses deux usages) et ses 2
   usages dans `HandView.cs` mis à jour en conséquence.
+- **Baseline de pointage en bullet points + rappel Tab pour le deck**
+  (demande explicite : "Dans la section rouge du screenshot, à droite
+  de l'écran j'aimerais un texte bullet point avec la baseline du
+  pointage" + "Il faut une mention tab to open piece deck ou quelque
+  chose du genre quelque part dans l'écran ET dans le shop"). Ajouté
+  dans l'espace vide sous le readout Lueur (`HudView.BuildScoringBaseline`,
+  statique, construit une seule fois — ces valeurs ne changent jamais en
+  cours de run) : groupe (progressif : 1re case 1 pt, 2e 2 pts, 3e
+  3 pts...), clear de ligne/colonne (3 pts/case), case dorée (+18 pts),
+  et un rappel "Tab: view piece deck". Le même rappel Tab est aussi
+  ajouté dans `ShopView` (coin bas-gauche, sous le bouton Reroll) —
+  la vue du deck reste accessible via Tab même par-dessus le shop
+  (aucun garde d'état dans `GameBootstrap.Update`), donc l'overlay
+  du shop avait besoin de son propre rappel plutôt que de compter sur
+  celui de l'écran principal, invisible une fois le shop ouvert
+  par-dessus. Texte passé par `DescriptionTextFormatter.Colorize`
+  (chaque ligne colorée séparément puis rejointes par "\n", plutôt que
+  tout le bloc multi-lignes d'un coup, pour éviter que le caractère de
+  saut de ligne ne se retrouve collé à un mot et casse la
+  correspondance exacte "pts" que le formatter cherche).
