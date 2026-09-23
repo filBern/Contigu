@@ -1552,14 +1552,19 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(domH, PieceColor.Violet, 2, 4, modifiers);
 
             Assert.AreEqual(23, grid.FilledCellCount);
-            Assert.AreEqual(2, result.Chips, "A lone 2-cell group, no golden/line-clear bonus");
+            // Group scoring is progressive (1st cell scored = 1 x
+            // GroupBonusPerCell, 2nd = 2x, ... — see ExpectedGroupBonus's
+            // own doc comment), so a lone 2-cell group is 1+2=3, not a
+            // flat 2 (a pre-existing wrong expectation in this test, only
+            // surfaced once CI actually ran it for the first time).
+            Assert.AreEqual(3, result.Chips, "A lone 2-cell group, no golden/line-clear bonus");
             Assert.AreEqual(2.3f, result.Mult, 0.0001f);
-            // round(2 * 2.3) = round(4.6) = 5 — the OLD integer-floor
+            // round(3 * 2.3) = round(6.9) = 7 — the OLD integer-floor
             // behavior would have given floor(2.3) = x2 for a total of
-            // 2*2=4 instead. On explicit request: "on arrondit le score
+            // 3*2=6 instead. On explicit request: "on arrondit le score
             // total de la pièce posé par la suite" — only the FINAL total
             // rounds, not the multiplier itself along the way.
-            Assert.AreEqual(5, result.TotalScore);
+            Assert.AreEqual(7, result.TotalScore);
         }
 
         // ---- Tenth batch: public getters exposing progressive-modifier

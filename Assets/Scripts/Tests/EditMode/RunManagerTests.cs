@@ -1511,11 +1511,27 @@ namespace Contigu.Tests
             // survives regardless of which of the two cells got tagged.
             int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.DomH);
 
-            var outcome = run.PlacePiece(slot, 4, 4);
+            // Every hand token draws a RANDOM initial rotation (see
+            // DeckManager.RandomRotation) — this used to hardcode the
+            // piece's landing cells as (4,4)/(5,4) as if it always placed
+            // unrotated, which only held for 2 of DomH's 4 possible
+            // rotations (the other 2 land it VERTICAL instead), making
+            // this test flaky depending on the random hand state. Only
+            // surfaced once CI actually ran it for the first time — same
+            // "compute the real rotated shape" pattern as the other
+            // ChurnUntilHandMatches tests in this file.
+            var rotation = run.Deck.HandRotations[slot];
+            var shape = PieceShapeCatalog.GetRotated(ShapeId.DomH, rotation);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.IsTrue(run.Grid.GetCell(4, 4).IsFilled);
-            Assert.IsTrue(run.Grid.GetCell(5, 4).IsFilled);
+            foreach (var offset in shape.Cells)
+            {
+                Assert.IsTrue(run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y).IsFilled);
+            }
         }
 
         [Test]
