@@ -4005,3 +4005,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   réarrangement ne vienne pas reconstruire les badges alors que la
   séquence de score est justement en train de lire leurs positions
   (`GetBadgeTransform`/`Pulse`).
+- **Pointage du groupe en ordre de lecture** (demande explicite : "Il y
+  a un drôle d'ordre de pointage des tuiles j'ai l'impression qu'on
+  passe au travers des pièces mais j'aimerais qu'on le fasse pas ordre
+  de lecture (gauche à droite en partant d'en haut)") — `GridManager.
+  FloodFillGroup` (qui calcule le groupe connecté re-scoré à chaque
+  pose, voir la scoring progressive N-ième-cellule de `PlacePiece`)
+  utilise une pile (DFS) : l'ordre de visite zigzague à travers la
+  forme plutôt que de la balayer proprement, exactement le symptôme
+  rapporté. Un `.Sort()` est ajouté juste avant le `return` de
+  `FloodFillGroup` — le seul point de passage commun à `FindConnectedGroup`
+  (une vraie pose) ET `PreviewGroup` (le survol) — qui trie les cellules
+  du groupe en ordre de lecture réel : y décroissant d'abord (le HAUT de
+  l'écran — voir `GridView.Build`, où y augmente vers le haut), puis x
+  croissant (gauche à droite) à l'intérieur d'une même rangée. Purement
+  cosmétique : le bonus de groupe est une somme des mêmes valeurs
+  (1..N × GroupBonusPerCell) peu importe quelle cellule précise reçoit
+  quelle valeur, et chaque bonus de modifier par-cellule qui parcourt
+  `groupCells` fait de même — donc le score total d'une pose ne change
+  jamais, seul l'ordre d'affichage (et donc l'ordre du pop-up/pulse
+  progressif dans `GameBootstrap`) change. Un nouveau test
+  (`PlacePiece_GroupScoreEvents_FollowReadingOrder_TopRowFirstThenLeftToRight`)
+  construit un groupe en zigzag délibérément terminé par le coin
+  supérieur-droit (pour que le DFS parte du MAUVAIS bout) et vérifie
+  que l'ordre final est bien le tri explicite, pas un hasard de
+  traversée.

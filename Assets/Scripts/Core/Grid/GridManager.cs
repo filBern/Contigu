@@ -2484,6 +2484,30 @@ namespace Contigu.Core
                 TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
             }
 
+            // A stack-based flood fill visits cells in whatever order the
+            // last-pushed neighbor happens to pop next — it zigzags around
+            // the group rather than sweeping across it, which is what the
+            // per-cell progressive group bonus (PlacePiece's group loop)
+            // and its popup/pulse animation (GameBootstrap) both walk in
+            // (on explicit report: "j'ai l'impression qu'on passe au
+            // travers des pièces... j'aimerais qu'on le fasse pas ordre de
+            // lecture (gauche à droite en partant d'en haut)"). Sorted here
+            // — the one spot every caller (FindConnectedGroup for both a
+            // real placement and PreviewGroup's hover highlight) goes
+            // through — into true reading order: highest Y (the TOP row —
+            // see GridView.Build, y increases upward on screen) first, then
+            // ascending X (left to right) within a row. Purely cosmetic:
+            // the group bonus is a sum of the same N values (1..N times
+            // GroupBonusPerCell) regardless of which specific cell gets
+            // which value, and every other per-cell modifier loop over
+            // groupCells just sums its own bonuses the same way — so this
+            // never changes a placement's total score, only which cell
+            // visibly earns which amount and in what order.
+            group.Sort((a, b) =>
+            {
+                int rowCompare = b.y.CompareTo(a.y);
+                return rowCompare != 0 ? rowCompare : a.x.CompareTo(b.x);
+            });
             return group;
         }
 

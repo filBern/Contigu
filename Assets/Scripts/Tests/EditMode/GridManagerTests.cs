@@ -978,6 +978,47 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_GroupScoreEvents_FollowReadingOrder_TopRowFirstThenLeftToRight()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            // Builds a staggered group across 2 rows/3 columns: (0,0)-(1,0)
+            // on the bottom row, (1,1)-(2,1) on the top row, connected only
+            // through (1,0)-(1,1). Finishing at (2,1) makes the flood fill
+            // start from the TOP-RIGHT cell and walk left/down from there —
+            // the opposite of reading order — so this only passes if
+            // FloodFillGroup's own explicit sort (not incidental DFS luck)
+            // is what's producing the final order.
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 1);
+            var result = grid.PlacePiece(single, PieceColor.Coral, 2, 1);
+
+            var groupPositions = new List<Vector2Int>();
+            foreach (var e in result.ScoreEvents)
+            {
+                if (e.Type == ScoreEventType.Group)
+                {
+                    groupPositions.Add(e.Position);
+                }
+            }
+
+            // Reading order (on explicit report: "j'ai l'impression qu'on
+            // passe au travers des pièces... j'aimerais qu'on le fasse pas
+            // ordre de lecture (gauche à droite en partant d'en haut)") —
+            // y increases UPWARD on screen (see GridView.Build), so the
+            // "top" row is the higher y, scanned first; then left-to-right
+            // (ascending x) within each row, top row before bottom row.
+            var expected = new List<Vector2Int>
+            {
+                new Vector2Int(1, 1), new Vector2Int(2, 1),
+                new Vector2Int(0, 0), new Vector2Int(1, 0)
+            };
+            Assert.AreEqual(expected, groupPositions);
+        }
+
+        [Test]
         public void PlacePiece_ScoreEvents_IncludesOneGoldenEntryAlongsideTheGroupEntry()
         {
             var grid = new GridManager();
