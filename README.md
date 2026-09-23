@@ -4453,3 +4453,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   propres cartes à hauteur variable. Les formes, à l'intérieur d'une
   couleur, suivent l'ordre fixe `InitialDeckFactory.ShapeOrder` déjà
   réutilisé ailleurs, plutôt que l'ordre imprévisible du dictionnaire.
+- **Bug : contenu du deck plaqué à gauche au lieu d'être centré**
+  (retour explicite, capture à l'appui : "Est-ce que tu peux centrer
+  les éléments ?"). Root cause : chaque section démarrait à x=0 dans
+  un conteneur large de 920px prévu pour les 6 colonnes au maximum —
+  avec moins de colonnes réellement utilisées (ex. seulement 4 types
+  par couleur pour un deck Marathon), le bloc entier restait collé au
+  bord gauche du conteneur au lieu de se centrer à l'écran, même si le
+  conteneur lui-même était bien centré. Corrigé en calculant un décalage
+  horizontal PARTAGÉ par toutes les sections, basé sur la section qui a
+  le plus de types distincts (plafonné à 6 colonnes) : les colonnes
+  restent alignées entre les sections tout en centrant le bloc entier.

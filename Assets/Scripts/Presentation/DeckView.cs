@@ -140,7 +140,8 @@ namespace Contigu.Presentation
             _countLabel.text = _deck.DeckCount + " pieces";
 
             var composition = _deck.GetDeckComposition();
-            float y = 0f;
+            var sections = new List<(PieceColor Color, List<(ShapeId Shape, int Count)> Types)>();
+            int widestSection = 0;
             for (int c = 0; c < ColorSectionOrder.Length; c++)
             {
                 var color = ColorSectionOrder[c];
@@ -149,10 +150,30 @@ namespace Contigu.Presentation
                 {
                     continue;
                 }
+                sections.Add((color, types));
+                if (types.Count > widestSection)
+                {
+                    widestSection = types.Count;
+                }
+            }
 
-                y = BuildColorSectionHeader(color, y);
+            // Every section shares the SAME horizontal offset/width (based
+            // on whichever section actually has the most distinct types,
+            // capped at ColumnsPerSection) rather than each hugging the
+            // container's own left edge — on explicit report, with every
+            // color under a full row the whole block still sat flush left
+            // inside the wider fixed-width container instead of reading as
+            // centered on screen.
+            int columnsUsed = Mathf.Min(ColumnsPerSection, widestSection);
+            float contentWidth = columnsUsed * CardWidth + (columnsUsed - 1) * CardSpacing;
+            float xOffset = (ListWidth - contentWidth) / 2f;
+
+            float y = 0f;
+            for (int i = 0; i < sections.Count; i++)
+            {
+                y = BuildColorSectionHeader(sections[i].Color, y, xOffset, contentWidth);
                 y -= SectionHeaderToGridGap;
-                y = BuildColorSectionGrid(types, color, y);
+                y = BuildColorSectionGrid(sections[i].Types, sections[i].Color, y, xOffset);
                 y -= SectionGap;
             }
         }
@@ -172,26 +193,26 @@ namespace Contigu.Presentation
             return result;
         }
 
-        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Returns the Y cursor for whatever comes next.</summary>
-        private float BuildColorSectionHeader(PieceColor color, float y)
+        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's own centered columns below it. Returns the Y cursor for whatever comes next.</summary>
+        private float BuildColorSectionHeader(PieceColor color, float y, float xOffset, float contentWidth)
         {
             var label = UIFactory.CreateText(_listContainer, "Header_" + color, VisualDefaults.GetColorName(color).ToUpperInvariant(), 15, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
             label.rectTransform.anchorMin = new Vector2(0f, 1f);
             label.rectTransform.anchorMax = new Vector2(0f, 1f);
             label.rectTransform.pivot = new Vector2(0f, 1f);
-            label.rectTransform.anchoredPosition = new Vector2(0f, y);
-            label.rectTransform.sizeDelta = new Vector2(ListWidth, SectionHeaderHeight);
+            label.rectTransform.anchoredPosition = new Vector2(xOffset, y);
+            label.rectTransform.sizeDelta = new Vector2(contentWidth, SectionHeaderHeight);
             return y - SectionHeaderHeight;
         }
 
-        /// <summary>Wraps <paramref name="types"/> across ColumnsPerSection narrow columns, as many rows as needed. Returns the Y cursor for whatever comes next.</summary>
-        private float BuildColorSectionGrid(List<(ShapeId Shape, int Count)> types, PieceColor color, float y)
+        /// <summary>Wraps <paramref name="types"/> across ColumnsPerSection narrow columns, as many rows as needed, every column starting at <paramref name="xOffset"/> — the same offset every section shares, so columns stay aligned across the whole (centered) block. Returns the Y cursor for whatever comes next.</summary>
+        private float BuildColorSectionGrid(List<(ShapeId Shape, int Count)> types, PieceColor color, float y, float xOffset)
         {
             for (int i = 0; i < types.Count; i++)
             {
                 int col = i % ColumnsPerSection;
                 int row = i / ColumnsPerSection;
-                float x = col * (CardWidth + CardSpacing);
+                float x = xOffset + col * (CardWidth + CardSpacing);
                 float cardY = y - row * (CardHeight + CardSpacing);
                 BuildTypeCard(x, cardY, types[i].Shape, color, types[i].Count);
             }
