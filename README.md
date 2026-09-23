@@ -4285,3 +4285,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   jamais en synchronisation) — aucun asset d'animation, juste
   `Time.time` lu chaque frame dans `Update()`, et la boucle ne
   redémarre jamais visiblement puisqu'un sinus/cosinus n'a pas de fin.
+- **Bug : texte flou sur les titres de section du tutoriel** (retour
+  explicite : "Tu as du texte flou (bold) dans le screen du tuto").
+  Root cause : les balises `<b>` du nouvel écran `TutorialView`, sur
+  une police d'affichage ("Digitalt", la police "Colorful UI" utilisée
+  partout) qui n'a pas de véritable graisse grasse — Unity simule le
+  gras en redessinant le glyphe deux fois avec un léger décalage, ce
+  qui donne un rendu flou/dédoublé, particulièrement visible sur les
+  traits déjà épais de Digitalt (voir le commentaire `pixelPerfect`
+  dans `GameBootstrap.BuildCanvas`, qui documentait déjà ce risque).
+  Tout le reste du projet évitait `<b>` pour cette même raison — un
+  oubli localisé à ce nouvel écran. Corrigé en remplaçant les titres
+  de section par du texte simple en majuscules.
