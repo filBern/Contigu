@@ -67,8 +67,13 @@ namespace Contigu.Presentation
         /// yellow/green display order — see VisualDefaults.ColorMap), and
         /// a cross for Joker, the one color the other four shapes don't
         /// use so it never gets mistaken for a "real" piece color.
+        /// Internal (not private): BackgroundShapeFactory reuses this exact
+        /// point-in-shape math at a much higher texture resolution for the
+        /// animated background's own geometric shapes — <paramref
+        /// name="color"/> is just a shape SELECTOR there, its actual
+        /// piece-color meaning is irrelevant to that caller.
         /// </summary>
-        private static bool IsInsideShape(PieceColor color, float dx, float dy)
+        internal static bool IsInsideShape(PieceColor color, float dx, float dy)
         {
             switch (color)
             {

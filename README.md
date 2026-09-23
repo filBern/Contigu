@@ -4297,3 +4297,43 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Tout le reste du projet évitait `<b>` pour cette même raison — un
   oubli localisé à ce nouvel écran. Corrigé en remplaçant les titres
   de section par du texte simple en majuscules.
+- **Titres de section du tutoriel agrandis** (retour explicite : "Les
+  secondary title devraient être plus gros") — les majuscules seules
+  (correction précédente) ne suffisaient pas à créer assez de
+  hiérarchie visuelle. Passés à `<size=24>` (contre 17 pour le corps)
+  — une vraie balise de redimensionnement, sans le risque de flou de
+  `<b>` puisqu'il n'y a rien à faire semblant de simuler. Au passage,
+  restructuré `TutorialView.BuildRulesText` en paires explicites
+  (titre, corps) plutôt qu'un tableau de lignes mêlées : un titre avec
+  sa propre balise `<size=>` en tête ne doit PAS repasser par
+  `DescriptionTextFormatter.Colorize`, sinon la balise collée au
+  premier mot ("LUEUR AND THE SHOP") empêche la reconnaissance du
+  mot-clé qu'elle est censée mettre en couleur.
+- **Fond d'écran repensé : formes géométriques nettes plutôt que des
+  taches douces** (retour explicite après avoir vu le premier jet en
+  jeu : "Je n'aime pas le background, j'aimerais quelque chose de plus
+  geometrique qui joue avec les grosseurs et positions de shapes et
+  qui est légèrement plus clair que le plain background qu'il y avait
+  avant. On garde le plain background aussi comme base"). Le panneau
+  plat `UITheme.Background` reste la base, comme demandé — seul le
+  contenu d'`AnimatedBackgroundView` change. `BackgroundBlobFactory`
+  (le dégradé radial "smoothstep" flou) est supprimé, remplacé par
+  `BackgroundShapeFactory` : réutilise directement
+  `ColorblindShapeFactory.IsInsideShape` (rendue `internal` pour
+  l'occasion) — les mêmes tests géométriques cercle/carré/triangle/
+  losange que le mode daltonien, où `PieceColor` sert uniquement de
+  sélecteur de FORME, sa vraie signification de couleur de pièce n'a
+  aucun rapport ici — mais dans un `Texture2D` bien plus grand (256 au
+  lieu de 32) : les badges du mode daltonien ne s'affichent jamais
+  au-delà de 20-45px, où 32 suffit largement, alors qu'une forme de
+  fond s'étire jusqu'à 150-500px, où une source de 32px aurait rendu
+  flou/pixelisé au lieu des arêtes nettes demandées. 8 formes (contre
+  4 taches avant), tailles variées de 120 à 320px, positions étalées
+  dans les marges autour de la colonne centrale (grille/HUD/main) —
+  "joue avec les grosseurs et positions" — chacune teintée d'une
+  SEULE nuance ton-sur-ton légèrement plus claire que le fond plat
+  (`Color.Lerp(UITheme.Background, Color.white, 0.16)`, alpha 0.5,
+  au lieu des 4 couleurs de pièce du premier jet) pour rester sobre.
+  Dérive toujours en boucle sinus/cosinus (même mécanisme qu'avant),
+  avec en plus une lente rotation propre à chaque forme pour renforcer
+  le côté géométrique.
