@@ -10,11 +10,21 @@ namespace Contigu.Data
     /// <see cref="PieceShapeDatabase"/> assets in the editor first. A database
     /// asset, if assigned on <c>GameBootstrap</c>, overrides these per-entry.
     ///
-    /// Colors are built from the v1 8-color game palette (also used for chrome —
-    /// see Presentation.UITheme): #372e4d, #5f699c, #65aed6, #a4ebcc, #effae6,
-    /// #f0b38d, #b56d7f, #614363. The 4 base piece colors take the palette's 4
-    /// most saturated hues (one each), Joker takes the remaining mid-tone slate
-    /// for a deliberately calmer, "wildcard" feel against the 4 vivid pieces.
+    /// The 4 base piece colors (on explicit request — a graphical overhaul of
+    /// the grid/tiles, "les 4 types de tuiles deviennent rouge, bleu, vert et
+    /// jaune") are now a fixed red/blue/green/yellow set instead of the v1
+    /// 8-color palette's own hues — chosen for the closest match to each
+    /// color's old hue (Coral's orange-red → Red, Teal's blue → Blue, Lime's
+    /// green → Green, Violet left over → Yellow) so a player's existing sense
+    /// of "which piece is which" carries over as much as possible. The
+    /// underlying <see cref="PieceColor"/> enum names (Coral/Teal/Violet/Lime)
+    /// are untouched — renaming those would ripple through ~100 modifier ids
+    /// (DevotionCoral, EclatTeal, ...) for a purely cosmetic change — only
+    /// their rendered <see cref="ColorMap"/> value and displayed
+    /// <see cref="ColorNames"/> string changed. Joker keeps its own calmer
+    /// mid-tone slate (#5f699c, from the old v1 palette, still used for chrome
+    /// — see Presentation.UITheme) for a deliberately different, "wildcard"
+    /// feel against the 4 new vivid pieces.
     /// </summary>
     public static class VisualDefaults
     {
@@ -36,19 +46,19 @@ namespace Contigu.Data
 
         private static readonly Dictionary<PieceColor, Color> ColorMap = new Dictionary<PieceColor, Color>
         {
-            { PieceColor.Coral, new Color(0.941f, 0.702f, 0.553f) }, // #f0b38d
-            { PieceColor.Teal, new Color(0.396f, 0.682f, 0.839f) }, // #65aed6
-            { PieceColor.Violet, new Color(0.710f, 0.427f, 0.498f) }, // #b56d7f
-            { PieceColor.Lime, new Color(0.643f, 0.922f, 0.800f) }, // #a4ebcc
+            { PieceColor.Coral, new Color(0.906f, 0.298f, 0.235f) }, // #e74c3c (Red)
+            { PieceColor.Teal, new Color(0.204f, 0.596f, 0.859f) }, // #3498db (Blue)
+            { PieceColor.Violet, new Color(0.945f, 0.769f, 0.059f) }, // #f1c40f (Yellow)
+            { PieceColor.Lime, new Color(0.180f, 0.800f, 0.443f) }, // #2ecc71 (Green)
             { PieceColor.Joker, new Color(0.373f, 0.412f, 0.612f) } // #5f699c
         };
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
         {
-            { PieceColor.Coral, "Coral" },
-            { PieceColor.Teal, "Teal" },
-            { PieceColor.Violet, "Violet" },
-            { PieceColor.Lime, "Lime" },
+            { PieceColor.Coral, "Red" },
+            { PieceColor.Teal, "Blue" },
+            { PieceColor.Violet, "Yellow" },
+            { PieceColor.Lime, "Green" },
             { PieceColor.Joker, "Joker" }
         };
 
@@ -88,8 +98,23 @@ namespace Contigu.Data
         // Overlay drawn on top of a filled cell's flat color fill and below
         // its color-icon badge — a neutral (untinted) frame/bevel so a filled
         // piece cell reads as a distinct "block" rather than a flat rect,
-        // regardless of which of the 5 piece colors fills it.
+        // regardless of which of the 5 piece colors fills it. No longer drawn
+        // now that TileSprite below gives every cell its own card-shaped
+        // border directly (see GridCellView.ApplyState) — kept here rather
+        // than deleted in case a future look wants it back.
         public static readonly Sprite FillTileSprite = Resources.Load<Sprite>("Tiles/fill-tile-piece");
+
+        /// <summary>
+        /// Every grid cell and piece-preview square's shared base look (on
+        /// explicit request — "une empty tile ressemble a card_bg_3.png",
+        /// "le preview de chaque tuile est card_bg_3.png teinté de la couleur
+        /// correspondante"): the same 9-sliced card art already used for hand
+        /// slots and shop cards (see Presentation.UISprites.CardBackground —
+        /// duplicated here rather than referenced, since Data must not depend
+        /// on Presentation), shown at its own natural pale color for an empty
+        /// cell and tinted with a piece's color for a filled one.
+        /// </summary>
+        public static readonly Sprite TileSprite = Resources.Load<Sprite>("Colorful_UI/colorful/sprites/gameUI/card_bg_3");
 
         public static Color GetColor(PieceColor color)
         {

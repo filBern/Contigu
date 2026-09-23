@@ -67,7 +67,18 @@ namespace Contigu.Presentation
                 for (int x = 0; x < cols; x++)
                 {
                     bool filled = occupied.Contains(new Vector2Int(x, y));
-                    var img = UIFactory.CreatePanel(container, "c" + x + "_" + y, filled ? fillColor : new Color(1f, 1f, 1f, 0.05f));
+                    // Same shared card art/tint as a filled grid cell (see
+                    // GridCellView.ApplyState) — an unfilled bounding-box
+                    // square (a shape like an L-tromino has some) stays the
+                    // plain translucent placeholder, since it isn't an
+                    // actual tile.
+                    var img = filled
+                        ? UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.TileSprite)
+                        : UIFactory.CreatePanel(container, "c" + x + "_" + y, new Color(1f, 1f, 1f, 0.05f));
+                    if (filled)
+                    {
+                        img.color = fillColor;
+                    }
                     img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
                     img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);

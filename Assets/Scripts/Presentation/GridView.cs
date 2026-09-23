@@ -39,7 +39,11 @@ namespace Contigu.Presentation
             _cells = new GridCellView[GridManager.Size, GridManager.Size];
 
             var container = UIFactory.CreateUIObject("GridContainer", parent);
-            float spacing = 3f;
+            // A visible gap between tiles now that each one is its own
+            // card-shaped sprite rather than a flat color square touching its
+            // neighbors (on explicit request: "une petite margin entre chaque
+            // tuile") — was 3f, barely readable as a margin at this scale.
+            float spacing = 6f;
             float total = GridManager.Size * cellSize + (GridManager.Size - 1) * spacing;
             container.sizeDelta = new Vector2(total, total);
 
@@ -71,6 +75,10 @@ namespace Contigu.Presentation
             var cellGo = UIFactory.CreateUIObject("Cell_" + x + "_" + y, parent);
             var background = cellGo.gameObject.AddComponent<Image>();
             background.color = Color.white;
+            // Sliced so VisualDefaults.TileSprite's rounded card border stays
+            // sharp at cell size instead of being stretched (GridCellView.
+            // ApplyState assigns the actual sprite/tint per cell state).
+            background.type = Image.Type.Sliced;
 
             // Neutral overlay drawn on top of the flat color fill and below
             // every badge — gives a filled piece cell a distinct "block" look

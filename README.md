@@ -3662,3 +3662,53 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   la constante `IdleStatusMessage`, pour comparer par référence de
   contenu plutôt que dupliquer le literal à 6 endroits) et l'arrête
   (en réinitialisant l'échelle à 1) pour tout autre message.
+- **Refonte graphique de la grille et des tuiles** (demande explicite :
+  "une empty tile ressemble a card_bg_3.png... j'aimerais une petite
+  margin entre chaque tuile... les 4 types de tuiles deviennent rouge,
+  bleu, vert et jaune... le preview de chaque tuile est card_bg_3.png
+  teinté de la couleur correspondante").
+  - **Nouveau sprite partagé** : `VisualDefaults.TileSprite` charge le
+    même art `card_bg_3` déjà utilisé pour les emplacements de main et
+    les cartes du shop (chargé séparément ici plutôt que référencé
+    depuis `Presentation.UISprites.CardBackground`, puisque `Data` ne
+    doit pas dépendre de `Presentation`) — 9-sliced (`spriteBorder`
+    14px déjà configuré sur l'asset). Utilisé par `GridCellView.ApplyState`
+    pour une case vide (couleur naturelle non teintée, blanc) ET une
+    case remplie (teintée avec la couleur de la pièce), et par
+    `ShapePreviewFactory.Build` pour chaque case REMPLIE d'un preview
+    de pièce (main, fantôme de drag, lignes de draft/deck/tile-choice,
+    badges de modifier par couleur) — un seul point d'entrée partagé
+    par toute case "remplie" affichée n'importe où dans le jeu, comme
+    le documentait déjà le commentaire de la factory ("same look as a
+    filled grid cell"). L'ancien overlay `FillTileSprite` (bordure/
+    bevel neutre par-dessus le flat fill) n'est plus utilisé que si
+    `TileSprite` échoue à charger — son rôle ("donner un look de bloc
+    distinct") est maintenant rempli par la bordure de la carte
+    elle-même. Golden/Locked restent inchangés (hors du périmètre de
+    la demande).
+  - **Marge entre les tuiles** : `GridView`'s `spacing` de la
+    `GridLayoutGroup` passé de 3f à 6f — à peine visible en tant que
+    marge à l'ancienne valeur maintenant que chaque case a sa propre
+    forme de carte au lieu d'un carré de couleur plate collé à ses
+    voisins. `Background.type` mis à `Image.Type.Sliced` à la création
+    de chaque cellule (`GridView.CreateCell`) pour que la bordure
+    arrondie du sprite reste nette plutôt que d'être étirée.
+  - **4 couleurs de pièce → rouge/bleu/vert/jaune** :
+    `VisualDefaults.ColorMap` change de valeurs RGB (l'ancienne palette
+    8-couleurs du jeu → `#e74c3c`/`#3498db`/`#2ecc71`/`#f1c40f`), et
+    `ColorNames` change en conséquence ("Red"/"Blue"/"Green"/"Yellow")
+    pour que le texte affiché (tooltips, statut de pose) corresponde à
+    ce qui est réellement montré. Les identifiants internes de l'enum
+    `PieceColor` (Coral/Teal/Violet/Lime) restent INCHANGÉS — les
+    renommer aurait fait onduler le changement à travers ~100 ids de
+    modifiers (`DevotionCoral`, `EclatTeal`, ...) pour un changement
+    purement cosmétique ; seules leur couleur rendue et leur nom
+    affiché changent. Correspondance choisie par la teinte la plus
+    proche de chaque ancienne couleur (Coral orangé → Red, Teal bleuté
+    → Blue, Lime verdâtre → Green), Violet restant seul → Yellow par
+    élimination. Joker garde sa propre teinte ardoise neutre
+    (`#5f699c`, déjà utilisée pour le chrome de l'UI) pour son
+    caractère "wildcard" délibérément distinct des 4 couleurs vives.
+    Icônes daltonisme (`VisualDefaults.IconMap`, `Icons/Coral` etc.)
+    non touchées — hors du périmètre de la demande, qui portait sur la
+    couleur de fond des tuiles, pas sur ces pictogrammes séparés.

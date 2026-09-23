@@ -92,11 +92,14 @@ namespace Contigu.Presentation
             }
             else if (isFilled)
             {
-                // Always the pure piece color once filled — a golden cell's own
-                // background is never tinted (that would shift the piece's actual
-                // color); its golden status is conveyed by the badge and effect
-                // label below instead, which persist regardless of fill state.
-                Background.sprite = null;
+                // The shared card art (see VisualDefaults.TileSprite),
+                // tinted the pure piece color once filled — a golden cell's
+                // own background is never tinted (that would shift the
+                // piece's actual color); its golden status is conveyed by
+                // the badge and effect label below instead, which persist
+                // regardless of fill state. Falls back to the old flat fill
+                // if the sprite failed to load.
+                Background.sprite = VisualDefaults.TileSprite;
                 Background.color = VisualDefaults.GetColor(filledColor.Value);
             }
             else if (cell.IsGolden)
@@ -106,13 +109,18 @@ namespace Contigu.Presentation
             }
             else
             {
-                Background.sprite = null;
-                Background.color = VisualDefaults.EmptyCellColor;
+                // Own natural (untinted) color, on explicit request: "une
+                // empty tile ressemble a card_bg_3.png".
+                Background.sprite = VisualDefaults.TileSprite;
+                Background.color = VisualDefaults.TileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
             }
 
-            // Neutral frame/bevel overlay on top of the flat fill, below every
-            // badge — only for an actually-filled, non-obstacle cell.
-            bool showFillTile = isFilled && !renderAsLockedObstacle && VisualDefaults.FillTileSprite != null;
+            // Neutral frame/bevel overlay on top of the flat fill, below
+            // every badge — only shown as a fallback for an actually-filled,
+            // non-obstacle cell when TileSprite itself failed to load, since
+            // that sprite's own card border already gives filled cells the
+            // "distinct block" look this used to add on its own.
+            bool showFillTile = isFilled && !renderAsLockedObstacle && VisualDefaults.TileSprite == null && VisualDefaults.FillTileSprite != null;
             _fillTile.gameObject.SetActive(showFillTile);
             if (showFillTile)
             {
