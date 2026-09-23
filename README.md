@@ -3732,3 +3732,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   devenus orphelins supprimés du dépôt (`GoldenTile.png`/`LockedTile.png`/
   le dossier `Modifiers` non touchés, hors périmètre — états de case
   distincts, pas des icônes de couleur de pièce).
+- **Suite : les noms/descriptions de modifiers qui citaient encore
+  Coral/Teal/Violet/Lime** (demande explicite : "Dans les upgrades et
+  modifiers il faut changer les mots pour remplacer Coral par Red,
+  idem pour les autres") — `VisualDefaults.GetColorName` retournait
+  déjà "Red"/"Blue"/"Yellow"/"Green" depuis le commit précédent, mais
+  9 `ModifierDefinition` en dur dans leur propre texte (Name et/ou
+  Description) échappaient à cette table : `Complementaire`
+  ("touches a complementary color pair (Coral/Violet or Teal/Lime)"
+  → "(Red/Yellow or Blue/Green)", en vérifiant contre la vraie logique
+  de paires dans `GridManager.ComplementaryPairs` : (Coral,Violet) et
+  (Teal,Lime)) ; les 4 Devotion ("Coral/Teal/Violet/Lime Devotion",
+  "...placing a Coral/Teal/Violet/Lime piece" → "Red/Blue/Yellow/Green
+  Devotion" etc.) ; les 4 Éclat (même chose, "...Glow"). Aucune
+  description d'upgrade (`Assets/Scripts/Core/Upgrades/`) ne citait de
+  nom de couleur en dur — rien à changer là. Les identifiants internes
+  (`ModifierId.DevotionCoral`, `EclatTeal`, etc.) restent inchangés,
+  même raisonnement que pour l'enum `PieceColor` lui-même.
+- **Question du joueur : qu'est-ce qui a été fait pour Joker ?** — rien
+  de changé côté couleur : Joker garde sa teinte ardoise d'origine
+  (`#5f699c`, toujours dans `VisualDefaults.ColorMap`, voir la décision
+  "4 couleurs de pièce → rouge/bleu/vert/jaune" plus haut), délibérément
+  distincte des 4 couleurs vives pour son caractère "wildcard". Son
+  icône daltonisme (`Icons/Joker.png`) a bien été supprimée, mais dans
+  le même geste que les 4 autres (Coral/Teal/Violet/Lime) — la carte
+  teintée est désormais la seule façon de reconnaître N'IMPORTE quelle
+  couleur de tuile remplie, Joker inclus, pas un traitement spécifique
+  à Joker.

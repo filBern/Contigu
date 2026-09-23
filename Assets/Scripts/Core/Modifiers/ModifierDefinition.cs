@@ -92,7 +92,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
-            "x2 multiplier if this placement touches a complementary color pair (Coral/Violet or Teal/Lime).");
+            "x2 multiplier if this placement touches a complementary color pair (Red/Yellow or Blue/Green).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
@@ -174,20 +174,20 @@ namespace Contigu.Core
         // for shapes.
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
-            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Coral Devotion",
-            "x2 multiplier when placing a Coral piece.");
+            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Red Devotion",
+            "x2 multiplier when placing a Red piece.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
-            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Teal Devotion",
-            "x2 multiplier when placing a Teal piece.");
+            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Blue Devotion",
+            "x2 multiplier when placing a Blue piece.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
-            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Violet Devotion",
-            "x2 multiplier when placing a Violet piece.");
+            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Yellow Devotion",
+            "x2 multiplier when placing a Yellow piece.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
-            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Lime Devotion",
-            "x2 multiplier when placing a Lime piece.");
+            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Green Devotion",
+            "x2 multiplier when placing a Green piece.");
 
         public static readonly ModifierDefinition FormeSingle = new ModifierDefinition(
             ModifierId.FormeSingle, ModifierCategory.Formes, "Single Specialist",
@@ -257,20 +257,20 @@ namespace Contigu.Core
             "+12 pts when the piece does NOT have exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
-            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Coral Glow",
-            "+4 pts per group cell when placing a Coral piece.");
+            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Red Glow",
+            "+4 pts per group cell when placing a Red piece.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
-            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Teal Glow",
-            "+4 pts per group cell when placing a Teal piece.");
+            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Blue Glow",
+            "+4 pts per group cell when placing a Blue piece.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
-            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Violet Glow",
-            "+4 pts per group cell when placing a Violet piece.");
+            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Yellow Glow",
+            "+4 pts per group cell when placing a Yellow piece.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
-            ModifierId.EclatLime, ModifierCategory.Couleurs, "Lime Glow",
-            "+4 pts per group cell when placing a Lime piece.");
+            ModifierId.EclatLime, ModifierCategory.Couleurs, "Green Glow",
+            "+4 pts per group cell when placing a Green piece.");
 
         // ---- Fifth batch: 8 new ideas (on explicit request) ----
 
