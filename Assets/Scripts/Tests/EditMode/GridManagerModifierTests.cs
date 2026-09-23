@@ -1986,6 +1986,78 @@ namespace Contigu.Tests
             Assert.AreEqual(1 + result.AdditiveMultBonus, result.Mult);
         }
 
+        // ---- Order-sensitive Mult (on explicit request: "leur pointage se
+        // fasse par ordre d'index" + the follow-up clarifying it's a strict
+        // left-to-right fold, not PEMDAS: "1(par défaut) x2 +2 +5 est moins
+        // grand que 1(par défaut) +2 +5 x2 puisque chaque calcul est fait de
+        // gauche à droite") — PlacementResult.Mult now folds every Mult
+        // ScoreEvent in RunManager.ActiveModifiers order instead of summing
+        // every "+" and multiplying every "x" into two separate pools first
+        // (which was mathematically order-INDEPENDENT and could never honor
+        // a purchase/arrangement order at all). Ilot (x2, isolated single
+        // cell) stands in for the "x2" in the player's own example;
+        // MultDeux/MultCinqRisque (+2/+5 Mult) stand in for "+2"/"+5".
+
+        [Test]
+        public void Mult_AppliesXBeforePlus_WhenXModifierComesFirstInIndexOrder()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Ilot, ModifierId.MultDeux, ModifierId.MultCinqRisque };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            // 1 (default) x2 -> 2, +2 -> 4, +5 -> 9 (left to right, not PEMDAS).
+            Assert.AreEqual(9f, result.Mult, 0.0001f);
+        }
+
+        [Test]
+        public void Mult_AppliesXLast_WhenXModifierComesLastInIndexOrder()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MultDeux, ModifierId.MultCinqRisque, ModifierId.Ilot };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+
+            // 1 (default) +2 -> 3, +5 -> 8, x2 -> 16 (left to right, not PEMDAS).
+            Assert.AreEqual(16f, result.Mult, 0.0001f);
+        }
+
+        [Test]
+        public void SwapModifiers_ChangesMult_ByChangingModifierOrder()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.Ilot);
+            run.DebugGrantModifier(ModifierId.MultDeux);
+            run.DebugGrantModifier(ModifierId.MultCinqRisque);
+
+            // Same 3 modifiers as the tests above, but arranged via
+            // RunManager.SwapModifiers — the actual reordering entry point
+            // the player's drag-and-drop/tap-tap UI calls (see
+            // Presentation.ModifierPanelView) — instead of construction
+            // order, to prove the swap itself is what the scoring engine
+            // reads from, not just the list literal passed to PlacePiece.
+            Assert.AreEqual(new List<ModifierId> { ModifierId.Ilot, ModifierId.MultDeux, ModifierId.MultCinqRisque }, run.ActiveModifiers);
+            run.SwapModifiers(0, 2);
+            Assert.AreEqual(new List<ModifierId> { ModifierId.MultCinqRisque, ModifierId.MultDeux, ModifierId.Ilot }, run.ActiveModifiers);
+        }
+
+        [Test]
+        public void MoveModifier_ReinsertsAtTargetIndex_ShiftingOthersInBetween()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.Ilot);
+            run.DebugGrantModifier(ModifierId.MultDeux);
+            run.DebugGrantModifier(ModifierId.MultCinqRisque);
+
+            // The drag-and-drop reordering gesture — a true re-insertion
+            // (shifts every modifier in between by one), unlike
+            // SwapModifiers' 2-way exchange above.
+            run.MoveModifier(0, 2);
+            Assert.AreEqual(new List<ModifierId> { ModifierId.MultDeux, ModifierId.MultCinqRisque, ModifierId.Ilot }, run.ActiveModifiers);
+        }
+
         [Test]
         public void FormeSq2Points_GivesFlatPerCellBonus_WhenPlacedShapeMatches()
         {

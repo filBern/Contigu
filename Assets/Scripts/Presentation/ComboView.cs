@@ -144,7 +144,7 @@ namespace Contigu.Presentation
             _chipsPulseCoroutine = RestartPulse(_chipsPulseCoroutine, _chipsPill);
         }
 
-        /// <summary>Same bounce as <see cref="PulseChips"/>, but on the red mult pill — used the instant <see cref="Core.PlacementResult.ModifierMultiplier"/> or .ComboMultiplier actually grows it, so the "mult went up" moment reads distinctly from an ordinary chips gain.</summary>
+        /// <summary>Same bounce as <see cref="PulseChips"/>, but on the red mult pill — used every time <see cref="Core.PlacementResult.Mult"/>'s ordered per-modifier catch-up (see GameBootstrap's placement sequence) actually grows it, so the "mult went up" moment reads distinctly from an ordinary chips gain.</summary>
         public void PulseMult()
         {
             _multPulseCoroutine = RestartPulse(_multPulseCoroutine, _multPill);

@@ -26,6 +26,54 @@ namespace Contigu.Core
             get { return _activeModifiers; }
         }
 
+        /// <summary>
+        /// Swaps the modifiers at two positions in <see
+        /// cref="ActiveModifiers"/> — the "tap 2 modifiers to swap them"
+        /// reordering gesture (see Presentation.ModifierPanelView), on
+        /// explicit request: modifier order now determines scoring order
+        /// (see PlacementResult.Mult's ordered fold), and the player needs
+        /// a way to arrange it — "mettre les x après les +". A no-op for an
+        /// out-of-range or identical pair.
+        /// </summary>
+        public void SwapModifiers(int indexA, int indexB)
+        {
+            if (!IsValidModifierIndex(indexA) || !IsValidModifierIndex(indexB) || indexA == indexB)
+            {
+                return;
+            }
+
+            var temp = _activeModifiers[indexA];
+            _activeModifiers[indexA] = _activeModifiers[indexB];
+            _activeModifiers[indexB] = temp;
+        }
+
+        /// <summary>
+        /// Moves the modifier at <paramref name="fromIndex"/> to <paramref
+        /// name="toIndex"/>, shifting every modifier in between by one
+        /// position — the drag-and-drop reordering gesture (see
+        /// Presentation.ModifierPanelView), sibling of <see
+        /// cref="SwapModifiers"/> above but a true re-insertion rather than
+        /// a 2-way swap, matching how dragging a card into a new slot
+        /// behaves everywhere else in the game (e.g. HandView). A no-op for
+        /// an out-of-range or identical pair.
+        /// </summary>
+        public void MoveModifier(int fromIndex, int toIndex)
+        {
+            if (!IsValidModifierIndex(fromIndex) || !IsValidModifierIndex(toIndex) || fromIndex == toIndex)
+            {
+                return;
+            }
+
+            var moved = _activeModifiers[fromIndex];
+            _activeModifiers.RemoveAt(fromIndex);
+            _activeModifiers.Insert(toIndex, moved);
+        }
+
+        private bool IsValidModifierIndex(int index)
+        {
+            return index >= 0 && index < _activeModifiers.Count;
+        }
+
         /// <summary>The last REAL modifier actually added by a shop purchase this run (never Copieur/Mimic itself, see BuyModifierSlot) — null until the player's first purchase. "Mimic" (Copieur) reads this to decide which modifier it copies.</summary>
         private ModifierId? _lastPurchasedModifierId;
 
@@ -674,6 +722,11 @@ namespace Contigu.Core
             var events = new List<ScoreEvent>(placement.ScoreEvents);
             var scoreEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], ScoringConstants.SlotLoyaltyMultiplier);
             scoreEvent.TriggeringModifier = slotModifier.Value;
+            // Its own position in _activeModifiers — needed so PlacementResult.Mult's
+            // ordered left-to-right fold (see its own doc comment) places this
+            // correctly relative to every other Mult modifier instead of
+            // always applying it last regardless of where the player put it.
+            scoreEvent.TriggeringModifierIndex = _activeModifiers.IndexOf(slotModifier.Value);
             events.Add(scoreEvent);
             placement.ScoreEvents = events;
         }
@@ -717,6 +770,10 @@ namespace Contigu.Core
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
                     multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
+                    // Its own position in _activeModifiers — see the same
+                    // stamp in ApplyHandSlotModifierBonus for why (feeds
+                    // PlacementResult.Mult's ordered fold).
+                    multEvent.TriggeringModifierIndex = i;
                     multEvent.PreciseAmount = trueMult;
                     events.Add(multEvent);
                 }
@@ -726,6 +783,7 @@ namespace Contigu.Core
                     placement.ModifierBonus += bonus;
                     var ptsEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus);
                     ptsEvent.TriggeringModifier = ModifierId.Multitude;
+                    ptsEvent.TriggeringModifierIndex = i;
                     events.Add(ptsEvent);
                 }
                 else if (_activeModifiers[i] == ModifierId.Experience)
@@ -735,6 +793,7 @@ namespace Contigu.Core
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
                     multEvent.TriggeringModifier = ModifierId.Experience;
+                    multEvent.TriggeringModifierIndex = i;
                     multEvent.PreciseAmount = trueMult;
                     events.Add(multEvent);
                 }

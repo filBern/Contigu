@@ -202,20 +202,77 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Balatro-style "mult" — the additive "+Mult" pool (see <see
-        /// cref="AdditiveMultBonus"/>/<see cref="ProgressiveAdditiveMult"/>)
-        /// applied as (1 + that pool), then every placement-wide "xN"
-        /// multiplier stacked on top, including Densité's true fractional
-        /// factor (<see cref="ProgressiveMultiplier"/>). A float rather
-        /// than an int specifically so progressive modifiers keep their
-        /// full precision all the way through the multiplication chain —
-        /// only <see cref="TotalScore"/> rounds, once, at the very end (on
-        /// explicit request: "on arrondit le score total de la pièce posé
-        /// par la suite").
+        /// Balatro-style "mult", starting at 1 — but unlike a plain "sum
+        /// every +Mult, multiply in every xN" pool, this now folds every
+        /// Mult-contributing <see cref="ScoreEvents"/> entry (<see
+        /// cref="ScoreEventType.ModifierMultiplier"/>/<see
+        /// cref="ScoreEventType.MultBonus"/>) strictly left to right, in
+        /// the order the player actually holds those modifiers (<see
+        /// cref="ScoreEvent.TriggeringModifierIndex"/> — the modifier's own
+        /// position in RunManager.ActiveModifiers), NOT by operator
+        /// precedence (on explicit request: "leur pointage se fasse par
+        /// ordre d'index. Le premier acheté est le premier index" +
+        /// "1(par défaut) x2 +2 +5 est moins grand que 1(par défaut) +2 +5
+        /// x2 puisque chaque calcul est fait de gauche à droite et non
+        /// selon la priorité des opérations PEDMAS"). A "+N Mult" modifier
+        /// (MultUn/Deux/Quatre, Risky Mult, Solidarité, Enchanted Cards,
+        /// Experience) ADDS N to the running total; an "xN" modifier
+        /// (Prisme, Devotion*, the line-pattern family, Combo, Slot
+        /// Loyalty, Densité, ...) MULTIPLIES it — exactly which one each
+        /// event is comes from its own <see
+        /// cref="ScoreEventType"/>. Reading off the events (rather than the
+        /// old separately-summed <see cref="AdditiveMultBonus"/>/<see
+        /// cref="ModifierMultiplier"/>/<see cref="ComboMultiplier"/>/<see
+        /// cref="ProgressiveMultiplier"/> fields, which are still populated
+        /// as an aggregate rollup for other readers/tests but no longer
+        /// drive the actual score) is what makes this order-sensitive at
+        /// all — those fields collapse every + into one sum and every x
+        /// into one product before combining the two, which is
+        /// mathematically order-INDEPENDENT (a sum and a product are each
+        /// commutative on their own) and could never honor a purchase
+        /// order no matter how the player arranged their modifiers. <see
+        /// cref="ScoreEvent.PreciseAmount"/> is used over the rounded <see
+        /// cref="ScoreEvent.Amount"/> wherever a modifier set it (Densité/
+        /// Enchanted Cards/Experience), so progressive modifiers keep full
+        /// precision through the whole fold — only <see cref="TotalScore"/>
+        /// rounds, once, at the very end.
         /// </summary>
         public float Mult
         {
-            get { return (1f + AdditiveMultBonus + ProgressiveAdditiveMult) * ModifierMultiplier * ComboMultiplier * ProgressiveMultiplier; }
+            get
+            {
+                var multEvents = new List<ScoreEvent>();
+                for (int i = 0; i < ScoreEvents.Count; i++)
+                {
+                    var e = ScoreEvents[i];
+                    if (e.Type == ScoreEventType.ModifierMultiplier || e.Type == ScoreEventType.MultBonus)
+                    {
+                        multEvents.Add(e);
+                    }
+                }
+                // Stable by construction: two events sharing the same index
+                // are always the SAME modifier's own multiple firings (a
+                // modifier is never partly "+" and partly "x"), so their
+                // relative order never matters — a plain (unstable) sort is
+                // safe here.
+                multEvents.Sort((a, b) => a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex));
+
+                float mult = 1f;
+                for (int i = 0; i < multEvents.Count; i++)
+                {
+                    var e = multEvents[i];
+                    float amount = e.PreciseAmount ?? e.Amount;
+                    if (e.Type == ScoreEventType.ModifierMultiplier)
+                    {
+                        mult *= amount;
+                    }
+                    else
+                    {
+                        mult += amount;
+                    }
+                }
+                return mult;
+            }
         }
 
         /// <summary>Chips * Mult, rounded ONCE here — never anywhere upstream (see <see cref="Mult"/>).</summary>

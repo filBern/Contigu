@@ -3925,3 +3925,83 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `UITheme.Panel` de base — aucun élément séparé dessiné par-dessus le
   preview, donc plus aucun risque de le griser, quelle que soit la
   forme de l'indicateur.
+- **Pointage des modifiers par ordre d'index, réorganisable** (demande
+  explicite : "j'aimerais que leur pointage se fasse par ordre d'index.
+  Le premier acheté est le premier index et ainsi de suite. Par contre
+  je veux qu'on puisse les réorganiser avec un drag and drop OU avec un
+  tap (tap 2 modifiers pour les inter changer de position). L'ordre est
+  important parce que le joueur va vouloir mettre les x après les +
+  pour maximiser les points. Il va falloir les numéroter visuellement
+  aussi" — puis, en clarification suite à une question sur les 7
+  modifiers "+Mult" existants : "Ce que je veux dire c'est que si le
+  joueur a 3 modifiers qui donne du mult (x2, +2, +5) l'ordre dans
+  lequel le joueur les place va changer le calcul... 1(par défaut) x2
+  +2 +5 est moins grand que 1(par défaut) +2 +5 x2 puisque chaque
+  calcule est fait de gauche à droite et non selon la priorité des
+  opérations PEDMAS"). Un changement bien plus profond qu'il n'y
+  paraît : avant cette demande, `PlacementResult.Mult` combinait tous
+  les modifiers `+Mult` dans un total sommé (`AdditiveMultBonus`/
+  `ProgressiveAdditiveMult`) et tous les modifiers `xN` dans un total
+  multiplié (`ModifierMultiplier`/`ComboMultiplier`/
+  `ProgressiveMultiplier`), puis combinait les deux `(1 + somme) *
+  produit` — une somme et un produit sont chacun commutatifs, donc ce
+  calcul était mathématiquement INDÉPENDANT de l'ordre des modifiers
+  actifs, peu importe comment le joueur les arrangeait. Pour que
+  l'ordre compte vraiment, `PlacementResult.Mult` calcule maintenant un
+  total UNIQUE, en partant de 1, en appliquant chaque modifier de Mult
+  strictement de gauche à droite selon sa position dans
+  `RunManager.ActiveModifiers` (un `+N Mult` additionne, un `xN`
+  multiplie) — exactement l'exemple donné par le joueur.
+  Heureusement, chaque `ScoreEvent` de type `ModifierMultiplier`/
+  `MultBonus` portait déjà son propre `TriggeringModifierIndex` (la
+  position exacte du modifier qui l'a produit dans la liste — ajouté
+  dans une tâche antérieure pour que les popups de score sachent sur
+  quel badge s'ancrer quand Copieur duplique un modifier), donc au lieu
+  de réécrire tout le pipeline de scoring, `Mult` trie simplement les
+  événements de Mult de ce placement par `TriggeringModifierIndex` et
+  les replie un par un. Deux ajustements pour que CHAQUE modifier de
+  Mult porte bien son propre index : "Combo" (`GridManager.
+  ComputeComboMultiplier`) n'émettait auparavant AUCUN `ScoreEvent` (son
+  facteur x2 était appliqué directement à la toute fin, hors-liste) —
+  il en émet maintenant un, comme tous les autres ; et les 3 bonus
+  résolus après-coup dans `RunManager` (Slot Loyalty, Cartes
+  Enchantées, Experience — qui ont besoin d'état que GridManager ne
+  connaît pas, comme le contenu du deck) ne stampaient jamais
+  `TriggeringModifierIndex` sur leur propre événement (un bug pré-
+  existant, invisible tant que l'ordre ne comptait pas) — corrigé en
+  leur passant l'index réel du modifier dans `_activeModifiers`.
+  Densité gagne aussi son `PreciseAmount` (comme Cartes Enchantées/
+  Experience déjà) pour ne pas perdre sa précision flottante en
+  passant par le nouveau pli d'événements plutôt que par
+  `ProgressiveMultiplier` directement. Les anciens champs agrégés
+  (`AdditiveMultBonus`, `ModifierMultiplier`, `ComboMultiplier`,
+  `ProgressiveMultiplier`, `ProgressiveAdditiveMult`) restent calculés
+  exactement comme avant (toujours lus par la suite de tests existante
+  et par le tooltip progressif) — seul `Mult` ne s'appuie plus dessus.
+  Côté animation (`GameBootstrap.PlayPlacementSequence`), les 3
+  rattrapages séparés (pool additif, produit des `xN`, Combo) sont
+  remplacés par UN seul passage ordonné qui flashe le popup et applique
+  le bond de score de chaque modifier de Mult un par un, dans le même
+  ordre que le calcul réel — Combo garde son callout central "COMBO
+  xN" distinct, mais n'a plus son propre rattrapage de score séparé,
+  vu qu'il n'est plus qu'un `ModifierMultiplier` de plus dans la boucle
+  unifiée.
+  Réorganisation : `RunManager.SwapModifiers(a, b)` (échange 2
+  positions — le geste "tap 2 modifiers") et `RunManager.
+  MoveModifier(from, to)` (réinsertion avec décalage — le geste drag-
+  and-drop) mutent directement `_activeModifiers`. Côté
+  `ModifierPanelView`, chaque badge affiche maintenant son numéro de
+  position (coin supérieur gauche, sur demande explicite : "il va
+  falloir les numéroter visuellement aussi") et un nouveau
+  `ModifierBadgeDragHandler` (même patron que `HandSlotDragHandler`)
+  route tap et drag vers le panneau : un premier tap arme un badge (le
+  même langage visuel qu'une slot de main sélectionnée — légèrement
+  éclairci, jamais un cadre, sur la demande explicite précédente
+  rejetant les cadres de sélection), un second tap sur un AUTRE badge
+  déclenche l'échange puis désarme ; un drag relâché sur un autre badge
+  déclenche le déplacement. Le panneau se bloque
+  (`ModifierPanelView.SetInteractable(false)`) pendant l'animation de
+  score, même principe que `HandView.SetInteractable`, pour qu'un
+  réarrangement ne vienne pas reconstruire les badges alors que la
+  séquence de score est justement en train de lire leurs positions
+  (`GetBadgeTransform`/`Pulse`).

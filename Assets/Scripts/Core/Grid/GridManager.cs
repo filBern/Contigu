@@ -392,7 +392,7 @@ namespace Contigu.Core
             // tier as ModifierMultiplier above, kept as its own field since
             // it's resolved from round-streak state Compute*Modifiers above
             // doesn't otherwise need.
-            result.ComboMultiplier = ComputeComboMultiplier(activeModifiers, clearedByPreviousPlacement);
+            result.ComboMultiplier = ComputeComboMultiplier(activeModifiers, clearedByPreviousPlacement, placedCells, events);
             result.ScoreEvents = events;
 
             return result;
@@ -458,8 +458,21 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Stacks x2 per copy of "Combo" held, same convention as <see cref="ComputeGroupMultiplier"/> — 1 (no-op) unless the previous placement this round cleared a line.</summary>
-        private static int ComputeComboMultiplier(IReadOnlyList<ModifierId> activeModifiers, bool clearedByPreviousPlacement)
+        /// <summary>
+        /// Stacks x2 per copy of "Combo" held, same convention as <see
+        /// cref="ComputeGroupMultiplier"/> — 1 (no-op) unless the previous
+        /// placement this round cleared a line. Now also emits its own
+        /// ModifierMultiplier <paramref name="events"/> entry (tagged with
+        /// its own position in <paramref name="activeModifiers"/>, same as
+        /// every other modifier via GridManager.TagNewEvents) — needed so
+        /// <see cref="PlacementResult.Mult"/>'s ordered left-to-right fold
+        /// (see its own doc comment) can place Combo correctly relative to
+        /// every other Mult modifier instead of always applying it dead
+        /// last regardless of where the player actually put it in their
+        /// reorderable list (on explicit request: "leur pointage se fasse
+        /// par ordre d'index").
+        /// </summary>
+        private static int ComputeComboMultiplier(IReadOnlyList<ModifierId> activeModifiers, bool clearedByPreviousPlacement, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (activeModifiers == null || !clearedByPreviousPlacement)
             {
@@ -472,6 +485,10 @@ namespace Contigu.Core
                 if (activeModifiers[i] == ModifierId.Combo)
                 {
                     multiplier *= ScoringConstants.ComboMultiplierFactor;
+                    var comboEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.ComboMultiplierFactor);
+                    comboEvent.TriggeringModifier = ModifierId.Combo;
+                    comboEvent.TriggeringModifierIndex = i;
+                    events.Add(comboEvent);
                 }
             }
             return multiplier;
@@ -975,10 +992,13 @@ namespace Contigu.Core
         /// request: "on doit multiplier comme si c'était un float au lieu
         /// d'arrondir a la baisse"). Returns 1 (no-op, never a debuff)
         /// while fewer than one step's worth of cells are filled. The
-        /// per-modifier badge popup still shows a rounded whole number
-        /// (ScoreEvent.Amount stays int) — only <see
-        /// cref="PlacementResult.TotalScore"/> needs the full precision,
-        /// via <see cref="PlacementResult.ProgressiveMultiplier"/>.
+        /// per-modifier badge popup shows a rounded whole number
+        /// (ScoreEvent.Amount stays int), but the event's own PreciseAmount
+        /// carries the true float — same as Enchanted Cards/Experience —
+        /// since <see cref="PlacementResult.Mult"/>'s ordered fold now reads
+        /// straight off this event instead of a separately-passed-around
+        /// ProgressiveMultiplier float, and would otherwise lose precision
+        /// to the rounded Amount.
         /// </summary>
         private float ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -997,7 +1017,9 @@ namespace Contigu.Core
                 return 1f;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], Mathf.RoundToInt(multiplier)));
+            var densiteEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], Mathf.RoundToInt(multiplier));
+            densiteEvent.PreciseAmount = multiplier;
+            events.Add(densiteEvent);
             return multiplier;
         }
 

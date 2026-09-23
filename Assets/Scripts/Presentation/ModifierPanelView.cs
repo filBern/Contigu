@@ -31,12 +31,37 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;
+        // How much a tap-selected badge lightens toward white (same "just a
+        // touch lighter" language as HandView's own selected-slot tint,
+        // never a border/frame — on the same earlier explicit request that
+        // ruled those out: "j'aime pas le cadre de sélection... juste
+        // mettre légèrement plus clair") — and how transparent a badge
+        // goes while being dragged, so its own row still reads through as
+        // a visible drop target underneath the cursor.
+        private const float SelectedTintAmount = 0.35f;
+        private const float DraggingAlpha = 0.4f;
+        private const float IndexLabelSize = 22f;
 
         private RectTransform _root;
         private RectTransform _rowsContainer;
         private TooltipView _tooltip;
         private System.Func<ModifierId, int> _usageCountProvider;
         private System.Func<ModifierId, string> _progressiveStateProvider;
+        private bool _interactable = true;
+
+        // Tap-to-swap: the first-tapped badge's row, armed and waiting for
+        // a second tap on a different badge to swap with — -1 when nothing
+        // is armed. Drag-to-move: the row currently being dragged, -1 when
+        // no drag is in flight. Independent of each other (a tap-selection
+        // survives a drag elsewhere) — see OnBadgeClicked/OnBadgeBeginDrag.
+        private int _selectedRowIndex = -1;
+        private int _draggingRowIndex = -1;
+
+        /// <summary>Fired when the player taps two different badges in a row — RunManager.SwapModifiers(a, b) is the expected response, followed by a Refresh.</summary>
+        public event System.Action<int, int> SwapRequested;
+
+        /// <summary>Fired when the player drags a badge and drops it onto another — RunManager.MoveModifier(from, to) is the expected response, followed by a Refresh.</summary>
+        public event System.Action<int, int> MoveRequested;
 
         // Parallel to the active-modifiers list passed to the last Refresh —
         // lets Pulse(id)/GetBadgeTransform find the badge(s) currently
@@ -133,6 +158,12 @@ namespace Contigu.Presentation
             _rowBadges.Clear();
             _rowBaseColors.Clear();
             _rowPulseCoroutines.Clear();
+            // Both refer to rows that no longer exist once the list is
+            // rebuilt below — a stale index here would either point at
+            // nothing or, worse, at some UNRELATED modifier that now
+            // happens to sit at that same position.
+            _selectedRowIndex = -1;
+            _draggingRowIndex = -1;
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
@@ -141,7 +172,134 @@ namespace Contigu.Presentation
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);
                 _rowPulseCoroutines.Add(null);
+
+                // Visual position number (on explicit request: "il va
+                // falloir les numéroter visuellement aussi" — scoring order
+                // now follows this exact list order, see
+                // PlacementResult.Mult, so the player needs to see it to
+                // arrange x-modifiers after +modifiers). Top-left corner,
+                // outlined for legibility over any badge color/icon
+                // underneath.
+                var indexLabel = UIFactory.CreateText(badge.transform, "Index", (i + 1).ToString(), Mathf.RoundToInt(IndexLabelSize), UITheme.TextPrimary);
+                indexLabel.raycastTarget = false;
+                indexLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+                indexLabel.rectTransform.anchorMax = new Vector2(0f, 1f);
+                indexLabel.rectTransform.pivot = new Vector2(0f, 1f);
+                indexLabel.rectTransform.anchoredPosition = new Vector2(2f, -2f);
+                indexLabel.rectTransform.sizeDelta = new Vector2(26f, 26f);
+                var indexOutline = indexLabel.gameObject.AddComponent<Outline>();
+                indexOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                indexOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+                // Drag-and-drop OR tap-tap swap reordering (on explicit
+                // request: "qu'on puisse les réorganiser avec un drag and
+                // drop OU avec un tap") — same forwarding pattern as
+                // HandSlotDragHandler.
+                var dragHandler = badge.gameObject.AddComponent<ModifierBadgeDragHandler>();
+                dragHandler.Init(this, i);
             }
+        }
+
+        /// <summary>Blocks reordering (tap-select/swap and drag-and-drop) while a placement's score sequence is animating — mirrors HandView.SetInteractable, since a mid-animation Refresh() would otherwise pull the rug out from under a badge popup/pulse still in flight.</summary>
+        public void SetInteractable(bool interactable)
+        {
+            _interactable = interactable;
+        }
+
+        /// <summary>Tap-to-swap: the first tap on a badge arms it (lightens it, same convention as HandView's selected-slot tint); a second tap on a DIFFERENT badge fires <see cref="SwapRequested"/> and disarms; tapping the SAME badge again just disarms.</summary>
+        public void OnBadgeClicked(int index)
+        {
+            if (!_interactable || index < 0 || index >= _rowBadges.Count)
+            {
+                return;
+            }
+
+            if (_selectedRowIndex < 0)
+            {
+                _selectedRowIndex = index;
+                ApplyRestingColor(index);
+                return;
+            }
+
+            int armed = _selectedRowIndex;
+            _selectedRowIndex = -1;
+            ApplyRestingColor(armed);
+
+            if (armed == index)
+            {
+                return;
+            }
+
+            if (SwapRequested != null)
+            {
+                SwapRequested(armed, index);
+            }
+        }
+
+        /// <summary>Drag start — fades the dragged badge so its own row still reads as an available drop target underneath the cursor, and disarms any tap-selection in progress (avoids a confusing "armed AND dragging" combined state).</summary>
+        public void OnBadgeBeginDrag(int index)
+        {
+            if (!_interactable || index < 0 || index >= _rowBadges.Count)
+            {
+                return;
+            }
+
+            if (_selectedRowIndex >= 0)
+            {
+                int armed = _selectedRowIndex;
+                _selectedRowIndex = -1;
+                ApplyRestingColor(armed);
+            }
+
+            _draggingRowIndex = index;
+            var c = _rowBadges[index].color;
+            _rowBadges[index].color = new Color(c.r, c.g, c.b, DraggingAlpha);
+        }
+
+        /// <summary>Fired by ModifierBadgeDragHandler.OnDrop when a drag lands on badge <paramref name="targetIndex"/> — fires <see cref="MoveRequested"/> immediately and clears the drag state right away, so the OnEndDrag cleanup that follows (see below) is always a safe no-op even if the caller's Refresh() already tore down every row by then.</summary>
+        public void OnBadgeDrop(int targetIndex)
+        {
+            if (!_interactable || _draggingRowIndex < 0 || _draggingRowIndex == targetIndex)
+            {
+                return;
+            }
+
+            int source = _draggingRowIndex;
+            _draggingRowIndex = -1;
+            if (MoveRequested != null)
+            {
+                MoveRequested(source, targetIndex);
+            }
+        }
+
+        /// <summary>Always fires after a drag ends, whether or not it landed on a valid drop target — restores the dragged badge's normal opacity when the drag didn't result in a move (OnBadgeDrop above already cleared _draggingRowIndex when it did, making this a no-op).</summary>
+        public void OnBadgeEndDrag()
+        {
+            if (_draggingRowIndex < 0 || _draggingRowIndex >= _rowBadges.Count)
+            {
+                _draggingRowIndex = -1;
+                return;
+            }
+
+            ApplyRestingColor(_draggingRowIndex);
+            _draggingRowIndex = -1;
+        }
+
+        /// <summary>A row's normal resting color — its true base color, lightened toward white while it's the tap-armed selection (see <see cref="SelectedTintAmount"/>).</summary>
+        private Color RestingColor(int i)
+        {
+            var baseColor = _rowBaseColors[i];
+            return i == _selectedRowIndex ? Color.Lerp(baseColor, Color.white, SelectedTintAmount) : baseColor;
+        }
+
+        /// <summary>Snaps a row's badge to its current RestingColor — skipped while a pulse is actively animating that same row's color, so this never fights a pulse mid-flight.</summary>
+        private void ApplyRestingColor(int i)
+        {
+            if (i < 0 || i >= _rowBadges.Count || _rowPulseCoroutines[i] != null)
+            {
+                return;
+            }
+            _rowBadges[i].color = RestingColor(i);
         }
 
         /// <summary>
@@ -207,7 +365,12 @@ namespace Contigu.Presentation
         private IEnumerator PulseBadge(int rowIndex)
         {
             var badge = _rowBadges[rowIndex];
-            var baseColor = _rowBaseColors[rowIndex];
+            // The row's CURRENT resting color (its true base, lightened if
+            // it's the tap-armed selection — see RestingColor) rather than
+            // always its true base — otherwise a pulse firing while a badge
+            // is selected would restore it to the un-tinted color at the
+            // end, silently discarding the selection highlight.
+            var baseColor = RestingColor(rowIndex);
             var highlightColor = Color.white;
             var rt = badge.rectTransform;
             float t = 0f;
