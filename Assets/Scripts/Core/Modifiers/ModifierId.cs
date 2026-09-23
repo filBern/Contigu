@@ -45,16 +45,6 @@ namespace Contigu.Core
         DevotionTeal,
         DevotionViolet,
         DevotionLime,
-        FormeSingle,
-        FormeDomH,
-        FormeDomV,
-        FormeTriL,
-        FormeTriIH,
-        FormeTriIV,
-        FormeSq2,
-        FormeLTetro,
-        FormeTTetro,
-        FormeSTetro,
 
         // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
         SlotUn,
@@ -111,26 +101,17 @@ namespace Contigu.Core
         // PlacementResult.AdditiveMultBonus, distinct from every "xN"
         // ModifierMultiplier modifier above); a new "+pts" counterpart for
         // each of the 10 Forme* shapes (Devotion/Éclat already covered
-        // this split for colors, Forme* only had one version); Solidarite
-        // (+N Mult scaling with total modifiers held); Copieur (copies
-        // whichever modifier was bought immediately before it); a risk/reward +5
-        // mult with a chance to be lost at round end; a mult bonus scaling
-        // with upgraded cards in the deck; a decaying flat points bonus;
-        // and a flat points bonus scaling with total deck size. See
-        // ModifierCatalog for each one's exact effect.
+        // this split for colors, Forme* only had one version — see the
+        // curation-pass note below, these 10 no longer exist as such);
+        // Solidarite (+N Mult scaling with total modifiers held); Copieur
+        // (copies whichever modifier was bought immediately before it); a
+        // risk/reward +5 mult with a chance to be lost at round end; a
+        // mult bonus scaling with upgraded cards in the deck; a decaying
+        // flat points bonus; and a flat points bonus scaling with total
+        // deck size. See ModifierCatalog for each one's exact effect.
         MultUn,
         MultDeux,
         MultQuatre,
-        FormeSinglePoints,
-        FormeDomHPoints,
-        FormeDomVPoints,
-        FormeTriLPoints,
-        FormeTriIHPoints,
-        FormeTriIVPoints,
-        FormeSq2Points,
-        FormeLTetroPoints,
-        FormeTTetroPoints,
-        FormeSTetroPoints,
         Solidarite,
         Copieur,
         MultCinqRisque,
@@ -142,6 +123,28 @@ namespace Contigu.Core
         // with how many special (trait-carrying) pieces have been PLAYED
         // this run, CartesEnchantees' "played" counterpart to its own
         // "currently in deck" count.
-        Experience
+        Experience,
+
+        // ---- Eleventh batch: curation pass (on explicit request — "que
+        // me propose tu pour faire passer le jeu à un state supérieur" ->
+        // "attaquons celui la") — replaces the 10 per-SHAPE FormeX
+        // Specialist ids (third batch, above) and their 10 FormeXPoints
+        // "+pts" siblings (ninth batch) with 3 per-SIZE-TIER pairs, grouped
+        // by the placed piece's own cell count: Petit (<=2 cells: Single,
+        // Domino H/V), Moyen (exactly 3: the 3 Trominoes), Grand (>=4
+        // cells: Square, L/T/S-Tetromino). 20 near-identical "xN/+pts if
+        // you play THIS EXACT shape" modifiers diluted the shop pool for a
+        // fairly minor axis (which of 10 shapes you happen to place)
+        // compared to color (Devotion/Éclat, only 4 values, kept as-is).
+        // Same ScoringConstants.FormeSpecialistMultiplier/
+        // FormeGlowBonusPerCell values as every one of the 20 modifiers
+        // this replaces — a pure catalog-size reduction, not a numeric
+        // rebalance.
+        FormatPetitSpecialiste,
+        FormatMoyenSpecialiste,
+        FormatGrandSpecialiste,
+        FormatPetitGlow,
+        FormatMoyenGlow,
+        FormatGrandGlow
     }
 }

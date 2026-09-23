@@ -240,10 +240,19 @@ namespace Contigu.Core
         /// <summary>Devotion (per-color): xN multiplier when placing a piece of the matching color — was "doubles this placement's group bonus" (additive), converted to a genuine multiplier like every other "+mult"-style modifier, on explicit request that every color/shape modifier have both a +pts version (Éclat/the new Forme*Points siblings) and a +mult version.</summary>
         public const int DevotionMultiplier = 2;
 
-        /// <summary>Forme* "Specialist" (per-shape): xN multiplier when the placed piece's own shape matches — same conversion, and for the same reason, as Devotion above.</summary>
+        /// <summary>
+        /// Format* "Specialist" (per-piece-size TIER, not per-exact-shape —
+        /// see the eleventh batch below): xN multiplier when the placed
+        /// piece's cell count falls in the modifier's tier — same
+        /// conversion, and for the same reason, as Devotion above.
+        /// Originally 10 separate per-shape constants sharing this exact
+        /// value; kept as one shared constant even after the curation-pass
+        /// consolidation down to 3 size tiers, since every one of them
+        /// used the same x2.
+        /// </summary>
         public const int FormeSpecialistMultiplier = 2;
 
-        /// <summary>The new "+pts" sibling of each Forme* "Specialist" modifier — bonus per scored group cell when the placed piece's shape matches, same pattern as Éclat's per-color bonus.</summary>
+        /// <summary>The "+pts" sibling of each Format* "Specialist" tier above — bonus per scored group cell when the placed piece's cell count falls in the tier, same pattern as Éclat's per-color bonus.</summary>
         public const int FormeGlowBonusPerCell = 4;
 
         /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
@@ -263,5 +272,20 @@ namespace Contigu.Core
 
         /// <summary>Experience: special (trait-carrying) pieces PLAYED this run so far, PLUS 1 (same "starting at one" baseline as Enchanted Cards), divided by this many and floored, to get the +Mult contributed — i.e. +0.1 Mult per special piece played, counting from a baseline of 1, same integer-step trick as CartesEnchanteesUpgradedCardsPerMultStep, just keyed on PLAYED count instead of current deck count.</summary>
         public const int ExperienceSpecialPiecesPlayedPerMultStep = 10;
+
+        // ---- Eleventh batch: Format* size-tier boundaries (curation pass,
+        // replaces the 10 FormeX/FormeXPoints per-shape modifiers — see
+        // ModifierId's own doc comment on this batch). A piece's cell count
+        // (PieceShape.Cells.Count) determines its tier: Petit is at most
+        // this many cells; Moyen is EXACTLY this many (the 3 Trominoes are
+        // the only 3-cell shapes in the catalog); Grand is at least this
+        // many. No piece in PieceShapeCatalog currently exceeds 4 cells, so
+        // Grand's lower bound is effectively also its upper bound today,
+        // but it's phrased as "at least" so a future bigger piece would
+        // fall into Grand automatically instead of matching nothing.
+
+        public const int FormatPetitMaxCells = 2;
+        public const int FormatMoyenCells = 3;
+        public const int FormatGrandMinCells = 4;
     }
 }

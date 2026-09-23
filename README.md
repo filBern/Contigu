@@ -4030,3 +4030,43 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   supérieur-droit (pour que le DFS parte du MAUVAIS bout) et vérifie
   que l'ordre final est bien le tri explicite, pas un hasard de
   traversée.
+- **Passe de curation : famille Forme (20 -> 6 modifiers), sur demande
+  explicite** — question ouverte "que me propose tu pour faire passer
+  le jeu à un state supérieur ?", réponse honnête : ~40% du catalogue
+  (36 sur ~93 modifiers) appartenait à des "familles" répétant le même
+  mécanisme avec une variable différente, et le pire cas de loin était
+  la famille Forme (10 formes précises × 2 versions Specialist/Glow =
+  20 modifiers quasi-identiques pour un axe assez mineur comparé à la
+  couleur), qui diluait le pool du shop (`RunManager.RollModifierSlot`
+  exclut déjà les modifiers possédés — avec 20 quasi-clones, un reroll
+  avait une grosse chance de proposer "encore un autre spécialiste de
+  forme"). Confirmé par le joueur : "Oui, 20 -> 6 par taille". Les 10
+  `ModifierId.FormeX` (xN si la pièce posée a EXACTEMENT cette forme)
+  et leurs 10 `FormeXPoints` ("+pts" équivalent) sont retirés, remplacés
+  par 3 paliers de TAILLE (nombre de cellules de la pièce plutôt que sa
+  forme précise) × 2 mécaniques : `FormatPetitSpecialiste`/`FormatPetitGlow`
+  (<=2 cellules : Single, Domino H/V), `FormatMoyenSpecialiste`/
+  `FormatMoyenGlow` (exactement 3 : les 3 Trominos), `FormatGrandSpecialiste`/
+  `FormatGrandGlow` (>=4 cellules : Carré, L/T/S-Tétromino) — mêmes
+  valeurs `ScoringConstants.FormeSpecialistMultiplier`/
+  `FormeGlowBonusPerCell` (x2 / +4pts) que les 20 modifiers remplacés,
+  donc une pure réduction du nombre de modifiers, pas un rééquilibrage
+  numérique cité comme limite honnête ("je ne peux pas vérifier
+  l'équilibrage numérique sans playtester — je n'ai pas d'environnement
+  Unity pour jouer réellement"). Seule exception délibérée : le PRIX
+  (`ModifierPricing`) est ajusté à la hausse par rapport aux anciens
+  modifiers par-forme (5/4 -> 6-7/5-6) parce qu'un palier de taille
+  couvre 3-4 formes sur 10 à la fois et déclenche donc 3-4x plus
+  souvent — un fait structurel calculable (pas un jugement subjectif de
+  puissance), aligné sur le tarif de Devotion/Éclat qui déclenchent à
+  fréquence comparable (~1 pose sur 4). `GridManager.
+  ApplyShapeSpecialistMultiplier`/`ApplyShapeGlow` (comparaison de
+  `ShapeId` exact) deviennent `ApplyFormatSpecialistMultiplier`/
+  `ApplyFormatGlow` (comparaison d'une plage `[minCells, maxCells]` sur
+  `shape.Cells.Count`), réutilisés par les 3 paliers au lieu d'une
+  fonction par forme. Aucun aperçu de silhouette pour ces nouveaux
+  badges (`ModifierVisualDefaults.GetSpecialistShape`, qui montrait la
+  forme ciblée, est supprimé avec son seul appelant dans
+  `ModifierBadgeFactory` — un palier de taille couvre plusieurs formes,
+  aucune silhouette unique ne le représenterait honnêtement) : ils
+  retombent sur l'abréviation à 2 lettres (F1/F2/F3, G1/G2/G3).

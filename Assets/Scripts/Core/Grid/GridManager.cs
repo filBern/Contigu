@@ -597,75 +597,26 @@ namespace Contigu.Core
                         bonus = 0;
                         multiplier *= ApplyColorDevotionMultiplier(PieceColor.Lime, jokerResolvedColor, placedCells, events);
                         break;
-                    case ModifierId.FormeSingle:
+                    case ModifierId.FormatPetitSpecialiste:
                         bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.Single, shape, placedCells, events);
+                        multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, shape, placedCells, events);
                         break;
-                    case ModifierId.FormeDomH:
+                    case ModifierId.FormatMoyenSpecialiste:
                         bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.DomH, shape, placedCells, events);
+                        multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, shape, placedCells, events);
                         break;
-                    case ModifierId.FormeDomV:
+                    case ModifierId.FormatGrandSpecialiste:
                         bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.DomV, shape, placedCells, events);
+                        multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, shape, placedCells, events);
                         break;
-                    case ModifierId.FormeTriL:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriL, shape, placedCells, events);
+                    case ModifierId.FormatPetitGlow:
+                        bonus = ApplyFormatGlow(1, ScoringConstants.FormatPetitMaxCells, shape, placedCells, groupCells, events);
                         break;
-                    case ModifierId.FormeTriIH:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriIH, shape, placedCells, events);
+                    case ModifierId.FormatMoyenGlow:
+                        bonus = ApplyFormatGlow(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, shape, placedCells, groupCells, events);
                         break;
-                    case ModifierId.FormeTriIV:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TriIV, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormeSq2:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.Sq2, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormeLTetro:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.LTetro, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormeTTetro:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.TTetro, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormeSTetro:
-                        bonus = 0;
-                        multiplier *= ApplyShapeSpecialistMultiplier(ShapeId.STetro, shape, placedCells, events);
-                        break;
-                    case ModifierId.FormeSinglePoints:
-                        bonus = ApplyShapeGlow(ShapeId.Single, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeDomHPoints:
-                        bonus = ApplyShapeGlow(ShapeId.DomH, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeDomVPoints:
-                        bonus = ApplyShapeGlow(ShapeId.DomV, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeTriLPoints:
-                        bonus = ApplyShapeGlow(ShapeId.TriL, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeTriIHPoints:
-                        bonus = ApplyShapeGlow(ShapeId.TriIH, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeTriIVPoints:
-                        bonus = ApplyShapeGlow(ShapeId.TriIV, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeSq2Points:
-                        bonus = ApplyShapeGlow(ShapeId.Sq2, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeLTetroPoints:
-                        bonus = ApplyShapeGlow(ShapeId.LTetro, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeTTetroPoints:
-                        bonus = ApplyShapeGlow(ShapeId.TTetro, shape, placedCells, groupCells, events);
-                        break;
-                    case ModifierId.FormeSTetroPoints:
-                        bonus = ApplyShapeGlow(ShapeId.STetro, shape, placedCells, groupCells, events);
+                    case ModifierId.FormatGrandGlow:
+                        bonus = ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, shape, placedCells, groupCells, events);
                         break;
                     case ModifierId.GrandFormat:
                         bonus = ApplyGrandFormat(placedCells, events);
@@ -805,10 +756,20 @@ namespace Contigu.Core
             return ScoringConstants.DevotionMultiplier;
         }
 
-        /// <summary>"Specialist" (per-shape): xN multiplier (see ScoringConstants.FormeSpecialistMultiplier) when the placed piece's own shape matches <paramref name="targetShape"/> — same conversion, and for the same reason, as Devotion above. Returns 1 (no-op) otherwise.</summary>
-        private static int ApplyShapeSpecialistMultiplier(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        /// <summary>
+        /// "Specialist" (per-piece-SIZE-TIER, curation pass — was per-exact-
+        /// shape, 10 separate modifiers, before "que me propose tu pour
+        /// faire passer le jeu à un state supérieur" -> "attaquons celui
+        /// la" consolidated them into 3 size tiers): xN multiplier (see
+        /// ScoringConstants.FormeSpecialistMultiplier) when the placed
+        /// piece's own cell count falls within [<paramref name="minCells"/>,
+        /// <paramref name="maxCells"/>] inclusive — same conversion, and for
+        /// the same reason, as Devotion above. Returns 1 (no-op) otherwise.
+        /// </summary>
+        private static int ApplyFormatSpecialistMultiplier(int minCells, int maxCells, PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            if (shape.Id != targetShape)
+            int cellCount = shape.Cells.Count;
+            if (cellCount < minCells || cellCount > maxCells)
             {
                 return 1;
             }
@@ -855,10 +816,11 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>The "+pts" sibling of ApplyShapeSpecialistMultiplier (ninth batch, on explicit request) — flat bonus (see ScoringConstants.FormeGlowBonusPerCell) per scored group cell when the placed piece's own shape matches <paramref name="targetShape"/>, mirroring ApplyEclat's per-color role above but for shape instead of color.</summary>
-        private static int ApplyShapeGlow(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
+        /// <summary>The "+pts" sibling of ApplyFormatSpecialistMultiplier (same curation-pass consolidation, ninth batch originally, on explicit request) — flat bonus (see ScoringConstants.FormeGlowBonusPerCell) per scored group cell when the placed piece's own cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive, mirroring ApplyEclat's per-color role above but for piece size instead of color.</summary>
+        private static int ApplyFormatGlow(int minCells, int maxCells, PieceShape shape, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
-            if (shape.Id != targetShape)
+            int cellCount = shape.Cells.Count;
+            if (cellCount < minCells || cellCount > maxCells)
             {
                 return 0;
             }

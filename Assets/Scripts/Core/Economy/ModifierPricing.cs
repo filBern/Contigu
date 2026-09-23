@@ -76,18 +76,6 @@ namespace Contigu.Core
                 case ModifierId.DevotionViolet: return 6;
                 case ModifierId.DevotionLime: return 6;
 
-                // ---- Forme* Specialist (per-shape xN, fires ~1 in 10 placements — rarer than Devotion, so cheaper) ----
-                case ModifierId.FormeSingle: return 5;
-                case ModifierId.FormeDomH: return 5;
-                case ModifierId.FormeDomV: return 5;
-                case ModifierId.FormeTriL: return 5;
-                case ModifierId.FormeTriIH: return 5;
-                case ModifierId.FormeTriIV: return 5;
-                case ModifierId.FormeSq2: return 5;
-                case ModifierId.FormeLTetro: return 5;
-                case ModifierId.FormeTTetro: return 5;
-                case ModifierId.FormeSTetro: return 5;
-
                 // ---- Fourth batch: hand-slot, piece-size, per-color-tile ----
                 case ModifierId.SlotUn: return 7; // xN on the ENTIRE score, ~1/3 of placements
                 case ModifierId.SlotDeux: return 7;
@@ -135,16 +123,6 @@ namespace Contigu.Core
                 case ModifierId.MultUn: return 5; // +1 Mult, unconditional
                 case ModifierId.MultDeux: return 7; // +2 Mult, unconditional
                 case ModifierId.MultQuatre: return 10; // +4 Mult, unconditional — the strongest flat effect in the game
-                case ModifierId.FormeSinglePoints: return 4;
-                case ModifierId.FormeDomHPoints: return 4;
-                case ModifierId.FormeDomVPoints: return 4;
-                case ModifierId.FormeTriLPoints: return 4;
-                case ModifierId.FormeTriIHPoints: return 4;
-                case ModifierId.FormeTriIVPoints: return 4;
-                case ModifierId.FormeSq2Points: return 4;
-                case ModifierId.FormeLTetroPoints: return 4;
-                case ModifierId.FormeTTetroPoints: return 4;
-                case ModifierId.FormeSTetroPoints: return 4;
                 case ModifierId.Solidarite: return 8; // scales with total modifiers held
                 case ModifierId.Copieur: return 9; // copies any modifier already bought — huge flexibility
                 case ModifierId.MultCinqRisque: return 7; // +5 Mult, but can be lost
@@ -154,6 +132,23 @@ namespace Contigu.Core
 
                 // ---- Tenth batch ----
                 case ModifierId.Experience: return 8; // scales with special pieces played
+
+                // ---- Eleventh batch: Format* size tiers (curation pass,
+                // replaces the 10 FormeX Specialist / 10 FormeXPoints Glow
+                // entries above) — priced higher than the old per-shape
+                // ones despite the exact same effect strength, because a
+                // size TIER covers several shapes at once and so fires
+                // several times more often: Petit/Moyen each cover 3 of the
+                // 10 catalog shapes (~30% of placements under a uniform
+                // draw, in Devotion's own "~1 in 4" bracket, so priced the
+                // same as Devotion/Éclat); Grand covers 4 shapes (~40%,
+                // the most frequent of the three, priced one step above).
+                case ModifierId.FormatPetitSpecialiste: return 6;
+                case ModifierId.FormatMoyenSpecialiste: return 6;
+                case ModifierId.FormatGrandSpecialiste: return 7;
+                case ModifierId.FormatPetitGlow: return 5;
+                case ModifierId.FormatMoyenGlow: return 5;
+                case ModifierId.FormatGrandGlow: return 6;
 
                 default:
                     return -1;

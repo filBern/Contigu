@@ -12,14 +12,11 @@ namespace Contigu.Presentation
     /// modifier side panel so both stay visually and behaviorally consistent.
     /// A modifier with real icon art (see ModifierVisualDefaults.GetIcon)
     /// shows that instead, taking priority over everything else below. Absent
-    /// that, two exceptions, both on explicit request: the Forme* "Specialist"
-    /// modifiers show a literal black-square preview of the shape they
-    /// target (see ModifierVisualDefaults.GetSpecialistShape) instead of an
-    /// abbreviation — spelling out a domino/tromino/tetromino name read as
-    /// unclear jargon — and the "Glow" (Éclat) and "Devotion" per-color
-    /// modifiers show an actual colored tile in their own color (see
-    /// ModifierVisualDefaults.GetColorTileColor) instead of their opaque
-    /// 2-letter code, for the same reason.
+    /// that, one exception, on explicit request: the "Glow" (Éclat) and
+    /// "Devotion" per-color modifiers show an actual colored tile in their
+    /// own color (see ModifierVisualDefaults.GetColorTileColor) instead of
+    /// their opaque 2-letter code — spelling out a color name read as
+    /// unclear jargon compared to just showing it.
     /// </summary>
     public static class ModifierBadgeFactory
     {
@@ -61,7 +58,6 @@ namespace Contigu.Presentation
             }
 
             var icon = ModifierVisualDefaults.GetIcon(def.Id);
-            var specialistShape = ModifierVisualDefaults.GetSpecialistShape(def.Id);
             var colorTileColor = ModifierVisualDefaults.GetColorTileColor(def.Id);
             if (icon != null)
             {
@@ -72,16 +68,6 @@ namespace Contigu.Presentation
                 iconImage.rectTransform.anchoredPosition = Vector2.zero;
                 iconImage.rectTransform.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
                 iconImage.sprite = icon;
-            }
-            else if (specialistShape.HasValue)
-            {
-                var preview = UIFactory.CreateUIObject("ShapePreview", badge.transform);
-                preview.anchorMin = new Vector2(0.5f, 0.5f);
-                preview.anchorMax = new Vector2(0.5f, 0.5f);
-                preview.pivot = new Vector2(0.5f, 0.5f);
-                preview.anchoredPosition = Vector2.zero;
-                preview.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
-                ShapePreviewFactory.BuildMono(preview, PieceShapeCatalog.Get(specialistShape.Value), Color.black);
             }
             else if (colorTileColor.HasValue)
             {

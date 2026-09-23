@@ -1036,57 +1036,58 @@ namespace Contigu.Tests
             }
         }
 
+        // ---- Format Specialist — curation pass, on explicit request:
+        // "que me propose tu pour faire passer le jeu à un state
+        // supérieur" -> "attaquons celui la". 10 per-SHAPE Specialist
+        // modifiers (one per exact ShapeId) consolidated into 3
+        // per-SIZE-TIER ones, since 10
+        // near-identical xN-if-this-exact-shape modifiers diluted the shop
+        // pool for a fairly minor axis compared to color. Grouped by piece
+        // cell count: Petit (<=2 cells: Single/DomH/DomV), Moyen (exactly 3:
+        // the 3 Trominoes), Grand (>=4 cells: Sq2/LTetro/TTetro/STetro) —
+        // same ScoringConstants.FormeSpecialistMultiplier value as every
+        // one of the 10 it replaces, so this is a pure count reduction, not
+        // a numeric rebalance. ----
+
         [Test]
-        public void FormeSq2_AppliesX2Multiplier_WhenPlacedShapeMatches()
+        public void FormatPetitSpecialiste_FiresForSingleAndBothDominoes_NotForBiggerShapes()
+        {
+            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.Single, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.DomH, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.DomV, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.TriL, false);
+            AssertFormatSpecialisteFires(ModifierId.FormatPetitSpecialiste, ShapeId.Sq2, false);
+        }
+
+        [Test]
+        public void FormatMoyenSpecialiste_FiresOnlyForTheThreeTrominoes()
+        {
+            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriL, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriIH, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.TriIV, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.Single, false);
+            AssertFormatSpecialisteFires(ModifierId.FormatMoyenSpecialiste, ShapeId.Sq2, false);
+        }
+
+        [Test]
+        public void FormatGrandSpecialiste_FiresForEveryFourCellShape_NotForSmallerOnes()
+        {
+            AssertFormatSpecialisteFires(ModifierId.FormatGrandSpecialiste, ShapeId.Sq2, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatGrandSpecialiste, ShapeId.LTetro, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatGrandSpecialiste, ShapeId.TTetro, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatGrandSpecialiste, ShapeId.STetro, true);
+            AssertFormatSpecialisteFires(ModifierId.FormatGrandSpecialiste, ShapeId.TriL, false);
+        }
+
+        private static void AssertFormatSpecialisteFires(ModifierId id, ShapeId shape, bool shouldFire)
         {
             var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.FormeSq2 };
-
-            var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
-
-            Assert.AreEqual(ScoringConstants.FormeSpecialistMultiplier, result.ModifierMultiplier);
-        }
-
-        [Test]
-        public void FormeSq2_DoesNotFire_WhenPlacedShapeDiffers()
-        {
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-            var modifiers = new List<ModifierId> { ModifierId.FormeSq2 };
-
-            var result = grid.PlacePiece(single, PieceColor.Lime, 0, 0, modifiers);
-
-            Assert.AreEqual(1, result.ModifierMultiplier);
-        }
-
-        [Test]
-        public void FormeModifiers_EachOnlyFiresForItsOwnShape()
-        {
-            AssertFormeFiresOnlyForShape(ModifierId.FormeSingle, ShapeId.Single);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeDomH, ShapeId.DomH);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeDomV, ShapeId.DomV);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeTriL, ShapeId.TriL);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeTriIH, ShapeId.TriIH);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeTriIV, ShapeId.TriIV);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeSq2, ShapeId.Sq2);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeLTetro, ShapeId.LTetro);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeTTetro, ShapeId.TTetro);
-            AssertFormeFiresOnlyForShape(ModifierId.FormeSTetro, ShapeId.STetro);
-        }
-
-        private static void AssertFormeFiresOnlyForShape(ModifierId id, ShapeId matchingShape)
-        {
             var modifiers = new List<ModifierId> { id };
-            var otherShape = matchingShape == ShapeId.Single ? ShapeId.DomH : ShapeId.Single;
 
-            var matchGrid = new GridManager();
-            var matchResult = matchGrid.PlacePiece(PieceShapeCatalog.Get(matchingShape), PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.FormeSpecialistMultiplier, matchResult.ModifierMultiplier, id + " should apply its xN multiplier to its own shape");
+            var result = grid.PlacePiece(PieceShapeCatalog.Get(shape), PieceColor.Coral, 0, 0, modifiers);
 
-            var otherGrid = new GridManager();
-            var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(1, otherResult.ModifierMultiplier, id + " should not fire for shape " + otherShape);
+            int expected = shouldFire ? ScoringConstants.FormeSpecialistMultiplier : 1;
+            Assert.AreEqual(expected, result.ModifierMultiplier, id + " vs " + shape);
         }
 
         // ---- Fourth batch (hand-slot, piece-size, per-color-tile bonuses) ----
@@ -2058,47 +2059,49 @@ namespace Contigu.Tests
             Assert.AreEqual(new List<ModifierId> { ModifierId.MultDeux, ModifierId.MultCinqRisque, ModifierId.Ilot }, run.ActiveModifiers);
         }
 
+        // ---- Format Glow (same curation pass as Format Specialist above —
+        // 10 per-SHAPE "+pts" modifiers consolidated into 3 per-size-tier
+        // ones, same ScoringConstants.FormeGlowBonusPerCell value as before) ----
+
         [Test]
-        public void FormeSq2Points_GivesFlatPerCellBonus_WhenPlacedShapeMatches()
+        public void FormatGrandGlow_GivesFlatPerCellBonus_WhenPlacedShapeMatches()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.FormeSq2Points };
+            var modifiers = new List<ModifierId> { ModifierId.FormatGrandGlow };
 
             var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
 
             Assert.AreEqual(square.Cells.Count * ScoringConstants.FormeGlowBonusPerCell, result.ModifierBonus,
-                "Forme*Points should be a flat per-tile bonus (the +pts sibling of the Forme* xN multiplier), not a multiplier itself");
+                "Format*Glow should be a flat per-tile bonus (the +pts sibling of the Format*Specialiste xN multiplier), not a multiplier itself");
         }
 
         [Test]
-        public void FormePointsModifiers_EachOnlyFiresForItsOwnShape()
+        public void FormatGlowModifiers_EachOnlyFireForTheirOwnSizeTier()
         {
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSinglePoints, ShapeId.Single);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeDomHPoints, ShapeId.DomH);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeDomVPoints, ShapeId.DomV);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriLPoints, ShapeId.TriL);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriIHPoints, ShapeId.TriIH);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTriIVPoints, ShapeId.TriIV);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSq2Points, ShapeId.Sq2);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeLTetroPoints, ShapeId.LTetro);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeTTetroPoints, ShapeId.TTetro);
-            AssertFormePointsFiresOnlyForShape(ModifierId.FormeSTetroPoints, ShapeId.STetro);
+            AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.Single, true);
+            AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.DomV, true);
+            AssertFormatGlowFires(ModifierId.FormatPetitGlow, ShapeId.TriL, false);
+
+            AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.TriIH, true);
+            AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.TriIV, true);
+            AssertFormatGlowFires(ModifierId.FormatMoyenGlow, ShapeId.Sq2, false);
+
+            AssertFormatGlowFires(ModifierId.FormatGrandGlow, ShapeId.LTetro, true);
+            AssertFormatGlowFires(ModifierId.FormatGrandGlow, ShapeId.STetro, true);
+            AssertFormatGlowFires(ModifierId.FormatGrandGlow, ShapeId.TriL, false);
         }
 
-        private static void AssertFormePointsFiresOnlyForShape(ModifierId id, ShapeId matchingShape)
+        private static void AssertFormatGlowFires(ModifierId id, ShapeId shape, bool shouldFire)
         {
+            var grid = new GridManager();
             var modifiers = new List<ModifierId> { id };
-            var otherShape = matchingShape == ShapeId.Single ? ShapeId.DomH : ShapeId.Single;
 
-            var matchGrid = new GridManager();
-            var matchShape = PieceShapeCatalog.Get(matchingShape);
-            var matchResult = matchGrid.PlacePiece(matchShape, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(matchShape.Cells.Count * ScoringConstants.FormeGlowBonusPerCell, matchResult.ModifierBonus, id + " should give its flat per-cell bonus for its own shape");
+            var pieceShape = PieceShapeCatalog.Get(shape);
+            var result = grid.PlacePiece(pieceShape, PieceColor.Coral, 0, 0, modifiers);
 
-            var otherGrid = new GridManager();
-            var otherResult = otherGrid.PlacePiece(PieceShapeCatalog.Get(otherShape), PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(0, otherResult.ModifierBonus, id + " should not fire for shape " + otherShape);
+            int expected = shouldFire ? pieceShape.Cells.Count * ScoringConstants.FormeGlowBonusPerCell : 0;
+            Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + shape);
         }
 
         [Test]
