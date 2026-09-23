@@ -3786,3 +3786,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   RectTransform ACTUEL de ce même label, aucun changement séparé n'était
   nécessaire pour que ces popups visent le nouvel emplacement — ils le
   font automatiquement dès que le label lui-même a été repositionné.
+- **Ajout d'une mention sur comment gagner/dépenser la Lueur** (demande
+  explicite : "Il manque aussi une mention sur comment on gagne des
+  points de lueur et à quoi ça sert") — 2 nouveaux bullets dans le même
+  bloc `HudView.BuildScoringBaseline` : "Line/column clear: +2 Lueur
+  per distinct color in it" (la vraie règle de base, voir
+  `EconomyConstants.LueurPerColorGroup` — 2 Lueur par couleur non-Joker
+  distincte dans la ligne/colonne clearée, JAMAIS par run contigu, donc
+  une ligne monochrome = 2 Lueur, une ligne touchant les 4 couleurs =
+  8 Lueur, ce qui récompense le mélange de couleurs plutôt que le
+  monochrome contrairement au score classique) et "Lueur: spend it in
+  the shop on modifiers/upgrades" (à quoi ça sert). Bloc élargi
+  (260x160 → 280x200) pour les 2 lignes en plus.

@@ -62,10 +62,12 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Static bullet-point reference for the scoring rules that always
-        /// apply (independent of any modifier), plus the deck-view hint, in
-        /// the top-right corner (on explicit request: "un texte bullet point
-        /// avec la baseline du pointage" + "une mention tab to open piece
-        /// deck ... quelque part dans l'écran") — moved up to sit right below
+        /// apply (independent of any modifier), how Lueur is earned/spent,
+        /// and the deck-view hint, in the top-right corner (on explicit
+        /// request: "un texte bullet point avec la baseline du pointage" +
+        /// "une mention tab to open piece deck ... quelque part dans
+        /// l'écran" + "il manque aussi une mention sur comment on gagne des
+        /// points de lueur et à quoi ça sert") — moved up to sit right below
         /// the top bar now that the Lueur readout that used to occupy that
         /// spot moved to below the status text instead (see LueurLabelY).
         /// Built once and never refreshed — none of this ever changes mid-run.
@@ -77,6 +79,8 @@ namespace Contigu.Presentation
                 "• Group: 1st tile 1 pt, 2nd 2 pts, 3rd 3 pts...",
                 "• Line/column clear: 3 pts per tile",
                 "• Golden tile: +18 pts",
+                "• Line/column clear: +2 Lueur per distinct color in it",
+                "• Lueur: spend it in the shop on modifiers/upgrades",
                 "• Tab: view piece deck"
             };
             string text = DescriptionTextFormatter.Colorize(lines[0]);
@@ -90,7 +94,7 @@ namespace Contigu.Presentation
             label.rectTransform.anchorMax = new Vector2(1f, 1f);
             label.rectTransform.pivot = new Vector2(1f, 1f);
             label.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
-            label.rectTransform.sizeDelta = new Vector2(260f, 160f);
+            label.rectTransform.sizeDelta = new Vector2(280f, 200f);
         }
 
         private static void BuildBar(Transform parent, string name, Sprite fillSprite, bool top,
