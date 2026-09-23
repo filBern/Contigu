@@ -4070,3 +4070,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `ModifierBadgeFactory` — un palier de taille couvre plusieurs formes,
   aucune silhouette unique ne le représenterait honnêtement) : ils
   retombent sur l'abréviation à 2 lettres (F1/F2/F3, G1/G2/G3).
+- **CI minimale : compiler le projet + tests EditMode à chaque push**
+  (demande explicite : "j'aimerais qu'on assess la dette technique" ->
+  "Fait celui que tu trouve le plus important") — l'évaluation a fait
+  ressortir un risque plus grave que la taille de `GridManager.cs` :
+  zéro vérification automatisée du code Presentation, jamais. Le
+  `.asmdef` des tests (`Assets/Scripts/Tests/EditMode/
+  Contigu.Tests.EditMode.asmdef`) ne référence QUE `Contigu.Core` —
+  tout `Assets/Scripts/Presentation/*.cs` (~4700 lignes, 27 fichiers,
+  0 test) n'a jamais été compilé par Unity pendant toute cette session ;
+  le seul filet a été un compteur d'accolades/parenthèses en Python
+  (voir les tâches précédentes), qui détecte un déséquilibre brut mais
+  aucune vraie erreur de type, de signature ou de `using` manquant.
+  `.github/workflows/unity-ci.yml` ajouté : `game-ci/unity-test-runner`
+  fait tourner la suite EditMode sur chaque push/PR vers `main` — Unity
+  doit compiler AVEC SUCCÈS les 3 assemblies (Core/Data/Presentation)
+  avant de pouvoir exécuter le moindre test, donc un échec de
+  compilation dans Presentation fait maintenant échouer la CI bruyamment
+  au lieu de dormir silencieusement dans le repo. Version Unity
+  (2022.3.62f3) lue depuis `ProjectSettings/ProjectVersion.txt` pour que
+  le workflow matche exactement l'éditeur du projet. Limite honnête :
+  ce workflow ne peut pas encore tourner vert tout seul — `game-ci`
+  exige une licence Unity activée fournie via les secrets GitHub
+  (`UNITY_LICENSE`, ou `UNITY_EMAIL`+`UNITY_PASSWORD` pour une licence
+  Personal), que je n'ai pas et ne peux pas créer à la place du joueur ;
+  reste une étape manuelle de sa part avant que la CI soit réellement
+  active.

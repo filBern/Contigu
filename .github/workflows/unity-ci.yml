@@ -1,0 +1,44 @@
+name: Unity CI
+
+# Compiles the whole project (Core + Data + Presentation) and runs the
+# EditMode test suite on every push/PR — closes the biggest gap flagged in
+# the technical-debt assessment: nothing in this repo verified that
+# Presentation-layer code (the UI, ~4700 lines, zero test coverage) even
+# COMPILED before landing on the branch. Unity must successfully compile
+# every assembly (Contigu.Core, Contigu.Data, Contigu.Presentation) before
+# it can run a single EditMode test, so a failing Presentation build now
+# fails this job loudly instead of sitting undetected in the repo.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: EditMode tests (compiles the whole project as a side effect)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ runner.os }}-
+
+      - name: Run EditMode tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 2022.3.62f3
+          testMode: EditMode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
