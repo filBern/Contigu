@@ -3759,3 +3759,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   teintée est désormais la seule façon de reconnaître N'IMPORTE quelle
   couleur de tuile remplie, Joker inclus, pas un traitement spécifique
   à Joker.
+- **Total de Lueur déplacé sous le texte de statut, agrandi, pulse à
+  chaque augmentation** (demande explicite : "j'aimerais qu'il soit
+  sous le texte Drag or click, qu'il soit un peu plus gros et qu'il
+  pulse chaque fois qu'il augmente. N'oublie pas que les texte
+  d'incrémentation se dirige vers son nouvel emplacement, pas
+  l'ancien") — `HudView`'s readout Lueur passe du coin haut-droit (taille
+  18, ancré à droite) à centré juste sous le texte de statut de
+  `GameBootstrap` ("Select or drag a piece onto the grid.", ancré à
+  y=-80, 26px de haut — position documentée en dur dans la nouvelle
+  constante `HudView.LueurLabelY`, même précédent de "constante
+  documentée référençant un nombre magique d'une autre classe" que
+  `BarHeight`), taille 22, centré. Le bloc de baseline de pointage
+  (`BuildScoringBaseline`) remonte prendre l'ancienne place du Lueur
+  (juste sous la barre du haut) pour ne pas laisser un trou vide.
+  `HudView.SetLueur` compare la nouvelle valeur à la dernière connue
+  (`_lastLueur`) et déclenche un pulse d'échelle (1 → x1.3 → 1, 0.25s)
+  à chaque VRAIE augmentation — y compris chaque étape intermédiaire du
+  rattrapage progressif (un groupe de Lueur à la fois), pas seulement
+  la valeur finale — jamais sur une baisse (dépense en shop) ni une
+  valeur inchangée. Pulse arrêté explicitement avant d'en redémarrer un
+  si une coroutine tournait déjà (même précaution défensive que le fix
+  du blanchiment des badges de modifier). Comme `LueurLabelTransform`
+  (la cible des popups volants "+N" vers Lueur, dans
+  `GameBootstrap.PlayPlacementSequence`) retourne toujours le
+  RectTransform ACTUEL de ce même label, aucun changement séparé n'était
+  nécessaire pour que ces popups visent le nouvel emplacement — ils le
+  font automatiquement dès que le label lui-même a été repositionné.

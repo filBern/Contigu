@@ -1,3 +1,4 @@
+using System.Collections;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -18,29 +19,43 @@ namespace Contigu.Presentation
     public sealed class HudView : MonoBehaviour
     {
         private const float BarHeight = 68f;
+        // Below GameBootstrap's status text ("Select or drag a piece onto
+        // the grid.", anchored top-center at y=-80, 26 tall — see
+        // GameBootstrap.BuildUI) — on explicit request: "j'aimerais qu'il
+        // soit sous le texte Drag or click". Kept as a documented constant
+        // rather than read from that Text directly, same
+        // cross-referenced-magic-number precedent as BarHeight above.
+        private const float LueurLabelY = -(80f + 26f + 10f);
+        private const float LueurPulseDuration = 0.25f;
+        private const float LueurPulsePeakScale = 1.3f;
+        private const float LueurPulsePeakFraction = 0.35f;
 
         private RectTransform _scoreFillRect;
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
         private Text _piecesLabel;
         private Text _lueurLabel;
+        private int _lastLueur;
+        private Coroutine _lueurPulseCoroutine;
 
         public void Build(Transform parent)
         {
             BuildBar(parent, "ScoreBar", UISprites.ScoreBarFill, top: true, out _scoreFillRect, out _scoreLabel);
             BuildBar(parent, "PiecesBar", UISprites.PiecesBarFill, top: false, out _piecesFillRect, out _piecesLabel);
 
-            // Small persistent readout in the top-right corner — Lueur is a
-            // whole-run currency (see RunManager.Lueur), not tied to either
-            // bar's own round-scoped progress, so it gets its own spot
-            // rather than folding into the score bar's label.
-            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 18, VisualDefaults.GoldenColor);
-            _lueurLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
-            _lueurLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _lueurLabel.rectTransform.pivot = new Vector2(1f, 1f);
-            _lueurLabel.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
-            _lueurLabel.rectTransform.sizeDelta = new Vector2(180f, 26f);
-            _lueurLabel.alignment = TextAnchor.MiddleRight;
+            // Persistent readout centered below the status text (moved there
+            // and enlarged on explicit request — was a small top-right
+            // corner readout) — Lueur is a whole-run currency (see
+            // RunManager.Lueur), not tied to either bar's own round-scoped
+            // progress, so it gets its own spot rather than folding into the
+            // score bar's label.
+            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 22, VisualDefaults.GoldenColor);
+            _lueurLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _lueurLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _lueurLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _lueurLabel.rectTransform.anchoredPosition = new Vector2(0f, LueurLabelY);
+            _lueurLabel.rectTransform.sizeDelta = new Vector2(300f, 30f);
+            _lueurLabel.alignment = TextAnchor.MiddleCenter;
 
             BuildScoringBaseline(parent);
         }
@@ -48,10 +63,12 @@ namespace Contigu.Presentation
         /// <summary>
         /// Static bullet-point reference for the scoring rules that always
         /// apply (independent of any modifier), plus the deck-view hint, in
-        /// the empty space below the Lueur readout (on explicit request: "un
-        /// texte bullet point avec la baseline du pointage" + "une mention
-        /// tab to open piece deck ... quelque part dans l'écran"). Built
-        /// once and never refreshed — none of this ever changes mid-run.
+        /// the top-right corner (on explicit request: "un texte bullet point
+        /// avec la baseline du pointage" + "une mention tab to open piece
+        /// deck ... quelque part dans l'écran") — moved up to sit right below
+        /// the top bar now that the Lueur readout that used to occupy that
+        /// spot moved to below the status text instead (see LueurLabelY).
+        /// Built once and never refreshed — none of this ever changes mid-run.
         /// </summary>
         private static void BuildScoringBaseline(Transform parent)
         {
@@ -72,7 +89,7 @@ namespace Contigu.Presentation
             label.rectTransform.anchorMin = new Vector2(1f, 1f);
             label.rectTransform.anchorMax = new Vector2(1f, 1f);
             label.rectTransform.pivot = new Vector2(1f, 1f);
-            label.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f + 26f + 12f));
+            label.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
             label.rectTransform.sizeDelta = new Vector2(260f, 160f);
         }
 
@@ -136,11 +153,52 @@ namespace Contigu.Presentation
         /// Updates just the Lueur label, without touching anything else —
         /// same idea as <see cref="SetScores"/>, lets the presentation layer
         /// animate Lueur up progressively (one group at a time) instead of
-        /// always jumping straight to the final value.
+        /// always jumping straight to the final value; each of those
+        /// intermediate catch-up steps that actually raises the total also
+        /// pulses the label (on explicit request: "qu'il pulse chaque fois
+        /// qu'il augmente"), not just the final one. A drop (spent in the
+        /// shop) or unchanged value never pulses.
         /// </summary>
         public void SetLueur(int lueur)
         {
             _lueurLabel.text = "Lueur: " + lueur;
+            if (lueur > _lastLueur)
+            {
+                PulseLueur();
+            }
+            _lastLueur = lueur;
+        }
+
+        private void PulseLueur()
+        {
+            // Stops any pulse already in flight before starting a fresh one
+            // rather than letting two coroutines animate the same
+            // RectTransform's scale at once (same defensive pattern as
+            // ModifierPanelView.PulseRow, which fixed a color-corruption bug
+            // from exactly this kind of overlap).
+            if (_lueurPulseCoroutine != null)
+            {
+                StopCoroutine(_lueurPulseCoroutine);
+            }
+            _lueurPulseCoroutine = StartCoroutine(PulseLueurRoutine());
+        }
+
+        private IEnumerator PulseLueurRoutine()
+        {
+            var rt = _lueurLabel.rectTransform;
+            float t = 0f;
+            while (t < LueurPulseDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / LueurPulseDuration);
+                float scale = p < LueurPulsePeakFraction
+                    ? Mathf.Lerp(1f, LueurPulsePeakScale, p / LueurPulsePeakFraction)
+                    : Mathf.Lerp(LueurPulsePeakScale, 1f, (p - LueurPulsePeakFraction) / (1f - LueurPulsePeakFraction));
+                rt.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _lueurPulseCoroutine = null;
         }
 
         /// <summary>
