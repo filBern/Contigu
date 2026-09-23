@@ -21,7 +21,6 @@ namespace Contigu.Presentation
         private Image _fillTile;
         private Image _badgeGolden;
         private Image _badgeSpecial;
-        private Image _badgeColorIcon;
         private Image _invalidMarker;
         private Text _effectLabel;
         private Image _badgeTraitOrigin;
@@ -31,7 +30,7 @@ namespace Contigu.Presentation
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgeColorIcon, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -40,7 +39,6 @@ namespace Contigu.Presentation
             _fillTile = fillTile;
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
-            _badgeColorIcon = badgeColorIcon;
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
@@ -142,17 +140,6 @@ namespace Contigu.Presentation
                 }
             }
 
-            // Colorblind-accessibility badge: shows the piece color's icon on
-            // top of the fill so color isn't the only signal. Hidden for any
-            // color that has no icon yet (e.g. Coral) rather than showing a
-            // blank/broken image.
-            Sprite colorIcon = isFilled && !renderAsLockedObstacle ? VisualDefaults.GetColorIcon(filledColor.Value) : null;
-            _badgeColorIcon.gameObject.SetActive(colorIcon != null);
-            if (colorIcon != null)
-            {
-                _badgeColorIcon.sprite = colorIcon;
-            }
-
             bool showSpecial = cell.IsTinted || cell.IsMultiplierZone;
             _badgeSpecial.gameObject.SetActive(showSpecial);
             if (cell.IsMultiplierZone)
@@ -214,26 +201,25 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Tints the cell green/red for valid/invalid placement preview. When
-        /// valid, also previews the color-icon badge for the hovered piece's
-        /// color — the same badge <see cref="ApplyState"/> shows once a cell
-        /// is actually filled, so hovering previews exactly what landing
-        /// there would look like. When invalid, shows a solid red marker
-        /// instead — the background tint alone was easy to miss, and a
-        /// color-icon preview would misleadingly suggest the piece could
-        /// land there. <paramref name="previewTrait"/> additionally previews
-        /// the SAME top-right trait-origin badge <see cref="ApplyState"/>
-        /// shows once placed, on the one cell that would actually carry the
-        /// placed piece's enchantment (see PieceTrait) — used to show the
-        /// old top-left/bottom-right badges instead (whichever of
-        /// Golden/Special matched the trait kind), which put the preview in
-        /// a different corner than both the hand-slot badge and the actual
-        /// placed badge (bug report: "dans la slot le badge est en haut a
-        /// gauche, dans le preview ... en bas a droite et lorsqu'il est
-        /// déposé il devient en haut a droite"). ClearHover's follow-up
-        /// ApplyState call resets everything once the hover ends.
+        /// Tints the cell green/red for valid/invalid placement preview —
+        /// the tile's own tinted card shape (see ApplyState) only appears
+        /// once actually placed, so hovering previews position/validity via
+        /// this overlay alone rather than the piece's own color. When
+        /// invalid, also shows a solid red marker — the background tint
+        /// alone was easy to miss. <paramref name="previewTrait"/>
+        /// additionally previews the SAME top-right trait-origin badge
+        /// <see cref="ApplyState"/> shows once placed, on the one cell that
+        /// would actually carry the placed piece's enchantment (see
+        /// PieceTrait) — used to show the old top-left/bottom-right badges
+        /// instead (whichever of Golden/Special matched the trait kind),
+        /// which put the preview in a different corner than both the
+        /// hand-slot badge and the actual placed badge (bug report: "dans la
+        /// slot le badge est en haut a gauche, dans le preview ... en bas a
+        /// droite et lorsqu'il est déposé il devient en haut a droite").
+        /// ClearHover's follow-up ApplyState call resets everything once the
+        /// hover ends.
         /// </summary>
-        public void SetHoverTint(Color? overlay, bool isValid, PieceColor? previewColor = null, PieceTrait? previewTrait = null)
+        public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null)
         {
             if (overlay.HasValue)
             {
@@ -241,16 +227,6 @@ namespace Contigu.Presentation
             }
 
             _invalidMarker.gameObject.SetActive(!isValid);
-
-            if (isValid && previewColor.HasValue)
-            {
-                Sprite icon = VisualDefaults.GetColorIcon(previewColor.Value);
-                _badgeColorIcon.gameObject.SetActive(icon != null);
-                if (icon != null)
-                {
-                    _badgeColorIcon.sprite = icon;
-                }
-            }
 
             if (isValid && previewTrait.HasValue)
             {

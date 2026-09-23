@@ -3712,3 +3712,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     Icônes daltonisme (`VisualDefaults.IconMap`, `Icons/Coral` etc.)
     non touchées — hors du périmètre de la demande, qui portait sur la
     couleur de fond des tuiles, pas sur ces pictogrammes séparés.
+- **Suite immédiate : les icônes daltonisme par couleur, finalement
+  retirées** (demande explicite : "pour les filled piece tile je veux
+  seulement card_bg_3.png teinté par la bonne couleur pour remplacer
+  les icons qui se trouvent dans ce folder Assets/Resources/Icons") —
+  revient sur le "hors du périmètre" de l'entrée précédente : le badge
+  daltonisme (`_badgeColorIcon` dans `GridCellView`/`GridView`, et son
+  équivalent dans `ShapePreviewFactory.Build`) qui se superposait au
+  centre de chaque tuile remplie (chargé depuis `Icons/Coral.png`,
+  `Teal.png`, `Violet.png`, `Lime.png`, `Joker.png` via
+  `VisualDefaults.IconMap`/`GetColorIcon`) est entièrement retiré — la
+  carte teintée `TileSprite` est désormais la SEULE façon de reconnaître
+  la couleur d'une tuile remplie. `VisualDefaults.IconMap`/`GetColorIcon`
+  supprimés ; `GridCellView.Init` perd son paramètre `badgeColorIcon` ;
+  `SetHoverTint` perd son paramètre `previewColor` (qui ne servait plus
+  qu'à afficher cette icône en aperçu de survol — le tinte vert/rouge
+  de validité reste l'unique retour visuel au survol, la couleur réelle
+  de la pièce n'apparaissant qu'une fois posée) ; les 5 fichiers PNG
+  devenus orphelins supprimés du dépôt (`GoldenTile.png`/`LockedTile.png`/
+  le dossier `Modifiers` non touchés, hors périmètre — états de case
+  distincts, pas des icônes de couleur de pièce).

@@ -76,22 +76,6 @@ namespace Contigu.Data
             { ShapeId.STetro, "S-Tetromino" }
         };
 
-        // Small per-color badge icons for colorblind accessibility (shown on
-        // filled grid cells alongside the color fill) plus the golden/locked
-        // cell textures, loaded from Assets/Resources/Icons at runtime since
-        // this project builds its whole UI from code with no editor-wired
-        // asset references. Resources.Load returns null for a color that has
-        // no icon yet (e.g. Coral) rather than throwing, so callers must treat
-        // a null sprite as "no icon available" and degrade to color-only.
-        private static readonly Dictionary<PieceColor, Sprite> IconMap = new Dictionary<PieceColor, Sprite>
-        {
-            { PieceColor.Coral, Resources.Load<Sprite>("Icons/Coral") },
-            { PieceColor.Teal, Resources.Load<Sprite>("Icons/Teal") },
-            { PieceColor.Violet, Resources.Load<Sprite>("Icons/Violet") },
-            { PieceColor.Lime, Resources.Load<Sprite>("Icons/Lime") },
-            { PieceColor.Joker, Resources.Load<Sprite>("Icons/Joker") }
-        };
-
         public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
         public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
 
@@ -112,18 +96,20 @@ namespace Contigu.Data
         /// slots and shop cards (see Presentation.UISprites.CardBackground —
         /// duplicated here rather than referenced, since Data must not depend
         /// on Presentation), shown at its own natural pale color for an empty
-        /// cell and tinted with a piece's color for a filled one.
+        /// cell and tinted with a piece's color for a filled one. Now the ONLY
+        /// way a filled tile shows its color (on further explicit request:
+        /// "je veux seulement card_bg_3.png teinté... pour remplacer les
+        /// icons") — replaces the old per-color colorblind-accessibility
+        /// badge (Assets/Resources/Icons/Coral.png etc., deleted) that used
+        /// to sit on top of the fill; GetColorIcon/IconMap removed along with
+        /// it, since the tinted card shape alone is what distinguishes a
+        /// filled tile now.
         /// </summary>
         public static readonly Sprite TileSprite = Resources.Load<Sprite>("Colorful_UI/colorful/sprites/gameUI/card_bg_3");
 
         public static Color GetColor(PieceColor color)
         {
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
-        }
-
-        public static Sprite GetColorIcon(PieceColor color)
-        {
-            return IconMap.TryGetValue(color, out var s) ? s : null;
         }
 
         public static string GetColorName(PieceColor color)

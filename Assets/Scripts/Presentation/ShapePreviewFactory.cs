@@ -8,11 +8,11 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Renders a small grid-square preview of a piece shape/color — same look
-    /// as a filled grid cell (flat color fill + colorblind icon) — with an
-    /// optional enchanted-tile trait badge overlaid on its LocalCellIndex
-    /// square. Shared by HandView (a dealt hand piece, its own rotation) and
-    /// DraftView (a deck-composition row in the Retirer/Dupliquer/Recolorer
-    /// type picker, always shown unrotated).
+    /// as a filled grid cell (VisualDefaults.TileSprite tinted the piece's
+    /// color) — with an optional enchanted-tile trait badge overlaid on its
+    /// LocalCellIndex square. Shared by HandView (a dealt hand piece, its own
+    /// rotation) and DraftView (a deck-composition row in the Retirer/
+    /// Dupliquer/Recolorer type picker, always shown unrotated).
     /// </summary>
     public static class ShapePreviewFactory
     {
@@ -86,17 +86,6 @@ namespace Contigu.Presentation
 
                     if (filled)
                     {
-                        // Same colorblind-accessibility icon as a filled grid
-                        // cell (see GridCellView). Skipped for a color with no
-                        // icon yet (Coral).
-                        var icon = VisualDefaults.GetColorIcon(color);
-                        if (icon != null)
-                        {
-                            var iconImg = UIFactory.CreatePanel(img.transform, "Icon", Color.white);
-                            iconImg.sprite = icon;
-                            UIFactory.StretchFull(iconImg.rectTransform);
-                        }
-
                         if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
                         {
                             // Sized relative to the cell itself rather than a

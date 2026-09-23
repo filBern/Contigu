@@ -14,9 +14,9 @@ namespace Contigu.Data
     /// PNGs dropped into Assets/Resources/Icons/Modifiers, named after each
     /// one's own <see cref="ModifierDefinition.Name"/> with spaces
     /// stripped), loaded via <see cref="GetIcon"/> — same null-means-no-icon-
-    /// yet fallback convention as VisualDefaults.GetColorIcon. Adding art
-    /// for another modifier later only needs one more entry in the
-    /// <see cref="Icons"/> dictionary below.
+    /// yet fallback convention used throughout this project's Resources.Load
+    /// calls. Adding art for another modifier later only needs one more
+    /// entry in the <see cref="Icons"/> dictionary below.
     /// </summary>
     public static class ModifierVisualDefaults
     {
@@ -203,10 +203,9 @@ namespace Contigu.Data
         // par leur nom dans le dossier Assets/Resources/Icons/Modifiers") —
         // one PNG per modifier, named after its own ModifierDefinition.Name
         // with spaces stripped (e.g. "Mega Chain" -> MegaChain.png). Loaded
-        // once here, same lazy-at-startup convention as VisualDefaults'
-        // IconMap; Resources.Load returns null for any modifier without art
-        // yet rather than throwing, so GetIcon below can be called for every
-        // modifier unconditionally.
+        // once here, at startup; Resources.Load returns null for any
+        // modifier without art yet rather than throwing, so GetIcon below
+        // can be called for every modifier unconditionally.
         private static readonly Dictionary<ModifierId, Sprite> Icons = new Dictionary<ModifierId, Sprite>
         {
             { ModifierId.Prisme, Resources.Load<Sprite>("Icons/Modifiers/Prism") },
