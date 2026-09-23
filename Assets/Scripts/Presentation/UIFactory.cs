@@ -111,7 +111,14 @@ namespace Contigu.Presentation
             var punch = img.gameObject.AddComponent<ButtonPunchEffect>();
             btn.onClick.AddListener(punch.Punch);
 
-            var text = CreateText(img.transform, "Label", label, fontSize, UITheme.TextPrimary);
+            // 50% bigger than whatever size the caller asked for (on
+            // explicit request: "Le texte sur tous les bouton peut être 50%
+            // plus gros") — every button in the game goes through this one
+            // spot, so scaling here instead of each of the ~15 call sites'
+            // own fontSize argument covers all of them at once and stays
+            // proportional if a caller ever asks for a smaller/bigger button
+            // label than another.
+            var text = CreateText(img.transform, "Label", label, Mathf.RoundToInt(fontSize * 1.5f), UITheme.TextPrimary);
             StretchFull(text.rectTransform);
             return btn;
         }

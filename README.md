@@ -3869,3 +3869,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   correction (`UIFactory.FinishButton`) bénéficie à tous les boutons du
   jeu, le shop étant juste l'endroit où le problème avait été
   remarqué.
+- **Texte des boutons 50% plus gros, partout** (demande explicite :
+  "Le texte sur tous les bouton peut être 50% plus gros") — même
+  `UIFactory.FinishButton` (point de passage unique pour les ~15
+  endroits du jeu qui créent un bouton) multiplie maintenant le
+  `fontSize` reçu par 1.5 (`Mathf.RoundToInt`) avant de construire le
+  label, plutôt que de modifier chacun de ces ~15 appels un par un —
+  reste proportionnel si un futur appel demande un bouton plus petit/
+  grand qu'un autre. Aucune taille de bouton (largeur/hauteur) n'a été
+  changée ; le `Text` reste en `HorizontalWrapMode.Wrap` +
+  `VerticalWrapMode.Overflow` (déjà le cas dans `CreateText`), donc un
+  label plus long à 1.5x se met à la ligne ou déborde proprement plutôt
+  que d'être tronqué — vérifié que tous les boutons existants ont une
+  marge confortable (le plus serré, les boutons "Buy (N)" du shop à
+  36px de haut, passe de 14 à 21pt, encore large marge).
