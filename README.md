@@ -3825,3 +3825,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   contrairement au noir ou au blanc, une couleur qu'aucun fond sombre
   de l'UI ni la carte pâle d'une case vide ne pourraient jamais
   confondre avec du "neutre".
+- **Placement plus permissif : accroche vers l'emplacement valide le
+  plus proche** (demande explicite, avec screenshot : "je suis
+  tellement proche de pouvoir le déposer, il faudrait être plus
+  permissif sur l'emplacement du curseur et que si le joueur est
+  proche de pouvoir déposer, on le lui propose") — jusqu'ici,
+  `GridView.GetPlacementOrigin` centrait la pièce EXACTEMENT sur la
+  case survolée (décalée de la moitié de sa boîte englobante) et
+  s'arrêtait là : si cet emplacement précis ne convenait pas (case
+  occupée/verrouillée sur son chemin, ou bord de grille), tout
+  l'aperçu (et le clic/drop qui suit) restait invalide même si UNE
+  case de décalage suffisait à le faire rentrer. Ajout d'un repli :
+  quand l'emplacement centré sur le curseur ne convient pas,
+  `FindNearestValidOrigin` cherche dans un rayon de 2 cases autour
+  (distance euclidienne, jusqu'à ~2.8 cases en diagonale) le point le
+  plus proche où la pièce rentre réellement, et l'utilise à la place —
+  sinon (rien de valide dans ce rayon), retombe sur l'ancien
+  comportement (aperçu rouge "ne rentre pas ici"). Un seul point de
+  changement : `GetPlacementOrigin` est déjà appelée à l'identique par
+  l'aperçu au survol ET par le clic/drop de placement (comme le disait
+  déjà son commentaire — "so what's previewed is exactly what gets
+  placed"), donc l'aperçu (vert/rouge, pulse du groupe prévisualisé) et
+  le placement réel restent automatiquement synchronisés sans logique
+  dupliquée.

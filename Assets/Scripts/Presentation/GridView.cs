@@ -287,6 +287,13 @@ namespace Contigu.Presentation
             HoverValidityChanged?.Invoke(valid);
         }
 
+        // How far (in cells, each direction) GetPlacementOrigin looks for a
+        // nearby spot the hovered piece WOULD fit when it doesn't fit right
+        // at the cursor (on explicit request: "je suis tellement proche de
+        // pouvoir le déposer, il faudrait être plus permissif... si le
+        // joueur est proche de pouvoir déposer, on le lui propose").
+        private const int SnapSearchRadius = 2;
+
         /// <summary>
         /// A shape's cells are always stored with their origin at the
         /// bottom-left of the bounding box (see PieceShapeCatalog), so using
@@ -294,9 +301,13 @@ namespace Contigu.Presentation
         /// hang up-and-right of the cursor — it read as if the cursor was at
         /// the piece's bottom-left corner rather than its middle. Shifts by
         /// half the shape's bounding box (rounded down) so the piece centers
-        /// on the cursor's cell instead. Used identically by the hover
-        /// preview and the click/drop placement path so what's previewed is
-        /// exactly what gets placed.
+        /// on the cursor's cell instead. If that exact spot doesn't fit,
+        /// snaps to the closest spot within <see cref="SnapSearchRadius"/>
+        /// cells that DOES (see FindNearestValidOrigin) — falls back to the
+        /// unsnapped, still-invalid spot if nothing nearby fits either, so
+        /// the usual red "can't place here" preview still shows. Used
+        /// identically by the hover preview and the click/drop placement
+        /// path so what's previewed is exactly what gets placed.
         /// </summary>
         private Vector2Int GetPlacementOrigin(int x, int y)
         {
@@ -312,7 +323,42 @@ namespace Contigu.Presentation
                 if (offsets[i].x > maxX) maxX = offsets[i].x;
                 if (offsets[i].y > maxY) maxY = offsets[i].y;
             }
-            return new Vector2Int(x - maxX / 2, y - maxY / 2);
+            var naiveOrigin = new Vector2Int(x - maxX / 2, y - maxY / 2);
+            if (_grid.CanPlace(_selectedShape, naiveOrigin.x, naiveOrigin.y))
+            {
+                return naiveOrigin;
+            }
+            return FindNearestValidOrigin(naiveOrigin) ?? naiveOrigin;
+        }
+
+        /// <summary>Closest origin (by straight-line distance) within SnapSearchRadius cells of <paramref name="naiveOrigin"/> where the selected shape actually fits, or null if nothing in that radius does.</summary>
+        private Vector2Int? FindNearestValidOrigin(Vector2Int naiveOrigin)
+        {
+            Vector2Int? best = null;
+            int bestDistSq = int.MaxValue;
+            for (int dy = -SnapSearchRadius; dy <= SnapSearchRadius; dy++)
+            {
+                for (int dx = -SnapSearchRadius; dx <= SnapSearchRadius; dx++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+                    int candidateX = naiveOrigin.x + dx;
+                    int candidateY = naiveOrigin.y + dy;
+                    if (!_grid.CanPlace(_selectedShape, candidateX, candidateY))
+                    {
+                        continue;
+                    }
+                    int distSq = dx * dx + dy * dy;
+                    if (distSq < bestDistSq)
+                    {
+                        bestDistSq = distSq;
+                        best = new Vector2Int(candidateX, candidateY);
+                    }
+                }
+            }
+            return best;
         }
 
         public void OnCellHoverExit(int x, int y)
