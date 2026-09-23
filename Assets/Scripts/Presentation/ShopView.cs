@@ -244,7 +244,8 @@ namespace Contigu.Presentation
         private float BuildModifierCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
         {
             var slot = run.ShopModifierSlots[index];
-            var card = UIFactory.CreatePanel(_modifierCardsContainer, "ModSlot_" + index, UITheme.PanelLight);
+            var card = UIFactory.CreateSlicedImage(_modifierCardsContainer, "ModSlot_" + index, UISprites.CardBackground);
+            card.color = UITheme.Panel; // card_bg_3 tinted darker (explicit request), instead of the flat PanelLight fill it used before
             cardRect = card.rectTransform;
             cardRect.sizeDelta = new Vector2(CardWidth, 0f);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
@@ -311,7 +312,8 @@ namespace Contigu.Presentation
         private void BuildUpgradeCard(RunManager run, int index)
         {
             var slot = run.ShopUpgradeSlots[index];
-            var card = UIFactory.CreatePanel(_upgradeCardsContainer, "UpgSlot_" + index, UITheme.PanelLight);
+            var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
+            card.color = UITheme.Panel; // card_bg_3 tinted darker (explicit request), instead of the flat PanelLight fill it used before
             card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;

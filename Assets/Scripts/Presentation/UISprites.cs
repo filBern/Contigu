@@ -18,7 +18,7 @@ namespace Contigu.Presentation
         private static Sprite _scoreBarFill;
         private static Sprite _piecesBarFill;
         private static Sprite _modifierPanelBackground;
-        private static Sprite _handSlotBackground;
+        private static Sprite _cardBackground;
         private static Sprite _chooseButtonBackground;
         private static Sprite _cancelButtonBackground;
 
@@ -53,10 +53,10 @@ namespace Contigu.Presentation
             get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "panel_bg")); }
         }
 
-        /// <summary>Background of each hand slot (HandView).</summary>
-        public static Sprite HandSlotBackground
+        /// <summary>The "card_bg_3" card art — background of each hand slot (HandView) and, tinted darker, of the shop's modifier/upgrade cards (ShopView, on explicit request: "pour le background des ''cartes'' dans le shop j'aimerais qu'on utilise card_bg_3.png teinté en plus foncé").</summary>
+        public static Sprite CardBackground
         {
-            get { return _handSlotBackground != null ? _handSlotBackground : (_handSlotBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
+            get { return _cardBackground != null ? _cardBackground : (_cardBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
         }
 
         /// <summary>Background for a primary "Choose"/confirm action button on a draft card.</summary>

@@ -83,7 +83,7 @@ namespace Contigu.Presentation
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
                 int idx = i;
-                var slot = UIFactory.CreateSlicedImage(container, "Slot" + i, UISprites.HandSlotBackground);
+                var slot = UIFactory.CreateSlicedImage(container, "Slot" + i, UISprites.CardBackground);
                 slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
                 // Plain Image/Button has no ILayoutElement, so without this the
                 // parent VerticalLayoutGroup has no size to read and collapses
@@ -116,7 +116,7 @@ namespace Contigu.Presentation
                 // of the slot. Drawn last (topmost) so it reads clearly
                 // regardless of the piece underneath; raycastTarget off so it
                 // never swallows the click meant for the slot's own Button.
-                var selectionOverlay = UIFactory.CreateSlicedImage(slot.transform, "SelectionOverlay", UISprites.HandSlotBackground);
+                var selectionOverlay = UIFactory.CreateSlicedImage(slot.transform, "SelectionOverlay", UISprites.CardBackground);
                 UIFactory.StretchFull(selectionOverlay.rectTransform);
                 selectionOverlay.color = new Color(UITheme.ButtonSelected.r, UITheme.ButtonSelected.g, UITheme.ButtonSelected.b, 0.55f);
                 selectionOverlay.raycastTarget = false;

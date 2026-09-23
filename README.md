@@ -3607,3 +3607,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (`GridManagerModifierTests.cs`) vérifie que 2 copies de Solidarite
     produisent bien 2 events `MultBonus` avec `TriggeringModifierIndex`
     0 et 1 respectivement, et non le même index pour les deux.
+- **Fond des cartes du shop remplacé par card_bg_3 teinté plus foncé**
+  (demande explicite : "Pour le background des ''cartes'' dans le shop
+  j'aimerais qu'on utilise Assets/Resources/Colorful_UI/colorful/
+  sprites/gameUI/card_bg_3.png teinté en plus foncé") — les cartes de
+  modifier et d'upgrade du shop (`ShopView.BuildModifierCard`/
+  `BuildUpgradeCard`) utilisaient un simple panneau de couleur plate
+  (`UIFactory.CreatePanel(..., UITheme.PanelLight)`), remplacé par
+  `UIFactory.CreateSlicedImage(..., UISprites.CardBackground)` (le
+  sprite 9-slice `card_bg_3`, même art déjà utilisé pour le fond des
+  emplacements de main — voir `HandView`) avec `card.color =
+  UITheme.Panel` en teinte multiplicative — `Panel` (#614363) étant
+  déjà la variante plus foncée de `PanelLight` (#5f699c) dans la
+  palette existante, pas besoin d'inventer une nouvelle couleur.
+  `UISprites.HandSlotBackground` renommé en `UISprites.CardBackground`
+  (même sprite `card_bg_3`, maintenant partagé entre la main et le
+  shop plutôt que nommé pour un seul de ses deux usages) et ses 2
+  usages dans `HandView.cs` mis à jour en conséquence.
