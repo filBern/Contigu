@@ -3913,10 +3913,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   seulement sur le fond, derrière le preview, passait inaperçue une
   fois le slot rempli par les couleurs de la pièce) — ce qui grisait
   justement le preview au moment où le joueur sélectionne sa pièce.
-  Remplacé par un cadre : même sprite 9-sliced (`UISprites.
-  CardBackground`, bordure de 14px), mais avec `fillCenter = false`,
-  qui ne dessine QUE la bordure sliced du sprite et laisse son centre
-  (là où vit le preview) totalement transparent — couleur ramenée à
-  opaque (`UITheme.ButtonSelected` sans alpha réduit, vu qu'il ne
-  couvre plus qu'un cadre de quelques pixels et non tout le slot) pour
-  rester tout aussi visible qu'avant sans jamais recouvrir la pièce.
+  D'abord remplacé par un cadre (même sprite 9-sliced avec
+  `fillCenter = false`, ne dessinant que la bordure sliced et laissant
+  le centre — là où vit le preview — transparent), puis ce cadre a lui
+  aussi été retiré sur demande explicite suivante ("j'aime pas le
+  cadre de sélection, peux-tu le retirer et juste mettre légèrement
+  plus clair") : `_selectionOverlays` et le GameObject `SelectionOverlay`
+  sont supprimés entièrement, et la sélection est maintenant indiquée
+  par le fond du slot lui-même, légèrement éclairci
+  (`Color.Lerp(UITheme.Panel, Color.white, 0.25f)`) au lieu du ton
+  `UITheme.Panel` de base — aucun élément séparé dessiné par-dessus le
+  preview, donc plus aucun risque de le griser, quelle que soit la
+  forme de l'indicateur.
