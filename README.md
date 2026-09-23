@@ -4483,3 +4483,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   incomplet fait partie de ce qui rend ce challenge plus difficile.
   Nouveau test `InitialDeckFactory_Build_HasExactlyOneCopyOfEveryShapeColorCombination`
   vérifiant les 40 combinaisons une par une.
+- **Écran du deck : fusion des paires d'orientation** (retour explicite,
+  capture à l'appui avec deux paires de cartes encerclées : "On peut
+  donc retirer les doublons dans l'écran de deck"). Le domino
+  horizontal/vertical (`DomH`/`DomV`) et la ligne de 3
+  horizontale/verticale (`TriIH`/`TriIV`) sont la même pièce simplement
+  pivotée à 90° — avec la couverture complète des 40 pièces, chaque
+  couleur affiche maintenant systématiquement les deux orientations
+  séparément, ce qui se lit comme des doublons dans ce résumé en
+  lecture seule. `DeckView.CollectTypesForColor` fusionne désormais
+  chaque paire d'orientation en une seule ligne par couleur (icône de
+  la forme représentative, compte combiné des deux orientations) via
+  une table `OrientationDuplicateOf`. C'est purement un regroupement
+  d'affichage : le deck réel, le picker de `DraftView` et le gameplay
+  ne sont pas touchés — les deux orientations restent des pièces
+  piochables séparément.
