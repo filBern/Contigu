@@ -121,6 +121,10 @@ namespace Contigu.Presentation
             {
                 DebugGrantLueurShortcut();
             }
+            if (Input.GetKeyDown(KeyCode.F11))
+            {
+                DebugGrantStarsShortcut();
+            }
 #endif
             // Tab toggles the deck-view overlay (on explicit request: an
             // in-game way to check the deck's composition without waiting
@@ -177,6 +181,22 @@ namespace Contigu.Presentation
             _run.DebugGrantLueur(100);
             RefreshAll();
             _shopView.Refresh(_run);
+        }
+
+        /// <summary>
+        /// Editor-only debug shortcut (F11): grants 100 Stars instantly and
+        /// saves right away, on explicit request ("il me faut un cheat pour
+        /// les unlock") — lets Marathon/Chaos be tested (or the picker's
+        /// unlock flow itself) without grinding out real runs for Stars
+        /// first. Same "skip the grind" spirit as F10 above. Refreshing
+        /// the picker is harmless even while it's hidden — it just re-reads
+        /// whatever's current the next time it's shown.
+        /// </summary>
+        private void DebugGrantStarsShortcut()
+        {
+            _metaStats.Stars += 100;
+            _metaStatsStore.Save(_metaStats);
+            _challengeSelectView.Refresh(_metaStats);
         }
 #endif
 

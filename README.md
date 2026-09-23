@@ -4418,3 +4418,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (premier lancement uniquement) s'affiche maintenant APRÈS qu'un
   challenge soit choisi plutôt qu'avant, pour rester logique dans
   l'ordre de l'écran.
+- **Cartes du picker de challenge trop claires + cheat de debug pour
+  les unlocks** (retour explicite, capture à l'appui : "Le background
+  des cartes challenge devrait être plus foncé. Aussi il me faut un
+  cheat pour les unlock"). Les cartes utilisaient `UISprites.
+  CardBackground` avec son tint blanc par défaut (lavande pâle, trop
+  clair contre l'overlay sombre) — corrigé avec `card.color =
+  UITheme.Panel`, le même tint que `ShopView` applique déjà à ses
+  propres cartes pour la même raison ("card_bg_3 tinted darker" y
+  était déjà documenté comme demande explicite passée). Touche `F11`
+  ajoutée (éditeur uniquement, même patron que F9/F10) :
+  `DebugGrantStarsShortcut` accorde 100 Stars instantanément et
+  sauvegarde tout de suite, pour tester Marathon/Chaos sans devoir
+  farmer des runs réels au préalable.

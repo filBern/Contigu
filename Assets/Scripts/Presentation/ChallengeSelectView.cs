@@ -79,6 +79,7 @@ namespace Contigu.Presentation
         private ChallengeCard BuildCard(Transform parent, ChallengeDefinition challenge, float x)
         {
             var card = UIFactory.CreateSlicedImage(parent, "Card_" + challenge.Id, UISprites.CardBackground);
+            card.color = UITheme.Panel; // card_bg_3 tinted darker (on explicit report — the default white tint read as a pale lavender card, too light against the dark overlay), same tint ShopView's own cards already use.
             card.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             card.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
