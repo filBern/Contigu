@@ -1101,6 +1101,12 @@ namespace Contigu.Core
             Lueur += amount;
         }
 
+        /// <summary>Debug-only helper: pins Lueur to an exact value, bypassing gameplay — lets EditMode tests establish a known baseline before asserting purchase/reroll outcomes, instead of assuming a round-completion helper (e.g. one that fills the board with golden cells to reach quota fast) happens to earn exactly zero incidental Lueur from line clears along the way. That assumption broke silently once InitialDeckFactory's starting deck composition changed and a seeded round started clearing lines it previously didn't.</summary>
+        public void DebugSetLueur(int amount)
+        {
+            Lueur = amount;
+        }
+
         private void EvaluateRoundEnd()
         {
             if (RoundScore >= CurrentQuota)

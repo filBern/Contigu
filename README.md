@@ -4498,3 +4498,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   d'affichage : le deck réel, le picker de `DraftView` et le gameplay
   ne sont pas touchés — les deux orientations restent des pièces
   piochables séparément.
+- **Bug CI (introduit sans demande explicite, corrigé en poussant le
+  correctif du point précédent) : 3 tests `RunManagerTests` liés au
+  Lueur devenus faux (`BuyModifierSlot_Succeeds_...`,
+  `BuyModifierSlot_Fails_WhenLueurIsInsufficient`,
+  `RerollShop_Fails_WhenLueurIsInsufficient`)**. Root cause tracée par
+  deux exécutions CI identiques (mêmes 3 tests, mêmes valeurs "Expected:
+  0, But was: 6" — donc bien un bug déterministe reproductible, pas une
+  instabilité d'ordre des tests ni un flake d'infrastructure) : ces
+  tests supposaient implicitement que `PlayRoundToAwaitingShop` (qui
+  remplit toute la grille en cases dorées pour atteindre le quota
+  rapidement) ne gagnait jamais de Lueur en cours de route avec la
+  seed=1 fixe — hypothèse valable pour l'ancien deck 24 pièces mais
+  cassée silencieusement par le passage à 40 pièces (point précédent) :
+  la séquence de pioche change avec la composition du deck, et cette
+  fois une ligne se complète avant le quota, générant 6 Lueur. Corrigé
+  en ajoutant `RunManager.DebugSetLueur(int)` (miroir de
+  `DebugGrantLueur` déjà existant) et en l'appelant juste après
+  `PlayRoundToAwaitingShop` dans ces 3 tests pour fixer une base connue
+  à 0 avant d'asserter — rend ces tests robustes à tout futur changement
+  du deck de départ ou du shuffle, au lieu de dépendre d'un effet de
+  bord incident.

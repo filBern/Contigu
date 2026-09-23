@@ -216,6 +216,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
+            run.DebugSetLueur(0);
             var targetId = run.ShopModifierSlots[0].ModifierId;
             int price = run.GetModifierSlotPrice(0);
             run.DebugGrantLueur(price);
@@ -233,6 +234,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
+            run.DebugSetLueur(0);
             int price = run.GetModifierSlotPrice(0);
             run.DebugGrantLueur(price - 1);
 
@@ -342,6 +344,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
+            run.DebugSetLueur(0);
 
             bool rerolled = run.RerollShop();
 
