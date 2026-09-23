@@ -3644,3 +3644,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   tout le bloc multi-lignes d'un coup, pour éviter que le caractère de
   saut de ligne ne se retrouve collé à un mot et casse la
   correspondance exacte "pts" que le formatter cherche).
+- **Texte de statut "Select or drag a piece onto the grid." : pulse
+  lent + taille augmentée** (demande explicite : "j'aimerais qu'il
+  pulse lentement et qu'il soit légèrement plus gros") — taille de
+  police 16 → 19, et une oscillation continue d'échelle en sinusoïde
+  (±5%, période ~4s, `GameBootstrap.PulseStatusText`) plutôt qu'un
+  flash ponctuel comme `ModifierPanelView.Pulse` (qui réagit à un
+  événement précis, pas adapté à un effet permanent). Le texte de
+  statut affiche plusieurs messages différents selon le contexte
+  (pièce sélectionnée, placement invalide, début de manche...) — le
+  pulse ne devait viser QUE ce message d'attente par défaut, pas les
+  autres (un pulse constant sur "Invalid placement there." aurait
+  nui à sa lisibilité). Toutes les affectations directes de
+  `_statusText.text` remplacées par un nouveau point d'entrée unique,
+  `GameBootstrap.SetStatusText(text)`, qui démarre le pulse quand le
+  texte est exactement le message d'attente par défaut (extrait dans
+  la constante `IdleStatusMessage`, pour comparer par référence de
+  contenu plutôt que dupliquer le literal à 6 endroits) et l'arrête
+  (en réinitialisant l'échelle à 1) pour tout autre message.

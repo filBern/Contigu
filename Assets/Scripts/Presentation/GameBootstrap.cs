@@ -31,6 +31,13 @@ namespace Contigu.Presentation
         // instead of collapsing to an instant dump.
         private const float ComboSpeedupFactor = 0.97f;
         private const float MinStaggerSeconds = 0.1f;
+        // Slow "breathing" pulse on the idle status prompt (on explicit
+        // request: "j'aimerais qu'il pulse lentement") — a gentle ±5% scale
+        // wobble, not the sharper one-shot flash ModifierPanelView.Pulse
+        // uses for score feedback.
+        private const float StatusPulseAmplitude = 0.05f;
+        private const float StatusPulseSpeed = 1.5f;
+        private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
 
         private RunManager _run;
 
@@ -48,6 +55,7 @@ namespace Contigu.Presentation
         private EndScreenView _endScreenView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
+        private Coroutine _statusPulseCoroutine;
         private bool _isPlayingPlacementSequence;
 
         private void Awake()
@@ -117,6 +125,57 @@ namespace Contigu.Presentation
         }
 #endif
 
+        /// <summary>
+        /// Sets the status line's text, starting or stopping its slow
+        /// "breathing" pulse depending on whether it's showing the default
+        /// idle prompt (on explicit request: "j'aimerais qu'il pulse
+        /// lentement et qu'il soit légèrement plus gros") — every other
+        /// status message (a piece selected, an error, a round transition)
+        /// stays still, since a constant pulse there would compete with the
+        /// message actually being new/important.
+        /// </summary>
+        private void SetStatusText(string text)
+        {
+            _statusText.text = text;
+            if (text == IdleStatusMessage)
+            {
+                StartStatusPulse();
+            }
+            else
+            {
+                StopStatusPulse();
+            }
+        }
+
+        private void StartStatusPulse()
+        {
+            if (_statusPulseCoroutine == null)
+            {
+                _statusPulseCoroutine = StartCoroutine(PulseStatusText());
+            }
+        }
+
+        private void StopStatusPulse()
+        {
+            if (_statusPulseCoroutine != null)
+            {
+                StopCoroutine(_statusPulseCoroutine);
+                _statusPulseCoroutine = null;
+            }
+            _statusText.rectTransform.localScale = Vector3.one;
+        }
+
+        /// <summary>Continuous sine-wave scale wobble (never a one-shot flash like ModifierPanelView.Pulse) — runs for as long as the idle prompt stays on screen, stopped/reset by SetStatusText the moment it's replaced by anything else.</summary>
+        private System.Collections.IEnumerator PulseStatusText()
+        {
+            while (true)
+            {
+                float scale = 1f + StatusPulseAmplitude * Mathf.Sin(Time.time * StatusPulseSpeed);
+                _statusText.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+        }
+
         private static void EnsureEventSystem()
         {
             if (FindObjectOfType<EventSystem>() == null)
@@ -169,13 +228,14 @@ namespace Contigu.Presentation
             _hudView = gameObject.AddComponent<HudView>();
             _hudView.Build(mainRoot);
 
-            _statusText = UIFactory.CreateText(mainRoot, "Status", "Select or drag a piece onto the grid.", 16, UITheme.TextMuted);
+            _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMuted);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
             // Below the top bar (68 tall, see HudView.BarHeight) with a 12px gap.
             _statusText.rectTransform.anchoredPosition = new Vector2(0f, -80f);
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
+            StartStatusPulse();
 
             // Dead center of the screen — the top/bottom progress bars and the
             // status text float above it rather than pushing it down, so the
@@ -283,14 +343,14 @@ namespace Contigu.Presentation
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
-            _statusText.text = "Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")";
+            SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
         }
 
         /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>
         private void OnHandSelectionCleared()
         {
             _gridView.SetSelectedShape(null);
-            _statusText.text = "Select or drag a piece onto the grid.";
+            SetStatusText(IdleStatusMessage);
         }
 
         private void OnCellClicked(int x, int y)
@@ -307,7 +367,7 @@ namespace Contigu.Presentation
             int handIndex = _handView.SelectedIndex;
             if (handIndex < 0 || handIndex >= DeckManager.HandSize || !_run.Deck.Hand[handIndex].HasValue)
             {
-                _statusText.text = "Select a piece from your hand first.";
+                SetStatusText("Select a piece from your hand first.");
                 return;
             }
 
@@ -317,7 +377,7 @@ namespace Contigu.Presentation
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
-                _statusText.text = "Invalid placement there.";
+                SetStatusText("Invalid placement there.");
                 return;
             }
 
@@ -334,7 +394,7 @@ namespace Contigu.Presentation
             _hudView.Refresh(_run);
             _hudView.SetLueur(lueurBefore);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
-            _statusText.text = "Select or drag a piece onto the grid.";
+            SetStatusText(IdleStatusMessage);
 
             _isPlayingPlacementSequence = true;
             _handView.SetInteractable(false);
@@ -813,9 +873,9 @@ namespace Contigu.Presentation
             }
             _shopView.Hide();
             RefreshAll();
-            _statusText.text = _run.IsBossRound
+            SetStatusText(_run.IsBossRound
                 ? "Boss round: every " + RunConfig.BossLockPiecesInterval + " pieces played, the boss locks " + RunConfig.BossLockCellsPerInterval + " more cells."
-                : "New round: select a piece, then click the grid.";
+                : "New round: select a piece, then click the grid.");
         }
 
         private void OnRestartRequested()
@@ -830,7 +890,7 @@ namespace Contigu.Presentation
             _deckView.Rebind(_run.Deck);
             _deckView.Hide();
             RefreshAll();
-            _statusText.text = "Select or drag a piece onto the grid.";
+            SetStatusText(IdleStatusMessage);
         }
 
         private void RefreshAll()
