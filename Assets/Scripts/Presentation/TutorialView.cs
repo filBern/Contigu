@@ -61,27 +61,27 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        /// <summary>Six short sections covering everything a new player needs before their first placement — colorized the same way as every other in-game description (see DescriptionTextFormatter) so "points"/"Lueur"/"mult" stay visually consistent with the rest of the UI.</summary>
+        /// <summary>Six short sections covering everything a new player needs before their first placement — colorized the same way as every other in-game description (see DescriptionTextFormatter) so "points"/"Lueur"/"mult" stay visually consistent with the rest of the UI. Section headers are plain uppercase, not &lt;b&gt;: the "Digitalt" display font has no real bold face, so Unity's legacy Text fakes it by double-rendering the glyph slightly offset — reads as blurry, especially at Digitalt's already-thick strokes (see GameBootstrap.BuildCanvas' own pixelPerfect comment) — every other screen in the project avoids &lt;b&gt; for the same reason.</summary>
         private static string BuildRulesText()
         {
             string[] lines =
             {
-                "<b>Goal</b>",
+                "GOAL",
                 "Reach each round's score quota before you run out of pieces. Clear all 8 rounds — the 8th is the boss round — to win the run.",
                 "",
-                "<b>Placing pieces</b>",
+                "PLACING PIECES",
                 "Drag or click a piece from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on.",
                 "",
-                "<b>Line and column clears</b>",
+                "LINE AND COLUMN CLEARS",
                 "Fill an entire row or column and it clears: +3 pts per tile. Clearing a line containing several distinct colors also earns Lueur (+2 Lueur per distinct color in it).",
                 "",
-                "<b>Lueur and the shop</b>",
+                "LUEUR AND THE SHOP",
                 "Between rounds, spend Lueur in the shop on modifiers and upgrades. Modifiers apply to every placement, in the order you arrange them (drag or tap two to swap) — some add flat bonuses, some multiply.",
                 "",
-                "<b>Boss round</b>",
+                "BOSS ROUND",
                 "The final round locks 2 more random empty cells every 3 pieces you play — leave yourself room before it starts tightening up.",
                 "",
-                "<b>Defeat</b>",
+                "DEFEAT",
                 "If none of your 3 hand pieces can be placed anywhere on the grid before reaching the quota, the run ends there.",
                 "",
                 "Tab: view your deck · C: colorblind mode · H: show this screen again"
