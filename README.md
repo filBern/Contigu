@@ -3883,3 +3883,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   que d'être tronqué — vérifié que tous les boutons existants ont une
   marge confortable (le plus serré, les boutons "Buy (N)" du shop à
   36px de haut, passe de 14 à 21pt, encore large marge).
+- **Compteur de Lueur 2x plus gros** (demande explicite : "Le compteur
+  de lueur devrait être 2x plus gros") — `HudView`'s `_lueurLabel`
+  passe de taille 22 (déjà doublée depuis 18 dans une demande
+  précédente) à 44, boîte élargie (300x30 → 450x48). Le rectangle
+  entre le texte de statut (bas à y=-106) et le sommet de la grille
+  (y≈-163, calculé depuis `8×GridCellSize + 7×spacing = 474`, centré
+  sur un canvas de 800 de haut) ne laisse que ~83px de marge — l'écart
+  entre le texte de statut et le Lueur resserré de 10 à 2px pour que la
+  boîte de 48px de haut ne morde pas sur le plateau (marge restante
+  ~7px). Le pulse déclenché à chaque augmentation (voir décision
+  précédente) reste un facteur d'échelle multiplicatif (x1.3), donc
+  fonctionne identiquement peu importe la taille de base du texte.

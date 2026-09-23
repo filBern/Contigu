@@ -24,8 +24,13 @@ namespace Contigu.Presentation
         // GameBootstrap.BuildUI) — on explicit request: "j'aimerais qu'il
         // soit sous le texte Drag or click". Kept as a documented constant
         // rather than read from that Text directly, same
-        // cross-referenced-magic-number precedent as BarHeight above.
-        private const float LueurLabelY = -(80f + 26f + 10f);
+        // cross-referenced-magic-number precedent as BarHeight above. Gap
+        // tightened 10->2 when the label doubled in size (below) — the grid
+        // itself starts at y≈-163 (8*54 + 7*6 = 474 total, centered on an
+        // 800-tall canvas — see GridView.Build/VisualDefaults.GridCellSize),
+        // so there's only ~83px of headroom below the status text for this
+        // label to grow into before it'd start overlapping the board.
+        private const float LueurLabelY = -(80f + 26f + 2f);
         private const float LueurPulseDuration = 0.25f;
         private const float LueurPulsePeakScale = 1.3f;
         private const float LueurPulsePeakFraction = 0.35f;
@@ -45,16 +50,18 @@ namespace Contigu.Presentation
 
             // Persistent readout centered below the status text (moved there
             // and enlarged on explicit request — was a small top-right
-            // corner readout) — Lueur is a whole-run currency (see
+            // corner readout, then 18->22, now doubled again to 44 on
+            // further explicit request: "Le compteur de lueur devrait être
+            // 2x plus gros") — Lueur is a whole-run currency (see
             // RunManager.Lueur), not tied to either bar's own round-scoped
             // progress, so it gets its own spot rather than folding into the
             // score bar's label.
-            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 22, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 44, VisualDefaults.GoldenColor);
             _lueurLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _lueurLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _lueurLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _lueurLabel.rectTransform.anchoredPosition = new Vector2(0f, LueurLabelY);
-            _lueurLabel.rectTransform.sizeDelta = new Vector2(300f, 30f);
+            _lueurLabel.rectTransform.sizeDelta = new Vector2(450f, 48f);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
 
             BuildScoringBaseline(parent);
