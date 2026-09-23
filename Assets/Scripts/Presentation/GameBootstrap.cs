@@ -40,6 +40,8 @@ namespace Contigu.Presentation
         private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
 
         private RunManager _run;
+        private IMetaStatsStore _metaStatsStore;
+        private MetaStats _metaStats;
 
         private GridView _gridView;
         private HandView _handView;
@@ -64,6 +66,8 @@ namespace Contigu.Presentation
             var canvasRect = BuildCanvas();
 
             _run = new RunManager(new SystemRandomProvider());
+            _metaStatsStore = new MetaStatsFileStore();
+            _metaStats = _metaStatsStore.Load();
 
             BuildUI(canvasRect);
             WireEvents();
@@ -761,13 +765,38 @@ namespace Contigu.Presentation
                     break;
 
                 case RunState.RunVictory:
-                    _endScreenView.ShowVictory(_run.TotalScore);
+                {
+                    bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: RunConfig.RoundCount);
+                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
                     break;
+                }
 
                 case RunState.RunDefeat:
-                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore);
+                {
+                    bool isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
+                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore);
                     break;
+                }
             }
+        }
+
+        /// <summary>
+        /// Meta-progression (spec extension, explicit request: "enchaînons
+        /// sur la meta progression" -> lightweight option chosen: stats/
+        /// best-score tracking only, no gameplay effect). Folds this run's
+        /// outcome into the persisted MetaStats and saves immediately —
+        /// same "commit right away, don't wait for a graceful shutdown"
+        /// reasoning as every other piece of run state, since there's no
+        /// guaranteed exit hook in a WebGL/browser build. Returns whether
+        /// this run's score is a new all-time best, for the end screen's
+        /// "new record" callout.
+        /// </summary>
+        private bool RecordRunOutcome(bool victory, int roundReached)
+        {
+            bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
+            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory);
+            _metaStatsStore.Save(_metaStats);
+            return isNewBestScore;
         }
 
         // ---- Lueur shop (spec extension, explicit request — replaces the

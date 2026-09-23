@@ -4167,3 +4167,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   erreur de retranscription, que les 318 tests EditMode de la CI
   (mise en place juste avant, voir l'entrée précédente) vérifient
   immédiatement à chaque push.
+- **Méta-progression légère : historique de stats entre les runs, sans
+  impact gameplay** (demande explicite : "Enchaînons sur la meta
+  progression", après avoir présenté 3 options de portées très
+  différentes — monnaie méta + déblocages de gameplay, cosmétiques
+  uniquement, ou un simple suivi de stats — le joueur a choisi la
+  dernière, la plus légère et sans risque d'équilibrage). Avant cette
+  entrée, le jeu n'avait AUCUNE persistance : zéro `PlayerPrefs`,
+  zéro fichier de sauvegarde nulle part dans le repo — chaque run
+  repartait de zéro et rien ne survivait à un redémarrage. Ajout de
+  `MetaStats` (4 compteurs : parties jouées, victoires, meilleur
+  score, meilleur round atteint) et `MetaStatsRecorder.RecordRunOutcome`,
+  une fonction pure qui plie le résultat d'un run dans les totaux
+  (`Core/Meta/`, testée par `MetaStatsRecorderTests`, 6 tests) — sans
+  aucun I/O, même raison que `SystemRandomProvider` reste du
+  `System.Random` pur plutôt que quelque chose de spécifique à Unity.
+  La persistance réelle (`MetaStatsFileStore`, JSON via
+  `Application.persistentDataPath`/`JsonUtility`, l'emplacement standard
+  Unity qui survit à un rebuild) vit côté `Presentation` et pas dans
+  `Core`, pour que `Core` reste garanti sans effet de bord disque —
+  seule l'interface `IMetaStatsStore` y est définie, même schéma que
+  `IRandomProvider`/`SystemRandomProvider`. Lue une fois au lancement
+  (`GameBootstrap.Awake`), mise à jour et sauvegardée immédiatement à
+  chaque victoire/défaite (`RecordRunOutcome`, avant même d'afficher
+  l'écran de fin — pas d'attente d'une fermeture propre, qui n'est pas
+  garantie en WebGL). Affichée sur `EndScreenView`, le seul écran qui
+  existe déjà entre deux runs (le jeu n'a pas de menu principal, il
+  démarre directement dans un run) : meilleur score (avec un "new
+  record!" en surbrillance `Success` s'il est battu), meilleur round
+  atteint sur 8, nombre de runs joués, nombre de victoires. Une
+  sauvegarde manquante ou corrompue (fichier absent au premier
+  lancement, ou édité/tronqué à la main) retombe silencieusement sur
+  des stats à zéro plutôt que de planter — le seul `try/catch` de toute
+  cette fonctionnalité, volontairement à la frontière disque/joueur, là
+  où le reste du code évite les gardes défensives sur de l'état interne
+  garanti par construction.
