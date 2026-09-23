@@ -4349,3 +4349,72 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   main). Corrigé en ne dessinant tout simplement RIEN pour une case
   non occupée par la forme, au lieu d'un placeholder à peine
   transparent.
+- **Meta-progression avec de vrais challenges (déblocables) : boss et
+  états de départ différents** (demande explicite : "Meta progression
+  avec différents challenge qui offrent différents boss et état de
+  depart" — relance en fait l'option "monnaie méta + déblocages de
+  gameplay" écartée au tout début au profit du simple suivi de stats ;
+  confirmé "Débloqués progressivement" pour le mode de déverrouillage,
+  et le contenu proposé — Marathon/Chaos — accepté tel quel comme
+  point de départ). Le plus gros morceau de cette session après le
+  système de modifiers lui-même.
+
+  **Monnaie "Stars"** : `MetaStats` gagne `Stars`/`MarathonUnlocked`/
+  `ChaosUnlocked` (champs plats plutôt qu'une collection générique —
+  seulement 3 challenges, et `JsonUtility` sérialise mal les
+  `HashSet`/`Dictionary`) et `IsUnlocked(ChallengeId)`. Gagnée en
+  jouant : +1 Star par round RÉELLEMENT nettoyé avant la défaite (pas
+  le round atteint, celui-là n'a jamais été validé), +2 Stars bonus
+  pour une victoire complète — calculé dans
+  `MetaStatsRecorder.RecordRunOutcome` à partir des MÊMES paramètres
+  qu'avant (`roundReached`/`victory`), sans changer sa signature ni
+  les 6 tests déjà en place. Dépensée via la nouvelle
+  `MetaStatsRecorder.TryUnlockChallenge` (fold pur, même convention
+  que `RecordRunOutcome` : jamais de mutation, Classic ou un challenge
+  déjà débloqué réussit sans rien débiter).
+
+  **`ChallengeDefinition`/`ChallengeCatalog`** (Core/Run) : tout ce
+  qu'un challenge peut faire varier (rounds/quotas/budgets de pièces,
+  et si/comment le boss verrouille des cases), Classic étant
+  construit à partir des valeurs de `RunConfig` (source unique,
+  aucune duplication) plutôt qu'une deuxième copie des mêmes
+  nombres :
+  - **Classic** (toujours débloqué) : inchangé, boss actif seulement
+    au dernier round.
+  - **Marathon** (5 Stars) : deck de départ plus petit (16 pièces au
+    lieu de 24 — `InitialDeckFactory.BuildMarathon`, refactorisé pour
+    partager sa boucle de construction avec `Build()`, chaque forme
+    garde au moins 1 exemplaire), budgets de pièces resserrés chaque
+    round, quotas réduits d'~15% pour compenser.
+  - **Chaos** (10 Stars) : même deck/quotas/budgets que Classic — seul
+    le boss change, actif dès le round 1 (`BossActiveEveryRound`) mais
+    à un rythme plus doux (1 case verrouillée toutes les 5 pièces, au
+    lieu de 2 toutes les 3 pour Classic).
+
+  **`RunManager`** : le constructeur prend maintenant un
+  `ChallengeDefinition challenge = null` optionnel, par défaut
+  `ChallengeCatalog.Classic` — choix délibéré pour que les ~100 appels
+  existants à `new RunManager(rng)` dans toute la suite de tests
+  n'aient RIEN à changer. Chaque lecture de `RunConfig.X` à l'intérieur
+  de la classe (Quotas/PieceBudgets/BossLockPiecesInterval/
+  BossLockCellsPerInterval, et `IsBossRound` qui devient `_challenge.
+  BossActiveEveryRound || CurrentRoundIndex == _challenge.
+  BossRoundIndex`) est remplacée par une lecture du challenge stocké
+  plutôt que de la classe statique.
+
+  **`ChallengeSelectView`** (nouveau) : le tout premier vrai écran de
+  menu du jeu — jusqu'ici `GameBootstrap.Awake` lançait directement un
+  run Classic. Une carte par challenge (nom, description, coût/état de
+  déblocage, solde de Stars affiché) ; cliquer sur un challenge
+  verrouillé mais abordable le débloque ET lance le run dans le même
+  clic (pas d'étape de confirmation séparée — dépenser des Stars ici
+  n'est jamais une erreur dont il faut protéger le joueur, ça n'achète
+  jamais qu'un accès permanent). Affiché à CHAQUE lancement et à
+  chaque "New Run" (pas seulement le premier jamais) : le bouton "New
+  Run" de l'écran de fin ne relance plus directement le même challenge,
+  il repasse par ce picker — `GameBootstrap.OnRestartRequested`/
+  `OnChallengeChosen`/`StartNewRun` (logique de rebind extraite de
+  l'ancien `OnRestartRequested` en une méthode partagée). Le tutoriel
+  (premier lancement uniquement) s'affiche maintenant APRÈS qu'un
+  challenge soit choisi plutôt qu'avant, pour rester logique dans
+  l'ordre de l'écran.

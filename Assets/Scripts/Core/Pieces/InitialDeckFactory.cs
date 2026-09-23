@@ -32,7 +32,32 @@ namespace Contigu.Core
             { ShapeId.STetro, 2 }
         };
 
+        /// <summary>The "Marathon" challenge's smaller starting deck (spec extension, explicit request — see ChallengeCatalog.Marathon), sums to 16: every shape still gets at least 1 copy (never below DeckManager.MinDeckSize=10, kept well above it), just fewer of each than the 24-token standard deck.</summary>
+        private static readonly Dictionary<ShapeId, int> MarathonCopiesPerShape = new Dictionary<ShapeId, int>
+        {
+            { ShapeId.Single, 2 },
+            { ShapeId.DomH, 2 },
+            { ShapeId.DomV, 2 },
+            { ShapeId.TriL, 1 },
+            { ShapeId.TriIH, 1 },
+            { ShapeId.TriIV, 1 },
+            { ShapeId.Sq2, 2 },
+            { ShapeId.LTetro, 2 },
+            { ShapeId.TTetro, 2 },
+            { ShapeId.STetro, 1 }
+        };
+
         public static List<PieceToken> Build()
+        {
+            return BuildFrom(CopiesPerShape);
+        }
+
+        public static List<PieceToken> BuildMarathon()
+        {
+            return BuildFrom(MarathonCopiesPerShape);
+        }
+
+        private static List<PieceToken> BuildFrom(Dictionary<ShapeId, int> copiesPerShape)
         {
             var tokens = new List<PieceToken>();
             var baseColors = PieceColorUtility.BaseColors;
@@ -41,7 +66,7 @@ namespace Contigu.Core
             for (int s = 0; s < ShapeOrder.Length; s++)
             {
                 var shapeId = ShapeOrder[s];
-                int copies = CopiesPerShape[shapeId];
+                int copies = copiesPerShape[shapeId];
                 for (int i = 0; i < copies; i++)
                 {
                     var color = baseColors[colorCursor % baseColors.Count];

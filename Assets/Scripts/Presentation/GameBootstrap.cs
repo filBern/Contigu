@@ -57,6 +57,7 @@ namespace Contigu.Presentation
         private DeckView _deckView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
+        private ChallengeSelectView _challengeSelectView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -84,17 +85,16 @@ namespace Contigu.Presentation
             // will render correctly the next time it's shown anyway.
             ColorblindMode.Changed += OnColorblindModeChanged;
 
-            // Shown once automatically, the very first time the game is
-            // ever launched (see TutorialView) — the game previously had
-            // zero in-game rules explanation anywhere. Marked seen right
-            // away rather than on close, so it can never re-trigger even
-            // if the overlay gets dismissed some other way.
-            if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
-            {
-                PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
-                PlayerPrefs.Save();
-                _tutorialView.Show();
-            }
+            // Shown at every launch (not just the first ever one — see
+            // ChallengeSelectView), blocking, on top of the Classic run
+            // just built above: OnChallengeChosen replaces it with
+            // whichever challenge is actually picked, even Classic again,
+            // so nothing about that initial run is ever actually played.
+            // TutorialView's own first-launch auto-show (see
+            // OnChallengeChosen) fires right after, once a challenge is
+            // locked in — the game previously had zero in-game rules
+            // explanation anywhere.
+            _challengeSelectView.Show(_metaStats);
         }
 
         private void OnColorblindModeChanged()
@@ -392,6 +392,9 @@ namespace Contigu.Presentation
 
             _tutorialView = gameObject.AddComponent<TutorialView>();
             _tutorialView.Build(mainRoot);
+
+            _challengeSelectView = gameObject.AddComponent<ChallengeSelectView>();
+            _challengeSelectView.Build(mainRoot);
         }
 
         private void WireEvents()
@@ -407,6 +410,7 @@ namespace Contigu.Presentation
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
+            _challengeSelectView.ChallengeChosen += OnChallengeChosen;
         }
 
         private void OnHandSlotSelected(int handIndex)
@@ -791,7 +795,7 @@ namespace Contigu.Presentation
 
             if (outcome.BossLockedCells.Count > 0)
             {
-                // The boss just locked more cells (see RunConfig.BossLockPiecesInterval)
+                // The boss just locked more cells (see ChallengeDefinition.BossLockPiecesInterval)
                 // outside of anything this sequence already animated above —
                 // a full refresh is the simplest way to surface them (and any
                 // Bastion cell they might have grazed) without a bespoke
@@ -826,7 +830,7 @@ namespace Contigu.Presentation
 
                 case RunState.RunVictory:
                 {
-                    bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: RunConfig.RoundCount);
+                    bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
                     break;
                 }
@@ -938,15 +942,60 @@ namespace Contigu.Presentation
             _shopView.Hide();
             RefreshAll();
             SetStatusText(_run.IsBossRound
-                ? "Boss round: every " + RunConfig.BossLockPiecesInterval + " pieces played, the boss locks " + RunConfig.BossLockCellsPerInterval + " more cells."
+                ? "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " pieces played, the boss locks " + _run.Challenge.BossLockCellsPerInterval + " more cells."
                 : "New round: select a piece, then click the grid.");
         }
 
+        /// <summary>
+        /// "New Run" now always goes back through the challenge picker
+        /// instead of immediately restarting the same challenge (spec
+        /// extension, explicit request: "Meta progression avec différents
+        /// challenge...") — see OnChallengeChosen for what actually starts
+        /// the next run once one is picked there.
+        /// </summary>
         private void OnRestartRequested()
         {
-            _isPlayingPlacementSequence = false;
             _endScreenView.Hide();
-            _run = new RunManager(new SystemRandomProvider());
+            _challengeSelectView.Show(_metaStats);
+        }
+
+        /// <summary>
+        /// Spends Stars to unlock <paramref name="challenge"/> if it isn't
+        /// already (a no-op charge for Classic/an already-unlocked one —
+        /// see MetaStatsRecorder.TryUnlockChallenge), persists that
+        /// immediately for the same "no guaranteed exit hook" reason every
+        /// other MetaStats write does, then starts the run. The picker
+        /// only ever calls this for a challenge it already rendered as
+        /// affordable, but TryUnlockChallenge is re-checked here anyway
+        /// rather than trusted blindly, since it's the one thing in this
+        /// whole flow that actually spends the player's currency.
+        /// </summary>
+        private void OnChallengeChosen(ChallengeDefinition challenge)
+        {
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(_metaStats, challenge);
+            if (!success)
+            {
+                _challengeSelectView.Refresh(_metaStats);
+                return;
+            }
+            _metaStats = updated;
+            _metaStatsStore.Save(_metaStats);
+
+            _challengeSelectView.Hide();
+            StartNewRun(challenge);
+
+            if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
+            {
+                PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
+                PlayerPrefs.Save();
+                _tutorialView.Show();
+            }
+        }
+
+        private void StartNewRun(ChallengeDefinition challenge)
+        {
+            _isPlayingPlacementSequence = false;
+            _run = new RunManager(new SystemRandomProvider(), challenge);
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run.Deck);
             _draftView.Rebind(_run.Deck);

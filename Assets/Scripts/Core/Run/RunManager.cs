@@ -204,8 +204,15 @@ namespace Contigu.Core
         }
 
         private readonly IRandomProvider _rng;
+        private readonly ChallengeDefinition _challenge;
 
-        /// <summary>0-based index into <see cref="RunConfig"/> arrays.</summary>
+        /// <summary>The challenge this run was started with (see ChallengeCatalog) — read by Presentation for the boss-round status text and to show which challenge is currently in play.</summary>
+        public ChallengeDefinition Challenge
+        {
+            get { return _challenge; }
+        }
+
+        /// <summary>0-based index into <see cref="ChallengeDefinition"/>'s Quotas/PieceBudgets arrays.</summary>
         public int CurrentRoundIndex { get; private set; }
 
         public int RoundScore { get; private set; }
@@ -221,24 +228,28 @@ namespace Contigu.Core
 
         public int CurrentQuota
         {
-            get { return RunConfig.Quotas[CurrentRoundIndex]; }
+            get { return _challenge.Quotas[CurrentRoundIndex]; }
         }
 
         public int CurrentBudget
         {
-            get { return RunConfig.PieceBudgets[CurrentRoundIndex]; }
+            get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
         }
 
+        /// <summary>Classic/Marathon: only the last round. Chaos: every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
         public bool IsBossRound
         {
-            get { return CurrentRoundIndex == RunConfig.BossRoundIndex; }
+            get { return _challenge.BossActiveEveryRound || CurrentRoundIndex == _challenge.BossRoundIndex; }
         }
 
-        public RunManager(IRandomProvider rng)
+        /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic (the original run) when omitted — keeps every existing call site (tests included) on the standard rules without having to pass one explicitly.</summary>
+        public RunManager(IRandomProvider rng, ChallengeDefinition challenge = null)
         {
             _rng = rng;
+            _challenge = challenge ?? ChallengeCatalog.Classic;
             Grid = new GridManager();
-            Deck = new DeckManager(InitialDeckFactory.Build(), rng);
+            var startingDeck = _challenge.Id == ChallengeId.Marathon ? InitialDeckFactory.BuildMarathon() : InitialDeckFactory.Build();
+            Deck = new DeckManager(startingDeck, rng);
             Upgrades = new UpgradeSystem(rng);
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
@@ -251,7 +262,7 @@ namespace Contigu.Core
             Grid.ResetForNewRound();
             // No more upfront lock here — the boss round now ratchets up
             // gradually instead, see ApplyBossLockTick (called from
-            // PlacePiece every RunConfig.BossLockPiecesInterval pieces).
+            // PlacePiece every _challenge.BossLockPiecesInterval pieces).
             // Normally a no-op (the hand carries over from the previous
             // round untouched) — only fires for the deferred draw PlacePiece
             // skips when the placement that empties the hand also ends the
@@ -370,7 +381,7 @@ namespace Contigu.Core
             if (IsBossRound)
             {
                 int piecesPlayedThisRound = CurrentBudget - PiecesRemainingThisRound;
-                if (piecesPlayedThisRound > 0 && piecesPlayedThisRound % RunConfig.BossLockPiecesInterval == 0)
+                if (piecesPlayedThisRound > 0 && piecesPlayedThisRound % _challenge.BossLockPiecesInterval == 0)
                 {
                     bossLockedCells = ApplyBossLockTick();
                 }
@@ -396,8 +407,8 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Boss round mechanic (see RunConfig.BossLockPiecesInterval): locks
-        /// RunConfig.BossLockCellsPerInterval more random empty cells and
+        /// Boss round mechanic (see ChallengeDefinition.BossLockPiecesInterval):
+        /// locks _challenge.BossLockCellsPerInterval more random empty cells and
         /// folds in any score that locking happens to produce (see
         /// GridManager.LockFreeCellsAndCheckClears) — "après avoir compté
         /// les bonus" this placement's own score is already in RoundScore/
@@ -408,7 +419,7 @@ namespace Contigu.Core
         /// </summary>
         private IReadOnlyList<Vector2Int> ApplyBossLockTick()
         {
-            var lockOutcome = Grid.LockFreeCellsAndCheckClears(RunConfig.BossLockCellsPerInterval, _rng);
+            var lockOutcome = Grid.LockFreeCellsAndCheckClears(_challenge.BossLockCellsPerInterval, _rng);
             if (lockOutcome.LineClearScore > 0)
             {
                 RoundScore += lockOutcome.LineClearScore;
@@ -1095,7 +1106,7 @@ namespace Contigu.Core
             if (RoundScore >= CurrentQuota)
             {
                 ApplyMultCinqRisqueLossChance();
-                if (CurrentRoundIndex == RunConfig.RoundCount - 1)
+                if (CurrentRoundIndex == _challenge.RoundCount - 1)
                 {
                     State = RunState.RunVictory;
                     return;

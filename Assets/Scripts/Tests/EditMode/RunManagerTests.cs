@@ -1554,6 +1554,45 @@ namespace Contigu.Tests
             Assert.AreEqual(RunConfig.BossLockCellsPerInterval, CountLockedCells(run.Grid));
         }
 
+        [Test]
+        public void PlacePiece_ChaosChallenge_LocksCellsFromRoundOne_AtItsOwnGentlerPace()
+        {
+            // Chaos (see ChallengeCatalog.Chaos): the boss cell-lock is
+            // active every round instead of only the last one, at its own
+            // (gentler) pace — 1 cell every 5 pieces here, not Classic's 2
+            // every 3, so this must NOT reuse RunConfig's boss numbers.
+            var run = new RunManager(new SystemRandomProvider(5), ChallengeCatalog.Chaos);
+            Assert.IsTrue(run.IsBossRound, "Chaos' boss should already be active on round 1");
+            Assert.AreEqual(0, CountLockedCells(run.Grid));
+
+            for (int i = 0; i < 4; i++)
+            {
+                PlaceFirstAvailableHandPiece(run);
+            }
+            Assert.AreEqual(0, CountLockedCells(run.Grid), "No lock tick yet after only 4 of Chaos' 5-piece interval");
+
+            PlaceFirstAvailableHandPiece(run);
+            Assert.AreEqual(ChallengeCatalog.Chaos.BossLockCellsPerInterval, CountLockedCells(run.Grid));
+        }
+
+        [Test]
+        public void RunManager_ClassicChallenge_NeverActivatesTheBossBeforeTheLastRound()
+        {
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Classic);
+
+            Assert.IsFalse(run.IsBossRound);
+        }
+
+        [Test]
+        public void RunManager_MarathonChallenge_StartsWithItsOwnSmallerDeckAndQuotas()
+        {
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+
+            Assert.AreEqual(16, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 16-token one, not the standard 24.");
+            Assert.AreEqual(ChallengeCatalog.Marathon.Quotas[0], run.CurrentQuota);
+            Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[0], run.CurrentBudget);
+        }
+
         /// <summary>Drives a fresh run straight to the start of <paramref name="targetRoundIndex"/> via DebugForceRoundComplete, without needing to actually reach each round's real quota — the upgrade/modifier picked each round don't matter for these tests, only reaching the round does.</summary>
         private static void AdvanceToRound(RunManager run, int targetRoundIndex)
         {

@@ -71,5 +71,95 @@ namespace Contigu.Tests
             Assert.AreEqual(9000, current.BestScore);
             Assert.AreEqual(7, current.BestRoundReached);
         }
+
+        [Test]
+        public void RecordRunOutcome_DefeatOnRoundFour_EarnsOneStarPerRoundActuallyCleared()
+        {
+            var current = new MetaStats();
+
+            // Defeated ON round 4 (1-based CurrentRoundNumber, the caller's
+            // convention) means rounds 1-3 were actually cleared first.
+            var updated = MetaStatsRecorder.RecordRunOutcome(current, finalScore: 1200, roundReached: 4, victory: false);
+
+            Assert.AreEqual(3, updated.Stars);
+        }
+
+        [Test]
+        public void RecordRunOutcome_Victory_EarnsOneStarPerRoundPlusTheVictoryBonus()
+        {
+            var current = new MetaStats();
+
+            var updated = MetaStatsRecorder.RecordRunOutcome(current, finalScore: 20000, roundReached: RunConfig.RoundCount, victory: true);
+
+            Assert.AreEqual(RunConfig.RoundCount + 2, updated.Stars);
+        }
+
+        [Test]
+        public void RecordRunOutcome_DefeatOnRoundOne_EarnsNoStars()
+        {
+            var current = new MetaStats { Stars = 4 };
+
+            var updated = MetaStatsRecorder.RecordRunOutcome(current, finalScore: 50, roundReached: 1, victory: false);
+
+            Assert.AreEqual(4, updated.Stars, "Dying on round 1 cleared nothing, so it must not earn or lose Stars.");
+        }
+
+        [Test]
+        public void RecordRunOutcome_PreservesStarsAndUnlockedChallenges()
+        {
+            var current = new MetaStats { Stars = 12, MarathonUnlocked = true, ChaosUnlocked = false };
+
+            var updated = MetaStatsRecorder.RecordRunOutcome(current, finalScore: 100, roundReached: 2, victory: false);
+
+            Assert.AreEqual(12 + 1, updated.Stars);
+            Assert.IsTrue(updated.MarathonUnlocked, "Recording a run must never forget an already-unlocked challenge.");
+            Assert.IsFalse(updated.ChaosUnlocked);
+        }
+
+        [Test]
+        public void TryUnlockChallenge_Classic_AlwaysSucceedsWithoutSpendingStars()
+        {
+            var current = new MetaStats { Stars = 0 };
+
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Classic);
+
+            Assert.IsTrue(success);
+            Assert.AreEqual(0, updated.Stars);
+        }
+
+        [Test]
+        public void TryUnlockChallenge_NotEnoughStars_FailsAndSpendsNothing()
+        {
+            var current = new MetaStats { Stars = 2 };
+
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Marathon);
+
+            Assert.IsFalse(success);
+            Assert.AreEqual(2, updated.Stars);
+            Assert.IsFalse(updated.MarathonUnlocked);
+        }
+
+        [Test]
+        public void TryUnlockChallenge_EnoughStars_SpendsExactlyTheUnlockCostAndFlipsTheFlag()
+        {
+            var current = new MetaStats { Stars = ChallengeCatalog.Marathon.UnlockCost };
+
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Marathon);
+
+            Assert.IsTrue(success);
+            Assert.AreEqual(0, updated.Stars);
+            Assert.IsTrue(updated.MarathonUnlocked);
+        }
+
+        [Test]
+        public void TryUnlockChallenge_AlreadyUnlocked_SucceedsWithoutSpendingAgain()
+        {
+            var current = new MetaStats { Stars = 3, ChaosUnlocked = true };
+
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Chaos);
+
+            Assert.IsTrue(success);
+            Assert.AreEqual(3, updated.Stars, "Already-unlocked challenges must never be charged for again.");
+        }
     }
 }
