@@ -12,9 +12,9 @@ namespace Contigu.Presentation
     /// TileSprite's own doc comment). When on, every rendered piece color
     /// (grid cells via GridCellView, every piece preview via
     /// ShapePreviewFactory — hand, shop, draft, deck view, per-color
-    /// modifier badges) additionally shows VisualDefaults.
-    /// GetColorblindSymbol's one-letter code, so color alone is never the
-    /// only way to tell two piece colors apart.
+    /// modifier badges) additionally shows one of ColorblindShapeFactory's
+    /// small black geometric shapes, so color alone is never the only way
+    /// to tell two piece colors apart.
     ///
     /// A single bool doesn't need the MetaStats JSON file's structure, so
     /// it's persisted directly via PlayerPrefs rather than folded into

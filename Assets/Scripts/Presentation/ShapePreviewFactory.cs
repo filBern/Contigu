@@ -88,7 +88,7 @@ namespace Contigu.Presentation
                     {
                         if (ColorblindMode.IsEnabled)
                         {
-                            BuildColorblindLabel(img.transform, color, cell);
+                            BuildColorblindShape(img.transform, color, cell);
                         }
 
                         if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
@@ -148,15 +148,17 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Colorblind-mode letter (see ColorblindMode), centered on a filled square, on top of its tint and below the trait badge (which only ever sits in the top-right corner, so the two never actually overlap).</summary>
-        private static void BuildColorblindLabel(Transform parent, PieceColor color, float cellSize)
+        /// <summary>Colorblind-mode shape (see ColorblindMode/ColorblindShapeFactory), centered on a filled square, on top of its tint and below the trait badge (which only ever sits in the top-right corner, so the two never actually overlap).</summary>
+        private static void BuildColorblindShape(Transform parent, PieceColor color, float cellSize)
         {
-            int fontSize = Mathf.RoundToInt(Mathf.Clamp(cellSize * 0.5f, 10f, 26f));
-            var label = UIFactory.CreateText(parent, "ColorblindLabel", VisualDefaults.GetColorblindSymbol(color), fontSize, Color.white);
-            UIFactory.StretchFull(label.rectTransform);
-            var outline = label.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            float size = Mathf.Clamp(cellSize * 0.5f, 8f, 26f);
+            var shape = UIFactory.CreatePanel(parent, "ColorblindShape", Color.black);
+            shape.sprite = ColorblindShapeFactory.GetShape(color);
+            shape.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            shape.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            shape.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            shape.rectTransform.sizeDelta = new Vector2(size, size);
+            shape.rectTransform.anchoredPosition = Vector2.zero;
         }
 
         private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)

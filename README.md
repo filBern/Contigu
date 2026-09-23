@@ -4216,12 +4216,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   pour son rendu jugé encombrant), celui-ci est un réglage opt-in
   (`Presentation.ColorblindMode`, persisté via `PlayerPrefs`, touche
   `C`) : le rendu par défaut (card_bg_3.png teintée) ne change pas du
-  tout tant que personne n'active le mode. Une fois activé, chaque
-  endroit du jeu qui affiche une couleur de pièce superpose une lettre
-  (`VisualDefaults.GetColorblindSymbol` — R/B/Y/G/J, la première
-  lettre du nom déjà affiché ailleurs, pas une deuxième table à
-  maintenir en synchro) : la grille elle-même
-  (`GridCellView`/`GridView`, nouveau label centré, créé avant
+  tout tant que personne n'active le mode. Premier jet en lettres
+  (R/B/Y/G/J), tout de suite corrigé sur retour explicite : "j'aimerais
+  qu'on ne réutilise pas les icon que j'avais fait, j'aimerais plus
+  que tu fasse des petites formes géométrique noir au milieu de la
+  tuile un peu comme un jeu de carte" — remplacé par
+  `ColorblindShapeFactory`, 5 silhouettes noires générées à la volée
+  (cercle/carré/triangle/losange pour Coral/Teal/Violet/Lime, une
+  croix pour Joker) : chaque forme est dessinée pixel par pixel dans
+  un `Texture2D` au premier appel puis mise en cache (blanc
+  opaque/transparent, teinté noir par l'`Image` qui l'affiche), donc
+  rien ici ne réutilise le moindre fichier d'icône — tout est fabriqué
+  en code, à la différence de l'ancien système par sprites supprimé.
+  Une fois activé, chaque endroit du jeu qui affiche une couleur de
+  pièce superpose sa forme : la grille elle-même
+  (`GridCellView`/`GridView`, nouvelle image centrée, créée avant
   `InvalidMarker` dans la hiérarchie pour qu'un survol invalide
   continue à se voir clairement par-dessus) ET, en un seul endroit
   partagé, toutes les autres previews de pièce du jeu — main, shop,

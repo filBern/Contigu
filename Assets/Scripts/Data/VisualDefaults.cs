@@ -128,19 +128,6 @@ namespace Contigu.Data
             return ColorNames.TryGetValue(color, out var n) ? n : color.ToString();
         }
 
-        /// <summary>
-        /// One-letter colorblind-mode symbol (spec extension, explicit
-        /// request: "mode daltonien activable" — opt-in, see
-        /// Presentation.ColorblindMode) — the first letter of <see
-        /// cref="GetColorName"/> (R/B/Y/G/J), so it stays a single source
-        /// of truth with the name already shown elsewhere rather than a
-        /// second parallel per-color table to keep in sync.
-        /// </summary>
-        public static string GetColorblindSymbol(PieceColor color)
-        {
-            return GetColorName(color).Substring(0, 1);
-        }
-
         public static string GetShapeName(ShapeId shape)
         {
             return ShapeNames.TryGetValue(shape, out var n) ? n : shape.ToString();
