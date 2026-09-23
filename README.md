@@ -4431,3 +4431,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `DebugGrantStarsShortcut` accorde 100 Stars instantanément et
   sauvegarde tout de suite, pour tester Marathon/Chaos sans devoir
   farmer des runs réels au préalable.
+- **`DeckView` refondu : groupé par couleur, cartes plus étroites**
+  (retour explicite, capture à l'appui : "L'écran du deck est vraiment
+  chaotique, j'aimerais que les pièces soient filtered par couleur et
+  qu'elles prennent moins de largeur chacune"). Root cause du chaos :
+  `DeckManager.GetDeckComposition()` renvoie un `Dictionary`, dont
+  l'ordre d'itération n'est pas garanti et, en pratique, mélangeait
+  les formes de toutes les couleurs dans un désordre imprévisible,
+  affichées dans une seule grille 3 colonnes à cartes larges de 300px
+  (beaucoup trop pour un simple aperçu de forme + "xN"). Remplacé par
+  une section par couleur (Coral/Teal/Violet/Lime/Joker, dans cet
+  ordre fixe, une section sautée si vide), chaque section : un label
+  teinté de sa propre couleur ("CORAL" en rouge, etc. — la
+  catégorisation se lit d'un coup d'œil sans même lire le mot), puis
+  une grille de cartes compactes (140px de large au lieu de 300px,
+  6 colonnes au lieu de 3) qui s'enroule sur autant de lignes que
+  nécessaire. Positionnement manuel section par section (plus de
+  `GridLayoutGroup`) puisque la hauteur de chaque section dépend du
+  nombre de formes distinctes que cette couleur a réellement dans le
+  deck — même curseur Y courant que `ShopView` utilise déjà pour ses
+  propres cartes à hauteur variable. Les formes, à l'intérieur d'une
+  couleur, suivent l'ordre fixe `InitialDeckFactory.ShapeOrder` déjà
+  réutilisé ailleurs, plutôt que l'ordre imprévisible du dictionnaire.

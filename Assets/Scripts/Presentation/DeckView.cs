@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -14,11 +15,30 @@ namespace Contigu.Presentation
     /// (see BuildTypeRow/FindRepresentativeTrait there) since it's the same
     /// underlying data (DeckManager.GetDeckComposition), just shown without
     /// the pick/sub-choice flow around it.
+    ///
+    /// Grouped by color into its own labeled section per PieceColor, each a
+    /// narrow multi-column wrap of small type cards (on explicit report —
+    /// "L'écran du deck est vraiment chaotique, j'aimerais que les pièces
+    /// soient filtered par couleur et qu'elles prennent moins de largeur
+    /// chacune": the original single ungrouped 3-column grid mixed every
+    /// color together in whatever order DeckManager.GetDeckComposition's
+    /// dictionary happened to iterate, at a fixed 300px-wide card for what
+    /// amounts to a small shape preview and an "xN" label). Manually
+    /// positioned section-by-section (no LayoutGroup) since each section's
+    /// row count — and so its height — depends on how many distinct types
+    /// that color actually has in the deck.
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
-        private const float RowHeight = 56f;
-        private const float RowPreviewSize = 44f;
+        private const float CardWidth = 140f;
+        private const float CardHeight = 46f;
+        private const float CardSpacing = 8f;
+        private const int ColumnsPerSection = 6;
+        private const float RowPreviewSize = 30f;
+        private const float SectionHeaderHeight = 22f;
+        private const float SectionHeaderToGridGap = 4f;
+        private const float SectionGap = 14f;
+        private const float ListWidth = 920f;
 
         private DeckManager _deck;
         private TooltipView _tooltip;
@@ -54,16 +74,15 @@ namespace Contigu.Presentation
             _countLabel.rectTransform.anchoredPosition = new Vector2(0f, -70f);
             _countLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
 
+            // Top-pivoted (not centered) since sections are positioned by a
+            // running Y cursor in RebuildRows, top-down — each section's
+            // height depends on how many distinct types that color has.
             _listContainer = UIFactory.CreateUIObject("List", _root);
-            _listContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            _listContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            _listContainer.pivot = new Vector2(0.5f, 0.5f);
-            _listContainer.anchoredPosition = new Vector2(0f, -30f);
-            _listContainer.sizeDelta = new Vector2(920f, 540f);
-            var grid = _listContainer.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(300f, RowHeight);
-            grid.spacing = new Vector2(10f, 10f);
-            grid.childAlignment = TextAnchor.UpperCenter;
+            _listContainer.anchorMin = new Vector2(0.5f, 1f);
+            _listContainer.anchorMax = new Vector2(0.5f, 1f);
+            _listContainer.pivot = new Vector2(0.5f, 1f);
+            _listContainer.anchoredPosition = new Vector2(0f, -110f);
+            _listContainer.sizeDelta = new Vector2(ListWidth, 560f);
 
             var closeBtn = UIFactory.CreateButton(_root, "Close", "Close", UISprites.CancelButtonBackground);
             var closeRect = closeBtn.GetComponent<RectTransform>();
@@ -107,14 +126,79 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
+        // Fixed display order (not enum declaration order specifically, but
+        // it happens to match) — Joker last since it's the rare wildcard
+        // case, so it only ever appears once every other section already has.
+        private static readonly PieceColor[] ColorSectionOrder =
+        {
+            PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime, PieceColor.Joker
+        };
+
         private void RebuildRows()
         {
             ClearChildren(_listContainer);
             _countLabel.text = _deck.DeckCount + " pieces";
-            foreach (var kvp in _deck.GetDeckComposition())
+
+            var composition = _deck.GetDeckComposition();
+            float y = 0f;
+            for (int c = 0; c < ColorSectionOrder.Length; c++)
             {
-                BuildTypeRow(_listContainer, kvp.Key.Shape, kvp.Key.Color, kvp.Value);
+                var color = ColorSectionOrder[c];
+                var types = CollectTypesForColor(composition, color);
+                if (types.Count == 0)
+                {
+                    continue;
+                }
+
+                y = BuildColorSectionHeader(color, y);
+                y -= SectionHeaderToGridGap;
+                y = BuildColorSectionGrid(types, color, y);
+                y -= SectionGap;
             }
+        }
+
+        /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order — GetDeckComposition's own Dictionary iteration order isn't guaranteed and, in practice, mixes shapes unpredictably (see this class's own doc comment on the original bug report).</summary>
+        private List<(ShapeId Shape, int Count)> CollectTypesForColor(IReadOnlyDictionary<(ShapeId Shape, PieceColor Color), int> composition, PieceColor color)
+        {
+            var result = new List<(ShapeId, int)>();
+            var shapeOrder = InitialDeckFactory.ShapeOrder;
+            for (int i = 0; i < shapeOrder.Length; i++)
+            {
+                if (composition.TryGetValue((shapeOrder[i], color), out int count))
+                {
+                    result.Add((shapeOrder[i], count));
+                }
+            }
+            return result;
+        }
+
+        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Returns the Y cursor for whatever comes next.</summary>
+        private float BuildColorSectionHeader(PieceColor color, float y)
+        {
+            var label = UIFactory.CreateText(_listContainer, "Header_" + color, VisualDefaults.GetColorName(color).ToUpperInvariant(), 15, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
+            label.rectTransform.anchorMin = new Vector2(0f, 1f);
+            label.rectTransform.anchorMax = new Vector2(0f, 1f);
+            label.rectTransform.pivot = new Vector2(0f, 1f);
+            label.rectTransform.anchoredPosition = new Vector2(0f, y);
+            label.rectTransform.sizeDelta = new Vector2(ListWidth, SectionHeaderHeight);
+            return y - SectionHeaderHeight;
+        }
+
+        /// <summary>Wraps <paramref name="types"/> across ColumnsPerSection narrow columns, as many rows as needed. Returns the Y cursor for whatever comes next.</summary>
+        private float BuildColorSectionGrid(List<(ShapeId Shape, int Count)> types, PieceColor color, float y)
+        {
+            for (int i = 0; i < types.Count; i++)
+            {
+                int col = i % ColumnsPerSection;
+                int row = i / ColumnsPerSection;
+                float x = col * (CardWidth + CardSpacing);
+                float cardY = y - row * (CardHeight + CardSpacing);
+                BuildTypeCard(x, cardY, types[i].Shape, color, types[i].Count);
+            }
+
+            int rowCount = Mathf.CeilToInt(types.Count / (float)ColumnsPerSection);
+            float gridHeight = rowCount * CardHeight + (rowCount - 1) * CardSpacing;
+            return y - gridHeight;
         }
 
         private static void ClearChildren(RectTransform container)
@@ -125,27 +209,32 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Same look as DraftView.BuildTypeRow, minus the Button/onClick — this view is purely informational, never a picker.</summary>
-        private void BuildTypeRow(RectTransform parent, ShapeId shape, PieceColor color, int count)
+        /// <summary>Same look as DraftView.BuildTypeRow, minus the Button/onClick — this view is purely informational, never a picker. Positioned explicitly at (x, y) within _listContainer rather than through a LayoutGroup, since each color section wraps its own row count.</summary>
+        private void BuildTypeCard(float x, float y, ShapeId shape, PieceColor color, int count)
         {
-            var row = UIFactory.CreatePanel(parent, "Type_" + shape + "_" + color, UITheme.ButtonIdle);
+            var row = UIFactory.CreatePanel(_listContainer, "Type_" + shape + "_" + color, UITheme.ButtonIdle);
+            row.rectTransform.anchorMin = new Vector2(0f, 1f);
+            row.rectTransform.anchorMax = new Vector2(0f, 1f);
+            row.rectTransform.pivot = new Vector2(0f, 1f);
+            row.rectTransform.anchoredPosition = new Vector2(x, y);
+            row.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
 
             var previewContainer = UIFactory.CreateUIObject("Preview", row.transform);
             previewContainer.anchorMin = new Vector2(0f, 0.5f);
             previewContainer.anchorMax = new Vector2(0f, 0.5f);
             previewContainer.pivot = new Vector2(0f, 0.5f);
-            previewContainer.anchoredPosition = new Vector2(8f, 0f);
+            previewContainer.anchoredPosition = new Vector2(6f, 0f);
             previewContainer.sizeDelta = new Vector2(RowPreviewSize, RowPreviewSize);
 
             var trait = FindRepresentativeTrait(shape, color);
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject);
 
-            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 15, UITheme.TextPrimary);
+            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 14, UITheme.TextPrimary);
             countLabel.rectTransform.anchorMin = new Vector2(1f, 0.5f);
             countLabel.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             countLabel.rectTransform.pivot = new Vector2(1f, 0.5f);
-            countLabel.rectTransform.anchoredPosition = new Vector2(-10f, 0f);
-            countLabel.rectTransform.sizeDelta = new Vector2(44f, 30f);
+            countLabel.rectTransform.anchoredPosition = new Vector2(-8f, 0f);
+            countLabel.rectTransform.sizeDelta = new Vector2(34f, 26f);
         }
 
         /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait.</summary>
