@@ -3895,3 +3895,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ~7px). Le pulse déclenché à chaque augmentation (voir décision
   précédente) reste un facteur d'échelle multiplicatif (x1.3), donc
   fonctionne identiquement peu importe la taille de base du texte.
+- **Slots de la main assombris + sélection sans "grey out" du preview**
+  (demande explicite : "Les slots non sélectionné sont difficile a voir
+  leur pièce, met les plus foncé. Idem pour lorsqu'ils sont sélectionné.
+  J'aimerais qu'on grey out pas le preview dans la slot lorsqu'elle est
+  sélectionné") — `HandView.UpdateSelectionVisuals` teintait un slot
+  occupé-mais-pas-sélectionné en `UITheme.ButtonIdle` (#5f699c) et un
+  slot sélectionné en `UITheme.ButtonSelected` (#65aed6), deux teintes
+  toutes deux plus CLAIRES que le fond `UITheme.Panel` (#614363) des
+  slots vides, et assez proches en teinte de la couleur Blue des pièces
+  (#3498db) pour qu'une pièce bleue s'y fonde presque (voir la capture
+  envoyée). Les trois états (vide / occupé / sélectionné) utilisent
+  maintenant tous le même fond assombri `UITheme.Panel`. Séparément, la
+  sélection était indiquée par un `selectionOverlay` — un film
+  translucide (55% alpha) couvrant tout le slot, PAR-DESSUS le preview
+  de la pièce (choix délibéré d'une itération précédente : une teinte
+  seulement sur le fond, derrière le preview, passait inaperçue une
+  fois le slot rempli par les couleurs de la pièce) — ce qui grisait
+  justement le preview au moment où le joueur sélectionne sa pièce.
+  Remplacé par un cadre : même sprite 9-sliced (`UISprites.
+  CardBackground`, bordure de 14px), mais avec `fillCenter = false`,
+  qui ne dessine QUE la bordure sliced du sprite et laisse son centre
+  (là où vit le preview) totalement transparent — couleur ramenée à
+  opaque (`UITheme.ButtonSelected` sans alpha réduit, vu qu'il ne
+  couvre plus qu'un cadre de quelques pixels et non tout le slot) pour
+  rester tout aussi visible qu'avant sans jamais recouvrir la pièce.

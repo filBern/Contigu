@@ -109,16 +109,25 @@ namespace Contigu.Presentation
                 previewContainer.anchoredPosition = Vector2.zero;
                 previewContainer.sizeDelta = new Vector2(100f, 110f);
 
-                // Translucent "ghost" film over the WHOLE slot, including the
-                // piece preview above — on explicit request: the background
-                // sprite's own selected/idle tint sits BEHIND the preview and
-                // was too easy to miss once a piece's own colors cover most
-                // of the slot. Drawn last (topmost) so it reads clearly
-                // regardless of the piece underneath; raycastTarget off so it
-                // never swallows the click meant for the slot's own Button.
+                // Selection indicator, drawn as a FRAME only (fillCenter =
+                // false skips the 9-slice's center region, leaving just its
+                // 14px sliced border opaque) instead of a full translucent
+                // wash over the whole slot. A prior version covered the
+                // WHOLE slot including the piece preview, on the reasoning
+                // that a background-only tint was too easy to miss once a
+                // piece's own colors cover most of the slot — but that in
+                // turn greyed out the piece itself while selected, which is
+                // exactly what got reported next: "j'aimerais qu'on grey out
+                // pas le preview dans la slot lorsqu'elle est sélectionné".
+                // The border-only frame keeps the selected state just as
+                // unmissable (drawn last/topmost, fully opaque) without ever
+                // drawing over the preview area in the middle; raycastTarget
+                // off so it never swallows the click meant for the slot's
+                // own Button.
                 var selectionOverlay = UIFactory.CreateSlicedImage(slot.transform, "SelectionOverlay", UISprites.CardBackground);
                 UIFactory.StretchFull(selectionOverlay.rectTransform);
-                selectionOverlay.color = new Color(UITheme.ButtonSelected.r, UITheme.ButtonSelected.g, UITheme.ButtonSelected.b, 0.55f);
+                selectionOverlay.fillCenter = false;
+                selectionOverlay.color = UITheme.ButtonSelected;
                 selectionOverlay.raycastTarget = false;
                 selectionOverlay.gameObject.SetActive(false);
 
@@ -330,9 +339,19 @@ namespace Contigu.Presentation
         {
             for (int i = 0; i < _slotBackgrounds.Length; i++)
             {
-                bool hasPiece = _deck.Hand[i].HasValue;
                 bool selected = i == _selectedIndex;
-                var baseColor = !hasPiece ? UITheme.Panel : (selected ? UITheme.ButtonSelected : UITheme.ButtonIdle);
+                // Every slot background is now the same darker Panel tint
+                // regardless of occupied/idle/selected state (on explicit
+                // request: "Les slots non sélectionné sont difficile a voir
+                // leur pièce, met les plus foncé. Idem pour lorsqu'ils sont
+                // sélectionné") — the old idle/selected tints (ButtonIdle
+                // #5f699c, ButtonSelected #65aed6) were both LIGHTER than
+                // the empty-slot Panel tint and close in hue to the piece
+                // colors themselves (esp. Blue, #3498db), so a piece could
+                // all but disappear into its own slot. Selection is now
+                // shown by the border-only frame overlay below instead of a
+                // brighter fill, so darkening this doesn't cost legibility.
+                var baseColor = UITheme.Panel;
                 // Same "recede into the void" treatment as locked grid cells
                 // (see VisualDefaults.LockedColor) — dims toward the
                 // background instead of a one-off grey, so it reads as part
