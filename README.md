@@ -3812,3 +3812,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   presque blanche, de `TileSprite` pour une case vide — un Joker trop
   clair se serait confondu avec "case vide" plutôt que de lire comme
   "wildcard".
+- **Suite : le noir ne fonctionnait pas mieux, essai d'une 3e couleur**
+  (demande explicite : "Essaye une autre couleur, finalement le noir
+  ne fonctionne pas mieux") — le quasi-noir se fondait presque aussi
+  mal que l'ancienne teinte ardoise, vu la quantité de chrome/contours
+  sombres déjà présents un peu partout dans l'UI (fond `UITheme.
+  Background` #372e4d, contours noirs sur presque tous les badges).
+  Changé pour un violet vif (`#9b59b6`) — la seule teinte primaire/
+  secondaire qu'aucune des 4 couleurs de pièce (rouge/jaune/vert/bleu)
+  ni les violets ternes de l'ancienne palette v1 (#372e4d/#614363/
+  #5f699c, tous bien plus sombres/désaturés) n'approche, et surtout,
+  contrairement au noir ou au blanc, une couleur qu'aucun fond sombre
+  de l'UI ni la carte pâle d'une case vide ne pourraient jamais
+  confondre avec du "neutre".

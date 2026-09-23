@@ -21,17 +21,21 @@ namespace Contigu.Data
     /// are untouched — renaming those would ripple through ~100 modifier ids
     /// (DevotionCoral, EclatTeal, ...) for a purely cosmetic change — only
     /// their rendered <see cref="ColorMap"/> value and displayed
-    /// <see cref="ColorNames"/> string changed. Joker's own color was
-    /// changed a second time, on further explicit report ("il se blend
-    /// vraiment trop avec un fond gris") — its original mid-tone slate
-    /// (#5f699c) is the exact same hex as Presentation.UITheme.PanelLight/
-    /// ButtonIdle chrome, so a Joker tile read as barely-there against any
-    /// gray/purple UI surface behind it. Now a near-black (#1b1b1b) —
-    /// distinct in both hue AND luminosity from the 4 vivid piece colors,
-    /// from every gray/purple in the old v1 chrome palette, and (unlike
-    /// white/near-white would be) from an empty tile's own pale, near-white
-    /// card art (see TileSprite below), which a white or very light Joker
-    /// tint would have made read as simply "empty" instead of "wildcard".
+    /// <see cref="ColorNames"/> string changed. Joker's own color went
+    /// through 2 more rounds after that, on further explicit reports —
+    /// first "il se blend vraiment trop avec un fond gris" (its original
+    /// mid-tone slate, #5f699c, is the exact same hex as Presentation.
+    /// UITheme.PanelLight/ButtonIdle chrome, so it read as barely-there
+    /// against any gray/purple UI surface), tried a near-black (#1b1b1b)
+    /// next — then "le noir ne fonctionne pas mieux" (dark UI chrome/
+    /// outlines everywhere meant near-black blended in almost as badly as
+    /// the old slate did). Landed on a vivid purple (#9b59b6) instead — the
+    /// one primary/secondary hue neither the 4 piece colors (red/yellow/
+    /// green/blue) nor the old v1 chrome palette's own muted purples
+    /// (#372e4d/#614363/#5f699c, all far darker/desaturated) come anywhere
+    /// near, and — unlike black or white — nowhere close to a "neutral" a
+    /// dark UI background or an empty tile's own pale card art could ever
+    /// be mistaken for.
     /// </summary>
     public static class VisualDefaults
     {
@@ -57,7 +61,7 @@ namespace Contigu.Data
             { PieceColor.Teal, new Color(0.204f, 0.596f, 0.859f) }, // #3498db (Blue)
             { PieceColor.Violet, new Color(0.945f, 0.769f, 0.059f) }, // #f1c40f (Yellow)
             { PieceColor.Lime, new Color(0.180f, 0.800f, 0.443f) }, // #2ecc71 (Green)
-            { PieceColor.Joker, new Color(0.106f, 0.106f, 0.106f) } // #1b1b1b (near-black)
+            { PieceColor.Joker, new Color(0.608f, 0.349f, 0.714f) } // #9b59b6 (vivid purple)
         };
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
