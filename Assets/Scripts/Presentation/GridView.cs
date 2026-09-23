@@ -125,6 +125,18 @@ namespace Contigu.Presentation
             badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
 
+            // Colorblind-mode letter (see ColorblindMode) — centered,
+            // created before InvalidMarker below so a transient
+            // hover-invalid preview still draws on top of it and reads
+            // clearly; above every corner badge above (no real overlap
+            // in practice, they never reach the cell's center).
+            var colorblindLabel = UIFactory.CreateText(cellGo, "ColorblindLabel", "", 22, Color.white);
+            UIFactory.StretchFull(colorblindLabel.rectTransform);
+            var colorblindOutline = colorblindLabel.gameObject.AddComponent<Outline>();
+            colorblindOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            colorblindOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            colorblindLabel.gameObject.SetActive(false);
+
             // Solid marker shown instead of the color-icon preview while
             // hovering an invalid placement — a plain colored square (no
             // sprite needed), small and central so it reads as a clear "not
@@ -150,7 +162,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, _tooltip);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, colorblindLabel, _tooltip);
             _cells[x, y] = cellView;
         }
 

@@ -88,7 +88,8 @@ namespace Contigu.Presentation
                 "• Golden tile: +18 pts",
                 "• Line/column clear: +2 Lueur per distinct color in it",
                 "• Lueur: spend it in the shop on modifiers/upgrades",
-                "• Tab: view piece deck"
+                "• Tab: view piece deck",
+                "• C: toggle colorblind mode"
             };
             string text = DescriptionTextFormatter.Colorize(lines[0]);
             for (int i = 1; i < lines.Length; i++)

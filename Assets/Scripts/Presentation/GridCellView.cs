@@ -25,12 +25,13 @@ namespace Contigu.Presentation
         private Text _effectLabel;
         private Image _badgeTraitOrigin;
         private TraitBadgeView _traitOriginBadgeView;
+        private Text _colorblindLabel;
         private TooltipView _tooltip;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Text colorblindLabel, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -42,6 +43,7 @@ namespace Contigu.Presentation
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
+            _colorblindLabel = colorblindLabel;
             _tooltip = tooltip;
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
         }
@@ -169,6 +171,13 @@ namespace Contigu.Presentation
             string effectText = BuildEffectLabel(cell);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
+
+            bool showColorblindLabel = ColorblindMode.IsEnabled && isFilled && !renderAsLockedObstacle;
+            _colorblindLabel.gameObject.SetActive(showColorblindLabel);
+            if (showColorblindLabel)
+            {
+                _colorblindLabel.text = VisualDefaults.GetColorblindSymbol(filledColor.Value);
+            }
 
             // Hover-only decoration — never part of a cell's actual state, so
             // every real render (including the one ClearHover triggers) hides

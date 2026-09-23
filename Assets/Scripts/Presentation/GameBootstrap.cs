@@ -72,6 +72,27 @@ namespace Contigu.Presentation
             BuildUI(canvasRect);
             WireEvents();
             RefreshAll();
+
+            // Re-renders every already-built piece-color view immediately on
+            // toggle (see ColorblindMode) rather than waiting for the next
+            // unrelated refresh — RefreshAll covers the grid/hand/HUD/
+            // modifier panel; the shop and deck-view overlay are only
+            // rebuilt too if actually open right now, since a hidden one
+            // will render correctly the next time it's shown anyway.
+            ColorblindMode.Changed += OnColorblindModeChanged;
+        }
+
+        private void OnColorblindModeChanged()
+        {
+            RefreshAll();
+            if (_run.State == RunState.AwaitingShop)
+            {
+                _shopView.Refresh(_run);
+            }
+            if (_deckView.IsVisible)
+            {
+                _deckView.Show();
+            }
         }
 
         private void Update()
@@ -93,6 +114,14 @@ namespace Contigu.Presentation
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 _deckView.Toggle();
+            }
+            // C toggles colorblind mode (see ColorblindMode) — same
+            // "always-available, not editor-only" reasoning as Tab above;
+            // an accessibility setting has to be reachable in a real build,
+            // not just in the editor.
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                ColorblindMode.Toggle();
             }
         }
 

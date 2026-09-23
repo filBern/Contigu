@@ -86,6 +86,11 @@ namespace Contigu.Presentation
 
                     if (filled)
                     {
+                        if (ColorblindMode.IsEnabled)
+                        {
+                            BuildColorblindLabel(img.transform, color, cell);
+                        }
+
                         if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
                         {
                             // Sized relative to the cell itself rather than a
@@ -141,6 +146,17 @@ namespace Contigu.Presentation
                 img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 img.rectTransform.anchoredPosition = new Vector2(startX + c.x * cell, startY + c.y * cell);
             }
+        }
+
+        /// <summary>Colorblind-mode letter (see ColorblindMode), centered on a filled square, on top of its tint and below the trait badge (which only ever sits in the top-right corner, so the two never actually overlap).</summary>
+        private static void BuildColorblindLabel(Transform parent, PieceColor color, float cellSize)
+        {
+            int fontSize = Mathf.RoundToInt(Mathf.Clamp(cellSize * 0.5f, 10f, 26f));
+            var label = UIFactory.CreateText(parent, "ColorblindLabel", VisualDefaults.GetColorblindSymbol(color), fontSize, Color.white);
+            UIFactory.StretchFull(label.rectTransform);
+            var outline = label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
         private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)

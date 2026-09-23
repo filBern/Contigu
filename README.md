@@ -4202,3 +4202,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   cette fonctionnalité, volontairement à la frontière disque/joueur, là
   où le reste du code évite les gardes défensives sur de l'état interne
   garanti par construction.
+- **Mode daltonien activable (touche C), off par défaut** (demande
+  explicite : "accessibilité daltonisme" ; puis, une fois pointé qu'un
+  système équivalent avait déjà existé et avait été explicitement
+  retiré — voir la note historique dans `VisualDefaults.TileSprite` :
+  "je veux seulement card_bg_3.png teinté... pour remplacer les
+  icons" — nouvelle question ouverte tranchée par "Mode daltonien
+  activable (toggle, off par défaut)"). Toute la lisibilité du plateau
+  repose sur 4 couleurs de pièce, et une bonne partie des modifiers
+  sont littéralement "par couleur" (Devotion/Éclat ×4) — sans rien
+  d'autre pour les distinguer, un joueur daltonien perd une partie du
+  jeu. Contrairement à l'ancien système (badge permanent, supprimé
+  pour son rendu jugé encombrant), celui-ci est un réglage opt-in
+  (`Presentation.ColorblindMode`, persisté via `PlayerPrefs`, touche
+  `C`) : le rendu par défaut (card_bg_3.png teintée) ne change pas du
+  tout tant que personne n'active le mode. Une fois activé, chaque
+  endroit du jeu qui affiche une couleur de pièce superpose une lettre
+  (`VisualDefaults.GetColorblindSymbol` — R/B/Y/G/J, la première
+  lettre du nom déjà affiché ailleurs, pas une deuxième table à
+  maintenir en synchro) : la grille elle-même
+  (`GridCellView`/`GridView`, nouveau label centré, créé avant
+  `InvalidMarker` dans la hiérarchie pour qu'un survol invalide
+  continue à se voir clairement par-dessus) ET, en un seul endroit
+  partagé, toutes les autres previews de pièce du jeu — main, shop,
+  draft, choix de tuile, vue du deck, et même les badges de modifier
+  par couleur — puisqu'elles passent toutes par
+  `ShapePreviewFactory.Build`. Basculé en direct sans attendre un
+  refresh sans rapport : `ColorblindMode.Changed` déclenche
+  `RefreshAll()` plus un refresh ciblé du shop/deck-view si l'un des
+  deux est ouvert au moment du bascule.
