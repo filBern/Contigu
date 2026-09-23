@@ -21,10 +21,17 @@ namespace Contigu.Data
     /// are untouched — renaming those would ripple through ~100 modifier ids
     /// (DevotionCoral, EclatTeal, ...) for a purely cosmetic change — only
     /// their rendered <see cref="ColorMap"/> value and displayed
-    /// <see cref="ColorNames"/> string changed. Joker keeps its own calmer
-    /// mid-tone slate (#5f699c, from the old v1 palette, still used for chrome
-    /// — see Presentation.UITheme) for a deliberately different, "wildcard"
-    /// feel against the 4 new vivid pieces.
+    /// <see cref="ColorNames"/> string changed. Joker's own color was
+    /// changed a second time, on further explicit report ("il se blend
+    /// vraiment trop avec un fond gris") — its original mid-tone slate
+    /// (#5f699c) is the exact same hex as Presentation.UITheme.PanelLight/
+    /// ButtonIdle chrome, so a Joker tile read as barely-there against any
+    /// gray/purple UI surface behind it. Now a near-black (#1b1b1b) —
+    /// distinct in both hue AND luminosity from the 4 vivid piece colors,
+    /// from every gray/purple in the old v1 chrome palette, and (unlike
+    /// white/near-white would be) from an empty tile's own pale, near-white
+    /// card art (see TileSprite below), which a white or very light Joker
+    /// tint would have made read as simply "empty" instead of "wildcard".
     /// </summary>
     public static class VisualDefaults
     {
@@ -50,7 +57,7 @@ namespace Contigu.Data
             { PieceColor.Teal, new Color(0.204f, 0.596f, 0.859f) }, // #3498db (Blue)
             { PieceColor.Violet, new Color(0.945f, 0.769f, 0.059f) }, // #f1c40f (Yellow)
             { PieceColor.Lime, new Color(0.180f, 0.800f, 0.443f) }, // #2ecc71 (Green)
-            { PieceColor.Joker, new Color(0.373f, 0.412f, 0.612f) } // #5f699c
+            { PieceColor.Joker, new Color(0.106f, 0.106f, 0.106f) } // #1b1b1b (near-black)
         };
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>

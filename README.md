@@ -3798,3 +3798,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   monochrome contrairement au score classique) et "Lueur: spend it in
   the shop on modifiers/upgrades" (à quoi ça sert). Bloc élargi
   (260x160 → 280x200) pour les 2 lignes en plus.
+- **Nouvelle couleur pour Joker** (demande explicite : "il se blend
+  vraiment trop avec un fond gris, peux être noir ou une autre couleur
+  vraiment éloigné des autres") — explication du blend : la teinte
+  d'origine de Joker (#5f699c) est très exactement le même hex que
+  `UITheme.PanelLight`/`ButtonIdle`, la couleur de chrome utilisée pour
+  quasi tous les panneaux/boutons gris-violet de l'UI, donc une tuile
+  Joker se fondait presque littéralement dans n'importe quel fond gris
+  de l'interface derrière elle. Changée pour un quasi-noir (`#1b1b1b`)
+  — distinct en teinte ET en luminosité des 4 couleurs vives, de tous
+  les gris/violets de l'ancienne palette v1, et (contrairement à un
+  blanc/très clair qui aurait semblé) de la couleur naturelle pâle,
+  presque blanche, de `TileSprite` pour une case vide — un Joker trop
+  clair se serait confondu avec "case vide" plutôt que de lire comme
+  "wildcard".
