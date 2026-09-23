@@ -89,7 +89,8 @@ namespace Contigu.Presentation
                 "• Line/column clear: +2 Lueur per distinct color in it",
                 "• Lueur: spend it in the shop on modifiers/upgrades",
                 "• Tab: view piece deck",
-                "• C: toggle colorblind mode"
+                "• C: toggle colorblind mode",
+                "• H: show the rules again"
             };
             string text = DescriptionTextFormatter.Colorize(lines[0]);
             for (int i = 1; i < lines.Length; i++)

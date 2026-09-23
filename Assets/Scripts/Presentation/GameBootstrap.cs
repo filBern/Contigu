@@ -38,6 +38,7 @@ namespace Contigu.Presentation
         private const float StatusPulseAmplitude = 0.05f;
         private const float StatusPulseSpeed = 1.5f;
         private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
+        private const string TutorialSeenPrefsKey = "TutorialSeen";
 
         private RunManager _run;
         private IMetaStatsStore _metaStatsStore;
@@ -55,6 +56,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltipView;
         private DeckView _deckView;
         private EndScreenView _endScreenView;
+        private TutorialView _tutorialView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
@@ -80,6 +82,18 @@ namespace Contigu.Presentation
             // rebuilt too if actually open right now, since a hidden one
             // will render correctly the next time it's shown anyway.
             ColorblindMode.Changed += OnColorblindModeChanged;
+
+            // Shown once automatically, the very first time the game is
+            // ever launched (see TutorialView) — the game previously had
+            // zero in-game rules explanation anywhere. Marked seen right
+            // away rather than on close, so it can never re-trigger even
+            // if the overlay gets dismissed some other way.
+            if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
+            {
+                PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
+                PlayerPrefs.Save();
+                _tutorialView.Show();
+            }
         }
 
         private void OnColorblindModeChanged()
@@ -122,6 +136,13 @@ namespace Contigu.Presentation
             if (Input.GetKeyDown(KeyCode.C))
             {
                 ColorblindMode.Toggle();
+            }
+            // H reopens the rules overlay (see TutorialView) — shown once
+            // automatically on first launch, always reachable again after
+            // that, same "always-available" reasoning as Tab/C above.
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                _tutorialView.Show();
             }
         }
 
@@ -361,6 +382,9 @@ namespace Contigu.Presentation
 
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
+
+            _tutorialView = gameObject.AddComponent<TutorialView>();
+            _tutorialView.Build(mainRoot);
         }
 
         private void WireEvents()

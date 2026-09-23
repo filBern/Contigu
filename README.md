@@ -4240,3 +4240,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   refresh sans rapport : `ColorblindMode.Changed` déclenche
   `RefreshAll()` plus un refresh ciblé du shop/deck-view si l'un des
   deux est ouvert au moment du bascule.
+- **Écran "How to Play" (touche H), affiché automatiquement au tout
+  premier lancement** (demande explicite, choisie parmi les 2 pistes
+  restantes de l'assessment "que me propose tu pour faire passer le
+  jeu à un state supérieur" — tutoriel vs. seed de run — via "On
+  enchaîne sur laquelle ?" → "Tutoriel / écran de règles"). Vérifié
+  avant d'écrire une ligne de code : zéro trace de "Tutorial"/"Help"/
+  "Onboarding" nulle part dans le repo — un nouveau joueur était lâché
+  directement round 1 sans aucune explication du scoring par groupe,
+  de la Lueur, du shop ou du round boss. `TutorialView` (nouveau,
+  même patron plein-écran que `EndScreenView`/`DeckView`) couvre en 6
+  sections courtes (Goal/Placing pieces/Line and column clears/Lueur
+  and the shop/Boss round/Defeat) tout ce qu'un joueur a besoin de
+  savoir avant sa première pose, réutilise
+  `DescriptionTextFormatter.Colorize` pour garder la même convention
+  visuelle que le reste du jeu (points en bleu, mult en rouge, Lueur
+  en or). Affiché une seule fois automatiquement — un flag
+  `PlayerPrefs` (`TutorialSeen`, même patron que `ColorblindMode`)
+  marqué dès la décision de l'afficher plutôt qu'à la fermeture, pour
+  qu'il ne puisse jamais se redéclencher même si l'overlay est fermé
+  autrement — puis réaccessible à tout moment via la touche `H`, même
+  raison "toujours disponible, pas seulement dans l'éditeur" que
+  `Tab`/`C`.
