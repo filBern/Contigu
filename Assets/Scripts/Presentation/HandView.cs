@@ -40,11 +40,17 @@ namespace Contigu.Presentation
         /// <summary>Fires when re-clicking the already-selected slot toggles it off (on explicit request) — GameBootstrap uses this to clear the grid's selected-shape preview the same way a successful placement does.</summary>
         public event Action SelectionCleared;
 
+        /// <summary>Fires when the player clicks the Shuffle button below the hand — GameBootstrap forwards this to RunManager.ShuffleHand and refreshes the hand/button state with the result (see RunManager.ShuffleHand/ShufflesRemaining).</summary>
+        public event Action ShuffleRequested;
+
         private DeckManager _deck;
         private TooltipView _tooltip;
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
+        private Button _shuffleButton;
+        private Text _shuffleButtonLabel;
+        private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
 
@@ -111,10 +117,46 @@ namespace Contigu.Presentation
                 _previewContainers[i] = previewContainer;
             }
 
+            BuildShuffleButton(container);
             BuildDragGhost();
 
             Refresh();
             return container;
+        }
+
+        /// <summary>
+        /// Below the 3 hand slots, in the same VerticalLayoutGroup container
+        /// so it stays grouped with the hand — re-rolls all 3 slots at once
+        /// for a limited number of uses per run (spec extension, explicit
+        /// request: "un bouton shuffle qui permet de shuffle les 3 slots de
+        /// pièce au hasard. Le joueur a droit à 10 shuffle"). Reuses the
+        /// same blue "primary action" sprite as the draft's Choose button
+        /// (on the same "New Run button like Choose button" precedent)
+        /// rather than the red Cancel one, since this is a positive action
+        /// the player opts into, not a dismissal.
+        /// </summary>
+        private void BuildShuffleButton(Transform container)
+        {
+            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ChooseButtonBackground, 18);
+            var layout = _shuffleButton.gameObject.AddComponent<LayoutElement>();
+            layout.preferredWidth = 120f;
+            layout.preferredHeight = 44f;
+            _shuffleButtonLabel = _shuffleButton.GetComponentInChildren<Text>();
+            _shuffleButton.onClick.AddListener(() =>
+            {
+                if (ShuffleRequested != null)
+                {
+                    ShuffleRequested();
+                }
+            });
+        }
+
+        /// <summary>Updates the Shuffle button's label and enabled state — called by GameBootstrap whenever RunManager.ShufflesRemaining changes (a successful shuffle, or a fresh/restarted run). Combined with <see cref="_interactable"/> (see SetInteractable) so a shuffle can't be triggered mid-animation any more than a slot click can.</summary>
+        public void SetShuffleState(int remaining, bool canShuffle)
+        {
+            _shuffleButtonLabel.text = "Shuffle (" + remaining + ")";
+            _shuffleAllowed = canShuffle;
+            _shuffleButton.interactable = _interactable && _shuffleAllowed;
         }
 
         /// <summary>
@@ -294,6 +336,7 @@ namespace Contigu.Presentation
             {
                 _slotButtons[i].interactable = interactable;
             }
+            _shuffleButton.interactable = interactable && _shuffleAllowed;
             UpdateSelectionVisuals();
         }
 

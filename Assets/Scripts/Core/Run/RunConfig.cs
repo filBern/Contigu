@@ -20,6 +20,19 @@ namespace Contigu.Core
         public const int BossLockCellsPerInterval = 2;
 
         /// <summary>
+        /// How many times the player can re-roll all 3 hand slots at once
+        /// for the whole run (spec extension, explicit request: "un bouton
+        /// shuffle qui permet de shuffle les 3 slots de pièce au hasard. Le
+        /// joueur a droit à 10 shuffle") — a shared per-run pool like
+        /// Lueur, not reset between rounds (see RunManager.ShufflesRemaining
+        /// / ShuffleHand). Also factors into the "stuck hand" defeat check
+        /// (see RunManager.EvaluateRoundEnd): a hand with no legal placement
+        /// is only a loss once shuffles are ALSO exhausted, since a shuffle
+        /// might turn up a playable hand.
+        /// </summary>
+        public const int StartingShuffleCount = 10;
+
+        /// <summary>
         /// Round score targets — a geometric progression (~x1.7 per round)
         /// rather than the previous roughly-quadratic one, on explicit
         /// request to match how much bigger placement totals can now get

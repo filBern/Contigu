@@ -88,6 +88,7 @@ namespace Contigu.Presentation
                 "• Golden tile: +18 pts",
                 "• Line/column clear: +2 Lueur per distinct color in it",
                 "• Lueur: spend it in the shop on modifiers/upgrades",
+                "• Shuffle: re-roll your hand, limited uses per run",
                 "• Tab: view piece deck",
                 "• C: toggle colorblind mode",
                 "• H: show the rules again"

@@ -2218,5 +2218,107 @@ namespace Contigu.Tests
             // (1 + 3) / 10 = 0.4.
             Assert.AreEqual("Currently +0.4 Mult", run.GetProgressiveModifierStateText(ModifierId.Experience));
         }
+
+        // ---- Shuffle (spec extension, explicit request: "un bouton
+        // shuffle qui permet de shuffle les 3 slots de pièce au hasard. Le
+        // joueur a droit à 10 shuffle" + "il va falloir tweak la condition
+        // de défaite pour valider si le joueur ne peut plus jouer de pièce
+        // ET qu'il n'a plus de shuffle en banque") ----
+
+        [Test]
+        public void RunManager_StartsWithTheConfiguredShuffleCount()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            Assert.AreEqual(RunConfig.StartingShuffleCount, run.ShufflesRemaining);
+        }
+
+        [Test]
+        public void ShuffleHand_Succeeds_DecrementsShufflesRemaining_AndDealsAFullHand()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            bool shuffled = run.ShuffleHand();
+
+            Assert.IsTrue(shuffled);
+            Assert.AreEqual(RunConfig.StartingShuffleCount - 1, run.ShufflesRemaining);
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                Assert.IsTrue(run.Deck.Hand[i].HasValue, "Shuffle should always deal a full 3-piece hand");
+            }
+        }
+
+        [Test]
+        public void ShuffleHand_Fails_OnceShufflesAreExhausted()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            for (int i = 0; i < RunConfig.StartingShuffleCount; i++)
+            {
+                Assert.IsTrue(run.ShuffleHand());
+            }
+
+            Assert.AreEqual(0, run.ShufflesRemaining);
+            bool shuffledAgain = run.ShuffleHand();
+
+            Assert.IsFalse(shuffledAgain);
+            Assert.AreEqual(0, run.ShufflesRemaining);
+        }
+
+        [Test]
+        public void ShuffleHand_Fails_WhenTheRunIsNotInProgress()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
+
+            bool shuffled = run.ShuffleHand();
+
+            Assert.IsFalse(shuffled);
+            Assert.AreEqual(RunConfig.StartingShuffleCount, run.ShufflesRemaining);
+        }
+
+        /// <summary>Locks every cell on an otherwise-fresh grid so no shape of any size can ever be placed — the simplest way to force a guaranteed-stuck hand regardless of which pieces a shuffle actually deals.</summary>
+        private static void LockEveryCell(RunManager run)
+        {
+            foreach (var pos in GridManager.AllPositions())
+            {
+                run.Grid.GetCell(pos).IsLocked = true;
+            }
+        }
+
+        [Test]
+        public void EvaluateRoundEnd_StuckHand_StaysInProgress_WhileShufflesRemain()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            LockEveryCell(run);
+
+            bool shuffled = run.ShuffleHand();
+
+            Assert.IsTrue(shuffled);
+            Assert.AreEqual(RunState.InProgress, run.State, "A stuck hand shouldn't lose the run while ShufflesRemaining is still positive");
+        }
+
+        [Test]
+        public void EvaluateRoundEnd_StuckHand_TriggersDefeat_OnceShufflesAreExhausted()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            LockEveryCell(run);
+
+            // Every cell is locked, so HasAnyHandPlacement is false no matter
+            // what a shuffle deals — the LAST charge (ShufflesRemaining
+            // reaching 0 as a direct result of this very call) is what
+            // finally lets EvaluateRoundEnd's stuck check fire, confirming
+            // the loss immediately rather than waiting for a placement
+            // attempt that could never succeed.
+            for (int i = 0; i < RunConfig.StartingShuffleCount - 1; i++)
+            {
+                run.ShuffleHand();
+                Assert.AreEqual(RunState.InProgress, run.State);
+            }
+
+            run.ShuffleHand();
+
+            Assert.AreEqual(0, run.ShufflesRemaining);
+            Assert.AreEqual(RunState.RunDefeat, run.State);
+        }
     }
 }

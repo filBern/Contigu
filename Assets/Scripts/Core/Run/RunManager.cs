@@ -8,9 +8,11 @@ namespace Contigu.Core
     /// and the win/lose transition into the upgrade draft (spec sections 1 and 6).
     ///
     /// A round ends the instant its quota is reached (success), or as soon as
-    /// either its piece budget runs out or its hand becomes unplayable — no
-    /// legal placement left anywhere on the grid for any of the 3 hand pieces —
-    /// without having reached the quota (defeat).
+    /// either its piece budget runs out or its hand becomes unplayable AND
+    /// out of shuffles — no legal placement left anywhere on the grid for
+    /// any of the 3 hand pieces, and no ShufflesRemaining charge left to
+    /// re-roll them — without having reached the quota (defeat). See
+    /// ShuffleHand.
     /// </summary>
     public sealed class RunManager
     {
@@ -85,6 +87,9 @@ namespace Contigu.Core
         /// shop (see <see cref="ShopModifierSlots"/>/<see cref="ShopUpgradeSlots"/>).
         /// </summary>
         public int Lueur { get; private set; }
+
+        /// <summary>How many hand shuffles the player has left this run (spec extension, explicit request — see RunConfig.StartingShuffleCount/ShuffleHand). Persists across rounds like Lueur, never reset by StartRound.</summary>
+        public int ShufflesRemaining { get; private set; }
 
         private readonly ShopSlot[] _modifierSlots = new ShopSlot[EconomyConstants.ShopModifierSlotCount];
         private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
@@ -253,6 +258,7 @@ namespace Contigu.Core
             Upgrades = new UpgradeSystem(rng);
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
+            ShufflesRemaining = RunConfig.StartingShuffleCount;
             CurrentRoundIndex = 0;
             StartRound();
         }
@@ -1107,6 +1113,29 @@ namespace Contigu.Core
             Lueur = amount;
         }
 
+        /// <summary>
+        /// Spends one shuffle charge to re-roll all 3 hand slots at once
+        /// (spec extension, explicit request — see RunConfig.
+        /// StartingShuffleCount/ShufflesRemaining). No-op (returns false,
+        /// nothing spent) when the run isn't InProgress or no charges are
+        /// left. Re-runs EvaluateRoundEnd right after re-rolling since a
+        /// shuffle can turn a stuck hand into a playable one — or, if the
+        /// fresh hand is ALSO unplayable and this was the last charge,
+        /// immediately confirm the loss instead of waiting for the
+        /// player's next placement attempt (there won't be a legal one).
+        /// </summary>
+        public bool ShuffleHand()
+        {
+            if (State != RunState.InProgress || ShufflesRemaining <= 0)
+            {
+                return false;
+            }
+            ShufflesRemaining--;
+            Deck.DrawNewHand();
+            EvaluateRoundEnd();
+            return true;
+        }
+
         private void EvaluateRoundEnd()
         {
             if (RoundScore >= CurrentQuota)
@@ -1134,7 +1163,16 @@ namespace Contigu.Core
             // skip the check and let the round stay InProgress. PlacePiece's
             // own post-EvaluateRoundEnd check then draws the next hand right
             // away, which the NEXT placement will correctly check.
-            if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement())
+            //
+            // A stuck hand (no legal placement for any of its 3 pieces) is
+            // only a genuine loss once ShufflesRemaining is ALSO exhausted
+            // (spec extension, explicit request: "il va falloir tweak la
+            // condition de défaite pour valider si le joueur ne peut plus
+            // jouer de pièce ET qu'il n'a plus de shuffle en banque") — with
+            // shuffles still in the bank, the player can re-roll the hand
+            // instead of losing outright (see ShuffleHand, which re-runs
+            // this exact check right after re-rolling).
+            if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement() && ShufflesRemaining <= 0)
             {
                 State = RunState.RunDefeat;
             }

@@ -423,6 +423,7 @@ namespace Contigu.Presentation
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;
             _handView.SelectionCleared += OnHandSelectionCleared;
+            _handView.ShuffleRequested += OnShuffleRequested;
             _shopView.ModifierBuyRequested += OnModifierBuyRequested;
             _shopView.UpgradeBuyRequested += OnUpgradeBuyRequested;
             _shopView.RerollRequested += OnRerollRequested;
@@ -454,6 +455,39 @@ namespace Contigu.Presentation
         {
             _gridView.SetSelectedShape(null);
             SetStatusText(IdleStatusMessage);
+        }
+
+        /// <summary>
+        /// The Shuffle button (see HandView.BuildShuffleButton) — re-rolls
+        /// the hand and, on a stuck-and-now-out-of-shuffles hand, ends the
+        /// run right away instead of waiting for a placement attempt that
+        /// can never come (same reasoning as PlacePiece's own post-refill
+        /// stuck check). Any current selection/preview is cleared first
+        /// since the hand it pointed at no longer exists.
+        /// </summary>
+        private void OnShuffleRequested()
+        {
+            if (_isPlayingPlacementSequence)
+            {
+                return;
+            }
+            bool shuffled = _run.ShuffleHand();
+            if (!shuffled)
+            {
+                return;
+            }
+            _gridView.SetSelectedShape(null);
+            _handView.ClearSelection();
+            _handView.Refresh();
+            RefreshShuffleButton();
+            SetStatusText(IdleStatusMessage);
+            HandleStateTransition(_run.State);
+        }
+
+        /// <summary>Syncs HandView's Shuffle button to RunManager.ShufflesRemaining/State — called everywhere the hand itself gets refreshed (RefreshAll, right after a placement, and here) so the button's count and enabled state never lag behind the actual run.</summary>
+        private void RefreshShuffleButton()
+        {
+            _handView.SetShuffleState(_run.ShufflesRemaining, _run.State == RunState.InProgress && _run.ShufflesRemaining > 0);
         }
 
         private void OnCellClicked(int x, int y)
@@ -491,6 +525,7 @@ namespace Contigu.Presentation
             // instantly vanishing) while its score is still playing out.
             _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors, outcome.Placement.ClearedCellTraits);
             _handView.Refresh();
+            RefreshShuffleButton();
             // Round/budget update immediately; the score AND Lueur numbers
             // themselves stay at their pre-placement values until
             // PlayPlacementSequence catches them up in step with each popup.
@@ -825,6 +860,7 @@ namespace Contigu.Presentation
 
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
+            RefreshShuffleButton();
             _modifierPanelView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
         }
@@ -1030,6 +1066,7 @@ namespace Contigu.Presentation
         {
             _gridView.Refresh();
             _handView.Refresh();
+            RefreshShuffleButton();
             _hudView.Refresh(_run);
             _comboView.Hide();
             _modifierPanelView.Refresh(_run.ActiveModifiers);

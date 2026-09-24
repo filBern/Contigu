@@ -4542,3 +4542,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   seed fixe (ex. `PlacePiece_TriggersDefeat_...` avec seed=7) ont été
   mis à jour en retraçant le tirage déterministe (`/tmp/
   dotnet_random_sim.py`, ré-exécuté avec le nouveau deck à 32 pièces).
+- **Bouton Shuffle (10 par run) + défaite conditionnée aux shuffles
+  restants** (demande explicite : "un bouton shuffle qui permet de
+  shuffle les 3 slots de pièce au hasard. Le joueur a droit à 10
+  shuffle. Il va falloir tweak la condition de défaite pour valider si
+  le joueur ne peut plus jouer de pièce ET qu'il n'a plus de shuffle
+  en banque"). `RunManager.ShufflesRemaining` (init à
+  `RunConfig.StartingShuffleCount = 10`) est une ressource par RUN
+  comme le Lueur — jamais réinitialisée entre les manches par
+  `StartRound`. `RunManager.ShuffleHand()` dépense une charge et
+  rappelle simplement `Deck.DrawNewHand()` (déjà utilisé partout
+  ailleurs pour redistribuer une main de 3), puis relance
+  `EvaluateRoundEnd()` immédiatement — si la nouvelle main est encore
+  injouable ET que c'était la dernière charge, la défaite est confirmée
+  tout de suite plutôt que d'attendre un placement qui ne pourra
+  jamais arriver. La condition de défaite "main bloquée" dans
+  `EvaluateRoundEnd` gagne donc un troisième critère :
+  `!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement() &&
+  ShufflesRemaining <= 0` (le budget de pièces épuisé reste un critère
+  de défaite séparé et inchangé — ce n'est pas la même situation).
+  Bouton ajouté sous les 3 slots de main dans `HandView`
+  (même groupe de layout, sprite bleu "Choose" plutôt que rouge
+  "Cancel" puisque c'est une action positive), désactivé pendant
+  l'animation d'un placement et une fois à 0 charge ou hors du round.
