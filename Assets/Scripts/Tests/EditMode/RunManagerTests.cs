@@ -663,6 +663,11 @@ namespace Contigu.Tests
         public void PlacePiece_TriggersDefeat_WhenBoardBecomesFullyBlockedAfterThisPlacement()
         {
             var run = new RunManager(new SystemRandomProvider(7));
+            // A stuck hand is only a loss once ShufflesRemaining is also 0
+            // (see RunConfig.StartingShuffleCount/RunManager.ShuffleHand) —
+            // pinned here rather than exhausting real shuffles, which would
+            // redraw the hand and ruin this test's seed-7 setup below.
+            run.DebugSetShufflesRemaining(0);
             var token = run.Deck.Hand[0].Value;
             var rotation = run.Deck.HandRotations[0];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
@@ -759,6 +764,11 @@ namespace Contigu.Tests
                 }
             }
             Assert.IsNotNull(run, "Could not find a seed whose starting hand isn't 3 tetrominoes within 50 tries");
+            // A stuck hand is only a loss once ShufflesRemaining is also 0
+            // (see RunConfig.StartingShuffleCount/RunManager.ShuffleHand) —
+            // pinned here rather than exhausting real shuffles, which would
+            // redraw the hand and ruin this test's carefully searched-for setup.
+            run.DebugSetShufflesRemaining(0);
 
             // Play every OTHER slot anywhere legal first, leaving only
             // smallestSlot occupied — so THIS test's placement is the one

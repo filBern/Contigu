@@ -1113,6 +1113,12 @@ namespace Contigu.Core
             Lueur = amount;
         }
 
+        /// <summary>Debug-only helper: pins ShufflesRemaining to an exact value, bypassing gameplay — mirrors DebugSetLueur, for EditMode tests that need to exercise the stuck-hand defeat check (see EvaluateRoundEnd) without spending real shuffles first, which would re-deal the hand via ShuffleHand and ruin a deliberately set-up deterministic scenario (a specific seed's hand, or one found by searching for a specific shape).</summary>
+        public void DebugSetShufflesRemaining(int amount)
+        {
+            ShufflesRemaining = amount;
+        }
+
         /// <summary>
         /// Spends one shuffle charge to re-roll all 3 hand slots at once
         /// (spec extension, explicit request — see RunConfig.
