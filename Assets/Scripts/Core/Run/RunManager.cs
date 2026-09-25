@@ -1466,6 +1466,28 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Debug-only helper: overwrites upgrade slot <paramref name="index"/>
+        /// (default 0) to be "Random Modifier" outright, bypassing the
+        /// shop's own roll — unlike DebugTriggerRandomModifierGrant above,
+        /// this goes through the REAL purchase button (BuyUpgradeSlot, via
+        /// ShopView's own "Buy" click), exercising its exact branching
+        /// instead of skipping straight to GrantRandomModifier — on explicit
+        /// report that it still never showed up after nearly 20 real
+        /// purchases even though the debug-triggered grant worked fine, to
+        /// rule in/out a bug specific to BuyUpgradeSlot's own code path.
+        /// No-op (false) if the shop isn't currently open.
+        /// </summary>
+        public bool DebugForceUpgradeSlotToRandomModifier(int index = 0)
+        {
+            if (State != RunState.AwaitingShop || index < 0 || index >= _upgradeSlots.Length)
+            {
+                return false;
+            }
+            _upgradeSlots[index] = ShopSlot.ForUpgrade(UpgradeCatalog.RandomModifier);
+            return true;
+        }
+
+        /// <summary>
         /// "Random Modifier" upgrade's actual effect (see UpgradeCatalog.
         /// RandomModifier) — grants one uniformly random modifier the player
         /// doesn't already hold, from the same catalog RollModifierSlot

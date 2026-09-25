@@ -4661,3 +4661,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   le reveal sans dépendre du tirage du shop, pour isoler si le
   problème est dans le pipeline achat/reveal ou juste la malchance/
   malentendu sur le système de boîte mystère.
+- **F8 confirmé fonctionnel par le joueur, mais toujours jamais vu
+  après presque 20 achats réels** — F8 contourne complètement
+  `BuyUpgradeSlot` (appelle `GrantRandomModifier` directement), donc
+  son succès ne prouve pas que le VRAI bouton "Buy" du shop route
+  correctement vers ce code. Ajout d'un second raccourci debug F7
+  (`RunManager.DebugForceUpgradeSlotToRandomModifier`) qui force un
+  vrai slot du shop à être Random Modifier (sans toucher au tirage
+  aléatoire) pour que le joueur puisse cliquer sur le vrai bouton
+  "Buy" et vérifier si `BuyUpgradeSlot` lui-même a un bug de
+  branchement. Nouveau test
+  `DebugForceUpgradeSlotToRandomModifier_ThenBuyUpgradeSlot_GrantsA
+  Modifier_ThroughTheRealPurchasePath` exerce exactement ce chemin
+  (contrairement aux tests F8 précédents) — passe en local, ce qui
+  suggère que le code d'achat réel est correct, mais seul un test en
+  jeu via F7 peut confirmer avec certitude côté joueur.

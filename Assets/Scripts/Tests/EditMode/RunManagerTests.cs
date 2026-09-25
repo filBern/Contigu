@@ -575,6 +575,43 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void DebugForceUpgradeSlotToRandomModifier_ThenBuyUpgradeSlot_GrantsAModifier_ThroughTheRealPurchasePath()
+        {
+            // Editor-only debug shortcut (F7) — forces a real shop slot to
+            // be Random Modifier so the actual "Buy" button (BuyUpgradeSlot)
+            // can be exercised directly, unlike F8/DebugTriggerRandomModifierGrant
+            // above which bypasses BuyUpgradeSlot's own branching entirely
+            // (on explicit report that it still never showed up after
+            // nearly 20 real purchases even though F8 worked fine — this
+            // test is exactly the path that report calls into question).
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(1000000);
+
+            bool forced = run.DebugForceUpgradeSlotToRandomModifier(0);
+            Assert.IsTrue(forced);
+            Assert.AreEqual(UpgradeId.RandomModifier, run.ShopUpgradeSlots[0].HiddenUpgrade.Id);
+
+            bool bought = run.BuyUpgradeSlot(0);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "Random Modifier has no sub-choice, so it should apply immediately");
+            Assert.IsTrue(run.LastRandomModifierGranted.HasValue);
+            CollectionAssert.Contains(run.ActiveModifiers, run.LastRandomModifierGranted.Value);
+        }
+
+        [Test]
+        public void DebugForceUpgradeSlotToRandomModifier_Fails_WhenTheShopIsNotOpen()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            Assert.AreEqual(RunState.InProgress, run.State);
+
+            bool forced = run.DebugForceUpgradeSlotToRandomModifier(0);
+
+            Assert.IsFalse(forced);
+        }
+
+        [Test]
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
             RunManager run = null;

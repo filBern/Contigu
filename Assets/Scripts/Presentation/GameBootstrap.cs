@@ -113,6 +113,10 @@ namespace Contigu.Presentation
         private void Update()
         {
 #if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.F7))
+            {
+                DebugForceUpgradeSlotShortcut();
+            }
             if (Input.GetKeyDown(KeyCode.F8))
             {
                 DebugTriggerRandomModifierShortcut();
@@ -156,6 +160,27 @@ namespace Contigu.Presentation
         }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only debug shortcut (F7): forces upgrade slot 0 to be
+        /// "Random Modifier" while the shop is open, so the REAL "Buy"
+        /// button (BuyUpgradeSlot, via ShopView) can be clicked normally —
+        /// on explicit report that it still never showed up after nearly 20
+        /// real purchases even though F8's debug-triggered grant worked
+        /// fine, to test whether BuyUpgradeSlot's own branching (not just
+        /// the shop's roll odds) is where the problem is. No-op with a
+        /// status message if the shop isn't currently open.
+        /// </summary>
+        private void DebugForceUpgradeSlotShortcut()
+        {
+            if (!_run.DebugForceUpgradeSlotToRandomModifier(0))
+            {
+                SetStatusText("F7: open the shop first.");
+                return;
+            }
+            _shopView.Refresh(_run);
+            SetStatusText("F7: upgrade slot 1 is now Random Modifier — buy it for real.");
+        }
+
         /// <summary>
         /// Editor-only debug shortcut (F8): directly triggers the "Random
         /// Modifier" upgrade's grant + reveal, bypassing the shop entirely —
