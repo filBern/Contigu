@@ -4676,3 +4676,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (contrairement aux tests F8 précédents) — passe en local, ce qui
   suggère que le code d'achat réel est correct, mais seul un test en
   jeu via F7 peut confirmer avec certitude côté joueur.
+- **F7 confirmé fonctionnel par le joueur (achat réel -> reveal a bien
+  montré Random Modifier)** — preuve que tout le pipeline (tirage,
+  achat, octroi, reveal) est correct de bout en bout ; les rapports
+  répétés de "jamais vu" étaient de la vraie malchance statistique.
+  Demande explicite malgré tout : "Met une probabilité vraiment forte
+  juste pour valider". Poids porté à 100 (contre 2/4/8 pour le reste du
+  pool Bank) via un cas spécial dans `UpgradeSystem.PickWeighted`
+  (nouvelle méthode `GetWeight`, plutôt que de toucher au système de
+  rareté partagé qui affecterait aussi Duplicate/Joker/etc.) — gagne
+  maintenant ~82% des tirages du pool Bank, ~41% de n'importe quel
+  slot d'upgrade. Vérifié par simulation Python (2000 essais) que ça
+  ne casse pas `RollFromPool_OverManySeeds_PicksRemovePieceFarLessOften
+  ThanDuplicatePiece` (le ratio relatif Duplicate/Remove reste
+  inchangé, juste dilué par le même facteur) : 0 échec simulé.
