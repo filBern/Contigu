@@ -4785,3 +4785,11 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   bouton) à `(+ShuffleBadgeSize*0.35, +ShuffleBadgeSize*0.35)` — il
   dépasse maintenant nettement au-delà du coin plutôt que d'être
   presque entièrement contenu dans les bords du bouton.
+- **Position du badge re-ajustée** ("Un peu moins en haut à droite",
+  suite à une capture d'écran en jeu montrant le badge complètement
+  détaché du bouton, flottant avec un espace visible) —
+  `anchoredPosition` repasse de `(+ShuffleBadgeSize*0.35, ...*0.35)`
+  (trop loin, l'ajustement précédent était allé trop fort) à
+  `(+ShuffleBadgeSize*0.12, ...*0.12)`, un compromis entre les deux
+  itérations précédentes : toujours débordant du coin, mais collé
+  contre le bouton au lieu de flotter à côté.
