@@ -21,6 +21,7 @@ namespace Contigu.Presentation
         private static Sprite _cardBackground;
         private static Sprite _chooseButtonBackground;
         private static Sprite _cancelButtonBackground;
+        private static Sprite _countBadge;
 
         /// <summary>Shared rounded-pill track behind both HUD progress bars.</summary>
         public static Sprite BarTrack
@@ -69,6 +70,12 @@ namespace Contigu.Presentation
         public static Sprite CancelButtonBackground
         {
             get { return _cancelButtonBackground != null ? _cancelButtonBackground : (_cancelButtonBackground = Resources.Load<Sprite>(GameUIPath + "red_btn")); }
+        }
+
+        /// <summary>Small filled circle used as a corner badge showing a remaining-count number (HandView's Shuffle button — explicit request: "utiliser Ellipse 19.png en haut à droite du bouton et qu'on mette le nombre de shuffle restant au milieu", replacing the "Shuffle (10)" label text that wrapped to 2 lines).</summary>
+        public static Sprite CountBadge
+        {
+            get { return _countBadge != null ? _countBadge : (_countBadge = Resources.Load<Sprite>(SliderPath + "Ellipse 19")); }
         }
     }
 }

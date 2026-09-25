@@ -34,6 +34,7 @@ namespace Contigu.Presentation
         // everywhere else as the "not placed yet" cue.
         private const float CursorGhostValidAlpha = 0f;
         private const float CursorGhostInvalidAlpha = 0.5f;
+        private const float ShuffleBadgeSize = 26f;
 
         public event Action<int> SlotSelected;
 
@@ -49,7 +50,7 @@ namespace Contigu.Presentation
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
         private Button _shuffleButton;
-        private Text _shuffleButtonLabel;
+        private Text _shuffleCountLabel;
         private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
@@ -137,11 +138,7 @@ namespace Contigu.Presentation
         /// </summary>
         private void BuildShuffleButton(Transform container)
         {
-            // Font size 14, not the 18 every other button here defaults to
-            // (explicit request: "réduire le texte de shuffle un peu, il
-            // prend 2 lignes au lieu d'une") — "Shuffle (10)" wrapped inside
-            // this button's 120px width at 18.
-            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ChooseButtonBackground, 14);
+            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "Shuffle", UISprites.ChooseButtonBackground, 16);
             // The container's VerticalLayoutGroup never sets
             // childControlWidth/childControlHeight (stays at Unity's
             // compiled-in false default — see Build() above), so it only
@@ -158,7 +155,29 @@ namespace Contigu.Presentation
             var layout = _shuffleButton.gameObject.AddComponent<LayoutElement>();
             layout.preferredWidth = 120f;
             layout.preferredHeight = 44f;
-            _shuffleButtonLabel = _shuffleButton.GetComponentInChildren<Text>();
+
+            // Remaining-count badge, top-right corner of the button
+            // (explicit request: "au lieu d'avoir (10) pour le shuffle,
+            // j'aimerais qu'on utilise Ellipse 19.png en haut à droite du
+            // bouton et qu'on mette le nombre de shuffle restant au
+            // milieu") — replaces the "Shuffle (10)" label text, which
+            // used to wrap to 2 lines; the button's own label is now just
+            // the static "Shuffle" set above.
+            // raycastTarget off on both — sitting half outside the button's
+            // own bounds at its corner, either would otherwise steal clicks
+            // that should reach the Button underneath instead.
+            var badge = UIFactory.CreateSlicedImage(_shuffleButton.transform, "CountBadge", UISprites.CountBadge);
+            badge.raycastTarget = false;
+            badge.rectTransform.anchorMin = new Vector2(1f, 1f);
+            badge.rectTransform.anchorMax = new Vector2(1f, 1f);
+            badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            badge.rectTransform.anchoredPosition = new Vector2(-ShuffleBadgeSize * 0.5f, -ShuffleBadgeSize * 0.5f);
+            badge.rectTransform.sizeDelta = new Vector2(ShuffleBadgeSize, ShuffleBadgeSize);
+
+            _shuffleCountLabel = UIFactory.CreateText(badge.transform, "Count", "", 13, UITheme.TextPrimary);
+            _shuffleCountLabel.raycastTarget = false;
+            UIFactory.StretchFull(_shuffleCountLabel.rectTransform);
+
             _shuffleButton.onClick.AddListener(() =>
             {
                 if (ShuffleRequested != null)
@@ -168,10 +187,10 @@ namespace Contigu.Presentation
             });
         }
 
-        /// <summary>Updates the Shuffle button's label and enabled state — called by GameBootstrap whenever RunManager.ShufflesRemaining changes (a successful shuffle, or a fresh/restarted run). Combined with <see cref="_interactable"/> (see SetInteractable) so a shuffle can't be triggered mid-animation any more than a slot click can.</summary>
+        /// <summary>Updates the Shuffle button's corner-badge count and enabled state — called by GameBootstrap whenever RunManager.ShufflesRemaining changes (a successful shuffle, or a fresh/restarted run). Combined with <see cref="_interactable"/> (see SetInteractable) so a shuffle can't be triggered mid-animation any more than a slot click can.</summary>
         public void SetShuffleState(int remaining, bool canShuffle)
         {
-            _shuffleButtonLabel.text = "Shuffle (" + remaining + ")";
+            _shuffleCountLabel.text = remaining.ToString();
             _shuffleAllowed = canShuffle;
             _shuffleButton.interactable = _interactable && _shuffleAllowed;
         }

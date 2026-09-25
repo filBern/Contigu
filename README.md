@@ -4761,3 +4761,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      18 à 14 dans `HandView.BuildShuffleButton`, pour que "Shuffle
      (10)" tienne sur une seule ligne dans les 120px de large du
      bouton.
+- **Badge de compte pour le bouton Shuffle** — demande explicite de
+  suivi : *"Au lieu d'avoir (10) pour le shuffle, j'aimerais qu'on
+  utilise Assets/Resources/Colorful_UI/colorful/sprites/slider/Ellipse
+  19.png en haut à droite du bouton et qu'on mette le nombre de
+  shuffle restant au milieu"*. Le bouton affiche maintenant juste
+  "Shuffle" en texte statique (retour à 16px, plus besoin de la
+  réduction de police du point précédent) ; un petit badge rond
+  (nouveau `UISprites.CountBadge`, chargé depuis
+  `Colorful_UI/colorful/sprites/slider/Ellipse 19`) est ancré au coin
+  supérieur droit du bouton (26×26, centré sur le coin), avec le
+  nombre de shuffles restants affiché dessus en texte (mis à jour dans
+  `HandView.SetShuffleState`, qui ne construit plus la chaîne "Shuffle
+  (N)" mais se contente de mettre à jour ce label du badge). Badge et
+  label ont `raycastTarget = false` — assis à moitié en dehors des
+  bornes du bouton à son coin, ils intercepteraient sinon les clics
+  destinés au `Button` en dessous.
