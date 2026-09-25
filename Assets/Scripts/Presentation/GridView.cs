@@ -31,6 +31,8 @@ namespace Contigu.Presentation
         private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
         private TooltipView _tooltip;
+        private RectTransform _container;
+        private float _cellStride;
 
         public RectTransform Build(Transform parent, GridManager grid, float cellSize, TooltipView tooltip)
         {
@@ -39,11 +41,13 @@ namespace Contigu.Presentation
             _cells = new GridCellView[GridManager.Size, GridManager.Size];
 
             var container = UIFactory.CreateUIObject("GridContainer", parent);
+            _container = container;
             // A visible gap between tiles now that each one is its own
             // card-shaped sprite rather than a flat color square touching its
             // neighbors (on explicit request: "une petite margin entre chaque
             // tuile") — was 3f, barely readable as a margin at this scale.
             float spacing = 6f;
+            _cellStride = cellSize + spacing;
             float total = GridManager.Size * cellSize + (GridManager.Size - 1) * spacing;
             container.sizeDelta = new Vector2(total, total);
 
@@ -55,6 +59,22 @@ namespace Contigu.Presentation
             layout.childAlignment = TextAnchor.LowerLeft;
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = GridManager.Size;
+
+            // Invisible, full-grid-size raycast target directly on the
+            // container itself — a child cell's own Image always wins the
+            // raycast over its ancestor's when the pointer is precisely on
+            // that cell, so this only ever catches a pointer event that
+            // misses every cell: the few-pixel spacing gap between adjacent
+            // tiles, which used to be a dead zone (on explicit report: "je
+            // suis a un ou deux pixel de la case, je ne peux pas déposer de
+            // pièce... rajoute une règle pour lorsque le curseur n'est pas
+            // sur une case"). See GridGapCatcher/OnGapPointerEnter/
+            // OnGapPointerClick for how a gap point resolves to its nearest
+            // cell instead of just doing nothing.
+            var gapCatcherImage = container.gameObject.AddComponent<Image>();
+            gapCatcherImage.color = new Color(0f, 0f, 0f, 0f);
+            var gapCatcher = container.gameObject.AddComponent<GridGapCatcher>();
+            gapCatcher.Init(this);
 
             // Instantiated bottom row (y=0) first so LowerLeft start corner
             // produces an on-screen layout where y increases upward.
@@ -378,6 +398,41 @@ namespace Contigu.Presentation
         {
             ClearHover();
             HoverValidityChanged?.Invoke(false);
+        }
+
+        /// <summary>Fired by GridGapCatcher (see Build) whenever the pointer moves within the grid's overall bounds without landing on any individual cell — resolves to the nearest cell instead of leaving the hover preview stuck or blank.</summary>
+        public void OnGapPointerEnter(Vector2 localPoint)
+        {
+            var cell = NearestCell(localPoint);
+            OnCellHoverEnter(cell.x, cell.y);
+        }
+
+        /// <summary>Fired by GridGapCatcher (see Build) for a click or drag-drop that lands in the gap between cells — same "snap to the nearest cell" fallback as OnGapPointerEnter, reusing the exact same placement path a precise cell hit already uses.</summary>
+        public void OnGapPointerClick(Vector2 localPoint)
+        {
+            var cell = NearestCell(localPoint);
+            OnCellClicked(cell.x, cell.y);
+        }
+
+        /// <summary>
+        /// <paramref name="localPoint"/> is relative to the grid container's
+        /// own RectTransform (see GridGapCatcher.LocalPoint). Each cell owns
+        /// a "slot" of width/height <see cref="_cellStride"/> (its own
+        /// cellSize plus the full spacing around it) — dividing the point's
+        /// offset from the container's bottom-left corner by that stride
+        /// naturally assigns half of any gap to whichever cell is on that
+        /// side of it, then clamps to the grid's actual bounds so a point
+        /// right at the very edge (or a hair outside it, float precision)
+        /// still resolves to a real cell instead of an out-of-range index.
+        /// </summary>
+        private Vector2Int NearestCell(Vector2 localPoint)
+        {
+            var rect = _container.rect;
+            float gx = localPoint.x - rect.xMin;
+            float gy = localPoint.y - rect.yMin;
+            int cellX = Mathf.Clamp(Mathf.FloorToInt(gx / _cellStride), 0, GridManager.Size - 1);
+            int cellY = Mathf.Clamp(Mathf.FloorToInt(gy / _cellStride), 0, GridManager.Size - 1);
+            return new Vector2Int(cellX, cellY);
         }
 
         private void ClearHover()

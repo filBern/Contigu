@@ -4565,3 +4565,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (même groupe de layout, sprite bleu "Choose" plutôt que rouge
   "Cancel" puisque c'est une action positive), désactivé pendant
   l'animation d'un placement et une fois à 0 charge ou hors du round.
+- **Bug : impossible de déposer une pièce quand le curseur est dans
+  l'espace entre deux cases** (retour explicite : "lorsque j'ai une
+  pièce sélectionné et que mon curseur est entre deux ou plus case de
+  la grille, je ne peux pas déposer de pièce malgré que je suis a un
+  ou deux pixel de la case"). Root cause : chaque case n'a d'événements
+  pointeur (survol/clic/drop) que dans les limites exactes de sa propre
+  image — le petit espacement de 6px entre cases (`GridView`'s
+  `spacing`) n'est couvert par AUCUNE case, donc un clic/drop qui tombe
+  pile dans cet espace ne touche rien du tout et échoue silencieusement.
+  Corrigé en ajoutant une image invisible plein-cadre directement sur
+  le conteneur de la grille (`GridGapCatcher`, nouveau fichier) —
+  puisqu'un enfant gagne toujours le raycast sur son parent quand le
+  curseur est précisément sur lui, ça ne capte QUE les événements
+  qu'aucune case n'a reçus (donc exactement l'espace entre les cases),
+  et résout la case la plus proche via `GridView.NearestCell` (chaque
+  case possède un "slot" de largeur cellSize+spacing, donc la moitié de
+  chaque espace revient naturellement à la case adjacente). Réutilise
+  le même chemin de placement qu'un clic précis sur une case — aucun
+  changement au comportement existant quand le curseur est déjà
+  exactement sur une case.
