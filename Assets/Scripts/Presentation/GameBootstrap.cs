@@ -573,9 +573,26 @@ namespace Contigu.Presentation
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
 
-            // Hold any completed line/column visually filled (instead of
-            // instantly vanishing) while its score is still playing out.
-            _gridView.RefreshHoldingClearedCells(outcome.Placement.ClearedCells, outcome.Placement.ClearedCellColors, outcome.Placement.ClearedCellTraits);
+            // Hold any completed line/column, or a Void/Kamikaze destruction,
+            // visually filled (instead of instantly vanishing) while its
+            // score is still playing out — the destroy burst PlayPlacement
+            // Sequence spawns for each below (explicit request: "un petit
+            // vfx lorsqu'on clear une tile ou qu'on la détruit") needs a
+            // still-filled tile to play against, same as a line clear does.
+            var heldCells = new List<Vector2Int>(outcome.Placement.ClearedCells);
+            var heldColors = new List<PieceColor>(outcome.Placement.ClearedCellColors);
+            var heldTraits = new List<PieceTrait?>(outcome.Placement.ClearedCellTraits);
+            for (int i = 0; i < outcome.Placement.DestroyedCells.Count; i++)
+            {
+                var destroyedColor = outcome.Placement.DestroyedCellColors[i];
+                if (destroyedColor.HasValue)
+                {
+                    heldCells.Add(outcome.Placement.DestroyedCells[i]);
+                    heldColors.Add(destroyedColor.Value);
+                    heldTraits.Add(null);
+                }
+            }
+            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits);
             _handView.Refresh();
             RefreshShuffleButton();
             // Round/budget update immediately; the score AND Lueur numbers
@@ -769,6 +786,12 @@ namespace Contigu.Presentation
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
                 _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell, UITheme.Success);
                 _gridView.PulseCell(pos.x, pos.y);
+                // Small burst as the tile actually empties (explicit
+                // request: "un petit vfx lorsqu'on clear une tile ou qu'on
+                // la détruit") — tinted to the color it had right before
+                // clearing, same held-color source PulseCell/ClearCellVisual
+                // implicitly rely on via RefreshHoldingClearedCells.
+                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]));
                 _gridView.ClearCellVisual(pos.x, pos.y);
 
                 displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
@@ -776,6 +799,25 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
                 _comboView.PulseChips();
+
+                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
+                staggerSpeed *= ComboSpeedupFactor;
+            }
+
+            // Void Tile / Kamikaze Tile destructions — same burst as a line
+            // clear above, but with no per-cell score popup of their own
+            // (their points already showed as a single Trait ScoreEvent
+            // earlier in this sequence, at the enchanted cell, not per
+            // destroyed cell). Held visually filled until now the same way
+            // ClearedCells are (see RunManager.PlacePiece's call into
+            // RefreshHoldingClearedCells below).
+            for (int i = 0; i < placement.DestroyedCells.Count; i++)
+            {
+                var pos = placement.DestroyedCells[i];
+                var color = placement.DestroyedCellColors[i];
+                _gridView.PulseCell(pos.x, pos.y);
+                _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary);
+                _gridView.ClearCellVisual(pos.x, pos.y);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;

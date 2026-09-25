@@ -13,6 +13,10 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
         private const float PulsePeakFraction = 0.4f;
+        private const float ClearBurstDuration = 0.32f;
+        private const int ClearBurstParticleCount = 6;
+        private const float ClearBurstParticleSize = 10f;
+        private const float ClearBurstTravelDistance = 42f;
 
         public int X { get; private set; }
         public int Y { get; private set; }
@@ -271,6 +275,67 @@ namespace Contigu.Presentation
             }
             rt.localScale = Vector3.one;
             _pulseCoroutine = null;
+        }
+
+        /// <summary>
+        /// Small radial burst of fading squares in <paramref name="color"/>,
+        /// played right as this cell empties — a completed line/column
+        /// clearing, or a trait effect (Void Tile/Kamikaze Tile) destroying
+        /// it — explicit request: "un petit vfx lorsqu'on clear une tile ou
+        /// qu'on la détruit". Self-contained, fire-and-forget (unlike <see
+        /// cref="Pulse"/> it's never re-triggered mid-flight, so it doesn't
+        /// need a stored Coroutine handle to stop/restart) — spawns its own
+        /// short-lived particle children instead of animating this cell's
+        /// own transform, so it plays independently of any Pulse happening
+        /// on the same cell at the same time.
+        /// </summary>
+        public void PlayClearBurst(Color color)
+        {
+            StartCoroutine(ClearBurstRoutine(color));
+        }
+
+        private IEnumerator ClearBurstRoutine(Color color)
+        {
+            var particles = new Image[ClearBurstParticleCount];
+            var directions = new Vector2[ClearBurstParticleCount];
+            for (int i = 0; i < ClearBurstParticleCount; i++)
+            {
+                var particle = UIFactory.CreatePanel(transform, "ClearBurst", color);
+                particle.raycastTarget = false;
+                particle.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchoredPosition = Vector2.zero;
+                particle.rectTransform.sizeDelta = new Vector2(ClearBurstParticleSize, ClearBurstParticleSize);
+
+                // Evenly spread around the circle, with a little jitter so a
+                // burst never looks like a perfectly mechanical rosette.
+                float angle = (360f / ClearBurstParticleCount) * i + Random.Range(-15f, 15f);
+                directions[i] = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                particles[i] = particle;
+            }
+
+            float t = 0f;
+            while (t < ClearBurstDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / ClearBurstDuration);
+                for (int i = 0; i < particles.Length; i++)
+                {
+                    var rt = particles[i].rectTransform;
+                    rt.anchoredPosition = directions[i] * ClearBurstTravelDistance * p;
+                    float scale = Mathf.Lerp(1f, 0.2f, p);
+                    rt.localScale = new Vector3(scale, scale, 1f);
+                    var c = particles[i].color;
+                    particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
+                }
+                yield return null;
+            }
+
+            for (int i = 0; i < particles.Length; i++)
+            {
+                Destroy(particles[i].gameObject);
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData)

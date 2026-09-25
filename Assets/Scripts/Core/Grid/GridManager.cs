@@ -2792,6 +2792,13 @@ namespace Contigu.Core
         /// </summary>
         public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude)
         {
+            return ClearRandomFilledCell(rng, exclude, out _);
+        }
+
+        /// <summary>Same as the 2-argument overload, but also hands back the cleared cell's color (before it was cleared) via <paramref name="clearedColor"/> — null when nothing was eligible — so RunManager.ApplyVoidEffect can pass it on to <see cref="PlacementResult.DestroyedCellColors"/> for the presentation layer's destroy VFX.</summary>
+        public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude, out PieceColor? clearedColor)
+        {
+            clearedColor = null;
             var excludeSet = new HashSet<Vector2Int>(exclude);
             var candidates = new List<Vector2Int>();
             foreach (var pos in AllPositions())
@@ -2810,6 +2817,7 @@ namespace Contigu.Core
 
             var chosen = candidates[rng.Next(candidates.Count)];
             var chosenCell = GetCell(chosen);
+            clearedColor = chosenCell.FilledColor;
             chosenCell.ClearFill();
             return chosen;
         }

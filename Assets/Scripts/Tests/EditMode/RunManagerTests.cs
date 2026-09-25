@@ -1300,6 +1300,63 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_VoidTrait_ReportsTheDestroyedCellAndItsColor()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            // Only one pre-existing cell on the board, far from the placement
+            // itself — the single eligible candidate Void can pick, so which
+            // cell gets destroyed is deterministic despite Void's own
+            // internal randomness.
+            FillCell(run.Grid, 7, 7, PieceColor.Coral);
+
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(1, outcome.Placement.DestroyedCells.Count);
+            Assert.AreEqual(new Vector2Int(7, 7), outcome.Placement.DestroyedCells[0]);
+            Assert.AreEqual(PieceColor.Coral, outcome.Placement.DestroyedCellColors[0]);
+            Assert.IsFalse(run.Grid.GetCell(7, 7).IsFilled, "Void should have actually cleared the cell, not just reported it");
+        }
+
+        [Test]
+        public void PlacePiece_VoidTrait_ReportsNoDestroyedCells_WhenNothingElseIsEligible()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagVoidTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.DestroyedCells.Count);
+        }
+
+        [Test]
+        public void PlacePiece_KamikazeTrait_ReportsEveryDestroyedCellAndItsColor()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+
+            const int anchorX = 3;
+            const int anchorY = 3;
+            FillCell(run.Grid, anchorX - 1, anchorY, PieceColor.Teal);
+            FillCell(run.Grid, anchorX + 1, anchorY, PieceColor.Lime);
+
+            var outcome = run.PlacePiece(slot, anchorX, anchorY);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2, outcome.Placement.DestroyedCells.Count);
+            CollectionAssert.Contains(outcome.Placement.DestroyedCells, new Vector2Int(anchorX - 1, anchorY));
+            CollectionAssert.Contains(outcome.Placement.DestroyedCells, new Vector2Int(anchorX + 1, anchorY));
+            CollectionAssert.Contains(outcome.Placement.DestroyedCellColors, (PieceColor?)PieceColor.Teal);
+            CollectionAssert.Contains(outcome.Placement.DestroyedCellColors, (PieceColor?)PieceColor.Lime);
+        }
+
+        [Test]
         public void PlacePiece_TwinTrait_DuplicatesGroupShareOntoEveryOtherCellInTheGroup()
         {
             var run = new RunManager(new SystemRandomProvider(1));

@@ -143,6 +143,24 @@ namespace Contigu.Core
         public int LineClearCellCount;
 
         /// <summary>
+        /// Cell(s) destroyed by a trait effect (Void Tile's random clear,
+        /// Kamikaze Tile's surrounding-tile wipe) rather than by completing
+        /// a line — distinct from <see cref="ClearedCells"/>, which
+        /// GridManager.CheckAndClearLines alone populates. Populated by
+        /// RunManager (see ApplyVoidEffect/ApplyKamikazeEffect), same
+        /// Core-doesn't-know-about-PieceTrait split as <see
+        /// cref="TraitBonus"/> — lets the presentation layer play the same
+        /// "tile just went away" feedback (a burst VFX, see
+        /// GridCellView.PlayClearBurst) for a destroyed cell as for a
+        /// cleared one (explicit request: "un petit vfx lorsqu'on clear une
+        /// tile ou qu'on la détruit").
+        /// </summary>
+        public IReadOnlyList<Vector2Int> DestroyedCells = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Each destroyed cell's color right before it was destroyed, parallel to <see cref="DestroyedCells"/> — nullable only defensively (a destroyed cell was necessarily filled, so this should never actually be null in practice), matching <see cref="Cell.FilledColor"/>'s own type.</summary>
+        public IReadOnlyList<PieceColor?> DestroyedCellColors = System.Array.Empty<PieceColor?>();
+
+        /// <summary>
         /// "Lueur" currency earned by this placement's own line clears —
         /// completely independent of <see cref="TotalScore"/>: it's driven
         /// by color GROUPING within each cleared line (see <see

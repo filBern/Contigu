@@ -4798,3 +4798,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `Vector2.zero` (centré pile sur le coin, straddle classique : moitié
   dedans, moitié dehors) — dernier cran de rapprochement après les
   deux allers-retours précédents.
+- **VFX de destruction/clear de tuile** — demande explicite : "J'aimerais
+  un petit vfx lorsqu'on clear une tile ou qu'on la détruit". Ajoute
+  `GridCellView.PlayClearBurst(Color)`, une petite explosion radiale de
+  6 carrés qui s'écartent du centre en s'estompant et en rétrécissant
+  sur ~0.32s (même convention que `Pulse()` : coroutine autonome sur le
+  `MonoBehaviour` de la cellule, sans DOTween ni sprite dédié — aucun
+  asset "explosion"/"burst" n'existe dans le pack Colorful UI, donc
+  effet purement programmatique via des `Image` blanches teintées),
+  exposée par `GridView.PlayClearBurst(x, y, color)`.
+  - **Clear de ligne/colonne** : appelé dans la boucle de
+    `GameBootstrap.PlayPlacementSequence` qui gérait déjà
+    `PulseCell`/`ClearCellVisual` par cellule, teinté avec la couleur
+    de la cellule juste avant qu'elle se vide (`ClearedCellColors`).
+  - **Destruction par trait (Void Tile / Kamikaze Tile)** : aucune
+    infrastructure n'existait pour ça — `ApplyVoidEffect`/
+    `ApplyKamikazeEffect` (RunManager) effaçaient directement la
+    cellule dans Grid sans jamais faire remonter l'info à la
+    présentation. Ajoute `PlacementResult.DestroyedCells`/
+    `DestroyedCellColors` (même convention "populé par RunManager, pas
+    GridManager" que `TraitBonus`), peuplés via un nouveau helper
+    `RunManager.AddDestroyedCell` (même pattern que `AddTraitBonus`).
+    `GridManager.ClearRandomFilledCell` gagne une surcharge avec un
+    paramètre `out PieceColor? clearedColor` (l'ancienne signature à 2
+    arguments reste intacte pour ne pas casser les 3 tests
+    `GridManagerTests` existants). `GameBootstrap` tient maintenant ces
+    cellules visuellement remplies (`RefreshHoldingClearedCells`
+    élargi pour fusionner `ClearedCells` + `DestroyedCells`) jusqu'à
+    leur propre passage dans `PlayPlacementSequence`, où elles jouent
+    le même burst puis se vident — sans popup de score dédié (le bonus
+    Kamikaze est déjà affiché comme un seul `ScoreEvent.Trait` sur la
+    cellule enchantée, pas par cellule détruite). 4 nouveaux tests dans
+    `RunManagerTests` (`PlacePiece_VoidTrait_...`,
+    `PlacePiece_KamikazeTrait_...`) vérifient que
+    `DestroyedCells`/`DestroyedCellColors` sont bien peuplés et que la
+    cellule est réellement vidée dans `Grid`.

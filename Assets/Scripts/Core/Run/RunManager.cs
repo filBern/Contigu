@@ -707,6 +707,17 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
+        /// <summary>Records one cell a trait effect (Void Tile/Kamikaze Tile) destroyed, same mutate-the-lists-directly convention as <see cref="AddTraitBonus"/> — see <see cref="PlacementResult.DestroyedCells"/> for why this is separate from <see cref="PlacementResult.ClearedCells"/>.</summary>
+        private static void AddDestroyedCell(PlacementResult placement, Vector2Int pos, PieceColor? color)
+        {
+            var cells = new List<Vector2Int>(placement.DestroyedCells);
+            cells.Add(pos);
+            placement.DestroyedCells = cells;
+            var colors = new List<PieceColor?>(placement.DestroyedCellColors);
+            colors.Add(color);
+            placement.DestroyedCellColors = colors;
+        }
+
         // Which SlotUn/Deux/Trois modifier corresponds to each 0-based hand index.
         private static readonly ModifierId?[] HandSlotModifiers = { ModifierId.SlotUn, ModifierId.SlotDeux, ModifierId.SlotTrois };
 
@@ -980,7 +991,11 @@ namespace Contigu.Core
         /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Pure risk/utility, no score of its own; a no-op if nothing else on the grid is eligible.</summary>
         private void ApplyVoidEffect(PlacementResult placement)
         {
-            Grid.ClearRandomFilledCell(_rng, placement.PlacedCells);
+            var cleared = Grid.ClearRandomFilledCell(_rng, placement.PlacedCells, out var clearedColor);
+            if (cleared.HasValue)
+            {
+                AddDestroyedCell(placement, cleared.Value, clearedColor);
+            }
         }
 
         /// <summary>
@@ -1039,8 +1054,10 @@ namespace Contigu.Core
                         continue;
                     }
 
+                    var color = cell.FilledColor;
                     cell.ClearFill();
                     destroyed++;
+                    AddDestroyedCell(placement, pos, color);
                 }
             }
 
