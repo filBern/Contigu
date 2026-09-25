@@ -64,10 +64,20 @@ namespace Contigu.Core
         /// purchase, like Joker — see RunManager.BuyUpgradeSlot/
         /// GrantRandomModifier) since there's nothing for the player to pick:
         /// the whole point is not knowing which modifier they'll get.
+        /// Rarity bumped Uncommon -> Common (on explicit report: "Après plus
+        /// d'une dizaine de reroll je n'ai jamais eu de random modifier" —
+        /// the math checked out as unlucky-but-plausible rather than a bug,
+        /// ~15% chance of a 0-sighting streak across 12 rerolls at Uncommon,
+        /// given the shop's own 50/50 Bank/Grid pool split on top of the
+        /// weighted pick within Bank's now-5-entry pool — but the player
+        /// confirmed they wanted it more frequent regardless). Now matches
+        /// Duplicate/Joker's weight, roughly doubling its odds per upgrade
+        /// slot (~7.7% -> ~13.3%) and cutting the 12-reroll never-seen-it
+        /// chance from ~15% to ~4%.
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
-            "Grants one random modifier you don't already have. A gamble — you don't get to pick which.", false, UpgradeRarity.Uncommon);
+            "Grants one random modifier you don't already have. A gamble — you don't get to pick which.", false, UpgradeRarity.Common);
 
         // Descriptions below all follow the same short "A tile that ..."
         // pattern, describing the trait itself rather than how many pieces

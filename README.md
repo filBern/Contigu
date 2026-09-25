@@ -4626,3 +4626,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   la même mise en page que `Show`, juste le texte du modifier accordé
   à la place de l'aperçu de pièce) pour révéler quel modifier a été
   obtenu.
+- **Random Modifier trop rare : rareté Uncommon -> Common** (retour
+  explicite : "Après plus d'une dizaine de reroll je n'ai jamais eu de
+  random modifier"). Vérifié avant de coder — pas de bug de câblage
+  (bien présent dans `UpgradeCatalog.BankPool`), juste de la malchance
+  plausible : le shop pioche d'abord 50/50 entre pool Bank/Grid avant
+  de pondérer par rareté à l'intérieur du pool choisi, donc en
+  Uncommon (poids 4 sur 26 dans les 5 entrées Bank), la chance par slot
+  d'upgrade n'était que ~7.7%, avec ~15% de chance de ne jamais le voir
+  sur 12 rerolls (2 slots chacun) — confirmé par calcul avant de
+  changer quoi que ce soit. Le joueur a confirmé vouloir que ce soit
+  plus fréquent malgré tout : passé en Common (même poids que
+  Duplicate/Joker), ~13.3% par slot, ~4% de chance de ne jamais le
+  voir sur 12 rerolls.
