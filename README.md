@@ -4777,3 +4777,11 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   label ont `raycastTarget = false` — assis à moitié en dehors des
   bornes du bouton à son coin, ils intercepteraient sinon les clics
   destinés au `Button` en dessous.
+- **Position du badge ajustée** ("Encore plus en haut à droite", suite
+  à une capture d'écran montrant le badge encore surtout à l'intérieur
+  du bouton) — `anchoredPosition` du badge passe de
+  `(-ShuffleBadgeSize*0.5, -ShuffleBadgeSize*0.5)` (centré pile sur le
+  coin, mais visuellement surtout à l'intérieur vu l'arrondi du
+  bouton) à `(+ShuffleBadgeSize*0.35, +ShuffleBadgeSize*0.35)` — il
+  dépasse maintenant nettement au-delà du coin plutôt que d'être
+  presque entièrement contenu dans les bords du bouton.

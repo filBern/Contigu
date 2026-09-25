@@ -162,16 +162,20 @@ namespace Contigu.Presentation
             // bouton et qu'on mette le nombre de shuffle restant au
             // milieu") — replaces the "Shuffle (10)" label text, which
             // used to wrap to 2 lines; the button's own label is now just
-            // the static "Shuffle" set above.
-            // raycastTarget off on both — sitting half outside the button's
-            // own bounds at its corner, either would otherwise steal clicks
-            // that should reach the Button underneath instead.
+            // the static "Shuffle" set above. Pushed further past the
+            // corner (explicit follow-up: "encore plus en haut à droite")
+            // rather than sitting mostly inside the button's own bounds —
+            // a positive offset here means it now sticks out past the
+            // corner instead of being inset from it.
+            // raycastTarget off on both — sitting mostly outside the
+            // button's own bounds at its corner, either would otherwise
+            // steal clicks that should reach the Button underneath instead.
             var badge = UIFactory.CreateSlicedImage(_shuffleButton.transform, "CountBadge", UISprites.CountBadge);
             badge.raycastTarget = false;
             badge.rectTransform.anchorMin = new Vector2(1f, 1f);
             badge.rectTransform.anchorMax = new Vector2(1f, 1f);
             badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchoredPosition = new Vector2(-ShuffleBadgeSize * 0.5f, -ShuffleBadgeSize * 0.5f);
+            badge.rectTransform.anchoredPosition = new Vector2(ShuffleBadgeSize * 0.35f, ShuffleBadgeSize * 0.35f);
             badge.rectTransform.sizeDelta = new Vector2(ShuffleBadgeSize, ShuffleBadgeSize);
 
             _shuffleCountLabel = UIFactory.CreateText(badge.transform, "Count", "", 13, UITheme.TextPrimary);
