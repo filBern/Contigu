@@ -138,6 +138,19 @@ namespace Contigu.Presentation
         private void BuildShuffleButton(Transform container)
         {
             _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ChooseButtonBackground, 18);
+            // The container's VerticalLayoutGroup never sets
+            // childControlWidth/childControlHeight (stays at Unity's
+            // compiled-in false default — see Build() above), so it only
+            // ever POSITIONS a child using its LayoutElement's preferred
+            // size, it never RESIZES the child's own RectTransform to
+            // match. Every other element in this same container (the 3
+            // hand slots) sets BOTH its own sizeDelta directly AND a
+            // matching LayoutElement — missing the sizeDelta half here left
+            // the button at whatever size a freshly created RectTransform
+            // defaults to (bug report: "je ne vois pas de shuffle button"),
+            // correctly spaced in the layout but with nothing actually
+            // drawn at that size.
+            _shuffleButton.GetComponent<RectTransform>().sizeDelta = new Vector2(120f, 44f);
             var layout = _shuffleButton.gameObject.AddComponent<LayoutElement>();
             layout.preferredWidth = 120f;
             layout.preferredHeight = 44f;
