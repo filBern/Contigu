@@ -34,7 +34,6 @@ namespace Contigu.Presentation
         private const float ModifierCardTopPadding = 10f;
         private const float ModifierCardGap = 6f;
         private const float ModifierNameHeight = 26f;
-        private const int ModifierDescFontSize = 12;
         // Floor for the description box even when every current slot's
         // description happens to be very short, so the card never looks
         // collapsed.
@@ -275,36 +274,15 @@ namespace Contigu.Presentation
 
             var def = ModifierCatalog.Get(slot.ModifierId);
 
-            var nameLabel = UIFactory.CreateText(card.transform, "Name", def.Name, 16, UITheme.TextPrimary);
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -ModifierCardTopPadding);
-            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, ModifierNameHeight);
-
-            // No colored background (explicit request: "enlever le carré
-            // coloré derrière l'icon") — the card now carries the name and
-            // description as its own text, so the category-colored chip
-            // read as redundant clutter. No hover tooltip either (explicit
-            // request: "Pas besoin du tooltip sur les modifiers qu'on peut
-            // acheter dans le shop, seulement dans notre liste de modifiers
-            // possédé") — same reasoning, the card already shows its own
-            // name/description right there.
-            var badge = ModifierBadgeFactory.Create(card.transform, def, BadgeSize, _tooltip, showBackground: false, attachTooltip: false);
-            badge.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            badge.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            badge.rectTransform.pivot = new Vector2(0.5f, 1f);
-            float badgeY = -(ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap);
-            badge.rectTransform.anchoredPosition = new Vector2(0f, badgeY);
-
-            float descWidth = CardWidth - 16f;
-            var descLabel = UIFactory.CreateText(card.transform, "Desc", DescriptionTextFormatter.Colorize(def.Description), ModifierDescFontSize, UITheme.TextPrimary);
-            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, badgeY - (BadgeSize + ModifierCardGap));
-            descLabel.rectTransform.sizeDelta = new Vector2(descWidth, 0f);
-            descRect = descLabel.rectTransform;
+            // No colored background behind the badge (explicit request:
+            // "enlever le carré coloré derrière l'icon") and no hover
+            // tooltip (explicit request: "Pas besoin du tooltip sur les
+            // modifiers qu'on peut acheter dans le shop, seulement dans
+            // notre liste de modifiers possédé") — the card already shows
+            // its own name/description as static text, so both read as
+            // redundant. See ModifierCardFactory for the shared visual
+            // (also used by UpgradeRevealView's Random Modifier reveal).
+            float descHeight = ModifierCardFactory.BuildContents(card.transform, def, _tooltip, CardWidth, out descRect);
 
             int price = run.GetModifierSlotPrice(index);
             bool atCap = run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
@@ -312,14 +290,7 @@ namespace Contigu.Presentation
                 !slot.Purchased && !atCap && run.PendingUpgrade == null && run.Lueur >= price,
                 () => OnModifierBuyClicked(index));
 
-            return PreferredHeight(descLabel, descWidth);
-        }
-
-        /// <summary>Same technique as UpgradeCardFactory.PreferredHeight — the wrapped text height a Text component would need at a given width, without requiring its RectTransform to already have that width applied.</summary>
-        private static float PreferredHeight(Text text, float width)
-        {
-            var settings = text.GetGenerationSettings(new Vector2(width, 0f));
-            return text.cachedTextGenerator.GetPreferredHeight(text.text, settings);
+            return descHeight;
         }
 
         private void BuildUpgradeCard(RunManager run, int index)

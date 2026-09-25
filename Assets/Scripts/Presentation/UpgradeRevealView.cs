@@ -19,6 +19,7 @@ namespace Contigu.Presentation
     {
         private const float TitleHeight = 40f;
         private const float PreviewSize = 96f;
+        private const float ModifierCardWidth = 190f; // matches ShopView.CardWidth — same visual as a shop modifier card
         private const float OkHeight = 44f;
         private const float BlockSpacing = 24f;
         // The canvas is always exactly this tall in its own local units
@@ -93,27 +94,48 @@ namespace Contigu.Presentation
         {
             ShowInternal(def, () =>
             {
+                _previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
                 ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, null, _tooltip, null);
+                return PreviewSize;
             });
         }
 
         /// <summary>
         /// Same overlay, for the "Random Modifier" upgrade (see
         /// RunManager.LastRandomModifierGranted) — there's no piece to
-        /// preview, so this shows the granted modifier's own name/
-        /// description where the piece preview would normally go, in the
-        /// exact same box so the rest of the layout math is untouched.
+        /// preview, so this shows the granted modifier as its own shop-style
+        /// card (name/badge/description via ModifierCardFactory, the exact
+        /// same visual the shop's modifier slots use) where the piece
+        /// preview would normally go, instead of the plain unstyled text
+        /// label this used before (explicit request, after seeing it in
+        /// game: "le visuel du random modifier earned screen est pas
+        /// excellent, tu peux afficher comme une carte du shop").
         /// </summary>
         public void ShowModifierGrant(UpgradeDefinition def, ModifierDefinition grantedModifier)
         {
             ShowInternal(def, () =>
             {
-                var label = UIFactory.CreateText(_previewContainer, "GrantedModifier", grantedModifier.Name + "\n" + grantedModifier.Description, 15, UITheme.TextPrimary);
-                UIFactory.StretchFull(label.rectTransform);
+                var cardImage = UIFactory.CreateSlicedImage(_previewContainer, "GrantedModifierCard", UISprites.CardBackground);
+                cardImage.color = UITheme.Panel;
+                var outline = cardImage.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                outline.effectDistance = new Vector2(2f, -2f);
+                cardImage.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                cardImage.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                cardImage.rectTransform.pivot = new Vector2(0.5f, 1f);
+                cardImage.rectTransform.anchoredPosition = Vector2.zero;
+
+                float descHeight = ModifierCardFactory.BuildContents(cardImage.transform, grantedModifier, _tooltip, ModifierCardWidth, out var descRect);
+                descRect.sizeDelta = new Vector2(descRect.sizeDelta.x, descHeight);
+
+                float cardHeight = ModifierCardFactory.TotalHeight(descHeight);
+                cardImage.rectTransform.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
+                _previewContainer.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
+                return cardHeight;
             });
         }
 
-        private void ShowInternal(UpgradeDefinition def, Action buildPreview)
+        private void ShowInternal(UpgradeDefinition def, Func<float> buildPreview)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
             {
@@ -125,14 +147,14 @@ namespace Contigu.Presentation
             {
                 Destroy(_previewContainer.GetChild(i).gameObject);
             }
-            buildPreview();
+            float previewHeight = buildPreview();
 
             // Same measured-block-centered-in-the-overlay approach as
             // TileChoiceView.LayoutBlock — the card's height varies with the
             // description's length, so title/card/preview/OK are stacked
             // and centered using that real height rather than fixed offsets.
             float cardHeight = card.sizeDelta.y;
-            float totalHeight = TitleHeight + BlockSpacing + cardHeight + BlockSpacing + PreviewSize + BlockSpacing + OkHeight;
+            float totalHeight = TitleHeight + BlockSpacing + cardHeight + BlockSpacing + previewHeight + BlockSpacing + OkHeight;
             float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
 
             _titleRect.anchoredPosition = new Vector2(0f, topY);
@@ -142,7 +164,7 @@ namespace Contigu.Presentation
             y -= cardHeight + BlockSpacing;
 
             _previewContainer.anchoredPosition = new Vector2(0f, y);
-            y -= PreviewSize + BlockSpacing;
+            y -= previewHeight + BlockSpacing;
 
             _okRect.anchoredPosition = new Vector2(0f, y);
 

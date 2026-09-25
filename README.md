@@ -4712,3 +4712,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   du boost temporaire). Le label "Random modifier" sur la carte du shop
   (voir juste au-dessus) n'était pas concerné par cette demande et reste
   en place.
+- **Random Modifier reveal redessiné comme une carte du shop** — demande
+  explicite après avoir vu l'écran en jeu (voir capture d'écran) : "le
+  visuel du random modifier earned screen est pas excellent, tu peux
+  afficher comme une carte du shop". Le modifier octroyé apparaissait
+  jusqu'ici en texte brut non stylé (`grantedModifier.Name + "\n" +
+  grantedModifier.Description`), débordant même du cadre prévu pour les
+  descriptions longues. Extrait la construction visuelle d'une carte
+  modifier (nom, badge sans fond, description) de `ShopView.
+  BuildModifierCard` vers une nouvelle classe partagée
+  `ModifierCardFactory` (fond + contour restent la responsabilité de
+  l'appelant, puisque seul le shop a besoin d'un bouton d'achat
+  dessus) — `ShopView` l'utilise maintenant pour ses propres cartes
+  (comportement inchangé, valeurs identiques), et `UpgradeRevealView.
+  ShowModifierGrant` construit une vraie carte (fond `CardBackground`
+  teinté + contour, comme dans le shop) avec ce même factory. La carte
+  ayant une hauteur variable (contrairement au preview de pièce fixe
+  96×96 pour Joker), `UpgradeRevealView.ShowInternal` calcule
+  maintenant sa mise en page verticale à partir de la hauteur réelle du
+  preview plutôt que d'une constante fixe.
