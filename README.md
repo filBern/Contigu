@@ -4703,3 +4703,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   au reste du système mystery box (Retirer/Dupliquer/Recolorer/Joker
   restent masqués comme avant). Le poids à 100 reste en place le temps
   que la validation continue.
+- **Validation terminée** ("Ok, tu peux redescendre les odds, tout est
+  bon") — le cas spécial `GetWeight` (poids 100) est retiré de
+  `UpgradeSystem.PickWeighted`, qui revient à peser chaque entrée
+  uniquement par `UpgradeRarityUtility.GetDraftWeight(rarity)` comme
+  avant, sans branche dédiée à Random Modifier. Sa rareté reste Common
+  (décision permanente confirmée plus tôt dans cette session, distincte
+  du boost temporaire). Le label "Random modifier" sur la carte du shop
+  (voir juste au-dessus) n'était pas concerné par cette demande et reste
+  en place.

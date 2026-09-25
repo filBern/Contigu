@@ -44,40 +44,20 @@ namespace Contigu.Core
             int totalWeight = 0;
             for (int i = 0; i < pool.Count; i++)
             {
-                totalWeight += GetWeight(pool[i]);
+                totalWeight += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
             }
 
             int roll = rng.Next(totalWeight);
             int cumulative = 0;
             for (int i = 0; i < pool.Count; i++)
             {
-                cumulative += GetWeight(pool[i]);
+                cumulative += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
                 if (roll < cumulative)
                 {
                     return pool[i];
                 }
             }
             return pool[pool.Count - 1];
-        }
-
-        /// <summary>
-        /// Draft weight for one upgrade — its rarity's weight (see
-        /// UpgradeRarityUtility.GetDraftWeight), except Random Modifier
-        /// (explicit request: "Met une probabilité vraiment forte juste
-        /// pour valider" — after several rounds of "je ne l'ai toujours pas
-        /// vu" reports that F7/F8 both showed were NOT a bug, a heavily
-        /// boosted weight so the player can see it turn up naturally within
-        /// a reroll or two, no debug shortcut needed, as final confirmation).
-        /// At 100 (vs. 2/4/8 for the rest of the Bank pool), it wins ~82% of
-        /// Bank-pool rolls and ~41% of every upgrade-slot roll outright.
-        /// </summary>
-        private static int GetWeight(UpgradeDefinition upgrade)
-        {
-            if (upgrade.Id == UpgradeId.RandomModifier)
-            {
-                return 100;
-            }
-            return UpgradeRarityUtility.GetDraftWeight(upgrade.Rarity);
         }
 
         /// <summary>
