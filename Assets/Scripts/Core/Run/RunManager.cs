@@ -1449,6 +1449,23 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Debug-only helper: exercises the exact same effect + reveal-
+        /// surfacing (LastRandomModifierGranted) that buying the "Random
+        /// Modifier" upgrade for real would (see BuyUpgradeSlot), without
+        /// needing to find/afford/click it in the shop first — on explicit
+        /// report ("Encore une fois je ne les ai pas vu en plus d'une
+        /// vingtaine [rerolls]") lets the purchase+grant+reveal pipeline be
+        /// tested directly, decoupled from the shop's own roll odds and its
+        /// "mystery box" card (which never shows an upgrade's real name
+        /// before purchase in the first place — see ShopView.BuildUpgradeCard).
+        /// </summary>
+        public ModifierId? DebugTriggerRandomModifierGrant()
+        {
+            LastRandomModifierGranted = GrantRandomModifier();
+            return LastRandomModifierGranted;
+        }
+
+        /// <summary>
         /// "Random Modifier" upgrade's actual effect (see UpgradeCatalog.
         /// RandomModifier) — grants one uniformly random modifier the player
         /// doesn't already hold, from the same catalog RollModifierSlot

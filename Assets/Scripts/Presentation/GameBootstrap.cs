@@ -113,6 +113,10 @@ namespace Contigu.Presentation
         private void Update()
         {
 #if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.F8))
+            {
+                DebugTriggerRandomModifierShortcut();
+            }
             if (Input.GetKeyDown(KeyCode.F9))
             {
                 DebugForceRoundWin();
@@ -152,6 +156,29 @@ namespace Contigu.Presentation
         }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Editor-only debug shortcut (F8): directly triggers the "Random
+        /// Modifier" upgrade's grant + reveal, bypassing the shop entirely —
+        /// on explicit report ("Encore une fois je ne les ai pas vu en plus
+        /// d'une vingtaine") lets the purchase/grant/reveal pipeline be
+        /// tested with certainty, independent of the shop's own roll odds
+        /// (see RunManager.DebugTriggerRandomModifierGrant). Works any time,
+        /// not just while the shop is open, unlike a real purchase.
+        /// </summary>
+        private void DebugTriggerRandomModifierShortcut()
+        {
+            var granted = _run.DebugTriggerRandomModifierGrant();
+            RefreshAll();
+            if (_run.State == RunState.AwaitingShop)
+            {
+                _shopView.Refresh(_run);
+            }
+            if (granted.HasValue)
+            {
+                _upgradeRevealView.ShowModifierGrant(UpgradeCatalog.RandomModifier, ModifierCatalog.Get(granted.Value));
+            }
+        }
+
         /// <summary>
         /// Editor-only debug shortcut (F9): instantly completes the current
         /// round so the upgrade draft appears right away — lets upgrades be

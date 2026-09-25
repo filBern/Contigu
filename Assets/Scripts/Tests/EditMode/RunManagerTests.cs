@@ -557,6 +557,24 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void DebugTriggerRandomModifierGrant_GrantsAModifier_IndependentOfTheShop()
+        {
+            // Editor-only debug shortcut (F8) — exercises the exact same
+            // grant/reveal path BuyUpgradeSlot uses for Random Modifier,
+            // without needing the shop open or a specific slot roll (on
+            // explicit report: "Encore une fois je ne les ai pas vu en plus
+            // d'une vingtaine [rerolls]" — a way to test the pipeline with
+            // certainty, decoupled from the shop's own roll odds).
+            var run = new RunManager(new SystemRandomProvider(1));
+
+            var granted = run.DebugTriggerRandomModifierGrant();
+
+            Assert.IsTrue(granted.HasValue);
+            Assert.AreEqual(granted, run.LastRandomModifierGranted);
+            CollectionAssert.Contains(run.ActiveModifiers, granted.Value);
+        }
+
+        [Test]
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
             RunManager run = null;

@@ -4639,3 +4639,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   plus fréquent malgré tout : passé en Common (même poids que
   Duplicate/Joker), ~13.3% par slot, ~4% de chance de ne jamais le
   voir sur 12 rerolls.
+- **Toujours introuvable après le passage en Common (retour explicite :
+  "Encore une fois je ne les ai pas vu en plus d'une vingtaine")** —
+  vérifié en simulant fidèlement l'algorithme de tirage en Python :
+  avec Common, ~13.3% par slot, la chance de ne jamais le voir sur
+  20+ rerolls tombe sous 0.5%, donc statistiquement très suspect.
+  Relecture complète du code de `BuyUpgradeSlot`/`GrantRandomModifier`/
+  `OnUpgradeBuyRequested` sans trouver de bug logique. Point clé
+  découvert en creusant `ShopView.BuildUpgradeCard` : le shop est une
+  "boîte mystère" volontaire — la carte d'un upgrade Bank affiche
+  toujours le libellé générique "Piece Upgrade", jamais le nom précis,
+  même une fois achetée (le reveal se fait seulement après achat, via
+  `UpgradeRevealView`) — donc rerolliser en lisant les cartes ne
+  montrera jamais "Random Modifier" par design. Le joueur a confirmé
+  avoir aussi essayé d'acheter des Piece Upgrade sans jamais l'obtenir
+  au reveal, ce qui reste statistiquement improbable si le code est
+  correct. Faute de pouvoir reproduire/observer directement (pas
+  d'accès à Unity dans cet environnement), ajout d'un raccourci debug
+  éditeur-seulement F8 (`RunManager.DebugTriggerRandomModifierGrant`,
+  même précédent que F9/F10/F11) qui déclenche directement l'octroi +
+  le reveal sans dépendre du tirage du shop, pour isoler si le
+  problème est dans le pipeline achat/reveal ou juste la malchance/
+  malentendu sur le système de boîte mystère.
