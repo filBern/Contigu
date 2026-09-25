@@ -127,6 +127,9 @@ namespace Contigu.Core
         /// <summary>The shape most recently rolled by a Joker purchase (see BuyUpgradeSlot/UpgradeSystem.ApplyJoker) — read once by the presentation layer (UpgradeRevealView) right after the purchase to show the real piece that got added instead of just describing the upgrade in text. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
+        /// <summary>The modifier most recently granted by a "Random Modifier" purchase (see BuyUpgradeSlot/GrantRandomModifier) — read once by the presentation layer (UpgradeRevealView) right after the purchase. Null if the gamble didn't pay off (already at EconomyConstants.MaxActiveModifiers, or — practically impossible — every modifier already held), in which case the purchase still cost its Lueur but granted nothing. Meaningless before any Random Modifier purchase this run.</summary>
+        public ModifierId? LastRandomModifierGranted { get; private set; }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -1426,13 +1429,62 @@ namespace Contigu.Core
                 return true;
             }
 
-            // The only Bank-pool upgrade left with RequiresSubChoice false —
-            // see UpgradeCatalog.BankPool — is Joker, so this is always it.
-            // ApplyJoker (not the generic Apply) so the actual shape rolled
-            // can be surfaced via LastJokerShapeAdded for the reveal to show
-            // (see UpgradeRevealView) instead of just naming the upgrade.
-            LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
+            // The two Bank-pool upgrades with RequiresSubChoice false — see
+            // UpgradeCatalog.BankPool — are Joker and Random Modifier, so
+            // it's always one of these two. Each applies through its own
+            // dedicated path (ApplyJoker / GrantRandomModifier, not the
+            // generic Apply) so the actual thing rolled can be surfaced
+            // (LastJokerShapeAdded / LastRandomModifierGranted) for the
+            // reveal to show (see UpgradeRevealView) instead of just naming
+            // the upgrade.
+            if (upgrade.Id == UpgradeId.JokerPiece)
+            {
+                LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
+            }
+            else
+            {
+                LastRandomModifierGranted = GrantRandomModifier();
+            }
             return true;
+        }
+
+        /// <summary>
+        /// "Random Modifier" upgrade's actual effect (see UpgradeCatalog.
+        /// RandomModifier) — grants one uniformly random modifier the player
+        /// doesn't already hold, from the same catalog RollModifierSlot
+        /// draws from, minus its "already offered this shop visit" exclusion
+        /// (irrelevant here — nothing is being offered for sale, it's
+        /// granted outright). Updates _lastPurchasedModifierId the same way
+        /// a direct modifier-slot purchase does, so a Copieur bought right
+        /// after can copy whatever this gamble happened to grant. Returns
+        /// null — grants nothing, though the Lueur already spent on the
+        /// upgrade itself is not refunded — if the player is already at
+        /// EconomyConstants.MaxActiveModifiers or (practically impossible)
+        /// already holds every modifier in the catalog.
+        /// </summary>
+        private ModifierId? GrantRandomModifier()
+        {
+            if (_activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
+            {
+                return null;
+            }
+            var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
+            for (int i = 0; i < ModifierCatalog.All.Length; i++)
+            {
+                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id))
+                {
+                    available.Add(ModifierCatalog.All[i]);
+                }
+            }
+            if (available.Count == 0)
+            {
+                return null;
+            }
+
+            var picked = available[_rng.Next(available.Count)].Id;
+            _activeModifiers.Add(picked);
+            _lastPurchasedModifierId = picked;
+            return picked;
         }
 
         /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>

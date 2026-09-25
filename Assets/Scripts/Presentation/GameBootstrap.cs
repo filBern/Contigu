@@ -951,11 +951,22 @@ namespace Contigu.Presentation
             var pending = _run.PendingUpgrade;
             if (pending == null)
             {
-                // Bank upgrade with no sub-choice (Joker) — already applied;
-                // still show the reveal card (plus a preview of the actual
-                // piece added, see RunManager.LastJokerShapeAdded) so the
-                // player can see what it was.
-                _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
+                // A Bank upgrade with no sub-choice (Joker or Random
+                // Modifier) — already applied; still show the reveal card so
+                // the player can see what it was, with a preview of the
+                // actual piece added (Joker) or the actual modifier granted
+                // (Random Modifier). No reveal at all in the rare case the
+                // gamble didn't pay off (RunManager.LastRandomModifierGranted
+                // null — already at the modifier cap) since there's nothing
+                // to show.
+                if (revealedUpgrade.Id == UpgradeId.JokerPiece)
+                {
+                    _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
+                }
+                else if (_run.LastRandomModifierGranted.HasValue)
+                {
+                    _upgradeRevealView.ShowModifierGrant(revealedUpgrade, ModifierCatalog.Get(_run.LastRandomModifierGranted.Value));
+                }
                 return;
             }
             if (pending.Pool == UpgradePool.Grid)

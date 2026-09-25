@@ -54,6 +54,21 @@ namespace Contigu.Core
             UpgradeId.RecolorPiece, UpgradePool.Bank, "Recolor a piece",
             "Choose a piece type and a target color; one copy changes color.", true, UpgradeRarity.Uncommon);
 
+        /// <summary>
+        /// A gamble (spec extension, explicit request: "j'aimerais qu'on
+        /// rajoute random modifier dans la liste de possibilité d'apparaitre.
+        /// 3 lueurs de base pareil, c'est un gamble") — Bank pool so it
+        /// automatically shares the same base price as every other Bank
+        /// upgrade (EconomyConstants.BankUpgradeShopBasePrice) with no
+        /// special-casing needed, and no sub-choice (applies immediately on
+        /// purchase, like Joker — see RunManager.BuyUpgradeSlot/
+        /// GrantRandomModifier) since there's nothing for the player to pick:
+        /// the whole point is not knowing which modifier they'll get.
+        /// </summary>
+        public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
+            UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
+            "Grants one random modifier you don't already have. A gamble — you don't get to pick which.", false, UpgradeRarity.Uncommon);
+
         // Descriptions below all follow the same short "A tile that ..."
         // pattern, describing the trait itself rather than how many pieces
         // get it — that count is a shop mechanic (see
@@ -127,7 +142,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] All =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece,
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
@@ -136,7 +151,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier
         };
 
         public static readonly UpgradeDefinition[] GridPool =

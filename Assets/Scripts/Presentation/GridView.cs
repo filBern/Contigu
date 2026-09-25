@@ -191,6 +191,7 @@ namespace Contigu.Presentation
         public void Rebind(GridManager grid)
         {
             _grid = grid;
+            _lastHoverOrigin = null;
             ClearHover();
             Refresh();
         }
@@ -261,19 +262,48 @@ namespace Contigu.Presentation
             _selectedShape = shape;
             _selectedColor = color;
             _selectedTrait = trait;
+            _lastHoverOrigin = null;
             ClearHover();
         }
 
+        /// <summary>
+        /// The last placement ORIGIN actually rendered by OnCellHoverEnter
+        /// below (not the raw x/y it was called with — several raw cells
+        /// can resolve to the same origin, e.g. via GetPlacementOrigin's own
+        /// centering/snap logic) — null once nothing has been hovered yet,
+        /// or right after ClearHover/SetSelectedShape force the next call
+        /// to redo the work regardless.
+        /// </summary>
+        private Vector2Int? _lastHoverOrigin;
+
         public void OnCellHoverEnter(int x, int y)
         {
-            ClearHover();
             if (_selectedShape == null)
             {
+                ClearHover();
+                _lastHoverOrigin = null;
                 HoverValidityChanged?.Invoke(false);
                 return;
             }
 
             var origin = GetPlacementOrigin(x, y);
+            if (_lastHoverOrigin.HasValue && _lastHoverOrigin.Value == origin)
+            {
+                // The resolved placement spot hasn't actually changed since
+                // last time (e.g. the pointer only moved a few pixels
+                // within the same cell's gap-side margin, re-firing
+                // GridGapCatcher's per-frame OnPointerMove for the exact
+                // same nearest cell) — skip redoing the tint/pulse work so
+                // the previewed group's cells don't restart their pulse
+                // animation every single frame the mouse merely twitches
+                // (on explicit report: "les groupe bloc pulse à chaque
+                // frame que je bouge ma souris, ils ne devrait pulse que
+                // lorsque la potentielle position valide change").
+                return;
+            }
+            _lastHoverOrigin = origin;
+            ClearHover();
+
             bool valid = _grid.CanPlace(_selectedShape, origin.x, origin.y);
             var overlay = valid ? UITheme.HoverValid : UITheme.HoverInvalid;
             var offsets = _selectedShape.Cells;
@@ -396,6 +426,7 @@ namespace Contigu.Presentation
 
         public void OnCellHoverExit(int x, int y)
         {
+            _lastHoverOrigin = null;
             ClearHover();
             HoverValidityChanged?.Invoke(false);
         }

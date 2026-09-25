@@ -85,12 +85,35 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// <paramref name="pieceShape"/>/<paramref name="pieceColor"/> is the
-        /// specific piece the upgrade actually added (currently always a
-        /// Joker — see RunManager.LastJokerShapeAdded — the only Bank
-        /// upgrade this view is ever shown for), previewed below the card so
-        /// the player sees exactly what they got, not just its name.
+        /// specific piece the upgrade actually added (Joker — see
+        /// RunManager.LastJokerShapeAdded), previewed below the card so the
+        /// player sees exactly what they got, not just its name.
         /// </summary>
         public void Show(UpgradeDefinition def, ShapeId pieceShape, PieceColor pieceColor)
+        {
+            ShowInternal(def, () =>
+            {
+                ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, null, _tooltip, null);
+            });
+        }
+
+        /// <summary>
+        /// Same overlay, for the "Random Modifier" upgrade (see
+        /// RunManager.LastRandomModifierGranted) — there's no piece to
+        /// preview, so this shows the granted modifier's own name/
+        /// description where the piece preview would normally go, in the
+        /// exact same box so the rest of the layout math is untouched.
+        /// </summary>
+        public void ShowModifierGrant(UpgradeDefinition def, ModifierDefinition grantedModifier)
+        {
+            ShowInternal(def, () =>
+            {
+                var label = UIFactory.CreateText(_previewContainer, "GrantedModifier", grantedModifier.Name + "\n" + grantedModifier.Description, 15, UITheme.TextPrimary);
+                UIFactory.StretchFull(label.rectTransform);
+            });
+        }
+
+        private void ShowInternal(UpgradeDefinition def, Action buildPreview)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
             {
@@ -102,7 +125,7 @@ namespace Contigu.Presentation
             {
                 Destroy(_previewContainer.GetChild(i).gameObject);
             }
-            ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, null, _tooltip, null);
+            buildPreview();
 
             // Same measured-block-centered-in-the-overlay approach as
             // TileChoiceView.LayoutBlock — the card's height varies with the

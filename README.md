@@ -4585,3 +4585,44 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   le même chemin de placement qu'un clic précis sur une case — aucun
   changement au comportement existant quand le curseur est déjà
   exactement sur une case.
+- **Bug : les blocs du groupe prévisualisé re-pulsent à chaque frame de
+  mouvement de souris, même sans changement de position valide**
+  (retour explicite : "Dès que je bouge légèrement la souris, même si
+  la position de la pièce n'a pas bougé, les group bloc pulse a chaque
+  frame que je bouge ma souris, ils ne devrait pulse que lorsque la
+  potentielle position valide change"). Root cause : régression
+  introduite par le correctif précédent (`GridGapCatcher`) — son
+  `OnPointerMove` rappelle `OnCellHoverEnter` à CHAQUE mouvement de
+  souris dans l'espace entre les cases, et cette méthode refaisait
+  inconditionnellement tout le travail (tint + `Pulse()` sur tout le
+  groupe prévisualisé) même quand l'origine de placement résolue était
+  identique à la précédente. Corrigé en mémorisant la dernière origine
+  réellement affichée (`GridView._lastHoverOrigin`) et en sortant tôt
+  si elle n'a pas changé — ne refait le travail que lorsque
+  `GetPlacementOrigin` retourne une case différente. Réinitialisé
+  explicitement dans `SetSelectedShape`/`OnCellHoverExit`/`Rebind` pour
+  qu'une nouvelle sélection ou un ré-survol de la même case après être
+  sorti de la grille rejoue bien l'animation.
+- **Upgrade "Random Modifier" dans le shop** (demande explicite :
+  "Dans la section upgrade du shop j'aimerais qu'on rajoute random
+  modifier dans la liste de possibilité d'apparaitre. 3 lueurs de base
+  pareil, c'est un gamble"). Nouvel `UpgradeId.RandomModifier`, pool
+  Bank (hérite automatiquement du même prix de base que les 3 autres
+  upgrades Bank — `EconomyConstants.BankUpgradeShopBasePrice = 3` —
+  sans code spécifique), sans sous-choix comme Joker : s'applique
+  immédiatement à l'achat via `RunManager.GrantRandomModifier`, qui
+  pioche un modifier uniformément au hasard parmi ceux que le joueur
+  ne possède pas déjà (même logique d'exclusion que `RollModifierSlot`,
+  sans son exclusion "déjà proposé cette visite" qui n'a pas de sens
+  ici puisque rien n'est proposé à l'achat séparément) et respecte le
+  plafond `MaxActiveModifiers` — si le joueur est déjà au plafond, le
+  gamble échoue (aucun modifier accordé) mais le Lueur dépensé n'est
+  pas remboursé. `RunManager.BuyUpgradeSlot` avait un commentaire
+  explicite affirmant que Joker était "the only Bank-pool upgrade left
+  with RequiresSubChoice false" — devenu faux avec ce deuxième
+  upgrade sans sous-choix, donc la branche a dû être corrigée pour
+  distinguer les deux au lieu d'appliquer Joker inconditionnellement.
+  `UpgradeRevealView` gagne `ShowModifierGrant` (réutilise exactement
+  la même mise en page que `Show`, juste le texte du modifier accordé
+  à la place de l'aperçu de pièce) pour révéler quel modifier a été
+  obtenu.

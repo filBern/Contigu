@@ -6,13 +6,14 @@ namespace Contigu.Core
         Grid
     }
 
-    /// <summary>The 4 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>
+    /// <summary>The 5 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>
     public enum UpgradeId
     {
         RemovePiece,
         DuplicatePiece,
         JokerPiece,
         RecolorPiece,
+        RandomModifier,
         GoldenCells,
         TintedCells,
         MultiplierZone,

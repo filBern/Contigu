@@ -501,6 +501,61 @@ namespace Contigu.Tests
             Assert.AreEqual(run.LastJokerShapeAdded, addedToken.Shape, "LastJokerShapeAdded should match the piece actually added, for UpgradeRevealView to preview");
         }
 
+        /// <summary>Same seed-search trick as BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded, for the other no-sub-choice Bank upgrade (spec extension, explicit request: "j'aimerais qu'on rajoute random modifier dans la liste de possibilité d'apparaitre").</summary>
+        private static (RunManager Run, int Slot) FindRunWithUpgradeOffered(UpgradeId id, int maxSeeds)
+        {
+            for (int seed = 0; seed < maxSeeds; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == id)
+                    {
+                        return (candidate, i);
+                    }
+                }
+            }
+            return (null, -1);
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_RandomModifier_AppliesImmediately_AndGrantsAModifierNotAlreadyHeld()
+        {
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.RandomModifier, 500);
+            Assert.IsNotNull(run, "Should find a Random Modifier upgrade slot within 500 seeds");
+
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(slot);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "Random Modifier has no sub-choice, so it should apply immediately");
+            Assert.IsTrue(run.LastRandomModifierGranted.HasValue, "A fresh run is nowhere near the modifier cap, so the gamble should always pay off here");
+            CollectionAssert.Contains(run.ActiveModifiers, run.LastRandomModifierGranted.Value);
+            Assert.AreEqual(1, run.ActiveModifiers.Count);
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_RandomModifier_GrantsNothing_WhenAlreadyAtTheModifierCap()
+        {
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.RandomModifier, 500);
+            Assert.IsNotNull(run, "Should find a Random Modifier upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+
+            for (int i = 0; i < EconomyConstants.MaxActiveModifiers; i++)
+            {
+                Assert.IsTrue(run.DebugGrantModifier(ModifierCatalog.All[i].Id));
+            }
+            Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
+
+            bool bought = run.BuyUpgradeSlot(slot);
+
+            Assert.IsTrue(bought, "The purchase itself (Lueur spent) still succeeds even if the gamble grants nothing");
+            Assert.IsFalse(run.LastRandomModifierGranted.HasValue);
+            Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count, "Should not exceed the cap");
+        }
+
         [Test]
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
