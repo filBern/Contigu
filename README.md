@@ -4690,3 +4690,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ne casse pas `RollFromPool_OverManySeeds_PicksRemovePieceFarLessOften
   ThanDuplicatePiece` (le ratio relatif Duplicate/Remove reste
   inchangé, juste dilué par le même facteur) : 0 échec simulé.
+- **Confirmation organique par le joueur** (poids boosté validé : "j'ai
+  réussi a en avoir, organiquement") — mais la carte du shop affichait
+  encore "Piece upgrade" avant l'achat, le label générique du mystery
+  box (voir plus haut, `ShopView.BuildUpgradeCard`). Demande explicite :
+  "je veux que ce soit marqué random modifier, garde les odds élevé le
+  temps de valider". Random Modifier est donc la seule exception au
+  mystery box (`ShopSlot.HiddenUpgrade` — déjà résolu au tirage mais
+  jusqu'ici jamais lu par la présentation) : `BuildUpgradeCard` affiche
+  désormais "Random modifier" à la place du label de pool générique dès
+  que `slot.HiddenUpgrade.Id == UpgradeId.RandomModifier`, sans toucher
+  au reste du système mystery box (Retirer/Dupliquer/Recolorer/Joker
+  restent masqués comme avant). Le poids à 100 reste en place le temps
+  que la validation continue.

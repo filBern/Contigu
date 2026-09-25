@@ -344,8 +344,14 @@ namespace Contigu.Presentation
             // upgrade (spec: "tout ce que tu sais c'est l'upgrade se situe
             // dans quel UpgradePool"), even once purchased (the reveal
             // happens in the follow-up sub-choice/tile-choice overlay
-            // instead, not on this card).
-            var poolLabel = UIFactory.CreateText(card.transform, "Pool", UpgradeVisualDefaults.GetPoolLabel(slot.Pool) + " upgrade", 20, UITheme.TextPrimary);
+            // instead, not on this card). Random Modifier is the one
+            // exception (explicit request, while validating its boosted
+            // odds: "je veux que ce soit marqué random modifier") — it's
+            // named outright instead of showing the generic Bank-pool
+            // "Piece upgrade" label.
+            bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
+            string cardLabel = isRandomModifier ? "Random modifier" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool) + " upgrade";
+            var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
