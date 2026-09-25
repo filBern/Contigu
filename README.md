@@ -4793,3 +4793,8 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `(+ShuffleBadgeSize*0.12, ...*0.12)`, un compromis entre les deux
   itérations précédentes : toujours débordant du coin, mais collé
   contre le bouton au lieu de flotter à côté.
+- **Position du badge, 3e ajustement** ("Encore un peu plus proche") —
+  `anchoredPosition` passe de `(+ShuffleBadgeSize*0.12, ...*0.12)` à
+  `Vector2.zero` (centré pile sur le coin, straddle classique : moitié
+  dedans, moitié dehors) — dernier cran de rapprochement après les
+  deux allers-retours précédents.
