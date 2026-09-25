@@ -137,7 +137,11 @@ namespace Contigu.Presentation
         /// </summary>
         private void BuildShuffleButton(Transform container)
         {
-            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ChooseButtonBackground, 18);
+            // Font size 14, not the 18 every other button here defaults to
+            // (explicit request: "réduire le texte de shuffle un peu, il
+            // prend 2 lignes au lieu d'une") — "Shuffle (10)" wrapped inside
+            // this button's 120px width at 18.
+            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ChooseButtonBackground, 14);
             // The container's VerticalLayoutGroup never sets
             // childControlWidth/childControlHeight (stays at Unity's
             // compiled-in false default — see Build() above), so it only

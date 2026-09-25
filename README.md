@@ -4731,3 +4731,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   96×96 pour Joker), `UpgradeRevealView.ShowInternal` calcule
   maintenant sa mise en page verticale à partir de la hauteur réelle du
   preview plutôt que d'une constante fixe.
+- **Trois ajustements rapides sur le reveal Random Modifier et le
+  bouton Shuffle** (demande explicite, 3 points en une seule fois) :
+  1. *"On peut retirer la section Common - Piece upgrade dans les
+     random modifier et grossir la carte modifier dans cet écran là"*
+     — `UpgradeCardFactory.Build` gagne un paramètre `showRarity`
+     (`true` par défaut, inchangé pour Joker/Draft/TileChoice) ;
+     `UpgradeRevealView.ShowModifierGrant` passe `false` pour ne plus
+     afficher la ligne "Common · Piece upgrade" (l'upgrade elle-même
+     n'a plus besoin d'être détaillée puisque la carte du modifier
+     octroyé, juste en dessous, dit déjà tout). `ModifierCardFactory.
+     BuildContents`/`TotalHeight` gagnent des paramètres optionnels
+     (badgeSize/nameHeight/nameFontSize/descFontSize, défauts =
+     valeurs du shop, donc `ShopView` inchangé) ; `UpgradeRevealView`
+     les utilise pour agrandir la carte du modifier octroyé (260px de
+     large contre 190 dans le shop, badge 130 contre 90, texte plus
+     gros) puisque cet écran n'affiche jamais qu'une seule carte à la
+     fois — toute la place gagnée par le retrait de la ligne de rareté
+     va à elle.
+  2. *"On peut augmenter un peu les chances d'avoir un random
+     modifier"* — réintroduit un cas spécial `GetWeight` dans
+     `UpgradeSystem.PickWeighted`, cette fois modéré (poids 12 au lieu
+     de son propre poids Common de 8, contre le boost x12.5 à 100 de
+     validation qui a depuis été retiré) : fait passer ses chances
+     d'environ 13,3% à environ 17,6% par slot d'upgrade (confirmé par
+     simulation Python, 200 000 tirages).
+  3. *"On peut réduire le texte de shuffle un peu, il prend 2 lignes
+     au lieu d'une"* — taille de police du bouton Shuffle réduite de
+     18 à 14 dans `HandView.BuildShuffleButton`, pour que "Shuffle
+     (10)" tienne sur une seule ligne dans les 120px de large du
+     bouton.

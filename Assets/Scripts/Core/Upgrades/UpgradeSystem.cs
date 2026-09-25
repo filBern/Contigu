@@ -44,20 +44,40 @@ namespace Contigu.Core
             int totalWeight = 0;
             for (int i = 0; i < pool.Count; i++)
             {
-                totalWeight += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
+                totalWeight += GetWeight(pool[i]);
             }
 
             int roll = rng.Next(totalWeight);
             int cumulative = 0;
             for (int i = 0; i < pool.Count; i++)
             {
-                cumulative += UpgradeRarityUtility.GetDraftWeight(pool[i].Rarity);
+                cumulative += GetWeight(pool[i]);
                 if (roll < cumulative)
                 {
                     return pool[i];
                 }
             }
             return pool[pool.Count - 1];
+        }
+
+        /// <summary>
+        /// Draft weight for one upgrade — its rarity's weight (see
+        /// UpgradeRarityUtility.GetDraftWeight), except Random Modifier,
+        /// which gets a small permanent bump on top of its own Common
+        /// weight (explicit request: "On peut augmenter un peu les chances
+        /// d'avoir un random modifier"). At 12 (vs. Common's own 8, and
+        /// 2/4/8 for the rest of the Bank pool), it goes from ~13.3% to
+        /// ~17.6% of any upgrade-slot roll — a modest push past Duplicate/
+        /// Joker rather than the earlier x12.5 boost to 100 used purely to
+        /// validate the reveal pipeline, which has since been reverted.
+        /// </summary>
+        private static int GetWeight(UpgradeDefinition upgrade)
+        {
+            if (upgrade.Id == UpgradeId.RandomModifier)
+            {
+                return 12;
+            }
+            return UpgradeRarityUtility.GetDraftWeight(upgrade.Rarity);
         }
 
         /// <summary>

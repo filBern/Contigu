@@ -32,7 +32,8 @@ namespace Contigu.Presentation
         private const float RarityHeight = 30f;
         private const float LineSpacing = 6f;
 
-        public static RectTransform Build(Transform parent, UpgradeDefinition def)
+        /// <summary><paramref name="showRarity"/> defaults to true; UpgradeRevealView's Random Modifier reveal passes false to drop the "Common · Piece upgrade" line entirely (explicit request: "On peut retirer la section Common - Piece upgrade dans les random modifier") — that reveal already shows the granted modifier itself as a full card right below, so the upgrade's own rarity/pool reads as redundant clutter there in a way it doesn't for a plain Joker reveal.</summary>
+        public static RectTransform Build(Transform parent, UpgradeDefinition def, bool showRarity = true)
         {
             var container = UIFactory.CreateUIObject("UpgradeReveal_" + def.Id, parent);
             container.anchorMin = new Vector2(0.5f, 1f);
@@ -49,15 +50,18 @@ namespace Contigu.Presentation
             var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 33, Color.white);
             PositionRow(nameLabel, 0f, NameHeight);
 
-            var rarityLabel = UIFactory.CreateText(container, "Rarity",
-                UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                21, Color.white);
-            rarityLabel.fontStyle = FontStyle.Italic;
-            float rarityY = -(NameHeight + LineSpacing);
-            PositionRow(rarityLabel, rarityY, RarityHeight);
+            float descY = -(NameHeight + LineSpacing);
+            if (showRarity)
+            {
+                var rarityLabel = UIFactory.CreateText(container, "Rarity",
+                    UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
+                    21, Color.white);
+                rarityLabel.fontStyle = FontStyle.Italic;
+                PositionRow(rarityLabel, descY, RarityHeight);
+                descY -= (RarityHeight + LineSpacing);
+            }
 
             var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description), 23, Color.white);
-            float descY = rarityY - (RarityHeight + LineSpacing);
             float descHeight = PreferredHeight(descLabel, Width);
             PositionRow(descLabel, descY, descHeight);
 

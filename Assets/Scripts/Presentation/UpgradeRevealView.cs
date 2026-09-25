@@ -19,7 +19,16 @@ namespace Contigu.Presentation
     {
         private const float TitleHeight = 40f;
         private const float PreviewSize = 96f;
-        private const float ModifierCardWidth = 190f; // matches ShopView.CardWidth — same visual as a shop modifier card
+        // Bigger than ShopView.CardWidth (190) — this screen only ever
+        // shows one modifier card at a time, so all the extra room goes to
+        // it (explicit request: "grossir la carte modifier dans cet écran
+        // là"). Badge/name/desc scale up to match instead of just leaving
+        // more empty margin around shop-sized contents.
+        private const float ModifierCardWidth = 260f;
+        private const float ModifierCardBadgeSize = 130f;
+        private const float ModifierCardNameHeight = 32f;
+        private const int ModifierCardNameFontSize = 20;
+        private const int ModifierCardDescFontSize = 15;
         private const float OkHeight = 44f;
         private const float BlockSpacing = 24f;
         // The canvas is always exactly this tall in its own local units
@@ -105,11 +114,17 @@ namespace Contigu.Presentation
         /// RunManager.LastRandomModifierGranted) — there's no piece to
         /// preview, so this shows the granted modifier as its own shop-style
         /// card (name/badge/description via ModifierCardFactory, the exact
-        /// same visual the shop's modifier slots use) where the piece
-        /// preview would normally go, instead of the plain unstyled text
-        /// label this used before (explicit request, after seeing it in
-        /// game: "le visuel du random modifier earned screen est pas
-        /// excellent, tu peux afficher comme une carte du shop").
+        /// same visual the shop's modifier slots use, just bigger — explicit
+        /// request: "grossir la carte modifier dans cet écran là") where the
+        /// piece preview would normally go, instead of the plain unstyled
+        /// text label this used before (explicit request, after seeing it
+        /// in game: "le visuel du random modifier earned screen est pas
+        /// excellent, tu peux afficher comme une carte du shop"). The
+        /// "Common · Piece upgrade" row above (the upgrade's OWN rarity/
+        /// pool, not the granted modifier's) is dropped for this reveal
+        /// specifically (explicit request: "On peut retirer la section
+        /// Common - Piece upgrade dans les random modifier") — see
+        /// UpgradeCardFactory.Build's showRarity parameter.
         /// </summary>
         public void ShowModifierGrant(UpgradeDefinition def, ModifierDefinition grantedModifier)
         {
@@ -125,23 +140,24 @@ namespace Contigu.Presentation
                 cardImage.rectTransform.pivot = new Vector2(0.5f, 1f);
                 cardImage.rectTransform.anchoredPosition = Vector2.zero;
 
-                float descHeight = ModifierCardFactory.BuildContents(cardImage.transform, grantedModifier, _tooltip, ModifierCardWidth, out var descRect);
+                float descHeight = ModifierCardFactory.BuildContents(cardImage.transform, grantedModifier, _tooltip, ModifierCardWidth, out var descRect,
+                    ModifierCardBadgeSize, ModifierCardNameHeight, ModifierCardNameFontSize, ModifierCardDescFontSize);
                 descRect.sizeDelta = new Vector2(descRect.sizeDelta.x, descHeight);
 
-                float cardHeight = ModifierCardFactory.TotalHeight(descHeight);
+                float cardHeight = ModifierCardFactory.TotalHeight(descHeight, ModifierCardBadgeSize, ModifierCardNameHeight);
                 cardImage.rectTransform.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
                 _previewContainer.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
                 return cardHeight;
-            });
+            }, showUpgradeRarity: false);
         }
 
-        private void ShowInternal(UpgradeDefinition def, Func<float> buildPreview)
+        private void ShowInternal(UpgradeDefinition def, Func<float> buildPreview, bool showUpgradeRarity = true)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
             {
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
-            var card = UpgradeCardFactory.Build(_cardContainer, def);
+            var card = UpgradeCardFactory.Build(_cardContainer, def, showUpgradeRarity);
 
             for (int i = _previewContainer.childCount - 1; i >= 0; i--)
             {
