@@ -1,0 +1,362 @@
+using System.Collections;
+using Contigu.Core;
+using Contigu.Data;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+namespace Contigu.Presentation
+{
+    /// <summary>One clickable/hoverable/droppable cell inside <see cref="GridView"/>.</summary>
+    public sealed class GridCellView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, IDropHandler
+    {
+        private const float PulseDuration = 0.28f;
+        private const float PulsePeakScale = 1.18f;
+        private const float PulsePeakFraction = 0.4f;
+        private const float ClearBurstDuration = 0.32f;
+        private const int ClearBurstParticleCount = 6;
+        private const float ClearBurstParticleSize = 10f;
+        private const float ClearBurstTravelDistance = 42f;
+
+        public int X { get; private set; }
+        public int Y { get; private set; }
+
+        public Image Background { get; private set; }
+        private Image _fillTile;
+        private Image _badgeGolden;
+        private Image _badgeSpecial;
+        private Image _invalidMarker;
+        private Text _effectLabel;
+        private Image _badgeTraitOrigin;
+        private TraitBadgeView _traitOriginBadgeView;
+        private Image _colorblindShape;
+        private TooltipView _tooltip;
+
+        private GridView _owner;
+        private Coroutine _pulseCoroutine;
+
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, TooltipView tooltip)
+        {
+            _owner = owner;
+            X = x;
+            Y = y;
+            Background = background;
+            _fillTile = fillTile;
+            _badgeGolden = badgeGolden;
+            _badgeSpecial = badgeSpecial;
+            _invalidMarker = invalidMarker;
+            _effectLabel = effectLabel;
+            _badgeTraitOrigin = badgeTraitOrigin;
+            _colorblindShape = colorblindShape;
+            _tooltip = tooltip;
+            _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
+        }
+
+        /// <summary>
+        /// Renders this cell from <paramref name="cell"/>'s current state, unless
+        /// <paramref name="fillColorOverride"/> is given — then it's painted as
+        /// filled with that color regardless of the cell's actual (possibly
+        /// already-cleared) fill state. Used to hold a just-completed line
+        /// visually filled while its score is still being shown, before the
+        /// clear animation actually empties it (see GridView).
+        /// <paramref name="originTraitOverride"/> follows the same "held"
+        /// convention: whenever <paramref name="fillColorOverride"/> is given,
+        /// this is used instead of the cell's own (possibly already-cleared)
+        /// OriginTrait, so the trait badge disappears exactly when the clear
+        /// animation empties THIS cell rather than the instant the line clear
+        /// actually happened in Core (bug report: the badge used to vanish at
+        /// the very start of the score cascade, before the tile itself
+        /// visually cleared).
+        /// </summary>
+        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null)
+        {
+            bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
+            PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
+            PieceTrait? originTrait = fillColorOverride.HasValue ? originTraitOverride : cell.OriginTrait;
+
+            // A Bastion cell (see Cell.IsBastion) is locked AND filled at the
+            // same time — it renders like any other filled tile (plus its
+            // trait-origin badge below), not like the empty "locked obstacle"
+            // look every other locked cell gets, since it's meant to read as
+            // a permanently-scoring tile rather than dead space.
+            bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion;
+
+            if (renderAsLockedObstacle)
+            {
+                if (VisualDefaults.LockedTileSprite != null)
+                {
+                    Background.sprite = VisualDefaults.LockedTileSprite;
+                    Background.color = Color.white;
+                }
+                else
+                {
+                    Background.sprite = null;
+                    Background.color = VisualDefaults.LockedColor;
+                }
+            }
+            else if (isFilled)
+            {
+                // The shared card art (see VisualDefaults.TileSprite),
+                // tinted the pure piece color once filled — a golden cell's
+                // own background is never tinted (that would shift the
+                // piece's actual color); its golden status is conveyed by
+                // the badge and effect label below instead, which persist
+                // regardless of fill state. Falls back to the old flat fill
+                // if the sprite failed to load.
+                Background.sprite = VisualDefaults.TileSprite;
+                Background.color = VisualDefaults.GetColor(filledColor.Value);
+            }
+            else if (cell.IsGolden)
+            {
+                Background.sprite = null;
+                Background.color = Color.Lerp(VisualDefaults.EmptyCellColor, VisualDefaults.GoldenColor, 0.55f);
+            }
+            else
+            {
+                // Own natural (untinted) color, on explicit request: "une
+                // empty tile ressemble a card_bg_3.png".
+                Background.sprite = VisualDefaults.TileSprite;
+                Background.color = VisualDefaults.TileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
+            }
+
+            // Neutral frame/bevel overlay on top of the flat fill, below
+            // every badge — only shown as a fallback for an actually-filled,
+            // non-obstacle cell when TileSprite itself failed to load, since
+            // that sprite's own card border already gives filled cells the
+            // "distinct block" look this used to add on its own.
+            bool showFillTile = isFilled && !renderAsLockedObstacle && VisualDefaults.TileSprite == null && VisualDefaults.FillTileSprite != null;
+            _fillTile.gameObject.SetActive(showFillTile);
+            if (showFillTile)
+            {
+                _fillTile.sprite = VisualDefaults.FillTileSprite;
+            }
+
+            _badgeGolden.gameObject.SetActive(cell.IsGolden);
+            if (cell.IsGolden)
+            {
+                if (VisualDefaults.GoldenTileSprite != null)
+                {
+                    _badgeGolden.sprite = VisualDefaults.GoldenTileSprite;
+                    _badgeGolden.color = Color.white;
+                }
+                else
+                {
+                    _badgeGolden.sprite = null;
+                    _badgeGolden.color = VisualDefaults.GoldenColor;
+                }
+            }
+
+            bool showSpecial = cell.IsTinted || cell.IsMultiplierZone;
+            _badgeSpecial.gameObject.SetActive(showSpecial);
+            if (cell.IsMultiplierZone)
+            {
+                // Multiplier wins the badge slot visually when a cell stacks both
+                // modifiers; both bonuses still apply to scoring regardless.
+                _badgeSpecial.color = VisualDefaults.MultiplierOutline;
+            }
+            else if (cell.IsTinted)
+            {
+                _badgeSpecial.color = VisualDefaults.GetColor(cell.TintedColor);
+            }
+
+            // Cosmetic reminder of which deck upgrade originally enchanted
+            // this cell (see Cell.OriginTrait) — independent of the
+            // Golden/Tinted/MultiplierZone badges above, which most trait
+            // kinds only carry for the one placement that scores them, so
+            // this is often the only on-grid trace left of a trait pick.
+            bool showTraitOrigin = originTrait.HasValue;
+            _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
+            if (showTraitOrigin)
+            {
+                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(originTrait.Value);
+                _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
+            }
+
+            string effectText = BuildEffectLabel(cell);
+            _effectLabel.text = effectText;
+            _effectLabel.gameObject.SetActive(effectText.Length > 0);
+
+            bool showColorblindShape = ColorblindMode.IsEnabled && isFilled && !renderAsLockedObstacle;
+            _colorblindShape.gameObject.SetActive(showColorblindShape);
+            if (showColorblindShape)
+            {
+                _colorblindShape.sprite = ColorblindShapeFactory.GetShape(filledColor.Value);
+            }
+
+            // Hover-only decoration — never part of a cell's actual state, so
+            // every real render (including the one ClearHover triggers) hides
+            // it again.
+            _invalidMarker.gameObject.SetActive(false);
+        }
+
+        /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
+        private static string BuildEffectLabel(Cell cell)
+        {
+            string multiplierPart = null;
+            if (cell.IsTinted && cell.IsMultiplierZone)
+            {
+                multiplierPart = "x4";
+            }
+            else if (cell.IsTinted || cell.IsMultiplierZone)
+            {
+                multiplierPart = "x2";
+            }
+
+            if (cell.IsGolden && multiplierPart != null)
+            {
+                return "+" + ScoringConstants.GoldenCellBonus + " " + multiplierPart;
+            }
+            if (cell.IsGolden)
+            {
+                return "+" + ScoringConstants.GoldenCellBonus;
+            }
+            return multiplierPart ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Tints the cell green/red for valid/invalid placement preview —
+        /// the tile's own tinted card shape (see ApplyState) only appears
+        /// once actually placed, so hovering previews position/validity via
+        /// this overlay alone rather than the piece's own color. When
+        /// invalid, also shows a solid red marker — the background tint
+        /// alone was easy to miss. <paramref name="previewTrait"/>
+        /// additionally previews the SAME top-right trait-origin badge
+        /// <see cref="ApplyState"/> shows once placed, on the one cell that
+        /// would actually carry the placed piece's enchantment (see
+        /// PieceTrait) — used to show the old top-left/bottom-right badges
+        /// instead (whichever of Golden/Special matched the trait kind),
+        /// which put the preview in a different corner than both the
+        /// hand-slot badge and the actual placed badge (bug report: "dans la
+        /// slot le badge est en haut a gauche, dans le preview ... en bas a
+        /// droite et lorsqu'il est déposé il devient en haut a droite").
+        /// ClearHover's follow-up ApplyState call resets everything once the
+        /// hover ends.
+        /// </summary>
+        public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null)
+        {
+            if (overlay.HasValue)
+            {
+                Background.color = Color.Lerp(Background.color, overlay.Value, 0.6f);
+            }
+
+            _invalidMarker.gameObject.SetActive(!isValid);
+
+            if (isValid && previewTrait.HasValue)
+            {
+                var trait = previewTrait.Value;
+                _badgeTraitOrigin.gameObject.SetActive(true);
+                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
+            }
+        }
+
+        /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points, or when it's previewed as part of the prospective group while hovering a valid placement (see GridView.OnCellHoverEnter).</summary>
+        public void Pulse()
+        {
+            if (_pulseCoroutine != null)
+            {
+                StopCoroutine(_pulseCoroutine);
+            }
+            _pulseCoroutine = StartCoroutine(PulseRoutine());
+        }
+
+        private IEnumerator PulseRoutine()
+        {
+            var rt = (RectTransform)transform;
+            float t = 0f;
+            while (t < PulseDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / PulseDuration);
+                float scale = p < PulsePeakFraction
+                    ? Mathf.Lerp(1f, PulsePeakScale, p / PulsePeakFraction)
+                    : Mathf.Lerp(PulsePeakScale, 1f, (p - PulsePeakFraction) / (1f - PulsePeakFraction));
+                rt.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _pulseCoroutine = null;
+        }
+
+        /// <summary>
+        /// Small radial burst of fading squares in <paramref name="color"/>,
+        /// played right as this cell empties — a completed line/column
+        /// clearing, or a trait effect (Void Tile/Kamikaze Tile) destroying
+        /// it — explicit request: "un petit vfx lorsqu'on clear une tile ou
+        /// qu'on la détruit". Self-contained, fire-and-forget (unlike <see
+        /// cref="Pulse"/> it's never re-triggered mid-flight, so it doesn't
+        /// need a stored Coroutine handle to stop/restart) — spawns its own
+        /// short-lived particle children instead of animating this cell's
+        /// own transform, so it plays independently of any Pulse happening
+        /// on the same cell at the same time.
+        /// </summary>
+        public void PlayClearBurst(Color color)
+        {
+            StartCoroutine(ClearBurstRoutine(color));
+        }
+
+        private IEnumerator ClearBurstRoutine(Color color)
+        {
+            var particles = new Image[ClearBurstParticleCount];
+            var directions = new Vector2[ClearBurstParticleCount];
+            for (int i = 0; i < ClearBurstParticleCount; i++)
+            {
+                var particle = UIFactory.CreatePanel(transform, "ClearBurst", color);
+                particle.raycastTarget = false;
+                particle.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchoredPosition = Vector2.zero;
+                particle.rectTransform.sizeDelta = new Vector2(ClearBurstParticleSize, ClearBurstParticleSize);
+
+                // Evenly spread around the circle, with a little jitter so a
+                // burst never looks like a perfectly mechanical rosette.
+                float angle = (360f / ClearBurstParticleCount) * i + Random.Range(-15f, 15f);
+                directions[i] = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                particles[i] = particle;
+            }
+
+            float t = 0f;
+            while (t < ClearBurstDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / ClearBurstDuration);
+                for (int i = 0; i < particles.Length; i++)
+                {
+                    var rt = particles[i].rectTransform;
+                    rt.anchoredPosition = directions[i] * ClearBurstTravelDistance * p;
+                    float scale = Mathf.Lerp(1f, 0.2f, p);
+                    rt.localScale = new Vector3(scale, scale, 1f);
+                    var c = particles[i].color;
+                    particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
+                }
+                yield return null;
+            }
+
+            for (int i = 0; i < particles.Length; i++)
+            {
+                Destroy(particles[i].gameObject);
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (_owner != null) _owner.OnCellHoverEnter(X, Y);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (_owner != null) _owner.OnCellHoverExit(X, Y);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (_owner != null) _owner.OnCellClicked(X, Y);
+        }
+
+        /// <summary>Fired by Unity's EventSystem when a drag (see HandSlotDragHandler) is released over this cell — reuses the exact same placement path as a plain click.</summary>
+        public void OnDrop(PointerEventData eventData)
+        {
+            if (_owner != null) _owner.OnCellClicked(X, Y);
+        }
+    }
+}
