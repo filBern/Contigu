@@ -4913,3 +4913,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   logique stop-et-relance qu'un pulse re-déclenché en cours d'animation
   (survoler rapidement plusieurs fois relance proprement sans jamais
   laisser l'échelle bloquée hors de 1).
+- **Icône losange au lieu du texte "Lueur:"** — demande explicite après
+  avoir vu les maquettes de la page Itch : "au lieu de marquer Lueur:
+  dans le jeu tu peux retirer Lueur et mettre le petit losange orange
+  comme dans ton screenshot 4" (le mockup `gameplay.png`, qui affichait
+  un losange doré suivi du nombre). Aucun sprite gemme/losange
+  n'existant dans le pack Colorful UI, l'icône est un simple carré
+  (`Image` uni) teinté `VisualDefaults.GoldenColor` et pivoté à 45°.
+  Appliqué aux deux endroits qui affichaient ce texte : `HudView`
+  (readout principal, 44pt) et `ShopView` (sous-titre du shop, 20pt).
+  Dans les deux cas, icône + nombre vivent dans un même conteneur
+  `HorizontalLayoutGroup` + `ContentSizeFitter` (même pattern que le
+  conteneur de la main dans `HandView`) plutôt qu'un décalage fixe,
+  pour que la paire reste centrée peu importe le nombre de chiffres.
+  `HudView.LueurLabelTransform` (la cible des popups Lueur volants)
+  pointe maintenant vers ce conteneur plutôt que vers le seul texte, et
+  `PulseLueurRoutine` anime le conteneur entier — icône et nombre
+  pulsent ensemble comme une seule unité visuelle.

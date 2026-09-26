@@ -39,6 +39,7 @@ namespace Contigu.Presentation
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
         private Text _piecesLabel;
+        private RectTransform _lueurContainer;
         private Text _lueurLabel;
         private int _lastLueur;
         private Coroutine _lueurPulseCoroutine;
@@ -55,13 +56,45 @@ namespace Contigu.Presentation
             // 2x plus gros") — Lueur is a whole-run currency (see
             // RunManager.Lueur), not tied to either bar's own round-scoped
             // progress, so it gets its own spot rather than folding into the
-            // score bar's label.
-            _lueurLabel = UIFactory.CreateText(parent, "LueurLabel", "", 44, VisualDefaults.GoldenColor);
-            _lueurLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.anchoredPosition = new Vector2(0f, LueurLabelY);
-            _lueurLabel.rectTransform.sizeDelta = new Vector2(450f, 48f);
+            // score bar's label. The "Lueur: " text prefix is gone (explicit
+            // request, after seeing the itch page mockups: "au lieu de
+            // marquer Lueur: ... mettre le petit losange orange") — a small
+            // rotated-square "diamond" icon stands in for it instead, since
+            // no gem/diamond sprite exists in the Colorful UI pack. Icon and
+            // number live in their own HorizontalLayoutGroup container
+            // (ContentSizeFitter-driven, same auto-width-stays-centered
+            // pattern as HandView's hand container) so the pair re-centers
+            // itself as the number's digit count changes, rather than the
+            // icon sitting at a fixed offset from a text block whose width
+            // varies.
+            _lueurContainer = UIFactory.CreateUIObject("LueurContainer", parent);
+            _lueurContainer.anchorMin = new Vector2(0.5f, 1f);
+            _lueurContainer.anchorMax = new Vector2(0.5f, 1f);
+            _lueurContainer.pivot = new Vector2(0.5f, 1f);
+            _lueurContainer.anchoredPosition = new Vector2(0f, LueurLabelY);
+            var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            lueurLayout.spacing = 10f;
+            lueurLayout.childAlignment = TextAnchor.MiddleCenter;
+            lueurLayout.childForceExpandWidth = false;
+            lueurLayout.childForceExpandHeight = false;
+            var lueurFitter = _lueurContainer.gameObject.AddComponent<ContentSizeFitter>();
+            lueurFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
+            lueurIcon.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            // Plain Image has no ILayoutElement, so without this the
+            // HorizontalLayoutGroup gives it zero width to work with (same
+            // gotcha as HandView's Shuffle button — see BuildShuffleButton).
+            // Sized a bit larger than the 22px square itself to leave room
+            // for the diamond's rotated corners (22 * sqrt(2) ≈ 31px
+            // diagonal) without crowding the number next to it.
+            var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
+            lueurIconLayout.preferredWidth = 34f;
+            lueurIconLayout.preferredHeight = 34f;
+
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 44, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
 
             BuildScoringBaseline(parent);
@@ -151,10 +184,10 @@ namespace Contigu.Presentation
             fillRect.anchorMax = max;
         }
 
-        /// <summary>Anchor for the Lueur label — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence) instead of just adding the total in one lump sum.</summary>
+        /// <summary>Anchor for the Lueur readout (icon + number together) — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence) instead of just adding the total in one lump sum.</summary>
         public RectTransform LueurLabelTransform
         {
-            get { return _lueurLabel.rectTransform; }
+            get { return _lueurContainer; }
         }
 
         public void Refresh(RunManager run)
@@ -176,7 +209,7 @@ namespace Contigu.Presentation
         /// </summary>
         public void SetLueur(int lueur)
         {
-            _lueurLabel.text = "Lueur: " + lueur;
+            _lueurLabel.text = lueur.ToString();
             if (lueur > _lastLueur)
             {
                 PulseLueur();
@@ -200,7 +233,7 @@ namespace Contigu.Presentation
 
         private IEnumerator PulseLueurRoutine()
         {
-            var rt = _lueurLabel.rectTransform;
+            var rt = _lueurContainer;
             float t = 0f;
             while (t < LueurPulseDuration)
             {

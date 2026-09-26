@@ -80,12 +80,33 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -24f);
             header.rectTransform.sizeDelta = new Vector2(900f, 36f);
 
-            _lueurLabel = UIFactory.CreateText(_root, "Lueur", "", 20, VisualDefaults.GoldenColor);
-            _lueurLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _lueurLabel.rectTransform.anchoredPosition = new Vector2(0f, -62f);
-            _lueurLabel.rectTransform.sizeDelta = new Vector2(900f, 28f);
+            // Same "diamond icon instead of a 'Lueur: ' text prefix" treatment
+            // as HudView's own Lueur readout (explicit request, after seeing
+            // the itch page mockups: "au lieu de marquer Lueur: ... mettre le
+            // petit losange orange") — kept consistent across every screen
+            // that shows this currency rather than fixing only the HUD.
+            var lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
+            lueurContainer.anchorMin = new Vector2(0.5f, 1f);
+            lueurContainer.anchorMax = new Vector2(0.5f, 1f);
+            lueurContainer.pivot = new Vector2(0.5f, 1f);
+            lueurContainer.anchoredPosition = new Vector2(0f, -62f);
+            var lueurLayout = lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            lueurLayout.spacing = 6f;
+            lueurLayout.childAlignment = TextAnchor.MiddleCenter;
+            lueurLayout.childForceExpandWidth = false;
+            lueurLayout.childForceExpandHeight = false;
+            var lueurFitter = lueurContainer.gameObject.AddComponent<ContentSizeFitter>();
+            lueurFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var lueurIcon = UIFactory.CreatePanel(lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
+            lueurIcon.rectTransform.sizeDelta = new Vector2(12f, 12f);
+            lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
+            lueurIconLayout.preferredWidth = 20f;
+            lueurIconLayout.preferredHeight = 20f;
+
+            _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 20, VisualDefaults.GoldenColor);
 
             var modifierSection = UIFactory.CreateText(_root, "ModifierLabel", "Modifiers", 16, UITheme.TextMuted);
             modifierSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -176,7 +197,7 @@ namespace Contigu.Presentation
         /// <summary>Rebuilds every card from the run's current shop state — called on Show and after every purchase/reroll so prices, affordability and "sold" states stay accurate.</summary>
         public void Refresh(RunManager run)
         {
-            _lueurLabel.text = "Lueur: " + run.Lueur;
+            _lueurLabel.text = run.Lueur.ToString();
 
             float modifierCardHeight = BuildModifierCards(run);
             float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
