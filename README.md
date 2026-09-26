@@ -4861,3 +4861,46 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `GameBootstrap.OnMainMenuPlayClicked` cache le menu et affiche
     `ChallengeSelectView` exactement comme avant (aucun changement à
     ce qui se passait déjà après ce point).
+- **Menu Settings : volume (Master/Music/SFX) + checkbox daltonisme**
+  — demande explicite : "un menu settings pour gérer le volume de
+  musique, de sfx, général et une checkbox pour daltonisme". Avant
+  d'écrire une seule ligne, vérifié par grep sur tout le projet qu'il
+  n'existe **aucun système audio du tout** (aucun `AudioSource`/
+  `AudioClip`/`AudioMixer`, aucun fichier son, aucun mixer) — Contigu
+  est un jeu entièrement silencieux aujourd'hui. Plutôt que de refuser
+  la demande ou d'inventer un faux pipeline audio, le menu est quand
+  même construit en entier : c'est la bonne UI, prête à brancher un
+  vrai système audio plus tard, avec une seule limite honnête décrite
+  ci-dessous.
+  - Nouveau `VolumeSettings` (classe statique, même pattern
+    PlayerPrefs-et-charge-une-fois que `ColorblindMode`) persiste
+    `MasterVolume`/`MusicVolume`/`SfxVolume` (floats 0-1, défaut 1) et
+    expose un event `Changed`. Nommé `VolumeSettings` plutôt que
+    `AudioSettings` pour éviter toute collision avec la vraie classe
+    statique `UnityEngine.AudioSettings`.
+  - **Master Volume est le seul des trois à faire quelque chose
+    d'audible dès maintenant** : `GameBootstrap.ApplyVolumeSettings`
+    l'applique à `AudioListener.volume` (qui atténue TOUTE la scène,
+    même sans le moindre clip chargé) à chaque changement, plus une
+    fois au lancement. Music/SFX n'ont pas de bus séparé sans
+    `AudioMixer` pour les recevoir — ils sont donc bien persistés et
+    prêts à l'emploi, mais n'ont aucun effet audible pour l'instant
+    (documenté en détail dans le commentaire de `VolumeSettings`).
+  - Nouveau `SettingsView` (overlay plein écran, même pattern Build/
+    Show/Hide que `TutorialView`/`ChallengeSelectView`), avec 3
+    rangées volume + une rangée checkbox, toutes alignées sur la même
+    grille à 3 colonnes (label/contrôle/valeur). Les 3 sliders sont de
+    vrais `UnityEngine.UI.Slider` (les premiers du projet — toutes les
+    barres du HUD existantes sont des fill-rects codés à la main,
+    jamais draggables) construits à partir des sprites Colorful UI
+    existants (`UISprites.BarTrack` + 3 fills de couleurs différentes
+    + un handle rond `Ellipse 20`) ; la checkbox daltonisme est un
+    simple bouton carré (aucun sprite de coche dans le pack Colorful
+    UI) teinté + un "X" littéral quand coché, branché directement sur
+    `ColorblindMode.Toggle()` — exactement le même état que la
+    touche C, pas un état séparé.
+  - Ouvert via la touche **Échap** (`SettingsView.Toggle()`), même
+    convention "toujours accessible, pas juste en éditeur" que Tab/C/H
+    — mention ajoutée aux deux endroits où les autres raccourcis sont
+    déjà documentés (`HudView`'s bullet-point baseline, la ligne de
+    fermeture de `TutorialView`).

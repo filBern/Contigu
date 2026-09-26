@@ -91,7 +91,8 @@ namespace Contigu.Presentation
                 "• Shuffle: re-roll your hand, limited uses per run",
                 "• Tab: view piece deck",
                 "• C: toggle colorblind mode",
-                "• H: show the rules again"
+                "• H: show the rules again",
+                "• Esc: settings"
             };
             string text = DescriptionTextFormatter.Colorize(lines[0]);
             for (int i = 1; i < lines.Length; i++)

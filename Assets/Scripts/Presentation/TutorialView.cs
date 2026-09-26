@@ -89,7 +89,7 @@ namespace Contigu.Presentation
                 string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + DescriptionTextFormatter.Colorize(sections[i].Body);
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\n" + DescriptionTextFormatter.Colorize("Tab: view your deck · C: colorblind mode · H: show this screen again");
+            text += "\n\n" + DescriptionTextFormatter.Colorize("Tab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings");
             return text;
         }
     }

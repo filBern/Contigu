@@ -59,6 +59,7 @@ namespace Contigu.Presentation
         private TutorialView _tutorialView;
         private ChallengeSelectView _challengeSelectView;
         private MainMenuView _mainMenuView;
+        private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -86,6 +87,14 @@ namespace Contigu.Presentation
             // will render correctly the next time it's shown anyway.
             ColorblindMode.Changed += OnColorblindModeChanged;
 
+            // Applies the persisted Master volume immediately at launch,
+            // then again any time SettingsView's slider changes it — the
+            // only one of the 3 volume sliders with anything to actually
+            // drive today (see VolumeSettings's own doc comment for why
+            // Music/SFX don't do anything audible yet).
+            VolumeSettings.Changed += ApplyVolumeSettings;
+            ApplyVolumeSettings();
+
             // Main menu is now the actual first thing shown at every launch
             // (spec extension, explicit request — "un main menu" spelling
             // the game's own name in colored tiles) — its "Jouer" button
@@ -107,6 +116,12 @@ namespace Contigu.Presentation
             // locked in — the game previously had zero in-game rules
             // explanation anywhere.
             _challengeSelectView.Show(_metaStats);
+        }
+
+        /// <summary>Scales every AudioSource in the scene (see AudioListener.volume) by VolumeSettings.MasterVolume — real, immediate effect even with zero clips loaded yet, unlike Music/SFX which have no bus of their own to attenuate without an AudioMixer.</summary>
+        private static void ApplyVolumeSettings()
+        {
+            AudioListener.volume = VolumeSettings.MasterVolume;
         }
 
         private void OnColorblindModeChanged()
@@ -168,6 +183,13 @@ namespace Contigu.Presentation
             if (Input.GetKeyDown(KeyCode.H))
             {
                 _tutorialView.Show();
+            }
+            // Escape toggles the Settings overlay (see SettingsView) — same
+            // "always-available" reasoning as Tab/C/H above; free key, no
+            // existing binding anywhere else in this codebase.
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                _settingsView.Toggle();
             }
         }
 
@@ -482,6 +504,9 @@ namespace Contigu.Presentation
 
             _mainMenuView = gameObject.AddComponent<MainMenuView>();
             _mainMenuView.Build(mainRoot);
+
+            _settingsView = gameObject.AddComponent<SettingsView>();
+            _settingsView.Build(mainRoot);
         }
 
         private void WireEvents()

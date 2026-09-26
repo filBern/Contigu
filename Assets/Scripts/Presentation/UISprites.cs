@@ -22,6 +22,8 @@ namespace Contigu.Presentation
         private static Sprite _chooseButtonBackground;
         private static Sprite _cancelButtonBackground;
         private static Sprite _countBadge;
+        private static Sprite _sfxBarFill;
+        private static Sprite _sliderHandle;
 
         /// <summary>Shared rounded-pill track behind both HUD progress bars.</summary>
         public static Sprite BarTrack
@@ -76,6 +78,18 @@ namespace Contigu.Presentation
         public static Sprite CountBadge
         {
             get { return _countBadge != null ? _countBadge : (_countBadge = Resources.Load<Sprite>(SliderPath + "Ellipse 19")); }
+        }
+
+        /// <summary>Fill for the SFX volume slider (SettingsView) — a third color distinct from ScoreBarFill (Master)/PiecesBarFill (Music) so the 3 sliders stay visually distinguishable at a glance.</summary>
+        public static Sprite SfxBarFill
+        {
+            get { return _sfxBarFill != null ? _sfxBarFill : (_sfxBarFill = Resources.Load<Sprite>(SliderPath + "greenBarFill")); }
+        }
+
+        /// <summary>Round knob for every UnityEngine.UI.Slider in SettingsView (Master/Music/SFX volume) — same "Ellipse" family already used for HandView's Shuffle count badge.</summary>
+        public static Sprite SliderHandle
+        {
+            get { return _sliderHandle != null ? _sliderHandle : (_sliderHandle = Resources.Load<Sprite>(SliderPath + "Ellipse 20")); }
         }
     }
 }
