@@ -58,6 +58,7 @@ namespace Contigu.Presentation
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
         private ChallengeSelectView _challengeSelectView;
+        private MainMenuView _mainMenuView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -85,9 +86,20 @@ namespace Contigu.Presentation
             // will render correctly the next time it's shown anyway.
             ColorblindMode.Changed += OnColorblindModeChanged;
 
+            // Main menu is now the actual first thing shown at every launch
+            // (spec extension, explicit request — "un main menu" spelling
+            // the game's own name in colored tiles) — its "Jouer" button
+            // (see OnMainMenuPlayClicked) reveals ChallengeSelectView
+            // exactly where it used to show immediately on its own.
+            _mainMenuView.Show();
+        }
+
+        private void OnMainMenuPlayClicked()
+        {
+            _mainMenuView.Hide();
             // Shown at every launch (not just the first ever one — see
             // ChallengeSelectView), blocking, on top of the Classic run
-            // just built above: OnChallengeChosen replaces it with
+            // built in Awake above: OnChallengeChosen replaces it with
             // whichever challenge is actually picked, even Classic again,
             // so nothing about that initial run is ever actually played.
             // TutorialView's own first-launch auto-show (see
@@ -467,10 +479,14 @@ namespace Contigu.Presentation
 
             _challengeSelectView = gameObject.AddComponent<ChallengeSelectView>();
             _challengeSelectView.Build(mainRoot);
+
+            _mainMenuView = gameObject.AddComponent<MainMenuView>();
+            _mainMenuView.Build(mainRoot);
         }
 
         private void WireEvents()
         {
+            _mainMenuView.PlayClicked += OnMainMenuPlayClicked;
             _gridView.CellClicked += OnCellClicked;
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;

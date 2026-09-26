@@ -4833,3 +4833,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `PlacePiece_KamikazeTrait_...`) vérifient que
     `DestroyedCells`/`DestroyedCellColors` sont bien peuplés et que la
     cellule est réellement vidée dans `Grid`.
+- **Main menu : titre "CONTIGU" en tuiles colorées, hover = recolore**
+  — demande explicite : "On va écrire le nom du jeu Contigu. Écrit
+  avec des tuiles rempli de couleur random a chaque fois. J'aimerais
+  que lorsqu'un hover sur une tuile, on change sa couleur de manière
+  random (une des trois autres couleur)". Nouveau `MainMenuView`,
+  maintenant le tout premier écran affiché au lancement (avant
+  `ChallengeSelectView`, qui n'apparaît plus qu'après avoir cliqué
+  "Jouer") — pas de fond opaque à lui, l'`AnimatedBackgroundView`
+  existant (déjà construit derrière tout le canvas) reste visible
+  derrière le titre, exactement comme partout ailleurs.
+  - `TitleTileFont` définit une police point-matrix 5×7 simple pour
+    les 7 lettres distinctes de CONTIGU (C/O/N/T/I/G/U), en dur sous
+    forme de grilles de chaînes `"#"`/`"."` par lettre.
+    `MainMenuView.BuildTitle` instancie une tuile (même sprite/
+    apparence `VisualDefaults.TileSprite` que les vraies cases de
+    grille) pour chaque case remplie de chaque lettre, lettres
+    espacées d'une colonne vide, le tout centré à l'écran.
+  - `TitleTileView` (un composant par tuile) tire une couleur
+    initiale aléatoire parmi les 4 vraies couleurs du plateau (Coral/
+    Teal/Violet/Lime — Joker exclu, ce n'est pas une couleur de tuile
+    peignable) au moment de la construction, et sur `OnPointerEnter`
+    (hover), retire une couleur aléatoire PARMI LES 3 AUTRES (boucle
+    `do/while` qui rejette si le tirage retombe sur la couleur
+    actuelle) — satisfait exactement "une des trois autres couleur".
+  - Bouton "Jouer" sous le titre : `MainMenuView.PlayClicked` →
+    `GameBootstrap.OnMainMenuPlayClicked` cache le menu et affiche
+    `ChallengeSelectView` exactement comme avant (aucun changement à
+    ce qui se passait déjà après ce point).
