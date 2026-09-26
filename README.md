@@ -4904,3 +4904,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     — mention ajoutée aux deux endroits où les autres raccourcis sont
     déjà documentés (`HudView`'s bullet-point baseline, la ligne de
     fermeture de `TutorialView`).
+- **Pulse au hover sur les tuiles du titre du main menu** — demande
+  explicite de suivi : "j'aimerais rajouter le petit pulse on hover
+  dans le nom dans le menu". `TitleTileView` gagne exactement le même
+  pulse (constantes/coroutine identiques : 0.28s, pic d'échelle 1.18,
+  40% montée / 60% descente) que `GridCellView.Pulse` — déclenché dans
+  `OnPointerEnter` juste après le retint de couleur, sur la même
+  logique stop-et-relance qu'un pulse re-déclenché en cours d'animation
+  (survoler rapidement plusieurs fois relance proprement sans jamais
+  laisser l'échelle bloquée hors de 1).
