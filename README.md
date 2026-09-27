@@ -5071,3 +5071,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      placé quelques crans avant la fin du reel (pas le tout dernier),
      laissant une poignée de badges de remplissage visibles après lui
      une fois le spin arrêté.
+- **Titre du menu : moins de tuiles, plus grandes ; boutons Settings et
+  Exit manquants** — retour explicite après capture d'écran du menu
+  principal : "Divize par deux le nombre de petit carré dans le titre
+  mais multiplie par deux la taille des tuiles. D'ailleurs il manque le
+  bouton pour les settings et le bouton Exit". Deux changements
+  indépendants :
+  1. `MainMenuView` : `Thickness` (le cluster de tuiles par cellule de
+     police introduit pour "deux blocs d'épaisseur") repasse de 2 à 1,
+     et `TileSize` double de 14 à 28 — moitié moins de tuiles, chacune
+     deux fois plus grande, au lieu de 4x plus de tuiles à la taille
+     d'origine. Le mécanisme `Thickness` reste en place (fonctionne
+     correctement à 1, juste une boucle interne qui ne fait plus qu'une
+     itération) plutôt que d'être retiré, au cas où l'épaisseur soit
+     retouchée à nouveau plus tard. Décalages verticaux du titre/bouton
+     "Jouer" réajustés pour la nouvelle hauteur du logo (208 au lieu de
+     222) et pour faire de la place aux deux nouveaux boutons en
+     dessous.
+  2. Le menu principal vivant maintenant dans sa propre scène
+     (`MainMenuBootstrap`, voir plus haut), il n'avait plus aucun moyen
+     d'ouvrir les réglages (avant, seulement via Échap, et uniquement
+     dans la scène de jeu) ni de quitter le jeu. `MainMenuView` gagne
+     deux nouveaux boutons ("Settings", "Exit", sous "Jouer") et deux
+     nouveaux événements (`SettingsClicked`, `ExitClicked`) — `MainMenuView`
+     reste responsable uniquement des events, exactement comme
+     `PlayClicked` déjà géré par `MainMenuBootstrap`.
+     `MainMenuBootstrap` construit sa propre instance de `SettingsView`
+     (un overlay autonome, sans état propre au-delà des classes statiques
+     `VolumeSettings`/`ColorblindMode` déjà persistées via PlayerPrefs —
+     donc sûr d'en construire une seconde instance dans cette scène en
+     plus de celle de `GameBootstrap`) et l'ouvre/ferme au clic sur
+     "Settings" (`SettingsView.Toggle()`), et appelle
+     `Application.Quit()` au clic sur "Exit" (avec le
+     `UnityEditor.EditorApplication.isPlaying = false` habituel sous
+     `#if UNITY_EDITOR`, `Application.Quit()` seul étant un no-op dans
+     l'Éditeur).

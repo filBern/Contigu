@@ -22,6 +22,7 @@ namespace Contigu.Presentation
         private const string GameplaySceneName = "Main";
 
         private MainMenuView _mainMenuView;
+        private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
 
         private void Awake()
@@ -29,15 +30,34 @@ namespace Contigu.Presentation
             EnsureEventSystem();
             var canvasRect = BuildCanvas();
 
+            // Its own SettingsView instance — Settings is a plain,
+            // self-contained overlay (Master/Music/SFX volume + colorblind
+            // toggle, all persisted via static PlayerPrefs-backed classes),
+            // so building a second one here alongside GameBootstrap's is
+            // safe: neither carries any state of its own beyond what those
+            // static classes already own.
+            _settingsView = gameObject.AddComponent<SettingsView>();
+            _settingsView.Build(canvasRect);
+
             _mainMenuView = gameObject.AddComponent<MainMenuView>();
             _mainMenuView.Build(canvasRect);
             _mainMenuView.PlayClicked += OnPlayClicked;
+            _mainMenuView.SettingsClicked += _settingsView.Toggle;
+            _mainMenuView.ExitClicked += OnExitClicked;
             _mainMenuView.Show();
         }
 
         private void OnPlayClicked()
         {
             SceneManager.LoadScene(GameplaySceneName);
+        }
+
+        private static void OnExitClicked()
+        {
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
 
         private static void EnsureEventSystem()
