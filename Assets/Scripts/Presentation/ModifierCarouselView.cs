@@ -52,9 +52,6 @@ namespace Contigu.Presentation
         /// <summary>Fires once the player dismisses the reveal.</summary>
         public event Action Dismissed;
 
-        /// <summary>Fires, in real time as the reel spins, every time the badge centered under the highlight frame changes — lets a caller (see GameBootstrap/ModifierPanelView.ShowSpinPlaceholder) mirror this exact spin elsewhere on screen instead of that spot just sitting empty (explicit request: "l'endroit ou on affiche le starting modifier j'aimerais qu'il fasse défiler les modifiers du caroussel en même temps").</summary>
-        public event Action<ModifierId> ReelPassed;
-
         private TooltipView _tooltip;
         private RectTransform _root;
         private RectTransform _titleRect;
@@ -178,7 +175,17 @@ namespace Contigu.Presentation
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
 
-            _cardContainer.gameObject.SetActive(false);
+            // The card stays visible for the WHOLE spin, not just the
+            // final reveal — it's kept in sync with whichever badge is
+            // currently centered under the highlight (see SpinRoutine),
+            // right below the reel it mirrors (explicit request/
+            // clarification: "je parlais de faire afficher le modifier
+            // dans le rectangle sous le carrousel... La liste doit être
+            // hidden en attendant" — the reveal CARD should live-update
+            // during the spin, not the separate MODIFIERS side panel).
+            // Only the OK button waits for the spin to actually land, so
+            // the player can't dismiss mid-spin.
+            _cardContainer.gameObject.SetActive(true);
             _okButton.gameObject.SetActive(false);
             _reelRect.anchoredPosition = Vector2.zero;
 
@@ -195,9 +202,12 @@ namespace Contigu.Presentation
                 BuildReelBadge(def, i);
             }
 
-            LayoutTitleAndViewport();
-
             _root.gameObject.SetActive(true);
+            // The very first spin tick below (SpinRoutine runs synchronously
+            // up to its first yield, right inside this StartCoroutine call)
+            // always calls UpdateCard at least once, which lays out the
+            // whole block via LayoutFullBlock — so nothing needs laying out
+            // here beforehand.
             _spinCoroutine = StartCoroutine(SpinRoutine(granted));
         }
 
@@ -226,7 +236,7 @@ namespace Contigu.Presentation
             // made the reveal look off-center).
             float endX = ReelWidth / 2f - WinningIndex * BadgeSpacing;
             float t = 0f;
-            int lastFiredIndex = -1;
+            int lastShownIndex = -1;
             while (t < SpinDuration)
             {
                 t += Time.deltaTime;
@@ -238,29 +248,37 @@ namespace Contigu.Presentation
                 // Whichever badge is CURRENTLY centered under the highlight
                 // right now, mid-spin — same math as endX above, solved the
                 // other way round (position -> index instead of index ->
-                // position). Fires only on change, so a caller mirroring
-                // this (see ReelPassed) updates once per badge passing by,
-                // not every single frame.
+                // position). Only rebuilds the card on an actual change, not
+                // every single frame.
                 int centeredIndex = Mathf.Clamp(Mathf.RoundToInt((ReelWidth / 2f - x) / BadgeSpacing), 0, ReelLength - 1);
-                if (centeredIndex != lastFiredIndex)
+                if (centeredIndex != lastShownIndex)
                 {
-                    lastFiredIndex = centeredIndex;
-                    if (ReelPassed != null)
-                    {
-                        ReelPassed(_reelModifierIds[centeredIndex]);
-                    }
+                    lastShownIndex = centeredIndex;
+                    UpdateCard(_reelModifierIds[centeredIndex]);
                 }
                 yield return null;
             }
             _reelRect.anchoredPosition = new Vector2(endX, 0f);
 
-            RevealCard(granted);
+            // Defensive re-sync: the loop's own last tick should already
+            // have landed on WinningIndex (same math as the hard position
+            // snap just above), but this guarantees the card matches the
+            // real grant exactly regardless of any float drift near the
+            // tail end of the spin.
+            UpdateCard(granted);
+            _okButton.gameObject.SetActive(true);
             _spinCoroutine = null;
         }
 
-        private void RevealCard(ModifierId granted)
+        /// <summary>(Re)builds the reveal card's contents for <paramref name="id"/> and re-centers the whole block around its (possibly new) height — called throughout the spin as the centered badge changes, not just once at the end, so the card genuinely mirrors the reel instead of only appearing once it stops.</summary>
+        private void UpdateCard(ModifierId id)
         {
-            var def = ModifierCatalog.Get(granted);
+            for (int i = _cardContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_cardContainer.GetChild(i).gameObject);
+            }
+
+            var def = ModifierCatalog.Get(id);
             var cardImage = UIFactory.CreateSlicedImage(_cardContainer, "GrantedModifierCard", UISprites.CardBackground);
             cardImage.color = UITheme.Panel;
             var outline = cardImage.gameObject.AddComponent<Outline>();
@@ -280,21 +298,9 @@ namespace Contigu.Presentation
             _cardContainer.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
 
             LayoutFullBlock(cardHeight);
-
-            _cardContainer.gameObject.SetActive(true);
-            _okButton.gameObject.SetActive(true);
         }
 
-        /// <summary>Centers just the title+reel while the spin is still playing — the card doesn't exist yet, and its height (which depends on the granted modifier's description length) isn't known until RevealCard builds it. LayoutFullBlock takes over once it does, repositioning everything together so the WHOLE block (title, reel, card, OK) ends up centered as one — this alone previously only centered the title+reel, leaving the card+OK appended below with no accounting for their own height (explicit report, from a screenshot: "il faudrait que tout le bloc d'info du starting modifier soit en centre verticalement").</summary>
-        private void LayoutTitleAndViewport()
-        {
-            float totalHeight = TitleHeight + BlockSpacing + ReelHeight;
-            float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
-            _titleRect.anchoredPosition = new Vector2(0f, topY);
-            _viewportRect.anchoredPosition = new Vector2(0f, topY - TitleHeight - BlockSpacing);
-        }
-
-        /// <summary>Re-centers the ENTIRE block — title, reel, card, OK button — as a single unit, now that <paramref name="cardHeight"/> is known. Replaces LayoutTitleAndViewport's earlier, title+reel-only centering (which stayed in effect for the card+OK too, pushing the whole block below true center by however tall the card turned out to be).</summary>
+        /// <summary>Centers the ENTIRE block — title, reel, card, OK button — as a single unit, against their true combined height (<paramref name="cardHeight"/> varies with the currently-shown modifier's description length, so this is recomputed every time UpdateCard rebuilds the card, not just once).</summary>
         private void LayoutFullBlock(float cardHeight)
         {
             float totalHeight = TitleHeight + BlockSpacing + ReelHeight + BlockSpacing + cardHeight + BlockSpacing + OkHeight;

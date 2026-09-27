@@ -91,16 +91,6 @@ namespace Contigu.Presentation
         // gets restored.
         private readonly List<Coroutine> _rowPulseCoroutines = new List<Coroutine>();
 
-        // Purely decorative — mirrors ModifierCarouselView's own spin (see
-        // ShowSpinPlaceholder) in the very first grid slot, where the
-        // starting modifier will actually land once the carousel is
-        // dismissed and a real Refresh takes over. Never tracked in
-        // _rowIds/_rowBadges/etc: it isn't a real active modifier, doesn't
-        // need reordering or a usage-count tooltip, and Refresh's own
-        // "destroy every child of _rowsContainer" already cleans it up like
-        // any other row without needing special-casing there.
-        private Image _spinPlaceholderBadge;
-
         /// <summary>
         /// <paramref name="usageCountProvider"/> (e.g. RunManager.GetModifierUsageCount)
         /// lets each badge's tooltip show how many times it's fired this
@@ -158,23 +148,12 @@ namespace Contigu.Presentation
             return _root;
         }
 
-        /// <summary>Mirrors ModifierCarouselView's own spin, in real time, in the very first grid slot — otherwise this panel just sits empty while the carousel spins elsewhere on screen (explicit request: "l'endroit ou on affiche le starting modifier j'aimerais qu'il fasse défiler les modifiers du caroussel en même temps"). Call once per ModifierCarouselView.ReelPassed firing; the next real Refresh (see GameBootstrap.OnModifierCarouselDismissed) clears it along with every other row, same as any other child of _rowsContainer.</summary>
-        public void ShowSpinPlaceholder(ModifierId id)
-        {
-            if (_spinPlaceholderBadge != null)
-            {
-                Destroy(_spinPlaceholderBadge.gameObject);
-            }
-            _spinPlaceholderBadge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(id), BadgeSize, _tooltip, attachTooltip: false);
-        }
-
         public void Refresh(IReadOnlyList<ModifierId> activeModifiers)
         {
             for (int i = _rowsContainer.childCount - 1; i >= 0; i--)
             {
                 Destroy(_rowsContainer.GetChild(i).gameObject);
             }
-            _spinPlaceholderBadge = null;
             _rowIds.Clear();
             _rowBadges.Clear();
             _rowBaseColors.Clear();

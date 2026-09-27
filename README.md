@@ -5159,23 +5159,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   telle quelle pendant le spin (avant que la carte n'existe), où
   centrer juste titre+reel est correct puisque rien d'autre n'est
   encore affiché à ce moment-là.
-- **Le panneau MODIFIERS défile en même temps que le carousel** —
-  demande explicite après capture d'écran montrant le panneau
-  "MODIFIERS" quasiment vide (juste une tranche bleue coupée en bord
-  d'écran) pendant que le carousel spinne au centre : "l'endroit ou on
-  affiche le starting modifier j'aimerais qu'il fasse défiler les
-  modifiers du caroussel en même temps, c'est possible?". Nouvel
-  événement `ModifierCarouselView.ReelPassed` (`Action<ModifierId>`),
-  qui se déclenche en temps réel pendant le spin, une fois par badge
-  qui passe sous le cadre doré — calculé par le même calcul que `endX`
-  mais résolu dans l'autre sens (position → index au lieu d'index →
-  position), donc toujours exactement synchronisé avec ce que montre
-  visuellement le reel, jamais un tirage indépendant. `ModifierPanelView`
-  gagne `ShowSpinPlaceholder(ModifierId)`, qui (re)construit un seul
-  badge dans la toute première case de la grille (jamais suivi dans
-  `_rowIds`/`_rowBadges` — ce n'est pas un vrai modificateur actif, pas
-  besoin de tooltip ni de réorganisation) ; `GameBootstrap` relie
-  directement `ReelPassed` à cette méthode dans `WireEvents`. Le
-  prochain vrai `Refresh` (dans `OnModifierCarouselDismissed`) efface
-  ce badge de démonstration comme n'importe quelle autre rangée,
-  puisqu'il n'est qu'un enfant de plus de `_rowsContainer`.
+- **La carte de reveal du carousel défile en même temps que le reel**
+  — demande explicite après capture d'écran, puis clarification une
+  fois le premier essai posté dans le mauvais endroit : "l'endroit ou
+  on affiche le starting modifier j'aimerais qu'il fasse défiler les
+  modifiers du caroussel en même temps, c'est possible?", puis "Je
+  parlais de faire afficher le modifier dans le rectangle sous le
+  carrousel pas dans la liste. La liste doit être hidden en
+  attendant". Premier essai (revert complet) : un événement
+  `ModifierCarouselView.ReelPassed` relié à un nouveau
+  `ModifierPanelView.ShowSpinPlaceholder`, montrant le badge courant du
+  reel dans la liste "MODIFIERS" à gauche — pas ce qui était demandé,
+  et contraire au fix précédent qui gardait justement cette liste vide
+  jusqu'à la fermeture du carousel. Retiré entièrement (événement,
+  méthode, câblage dans `GameBootstrap`).
+
+  Implémentation correcte : la carte "SMALL FORMAT / PF / ..." déjà
+  affichée sous le reel une fois le spin arrêté se met maintenant à
+  jour en TEMPS RÉEL pendant tout le spin, pas seulement à la toute
+  fin. `RevealCard` (qui ne construisait la carte qu'une fois, à
+  l'arrêt) devient `UpdateCard(ModifierId)`, appelable à répétition —
+  elle détruit/reconstruit le contenu de la carte et relance
+  `LayoutFullBlock` à chaque appel, puisque la hauteur de la carte
+  varie selon la description du modificateur affiché. `SpinRoutine`
+  l'appelle à chaque fois que l'index actuellement centré sous le cadre
+  doré change (même calcul que `endX`, résolu dans l'autre sens :
+  position → index), donc la carte montre toujours exactement le même
+  modificateur que celui qui défile visuellement dans le reel juste
+  au-dessus, jamais un tirage indépendant. Le bouton OK, lui, reste
+  masqué jusqu'à l'arrêt réel du spin (pour ne pas pouvoir fermer en
+  plein spin) ; un appel `UpdateCard(granted)` de sécurité juste après
+  le snap final de position garantit que la carte affiche exactement le
+  bon modificateur même en cas de dérive flottante en fin de coroutine.
+  `LayoutTitleAndViewport` (qui ne centrait que titre+reel avant que la
+  carte n'existe) est devenue du code mort une fois la carte visible
+  dès le tout premier tick du spin — supprimée, `LayoutFullBlock`
+  couvrant maintenant tous les cas dès `Show()`.
