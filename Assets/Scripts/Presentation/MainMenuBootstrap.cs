@@ -12,7 +12,7 @@ namespace Contigu.Presentation
     /// screen inside the gameplay scene and just shown/hidden like an
     /// overlay (see GameBootstrap); it's now the sole thing in its own
     /// scene, loaded first, handing off to the gameplay scene via
-    /// SceneManager.LoadScene once "Jouer" is clicked. Mirrors
+    /// SceneManager.LoadScene once "Play" is clicked. Mirrors
     /// GameBootstrap's own EventSystem/Canvas/CanvasScaler/
     /// AnimatedBackgroundView setup exactly, so the two scenes look and
     /// scale identically and the transition between them isn't jarring.

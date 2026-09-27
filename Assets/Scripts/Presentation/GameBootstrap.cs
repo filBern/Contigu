@@ -104,7 +104,7 @@ namespace Contigu.Presentation
             // see Assets/Scenes/MainMenu.unity — spec extension, explicit
             // request: "j'aurais aimé qu'il soit dans une scene a part")
             // instead of being built and shown/hidden inside this same
-            // scene; its "Jouer" button loads this scene fresh via
+            // scene; its "Play" button loads this scene fresh via
             // SceneManager.LoadScene, so ChallengeSelectView is shown
             // immediately here instead, blocking, on top of the Classic run
             // built just above: OnChallengeChosen replaces it with whichever

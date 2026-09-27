@@ -14,7 +14,7 @@ namespace Contigu.Presentation
     /// already-drifting shapes, shown before the existing pre-run flow
     /// (ChallengeSelectView) even starts. No background fill of its own on
     /// purpose, so the animated background shows through behind the title
-    /// exactly as it does everywhere else; the "Jouer" button just hands
+    /// exactly as it does everywhere else; the "Play" button just hands
     /// off to ChallengeSelectView, which is unchanged otherwise.
     /// </summary>
     public sealed class MainMenuView : MonoBehaviour
@@ -59,7 +59,7 @@ namespace Contigu.Presentation
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
             titleContainer.anchoredPosition = new Vector2(0f, 130f);
 
-            var playButton = UIFactory.CreateButton(_root, "Play", "Jouer", UISprites.ChooseButtonBackground, 22);
+            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.ChooseButtonBackground, 22);
             var playRect = playButton.GetComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
