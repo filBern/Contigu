@@ -5034,3 +5034,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   autre élément de HUD à côté. Décalage vertical du titre ajusté de 60 à
   110 pour garder le même espacement au-dessus du bouton "Jouer" une
   fois le titre deux fois plus haut.
+- **Corrections sur `ModifierCarouselView`** — retours explicites après
+  capture d'écran du carousel de modificateur de départ : "Modificateur
+  de depart est en francais, pas en anglais, il n'est pas centré" puis
+  "il devrait y avoir des modifier après pour vraiment montrer le
+  random". Trois bugs distincts, tous corrigés :
+  1. Titre traduit en anglais ("Starting modifier") — convention du
+     projet, le texte in-game reste en anglais même si la conversation
+     se fait en français.
+  2. Le badge gagnant était placé au tout dernier index du reel
+     (`ReelLength - 1`), et `SpinRoutine`'s `endX` alignait ce dernier
+     badge sur `x = 0`, c'est-à-dire le bord GAUCHE du viewport — pas
+     son centre, où se trouve le cadre doré. Le badge gagnant
+     apparaissait donc collé au bord gauche du panneau violet au lieu
+     d'être centré (la capture d'écran le montrait clairement à moitié
+     coupé par le masque). Corrigé : `endX = ReelWidth / 2f -
+     WinningIndex * BadgeSpacing`, qui tient compte de l'écart entre le
+     bord gauche du viewport (où le reel est ancré) et son centre (où
+     est le cadre).
+  3. Le cadre doré lui-même ne s'affichait jamais du tout — il était
+     construit comme un `Outline` posé sur une `Image` de couleur
+     `Color.clear`. L'effet `Outline`/`Shadow` d'Unity multiplie
+     l'alpha de sa propre couleur par l'alpha du Graphic de base ; à
+     alpha 0 sur ce dernier, le résultat est un alpha 0 dans tous les
+     cas, donc rien ne se dessine — piège Unity déjà connu et déjà
+     évité ailleurs dans le projet (`ModifierBadgeFactory` n'ajoute son
+     propre `Outline` que quand `showBackground` est vrai, jamais sur
+     un badge à fond `Color.clear`). Remplacé par
+     `BuildHighlightFrame` : 4 barres pleines (haut/bas/gauche/droite)
+     qui forment un cadre creux, sans dépendre du tout de l'effet
+     `Outline`.
+  4. Le badge gagnant se trouvait aussi être le tout dernier élément du
+     reel, donc une fois le spin arrêté, plus rien ne défilait après —
+     ça se lisait comme mis en scène plutôt que vraiment aléatoire.
+     Nouveau `WinningIndex = ReelLength - 6` : le gagnant est maintenant
+     placé quelques crans avant la fin du reel (pas le tout dernier),
+     laissant une poignée de badges de remplissage visibles après lui
+     une fois le spin arrêté.

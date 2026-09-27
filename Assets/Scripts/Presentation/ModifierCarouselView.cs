@@ -25,10 +25,15 @@ namespace Contigu.Presentation
         private const float ReelHeight = 110f;
         private const float BadgeSize = 80f;
         private const float BadgeSpacing = 110f;
-        // Total badges in the strip — only the LAST one is the real pick;
-        // every other one is just eye candy the reel blows past on its way
-        // there.
+        // Total badges in the strip — every one but WinningIndex is just
+        // eye candy the reel blows past on its way there. WinningIndex sits
+        // a few slots before the end (not the last slot) so a handful of
+        // filler badges are still visible sliding past AFTER the reel stops
+        // — landing on the very last badge in the strip made the spin read
+        // as staged rather than random (explicit feedback: "il devrait y
+        // avoir des modifier après pour vraiment montrer le random").
         private const int ReelLength = 22;
+        private const int WinningIndex = ReelLength - 6;
         private const float SpinDuration = 2.4f;
 
         private const float TitleHeight = 40f;
@@ -65,7 +70,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var title = UIFactory.CreateText(_root, "Title", "Modificateur de depart", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Starting modifier", 22, UITheme.TextPrimary);
             _titleRect = title.rectTransform;
             _titleRect.anchorMin = new Vector2(0.5f, 1f);
             _titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -91,15 +96,13 @@ namespace Contigu.Presentation
             // Fixed frame in the exact center of the viewport, added AFTER
             // the reel so it draws on top of whichever badge is passing
             // underneath — whichever one is centered here once the spin
-            // stops is the modifier that actually got granted.
-            var highlight = UIFactory.CreatePanel(viewport.transform, "Highlight", Color.clear);
-            highlight.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            highlight.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            highlight.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            highlight.rectTransform.sizeDelta = new Vector2(BadgeSize + 14f, BadgeSize + 14f);
-            var highlightOutline = highlight.gameObject.AddComponent<Outline>();
-            highlightOutline.effectColor = VisualDefaults.GoldenColor;
-            highlightOutline.effectDistance = new Vector2(2f, -2f);
+            // stops is the modifier that actually got granted. Built from 4
+            // plain solid bars rather than an Outline component on a
+            // Color.clear Image: Unity's Shadow/Outline effect multiplies
+            // its own effectColor's alpha by the base Graphic's alpha, so on
+            // a fully transparent (alpha 0) base it silently renders
+            // nothing at all — the bug that made this frame invisible.
+            BuildHighlightFrame(viewport.transform);
 
             _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
             _cardContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -117,6 +120,41 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>4 plain solid bars forming a hollow square border around the center of <paramref name="parent"/> (the viewport) — see the comment at its call site in Build for why this replaces an Outline-on-Color.clear approach.</summary>
+        private static void BuildHighlightFrame(Transform parent)
+        {
+            const float FrameSize = BadgeSize + 14f;
+            const float BarThickness = 4f;
+
+            var top = UIFactory.CreatePanel(parent, "HighlightTop", VisualDefaults.GoldenColor);
+            top.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            top.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            top.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            top.rectTransform.sizeDelta = new Vector2(FrameSize, BarThickness);
+            top.rectTransform.anchoredPosition = new Vector2(0f, FrameSize / 2f);
+
+            var bottom = UIFactory.CreatePanel(parent, "HighlightBottom", VisualDefaults.GoldenColor);
+            bottom.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            bottom.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            bottom.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            bottom.rectTransform.sizeDelta = new Vector2(FrameSize, BarThickness);
+            bottom.rectTransform.anchoredPosition = new Vector2(0f, -FrameSize / 2f);
+
+            var left = UIFactory.CreatePanel(parent, "HighlightLeft", VisualDefaults.GoldenColor);
+            left.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            left.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            left.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            left.rectTransform.sizeDelta = new Vector2(BarThickness, FrameSize);
+            left.rectTransform.anchoredPosition = new Vector2(-FrameSize / 2f, 0f);
+
+            var right = UIFactory.CreatePanel(parent, "HighlightRight", VisualDefaults.GoldenColor);
+            right.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            right.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            right.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            right.rectTransform.sizeDelta = new Vector2(BarThickness, FrameSize);
+            right.rectTransform.anchoredPosition = new Vector2(FrameSize / 2f, 0f);
         }
 
         /// <summary><paramref name="granted"/> is RunManager.StartingModifier — already picked and applied by the time this shows; the spin is purely presentational suspense, same as UpgradeRevealView's reveals never gamble with anything Core hasn't already resolved.</summary>
@@ -142,13 +180,15 @@ namespace Contigu.Presentation
 
             // Purely decorative filler badges — a fresh System.Random here
             // (not the run's own seeded IRandomProvider) is fine since none
-            // of this affects anything Core actually resolves.
+            // of this affects anything Core actually resolves. The granted
+            // modifier sits at WinningIndex, not the last slot, so a few
+            // filler badges are still visible past it once the spin stops.
             var filler = new System.Random();
-            for (int i = 0; i < ReelLength - 1; i++)
+            for (int i = 0; i < ReelLength; i++)
             {
-                BuildReelBadge(ModifierCatalog.All[filler.Next(ModifierCatalog.All.Length)], i);
+                var def = i == WinningIndex ? ModifierCatalog.Get(granted) : ModifierCatalog.All[filler.Next(ModifierCatalog.All.Length)];
+                BuildReelBadge(def, i);
             }
-            BuildReelBadge(ModifierCatalog.Get(granted), ReelLength - 1);
 
             LayoutTitleAndViewport();
 
@@ -167,13 +207,19 @@ namespace Contigu.Presentation
 
         private IEnumerator SpinRoutine(ModifierId granted)
         {
-            // Slides the reel left until the very last badge (the real
+            // Slides the reel left until the WinningIndex badge (the real
             // pick) sits centered under the fixed highlight frame — an
             // ease-out cubic (fast start, slow finish) rather than the
             // linear-then-snap every other "juice" coroutine in this game
             // uses, since a spin reads as fake if it doesn't visibly
-            // decelerate before landing.
-            float endX = -(ReelLength - 1) * BadgeSpacing;
+            // decelerate before landing. The reel is anchored to the
+            // viewport's LEFT edge (see _reelRect's anchor in Build), so
+            // centering a badge under the highlight — which sits at the
+            // viewport's true center, ReelWidth/2 from that same left edge
+            // — needs that offset added; without it, the target badge lands
+            // flush against the viewport's left edge instead (the bug that
+            // made the reveal look off-center).
+            float endX = ReelWidth / 2f - WinningIndex * BadgeSpacing;
             float t = 0f;
             while (t < SpinDuration)
             {
