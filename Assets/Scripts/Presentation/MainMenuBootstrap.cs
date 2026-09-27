@@ -30,17 +30,25 @@ namespace Contigu.Presentation
             EnsureEventSystem();
             var canvasRect = BuildCanvas();
 
+            _mainMenuView = gameObject.AddComponent<MainMenuView>();
+            _mainMenuView.Build(canvasRect);
+
             // Its own SettingsView instance — Settings is a plain,
             // self-contained overlay (Master/Music/SFX volume + colorblind
             // toggle, all persisted via static PlayerPrefs-backed classes),
             // so building a second one here alongside GameBootstrap's is
             // safe: neither carries any state of its own beyond what those
-            // static classes already own.
+            // static classes already own. Built AFTER MainMenuView (matches
+            // GameBootstrap's own ordering) so it renders as a later sibling
+            // — on TOP of the menu's title/Play/Settings/Exit buttons —
+            // instead of underneath them: those buttons were visibly
+            // (and clickably) poking through the settings overlay before
+            // this ordering fix (explicit report, from a screenshot: "il
+            // faut hide certains éléments du menu lorsqu'on est dans les
+            // settings").
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(canvasRect);
 
-            _mainMenuView = gameObject.AddComponent<MainMenuView>();
-            _mainMenuView.Build(canvasRect);
             _mainMenuView.PlayClicked += OnPlayClicked;
             _mainMenuView.SettingsClicked += _settingsView.Toggle;
             _mainMenuView.ExitClicked += OnExitClicked;

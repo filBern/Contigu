@@ -5106,3 +5106,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      `UnityEditor.EditorApplication.isPlaying = false` habituel sous
      `#if UNITY_EDITOR`, `Application.Quit()` seul étant un no-op dans
      l'Éditeur).
+- **Ordre de construction Settings/menu inversé** — retour explicite
+  après capture d'écran de l'overlay Settings ouvert par-dessus le menu
+  principal : "Il faut hide certains éléments du menu lorsqu'on est
+  dans les settings". La capture montrait les boutons "Jouer"/
+  "Settings"/"Exit" du menu principal parfaitement visibles (et donc
+  cliquables) PAR-DESSUS l'overlay Settings, au lieu d'être cachés
+  derrière. Cause : dans `MainMenuBootstrap.Awake`, `_settingsView`
+  était construit AVANT `_mainMenuView` — en uGUI, un sibling construit
+  plus tard se dessine par-dessus les précédents, donc les boutons du
+  menu (construits après) rendaient bien au-dessus de l'overlay
+  Settings (construit avant), l'inverse de ce qu'il fallait. Corrigé en
+  inversant l'ordre (menu d'abord, Settings ensuite) — exactement
+  l'ordre déjà utilisé dans `GameBootstrap` pour la même raison. Aucun
+  changement nécessaire côté opacité du fond de `SettingsView`
+  (`Color(0,0,0,0.88f)`, la même semi-transparence que tous les autres
+  overlays du jeu) : le vrai bug était l'ordre des siblings, pas le fond
+  lui-même.
