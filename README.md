@@ -5123,3 +5123,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`Color(0,0,0,0.88f)`, la même semi-transparence que tous les autres
   overlays du jeu) : le vrai bug était l'ordre des siblings, pas le fond
   lui-même.
+- **Le badge du modificateur de départ apparaissait dans le panneau
+  avant la fin du carousel** — retour explicite, confirmé par capture
+  d'écran montrant le badge "AP" déjà visible dans le panneau
+  "MODIFIERS" à gauche pendant que le carousel affichait encore sa
+  reveal (avant même de cliquer OK) : "le starting modifier apparait
+  avant même qu'il soit sélectionné dans le caroussel, il ne doit
+  apparaitre qu'après". Cause : `GameBootstrap.StartNewRun` appelait
+  `RunManager.GrantStartingModifier()` (qui ajoute le modificateur à
+  `ActiveModifiers` immédiatement, côté Core) AVANT `RefreshAll()` —
+  qui rafraîchit entre autres `ModifierPanelView` avec l'état courant
+  de `ActiveModifiers`, déjà mis à jour à ce moment-là. Corrigé en
+  inversant l'ordre : `RefreshAll()` tourne maintenant avant le grant
+  (le panneau reflète donc l'état vide d'avant-grant), et un nouveau
+  `_modifierPanelView.Refresh(_run.ActiveModifiers)` dans
+  `OnModifierCarouselDismissed` ne rafraîchit le panneau qu'une fois le
+  carousel fermé (clic sur OK) — le badge n'apparaît dans la liste
+  qu'après la reveal, jamais pendant.

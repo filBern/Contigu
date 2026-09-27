@@ -1197,6 +1197,15 @@ namespace Contigu.Presentation
 
         private void OnModifierCarouselDismissed()
         {
+            // Only now does the modifier panel learn about the starting
+            // modifier RunManager.GrantStartingModifier already granted back
+            // in StartNewRun — refreshing it any earlier let the badge show
+            // up in the left-side panel, behind the carousel, WHILE the
+            // spin was still playing (explicit report, after seeing it in
+            // game: "le starting modifier apparait avant même qu'il soit
+            // sélectionné dans le caroussel, il ne doit apparaitre qu'après").
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+
             if (_showTutorialAfterCarousel)
             {
                 _showTutorialAfterCarousel = false;
@@ -1215,15 +1224,18 @@ namespace Contigu.Presentation
             _deckView.Rebind(_run.Deck);
             _deckView.Hide();
 
-            // A fresh strategy to build the run around, dictated rather
-            // than chosen (spec extension, explicit request — see
-            // RunManager.GrantStartingModifier) — granted before RefreshAll
-            // so the modifier panel already shows it once the carousel
-            // reveal underneath gets dismissed.
-            var startingModifier = _run.GrantStartingModifier();
-
+            // RefreshAll runs BEFORE granting the starting modifier, so the
+            // modifier panel it refreshes still shows the run's pre-grant
+            // (empty) state — see OnModifierCarouselDismissed for where the
+            // panel actually learns about it, once the carousel reveal is
+            // done with it.
             RefreshAll();
             SetStatusText(IdleStatusMessage);
+
+            // A fresh strategy to build the run around, dictated rather
+            // than chosen (spec extension, explicit request — see
+            // RunManager.GrantStartingModifier).
+            var startingModifier = _run.GrantStartingModifier();
             _modifierCarouselView.Show(startingModifier);
         }
 
