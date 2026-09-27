@@ -12,7 +12,7 @@ namespace Contigu.Presentation
     {
         private const string SliderPath = "Colorful_UI/colorful/sprites/slider/";
         private const string GameUIPath = "Colorful_UI/colorful/sprites/gameUI/";
-        private const string ButtonPath = "Colorful_UI/colorful/sprites/button/";
+        private const string IconsPath = "Icons/";
 
         private static Sprite _barTrack;
         private static Sprite _scoreBarFill;
@@ -62,16 +62,29 @@ namespace Contigu.Presentation
             get { return _cardBackground != null ? _cardBackground : (_cardBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
         }
 
-        /// <summary>Background for a primary "Choose"/confirm action button on a draft card.</summary>
+        /// <summary>
+        /// Background for a primary "Choose"/confirm action button — every
+        /// positive-action button in the game (Play, Buy, Confirm, Next
+        /// round, the Shuffle button, etc.). A flat rounded pill with a
+        /// subtle darker bottom band, baked in Python/Pillow to match the
+        /// button style from the itch.io page mockups (explicit request,
+        /// after seeing them: "j'aime vraiment beaucoup la version des
+        /// boutons que tu as fait ... remplacer mes boutons existants") —
+        /// replaces the old "Colorful UI" pack's glossier 3D-bevel
+        /// blueButton.png sprite. A new project asset (Assets/Resources/
+        /// Icons/pill_button_blue.png) rather than overwriting the vendored
+        /// pack file, same convention as GoldenTile.png/LockedTile.png in
+        /// this same folder.
+        /// </summary>
         public static Sprite ChooseButtonBackground
         {
-            get { return _chooseButtonBackground != null ? _chooseButtonBackground : (_chooseButtonBackground = Resources.Load<Sprite>(ButtonPath + "emptyButtons/blueButton")); }
+            get { return _chooseButtonBackground != null ? _chooseButtonBackground : (_chooseButtonBackground = Resources.Load<Sprite>(IconsPath + "pill_button_blue")); }
         }
 
-        /// <summary>Background for a "Cancel" button.</summary>
+        /// <summary>Background for a "Cancel"/negative-action button (Reroll, the shop's Mult pill, etc.) — same new flat-pill sprite family as <see cref="ChooseButtonBackground"/>, just the Danger-red variant.</summary>
         public static Sprite CancelButtonBackground
         {
-            get { return _cancelButtonBackground != null ? _cancelButtonBackground : (_cancelButtonBackground = Resources.Load<Sprite>(GameUIPath + "red_btn")); }
+            get { return _cancelButtonBackground != null ? _cancelButtonBackground : (_cancelButtonBackground = Resources.Load<Sprite>(IconsPath + "pill_button_danger")); }
         }
 
         /// <summary>Small filled circle used as a corner badge showing a remaining-count number (HandView's Shuffle button — explicit request: "utiliser Ellipse 19.png en haut à droite du bouton et qu'on mette le nombre de shuffle restant au milieu", replacing the "Shuffle (10)" label text that wrapped to 2 lines).</summary>

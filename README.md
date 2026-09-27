@@ -4930,3 +4930,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   pointe maintenant vers ce conteneur plutôt que vers le seul texte, et
   `PulseLueurRoutine` anime le conteneur entier — icône et nombre
   pulsent ensemble comme une seule unité visuelle.
+- **Nouveau style de bouton — pilule plate, partout** — demande
+  explicite après avoir vu les maquettes de la page Itch : "j'aime
+  vraiment beaucoup la version des boutons que tu as fait, peux-tu les
+  uploader dans le git et remplacer mes boutons existent". Les
+  maquettes utilisaient un simple bouton "pilule" (couleur plate +
+  léger bandeau plus sombre en bas, via `box-shadow: inset`) très
+  différent du sprite `blueButton.png`/`red_btn.png` du pack Colorful
+  UI (bevel 3D, reflet brillant). Génère deux nouveaux sprites 9-slice
+  via Python/Pillow (`make_button_sprites.py`, pas commité — script
+  jetable de génération, comme pour les mockups Itch) :
+  `Assets/Resources/Icons/pill_button_blue.png` (teinte
+  `UITheme.ButtonSelected` #65aed6) et `pill_button_danger.png`
+  (`UITheme.Danger` #b56d7f), chacun 160×48, bordures gauche/droite de
+  24px (stadium complet à hauteur pleine, `spriteBorder: {24,0,24,0}`
+  dans le `.meta`) — nouveaux assets du projet plutôt que d'écraser les
+  fichiers du pack vendored, même convention que `GoldenTile.png`/
+  `LockedTile.png` déjà dans ce dossier. Hauteur canvas choisie (48)
+  pour rester proche de la plupart des boutons réels du jeu (32-56px)
+  et minimiser la distorsion elliptique des coins arrondis qu'un
+  redimensionnement vertical important provoquerait (aucune bordure
+  haut/bas définie, donc toute la texture s'étire verticalement d'un
+  seul bloc). Bordure 24px vérifiée sûre même pour le plus petit bouton
+  du jeu (les pilules de combo à 84px de large dans `ComboView`).
+  `UISprites.ChooseButtonBackground`/`CancelButtonBackground` pointent
+  maintenant vers ces nouveaux fichiers au lieu du pack Colorful UI —
+  **aucun site d'appel n'a eu besoin d'être modifié** (15 boutons à
+  travers 12 fichiers changent d'apparence automatiquement, la couleur
+  étant déjà cuite dans le sprite exactement comme avant).
