@@ -4958,3 +4958,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   **aucun site d'appel n'a eu besoin d'être modifié** (15 boutons à
   travers 12 fichiers changent d'apparence automatiquement, la couleur
   étant déjà cuite dans le sprite exactement comme avant).
+- **Carousel de modificateur de départ** — demande explicite : "j'aimerais
+  qu'au départ d'une run, il y ait un carousel qui choisissent un
+  modifier au hasard, comme pour dicter une stratégie initiale que le
+  joueur devra utiliser". Nouvelle méthode `RunManager.GrantStartingModifier()`
+  qui pioche un modificateur uniformément au hasard dans tout le
+  catalogue (aucune exclusion "déjà possédé" nécessaire, une run neuve
+  n'en tient aucun) et l'ajoute directement à `ActiveModifiers` —
+  volontairement **pas** appelée depuis le constructeur de `RunManager`
+  (elle est appelée explicitement par `GameBootstrap.StartNewRun`, juste
+  avant `RefreshAll`), pour que chaque test existant qui suppose une run
+  fraîche à 0 modificateur continue de passer sans y toucher. Ne met pas
+  à jour `_lastPurchasedModifierId` non plus : ce modificateur est offert
+  gratuitement, pas acheté, donc le tout premier achat de Copieur en shop
+  n'a toujours rien à copier — comportement inchangé, vérifié par un
+  nouveau test dédié.
+
+  Côté présentation, `ModifierCarouselView` (calqué sur le pattern
+  overlay bloquant de `UpgradeRevealView`) affiche un bandeau ("reel")
+  horizontal de badges de modificateurs (`ModifierBadgeFactory`, 22 au
+  total) qui défile sous un cadre fixe doré, ralentit avec un easing
+  cubique (comme toutes les autres animations "juice" du jeu, mais sur
+  une durée bien plus longue — 2.4s — pour vraiment se lire comme un
+  vrai spin) et s'arrête exactement sur le dernier badge : celui du
+  modificateur réellement accordé par `GrantStartingModifier` (le tirage
+  Core est déjà résolu avant même que le spin ne commence — le suspense
+  est purement visuel, comme toutes les autres reveal de ce jeu). Une
+  fois arrêté, la carte complète du modificateur (nom/icône/description)
+  s'affiche en dessous via le même `ModifierCardFactory.BuildContents`
+  que `UpgradeRevealView.ShowModifierGrant` utilise déjà pour la reveal
+  "Random Modifier" du shop — même langage visuel entre les deux gains
+  de modificateur aléatoire du jeu. Affiché une fois à chaque début de
+  run (`StartNewRun`, donc autant pour la toute première run que pour
+  chaque "New Run" suivant), jamais pour la run jetable construite dans
+  `Awake` (jamais réellement jouée). L'affichage de `TutorialView` au
+  tout premier lancement est différé jusqu'à la fermeture du carousel
+  (`OnModifierCarouselDismissed`) plutôt que montré en même temps,
+  puisque les deux sont des overlays plein écran bloquants qui se
+  seraient sinon superposés.

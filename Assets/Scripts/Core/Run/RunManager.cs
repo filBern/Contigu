@@ -130,6 +130,9 @@ namespace Contigu.Core
         /// <summary>The modifier most recently granted by a "Random Modifier" purchase (see BuyUpgradeSlot/GrantRandomModifier) — read once by the presentation layer (UpgradeRevealView) right after the purchase. Null if the gamble didn't pay off (already at EconomyConstants.MaxActiveModifiers, or — practically impossible — every modifier already held), in which case the purchase still cost its Lueur but granted nothing. Meaningless before any Random Modifier purchase this run.</summary>
         public ModifierId? LastRandomModifierGranted { get; private set; }
 
+        /// <summary>The modifier granted for free by <see cref="GrantStartingModifier"/> at the start of this run — read once by the presentation layer (ModifierCarouselView) to know which badge the spin has to land on. Null until that's called.</summary>
+        public ModifierId? StartingModifier { get; private set; }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -1502,6 +1505,32 @@ namespace Contigu.Core
             }
             _upgradeSlots[index] = ShopSlot.ForUpgrade(UpgradeCatalog.RandomModifier);
             return true;
+        }
+
+        /// <summary>
+        /// Grants one uniformly random modifier for free, right at the start
+        /// of a run — a slot-machine-style "carousel" (see Presentation.
+        /// ModifierCarouselView) spins through several modifier badges
+        /// before landing on this one, meant to dictate an initial strategy
+        /// the player has to build the run around (explicit request:
+        /// "un carousel qui choisissent un modifier au hasard, comme pour
+        /// dicter une stratégie initiale que le joueur devra utiliser").
+        /// Called explicitly by GameBootstrap right after constructing the
+        /// RunManager, never from the constructor itself, so every existing
+        /// test asserting a freshly-built run holds zero modifiers keeps
+        /// passing unless it opts into this call. Picks from the whole
+        /// catalog with no "already held" exclusion needed — a brand new run
+        /// holds nothing yet — unlike GrantRandomModifier below. Doesn't
+        /// touch _lastPurchasedModifierId: this is a freebie, not a
+        /// purchase, so Copieur's very first shop pick still has nothing to
+        /// copy, same as before this feature existed.
+        /// </summary>
+        public ModifierId GrantStartingModifier()
+        {
+            var picked = ModifierCatalog.All[_rng.Next(ModifierCatalog.All.Length)].Id;
+            _activeModifiers.Add(picked);
+            StartingModifier = picked;
+            return picked;
         }
 
         /// <summary>

@@ -52,6 +52,7 @@ namespace Contigu.Presentation
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
         private UpgradeRevealView _upgradeRevealView;
+        private ModifierCarouselView _modifierCarouselView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
@@ -65,6 +66,11 @@ namespace Contigu.Presentation
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
         private bool _isPlayingPlacementSequence;
+        // Set right before the very first ModifierCarouselView.Show of a
+        // launch, so TutorialView only ever opens on top of it (see
+        // OnModifierCarouselDismissed) instead of the two overlays stacking
+        // at the same time.
+        private bool _showTutorialAfterCarousel;
 
         private void Awake()
         {
@@ -467,6 +473,9 @@ namespace Contigu.Presentation
             _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
             _upgradeRevealView.Build(mainRoot, _tooltipView);
 
+            _modifierCarouselView = gameObject.AddComponent<ModifierCarouselView>();
+            _modifierCarouselView.Build(mainRoot, _tooltipView);
+
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
             // restart's new RunManager instance is picked up automatically —
@@ -525,6 +534,7 @@ namespace Contigu.Presentation
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
+            _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }
 
         private void OnHandSlotSelected(int handIndex)
@@ -1186,10 +1196,23 @@ namespace Contigu.Presentation
             _challengeSelectView.Hide();
             StartNewRun(challenge);
 
+            // Deferred until the starting-modifier carousel is dismissed
+            // (see OnModifierCarouselDismissed) instead of shown right here
+            // — both are blocking, full-screen overlays, and showing them
+            // at the same time would stack one on top of the other.
             if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
             {
                 PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
                 PlayerPrefs.Save();
+                _showTutorialAfterCarousel = true;
+            }
+        }
+
+        private void OnModifierCarouselDismissed()
+        {
+            if (_showTutorialAfterCarousel)
+            {
+                _showTutorialAfterCarousel = false;
                 _tutorialView.Show();
             }
         }
@@ -1204,8 +1227,17 @@ namespace Contigu.Presentation
             _tileChoiceView.Rebind(_run.Deck);
             _deckView.Rebind(_run.Deck);
             _deckView.Hide();
+
+            // A fresh strategy to build the run around, dictated rather
+            // than chosen (spec extension, explicit request — see
+            // RunManager.GrantStartingModifier) — granted before RefreshAll
+            // so the modifier panel already shows it once the carousel
+            // reveal underneath gets dismissed.
+            var startingModifier = _run.GrantStartingModifier();
+
             RefreshAll();
             SetStatusText(IdleStatusMessage);
+            _modifierCarouselView.Show(startingModifier);
         }
 
         private void RefreshAll()
