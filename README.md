@@ -5140,3 +5140,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `OnModifierCarouselDismissed` ne rafraîchit le panneau qu'une fois le
   carousel fermé (clic sur OK) — le badge n'apparaît dans la liste
   qu'après la reveal, jamais pendant.
+- **Bloc du carousel de modificateur pas centré verticalement** —
+  retour explicite avec capture d'écran montrant le bloc titre/reel/
+  carte/OK clairement décalé vers le bas de l'écran, pas centré.
+  Cause : `LayoutTitleAndViewport` ne centrait que le titre + le
+  viewport du reel (`TitleHeight + BlockSpacing + ReelHeight`) sur
+  `CanvasHeight`, sans tenir compte de la carte de reveal ni du bouton
+  OK — `LayoutCardAndOk` les empilait ensuite simplement en dessous,
+  sans jamais recalculer le centrage pour le bloc complet. Comme la
+  hauteur de la carte varie selon la longueur de la description du
+  modificateur (`ModifierCardFactory.TotalHeight`), le bloc entier
+  finissait toujours décalé sous le vrai centre, d'autant plus que la
+  carte est haute. Remplacé par `LayoutFullBlock(cardHeight)`,
+  appelée depuis `RevealCard` une fois que `cardHeight` est enfin
+  connu : elle recalcule le centrage sur la hauteur totale réelle
+  (titre + reel + carte + OK, espacements inclus) et repositionne les
+  quatre éléments d'un coup. `LayoutTitleAndViewport` reste utilisée
+  telle quelle pendant le spin (avant que la carte n'existe), où
+  centrer juste titre+reel est correct puisque rien d'autre n'est
+  encore affiché à ce moment-là.

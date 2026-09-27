@@ -256,12 +256,13 @@ namespace Contigu.Presentation
             cardImage.rectTransform.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
             _cardContainer.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
 
-            LayoutCardAndOk(cardHeight);
+            LayoutFullBlock(cardHeight);
 
             _cardContainer.gameObject.SetActive(true);
             _okButton.gameObject.SetActive(true);
         }
 
+        /// <summary>Centers just the title+reel while the spin is still playing — the card doesn't exist yet, and its height (which depends on the granted modifier's description length) isn't known until RevealCard builds it. LayoutFullBlock takes over once it does, repositioning everything together so the WHOLE block (title, reel, card, OK) ends up centered as one — this alone previously only centered the title+reel, leaving the card+OK appended below with no accounting for their own height (explicit report, from a screenshot: "il faudrait que tout le bloc d'info du starting modifier soit en centre verticalement").</summary>
         private void LayoutTitleAndViewport()
         {
             float totalHeight = TitleHeight + BlockSpacing + ReelHeight;
@@ -270,11 +271,21 @@ namespace Contigu.Presentation
             _viewportRect.anchoredPosition = new Vector2(0f, topY - TitleHeight - BlockSpacing);
         }
 
-        private void LayoutCardAndOk(float cardHeight)
+        /// <summary>Re-centers the ENTIRE block — title, reel, card, OK button — as a single unit, now that <paramref name="cardHeight"/> is known. Replaces LayoutTitleAndViewport's earlier, title+reel-only centering (which stayed in effect for the card+OK too, pushing the whole block below true center by however tall the card turned out to be).</summary>
+        private void LayoutFullBlock(float cardHeight)
         {
-            float y = _viewportRect.anchoredPosition.y - ReelHeight - BlockSpacing;
+            float totalHeight = TitleHeight + BlockSpacing + ReelHeight + BlockSpacing + cardHeight + BlockSpacing + OkHeight;
+            float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
+
+            _titleRect.anchoredPosition = new Vector2(0f, topY);
+            float y = topY - TitleHeight - BlockSpacing;
+
+            _viewportRect.anchoredPosition = new Vector2(0f, y);
+            y -= ReelHeight + BlockSpacing;
+
             _cardContainer.anchoredPosition = new Vector2(0f, y);
             y -= cardHeight + BlockSpacing;
+
             _okRect.anchoredPosition = new Vector2(0f, y);
         }
 
