@@ -26,7 +26,9 @@ namespace Contigu.Tests
             }
             list.Add(new PieceToken(ShapeId.Single, PieceColor.Teal));
             list.Add(new PieceToken(ShapeId.DomH, PieceColor.Teal));
-            return list; // 10 shapes x Coral + 2 extra Teal = 12 unique tokens
+            list.Add(new PieceToken(ShapeId.TriL, PieceColor.Teal));
+            list.Add(new PieceToken(ShapeId.TriIH, PieceColor.Teal));
+            return list; // 8 shapes x Coral + 4 extra Teal = 12 unique tokens
         }
 
         private static string Key(PieceToken t)
