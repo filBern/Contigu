@@ -52,6 +52,9 @@ namespace Contigu.Presentation
         /// <summary>Fires once the player dismisses the reveal.</summary>
         public event Action Dismissed;
 
+        /// <summary>Fires, in real time as the reel spins, every time the badge centered under the highlight frame changes — lets a caller (see GameBootstrap/ModifierPanelView.ShowSpinPlaceholder) mirror this exact spin elsewhere on screen instead of that spot just sitting empty (explicit request: "l'endroit ou on affiche le starting modifier j'aimerais qu'il fasse défiler les modifiers du caroussel en même temps").</summary>
+        public event Action<ModifierId> ReelPassed;
+
         private TooltipView _tooltip;
         private RectTransform _root;
         private RectTransform _titleRect;
@@ -61,6 +64,7 @@ namespace Contigu.Presentation
         private RectTransform _okRect;
         private Button _okButton;
         private Coroutine _spinCoroutine;
+        private readonly ModifierId[] _reelModifierIds = new ModifierId[ReelLength];
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
@@ -187,6 +191,7 @@ namespace Contigu.Presentation
             for (int i = 0; i < ReelLength; i++)
             {
                 var def = i == WinningIndex ? ModifierCatalog.Get(granted) : ModifierCatalog.All[filler.Next(ModifierCatalog.All.Length)];
+                _reelModifierIds[i] = def.Id;
                 BuildReelBadge(def, i);
             }
 
@@ -221,12 +226,30 @@ namespace Contigu.Presentation
             // made the reveal look off-center).
             float endX = ReelWidth / 2f - WinningIndex * BadgeSpacing;
             float t = 0f;
+            int lastFiredIndex = -1;
             while (t < SpinDuration)
             {
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / SpinDuration);
                 float eased = 1f - Mathf.Pow(1f - p, 3f);
-                _reelRect.anchoredPosition = new Vector2(Mathf.Lerp(0f, endX, eased), 0f);
+                float x = Mathf.Lerp(0f, endX, eased);
+                _reelRect.anchoredPosition = new Vector2(x, 0f);
+
+                // Whichever badge is CURRENTLY centered under the highlight
+                // right now, mid-spin — same math as endX above, solved the
+                // other way round (position -> index instead of index ->
+                // position). Fires only on change, so a caller mirroring
+                // this (see ReelPassed) updates once per badge passing by,
+                // not every single frame.
+                int centeredIndex = Mathf.Clamp(Mathf.RoundToInt((ReelWidth / 2f - x) / BadgeSpacing), 0, ReelLength - 1);
+                if (centeredIndex != lastFiredIndex)
+                {
+                    lastFiredIndex = centeredIndex;
+                    if (ReelPassed != null)
+                    {
+                        ReelPassed(_reelModifierIds[centeredIndex]);
+                    }
+                }
                 yield return null;
             }
             _reelRect.anchoredPosition = new Vector2(endX, 0f);

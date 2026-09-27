@@ -5159,3 +5159,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   telle quelle pendant le spin (avant que la carte n'existe), où
   centrer juste titre+reel est correct puisque rien d'autre n'est
   encore affiché à ce moment-là.
+- **Le panneau MODIFIERS défile en même temps que le carousel** —
+  demande explicite après capture d'écran montrant le panneau
+  "MODIFIERS" quasiment vide (juste une tranche bleue coupée en bord
+  d'écran) pendant que le carousel spinne au centre : "l'endroit ou on
+  affiche le starting modifier j'aimerais qu'il fasse défiler les
+  modifiers du caroussel en même temps, c'est possible?". Nouvel
+  événement `ModifierCarouselView.ReelPassed` (`Action<ModifierId>`),
+  qui se déclenche en temps réel pendant le spin, une fois par badge
+  qui passe sous le cadre doré — calculé par le même calcul que `endX`
+  mais résolu dans l'autre sens (position → index au lieu d'index →
+  position), donc toujours exactement synchronisé avec ce que montre
+  visuellement le reel, jamais un tirage indépendant. `ModifierPanelView`
+  gagne `ShowSpinPlaceholder(ModifierId)`, qui (re)construit un seul
+  badge dans la toute première case de la grille (jamais suivi dans
+  `_rowIds`/`_rowBadges` — ce n'est pas un vrai modificateur actif, pas
+  besoin de tooltip ni de réorganisation) ; `GameBootstrap` relie
+  directement `ReelPassed` à cette méthode dans `WireEvents`. Le
+  prochain vrai `Refresh` (dans `OnModifierCarouselDismissed`) efface
+  ce badge de démonstration comme n'importe quelle autre rangée,
+  puisqu'il n'est qu'un enfant de plus de `_rowsContainer`.

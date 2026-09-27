@@ -522,6 +522,7 @@ namespace Contigu.Presentation
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
+            _modifierCarouselView.ReelPassed += _modifierPanelView.ShowSpinPlaceholder;
         }
 
         private void OnHandSlotSelected(int handIndex)
