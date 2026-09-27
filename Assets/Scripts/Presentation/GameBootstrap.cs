@@ -59,7 +59,6 @@ namespace Contigu.Presentation
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
         private ChallengeSelectView _challengeSelectView;
-        private MainMenuView _mainMenuView;
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private FeedbackLayer _feedbackLayer;
@@ -101,26 +100,18 @@ namespace Contigu.Presentation
             VolumeSettings.Changed += ApplyVolumeSettings;
             ApplyVolumeSettings();
 
-            // Main menu is now the actual first thing shown at every launch
-            // (spec extension, explicit request — "un main menu" spelling
-            // the game's own name in colored tiles) — its "Jouer" button
-            // (see OnMainMenuPlayClicked) reveals ChallengeSelectView
-            // exactly where it used to show immediately on its own.
-            _mainMenuView.Show();
-        }
-
-        private void OnMainMenuPlayClicked()
-        {
-            _mainMenuView.Hide();
-            // Shown at every launch (not just the first ever one — see
-            // ChallengeSelectView), blocking, on top of the Classic run
-            // built in Awake above: OnChallengeChosen replaces it with
-            // whichever challenge is actually picked, even Classic again,
-            // so nothing about that initial run is ever actually played.
-            // TutorialView's own first-launch auto-show (see
-            // OnChallengeChosen) fires right after, once a challenge is
-            // locked in — the game previously had zero in-game rules
-            // explanation anywhere.
+            // The main menu now lives in its own scene (MainMenuBootstrap,
+            // see Assets/Scenes/MainMenu.unity — spec extension, explicit
+            // request: "j'aurais aimé qu'il soit dans une scene a part")
+            // instead of being built and shown/hidden inside this same
+            // scene; its "Jouer" button loads this scene fresh via
+            // SceneManager.LoadScene, so ChallengeSelectView is shown
+            // immediately here instead, blocking, on top of the Classic run
+            // built just above: OnChallengeChosen replaces it with whichever
+            // challenge is actually picked, even Classic again, so nothing
+            // about that initial run is ever actually played. TutorialView's
+            // own first-launch auto-show (see OnChallengeChosen) fires right
+            // after, once a challenge is locked in.
             _challengeSelectView.Show(_metaStats);
         }
 
@@ -511,16 +502,12 @@ namespace Contigu.Presentation
             _challengeSelectView = gameObject.AddComponent<ChallengeSelectView>();
             _challengeSelectView.Build(mainRoot);
 
-            _mainMenuView = gameObject.AddComponent<MainMenuView>();
-            _mainMenuView.Build(mainRoot);
-
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(mainRoot);
         }
 
         private void WireEvents()
         {
-            _mainMenuView.PlayClicked += OnMainMenuPlayClicked;
             _gridView.CellClicked += OnCellClicked;
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;

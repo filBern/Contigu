@@ -4996,3 +4996,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`OnModifierCarouselDismissed`) plutôt que montré en même temps,
   puisque les deux sont des overlays plein écran bloquants qui se
   seraient sinon superposés.
+- **Main menu dans sa propre scène** — demande explicite après avoir
+  testé le menu : "j'aurais aimé qu'il soit dans une scene a part".
+  Auparavant `MainMenuView` était construit à l'intérieur de la même
+  scène que le reste du jeu (`Assets/Scenes/Main.unity`, via
+  `GameBootstrap`) et simplement affiché/masqué comme un overlay parmi
+  tous les autres. Nouvelle scène `Assets/Scenes/MainMenu.unity`
+  (Caméra + AudioListener identiques à `Main.unity`, plus un unique
+  GameObject "MainMenuBootstrap") et son propre script
+  `MainMenuBootstrap.cs`, qui reproduit exactement le setup
+  Canvas/CanvasScaler/EventSystem/`AnimatedBackgroundView` de
+  `GameBootstrap.BuildCanvas` pour que la transition entre les deux
+  scènes soit invisible. Son bouton "Jouer" appelle maintenant
+  `SceneManager.LoadScene("Main")` plutôt que de simplement masquer
+  `MainMenuView` et révéler `ChallengeSelectView` dans la même scène.
+  `GameBootstrap` n'a donc plus de référence à `MainMenuView` du tout :
+  son `Awake()` montre directement `ChallengeSelectView`, exactement
+  comme le faisait avant `OnMainMenuPlayClicked` (méthode supprimée).
+  Les deux scènes sont enregistrées dans
+  `ProjectSettings/EditorBuildSettings.asset` (`MainMenu.unity` en
+  premier, `Main.unity` en second) pour qu'un vrai build démarre bien
+  sur le menu.
+- **Titre du menu en deux blocs d'épaisseur** — demande explicite dans
+  le même message : "que le titre soit en deux blocs d'épaisseur".
+  `MainMenuView.BuildTitle` faisait correspondre une tuile à chaque
+  cellule remplie de la police matricielle 5×7 de `TitleTileFont`. Le
+  nouveau `const int Thickness = 2` fait qu'une cellule remplie devient
+  maintenant un cluster de `Thickness x Thickness` tuiles (un simple
+  agrandissement "nearest-neighbor" du bitmap de la police, pas un
+  redessin des lettres) : chaque trait qui faisait 1 tuile d'épaisseur
+  en fait maintenant 2, sans toucher à `TitleTileFont`. Chaque tuile du
+  cluster reste indépendante (sa propre couleur aléatoire au départ,
+  son propre hover-recolor via `TitleTileView`) — même interactivité
+  qu'avant, juste plus de tuiles, plus petites à l'échelle du logo
+  entier. Effet de bord assumé : le logo entier double aussi de taille
+  (largeur et hauteur), ce qui se justifie bien pour un écran-titre sans
+  autre élément de HUD à côté. Décalage vertical du titre ajusté de 60 à
+  110 pour garder le même espacement au-dessus du bouton "Jouer" une
+  fois le titre deux fois plus haut.
