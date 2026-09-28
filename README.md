@@ -5663,3 +5663,9 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   rafraîchir le panneau une fois le joueur sur OK — ce qui, avec
   l'animation d'ajout du round précédent, fait maintenant pop le nouveau
   badge au bon moment plutôt que de le faire surgir prématurément.
+
+- **Pulse de Lueur trop intense** : "Le pulse de lueur est vraiment trop
+  intense" — `HudView.LueurPulsePeakScale` (le grossissement du
+  losange+chiffre à chaque gain) réduit de 1.3 à 1.15, même ampleur de
+  dépassement (+0.15) que le pop d'ajout de `ModifierPanelView`, pour
+  rester cohérent avec l'intensité des autres micro-animations du jeu.
