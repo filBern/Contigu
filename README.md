@@ -5597,3 +5597,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `BuyUpgradeSlot_RandomModifier_GrantsNothing_WhenAlreadyAtTheModifierCap`
     réécrit en `..._Fails_WhenAlreadyAtTheModifierCap` pour refléter le
     nouveau comportement).
+
+- **Reveal du Random Modifier réutilise le carousel de début de run** :
+  "Pour l'upgrade random modifier, j'aimerais qu'on utilise l'animation
+  carousel comme en début de run" (au lieu de la carte statique que
+  `UpgradeRevealView.ShowModifierGrant` affichait). `ModifierCarouselView`
+  (déjà utilisée pour le modifier de départ gratuit — voir
+  `RunManager.GrantStartingModifier`) était câblée avec un titre "Starting
+  modifier" en dur ; `Show` prend maintenant un paramètre `title` optionnel
+  (défaut inchangé, donc le site d'appel de début de run n'a rien à
+  changer) pour distinguer les deux contextes à l'écran — le nouveau site
+  d'appel (achat réel dans `GameBootstrap.OnUpgradeBuyClicked`, plus le
+  raccourci debug F8 `DebugTriggerRandomModifierShortcut` qui teste le
+  même pipeline) passe "Random modifier". `UpgradeRevealView.
+  ShowModifierGrant` devenait alors du code mort (plus aucun appelant) —
+  supprimée avec les constantes qu'elle utilisait seule, et `ShowInternal`
+  simplifiée (paramètre `showUpgradeRarity` retiré, son seul appelant
+  restant — le reveal Joker — passait toujours `true`) ; `UpgradeRevealView`
+  ne gère donc plus que Joker désormais, `ModifierCarouselView` gère les
+  deux reveals de modifier (départ de run et achat en boutique).

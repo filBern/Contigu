@@ -282,7 +282,7 @@ namespace Contigu.Presentation
             }
             if (granted.HasValue)
             {
-                _upgradeRevealView.ShowModifierGrant(UpgradeCatalog.RandomModifier, ModifierCatalog.Get(granted.Value));
+                _modifierCarouselView.Show(granted.Value, "Random modifier");
             }
         }
 
@@ -1213,7 +1213,7 @@ namespace Contigu.Presentation
                 }
                 else if (_run.LastRandomModifierGranted.HasValue)
                 {
-                    _upgradeRevealView.ShowModifierGrant(revealedUpgrade, ModifierCatalog.Get(_run.LastRandomModifierGranted.Value));
+                    _modifierCarouselView.Show(_run.LastRandomModifierGranted.Value, "Random modifier");
                 }
                 return;
             }

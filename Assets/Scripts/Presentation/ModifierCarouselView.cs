@@ -8,16 +8,22 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Slot-machine-style overlay shown once, right at the start of a run,
-    /// for the free modifier RunManager.GrantStartingModifier just granted
-    /// (spec extension, explicit request: "au départ d'une run, il y ait un
-    /// carousel qui choisissent un modifier au hasard, comme pour dicter une
-    /// stratégie initiale que le joueur devra utiliser"). A horizontal reel
-    /// of random modifier badges (see ModifierBadgeFactory) spins under a
-    /// fixed highlight frame and decelerates onto the real pick, then the
-    /// same modifier-card presentation UpgradeRevealView.ShowModifierGrant
-    /// uses (via ModifierCardFactory) reveals its name/icon/description
-    /// below, blocking until dismissed.
+    /// Slot-machine-style overlay for revealing a modifier the player
+    /// didn't pick themselves — originally just the free modifier
+    /// RunManager.GrantStartingModifier grants at the start of a run
+    /// (spec extension, explicit request: "au départ d'une run, il y ait
+    /// un carousel qui choisissent un modifier au hasard, comme pour
+    /// dicter une stratégie initiale que le joueur devra utiliser"), and
+    /// reused for the shop's "Random Modifier" upgrade grant too (explicit
+    /// follow-up request: "pour l'upgrade random modifier, j'aimerais
+    /// qu'on utilise l'animation carousel comme en début de run" — see
+    /// GameBootstrap.OnUpgradeBuyClicked/DebugTriggerRandomModifierShortcut).
+    /// The <paramref name="title"/> argument on <see cref="Show"/> is what
+    /// tells the two contexts apart on screen. A horizontal reel of random
+    /// modifier badges (see ModifierBadgeFactory) spins under a fixed
+    /// highlight frame and decelerates onto the real pick, then the same
+    /// modifier-card presentation (via ModifierCardFactory) reveals its
+    /// name/icon/description below, blocking until dismissed.
     /// </summary>
     public sealed class ModifierCarouselView : MonoBehaviour
     {
@@ -54,6 +60,7 @@ namespace Contigu.Presentation
 
         private TooltipView _tooltip;
         private RectTransform _root;
+        private Text _titleText;
         private RectTransform _titleRect;
         private RectTransform _viewportRect;
         private RectTransform _reelRect;
@@ -72,6 +79,7 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(_root);
 
             var title = UIFactory.CreateText(_root, "Title", "Starting modifier", 22, UITheme.TextOnBackground);
+            _titleText = title;
             _titleRect = title.rectTransform;
             _titleRect.anchorMin = new Vector2(0.5f, 1f);
             _titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -159,9 +167,20 @@ namespace Contigu.Presentation
             right.rectTransform.anchoredPosition = new Vector2(FrameSize / 2f, 0f);
         }
 
-        /// <summary><paramref name="granted"/> is RunManager.StartingModifier — already picked and applied by the time this shows; the spin is purely presentational suspense, same as UpgradeRevealView's reveals never gamble with anything Core hasn't already resolved.</summary>
-        public void Show(ModifierId granted)
+        /// <summary>
+        /// <paramref name="granted"/> is either RunManager.StartingModifier
+        /// or RunManager.LastRandomModifierGranted, depending on the
+        /// caller — already picked and applied by the time this shows; the
+        /// spin is purely presentational suspense, same as
+        /// UpgradeRevealView's reveal never gambles with anything Core
+        /// hasn't already resolved. <paramref name="title"/> distinguishes
+        /// the two contexts on screen — defaults to the original
+        /// start-of-run wording so that call site needn't pass one.
+        /// </summary>
+        public void Show(ModifierId granted, string title = "Starting modifier")
         {
+            _titleText.text = title;
+
             if (_spinCoroutine != null)
             {
                 StopCoroutine(_spinCoroutine);
