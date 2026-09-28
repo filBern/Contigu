@@ -2243,6 +2243,98 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Every cell of every row/column that WOULD complete (and clear) if
+        /// <paramref name="shape"/> were placed at (<paramref name="anchorX"/>,
+        /// <paramref name="anchorY"/>) — same "preview without mutating any
+        /// grid state" idea as <see cref="PreviewGroup"/>, using the exact
+        /// same row/column-complete rule <see cref="CheckAndClearLines"/>
+        /// itself uses (<see cref="IsRowComplete"/>/<see
+        /// cref="IsColumnComplete"/>), just with the hypothetical placement's
+        /// own cells counted as filled too. Lets the presentation layer
+        /// highlight the prospective line(s) while the player is still
+        /// choosing where to drop a piece (explicit request: "j'aimerais
+        /// qu'on fasse un highlight de la ligne qui serait cleared"). Assumes
+        /// the placement is valid (<see cref="CanPlace"/>) — callers should
+        /// check that first, same as <see cref="PreviewGroup"/>. A cell can
+        /// appear more than once if it belongs to both a completing row AND
+        /// a completing column at once — callers that need a de-duplicated
+        /// set should collect these into their own HashSet, same as
+        /// GridView's own hover footprint does elsewhere.
+        /// </summary>
+        public List<Vector2Int> PreviewClearedLineCells(PieceShape shape, int anchorX, int anchorY)
+        {
+            var offsets = shape.Cells;
+            var footprint = new HashSet<Vector2Int>(offsets.Count);
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                footprint.Add(new Vector2Int(anchorX + offsets[i].x, anchorY + offsets[i].y));
+            }
+
+            var result = new List<Vector2Int>();
+            for (int y = 0; y < Size; y++)
+            {
+                if (IsRowCompleteWithFootprint(y, footprint))
+                {
+                    for (int x = 0; x < Size; x++)
+                    {
+                        result.Add(new Vector2Int(x, y));
+                    }
+                }
+            }
+            for (int x = 0; x < Size; x++)
+            {
+                if (IsColumnCompleteWithFootprint(x, footprint))
+                {
+                    for (int y = 0; y < Size; y++)
+                    {
+                        result.Add(new Vector2Int(x, y));
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>Same rule as <see cref="IsRowComplete"/> (every unlocked cell filled, at least one unlocked cell), but also treats every cell in <paramref name="footprint"/> as filled, regardless of its actual current state — the hypothetical placement <see cref="PreviewClearedLineCells"/> checks.</summary>
+        private bool IsRowCompleteWithFootprint(int y, HashSet<Vector2Int> footprint)
+        {
+            bool hasUnlockedCell = false;
+            for (int x = 0; x < Size; x++)
+            {
+                var cell = _cells[x, y];
+                if (cell.IsLocked)
+                {
+                    continue;
+                }
+                hasUnlockedCell = true;
+                if (!cell.IsFilled && !footprint.Contains(new Vector2Int(x, y)))
+                {
+                    return false;
+                }
+            }
+            return hasUnlockedCell;
+        }
+
+        /// <summary>Column counterpart to <see cref="IsRowCompleteWithFootprint"/> — see its own doc comment.</summary>
+        private bool IsColumnCompleteWithFootprint(int x, HashSet<Vector2Int> footprint)
+        {
+            bool hasUnlockedCell = false;
+            for (int y = 0; y < Size; y++)
+            {
+                var cell = _cells[x, y];
+                if (cell.IsLocked)
+                {
+                    continue;
+                }
+                hasUnlockedCell = true;
+                if (!cell.IsFilled && !footprint.Contains(new Vector2Int(x, y)))
+                {
+                    return false;
+                }
+            }
+            return hasUnlockedCell;
+        }
+
+        /// <summary>
         /// A joker piece's own cells have no fixed color of their own, so
         /// they can potentially anchor the resulting group on ANY distinct
         /// real color reachable through them (through other jokers too — see

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +31,11 @@ namespace Contigu.Presentation
         private PieceColor? _selectedColor;
         private PieceTrait? _selectedTrait;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
+        // Separate from _hoveredFootprint — the line-clear preview covers
+        // whichever WHOLE rows/columns would complete, which is mostly
+        // pre-existing cells outside the piece's own footprint (see
+        // OnCellHoverEnter/ClearHover).
+        private readonly List<Vector2Int> _lineClearPreviewCells = new List<Vector2Int>();
         private TooltipView _tooltip;
         private RectTransform _container;
         private float _cellStride;
@@ -109,6 +115,23 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(fillTile.rectTransform);
             fillTile.gameObject.SetActive(false);
 
+            // Translucent gold wash over the WHOLE cell, shown on every cell
+            // of a row/column that would clear if the currently-hovered
+            // piece landed here (see GridManager.PreviewClearedLineCells) —
+            // explicit request: "j'aimerais qu'on fasse un highlight de la
+            // ligne qui serait cleared". Built above Background/FillTile but
+            // below every badge, so a modifier badge underneath the wash
+            // still reads clearly instead of getting tinted along with it;
+            // most of a cleared line's cells are pre-existing tiles that
+            // need to keep showing their own true fill color, so this is a
+            // separate overlay layer rather than folding into
+            // GridCellView.SetHoverTint's own green/red Background Lerp.
+            var lineClearOverlay = UIFactory.CreatePanel(cellGo, "LineClearOverlay",
+                new Color(VisualDefaults.GoldenColor.r, VisualDefaults.GoldenColor.g, VisualDefaults.GoldenColor.b, 0.45f));
+            lineClearOverlay.raycastTarget = false;
+            UIFactory.StretchFull(lineClearOverlay.rectTransform);
+            lineClearOverlay.gameObject.SetActive(false);
+
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
             badgeGolden.rectTransform.pivot = new Vector2(0f, 1f);
@@ -183,7 +206,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, _tooltip);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, lineClearOverlay, _tooltip);
             _cells[x, y] = cellView;
         }
 
@@ -345,6 +368,20 @@ namespace Contigu.Presentation
                     }
                     _cells[pos.x, pos.y].Pulse();
                 }
+
+                // Highlights every cell of any row/column this placement
+                // would complete and clear (explicit request: "j'aimerais
+                // qu'on fasse un highlight de la ligne qui serait cleared")
+                // — unlike Pulse() above, this tint needs explicit cleanup
+                // (see ClearHover), so every cell touched here is tracked in
+                // _lineClearPreviewCells first.
+                var clearedLineCells = _grid.PreviewClearedLineCells(_selectedShape, origin.x, origin.y);
+                for (int i = 0; i < clearedLineCells.Count; i++)
+                {
+                    var pos = clearedLineCells[i];
+                    _cells[pos.x, pos.y].SetLineClearPreview(true);
+                    _lineClearPreviewCells.Add(pos);
+                }
             }
 
             HoverValidityChanged?.Invoke(valid);
@@ -474,6 +511,13 @@ namespace Contigu.Presentation
                 RefreshCell(pos.x, pos.y);
             }
             _hoveredFootprint.Clear();
+
+            for (int i = 0; i < _lineClearPreviewCells.Count; i++)
+            {
+                var pos = _lineClearPreviewCells[i];
+                RefreshCell(pos.x, pos.y);
+            }
+            _lineClearPreviewCells.Clear();
         }
 
         public void OnCellClicked(int x, int y)

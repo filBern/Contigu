@@ -5207,3 +5207,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   bouton. "Sold" reste du texte brut une fois acheté (plus de prix à
   afficher). Icône et texte du prix en `raycastTarget = false` pour ne
   jamais interférer avec le clic du bouton parent.
+- **Highlight de la ligne/colonne qui serait cleared en hover** —
+  demande explicite : "Lorsqu'on a une pièce dans nos mains et que la
+  potentielle position pourrait Line clear, j'aimerais qu'on fasse un
+  highlight de la ligne qui serait cleared". Nouvelle méthode Core
+  `GridManager.PreviewClearedLineCells(shape, anchorX, anchorY)` — même
+  esprit que `PreviewGroup` (aperçu pur, sans muter l'état de la
+  grille) : réutilise exactement la même règle de complétion que
+  `CheckAndClearLines` (`IsRowComplete`/`IsColumnComplete`, via deux
+  nouvelles variantes `...WithFootprint` qui traitent en plus les
+  cellules de la pièce hypothétique comme remplies) pour dire quelles
+  lignes/colonnes complèteraient si la pièce survolée était posée là.
+  Un highlight séparé plutôt que de réutiliser le tint vert/rouge de
+  `SetHoverTint` : la plupart des cellules d'une ligne qui clear sont
+  déjà remplies avec leur vraie couleur, teinter par-dessus aurait
+  brouillé cette couleur pour rien. `GridCellView` gagne un nouveau
+  calque `LineClearOverlay` (un carré translucide doré plein cellule,
+  `VisualDefaults.GoldenColor` à 45% d'alpha,
+  `raycastTarget = false`, construit au-dessus de Background/FillTile
+  mais sous tous les badges pour qu'ils restent lisibles) et
+  `SetLineClearPreview(bool)` pour le montrer/cacher ; réinitialisé à
+  chaque vrai `ApplyState`, comme `InvalidMarker`. `GridView` collecte
+  les cellules touchées dans une nouvelle liste
+  `_lineClearPreviewCells` (distincte de `_hoveredFootprint`, puisque
+  la ligne complète déborde largement du footprint de la pièce) et les
+  réinitialise dans `ClearHover`. 4 nouveaux tests EditMode pour
+  `PreviewClearedLineCells` (plateau vide, ligne qui compléterait sans
+  muter la grille, ligne qui reste incomplète, ligne ET colonne qui
+  complètent en même temps).

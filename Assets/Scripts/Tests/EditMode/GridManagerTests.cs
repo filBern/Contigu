@@ -1119,5 +1119,82 @@ namespace Contigu.Tests
             CollectionAssert.Contains(preview, new Vector2Int(0, 1));
             CollectionAssert.DoesNotContain(preview, new Vector2Int(1, 0));
         }
+
+        [Test]
+        public void PreviewClearedLineCells_OnAnEmptyBoard_ReturnsNothing()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            var preview = grid.PreviewClearedLineCells(single, 0, 0);
+
+            Assert.AreEqual(0, preview.Count);
+        }
+
+        [Test]
+        public void PreviewClearedLineCells_DetectsARowThatWouldComplete_WithoutMutatingTheGrid()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+
+            // The row's last empty cell — placing here would complete it.
+            var preview = grid.PreviewClearedLineCells(single, GridManager.Size - 1, 0);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                CollectionAssert.Contains(preview, new Vector2Int(x, 0));
+            }
+            // Nothing was actually mutated by the preview call.
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 1, 0).IsFilled);
+        }
+
+        [Test]
+        public void PreviewClearedLineCells_ReturnsNothing_WhenTheRowStaysIncomplete()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Only fills half the row — nowhere near complete no matter
+            // where the next single piece lands.
+            for (int x = 0; x < GridManager.Size / 2; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+
+            var preview = grid.PreviewClearedLineCells(single, GridManager.Size - 1, 0);
+
+            Assert.AreEqual(0, preview.Count);
+        }
+
+        [Test]
+        public void PreviewClearedLineCells_DetectsBothARowAndAColumn_WhenBothWouldComplete()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            for (int x = 1; x < GridManager.Size; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            for (int y = 1; y < GridManager.Size; y++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, 0, y);
+            }
+
+            // (0,0) is the only cell missing from both the bottom row and
+            // the left column — placing there completes both at once.
+            var preview = grid.PreviewClearedLineCells(single, 0, 0);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                CollectionAssert.Contains(preview, new Vector2Int(x, 0));
+            }
+            for (int y = 0; y < GridManager.Size; y++)
+            {
+                CollectionAssert.Contains(preview, new Vector2Int(0, y));
+            }
+        }
     }
 }

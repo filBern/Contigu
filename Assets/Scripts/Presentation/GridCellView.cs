@@ -30,12 +30,13 @@ namespace Contigu.Presentation
         private Image _badgeTraitOrigin;
         private TraitBadgeView _traitOriginBadgeView;
         private Image _colorblindShape;
+        private Image _lineClearOverlay;
         private TooltipView _tooltip;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, Image lineClearOverlay, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -48,6 +49,7 @@ namespace Contigu.Presentation
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
             _colorblindShape = colorblindShape;
+            _lineClearOverlay = lineClearOverlay;
             _tooltip = tooltip;
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
         }
@@ -183,10 +185,11 @@ namespace Contigu.Presentation
                 _colorblindShape.sprite = ColorblindShapeFactory.GetShape(filledColor.Value);
             }
 
-            // Hover-only decoration — never part of a cell's actual state, so
-            // every real render (including the one ClearHover triggers) hides
-            // it again.
+            // Hover-only decorations — never part of a cell's actual state,
+            // so every real render (including the one ClearHover triggers)
+            // hides them again.
             _invalidMarker.gameObject.SetActive(false);
+            _lineClearOverlay.gameObject.SetActive(false);
         }
 
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
@@ -247,6 +250,24 @@ namespace Contigu.Presentation
                 _badgeTraitOrigin.gameObject.SetActive(true);
                 _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
             }
+        }
+
+        /// <summary>
+        /// Translucent gold overlay marking this cell as part of a row/
+        /// column that would clear if the currently-hovered piece were
+        /// placed here (see GridManager.PreviewClearedLineCells/
+        /// GridView.OnCellHoverEnter) — explicit request: "j'aimerais qu'on
+        /// fasse un highlight de la ligne qui serait cleared". A separate
+        /// overlay layer rather than folding this into SetHoverTint's own
+        /// green/red Lerp, since most of a cleared line's cells are
+        /// pre-existing tiles that need to keep showing their own true fill
+        /// color underneath, not get blended toward validity-tint colors
+        /// that have nothing to do with a line clear. Reset by the next real
+        /// ApplyState render, same as the other hover-only decorations.
+        /// </summary>
+        public void SetLineClearPreview(bool active)
+        {
+            _lineClearOverlay.gameObject.SetActive(active);
         }
 
         /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points, or when it's previewed as part of the prospective group while hovering a valid placement (see GridView.OnCellHoverEnter).</summary>
