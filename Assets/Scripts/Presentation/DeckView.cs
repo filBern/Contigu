@@ -60,14 +60,14 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Your Deck", 26, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "Your Deck", 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             header.rectTransform.sizeDelta = new Vector2(900f, 40f);
 
-            _countLabel = UIFactory.CreateText(_root, "Count", "", 18, UITheme.TextPrimary);
+            _countLabel = UIFactory.CreateText(_root, "Count", "", 18, UITheme.TextOnBackground);
             _countLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.pivot = new Vector2(0.5f, 1f);

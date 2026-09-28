@@ -73,7 +73,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "The Lueur Shop", 26, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "The Lueur Shop", 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -108,7 +108,7 @@ namespace Contigu.Presentation
 
             _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 20, VisualDefaults.GoldenColor);
 
-            var modifierSection = UIFactory.CreateText(_root, "ModifierLabel", "Modifiers", 16, UITheme.TextMuted);
+            var modifierSection = UIFactory.CreateText(_root, "ModifierLabel", "Modifiers", 16, UITheme.TextMutedOnBackground);
             modifierSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             modifierSection.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             modifierSection.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -117,7 +117,7 @@ namespace Contigu.Presentation
 
             _modifierCardsContainer = BuildCardRow("ModifierCards", ModifierCardsTopY);
 
-            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Upgrades", 16, UITheme.TextMuted);
+            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Upgrades", 16, UITheme.TextMutedOnBackground);
             _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -150,7 +150,7 @@ namespace Contigu.Presentation
             // request: the hint shown on the main game screen — see
             // HudView — needed here as well since the shop is its own
             // separate overlay).
-            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view piece deck", 14, UITheme.TextMuted);
+            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view piece deck", 14, UITheme.TextMutedOnBackground);
             var deckHintRect = deckHint.rectTransform;
             deckHintRect.anchorMin = new Vector2(0f, 0f);
             deckHintRect.anchorMax = new Vector2(0f, 0f);

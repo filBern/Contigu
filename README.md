@@ -5472,3 +5472,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   marge. `ComboView.PulsePeakScale` (l'agrandissement du "pulse" quand
   chips/mult augmentent) passe de 1.4 à 1.2 — le dépassement au-dessus de
   1x (+0.4) est divisé par 2 (+0.2).
+
+- **Texte trop sombre du header du shop (round 11)** : "''The lueur shop''
+  text is way too dark, choose another color from the palette". Cause :
+  l'audit texte-sur-fond-sombre du premier round de reskin cherchait
+  spécifiquement `new Color(0f, 0f, 0f, 0.88f)` (l'alpha des 7 overlays
+  d'origine) — `ShopView` et `DeckView` utilisent un alpha légèrement
+  différent (0.82) pour leur propre overlay, donc n'avaient jamais été
+  repérés par ce grep et gardaient `UITheme.TextPrimary`/`TextMuted`
+  (sombres) sur un fond sombre. Trouvé en listant TOUTES les variantes
+  `new Color(0f, 0f, 0f, 0.XXf)` du dossier plutôt qu'une seule valeur
+  fixe. Corrigés vers `TextOnBackground`/`TextMutedOnBackground` :
+  `ShopView`'s "The Lueur Shop" header, ses labels de section "Modifiers"/
+  "Upgrades", son hint "Tab: view piece deck", et `DeckView`'s header
+  "Your Deck" + son compteur total — le texte À L'INTÉRIEUR des cartes
+  (claires, `UITheme.Panel`/`ButtonIdle`) de ces deux vues reste en
+  `TextPrimary`/`TextMuted` sombre, déjà correct.
