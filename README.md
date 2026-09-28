@@ -5616,3 +5616,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   restant — le reveal Joker — passait toujours `true`) ; `UpgradeRevealView`
   ne gère donc plus que Joker désormais, `ModifierCarouselView` gère les
   deux reveals de modifier (départ de run et achat en boutique).
+
+- **Animation d'ajout/retrait dans la liste de modifiers** : "Lorsqu'un
+  modifier est ajouter ou retiré de la liste il faut une animation" —
+  `ModifierPanelView.Refresh` détruisait et reconstruisait tous les badges
+  d'un coup sans transition à chaque appel, y compris pour un simple
+  réordonnancement (swap/drag).
+  - `Refresh` compare maintenant la liste juste avant et juste après (un
+    matching multiset glouton par VALEUR, pas par position — c'est ce qui
+    fait qu'un réordonnancement ne compte jamais comme un ajout/retrait,
+    et qui gère correctement les ids dupliqués via Copieur) pour savoir
+    précisément quelles rangées sont de vraies nouvelles entrées et
+    lesquelles disparaissent réellement, par opposition à celles qui
+    restent ou bougent juste de position.
+  - Un badge nouvellement ajouté apparaît avec un léger effet de rebond
+    (même forme que le pulse de score existant — `PulsePeakScale` — mais
+    partant de 0 au lieu de 1).
+  - Un badge retiré rétrécit et s'estompe sur place au lieu de disparaître
+    instantanément : reparenté sur `_root` (avec `worldPositionStays:
+    true`, donc sans recalcul de coordonnées) pour jouer son animation
+    par-dessus la grille déjà reconstruite, pendant que
+    `GridLayoutGroup` peut réorganiser librement les badges restants
+    en dessous. Un `CanvasGroup` fait disparaître tout le badge (icône,
+    losange d'index, texte compris, pas seulement son image de fond) en
+    un seul fondu et bloque le survol/clic/drag pendant l'animation,
+    puisqu'il n'existe déjà plus dans `_rowIds`/`_rowBadges` — un clic
+    dessus résoudrait contre un index maintenant sans rapport dans la
+    liste reconstruite.

@@ -38,6 +38,17 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;
+        // Add/remove feedback (explicit request: "Lorsqu'un modifier est
+        // ajouté ou retiré de la liste il faut une animation") — a newly
+        // added badge pops in from nothing with a slight overshoot (same
+        // "ease past 1x, settle back" shape as PulsePeakScale above, just
+        // starting from 0 instead of 1 since there's no prior size to
+        // return to); a removed one shrinks and fades out in place instead
+        // of just vanishing the instant Refresh rebuilds the grid.
+        private const float AddedPopDuration = 0.35f;
+        private const float AddedPopPeakScale = 1.15f;
+        private const float AddedPopPeakFraction = 0.5f;
+        private const float RemovedShrinkDuration = 0.3f;
         // How much a tap-selected badge lightens toward white (same "just a
         // touch lighter" language as HandView's own selected-slot tint,
         // never a border/frame — on the same earlier explicit request that
@@ -179,10 +190,55 @@ namespace Contigu.Presentation
 
         public void Refresh(IReadOnlyList<ModifierId> activeModifiers)
         {
-            for (int i = _rowsContainer.childCount - 1; i >= 0; i--)
+            // Snapshotted BEFORE the rebuild below so add/remove feedback
+            // (explicit request: "Lorsqu'un modifier est ajouté ou retiré
+            // de la liste il faut une animation") can diff against what
+            // was actually on screen a moment ago, rather than just
+            // wiping and redrawing with no transition every single time —
+            // including on a plain reorder (swap/drag), which must NOT
+            // read as anything being added or removed.
+            var previousIds = new List<ModifierId>(_rowIds);
+            var previousBadges = new List<Image>(_rowBadges);
+
+            // Greedy multiset match: each NEW entry claims the first
+            // still-unclaimed OLD row with the same id. Matching by VALUE
+            // (not position) is what makes a reorder a no-op here — the
+            // same badges just claim each other regardless of where they
+            // moved to. Duplicate ids (Copieur) are handled correctly too,
+            // since each occurrence can only claim one specific old row.
+            var oldClaimed = new bool[previousIds.Count];
+            var newIsAdded = new bool[activeModifiers.Count];
+            for (int i = 0; i < activeModifiers.Count; i++)
             {
-                Destroy(_rowsContainer.GetChild(i).gameObject);
+                bool matched = false;
+                for (int j = 0; j < previousIds.Count; j++)
+                {
+                    if (!oldClaimed[j] && previousIds[j] == activeModifiers[i])
+                    {
+                        oldClaimed[j] = true;
+                        matched = true;
+                        break;
+                    }
+                }
+                newIsAdded[i] = !matched;
             }
+
+            // Every unclaimed OLD row is a genuine removal — animated away
+            // instead of destroyed outright; every claimed one is either
+            // staying or just moving, so it's safe to destroy immediately
+            // since a fresh badge for it is about to be built below anyway.
+            for (int j = 0; j < previousBadges.Count; j++)
+            {
+                if (oldClaimed[j])
+                {
+                    Destroy(previousBadges[j].gameObject);
+                }
+                else
+                {
+                    PlayRemovedBadge(previousBadges[j]);
+                }
+            }
+
             _rowIds.Clear();
             _rowBadges.Clear();
             _rowBaseColors.Clear();
@@ -202,6 +258,10 @@ namespace Contigu.Presentation
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);
                 _rowPulseCoroutines.Add(null);
+                if (newIsAdded[i])
+                {
+                    StartCoroutine(PlayAddedBadge(badge.rectTransform));
+                }
 
                 // Visual position number (on explicit request: "il va
                 // falloir les numéroter visuellement aussi" — scoring order
@@ -453,6 +513,75 @@ namespace Contigu.Presentation
                 badge.color = baseColor;
             }
             _rowPulseCoroutines[rowIndex] = null;
+        }
+
+        /// <summary>A freshly built badge pops in from nothing with a slight overshoot, same "ease past peak, settle back" shape as PulseBadge above — called right after Refresh adds a genuinely new row (see the match/diff at the top of Refresh), never on one that's merely moved from a reorder.</summary>
+        private IEnumerator PlayAddedBadge(RectTransform rect)
+        {
+            rect.localScale = Vector3.zero;
+            float t = 0f;
+            while (t < AddedPopDuration)
+            {
+                if (rect == null)
+                {
+                    yield break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / AddedPopDuration);
+                float scale = p < AddedPopPeakFraction
+                    ? Mathf.Lerp(0f, AddedPopPeakScale, p / AddedPopPeakFraction)
+                    : Mathf.Lerp(AddedPopPeakScale, 1f, (p - AddedPopPeakFraction) / (1f - AddedPopPeakFraction));
+                rect.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            if (rect != null)
+            {
+                rect.localScale = Vector3.one;
+            }
+        }
+
+        /// <summary>
+        /// A row that Refresh's diff found no match for in the new list
+        /// (sold, or lost to some other removal) shrinks and fades away in
+        /// place instead of just vanishing the instant the grid rebuilds.
+        /// Reparented onto _root (worldPositionStays: true keeps its exact
+        /// screen position/size, no coordinate math needed) so it plays out
+        /// above the already-rebuilt grid without fighting the
+        /// GridLayoutGroup, which is free to reflow every surviving badge
+        /// into its new position immediately underneath it. A CanvasGroup
+        /// fades the whole badge (icon/label/index diamond included, not
+        /// just its own background Image) as one unit and blocks it from
+        /// absorbing any stray hover/click/drag on its way out — it's
+        /// already gone from _rowIds/_rowBadges, so any of those would
+        /// resolve against a now-unrelated index in the rebuilt list.
+        /// </summary>
+        private void PlayRemovedBadge(Image badge)
+        {
+            var rect = badge.rectTransform;
+            rect.SetParent(_root, worldPositionStays: true);
+            rect.SetAsLastSibling();
+            var canvasGroup = badge.gameObject.AddComponent<CanvasGroup>();
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+            StartCoroutine(RemovedBadgeRoutine(rect, canvasGroup));
+        }
+
+        private IEnumerator RemovedBadgeRoutine(RectTransform rect, CanvasGroup canvasGroup)
+        {
+            Vector3 startScale = rect.localScale;
+            float t = 0f;
+            while (t < RemovedShrinkDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / RemovedShrinkDuration);
+                rect.localScale = Vector3.Lerp(startScale, Vector3.zero, p);
+                canvasGroup.alpha = 1f - p;
+                yield return null;
+            }
+            if (rect != null)
+            {
+                Destroy(rect.gameObject);
+            }
         }
     }
 }
