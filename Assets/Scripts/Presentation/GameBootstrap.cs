@@ -1063,9 +1063,23 @@ namespace Contigu.Presentation
         /// PiecesRemainingThisRound are already final; only the local
         /// displayed values animate. The shop only opens once this
         /// finishes.
+        ///
+        /// Blocks hand/modifier-panel input for its whole duration, same as
+        /// PlayPlacementSequence — by the time HandleStateTransition calls
+        /// this, that OTHER sequence has already re-enabled the hand (see
+        /// its own end), so without this a piece could still be selected
+        /// here (bug report: "j'ai été capable et maintenant le ghost
+        /// overlay est stuck sur mon curseur" — HandView's drag ghost,
+        /// shown the instant a slot is selected, has no way to know a new
+        /// round-end sequence started right after the one that re-enabled
+        /// it, and the shop opening afterward never clears it either).
         /// </summary>
         private System.Collections.IEnumerator PlayRoundEndLueurBonusSequence()
         {
+            _isPlayingPlacementSequence = true;
+            _handView.SetInteractable(false);
+            _modifierPanelView.SetInteractable(false);
+
             int bonus = _run.LastRoundEndLueurBonus;
             int displayedPieces = bonus;
             int displayedLueur = _run.Lueur - bonus;
@@ -1081,6 +1095,10 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);
             }
 
+            _isPlayingPlacementSequence = false;
+            _handView.SetInteractable(true);
+            RefreshShuffleButton();
+            _modifierPanelView.SetInteractable(true);
             _shopView.Show(_run);
         }
 

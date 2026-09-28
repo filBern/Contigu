@@ -5540,3 +5540,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   crème claire — lisait bien seulement sur le fond sombre du header
   "Stars") à `UITheme.Danger` (corail, déjà utilisé ailleurs dans la DA
   pour signaler "bloqué/invalide").
+
+- **Ghost de la main resté coincé pendant la nouvelle séquence de fin de
+  manche** : bug rapporté explicitement juste après l'ajout de
+  `PlayRoundEndLueurBonusSequence` — "Tu ne devrais pas être en mesure de
+  sélectionner de tuile pendant cette co-routine là, j'ai été capable et
+  maintenant le ghost overlay est stuck sur mon curseur". Cause : cette
+  nouvelle coroutine ne touchait ni `_isPlayingPlacementSequence` ni
+  `HandView.SetInteractable`, alors que `PlayPlacementSequence` (qui
+  s'exécute juste avant) réactive déjà la main à sa toute fin, avant
+  d'appeler `HandleStateTransition` — la main restait donc pleinement
+  interactive pendant les 1-2 secondes de cette nouvelle animation,
+  laissant le joueur sélectionner une pièce (et faire apparaître son
+  "ghost" suivant le curseur, voir `HandView.BuildDragGhost`) que rien ne
+  venait ensuite cacher, ni l'ouverture du shop juste après. Fixé en
+  reprenant exactement le même verrouillage que `PlayPlacementSequence`
+  (`_isPlayingPlacementSequence = true` + `HandView.SetInteractable(false)`
+  + `ModifierPanelView.SetInteractable(false)` en début de coroutine,
+  restaurés à la fin juste avant `_shopView.Show`) — `StartCoroutine`
+  exécute le code avant le premier `yield` de façon synchrone dans la même
+  frame, donc il n'y a aucune fenêtre où la main redevient interactive
+  entre la fin de `PlayPlacementSequence` et le début de celle-ci.
