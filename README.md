@@ -5519,3 +5519,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (`SetLueur`, qui pulse déjà tout seul). Le shop n'ouvre qu'une fois la
     séquence terminée. Testé (`RunManagerTests.
     EvaluateRoundEnd_ConvertsUnusedPieceBudgetIntoLueur_WhenQuotaReached`).
+
+- **Écran "Choose your challenge" en carousel** : 2 demandes explicites —
+  "j'aimerais qu'on fasse un caroussel avec les challenges au cas ou je
+  finis par en avoir plusieurs avec 2 boutons pour aller vers le
+  challenge de gauche et pour celui de droite", et "le texte Locked n'est
+  pas lisible en jaune". `ChallengeSelectView` construisait avant une
+  carte par entrée de `ChallengeCatalog.All`, alignées côte à côte sur une
+  largeur fixe — qui se serait resserrée à chaque nouveau challenge
+  ajouté. Réécrit en carousel à une seule carte : les éléments d'UI
+  (nom/description/statut/bouton Play) sont construits UNE fois et
+  rebranchés sur l'entrée courante (`ShowChallengeAt`/`RefreshCurrentCard`)
+  plutôt qu'un tableau de cartes — la largeur de l'écran ne dépend donc
+  plus jamais du nombre de challenges. Deux boutons flèche ("<"/">",
+  `UITheme.PanelLight` + le contour épais habituel) de part et d'autre de
+  la carte font défiler l'index avec retour en boucle aux extrémités (vu
+  le cadre "carousel" explicite de la demande) ; un petit label "N / M"
+  sous la carte indique la position. Le texte "Locked" passe de
+  `VisualDefaults.GoldenColor` (jaune, faible contraste sur la carte
+  crème claire — lisait bien seulement sur le fond sombre du header
+  "Stars") à `UITheme.Danger` (corail, déjà utilisé ailleurs dans la DA
+  pour signaler "bloqué/invalide").
