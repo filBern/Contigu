@@ -34,14 +34,31 @@ namespace Contigu.Presentation
             // screen, same fix TooltipView already applies to itself.
             _root.SetAsLastSibling();
 
-            var popup = UIFactory.CreateText(_root, "Popup", text, 22, color);
+            var container = UIFactory.CreateUIObject("PopupContainer", _root);
             // Small random horizontal jitter so several popups landing on the
             // same cell (e.g. two group-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
-            popup.rectTransform.position = anchor.position + new Vector3(jitterX, 0f, 0f);
-            popup.rectTransform.sizeDelta = new Vector2(160f, 40f);
-            StartCoroutine(AnimatePopup(popup));
+            container.position = anchor.position + new Vector3(jitterX, 0f, 0f);
+            container.sizeDelta = new Vector2(160f, 40f);
+
+            // Small beige diamond backdrop (explicit request: "un petit
+            // losange derrière les pop up de score avec la couleur ... beige
+            // du background de la liste de modifiers", i.e. UITheme.Panel)
+            // — same rotated-square motif as the Lueur icon and the modifier
+            // badge index number.
+            var diamond = UIFactory.CreatePanel(container, "Diamond", UITheme.Panel);
+            diamond.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            diamond.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            diamond.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            diamond.rectTransform.anchoredPosition = Vector2.zero;
+            diamond.rectTransform.sizeDelta = new Vector2(40f, 40f);
+            diamond.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
+            var popup = UIFactory.CreateText(container, "Popup", text, 22, color);
+            UIFactory.StretchFull(popup.rectTransform);
+
+            StartCoroutine(AnimatePopup(container, diamond, popup));
         }
 
         /// <summary>
@@ -106,37 +123,41 @@ namespace Contigu.Presentation
             }
         }
 
-        private IEnumerator AnimatePopup(Text text)
+        private IEnumerator AnimatePopup(RectTransform container, Image diamond, Text text)
         {
-            var rect = text.rectTransform;
             // Slow, readable float+fade — several of these play in a staggered
             // sequence per placement, so each one needs enough time on screen to
             // actually be read before the next appears.
             const float duration = 1.3f;
             const float holdFraction = 0.35f; // stay fully opaque before fading
             float t = 0f;
-            Vector3 startPos = rect.position;
-            Color startColor = text.color;
+            Vector3 startPos = container.position;
+            Color textColor = text.color;
+            Color diamondColor = diamond.color;
 
             while (t < duration)
             {
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
-                rect.position = startPos + new Vector3(0f, 60f * p, 0f);
+                container.position = startPos + new Vector3(0f, 60f * p, 0f);
 
                 float fadeP = Mathf.Clamp01((p - holdFraction) / (1f - holdFraction));
                 float alpha = Mathf.Lerp(1f, 0f, fadeP);
 
-                var c = startColor;
-                c.a = alpha;
-                text.color = c;
+                var tc = textColor;
+                tc.a = alpha;
+                text.color = tc;
+
+                var dc = diamondColor;
+                dc.a = alpha;
+                diamond.color = dc;
 
                 yield return null;
             }
 
-            if (text != null)
+            if (container != null)
             {
-                Destroy(text.gameObject);
+                Destroy(container.gameObject);
             }
         }
     }

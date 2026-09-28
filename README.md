@@ -5380,3 +5380,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   qu'on pouvait simplement retirer en gardant la police. Documenté tel
   quel dans le code (`UIFactory.DefaultFont`) pour que ce compromis reste
   visible si le sujet revient.
+
+- **Losange derrière les popups de score + texte du combo en beige
+  (round 5)** : 2 demandes explicites — "mettre un petit losange derrière
+  les pop up de score avec la couleur un peu beige du background de la
+  liste de modifiers" et "les textes de scores en bas de la grille soit de
+  la couleur beige parlé plus haut", confirmée par une capture montrant le
+  total "10" de `ComboView` presque illisible (texte sombre sur le fond
+  navy nu).
+  - `FeedbackLayer.SpawnPopup` (le "+N" qui flotte sur une case au
+    scoring) enveloppe maintenant son texte dans un petit conteneur
+    partagé avec un losange `UITheme.Panel` (même motif carré-pivoté-45°
+    que l'icône Lueur/le badge d'index des modificateurs) derrière —
+    `AnimatePopup` anime la position du conteneur et l'alpha du losange en
+    même temps que celui du texte, pour qu'ils apparaissent/disparaissent
+    ensemble. `SpawnFlyingPopup` (les popups Lueur, qui volent vers le HUD)
+    n'est pas concerné — seuls les "pop up de score" au sens strict
+    (chips/mult/golden/line-clear, via `SpawnPopup`) le sont.
+  - `ComboView`'s `_totalText` (le total chips×mult) et le label "x" entre
+    les deux pastilles utilisaient `UITheme.TextPrimary` (sombre) alors
+    qu'ils flottent directement sur le fond navy nu du canvas (`ComboView`
+    n'a pas de panneau propre derrière lui, contrairement à la plupart du
+    texte déjà passé en revue lors des rounds précédents) — passés à
+    `UITheme.Panel` (beige). Les textes des 2 pastilles elles-mêmes
+    (`_chipsText`/`_multText`, en blanc sur fond bleu/rouge saturé)
+    restent inchangés, déjà suffisamment lisibles.

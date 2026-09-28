@@ -55,8 +55,12 @@ namespace Contigu.Presentation
 
             // Running total (chips x mult) — sits above the breakdown, on
             // explicit follow-up request ("rajouter en dessous ou en haut
-            // de ces deux chiffres le score total du placement").
-            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 30, UITheme.TextPrimary);
+            // de ces deux chiffres le score total du placement"). Beige
+            // (UITheme.Panel — explicit request: "les textes de scores en
+            // bas de la grille soit de la couleur beige"), since this
+            // floats directly over the bare navy Background rather than a
+            // light panel like most of the reskinned text.
+            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 30, UITheme.Panel);
             var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
             totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
             totalLayout.preferredHeight = 36f;
@@ -83,7 +87,7 @@ namespace Contigu.Presentation
             _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 26, Color.white);
             UIFactory.StretchFull(_chipsText.rectTransform);
 
-            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 22, UITheme.TextPrimary);
+            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 22, UITheme.Panel);
             var xLayout = xLabel.gameObject.AddComponent<LayoutElement>();
             xLayout.preferredWidth = 16f;
             xLayout.preferredHeight = PillHeight;
