@@ -5414,3 +5414,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `totalLayout.preferredHeight` réajusté 36→54 en conséquence) ; un
     padding top de 6px sur le `VerticalLayoutGroup` du root le décale
     légèrement plus bas dans son bloc.
+
+- **Disabled state des boutons (round 7)** : "Les disabled states de
+  boutons dans le shop ne sont pas beau, est-ce que tu peux l'améliorer",
+  confirmé par une capture montrant le bouton "Buy" désactivé (fonds
+  insuffisants) en gris-bleu terne et boueux à côté des boutons actifs
+  cyan vif. Cause : `UIFactory.FinishButton`'s `colors.disabledColor`
+  était blanc à 40% d'alpha — un `Selectable` en `ColorTint` REMPLACE la
+  couleur du `targetGraphic` par cette valeur (il ne la multiplie pas
+  avec la couleur normale), donc le bouton devenait semi-transparent et
+  se mélangeait avec tout ce qu'il y avait derrière (carte crème, overlay
+  sombre...), un résultat différent et boueux selon le contexte au lieu
+  d'un état "désactivé" propre et prévisible. Remplacé par un gris neutre
+  **opaque** (`0.62, 0.62, 0.62, 1`) — un seul changement dans
+  `FinishButton`, donc corrige automatiquement tous les boutons
+  désactivés du jeu (pas seulement le shop), cohérent avec le contour
+  épais (qui reste net puisque l'alpha du graphique reste à 1) et avec le
+  texte/icône par-dessus (le label sombre `UITheme.TextPrimary` et
+  l'icône losange dorée du prix restent lisibles sur un gris moyen).

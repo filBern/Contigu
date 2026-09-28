@@ -117,7 +117,18 @@ namespace Contigu.Presentation
             colors.highlightedColor = new Color(0.88f, 0.88f, 0.88f, 1f);
             colors.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
             colors.selectedColor = Color.white;
-            colors.disabledColor = new Color(1f, 1f, 1f, 0.4f);
+            // Flat, fully OPAQUE muted gray rather than the old white-at-
+            // 40%-alpha (explicit report: "les disabled states de boutons
+            // dans le shop ne sont pas beau") — that translucent tint let
+            // whatever sat behind the button (the card, the dark overlay,
+            // etc.) show through and blend with the button's own sprite
+            // color, so a disabled button came out as a muddy, inconsistent
+            // color depending on its surroundings instead of a clean,
+            // deliberate "disabled" look. A flat gray reads the same
+            // everywhere, and stays opaque enough for the thick outline
+            // (drawn from this same graphic's alpha) and any dark text/icon
+            // sitting on top (e.g. ShopView's price label) to stay legible.
+            colors.disabledColor = new Color(0.62f, 0.62f, 0.62f, 1f);
             btn.colors = colors;
 
             // Quick scale-punch on click, on top of the color tint above —
