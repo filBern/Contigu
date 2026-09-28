@@ -23,14 +23,14 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "How to Play", 32, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "How to Play", 32, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -36f);
             header.rectTransform.sizeDelta = new Vector2(1000f, 46f);
 
-            var body = UIFactory.CreateText(_root, "Body", BuildRulesText(), 17, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            var body = UIFactory.CreateText(_root, "Body", BuildRulesText(), 17, UITheme.TextOnBackground, TextAnchor.UpperLeft);
             body.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             body.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             body.rectTransform.pivot = new Vector2(0.5f, 1f);

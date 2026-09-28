@@ -133,7 +133,7 @@ namespace Contigu.Presentation
                 text += "\n" + DescriptionTextFormatter.Colorize(lines[i]);
             }
 
-            var label = UIFactory.CreateText(parent, "ScoringBaseline", text, 15, UITheme.TextMuted, TextAnchor.UpperRight);
+            var label = UIFactory.CreateText(parent, "ScoringBaseline", text, 15, UITheme.TextMutedOnBackground, TextAnchor.UpperRight);
             label.rectTransform.anchorMin = new Vector2(1f, 1f);
             label.rectTransform.anchorMax = new Vector2(1f, 1f);
             label.rectTransform.pivot = new Vector2(1f, 1f);
@@ -169,7 +169,7 @@ namespace Contigu.Presentation
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextPrimary);
+            var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextOnBackground);
             UIFactory.StretchFull(text.rectTransform);
 
             fillRect = rt;

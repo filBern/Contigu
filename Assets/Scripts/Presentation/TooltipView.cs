@@ -45,9 +45,7 @@ namespace Contigu.Presentation
             _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0f, 1f);
             _panel.sizeDelta = new Vector2(Width, InitialHeight);
-            var panelOutline = panelImg.gameObject.AddComponent<Outline>();
-            panelOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            panelOutline.effectDistance = new Vector2(2f, -2f);
+            UIFactory.AddThickOutline(panelImg, UITheme.Border);
 
             _nameLabel = UIFactory.CreateText(_panel, "Name", "", 15, UITheme.TextPrimary, TextAnchor.UpperLeft);
             _nameLabel.raycastTarget = false;

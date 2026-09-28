@@ -107,6 +107,7 @@ namespace Contigu.Presentation
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
             var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
+            UIFactory.AddThickOutline(panel, UITheme.Border);
             _root = panel.rectTransform;
             // Vertically centered, STATIC size — the panel never resizes at
             // runtime anymore (see the class doc comment), so there's no

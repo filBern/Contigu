@@ -37,7 +37,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Settings", 32, UITheme.TextPrimary);
+            var header = UIFactory.CreateText(_root, "Header", "Settings", 32, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -65,7 +65,7 @@ namespace Contigu.Presentation
         /// <summary>One label + slider + live "NN%" readout, all in the same 3-column grid every row shares (see LabelColumnX/ControlColumnX/ValueColumnX) so the 3 volume rows and the checkbox row line up.</summary>
         private void BuildVolumeRow(Transform parent, float y, string label, Sprite fillSprite, float initialValue, Action<float> onChanged)
         {
-            var labelText = UIFactory.CreateText(parent, label + "Label", label, 18, UITheme.TextPrimary, TextAnchor.MiddleRight);
+            var labelText = UIFactory.CreateText(parent, label + "Label", label, 18, UITheme.TextOnBackground, TextAnchor.MiddleRight);
             labelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             labelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             labelText.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -80,7 +80,7 @@ namespace Contigu.Presentation
             sliderRect.anchoredPosition = new Vector2(ControlColumnX, y);
             sliderRect.sizeDelta = new Vector2(RowSliderWidth, RowHeight);
 
-            var valueLabel = UIFactory.CreateText(parent, label + "Value", Mathf.RoundToInt(initialValue * 100) + "%", 16, UITheme.TextMuted);
+            var valueLabel = UIFactory.CreateText(parent, label + "Value", Mathf.RoundToInt(initialValue * 100) + "%", 16, UITheme.TextMutedOnBackground);
             valueLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             valueLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             valueLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -134,7 +134,7 @@ namespace Contigu.Presentation
         /// <summary>A small square Button standing in for a checkbox (no checkmark sprite exists in the Colorful UI pack) — tinted UITheme.ButtonSelected plus a literal "X" label when checked, both driven straight off ColorblindMode.IsEnabled/Toggle(), the exact same state the C key already reads and flips.</summary>
         private static void BuildColorblindRow(Transform parent, float y)
         {
-            var labelText = UIFactory.CreateText(parent, "ColorblindLabel", "Colorblind Mode", 18, UITheme.TextPrimary, TextAnchor.MiddleRight);
+            var labelText = UIFactory.CreateText(parent, "ColorblindLabel", "Colorblind Mode", 18, UITheme.TextOnBackground, TextAnchor.MiddleRight);
             labelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             labelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             labelText.rectTransform.pivot = new Vector2(0.5f, 1f);

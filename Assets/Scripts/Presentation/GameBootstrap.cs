@@ -392,7 +392,7 @@ namespace Contigu.Presentation
             _hudView = gameObject.AddComponent<HudView>();
             _hudView.Build(mainRoot);
 
-            _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMuted);
+            _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMutedOnBackground);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);

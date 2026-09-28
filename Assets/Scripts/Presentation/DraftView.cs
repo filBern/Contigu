@@ -139,7 +139,7 @@ namespace Contigu.Presentation
             _typeCellByIndex.Clear();
             _typePreviewContainerByIndex.Clear();
 
-            var title = UIFactory.CreateText(_root, "Title", "Choose a piece type", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Choose a piece type", 22, UITheme.TextOnBackground);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -364,7 +364,7 @@ namespace Contigu.Presentation
         {
             ClearChildren();
 
-            var title = UIFactory.CreateText(_root, "Title", "Choose the target color", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Choose the target color", 22, UITheme.TextOnBackground);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);

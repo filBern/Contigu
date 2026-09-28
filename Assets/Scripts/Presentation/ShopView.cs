@@ -283,9 +283,7 @@ namespace Contigu.Presentation
             cardRect.sizeDelta = new Vector2(CardWidth, 0f);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
-            var outline = card.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(2f, -2f);
+            UIFactory.AddThickOutline(card, UITheme.Border);
 
             descRect = null;
             if (slot == null)
@@ -323,9 +321,7 @@ namespace Contigu.Presentation
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
             cardLayout.preferredHeight = CardHeight;
-            var outline = card.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(2f, -2f);
+            UIFactory.AddThickOutline(card, UITheme.Border);
 
             if (slot == null)
             {

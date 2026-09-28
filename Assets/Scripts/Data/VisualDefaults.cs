@@ -131,9 +131,13 @@ namespace Contigu.Data
             return ShapeNames.TryGetValue(shape, out var n) ? n : shape.ToString();
         }
 
-        public static readonly Color GoldenColor = new Color(0.941f, 0.702f, 0.553f); // #f0b38d — warmest palette color; blends into a pale gold over EmptyCellColor
-        public static readonly Color MultiplierOutline = new Color(0.396f, 0.682f, 0.839f, 0.85f); // #65aed6 — kept distinct from Golden/Tinted so the badge types stay distinguishable on a cell
-        public static readonly Color LockedColor = new Color(0.216f, 0.180f, 0.302f); // #372e4d — same as UITheme.Background: locked cells recede into the void
+        // Realigned to the reference DA's mustard accent (UITheme.
+        // ButtonSelected, #ffc53d) on the same reskin pass — this is a
+        // chrome/accent color (golden tiles, the Lueur icon), not one of
+        // the 4 base piece colors the request said to leave untouched.
+        public static readonly Color GoldenColor = new Color(1f, 0.773f, 0.239f); // #ffc53d
+        public static readonly Color MultiplierOutline = new Color(0.396f, 0.682f, 0.839f, 0.85f); // #65aed6 — kept distinct from Golden/Tinted so the badge types stay distinguishable on a cell; not part of the reference DA reskin, so left as-is
+        public static readonly Color LockedColor = new Color(0.071f, 0.188f, 0.290f); // #12304a — same as UITheme.Background: locked cells recede into the void
         public static readonly Color EmptyCellColor = new Color(0.937f, 0.980f, 0.902f); // #effae6
     }
 }

@@ -5250,3 +5250,57 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (`Image` → `GameObject`, un simple conteneur autour des 4 barres) ;
   `SetLineClearPreview`/`ApplyState` togglent maintenant ce conteneur
   entier plutôt qu'une seule Image.
+
+- **Reskin complet de la DA (couleurs + contours)** : sur demande explicite,
+  à partir d'une capture d'écran de référence (une appli "Journal de bord"
+  sans rapport avec le jeu, donnée uniquement comme référence de style —
+  "est-ce que tu es en mesure de changer la DA du jeu pour ce screenshot?
+  Je parle des couleurs, mais ne touche pas aux 4 couleurs de tuiles"),
+  suivi d'un "Les deux" confirmant qu'il fallait à la fois reprendre la
+  palette ET les contours noirs épais façon bande dessinée de la
+  référence. Les 4 couleurs de pièces (`Data.VisualDefaults.ColorMap` —
+  Coral/Teal/Violet/Lime, ainsi que Joker) sont restées intouchées comme
+  demandé ; seule la palette de chrome UI (`Presentation.UITheme`) et
+  quelques couleurs d'accent adjacentes dans `VisualDefaults`
+  (`GoldenColor`, `LockedColor`) ont changé.
+  - Palette exacte extraite au pixel près de la capture via Pillow
+    (`Image.crop(...).getcolors(...)` triée par fréquence, pas à l'œil) :
+    `#12304a` (fond navy), `#fff7e8` (cartes/panneaux/boutons crème),
+    `#13212e` (texte/contours quasi-noir), `#ffc53d` (moutarde, bouton
+    principal), `#ff6b57` (corail, bouton secondaire/danger).
+  - Problème de contraste découvert en cours de route : l'ancienne palette
+    n'avait qu'un seul rôle `TextPrimary` (clair) car toutes les surfaces
+    (fond violet, panneaux violets, boutons bleus) étaient sombres à
+    moyennes. La nouvelle palette inverse ça — panneaux/boutons
+    maintenant clairs (texte sombre nécessaire), mais le fond de page
+    `Background` reste navy (texte clair nécessaire). `TextPrimary` a
+    donc basculé vers le sombre (`#13212e`, cohérent avec la référence où
+    le texte est sombre presque partout — sur cartes crème, sur boutons
+    moutarde, même sur l'onglet corail), et deux nouveaux rôles
+    `TextOnBackground`/`TextMutedOnBackground` (clairs) ont été ajoutés
+    pour la minorité de texte posé directement sur le fond navy nu ou sur
+    les fonds semi-transparents noirs (`0,0,0,0.88`) des 7 overlays du
+    jeu (Settings, Tutorial, ModifierCarousel, TileChoice, DraftView
+    sub-choice, ChallengeSelect, UpgradeReveal) — appliqué titre par
+    titre/label par label à chaque vue concernée.
+  - Contours épais "comic" : nouveau `UIFactory.AddThickOutline(Image,
+    Color, float thickness = 3f)`, qui réutilise le composant `Outline`
+    natif d'Unity (la même technique 4-copies-en-diagonale déjà utilisée
+    pour les petits badges du jeu, juste avec une épaisseur plus grande),
+    valide ici car chaque cible (boutons, cartes) est une Image opaque de
+    taille fixe — contrairement au cadre du carrousel ou au contour de
+    line-clear ci-dessus, qui avaient besoin d'un contour fait main
+    justement parce que `Outline` ne fonctionne pas sur un Graphic
+    transparent. Câblé une seule fois dans `UIFactory.FinishButton`, donc
+    tous les ~20 boutons du jeu héritent du contour automatiquement sans
+    toucher chaque site d'appel ; ajouté explicitement en plus sur les
+    principales cartes/panneaux (cartes du shop, carte de challenge,
+    panneau de modificateurs, viewport + carte de reveal du carrousel,
+    carte de l'UpgradeRevealView, slots de la main, panneau du tooltip),
+    en remplaçant au passage plusieurs contours fins codés à la main
+    (`Outline` noir à 90% d'alpha, épaisseur 2) qui existaient déjà à
+    certains de ces endroits pour rester cohérent avec la nouvelle DA.
+  - `AnimatedBackgroundView` (les formes géométriques qui dérivent en
+    arrière-plan) n'a nécessité aucun changement : sa teinte est déjà
+    dérivée dynamiquement de `UITheme.Background` (`Color.Lerp` vers du
+    blanc), donc elle suit la nouvelle couleur de fond automatiquement.

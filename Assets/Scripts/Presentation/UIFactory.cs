@@ -111,6 +111,12 @@ namespace Contigu.Presentation
             var punch = img.gameObject.AddComponent<ButtonPunchEffect>();
             btn.onClick.AddListener(punch.Punch);
 
+            // The reference DA's thick dark "comic" outline, on every
+            // button in the game automatically since they all funnel
+            // through here (explicit request: "changer la DA du jeu ...
+            // les couleurs [et] des contours noirs").
+            AddThickOutline(img, UITheme.Border);
+
             // 50% bigger than whatever size the caller asked for (on
             // explicit request: "Le texte sur tous les bouton peut être 50%
             // plus gros") — every button in the game goes through this one
@@ -121,6 +127,32 @@ namespace Contigu.Presentation
             var text = CreateText(img.transform, "Label", label, Mathf.RoundToInt(fontSize * 1.5f), UITheme.TextPrimary);
             StretchFull(text.rectTransform);
             return btn;
+        }
+
+        /// <summary>
+        /// The reference DA's thick "comic" outline around a panel/card/
+        /// button (explicit request: "changer la DA du jeu ... des contours
+        /// noirs") — a single Outline component, not a hand-rolled 4-bar
+        /// frame like GridView.BuildLineClearBorder/ModifierCarouselView.
+        /// BuildHighlightFrame use elsewhere: those exist specifically to
+        /// outline a see-through or dynamically-resized area, where a
+        /// straight-bar frame is the only thing that actually renders
+        /// correctly. Every target here is an OPAQUE, static-sized Image
+        /// (button/panel fill), so Unity's own Outline works cleanly —
+        /// its ModifyVertices draws 4 diagonal copies of <paramref
+        /// name="target"/>'s own shape (offset (d,d)/(d,-d)/(-d,d)/(-d,-d)),
+        /// which is exactly Unity's standard "add a border" trick and
+        /// already used throughout this codebase for small badges; this
+        /// just applies the same technique at a size that reads clearly on
+        /// full buttons/cards too, and follows a 9-sliced sprite's own
+        /// rounded corners automatically since it duplicates that exact
+        /// alpha shape.
+        /// </summary>
+        public static void AddThickOutline(Image target, Color color, float thickness = 3f)
+        {
+            var outline = target.gameObject.AddComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = new Vector2(thickness, -thickness);
         }
 
         public static void StretchFull(RectTransform rt)

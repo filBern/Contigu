@@ -71,7 +71,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var title = UIFactory.CreateText(_root, "Title", "Starting modifier", 22, UITheme.TextPrimary);
+            var title = UIFactory.CreateText(_root, "Title", "Starting modifier", 22, UITheme.TextOnBackground);
             _titleRect = title.rectTransform;
             _titleRect.anchorMin = new Vector2(0.5f, 1f);
             _titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -79,6 +79,7 @@ namespace Contigu.Presentation
             _titleRect.sizeDelta = new Vector2(600f, TitleHeight);
 
             var viewport = UIFactory.CreatePanel(_root, "Viewport", UITheme.Panel);
+            UIFactory.AddThickOutline(viewport, UITheme.Border);
             _viewportRect = viewport.rectTransform;
             _viewportRect.anchorMin = new Vector2(0.5f, 1f);
             _viewportRect.anchorMax = new Vector2(0.5f, 1f);
@@ -281,9 +282,7 @@ namespace Contigu.Presentation
             var def = ModifierCatalog.Get(id);
             var cardImage = UIFactory.CreateSlicedImage(_cardContainer, "GrantedModifierCard", UISprites.CardBackground);
             cardImage.color = UITheme.Panel;
-            var outline = cardImage.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(2f, -2f);
+            UIFactory.AddThickOutline(cardImage, UITheme.Border);
             cardImage.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             cardImage.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             cardImage.rectTransform.pivot = new Vector2(0.5f, 1f);

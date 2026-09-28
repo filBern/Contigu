@@ -89,6 +89,7 @@ namespace Contigu.Presentation
             {
                 int idx = i;
                 var slot = UIFactory.CreateSlicedImage(container, "Slot" + i, UISprites.CardBackground);
+                UIFactory.AddThickOutline(slot, UITheme.Border);
                 slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
                 // Plain Image/Button has no ILayoutElement, so without this the
                 // parent VerticalLayoutGroup has no size to read and collapses
