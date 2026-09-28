@@ -115,22 +115,21 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(fillTile.rectTransform);
             fillTile.gameObject.SetActive(false);
 
-            // Translucent gold wash over the WHOLE cell, shown on every cell
+            // Gold border hugging the cell's own edges, shown on every cell
             // of a row/column that would clear if the currently-hovered
             // piece landed here (see GridManager.PreviewClearedLineCells) —
             // explicit request: "j'aimerais qu'on fasse un highlight de la
-            // ligne qui serait cleared". Built above Background/FillTile but
-            // below every badge, so a modifier badge underneath the wash
-            // still reads clearly instead of getting tinted along with it;
-            // most of a cleared line's cells are pre-existing tiles that
-            // need to keep showing their own true fill color, so this is a
-            // separate overlay layer rather than folding into
-            // GridCellView.SetHoverTint's own green/red Background Lerp.
-            var lineClearOverlay = UIFactory.CreatePanel(cellGo, "LineClearOverlay",
-                new Color(VisualDefaults.GoldenColor.r, VisualDefaults.GoldenColor.g, VisualDefaults.GoldenColor.b, 0.45f));
-            lineClearOverlay.raycastTarget = false;
-            UIFactory.StretchFull(lineClearOverlay.rectTransform);
-            lineClearOverlay.gameObject.SetActive(false);
+            // ligne qui serait cleared", refined on a follow-up request to
+            // outline instead of wash the whole tile: "au lieu de highlight
+            // la tuile au complet, est-ce qu'on peut highlight seulement le
+            // contour". 4 thin bars rather than an Outline component (same
+            // reasoning as ModifierCarouselView's own highlight frame — see
+            // its BuildHighlightFrame) — most of a cleared line's cells are
+            // pre-existing tiles that need to keep showing their own true
+            // fill color underneath, so a full-cell tint (or anything that
+            // relies on the base Graphic's alpha, like Outline/Shadow) would
+            // either obscure or simply not render over them.
+            var lineClearOverlay = BuildLineClearBorder(cellGo);
 
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
@@ -208,6 +207,51 @@ namespace Contigu.Presentation
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
             cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, lineClearOverlay, _tooltip);
             _cells[x, y] = cellView;
+        }
+
+        /// <summary>4 thin bars, anchor-stretched along the cell's own edges, forming a hollow border — see the comment at its call site in CreateCell for why a wash/Outline don't work here. Toggled as one unit by GridCellView.SetLineClearPreview.</summary>
+        private static GameObject BuildLineClearBorder(Transform parent)
+        {
+            const float BarThickness = 3f;
+            var borderColor = new Color(VisualDefaults.GoldenColor.r, VisualDefaults.GoldenColor.g, VisualDefaults.GoldenColor.b, 0.9f);
+
+            var wrapper = UIFactory.CreateUIObject("LineClearOverlay", parent);
+            UIFactory.StretchFull(wrapper);
+
+            var top = UIFactory.CreatePanel(wrapper, "Top", borderColor);
+            top.raycastTarget = false;
+            top.rectTransform.anchorMin = new Vector2(0f, 1f);
+            top.rectTransform.anchorMax = new Vector2(1f, 1f);
+            top.rectTransform.pivot = new Vector2(0.5f, 1f);
+            top.rectTransform.sizeDelta = new Vector2(0f, BarThickness);
+            top.rectTransform.anchoredPosition = Vector2.zero;
+
+            var bottom = UIFactory.CreatePanel(wrapper, "Bottom", borderColor);
+            bottom.raycastTarget = false;
+            bottom.rectTransform.anchorMin = new Vector2(0f, 0f);
+            bottom.rectTransform.anchorMax = new Vector2(1f, 0f);
+            bottom.rectTransform.pivot = new Vector2(0.5f, 0f);
+            bottom.rectTransform.sizeDelta = new Vector2(0f, BarThickness);
+            bottom.rectTransform.anchoredPosition = Vector2.zero;
+
+            var left = UIFactory.CreatePanel(wrapper, "Left", borderColor);
+            left.raycastTarget = false;
+            left.rectTransform.anchorMin = new Vector2(0f, 0f);
+            left.rectTransform.anchorMax = new Vector2(0f, 1f);
+            left.rectTransform.pivot = new Vector2(0f, 0.5f);
+            left.rectTransform.sizeDelta = new Vector2(BarThickness, 0f);
+            left.rectTransform.anchoredPosition = Vector2.zero;
+
+            var right = UIFactory.CreatePanel(wrapper, "Right", borderColor);
+            right.raycastTarget = false;
+            right.rectTransform.anchorMin = new Vector2(1f, 0f);
+            right.rectTransform.anchorMax = new Vector2(1f, 1f);
+            right.rectTransform.pivot = new Vector2(1f, 0.5f);
+            right.rectTransform.sizeDelta = new Vector2(BarThickness, 0f);
+            right.rectTransform.anchoredPosition = Vector2.zero;
+
+            wrapper.gameObject.SetActive(false);
+            return wrapper.gameObject;
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) GridManager instance.</summary>

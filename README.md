@@ -5222,9 +5222,7 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `SetHoverTint` : la plupart des cellules d'une ligne qui clear sont
   déjà remplies avec leur vraie couleur, teinter par-dessus aurait
   brouillé cette couleur pour rien. `GridCellView` gagne un nouveau
-  calque `LineClearOverlay` (un carré translucide doré plein cellule,
-  `VisualDefaults.GoldenColor` à 45% d'alpha,
-  `raycastTarget = false`, construit au-dessus de Background/FillTile
+  calque `LineClearOverlay` (construit au-dessus de Background/FillTile
   mais sous tous les badges pour qu'ils restent lisibles) et
   `SetLineClearPreview(bool)` pour le montrer/cacher ; réinitialisé à
   chaque vrai `ApplyState`, comme `InvalidMarker`. `GridView` collecte
@@ -5235,3 +5233,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `PreviewClearedLineCells` (plateau vide, ligne qui compléterait sans
   muter la grille, ligne qui reste incomplète, ligne ET colonne qui
   complètent en même temps).
+
+  Suivi immédiat, demande explicite : "Au lieu de highlight la tuile
+  au complet, est-ce qu'on peut highlight seulement le contour".
+  `LineClearOverlay` était au départ un carré translucide doré plein
+  cellule (`VisualDefaults.GoldenColor` à 45% d'alpha) — remplacé par
+  `GridView.BuildLineClearBorder` : 4 fines barres (3px, ancrées sur
+  chaque bord de la cellule plutôt que dimensionnées en dur, donc
+  toujours parfaitement calées quelle que soit la taille réelle de la
+  cellule) formant un contour creux, exactement le même principe que
+  le cadre doré de `ModifierCarouselView` (voir `BuildHighlightFrame`,
+  plus haut) — pas un composant `Outline` d'Unity, pour la même raison
+  déjà documentée là-bas : son effet multiplie sa propre couleur par
+  l'alpha du Graphic de base, donc rien ne s'affiche s'il n'y a pas de
+  remplissage plein sous-jacent. `_lineClearOverlay` change de type
+  (`Image` → `GameObject`, un simple conteneur autour des 4 barres) ;
+  `SetLineClearPreview`/`ApplyState` togglent maintenant ce conteneur
+  entier plutôt qu'une seule Image.

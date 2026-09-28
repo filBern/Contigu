@@ -30,13 +30,16 @@ namespace Contigu.Presentation
         private Image _badgeTraitOrigin;
         private TraitBadgeView _traitOriginBadgeView;
         private Image _colorblindShape;
-        private Image _lineClearOverlay;
+        // A GameObject, not an Image — it's a wrapper around 4 border bars
+        // (see GridView.BuildLineClearBorder), toggled as one unit rather
+        // than being a single Graphic itself.
+        private GameObject _lineClearOverlay;
         private TooltipView _tooltip;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, Image lineClearOverlay, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -189,7 +192,7 @@ namespace Contigu.Presentation
             // so every real render (including the one ClearHover triggers)
             // hides them again.
             _invalidMarker.gameObject.SetActive(false);
-            _lineClearOverlay.gameObject.SetActive(false);
+            _lineClearOverlay.SetActive(false);
         }
 
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
@@ -253,11 +256,13 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Translucent gold overlay marking this cell as part of a row/
-        /// column that would clear if the currently-hovered piece were
-        /// placed here (see GridManager.PreviewClearedLineCells/
-        /// GridView.OnCellHoverEnter) — explicit request: "j'aimerais qu'on
-        /// fasse un highlight de la ligne qui serait cleared". A separate
+        /// Gold border marking this cell as part of a row/column that
+        /// would clear if the currently-hovered piece were placed here (see
+        /// GridManager.PreviewClearedLineCells/GridView.OnCellHoverEnter) —
+        /// explicit request: "j'aimerais qu'on fasse un highlight de la
+        /// ligne qui serait cleared", refined to an outline rather than a
+        /// full tile wash on a follow-up request: "au lieu de highlight la
+        /// tuile au complet ... highlight seulement le contour". A separate
         /// overlay layer rather than folding this into SetHoverTint's own
         /// green/red Lerp, since most of a cleared line's cells are
         /// pre-existing tiles that need to keep showing their own true fill
@@ -267,7 +272,7 @@ namespace Contigu.Presentation
         /// </summary>
         public void SetLineClearPreview(bool active)
         {
-            _lineClearOverlay.gameObject.SetActive(active);
+            _lineClearOverlay.SetActive(active);
         }
 
         /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points, or when it's previewed as part of the prospective group while hovering a valid placement (see GridView.OnCellHoverEnter).</summary>
