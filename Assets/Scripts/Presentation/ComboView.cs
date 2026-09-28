@@ -49,6 +49,20 @@ namespace Contigu.Presentation
             rootLayout.childAlignment = TextAnchor.MiddleCenter;
             rootLayout.childForceExpandWidth = false;
             rootLayout.childForceExpandHeight = false;
+            // AddComponent<VerticalLayoutGroup>() defaults BOTH of these to
+            // false, which means the group only used each child's own
+            // (unset, near-zero) RectTransform height to POSITION it, while
+            // the ContentSizeFitter above still sized the whole root off
+            // each child's LayoutElement.preferredHeight — a mismatch that
+            // left a large, empty gap between _totalText and the pill row
+            // below it once preferredHeight grew past whatever the text's
+            // actual rect happened to be (explicit report, after the 50%
+            // font bump above: "Réduit la distance entre le total combo et
+            // la ligne avec mult"). Forcing control here makes the group
+            // actually resize each child to its preferred size, so the two
+            // stay in sync and the gap is just the spacing below.
+            rootLayout.childControlWidth = true;
+            rootLayout.childControlHeight = true;
             // A few pixels of top padding (explicit request: "le texte de
             // combo total devrait être ... quelques pixel plus bas") so the
             // total sits a touch lower instead of flush against the top of

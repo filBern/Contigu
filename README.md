@@ -5432,3 +5432,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   épais (qui reste net puisque l'alpha du graphique reste à 1) et avec le
   texte/icône par-dessus (le label sombre `UITheme.TextPrimary` et
   l'icône losange dorée du prix restent lisibles sur un gris moyen).
+
+- **Gap ComboView (round 8)** : "Réduit la distance entre le total combo
+  et la ligne avec mult", visible sur capture juste après le passage à
+  une police 50% plus grosse (round 6). Cause : `ComboView.Build`'s
+  `VerticalLayoutGroup` n'activait jamais `childControlWidth`/
+  `childControlHeight` (`false` par défaut pour un composant ajouté par
+  script) — le `ContentSizeFitter` du root calculait sa hauteur totale à
+  partir du `LayoutElement.preferredHeight` de chaque enfant (54 pour
+  `_totalText` depuis le round 6), mais le groupe positionnait en réalité
+  chaque enfant selon la taille RÉELLE (non contrôlée) de son propre
+  RectTransform — un écart qui ne se voyait pas trop tant que
+  `preferredHeight` restait petit (36), mais qui est devenu un grand vide
+  visible une fois monté à 54. Fixé en activant `childControlWidth`/
+  `childControlHeight` sur le `VerticalLayoutGroup`, pour que la taille
+  réellement appliquée aux enfants corresponde à celle utilisée pour le
+  calcul du `ContentSizeFitter`.
