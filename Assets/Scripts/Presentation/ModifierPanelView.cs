@@ -58,6 +58,13 @@ namespace Contigu.Presentation
         // a visible drop target underneath the cursor.
         private const float SelectedTintAmount = 0.35f;
         private const float DraggingAlpha = 0.4f;
+        // How strongly the badge currently under the cursor tints gold
+        // while a drag is in flight — reflects where the dragged modifier
+        // would actually land if dropped right now (explicit request:
+        // "Lorsque je drag un modifier, j'aimerais que potentiel position
+        // devrait se refléter") — previously a drag gave no feedback at
+        // all about the target slot until the exact moment of release.
+        private const float DropTargetTintAmount = 0.5f;
         private const float IndexLabelSize = 22f;
 
         private RectTransform _root;
@@ -80,6 +87,13 @@ namespace Contigu.Presentation
         // request: "Le joueur devrait pouvoir sell modifier lorsqu'il hover
         // dessus"). See OnBadgeHoverEnter/Exit and HoveredRowIndex.
         private int _hoveredRowIndex = -1;
+
+        // Which row is tinted gold as the drag's live drop-target preview,
+        // -1 when none — only ever set while _draggingRowIndex >= 0 (see
+        // OnBadgeHoverEnter), always the same row _hoveredRowIndex points
+        // at in that case, but tracked separately since _hoveredRowIndex
+        // also keeps working (for the sell shortcut) outside of a drag.
+        private int _dropTargetRowIndex = -1;
 
         /// <summary>The row index the pointer currently hovers, or -1 if none/the panel is blocked (see SetInteractable) — GameBootstrap reads this on its sell key press rather than tracking hover itself.</summary>
         public int HoveredRowIndex
@@ -250,6 +264,7 @@ namespace Contigu.Presentation
             _selectedRowIndex = -1;
             _draggingRowIndex = -1;
             _hoveredRowIndex = -1;
+            _dropTargetRowIndex = -1;
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
@@ -334,18 +349,30 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Marks <paramref name="index"/> as the row currently under the pointer — see HoveredRowIndex. Not gated on _interactable here (that's checked by the getter instead), so hover tracking itself never gets out of sync with what the pointer is actually over.</summary>
+        /// <summary>Marks <paramref name="index"/> as the row currently under the pointer — see HoveredRowIndex. Not gated on _interactable here (that's checked by the getter instead), so hover tracking itself never gets out of sync with what the pointer is actually over. While a drag is in flight, hovering over a DIFFERENT row also tints it gold as a live preview of where the dragged modifier would land if dropped right now (see DropTargetTintAmount) — dragging the same badge back over itself deliberately shows no preview, since dropping there is a no-op (see OnBadgeDrop).</summary>
         public void OnBadgeHoverEnter(int index)
         {
             _hoveredRowIndex = index;
+
+            if (_draggingRowIndex >= 0 && index != _draggingRowIndex)
+            {
+                _dropTargetRowIndex = index;
+                ApplyRestingColor(index);
+            }
         }
 
-        /// <summary>Clears the hover only if it's still THIS row — a fast pointer move can fire the next badge's OnPointerEnter before this one's OnPointerExit, and blindly clearing here would wipe out that newer hover.</summary>
+        /// <summary>Clears the hover only if it's still THIS row — a fast pointer move can fire the next badge's OnPointerEnter before this one's OnPointerExit, and blindly clearing here would wipe out that newer hover. Same guard for the drop-target preview: only clears (and un-tints) it if this row is still the one currently previewed.</summary>
         public void OnBadgeHoverExit(int index)
         {
             if (_hoveredRowIndex == index)
             {
                 _hoveredRowIndex = -1;
+            }
+
+            if (_dropTargetRowIndex == index)
+            {
+                _dropTargetRowIndex = -1;
+                ApplyRestingColor(index);
             }
         }
 
@@ -385,23 +412,31 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Always fires after a drag ends, whether or not it landed on a valid drop target — restores the dragged badge's normal opacity when the drag didn't result in a move (OnBadgeDrop above already cleared _draggingRowIndex when it did, making this a no-op).</summary>
+        /// <summary>Always fires after a drag ends, whether or not it landed on a valid drop target — restores the dragged badge's normal opacity when the drag didn't result in a move (OnBadgeDrop above already cleared _draggingRowIndex when it did, making this a no-op), and cleans up a leftover drop-target preview if the pointer was released somewhere that never fired OnPointerExit on it (e.g. outside the panel entirely). A drop that DID land already reset both indices via Refresh, so this is a safe no-op in that case too.</summary>
         public void OnBadgeEndDrag()
         {
-            if (_draggingRowIndex < 0 || _draggingRowIndex >= _rowBadges.Count)
+            if (_draggingRowIndex >= 0 && _draggingRowIndex < _rowBadges.Count)
             {
-                _draggingRowIndex = -1;
-                return;
+                ApplyRestingColor(_draggingRowIndex);
             }
-
-            ApplyRestingColor(_draggingRowIndex);
             _draggingRowIndex = -1;
+
+            if (_dropTargetRowIndex >= 0 && _dropTargetRowIndex < _rowBadges.Count)
+            {
+                int target = _dropTargetRowIndex;
+                _dropTargetRowIndex = -1;
+                ApplyRestingColor(target);
+            }
         }
 
-        /// <summary>A row's normal resting color — its true base color, lightened toward white while it's the tap-armed selection (see <see cref="SelectedTintAmount"/>).</summary>
+        /// <summary>A row's normal resting color — its true base color, tinted gold while it's the live drop-target preview during a drag (see <see cref="DropTargetTintAmount"/>), or lightened toward white while it's the tap-armed selection (see <see cref="SelectedTintAmount"/>). The two never overlap in practice (OnBadgeBeginDrag disarms any tap-selection first), but the drop-target check runs first regardless since it reflects the more time-sensitive state.</summary>
         private Color RestingColor(int i)
         {
             var baseColor = _rowBaseColors[i];
+            if (i == _dropTargetRowIndex)
+            {
+                return Color.Lerp(baseColor, VisualDefaults.GoldenColor, DropTargetTintAmount);
+            }
             return i == _selectedRowIndex ? Color.Lerp(baseColor, Color.white, SelectedTintAmount) : baseColor;
         }
 

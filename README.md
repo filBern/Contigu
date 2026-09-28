@@ -5701,3 +5701,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   intense. `HudView.LueurPulsePeakScale` réduit à nouveau, de 1.15 à
   1.07 (dépassement +0.07 au lieu de +0.15, soit à nouveau moitié moins),
   pour un effet à peine perceptible plutôt qu'un "pop" visible.
+
+- **Aucun feedback visuel pendant le drag d'un modifier** : "Lorsque je
+  drag un modifier, j'aimerais que potentiel position devrait se
+  refléter" — `ModifierBadgeDragHandler.OnDrag` ne fait rien (le badge
+  glissé ne suit même pas le curseur, seule sa transparence change via
+  `DraggingAlpha`), et rien n'indiquait où il atterrirait tant que le
+  joueur ne relâchait pas exactement au-dessus d'un autre badge
+  (`OnDrop` → `MoveRequested` → `RunManager.MoveModifier`, une vraie
+  réinsertion qui décale tout ce qui est entre l'ancienne et la nouvelle
+  position).
+  - Réutilise le suivi de survol déjà en place pour le raccourci "sell"
+    (`OnBadgeHoverEnter`/`OnBadgeHoverExit`, `_hoveredRowIndex`) : tant
+    qu'un drag est en cours (`_draggingRowIndex >= 0`), survoler un AUTRE
+    badge le teinte maintenant en or (`_dropTargetRowIndex`,
+    `DropTargetTintAmount = 0.5`) — reflétant en direct la rangée où le
+    modifier glissé atterrirait si on le relâchait maintenant.
+  - `RestingColor` (déjà utilisée pour la teinte "sélectionné" en
+    tap-tap) gère maintenant aussi cette teinte or, avec la même logique
+    de restauration via `ApplyRestingColor` au survol suivant/à la fin du
+    drag — y compris si le drag se termine hors de tout badge valide
+    (`OnBadgeEndDrag` nettoie l'aperçu orphelin dans ce cas), ou si le
+    drop aboutit réellement (`Refresh`, déjà appelée après tout
+    `MoveRequested`/`SwapRequested`, réinitialise `_dropTargetRowIndex`
+    avec le reste de l'état de rangée).
