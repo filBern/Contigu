@@ -71,6 +71,34 @@ namespace Contigu.Core
             _activeModifiers.Insert(toIndex, moved);
         }
 
+        /// <summary>
+        /// Sells the modifier at <paramref name="index"/> in <see
+        /// cref="ActiveModifiers"/> for Lueur (spec extension, explicit
+        /// request: "Le joueur devrait pouvoir sell modifier lorsqu'il
+        /// hover dessus" — see Presentation.GameBootstrap's key binding).
+        /// Refunds <see cref="ModifierPricing"/>'s BASE catalog price minus
+        /// 1 ("Le prix de vente d'un modifier est prix initial-1"), never
+        /// whatever escalated price a shop purchase of it might actually
+        /// have cost, and the same amount regardless of how it was
+        /// obtained (bought, Copieur-copied, or the free starting
+        /// modifier). No-op (returns false, nothing sold or refunded) for
+        /// an out-of-range index.
+        /// </summary>
+        public bool SellModifier(int index, out int refundedLueur)
+        {
+            if (!IsValidModifierIndex(index))
+            {
+                refundedLueur = 0;
+                return false;
+            }
+
+            var id = _activeModifiers[index];
+            refundedLueur = ModifierPricing.GetPrice(id) - 1;
+            _activeModifiers.RemoveAt(index);
+            Lueur += refundedLueur;
+            return true;
+        }
+
         private bool IsValidModifierIndex(int index)
         {
             return index >= 0 && index < _activeModifiers.Count;
@@ -1431,7 +1459,13 @@ namespace Contigu.Core
         /// finishes it — nothing else in the shop can be done meanwhile.
         /// Fails (no charge) under the same conditions as
         /// <see cref="BuyModifierSlot"/> (minus the modifier cap, which
-        /// doesn't apply to upgrades).
+        /// doesn't apply to upgrades in general) — EXCEPT for the "Random
+        /// Modifier" upgrade specifically (explicit report: "si le joueur
+        /// a un random modifier comme upgrade et qu'il est full il ne
+        /// devrait pas pouvoir l'acheter"), which DOES respect the cap:
+        /// buying it while already at EconomyConstants.MaxActiveModifiers
+        /// used to still charge Lueur and simply grant nothing (see
+        /// GrantRandomModifier), silently wasting the purchase.
         /// </summary>
         public bool BuyUpgradeSlot(int index)
         {
@@ -1440,6 +1474,11 @@ namespace Contigu.Core
                 return false;
             }
             if (index < 0 || index >= _upgradeSlots.Length || _upgradeSlots[index] == null || _upgradeSlots[index].Purchased)
+            {
+                return false;
+            }
+            var hiddenUpgrade = _upgradeSlots[index].HiddenUpgrade;
+            if (hiddenUpgrade.Id == UpgradeId.RandomModifier && _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
             {
                 return false;
             }

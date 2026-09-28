@@ -577,8 +577,13 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void BuyUpgradeSlot_RandomModifier_GrantsNothing_WhenAlreadyAtTheModifierCap()
+        public void BuyUpgradeSlot_RandomModifier_Fails_WhenAlreadyAtTheModifierCap()
         {
+            // Balance fix, explicit report: "si le joueur a un random
+            // modifier comme upgrade et qu'il est full il ne devrait pas
+            // pouvoir l'acheter" — this purchase used to still charge
+            // Lueur and grant nothing (a silently wasted purchase); now it
+            // fails outright, same as BuyModifierSlot already does at cap.
             var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.RandomModifier, 500);
             Assert.IsNotNull(run, "Should find a Random Modifier upgrade slot within 500 seeds");
             run.DebugGrantLueur(1000000);
@@ -588,12 +593,54 @@ namespace Contigu.Tests
                 Assert.IsTrue(run.DebugGrantModifier(ModifierCatalog.All[i].Id));
             }
             Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
+            int lueurBefore = run.Lueur;
 
             bool bought = run.BuyUpgradeSlot(slot);
 
-            Assert.IsTrue(bought, "The purchase itself (Lueur spent) still succeeds even if the gamble grants nothing");
+            Assert.IsFalse(bought, "Should refuse the purchase outright rather than charge Lueur for nothing");
+            Assert.AreEqual(lueurBefore, run.Lueur, "No Lueur should be spent on a refused purchase");
             Assert.IsFalse(run.LastRandomModifierGranted.HasValue);
             Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count, "Should not exceed the cap");
+            Assert.IsFalse(run.ShopUpgradeSlots[slot].Purchased, "The slot should stay available to buy once the player sells a modifier to make room");
+        }
+
+        [Test]
+        public void SellModifier_RemovesItAndRefundsBasePriceMinusOne()
+        {
+            // Spec extension, explicit request: "Le joueur devrait pouvoir
+            // sell modifier lorsqu'il hover dessus" + "Le prix de vente
+            // d'un modifier est prix initial-1" — refunds ModifierPricing's
+            // BASE catalog price (never the shop's own escalated price)
+            // minus 1, regardless of how the modifier was actually obtained.
+            var run = new RunManager(new SystemRandomProvider(1));
+            var id = ModifierCatalog.All[0].Id;
+            run.DebugGrantModifier(id);
+            run.DebugSetLueur(0);
+
+            bool sold = run.SellModifier(0, out int refunded);
+
+            Assert.IsTrue(sold);
+            Assert.AreEqual(ModifierPricing.GetPrice(id) - 1, refunded);
+            Assert.AreEqual(refunded, run.Lueur);
+            Assert.AreEqual(0, run.ActiveModifiers.Count);
+        }
+
+        [Test]
+        public void SellModifier_Fails_ForAnOutOfRangeIndex()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierCatalog.All[0].Id);
+            int lueurBefore = run.Lueur;
+
+            bool soldNegative = run.SellModifier(-1, out int refundedNegative);
+            bool soldTooHigh = run.SellModifier(run.ActiveModifiers.Count, out int refundedTooHigh);
+
+            Assert.IsFalse(soldNegative);
+            Assert.IsFalse(soldTooHigh);
+            Assert.AreEqual(0, refundedNegative);
+            Assert.AreEqual(0, refundedTooHigh);
+            Assert.AreEqual(1, run.ActiveModifiers.Count, "Nothing should have been removed");
+            Assert.AreEqual(lueurBefore, run.Lueur, "Nothing should have been refunded");
         }
 
         [Test]

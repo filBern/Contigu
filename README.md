@@ -5561,3 +5561,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   exécute le code avant le premier `yield` de façon synchrone dans la même
   frame, donc il n'y a aucune fenêtre où la main redevient interactive
   entre la fin de `PlayPlacementSequence` et le début de celle-ci.
+
+- **Vente de modifiers + Random Modifier bloqué à plein** : 3 demandes
+  explicites — "Le joueur devrait pouvoir ''sell modifier'' lorsqu'il
+  hover dessus + un input que tu peux choisir", "si le joueur a un random
+  modifier comme upgrade et qu'il est full il ne devrait pas pouvoir
+  l'acheter", et "Le prix de vente d'un modifier est prix initial-1".
+  - `RunManager.SellModifier(index, out refundedLueur)` : retire le
+    modifier à `index` dans `ActiveModifiers` et rembourse
+    `ModifierPricing.GetPrice(id) - 1` — le prix BASE du catalogue, pas
+    le prix escaladé qu'un achat réel en boutique aurait pu coûter, et le
+    même montant peu importe comment le modifier a été obtenu (acheté,
+    copié via Copieur, ou le modifier de départ gratuit).
+  - Input choisi : **X** (touche libre, lit naturellement "retirer/jeter"
+    dans la plupart des jeux), toujours actif comme Tab/C/H/Esc — voir
+    `GameBootstrap.Update`/`TrySellHoveredModifier`, ajouté aussi à la
+    liste de rappels de `HudView.BuildScoringBaseline`. Le survol est
+    suivi via `ModifierBadgeDragHandler` (déjà attaché à chaque badge du
+    panneau persistant pour le drag/tap-swap), qui implémente maintenant
+    aussi `IPointerEnterHandler`/`IPointerExitHandler` et remonte l'index
+    survolé à `ModifierPanelView` (`HoveredRowIndex`, `-1` quand le
+    panneau est bloqué mid-animation — même verrou que le reste). La
+    vente fait voler le remboursement depuis le badge vers le compteur de
+    Lueur, comme tout autre gain de Lueur.
+  - `RunManager.BuyUpgradeSlot` : l'upgrade "Random Modifier" refusait
+    déjà d'accorder un modifier une fois plein (`GrantRandomModifier`
+    retourne null), mais l'achat lui-même passait quand même et facturait
+    la Lueur pour rien — l'achat échoue maintenant complètement dans ce
+    cas précis (seule exception au cap parmi les upgrades, qui l'ignorent
+    normalement). `ShopView` reflète l'état à l'écran : bouton grisé,
+    label "Full (N)" au lieu du prix, même traitement que les slots de
+    modifiers déjà pleins.
+  - Testé (`RunManagerTests.SellModifier_RemovesItAndRefundsBasePriceMinusOne`,
+    `SellModifier_Fails_ForAnOutOfRangeIndex`, et l'ancien test
+    `BuyUpgradeSlot_RandomModifier_GrantsNothing_WhenAlreadyAtTheModifierCap`
+    réécrit en `..._Fails_WhenAlreadyAtTheModifierCap` pour refléter le
+    nouveau comportement).

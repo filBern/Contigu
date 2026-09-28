@@ -193,6 +193,52 @@ namespace Contigu.Presentation
             {
                 _settingsView.Toggle();
             }
+            // X sells whichever modifier badge the pointer is currently
+            // resting over (spec extension, explicit request: "Le joueur
+            // devrait pouvoir sell modifier lorsqu'il hover dessus + un
+            // input que tu peux choisir" — X chosen since it's free and
+            // reads as "remove/discard" in most games, same "always-
+            // available" reasoning as the other bindings above).
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                TrySellHoveredModifier();
+            }
+        }
+
+        /// <summary>
+        /// Sells whichever modifier badge is currently hovered (see
+        /// ModifierPanelView.HoveredRowIndex — already -1 while the panel
+        /// is blocked, e.g. mid-animation) via RunManager.SellModifier, and
+        /// flies the refund from that badge to the Lueur label same as any
+        /// other Lueur gain. No-op if nothing's hovered or the run is in a
+        /// state (victory/defeat) where touching modifiers makes no sense.
+        /// </summary>
+        private void TrySellHoveredModifier()
+        {
+            if (_run.State != RunState.InProgress && _run.State != RunState.AwaitingShop)
+            {
+                return;
+            }
+            int hoveredIndex = _modifierPanelView.HoveredRowIndex;
+            if (hoveredIndex < 0 || hoveredIndex >= _run.ActiveModifiers.Count)
+            {
+                return;
+            }
+
+            var id = _run.ActiveModifiers[hoveredIndex];
+            var badgeAnchor = _modifierPanelView.GetBadgeTransform(id, hoveredIndex);
+            if (!_run.SellModifier(hoveredIndex, out int refundedLueur))
+            {
+                return;
+            }
+
+            if (badgeAnchor != null)
+            {
+                _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + refundedLueur, VisualDefaults.GoldenColor);
+            }
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+            _hudView.SetLueur(_run.Lueur);
+            SetStatusText("Sold " + ModifierCatalog.Get(id).Name + " for " + refundedLueur + " Lueur.");
         }
 
 #if UNITY_EDITOR

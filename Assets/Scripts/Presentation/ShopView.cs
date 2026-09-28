@@ -354,8 +354,15 @@ namespace Contigu.Presentation
             mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
 
             int price = run.GetUpgradeSlotPrice(index);
-            BuildBuyButton(card.transform, slot.Purchased, price.ToString(),
-                !slot.Purchased && run.PendingUpgrade == null && run.Lueur >= price,
+            // Random Modifier is the one upgrade that respects the
+            // modifier cap (explicit report: "si le joueur a un random
+            // modifier comme upgrade et qu'il est full il ne devrait pas
+            // pouvoir l'acheter") — buying it while already full used to
+            // still charge Lueur and grant nothing (see RunManager.
+            // BuyUpgradeSlot). Every other upgrade ignores the cap.
+            bool atModifierCap = isRandomModifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
+            BuildBuyButton(card.transform, slot.Purchased, atModifierCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(),
+                !slot.Purchased && !atModifierCap && run.PendingUpgrade == null && run.Lueur >= price,
                 () => OnUpgradeBuyClicked(index));
         }
 

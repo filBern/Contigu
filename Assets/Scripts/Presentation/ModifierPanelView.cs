@@ -64,6 +64,18 @@ namespace Contigu.Presentation
         private int _selectedRowIndex = -1;
         private int _draggingRowIndex = -1;
 
+        // Which row the pointer currently rests over, -1 when none — feeds
+        // the "sell the modifier under the cursor" shortcut (explicit
+        // request: "Le joueur devrait pouvoir sell modifier lorsqu'il hover
+        // dessus"). See OnBadgeHoverEnter/Exit and HoveredRowIndex.
+        private int _hoveredRowIndex = -1;
+
+        /// <summary>The row index the pointer currently hovers, or -1 if none/the panel is blocked (see SetInteractable) — GameBootstrap reads this on its sell key press rather than tracking hover itself.</summary>
+        public int HoveredRowIndex
+        {
+            get { return _interactable ? _hoveredRowIndex : -1; }
+        }
+
         /// <summary>Fired when the player taps two different badges in a row — RunManager.SwapModifiers(a, b) is the expected response, followed by a Refresh.</summary>
         public event System.Action<int, int> SwapRequested;
 
@@ -181,6 +193,7 @@ namespace Contigu.Presentation
             // happens to sit at that same position.
             _selectedRowIndex = -1;
             _draggingRowIndex = -1;
+            _hoveredRowIndex = -1;
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
@@ -258,6 +271,21 @@ namespace Contigu.Presentation
             if (SwapRequested != null)
             {
                 SwapRequested(armed, index);
+            }
+        }
+
+        /// <summary>Marks <paramref name="index"/> as the row currently under the pointer — see HoveredRowIndex. Not gated on _interactable here (that's checked by the getter instead), so hover tracking itself never gets out of sync with what the pointer is actually over.</summary>
+        public void OnBadgeHoverEnter(int index)
+        {
+            _hoveredRowIndex = index;
+        }
+
+        /// <summary>Clears the hover only if it's still THIS row — a fast pointer move can fire the next badge's OnPointerEnter before this one's OnPointerExit, and blindly clearing here would wipe out that newer hover.</summary>
+        public void OnBadgeHoverExit(int index)
+        {
+            if (_hoveredRowIndex == index)
+            {
+                _hoveredRowIndex = -1;
             }
         }
 
