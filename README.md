@@ -5768,3 +5768,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     défaut (le conteneur ne contrôle pas la taille de ses enfants), animer
     l'échelle du chiffre ne redéclenche pas de recalcul de mise en page
     qui viendrait perturber sa position.
+
+- **Retrait complet du pulse de Lueur** : "Enlève le pulse complètement
+  sur l'effet lueur en haut de la grille" — après plusieurs passages à
+  essayer de corriger son intensité, sa position et un glitch de relance
+  (voir les trois entrées précédentes), toujours pas satisfaisant :
+  retiré entièrement plutôt que retenté une nouvième fois. `SetLueur` ne
+  fait plus que mettre à jour le texte du chiffre ; `PulseLueur`,
+  `PulseLueurRoutine`, `_lastLueur`, `_lueurPulseCoroutine` et les
+  constantes `LueurPulseDuration`/`LueurPulsePeakScale`/
+  `LueurPulsePeakFraction` sont supprimés (plus aucun appelant), ainsi
+  que le `using System.Collections;` du fichier (plus aucune coroutine
+  dans `HudView` désormais).

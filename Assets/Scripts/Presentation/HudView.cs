@@ -1,4 +1,3 @@
-using System.Collections;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -31,16 +30,6 @@ namespace Contigu.Presentation
         // so there's only ~83px of headroom below the status text for this
         // label to grow into before it'd start overlapping the board.
         private const float LueurLabelY = -(80f + 26f + 2f);
-        private const float LueurPulseDuration = 0.25f;
-        // Halved twice already (explicit reports: "Le pulse de lueur est
-        // vraiment trop intense", then "encore beaucoup trop intense")
-        // from +0.3 (1.3x peak) down to +0.07 (1.07x) — most of what still
-        // read as "too intense" at that point was actually the restart
-        // glitch fixed below (PulseLueur no longer interrupts an
-        // in-flight pulse), not the peak scale itself, but nudged down
-        // once more anyway to +0.04 (1.04x) to be safe.
-        private const float LueurPulsePeakScale = 1.04f;
-        private const float LueurPulsePeakFraction = 0.35f;
 
         private RectTransform _scoreFillRect;
         private Text _scoreLabel;
@@ -48,8 +37,6 @@ namespace Contigu.Presentation
         private Text _piecesLabel;
         private RectTransform _lueurContainer;
         private Text _lueurLabel;
-        private int _lastLueur;
-        private Coroutine _lueurPulseCoroutine;
 
         public void Build(Transform parent)
         {
@@ -231,82 +218,16 @@ namespace Contigu.Presentation
         /// Updates just the Lueur label, without touching anything else —
         /// same idea as <see cref="SetScores"/>, lets the presentation layer
         /// animate Lueur up progressively (one group at a time) instead of
-        /// always jumping straight to the final value; each of those
-        /// intermediate catch-up steps that actually raises the total also
-        /// pulses the label (on explicit request: "qu'il pulse chaque fois
-        /// qu'il augmente"), not just the final one. A drop (spent in the
-        /// shop) or unchanged value never pulses.
+        /// always jumping straight to the final value. Used to also pulse
+        /// the label on every increase, removed outright on explicit
+        /// request ("Enlève le pulse complètement sur l'effet lueur en
+        /// haut de la grille") after several rounds of trying to tune its
+        /// intensity/positioning/timing down to something that still read
+        /// as too much.
         /// </summary>
         public void SetLueur(int lueur)
         {
             _lueurLabel.text = lueur.ToString();
-            if (lueur > _lastLueur)
-            {
-                PulseLueur();
-            }
-            _lastLueur = lueur;
-        }
-
-        private void PulseLueur()
-        {
-            // Ignores the request outright while a pulse is already in
-            // flight, rather than the STOP-then-restart this used to do
-            // (same defensive intent as ModifierPanelView.PulseRow — never
-            // let two coroutines animate the same RectTransform's scale at
-            // once — but restarting was the wrong fix here). SetLueur is
-            // called once per +1/group during a staggered gain sequence
-            // (e.g. GameBootstrap.PlayRoundEndLueurBonusSequence, every
-            // 0.1s) — faster than LueurPulseDuration (0.25s), so a hard
-            // restart on every call kept cutting the animation off
-            // mid-lerp and snapping PulseLueurRoutine's own scale formula
-            // (which always starts from p=0, i.e. scale 1, on every fresh
-            // call) back down before ramping up again, reading as several
-            // stuttering pulses in a row instead of one smooth one
-            // (explicit report: "il semble pulse plus qu'une fois d'affilé
-            // comme un glitch"). Simply letting the current pulse ride out
-            // to completion — the label's TEXT still updates on every
-            // SetLueur call regardless, only the pulse itself is skipped —
-            // fixes that outright: one pulse per burst of gains, however
-            // many individual +N calls make it up.
-            if (_lueurPulseCoroutine != null)
-            {
-                return;
-            }
-            _lueurPulseCoroutine = StartCoroutine(PulseLueurRoutine());
-        }
-
-        private IEnumerator PulseLueurRoutine()
-        {
-            // Scales the NUMBER's own RectTransform, not _lueurContainer
-            // (explicit report: "j'aimerais qu'il pulse en grosseur de
-            // texte, pas en position. Il semble aller vers le bas") —
-            // _lueurContainer is top-pivoted (pivot.y = 1, see Build) so
-            // the container itself growing/shrinking around that pivot
-            // moved its bottom edge (and everything in it, icon included)
-            // down and back up on every pulse, reading as a position
-            // shift rather than the number simply growing in place. A
-            // fresh RectTransform defaults to a CENTER pivot (0.5, 0.5,
-            // never touched here), and it's a leaf under the
-            // HorizontalLayoutGroup with default childControlWidth/Height
-            // (false), so scaling it doesn't feed back into the layout
-            // group's own position math the way changing its sizeDelta
-            // would — it just grows/shrinks the digits in place. The icon
-            // is untouched now too, matching "en grosseur de texte" (not
-            // the icon+number pair as a whole).
-            var rt = _lueurLabel.rectTransform;
-            float t = 0f;
-            while (t < LueurPulseDuration)
-            {
-                t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / LueurPulseDuration);
-                float scale = p < LueurPulsePeakFraction
-                    ? Mathf.Lerp(1f, LueurPulsePeakScale, p / LueurPulsePeakFraction)
-                    : Mathf.Lerp(LueurPulsePeakScale, 1f, (p - LueurPulsePeakFraction) / (1f - LueurPulsePeakFraction));
-                rt.localScale = new Vector3(scale, scale, 1f);
-                yield return null;
-            }
-            rt.localScale = Vector3.one;
-            _lueurPulseCoroutine = null;
         }
 
         /// <summary>
