@@ -5488,3 +5488,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   "Your Deck" + son compteur total — le texte À L'INTÉRIEUR des cartes
   (claires, `UITheme.Panel`/`ButtonIdle`) de ces deux vues reste en
   `TextPrimary`/`TextMuted` sombre, déjà correct.
+
+- **Budget de pièces inutilisé converti en Lueur** : problème de balance
+  signalé explicitement — "si le joueur a des trop bon modifiers trop tôt
+  dans la game, il n'a pas assez de temps pour récolter des lueurs", avec
+  la solution donnée directement : "Chaque tuile non utilisé dans une
+  round est +1 lueur", plus une animation demandée explicitement ("une
+  animation de +1 lueur qui part de la progress bar d'en bas vers le
+  compteur de lueur tout en faisant descendre de compteur de tuile
+  restante").
+  - Core (`RunManager.EvaluateRoundEnd`) : dès qu'une manche se termine
+    par quota atteint (avant la branche victoire/shop), `Lueur +=
+    PiecesRemainingThisRound` — chaque pièce du budget non jouée vaut
+    donc exactement +1 Lueur. Suit la même convention que tout le reste
+    du scoring dans ce projet : le Core calcule l'état final
+    INSTANTANÉMENT (`Lueur` contient déjà le bonus), la Presentation se
+    charge seule de rejouer une révélation progressive. Nouveau champ
+    `LastRoundEndLueurBonus` (lu une seule fois par la Presentation,
+    remis à 0 dans `StartRound`) retient le montant du bonus pour que la
+    séquence d'animation sache combien de "+1" jouer.
+  - Presentation (`GameBootstrap.PlayRoundEndLueurBonusSequence`,
+    nouvelle coroutine appelée par `HandleStateTransition` avant
+    `_shopView.Show` quand `LastRoundEndLueurBonus > 0`) : boucle une
+    fois par pièce inutilisée — décrémente la barre du bas
+    (`HudView.SetPieces`, méthode rendue publique, ex-`UpdatePieces`),
+    fait voler un popup "+1" depuis la barre du bas (nouveau
+    `HudView.PiecesBarTransform`) vers le compteur de Lueur en réutilisant
+    `FeedbackLayer.SpawnFlyingPopup` (même mécanisme que les popups Lueur
+    de groupe en cours de manche), puis incrémente l'affichage de Lueur
+    (`SetLueur`, qui pulse déjà tout seul). Le shop n'ouvre qu'une fois la
+    séquence terminée. Testé (`RunManagerTests.
+    EvaluateRoundEnd_ConvertsUnusedPieceBudgetIntoLueur_WhenQuotaReached`).

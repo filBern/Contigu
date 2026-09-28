@@ -31,6 +31,11 @@ namespace Contigu.Presentation
         // instead of collapsing to an instant dump.
         private const float ComboSpeedupFactor = 0.97f;
         private const float MinStaggerSeconds = 0.1f;
+        // Round-end "unused piece -> Lueur" popup sequence (see
+        // PlayRoundEndLueurBonusSequence) — faster than LueurGroupStaggerSeconds
+        // since this can run once per unused piece in the round's whole
+        // budget (up to ~24), not just once per scored group.
+        private const float RoundEndLueurBonusStaggerSeconds = 0.1f;
         // Slow "breathing" pulse on the idle status prompt (on explicit
         // request: "j'aimerais qu'il pulse lentement") — a gentle ±5% scale
         // wobble, not the sharper one-shot flash ModifierPanelView.Pulse
@@ -1017,7 +1022,14 @@ namespace Contigu.Presentation
             switch (state)
             {
                 case RunState.AwaitingShop:
-                    _shopView.Show(_run);
+                    if (_run.LastRoundEndLueurBonus > 0)
+                    {
+                        StartCoroutine(PlayRoundEndLueurBonusSequence());
+                    }
+                    else
+                    {
+                        _shopView.Show(_run);
+                    }
                     break;
 
                 case RunState.RunVictory:
@@ -1034,6 +1046,42 @@ namespace Contigu.Presentation
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Replays the round-end "unused piece budget -> Lueur" bonus
+        /// RunManager.EvaluateRoundEnd already applied to Lueur in full
+        /// (spec extension, explicit request — balance fix: a strong early
+        /// modifier can reach quota almost instantly, leaving most of the
+        /// round's piece budget unused and starving Lueur income for the
+        /// shop; see RunManager.LastRoundEndLueurBonus). One tick per
+        /// unused piece: the pieces bar counts down toward 0 and a "+1"
+        /// popup flies from it to the Lueur label (same
+        /// FeedbackLayer.SpawnFlyingPopup used for in-round Lueur group
+        /// popups — see PlayPlacementSequence), pulsing the Lueur readout
+        /// up to match. Purely a presentation replay — Core's Lueur/
+        /// PiecesRemainingThisRound are already final; only the local
+        /// displayed values animate. The shop only opens once this
+        /// finishes.
+        /// </summary>
+        private System.Collections.IEnumerator PlayRoundEndLueurBonusSequence()
+        {
+            int bonus = _run.LastRoundEndLueurBonus;
+            int displayedPieces = bonus;
+            int displayedLueur = _run.Lueur - bonus;
+            var fromAnchor = _hudView.PiecesBarTransform;
+
+            for (int i = 0; i < bonus; i++)
+            {
+                displayedPieces--;
+                displayedLueur++;
+                _hudView.SetPieces(displayedPieces, _run.CurrentBudget);
+                _feedbackLayer.SpawnFlyingPopup(fromAnchor.position, _hudView.LueurLabelTransform, "+1", VisualDefaults.GoldenColor);
+                _hudView.SetLueur(displayedLueur);
+                yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);
+            }
+
+            _shopView.Show(_run);
         }
 
         /// <summary>

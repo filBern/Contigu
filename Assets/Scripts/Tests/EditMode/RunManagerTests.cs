@@ -172,6 +172,46 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void EvaluateRoundEnd_ConvertsUnusedPieceBudgetIntoLueur_WhenQuotaReached()
+        {
+            // Balance fix (explicit request): a strong early modifier can
+            // reach quota almost instantly, leaving most of the round's
+            // piece budget unused and starving Lueur income for the shop —
+            // every unused piece is now worth +1 Lueur, same "every cell
+            // golden" fast-quota setup as the round-end test above.
+            var run = new RunManager(new SystemRandomProvider(42));
+            foreach (var pos in GridManager.AllPositions())
+            {
+                run.Grid.GetCell(pos).IsGolden = true;
+            }
+            run.DebugSetLueur(0);
+
+            int guard = 0;
+            while (run.State == RunState.InProgress)
+            {
+                int slot = FirstOccupiedHandSlot(run);
+                var token = run.Deck.Hand[slot].Value;
+                var rotation = run.Deck.HandRotations[slot];
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+                var anchor = FindAnyValidAnchor(run.Grid, shape);
+                Assert.IsTrue(anchor.HasValue);
+                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+                guard++;
+                Assert.Less(guard, 100);
+            }
+
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
+            int unusedPieces = run.PiecesRemainingThisRound;
+            Assert.Greater(unusedPieces, 0, "Round should end with budget still remaining once the quota is reached");
+            Assert.AreEqual(unusedPieces, run.LastRoundEndLueurBonus);
+            Assert.AreEqual(unusedPieces, run.Lueur, "Every unused piece should be worth exactly +1 Lueur");
+
+            run.LeaveShop();
+
+            Assert.AreEqual(0, run.LastRoundEndLueurBonus, "Should reset once the next round starts, not linger from the previous one");
+        }
+
+        [Test]
         public void ActiveModifiers_StopsAcceptingMore_OnceAtTheCap()
         {
             var run = new RunManager(new SystemRandomProvider(1));

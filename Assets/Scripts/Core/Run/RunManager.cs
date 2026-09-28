@@ -230,6 +230,9 @@ namespace Contigu.Core
         public int TotalScore { get; private set; }
         public int PiecesRemainingThisRound { get; private set; }
 
+        /// <summary>How much Lueur the round that just ended converted its unused piece budget into (see EvaluateRoundEnd) — 0 until the first round ends, read once by GameBootstrap right after transitioning to AwaitingShop to replay it as a popup sequence, then meaningless again until the next round ends.</summary>
+        public int LastRoundEndLueurBonus { get; private set; }
+
         public RunState State { get; private set; }
 
         public int CurrentRoundNumber
@@ -287,6 +290,7 @@ namespace Contigu.Core
             }
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
+            LastRoundEndLueurBonus = 0;
             State = RunState.InProgress;
 
             // Same stuck-check PlacePiece runs after a mid-round redraw (see
@@ -1169,6 +1173,22 @@ namespace Contigu.Core
         {
             if (RoundScore >= CurrentQuota)
             {
+                // Balance fix (spec extension, explicit request): a strong
+                // early modifier can reach quota almost instantly, leaving
+                // most of the round's piece budget unused and starving the
+                // player of Lueur income for the shop. Converting every
+                // unused piece into +1 Lueur means finishing a round FAST
+                // still pays out close to what grinding it out fully would
+                // have. LastRoundEndLueurBonus is read once by the
+                // presentation layer (GameBootstrap.PlayRoundEndLueurBonusSequence)
+                // to replay this as a "+1 Lueur" popup per unused piece,
+                // flying from the pieces bar to the Lueur counter, before
+                // the shop actually opens — Lueur itself is already final
+                // here, same "core computes the end state instantly,
+                // presentation fakes the gradual reveal" convention as
+                // every other scoring event in PlacePiece.
+                LastRoundEndLueurBonus = PiecesRemainingThisRound;
+                Lueur += LastRoundEndLueurBonus;
                 ApplyMultCinqRisqueLossChance();
                 if (CurrentRoundIndex == _challenge.RoundCount - 1)
                 {

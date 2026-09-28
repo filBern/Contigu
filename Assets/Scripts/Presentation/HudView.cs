@@ -206,9 +206,15 @@ namespace Contigu.Presentation
             get { return _lueurContainer; }
         }
 
+        /// <summary>Anchor on the pieces bar — the presentation layer flies each round-end "unused piece -> Lueur" popup FROM this point (see GameBootstrap.PlayRoundEndLueurBonusSequence), the mirror image of LueurLabelTransform above as a destination.</summary>
+        public RectTransform PiecesBarTransform
+        {
+            get { return _piecesLabel.rectTransform; }
+        }
+
         public void Refresh(RunManager run)
         {
-            UpdatePieces(run.PiecesRemainingThisRound, run.CurrentBudget);
+            SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             SetScores(run.RoundScore, run.CurrentQuota);
             SetLueur(run.Lueur);
         }
@@ -277,7 +283,14 @@ namespace Contigu.Presentation
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
         }
 
-        private void UpdatePieces(int piecesRemaining, int budget)
+        /// <summary>
+        /// Updates just the pieces bar, without touching the score bar — same
+        /// "presentation layer animates progressively" idea as <see
+        /// cref="SetScores"/>, used by GameBootstrap.PlayRoundEndLueurBonusSequence
+        /// to count the bar down one unused piece at a time as each converts
+        /// into +1 Lueur, instead of jumping straight to empty.
+        /// </summary>
+        public void SetPieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;
             SetRatio(_piecesFillRect, budget > 0 ? (float)piecesRemaining / budget : 0f);
