@@ -25,7 +25,9 @@ namespace Contigu.Presentation
     public sealed class ComboView : MonoBehaviour
     {
         private const float PulseDuration = 0.35f;
-        private const float PulsePeakScale = 1.4f;
+        // The overshoot above 1x halved (explicit request: "réduit son
+        // pulse de moitié") — was +0.4 (1.4x peak), now +0.2 (1.2x peak).
+        private const float PulsePeakScale = 1.2f;
         private const float PulsePeakFraction = 0.4f;
         private const float PillWidth = 84f;
         private const float PillHeight = 46f;
@@ -73,8 +75,9 @@ namespace Contigu.Presentation
             // 105.5px gap between the grid's bottom edge and the pieces bar
             // (see GameBootstrap's comboRect comment) — enough to overlap
             // the bar (explicit report with screenshot: "il y a un overlap
-            // là avec mult et addition de combo").
-            rootLayout.padding = new RectOffset(0, 0, 3, 0);
+            // là avec mult et addition de combo"). Trimmed once more, 3->2,
+            // to free up a bit more slack for the position nudge below.
+            rootLayout.padding = new RectOffset(0, 0, 2, 0);
             var rootFitter = _root.gameObject.AddComponent<ContentSizeFitter>();
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;

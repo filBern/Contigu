@@ -5462,3 +5462,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `totalLayout.preferredHeight` (54→48, encore largement assez pour des
   chiffres à 45pt qui n'ont pas de jambages) et le padding du haut (6→3) —
   nouvelle hauteur totale 100px, avec ~2.75px de marge de chaque côté.
+
+- **Position + pulse du ComboView (round 10)** : "Remonte le encore un
+  peu et réduit son pulse de moitié". Padding du haut retrimé 3→2px
+  (hauteur totale 99px, ~3.25px de marge de chaque côté au centre exact
+  de la marge de 105.5px) puis `comboRect.anchoredPosition.y` remonté de
+  120.75 à 123.25 (dans le budget des 3.25px de marge, sans toucher le
+  bas de la grille) — gain net côté barre du bas : ~2.75px → ~5.75px de
+  marge. `ComboView.PulsePeakScale` (l'agrandissement du "pulse" quand
+  chips/mult augmentent) passe de 1.4 à 1.2 — le dépassement au-dessus de
+  1x (+0.4) est divisé par 2 (+0.2).

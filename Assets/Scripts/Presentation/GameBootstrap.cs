@@ -435,14 +435,18 @@ namespace Contigu.Presentation
             comboRect.anchorMin = new Vector2(0.5f, 0f);
             comboRect.anchorMax = new Vector2(0.5f, 0f);
             comboRect.pivot = new Vector2(0.5f, 0.5f);
-            // Centered under the grid, in the gap between the grid's bottom
-            // edge and the pieces bar flush against the screen's bottom edge.
-            // Grid is centered on an always-800-tall canvas (CanvasScaler
-            // matches height) and 453 tall, so its bottom edge sits 400 -
-            // 453/2 = 173.5 above the bottom. The pieces bar is 68 tall (see
-            // HudView.BarHeight). Midpoint between the grid's bottom and the
-            // bar's top: (173.5 + 68) / 2 = 120.75.
-            comboRect.anchoredPosition = new Vector2(0f, 120.75f);
+            // In the gap between the grid's bottom edge and the pieces bar
+            // flush against the screen's bottom edge. Grid is centered on an
+            // always-800-tall canvas (CanvasScaler matches height) and 453
+            // tall, so its bottom edge sits 400 - 453/2 = 173.5 above the
+            // bottom. The pieces bar is 68 tall (see HudView.BarHeight).
+            // Midpoint between the grid's bottom and the bar's top:
+            // (173.5 + 68) / 2 = 120.75 — nudged up a few more px from there
+            // (explicit request: "Remonte le encore un peu") for extra
+            // clearance from the bar, still within the ~3.25px of slack the
+            // block's own height (99, see ComboView.Build) leaves inside the
+            // 105.5px gap before it'd touch the grid.
+            comboRect.anchoredPosition = new Vector2(0f, 123.25f);
             // No explicit sizeDelta — ComboView's own ContentSizeFitter
             // sizes it to fit its two pills (chips + mult).
 
