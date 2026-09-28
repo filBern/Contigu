@@ -82,17 +82,19 @@ namespace Contigu.Presentation
             lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
-            lueurIcon.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            // Slightly smaller than the original 22px (explicit report: "le
+            // losange de lueur est legerement trop gros").
+            lueurIcon.rectTransform.sizeDelta = new Vector2(18f, 18f);
             lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             // Plain Image has no ILayoutElement, so without this the
             // HorizontalLayoutGroup gives it zero width to work with (same
             // gotcha as HandView's Shuffle button — see BuildShuffleButton).
-            // Sized a bit larger than the 22px square itself to leave room
-            // for the diamond's rotated corners (22 * sqrt(2) ≈ 31px
+            // Sized a bit larger than the 18px square itself to leave room
+            // for the diamond's rotated corners (18 * sqrt(2) ≈ 25px
             // diagonal) without crowding the number next to it.
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
-            lueurIconLayout.preferredWidth = 34f;
-            lueurIconLayout.preferredHeight = 34f;
+            lueurIconLayout.preferredWidth = 28f;
+            lueurIconLayout.preferredHeight = 28f;
 
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 44, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;

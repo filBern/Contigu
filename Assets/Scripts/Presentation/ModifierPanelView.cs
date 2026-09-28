@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,9 +26,15 @@ namespace Contigu.Presentation
         private const float BadgeSize = 90f;
         private const float BadgeSpacing = 10f;
         private const float HeaderHeight = 58f;
+        // Gap between the header band and the first badge row (explicit
+        // report, after seeing the two flush against each other with no
+        // breathing room: "il y a un petit overlap") — the header band's
+        // own thick outline and the first row's badges' own thick outlines
+        // used to sit right on top of each other with zero space between.
+        private const float HeaderRowGap = 12f;
         private const float BottomPadding = 16f;
         private const int DisplayRows = 5; // 2 columns x 5 rows = 10 modifiers
-        private const float PanelHeight = HeaderHeight + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
+        private const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;
@@ -146,7 +153,7 @@ namespace Contigu.Presentation
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
             _rowsContainer.anchorMax = new Vector2(0.5f, 1f);
             _rowsContainer.pivot = new Vector2(0.5f, 1f);
-            _rowsContainer.anchoredPosition = new Vector2(0f, -HeaderHeight);
+            _rowsContainer.anchoredPosition = new Vector2(0f, -(HeaderHeight + HeaderRowGap));
 
             var layout = _rowsContainer.gameObject.AddComponent<GridLayoutGroup>();
             layout.cellSize = new Vector2(BadgeSize, BadgeSize);
@@ -187,9 +194,20 @@ namespace Contigu.Presentation
                 // falloir les numéroter visuellement aussi" — scoring order
                 // now follows this exact list order, see
                 // PlacementResult.Mult, so the player needs to see it to
-                // arrange x-modifiers after +modifiers). Top-left corner,
-                // outlined for legibility over any badge color/icon
-                // underneath.
+                // arrange x-modifiers after +modifiers). Top-left corner, on
+                // a small rotated-square "diamond" backdrop (explicit
+                // request: "mettre un petit losange sous le chiffre" — same
+                // motif as HudView's Lueur icon) instead of the dark text
+                // Outline this used before, for legibility over any badge
+                // color/icon underneath.
+                var indexBg = UIFactory.CreatePanel(badge.transform, "IndexBg", VisualDefaults.GoldenColor);
+                indexBg.rectTransform.anchorMin = new Vector2(0f, 1f);
+                indexBg.rectTransform.anchorMax = new Vector2(0f, 1f);
+                indexBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                indexBg.rectTransform.anchoredPosition = new Vector2(15f, -15f);
+                indexBg.rectTransform.sizeDelta = new Vector2(30f, 30f);
+                indexBg.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
                 var indexLabel = UIFactory.CreateText(badge.transform, "Index", (i + 1).ToString(), Mathf.RoundToInt(IndexLabelSize), UITheme.TextPrimary);
                 indexLabel.raycastTarget = false;
                 indexLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
@@ -197,9 +215,6 @@ namespace Contigu.Presentation
                 indexLabel.rectTransform.pivot = new Vector2(0f, 1f);
                 indexLabel.rectTransform.anchoredPosition = new Vector2(2f, -2f);
                 indexLabel.rectTransform.sizeDelta = new Vector2(26f, 26f);
-                var indexOutline = indexLabel.gameObject.AddComponent<Outline>();
-                indexOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-                indexOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
                 // Drag-and-drop OR tap-tap swap reordering (on explicit
                 // request: "qu'on puisse les réorganiser avec un drag and

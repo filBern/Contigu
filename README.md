@@ -5342,3 +5342,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     foncé d'origine. `UISprites.ModifierPanelBackground` (devenu inutilisé)
     est supprimé ; `BarTrack`/`ScoreBarFill`/`PiecesBarFill` sont conservés
     puisque `SettingsView` s'en sert encore pour ses sliders de volume.
+
+- **Suite du reskin (round 3) : ajustements après capture d'écran du
+  panneau de modificateurs reconstruit** : sur nouvelle capture, 2 demandes
+  explicites — "la liste de modifiers devrait être légèrement plus bas, il
+  y a un petit overlap" et "Peux tu mettre un petit losange sous le
+  chiffre avec le modifier" — plus une 3e sur le HUD, "Le losange de lueur
+  est legerement trop gros" (une 4e remarque, "Tu n'utilise plus la font
+  spéciale qu'on utilisait avant", est restée sans action : c'est le
+  changement de police du round précédent qui a réglé le problème de
+  bordure sur le texte, donc un constat plutôt qu'une nouvelle demande).
+  - `ModifierPanelView` posait ses 2 colonnes de badges directement collées
+    au bandeau d'en-tête (`_rowsContainer` décalé d'exactement
+    `HeaderHeight`, sans marge) — leurs contours épais respectifs se
+    touchaient. Nouvelle constante `HeaderRowGap` (12px) insérée entre les
+    deux, `PanelHeight` recalculée en conséquence pour que le panneau
+    garde la bonne hauteur totale.
+  - Le petit numéro d'ordre en haut à gauche de chaque badge (position
+    dans la liste, utilisée pour l'ordre de scoring) avait son propre
+    `Outline` texte pour rester lisible peu importe la couleur du badge
+    dessous — remplacé par un petit losange moutarde (`VisualDefaults.
+    GoldenColor`, même carré-pivoté-45° que l'icône Lueur du HUD) derrière
+    le chiffre, plus cohérent avec le reste de la DA (plus aucune bordure
+    de texte nulle part) et reprenant le même motif "losange" déjà associé
+    à Lueur ailleurs dans l'écran.
+  - Icône losange de Lueur (`HudView`) réduite de 22px à 18px (badge de
+    layout 34→28) pour rester proportionnée au chiffre à côté.
