@@ -5643,3 +5643,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     puisqu'il n'existe déjà plus dans `_rowIds`/`_rowBadges` — un clic
     dessus résoudrait contre un index maintenant sans rapport dans la
     liste reconstruite.
+
+- **Le Random Modifier apparaissait avant le carousel, pas après** : "Le
+  nouveau random modifier devrait apparaitre dans la liste après avoir
+  appuyé sur OK" — même bug que celui déjà corrigé pour le modifier de
+  départ ("le starting modifier apparait avant même qu'il soit
+  sélectionné dans le caroussel"), réintroduit en réutilisant le carousel
+  pour Random Modifier (round précédent) : `OnUpgradeBuyRequested`
+  appelait `RefreshAll()` (qui rafraîchit `ModifierPanelView` avec
+  `_run.ActiveModifiers`, DÉJÀ à jour puisque `RunManager.BuyUpgradeSlot`
+  vient de l'accorder) avant même d'ouvrir le carousel, contrairement au
+  flux de début de run qui rafraîchit délibérément AVANT l'octroi puis
+  seulement à nouveau au dismiss (`OnModifierCarouselDismissed`).
+  `RefreshAll` prend maintenant un paramètre optionnel
+  `refreshModifierPanel` (défaut `true`, donc tous les autres appels sont
+  inchangés) ; `OnUpgradeBuyRequested` le passe à `false` précisément
+  quand un Random Modifier va être révélé via le carousel, laissant
+  `OnModifierCarouselDismissed` (déjà partagé entre les deux contextes)
+  rafraîchir le panneau une fois le joueur sur OK — ce qui, avec
+  l'animation d'ajout du round précédent, fait maintenant pop le nouveau
+  badge au bon moment plutôt que de le faire surgir prématurément.

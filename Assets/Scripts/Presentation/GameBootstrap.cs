@@ -1193,10 +1193,21 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            RefreshAll();
-            _shopView.Refresh(_run);
 
             var pending = _run.PendingUpgrade;
+            // Deferred until the carousel is dismissed (see
+            // OnModifierCarouselDismissed) instead of refreshed right here
+            // — same "don't let the panel spoil the reveal" reasoning as
+            // the starting-modifier carousel (explicit report: "Le nouveau
+            // random modifier devrait apparaitre dans la liste après avoir
+            // appuyé sur OK"). Core has already granted it (RunManager.
+            // LastRandomModifierGranted) — only the panel's own refresh
+            // needs to wait; everything else (grid/hand/HUD/shop) updates
+            // immediately as usual.
+            bool willShowModifierCarousel = pending == null && revealedUpgrade.Id != UpgradeId.JokerPiece && _run.LastRandomModifierGranted.HasValue;
+            RefreshAll(refreshModifierPanel: !willShowModifierCarousel);
+            _shopView.Refresh(_run);
+
             if (pending == null)
             {
                 // A Bank upgrade with no sub-choice (Joker or Random
@@ -1313,13 +1324,19 @@ namespace Contigu.Presentation
 
         private void OnModifierCarouselDismissed()
         {
-            // Only now does the modifier panel learn about the starting
-            // modifier RunManager.GrantStartingModifier already granted back
-            // in StartNewRun — refreshing it any earlier let the badge show
-            // up in the left-side panel, behind the carousel, WHILE the
-            // spin was still playing (explicit report, after seeing it in
-            // game: "le starting modifier apparait avant même qu'il soit
-            // sélectionné dans le caroussel, il ne doit apparaitre qu'après").
+            // Only now does the modifier panel learn about whichever
+            // modifier the carousel just revealed — the starting modifier
+            // (RunManager.GrantStartingModifier, granted back in
+            // StartNewRun) or a shop-bought Random Modifier
+            // (RunManager.LastRandomModifierGranted, granted in
+            // OnUpgradeBuyRequested). Refreshing any earlier let the badge
+            // show up in the left-side panel, behind the carousel, WHILE
+            // the spin was still playing — explicit reports for both:
+            // "le starting modifier apparait avant même qu'il soit
+            // sélectionné dans le caroussel, il ne doit apparaitre
+            // qu'après", then again once Random Modifier started reusing
+            // this same carousel: "Le nouveau random modifier devrait
+            // apparaitre dans la liste après avoir appuyé sur OK".
             _modifierPanelView.Refresh(_run.ActiveModifiers);
 
             if (_showTutorialAfterCarousel)
@@ -1355,14 +1372,18 @@ namespace Contigu.Presentation
             _modifierCarouselView.Show(startingModifier);
         }
 
-        private void RefreshAll()
+        /// <summary><paramref name="refreshModifierPanel"/> defaults to true; OnUpgradeBuyRequested passes false when a Random Modifier grant is about to reveal through the carousel, deferring the panel's own refresh until that reveal is dismissed (see its own comment for why).</summary>
+        private void RefreshAll(bool refreshModifierPanel = true)
         {
             _gridView.Refresh();
             _handView.Refresh();
             RefreshShuffleButton();
             _hudView.Refresh(_run);
             _comboView.Hide();
-            _modifierPanelView.Refresh(_run.ActiveModifiers);
+            if (refreshModifierPanel)
+            {
+                _modifierPanelView.Refresh(_run.ActiveModifiers);
+            }
         }
     }
 }
