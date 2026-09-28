@@ -106,7 +106,16 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
-            var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.ModifierPanelBackground);
+            // Own flat geometric panel (a plain cream rectangle plus a
+            // mustard header band) instead of the "Colorful UI" pack's
+            // "panel_bg" sprite — on explicit request, after seeing it next
+            // to the new DA ("refaire l'asset de la liste de modifiers
+            // toi-même avec la bonne palette de couleur et des formes
+            // géométriques"): that sprite's baked-in cyan art doesn't
+            // follow UITheme at all (CreateSlicedImage tints sprites white,
+            // i.e. not at all), so it kept showing its own colors no matter
+            // what the rest of the reskin changed.
+            var panel = UIFactory.CreatePanel(parent, "ModifierPanel", UITheme.Panel);
             UIFactory.AddThickOutline(panel, UITheme.Border);
             _root = panel.rectTransform;
             // Vertically centered, STATIC size — the panel never resizes at
@@ -120,18 +129,18 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, PanelHeight);
             _root.anchoredPosition = new Vector2(40f, 0f);
 
-            // "Modifiers" sits inside panel_bg's own header band near the
-            // top of the card (on explicit request) — panel_bg's header
-            // band art is exactly what this whole detour (card_bg_2 +
-            // banner + floating text) was trying to work around, but with a
-            // static panel height it never stretches/distorts, so the plain
-            // original approach is safe again.
-            var header = UIFactory.CreateText(_root, "Header", "Modifiers", 30, UITheme.TextPrimary, TextAnchor.UpperCenter);
-            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -4f);
-            header.rectTransform.sizeDelta = new Vector2(PanelWidth - 16f, 48f);
+            // Flat mustard header band standing in for panel_bg's own baked
+            // header art — same idea, built from a plain rectangle in the
+            // new DA's accent color instead of pre-made sprite art.
+            var headerBand = UIFactory.CreatePanel(_root, "HeaderBand", UITheme.ButtonSelected);
+            headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
+            headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);
+            headerBand.rectTransform.pivot = new Vector2(0.5f, 1f);
+            headerBand.rectTransform.anchoredPosition = Vector2.zero;
+            headerBand.rectTransform.sizeDelta = new Vector2(0f, HeaderHeight);
+
+            var header = UIFactory.CreateText(headerBand.transform, "Header", "Modifiers", 30, UITheme.TextPrimary, TextAnchor.MiddleCenter);
+            UIFactory.StretchFull(header.rectTransform);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);

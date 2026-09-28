@@ -5304,3 +5304,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     arrière-plan) n'a nécessité aucun changement : sa teinte est déjà
     dérivée dynamiquement de `UITheme.Background` (`Color.Lerp` vers du
     blanc), donc elle suit la nouvelle couleur de fond automatiquement.
+
+- **Suite du reskin (round 2) : police, panneau de modificateurs, progress
+  bars** : sur capture d'écran du jeu après le premier passage du reskin
+  ci-dessus, 3 demandes explicites — "Retire les border sur les textes",
+  "refaire l'asset de la liste de modifiers toi même avec la bonne palette
+  de couleur et des formes géometrique", "idem pour les deux progress bar".
+  - Le "contour" sur le texte n'était pas un composant `Outline` (un seul
+    site en avait un, `ModifierPanelView`'s index badge, sans rapport avec
+    ce qui se voyait partout) mais la police "Digitalt" du pack "Colorful
+    UI" elle-même : ses glyphes sont dessinés avec un trait très épais et
+    uniforme, qui passait inaperçu sur l'ancienne palette sombre mais
+    ressort comme un contour non désiré sur les nouveaux fonds clairs.
+    Confirmé en zoomant au pixel près (Pillow) sur "0 / 300", "MODIFIERS"
+    et le badge "M4" de la capture fournie. Le pack ne contient aucune
+    autre police ; `UIFactory.DefaultFont()` bascule donc sur la police
+    intégrée d'Unity (`LegacyRuntime.ttf`) au lieu de charger Digitalt.
+  - Panneau des modificateurs (`ModifierPanelView`) et les deux barres de
+    progression du HUD (`HudView.BuildBar`) utilisaient encore des sprites
+    du pack "Colorful UI" (`panel_bg` cyan, `progress_bar (1)` + ses fills
+    bleu/violet) — ces sprites gardent leurs propres couleurs peu importe
+    la palette de `UITheme`, puisque `CreateSlicedImage` les affiche à
+    teinte blanche (donc "pas de teinte du tout"), ce qui expliquait
+    pourquoi ces 3 éléments étaient restés visuellement à l'ancienne DA
+    malgré le reskin précédent. Les trois sont maintenant construits comme
+    de simples rectangles plats (déjà le vocabulaire "formes géométriques"
+    utilisé pour `AnimatedBackgroundView`) dans la palette `UITheme`, avec
+    le même contour épais que le reste de la DA : le panneau devient un
+    rectangle crème avec un bandeau d'en-tête moutarde (`UITheme.
+    ButtonSelected`) portant "Modifiers", et chaque barre devient un
+    rectangle-piste crème avec un rectangle-fill par-dessus (moutarde pour
+    le score, menthe `UITheme.Success` pour les pièces restantes) —
+    remplace aussi la forme "pilule arrondie" par un rectangle net, plus
+    cohérent avec des barres qui touchent déjà les bords de l'écran à
+    plat. Le texte de ces deux barres repasse en sombre (`TextPrimary`)
+    puisqu'il repose maintenant sur un fond clair au lieu du sprite violet
+    foncé d'origine. `UISprites.ModifierPanelBackground` (devenu inutilisé)
+    est supprimé ; `BarTrack`/`ScoreBarFill`/`PiecesBarFill` sont conservés
+    puisque `SettingsView` s'en sert encore pour ses sliders de volume.

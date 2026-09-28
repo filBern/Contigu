@@ -11,16 +11,23 @@ namespace Contigu.Presentation
     {
         private static Font _cachedFont;
 
-        /// <summary>The "Colorful UI" pack's font, used everywhere text is created (titles, labels, buttons, and description paragraphs alike, on explicit request) — falls back to Unity's built-in legacy font if the asset pack isn't present (e.g. a checkout that hasn't pulled it yet).</summary>
+        /// <summary>
+        /// Used everywhere text is created (titles, labels, buttons, and
+        /// description paragraphs alike). Used to be the "Colorful UI" pack's
+        /// own "Digitalt" font — reverted to Unity's built-in font as part of
+        /// the DA reskin (explicit request: "Retire les border sur les
+        /// textes"): Digitalt's glyphs are drawn with a thick uniform stroke
+        /// baked into the font itself, which read fine against the old dark
+        /// palette but looks exactly like an unwanted outline/border around
+        /// every letter against the new cream panels/buttons. No plain
+        /// (non-bordered) font ships in that asset pack, so this switches to
+        /// the built-in legacy font instead of pulling in a new asset.
+        /// </summary>
         public static Font DefaultFont()
         {
             if (_cachedFont == null)
             {
-                _cachedFont = Resources.Load<Font>("Colorful_UI/colorful/font/Digitalt");
-                if (_cachedFont == null)
-                {
-                    _cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                }
+                _cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             }
             return _cachedFont;
         }

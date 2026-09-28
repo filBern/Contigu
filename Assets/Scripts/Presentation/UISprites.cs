@@ -17,7 +17,6 @@ namespace Contigu.Presentation
         private static Sprite _barTrack;
         private static Sprite _scoreBarFill;
         private static Sprite _piecesBarFill;
-        private static Sprite _modifierPanelBackground;
         private static Sprite _cardBackground;
         private static Sprite _chooseButtonBackground;
         private static Sprite _cancelButtonBackground;
@@ -25,35 +24,22 @@ namespace Contigu.Presentation
         private static Sprite _sfxBarFill;
         private static Sprite _sliderHandle;
 
-        /// <summary>Shared rounded-pill track behind both HUD progress bars.</summary>
+        /// <summary>Shared rounded-pill track behind SettingsView's volume sliders (HudView builds its own flat-panel progress bars instead — see HudView.BuildBar).</summary>
         public static Sprite BarTrack
         {
             get { return _barTrack != null ? _barTrack : (_barTrack = Resources.Load<Sprite>(SliderPath + "progress_bar (1)")); }
         }
 
-        /// <summary>Fill for the round-score bar (top).</summary>
+        /// <summary>Fill for SettingsView's Master volume slider.</summary>
         public static Sprite ScoreBarFill
         {
             get { return _scoreBarFill != null ? _scoreBarFill : (_scoreBarFill = Resources.Load<Sprite>(SliderPath + "blueBarFill")); }
         }
 
-        /// <summary>Fill for the remaining-pieces bar (bottom).</summary>
+        /// <summary>Fill for SettingsView's Music volume slider.</summary>
         public static Sprite PiecesBarFill
         {
             get { return _piecesBarFill != null ? _piecesBarFill : (_piecesBarFill = Resources.Load<Sprite>(SliderPath + "purpleBarFill")); }
-        }
-
-        /// <summary>
-        /// Background of the left-edge active-modifiers panel (ModifierPanelView).
-        /// Was briefly swapped to "card_bg_2" to sidestep panel_bg's header
-        /// band distorting under a dynamically-resizing panel — reverted back
-        /// to "panel_bg" (on explicit request) now that the panel uses a
-        /// static height instead (fits exactly 10 modifiers, 2x5), which
-        /// removes the resizing that caused the distortion in the first place.
-        /// </summary>
-        public static Sprite ModifierPanelBackground
-        {
-            get { return _modifierPanelBackground != null ? _modifierPanelBackground : (_modifierPanelBackground = Resources.Load<Sprite>(GameUIPath + "panel_bg")); }
         }
 
         /// <summary>The "card_bg_3" card art — background of each hand slot (HandView) and, tinted darker, of the shop's modifier/upgrade cards (ShopView, on explicit request: "pour le background des ''cartes'' dans le shop j'aimerais qu'on utilise card_bg_3.png teinté en plus foncé").</summary>
