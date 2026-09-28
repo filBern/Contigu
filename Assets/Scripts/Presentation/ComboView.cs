@@ -30,7 +30,7 @@ namespace Contigu.Presentation
         private const float PillWidth = 84f;
         private const float PillHeight = 46f;
         private const float PillSpacing = 8f;
-        private const float TotalRowSpacing = 4f;
+        private const float TotalRowSpacing = 3f;
 
         private RectTransform _root;
         private Text _totalText;
@@ -66,8 +66,15 @@ namespace Contigu.Presentation
             // A few pixels of top padding (explicit request: "le texte de
             // combo total devrait être ... quelques pixel plus bas") so the
             // total sits a touch lower instead of flush against the top of
-            // this block.
-            rootLayout.padding = new RectOffset(0, 0, 6, 0);
+            // this block. Trimmed from an initial 6px (together with
+            // totalLayout.preferredHeight below and TotalRowSpacing above)
+            // once fixing the internal gap (see childControlHeight above)
+            // revealed the whole block had grown taller than the fixed
+            // 105.5px gap between the grid's bottom edge and the pieces bar
+            // (see GameBootstrap's comboRect comment) — enough to overlap
+            // the bar (explicit report with screenshot: "il y a un overlap
+            // là avec mult et addition de combo").
+            rootLayout.padding = new RectOffset(0, 0, 3, 0);
             var rootFitter = _root.gameObject.AddComponent<ContentSizeFitter>();
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -84,7 +91,10 @@ namespace Contigu.Presentation
             _totalText = UIFactory.CreateText(_root, "TotalText", "0", 45, UITheme.Panel);
             var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
             totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
-            totalLayout.preferredHeight = 54f;
+            // Trimmed from 54 to 48 (see the padding comment above) — still
+            // comfortably tall enough for the 45pt digits, which have no
+            // descenders to clear.
+            totalLayout.preferredHeight = 48f;
 
             var row = UIFactory.CreateUIObject("Row", _root);
             var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();

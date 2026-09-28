@@ -5448,3 +5448,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `childControlHeight` sur le `VerticalLayoutGroup`, pour que la taille
   réellement appliquée aux enfants corresponde à celle utilisée pour le
   calcul du `ContentSizeFitter`.
+
+- **Overlap ComboView / barre du bas (round 9)** : "Il y a un overlap là
+  (cercle rouge) avec mult et addition de combo", capture à l'appui
+  montrant les pastilles chips/mult chevauchant la barre verte des pièces
+  restantes en bas d'écran. En corrigeant le gap interne au round
+  précédent, la hauteur totale du bloc `ComboView` (padding + total +
+  spacing + rangée de pastilles) est passée à 110px — plus grande que les
+  105.5px de marge disponible entre le bas de la grille et le haut de la
+  barre du bas (voir le commentaire de `comboRect` dans
+  `GameBootstrap.BuildUI`), donc le bloc débordait des deux côtés de cette
+  marge peu importe où on le centrait. Réduit `TotalRowSpacing` (4→3),
+  `totalLayout.preferredHeight` (54→48, encore largement assez pour des
+  chiffres à 45pt qui n'ont pas de jambages) et le padding du haut (6→3) —
+  nouvelle hauteur totale 100px, avec ~2.75px de marge de chaque côté.
