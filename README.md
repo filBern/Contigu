@@ -5749,3 +5749,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - `LueurPulsePeakScale` réduit une troisième fois, de 1.07 à 1.04 (par
     précaution, bien que la majorité de l'intensité perçue restante
     venait probablement du glitch de relance ci-dessus).
+
+- **Le pulse de Lueur bougeait en position au lieu de juste grossir** :
+  "Le pulse de lueur j'aimerais qu'il pulse en grosseur de texte, pas en
+  position. Il semble aller vers le bas" — `PulseLueurRoutine` animait
+  `_lueurContainer.localScale` (le conteneur du losange ET du chiffre
+  ensemble), or ce conteneur a un pivot HAUT (`pivot.y = 1`, nécessaire
+  pour son ancrage sous le texte de statut — voir `Build`) : en grossir
+  l'échelle autour de ce pivot déplaçait son bord bas (donc tout son
+  contenu, losange compris) vers le bas puis le refaisait remonter à
+  chaque pulse, ce qui se lisait comme une position qui bouge plutôt
+  qu'un simple agrandissement sur place.
+  - La routine cible maintenant `_lueurLabel.rectTransform` (juste le
+    chiffre, pas le losange) au lieu de `_lueurContainer` — son pivot par
+    défaut est centré (0.5, 0.5), donc il grossit/rétrécit symétriquement
+    sur place sans dérive de position, et comme
+    `HorizontalLayoutGroup.childControlWidth/Height` sont à `false` par
+    défaut (le conteneur ne contrôle pas la taille de ses enfants), animer
+    l'échelle du chiffre ne redéclenche pas de recalcul de mise en page
+    qui viendrait perturber sa position.

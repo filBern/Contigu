@@ -277,7 +277,23 @@ namespace Contigu.Presentation
 
         private IEnumerator PulseLueurRoutine()
         {
-            var rt = _lueurContainer;
+            // Scales the NUMBER's own RectTransform, not _lueurContainer
+            // (explicit report: "j'aimerais qu'il pulse en grosseur de
+            // texte, pas en position. Il semble aller vers le bas") —
+            // _lueurContainer is top-pivoted (pivot.y = 1, see Build) so
+            // the container itself growing/shrinking around that pivot
+            // moved its bottom edge (and everything in it, icon included)
+            // down and back up on every pulse, reading as a position
+            // shift rather than the number simply growing in place. A
+            // fresh RectTransform defaults to a CENTER pivot (0.5, 0.5,
+            // never touched here), and it's a leaf under the
+            // HorizontalLayoutGroup with default childControlWidth/Height
+            // (false), so scaling it doesn't feed back into the layout
+            // group's own position math the way changing its sizeDelta
+            // would — it just grows/shrinks the digits in place. The icon
+            // is untouched now too, matching "en grosseur de texte" (not
+            // the icon+number pair as a whole).
+            var rt = _lueurLabel.rectTransform;
             float t = 0f;
             while (t < LueurPulseDuration)
             {
