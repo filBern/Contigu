@@ -5195,3 +5195,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   carte n'existe) est devenue du code mort une fois la carte visible
   dès le tout premier tick du spin — supprimée, `LayoutFullBlock`
   couvrant maintenant tous les cas dès `Show()`.
+- **Icône Lueur au lieu du texte "Buy" dans le shop** — demande
+  explicite : "au lieu d'afficher Buy, met l'icon de lueuer". Le
+  bouton d'achat affichait "Buy (123)" en texte brut ; `BuildBuyButton`
+  laisse maintenant le label natif du bouton vide et ajoute un
+  conteneur "Price" (`HorizontalLayoutGroup` + `ContentSizeFitter`,
+  exactement le même motif que le losange doré + nombre déjà utilisé
+  pour le sous-titre Lueur du shop et le HUD) centré sur le bouton :
+  losange orange tourné à 45° (`VisualDefaults.GoldenColor`) suivi du
+  prix, en `UITheme.TextPrimary` à la même taille que l'ancien texte du
+  bouton. "Sold" reste du texte brut une fois acheté (plus de prix à
+  afficher). Icône et texte du prix en `raycastTarget = false` pour ne
+  jamais interférer avec le clic du bouton parent.

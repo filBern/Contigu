@@ -395,9 +395,10 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>The buy button showed "Buy (123)" as plain text; now it shows the same gold-diamond Lueur icon + number used everywhere else this currency appears (explicit request: "au lieu d'afficher Buy, met l'icon de lueuer"), leaving "Sold" as plain text since there's no price left to show once purchased.</summary>
         private static void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool interactable, Action onClick)
         {
-            var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "Buy (" + priceLabel + ")", UISprites.ChooseButtonBackground, 14);
+            var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);
             var buyRect = buyBtn.GetComponent<RectTransform>();
             buyRect.anchorMin = new Vector2(0.5f, 0f);
             buyRect.anchorMax = new Vector2(0.5f, 0f);
@@ -406,6 +407,39 @@ namespace Contigu.Presentation
             buyRect.sizeDelta = new Vector2(CardWidth - 24f, BuyButtonHeight);
             buyBtn.interactable = !purchased && interactable;
             buyBtn.onClick.AddListener(() => onClick());
+
+            if (purchased)
+            {
+                return;
+            }
+
+            // Same HorizontalLayoutGroup + ContentSizeFitter icon+number
+            // pattern as the shop's own header Lueur readout, just centered
+            // on the button instead of anchored to a corner, and sized down
+            // to fit comfortably inside one this small.
+            var priceContainer = UIFactory.CreateUIObject("Price", buyBtn.transform);
+            priceContainer.anchorMin = new Vector2(0.5f, 0.5f);
+            priceContainer.anchorMax = new Vector2(0.5f, 0.5f);
+            priceContainer.pivot = new Vector2(0.5f, 0.5f);
+            var priceLayout = priceContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            priceLayout.spacing = 4f;
+            priceLayout.childAlignment = TextAnchor.MiddleCenter;
+            priceLayout.childForceExpandWidth = false;
+            priceLayout.childForceExpandHeight = false;
+            var priceFitter = priceContainer.gameObject.AddComponent<ContentSizeFitter>();
+            priceFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            priceFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var priceIcon = UIFactory.CreatePanel(priceContainer, "PriceIcon", VisualDefaults.GoldenColor);
+            priceIcon.raycastTarget = false;
+            priceIcon.rectTransform.sizeDelta = new Vector2(10f, 10f);
+            priceIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            var priceIconLayout = priceIcon.gameObject.AddComponent<LayoutElement>();
+            priceIconLayout.preferredWidth = 16f;
+            priceIconLayout.preferredHeight = 16f;
+
+            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, UITheme.TextPrimary);
+            priceText.raycastTarget = false;
         }
     }
 }
