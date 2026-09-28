@@ -32,12 +32,14 @@ namespace Contigu.Presentation
         // label to grow into before it'd start overlapping the board.
         private const float LueurLabelY = -(80f + 26f + 2f);
         private const float LueurPulseDuration = 0.25f;
-        // Halved once already (explicit report: "Le pulse de lueur est
-        // vraiment trop intense") from +0.3 (1.3x peak) to +0.15 (1.15x) —
-        // still reported as way too intense afterwards ("encore beaucoup
-        // trop intense"), so halved again to +0.07 (1.07x), a barely-there
-        // flicker rather than a "pop".
-        private const float LueurPulsePeakScale = 1.07f;
+        // Halved twice already (explicit reports: "Le pulse de lueur est
+        // vraiment trop intense", then "encore beaucoup trop intense")
+        // from +0.3 (1.3x peak) down to +0.07 (1.07x) — most of what still
+        // read as "too intense" at that point was actually the restart
+        // glitch fixed below (PulseLueur no longer interrupts an
+        // in-flight pulse), not the peak scale itself, but nudged down
+        // once more anyway to +0.04 (1.04x) to be safe.
+        private const float LueurPulsePeakScale = 1.04f;
         private const float LueurPulsePeakFraction = 0.35f;
 
         private RectTransform _scoreFillRect;
@@ -247,14 +249,28 @@ namespace Contigu.Presentation
 
         private void PulseLueur()
         {
-            // Stops any pulse already in flight before starting a fresh one
-            // rather than letting two coroutines animate the same
-            // RectTransform's scale at once (same defensive pattern as
-            // ModifierPanelView.PulseRow, which fixed a color-corruption bug
-            // from exactly this kind of overlap).
+            // Ignores the request outright while a pulse is already in
+            // flight, rather than the STOP-then-restart this used to do
+            // (same defensive intent as ModifierPanelView.PulseRow — never
+            // let two coroutines animate the same RectTransform's scale at
+            // once — but restarting was the wrong fix here). SetLueur is
+            // called once per +1/group during a staggered gain sequence
+            // (e.g. GameBootstrap.PlayRoundEndLueurBonusSequence, every
+            // 0.1s) — faster than LueurPulseDuration (0.25s), so a hard
+            // restart on every call kept cutting the animation off
+            // mid-lerp and snapping PulseLueurRoutine's own scale formula
+            // (which always starts from p=0, i.e. scale 1, on every fresh
+            // call) back down before ramping up again, reading as several
+            // stuttering pulses in a row instead of one smooth one
+            // (explicit report: "il semble pulse plus qu'une fois d'affilé
+            // comme un glitch"). Simply letting the current pulse ride out
+            // to completion — the label's TEXT still updates on every
+            // SetLueur call regardless, only the pulse itself is skipped —
+            // fixes that outright: one pulse per burst of gains, however
+            // many individual +N calls make it up.
             if (_lueurPulseCoroutine != null)
             {
-                StopCoroutine(_lueurPulseCoroutine);
+                return;
             }
             _lueurPulseCoroutine = StartCoroutine(PulseLueurRoutine());
         }

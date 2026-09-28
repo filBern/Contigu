@@ -5725,3 +5725,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     drop aboutit réellement (`Refresh`, déjà appelée après tout
     `MoveRequested`/`SwapRequested`, réinitialise `_dropTargetRowIndex`
     avec le reste de l'état de rangée).
+
+- **Pulse de Lueur toujours trop intense, et glitchait** : "Le pulse de
+  lueur est encore trop intense et il semble pulse plus qu'une fois
+  d'affilé comme un glitch" — après deux réductions successives de
+  `LueurPulsePeakScale`, encore signalé trop intense, avec en plus un
+  effet de scintillement en rafale. La vraie cause du scintillement :
+  `PulseLueur` faisait un `StopCoroutine` puis relançait
+  systématiquement `PulseLueurRoutine` à chaque appel de `SetLueur`, or
+  celui-ci est appelé une fois par +1/groupe pendant une séquence de gain
+  échelonnée (ex. `PlayRoundEndLueurBonusSequence`, toutes les 0.1s) —
+  plus rapide que `LueurPulseDuration` (0.25s). Chaque relance interrompait
+  donc l'animation en plein vol et repartait de zéro (la formule de
+  `PulseLueurRoutine` recommence toujours à l'échelle 1 quand `p = 0`),
+  ce qui faisait visuellement redescendre puis remonter l'échelle à
+  répétition au lieu d'un seul pulse fluide.
+  - `PulseLueur` ignore maintenant complètement une nouvelle demande tant
+    qu'un pulse est déjà en cours, au lieu de l'interrompre pour en
+    relancer un — le texte du compteur continue de se mettre à jour à
+    chaque appel de `SetLueur` de toute façon, seul le pulse visuel est
+    maintenant un seul pulse fluide par rafale de gains plutôt qu'un par
+    incrément.
+  - `LueurPulsePeakScale` réduit une troisième fois, de 1.07 à 1.04 (par
+    précaution, bien que la majorité de l'intensité perçue restante
+    venait probablement du glitch de relance ci-dessus).
