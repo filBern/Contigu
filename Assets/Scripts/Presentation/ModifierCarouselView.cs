@@ -68,6 +68,10 @@ namespace Contigu.Presentation
         private RectTransform _okRect;
         private Button _okButton;
         private Coroutine _spinCoroutine;
+        // Y position (below the fixed viewport) that the card container
+        // starts at every time — set once per Show() by LayoutFixedPart,
+        // then read (never written) by UpdateCard for the rest of the spin.
+        private float _fixedCardTopY;
         private readonly ModifierId[] _reelModifierIds = new ModifierId[ReelLength];
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
@@ -222,13 +226,33 @@ namespace Contigu.Presentation
                 BuildReelBadge(def, i);
             }
 
+            // Title/viewport position computed ONCE here, using the WINNING
+            // modifier's own card height as the centering reference, and
+            // never touched again for the rest of the spin (explicit
+            // request: "je ne veux pas que le caroussel bouge horizontalement
+            // [sic — the reel itself only ever slides sideways by design;
+            // this was about the whole block, reel included, visibly
+            // shifting as UpdateCard used to re-center everything around
+            // whichever filler's description was currently showing], que ce
+            // soit le rectangle sous le caroussel [qui] bouge en hauteur en
+            // fonction"). Only the card container (and the OK button under
+            // it) still move, in UpdateCard, to fit each badge's own
+            // description length as it passes by underneath the reel.
+            LayoutFixedPart(MeasureCardHeight(granted));
+
             _root.gameObject.SetActive(true);
-            // The very first spin tick below (SpinRoutine runs synchronously
-            // up to its first yield, right inside this StartCoroutine call)
-            // always calls UpdateCard at least once, which lays out the
-            // whole block via LayoutFullBlock — so nothing needs laying out
-            // here beforehand.
             _spinCoroutine = StartCoroutine(SpinRoutine(granted));
+        }
+
+        /// <summary>Builds <paramref name="id"/>'s card off-screen just long enough to read its true height, then tears it down — used once per Show() to compute LayoutFixedPart's reference height without leaving anything extra in the hierarchy.</summary>
+        private float MeasureCardHeight(ModifierId id)
+        {
+            var probe = UIFactory.CreateSlicedImage(_cardContainer, "HeightProbe", UISprites.CardBackground);
+            float descHeight = ModifierCardFactory.BuildContents(probe.transform, ModifierCatalog.Get(id), _tooltip, ModifierCardWidth, out _,
+                ModifierCardBadgeSize, ModifierCardNameHeight, ModifierCardNameFontSize, ModifierCardDescFontSize);
+            float height = ModifierCardFactory.TotalHeight(descHeight, ModifierCardBadgeSize, ModifierCardNameHeight);
+            Destroy(probe.gameObject);
+            return height;
         }
 
         private void BuildReelBadge(ModifierDefinition def, int index)
@@ -290,7 +314,7 @@ namespace Contigu.Presentation
             _spinCoroutine = null;
         }
 
-        /// <summary>(Re)builds the reveal card's contents for <paramref name="id"/> and re-centers the whole block around its (possibly new) height — called throughout the spin as the centered badge changes, not just once at the end, so the card genuinely mirrors the reel instead of only appearing once it stops.</summary>
+        /// <summary>(Re)builds the reveal card's contents for <paramref name="id"/> and re-anchors it (and the OK button below it) from the fixed <see cref="_fixedCardTopY"/> set once in LayoutFixedPart — called throughout the spin as the centered badge changes, not just once at the end, so the card genuinely mirrors the reel instead of only appearing once it stops. The title and viewport above are untouched here: only the card grows/shrinks with each badge's own description length.</summary>
         private void UpdateCard(ModifierId id)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
@@ -315,13 +339,17 @@ namespace Contigu.Presentation
             cardImage.rectTransform.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
             _cardContainer.sizeDelta = new Vector2(ModifierCardWidth, cardHeight);
 
-            LayoutFullBlock(cardHeight);
+            // Only the card (and the OK button riding just below it) move —
+            // the title and viewport were already placed once, in
+            // LayoutFixedPart, and stay put for the whole spin.
+            _cardContainer.anchoredPosition = new Vector2(0f, _fixedCardTopY);
+            _okRect.anchoredPosition = new Vector2(0f, _fixedCardTopY - cardHeight - BlockSpacing);
         }
 
-        /// <summary>Centers the ENTIRE block — title, reel, card, OK button — as a single unit, against their true combined height (<paramref name="cardHeight"/> varies with the currently-shown modifier's description length, so this is recomputed every time UpdateCard rebuilds the card, not just once).</summary>
-        private void LayoutFullBlock(float cardHeight)
+        /// <summary>Positions the title and viewport ONCE per Show(), against a total-height estimate built from the WINNING modifier's own card height — never touched again afterwards, so the reel and its highlight frame stay rock-steady for the whole spin regardless of which filler badge's (shorter or longer) description is currently showing in the card below. Also records <see cref="_fixedCardTopY"/>, the Y the card container (and, from it, the OK button) is placed at on every subsequent UpdateCard call.</summary>
+        private void LayoutFixedPart(float referenceCardHeight)
         {
-            float totalHeight = TitleHeight + BlockSpacing + ReelHeight + BlockSpacing + cardHeight + BlockSpacing + OkHeight;
+            float totalHeight = TitleHeight + BlockSpacing + ReelHeight + BlockSpacing + referenceCardHeight + BlockSpacing + OkHeight;
             float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
 
             _titleRect.anchoredPosition = new Vector2(0f, topY);
@@ -330,10 +358,7 @@ namespace Contigu.Presentation
             _viewportRect.anchoredPosition = new Vector2(0f, y);
             y -= ReelHeight + BlockSpacing;
 
-            _cardContainer.anchoredPosition = new Vector2(0f, y);
-            y -= cardHeight + BlockSpacing;
-
-            _okRect.anchoredPosition = new Vector2(0f, y);
+            _fixedCardTopY = y;
         }
 
         private void OnOkClicked()

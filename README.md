@@ -5669,3 +5669,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   losange+chiffre à chaque gain) réduit de 1.3 à 1.15, même ampleur de
   dépassement (+0.15) que le pop d'ajout de `ModifierPanelView`, pour
   rester cohérent avec l'intensité des autres micro-animations du jeu.
+
+- **Le carousel bougeait pendant le spin** : "Lors du carousel j'aimerais
+  que le caroussel ne bouge pas horizontalement que ce soit le rectangle
+  sous le caroussel bouge en hauteur en fonction" — `UpdateCard`
+  (rappelée à chaque fois que le badge centré sous le highlight change,
+  donc plusieurs fois par spin) appelait `LayoutFullBlock`, qui
+  recentrait TOUT le bloc (titre + viewport/reel + carte + bouton OK)
+  autour de la hauteur totale, laquelle varie avec la longueur de la
+  description du modifier actuellement affiché dans la carte — le titre
+  et le reel se déplaçaient donc verticalement à chaque changement de
+  badge pendant le spin, alors que seule la carte en dessous devrait
+  réagir à sa propre hauteur.
+  - `LayoutFullBlock` est remplacée par `LayoutFixedPart`, appelée une
+    seule fois depuis `Show()` (avant de lancer la coroutine de spin) :
+    elle positionne le titre et le viewport une bonne fois pour toutes,
+    en utilisant comme référence de hauteur la carte du modifier VRAIMENT
+    gagnant (mesurée à l'avance hors-écran par `MeasureCardHeight`, qui
+    construit puis détruit immédiatement une carte de mesure), et
+    mémorise dans `_fixedCardTopY` le Y juste sous le viewport.
+  - `UpdateCard` ne repositionne plus que `_cardContainer` (ancré à
+    `_fixedCardTopY`, fixe) et `_okRect` (juste en dessous, à
+    `_fixedCardTopY - cardHeight - BlockSpacing`, variable selon la carte
+    du moment) — le titre et le viewport/reel restent donc parfaitement
+    immobiles pour toute la durée du spin, seule la carte grandit ou
+    rétrécit sur place selon le badge affiché.
