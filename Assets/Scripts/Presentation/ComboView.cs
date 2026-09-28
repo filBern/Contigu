@@ -49,6 +49,11 @@ namespace Contigu.Presentation
             rootLayout.childAlignment = TextAnchor.MiddleCenter;
             rootLayout.childForceExpandWidth = false;
             rootLayout.childForceExpandHeight = false;
+            // A few pixels of top padding (explicit request: "le texte de
+            // combo total devrait être ... quelques pixel plus bas") so the
+            // total sits a touch lower instead of flush against the top of
+            // this block.
+            rootLayout.padding = new RectOffset(0, 0, 6, 0);
             var rootFitter = _root.gameObject.AddComponent<ContentSizeFitter>();
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -60,10 +65,12 @@ namespace Contigu.Presentation
             // bas de la grille soit de la couleur beige"), since this
             // floats directly over the bare navy Background rather than a
             // light panel like most of the reskinned text.
-            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 30, UITheme.Panel);
+            // Font size 50% bigger than the original 30 (explicit request:
+            // "Le texte de combo total devrait être 50% plus gros").
+            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 45, UITheme.Panel);
             var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
             totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
-            totalLayout.preferredHeight = 36f;
+            totalLayout.preferredHeight = 54f;
 
             var row = UIFactory.CreateUIObject("Row", _root);
             var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();

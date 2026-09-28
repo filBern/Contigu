@@ -46,13 +46,15 @@ namespace Contigu.Presentation
             // losange derrière les pop up de score avec la couleur ... beige
             // du background de la liste de modifiers", i.e. UITheme.Panel)
             // — same rotated-square motif as the Lueur icon and the modifier
-            // badge index number.
+            // badge index number. Sized down from an initial 40px on
+            // explicit follow-up report ("le losange de popups de score est
+            // trop gros").
             var diamond = UIFactory.CreatePanel(container, "Diamond", UITheme.Panel);
             diamond.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             diamond.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             diamond.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             diamond.rectTransform.anchoredPosition = Vector2.zero;
-            diamond.rectTransform.sizeDelta = new Vector2(40f, 40f);
+            diamond.rectTransform.sizeDelta = new Vector2(26f, 26f);
             diamond.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
             var popup = UIFactory.CreateText(container, "Popup", text, 22, color);

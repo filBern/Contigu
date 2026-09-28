@@ -5405,3 +5405,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `UITheme.Panel` (beige). Les textes des 2 pastilles elles-mêmes
     (`_chipsText`/`_multText`, en blanc sur fond bleu/rouge saturé)
     restent inchangés, déjà suffisamment lisibles.
+
+- **Ajustements de taille (round 6)** : 2 demandes explicites — "Le
+  losange de popups de score est trop gros, réduit le" et "Le texte de
+  combo total devrait être 50% plus gros et quelques pixel plus bas".
+  - `FeedbackLayer.SpawnPopup`'s diamond passe de 40px à 26px.
+  - `ComboView._totalText` passe de 30 à 45 (police 50% plus grosse,
+    `totalLayout.preferredHeight` réajusté 36→54 en conséquence) ; un
+    padding top de 6px sur le `VerticalLayoutGroup` du root le décale
+    légèrement plus bas dans son bloc.
