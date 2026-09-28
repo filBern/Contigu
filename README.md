@@ -5368,3 +5368,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     à Lueur ailleurs dans l'écran.
   - Icône losange de Lueur (`HudView`) réduite de 22px à 18px (badge de
     layout 34→28) pour rester proportionnée au chiffre à côté.
+
+- **Retour sur la police (round 4)** : correction explicite après le
+  changement de police du round 2 — "La font est la Assets/Resources/
+  Colorful_UI/colorful/font". `UIFactory.DefaultFont()` recharge donc
+  "Digitalt" (au lieu de la police intégrée d'Unity utilisée entre-temps).
+  Le pack ne contenant qu'un seul fichier de police (`Digitalt.otf`/
+  `.ttf`, confirmé par un listing complet du dossier), l'épaisseur de
+  trait qui donnait l'impression d'une "bordure" sur le texte fait partie
+  intégrante de son dessin — ce n'était pas un composant `Outline` séparé
+  qu'on pouvait simplement retirer en gardant la police. Documenté tel
+  quel dans le code (`UIFactory.DefaultFont`) pour que ce compromis reste
+  visible si le sujet revient.
