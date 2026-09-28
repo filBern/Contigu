@@ -32,11 +32,12 @@ namespace Contigu.Presentation
         // label to grow into before it'd start overlapping the board.
         private const float LueurLabelY = -(80f + 26f + 2f);
         private const float LueurPulseDuration = 0.25f;
-        // Overshoot roughly halved (explicit report: "Le pulse de lueur
-        // est vraiment trop intense") — from +0.3 (1.3x peak) to +0.15
-        // (1.15x), landing on the same subtle "pop" magnitude already used
-        // for ModifierPanelView's own added-badge animation.
-        private const float LueurPulsePeakScale = 1.15f;
+        // Halved once already (explicit report: "Le pulse de lueur est
+        // vraiment trop intense") from +0.3 (1.3x peak) to +0.15 (1.15x) —
+        // still reported as way too intense afterwards ("encore beaucoup
+        // trop intense"), so halved again to +0.07 (1.07x), a barely-there
+        // flicker rather than a "pop".
+        private const float LueurPulsePeakScale = 1.07f;
         private const float LueurPulsePeakFraction = 0.35f;
 
         private RectTransform _scoreFillRect;

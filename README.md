@@ -5694,3 +5694,10 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     du moment) — le titre et le viewport/reel restent donc parfaitement
     immobiles pour toute la durée du spin, seule la carte grandit ou
     rétrécit sur place selon le badge affiché.
+
+- **Pulse de Lueur encore trop intense** : "Le pulse de lueur est encore
+  beaucoup trop intense" — malgré un premier passage l'ayant déjà réduit
+  de 1.3x à 1.15x (voir plus haut), toujours signalé comme beaucoup trop
+  intense. `HudView.LueurPulsePeakScale` réduit à nouveau, de 1.15 à
+  1.07 (dépassement +0.07 au lieu de +0.15, soit à nouveau moitié moins),
+  pour un effet à peine perceptible plutôt qu'un "pop" visible.
