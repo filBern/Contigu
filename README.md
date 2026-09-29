@@ -6053,3 +6053,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   fois). `ModifierBadgeView`/`ModifierBadgeFactory`/`ModifierPanelView`
   relaient un nouveau `levelStateProvider`, même mécanisme que le
   `progressiveStateProvider` déjà threadé par index de slot.
+- **Upgrades trop rares dans le Blister** : sur rapport explicite, juste
+  après la mise en ligne de la refonte ci-dessus ("Il faudrait qu'on
+  ajoute des upgrades ou qu'on bump up un peu les odds parce qu'ils
+  n'apparaissent vraiment pas assez souvent dans la section blister") —
+  avec ~70 modifiers pour ~21 upgrades au catalogue, un sac parfaitement
+  plat (poids 8 par item) donnait environ 15-16% de chances d'upgrade par
+  slot. Nouvelle constante `EconomyConstants.BlisterUpgradeWeightMultiplier
+  = 3`, appliquée uniquement au poids de rareté des upgrades dans
+  `RollBlisterSlot` (jamais au poids des modifiers, ni à la pondération
+  séparée de Casino) — fait monter ça à environ 35-40% par slot, sans
+  avoir à inventer de nouveau contenu d'upgrade. Un seul bouton à tourner
+  si ce n'est toujours pas assez.

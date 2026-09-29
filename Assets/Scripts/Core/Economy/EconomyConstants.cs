@@ -39,6 +39,22 @@ namespace Contigu.Core
         public const int ShopBlisterSlotCount = 3;
 
         /// <summary>
+        /// Extra multiplier applied to each upgrade's own rarity weight
+        /// (never the modifier weight) when rolling a Blister slot — on
+        /// explicit report, right after the flat-bag design shipped:
+        /// "Il faudrait qu'on ajoute des upgrades ou qu'on bump up un peu
+        /// les odds parce qu'ils n'apparaissent vraiment pas assez souvent
+        /// dans la section blister". With ~70 modifiers to ~21 upgrades in
+        /// the catalog, a truly flat weight-8-per-item bag put an upgrade's
+        /// odds per slot around 15-16%; x3 brings that to roughly 35-40%
+        /// without needing to invent new upgrade content. A single tunable
+        /// knob if that still doesn't feel frequent enough. Never affects
+        /// Casino's own separate weighting (see RunManager.RollUpgradeSlot/
+        /// UpgradeSystem.RollFromPool), which this constant doesn't touch.
+        /// </summary>
+        public const int BlisterUpgradeWeightMultiplier = 3;
+
+        /// <summary>
         /// How many "Casino" slots the shop offers per visit — only the
         /// UpgradePool is shown, the specific UpgradeDefinition underneath
         /// stays hidden until purchase (explicit request: "la section

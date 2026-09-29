@@ -431,13 +431,15 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
-            // Casino slot 0 could have rolled Modifier Upgrade, which
-            // refuses to sell with zero modifiers owned (same "nothing for
-            // it to do" precedent as Random Modifier at the cap) — granting
-            // one up front keeps this purchase unconditionally valid
-            // regardless of what actually got rolled, since that's not
-            // what this test is about.
-            run.DebugGrantModifier(ModifierCatalog.All[0].Id);
+            // Force a no-sub-choice upgrade (Random Modifier — see
+            // DebugForceUpgradeSlotToRandomModifier) into Casino slot 0 so
+            // the purchase always applies immediately and leaves
+            // PendingUpgrade null. Whatever actually rolled there could
+            // easily have needed a sub-choice (a tile pick, a deck-type
+            // pick, ...) instead, and RerollShop refuses to run at all
+            // while a purchase is still pending — unrelated to what this
+            // test is actually about.
+            Assert.IsTrue(run.DebugForceUpgradeSlotToRandomModifier(0));
             Assert.IsTrue(run.BuyUpgradeSlot(0));
             var blisterSlotsBefore = new List<ShopSlot>(run.ShopBlisterSlots);
 

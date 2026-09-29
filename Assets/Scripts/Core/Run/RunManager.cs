@@ -1403,17 +1403,22 @@ namespace Contigu.Core
         /// — a single FLAT weighted bag holding every not-yet-held/not-
         /// already-offered-this-visit modifier (uniform weight, matching
         /// the Common upgrade-rarity weight) alongside every eligible
-        /// upgrade (its own rarity weight, see UpgradeRarityUtility) —
+        /// upgrade (its own rarity weight, see UpgradeRarityUtility,
+        /// multiplied by EconomyConstants.BlisterUpgradeWeightMultiplier) —
         /// explicit request: "mélanger modifiers et upgrades dans un sac et
         /// en tirer 3 au hasard", resolved (after clarifying the options) as
-        /// one real shared bag rather than an artificial 50/50 split — with
-        /// ~70 modifiers to ~21 upgrades, a Blister slot naturally lands on
-        /// a modifier roughly 3 times out of 4. An upgrade needing a
-        /// prerequisite the player doesn't meet yet (Modifier Upgrade with
-        /// no modifiers owned, Random Modifier already at the cap) is
-        /// excluded from the bag entirely — unlike a Casino slot, a Blister
-        /// slot's exact identity is always visible, so an obviously-dead
-        /// card would just read as broken.
+        /// one real shared bag rather than an artificial 50/50 split. With
+        /// ~70 modifiers to ~21 upgrades, a perfectly flat weight-8-per-item
+        /// bag put an upgrade's odds around 15-16% per slot — on a follow-up
+        /// report that this read as far too rare ("ils n'apparaissent
+        /// vraiment pas assez souvent"), upgrade weight alone gained the
+        /// multiplier above, bringing it to roughly 35-40% without touching
+        /// modifiers' own (still perfectly uniform) odds among themselves.
+        /// An upgrade needing a prerequisite the player doesn't meet yet
+        /// (Modifier Upgrade with no modifiers owned, Random Modifier
+        /// already at the cap) is excluded from the bag entirely — unlike a
+        /// Casino slot, a Blister slot's exact identity is always visible,
+        /// so an obviously-dead card would just read as broken.
         /// </summary>
         private ShopSlot RollBlisterSlot()
         {
@@ -1442,7 +1447,7 @@ namespace Contigu.Core
             int totalWeight = modifierCandidates.Count * ModifierBlisterWeight;
             for (int i = 0; i < upgradeCandidates.Count; i++)
             {
-                totalWeight += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity);
+                totalWeight += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity) * EconomyConstants.BlisterUpgradeWeightMultiplier;
             }
             if (totalWeight <= 0)
             {
@@ -1472,7 +1477,7 @@ namespace Contigu.Core
             }
             for (int i = 0; i < upgradeCandidates.Count; i++)
             {
-                cumulative += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity);
+                cumulative += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity) * EconomyConstants.BlisterUpgradeWeightMultiplier;
                 if (roll < cumulative)
                 {
                     return ShopSlot.ForUpgrade(upgradeCandidates[i]);
