@@ -1107,6 +1107,14 @@ namespace Contigu.Tests
             {
                 run.Grid.GetCell(pos).IsGolden = true;
             }
+            // Shuffles are a single pool for the WHOLE run (never reset
+            // between rounds — see RunConfig.StartingShuffleCount), but this
+            // helper's own contract is just "get THIS round to AwaitingShop"
+            // — a caller chaining it across several rounds (e.g. a 5-round
+            // shop test) shouldn't have that fail because an EARLIER round's
+            // board fragmentation happened to spend shuffles this round
+            // needed too. Topped up here every call instead.
+            run.DebugSetShufflesRemaining(RunConfig.StartingShuffleCount);
 
             int guard = 0;
             while (run.State == RunState.InProgress)
