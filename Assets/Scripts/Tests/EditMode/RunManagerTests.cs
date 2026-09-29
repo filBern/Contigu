@@ -508,6 +508,82 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BuyUpgradeSlot_RandomPiece_SetsPendingUpgradeWithFivePieceCandidates_ThenResolveAddsTheChosenOne()
+        {
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.RandomPiece)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Random Piece upgrade slot within 500 seeds");
+
+            var hiddenUpgrade = run.ShopUpgradeSlots[foundSlot].HiddenUpgrade;
+            run.DebugGrantLueur(1000000);
+            int deckCountBefore = run.Deck.DeckCount;
+
+            bool bought = run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsTrue(bought);
+            Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradeTileCandidates.Count, "Random Piece has no tile choice");
+            Assert.AreEqual(0, run.PendingUpgradeTypeCandidates.Count, "Random Piece's candidates aren't existing deck types");
+            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, run.PendingUpgradePieceCandidates.Count);
+            // Nothing else in the shop can happen while a purchase is pending.
+            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.LeaveShop());
+
+            var chosenCandidate = run.PendingUpgradePieceCandidates[2];
+
+            bool resolved = run.ResolveUpgradePieceChoice(2);
+
+            Assert.IsTrue(resolved);
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradePieceCandidates.Count, "Candidates should be cleared once resolved");
+            Assert.AreEqual(deckCountBefore + 1, run.Deck.DeckCount);
+            Assert.IsTrue(run.Deck.Deck.Contains(chosenCandidate), "The exact candidate picked (trait included) should land in the deck");
+            Assert.IsTrue(run.LeaveShop(), "The shop should be usable again once the pending upgrade is resolved");
+        }
+
+        [Test]
+        public void ResolveUpgradePieceChoice_Fails_ForAnOutOfRangeIndex()
+        {
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.RandomPiece)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Random Piece upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+            run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsFalse(run.ResolveUpgradePieceChoice(-1));
+            Assert.IsFalse(run.ResolveUpgradePieceChoice(EconomyConstants.ShopTileCandidateCount));
+            Assert.IsNotNull(run.PendingUpgrade, "An invalid choice should leave the purchase still pending, not silently drop it");
+        }
+
+        [Test]
         public void BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded()
         {
             RunManager run = null;

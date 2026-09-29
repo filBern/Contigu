@@ -14,6 +14,10 @@ namespace Contigu.Core
         JokerPiece,
         RecolorPiece,
         RandomModifier,
+
+        // ---- Fourth batch (Bank pool, on explicit request) ----
+        RandomPiece,
+
         GoldenCells,
         TintedCells,
         MultiplierZone,

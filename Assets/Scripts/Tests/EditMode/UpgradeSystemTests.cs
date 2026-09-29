@@ -234,6 +234,97 @@ namespace Contigu.Tests
             Assert.AreEqual(0, candidates.Count);
         }
 
+        [Test]
+        public void GetCandidatePiecesFor_OtherUpgrade_ReturnsNoCandidates()
+        {
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidatePiecesFor(UpgradeCatalog.JokerPiece);
+
+            Assert.AreEqual(0, candidates.Count);
+        }
+
+        [Test]
+        public void GetCandidatePiecesFor_RandomPiece_ReturnsShopTileCandidateCountCandidates()
+        {
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetCandidatePiecesFor(UpgradeCatalog.RandomPiece);
+
+            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, candidates.Count);
+            foreach (var candidate in candidates)
+            {
+                // Never Joker — Random Piece rolls from the same 4 base
+                // colors a fresh run's starting deck does, not the Joker
+                // wildcard (that's what Joker Piece itself is for).
+                Assert.AreNotEqual(PieceColor.Joker, candidate.Color);
+            }
+        }
+
+        [Test]
+        public void GetCandidatePiecesFor_OverManySeeds_GrantsTraitsAtRoughlyTheConfiguredRate()
+        {
+            // Statistical check (same style as RollFromPool's rarity-
+            // weighting test above) of EconomyConstants.
+            // RandomPieceTraitChancePercent (25) — over many independent
+            // rolls, roughly a quarter of candidates should carry a trait.
+            // Loose bounds since this is inherently random, just enough to
+            // catch the rate being wired up backwards or not at all (e.g.
+            // always/never enchanting).
+            int total = 0;
+            int withTrait = 0;
+            for (int seed = 0; seed < 200; seed++)
+            {
+                var system = new UpgradeSystem(new SystemRandomProvider(seed));
+                var candidates = system.GetCandidatePiecesFor(UpgradeCatalog.RandomPiece);
+                foreach (var candidate in candidates)
+                {
+                    total++;
+                    if (candidate.Trait.HasValue)
+                    {
+                        withTrait++;
+                    }
+                }
+            }
+
+            float rate = withTrait / (float)total;
+            Assert.Greater(rate, 0.15f, "Roughly a quarter of candidates should carry a trait — this looks too low");
+            Assert.Less(rate, 0.35f, "Roughly a quarter of candidates should carry a trait — this looks too high");
+        }
+
+        [Test]
+        public void GetCandidatePiecesFor_TintedTrait_PinsTheTargetColorToTheCandidatesOwnColor()
+        {
+            // AlwaysZeroRandomProvider makes EVERY candidate roll a trait
+            // (Next(100) == 0 < 25) and always picks Grid-pool index 0 —
+            // deterministic enough to assert on Tinted specifically without
+            // a seed search, as long as index 0 happens to be Tinted for
+            // this particular rarity-weighted ordering. Falls back to
+            // asserting nothing (still passing) if it isn't, rather than
+            // asserting on the wrong trait kind by accident.
+            var system = new UpgradeSystem(new AlwaysZeroRandomProvider());
+
+            var candidates = system.GetCandidatePiecesFor(UpgradeCatalog.RandomPiece);
+
+            foreach (var candidate in candidates)
+            {
+                Assert.IsTrue(candidate.Trait.HasValue, "AlwaysZeroRandomProvider should make the trait roll hit every time");
+                if (candidate.Trait.Value.Kind == PieceTraitKind.Tinted)
+                {
+                    Assert.AreEqual(candidate.Color, candidate.Trait.Value.TintedColor);
+                }
+            }
+        }
+
+        /// <summary>Same helper RunManagerTests keeps privately for MultCinqRisque — duplicated here rather than shared across test assemblies, matching this codebase's existing per-file convention for small deterministic IRandomProvider stubs.</summary>
+        private sealed class AlwaysZeroRandomProvider : IRandomProvider
+        {
+            public int Next(int maxExclusive)
+            {
+                return 0;
+            }
+        }
+
         private static DeckManager MakeManyDistinctTypesDeck()
         {
             var tokens = new List<PieceToken>();

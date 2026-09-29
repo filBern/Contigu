@@ -56,6 +56,7 @@ namespace Contigu.Presentation
         private ShopView _shopView;
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
+        private PieceChoiceView _pieceChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
         private ModifierPanelView _modifierPanelView;
@@ -516,6 +517,9 @@ namespace Contigu.Presentation
             _tileChoiceView = gameObject.AddComponent<TileChoiceView>();
             _tileChoiceView.Build(mainRoot, _tooltipView);
 
+            _pieceChoiceView = gameObject.AddComponent<PieceChoiceView>();
+            _pieceChoiceView.Build(mainRoot, _tooltipView);
+
             _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
             _upgradeRevealView.Build(mainRoot, _tooltipView);
 
@@ -574,6 +578,7 @@ namespace Contigu.Presentation
             _shopView.LeaveRequested += OnLeaveShopRequested;
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
+            _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
@@ -1232,6 +1237,10 @@ namespace Contigu.Presentation
             {
                 _tileChoiceView.Show(_run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending);
             }
+            else if (pending.Id == UpgradeId.RandomPiece)
+            {
+                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending);
+            }
             else
             {
                 _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates);
@@ -1248,6 +1257,13 @@ namespace Contigu.Presentation
         private void OnTileChoiceConfirmed(IReadOnlyList<int> chosenDeckIndices)
         {
             _run.ResolveUpgradeTileChoice(chosenDeckIndices);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnPieceChoiceConfirmed(int candidateIndex)
+        {
+            _run.ResolveUpgradePieceChoice(candidateIndex);
             RefreshAll();
             _shopView.Refresh(_run);
         }

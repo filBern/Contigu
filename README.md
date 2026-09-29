@@ -5780,3 +5780,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `LueurPulsePeakFraction` sont supprimés (plus aucun appelant), ainsi
   que le `using System.Collections;` du fichier (plus aucune coroutine
   dans `HudView` désormais).
+
+- **Nouvel upgrade de shop : Random Piece** : "J'aimerais rajouter un
+  type d'upgrade dans le shop: random piece. Propose 5 choix de pièces
+  et le joueur en sélectionne une. Chaque pièce a un pourcentage de
+  chance d'être upgradé avec une tuile spéciale (vois, mult, etc)" —
+  nouvel `UpgradeId.RandomPiece` (Bank pool, comme Joker/Dupliquer, prix
+  identique aux autres upgrades Bank). Contrairement aux 3 autres
+  sous-choix Bank existants (Retirer/Dupliquer/Recolorer), qui portent
+  sur un TYPE déjà présent dans le deck (`UpgradeSystem.
+  GetCandidateTypesFor`), les 5 candidats ici sont des pièces fraîchement
+  tirées qui n'existent pas encore dans le deck — chacune indépendamment
+  a `EconomyConstants.RandomPieceTraitChancePercent` (25%) de chance de
+  porter déjà une tuile spéciale (golden/mult/void/etc), tirée avec la
+  même pondération par rareté qu'un vrai upgrade Grid
+  (`UpgradeSystem.RollFromPool(UpgradePool.Grid)`) plutôt qu'uniformément
+  — pour qu'une tuile rare (ex: Seeder) reste proportionnellement rare
+  ici aussi.
+  - `UpgradeSystem.GetCandidatePiecesFor` construit les 5 `PieceToken`
+    candidats (forme + couleur aléatoires parmi les 4 couleurs de base,
+    jamais Joker — c'est le rôle de Joker Piece) ; `RunManager` les
+    expose via un nouveau `PendingUpgradePieceCandidates` (parallèle à
+    `PendingUpgradeTypeCandidates`, mais de `PieceToken` plutôt que de
+    tuples (Shape, Color), puisque ces pièces n'ont pas d'index de deck)
+    et `ResolveUpgradePieceChoice(int)` ajoute exactement le candidat
+    choisi (trait compris) via un nouveau `DeckManager.
+    AddPreparedToken`, public spécifiquement pour ce cas (tous les
+    autres chemins d'ajout de pièce construisent un token NU puis le
+    taguent séparément).
+  - Nouvelle vue `PieceChoiceView` (calquée sur `TileChoiceView` — même
+    bloc carte/titre/previews/Confirm mesuré et centré verticalement)
+    mais plus simple sur deux points : les candidats sont des
+    `PieceToken` complets fournis directement par Core (pas d'index de
+    deck à résoudre), et leur trait éventuel est déjà tiré donc montré
+    tel quel — pas de prévisualisation progressive au clic comme le
+    fait `TileChoiceView` pour un upgrade Grid classique.

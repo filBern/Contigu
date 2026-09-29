@@ -124,6 +124,59 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// The candidate pieces to show for "Random Piece"'s sub-choice —
+        /// empty for anything else. Unlike every other Bank sub-choice
+        /// (which offers TYPES already in the deck, see
+        /// GetCandidateTypesFor), these are freshly rolled from the full
+        /// shape/color space (same pool InitialDeckFactory seeds a new run
+        /// from) and don't exist in the deck yet, so there's no "candidate
+        /// deck index" to hand back — the full PieceToken is the candidate
+        /// itself, trait included. Each candidate independently has a
+        /// EconomyConstants.RandomPieceTraitChancePercent chance to already
+        /// carry a Grid-pool tile trait, rolled the exact same rarity-
+        /// weighted way a real Grid-pool upgrade slot would (<see
+        /// cref="RollFromPool"/>) so a rarer trait (e.g. Seeder) stays
+        /// proportionally rarer here too, with one random valid local cell
+        /// index for the rolled shape (same convention as
+        /// DeckManager.TagRandomTokens/TagSpecificTokens).
+        /// </summary>
+        public IReadOnlyList<PieceToken> GetCandidatePiecesFor(UpgradeDefinition upgrade)
+        {
+            if (upgrade.Id != UpgradeId.RandomPiece)
+            {
+                return System.Array.Empty<PieceToken>();
+            }
+
+            var candidates = new PieceToken[EconomyConstants.ShopTileCandidateCount];
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];
+                var color = PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
+
+                PieceTrait? trait = null;
+                if (_rng.Next(100) < EconomyConstants.RandomPieceTraitChancePercent)
+                {
+                    var rolledGridUpgrade = RollFromPool(UpgradePool.Grid);
+                    var kind = TraitKindFor(rolledGridUpgrade.Id).Value; // every Grid-pool entry maps to one
+                    int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
+                    int localIndex = _rng.Next(cellCount);
+                    trait = kind == PieceTraitKind.Tinted
+                        ? new PieceTrait(kind, localIndex, color)
+                        : new PieceTrait(kind, localIndex);
+                }
+
+                candidates[i] = new PieceToken(shape, color, trait);
+            }
+            return candidates;
+        }
+
+        /// <summary>Adds the candidate the player picked (see GetCandidatePiecesFor) straight to the deck, trait included — the counterpart to ApplyToChosenTiles for a Bank-pool sub-choice whose "choice" is a whole token rather than an index into the existing deck.</summary>
+        public void ApplyChosenPiece(PieceToken chosen, DeckManager deck)
+        {
+            deck.AddPreparedToken(chosen);
+        }
+
+        /// <summary>
         /// Tags EXACTLY <paramref name="deckIndices"/> (the tokens the player
         /// picked from the candidates <see cref="GetCandidateTilesFor"/>
         /// offered) with the <see cref="PieceTrait"/> that <paramref

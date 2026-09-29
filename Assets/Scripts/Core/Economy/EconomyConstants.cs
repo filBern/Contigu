@@ -50,6 +50,21 @@ namespace Contigu.Core
         /// <summary>How many of the ShopTileCandidateCount candidates the player actually picks — same count every Grid upgrade used to tag randomly, just player-chosen now instead of random.</summary>
         public const int ShopTileChoiceCount = 3;
 
+        /// <summary>
+        /// Per-candidate percent chance (spec extension, explicit request:
+        /// "Chaque pièce a un pourcentage de chance d'être upgradé avec une
+        /// tuile spéciale"), rolled via IRandomProvider.Next(100) &lt; this
+        /// (IRandomProvider has no float roll — see UpgradeSystem.
+        /// GetCandidatePiecesFor), that one of the "Random Piece" upgrade's
+        /// ShopTileCandidateCount (5) freshly-rolled piece candidates
+        /// already carries a Grid-pool tile trait (golden/mult/void/etc)
+        /// before the player even picks one. Independent per candidate, so
+        /// on average 1-2 of the 5 will be enchanted. Chosen (over 40%) to
+        /// keep it a rare bonus rather than making this upgrade obviously
+        /// superior to Joker Piece (which never enchants).
+        /// </summary>
+        public const int RandomPieceTraitChancePercent = 25;
+
         // ---- Lueur-earning modifiers (see ModifierId's eighth batch) —
         // each adapted from an existing SCORE modifier of the same shape,
         // paying Lueur instead (on explicit request). Values are roughly

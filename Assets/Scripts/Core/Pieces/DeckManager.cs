@@ -306,6 +306,23 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Adds a fully-formed token (shape, color, and optionally an
+        /// already-rolled trait) straight to the deck — public so
+        /// UpgradeSystem.ResolveRandomPieceChoice can add exactly the
+        /// candidate the player picked (see RunManager.
+        /// PendingUpgradePieceCandidates), unlike every other "add a piece"
+        /// path (DuplicateOfType/AddJoker above), which only ever construct
+        /// an UNTAGGED token themselves and rely on a separate Tag* call
+        /// afterward for a trait. Like those, only reaches _deck — not
+        /// _drawPile — so a newly added piece isn't drawable until the next
+        /// reshuffle (same convention as every other deck-growing upgrade).
+        /// </summary>
+        public void AddPreparedToken(PieceToken token)
+        {
+            AddToken(token);
+        }
+
+        /// <summary>
         /// Mirrors a _deck token edit (<paramref name="before"/> becoming
         /// <paramref name="after"/>, same shape/color) into whichever of
         /// _drawPile/_hand currently holds a live copy of it — same idea

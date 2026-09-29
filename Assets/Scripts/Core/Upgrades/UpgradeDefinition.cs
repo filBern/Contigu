@@ -79,6 +79,30 @@ namespace Contigu.Core
             UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
             "Grants one random modifier you don't already have. A gamble — you don't get to pick which.", false, UpgradeRarity.Common);
 
+        // ---- Fourth batch (Bank pool, on explicit request) ----
+
+        /// <summary>
+        /// Spec extension, explicit request: "j'aimerais rajouter un type
+        /// d'upgrade dans le shop: random piece. Propose 5 choix de pièces
+        /// et le joueur en sélectionne une. Chaque pièce a un pourcentage
+        /// de chance d'être upgradé avec une tuile spéciale". Bank pool
+        /// (adds to the deck, like Joker/Duplicate) but WITH a sub-choice —
+        /// unlike every other Bank sub-choice (Retirer/Dupliquer/Recolorer),
+        /// which picks a TYPE already in the deck (see UpgradeSystem.
+        /// GetCandidateTypesFor), this one's candidates are freshly rolled
+        /// pieces that don't exist in the deck yet, each independently
+        /// possibly pre-enchanted with a Grid-pool tile trait (see
+        /// EconomyConstants.RandomPieceTraitChancePercent,
+        /// UpgradeSystem.GetCandidatePiecesFor) — so it gets its own
+        /// RunManager.PendingUpgradePieceCandidates/ResolveUpgradePieceChoice
+        /// pair and Presentation.PieceChoiceView instead of reusing
+        /// DraftView (which only knows how to show plain (Shape, Color)
+        /// types, never a trait preview).
+        /// </summary>
+        public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
+            UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
+            "Choose 1 of 5 randomly rolled pieces to add to your deck. Each has a chance to already carry a special tile.", true, UpgradeRarity.Common);
+
         // Descriptions below all follow the same short "A tile that ..."
         // pattern, describing the trait itself rather than how many pieces
         // get it — that count is a shop mechanic (see
@@ -152,7 +176,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] All =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier,
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
@@ -161,7 +185,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece
         };
 
         public static readonly UpgradeDefinition[] GridPool =

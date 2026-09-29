@@ -152,6 +152,9 @@ namespace Contigu.Core
         /// <summary>Candidate piece TYPES for <see cref="PendingUpgrade"/>'s sub-choice — only populated (non-empty) for a Bank-pool upgrade that needs one (Retirer/Dupliquer/Recolorer); empty otherwise. Capped the same way PendingUpgradeTileCandidates is, so the type picker never lists the whole deck composition at once.</summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> PendingUpgradeTypeCandidates { get; private set; }
 
+        /// <summary>Candidate freshly-rolled PIECES (trait included) for <see cref="PendingUpgrade"/>'s sub-choice — only populated for "Random Piece" (see UpgradeSystem.GetCandidatePiecesFor); empty otherwise. A separate list from PendingUpgradeTypeCandidates since these don't exist in the deck yet — there's no deck index to hand back, the token itself IS the candidate.</summary>
+        public IReadOnlyList<PieceToken> PendingUpgradePieceCandidates { get; private set; }
+
         /// <summary>The shape most recently rolled by a Joker purchase (see BuyUpgradeSlot/UpgradeSystem.ApplyJoker) — read once by the presentation layer (UpgradeRevealView) right after the purchase to show the real piece that got added instead of just describing the upgrade in text. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
@@ -295,6 +298,7 @@ namespace Contigu.Core
             Upgrades = new UpgradeSystem(rng);
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
+            PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
             ShufflesRemaining = RunConfig.StartingShuffleCount;
             CurrentRoundIndex = 0;
             StartRound();
@@ -1299,6 +1303,7 @@ namespace Contigu.Core
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
+            PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
             for (int i = 0; i < _modifierSlots.Length; i++)
             {
                 _modifierSlots[i] = RollModifierSlot();
@@ -1501,6 +1506,20 @@ namespace Contigu.Core
                 return true;
             }
 
+            // Random Piece is Bank pool WITH a sub-choice, like Retirer/
+            // Dupliquer/Recolorer below, but its candidates are freshly
+            // rolled pieces rather than existing deck types — handled by
+            // its own Pending*/Resolve* pair (see PendingUpgradePieceCandidates/
+            // ResolveUpgradePieceChoice) instead of falling into the
+            // generic RequiresSubChoice branch just below, which only
+            // knows how to populate PendingUpgradeTypeCandidates.
+            if (upgrade.Id == UpgradeId.RandomPiece)
+            {
+                PendingUpgrade = upgrade;
+                PendingUpgradePieceCandidates = Upgrades.GetCandidatePiecesFor(upgrade);
+                return true;
+            }
+
             if (upgrade.RequiresSubChoice)
             {
                 PendingUpgrade = upgrade;
@@ -1643,6 +1662,24 @@ namespace Contigu.Core
             PendingUpgrade = null;
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             return applied;
+        }
+
+        /// <summary>Resolves "Random Piece"'s sub-choice — <paramref name="candidateIndex"/> must index into <see cref="PendingUpgradePieceCandidates"/> (not validated beyond range here; the presentation layer only ever offers those). No-op (false) if nothing is pending or it's actually a different upgrade.</summary>
+        public bool ResolveUpgradePieceChoice(int candidateIndex)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.RandomPiece)
+            {
+                return false;
+            }
+            if (candidateIndex < 0 || candidateIndex >= PendingUpgradePieceCandidates.Count)
+            {
+                return false;
+            }
+
+            Upgrades.ApplyChosenPiece(PendingUpgradePieceCandidates[candidateIndex], Deck);
+            PendingUpgrade = null;
+            PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
+            return true;
         }
 
         /// <summary>Resolves a Grid-pool <see cref="PendingUpgrade"/> — <paramref name="chosenDeckIndices"/> must come from <see cref="PendingUpgradeTileCandidates"/> (not validated beyond that here; the presentation layer only ever offers those). No-op (false) if nothing is pending or it's actually a Bank-pool upgrade.</summary>
