@@ -5924,3 +5924,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     l'ancien footprint de grille 453px (8 cases + espacement) ; recalculés
     pour le nouveau footprint 354px (6 cases + espacement) selon la même
     formule commentée sur place.
+- **Tooltip des modifiers progressifs ignorait le niveau du slot** : sur
+  rapport de bug explicite ("Enchanted cards modifier on dirait que le max
+  est 1.0") — `RunManager.GetProgressiveModifierStateText` calculait
+  toujours sa valeur affichée ("Currently +X Mult") au niveau 1, jamais mise
+  à l'échelle par le facteur de niveau du slot ("Modifier Upgrade" du shop),
+  contrairement au score RÉELLEMENT appliqué en jeu qui, lui, multipliait
+  déjà correctement par ce facteur. Pour Enchanted Cards, dont la formule
+  brute ((1+cartes upgradées)/10) ne dépasse +1.0 Mult qu'au-delà de 9
+  cartes upgradées en main, ça se lisait exactement comme un plafond dur
+  même quand le modifier était réellement upgradé et scorait plus. Fix :
+  `GetProgressiveModifierStateText` prend maintenant un `index` optionnel
+  (l'index du slot dans `ActiveModifiers`, -1 par défaut pour ne rien casser
+  côté tests/appelants existants) et multiplie chaque cas du switch par le
+  facteur de niveau de ce slot quand il est fourni ; `ModifierPanelView`
+  connaît déjà l'index de chaque rangée (même raison que son `levelProvider`
+  existant : Copieur peut faire occuper le même id à plusieurs rangées, à
+  des niveaux différents), donc il suffisait de le relayer jusqu'au tooltip
+  au lieu de ne passer que l'id.
+- **Boutons du shop pas rafraîchis après avoir vendu un modifier** : sur
+  rapport de bug explicite ("Lorsqu'on a 10 modifiers et qu'on en vend un
+  dans le shop, le statut des boutons n'est pas a jour, ça m'indique
+  toujours full") — vendre un modifier via le survol + X pendant que le
+  shop est ouvert ne rafraîchissait que `ModifierPanelView` et le HUD, jamais
+  `ShopView` lui-même ; ses boutons "Full (N)" (Random Modifier, Modifier
+  Upgrade) ne relisent `ActiveModifiers.Count` qu'au Build/Refresh, donc ils
+  restaient bloqués sur "Full" même une fois repassé sous le cap. Fix :
+  `TrySellHoveredModifier` appelle maintenant `_shopView.Refresh(_run)` en
+  plus, uniquement quand `_run.State == RunState.AwaitingShop` (le shop
+  n'existe pas visuellement en dehors de cet état).

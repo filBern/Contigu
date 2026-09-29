@@ -2771,6 +2771,54 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void GetProgressiveModifierStateText_ScalesWithTheGivenSlotsOwnLevel()
+        {
+            // Bug fix (on explicit report: "Enchanted cards modifier on
+            // dirait que le max est 1.0") — the tooltip used to ignore the
+            // slot's own level entirely and always show the level-1 value,
+            // which for Enchanted Cards only crosses +1.0 Mult past 9
+            // upgraded deck cards, reading exactly like a hard cap even
+            // though a leveled-up copy was actually scoring more.
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
+            Assert.IsTrue(run.DebugGrantModifier(ModifierId.CartesEnchantees));
+            Assert.AreEqual(1, run.GetModifierLevel(0), "A freshly granted modifier should start at level 1");
+
+            // (1 + 19) / 10 = 2.0 — a whole number, so the expected string
+            // stays exact after the level-2 factor below multiplies it.
+            run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2));
+            Assert.AreEqual("Currently +2 Mult", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees, 0));
+
+            run.DebugGrantLueur(1000000);
+            Assert.IsTrue(run.BuyUpgradeSlot(foundSlot));
+            Assert.IsTrue(run.ResolveModifierUpgradeChoice(0));
+            Assert.AreEqual(2, run.GetModifierLevel(0));
+
+            // Level 2 = factor 1.5 -> 2.0 * 1.5 = 3.0.
+            Assert.AreEqual("Currently +3 Mult", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees, 0));
+
+            // The plain, index-less overload every other caller (and every
+            // other test in this file) relies on must keep showing the
+            // un-leveled value — it has no way to know which slot to scale.
+            Assert.AreEqual("Currently +2 Mult", run.GetProgressiveModifierStateText(ModifierId.CartesEnchantees));
+        }
+
+        [Test]
         public void GetProgressiveModifierStateText_Experience_ShowsItsAdditiveContributionWithABaselineOfOne()
         {
             var run = new RunManager(new SystemRandomProvider(1));

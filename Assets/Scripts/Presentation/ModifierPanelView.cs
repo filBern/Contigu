@@ -71,7 +71,9 @@ namespace Contigu.Presentation
         private RectTransform _rowsContainer;
         private TooltipView _tooltip;
         private System.Func<ModifierId, int> _usageCountProvider;
-        private System.Func<ModifierId, string> _progressiveStateProvider;
+        // By ModifierId AND index — index is needed to look up this row's
+        // own level factor (see Build's doc comment).
+        private System.Func<ModifierId, int, string> _progressiveStateProvider;
         // By INDEX, not id — level is per-slot (see RunManager.GetModifierLevel),
         // not per-modifier-type, so two copies of the same id via Copieur can
         // sit at different levels.
@@ -146,7 +148,12 @@ namespace Contigu.Presentation
         /// (RunManager.GetProgressiveModifierStateText) lets a progressive/
         /// incremental modifier's tooltip show its current live state (on
         /// explicit request, e.g. "Currently x2.3") — null for every other
-        /// modifier. <paramref name="levelProvider"/> (RunManager.
+        /// modifier. Takes the row's own INDEX alongside the id (same
+        /// reasoning as levelProvider below) so its level factor can be
+        /// folded in — bug fix (on explicit report: "Enchanted cards
+        /// modifier on dirait que le max est 1.0"): without the index, the
+        /// tooltip had no way to know this slot's level and always showed
+        /// the un-leveled value. <paramref name="levelProvider"/> (RunManager.
         /// GetModifierLevel) feeds the small "Lv.N" badge Refresh shows on
         /// any row leveled past 1 via the "Modifier Upgrade" shop upgrade —
         /// queried by INDEX (its own position in ActiveModifiers), not id,
@@ -157,7 +164,7 @@ namespace Contigu.Presentation
         /// entirely (see ShopView) and never show a level (nothing bought
         /// yet has one).
         /// </summary>
-        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<int, int> levelProvider = null)
+        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, int, string> progressiveStateProvider = null, System.Func<int, int> levelProvider = null)
         {
             _tooltip = tooltip;
             _usageCountProvider = usageCountProvider;
@@ -281,7 +288,16 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: _progressiveStateProvider);
+                // ModifierBadgeFactory/ModifierBadgeView only know a plain
+                // Func<ModifierId,string> (they're shared with the shop's
+                // index-less draft cards) — this row's own index is baked
+                // into the closure here instead, so the badge itself never
+                // needs to know about levels at all.
+                int rowIndex = i;
+                System.Func<ModifierId, string> rowProgressiveState = _progressiveStateProvider != null
+                    ? (System.Func<ModifierId, string>)(rowId => _progressiveStateProvider(rowId, rowIndex))
+                    : null;
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);

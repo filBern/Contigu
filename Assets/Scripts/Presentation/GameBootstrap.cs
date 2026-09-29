@@ -240,6 +240,16 @@ namespace Contigu.Presentation
             }
             _modifierPanelView.Refresh(_run.ActiveModifiers);
             _hudView.SetLueur(_run.Lueur);
+            if (_run.State == RunState.AwaitingShop)
+            {
+                // Selling while the shop is open can un-cap "Full (N)"
+                // buttons (Random Modifier, Modifier Upgrade) — those read
+                // ActiveModifiers.Count only when built/refreshed, so
+                // without this they kept showing "Full" after a sale took
+                // the count back under the cap (bug report: "le statut des
+                // boutons n'est pas a jour, ça m'indique toujours full").
+                _shopView.Refresh(_run);
+            }
             SetStatusText("Sold " + ModifierCatalog.Get(id).Name + " for " + refundedLueur + " Lueur.");
         }
 
@@ -535,7 +545,7 @@ namespace Contigu.Presentation
             // _run is reassigned on restart but this view is never rebuilt,
             // only Refreshed, so a bound delegate would keep querying the
             // old, discarded run forever.
-            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), id => _run.GetProgressiveModifierStateText(id), index => _run.GetModifierLevel(index));
+            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index));
             // Reordering (drag-and-drop or tap-tap swap, on explicit
             // request: modifier order now determines scoring order, see
             // PlacementResult.Mult) — same "read the current _run field at

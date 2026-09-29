@@ -264,27 +264,44 @@ namespace Contigu.Core
         /// separate "+1" that makes the OVERALL Mult never drop below x1 is
         /// PlacementResult.Mult's own baseline, added once, game-wide, not
         /// specific to either of these two modifiers.
+        ///
+        /// <paramref name="index"/> is this slot's own position in <see
+        /// cref="ActiveModifiers"/> (optional, -1 by default) — when given,
+        /// every case below is scaled by that slot's own level factor (see
+        /// ModifierLevelUtility), matching the scaling every one of these
+        /// already gets for real at score time (ApplyDeckStateModifierBonuses'
+        /// own <c>* GetModifierLevelFactor(i)</c>, or the generic per-event
+        /// rescale in GridManager.ApplyPreClearModifiers/ApplyPostClearModifiers
+        /// for the 3 Grid-tracked ones). Left at -1 (factor 1, today's exact
+        /// behavior) by every caller that doesn't know its own slot index —
+        /// bug fix (on explicit report: "Enchanted cards modifier on dirait
+        /// que le max est 1.0"): without this, a leveled-up copy's tooltip
+        /// kept showing the UN-leveled value, which for Enchanted Cards
+        /// naturally caps just under +1.0 Mult at level 1 (its formula only
+        /// exceeds 1.0 past 9 upgraded deck cards) — reading exactly like a
+        /// hard ceiling even though the modifier was actually scoring more.
         /// </summary>
-        public string GetProgressiveModifierStateText(ModifierId id)
+        public string GetProgressiveModifierStateText(ModifierId id, int index = -1)
         {
+            float levelFactor = index >= 0 ? GetModifierLevelFactor(index) : 1f;
             switch (id)
             {
                 case ModifierId.Gradient:
-                    return "Currently x" + Grid.GradientCurrentMultiplier;
+                    return "Currently x" + FormatMultDisplay(Grid.GradientCurrentMultiplier * levelFactor);
                 case ModifierId.Repetition:
-                    return "Currently x" + Grid.RepetitionCurrentMultiplier;
+                    return "Currently x" + FormatMultDisplay(Grid.RepetitionCurrentMultiplier * levelFactor);
                 case ModifierId.Densite:
-                    return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep));
+                    return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep) * levelFactor);
                 case ModifierId.Epuisement:
-                    return "Currently +" + Grid.EpuisementCurrentBonus + " pts";
+                    return "Currently +" + Mathf.RoundToInt(Grid.EpuisementCurrentBonus * levelFactor) + " pts";
                 case ModifierId.Solidarite:
-                    return "Currently +" + _activeModifiers.Count + " Mult";
+                    return "Currently +" + FormatMultDisplay(_activeModifiers.Count * levelFactor) + " Mult";
                 case ModifierId.Multitude:
-                    return "Currently +" + (Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts";
+                    return "Currently +" + Mathf.RoundToInt(Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard * levelFactor) + " pts";
                 case ModifierId.CartesEnchantees:
-                    return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep) + " Mult";
+                    return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Experience:
-                    return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep) + " Mult";
+                    return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * levelFactor) + " Mult";
                 default:
                     return null;
             }
