@@ -6108,3 +6108,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   d'éligible n'est détruit, même convention que Kamikaze Tile (qui score
   déjà +6 par tuile détruite). Tooltip in-game et description du shop
   mis à jour pour refléter le bonus.
+- **Tooltip d'upgrade de tuile resté ouvert après un clear** : sur rapport
+  explicite ("Lorsqu'une tuile est cleared pendant qu'on hover sur son
+  upgrade, le tooltip devrait être hidden") — `GridCellView.ApplyState`
+  désactive le badge d'origine (`_badgeTraitOrigin.gameObject.
+  SetActive(false)`) dès que `Cell.OriginTrait` se vide (un line/column
+  clear, ou une destruction Void/Kamikaze), ce qui ne déclenche PAS
+  `OnPointerExit` sur `TraitBadgeView` — contrairement au cas déjà géré
+  par son `OnDestroy` (même souci, mais pour un badge carrément détruit
+  plutôt que simplement désactivé). Nouveau `TraitBadgeView.OnDisable`,
+  même `Hide()` inconditionnel que `OnDestroy`.

@@ -68,6 +68,25 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Same fix as <see cref="OnDestroy"/>, for the more common case on
+        /// the grid: GridCellView never destroys this badge, it just
+        /// SetActive(false)s it via ApplyState once the cell's OriginTrait
+        /// clears (a line/column clear, or a Void/Kamikaze destruction) —
+        /// which doesn't fire OnPointerExit either, so a tooltip left open
+        /// while hovering a tile upgrade badge stayed stuck even after the
+        /// tile it described was gone (explicit bug report: "Lorsqu'une
+        /// tuile est cleared pendant qu'on hover sur son upgrade, le
+        /// tooltip devrait être hidden").
+        /// </summary>
+        private void OnDisable()
+        {
+            if (_tooltip != null)
+            {
+                _tooltip.Hide();
+            }
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_clickForwardTarget != null)
