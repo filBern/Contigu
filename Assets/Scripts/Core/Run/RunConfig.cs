@@ -33,20 +33,22 @@ namespace Contigu.Core
         public const int StartingShuffleCount = 10;
 
         /// <summary>
-        /// Round score targets — a geometric progression (~x1.7 per round)
-        /// rather than the previous roughly-quadratic one, on explicit
-        /// request to match how much bigger placement totals can now get
-        /// once several of the 24 modifiers converted to "xN multiplier"
-        /// (see ScoringConstants/PlacementResult.ModifierMultiplier) stack
-        /// together on the same placement — a couple of those compounding
-        /// multiplicatively with GroupMultiplier/ComboMultiplier can already
-        /// dwarf the old late-round targets, so those needed to climb
-        /// exponentially too or the back half of a run would stop being any
-        /// kind of challenge.
+        /// Round score targets. Was a flat ~x1.7-per-round geometric
+        /// progression; steepened to an ACCELERATING curve — round-over-
+        /// round ratio climbing from ~x1.83 to ~x2.15 rather than a constant
+        /// ratio — on explicit report that the run was ending every single
+        /// round with roughly half its piece budget still unused, i.e. the
+        /// old curve simply wasn't keeping pace with how much placement
+        /// totals grow as the player stacks modifiers ("plus difficile,
+        /// plus exponentiel peut être"). Round 1 deliberately left at the
+        /// same 300 (explicit request: "on peut garder le 300 points de
+        /// base") — it's the only round with zero modifiers/upgrades yet,
+        /// so it isn't where the game was reported to feel easy; every
+        /// round after it climbs meaningfully harder than before.
         /// </summary>
         public static readonly int[] Quotas =
         {
-            300, 500, 850, 1450, 2450, 4150, 7050, 12000
+            300, 550, 1050, 2000, 4000, 8200, 17200, 37000
         };
 
         public static readonly int[] PieceBudgets =

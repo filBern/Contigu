@@ -32,8 +32,8 @@ namespace Contigu.Core
         /// <summary>How many upgrade slots (pool only shown, specific upgrade hidden) the shop offers per visit.</summary>
         public const int ShopUpgradeSlotCount = 2;
 
-        /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling.</summary>
-        public const int MaxActiveModifiers = 10;
+        /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>
+        public const int MaxActiveModifiers = 8;
 
         public const int BankUpgradeShopBasePrice = 3;
         public const int GridUpgradeShopBasePrice = 3;

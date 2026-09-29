@@ -5953,3 +5953,21 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `TrySellHoveredModifier` appelle maintenant `_shopView.Refresh(_run)` en
   plus, uniquement quand `_run.State == RunState.AwaitingShop` (le shop
   n'existe pas visuellement en dehors de cet état).
+- **Courbe de quotas accélérée + cap de modifiers réduit à 8** : sur demande
+  explicite ("Le jeu est beaucoup trop facile, je finis avec 50% de pièces
+  restantes à chaque round... on peut garder le 300 points de base mais il
+  faudrait que ce soit plus difficile, plus exponentiel peut être. Et
+  réduire à 8 la quantité de modifiers"). `RunConfig.Quotas` passe d'une
+  progression géométrique à ratio CONSTANT (~x1.7/round) à une progression
+  qui ACCÉLÈRE (ratio grimpant de ~x1.83 à ~x2.15 d'une manche à l'autre) :
+  `{300, 550, 1050, 2000, 4000, 8200, 17200, 37000}` au lieu de `{300, 500,
+  850, 1450, 2450, 4150, 7050, 12000}`. La manche 1 reste volontairement à
+  300 (demande explicite) — c'est la seule manche sans encore aucun
+  modifier/upgrade, donc ce n'est pas elle qui posait problème ; chaque
+  manche suivante grimpe nettement plus dur qu'avant. `EconomyConstants.
+  MaxActiveModifiers` passe de 10 à 8 en parallèle (le stacking de
+  modifiers étant justement ce qui faisait dépasser l'ancienne courbe de
+  quotas trop facilement) ; `ModifierPanelView` (grille 2 colonnes,
+  dimensionnée statiquement pour éviter les anciens bugs de 9-slice au
+  redimensionnement) suit : 5 rangées (2x5=10) → 4 rangées (2x4=8), pour
+  rester pile à la taille du nouveau cap.

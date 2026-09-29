@@ -11,11 +11,12 @@ namespace Contigu.Presentation
     /// Persistent panel pinned to the left edge of the screen, listing the
     /// player's currently active modifiers as a 2-column grid of bare badges
     /// (no per-row card background). The panel uses a STATIC height sized
-    /// for exactly 10 modifiers (2x5) — on explicit request, after several
-    /// dynamic-resize approaches each ran into their own 9-slice rendering
-    /// glitch at one panel height or another (see README). Active modifiers
-    /// are otherwise unlimited (RunManager has no cap), so beyond 10 the
-    /// grid simply keeps growing past the card's own visible area.
+    /// for exactly EconomyConstants.MaxActiveModifiers modifiers (2x4, since
+    /// that cap is 8) — on explicit request, after several dynamic-resize
+    /// approaches each ran into their own 9-slice rendering glitch at one
+    /// panel height or another (see README). RunManager itself enforces
+    /// that same cap (see EconomyConstants.MaxActiveModifiers), so the grid
+    /// never actually needs to grow past this static size.
     /// A readout refreshed by the caller whenever the active set changes, plus
     /// a <see cref="Pulse"/> effect the caller triggers on a badge whenever it
     /// actually scores points on a placement.
@@ -33,7 +34,7 @@ namespace Contigu.Presentation
         // used to sit right on top of each other with zero space between.
         private const float HeaderRowGap = 12f;
         private const float BottomPadding = 16f;
-        private const int DisplayRows = 5; // 2 columns x 5 rows = 10 modifiers
+        private const int DisplayRows = 4; // 2 columns x 4 rows = 8 modifiers (EconomyConstants.MaxActiveModifiers)
         private const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
