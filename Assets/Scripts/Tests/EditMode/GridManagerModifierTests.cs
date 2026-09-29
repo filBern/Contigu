@@ -2220,5 +2220,75 @@ namespace Contigu.Tests
 
             Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement, afterReset.ModifierBonus, "A round boundary should not undo the decay — permanent for the whole run, same as Gradient's counter");
         }
+
+        // ---- "Modifier Upgrade" shop upgrade's generic level system (see
+        // ModifierLevelUtility) — PlacePiece's optional trailing
+        // modifierLevels parameter, parallel to activeModifiers by index.
+        // Exercised here via 2 representative modifiers (a flat bonus and
+        // a "+Mult" additive one) rather than every one of the ~95, since
+        // the scaling itself is fully generic (see GridManager.
+        // ApplyPreClearModifiers/ApplyPostClearModifiers) and doesn't touch
+        // any individual modifier's own Apply* logic.
+
+        [Test]
+        public void ModifierLevels_ScalesAFlatBonusModifiersContribution()
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Couronne };
+
+            var gridUnleveled = new GridManager();
+            var unleveled = gridUnleveled.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers);
+
+            // Level 3 -> factor 2.0 (1 + (3-1)*0.5, see ModifierLevelUtility)
+            // — a clean doubling, avoiding any rounding ambiguity a level 2
+            // (factor 1.5) test would have on small integers.
+            var gridLeveled = new GridManager();
+            var leveled = gridLeveled.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers, new List<int> { 3 });
+
+            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, unleveled.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell * 2, leveled.ModifierBonus, "A level-3 (2x factor) flat bonus should be exactly double");
+            Assert.Greater(leveled.Chips, unleveled.Chips, "The real score total (Chips) should reflect the scaled bonus, not just the event shown on screen");
+        }
+
+        [Test]
+        public void ModifierLevels_ScalesAnAdditiveMultModifiersContribution_ViaMult()
+        {
+            // PlacementResult.Mult is events-driven (see its own doc
+            // comment) — AdditiveMultBonus is a stale aggregate no longer
+            // read for the real total, so this checks Mult directly rather
+            // than AdditiveMultBonus (which leveling deliberately never
+            // touches — see GridManager.ApplyPreClearModifiers's comment).
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MultUn };
+
+            var gridUnleveled = new GridManager();
+            var unleveled = gridUnleveled.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            var gridLeveled = new GridManager();
+            var leveled = gridLeveled.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers, new List<int> { 3 });
+
+            Assert.AreEqual(1 + ScoringConstants.MultUnBonus, unleveled.Mult);
+            Assert.AreEqual(1 + ScoringConstants.MultUnBonus * 2, leveled.Mult, "A level-3 (2x factor) +1 Mult modifier should contribute +2 Mult instead of +1");
+        }
+
+        [Test]
+        public void ModifierLevels_OutOfRangeOrNullList_LeavesEveryModifierAtLevelOne()
+        {
+            // The overwhelmingly common case (every EditMode test above
+            // this section, and every real placement before a single
+            // Modifier Upgrade purchase) passes no modifierLevels at all —
+            // must be indistinguishable from "everyone is level 1".
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Couronne };
+
+            var gridNoLevels = new GridManager();
+            var noLevels = gridNoLevels.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers);
+
+            var gridEmptyLevels = new GridManager();
+            var emptyLevels = gridEmptyLevels.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers, new List<int>());
+
+            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, noLevels.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, emptyLevels.ModifierBonus, "A modifierLevels list too short to cover this slot should fall back to level 1, not throw or silently zero it out");
+        }
     }
 }

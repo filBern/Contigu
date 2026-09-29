@@ -22,10 +22,57 @@ namespace Contigu.Core
 
         private readonly List<ModifierId> _activeModifiers = new List<ModifierId>();
 
+        // Parallel to _activeModifiers (same index == same slot), never
+        // exposed as its own list — kept a plain List<int> rather than
+        // promoting _activeModifiers itself to hold (ModifierId, int)
+        // pairs, since ActiveModifiers's type is read directly by ~150
+        // GridManagerModifierTests call sites and several RunManagerTests
+        // collection-equality asserts that would all break for a change
+        // completely unrelated to what they're actually testing. Every
+        // mutation of _activeModifiers (add/remove/swap/move) MUST mirror
+        // the same operation here in the same call — see AddActiveModifier/
+        // RemoveActiveModifierAt below, the only two places that touch
+        // _activeModifiers.Add/RemoveAt directly; Swap/MoveModifier mirror
+        // inline since they're simple index swaps, not a count change.
+        private readonly List<int> _modifierLevels = new List<int>();
+
         /// <summary>Modifiers currently held by the player, persisting for the whole run (never reset between rounds). Capped at EconomyConstants.MaxActiveModifiers now that the shop lets Lueur buy them far more freely than the old one-per-round draft ever could.</summary>
         public IReadOnlyList<ModifierId> ActiveModifiers
         {
             get { return _activeModifiers; }
+        }
+
+        /// <summary>
+        /// The level of the modifier at <paramref name="index"/> in <see
+        /// cref="ActiveModifiers"/> — 1 (today's exact, un-leveled
+        /// behavior) for anything never touched by the "Modifier Upgrade"
+        /// shop upgrade (see ResolveModifierUpgradeChoice), or an
+        /// out-of-range index. See ModifierLevelUtility for how a level
+        /// translates into a scoring multiplier.
+        /// </summary>
+        public int GetModifierLevel(int index)
+        {
+            return index >= 0 && index < _modifierLevels.Count ? _modifierLevels[index] : 1;
+        }
+
+        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> (see ModifierLevelUtility) — used by ApplyHandSlotModifierBonus/ApplyDeckStateModifierBonuses below, the 4 modifiers resolved here in RunManager rather than through GridManager's own dispatch tables (see GridManager.GetModifierLevelFactor for its own, otherwise-identical counterpart).</summary>
+        private float GetModifierLevelFactor(int index)
+        {
+            return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index));
+        }
+
+        /// <summary>Every place that adds a new modifier slot (a real purchase, Copieur's copy, the Random Modifier gamble, or the free starting grant) goes through here — the ONLY place _activeModifiers.Add is called — so a fresh slot's level (always 1) can never be forgotten.</summary>
+        private void AddActiveModifier(ModifierId id)
+        {
+            _activeModifiers.Add(id);
+            _modifierLevels.Add(1);
+        }
+
+        /// <summary>Counterpart to AddActiveModifier — the ONLY place _activeModifiers.RemoveAt is called, so a removed slot's level always disappears along with it instead of leaking into whatever modifier happens to reflow into that index afterward.</summary>
+        private void RemoveActiveModifierAt(int index)
+        {
+            _activeModifiers.RemoveAt(index);
+            _modifierLevels.RemoveAt(index);
         }
 
         /// <summary>
@@ -47,6 +94,13 @@ namespace Contigu.Core
             var temp = _activeModifiers[indexA];
             _activeModifiers[indexA] = _activeModifiers[indexB];
             _activeModifiers[indexB] = temp;
+
+            // Level belongs to the specific granted copy, not the slot
+            // position — it must travel WITH the modifier it was spent on,
+            // not stay behind at the old index.
+            var tempLevel = _modifierLevels[indexA];
+            _modifierLevels[indexA] = _modifierLevels[indexB];
+            _modifierLevels[indexB] = tempLevel;
         }
 
         /// <summary>
@@ -69,6 +123,12 @@ namespace Contigu.Core
             var moved = _activeModifiers[fromIndex];
             _activeModifiers.RemoveAt(fromIndex);
             _activeModifiers.Insert(toIndex, moved);
+
+            // Same "level travels with the modifier, not the slot" reasoning
+            // as SwapModifiers above.
+            var movedLevel = _modifierLevels[fromIndex];
+            _modifierLevels.RemoveAt(fromIndex);
+            _modifierLevels.Insert(toIndex, movedLevel);
         }
 
         /// <summary>
@@ -94,7 +154,7 @@ namespace Contigu.Core
 
             var id = _activeModifiers[index];
             refundedLueur = ModifierPricing.GetPrice(id) - 1;
-            _activeModifiers.RemoveAt(index);
+            RemoveActiveModifierAt(index);
             Lueur += refundedLueur;
             return true;
         }
@@ -403,7 +463,7 @@ namespace Contigu.Core
             }
 
             var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
-            var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers);
+            var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers, _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
             if (token.Trait.HasValue)
             {
@@ -790,13 +850,17 @@ namespace Contigu.Core
 
             placement.ModifierMultiplier *= ScoringConstants.SlotLoyaltyMultiplier;
             var events = new List<ScoreEvent>(placement.ScoreEvents);
-            var scoreEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], ScoringConstants.SlotLoyaltyMultiplier);
-            scoreEvent.TriggeringModifier = slotModifier.Value;
             // Its own position in _activeModifiers — needed so PlacementResult.Mult's
             // ordered left-to-right fold (see its own doc comment) places this
             // correctly relative to every other Mult modifier instead of
             // always applying it last regardless of where the player put it.
-            scoreEvent.TriggeringModifierIndex = _activeModifiers.IndexOf(slotModifier.Value);
+            // Also this slot's own level factor (see ModifierLevelUtility) —
+            // Mult is events-driven, so scaling this event's Amount is all a
+            // leveled Slot Loyalty needs.
+            int slotIndex = _activeModifiers.IndexOf(slotModifier.Value);
+            var scoreEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], Mathf.RoundToInt(ScoringConstants.SlotLoyaltyMultiplier * GetModifierLevelFactor(slotIndex)));
+            scoreEvent.TriggeringModifier = slotModifier.Value;
+            scoreEvent.TriggeringModifierIndex = slotIndex;
             events.Add(scoreEvent);
             placement.ScoreEvents = events;
         }
@@ -835,8 +899,9 @@ namespace Contigu.Core
                     // badge popup show the exact value (e.g. "+1.3") instead
                     // of a misleadingly rounded "+1" (on explicit report:
                     // "le popup de score qui apparait est un int et non un
-                    // float").
-                    float trueMult = (1 + upgradedCount) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep;
+                    // float"). Scaled by this slot's own level factor (see
+                    // ModifierLevelUtility) same as every other modifier.
+                    float trueMult = (1 + upgradedCount) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * GetModifierLevelFactor(i);
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
                     multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
@@ -849,7 +914,7 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Multitude)
                 {
-                    int bonus = Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard;
+                    int bonus = Mathf.RoundToInt(Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard * GetModifierLevelFactor(i));
                     placement.ModifierBonus += bonus;
                     var ptsEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus);
                     ptsEvent.TriggeringModifier = ModifierId.Multitude;
@@ -858,8 +923,8 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Experience)
                 {
-                    // Same TRUE-float treatment as CartesEnchantees above.
-                    float trueMult = (1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep;
+                    // Same TRUE-float treatment (and level scaling) as CartesEnchantees above.
+                    float trueMult = (1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * GetModifierLevelFactor(i);
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
                     multEvent.TriggeringModifier = ModifierId.Experience;
@@ -1156,7 +1221,7 @@ namespace Contigu.Core
             {
                 return false;
             }
-            _activeModifiers.Add(modifierId);
+            AddActiveModifier(modifierId);
             return true;
         }
 
@@ -1270,7 +1335,7 @@ namespace Contigu.Core
                 }
                 if (_rng.Next(EconomyConstants.MultCinqRisqueLossChanceDenominator) == 0)
                 {
-                    _activeModifiers.RemoveAt(i);
+                    RemoveActiveModifierAt(i);
                 }
             }
         }
@@ -1441,12 +1506,12 @@ namespace Contigu.Core
             {
                 if (_lastPurchasedModifierId.HasValue)
                 {
-                    _activeModifiers.Add(_lastPurchasedModifierId.Value);
+                    AddActiveModifier(_lastPurchasedModifierId.Value);
                 }
             }
             else
             {
-                _activeModifiers.Add(slot.ModifierId);
+                AddActiveModifier(slot.ModifierId);
                 _lastPurchasedModifierId = slot.ModifierId;
             }
             return true;
@@ -1487,6 +1552,13 @@ namespace Contigu.Core
             {
                 return false;
             }
+            // Same "don't sell an upgrade with nothing for it to actually
+            // do" precedent as the RandomModifier cap check just above —
+            // Modifier Upgrade needs an already-owned modifier to level up.
+            if (hiddenUpgrade.Id == UpgradeId.ModifierUpgrade && _activeModifiers.Count == 0)
+            {
+                return false;
+            }
             int price = GetUpgradeSlotPrice(index);
             if (Lueur < price)
             {
@@ -1517,6 +1589,18 @@ namespace Contigu.Core
             {
                 PendingUpgrade = upgrade;
                 PendingUpgradePieceCandidates = Upgrades.GetCandidatePiecesFor(upgrade);
+                return true;
+            }
+
+            // Modifier Upgrade is a THIRD distinct Bank sub-choice shape —
+            // unlike Retirer/Dupliquer/Recolorer (pick a deck TYPE) and
+            // Random Piece (pick from freshly-rolled candidates), its
+            // candidates are simply every slot the player already owns
+            // (ActiveModifiers itself), so there's no Pending*Candidates
+            // list to populate here at all — see ResolveModifierUpgradeChoice.
+            if (upgrade.Id == UpgradeId.ModifierUpgrade)
+            {
+                PendingUpgrade = upgrade;
                 return true;
             }
 
@@ -1606,7 +1690,7 @@ namespace Contigu.Core
         public ModifierId GrantStartingModifier()
         {
             var picked = ModifierCatalog.All[_rng.Next(ModifierCatalog.All.Length)].Id;
-            _activeModifiers.Add(picked);
+            AddActiveModifier(picked);
             StartingModifier = picked;
             return picked;
         }
@@ -1645,7 +1729,7 @@ namespace Contigu.Core
             }
 
             var picked = available[_rng.Next(available.Count)].Id;
-            _activeModifiers.Add(picked);
+            AddActiveModifier(picked);
             _lastPurchasedModifierId = picked;
             return picked;
         }
@@ -1679,6 +1763,23 @@ namespace Contigu.Core
             Upgrades.ApplyChosenPiece(PendingUpgradePieceCandidates[candidateIndex], Deck);
             PendingUpgrade = null;
             PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
+            return true;
+        }
+
+        /// <summary>Resolves "Modifier Upgrade"'s sub-choice — <paramref name="slotIndex"/> indexes directly into <see cref="ActiveModifiers"/> (not a separate Pending*Candidates list, since every owned modifier is eligible — see BuyUpgradeSlot). Raises that slot's level by one (see GetModifierLevel/ModifierLevelUtility); no-op (false) if nothing is pending, it's actually a different upgrade, or the index is out of range.</summary>
+        public bool ResolveModifierUpgradeChoice(int slotIndex)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.ModifierUpgrade)
+            {
+                return false;
+            }
+            if (!IsValidModifierIndex(slotIndex))
+            {
+                return false;
+            }
+
+            _modifierLevels[slotIndex]++;
+            PendingUpgrade = null;
             return true;
         }
 

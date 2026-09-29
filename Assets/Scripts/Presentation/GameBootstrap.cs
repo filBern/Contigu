@@ -57,6 +57,7 @@ namespace Contigu.Presentation
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
         private PieceChoiceView _pieceChoiceView;
+        private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
         private ModifierPanelView _modifierPanelView;
@@ -520,6 +521,9 @@ namespace Contigu.Presentation
             _pieceChoiceView = gameObject.AddComponent<PieceChoiceView>();
             _pieceChoiceView.Build(mainRoot, _tooltipView);
 
+            _modifierUpgradeChoiceView = gameObject.AddComponent<ModifierUpgradeChoiceView>();
+            _modifierUpgradeChoiceView.Build(mainRoot, _tooltipView);
+
             _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
             _upgradeRevealView.Build(mainRoot, _tooltipView);
 
@@ -532,7 +536,7 @@ namespace Contigu.Presentation
             // _run is reassigned on restart but this view is never rebuilt,
             // only Refreshed, so a bound delegate would keep querying the
             // old, discarded run forever.
-            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), id => _run.GetProgressiveModifierStateText(id));
+            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), id => _run.GetProgressiveModifierStateText(id), index => _run.GetModifierLevel(index));
             // Reordering (drag-and-drop or tap-tap swap, on explicit
             // request: modifier order now determines scoring order, see
             // PlacementResult.Mult) — same "read the current _run field at
@@ -579,6 +583,7 @@ namespace Contigu.Presentation
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
+            _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
@@ -1241,6 +1246,10 @@ namespace Contigu.Presentation
             {
                 _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending);
             }
+            else if (pending.Id == UpgradeId.ModifierUpgrade)
+            {
+                _modifierUpgradeChoiceView.Show(_run.ActiveModifiers, index => _run.GetModifierLevel(index), pending);
+            }
             else
             {
                 _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates);
@@ -1264,6 +1273,13 @@ namespace Contigu.Presentation
         private void OnPieceChoiceConfirmed(int candidateIndex)
         {
             _run.ResolveUpgradePieceChoice(candidateIndex);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnModifierUpgradeChoiceConfirmed(int slotIndex)
+        {
+            _run.ResolveModifierUpgradeChoice(slotIndex);
             RefreshAll();
             _shopView.Refresh(_run);
         }

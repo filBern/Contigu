@@ -5815,3 +5815,84 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     deck à résoudre), et leur trait éventuel est déjà tiré donc montré
     tel quel — pas de prévisualisation progressive au clic comme le
     fait `TileChoiceView` pour un upgrade Grid classique.
+
+- **Nouvel upgrade de shop : Modifier Upgrade** : "J'aimerais rajouter un
+  type d'upgrade dans le shop: Modifier upgrade, ce serait pour upgrader
+  un modifier que le joueur possède." La question posée en retour —
+  "upgrader" veut dire quoi concrètement, sachant qu'aucun modifier n'a
+  de valeur numérique générique modifiable (chacun a sa propre logique
+  codée en dur dans `GridManager`) — a été tranchée pour un système de
+  niveaux générique plutôt qu'une simple duplication ou qu'un passage à
+  la version supérieure d'une famille existante (Mult +1→+2→+4 etc.,
+  qui n'existe que pour une poignée de modifiers sur ~95).
+  - **Stockage** : `RunManager._activeModifiers` reste un simple
+    `List<ModifierId>` (inchangé) — un changement de type aurait cassé
+    les ~150 sites de `GridManagerModifierTests` qui construisent
+    `List<ModifierId>` directement, plus plusieurs asserts d'égalité de
+    collection dans `RunManagerTests`. Le niveau vit dans une liste
+    parallèle `_modifierLevels` (même index = même emplacement), avec
+    deux nouvelles méthodes privées `AddActiveModifier`/
+    `RemoveActiveModifierAt` comme SEULS points d'ajout/retrait — tous
+    les appels existants (`BuyModifierSlot`, Copieur, `GrantRandomModifier`,
+    `GrantStartingModifier`, `SellModifier`, la perte de MultCinqRisque)
+    passent maintenant par là, pour qu'un niveau ne puisse jamais être
+    oublié ou fuiter vers le mauvais modifier après une suppression.
+    `SwapModifiers`/`MoveModifier` déplacent maintenant aussi le niveau
+    EN MÊME TEMPS que le modifier — le niveau appartient à la copie
+    précise achetée, pas à la position dans la liste.
+  - **Application au scoring, sans toucher aux ~50 méthodes `Apply*`** :
+    `GridManager.ApplyPreClearModifiers`/`ApplyPostClearModifiers`
+    (les deux seules boucles génériques qui dispatchent vers chaque
+    modifier actif) prennent un nouveau paramètre optionnel
+    `modifierLevels` (donc `PlacePiece` aussi, en paramètre optionnel de
+    fin — les ~150 tests existants qui ne le passent pas continuent de
+    compiler et de se comporter EXACTEMENT comme avant, niveau 1 partout).
+    `PlacementResult.Mult` est déjà entièrement dérivé de `ScoreEvents`
+    (les anciens champs agrégés `ModifierMultiplier`/`AdditiveMultBonus`/
+    etc. ne pilotent plus le score réel, juste un rollup affiché
+    ailleurs) — donc `TagNewEvents` (déjà le point générique qui tague
+    chaque événement fraîchement ajouté avec son modifier d'origine)
+    prend maintenant aussi un facteur d'échelle et multiplie `Amount`/
+    `PreciseAmount` de CHAQUE événement, quel que soit son type (flat,
+    xN, +Mult ou Lueur) — un seul endroit générique. `ScoreEvent.Amount`
+    n'est donc plus `readonly`. Pour les bonus plats et la Lueur
+    (dont le VRAI total vient de `ModifierBonus`/`ModifierLueurBonus`,
+    pas des events), la contribution PROPRE à ce modifier est aussi
+    mise à l'échelle au même point : un `before`/`after` autour de
+    l'appel à `effect(ctx)` isole le delta de CE modifier sans toucher
+    aux contributions déjà accumulées par les autres. Les 4 modifiers
+    résolus dans `RunManager` plutôt que `GridManager` (Slot Loyalty,
+    Enchanted Cards, Multitude, Experience — `ApplyHandSlotModifierBonus`/
+    `ApplyDeckStateModifierBonuses`) sont mis à l'échelle directement à
+    leur propre site de construction d'événement, `RunManager` possédant
+    déjà `_modifierLevels`.
+  - **Formule** : `ModifierLevelUtility.LevelToFactor` — +50% par niveau
+    au-dessus de 1 (niveau 2 = x1.5, niveau 3 = x2, ...), linéaire plutôt
+    que composé pour éviter une inflation incontrôlée si le joueur
+    empile plusieurs achats sur le même modifier. Une seule constante à
+    retoucher si le playtesting réclame une courbe plus douce ou plus
+    forte.
+  - **Achat** : `UpgradeId.ModifierUpgrade` (Bank pool, rareté
+    Uncommon) — un TROISIÈME type de sous-choix Bank, distinct de
+    Retirer/Dupliquer/Recolorer (choisir un TYPE du deck) et de Random
+    Piece (choisir parmi des candidats fraîchement tirés) : ses
+    candidats sont directement `RunManager.ActiveModifiers` lui-même
+    (tout modifier possédé est éligible), donc pas de nouvelle liste
+    `Pending*Candidates` à peupler — juste
+    `ResolveModifierUpgradeChoice(int slotIndex)`. Refusé d'emblée si le
+    joueur ne possède encore aucun modifier (même précédent que Random
+    Modifier respectant le cap de modifiers).
+  - **UI** : `ModifierPanelView` affiche maintenant un petit badge
+    "LvN" (coin bas-droit, motif similaire au losange d'index en
+    haut-gauche) sur toute rangée dont le niveau dépasse 1 — nouveau
+    paramètre optionnel `levelProvider` sur `Build`, interrogé par
+    INDEX (pas par id, un même id peut occuper plusieurs rangées via
+    Copieur à des niveaux différents). Nouvelle vue
+    `ModifierUpgradeChoiceView` (même bloc carte/titre/Confirm mesuré
+    que `PieceChoiceView`/`TileChoiceView`, mais un picker en GRILLE
+    multi-lignes plutôt qu'une rangée fixe de 5, puisque le nombre de
+    modifiers possédés varie jusqu'à `EconomyConstants.MaxActiveModifiers`)
+    pour choisir lequel upgrader.
+  - `ShopView` affiche "None owned" (bouton désactivé) sur une carte
+    Modifier Upgrade quand le joueur ne possède encore rien — même
+    mécanique d'affichage que "Full (N)" pour Random Modifier au cap.

@@ -584,6 +584,147 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BuyUpgradeSlot_ModifierUpgrade_Refuses_WhenPlayerOwnsNoModifiers()
+        {
+            // Same "don't sell an upgrade with nothing for it to do"
+            // precedent as RandomModifier respecting the modifier cap.
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
+            Assert.AreEqual(0, run.ActiveModifiers.Count, "A fresh run (no starting-modifier grant in this helper) should own nothing yet");
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsFalse(bought);
+            Assert.IsFalse(run.ShopUpgradeSlots[foundSlot].Purchased);
+            Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void BuyUpgradeSlot_ModifierUpgrade_SetsPendingUpgrade_ThenResolveRaisesTheChosenSlotsLevel()
+        {
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
+            Assert.IsTrue(run.DebugGrantModifier(ModifierId.Couronne));
+            Assert.AreEqual(1, run.GetModifierLevel(0), "A freshly granted modifier should start at level 1");
+            var hiddenUpgrade = run.ShopUpgradeSlots[foundSlot].HiddenUpgrade;
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsTrue(bought);
+            Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
+            // Nothing else in the shop can happen while a purchase is pending.
+            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.LeaveShop());
+
+            bool resolved = run.ResolveModifierUpgradeChoice(0);
+
+            Assert.IsTrue(resolved);
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(2, run.GetModifierLevel(0), "The chosen slot's level should rise by exactly one");
+            Assert.IsTrue(run.LeaveShop(), "The shop should be usable again once the pending upgrade is resolved");
+        }
+
+        [Test]
+        public void ResolveModifierUpgradeChoice_Fails_ForAnOutOfRangeIndex()
+        {
+            RunManager run = null;
+            int foundSlot = -1;
+            for (int seed = 0; seed < 500 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
+                {
+                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
+                    {
+                        run = candidate;
+                        foundSlot = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
+            run.DebugGrantModifier(ModifierId.Couronne);
+            run.DebugGrantLueur(1000000);
+            run.BuyUpgradeSlot(foundSlot);
+
+            Assert.IsFalse(run.ResolveModifierUpgradeChoice(-1));
+            Assert.IsFalse(run.ResolveModifierUpgradeChoice(1));
+            Assert.IsNotNull(run.PendingUpgrade, "An invalid choice should leave the purchase still pending, not silently drop it");
+        }
+
+        [Test]
+        public void SwapModifiers_MovesLevelsWithTheirModifiers_NotWithTheSlotPosition()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.Couronne);
+            run.DebugGrantModifier(ModifierId.Carrefour);
+            PlayRoundToAwaitingShop(run);
+            RaiseModifierLevelViaShop(run, 0); // Couronne (slot 0) -> level 2
+
+            run.SwapModifiers(0, 1);
+
+            Assert.AreEqual(ModifierId.Carrefour, run.ActiveModifiers[0]);
+            Assert.AreEqual(ModifierId.Couronne, run.ActiveModifiers[1]);
+            Assert.AreEqual(1, run.GetModifierLevel(0), "Carrefour (never leveled) should still read level 1 after moving into slot 0");
+            Assert.AreEqual(2, run.GetModifierLevel(1), "Couronne's own level-2 should have followed it into slot 1, not stayed behind at slot 0");
+        }
+
+        /// <summary>Buys a Modifier Upgrade slot (rerolling, funded by a large Lueur grant, until one shows up) and resolves it onto <paramref name="slotIndex"/> — the only way to raise a specific slot's level without reaching into RunManager's private state. The shop must already be open (see PlayRoundToAwaitingShop).</summary>
+        private static void RaiseModifierLevelViaShop(RunManager run, int slotIndex)
+        {
+            run.DebugGrantLueur(1000000);
+            int guard = 0;
+            while (true)
+            {
+                for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
+                {
+                    if (run.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade && !run.ShopUpgradeSlots[i].Purchased)
+                    {
+                        Assert.IsTrue(run.BuyUpgradeSlot(i));
+                        Assert.IsTrue(run.ResolveModifierUpgradeChoice(slotIndex));
+                        return;
+                    }
+                }
+                Assert.IsTrue(run.RerollShop(), "Ran out of Lueur or attempts while rerolling for a Modifier Upgrade slot");
+                guard++;
+                Assert.Less(guard, 500, "Should find a Modifier Upgrade slot within 500 rerolls");
+            }
+        }
+
+        [Test]
         public void BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded()
         {
             RunManager run = null;

@@ -17,6 +17,7 @@ namespace Contigu.Core
 
         // ---- Fourth batch (Bank pool, on explicit request) ----
         RandomPiece,
+        ModifierUpgrade,
 
         GoldenCells,
         TintedCells,

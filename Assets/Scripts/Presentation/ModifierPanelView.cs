@@ -72,6 +72,10 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private System.Func<ModifierId, int> _usageCountProvider;
         private System.Func<ModifierId, string> _progressiveStateProvider;
+        // By INDEX, not id — level is per-slot (see RunManager.GetModifierLevel),
+        // not per-modifier-type, so two copies of the same id via Copieur can
+        // sit at different levels.
+        private System.Func<int, int> _levelProvider;
         private bool _interactable = true;
 
         // Tap-to-swap: the first-tapped badge's row, armed and waiting for
@@ -142,14 +146,23 @@ namespace Contigu.Presentation
         /// (RunManager.GetProgressiveModifierStateText) lets a progressive/
         /// incremental modifier's tooltip show its current live state (on
         /// explicit request, e.g. "Currently x2.3") — null for every other
-        /// modifier. Only this owned-modifiers panel passes either one; the
-        /// shop's own cards skip the tooltip entirely (see ShopView).
+        /// modifier. <paramref name="levelProvider"/> (RunManager.
+        /// GetModifierLevel) feeds the small "Lv.N" badge Refresh shows on
+        /// any row leveled past 1 via the "Modifier Upgrade" shop upgrade —
+        /// queried by INDEX (its own position in ActiveModifiers), not id,
+        /// same reasoning as TriggeringModifierIndex elsewhere in this
+        /// codebase (Copieur can make the same id occupy more than one row,
+        /// each independently leveled). Only this owned-modifiers panel
+        /// passes any of these; the shop's own cards skip the tooltip
+        /// entirely (see ShopView) and never show a level (nothing bought
+        /// yet has one).
         /// </summary>
-        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, string> progressiveStateProvider = null)
+        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<int, int> levelProvider = null)
         {
             _tooltip = tooltip;
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
+            _levelProvider = levelProvider;
             // Own flat geometric panel (a plain cream rectangle plus a
             // mustard header band) instead of the "Colorful UI" pack's
             // "panel_bg" sprite — on explicit request, after seeing it next
@@ -303,6 +316,32 @@ namespace Contigu.Presentation
                 indexLabel.rectTransform.pivot = new Vector2(0f, 1f);
                 indexLabel.rectTransform.anchoredPosition = new Vector2(2f, -2f);
                 indexLabel.rectTransform.sizeDelta = new Vector2(26f, 26f);
+
+                // "Modifier Upgrade" level badge (see ModifierLevelUtility)
+                // — bottom-right corner, mirroring the top-left index
+                // diamond's motif, but only shown once a slot is actually
+                // leveled past 1: every badge carrying the same tag all the
+                // time would be visual noise for the overwhelming majority
+                // that are never upgraded.
+                int level = _levelProvider != null ? _levelProvider(i) : 1;
+                if (level > 1)
+                {
+                    var levelBg = UIFactory.CreatePanel(badge.transform, "LevelBg", VisualDefaults.GoldenColor);
+                    levelBg.rectTransform.anchorMin = new Vector2(1f, 0f);
+                    levelBg.rectTransform.anchorMax = new Vector2(1f, 0f);
+                    levelBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f);
+                    levelBg.rectTransform.sizeDelta = new Vector2(34f, 34f);
+                    levelBg.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
+                    var levelLabel = UIFactory.CreateText(badge.transform, "Level", "Lv" + level, Mathf.RoundToInt(IndexLabelSize * 0.8f), UITheme.TextPrimary);
+                    levelLabel.raycastTarget = false;
+                    levelLabel.rectTransform.anchorMin = new Vector2(1f, 0f);
+                    levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+                    levelLabel.rectTransform.pivot = new Vector2(1f, 0f);
+                    levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f);
+                    levelLabel.rectTransform.sizeDelta = new Vector2(30f, 20f);
+                }
 
                 // Drag-and-drop OR tap-tap swap reordering (on explicit
                 // request: "qu'on puisse les réorganiser avec un drag and

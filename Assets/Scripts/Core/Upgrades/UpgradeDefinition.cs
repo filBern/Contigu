@@ -103,6 +103,31 @@ namespace Contigu.Core
             UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
             "Choose 1 of 5 randomly rolled pieces to add to your deck. Each has a chance to already carry a special tile.", true, UpgradeRarity.Common);
 
+        /// <summary>
+        /// Spec extension, explicit request: "J'aimerais rajouter un type
+        /// d'upgrade dans le shop: Modifier upgrade, ce serait pour
+        /// upgrader un modifier que le joueur possède." After clarifying
+        /// what "upgrade" should concretely do (a generic level system
+        /// that amplifies whatever the chosen modifier already does — see
+        /// ModifierLevelUtility — rather than swapping to a named next
+        /// tier, which only a handful of modifiers even have), landed on a
+        /// third Bank sub-choice shape distinct from both existing ones:
+        /// unlike Retirer/Dupliquer/Recolorer (pick a TYPE from the deck)
+        /// and Random Piece (pick from freshly-rolled candidates), this
+        /// picks a SLOT the player already owns — RunManager.ActiveModifiers
+        /// itself is the full candidate list (every owned modifier is
+        /// eligible), so there's no Pending*Candidates list to populate at
+        /// all, just RunManager.ResolveModifierUpgradeChoice(slotIndex)
+        /// once Presentation.ModifierUpgradeChoiceView shows the picker.
+        /// Refused outright (see RunManager.BuyUpgradeSlot) if the player
+        /// owns no modifiers yet — same "don't sell an upgrade with
+        /// nothing to apply to" precedent as Random Modifier respecting
+        /// the modifier cap.
+        /// </summary>
+        public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
+            UpgradeId.ModifierUpgrade, UpgradePool.Bank, "Modifier Upgrade",
+            "Choose one of your active modifiers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
+
         // Descriptions below all follow the same short "A tile that ..."
         // pattern, describing the trait itself rather than how many pieces
         // get it — that count is a shop mechanic (see
@@ -176,7 +201,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] All =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece,
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
@@ -185,7 +210,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade
         };
 
         public static readonly UpgradeDefinition[] GridPool =

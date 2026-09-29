@@ -361,8 +361,15 @@ namespace Contigu.Presentation
             // still charge Lueur and grant nothing (see RunManager.
             // BuyUpgradeSlot). Every other upgrade ignores the cap.
             bool atModifierCap = isRandomModifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            BuildBuyButton(card.transform, slot.Purchased, atModifierCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(),
-                !slot.Purchased && !atModifierCap && run.PendingUpgrade == null && run.Lueur >= price,
+            // Modifier Upgrade needs an already-owned modifier to level up
+            // — same "don't sell it with nothing for it to do" precedent
+            // as the cap check above (see RunManager.BuyUpgradeSlot).
+            bool isModifierUpgrade = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.ModifierUpgrade;
+            bool hasNoModifiersToUpgrade = isModifierUpgrade && run.ActiveModifiers.Count == 0;
+            bool blocked = atModifierCap || hasNoModifiersToUpgrade;
+            string blockedLabel = atModifierCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : "None owned";
+            BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
+                !slot.Purchased && !blocked && run.PendingUpgrade == null && run.Lueur >= price,
                 () => OnUpgradeBuyClicked(index));
         }
 

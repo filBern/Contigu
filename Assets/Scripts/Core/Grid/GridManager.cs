@@ -231,7 +231,7 @@ namespace Contigu.Core
         /// the caller already validated the placement (or will inspect the
         /// returned failure).
         /// </summary>
-        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null)
+        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null, IReadOnlyList<int> modifierLevels = null)
         {
             if (!CanPlace(shape, anchorX, anchorY))
             {
@@ -338,7 +338,7 @@ namespace Contigu.Core
             int modifierAdditiveMultBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur, out int preAdditiveMult);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur, out int preAdditiveMult, modifierLevels);
                 modifierMultiplier *= preMultiplier;
                 modifierLueurBonus += preLueur;
                 modifierAdditiveMultBonus += preAdditiveMult;
@@ -383,7 +383,7 @@ namespace Contigu.Core
             float modifierProgressiveMultiplier = 1f;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveMultiplier);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveMultiplier, modifierLevels);
                 modifierMultiplier *= postMultiplier;
                 modifierLueurBonus += postLueur;
                 modifierProgressiveMultiplier *= postProgressiveMultiplier;
@@ -633,7 +633,7 @@ namespace Contigu.Core
             };
         }
 
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
@@ -664,8 +664,26 @@ namespace Contigu.Core
             {
                 var id = activeModifiers[i];
                 int eventsBefore = events.Count;
+                int lueurBefore = ctx.Lueur;
                 int bonus = _preClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
-                TagNewEvents(events, eventsBefore, id, i);
+
+                // Rescales THIS modifier's own contribution only — never the
+                // other modifiers' ctx changes already folded in by earlier
+                // loop iterations — by diffing ctx.Lueur before/after just
+                // this one call. ctx.Multiplier/ctx.AdditiveMult are
+                // deliberately left untouched: PlacementResult.Mult reads
+                // ScoreEvents exclusively (see its own doc comment), not
+                // those two fields, so TagNewEvents' event-level rescale
+                // below is already sufficient for every xN/+Mult modifier.
+                float levelFactor = GetModifierLevelFactor(modifierLevels, i);
+                if (levelFactor != 1f)
+                {
+                    bonus = Mathf.RoundToInt(bonus * levelFactor);
+                    int lueurDelta = ctx.Lueur - lueurBefore;
+                    ctx.Lueur = lueurBefore + Mathf.RoundToInt(lueurDelta * levelFactor);
+                }
+
+                TagNewEvents(events, eventsBefore, id, i, levelFactor);
                 total += bonus;
             }
             modifierMultiplier = ctx.Multiplier;
@@ -1460,7 +1478,7 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveMultiplier)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveMultiplier, IReadOnlyList<int> modifierLevels = null)
         {
             var ctx = new PostClearModifierContext
             {
@@ -1475,8 +1493,22 @@ namespace Contigu.Core
             {
                 var id = activeModifiers[i];
                 int eventsBefore = events.Count;
+                int lueurBefore = ctx.Lueur;
                 int bonus = _postClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
-                TagNewEvents(events, eventsBefore, id, i);
+
+                // Same reasoning as ApplyPreClearModifiers above — only this
+                // call's own ctx.Lueur delta is rescaled, and
+                // ctx.Multiplier/ctx.ProgressiveMultiplier are left alone
+                // since Mult is events-derived, not read from them.
+                float levelFactor = GetModifierLevelFactor(modifierLevels, i);
+                if (levelFactor != 1f)
+                {
+                    bonus = Mathf.RoundToInt(bonus * levelFactor);
+                    int lueurDelta = ctx.Lueur - lueurBefore;
+                    ctx.Lueur = lueurBefore + Mathf.RoundToInt(lueurDelta * levelFactor);
+                }
+
+                TagNewEvents(events, eventsBefore, id, i, levelFactor);
                 total += bonus;
             }
             modifierMultiplier = ctx.Multiplier;
@@ -1485,14 +1517,50 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>Stamps every event appended since <paramref name="startIndex"/> with the modifier that produced it — <paramref name="modifierIndex"/> is that modifier's own position within activeModifiers (see ScoreEvent.TriggeringModifierIndex), needed because Copieur can make the same id occupy more than one position — so the presentation layer knows which one to highlight.</summary>
-        private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id, int modifierIndex)
+        /// <summary>
+        /// Stamps every event appended since <paramref name="startIndex"/>
+        /// with the modifier that produced it — <paramref
+        /// name="modifierIndex"/> is that modifier's own position within
+        /// activeModifiers (see ScoreEvent.TriggeringModifierIndex), needed
+        /// because Copieur can make the same id occupy more than one
+        /// position — so the presentation layer knows which one to
+        /// highlight. <paramref name="levelFactor"/> (see
+        /// ModifierLevelUtility, 1f for an un-leveled slot — the
+        /// overwhelmingly common case) also rescales each event's own
+        /// Amount/PreciseAmount right here, generically, for every event
+        /// type at once: this is what makes a leveled xN/+Mult modifier's
+        /// contribution to PlacementResult.Mult actually stronger (Mult is
+        /// derived purely from ScoreEvents, see its own doc comment), and
+        /// keeps a leveled flat/Lueur modifier's on-screen popup consistent
+        /// with the ALSO-separately-scaled ModifierBonus/ModifierLueurBonus
+        /// its caller (ApplyPreClearModifiers/ApplyPostClearModifiers)
+        /// applies to the actual point/Lueur total.
+        /// </summary>
+        private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id, int modifierIndex, float levelFactor = 1f)
         {
             for (int i = startIndex; i < events.Count; i++)
             {
                 events[i].TriggeringModifier = id;
                 events[i].TriggeringModifierIndex = modifierIndex;
+                if (levelFactor != 1f)
+                {
+                    events[i].Amount = Mathf.RoundToInt(events[i].Amount * levelFactor);
+                    if (events[i].PreciseAmount.HasValue)
+                    {
+                        events[i].PreciseAmount = events[i].PreciseAmount.Value * levelFactor;
+                    }
+                }
             }
+        }
+
+        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> — 1f (no-op) when <paramref name="modifierLevels"/> is null (the vast majority of callers, e.g. every EditMode test that predates leveling) or doesn't cover that index. See ModifierLevelUtility.</summary>
+        private static float GetModifierLevelFactor(IReadOnlyList<int> modifierLevels, int index)
+        {
+            if (modifierLevels == null || index < 0 || index >= modifierLevels.Count)
+            {
+                return 1f;
+            }
+            return ModifierLevelUtility.LevelToFactor(modifierLevels[index]);
         }
 
         /// <summary>Prisme: xN multiplier (see ScoringConstants.PrismeMultiplier) when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker). Returns 1 (no-op) when it doesn't qualify.</summary>

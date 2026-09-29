@@ -48,7 +48,16 @@ namespace Contigu.Core
     {
         public readonly ScoreEventType Type;
         public readonly Vector2Int Position;
-        public readonly int Amount;
+
+        /// <summary>
+        /// Not readonly (unlike Type/Position) — GridManager.TagNewEvents
+        /// rescales this in place for a leveled modifier's newly-tagged
+        /// events (see ModifierLevelUtility), the same way it already
+        /// mutates TriggeringModifier/TriggeringModifierIndex post-
+        /// construction below, rather than every one of the ~50 individual
+        /// Apply* methods needing to know its own modifier's level.
+        /// </summary>
+        public int Amount;
 
         /// <summary>
         /// Which active modifier produced this event, when <see cref="Type"/> is
