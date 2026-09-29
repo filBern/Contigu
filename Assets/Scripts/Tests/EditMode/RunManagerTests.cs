@@ -1105,13 +1105,32 @@ namespace Contigu.Tests
             int guard = 0;
             while (run.State == RunState.InProgress)
             {
-                int slot = FirstOccupiedHandSlot(run);
-                var token = run.Deck.Hand[slot].Value;
-                var rotation = run.Deck.HandRotations[slot];
-                var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-                var anchor = FindAnyValidAnchor(run.Grid, shape);
-                Assert.IsTrue(anchor.HasValue, "Ran out of room before reaching the quota");
-                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+                // Try every occupied hand slot, not just the first — on a
+                // small board a fragmented layout can leave the first
+                // slot's piece with nowhere to go while another hand piece
+                // still fits, same as a real player would just play a
+                // different piece instead of getting stuck.
+                int? foundSlot = null;
+                Vector2Int anchor = default;
+                for (int i = 0; i < DeckManager.HandSize; i++)
+                {
+                    if (!run.Deck.Hand[i].HasValue)
+                    {
+                        continue;
+                    }
+                    var token = run.Deck.Hand[i].Value;
+                    var rotation = run.Deck.HandRotations[i];
+                    var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+                    var candidateAnchor = FindAnyValidAnchor(run.Grid, shape);
+                    if (candidateAnchor.HasValue)
+                    {
+                        foundSlot = i;
+                        anchor = candidateAnchor.Value;
+                        break;
+                    }
+                }
+                Assert.IsTrue(foundSlot.HasValue, "Ran out of room before reaching the quota");
+                run.PlacePiece(foundSlot.Value, anchor.x, anchor.y);
                 guard++;
                 Assert.Less(guard, 100, "Round should reach its quota well within 100 placements given every cell is golden");
             }
