@@ -56,36 +56,36 @@ namespace Contigu.Data
             switch (trait.Kind)
             {
                 case PieceTraitKind.Golden:
-                    return "When this piece is placed, this tile scores a flat golden bonus.";
+                    return "Scores a flat golden bonus when placed.";
                 case PieceTraitKind.Tinted:
-                    return "When this piece is placed, this tile doubles the placement's group and golden bonuses (not the line-clear bonus) — it's tinted to this piece's own color ("
-                        + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + "), so it always fires.";
+                    return "Doubles this placement's group and golden bonus (not line-clear) — tinted to "
+                        + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + ", so it always fires.";
                 case PieceTraitKind.Multiplier:
-                    return "When this piece is placed, this tile doubles the placement's ENTIRE score (group, golden, and line-clear bonuses together) — broader than Tinted Tile, which skips the line-clear bonus.";
+                    return "Doubles the placement's ENTIRE score (group, golden, and line-clear) — broader than Tinted Tile, which skips line-clear.";
                 case PieceTraitKind.Blast:
-                    return "When this piece is placed, this tile AND its 4 orthogonal neighbors score golden if they end up in the same scored group.";
+                    return "This tile and its 4 orthogonal neighbors score golden if they land in the same scored group.";
                 case PieceTraitKind.Beacon:
-                    return "When this piece is placed, every already-filled tile in this tile's row and column also becomes a multiplier for that one placement's scoring.";
+                    return "Every filled tile in this tile's row and column becomes a multiplier for this placement.";
                 case PieceTraitKind.Mirror:
-                    return "When this piece is placed, this tile's own group bonus is also duplicated onto one random OTHER tile in the scored group (if there's more than one cell in it).";
+                    return "Copies this tile's group bonus onto one random other tile in the scored group.";
                 case PieceTraitKind.Seeder:
-                    return "When this piece is placed, this tile turns golden on the grid for the rest of the round — it keeps scoring every time its group is rescored, until the round ends.";
+                    return "Turns golden for the rest of the round, rescoring every time its group is scored again.";
                 case PieceTraitKind.Catalyst:
-                    return "When this piece is placed, this tile scores extra points for every cell in the resulting group that was already on the grid before this placement — the bigger the group it reacts with, the bigger the bonus.";
+                    return "Scores extra per pre-existing cell merged into its group — the bigger the merge, the bigger the bonus.";
                 case PieceTraitKind.Twin:
-                    return "When this piece is placed, this tile's own group-bonus share is duplicated onto EVERY other tile in the scored group, not just one at random like Mirror Tile.";
+                    return "Copies this tile's group bonus onto EVERY other tile in the group, not just one like Mirror Tile.";
                 case PieceTraitKind.Detonator:
-                    return "When this piece is placed, if it clears at least one row or column, this tile doubles that placement's whole line-clear bonus.";
+                    return "Doubles this placement's whole line-clear bonus, if it clears at least one row or column.";
                 case PieceTraitKind.Chameleon:
-                    return "When this piece is placed, if this tile has an already-filled neighbor, the WHOLE piece recolors to match it before scoring — merging into an existing group instead of keeping its own color.";
+                    return "If this tile has a filled neighbor, the WHOLE piece recolors to match it before scoring, merging into that group.";
                 case PieceTraitKind.Spark:
-                    return "When this piece is placed, this tile scores more points the longer it's been since the last row/column clear this round — the bonus resets once a clear happens.";
+                    return "Scores more the longer since the last row/column clear this round — resets once a clear happens.";
                 case PieceTraitKind.Void:
-                    return "When this piece is placed, this tile also clears one random already-filled tile elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the tile broken — free space, at the risk of undoing a setup you were building.";
+                    return "Also clears one random filled tile elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the tile broken.";
                 case PieceTraitKind.Bastion:
-                    return "Once placed, this tile locks in place for the rest of the round instead of being cleared — it still scores the line-clear bonus every time its row/column completes, forever, for as long as the round lasts.";
+                    return "Locks in place instead of clearing, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
-                    return "When this piece is placed, this tile also destroys its 8 surrounding tiles (including this same piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile actually destroyed.";
+                    return "Also destroys its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
                 default:
                     return string.Empty;
             }

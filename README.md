@@ -6144,3 +6144,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   centre de la recherche 8-voisins, jamais l'une des 8 voisines). Le
   helper `ContainsCell`, devenu inutilisé, a été supprimé. Textes
   in-game/shop et tests mis à jour en conséquence.
+- **Descriptions d'upgrades et modifiers raccourcies** : sur demande
+  explicite ("Toutes les descriptions d'upgrades et modifiers sont
+  beaucoup trop longues, ça devient chiant a lire a la longue, peux-tu
+  les réduires") — les ~70 descriptions de `ModifierCatalog`, les ~22 de
+  `UpgradeCatalog`, et les 15 descriptions in-game de tuiles enchantées
+  (`PieceTraitVisualDefaults.GetDescription`, plus verbeuses encore —
+  chacune répétait "When this piece is placed, this tile...") ont été
+  réécrites plus courtes, même mécanique et mêmes chiffres. "multiplier"
+  contracté en "Mult" partout dans les modifiers (toujours colorié en
+  rouge par `DescriptionTextFormatter`, qui matche "mult" sans égard à
+  la casse), pour matcher le phrasé déjà utilisé par les modifiers +Mult
+  plus récents. Aucun test n'asserte sur le texte exact des
+  descriptions ; seul le contenu des chaînes change, pas la structure
+  des catalogues.

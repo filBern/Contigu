@@ -55,115 +55,123 @@ namespace Contigu.Core
     /// Trou dans la Grille, Cœur de Pierre, Diagonale Verrouillée and Sans
     /// Doublon (all tied to boss-round locked cells) and Symétrie (unclear,
     /// hard to trigger) were removed on explicit request — see README.
+    ///
+    /// Every description below was shortened on explicit request ("Toutes
+    /// les descriptions d'upgrades et modifiers sont beaucoup trop longues,
+    /// ça devient chiant a lire a la longue, peux-tu les réduires") — same
+    /// mechanic and numbers, fewer words, "multiplier" contracted to "Mult"
+    /// throughout (still colorized red by DescriptionTextFormatter, which
+    /// matches "mult" case-insensitively) to match the newer +Mult
+    /// modifiers' own phrasing.
     /// </summary>
     public static class ModifierCatalog
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
             ModifierId.Prisme, ModifierCategory.Couleurs, "Prism",
-            "x3 multiplier if this placement touches 3 distinct colors.");
+            "x3 Mult if 3 different colors are touched.");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
-            "+10 pts if the connected group has at least 5 cells.");
+            "+10 pts if the group has 5+ cells.");
 
         public static readonly ModifierDefinition MegaChaine = new ModifierDefinition(
             ModifierId.MegaChaine, ModifierCategory.Connexions, "Mega Chain",
-            "+30 pts if the group has at least 10 cells, +5 pts per cell beyond that.");
+            "+30 pts if the group has 10+ cells, +5 pts per cell past that.");
 
         public static readonly ModifierDefinition Forteresse = new ModifierDefinition(
             ModifierId.Forteresse, ModifierCategory.Voisinage, "Fortress",
-            "+6 pts per group cell fully surrounded.");
+            "+6 pts per fully surrounded group cell.");
 
         public static readonly ModifierDefinition Prisonnier = new ModifierDefinition(
             ModifierId.Prisonnier, ModifierCategory.Voisinage, "Prisoner",
-            "+4 pts per group cell surrounded on its 4 orthogonal sides.");
+            "+4 pts per group cell with all 4 sides filled.");
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
             ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
-            "x2 multiplier every time a 2x2 square block is placed.");
+            "x2 Mult when a 2x2 block is placed.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
-            "+8 pts per distinct color among cleared cells.");
+            "+8 pts per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
-            "x2 multiplier if this placement touches 2 other colors.");
+            "x2 Mult if 2 other colors are touched.");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
-            "x2 multiplier if this placement touches a complementary color pair (Red/Yellow or Blue/Green).");
+            "x2 Mult if a complementary pair is touched (Red/Yellow or Blue/Green).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
-            "x2 multiplier if the placement forms an isolated single-cell group.");
+            "x2 Mult if the piece lands as a lone single cell.");
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
-            "+5 pts per group cell sitting on the grid's outer edge.");
+            "+5 pts per group cell on the grid's edge.");
 
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
             ModifierId.Carrefour, ModifierCategory.Voisinage, "Crossroads",
-            "+12 pts per group cell surrounded on all 4 sides by at least 2 different colors.");
+            "+12 pts per group cell surrounded by 2+ colors.");
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Mason",
-            "x2 multiplier for every placement that completes no row/column.");
+            "x2 Mult when no row/column is completed.");
 
         public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
-            "x2 multiplier per row/column completed simultaneously by this placement, stacking. (Minimum 2)");
+            "x2 Mult per row/column cleared at once, stacking (2+ only).");
 
         // Very hard to actually trigger (needs 4 filled cardinal neighbors
         // showing all 4 base colors at once) — bonus raised 18->35 on
         // explicit request to make it worth chasing.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
             ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
-            "+35 pts per group cell whose 4 cardinal neighbors are filled by all 4 base colors.");
+            "+35 pts per group cell surrounded by all 4 colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
             ModifierId.Monochrome, ModifierCategory.Roguelike, "Monochrome",
-            "+3 pts per group cell when the whole group has ZERO jokers anywhere in it.");
+            "+3 pts per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
             ModifierId.Contraste, ModifierCategory.Couleurs, "Contrast",
-            "+6 pts per placed cell that has at least one filled orthogonal neighbor of a different color.");
+            "+6 pts per placed cell next to a different color.");
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
             ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
-            "x2 multiplier whenever this placement's scored group is larger than the group scored by previous placement.");
+            "x2 Mult when this group is bigger than the last one scored.");
 
         public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
             ModifierId.Emmitouflee, ModifierCategory.Voisinage, "Cocooned",
-            "+8 pts per group cell whose 4 diagonal neighbors are all filled.");
+            "+8 pts per group cell with all 4 diagonals filled.");
 
         public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
             ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
-            "+6 pts per group cell orthogonally adjacent to an upgraded cell.");
+            "+6 pts per group cell next to an upgraded tile.");
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
-            "x2 multiplier per cleared row/column containing all 4 base colors, stacking.");
+            "x2 Mult per cleared line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition Alternance = new ModifierDefinition(
             ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
-            "x2 multiplier per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern), stacking.");
+            "x2 Mult per cleared line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition Palindrome = new ModifierDefinition(
             ModifierId.Palindrome, ModifierCategory.Connexions, "Palindrome",
-            "x2 multiplier per cleared row/column whose own color sequence reads the same forwards and backwards, stacking.");
+            "x2 Mult per cleared line whose colors read the same both ways, stacking.");
 
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
-            "PERMANENT: every cleared row/column where no two adjacent cells share the same color adds +1 to a multiplier that never resets, not even between rounds — applies as xn to every placement for the rest of the run.");
+            "PERMANENT: +1 Mult (never resets) per cleared line with no two adjacent same-color cells.");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",
-            "x2 multiplier per cleared row/column without isolated single cell of its own color, stacking.");
+            "x2 Mult per cleared line with no isolated single-color cell, stacking.");
 
         public static readonly ModifierDefinition MonochromeLigne = new ModifierDefinition(
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
-            "x2 multiplier per cleared row/column that is entirely a single color, stacking.");
+            "x2 Mult per cleared line that's a single color, stacking.");
 
         // Devotion/Forme* converted from "doubles this placement's group
         // bonus" (additive) to a genuine xN ModifierMultiplier, on explicit
@@ -175,19 +183,19 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Red Devotion",
-            "x2 multiplier when placing a Red piece.");
+            "x2 Mult on Red pieces.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
             ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Blue Devotion",
-            "x2 multiplier when placing a Blue piece.");
+            "x2 Mult on Blue pieces.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
             ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Yellow Devotion",
-            "x2 multiplier when placing a Yellow piece.");
+            "x2 Mult on Yellow pieces.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
             ModifierId.DevotionLime, ModifierCategory.Couleurs, "Green Devotion",
-            "x2 multiplier when placing a Green piece.");
+            "x2 Mult on Green pieces.");
 
         // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
         // The 3 slot modifiers can't be evaluated by GridManager at all — it has
@@ -198,69 +206,69 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
             ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
-            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 1.");
+            "x2 Mult on the whole score when played from hand slot 1.");
 
         public static readonly ModifierDefinition SlotDeux = new ModifierDefinition(
             ModifierId.SlotDeux, ModifierCategory.Roguelike, "Slot 2 Loyalty",
-            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 2.");
+            "x2 Mult on the whole score when played from hand slot 2.");
 
         public static readonly ModifierDefinition SlotTrois = new ModifierDefinition(
             ModifierId.SlotTrois, ModifierCategory.Roguelike, "Slot 3 Loyalty",
-            "x2 multiplier on this placement's ENTIRE score when playing from hand slot 3.");
+            "x2 Mult on the whole score when played from hand slot 3.");
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",
-            "+8 pts per placed cell when the piece has 3 or more cells.");
+            "+8 pts per cell for pieces with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
             ModifierId.HorsNorme, ModifierCategory.Roguelike, "Off-Size",
-            "+12 pts when the piece does NOT have exactly 3 cells.");
+            "+12 pts if the piece isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Red Glow",
-            "+4 pts per group cell when placing a Red piece.");
+            "+4 pts per group cell on Red pieces.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
             ModifierId.EclatTeal, ModifierCategory.Couleurs, "Blue Glow",
-            "+4 pts per group cell when placing a Blue piece.");
+            "+4 pts per group cell on Blue pieces.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
             ModifierId.EclatViolet, ModifierCategory.Couleurs, "Yellow Glow",
-            "+4 pts per group cell when placing a Yellow piece.");
+            "+4 pts per group cell on Yellow pieces.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Green Glow",
-            "+4 pts per group cell when placing a Green piece.");
+            "+4 pts per group cell on Green pieces.");
 
         // ---- Fifth batch: 8 new ideas (on explicit request) ----
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
-            "+5 pts per group cell sitting on either of the board's two main diagonals.");
+            "+5 pts per group cell on either main diagonal.");
 
         public static readonly ModifierDefinition Nid = new ModifierDefinition(
             ModifierId.Nid, ModifierCategory.Voisinage, "Nest",
-            "+3 pts per group cell with exactly 3 of its 4 orthogonal neighbors filled.");
+            "+3 pts per group cell with exactly 3 sides filled.");
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
-            "x2 multiplier when this placement's group is entirely its own piece (more than 1 cell) — nothing pre-existing merged into it.");
+            "x2 Mult when the group is only this piece (2+ cells) — nothing merged in.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Open Space",
-            "x2 multiplier whenever the board is at most 25% filled once this placement is fully resolved.");
+            "x2 Mult when the board ends up 25% filled or less.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
             ModifierId.Rafale, ModifierCategory.Destruction, "Burst",
-            "x3 multiplier when this placement clears a line AND the immediately previous one this round also did.");
+            "x3 Mult when this AND the last placement both cleared a line.");
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
             ModifierId.PetitFormat, ModifierCategory.Roguelike, "Small Format",
-            "+5 pts per placed cell when the piece has at most 2 cells.");
+            "+5 pts per cell for pieces with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
-            "x2 multiplier when this placement's color isn't anywhere else on the board yet.");
+            "x2 Mult when this color is new to the board.");
 
         // ---- Sixth batch: 11 more, from a player-authored brainstorm list
         // (Équilibriste, Longue série and a second "Solitaire" idea were
@@ -268,47 +276,47 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Pont = new ModifierDefinition(
             ModifierId.Pont, ModifierCategory.Connexions, "Bridge",
-            "x2 multiplier per pre-existing group this placement bridges together beyond the first one, stacking.");
+            "x2 Mult per extra pre-existing group bridged together, stacking.");
 
         public static readonly ModifierDefinition Encerclement = new ModifierDefinition(
             ModifierId.Encerclement, ModifierCategory.Voisinage, "Encirclement",
-            "+6 pts per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid.");
+            "+6 pts per group cell boxed in on all 8 sides (filled or edge).");
 
         public static readonly ModifierDefinition Boucher = new ModifierDefinition(
             ModifierId.Boucher, ModifierCategory.Voisinage, "Sealer",
-            "+10 pts per pre-existing tile that this placement itself causes to become encircled (see Encirclement).");
+            "+10 pts per pre-existing tile this placement newly encircles.");
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
             ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Big Family",
-            "x2 multiplier when this placement's color exists in exactly one connected group on the whole board.");
+            "x2 Mult when this color forms only one connected group on the board.");
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
             ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
-            "xn multiplier where n is how many placements in a row share this piece's shape: x2 on the 2nd consecutive placement of the same shape, x3 on the 3rd, and so on (resets to x1 the moment a different shape is placed).");
+            "xn Mult for n consecutive same-shape placements (x2 on the 2nd, x3 on the 3rd...); resets on a different shape.");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
-            "x2 multiplier when this piece's color differs from the immediately previous placement's color this round.");
+            "x2 Mult when this piece's color differs from the last one played.");
 
         public static readonly ModifierDefinition Combo = new ModifierDefinition(
             ModifierId.Combo, ModifierCategory.Destruction, "Combo",
-            "x2 this placement's ENTIRE score when the immediately previous placement this round cleared a line.");
+            "x2 the whole score if the last placement cleared a line.");
 
         public static readonly ModifierDefinition Precision = new ModifierDefinition(
             ModifierId.Precision, ModifierCategory.Voisinage, "Precision",
-            "+5 pts per placed cell when EVERY cell of this piece touches at least one pre-existing filled tile.");
+            "+5 pts per cell if every cell of the piece touches a filled tile.");
 
         public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
             ModifierId.Surpopulation, ModifierCategory.Voisinage, "Overcrowding",
-            "+8 pts per placed cell when EVERY cell of this piece touches at least 2 pre-existing filled tiles.");
+            "+8 pts per cell if every cell of the piece touches 2+ filled tiles.");
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
             ModifierId.Minimaliste, ModifierCategory.Voisinage, "Minimalist",
-            "x2 multiplier when this piece's whole footprint touches EXACTLY one pre-existing filled tile, total.");
+            "x2 Mult when the piece touches exactly 1 filled tile, total.");
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
-            "A placed Joker tile counts as whichever base color would score the most from your Devotion/Glow modifiers.");
+            "Joker tiles count as whichever color scores best with your Devotion/Glow modifiers.");
 
         // ---- Seventh batch: progressive modifiers that scale with a
         // running counter instead of a fixed strength, on explicit request
@@ -319,7 +327,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
-            "+n Mult where n is how many cells are filled on the board after this placement, divided by 10 — the fuller the board, the stronger this gets.");
+            "+n Mult, n = filled cells on the board ÷ 10 — scales with how full the board is.");
 
         // ---- Eighth batch: Lueur-earning modifiers, each adapted from an
         // existing score modifier of the same shape instead of a new
@@ -331,23 +339,23 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 Lueur per cleared row/column containing all 4 base colors, stacking.");
+            "+6 Lueur per cleared line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
             ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
-            "+4 Lueur per cleared row/column whose colors strictly alternate between exactly 2 colors along its whole length (a joker anywhere breaks the pattern), stacking.");
+            "+4 Lueur per cleared line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
             ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
-            "+4 Lueur per cleared row/column that is entirely a single color, stacking.");
+            "+4 Lueur per cleared line that's a single color, stacking.");
 
         public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
             ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Collector",
-            "+2 Lueur per distinct color among this placement's cleared cells.");
+            "+2 Lueur per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
-            "+5 Lueur when this piece is the same shape as the immediately previous placement this round.");
+            "+5 Lueur when this piece matches the last one's shape.");
 
         // ---- Ninth batch, on explicit request ----
 
@@ -369,19 +377,19 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Copieur = new ModifierDefinition(
             ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
-            "The instant you buy this, it's replaced by another copy of whichever modifier you bought immediately before it. Does nothing if it's the very first modifier you buy this run.");
+            "Instantly copies whatever modifier you bought right before it. Does nothing on your first purchase.");
 
         public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
             ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Risky Mult",
-            "+5 Mult. No condition — but a 1-in-5 chance to lose this modifier at the end of every round.");
+            "+5 Mult, but 1-in-5 chance to lose it at the end of every round.");
 
         public static readonly ModifierDefinition CartesEnchantees = new ModifierDefinition(
             ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Cards",
-            "+0.1 Mult per upgraded card in your deck, counting from a baseline of 1 (so it's never quite zero).");
+            "+0.1 Mult per upgraded card in your deck, starting from a baseline of 1.");
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+100 pts, dropping by 5 after every placement for the rest of the run (down to 0, permanent, never resets).");
+            "+100 pts, -5 per placement for the rest of the run (down to 0, never resets).");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
@@ -389,7 +397,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
             ModifierId.Experience, ModifierCategory.Roguelike, "Experience",
-            "+0.1 Mult per special (upgraded) piece you've PLAYED this run, counting from a baseline of 1 — Enchanted Cards' played-count counterpart.");
+            "+0.1 Mult per upgraded piece you've PLAYED this run, starting from a baseline of 1.");
 
         // ---- Eleventh batch: curation pass (on explicit request — see
         // ModifierId's own doc comment on this batch) — replaces the 10
@@ -400,27 +408,27 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition FormatPetitSpecialiste = new ModifierDefinition(
             ModifierId.FormatPetitSpecialiste, ModifierCategory.Formes, "Small Format Specialist",
-            "x2 multiplier when the placed piece has 2 cells or fewer (Single, Domino H/V).");
+            "x2 Mult on pieces with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenSpecialiste = new ModifierDefinition(
             ModifierId.FormatMoyenSpecialiste, ModifierCategory.Formes, "Medium Format Specialist",
-            "x2 multiplier when the placed piece has exactly 3 cells (any of the 3 Trominoes).");
+            "x2 Mult on 3-cell pieces (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandSpecialiste = new ModifierDefinition(
             ModifierId.FormatGrandSpecialiste, ModifierCategory.Formes, "Large Format Specialist",
-            "x2 multiplier when the placed piece has 4 cells (Square or any Tetromino).");
+            "x2 Mult on 4-cell pieces (Square or any Tetromino).");
 
         public static readonly ModifierDefinition FormatPetitGlow = new ModifierDefinition(
             ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Small Format Glow",
-            "+4 pts per scored group cell when the placed piece has 2 cells or fewer (Single, Domino H/V).");
+            "+4 pts per group cell on pieces with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenGlow = new ModifierDefinition(
             ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Medium Format Glow",
-            "+4 pts per scored group cell when the placed piece has exactly 3 cells (any of the 3 Trominoes).");
+            "+4 pts per group cell on 3-cell pieces (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandGlow = new ModifierDefinition(
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Large Format Glow",
-            "+4 pts per scored group cell when the placed piece has 4 cells (Square or any Tetromino).");
+            "+4 pts per group cell on 4-cell pieces (Square or any Tetromino).");
 
         public static readonly ModifierDefinition[] All =
         {

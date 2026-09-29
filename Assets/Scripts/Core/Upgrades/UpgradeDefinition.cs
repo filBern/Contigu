@@ -40,11 +40,11 @@ namespace Contigu.Core
         // being weaker than another option.
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
             UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose a piece type from the deck; one copy is permanently removed.", true, UpgradeRarity.Rare);
+            "Choose a piece type; remove one copy from the deck.", true, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
-            "Choose a piece type from the deck; one extra copy is added.", true, UpgradeRarity.Common);
+            "Choose a piece type; add one extra copy to the deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
             UpgradeId.JokerPiece, UpgradePool.Bank, "Joker piece",
@@ -52,7 +52,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition RecolorPiece = new UpgradeDefinition(
             UpgradeId.RecolorPiece, UpgradePool.Bank, "Recolor a piece",
-            "Choose a piece type and a target color; one copy changes color.", true, UpgradeRarity.Uncommon);
+            "Choose a piece type and color; recolor one copy.", true, UpgradeRarity.Uncommon);
 
         /// <summary>
         /// A gamble (spec extension, explicit request: "j'aimerais qu'on
@@ -77,7 +77,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
-            "Grants one random modifier you don't already have. A gamble — you don't get to pick which.", false, UpgradeRarity.Common);
+            "Grants one random modifier you don't already have.", false, UpgradeRarity.Common);
 
         // ---- Fourth batch (Bank pool, on explicit request) ----
 
@@ -101,7 +101,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
-            "Choose 1 of 5 randomly rolled pieces to add to your deck. Each has a chance to already carry a special tile.", true, UpgradeRarity.Common);
+            "Choose 1 of 5 random pieces to add to your deck; each may already carry a special tile.", true, UpgradeRarity.Common);
 
         /// <summary>
         /// Spec extension, explicit request: "J'aimerais rajouter un type
@@ -141,11 +141,11 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "A tile that always doubles the placement's group and golden score (not the line-clear bonus) — tinted to match the piece's own color.", false, UpgradeRarity.Common);
+            "A tile that doubles group and golden score (not line-clear), tinted to the piece's color.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "A tile that doubles the placement's ENTIRE score, line-clear bonus included.", false, UpgradeRarity.Uncommon);
+            "A tile that doubles the whole placement's score, line-clear included.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
             UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",
@@ -153,15 +153,15 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
             UpgradeId.MultiplierBeacon, UpgradePool.Grid, "Multiplier Beacon",
-            "A tile that turns every filled tile in its row/column into a multiplier for that placement.", false, UpgradeRarity.Rare);
+            "A tile that turns its whole row/column into multipliers for that placement.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
             UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Tile",
-            "A tile that duplicates its group-bonus share onto one random other tile in the group.", false, UpgradeRarity.Uncommon);
+            "A tile that copies its group bonus onto one random other tile in the group.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
-            "A tile that stays golden on the grid for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
+            "A tile that stays golden for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
 
         // ---- Second batch (7 more tile upgrades, on explicit request) ----
 
@@ -171,7 +171,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
             UpgradeId.TwinTile, UpgradePool.Grid, "Twin Tile",
-            "A tile that duplicates its group-bonus share onto EVERY other tile in the group.", false, UpgradeRarity.Rare);
+            "A tile that copies its group bonus onto EVERY other tile in the group.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DetonatorTile = new UpgradeDefinition(
             UpgradeId.DetonatorTile, UpgradePool.Grid, "Detonator Tile",
@@ -193,7 +193,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition BastionTile = new UpgradeDefinition(
             UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Tile",
-            "A tile that locks in place for the rest of the round instead of being cleared, but keeps scoring the line-clear bonus every time its row/column completes.", false, UpgradeRarity.Uncommon);
+            "A tile that locks in place instead of clearing, but keeps scoring every line it completes.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
