@@ -319,7 +319,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
-            "xn multiplier where n is how many cells are filled on the board after this placement, divided by 10 (rounded down) — the fuller the board, the stronger this gets.");
+            "+n Mult where n is how many cells are filled on the board after this placement, divided by 10 — the fuller the board, the stronger this gets.");
 
         // ---- Eighth batch: Lueur-earning modifiers, each adapted from an
         // existing score modifier of the same shape instead of a new

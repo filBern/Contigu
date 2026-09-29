@@ -227,8 +227,8 @@ namespace Contigu.Core
 
         // ---- Seventh batch: progressive modifiers (on explicit request) ----
 
-        /// <summary>Density (Densité): filled cells on the board (after this placement's own clears) are divided by this many, floored, to get the xN multiplier — i.e. +0.1x per filled tile, kept as a clean integer step instead of introducing fractional multipliers.</summary>
-        public const int DensiteFilledCellsPerMultiplierStep = 10;
+        /// <summary>Density (Densité): filled cells on the board (after this placement's own clears), divided by this many as a TRUE float (never floored), to get the +Mult contributed — i.e. +0.1 Mult per filled tile. Converted from an "xN multiplier" to a "+N Mult" additive contributor, same family as MultUn/CartesEnchantees/Experience, on explicit request: "Density modifier devrait +n mult au lieu de xn mult ET devrait être un float au lieu d'un int" — no "start at 1" baseline needed here (unlike CartesEnchantees/Experience below), since an empty board correctly contributing +0 Mult is the right behavior for an additive term, where it would have been a score-killing x0 under the old multiplicative model.</summary>
+        public const int DensiteFilledCellsPerMultStep = 10;
 
         // ---- Ninth batch (on explicit request) ----
 

@@ -6065,3 +6065,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   séparée de Casino) — fait monter ça à environ 35-40% par slot, sans
   avoir à inventer de nouveau contenu d'upgrade. Un seul bouton à tourner
   si ce n'est toujours pas assez.
+- **Density : `+n Mult` additif au lieu de `xn` multiplicatif** : sur
+  demande explicite ("Density modifier devrait +n mult au lieu de xn mult
+  ET devrait être un float au lieu d'un int") — `GridManager.ApplyDensite`
+  ne produit plus un `ScoreEventType.ModifierMultiplier` (`xn`, avec un
+  plancher `Mathf.Max(1f, ...)` qui masquait un plateau presque vide) mais
+  un `ScoreEventType.MultBonus` (`+n`), rejoignant ainsi le même pool
+  additif que Cartes Enchantées/Experience/Solidarité — sans le plancher
+  à 1, puisqu'un plateau vraiment vide contribue correctement `+0 Mult`
+  (jamais un multiplicateur `x0` qui aurait annulé le score). Le champ
+  dédié `PlacementResult.ProgressiveMultiplier` (float, init à 1f) est
+  supprimé, sa valeur fusionnée dans `PlacementResult.ProgressiveAdditiveMult`
+  (float, déjà partagé par les deux autres) ; `GridManager`'s
+  `PostClearModifierContext.ProgressiveMultiplier` devient
+  `ProgressiveAdditiveMult` (accumulé par `+=` plutôt que `*=`). Le
+  tooltip ("Currently ...") de Density passe de `"x" + ...` à
+  `"+" + ... + " Mult"`, même phrasé que les deux autres modifiers
+  additifs progressifs.

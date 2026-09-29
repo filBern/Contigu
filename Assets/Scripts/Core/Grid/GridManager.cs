@@ -387,20 +387,20 @@ namespace Contigu.Core
             // identical (streak also starts at 0).
             bool clearedByPreviousPlacement = previousGroupSize.HasValue && streakBeforePlacement == 0;
 
-            float modifierProgressiveMultiplier = 1f;
+            float modifierProgressiveAdditiveMult = 0f;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveMultiplier, modifierLevels);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveAdditiveMult, modifierLevels);
                 modifierMultiplier *= postMultiplier;
                 modifierLueurBonus += postLueur;
-                modifierProgressiveMultiplier *= postProgressiveMultiplier;
+                modifierProgressiveAdditiveMult += postProgressiveAdditiveMult;
             }
 
             result.ModifierBonus = modifierBonus;
             result.ModifierMultiplier = modifierMultiplier;
             result.ModifierLueurBonus = modifierLueurBonus;
             result.AdditiveMultBonus = modifierAdditiveMultBonus;
-            result.ProgressiveMultiplier = modifierProgressiveMultiplier;
+            result.ProgressiveAdditiveMult += modifierProgressiveAdditiveMult;
             // "Combo": reuses the exact same "did the previous placement
             // clear?" signal as Rafale, but multiplies the WHOLE placement's
             // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
@@ -901,21 +901,26 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Density (Densité): progressive xN multiplier, the opposite of
-        /// Espace Libre — N is how many cells are filled on the board right
-        /// after this placement (and any of its own line clears), divided
-        /// by ScoringConstants.DensiteFilledCellsPerMultiplierStep as a
-        /// TRUE float (never floored mid-calculation — on explicit
-        /// request: "on doit multiplier comme si c'était un float au lieu
-        /// d'arrondir a la baisse"). Returns 1 (no-op, never a debuff)
-        /// while fewer than one step's worth of cells are filled. The
+        /// Density (Densité): progressive +N Mult, the opposite of Espace
+        /// Libre — N is how many cells are filled on the board right after
+        /// this placement (and any of its own line clears), divided by
+        /// ScoringConstants.DensiteFilledCellsPerMultStep as a TRUE float
+        /// (never floored mid-calculation — on explicit request: "on doit
+        /// multiplier comme si c'était un float au lieu d'arrondir a la
+        /// baisse"). Converted from an "xN multiplier" to a "+N Mult"
+        /// additive contributor (explicit request: "Density modifier
+        /// devrait +n mult au lieu de xn mult ET devrait être un float au
+        /// lieu d'un int") — same family as MultUn/CartesEnchantees/
+        /// Experience now, so an empty board correctly contributes +0
+        /// Mult with no special-case floor needed (unlike the old
+        /// multiplicative version, where anything below x1 would have
+        /// been a debuff and had to be clamped up to a no-op x1). The
         /// per-modifier badge popup shows a rounded whole number
         /// (ScoreEvent.Amount stays int), but the event's own PreciseAmount
         /// carries the true float — same as Enchanted Cards/Experience —
-        /// since <see cref="PlacementResult.Mult"/>'s ordered fold now reads
-        /// straight off this event instead of a separately-passed-around
-        /// ProgressiveMultiplier float, and would otherwise lose precision
-        /// to the rounded Amount.
+        /// since <see cref="PlacementResult.Mult"/>'s ordered fold reads
+        /// straight off this event, and would otherwise lose precision to
+        /// the rounded Amount.
         /// </summary>
         private float ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -928,16 +933,11 @@ namespace Contigu.Core
                 }
             }
 
-            float multiplier = filled / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep;
-            if (multiplier < 1f)
-            {
-                return 1f;
-            }
-
-            var densiteEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], Mathf.RoundToInt(multiplier));
-            densiteEvent.PreciseAmount = multiplier;
+            float additiveMult = filled / (float)ScoringConstants.DensiteFilledCellsPerMultStep;
+            var densiteEvent = new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], Mathf.RoundToInt(additiveMult));
+            densiteEvent.PreciseAmount = additiveMult;
             events.Add(densiteEvent);
-            return multiplier;
+            return additiveMult;
         }
 
         /// <summary>Rafale: xN multiplier (see ScoringConstants.RafaleMultiplier) when this placement clears at least one row/column AND the immediately previous placement this round also did — two clears back to back. Returns 1 (no-op) otherwise.</summary>
@@ -1438,7 +1438,7 @@ namespace Contigu.Core
         /// Everything a post-clear modifier's effect delegate (see <see
         /// cref="_postClearEffects"/>) might need to read, plus the
         /// accumulators it mutates as a side effect (Multiplier/Lueur/
-        /// ProgressiveMultiplier — <see cref="ApplyPostClearModifiers"/>
+        /// ProgressiveAdditiveMult — <see cref="ApplyPostClearModifiers"/>
         /// reads these back out once the whole dispatch loop finishes).
         /// Same rationale as <see cref="PreClearModifierContext"/>.
         /// </summary>
@@ -1450,7 +1450,7 @@ namespace Contigu.Core
             public bool ClearedByPreviousPlacement;
             public int Multiplier = 1;
             public int Lueur;
-            public float ProgressiveMultiplier = 1f;
+            public float ProgressiveAdditiveMult;
         }
 
         private delegate int PostClearModifierEffect(PostClearModifierContext ctx);
@@ -1480,12 +1480,12 @@ namespace Contigu.Core
                 { ModifierId.MonochromeLigneLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine); return 0; } },
                 { ModifierId.EspaceLibre, ctx => { ctx.Multiplier *= ApplyEspaceLibre(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Rafale, ctx => { ctx.Multiplier *= ApplyRafale(ctx.ClearedByPreviousPlacement, ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Densite, ctx => { ctx.ProgressiveMultiplier *= ApplyDensite(ctx.PlacedCells, ctx.Events); return 0; } }
+                { ModifierId.Densite, ctx => { ctx.ProgressiveAdditiveMult += ApplyDensite(ctx.PlacedCells, ctx.Events); return 0; } }
             };
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveMultiplier, IReadOnlyList<int> modifierLevels = null)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveAdditiveMult, IReadOnlyList<int> modifierLevels = null)
         {
             var ctx = new PostClearModifierContext
             {
@@ -1505,7 +1505,7 @@ namespace Contigu.Core
 
                 // Same reasoning as ApplyPreClearModifiers above — only this
                 // call's own ctx.Lueur delta is rescaled, and
-                // ctx.Multiplier/ctx.ProgressiveMultiplier are left alone
+                // ctx.Multiplier/ctx.ProgressiveAdditiveMult are left alone
                 // since Mult is events-derived, not read from them.
                 float levelFactor = GetModifierLevelFactor(modifierLevels, i);
                 if (levelFactor != 1f)
@@ -1520,7 +1520,7 @@ namespace Contigu.Core
             }
             modifierMultiplier = ctx.Multiplier;
             lueurBonus = ctx.Lueur;
-            progressiveMultiplier = ctx.ProgressiveMultiplier;
+            progressiveAdditiveMult = ctx.ProgressiveAdditiveMult;
             return total;
         }
 

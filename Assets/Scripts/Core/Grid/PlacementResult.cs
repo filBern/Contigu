@@ -97,34 +97,30 @@ namespace Contigu.Core
         public int AdditiveMultBonus;
 
         /// <summary>
-        /// TRUE fractional ADDITIVE "+Mult" contribution from Enchanted
-        /// Cards/Experience (see RunManager.ApplyDeckStateModifierBonuses) —
-        /// 0.1 per card/piece, computed as a genuine float instead of the
-        /// integer-stepped approximation ((1+count)/10) previously used to
-        /// avoid float in the pipeline (on explicit request: "Les upgrade
-        /// progressive, on doit multiplier comme si c'était un float au
-        /// lieu d'arrondir a la baisse. On arrondit le score total de la
-        /// pièce posé par la suite"). Kept separate from <see
-        /// cref="AdditiveMultBonus"/> (int) so that field stays exact for
-        /// its existing readers (MultUn/Deux/Quatre, Solidarite,
-        /// MultCinqRisque, all genuinely whole numbers) — this adds in on
-        /// top when computing <see cref="Mult"/>. 0 when neither modifier
-        /// is held.
+        /// TRUE fractional ADDITIVE "+Mult" contribution from Density
+        /// (Densité), Enchanted Cards, and Experience (see GridManager.
+        /// ApplyDensite/RunManager.ApplyDeckStateModifierBonuses) — 0.1 per
+        /// filled tile/upgraded card/special piece played, computed as a
+        /// genuine float instead of the integer-stepped approximation
+        /// previously used to avoid float in the pipeline (on explicit
+        /// request: "Les upgrade progressive, on doit multiplier comme si
+        /// c'était un float au lieu d'arrondir a la baisse. On arrondit le
+        /// score total de la pièce posé par la suite" — Densite joined this
+        /// same pool later, converted from a multiplier: "Density modifier
+        /// devrait +n mult au lieu de xn mult ET devrait être un float au
+        /// lieu d'un int"). Kept separate from <see cref="AdditiveMultBonus"/>
+        /// (int) so that field stays exact for its existing readers
+        /// (MultUn/Deux/Quatre, Solidarite, MultCinqRisque, all genuinely
+        /// whole numbers) — this adds in on top when computing <see
+        /// cref="Mult"/>. 0 when none of the three is held (or, for
+        /// Densite specifically, while the board is still empty — unlike
+        /// Enchanted Cards/Experience, Densite has no "start at 1" baseline
+        /// forcing it above zero, since a genuinely empty board correctly
+        /// contributing +0 Mult is fine for an additive term, where it
+        /// would have been a score-killing x0 under the old multiplicative
+        /// version).
         /// </summary>
         public float ProgressiveAdditiveMult;
-
-        /// <summary>
-        /// TRUE fractional multiplier from Density (Densité) — filled/10 as
-        /// a genuine float (never floored mid-calculation), floored only at
-        /// 1f so it can never be a debuff below its threshold (same
-        /// explicit request as <see cref="ProgressiveAdditiveMult"/> above).
-        /// Kept separate from <see cref="ModifierMultiplier"/> (int) so
-        /// that field stays a clean whole-number "how many xN modifiers
-        /// fired" count for its existing readers — this multiplies in
-        /// separately when computing <see cref="Mult"/>. 1 when Densite
-        /// isn't held or hasn't reached its threshold yet.
-        /// </summary>
-        public float ProgressiveMultiplier = 1f;
 
         /// <summary>Sum of every bonus from the player's active modifiers on this placement that's still a flat/per-cell bonus rather than a multiplier (see <see cref="ModifierId"/>/<see cref="ModifierMultiplier"/>).</summary>
         public int ModifierBonus;
@@ -234,16 +230,16 @@ namespace Contigu.Core
         /// x2 puisque chaque calcul est fait de gauche à droite et non
         /// selon la priorité des opérations PEDMAS"). A "+N Mult" modifier
         /// (MultUn/Deux/Quatre, Risky Mult, Solidarité, Enchanted Cards,
-        /// Experience) ADDS N to the running total; an "xN" modifier
-        /// (Prisme, Devotion*, the line-pattern family, Combo, Slot
-        /// Loyalty, Densité, ...) MULTIPLIES it — exactly which one each
+        /// Experience, Densité) ADDS N to the running total; an "xN"
+        /// modifier (Prisme, Devotion*, the line-pattern family, Combo,
+        /// Slot Loyalty, ...) MULTIPLIES it — exactly which one each
         /// event is comes from its own <see
         /// cref="ScoreEventType"/>. Reading off the events (rather than the
         /// old separately-summed <see cref="AdditiveMultBonus"/>/<see
         /// cref="ModifierMultiplier"/>/<see cref="ComboMultiplier"/>/<see
-        /// cref="ProgressiveMultiplier"/> fields, which are still populated
-        /// as an aggregate rollup for other readers/tests but no longer
-        /// drive the actual score) is what makes this order-sensitive at
+        /// cref="ProgressiveAdditiveMult"/> fields, which are still
+        /// populated as an aggregate rollup for other readers/tests but no
+        /// longer drive the actual score) is what makes this order-sensitive at
         /// all — those fields collapse every + into one sum and every x
         /// into one product before combining the two, which is
         /// mathematically order-INDEPENDENT (a sum and a product are each

@@ -250,22 +250,23 @@ namespace Contigu.Core
         /// is a PREVIEW of what its own NEXT placement would score if it kept
         /// the streak alive (see GridManager.RepetitionCurrentMultiplier),
         /// unlike the others here which report what their OWN LAST
-        /// placement already applied; Densite
-        /// shows its TRUE float multiplicative factor now actually applied
-        /// to the score (see PlacementResult.ProgressiveMultiplier — on
-        /// explicit request, no longer rounded down mid-calculation: "on
-        /// doit multiplier comme si c'était un float"). CartesEnchantees/
-        /// Experience are ADDITIVE contributors to the SAME "+Mult" pool as
+        /// placement already applied. Densite/CartesEnchantees/Experience
+        /// are ADDITIVE contributors to the SAME "+Mult" pool as
         /// Solidarite/MultUn (see PlacementResult.ProgressiveAdditiveMult),
-        /// not a multiplier of their own, so they show "+N Mult" the same
-        /// way Solidarite does, NOT "xN" — showing "x" here was a bug (on
-        /// explicit report: "tu as oublié la baseline de 1 et non de 0"):
-        /// their own raw contribution starts at +0.1 (never +0, "counting
-        /// from a baseline of 1" card), which read as a NERF ("x0.1") under
-        /// the old "x" phrasing instead of the bonus it actually is — the
-        /// separate "+1" that makes the OVERALL Mult never drop below x1 is
-        /// PlacementResult.Mult's own baseline, added once, game-wide, not
-        /// specific to either of these two modifiers.
+        /// not a multiplier of their own, so they show "+N Mult", NOT "xN"
+        /// — showing "x" here was a bug for CartesEnchantees/Experience
+        /// (on explicit report: "tu as oublié la baseline de 1 et non de
+        /// 0"): their own raw contribution starts at +0.1 (never +0,
+        /// "counting from a baseline of 1" card), which read as a NERF
+        /// ("x0.1") under the old "x" phrasing instead of the bonus it
+        /// actually is. Densite joined this same "+N Mult" family later,
+        /// converted from an "xN" multiplier (explicit request: "Density
+        /// modifier devrait +n mult au lieu de xn mult ET devrait être un
+        /// float au lieu d'un int") — unlike the other two, it has no
+        /// "start at 1" baseline (a genuinely empty board correctly shows
+        /// "+0 Mult"). The separate "+1" that makes the OVERALL Mult never
+        /// drop below x1 is PlacementResult.Mult's own baseline, added
+        /// once, game-wide, not specific to any of these three modifiers.
         ///
         /// <paramref name="index"/> is this slot's own position in <see
         /// cref="ActiveModifiers"/> (optional, -1 by default) — when given,
@@ -293,7 +294,7 @@ namespace Contigu.Core
                 case ModifierId.Repetition:
                     return "Currently x" + FormatMultDisplay(Grid.RepetitionCurrentMultiplier * levelFactor);
                 case ModifierId.Densite:
-                    return "Currently x" + FormatMultDisplay(Mathf.Max(1f, Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultiplierStep) * levelFactor);
+                    return "Currently +" + FormatMultDisplay(Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Epuisement:
                     return "Currently +" + Mathf.RoundToInt(Grid.EpuisementCurrentBonus * levelFactor) + " pts";
                 case ModifierId.Solidarite:

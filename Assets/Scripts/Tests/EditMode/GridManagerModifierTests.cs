@@ -1485,8 +1485,8 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Densite };
 
             var early = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(1f, early.ProgressiveMultiplier, "Only 1 cell filled, well under the 10-cell step");
-            Assert.AreEqual(1, early.ModifierMultiplier, "Densite contributes to ProgressiveMultiplier, not the plain integer ModifierMultiplier — see next test for why");
+            Assert.AreEqual(0.1f, early.ProgressiveAdditiveMult, 0.0001f, "Only 1 cell filled, well under the 10-cell step");
+            Assert.AreEqual(1, early.ModifierMultiplier, "Densite contributes to ProgressiveAdditiveMult, not the plain integer ModifierMultiplier — see next test for why");
 
             // Fill 18 more cells without completing any row/column: 3 rows
             // leaving their last column empty (5 of 6 cells each), plus a
@@ -1506,12 +1506,12 @@ namespace Contigu.Tests
             // Row/column 5 are still completely untouched by the fill above,
             // so placing here can't complete either one.
             var late = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 1, GridManager.Size - 1, modifiers);
-            Assert.AreEqual(2f, late.ProgressiveMultiplier, "20 cells filled / 10 per step = x2.0 exactly");
+            Assert.AreEqual(2f, late.ProgressiveAdditiveMult, 0.0001f, "20 cells filled / 10 per step = +2.0 Mult exactly");
             Assert.AreEqual(1, late.ModifierMultiplier);
         }
 
         [Test]
-        public void Densite_UsesTheTrueFractionalMultiplier_NotFlooredToTheNearestStep()
+        public void Densite_UsesTheTrueFractionalAdditiveMult_NotFlooredToTheNearestStep()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -1532,19 +1532,19 @@ namespace Contigu.Tests
             // 23 filled cells total (well short of a clean multiple of 10) —
             // on explicit request: "on doit multiplier comme si c'était un
             // float au lieu d'arrondir a la baisse". The OLD integer-floor
-            // behavior would have given a flat x2 here; the true value is
-            // x2.3. Placed in the still-untouched last column so it can't
-            // complete row 4 (only 2 of its cells are filled) or column 5
-            // (this is its only filled cell).
+            // behavior would have given a flat +2 Mult here; the true value
+            // is +2.3 Mult. Placed in the still-untouched last column so it
+            // can't complete row 4 (only 2 of its cells are filled) or
+            // column 5 (this is its only filled cell).
             var result = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 1, 4, modifiers);
 
             Assert.AreEqual(23, grid.FilledCellCount);
-            Assert.AreEqual(2.3f, result.ProgressiveMultiplier, 0.0001f);
+            Assert.AreEqual(2.3f, result.ProgressiveAdditiveMult, 0.0001f);
             Assert.AreEqual(1, result.ModifierMultiplier);
         }
 
         [Test]
-        public void TotalScore_UsesTheTrueFractionalMult_InsteadOfFlooringItBeforeMultiplyingByChips()
+        public void TotalScore_UsesTheTrueFractionalAdditiveMult_InsteadOfFlooringItBeforeMultiplyingByChips()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -1563,10 +1563,10 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 21
 
             // Placing this 2-cell domino brings the board to 23 filled
-            // cells — Densite's true multiplier is 2.3, not the old
-            // floored x2. Row 4 only has 3 of 6 cells filled afterward
-            // (columns 0-2), and columns 1-2 only 5 of 6 (row 5 still
-            // empty), so nothing completes.
+            // cells — Densite's true additive contribution is +2.3 Mult,
+            // not the old floored +2. Row 4 only has 3 of 6 cells filled
+            // afterward (columns 0-2), and columns 1-2 only 5 of 6 (row 5
+            // still empty), so nothing completes.
             var result = grid.PlacePiece(domH, PieceColor.Violet, 1, 4, modifiers);
 
             Assert.AreEqual(23, grid.FilledCellCount);
@@ -1576,13 +1576,16 @@ namespace Contigu.Tests
             // flat 2 (a pre-existing wrong expectation in this test, only
             // surfaced once CI actually ran it for the first time).
             Assert.AreEqual(3, result.Chips, "A lone 2-cell group, no golden/line-clear bonus");
-            Assert.AreEqual(2.3f, result.Mult, 0.0001f);
-            // round(3 * 2.3) = round(6.9) = 7 — the OLD integer-floor
-            // behavior would have given floor(2.3) = x2 for a total of
-            // 3*2=6 instead. On explicit request: "on arrondit le score
-            // total de la pièce posé par la suite" — only the FINAL total
-            // rounds, not the multiplier itself along the way.
-            Assert.AreEqual(7, result.TotalScore);
+            // Mult's own baseline of 1 PLUS Densite's +2.3 additive Mult =
+            // 3.3 (on explicit request, Densite converted from an "xN"
+            // multiplier to a "+N Mult" additive contributor: "Density
+            // modifier devrait +n mult au lieu de xn mult").
+            Assert.AreEqual(3.3f, result.Mult, 0.0001f);
+            // round(3 * 3.3) = round(9.9) = 10. On explicit request: "on
+            // arrondit le score total de la pièce posé par la suite" —
+            // only the FINAL total rounds, not the multiplier itself along
+            // the way.
+            Assert.AreEqual(10, result.TotalScore);
         }
 
         // ---- Tenth batch: public getters exposing progressive-modifier
