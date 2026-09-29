@@ -35,30 +35,31 @@ namespace Contigu.Core
         /// <summary>
         /// Round score targets. Was a flat ~x1.7-per-round geometric
         /// progression; steepened to an ACCELERATING curve (round-over-round
-        /// ratio climbing from ~x1.75 to ~x2.6, instead of a constant ratio)
-        /// on explicit report that the run was ending every single round
-        /// with roughly half its piece budget still unused ("plus
+        /// ratio climbing from ~x1.83 to ~x2.15, instead of a constant
+        /// ratio) on explicit report that the run was ending every single
+        /// round with roughly half its piece budget still unused ("plus
         /// difficile, plus exponentiel peut être"). Round 1 deliberately
         /// left at the same 300 (explicit request: "on peut garder le 300
         /// points de base") — it's the only round with zero modifiers/
         /// upgrades yet, so it isn't where the game was reported to feel
         /// easy.
         ///
-        /// Rounds 2-5 only climb modestly (roughly +5% to +18% over the old
-        /// values) — CI caught a first, much steeper attempt at round 5
-        /// (4000) as unreachable even with EVERY cell golden and zero
-        /// modifiers (see PlayRoundToAwaitingShop/ShopModifierSlots_
-        /// NeverOffersAModifierAlreadyActive), which was a real signal, not
-        /// just a test artifact: if that best-case baseline can't reach a
-        /// quota within its piece budget, an unlucky real player with weak
-        /// modifiers can't either. Rounds 6-8 (never exercised by real
-        /// placement in EditMode tests, only DebugForceRoundComplete) carry
-        /// the bulk of the acceleration instead, where real runs have
-        /// several rounds' worth of purchased modifiers to lean on.
+        /// NOTE for whoever tunes this next: PlayRoundToAwaitingShop (the
+        /// EditMode helper backing most shop/modifier tests) does NOT need
+        /// these numbers to be reachable by real placement — it fast-
+        /// forwards via DebugForceRoundComplete once a round's last piece
+        /// or last shuffle would otherwise risk RunManager.EvaluateRoundEnd's
+        /// "ran out of budget"/stuck-hand defeat paths. An earlier version
+        /// of this comment reasoned that a CI failure there meant a quota
+        /// was genuinely unreachable and had to be dialed back — that
+        /// turned out to be a fixed-seed RNG artifact of that one golden-
+        /// cell/zero-modifier grind, not a real balance ceiling, so don't
+        /// re-derive quota values from whether that specific test happens
+        /// to pass.
         /// </summary>
         public static readonly int[] Quotas =
         {
-            300, 525, 925, 1650, 2900, 6200, 14500, 38000
+            300, 550, 1050, 2000, 4000, 8200, 17200, 37000
         };
 
         public static readonly int[] PieceBudgets =

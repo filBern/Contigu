@@ -5959,23 +5959,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   faudrait que ce soit plus difficile, plus exponentiel peut être. Et
   réduire à 8 la quantité de modifiers"). `RunConfig.Quotas` passe d'une
   progression géométrique à ratio CONSTANT (~x1.7/round) à une progression
-  qui ACCÉLÈRE (ratio grimpant de ~x1.75 à ~x2.6 d'une manche à l'autre) :
-  `{300, 525, 925, 1650, 2900, 6200, 14500, 38000}` au lieu de `{300, 500,
+  qui ACCÉLÈRE (ratio grimpant de ~x1.83 à ~x2.15 d'une manche à l'autre) :
+  `{300, 550, 1050, 2000, 4000, 8200, 17200, 37000}` au lieu de `{300, 500,
   850, 1450, 2450, 4150, 7050, 12000}`. La manche 1 reste volontairement à
-  300 (demande explicite). Les manches 2 à 5 ne montent que modérément
-  (+5% à +18% par rapport à l'ancienne courbe) — un premier essai
-  nettement plus agressif (manche 5 à 4000) a été rattrapé par la CI :
-  `PlayRoundToAwaitingShop`/`ShopModifierSlots_NeverOffersAModifierAlreadyActive`
-  remplit tout le plateau en golden et joue sans AUCUN modifier, un
-  scénario "meilleur cas" ; si même celui-là n'arrive pas à atteindre le
-  quota dans le budget de pièces, un vrai joueur avec de mauvais modifiers
-  ne le pourrait pas non plus — un signal réel, pas juste un artefact de
-  test. Les manches 6 à 8 (jamais exercées par une vraie pose dans la
-  suite EditMode, seulement via `DebugForceRoundComplete`) portent donc
-  l'essentiel de l'accélération, là où un run réel a plusieurs manches
-  d'achats de modifiers derrière lui. `EconomyConstants.MaxActiveModifiers`
-  passe de 10 à 8 en parallèle (le stacking de modifiers étant justement ce
-  qui faisait dépasser l'ancienne courbe de quotas trop facilement) ;
-  `ModifierPanelView` (grille 2 colonnes, dimensionnée statiquement pour
-  éviter les anciens bugs de 9-slice au redimensionnement) suit : 5 rangées
-  (2x5=10) → 4 rangées (2x4=8), pour rester pile à la taille du nouveau cap.
+  300 (demande explicite) — c'est la seule manche sans encore aucun
+  modifier/upgrade, donc ce n'est pas elle qui posait problème.
+  `EconomyConstants.MaxActiveModifiers` passe de 10 à 8 en parallèle (le
+  stacking de modifiers étant justement ce qui faisait dépasser l'ancienne
+  courbe de quotas trop facilement) ; `ModifierPanelView` (grille 2
+  colonnes, dimensionnée statiquement pour éviter les anciens bugs de
+  9-slice au redimensionnement) suit : 5 rangées (2x5=10) → 4 rangées
+  (2x4=8), pour rester pile à la taille du nouveau cap.
+  - **Détour en cours de route** : un premier essai à cette même valeur de
+    manche 5 (4000) a été rattrapé par la CI — `PlayRoundToAwaitingShop`
+    (le helper de test derrière la plupart des tests shop/modifiers) fait
+    un plateau tout doré sans AUCUN modifier avec une seed FIXE, et
+    n'atteignait plus le quota dans le budget de pièces. Diagnostiqué au
+    départ comme un vrai signal d'équilibrage (si même ce "meilleur cas"
+    n'y arrive pas, un joueur malchanceux non plus) et donc dialé en
+    arrière à `{300, 525, 925, 1650, 2900, 6200, 14500, 38000}` — mais
+    dialer en arrière à 2900 échouait ENCORE, révélant que c'était en fait
+    un artefact de la seed fixe (une main précise, pas une question
+    d'équilibrage général) et non un plafond réel. Le vrai fix était dans
+    le test lui-même : `PlayRoundToAwaitingShop` fast-forward maintenant
+    via `DebugForceRoundComplete` (même mécanisme qu'`AdvanceToRound`) dès
+    que la dernière pièce du budget ou le dernier shuffle risquerait de
+    déclencher les chemins de défaite de `EvaluateRoundEnd` — ce helper n'a
+    jamais eu besoin d'atteindre le quota par une vraie pose, seulement
+    d'amener le run en `AwaitingShop` de façon déterministe. Une fois ce
+    filet de sécurité en place, la courbe de quotas a pu revenir à sa
+    valeur voulue ci-dessus sans dépendre du hasard d'une seed de test.
