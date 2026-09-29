@@ -431,6 +431,13 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
+            // Casino slot 0 could have rolled Modifier Upgrade, which
+            // refuses to sell with zero modifiers owned (same "nothing for
+            // it to do" precedent as Random Modifier at the cap) — granting
+            // one up front keeps this purchase unconditionally valid
+            // regardless of what actually got rolled, since that's not
+            // what this test is about.
+            run.DebugGrantModifier(ModifierCatalog.All[0].Id);
             Assert.IsTrue(run.BuyUpgradeSlot(0));
             var blisterSlotsBefore = new List<ShopSlot>(run.ShopBlisterSlots);
 
