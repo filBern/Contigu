@@ -196,6 +196,16 @@ namespace Contigu.Core
         /// <summary>Kamikaze Tile: bonus per surrounding tile actually destroyed (this placement's own cells excluded).</summary>
         public const int KamikazeBonusPerDestroyedCell = 6;
 
+        /// <summary>
+        /// Void Tile: bonus for the one already-filled cell elsewhere on the
+        /// grid it destroys, on explicit request ("Le void tile, quand elle
+        /// est triggered dans la grille, faire +10 pour la tuile brisé") —
+        /// Void was previously pure risk/utility with no score of its own.
+        /// A no-op (no bonus) when nothing else on the grid is eligible to
+        /// be destroyed.
+        /// </summary>
+        public const int VoidBonusPerDestroyedCell = 10;
+
         // ---- Sixth batch of modifier bonuses (player-authored brainstorm, see ModifierCatalog) ----
 
         /// <summary>Bridge (Pont): xN multiplier PER pre-existing group bridged together by this placement beyond the first (bridging 2 groups applies once, 3 groups twice, stacking multiplicatively).</summary>

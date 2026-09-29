@@ -782,7 +782,8 @@ namespace Contigu.Core
         /// after scoring, Detonator needs the line-clear outcome, Spark needs
         /// the pre-placement no-clear streak captured earlier in PlacePiece,
         /// and Void mutates the grid outside this placement's own cells
-        /// entirely (no score of its own). Golden/Tinted/Multiplier/Blast/
+        /// entirely (scoring a flat bonus for the one tile it breaks, if
+        /// any). Golden/Tinted/Multiplier/Blast/
         /// Beacon/Seeder/Chameleon all resolve elsewhere (Cell-flag stamping
         /// or, for Chameleon, ResolveChameleonColor) and need nothing here.
         /// </summary>
@@ -1112,13 +1113,14 @@ namespace Contigu.Core
             AddTraitBonus(placement, placement.PlacedCells[0], bonus);
         }
 
-        /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Pure risk/utility, no score of its own; a no-op if nothing else on the grid is eligible.</summary>
+        /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Scores ScoringConstants.VoidBonusPerDestroyedCell for the broken tile (on explicit request: "Le void tile, quand elle est triggered dans la grille, faire +10 pour la tuile brisé" — previously pure risk/utility with no score of its own); a no-op if nothing else on the grid is eligible.</summary>
         private void ApplyVoidEffect(PlacementResult placement)
         {
             var cleared = Grid.ClearRandomFilledCell(_rng, placement.PlacedCells, out var clearedColor);
             if (cleared.HasValue)
             {
                 AddDestroyedCell(placement, cleared.Value, clearedColor);
+                AddTraitBonus(placement, cleared.Value, ScoringConstants.VoidBonusPerDestroyedCell);
             }
         }
 

@@ -1800,6 +1800,9 @@ namespace Contigu.Tests
             Assert.AreEqual(new Vector2Int(GridManager.Size - 1, GridManager.Size - 1), outcome.Placement.DestroyedCells[0]);
             Assert.AreEqual(PieceColor.Coral, outcome.Placement.DestroyedCellColors[0]);
             Assert.IsFalse(run.Grid.GetCell(GridManager.Size - 1, GridManager.Size - 1).IsFilled, "Void should have actually cleared the cell, not just reported it");
+            // On explicit request: "Le void tile, quand elle est triggered
+            // dans la grille, faire +10 pour la tuile brisé".
+            Assert.AreEqual(ScoringConstants.VoidBonusPerDestroyedCell, outcome.Placement.TraitBonus);
         }
 
         [Test]
@@ -1813,6 +1816,7 @@ namespace Contigu.Tests
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(0, outcome.Placement.DestroyedCells.Count);
+            Assert.AreEqual(0, outcome.Placement.TraitBonus, "No cell destroyed, so no bonus either");
         }
 
         [Test]

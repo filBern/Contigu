@@ -187,7 +187,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition VoidTile = new UpgradeDefinition(
             UpgradeId.VoidTile, UpgradePool.Grid, "Void Tile",
-            "A tile that also clears one random filled tile elsewhere on the grid.", false, UpgradeRarity.Rare);
+            "A tile that also clears one random filled tile elsewhere on the grid (+10 for the tile broken).", false, UpgradeRarity.Rare);
 
         // ---- Third batch (2 more tile upgrades, on explicit request) ----
 

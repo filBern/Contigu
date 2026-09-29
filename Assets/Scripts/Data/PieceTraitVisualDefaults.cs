@@ -81,7 +81,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Spark:
                     return "When this piece is placed, this tile scores more points the longer it's been since the last row/column clear this round — the bonus resets once a clear happens.";
                 case PieceTraitKind.Void:
-                    return "When this piece is placed, this tile also clears one random already-filled tile elsewhere on the grid — free space, at the risk of undoing a setup you were building.";
+                    return "When this piece is placed, this tile also clears one random already-filled tile elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the tile broken — free space, at the risk of undoing a setup you were building.";
                 case PieceTraitKind.Bastion:
                     return "Once placed, this tile locks in place for the rest of the round instead of being cleared — it still scores the line-clear bonus every time its row/column completes, forever, for as long as the round lasts.";
                 case PieceTraitKind.Kamikaze:

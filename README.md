@@ -6097,3 +6097,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   directement sur le fond sans panneau dessous" — voir leur doc dans
   `UITheme.cs`), et les tailles augmentées (sous-titre 22→28, stats
   16→20).
+- **Void Tile : score maintenant +10 pour la tuile brisée** : sur demande
+  explicite ("Le void tile, quand elle est triggered dans la grille,
+  faire +10 pour la tuile brisé") — Void Tile détruisait déjà une tuile
+  déjà remplie ailleurs sur la grille en la plaçant, mais c'était pure
+  risk/utility, "no score of its own". Nouvelle constante
+  `ScoringConstants.VoidBonusPerDestroyedCell = 10`, appliquée dans
+  `RunManager.ApplyVoidEffect` via le même `AddTraitBonus` que les autres
+  bonus de trait (positionné sur la tuile détruite) — no-op si rien
+  d'éligible n'est détruit, même convention que Kamikaze Tile (qui score
+  déjà +6 par tuile détruite). Tooltip in-game et description du shop
+  mis à jour pour refléter le bonus.

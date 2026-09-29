@@ -41,7 +41,7 @@ namespace Contigu.Core
         /// <summary>"Spark Tile" — scores more points the longer it's been (in placements) since the last row/column clear this round; resets once a clear happens.</summary>
         Spark,
 
-        /// <summary>"Void Tile" — also clears one random already-filled, unlocked cell elsewhere on the grid (excluding this placement's own cells) when placed. No score of its own.</summary>
+        /// <summary>"Void Tile" — also clears one random already-filled, unlocked cell elsewhere on the grid (excluding this placement's own cells) when placed, scoring ScoringConstants.VoidBonusPerDestroyedCell for the broken tile.</summary>
         Void,
 
         // ---- Third batch (2 more, on explicit request) ----
