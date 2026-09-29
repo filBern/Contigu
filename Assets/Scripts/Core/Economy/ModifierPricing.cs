@@ -8,7 +8,7 @@ namespace Contigu.Core
     /// EconomyConstants.ModifierShopBasePrice, removed now that it's fully
     /// superseded by this per-modifier table) regardless of what it offered.
     /// Every price returned is in [4, 10] and is a BASE price — RunManager.
-    /// GetModifierSlotPrice still applies this visit's usual escalation on
+    /// GetBlisterSlotPrice still applies this visit's usual escalation on
     /// top (see EconomyConstants.ShopPriceEscalationPerPurchase), same as
     /// GetUpgradeSlotPrice already varies its own base price by upgrade pool.
     ///

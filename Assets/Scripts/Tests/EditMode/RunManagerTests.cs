@@ -94,7 +94,7 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             Assert.AreEqual(RunState.InProgress, run.State);
 
-            Assert.IsFalse(run.BuyModifierSlot(0));
+            Assert.IsFalse(run.BuyBlisterSlot(0));
             Assert.IsFalse(run.BuyUpgradeSlot(0));
             Assert.IsFalse(run.RerollShop());
             Assert.IsFalse(run.LeaveShop());
@@ -156,7 +156,7 @@ namespace Contigu.Tests
             Assert.GreaterOrEqual(run.RoundScore, run.CurrentQuota);
             Assert.Greater(run.PiecesRemainingThisRound, 0, "Round should end with budget still remaining once the quota is reached");
 
-            Assert.AreEqual(EconomyConstants.ShopModifierSlotCount, run.ShopModifierSlots.Count);
+            Assert.AreEqual(EconomyConstants.ShopBlisterSlotCount, run.ShopBlisterSlots.Count);
             Assert.AreEqual(EconomyConstants.ShopUpgradeSlotCount, run.ShopUpgradeSlots.Count);
             Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
 
@@ -238,8 +238,37 @@ namespace Contigu.Tests
             Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
         }
 
+        /// <summary>
+        /// Finds a seed (searching from 0) whose first shop visit has a
+        /// Blister slot of <paramref name="kind"/> at <paramref name="index"/>
+        /// — tests that need a specific slot kind deterministically (most
+        /// hardcode index 0) can no longer just reroll into one, since
+        /// RerollShop never touches the Blister section (explicit request:
+        /// "le bouton reroll ne reroll pas la section 'blister'"). Same
+        /// "search up to 500 seeds" technique already used elsewhere in
+        /// this file for a specific shop condition (e.g.
+        /// BuyUpgradeSlot_ModifierUpgrade_Refuses_WhenPlayerOwnsNoModifiers) —
+        /// with ~75% of a Blister slot's weighted bag being modifiers (see
+        /// RunManager.RollBlisterSlot), this should succeed almost
+        /// immediately in practice.
+        /// </summary>
+        private static RunManager FindRunWithBlisterSlotKind(ShopSlotKind kind, int index = 0)
+        {
+            for (int seed = 0; seed < 500; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                PlayRoundToAwaitingShop(candidate);
+                if (candidate.ShopBlisterSlots[index] != null && candidate.ShopBlisterSlots[index].Kind == kind)
+                {
+                    return candidate;
+                }
+            }
+            Assert.Fail("Should find a Blister slot of kind " + kind + " at index " + index + " within 500 seeds");
+            return null;
+        }
+
         [Test]
-        public void ShopModifierSlots_NeverOffersAModifierAlreadyActive()
+        public void ShopBlisterSlots_NeverOffersAModifierAlreadyActive()
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
@@ -247,45 +276,54 @@ namespace Contigu.Tests
             {
                 PlayRoundToAwaitingShop(run);
 
-                foreach (var slot in run.ShopModifierSlots)
+                foreach (var slot in run.ShopBlisterSlots)
                 {
+                    if (slot.Kind != ShopSlotKind.Modifier)
+                    {
+                        continue;
+                    }
                     CollectionAssert.DoesNotContain(run.ActiveModifiers, slot.ModifierId,
                         "A modifier already held should never be offered again in the same run");
                 }
 
-                run.DebugGrantModifier(run.ShopModifierSlots[0].ModifierId);
+                for (int slotIndex = 0; slotIndex < run.ShopBlisterSlots.Count; slotIndex++)
+                {
+                    if (run.ShopBlisterSlots[slotIndex].Kind == ShopSlotKind.Modifier)
+                    {
+                        run.DebugGrantModifier(run.ShopBlisterSlots[slotIndex].ModifierId);
+                        break;
+                    }
+                }
                 run.LeaveShop();
             }
         }
 
         [Test]
-        public void BuyModifierSlot_Succeeds_DeductsLueurAndActivatesTheModifier()
+        public void BuyBlisterSlot_Succeeds_DeductsLueurAndActivatesTheModifier()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
-            PlayRoundToAwaitingShop(run);
+            var run = FindRunWithBlisterSlotKind(ShopSlotKind.Modifier);
             run.DebugSetLueur(0);
-            var targetId = run.ShopModifierSlots[0].ModifierId;
-            int price = run.GetModifierSlotPrice(0);
+            var targetId = run.ShopBlisterSlots[0].ModifierId;
+            int price = run.GetBlisterSlotPrice(0);
             run.DebugGrantLueur(price);
 
-            bool bought = run.BuyModifierSlot(0);
+            bool bought = run.BuyBlisterSlot(0);
 
             Assert.IsTrue(bought);
             Assert.AreEqual(0, run.Lueur);
             CollectionAssert.Contains(run.ActiveModifiers, targetId);
-            Assert.IsTrue(run.ShopModifierSlots[0].Purchased);
+            Assert.IsTrue(run.ShopBlisterSlots[0].Purchased);
         }
 
         [Test]
-        public void BuyModifierSlot_Fails_WhenLueurIsInsufficient()
+        public void BuyBlisterSlot_Fails_WhenLueurIsInsufficient()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
-            PlayRoundToAwaitingShop(run);
+            var run = FindRunWithBlisterSlotKind(ShopSlotKind.Modifier);
             run.DebugSetLueur(0);
-            int price = run.GetModifierSlotPrice(0);
+            int price = run.GetBlisterSlotPrice(0);
             run.DebugGrantLueur(price - 1);
 
-            bool bought = run.BuyModifierSlot(0);
+            bool bought = run.BuyBlisterSlot(0);
 
             Assert.IsFalse(bought);
             Assert.AreEqual(price - 1, run.Lueur);
@@ -293,97 +331,118 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void BuyModifierSlot_Fails_OnceAlreadyPurchased()
+        public void BuyBlisterSlot_Fails_OnceAlreadyPurchased()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(100000);
-            Assert.IsTrue(run.BuyModifierSlot(0));
+            Assert.IsTrue(run.BuyBlisterSlot(0));
 
-            bool boughtAgain = run.BuyModifierSlot(0);
+            bool boughtAgain = run.BuyBlisterSlot(0);
 
             Assert.IsFalse(boughtAgain);
         }
 
         [Test]
-        public void BuyModifierSlot_Fails_AtTheModifierCap()
+        public void BuyBlisterSlot_Fails_AtTheModifierCap()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
-            for (int i = 0; i < EconomyConstants.MaxActiveModifiers; i++)
+            var run = FindRunWithBlisterSlotKind(ShopSlotKind.Modifier);
+            // Grant exactly MaxActiveModifiers DISTINCT modifiers, skipping
+            // slot 0's own one — the point is a full-but-still-obtainable
+            // modifier blocked purely by the cap, not one already held
+            // (RollBlisterSlot already guarantees slot 0 wasn't held at
+            // roll time; nothing stops it coinciding with a grant here).
+            int granted = 0;
+            for (int i = 0; i < ModifierCatalog.All.Length && granted < EconomyConstants.MaxActiveModifiers; i++)
             {
+                if (ModifierCatalog.All[i].Id == run.ShopBlisterSlots[0].ModifierId)
+                {
+                    continue;
+                }
                 run.DebugGrantModifier(ModifierCatalog.All[i].Id);
+                granted++;
             }
-            PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(100000);
 
-            bool bought = run.BuyModifierSlot(0);
+            bool bought = run.BuyBlisterSlot(0);
 
             Assert.IsFalse(bought);
             Assert.AreEqual(EconomyConstants.MaxActiveModifiers, run.ActiveModifiers.Count);
         }
 
         [Test]
-        public void ModifierSlotPrice_EscalatesWithEachPurchaseThisVisit()
+        public void BlisterSlotPrice_EscalatesWithEachPurchaseThisVisit()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
-            int firstPrice = run.GetModifierSlotPrice(1);
+            int firstPrice = run.GetBlisterSlotPrice(1);
             run.DebugGrantLueur(1000000);
-            run.BuyModifierSlot(0);
+            run.BuyBlisterSlot(0);
 
-            int secondPrice = run.GetModifierSlotPrice(1);
+            int secondPrice = run.GetBlisterSlotPrice(1);
 
             Assert.Greater(secondPrice, firstPrice, "Every purchase this visit should raise the price of what's still on offer");
         }
 
         [Test]
-        public void GetModifierSlotPrice_MatchesModifierPricing_BeforeAnyPurchaseThisVisit()
+        public void GetBlisterSlotPrice_MatchesModifierPricingOrUpgradeBasePrice_BeforeAnyPurchaseThisVisit()
         {
             // No purchase yet this visit, so the usual escalation is a no-op
             // (see RunManager.ComputePrice) and the slot's price should be
-            // exactly ModifierPricing's base price for whatever it's offering.
+            // exactly ModifierPricing's (Modifier-kind) or the Bank/Grid
+            // base price's (Upgrade-kind, same as a Casino slot's own base
+            // price) for whatever it's offering.
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
 
-            for (int i = 0; i < run.ShopModifierSlots.Count; i++)
+            for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
-                int expected = ModifierPricing.GetPrice(run.ShopModifierSlots[i].ModifierId);
-                Assert.AreEqual(expected, run.GetModifierSlotPrice(i), "Slot " + i);
+                var slot = run.ShopBlisterSlots[i];
+                int expected = slot.Kind == ShopSlotKind.Modifier
+                    ? ModifierPricing.GetPrice(slot.ModifierId)
+                    : (slot.Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice);
+                Assert.AreEqual(expected, run.GetBlisterSlotPrice(i), "Slot " + i);
             }
         }
 
         [Test]
-        public void GetModifierSlotPrice_ReturnsZero_ForAnOutOfRangeIndex()
+        public void GetBlisterSlotPrice_ReturnsZero_ForAnOutOfRangeIndex()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
 
-            Assert.AreEqual(0, run.GetModifierSlotPrice(-1));
-            Assert.AreEqual(0, run.GetModifierSlotPrice(run.ShopModifierSlots.Count));
+            Assert.AreEqual(0, run.GetBlisterSlotPrice(-1));
+            Assert.AreEqual(0, run.GetBlisterSlotPrice(run.ShopBlisterSlots.Count));
         }
 
         [Test]
-        public void RerollShop_ReplacesEverySlot_IncludingAlreadyPurchasedOnes()
+        public void RerollShop_ReplacesEveryCasinoSlot_ButNeverTouchesBlister()
         {
-            // Used to leave a purchased slot exactly as it was ("SOLD"
-            // forever, for the rest of that shop visit) — changed on
-            // explicit feedback that this read as reroll doing nothing:
+            // Used to leave a purchased CASINO slot exactly as it was
+            // ("SOLD" forever, for the rest of that shop visit) — changed
+            // on explicit feedback that this read as reroll doing nothing:
             // "mes upgrades et modifiers que j'ai acheté sont encore
-            // marqué sold, il faut que j'aie tout de disponible".
+            // marqué sold, il faut que j'aie tout de disponible". The
+            // Blister section is a newer addition (explicit request:
+            // "le bouton reroll ne reroll pas la section 'blister'") —
+            // checked here via reference equality (AreSame), proving
+            // RerollShop never even REASSIGNS a Blister slot, let alone
+            // resets its Purchased flag.
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
-            Assert.IsTrue(run.BuyModifierSlot(0));
-            var purchasedId = run.ShopModifierSlots[0].ModifierId;
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            var blisterSlotsBefore = new List<ShopSlot>(run.ShopBlisterSlots);
 
             bool rerolled = run.RerollShop();
 
             Assert.IsTrue(rerolled);
-            Assert.IsFalse(run.ShopModifierSlots[0].Purchased, "A previously-sold slot should come back purchasable after a reroll");
-            Assert.IsFalse(run.ShopModifierSlots[1].Purchased);
-            // Buying it already permanently granted the modifier — rerolling
-            // the SLOT later must not take that back.
-            CollectionAssert.Contains(run.ActiveModifiers, purchasedId);
+            Assert.IsFalse(run.ShopUpgradeSlots[0].Purchased, "A previously-sold Casino slot should come back purchasable after a reroll");
+            Assert.IsFalse(run.ShopUpgradeSlots[1].Purchased);
+            for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
+            {
+                Assert.AreSame(blisterSlotsBefore[i], run.ShopBlisterSlots[i], "Reroll should never touch the Blister section, slot " + i);
+            }
         }
 
         [Test]
@@ -454,7 +513,7 @@ namespace Contigu.Tests
             Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
             Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
             // Nothing else in the shop can happen while a purchase is pending.
-            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.BuyBlisterSlot(1));
             Assert.IsFalse(run.RerollShop());
             Assert.IsFalse(run.LeaveShop());
 
@@ -547,7 +606,7 @@ namespace Contigu.Tests
             Assert.AreEqual(0, run.PendingUpgradeTypeCandidates.Count, "Random Piece's candidates aren't existing deck types");
             Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, run.PendingUpgradePieceCandidates.Count);
             // Nothing else in the shop can happen while a purchase is pending.
-            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.BuyBlisterSlot(1));
             Assert.IsFalse(run.LeaveShop());
 
             var chosenCandidate = run.PendingUpgradePieceCandidates[2];
@@ -652,7 +711,7 @@ namespace Contigu.Tests
             Assert.IsTrue(bought);
             Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
             // Nothing else in the shop can happen while a purchase is pending.
-            Assert.IsFalse(run.BuyModifierSlot(1));
+            Assert.IsFalse(run.BuyBlisterSlot(1));
             Assert.IsFalse(run.LeaveShop());
 
             bool resolved = run.ResolveModifierUpgradeChoice(0);
@@ -807,7 +866,7 @@ namespace Contigu.Tests
             // modifier comme upgrade et qu'il est full il ne devrait pas
             // pouvoir l'acheter" — this purchase used to still charge
             // Lueur and grant nothing (a silently wasted purchase); now it
-            // fails outright, same as BuyModifierSlot already does at cap.
+            // fails outright, same as a Modifier-kind BuyBlisterSlot already does at cap.
             var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.RandomModifier, 500);
             Assert.IsNotNull(run, "Should find a Random Modifier upgrade slot within 500 seeds");
             run.DebugGrantLueur(1000000);
@@ -2450,25 +2509,12 @@ namespace Contigu.Tests
             }
         }
 
-        /// <summary>Finds <paramref name="target"/> among the open shop's modifier slots and buys it, rerolling (funded by a large Lueur grant) until it shows up — modifier slots are randomly rolled, so this is the only way to buy a SPECIFIC modifier without relying on <see cref="RunManager.DebugGrantModifier"/>, which can't exercise purchase-time behavior like Copieur's. The shop must already be open (see PlayRoundToAwaitingShop).</summary>
+        /// <summary>Buys <paramref name="target"/> through the real shop purchase path (funded by a large Lueur grant) — forces Blister slot 0 to hold it (see RunManager.DebugForceBlisterSlotToModifier, since the Blister section can no longer be rerolled into a specific modifier once opened) rather than relying on RunManager.DebugGrantModifier, which skips BuyBlisterSlot entirely and so can't exercise purchase-time behavior like Copieur's. The shop must already be open (see PlayRoundToAwaitingShop).</summary>
         private static void BuyModifierByIdViaShop(RunManager run, ModifierId target)
         {
             run.DebugGrantLueur(1000000);
-            int guard = 0;
-            while (true)
-            {
-                for (int i = 0; i < run.ShopModifierSlots.Count; i++)
-                {
-                    if (run.ShopModifierSlots[i].ModifierId == target && !run.ShopModifierSlots[i].Purchased)
-                    {
-                        Assert.IsTrue(run.BuyModifierSlot(i), "Buying " + target + " should succeed with ample Lueur granted");
-                        return;
-                    }
-                }
-                Assert.IsTrue(run.RerollShop(), "Reroll should always succeed with ample Lueur granted");
-                guard++;
-                Assert.Less(guard, 2000, target + " never appeared in the shop after many rerolls");
-            }
+            Assert.IsTrue(run.DebugForceBlisterSlotToModifier(target, 0), "Shop should already be open");
+            Assert.IsTrue(run.BuyBlisterSlot(0), "Buying " + target + " should succeed with ample Lueur granted");
         }
 
         private static int CountOccurrences(IReadOnlyList<ModifierId> modifiers, ModifierId id)

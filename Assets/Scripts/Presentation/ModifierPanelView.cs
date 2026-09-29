@@ -298,7 +298,20 @@ namespace Contigu.Presentation
                 System.Func<ModifierId, string> rowProgressiveState = _progressiveStateProvider != null
                     ? (System.Func<ModifierId, string>)(rowId => _progressiveStateProvider(rowId, rowIndex))
                     : null;
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState);
+                int level = _levelProvider != null ? _levelProvider(i) : 1;
+                // Bug fix (on explicit report: "il faut mettre à jour la
+                // description dans le tooltip pour qu'il reflète le bon
+                // bonus") — a leveled modifier's static Description text
+                // still just states its base, level-1 numbers (ModifierLevelUtility
+                // scales every modifier's ACTUAL effect uniformly at score
+                // time, but free-text descriptions can't safely be auto-
+                // rewritten per modifier). Shown only past level 1, same
+                // "no noise for the overwhelming majority never upgraded"
+                // reasoning as the Lv.N badge below.
+                System.Func<ModifierId, string> rowLevelState = level > 1
+                    ? (System.Func<ModifierId, string>)(rowId => "Level " + level + " — x" + ModifierLevelUtility.LevelToFactor(level).ToString(System.Globalization.CultureInfo.InvariantCulture) + " effect")
+                    : null;
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);
@@ -340,7 +353,6 @@ namespace Contigu.Presentation
                 // leveled past 1: every badge carrying the same tag all the
                 // time would be visual noise for the overwhelming majority
                 // that are never upgraded.
-                int level = _levelProvider != null ? _levelProvider(i) : 1;
                 if (level > 1)
                 {
                     var levelBg = UIFactory.CreatePanel(badge.transform, "LevelBg", VisualDefaults.GoldenColor);

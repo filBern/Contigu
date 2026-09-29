@@ -26,10 +26,29 @@ namespace Contigu.Core
         /// </summary>
         public const int LueurPerColorGroup = 2;
 
-        /// <summary>How many modifier slots the shop offers per visit.</summary>
-        public const int ShopModifierSlotCount = 3;
+        /// <summary>
+        /// How many "Blister" slots the shop offers per visit — a modifier
+        /// or upgrade drawn from one shared bag, its exact identity always
+        /// shown up front (never a mystery), on explicit request: "au lieu
+        /// d'une section modifiers et d'une section upgrade, j'aimerais
+        /// qu'on ait une section 'blister'... mélanger modifiers et
+        /// upgrades dans un sac et en tirer 3 au hasard". Replaces the old,
+        /// separate modifier-only section — see RunManager.RollBlisterSlot.
+        /// Never touched by RerollShop (see ShopUpgradeSlotCount below).
+        /// </summary>
+        public const int ShopBlisterSlotCount = 3;
 
-        /// <summary>How many upgrade slots (pool only shown, specific upgrade hidden) the shop offers per visit.</summary>
+        /// <summary>
+        /// How many "Casino" slots the shop offers per visit — only the
+        /// UpgradePool is shown, the specific UpgradeDefinition underneath
+        /// stays hidden until purchase (explicit request: "la section
+        /// 'casino' avec ce que l'on a déjà comme section upgrade, ce sont
+        /// des choses que le joueur découvre sans préalablement savoir
+        /// exactement ce qu'il obtientra" — this is exactly the pre-
+        /// existing upgrade-slot mystery-box mechanic, unchanged, just
+        /// renamed/reorganized as its own section). The ONLY section
+        /// RerollShop still touches.
+        /// </summary>
         public const int ShopUpgradeSlotCount = 2;
 
         /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>

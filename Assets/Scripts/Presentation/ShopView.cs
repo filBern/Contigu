@@ -8,29 +8,41 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Between-round Lueur shop (spec extension, explicit request — replaces
-    /// the old draft/modifier-pick screens entirely): 3 modifier slots shown
-    /// plainly, 2 upgrade slots that only reveal their pool (Bank/Grid) until
-    /// bought, and a reroll that refreshes every still-unsold slot. The
-    /// player can buy as many slots as they can afford, in any order, then
-    /// leave when ready — nothing here is a forced single pick like the old
-    /// draft was.
+    /// Between-round Lueur shop. Redesigned (explicit request: "au lieu
+    /// d'une section modifiers et d'une section upgrade, j'aimerais qu'on
+    /// ait une section 'blister'... la section 'casino' avec ce que l'on a
+    /// déjà comme section upgrade") from the old separate modifier/upgrade
+    /// sections into two differently-themed ones: "Blister" (3 slots, a
+    /// modifier OR upgrade drawn from one shared bag — see RunManager.
+    /// RollBlisterSlot — always shown plainly, exactly like the old
+    /// modifier slots were) and "Casino" (2 slots, the original mystery-box
+    /// upgrade section, unchanged — only its UpgradePool is shown until
+    /// bought). Reroll only refreshes Casino (explicit request: "le bouton
+    /// reroll ne reroll pas la section 'blister'") — Blister already shows
+    /// its exact contents up front, so rerolling it would be a different
+    /// kind of purchase than "try the mystery box again." The player can
+    /// buy as many slots as they can afford, in any order, then leave when
+    /// ready — nothing here is a forced single pick like the old draft was.
     /// </summary>
     public sealed class ShopView : MonoBehaviour
     {
         private const float CardWidth = 190f;
-        // Upgrade ("mystery box") cards only — modifier cards now size
+        // Casino ("mystery box") cards only — Blister cards now size
         // themselves dynamically to fit their name/description, see
-        // BuildModifierCards.
+        // BuildBlisterCards.
         private const float CardHeight = 200f;
         private const float BadgeSize = 90f;
         private const float BuyButtonHeight = 36f;
         private const float BuyButtonBottomMargin = 12f;
 
-        // Modifier card layout (on explicit request: "on peut rajouter le
+        // Blister card layout (on explicit request: "on peut rajouter le
         // nom en haut de l'icon et sa description sous son icon" — the card
         // used to show only the badge + buy button, name/description only
-        // ever appeared in the hover tooltip).
+        // ever appeared in the hover tooltip). Shared by both a Modifier-
+        // kind slot (name/badge/description, via ModifierCardFactory) and
+        // an Upgrade-kind slot (name/rarity+pool swatch/description, via
+        // BuildBlisterUpgradeCard) so the whole row lands on one uniform
+        // height regardless of the mix.
         private const float ModifierCardTopPadding = 10f;
         private const float ModifierCardGap = 6f;
         private const float ModifierNameHeight = 26f;
@@ -39,18 +51,18 @@ namespace Contigu.Presentation
         // collapsed.
         private const float ModifierDescMinHeight = 40f;
 
-        public event Action<int> ModifierBuyRequested;
+        public event Action<int> BlisterBuyRequested;
         public event Action<int> UpgradeBuyRequested;
         public event Action RerollRequested;
         public event Action LeaveRequested;
 
-        // Where the modifier card row starts (top pivot), and the 2 gaps
-        // reused below to place the "Upgrades" section under it — its own Y
+        // Where the Blister card row starts (top pivot), and the 2 gaps
+        // reused below to place the "Casino" section under it — its own Y
         // used to be a fixed -344f assuming a fixed CardHeight, which
-        // overlapped the modifier cards once those grew tall enough to fit
+        // overlapped the Blister cards once those grew tall enough to fit
         // a name + description (bug report: "il y a des overlaps entre
         // modifiers et upgrades"). It's now placed right after however
-        // tall the modifier row actually turns out to be this refresh.
+        // tall the Blister row actually turns out to be this refresh.
         private const float ModifierCardsTopY = -124f;
         private const float SectionGap = 20f;
         private const float LabelToCardsGap = 24f;
@@ -58,7 +70,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private RectTransform _root;
         private Text _lueurLabel;
-        private RectTransform _modifierCardsContainer;
+        private RectTransform _blisterCardsContainer;
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
         private Button _rerollButton;
@@ -108,16 +120,16 @@ namespace Contigu.Presentation
 
             _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 20, VisualDefaults.GoldenColor);
 
-            var modifierSection = UIFactory.CreateText(_root, "ModifierLabel", "Modifiers", 16, UITheme.TextMutedOnBackground);
-            modifierSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            modifierSection.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            modifierSection.rectTransform.pivot = new Vector2(0.5f, 1f);
-            modifierSection.rectTransform.anchoredPosition = new Vector2(0f, -100f);
-            modifierSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
+            var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
+            blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            blisterSection.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            blisterSection.rectTransform.pivot = new Vector2(0.5f, 1f);
+            blisterSection.rectTransform.anchoredPosition = new Vector2(0f, -100f);
+            blisterSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
 
-            _modifierCardsContainer = BuildCardRow("ModifierCards", ModifierCardsTopY);
+            _blisterCardsContainer = BuildCardRow("BlisterCards", ModifierCardsTopY);
 
-            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Upgrades", 16, UITheme.TextMutedOnBackground);
+            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Casino", 16, UITheme.TextMutedOnBackground);
             _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -199,7 +211,7 @@ namespace Contigu.Presentation
         {
             _lueurLabel.text = run.Lueur.ToString();
 
-            float modifierCardHeight = BuildModifierCards(run);
+            float modifierCardHeight = BuildBlisterCards(run);
             float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
             _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, upgradeSectionY);
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap);
@@ -225,29 +237,30 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Builds all modifier cards in 2 passes so they share one uniform
-        /// height even though each card's description text is a different
-        /// length: pass 1 builds every card and measures its own
+        /// Builds all Blister cards (a mix of Modifier-kind and Upgrade-kind
+        /// slots, see RunManager.ShopBlisterSlots) in 2 passes so they share
+        /// one uniform height even though each card's description text is a
+        /// different length: pass 1 builds every card and measures its own
         /// description's natural (wrapped) height via Text.preferredHeight-
         /// style generation settings (same technique as
         /// UpgradeCardFactory.PreferredHeight); pass 2 applies the tallest
         /// one found to every card and its description box, so the buy
         /// button always lands at the same Y across the row regardless of
-        /// which modifiers are currently offered. Returns that shared card
-        /// height so the caller can place whatever comes below the row
-        /// (the "Upgrades" section) without overlapping it.
+        /// which items are currently offered or their mix. Returns that
+        /// shared card height so the caller can place whatever comes below
+        /// the row (the "Casino" section) without overlapping it.
         /// </summary>
-        private float BuildModifierCards(RunManager run)
+        private float BuildBlisterCards(RunManager run)
         {
-            ClearChildren(_modifierCardsContainer);
+            ClearChildren(_blisterCardsContainer);
 
-            var cardRects = new List<RectTransform>(run.ShopModifierSlots.Count);
-            var descRects = new List<RectTransform>(run.ShopModifierSlots.Count);
+            var cardRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
+            var descRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
             float maxDescHeight = ModifierDescMinHeight;
 
-            for (int i = 0; i < run.ShopModifierSlots.Count; i++)
+            for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
-                float descHeight = BuildModifierCard(run, i, out var cardRect, out var descRect);
+                float descHeight = BuildBlisterCard(run, i, out var cardRect, out var descRect);
                 cardRects.Add(cardRect);
                 descRects.Add(descRect);
                 if (descHeight > maxDescHeight)
@@ -273,11 +286,11 @@ namespace Contigu.Presentation
             return cardHeight;
         }
 
-        /// <summary>Builds one modifier card's contents (name, bare icon, description, buy button) and returns its description's own natural height — <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildModifierCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height.</summary>
-        private float BuildModifierCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
+        /// <summary>Builds one Blister card's contents (name, bare icon or rarity swatch, description, buy button) and returns its description's own natural height — <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildBlisterCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height. Dispatches on the slot's Kind — a Blister slot's identity is always fully shown, modifier or upgrade alike (explicit request: "on aperçoit 3 modifiers ou upgrades"), unlike a Casino slot.</summary>
+        private float BuildBlisterCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
         {
-            var slot = run.ShopModifierSlots[index];
-            var card = UIFactory.CreateSlicedImage(_modifierCardsContainer, "ModSlot_" + index, UISprites.CardBackground);
+            var slot = run.ShopBlisterSlots[index];
+            var card = UIFactory.CreateSlicedImage(_blisterCardsContainer, "BlisterSlot_" + index, UISprites.CardBackground);
             card.color = UITheme.Panel; // card_bg_3 tinted darker (explicit request), instead of the flat PanelLight fill it used before
             cardRect = card.rectTransform;
             cardRect.sizeDelta = new Vector2(CardWidth, 0f);
@@ -291,25 +304,72 @@ namespace Contigu.Presentation
                 return 0f;
             }
 
-            var def = ModifierCatalog.Get(slot.ModifierId);
+            float descHeight = slot.Kind == ShopSlotKind.Modifier
+                ? BuildBlisterModifierCardContents(card.transform, slot.ModifierId, out descRect)
+                : BuildBlisterUpgradeCardContents(card.transform, slot.HiddenUpgrade, out descRect);
 
-            // No colored background behind the badge (explicit request:
-            // "enlever le carré coloré derrière l'icon") and no hover
-            // tooltip (explicit request: "Pas besoin du tooltip sur les
-            // modifiers qu'on peut acheter dans le shop, seulement dans
-            // notre liste de modifiers possédé") — the card already shows
-            // its own name/description as static text, so both read as
-            // redundant. See ModifierCardFactory for the shared visual
-            // (also used by UpgradeRevealView's Random Modifier reveal).
-            float descHeight = ModifierCardFactory.BuildContents(card.transform, def, _tooltip, CardWidth, out descRect);
-
-            int price = run.GetModifierSlotPrice(index);
-            bool atCap = run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            BuildBuyButton(card.transform, slot.Purchased, atCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(),
-                !slot.Purchased && !atCap && run.PendingUpgrade == null && run.Lueur >= price,
-                () => OnModifierBuyClicked(index));
+            int price = run.GetBlisterSlotPrice(index);
+            bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
+            string blockedLabel = "Full (" + EconomyConstants.MaxActiveModifiers + ")";
+            BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
+                !slot.Purchased && !blocked && run.PendingUpgrade == null && run.Lueur >= price,
+                () => OnBlisterBuyClicked(index));
 
             return descHeight;
+        }
+
+        /// <summary>A Blister modifier card's contents — identical to the old, only-ever-modifiers card: name, bare icon, description. No colored background behind the badge (explicit request: "enlever le carré coloré derrière l'icon") and no hover tooltip (explicit request: "Pas besoin du tooltip sur les modifiers qu'on peut acheter dans le shop, seulement dans notre liste de modifiers possédé") — the card already shows its own name/description as static text, so both read as redundant. See ModifierCardFactory for the shared visual (also used by UpgradeRevealView's Random Modifier reveal).</summary>
+        private float BuildBlisterModifierCardContents(Transform cardTransform, ModifierId modifierId, out RectTransform descRect)
+        {
+            var def = ModifierCatalog.Get(modifierId);
+            return ModifierCardFactory.BuildContents(cardTransform, def, _tooltip, CardWidth, out descRect);
+        }
+
+        /// <summary>
+        /// A Blister upgrade card's contents — mirrors ModifierCardFactory.
+        /// BuildContents' exact layout (same TopPadding/NameHeight/Gap/
+        /// BadgeSize) so a row mixing modifier and upgrade cards still
+        /// shares one uniform height, but shows the upgrade's real name and
+        /// description plainly instead of a "?" mystery hint — unlike a
+        /// Casino card, a Blister slot's identity is never hidden. In place
+        /// of a modifier's icon, a rarity-colored swatch names the
+        /// upgrade's pool ("Piece Upgrade"/"Tile Upgrade" — see
+        /// UpgradeVisualDefaults), since upgrades have no per-item icon art.
+        /// </summary>
+        private float BuildBlisterUpgradeCardContents(Transform cardTransform, UpgradeDefinition def, out RectTransform descRect)
+        {
+            var nameLabel = UIFactory.CreateText(cardTransform, "Name", def.Name, 16, UITheme.TextPrimary);
+            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -ModifierCardTopPadding);
+            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, ModifierNameHeight);
+
+            float swatchY = -(ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap);
+            var swatch = UIFactory.CreatePanel(cardTransform, "PoolSwatch", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+            swatch.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            swatch.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            swatch.rectTransform.pivot = new Vector2(0.5f, 1f);
+            swatch.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
+            swatch.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
+            UIFactory.AddThickOutline(swatch, UITheme.Border);
+
+            var swatchLabel = UIFactory.CreateText(swatch.transform, "PoolLabel", UpgradeVisualDefaults.GetPoolLabel(def.Pool), 13, UITheme.TextPrimary);
+            swatchLabel.alignment = TextAnchor.MiddleCenter;
+            swatchLabel.raycastTarget = false;
+            UIFactory.StretchFull(swatchLabel.rectTransform);
+
+            float descWidth = CardWidth - 16f;
+            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description), 12, UITheme.TextPrimary);
+            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            descLabel.rectTransform.anchoredPosition = new Vector2(0f, swatchY - (BadgeSize + ModifierCardGap));
+            descLabel.rectTransform.sizeDelta = new Vector2(descWidth, 0f);
+            descRect = descLabel.rectTransform;
+
+            var settings = descLabel.GetGenerationSettings(new Vector2(descWidth, 0f));
+            return descLabel.cachedTextGenerator.GetPreferredHeight(descLabel.text, settings);
         }
 
         private void BuildUpgradeCard(RunManager run, int index)
@@ -389,11 +449,11 @@ namespace Contigu.Presentation
             }
         }
 
-        private void OnModifierBuyClicked(int index)
+        private void OnBlisterBuyClicked(int index)
         {
-            if (ModifierBuyRequested != null)
+            if (BlisterBuyRequested != null)
             {
-                ModifierBuyRequested(index);
+                BlisterBuyRequested(index);
             }
         }
 

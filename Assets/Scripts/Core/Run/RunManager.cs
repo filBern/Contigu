@@ -164,7 +164,7 @@ namespace Contigu.Core
             return index >= 0 && index < _activeModifiers.Count;
         }
 
-        /// <summary>The last REAL modifier actually added by a shop purchase this run (never Copieur/Mimic itself, see BuyModifierSlot) — null until the player's first purchase. "Mimic" (Copieur) reads this to decide which modifier it copies.</summary>
+        /// <summary>The last REAL modifier actually added by a shop purchase this run (never Copieur/Mimic itself, see BuyBlisterSlot) — null until the player's first purchase. "Mimic" (Copieur) reads this to decide which modifier it copies.</summary>
         private ModifierId? _lastPurchasedModifierId;
 
         /// <summary>
@@ -172,24 +172,26 @@ namespace Contigu.Core
         /// style economy): earned by clearing lines with DIVERSE colors (see
         /// GridManager.PlacementResult.LueurEarned), persists for the whole
         /// run like <see cref="TotalScore"/>, and spent in the between-round
-        /// shop (see <see cref="ShopModifierSlots"/>/<see cref="ShopUpgradeSlots"/>).
+        /// shop (see <see cref="ShopBlisterSlots"/>/<see cref="ShopUpgradeSlots"/>).
         /// </summary>
         public int Lueur { get; private set; }
 
         /// <summary>How many hand shuffles the player has left this run (spec extension, explicit request — see RunConfig.StartingShuffleCount/ShuffleHand). Persists across rounds like Lueur, never reset by StartRound.</summary>
         public int ShufflesRemaining { get; private set; }
 
-        private readonly ShopSlot[] _modifierSlots = new ShopSlot[EconomyConstants.ShopModifierSlotCount];
+        private readonly ShopSlot[] _blisterSlots = new ShopSlot[EconomyConstants.ShopBlisterSlotCount];
         private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
 
         /// <summary>How many purchases (slot buys AND rerolls) have happened in the CURRENT shop visit — every one raises the price of everything else still on offer (see GetSlotPrice/GetRerollPrice), reset to 0 each time the shop opens.</summary>
         private int _purchasesThisVisit;
 
-        public IReadOnlyList<ShopSlot> ShopModifierSlots
+        /// <summary>The "Blister" section (see EconomyConstants.ShopBlisterSlotCount) — a modifier OR upgrade, drawn from one shared bag, always fully revealed. Never touched by RerollShop.</summary>
+        public IReadOnlyList<ShopSlot> ShopBlisterSlots
         {
-            get { return _modifierSlots; }
+            get { return _blisterSlots; }
         }
 
+        /// <summary>The "Casino" section (see EconomyConstants.ShopUpgradeSlotCount) — always an Upgrade-kind slot, only its UpgradePool shown until purchased. The only section RerollShop touches.</summary>
         public IReadOnlyList<ShopSlot> ShopUpgradeSlots
         {
             get { return _upgradeSlots; }
@@ -1386,9 +1388,9 @@ namespace Contigu.Core
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
-            for (int i = 0; i < _modifierSlots.Length; i++)
+            for (int i = 0; i < _blisterSlots.Length; i++)
             {
-                _modifierSlots[i] = RollModifierSlot();
+                _blisterSlots[i] = RollBlisterSlot();
             }
             for (int i = 0; i < _upgradeSlots.Length; i++)
             {
@@ -1396,46 +1398,127 @@ namespace Contigu.Core
             }
         }
 
-        private ShopSlot RollModifierSlot()
+        /// <summary>
+        /// One "Blister" slot's roll (see EconomyConstants.ShopBlisterSlotCount)
+        /// — a single FLAT weighted bag holding every not-yet-held/not-
+        /// already-offered-this-visit modifier (uniform weight, matching
+        /// the Common upgrade-rarity weight) alongside every eligible
+        /// upgrade (its own rarity weight, see UpgradeRarityUtility) —
+        /// explicit request: "mélanger modifiers et upgrades dans un sac et
+        /// en tirer 3 au hasard", resolved (after clarifying the options) as
+        /// one real shared bag rather than an artificial 50/50 split — with
+        /// ~70 modifiers to ~21 upgrades, a Blister slot naturally lands on
+        /// a modifier roughly 3 times out of 4. An upgrade needing a
+        /// prerequisite the player doesn't meet yet (Modifier Upgrade with
+        /// no modifiers owned, Random Modifier already at the cap) is
+        /// excluded from the bag entirely — unlike a Casino slot, a Blister
+        /// slot's exact identity is always visible, so an obviously-dead
+        /// card would just read as broken.
+        /// </summary>
+        private ShopSlot RollBlisterSlot()
         {
-            var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
+            var modifierCandidates = new List<ModifierDefinition>();
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
                 var candidate = ModifierCatalog.All[i];
-                if (_activeModifiers.Contains(candidate.Id) || IsAlreadyOfferedThisVisit(candidate.Id))
+                if (_activeModifiers.Contains(candidate.Id) || IsModifierAlreadyOfferedInBlister(candidate.Id))
                 {
                     continue;
                 }
-                available.Add(candidate);
+                modifierCandidates.Add(candidate);
             }
-            if (available.Count == 0)
+            var upgradeCandidates = new List<UpgradeDefinition>();
+            for (int i = 0; i < UpgradeCatalog.All.Length; i++)
             {
-                // Only possible once held+offered modifiers together cover
-                // the whole catalog — extremely unlikely at the 10-modifier
-                // cap with 68+ entries, but stay defensive rather than throw.
+                var candidate = UpgradeCatalog.All[i];
+                if (!IsUpgradeEligibleForOffer(candidate) || IsUpgradeAlreadyOfferedInBlister(candidate.Id))
+                {
+                    continue;
+                }
+                upgradeCandidates.Add(candidate);
+            }
+
+            const int ModifierBlisterWeight = 8; // matches UpgradeRarityUtility.GetDraftWeight(Common)
+            int totalWeight = modifierCandidates.Count * ModifierBlisterWeight;
+            for (int i = 0; i < upgradeCandidates.Count; i++)
+            {
+                totalWeight += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity);
+            }
+            if (totalWeight <= 0)
+            {
+                // Only possible once held+offered modifiers AND every
+                // eligible upgrade together cover both whole catalogs —
+                // extremely unlikely with 70+/21+ entries, but stay
+                // defensive rather than throw.
                 for (int i = 0; i < ModifierCatalog.All.Length; i++)
                 {
                     if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id))
                     {
-                        available.Add(ModifierCatalog.All[i]);
+                        return ShopSlot.ForModifier(ModifierCatalog.All[i].Id);
                     }
                 }
+                return ShopSlot.ForModifier(ModifierCatalog.All[0].Id);
             }
 
-            var picked = available[_rng.Next(available.Count)];
-            return ShopSlot.ForModifier(picked.Id);
+            int roll = _rng.Next(totalWeight);
+            int cumulative = 0;
+            for (int i = 0; i < modifierCandidates.Count; i++)
+            {
+                cumulative += ModifierBlisterWeight;
+                if (roll < cumulative)
+                {
+                    return ShopSlot.ForModifier(modifierCandidates[i].Id);
+                }
+            }
+            for (int i = 0; i < upgradeCandidates.Count; i++)
+            {
+                cumulative += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity);
+                if (roll < cumulative)
+                {
+                    return ShopSlot.ForUpgrade(upgradeCandidates[i]);
+                }
+            }
+            // Shouldn't happen given roll < totalWeight computed the same
+            // way, but stay defensive rather than fall off the end.
+            return ShopSlot.ForUpgrade(upgradeCandidates[upgradeCandidates.Count - 1]);
         }
 
-        private bool IsAlreadyOfferedThisVisit(ModifierId id)
+        private bool IsModifierAlreadyOfferedInBlister(ModifierId id)
         {
-            for (int i = 0; i < _modifierSlots.Length; i++)
+            for (int i = 0; i < _blisterSlots.Length; i++)
             {
-                if (_modifierSlots[i] != null && _modifierSlots[i].ModifierId == id)
+                if (_blisterSlots[i] != null && _blisterSlots[i].Kind == ShopSlotKind.Modifier && _blisterSlots[i].ModifierId == id)
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        private bool IsUpgradeAlreadyOfferedInBlister(UpgradeId id)
+        {
+            for (int i = 0; i < _blisterSlots.Length; i++)
+            {
+                if (_blisterSlots[i] != null && _blisterSlots[i].Kind == ShopSlotKind.Upgrade && _blisterSlots[i].HiddenUpgrade.Id == id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Whether <paramref name="candidate"/> could actually be applied right now — see RollBlisterSlot's own doc comment for why this only matters for Blister, not Casino.</summary>
+        private bool IsUpgradeEligibleForOffer(UpgradeDefinition candidate)
+        {
+            if (candidate.Id == UpgradeId.RandomModifier && _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
+            {
+                return false;
+            }
+            if (candidate.Id == UpgradeId.ModifierUpgrade && _activeModifiers.Count == 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         private ShopSlot RollUpgradeSlot()
@@ -1445,14 +1528,18 @@ namespace Contigu.Core
             return ShopSlot.ForUpgrade(upgrade);
         }
 
-        /// <summary>Current Lueur price of modifier slot <paramref name="index"/> — varies per modifier (see ModifierPricing, on explicit request), including this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
-        public int GetModifierSlotPrice(int index)
+        /// <summary>Current Lueur price of Blister slot <paramref name="index"/> — a Modifier-kind slot varies per modifier (see ModifierPricing, on explicit request); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice). Either way includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
+        public int GetBlisterSlotPrice(int index)
         {
-            if (index < 0 || index >= _modifierSlots.Length || _modifierSlots[index] == null)
+            if (index < 0 || index >= _blisterSlots.Length || _blisterSlots[index] == null)
             {
                 return 0;
             }
-            return ComputePrice(ModifierPricing.GetPrice(_modifierSlots[index].ModifierId));
+            var slot = _blisterSlots[index];
+            int basePrice = slot.Kind == ShopSlotKind.Modifier
+                ? ModifierPricing.GetPrice(slot.ModifierId)
+                : (slot.Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice);
+            return ComputePrice(basePrice);
         }
 
         /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation.</summary>
@@ -1479,78 +1566,105 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Buys modifier slot <paramref name="index"/> outright — modifiers
-        /// are never a mystery, so this is the whole purchase, no follow-up
-        /// needed. Fails (no charge, no state change) if the shop isn't
-        /// open, the slot is invalid/already bought, the player can't
-        /// afford it, or they're already at EconomyConstants.MaxActiveModifiers.
+        /// Buys Blister slot <paramref name="index"/> outright — a
+        /// Modifier-kind slot applies immediately (modifiers are never a
+        /// mystery, so this is the whole purchase, no follow-up needed); an
+        /// Upgrade-kind slot goes through the exact same resolution as a
+        /// Casino purchase (see ApplyPurchasedUpgrade/BuyUpgradeSlot),
+        /// since a Blister slot's upgrade is just as fully rolled — only
+        /// its PRE-purchase visibility differs. Fails (no charge, no state
+        /// change) if the shop isn't open, the slot is invalid/already
+        /// bought, the player can't afford it, or (Modifier-kind only)
+        /// they're already at EconomyConstants.MaxActiveModifiers — an
+        /// Upgrade-kind slot's own prerequisite checks (Random Modifier at
+        /// the cap, Modifier Upgrade with nothing owned) never actually
+        /// fire here in practice since RollBlisterSlot excludes those
+        /// upgrades from the bag entirely, but are kept for defense in
+        /// depth (the player's modifier count can change between the roll
+        /// and the purchase, e.g. buying two Modifier-kind Blister slots
+        /// first).
         /// </summary>
-        public bool BuyModifierSlot(int index)
+        public bool BuyBlisterSlot(int index)
         {
             if (State != RunState.AwaitingShop || PendingUpgrade != null)
             {
                 return false;
             }
-            if (index < 0 || index >= _modifierSlots.Length || _modifierSlots[index] == null || _modifierSlots[index].Purchased)
+            if (index < 0 || index >= _blisterSlots.Length || _blisterSlots[index] == null || _blisterSlots[index].Purchased)
             {
                 return false;
             }
-            if (_activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
-            {
-                return false;
-            }
-            int price = GetModifierSlotPrice(index);
-            if (Lueur < price)
-            {
-                return false;
-            }
+            var slot = _blisterSlots[index];
 
-            Lueur -= price;
-            _purchasesThisVisit++;
-            var slot = _modifierSlots[index];
-            slot.Purchased = true;
-
-            // "Mimic" (Copieur) isn't a real modifier of its own — buying it
-            // adds another copy of whichever modifier was purchased
-            // immediately before it instead (on explicit request: "un
-            // modifier qui copy le modifier précédemment acheté"). A no-op
-            // (still costs Lueur, still marks the slot sold) if nothing has
-            // been purchased yet this run. _lastPurchasedModifierId only
-            // ever tracks a REAL purchase, never Copieur itself, so buying
-            // several Mimics in a row all copy the same underlying modifier
-            // rather than chaining off each other.
-            if (slot.ModifierId == ModifierId.Copieur)
+            if (slot.Kind == ShopSlotKind.Modifier)
             {
-                if (_lastPurchasedModifierId.HasValue)
+                if (_activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
                 {
-                    AddActiveModifier(_lastPurchasedModifierId.Value);
+                    return false;
                 }
+                int price = GetBlisterSlotPrice(index);
+                if (Lueur < price)
+                {
+                    return false;
+                }
+
+                Lueur -= price;
+                _purchasesThisVisit++;
+                slot.Purchased = true;
+
+                // "Mimic" (Copieur) isn't a real modifier of its own —
+                // buying it adds another copy of whichever modifier was
+                // purchased immediately before it instead (on explicit
+                // request: "un modifier qui copy le modifier précédemment
+                // acheté"). A no-op (still costs Lueur, still marks the
+                // slot sold) if nothing has been purchased yet this run.
+                // _lastPurchasedModifierId only ever tracks a REAL
+                // purchase, never Copieur itself, so buying several Mimics
+                // in a row all copy the same underlying modifier rather
+                // than chaining off each other.
+                if (slot.ModifierId == ModifierId.Copieur)
+                {
+                    if (_lastPurchasedModifierId.HasValue)
+                    {
+                        AddActiveModifier(_lastPurchasedModifierId.Value);
+                    }
+                }
+                else
+                {
+                    AddActiveModifier(slot.ModifierId);
+                    _lastPurchasedModifierId = slot.ModifierId;
+                }
+                return true;
             }
-            else
+
+            var hiddenUpgrade = slot.HiddenUpgrade;
+            if (!IsUpgradeEligibleForOffer(hiddenUpgrade))
             {
-                AddActiveModifier(slot.ModifierId);
-                _lastPurchasedModifierId = slot.ModifierId;
+                return false;
             }
-            return true;
+            int upgradePrice = GetBlisterSlotPrice(index);
+            if (Lueur < upgradePrice)
+            {
+                return false;
+            }
+            Lueur -= upgradePrice;
+            _purchasesThisVisit++;
+            slot.Purchased = true;
+            return ApplyPurchasedUpgrade(hiddenUpgrade);
         }
 
         /// <summary>
-        /// Buys upgrade slot <paramref name="index"/> — the specific upgrade
-        /// underneath (only its <see cref="UpgradePool"/> was ever shown)
-        /// gets revealed as <see cref="PendingUpgrade"/>. A Bank-pool
-        /// upgrade with no sub-choice (Joker) applies immediately and leaves
-        /// PendingUpgrade null; one that needs a sub-choice (Retirer/
-        /// Dupliquer/Recolorer) or a Grid-pool upgrade (needs a tile choice,
-        /// see PendingUpgradeTileCandidates) leaves PendingUpgrade set until
-        /// <see cref="ResolveUpgradeSubChoice"/>/<see cref="ResolveUpgradeTileChoice"/>
-        /// finishes it — nothing else in the shop can be done meanwhile.
-        /// Fails (no charge) under the same conditions as
-        /// <see cref="BuyModifierSlot"/> (minus the modifier cap, which
-        /// doesn't apply to upgrades in general) — EXCEPT for the "Random
-        /// Modifier" upgrade specifically (explicit report: "si le joueur
-        /// a un random modifier comme upgrade et qu'il est full il ne
-        /// devrait pas pouvoir l'acheter"), which DOES respect the cap:
-        /// buying it while already at EconomyConstants.MaxActiveModifiers
+        /// Buys Casino upgrade slot <paramref name="index"/> — the specific
+        /// upgrade underneath (only its <see cref="UpgradePool"/> was ever
+        /// shown) gets revealed as <see cref="PendingUpgrade"/> (see
+        /// ApplyPurchasedUpgrade for the actual resolution, shared with a
+        /// Blister-kind upgrade purchase). Fails (no charge) under the same
+        /// conditions as <see cref="BuyBlisterSlot"/> (minus the modifier
+        /// cap, which doesn't apply to upgrades in general) — EXCEPT for
+        /// the "Random Modifier" upgrade specifically (explicit report: "si
+        /// le joueur a un random modifier comme upgrade et qu'il est full
+        /// il ne devrait pas pouvoir l'acheter"), which DOES respect the
+        /// cap: buying it while already at EconomyConstants.MaxActiveModifiers
         /// used to still charge Lueur and simply grant nothing (see
         /// GrantRandomModifier), silently wasting the purchase.
         /// </summary>
@@ -1565,14 +1679,7 @@ namespace Contigu.Core
                 return false;
             }
             var hiddenUpgrade = _upgradeSlots[index].HiddenUpgrade;
-            if (hiddenUpgrade.Id == UpgradeId.RandomModifier && _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
-            {
-                return false;
-            }
-            // Same "don't sell an upgrade with nothing for it to actually
-            // do" precedent as the RandomModifier cap check just above —
-            // Modifier Upgrade needs an already-owned modifier to level up.
-            if (hiddenUpgrade.Id == UpgradeId.ModifierUpgrade && _activeModifiers.Count == 0)
+            if (!IsUpgradeEligibleForOffer(hiddenUpgrade))
             {
                 return false;
             }
@@ -1586,8 +1693,24 @@ namespace Contigu.Core
             _purchasesThisVisit++;
             var slot = _upgradeSlots[index];
             slot.Purchased = true;
-            var upgrade = slot.HiddenUpgrade;
+            return ApplyPurchasedUpgrade(slot.HiddenUpgrade);
+        }
 
+        /// <summary>
+        /// Shared resolution for a just-paid-for upgrade purchase, whichever
+        /// section it came from (Blister or Casino — see BuyBlisterSlot/
+        /// BuyUpgradeSlot, which each handle their OWN slot bookkeeping and
+        /// eligibility/price checks before calling this). A Bank-pool
+        /// upgrade with no sub-choice (Joker) applies immediately and
+        /// leaves PendingUpgrade null; one that needs a sub-choice
+        /// (Retirer/Dupliquer/Recolorer) or a Grid-pool upgrade (needs a
+        /// tile choice, see PendingUpgradeTileCandidates) leaves
+        /// PendingUpgrade set until <see cref="ResolveUpgradeSubChoice"/>/
+        /// <see cref="ResolveUpgradeTileChoice"/> finishes it — nothing
+        /// else in the shop can be done meanwhile.
+        /// </summary>
+        private bool ApplyPurchasedUpgrade(UpgradeDefinition upgrade)
+        {
             if (upgrade.Pool == UpgradePool.Grid)
             {
                 PendingUpgrade = upgrade;
@@ -1687,6 +1810,27 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Debug-only helper: overwrites Blister slot <paramref name="index"/>
+        /// (default 0) to hold <paramref name="modifierId"/> outright,
+        /// bypassing the shop's own roll — lets a test buy a SPECIFIC
+        /// modifier through the real purchase path (BuyBlisterSlot,
+        /// exercising e.g. Copieur's purchase-time copy logic) without
+        /// rerolling into it, which the Blister section no longer supports
+        /// once rolled (RerollShop only ever touches Casino — explicit
+        /// request: "le bouton reroll ne reroll pas la section 'blister'").
+        /// No-op (false) if the shop isn't currently open.
+        /// </summary>
+        public bool DebugForceBlisterSlotToModifier(ModifierId modifierId, int index = 0)
+        {
+            if (State != RunState.AwaitingShop || index < 0 || index >= _blisterSlots.Length)
+            {
+                return false;
+            }
+            _blisterSlots[index] = ShopSlot.ForModifier(modifierId);
+            return true;
+        }
+
+        /// <summary>
         /// Grants one uniformly random modifier for free, right at the start
         /// of a run — a slot-machine-style "carousel" (see Presentation.
         /// ModifierCarouselView) spins through several modifier badges
@@ -1715,7 +1859,7 @@ namespace Contigu.Core
         /// <summary>
         /// "Random Modifier" upgrade's actual effect (see UpgradeCatalog.
         /// RandomModifier) — grants one uniformly random modifier the player
-        /// doesn't already hold, from the same catalog RollModifierSlot
+        /// doesn't already hold, from the same catalog RollBlisterSlot
         /// draws from, minus its "already offered this shop visit" exclusion
         /// (irrelevant here — nothing is being offered for sale, it's
         /// granted outright). Updates _lastPurchasedModifierId the same way
@@ -1815,18 +1959,24 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Refreshes every slot — modifier AND upgrade, purchased or not —
-        /// with a new random offer. Used to only touch still-unsold slots
-        /// (leaving a "SOLD" one exactly as it was), but on explicit
-        /// feedback that read as reroll silently doing nothing whenever
-        /// most of the shop had already been bought: "mes upgrades et
-        /// modifiers que j'ai acheté sont encore marqué sold, il faut que
-        /// j'aie tout de disponible". Buying a slot still permanently
-        /// grants whatever it held (the modifier/upgrade is already applied
-        /// by then) — this only replaces the SLOT OFFER itself, giving the
-        /// player a fresh purchasable pick where a spent one used to sit.
-        /// Costs Lueur (see GetRerollPrice), and itself counts toward this
-        /// visit's price escalation like any other purchase.
+        /// Refreshes every CASINO slot — purchased or not — with a new
+        /// random offer. Never touches the Blister section (explicit
+        /// request: "le bouton reroll ne reroll pas la section 'blister'")
+        /// — Blister already shows its exact contents up front, so a
+        /// reroll there would just be "pay Lueur to see 3 different exact
+        /// items," a very different (and not requested) kind of purchase
+        /// from Casino's "pay Lueur to try your luck at the mystery box
+        /// again." Used to only touch still-unsold CASINO slots (leaving a
+        /// "SOLD" one exactly as it was), but on explicit feedback that
+        /// read as reroll silently doing nothing whenever most of the shop
+        /// had already been bought: "mes upgrades et modifiers que j'ai
+        /// acheté sont encore marqué sold, il faut que j'aie tout de
+        /// disponible". Buying a slot still permanently grants whatever it
+        /// held (the upgrade is already applied by then) — this only
+        /// replaces the SLOT OFFER itself, giving the player a fresh
+        /// purchasable pick where a spent one used to sit. Costs Lueur (see
+        /// GetRerollPrice), and itself counts toward this visit's price
+        /// escalation like any other purchase.
         /// </summary>
         public bool RerollShop()
         {
@@ -1842,10 +1992,6 @@ namespace Contigu.Core
 
             Lueur -= price;
             _purchasesThisVisit++;
-            for (int i = 0; i < _modifierSlots.Length; i++)
-            {
-                _modifierSlots[i] = RollModifierSlot();
-            }
             for (int i = 0; i < _upgradeSlots.Length; i++)
             {
                 _upgradeSlots[i] = RollUpgradeSlot();

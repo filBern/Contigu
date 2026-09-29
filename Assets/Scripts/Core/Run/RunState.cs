@@ -5,7 +5,7 @@ namespace Contigu.Core
         /// <summary>Round in progress, waiting for the player to place pieces.</summary>
         InProgress,
 
-        /// <summary>Round quota reached with pieces still budgeted or exactly exhausted; the Lueur shop is open (see RunManager.ShopModifierSlots/ShopUpgradeSlots) until the player leaves it.</summary>
+        /// <summary>Round quota reached with pieces still budgeted or exactly exhausted; the Lueur shop is open (see RunManager.ShopBlisterSlots/ShopUpgradeSlots) until the player leaves it.</summary>
         AwaitingShop,
 
         /// <summary>Budget exhausted without reaching the quota: the run is over.</summary>

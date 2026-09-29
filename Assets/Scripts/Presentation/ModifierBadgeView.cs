@@ -11,6 +11,7 @@ namespace Contigu.Presentation
         private ModifierDefinition _def;
         private System.Func<ModifierId, int> _usageCountProvider;
         private System.Func<ModifierId, string> _progressiveStateProvider;
+        private System.Func<ModifierId, string> _levelStateProvider;
 
         // Whether the pointer is currently resting over this badge — while
         // true, Update() below keeps re-pushing fresh content into the
@@ -25,12 +26,13 @@ namespace Contigu.Presentation
         // display staleness bug, not a scoring one).
         private bool _hovering;
 
-        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null)
+        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null)
         {
             _tooltip = tooltip;
             _def = def;
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
+            _levelStateProvider = levelStateProvider;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -75,6 +77,22 @@ namespace Contigu.Presentation
             if (!string.IsNullOrEmpty(progressiveState))
             {
                 description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState);
+            }
+            else
+            {
+                // Every OTHER (non-progressive) modifier's Description is
+                // static text baked at base (level-1) numbers — this is the
+                // generic level line instead, covering the other ~40+
+                // modifiers a per-modifier "Currently ..." line was never
+                // written for. Skipped when progressiveState already fired
+                // above: that line already reports the true, level-scaled
+                // value on its own, so both together would just repeat the
+                // same information.
+                string levelState = _levelStateProvider != null ? _levelStateProvider(_def.Id) : null;
+                if (!string.IsNullOrEmpty(levelState))
+                {
+                    description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState);
+                }
             }
             _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle);
         }

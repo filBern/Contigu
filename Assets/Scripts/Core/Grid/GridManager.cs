@@ -634,7 +634,7 @@ namespace Contigu.Core
                 // Copieur: never actually held — buying it in the shop adds
                 // another copy of whichever modifier was purchased right
                 // before it instead of adding Copieur itself (see
-                // RunManager.BuyModifierSlot), so this entry should never
+                // RunManager.BuyBlisterSlot), so this entry should never
                 // actually be looked up in practice.
                 { ModifierId.Copieur, ctx => 0 }
             };

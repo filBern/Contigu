@@ -585,7 +585,7 @@ namespace Contigu.Presentation
             _handView.SlotSelected += OnHandSlotSelected;
             _handView.SelectionCleared += OnHandSelectionCleared;
             _handView.ShuffleRequested += OnShuffleRequested;
-            _shopView.ModifierBuyRequested += OnModifierBuyRequested;
+            _shopView.BlisterBuyRequested += OnBlisterBuyRequested;
             _shopView.UpgradeBuyRequested += OnUpgradeBuyRequested;
             _shopView.RerollRequested += OnRerollRequested;
             _shopView.LeaveRequested += OnLeaveShopRequested;
@@ -1189,11 +1189,36 @@ namespace Contigu.Presentation
         // ---- Lueur shop (spec extension, explicit request — replaces the
         // old draft/modifier-pick screens entirely) ----
 
-        private void OnModifierBuyRequested(int index)
+        private void OnBlisterBuyRequested(int index)
         {
-            _run.BuyModifierSlot(index);
-            RefreshAll();
-            _shopView.Refresh(_run);
+            if (index < 0 || index >= _run.ShopBlisterSlots.Count || _run.ShopBlisterSlots[index] == null)
+            {
+                return;
+            }
+            var slot = _run.ShopBlisterSlots[index];
+            // A Modifier-kind slot applies outright, same as the old
+            // modifier-only section — no follow-up screen needed. An
+            // Upgrade-kind slot needs the exact same reveal/sub-choice
+            // dispatch a Casino purchase does (see HandleUpgradePurchaseResult) —
+            // its identity was already visible before buying, but WHAT
+            // happens next (tile choice, piece choice, ...) is unchanged.
+            bool isUpgrade = slot.Kind == ShopSlotKind.Upgrade;
+            var revealedUpgrade = isUpgrade ? slot.HiddenUpgrade : null;
+
+            if (!_run.BuyBlisterSlot(index))
+            {
+                return;
+            }
+
+            if (isUpgrade)
+            {
+                HandleUpgradePurchaseResult(revealedUpgrade);
+            }
+            else
+            {
+                RefreshAll();
+                _shopView.Refresh(_run);
+            }
         }
 
         private void OnUpgradeBuyRequested(int index)
@@ -1212,7 +1237,21 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            HandleUpgradePurchaseResult(revealedUpgrade);
+        }
 
+        /// <summary>
+        /// Shared post-purchase reveal/follow-up dispatch for an upgrade
+        /// just bought, whichever section it came from (Casino via
+        /// OnUpgradeBuyRequested, or a Blister slot's Upgrade-kind case via
+        /// OnBlisterBuyRequested) — the resolution logic (tile choice, piece
+        /// choice, modifier-upgrade choice, generic sub-choice draft, or an
+        /// immediate Joker/Random Modifier reveal) only depends on
+        /// RunManager.PendingUpgrade/LastRandomModifierGranted, never on
+        /// which shop section triggered it.
+        /// </summary>
+        private void HandleUpgradePurchaseResult(UpgradeDefinition revealedUpgrade)
+        {
             var pending = _run.PendingUpgrade;
             // Deferred until the carousel is dismissed (see
             // OnModifierCarouselDismissed) instead of refreshed right here

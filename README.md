@@ -5989,3 +5989,67 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     d'amener le run en `AwaitingShop` de façon déterministe. Une fois ce
     filet de sécurité en place, la courbe de quotas a pu revenir à sa
     valeur voulue ci-dessus sans dépendre du hasard d'une seed de test.
+- **Refonte du shop : sections "Blister" + "Casino"** : sur demande
+  explicite ("Au lieu d'une section modifiers et d'une section upgrade,
+  j'aimerais qu'on ait une section 'blister'... mélanger modifiers et
+  upgrades dans un sac et en tirer 3 au hasard. Puis la section 'casino'
+  avec ce que l'on a déjà comme section upgrade... le bouton reroll ne
+  reroll pas la section 'blister'"). Les 2 anciennes sections (modifiers
+  toujours visibles / upgrades en mystery-box) deviennent :
+  - **Blister** (`RunManager.ShopBlisterSlots`, `EconomyConstants.
+    ShopBlisterSlotCount = 3`) : chaque slot tire un modifier OU un
+    upgrade depuis UN SEUL sac pondéré à plat (`RollBlisterSlot`) —
+    chaque modifier disponible avec le même poids que la rareté "Common"
+    (8), chaque upgrade éligible avec son propre poids de rareté (voir
+    `UpgradeRarityUtility`). Avec ~70 modifiers pour ~21 upgrades au
+    catalogue, un slot tombe sur un modifier environ 3 fois sur 4 — un
+    vrai sac partagé plutôt qu'un 50/50 artificiel (clarifié
+    explicitement avec l'utilisateur avant l'implémentation, vu l'ampleur
+    du chantier). Toujours affiché intégralement (nom + description),
+    modifier ou upgrade — jamais un mystère, contrairement à Casino. Un
+    upgrade dont le prérequis n'est pas rempli (Modifier Upgrade sans
+    aucun modifier possédé, Random Modifier déjà au cap) est exclu du sac
+    entièrement : contrairement à Casino, une carte Blister révèle son
+    identité exacte, donc une carte visiblement inachetable lirait comme
+    un bug plutôt qu'un choix de design.
+  - **Casino** (`RunManager.ShopUpgradeSlots`, inchangé mécaniquement) :
+    exactement l'ancien système d'upgrade mystery-box — seul l'
+    `UpgradePool` (Bank/Grid) est visible avant achat.
+  - `RerollShop` ne rafraîchit plus QUE Casino — Blister montre déjà son
+    contenu exact, donc le reroller serait un genre d'achat différent
+    ("payer pour voir 3 items exacts différents") jamais demandé.
+  - Achat unifié : `BuyModifierSlot`/`BuyUpgradeSlot` fusionnent
+    conceptuellement en `BuyBlisterSlot` (dispatch sur `ShopSlot.Kind`,
+    partage `ApplyPurchasedUpgrade` — nouvelle méthode extraite de
+    l'ancien `BuyUpgradeSlot` — avec Casino pour la résolution d'un achat
+    d'upgrade, y compris les sous-choix Retirer/Dupliquer/Recolorer/
+    Random Piece/Modifier Upgrade) ; `BuyUpgradeSlot` (Casino) reste
+    séparé et inchangé dans son comportement.
+  - Nouveau helper debug `DebugForceBlisterSlotToModifier` (même esprit
+    que `DebugForceUpgradeSlotToRandomModifier` déjà existant) : comme
+    Blister ne peut plus être rerollé une fois ouvert, un test qui doit
+    acheter un modifier PRÉCIS via le vrai chemin d'achat (pour exercer
+    Copieur par exemple) ne peut plus le faire en rerollant jusqu'à ce
+    qu'il apparaisse — corrigé en forçant directement le slot.
+  - Card UI (`ShopView.cs`) : la rangée Blister mélange maintenant des
+    cartes modifier (inchangées, `ModifierCardFactory`) et des cartes
+    upgrade révélées (nouvelles, nom + swatch coloré par rareté montrant
+    le pool "Piece Upgrade"/"Tile Upgrade" à la place d'une icône +
+    description réelle) dans la MÊME rangée à hauteur uniforme (2 passes,
+    comme avant). Casino garde sa carte mystery-box "?" inchangée.
+- **Tooltip des modifiers : description mise à jour au niveau** : sur
+  demande explicite ("il faut mettre a jour la description dans le
+  tooltip pour qu'il reflete le bon bonus") — la description STATIQUE
+  d'un modifier (`ModifierDefinition.Description`) reste un texte figé
+  aux nombres de base (niveau 1) : ré-écrire dynamiquement des nombres
+  dans du texte libre par modifier aurait été fragile (risque de
+  confondre un nombre-condition avec un nombre-récompense dans la même
+  phrase, ex. "x3 multiplier if this placement touches 3 distinct
+  colors" — seul le premier "3" doit être mis à l'échelle). Fix : une
+  nouvelle ligne générique "Level N — xF effect" s'ajoute au tooltip de
+  tout modifier au niveau > 1 (sauf les 8 modifiers "progressifs" —
+  Gradient, Repetition, Densite, etc. — qui ont déjà leur propre ligne
+  "Currently ..." level-aware, pour éviter de répéter la même info deux
+  fois). `ModifierBadgeView`/`ModifierBadgeFactory`/`ModifierPanelView`
+  relaient un nouveau `levelStateProvider`, même mécanisme que le
+  `progressiveStateProvider` déjà threadé par index de slot.

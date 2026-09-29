@@ -44,9 +44,14 @@ namespace Contigu.Presentation
         /// mirrors <paramref name="usageCountProvider"/> — only the side
         /// panel passes one, so a progressive/incremental modifier's
         /// tooltip can show its current live state (see
-        /// RunManager.GetProgressiveModifierStateText).
+        /// RunManager.GetProgressiveModifierStateText). <paramref
+        /// name="levelStateProvider"/> is the same shape again — only the
+        /// side panel passes one, non-null only past level 1 — so a
+        /// LEVELED modifier's tooltip shows its true, scaled effect instead
+        /// of just the unleveled base numbers baked into its static
+        /// Description.
         /// </summary>
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null)
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null)
         {
             var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
@@ -89,7 +94,7 @@ namespace Contigu.Presentation
             if (attachTooltip)
             {
                 var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
-                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider);
+                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider, levelStateProvider);
             }
 
             return badge;
