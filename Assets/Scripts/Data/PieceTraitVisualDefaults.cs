@@ -85,7 +85,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion:
                     return "Once placed, this tile locks in place for the rest of the round instead of being cleared — it still scores the line-clear bonus every time its row/column completes, forever, for as long as the round lasts.";
                 case PieceTraitKind.Kamikaze:
-                    return "When this piece is placed, this tile also destroys its 8 surrounding tiles (this placement's own cells excluded), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile actually destroyed.";
+                    return "When this piece is placed, this tile also destroys its 8 surrounding tiles (including this same piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile actually destroyed.";
                 default:
                     return string.Empty;
             }

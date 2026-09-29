@@ -6132,3 +6132,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   n'est pas touché (utilise déjà 1 cellule/intervalle, à son propre
   rythme de 5 pièces). Texte du tutoriel et description en jeu (déjà
   dynamique dans `GameBootstrap`) mis à jour en conséquence.
+- **Kamikaze Tile détruit maintenant aussi ses propres tuiles** : sur
+  demande explicite ("The kamikaze tile shouldn't exclude it's own
+  tiles") — `RunManager.ApplyKamikazeEffect` excluait jusqu'ici les
+  AUTRES cellules de ce même placement (même convention "protect what
+  was just placed" que Void Tile) via un `ContainsCell(placement.
+  PlacedCells, pos)`. Retiré : si la tuile enchantée fait partie d'une
+  pièce à plusieurs cellules, ses voisines Moore peuvent maintenant
+  inclure les autres cellules de cette même pièce tout juste posée (la
+  tuile enchantée elle-même reste toujours à l'abri, puisqu'elle est le
+  centre de la recherche 8-voisins, jamais l'une des 8 voisines). Le
+  helper `ContainsCell`, devenu inutilisé, a été supprimé. Textes
+  in-game/shop et tests mis à jour en conséquence.

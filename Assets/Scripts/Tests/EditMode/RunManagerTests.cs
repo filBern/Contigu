@@ -2169,13 +2169,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_KamikazeTrait_NeverDestroysThisPlacementsOwnCells()
+        public void PlacePiece_KamikazeTrait_CanDestroyThisPlacementsOwnOtherCells()
         {
+            // On explicit request: "The kamikaze tile shouldn't exclude
+            // it's own tiles" — reverses the old "protect what was just
+            // placed" exclusion (see the removed
+            // PlacePiece_KamikazeTrait_NeverDestroysThisPlacementsOwnCells).
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
             // A 2-cell piece so its OTHER cell sits right inside whichever
             // local cell got enchanted's own 8-neighbor blast radius —
-            // survives regardless of which of the two cells got tagged.
+            // destroyed regardless of which of the two cells got tagged.
             int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.DomH);
 
             // Every hand token draws a RANDOM initial rotation (see
@@ -2195,10 +2199,21 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
+            // The board was otherwise empty, so the only cell eligible for
+            // Kamikaze to destroy is this same placement's OTHER cell — the
+            // trait cell itself is never a candidate (Moore neighborhood
+            // excludes its own center).
+            Assert.AreEqual(1, outcome.Placement.DestroyedCells.Count);
+            Assert.AreEqual(ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
+            int filledCount = 0;
             foreach (var offset in shape.Cells)
             {
-                Assert.IsTrue(run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y).IsFilled);
+                if (run.Grid.GetCell(anchor.Value.x + offset.x, anchor.Value.y + offset.y).IsFilled)
+                {
+                    filledCount++;
+                }
             }
+            Assert.AreEqual(1, filledCount, "Exactly one of the piece's 2 cells should survive — the trait cell itself");
         }
 
         [Test]

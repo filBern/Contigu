@@ -49,7 +49,7 @@ namespace Contigu.Core
         /// <summary>"Bastion Tile" — once placed, this tile locks in place for the rest of the round: it's never cleared by a completed row/column, but it still scores the line-clear bonus every time one of those completes, as if it actually had been.</summary>
         Bastion,
 
-        /// <summary>"Kamikaze Tile" — when placed, also destroys its 8 surrounding tiles (this placement's own cells excluded), scoring a flat bonus per tile actually destroyed.</summary>
+        /// <summary>"Kamikaze Tile" — when placed, also destroys its 8 surrounding tiles (including this same placement's own other cells), scoring a flat bonus per tile actually destroyed.</summary>
         Kamikaze
     }
 

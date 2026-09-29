@@ -1149,10 +1149,14 @@ namespace Contigu.Core
         /// <summary>
         /// "Kamikaze Tile": destroys every already-filled, unlocked cell in
         /// the enchanted cell's 8 surrounding tiles (Moore neighborhood) —
-        /// this placement's own cells are excluded, same "protect what was
-        /// just placed" convention as Void Tile — scoring
-        /// ScoringConstants.KamikazeBonusPerDestroyedCell per tile actually
-        /// destroyed.
+        /// including this SAME placement's own other cells, if the piece
+        /// it's part of has more than one (on explicit request: "The
+        /// kamikaze tile shouldn't exclude it's own tiles" — no longer the
+        /// "protect what was just placed" convention Void Tile still uses)
+        /// — scoring ScoringConstants.KamikazeBonusPerDestroyedCell per
+        /// tile actually destroyed. The trait cell itself is never a
+        /// candidate (it's the center of the 8-neighbor search, not one of
+        /// the 8 neighbors).
         /// </summary>
         private void ApplyKamikazeEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
@@ -1175,7 +1179,7 @@ namespace Contigu.Core
 
                     var pos = new Vector2Int(x, y);
                     var cell = Grid.GetCell(pos);
-                    if (!cell.IsFilled || cell.IsLocked || ContainsCell(placement.PlacedCells, pos))
+                    if (!cell.IsFilled || cell.IsLocked)
                     {
                         continue;
                     }
@@ -1191,18 +1195,6 @@ namespace Contigu.Core
             {
                 AddTraitBonus(placement, traitCellPos, destroyed * ScoringConstants.KamikazeBonusPerDestroyedCell);
             }
-        }
-
-        private static bool ContainsCell(IReadOnlyList<Vector2Int> cells, Vector2Int pos)
-        {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                if (cells[i] == pos)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         /// <summary>
