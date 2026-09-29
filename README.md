@@ -6082,3 +6082,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   tooltip ("Currently ...") de Density passe de `"x" + ...` à
   `"+" + ... + " Mult"`, même phrasé que les deux autres modifiers
   additifs progressifs.
+- **Écran de fin de partie : texte du sous-titre/stats illisible** : sur
+  rapport explicite avec capture d'écran ("The end game text is hard to
+  read, make it bigger and a lighter color") — le sous-titre ("Quota not
+  reached — total score: ...") et la ligne de stats meta ("Best score:
+  ...") utilisaient `UITheme.TextMuted`, une couleur bleu marine foncé à
+  68% d'opacité pensée pour du texte SUR les panneaux crème clairs, alors
+  qu'`EndScreenView` les affiche directement sur son overlay quasi-noir
+  (`new Color(0.04f, 0.04f, 0.06f, 0.95f)`) — d'où un texte quasiment
+  invisible, contrairement au titre ("Defeat — Round N") qui reste
+  lisible car recoloré explicitement en `Success`/`Danger` dans
+  `ShowVictory`/`ShowDefeat`. Remplacé par `UITheme.TextOnBackground`/
+  `TextMutedOnBackground` (déjà réservées pour "le texte assis
+  directement sur le fond sans panneau dessous" — voir leur doc dans
+  `UITheme.cs`), et les tailles augmentées (sous-titre 22→28, stats
+  16→20).

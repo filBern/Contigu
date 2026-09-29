@@ -26,13 +26,13 @@ namespace Contigu.Presentation
             _titleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _titleText.rectTransform.sizeDelta = new Vector2(700f, 80f);
 
-            _subtitleText = UIFactory.CreateText(_root, "Subtitle", "", 22, UITheme.TextMuted);
+            _subtitleText = UIFactory.CreateText(_root, "Subtitle", "", 28, UITheme.TextOnBackground);
             _subtitleText.rectTransform.anchorMin = new Vector2(0.5f, 0.48f);
             _subtitleText.rectTransform.anchorMax = new Vector2(0.5f, 0.48f);
             _subtitleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _subtitleText.rectTransform.sizeDelta = new Vector2(700f, 50f);
 
-            _metaStatsText = UIFactory.CreateText(_root, "MetaStats", "", 16, UITheme.TextMuted);
+            _metaStatsText = UIFactory.CreateText(_root, "MetaStats", "", 20, UITheme.TextMutedOnBackground);
             _metaStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0.40f);
             _metaStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0.40f);
             _metaStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -87,7 +87,7 @@ namespace Contigu.Presentation
                 + "\nBest round reached: " + metaStats.BestRoundReached + "/" + RunConfig.RoundCount
                 + "   ·   Runs played: " + metaStats.TotalRunsPlayed
                 + "   ·   Victories: " + metaStats.TotalVictories;
-            _metaStatsText.color = isNewBestScore ? UITheme.Success : UITheme.TextMuted;
+            _metaStatsText.color = isNewBestScore ? UITheme.Success : UITheme.TextMutedOnBackground;
         }
 
         public void Hide()
