@@ -1194,10 +1194,10 @@ namespace Contigu.Tests
             var onMainDiagonal = grid.PlacePiece(single, PieceColor.Coral, 3, 3, modifiers);
             Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onMainDiagonal.ModifierBonus);
 
-            var onAntiDiagonal = grid.PlacePiece(single, PieceColor.Teal, 5, 2, modifiers); // 5 + 2 == Size - 1
+            var onAntiDiagonal = grid.PlacePiece(single, PieceColor.Teal, 5, 0, modifiers); // 5 + 0 == Size - 1
             Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onAntiDiagonal.ModifierBonus);
 
-            var offDiagonal = grid.PlacePiece(single, PieceColor.Violet, 1, 4, modifiers);
+            var offDiagonal = grid.PlacePiece(single, PieceColor.Violet, 1, 3, modifiers); // neither x == y nor x + y == Size - 1
             Assert.AreEqual(0, offDiagonal.ModifierBonus);
         }
 

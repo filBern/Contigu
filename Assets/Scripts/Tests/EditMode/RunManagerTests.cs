@@ -188,6 +188,7 @@ namespace Contigu.Tests
             run.DebugSetLueur(0);
 
             int guard = 0;
+            int lueurEarnedFromPlacements = 0;
             while (run.State == RunState.InProgress)
             {
                 int slot = FirstOccupiedHandSlot(run);
@@ -196,7 +197,12 @@ namespace Contigu.Tests
                 var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
                 var anchor = FindAnyValidAnchor(run.Grid, shape);
                 Assert.IsTrue(anchor.HasValue);
-                run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+                var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+                // On the smaller board, rows/columns complete (and earn their
+                // own line-clear Lueur) far more often during this golden-cell
+                // quota rush than they did on the old 8x8 board, so that has
+                // to be netted out to isolate the round-end bonus below.
+                lueurEarnedFromPlacements += outcome.Placement.LueurEarned + outcome.Placement.ModifierLueurBonus;
                 guard++;
                 Assert.Less(guard, 100);
             }
@@ -205,7 +211,7 @@ namespace Contigu.Tests
             int unusedPieces = run.PiecesRemainingThisRound;
             Assert.Greater(unusedPieces, 0, "Round should end with budget still remaining once the quota is reached");
             Assert.AreEqual(unusedPieces, run.LastRoundEndLueurBonus);
-            Assert.AreEqual(unusedPieces, run.Lueur, "Every unused piece should be worth exactly +1 Lueur");
+            Assert.AreEqual(unusedPieces + lueurEarnedFromPlacements, run.Lueur, "Every unused piece should be worth exactly +1 Lueur, on top of whatever line-clear Lueur was earned during play");
 
             run.LeaveShop();
 
@@ -1129,10 +1135,21 @@ namespace Contigu.Tests
                         break;
                     }
                 }
-                Assert.IsTrue(foundSlot.HasValue, "Ran out of room before reaching the quota");
+                if (!foundSlot.HasValue)
+                {
+                    // Genuinely stuck (none of the 3 hand pieces fit
+                    // anywhere) — a real player would just shuffle for a new
+                    // hand here rather than lose, and the board's own
+                    // stuck-hand check (RunManager.EvaluateRoundEnd) agrees:
+                    // it stays InProgress as long as shuffles remain. Far
+                    // more likely to happen on the smaller board's tighter,
+                    // more fragmentable free space than it ever was on 8x8.
+                    Assert.IsTrue(run.ShuffleHand(), "Ran out of room before reaching the quota, and no shuffles left to recover");
+                    continue;
+                }
                 run.PlacePiece(foundSlot.Value, anchor.x, anchor.y);
                 guard++;
-                Assert.Less(guard, 100, "Round should reach its quota well within 100 placements given every cell is golden");
+                Assert.Less(guard, 200, "Round should reach its quota well within 200 placements given every cell is golden");
             }
             Assert.AreEqual(RunState.AwaitingShop, run.State);
         }
@@ -1825,13 +1842,13 @@ namespace Contigu.Tests
             int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
 
             // Left ("first" in the old scan order) neighbor is a lone Coral
-            // cell — joining it would only make a 2-cell group. The right
+            // cell — joining it would only make a 2-cell group. The upward
             // neighbor is part of a 3-cell Teal group — joining it makes a
             // 4-cell group, which scores more.
             FillCell(run.Grid, 2, 3, PieceColor.Coral);
-            FillCell(run.Grid, 4, 3, PieceColor.Teal);
-            FillCell(run.Grid, 5, 3, PieceColor.Teal);
-            FillCell(run.Grid, 6, 3, PieceColor.Teal);
+            FillCell(run.Grid, 3, 2, PieceColor.Teal);
+            FillCell(run.Grid, 3, 1, PieceColor.Teal);
+            FillCell(run.Grid, 3, 0, PieceColor.Teal);
 
             var outcome = run.PlacePiece(slot, 3, 3);
 
@@ -2305,8 +2322,12 @@ namespace Contigu.Tests
 
             run.Deck.DrawNewHand();
             // Far from (0,0) so the first placement's shape can never overlap
-            // this one, whatever shape/rotation each hand draw happens to be.
-            var second = run.PlacePiece(0, 5, 5);
+            // this one, whatever shape/rotation each hand draw happens to be
+            // — the widest shape spans 3 cells along one axis (offsets
+            // 0/1/2), so anchoring at Size-3 both clears that reach from
+            // (0,0) and still leaves room for the same worst-case shape to
+            // fit within the board on the other side.
+            var second = run.PlacePiece(0, GridManager.Size - 3, GridManager.Size - 3);
             Assert.IsTrue(second.Placement.Success);
             Assert.AreEqual(2, run.GetModifierUsageCount(ModifierId.SlotUn));
         }

@@ -775,12 +775,12 @@ namespace Contigu.Tests
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
 
-            grid.GetCell(3, 0).IsGolden = true;
-            var tinted = grid.GetCell(4, 0);
+            grid.GetCell(GridManager.Size - 4, 0).IsGolden = true;
+            var tinted = grid.GetCell(GridManager.Size - 3, 0);
             tinted.IsTinted = true;
             tinted.TintedColor = PieceColor.Coral;
-            grid.GetCell(5, 0).IsMultiplierZone = true;
-            grid.GetCell(6, 0).OriginTrait = new PieceTrait(PieceTraitKind.Golden, 0);
+            grid.GetCell(GridManager.Size - 2, 0).IsMultiplierZone = true;
+            grid.GetCell(GridManager.Size - 1, 0).OriginTrait = new PieceTrait(PieceTraitKind.Golden, 0);
 
             for (int x = 0; x < GridManager.Size - 1; x++)
             {
@@ -788,15 +788,15 @@ namespace Contigu.Tests
             }
             grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
 
-            Assert.IsFalse(grid.GetCell(3, 0).IsFilled, "Line should have cleared");
-            Assert.IsFalse(grid.GetCell(3, 0).IsGolden);
-            Assert.IsFalse(grid.GetCell(4, 0).IsTinted);
-            Assert.IsFalse(grid.GetCell(5, 0).IsMultiplierZone);
-            Assert.IsFalse(grid.GetCell(6, 0).OriginTrait.HasValue);
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 4, 0).IsFilled, "Line should have cleared");
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 4, 0).IsGolden);
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 3, 0).IsTinted);
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 2, 0).IsMultiplierZone);
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 1, 0).OriginTrait.HasValue);
 
             // An unrelated piece landing on the same spot afterward should
             // score as a completely plain cell — no leftover golden bonus.
-            var result = grid.PlacePiece(single, PieceColor.Teal, 3, 0);
+            var result = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 4, 0);
             Assert.AreEqual(0, result.GoldenBonus);
         }
 
