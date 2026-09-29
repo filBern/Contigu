@@ -1025,7 +1025,7 @@ namespace Contigu.Tests
             {
                 for (int y = 0; y < GridManager.Size; y++)
                 {
-                    bool inPocket = x >= 5 && y >= 5;
+                    bool inPocket = x >= GridManager.Size - 3 && y >= GridManager.Size - 3;
                     var cell = run.Grid.GetCell(x, y);
                     if (!inPocket && !cell.IsFilled)
                     {
@@ -1660,15 +1660,15 @@ namespace Contigu.Tests
             // itself — the single eligible candidate Void can pick, so which
             // cell gets destroyed is deterministic despite Void's own
             // internal randomness.
-            FillCell(run.Grid, 7, 7, PieceColor.Coral);
+            FillCell(run.Grid, GridManager.Size - 1, GridManager.Size - 1, PieceColor.Coral);
 
             var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
             Assert.AreEqual(1, outcome.Placement.DestroyedCells.Count);
-            Assert.AreEqual(new Vector2Int(7, 7), outcome.Placement.DestroyedCells[0]);
+            Assert.AreEqual(new Vector2Int(GridManager.Size - 1, GridManager.Size - 1), outcome.Placement.DestroyedCells[0]);
             Assert.AreEqual(PieceColor.Coral, outcome.Placement.DestroyedCellColors[0]);
-            Assert.IsFalse(run.Grid.GetCell(7, 7).IsFilled, "Void should have actually cleared the cell, not just reported it");
+            Assert.IsFalse(run.Grid.GetCell(GridManager.Size - 1, GridManager.Size - 1).IsFilled, "Void should have actually cleared the cell, not just reported it");
         }
 
         [Test]
@@ -1945,12 +1945,12 @@ namespace Contigu.Tests
             var token = run.Deck.Hand[slot].Value;
             // Only ONE eligible cell elsewhere on the grid, so Void's random
             // pick is deterministic regardless of the RNG seed.
-            FillCell(run.Grid, 7, 7, token.Color);
+            FillCell(run.Grid, GridManager.Size - 1, GridManager.Size - 1, token.Color);
 
             var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.IsFalse(run.Grid.GetCell(7, 7).IsFilled, "Void should have cleared the only other filled cell on the grid");
+            Assert.IsFalse(run.Grid.GetCell(GridManager.Size - 1, GridManager.Size - 1).IsFilled, "Void should have cleared the only other filled cell on the grid");
         }
 
         [Test]
@@ -2669,13 +2669,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 run.Grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            run.Grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            run.Grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual("Currently x" + run.Grid.GradientCurrentMultiplier, run.GetProgressiveModifierStateText(ModifierId.Gradient));
         }

@@ -471,17 +471,17 @@ namespace Contigu.Presentation
             gridRect.anchoredPosition = Vector2.zero;
 
             // To the right of the grid, vertically centered on it (which is
-            // now screen center too). Grid right edge sits 226.5 (half of its
-            // 453-wide 8x8+spacing footprint, see GridView.Build) from screen
+            // now screen center too). Grid right edge sits 177 (half of its
+            // 354-wide 6x6+spacing footprint, see GridView.Build) from screen
             // center; the hand's own width is 120 (its slot width, via
             // ContentSizeFitter) so its center needs to clear the grid by
-            // 226.5 + a 24 gap + its own half-width (60).
+            // 177 + a 24 gap + its own half-width (60).
             _handView = gameObject.AddComponent<HandView>();
             var handRect = _handView.Build(mainRoot, _run.Deck, _tooltipView);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            handRect.anchoredPosition = new Vector2(310f, 0f);
+            handRect.anchoredPosition = new Vector2(261f, 0f);
 
             _comboView = gameObject.AddComponent<ComboView>();
             var comboRect = _comboView.Build(mainRoot);
@@ -490,16 +490,15 @@ namespace Contigu.Presentation
             comboRect.pivot = new Vector2(0.5f, 0.5f);
             // In the gap between the grid's bottom edge and the pieces bar
             // flush against the screen's bottom edge. Grid is centered on an
-            // always-800-tall canvas (CanvasScaler matches height) and 453
-            // tall, so its bottom edge sits 400 - 453/2 = 173.5 above the
-            // bottom. The pieces bar is 68 tall (see HudView.BarHeight).
-            // Midpoint between the grid's bottom and the bar's top:
-            // (173.5 + 68) / 2 = 120.75 — nudged up a few more px from there
-            // (explicit request: "Remonte le encore un peu") for extra
-            // clearance from the bar, still within the ~3.25px of slack the
-            // block's own height (99, see ComboView.Build) leaves inside the
-            // 105.5px gap before it'd touch the grid.
-            comboRect.anchoredPosition = new Vector2(0f, 123.25f);
+            // always-800-tall canvas (CanvasScaler matches height) and 354
+            // tall (6x6+spacing footprint, see GridView.Build), so its bottom
+            // edge sits 400 - 354/2 = 223 above the bottom. The pieces bar is
+            // 68 tall (see HudView.BarHeight). Midpoint between the grid's
+            // bottom and the bar's top: (223 + 68) / 2 = 145.5 — nudged up
+            // the same few px as before (explicit request: "Remonte le
+            // encore un peu") for extra clearance from the bar; the smaller
+            // board leaves far more slack here than the old 8x8 footprint did.
+            comboRect.anchoredPosition = new Vector2(0f, 148f);
             // No explicit sizeDelta — ComboView's own ContentSizeFitter
             // sizes it to fit its two pills (chips + mult).
 

@@ -105,8 +105,9 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.MegaChaine };
 
             // A 5x2 block (x=0..4, y=0..1): never fills a whole row (needs all
-            // 8 columns) or column (needs all 8 rows), so nothing auto-clears
-            // mid-sequence and the group grows cleanly to exactly 10 cells.
+            // GridManager.Size columns) or column (needs all GridManager.Size
+            // rows), so nothing auto-clears mid-sequence and the group grows
+            // cleanly to exactly 10 cells.
             for (int x = 0; x < 5; x++)
             {
                 grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
@@ -186,16 +187,15 @@ namespace Contigu.Tests
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Collectionneur };
 
-            // Fill x=0..6 with 3 distinct colors, leaving x=7 to complete the row.
+            // Fill x=0..(Size-2) with 3 distinct colors, leaving the last
+            // column to complete the row with a 4th.
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 6, 0, modifiers);
 
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
             Assert.AreEqual(4 * ScoringConstants.CollectionneurBonusPerColor, finalResult.ModifierBonus);
@@ -473,8 +473,8 @@ namespace Contigu.Tests
 
             var finalResult = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            // Row 0 (8 cells) + column 0 (8 cells) share exactly 1 cell (0,0),
-            // so 15 distinct cells clear — confirms both lines completed.
+            // Row 0 (Size cells) + column 0 (Size cells) share exactly 1 cell
+            // (0,0), so 2*Size-1 distinct cells clear — confirms both lines completed.
             Assert.AreEqual(2 * GridManager.Size - 1, finalResult.LineClearCellCount);
             Assert.AreEqual(ScoringConstants.DemolisseurMultiplierPerLine * ScoringConstants.DemolisseurMultiplierPerLine, finalResult.ModifierMultiplier);
         }
@@ -648,7 +648,7 @@ namespace Contigu.Tests
             Assert.AreEqual(ScoringConstants.DegradeMultiplier, second.ModifierMultiplier);
 
             // A fresh, unconnected single-cell group (size 1) isn't bigger than the previous placement's 2.
-            var third = grid.PlacePiece(single, PieceColor.Teal, 7, 7, modifiers);
+            var third = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, GridManager.Size - 1, modifiers);
             Assert.AreEqual(1, third.ModifierMultiplier);
         }
 
@@ -731,9 +731,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
             Assert.AreEqual(ScoringConstants.ArcEnCielMultiplierPerLine, finalResult.ModifierMultiplier);
@@ -765,13 +763,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Coral, PieceColor.Teal,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Coral
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Teal, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(ScoringConstants.AlternanceMultiplierPerLine, finalResult.ModifierMultiplier);
         }
@@ -786,13 +785,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Coral, PieceColor.Coral,
-                PieceColor.Teal, PieceColor.Coral, PieceColor.Teal
+                PieceColor.Teal
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(1, finalResult.ModifierMultiplier);
         }
@@ -806,14 +806,15 @@ namespace Contigu.Tests
 
             var pattern = new[]
             {
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
-                PieceColor.Lime, PieceColor.Violet, PieceColor.Teal
+                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet,
+                PieceColor.Violet, PieceColor.Teal
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(ScoringConstants.PalindromeMultiplierPerLine, finalResult.ModifierMultiplier);
         }
@@ -844,13 +845,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             // First-ever Gradient line this run: permanent counter goes 0 -> 1,
             // so the multiplier is (1 + 1) = x2 (see Gradient_Permanently...
@@ -892,13 +894,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var firstClear = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var firstClear = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
             Assert.AreEqual(2, firstClear.ModifierMultiplier, "First-ever Gradient line: counter 0->1, so x(1+1)");
 
             // A later placement that clears NOTHING still benefits from the
@@ -923,13 +926,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Coral, PieceColor.Teal, PieceColor.Teal,
-                PieceColor.Violet, PieceColor.Violet, PieceColor.Lime
+                PieceColor.Violet
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(ScoringConstants.BlocMultiplierPerLine, finalResult.ModifierMultiplier);
         }
@@ -944,13 +948,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Coral, PieceColor.Teal, PieceColor.Violet,
-                PieceColor.Violet, PieceColor.Lime, PieceColor.Lime
+                PieceColor.Violet
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Coral, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(1, finalResult.ModifierMultiplier, "The lone Teal cell at index 2 has no matching neighbor on either side");
         }
@@ -1285,7 +1290,7 @@ namespace Contigu.Tests
             var second = grid.PlacePiece(single, PieceColor.Coral, 5, 5, modifiers);
             Assert.AreEqual(1, second.ModifierMultiplier, "Coral is already on the board, no longer fresh");
 
-            var third = grid.PlacePiece(single, PieceColor.Teal, 7, 7, modifiers);
+            var third = grid.PlacePiece(single, PieceColor.Teal, 0, GridManager.Size - 1, modifiers);
             Assert.AreEqual(ScoringConstants.FraicheurMultiplier, third.ModifierMultiplier, "Teal is still new to the board");
         }
 
@@ -1296,20 +1301,24 @@ namespace Contigu.Tests
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.EspaceLibre };
 
-            var early = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
+            var early = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, GridManager.Size - 1, modifiers);
             Assert.AreEqual(ScoringConstants.EspaceLibreMultiplier, early.ModifierMultiplier, "Board is nearly empty, should fire");
 
-            // Fill past the 16-cell (25%) threshold without ever completing a
-            // row/column (each of these 3 rows leaves its last column empty).
-            for (int y = 0; y < 3; y++)
+            // Fill past ScoringConstants.EspaceLibreMaxFilledCells (a fixed
+            // count, not scaled to GridManager.Size) without ever completing
+            // a row/column — each of these rows leaves its last column
+            // empty, and no column reaches every row either.
+            for (int y = 0; y < GridManager.Size - 2; y++)
             {
                 for (int x = 0; x < GridManager.Size - 1; x++)
                 {
                     grid.PlacePiece(single, PieceColor.Teal, x, y);
                 }
             }
+            Assert.Greater(1 + (GridManager.Size - 2) * (GridManager.Size - 1), ScoringConstants.EspaceLibreMaxFilledCells,
+                "This test's fill amount must actually cross the threshold it's testing");
 
-            var late = grid.PlacePiece(single, PieceColor.Violet, 0, 3, modifiers);
+            var late = grid.PlacePiece(single, PieceColor.Violet, 0, GridManager.Size - 2, modifiers);
             Assert.AreEqual(1, late.ModifierMultiplier, "Board should no longer count as open once past the threshold");
         }
 
@@ -1325,11 +1334,11 @@ namespace Contigu.Tests
                 grid.PlacePiece(single, PieceColor.Teal, x, 1);
             }
 
-            var first = grid.PlacePiece(single, PieceColor.Coral, 7, 0); // completes row 0
+            var first = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0); // completes row 0
             Assert.Greater(first.LineClearScore, 0, "Sanity check: row 0 should have cleared");
 
             var modifiers = new List<ModifierId> { ModifierId.Rafale };
-            var second = grid.PlacePiece(single, PieceColor.Teal, 7, 1, modifiers); // completes row 1, right after another clear
+            var second = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 1, modifiers); // completes row 1, right after another clear
 
             Assert.AreEqual(ScoringConstants.RafaleMultiplier, second.ModifierMultiplier);
         }
@@ -1347,7 +1356,7 @@ namespace Contigu.Tests
                 grid.PlacePiece(single, PieceColor.Teal, x, 2);
             }
             var modifiers = new List<ModifierId> { ModifierId.Rafale };
-            var clearing = grid.PlacePiece(single, PieceColor.Teal, 7, 2, modifiers); // completes row 2
+            var clearing = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 2, modifiers); // completes row 2
 
             Assert.Greater(clearing.LineClearScore, 0, "Sanity check: row 2 should have cleared");
             Assert.AreEqual(1, clearing.ModifierMultiplier, "Previous placement didn't clear, so Rafale shouldn't fire");
@@ -1440,7 +1449,7 @@ namespace Contigu.Tests
             Assert.AreEqual(ScoringConstants.GrosseFamilleMultiplier, solo.ModifierMultiplier, "Only Coral group on the board");
 
             // A second, disconnected Coral group elsewhere breaks the "single group" condition.
-            var second = grid.PlacePiece(single, PieceColor.Coral, 7, 7, modifiers);
+            var second = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, GridManager.Size - 1, modifiers);
             Assert.AreEqual(1, second.ModifierMultiplier);
         }
 
@@ -1461,10 +1470,10 @@ namespace Contigu.Tests
             var third = grid.PlacePiece(single, PieceColor.Violet, 5, 5, modifiers);
             Assert.AreEqual(3, third.ModifierMultiplier, "3rd consecutive Single in a row");
 
-            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 6, modifiers);
+            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 4, modifiers);
             Assert.AreEqual(1, broken.ModifierMultiplier, "A different shape breaks and restarts the streak");
 
-            var restarted = grid.PlacePiece(single, PieceColor.Coral, 6, 6, modifiers);
+            var restarted = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0, modifiers);
             Assert.AreEqual(1, restarted.ModifierMultiplier, "Streak restarts at 1 (no bonus yet) right after it broke");
         }
 
@@ -1479,17 +1488,24 @@ namespace Contigu.Tests
             Assert.AreEqual(1f, early.ProgressiveMultiplier, "Only 1 cell filled, well under the 10-cell step");
             Assert.AreEqual(1, early.ModifierMultiplier, "Densite contributes to ProgressiveMultiplier, not the plain integer ModifierMultiplier — see next test for why");
 
-            // Fill 18 more cells without completing any row/column (3 rows of
-            // 6, none reaching the 8-cell width), for 19 filled cells total.
+            // Fill 18 more cells without completing any row/column: 3 rows
+            // leaving their last column empty (5 of 6 cells each), plus a
+            // partial 4th row — for 19 filled cells total (early + this).
             for (int y = 1; y <= 3; y++)
             {
-                for (int x = 0; x < 6; x++)
+                for (int x = 0; x < GridManager.Size - 1; x++)
                 {
                     grid.PlacePiece(single, PieceColor.Teal, x, y);
                 }
             }
+            for (int x = 0; x < 3; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Teal, x, 4);
+            }
 
-            var late = grid.PlacePiece(single, PieceColor.Violet, 6, 1, modifiers);
+            // Row/column 5 are still completely untouched by the fill above,
+            // so placing here can't complete either one.
+            var late = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 1, GridManager.Size - 1, modifiers);
             Assert.AreEqual(2f, late.ProgressiveMultiplier, "20 cells filled / 10 per step = x2.0 exactly");
             Assert.AreEqual(1, late.ModifierMultiplier);
         }
@@ -1501,24 +1517,26 @@ namespace Contigu.Tests
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Densite };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0); // 1 filled
-            for (int y = 1; y <= 3; y++)
+            // Rows 0-3, columns 0-4 (leaving the whole last column empty) —
+            // 4*5 = 20 filled, no row or column anywhere near complete.
+            for (int y = 0; y < 4; y++)
             {
-                for (int x = 0; x < 6; x++)
+                for (int x = 0; x < GridManager.Size - 1; x++)
                 {
-                    grid.PlacePiece(single, PieceColor.Teal, x, y); // +18 (19 total)
+                    grid.PlacePiece(single, PieceColor.Teal, x, y);
                 }
             }
-            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 20
-            grid.PlacePiece(single, PieceColor.Lime, 1, 4); // 21
-            grid.PlacePiece(single, PieceColor.Lime, 2, 4); // 22
+            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 21
+            grid.PlacePiece(single, PieceColor.Lime, 1, 4); // 22
 
             // 23 filled cells total (well short of a clean multiple of 10) —
             // on explicit request: "on doit multiplier comme si c'était un
             // float au lieu d'arrondir a la baisse". The OLD integer-floor
             // behavior would have given a flat x2 here; the true value is
-            // x2.3.
-            var result = grid.PlacePiece(single, PieceColor.Violet, 3, 4, modifiers);
+            // x2.3. Placed in the still-untouched last column so it can't
+            // complete row 4 (only 2 of its cells are filled) or column 5
+            // (this is its only filled cell).
+            var result = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 1, 4, modifiers);
 
             Assert.AreEqual(23, grid.FilledCellCount);
             Assert.AreEqual(2.3f, result.ProgressiveMultiplier, 0.0001f);
@@ -1533,21 +1551,23 @@ namespace Contigu.Tests
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
             var modifiers = new List<ModifierId> { ModifierId.Densite };
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 0); // 1
-            for (int y = 1; y <= 3; y++)
+            // Rows 0-3, columns 0-4 (leaving the whole last column empty) —
+            // 4*5 = 20 filled, no row or column anywhere near complete.
+            for (int y = 0; y < 4; y++)
             {
-                for (int x = 0; x < 6; x++)
+                for (int x = 0; x < GridManager.Size - 1; x++)
                 {
-                    grid.PlacePiece(single, PieceColor.Teal, x, y); // +18 (19 total)
+                    grid.PlacePiece(single, PieceColor.Teal, x, y);
                 }
             }
-            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 20
-            grid.PlacePiece(single, PieceColor.Lime, 1, 4); // 21
+            grid.PlacePiece(single, PieceColor.Lime, 0, 4); // 21
 
             // Placing this 2-cell domino brings the board to 23 filled
             // cells — Densite's true multiplier is 2.3, not the old
-            // floored x2.
-            var result = grid.PlacePiece(domH, PieceColor.Violet, 2, 4, modifiers);
+            // floored x2. Row 4 only has 3 of 6 cells filled afterward
+            // (columns 0-2), and columns 1-2 only 5 of 6 (row 5 still
+            // empty), so nothing completes.
+            var result = grid.PlacePiece(domH, PieceColor.Violet, 1, 4, modifiers);
 
             Assert.AreEqual(23, grid.FilledCellCount);
             // Group scoring is progressive (1st cell scored = 1 x
@@ -1581,13 +1601,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Violet
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(finalResult.ModifierMultiplier, grid.GradientCurrentMultiplier);
         }
@@ -1680,10 +1701,10 @@ namespace Contigu.Tests
                 grid.PlacePiece(single, PieceColor.Coral, x, 0);
                 grid.PlacePiece(single, PieceColor.Teal, x, 1);
             }
-            grid.PlacePiece(single, PieceColor.Coral, 7, 0); // completes row 0
+            grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0); // completes row 0
 
             var modifiers = new List<ModifierId> { ModifierId.Combo };
-            var second = grid.PlacePiece(single, PieceColor.Teal, 7, 1, modifiers); // completes row 1, right after another clear
+            var second = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 1, modifiers); // completes row 1, right after another clear
 
             Assert.AreEqual(ScoringConstants.ComboMultiplierFactor, second.ComboMultiplier);
             int baseSubtotal = (second.GroupBonus + second.GoldenBonus) * second.GroupMultiplier
@@ -1836,9 +1857,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Lime, 6, 0, modifiers);
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
             Assert.AreEqual(EconomyConstants.ArcEnCielLueurPerLine, finalResult.ModifierLueurBonus);
@@ -1871,13 +1890,14 @@ namespace Contigu.Tests
             var pattern = new[]
             {
                 PieceColor.Coral, PieceColor.Teal, PieceColor.Coral, PieceColor.Teal,
-                PieceColor.Coral, PieceColor.Teal, PieceColor.Coral
+                PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size - 1, pattern.Length);
             for (int x = 0; x < pattern.Length; x++)
             {
                 grid.PlacePiece(single, pattern[x], x, 0, modifiers);
             }
-            var finalResult = grid.PlacePiece(single, PieceColor.Teal, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(EconomyConstants.AlternanceLueurPerLine, finalResult.ModifierLueurBonus);
         }
@@ -1905,16 +1925,15 @@ namespace Contigu.Tests
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.CollectionneurLueur };
 
-            // Fill x=0..6 with 3 distinct colors, leaving x=7 to complete the row.
+            // Fill x=0..(Size-2) with 3 distinct colors, leaving the last
+            // column to complete the row with a 4th.
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Teal, 2, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Teal, 3, 0, modifiers);
+            grid.PlacePiece(single, PieceColor.Violet, 3, 0, modifiers);
             grid.PlacePiece(single, PieceColor.Violet, 4, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 5, 0, modifiers);
-            grid.PlacePiece(single, PieceColor.Violet, 6, 0, modifiers);
 
-            var finalResult = grid.PlacePiece(single, PieceColor.Lime, 7, 0, modifiers);
+            var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
             Assert.AreEqual(4 * EconomyConstants.CollectionneurLueurPerColor, finalResult.ModifierLueurBonus);
@@ -1949,7 +1968,7 @@ namespace Contigu.Tests
             var third = grid.PlacePiece(single, PieceColor.Violet, 5, 5, modifiers);
             Assert.AreEqual(EconomyConstants.RepetitionLueurBonus, third.ModifierLueurBonus, "3rd consecutive Single in a row too — flat, not progressive like Repetition's own score version");
 
-            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 6, modifiers);
+            var broken = grid.PlacePiece(domH, PieceColor.Lime, 0, 1, modifiers);
             Assert.AreEqual(0, broken.ModifierLueurBonus, "A different shape breaks the streak");
         }
 

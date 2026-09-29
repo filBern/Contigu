@@ -22,7 +22,7 @@ namespace Contigu.Tests
             {
                 grid.PlacePiece(single, PieceColor.Coral, x, 0);
             }
-            var final = grid.PlacePiece(single, PieceColor.Coral, 7, 0);
+            var final = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
             Assert.AreEqual(EconomyConstants.LueurPerColorGroup, final.LueurEarned,
@@ -45,7 +45,7 @@ namespace Contigu.Tests
             {
                 grid.PlacePiece(single, colors[x % colors.Length], x, 0);
             }
-            var final = grid.PlacePiece(single, colors[(GridManager.Size - 1) % colors.Length], 7, 0);
+            var final = grid.PlacePiece(single, colors[(GridManager.Size - 1) % colors.Length], GridManager.Size - 1, 0);
 
             Assert.Greater(final.LineClearScore, 0, "Sanity check: row 0 should have cleared");
             Assert.AreEqual(colors.Length, final.LueurGroups.Count, "One group per distinct color, not per run");
@@ -61,16 +61,21 @@ namespace Contigu.Tests
             // would have counted the two Coral runs separately).
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Sized to exactly GridManager.Size (6) cells, same structural
+            // property as before the board shrank from 8: Coral split into
+            // two runs (indices 0-1 and the last cell) with Teal/Lime in
+            // between — only 3 distinct colors, so 3 groups.
             var colors = new[]
             {
-                PieceColor.Coral, PieceColor.Coral, PieceColor.Teal, PieceColor.Teal,
-                PieceColor.Teal, PieceColor.Lime, PieceColor.Lime, PieceColor.Coral
+                PieceColor.Coral, PieceColor.Coral, PieceColor.Teal,
+                PieceColor.Lime, PieceColor.Lime, PieceColor.Coral
             };
+            Assert.AreEqual(GridManager.Size, colors.Length, "This test's color sequence must cover the whole row");
             for (int x = 0; x < GridManager.Size - 1; x++)
             {
                 grid.PlacePiece(single, colors[x], x, 0);
             }
-            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
+            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], GridManager.Size - 1, 0);
 
             Assert.AreEqual(3, final.LueurGroups.Count);
             Assert.AreEqual(3 * EconomyConstants.LueurPerColorGroup, final.LueurEarned);
@@ -102,11 +107,11 @@ namespace Contigu.Tests
             {
                 grid.PlacePiece(single, colors[x], x, 0);
             }
-            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], 7, 0);
+            var final = grid.PlacePiece(single, colors[GridManager.Size - 1], GridManager.Size - 1, 0);
 
             Assert.AreEqual(1, final.LueurGroups.Count, "Only the Coral color earns — the Joker cell doesn't start a group of its own");
             Assert.AreEqual(EconomyConstants.LueurPerColorGroup, final.LueurEarned);
-            Assert.AreEqual(GridManager.Size - 1, final.LueurGroups[0].Cells.Count, "All 7 non-Joker cells should be in the one Coral group");
+            Assert.AreEqual(GridManager.Size - 1, final.LueurGroups[0].Cells.Count, "All non-Joker cells should be in the one Coral group");
         }
 
         [Test]
@@ -127,8 +132,11 @@ namespace Contigu.Tests
             var grid = new GridManager();
             var shape = PieceShapeCatalog.Get(ShapeId.TriIH); // spans 3 cells horizontally
 
-            Assert.IsFalse(grid.CanPlace(shape, 6, 0)); // would need x=6,7,8 -> out of bounds
-            Assert.IsTrue(grid.CanPlace(shape, 5, 0));
+            // Anchored at Size-2, the piece would need cells (Size-2, Size-1,
+            // Size) — the last one off the edge. Anchored one to the left, at
+            // Size-3, all 3 cells (Size-3, Size-2, Size-1) are in bounds.
+            Assert.IsFalse(grid.CanPlace(shape, GridManager.Size - 2, 0));
+            Assert.IsTrue(grid.CanPlace(shape, GridManager.Size - 3, 0));
         }
 
         [Test]
@@ -596,9 +604,9 @@ namespace Contigu.Tests
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
-            grid.GetCell(7, 0).IsLocked = true;
+            grid.GetCell(GridManager.Size - 1, 0).IsLocked = true;
 
-            // Fill the 6 non-locked cells x=0..5, leaving x=6 as the last non-locked cell.
+            // Fill every non-locked cell, leaving the last one for the final placement below.
             for (int x = 0; x < GridManager.Size - 2; x++)
             {
                 var result = grid.PlacePiece(single, PieceColor.Violet, x, 0);
@@ -607,10 +615,10 @@ namespace Contigu.Tests
 
             var finalResult = grid.PlacePiece(single, PieceColor.Violet, GridManager.Size - 2, 0);
 
-            // Row is complete because every NON-locked cell (x=0..6) is filled; locked cell (x=7) is excluded from the condition.
+            // Row is complete because every NON-locked cell is filled; the locked cell is excluded from the condition.
             Assert.AreEqual(GridManager.Size - 1, finalResult.LineClearCellCount);
-            Assert.IsFalse(grid.GetCell(7, 0).IsFilled);
-            Assert.IsTrue(grid.GetCell(7, 0).IsLocked);
+            Assert.IsFalse(grid.GetCell(GridManager.Size - 1, 0).IsFilled);
+            Assert.IsTrue(grid.GetCell(GridManager.Size - 1, 0).IsLocked);
         }
 
         [Test]
@@ -665,7 +673,7 @@ namespace Contigu.Tests
         [Test]
         public void LockFreeCellsAndCheckClears_CompletingALineByLockingItsLastEmptyCell_ScoresAndClears()
         {
-            // Every cell except (7, 0) is already filled — the single
+            // Every cell except (Size-1, 0) is already filled — the single
             // remaining empty spot is the only `!IsLocked && !IsFilled`
             // candidate anywhere on the board, so the lock is deterministic
             // regardless of the RNG seed, and locking it instantly completes
@@ -673,7 +681,7 @@ namespace Contigu.Tests
             var grid = new GridManager();
             foreach (var pos in GridManager.AllPositions())
             {
-                if (pos.x == 7 && pos.y == 0)
+                if (pos.x == GridManager.Size - 1 && pos.y == 0)
                 {
                     continue;
                 }
@@ -684,7 +692,7 @@ namespace Contigu.Tests
 
             var outcome = grid.LockFreeCellsAndCheckClears(1, new SystemRandomProvider(1));
 
-            CollectionAssert.AreEqual(new[] { new Vector2Int(7, 0) }, outcome.LockedCells);
+            CollectionAssert.AreEqual(new[] { new Vector2Int(GridManager.Size - 1, 0) }, outcome.LockedCells);
             Assert.Greater(outcome.LineClearScore, 0, "Locking the board's last empty cell should complete and clear at least its row and column");
             CollectionAssert.Contains(outcome.ClearedCells, new Vector2Int(0, 0));
         }
@@ -705,15 +713,17 @@ namespace Contigu.Tests
             bastionCell.IsBastion = true;
             bastionCell.IsLocked = true;
 
-            grid.PlacePiece(single, PieceColor.Teal, 0, 0);
-            grid.PlacePiece(single, PieceColor.Teal, 1, 0);
-            grid.PlacePiece(single, PieceColor.Teal, 2, 0);
-            grid.PlacePiece(single, PieceColor.Teal, 4, 0);
-            grid.PlacePiece(single, PieceColor.Teal, 5, 0);
-            grid.PlacePiece(single, PieceColor.Teal, 6, 0);
-            var final = grid.PlacePiece(single, PieceColor.Teal, 7, 0);
+            PlacementResult final = null;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == 3)
+                {
+                    continue; // the bastion cell itself, filled above
+                }
+                final = grid.PlacePiece(single, PieceColor.Teal, x, 0);
+            }
 
-            Assert.AreEqual(GridManager.Size - 1, final.LineClearCellCount, "Only the 7 unlocked cells actually clear");
+            Assert.AreEqual(GridManager.Size - 1, final.LineClearCellCount, "Only the unlocked cells actually clear");
             Assert.AreEqual(GridManager.Size * ScoringConstants.LineClearBonusPerCell, final.LineClearScore,
                 "The locked Bastion cell still earns the same per-cell bonus as an actually-cleared cell");
             CollectionAssert.DoesNotContain(final.ClearedCells, new Vector2Int(3, 0));
@@ -868,18 +878,18 @@ namespace Contigu.Tests
 
             Assert.AreEqual(0, grid.PlacementsSinceLastClear, "No placements made yet this round");
 
-            grid.PlacePiece(single, PieceColor.Coral, 0, 5);
+            grid.PlacePiece(single, PieceColor.Coral, 0, 0);
             Assert.AreEqual(1, grid.PlacementsSinceLastClear);
 
-            grid.PlacePiece(single, PieceColor.Coral, 1, 5);
+            grid.PlacePiece(single, PieceColor.Coral, 1, 0);
             Assert.AreEqual(2, grid.PlacementsSinceLastClear);
 
             for (int x = 0; x < GridManager.Size; x++)
             {
-                grid.PlacePiece(single, PieceColor.Teal, x, 6);
+                grid.PlacePiece(single, PieceColor.Teal, x, GridManager.Size - 1);
             }
-            // The row-6 loop above fills every cell of a fresh row (a clear),
-            // so the streak should have reset to 0 by the time it returns here.
+            // The loop above fills every cell of a fresh row (a clear), so
+            // the streak should have reset to 0 by the time it returns here.
             Assert.AreEqual(0, grid.PlacementsSinceLastClear, "A placement that clears a line/column resets the streak");
         }
 

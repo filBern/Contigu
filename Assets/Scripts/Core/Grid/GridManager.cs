@@ -4,14 +4,21 @@ using UnityEngine;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Owns the 8x8 grid state: placement validation, the connected-color-group
+    /// Owns the 6x6 grid state: placement validation, the connected-color-group
     /// bonus, line/column clears, and the persistent cell modifiers (golden,
     /// tinted, multiplier zone) plus the boss round's locked cells. Pure C#, no
     /// MonoBehaviour dependency, so it is unit-testable in isolation.
     /// </summary>
     public sealed class GridManager
     {
-        public const int Size = 8;
+        // Shrunk from 8 (explicit request: "Au lieu d'une grille de 8x8,
+        // peux tu faire 6x6. Ça sera plus dense, plus rapidement complexe")
+        // — a smaller board fills up faster against the SAME piece budgets/
+        // quotas (see RunConfig), which is the whole point: deliberately
+        // left those untouched rather than compensating the difficulty back
+        // down, since that's exactly the "plus rapidement complexe" this
+        // was asked for.
+        public const int Size = 6;
 
         private readonly Cell[,] _cells;
 

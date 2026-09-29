@@ -5896,3 +5896,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - `ShopView` affiche "None owned" (bouton désactivé) sur une carte
     Modifier Upgrade quand le joueur ne possède encore rien — même
     mécanique d'affichage que "Full (N)" pour Random Modifier au cap.
+- **Grille réduite à 6x6** : sur demande explicite — « Au lieu d'une grille de
+  8x8, peux tu faire 6x6. Ça sera plus dense, plus rapidement complexe » —
+  `GridManager.Size` passe de 8 à 6. C'est le seul changement nécessaire côté
+  Core/Presentation : `GridView` et le reste de la couche Presentation sont
+  entièrement paramétriques sur cette constante (aucune coordonnée d'écran ou
+  de layout n'est codée en dur ailleurs que les deux offsets ci-dessous).
+  Délibérément laissés INCHANGÉS : `RunConfig.Quotas`/`PieceBudgets`,
+  `RunConfig.BossLockPiecesInterval`/`BossLockCellsPerInterval`,
+  `ScoringConstants.EspaceLibreMaxFilledCells` (constante fixe, pas
+  recalculée dynamiquement), la taille du deck initial et
+  `DeckManager.MinDeckSize` — c'est précisément en gardant ces budgets tels
+  quels qu'une grille plus petite se remplit plus vite et complexifie la
+  partie plus tôt, exactement l'effet demandé, sans qu'il soit nécessaire de
+  compenser artificiellement la difficulté.
+  - Toute la suite de tests EditMode (`GridManagerTests`,
+    `GridManagerModifierTests`, `RunManagerTests`) a été auditée et corrigée
+    pour dériver ses bornes de boucle et coordonnées de bord depuis
+    `GridManager.Size` plutôt que des littéraux `6`/`7`/`8` — y compris
+    plusieurs cas où un ancien littéral coïncidait numériquement avec la
+    nouvelle taille mais avait un sens complètement différent (ex. une
+    boucle de remplissage bornée à `6` voulant dire « strictement moins que
+    l'ancienne largeur de 8 » se serait mise à remplir toute la rangée et à
+    déclencher un clear non désiré une fois `Size` passé à 6).
+  - Deux offsets pixel fixes dans `GameBootstrap.cs` (position X du panneau
+    de main, position Y du popup de combo) étaient dérivés à la main de
+    l'ancien footprint de grille 453px (8 cases + espacement) ; recalculés
+    pour le nouveau footprint 354px (6 cases + espacement) selon la même
+    formule commentée sur place.
