@@ -15,9 +15,17 @@ namespace Contigu.Core
         /// still-empty cells (see RunManager.ApplyBossLockTick /
         /// GridManager.LockFreeCellsAndCheckClears) — the board tightens up
         /// gradually across the whole round instead of all at once.
+        /// <see cref="BossLockCellsPerInterval"/> was halved from 2 to 1 on
+        /// explicit report that the boss had become too aggressive once the
+        /// board shrank from 8x8 to <see cref="GridManager.Size"/> = 6x6
+        /// ("Le boss ajoute trop de tuile maintenant qu'on est rendu en
+        /// 6x6") — the old numbers (14 cells locked over a 22-piece boss
+        /// round) ate ~22% of an 8x8 board but ~39% of the smaller 6x6 one;
+        /// halving brings it back down to ~19%, close to the original
+        /// proportion.
         /// </summary>
         public const int BossLockPiecesInterval = 3;
-        public const int BossLockCellsPerInterval = 2;
+        public const int BossLockCellsPerInterval = 1;
 
         /// <summary>
         /// How many times the player can re-roll all 3 hand slots at once

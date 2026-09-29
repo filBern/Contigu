@@ -6118,3 +6118,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   par son `OnDestroy` (même souci, mais pour un badge carrément détruit
   plutôt que simplement désactivé). Nouveau `TraitBadgeView.OnDisable`,
   même `Hide()` inconditionnel que `OnDestroy`.
+- **Boss round : locks trop agressifs depuis le passage en 6x6** : sur
+  rapport explicite ("Le boss ajoute trop de tuile maintenant qu'on est
+  rendu en 6x6") — `RunConfig.BossLockCellsPerInterval` (2 cellules
+  verrouillées tous les `BossLockPiecesInterval` = 3 pièces jouées)
+  n'avait jamais été retouché lors du redimensionnement de la grille de
+  8x8 à 6x6. Sur le boss round de Classic (budget de 22 pièces), ça
+  verrouillait 14 cellules au total — ~22% d'une grille 8x8 (64
+  cellules) mais ~39% de la grille 6x6 actuelle (36 cellules), bien plus
+  agressif que prévu. Réduit à 1 cellule par intervalle (7 cellules au
+  total sur le boss round de Classic, ~19% — proche de la proportion
+  d'origine). Affecte aussi Marathon (mêmes constantes RunConfig) ; Chaos
+  n'est pas touché (utilise déjà 1 cellule/intervalle, à son propre
+  rythme de 5 pièces). Texte du tutoriel et description en jeu (déjà
+  dynamique dans `GameBootstrap`) mis à jour en conséquence.

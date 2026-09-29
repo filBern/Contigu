@@ -2202,12 +2202,16 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_DuringBossRound_LocksTwoMoreFreeCellsEveryThreePiecesPlayed()
+        public void PlacePiece_DuringBossRound_LocksOneMoreFreeCellEveryThreePiecesPlayed()
         {
             // Boss round rework (on explicit request — "le boss est beaucoup
             // trop difficile, on va faire autre chose"): no more upfront
             // lock, instead RunConfig.BossLockCellsPerInterval more empty
-            // cells lock every RunConfig.BossLockPiecesInterval pieces played.
+            // cells lock every RunConfig.BossLockPiecesInterval pieces
+            // played. BossLockCellsPerInterval was later halved from 2 to 1
+            // on explicit report that this ate too much of the board once
+            // it shrank to 6x6 ("Le boss ajoute trop de tuile maintenant
+            // qu'on est rendu en 6x6").
             var run = new RunManager(new SystemRandomProvider(5));
             AdvanceToRound(run, RunConfig.BossRoundIndex);
             Assert.IsTrue(run.IsBossRound);
@@ -2226,7 +2230,7 @@ namespace Contigu.Tests
         {
             // Chaos (see ChallengeCatalog.Chaos): the boss cell-lock is
             // active every round instead of only the last one, at its own
-            // (gentler) pace — 1 cell every 5 pieces here, not Classic's 2
+            // (gentler) pace — 1 cell every 5 pieces here, not Classic's
             // every 3, so this must NOT reuse RunConfig's boss numbers.
             var run = new RunManager(new SystemRandomProvider(5), ChallengeCatalog.Chaos);
             Assert.IsTrue(run.IsBossRound, "Chaos' boss should already be active on round 1");
