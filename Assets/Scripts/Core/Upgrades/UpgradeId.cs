@@ -46,6 +46,11 @@ namespace Contigu.Core
         // redo of an earlier attempt that wrongly built this as a
         // persistent Modifier instead: "les modifiers mastery que tu as
         // créé devaient être des upgrades, pas des modifiers") ----
-        PieceMastery
+        PieceMastery,
+
+        // ---- Sixth batch (Bank pool, on explicit request: "Il faudrait
+        // faire la même chose avec les couleurs" — the same Mastery
+        // mechanic, keyed by PieceColor instead of ShapeId) ----
+        ColorMastery
     }
 }

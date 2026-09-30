@@ -216,18 +216,23 @@ namespace Contigu.Core
             UpgradeId.PieceMastery, UpgradePool.Bank, "Piece Mastery",
             "Levels up one random piece shape — its tiles score +1 pts per level past the first.", false, UpgradeRarity.Uncommon);
 
+        /// <summary>Sixth batch (on explicit request: "Il faudrait faire la même chose avec les couleurs") — Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
+        public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
+            UpgradeId.ColorMastery, UpgradePool.Bank, "Color Mastery",
+            "Levels up one random piece color — its tiles score +1 pts per level past the first.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile, PieceMastery
+            BastionTile, KamikazeTile, PieceMastery, ColorMastery
         };
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade, PieceMastery
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade, PieceMastery, ColorMastery
         };
 
         public static readonly UpgradeDefinition[] GridPool =

@@ -249,6 +249,18 @@ namespace Contigu.Core
             return _shapeMasteryLevels.TryGetValue(shape, out var level) ? level : 1;
         }
 
+        /// <summary>Piece Mastery's exact sibling (on explicit request: "Il faudrait faire la même chose avec les couleurs") — same mechanics, keyed by PieceColor instead of ShapeId.</summary>
+        public PieceColor? LastColorMasteryGranted { get; private set; }
+
+        /// <summary>Current level per color, from "Color Mastery" purchases (see GrantColorMastery/ApplyColorMasteryBonus) — 1 (no bonus) for any color never leveled up.</summary>
+        private readonly Dictionary<PieceColor, int> _colorMasteryLevels = new Dictionary<PieceColor, int>();
+
+        /// <summary>Current level of <paramref name="color"/> (1 if never leveled up by a Color Mastery purchase).</summary>
+        public int GetColorMasteryLevel(PieceColor color)
+        {
+            return _colorMasteryLevels.TryGetValue(color, out var level) ? level : 1;
+        }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -515,6 +527,7 @@ namespace Contigu.Core
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
             ApplyShapeMasteryBonus(shape, placement);
+            ApplyColorMasteryBonus(placementColor, placement);
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
@@ -934,6 +947,21 @@ namespace Contigu.Core
             placement.ShapeMasteryBonus += bonus;
             var events = new List<ScoreEvent>(placement.ScoreEvents);
             events.Add(new ScoreEvent(ScoreEventType.ShapeMastery, placement.PlacedCells[0], bonus));
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>Piece Mastery's exact sibling — (level - 1) flat points when the placed piece's own color has been leveled up by a Color Mastery purchase (see GetColorMasteryLevel/GrantColorMastery). <paramref name="color"/> is the placement's REAL resolved color (post-Chameleon, if applicable) — same "own color" RunManager.PlacePiece already resolves for ApplyPostPlacementTraitBonus.</summary>
+        private void ApplyColorMasteryBonus(PieceColor color, PlacementResult placement)
+        {
+            int bonus = GetColorMasteryLevel(color) - 1;
+            if (bonus <= 0)
+            {
+                return;
+            }
+
+            placement.ColorMasteryBonus += bonus;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.ColorMastery, placement.PlacedCells[0], bonus));
             placement.ScoreEvents = events;
         }
 
@@ -1844,15 +1872,16 @@ namespace Contigu.Core
                 return true;
             }
 
-            // The three Bank-pool upgrades with RequiresSubChoice false —
-            // see UpgradeCatalog.BankPool — are Joker, Random Modifier and
-            // Piece Mastery. Each applies through its own dedicated path
-            // (ApplyJoker / GrantRandomModifier / GrantShapeMastery, not a
-            // generic Apply) so the actual thing rolled can be surfaced
-            // (LastJokerShapeAdded / LastRandomModifierGranted /
-            // LastShapeMasteryGranted) for the reveal to show (see
-            // UpgradeRevealView / ShapeCarouselView) instead of just naming
-            // the upgrade.
+            // The four Bank-pool upgrades with RequiresSubChoice false —
+            // see UpgradeCatalog.BankPool — are Joker, Random Modifier,
+            // Piece Mastery and Color Mastery. Each applies through its own
+            // dedicated path (ApplyJoker / GrantRandomModifier /
+            // GrantShapeMastery / GrantColorMastery, not a generic Apply) so
+            // the actual thing rolled can be surfaced (LastJokerShapeAdded /
+            // LastRandomModifierGranted / LastShapeMasteryGranted /
+            // LastColorMasteryGranted) for the reveal to show (see
+            // UpgradeRevealView / ShapeCarouselView / ColorCarouselView)
+            // instead of just naming the upgrade.
             if (upgrade.Id == UpgradeId.JokerPiece)
             {
                 LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
@@ -1860,6 +1889,10 @@ namespace Contigu.Core
             else if (upgrade.Id == UpgradeId.PieceMastery)
             {
                 LastShapeMasteryGranted = GrantShapeMastery();
+            }
+            else if (upgrade.Id == UpgradeId.ColorMastery)
+            {
+                LastColorMasteryGranted = GrantColorMastery();
             }
             else
             {
@@ -1890,6 +1923,13 @@ namespace Contigu.Core
         {
             LastShapeMasteryGranted = GrantShapeMastery();
             return LastShapeMasteryGranted.Value;
+        }
+
+        /// <summary>Debug-only helper: exercises "Color Mastery"'s exact grant (GrantColorMastery), bypassing the shop entirely — same rationale as DebugTriggerShapeMasteryGrant.</summary>
+        public PieceColor DebugTriggerColorMasteryGrant()
+        {
+            LastColorMasteryGranted = GrantColorMastery();
+            return LastColorMasteryGranted.Value;
         }
 
         /// <summary>
@@ -2012,6 +2052,15 @@ namespace Contigu.Core
             var shapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
             var picked = shapes[_rng.Next(shapes.Length)];
             _shapeMasteryLevels[picked] = GetShapeMasteryLevel(picked) + 1;
+            return picked;
+        }
+
+        /// <summary>"Color Mastery": Piece Mastery's exact sibling — picks a random BASE color (PieceColorUtility.BaseColors, so never Joker) and levels it up by 1. Always succeeds, same as GrantShapeMastery.</summary>
+        private PieceColor GrantColorMastery()
+        {
+            var colors = PieceColorUtility.BaseColors;
+            var picked = colors[_rng.Next(colors.Count)];
+            _colorMasteryLevels[picked] = GetColorMasteryLevel(picked) + 1;
             return picked;
         }
 

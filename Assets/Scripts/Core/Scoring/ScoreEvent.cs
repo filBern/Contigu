@@ -38,7 +38,10 @@ namespace Contigu.Core
         MultBonus,
 
         /// <summary>A flat per-placement bonus from the "Piece Mastery" upgrade (see <see cref="PlacementResult.ShapeMasteryBonus"/>, <see cref="RunManager.GetShapeMasteryLevel"/>) — not tied to any <see cref="ModifierId"/> or <see cref="PieceTrait"/>, unlike <see cref="Modifier"/>/<see cref="Trait"/>: a persistent per-exact-shape level the player bought from the shop, independent of both systems.</summary>
-        ShapeMastery
+        ShapeMastery,
+
+        /// <summary>Piece Mastery's exact sibling, from the "Color Mastery" upgrade — see <see cref="PlacementResult.ColorMasteryBonus"/>, <see cref="RunManager.GetColorMasteryLevel"/>.</summary>
+        ColorMastery
     }
 
     /// <summary>

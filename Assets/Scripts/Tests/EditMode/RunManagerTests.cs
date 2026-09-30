@@ -1035,6 +1035,89 @@ namespace Contigu.Tests
             Assert.AreEqual(0, outcome.Placement.ShapeMasteryBonus);
         }
 
+        // ---- Sixth batch: "Color Mastery" (on explicit request: "Il
+        // faudrait faire la même chose avec les couleurs") — Piece
+        // Mastery's exact sibling, keyed by PieceColor instead of ShapeId.
+        // Same test shape as the Piece Mastery block above. ----
+
+        [Test]
+        public void BuyUpgradeSlot_ColorMastery_AppliesImmediately_AndLevelsUpTheGrantedColor()
+        {
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.ColorMastery, 500);
+            Assert.IsNotNull(run, "Should find a Color Mastery upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(slot);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "Color Mastery has no sub-choice, so it should apply immediately");
+            Assert.IsTrue(run.LastColorMasteryGranted.HasValue);
+            Assert.AreEqual(2, run.GetColorMasteryLevel(run.LastColorMasteryGranted.Value), "A color never leveled up before should go from level 1 to level 2");
+        }
+
+        [Test]
+        public void GetColorMasteryLevel_DefaultsToOne_ForAColorNeverLeveledUp()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            Assert.AreEqual(1, run.GetColorMasteryLevel(PieceColor.Teal));
+        }
+
+        [Test]
+        public void DebugTriggerColorMasteryGrant_EachCallLevelsUpExactlyOneColorByOne_NoCap()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            const int grants = 50;
+            for (int i = 0; i < grants; i++)
+            {
+                run.DebugTriggerColorMasteryGrant();
+            }
+
+            int totalLevelsGained = 0;
+            foreach (var color in PieceColorUtility.BaseColors)
+            {
+                totalLevelsGained += run.GetColorMasteryLevel(color) - 1;
+            }
+            Assert.AreEqual(grants, totalLevelsGained, "Every grant should add exactly 1 to some color's level");
+        }
+
+        [Test]
+        public void PlacePiece_AddsFlatBonus_EqualToLevelMinusOne_ForAPieceOfTheLeveledColor()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PieceColor? leveledColor = null;
+            for (int i = 0; i < 100 && !leveledColor.HasValue; i++)
+            {
+                run.DebugTriggerColorMasteryGrant();
+                foreach (var candidate in PieceColorUtility.BaseColors)
+                {
+                    if (run.GetColorMasteryLevel(candidate) >= 3)
+                    {
+                        leveledColor = candidate;
+                        break;
+                    }
+                }
+            }
+            Assert.IsTrue(leveledColor.HasValue, "Test setup sanity: some color should reach level 3 within 100 grants");
+
+            int slot = ChurnUntilHandMatches(run, t => t.Color == leveledColor.Value);
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(run.GetColorMasteryLevel(leveledColor.Value) - 1, outcome.Placement.ColorMasteryBonus);
+        }
+
+        [Test]
+        public void PlacePiece_AddsNoColorMasteryBonus_ForAPieceOfAnUnleveledColor()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Coral);
+
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.ColorMasteryBonus);
+        }
+
         [Test]
         public void SellModifier_RemovesItAndRefundsBasePriceMinusOne()
         {

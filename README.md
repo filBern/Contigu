@@ -6470,3 +6470,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   non-plafonnement (invariant : N achats = N niveaux distribués au
   total, peu importe la forme), et le bonus de score réel sur une
   pose.
+- **"Color Mastery", le sibling exact de Piece Mastery** : sur demande
+  explicite ("Il faudrait faire la même chose avec les couleurs") —
+  même mécanique complète, calquée mot pour mot sur Piece Mastery mais
+  indexée par `PieceColor` au lieu de `ShapeId` :
+  `UpgradeId.ColorMastery` (Bank pool, sans sous-choix),
+  `RunManager.GrantColorMastery` (tire une des 4 couleurs de base via
+  `PieceColorUtility.BaseColors` — jamais Joker — et incrémente son
+  niveau dans `_colorMasteryLevels`, sans plafond), `ColorCarouselView`
+  (nouveau fichier, clone de `ShapeCarouselView`) et
+  `RunManager.ApplyColorMasteryBonus` (`niveau - 1` points, nouvel
+  event `ScoreEventType.ColorMastery` / `PlacementResult.
+  ColorMasteryBonus`, vérifié sur la couleur RÉELLEMENT posée —
+  `placementColor`, après résolution Chameleon le cas échéant). Seule
+  différence de présentation notable : contrairement au carrousel de
+  formes (grisé, "la couleur importe peu"), le carrousel de couleurs
+  montre chaque candidat dans sa VRAIE couleur sur une tuile carrée
+  neutre (`ShapePreviewFactory.Build` avec la forme `Sq2`) — ici c'est
+  la couleur qui est l'axe pertinent. Une pièce Joker (dont la couleur
+  de remplissage reste `PieceColor.Joker`) ne reçoit jamais ce bonus,
+  par simplicité — contrairement à Devotion, aucune résolution
+  "meilleure couleur possible" n'est appliquée ici. Mêmes 5 tests
+  miroirs ajoutés dans `RunManagerTests.cs` (achat réel, défaut niveau
+  1, non-plafonnement, bonus de score réel, absence de bonus sur une
+  couleur jamais montée).

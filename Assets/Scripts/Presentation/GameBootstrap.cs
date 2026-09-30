@@ -61,6 +61,7 @@ namespace Contigu.Presentation
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
         private ShapeCarouselView _shapeCarouselView;
+        private ColorCarouselView _colorCarouselView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
@@ -540,6 +541,9 @@ namespace Contigu.Presentation
 
             _shapeCarouselView = gameObject.AddComponent<ShapeCarouselView>();
             _shapeCarouselView.Build(mainRoot);
+
+            _colorCarouselView = gameObject.AddComponent<ColorCarouselView>();
+            _colorCarouselView.Build(mainRoot);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
@@ -1319,6 +1323,11 @@ namespace Contigu.Presentation
                 {
                     var grantedShape = _run.LastShapeMasteryGranted.Value;
                     _shapeCarouselView.Show(grantedShape, _run.GetShapeMasteryLevel(grantedShape));
+                }
+                else if (revealedUpgrade.Id == UpgradeId.ColorMastery && _run.LastColorMasteryGranted.HasValue)
+                {
+                    var grantedColor = _run.LastColorMasteryGranted.Value;
+                    _colorCarouselView.Show(grantedColor, _run.GetColorMasteryLevel(grantedColor));
                 }
                 else if (_run.LastRandomModifierGranted.HasValue)
                 {
