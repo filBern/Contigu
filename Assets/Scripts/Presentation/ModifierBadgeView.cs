@@ -64,7 +64,7 @@ namespace Contigu.Presentation
             string subtitle = _usageCountProvider != null
                 ? "Used " + _usageCountProvider(_def.Id) + "x this run"
                 : null;
-            string description = DescriptionTextFormatter.Colorize(_def.Description);
+            string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
             // Progressive/incremental modifiers (Gradient, Repetition,
             // Densité, Épuisement, Cartes Enchantées, Multitude,
             // Solidarité, Experience) get an extra line showing their
@@ -76,7 +76,7 @@ namespace Contigu.Presentation
             string progressiveState = _progressiveStateProvider != null ? _progressiveStateProvider(_def.Id) : null;
             if (!string.IsNullOrEmpty(progressiveState))
             {
-                description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState);
+                description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState, 14);
             }
             else
             {
@@ -91,7 +91,7 @@ namespace Contigu.Presentation
                 string levelState = _levelStateProvider != null ? _levelStateProvider(_def.Id) : null;
                 if (!string.IsNullOrEmpty(levelState))
                 {
-                    description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState);
+                    description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
                 }
             }
             _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle);

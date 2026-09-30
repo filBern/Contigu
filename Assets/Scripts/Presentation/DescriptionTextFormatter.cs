@@ -18,17 +18,25 @@ namespace Contigu.Presentation
     /// Descriptions that earn Lueur (the shop currency) no longer spell out
     /// the word at all — on explicit request ("changer le mot lueur dans
     /// les description de modifiers et upgrades pour le symbole losange
-    /// jaune"), the literal Lueur-diamond glyph (U+25C6, pre-wrapped in its
-    /// own gold color tag) is embedded directly in those description
-    /// strings instead, so there's nothing left for this formatter to
-    /// match.
+    /// jaune"), the literal Lueur-diamond glyph (◆, U+25C6) is embedded
+    /// directly in those description strings instead, and THIS formatter
+    /// colors it gold (same as the word used to be) and, on a further
+    /// explicit request ("Grossis de 50% le symbole lueur dans les
+    /// descriptions"), sizes it 50% larger than the surrounding text —
+    /// hence <see cref="Colorize"/> now needs the caller's base font size,
+    /// since the glyph's target size is relative to whatever context is
+    /// displaying the description (tooltip, shop card, upgrade card, ...
+    /// each uses a different base size).
     /// </summary>
     public static class DescriptionTextFormatter
     {
         private const string PointsColorHex = "65AED6"; // UITheme.ButtonSelected
         private const string MultiplierColorHex = "B56D7F"; // UITheme.Danger
+        private const string DiamondColorHex = "F0B38D"; // VisualDefaults.GoldenColor
+        private const string DiamondGlyph = "◆";
+        private const float DiamondSizeMultiplier = 1.5f;
 
-        public static string Colorize(string description)
+        public static string Colorize(string description, int fontSize)
         {
             if (string.IsNullOrEmpty(description))
             {
@@ -39,13 +47,13 @@ namespace Contigu.Presentation
             string result = null;
             for (int i = 0; i < words.Length; i++)
             {
-                string colored = ColorizeWord(words[i]);
+                string colored = ColorizeWord(words[i], fontSize);
                 result = result == null ? colored : result + " " + colored;
             }
             return result;
         }
 
-        private static string ColorizeWord(string word)
+        private static string ColorizeWord(string word, int fontSize)
         {
             int end = word.Length;
             while (end > 0 && IsTrailingPunctuation(word[end - 1]))
@@ -63,6 +71,11 @@ namespace Contigu.Presentation
             if (lower == "multiplier" || lower == "multipliers" || lower == "mult" || IsMultiplierFactor(lower))
             {
                 return Wrap(core, MultiplierColorHex) + trailing;
+            }
+            if (core == DiamondGlyph)
+            {
+                int diamondSize = (int)(fontSize * DiamondSizeMultiplier + 0.5f);
+                return "<size=" + diamondSize + ">" + Wrap(core, DiamondColorHex) + "</size>" + trailing;
             }
             return word;
         }

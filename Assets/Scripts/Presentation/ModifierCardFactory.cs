@@ -41,7 +41,7 @@ namespace Contigu.Presentation
             badge.rectTransform.anchoredPosition = new Vector2(0f, badgeY);
 
             float descWidth = width - 16f;
-            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description), descFontSize, UITheme.TextPrimary);
+            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, descFontSize), descFontSize, UITheme.TextPrimary);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);

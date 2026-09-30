@@ -132,10 +132,10 @@ namespace Contigu.Presentation
                 "• Esc: settings",
                 "• X: sell the modifier you're hovering"
             };
-            string text = DescriptionTextFormatter.Colorize(lines[0]);
+            string text = DescriptionTextFormatter.Colorize(lines[0], 15);
             for (int i = 1; i < lines.Length; i++)
             {
-                text += "\n" + DescriptionTextFormatter.Colorize(lines[i]);
+                text += "\n" + DescriptionTextFormatter.Colorize(lines[i], 15);
             }
 
             var label = UIFactory.CreateText(parent, "ScoringBaseline", text, 15, UITheme.TextMutedOnBackground, TextAnchor.UpperRight);

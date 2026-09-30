@@ -339,23 +339,23 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 <color=#F0B38D>◆</color> per cleared line with all 4 colors, stacking.");
+            "+6 ◆ per cleared line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
             ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
-            "+4 <color=#F0B38D>◆</color> per cleared line alternating between 2 colors, stacking (a joker breaks it).");
+            "+4 ◆ per cleared line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
             ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
-            "+4 <color=#F0B38D>◆</color> per cleared line that's a single color, stacking.");
+            "+4 ◆ per cleared line that's a single color, stacking.");
 
         public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
             ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Collector",
-            "+2 <color=#F0B38D>◆</color> per distinct color in cleared cells.");
+            "+2 ◆ per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
-            "+5 <color=#F0B38D>◆</color> when this piece matches the last one's shape.");
+            "+5 ◆ when this piece matches the last one's shape.");
 
         // ---- Ninth batch, on explicit request ----
 

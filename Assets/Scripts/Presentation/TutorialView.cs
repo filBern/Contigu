@@ -88,10 +88,10 @@ namespace Contigu.Presentation
             string text = null;
             for (int i = 0; i < sections.Length; i++)
             {
-                string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + DescriptionTextFormatter.Colorize(sections[i].Body);
+                string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + DescriptionTextFormatter.Colorize(sections[i].Body, 17);
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\n" + DescriptionTextFormatter.Colorize("Tab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings");
+            text += "\n\n" + DescriptionTextFormatter.Colorize("Tab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings", 17);
             return text;
         }
     }

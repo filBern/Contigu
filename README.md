@@ -6355,3 +6355,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   mot. `DescriptionTextFormatter` : la règle de colorisation du mot
   "lueur" devient morte (le mot n'apparaît plus nulle part) et a été
   retirée.
+- **Le symbole losange grossi de 50% dans les descriptions** : sur
+  demande explicite ("Grossis de 50% le symbole lueur dans les
+  descriptions") — le glyphe ◆ n'est plus pré-coloré directement dans
+  les 5 chaînes de `ModifierDefinition` ; `DescriptionTextFormatter.
+  Colorize` prend maintenant la taille de police de base du contexte
+  appelant en paramètre, détecte lui-même le glyphe et l'enveloppe
+  dans `<size=X><color=#F0B38D>◆</color></size>` avec `X = taille de
+  base × 1.5`, pour rester 50% plus gros que le texte environnant peu
+  importe où la description s'affiche (tooltip, carte de shop, carte
+  d'upgrade...). Les 11 appels de `Colorize` dans le projet passent
+  maintenant chacun leur propre taille de police de base.

@@ -407,7 +407,7 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(swatchLabel.rectTransform);
 
             float descWidth = CardWidth - 16f;
-            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description), 12, UITheme.TextPrimary);
+            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, 12), 12, UITheme.TextPrimary);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);

@@ -61,7 +61,7 @@ namespace Contigu.Presentation
                 descY -= (RarityHeight + LineSpacing);
             }
 
-            var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description), 23, Color.white);
+            var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description, 23), 23, Color.white);
             float descHeight = PreferredHeight(descLabel, Width);
             PositionRow(descLabel, descY, descHeight);
 
