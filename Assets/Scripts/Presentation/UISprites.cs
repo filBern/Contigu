@@ -62,7 +62,12 @@ namespace Contigu.Presentation
         /// hand. 9-slice border is 18/0/18/0 (left/bottom/right/top) to
         /// match this asset's own corner radius — see this same folder's
         /// sibling <see cref="CancelButtonBackground"/>, tinted from the
-        /// exact same source PNG.
+        /// exact same source PNG. Import's filter mode is Bilinear, not
+        /// this project's usual Point (every other Icons/ sprite) — on
+        /// explicit report that the buttons looked "très pixelisé" once
+        /// <see cref="UIFactory.AddThickOutline"/> stopped hiding the
+        /// rounded corners' staircase under Point sampling's nearest-pixel
+        /// jump between the source PNG's own anti-aliased alpha steps.
         /// </summary>
         public static Sprite ChooseButtonBackground
         {

@@ -6554,3 +6554,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   éléments (cartes du shop, panneaux, badges, slots de main, etc.) qui
   appellent `AddThickOutline` directement de leur côté gardent leur
   contour — seul celui des boutons est retiré.
+- **Boutons pixelisés, corrigé** : sur rapport explicite ("Je trouve
+  que les boutons font très pixelisé les images") — les deux sprites
+  de fond de bouton importent en filtrage Point (comme tous les autres
+  sprites de `Icons/`), ce qui échantillonne leurs coins arrondis
+  anti-crénelés au pixel le plus proche plutôt qu'en lissant entre
+  deux pixels ; ça donnait un escalier bien visible sur le coin, que
+  l'épais contour noir retiré à l'étape précédente cachait jusque-là.
+  Passé en filtrage Bilinéaire pour ces deux sprites uniquement (les
+  autres sprites du dossier, en vrai pixel art, gardent leur filtrage
+  Point d'origine).
