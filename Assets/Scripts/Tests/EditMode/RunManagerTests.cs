@@ -943,6 +943,99 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BuyUpgradeSlot_PieceMastery_AppliesImmediately_AndLevelsUpTheGrantedShape()
+        {
+            // Corrected redo of an earlier attempt that wrongly built this
+            // as a persistent Modifier instead of an Upgrade (explicit
+            // report: "les modifiers mastery que tu as créé devaient être
+            // des upgrades, pas des modifiers").
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.PieceMastery, 500);
+            Assert.IsNotNull(run, "Should find a Piece Mastery upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(slot);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "Piece Mastery has no sub-choice, so it should apply immediately");
+            Assert.IsTrue(run.LastShapeMasteryGranted.HasValue);
+            Assert.AreEqual(2, run.GetShapeMasteryLevel(run.LastShapeMasteryGranted.Value), "A shape never leveled up before should go from level 1 to level 2");
+        }
+
+        [Test]
+        public void GetShapeMasteryLevel_DefaultsToOne_ForAShapeNeverLeveledUp()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            Assert.AreEqual(1, run.GetShapeMasteryLevel(ShapeId.TriL));
+        }
+
+        [Test]
+        public void DebugTriggerShapeMasteryGrant_EachCallLevelsUpExactlyOneShapeByOne_NoCap()
+        {
+            // Pure counting invariant, so it's deterministic regardless of
+            // which shapes the RNG actually lands on: every single grant
+            // adds exactly 1 to SOME shape's level (explicit request:
+            // "nombre d'upgrade infinie par shape" — no cap to hit).
+            var run = new RunManager(new SystemRandomProvider(1));
+            const int grants = 50;
+            for (int i = 0; i < grants; i++)
+            {
+                run.DebugTriggerShapeMasteryGrant();
+            }
+
+            int totalLevelsGained = 0;
+            foreach (ShapeId shape in System.Enum.GetValues(typeof(ShapeId)))
+            {
+                totalLevelsGained += run.GetShapeMasteryLevel(shape) - 1;
+            }
+            Assert.AreEqual(grants, totalLevelsGained, "Every grant should add exactly 1 to some shape's level");
+        }
+
+        [Test]
+        public void PlacePiece_AddsFlatBonus_EqualToLevelMinusOne_ForAPieceOfTheLeveledShape()
+        {
+            // Keep rolling until SOME shape reaches level 3 (+2 pts), per
+            // the explicit example: "2 points bonus pour le niveau 3" —
+            // checking every shape after each grant (not just the one just
+            // rolled) so this converges quickly regardless of the seed.
+            var run = new RunManager(new SystemRandomProvider(1));
+            ShapeId? leveledShape = null;
+            for (int i = 0; i < 100 && !leveledShape.HasValue; i++)
+            {
+                run.DebugTriggerShapeMasteryGrant();
+                foreach (ShapeId candidate in System.Enum.GetValues(typeof(ShapeId)))
+                {
+                    if (run.GetShapeMasteryLevel(candidate) >= 3)
+                    {
+                        leveledShape = candidate;
+                        break;
+                    }
+                }
+            }
+            Assert.IsTrue(leveledShape.HasValue, "Test setup sanity: some shape should reach level 3 within 100 grants");
+
+            // PieceShape.Id (what ApplyShapeMasteryBonus actually checks)
+            // is unaffected by a hand token's own random rotation, so
+            // matching the token's unrotated Shape directly is enough here.
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == leveledShape.Value);
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(run.GetShapeMasteryLevel(leveledShape.Value) - 1, outcome.Placement.ShapeMasteryBonus);
+        }
+
+        [Test]
+        public void PlacePiece_AddsNoBonus_ForAPieceOfAnUnleveledShape()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+
+            var outcome = run.PlacePiece(slot, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.ShapeMasteryBonus);
+        }
+
+        [Test]
         public void SellModifier_RemovesItAndRefundsBasePriceMinusOne()
         {
             // Spec extension, explicit request: "Le joueur devrait pouvoir

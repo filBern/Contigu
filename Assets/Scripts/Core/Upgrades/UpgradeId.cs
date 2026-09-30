@@ -40,6 +40,12 @@ namespace Contigu.Core
 
         // ---- Third batch (2 more, on explicit request) ----
         BastionTile,
-        KamikazeTile
+        KamikazeTile,
+
+        // ---- Fifth batch (Bank pool, on explicit request — a corrected
+        // redo of an earlier attempt that wrongly built this as a
+        // persistent Modifier instead: "les modifiers mastery que tu as
+        // créé devaient être des upgrades, pas des modifiers") ----
+        PieceMastery
     }
 }

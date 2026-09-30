@@ -60,6 +60,7 @@ namespace Contigu.Presentation
         private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
+        private ShapeCarouselView _shapeCarouselView;
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
@@ -536,6 +537,9 @@ namespace Contigu.Presentation
 
             _modifierCarouselView = gameObject.AddComponent<ModifierCarouselView>();
             _modifierCarouselView.Build(mainRoot, _tooltipView);
+
+            _shapeCarouselView = gameObject.AddComponent<ShapeCarouselView>();
+            _shapeCarouselView.Build(mainRoot);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
             // Lambda (not the method group _run.GetModifierUsageCount) so a
@@ -1293,7 +1297,7 @@ namespace Contigu.Presentation
             // LastRandomModifierGranted) — only the panel's own refresh
             // needs to wait; everything else (grid/hand/HUD/shop) updates
             // immediately as usual.
-            bool willShowModifierCarousel = pending == null && revealedUpgrade.Id != UpgradeId.JokerPiece && _run.LastRandomModifierGranted.HasValue;
+            bool willShowModifierCarousel = pending == null && revealedUpgrade.Id == UpgradeId.RandomModifier && _run.LastRandomModifierGranted.HasValue;
             RefreshAll(refreshModifierPanel: !willShowModifierCarousel);
             _shopView.Refresh(_run);
 
@@ -1310,6 +1314,11 @@ namespace Contigu.Presentation
                 if (revealedUpgrade.Id == UpgradeId.JokerPiece)
                 {
                     _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
+                }
+                else if (revealedUpgrade.Id == UpgradeId.PieceMastery && _run.LastShapeMasteryGranted.HasValue)
+                {
+                    var grantedShape = _run.LastShapeMasteryGranted.Value;
+                    _shapeCarouselView.Show(grantedShape, _run.GetShapeMasteryLevel(grantedShape));
                 }
                 else if (_run.LastRandomModifierGranted.HasValue)
                 {

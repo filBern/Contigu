@@ -135,6 +135,9 @@ namespace Contigu.Core
         /// <summary>Sum of every bonus produced directly by the placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag — see <see cref="ScoreEventType.Trait"/>. Populated by RunManager, not GridManager, since GridManager knows nothing about PieceTrait.</summary>
         public int TraitBonus;
 
+        /// <summary>Flat bonus from the "Piece Mastery" upgrade (see <see cref="ScoreEventType.ShapeMastery"/>, <see cref="RunManager.GetShapeMasteryLevel"/>) — (level - 1) points when the placed piece's exact shape has been leveled up, 0 otherwise. Populated by RunManager, same post-hoc pattern as <see cref="TraitBonus"/>, since GridManager knows nothing about upgrade-granted shape levels.</summary>
+        public int ShapeMasteryBonus;
+
         public IReadOnlyList<Vector2Int> ClearedCells = System.Array.Empty<Vector2Int>();
 
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
@@ -219,7 +222,7 @@ namespace Contigu.Core
         /// </summary>
         public int Chips
         {
-            get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus; }
+            get { return (GroupBonus + GoldenBonus) * GroupMultiplier + LineClearScore * LineClearMultiplier + ModifierBonus + TraitBonus + ShapeMasteryBonus; }
         }
 
         /// <summary>

@@ -199,18 +199,35 @@ namespace Contigu.Core
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
             "A tile that destroys itself and its 8 surrounding tiles when placed (+6 per tile destroyed).", false, UpgradeRarity.Rare);
 
+        /// <summary>
+        /// Fifth batch (on explicit request — a corrected redo: "les
+        /// modifiers mastery que tu as créé devaient être des upgrades, pas
+        /// des modifiers"). No sub-choice — like Joker/Random Modifier, it
+        /// applies immediately on purchase: a carousel spins through all 8
+        /// shapes (grayed out, color irrelevant) and lands on one at random
+        /// (see RunManager.GrantShapeMastery/LastShapeMasteryGranted,
+        /// ShapeCarouselView), leveling up EVERY piece of that exact shape
+        /// in the deck. Level N gives +(N-1) flat points per placement of
+        /// that shape (level 2 = +1, level 3 = +2, ...) — buying it again,
+        /// whether it lands on the same shape or a different one, keeps
+        /// leveling up, no cap.
+        /// </summary>
+        public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
+            UpgradeId.PieceMastery, UpgradePool.Bank, "Piece Mastery",
+            "Levels up one random piece shape — its tiles score +1 pts per level past the first.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile
+            BastionTile, KamikazeTile, PieceMastery
         };
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade, PieceMastery
         };
 
         public static readonly UpgradeDefinition[] GridPool =

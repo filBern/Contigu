@@ -6436,3 +6436,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   veut garder. Tests mis à jour dans `GridManagerModifierTests.cs` et
   `RunManagerTests.cs` pour lire `AdditiveMultBonus` au lieu de
   `ModifierMultiplier` sur ces 9 modifiers.
+- **"Piece Mastery", un nouvel upgrade (redo corrigé)** : sur rapport
+  explicite ("Nooooooooooon, les modifiers mastery que tu as créé
+  devaient être des upgrades, pas des modifiers") — les 8 modifiers
+  "Mastery" du commit précédent ont été entièrement retirés (`git
+  revert`) puis reconstruits comme un seul upgrade Bank-pool, suivant
+  le flow exact demandé :
+  1. Achat dans le shop (`UpgradeId.PieceMastery`, sans sous-choix,
+     même famille que Joker/Random Modifier).
+  2. `RunManager.GrantShapeMastery` choisit une forme au hasard parmi
+     les 8 (`ShapeId`) et incrémente son niveau (`_shapeMasteryLevels`,
+     `Dictionary<ShapeId,int>`, défaut niveau 1 = aucun bonus) —
+     jamais de plafond, une forme déjà bien avancée peut continuer à
+     monter indéfiniment.
+  3. `ShapeCarouselView` (nouveau fichier, clone de
+     `ModifierCarouselView` adapté aux formes) montre un carrousel qui
+     défile parmi les 8 formes, coloriées en gris uni
+     (`ShapePreviewFactory.BuildMono`, déjà utilisé pour les badges
+     Format* Specialist — "la couleur importe peu") au lieu de la
+     couleur réelle de la pièce, et s'arrête sur celle déjà tirée par
+     `GrantShapeMastery`.
+  4. `RunManager.ApplyShapeMasteryBonus` (appelé dans `PlacePiece`,
+     même pattern post-hoc que `ApplyHandSlotModifierBonus`) ajoute
+     `niveau - 1` points bruts (`PlacementResult.ShapeMasteryBonus`,
+     nouvel event `ScoreEventType.ShapeMastery`) chaque fois qu'une
+     pièce de cette forme EXACTE est posée — niveau 2 = +1 pt, niveau 3
+     = +2 pts, conforme à l'exemple donné.
+
+  Nouveau helper de debug `DebugTriggerShapeMasteryGrant` (même
+  raison que `DebugTriggerRandomModifierGrant` : tester le pipeline
+  achat/octroi/reveal sans dépendre du roll du shop). Tests dans
+  `RunManagerTests.cs` couvrant l'achat réel, le défaut niveau 1, le
+  non-plafonnement (invariant : N achats = N niveaux distribués au
+  total, peu importe la forme), et le bonus de score réel sur une
+  pose.

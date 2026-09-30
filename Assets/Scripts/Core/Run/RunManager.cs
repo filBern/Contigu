@@ -229,6 +229,26 @@ namespace Contigu.Core
         /// <summary>The modifier granted for free by <see cref="GrantStartingModifier"/> at the start of this run — read once by the presentation layer (ModifierCarouselView) to know which badge the spin has to land on. Null until that's called.</summary>
         public ModifierId? StartingModifier { get; private set; }
 
+        /// <summary>The shape most recently leveled up by a "Piece Mastery" purchase (see BuyUpgradeSlot/GrantShapeMastery) — read once by the presentation layer (ShapeCarouselView) to know which shape the spin has to land on. Null before any Piece Mastery purchase this run.</summary>
+        public ShapeId? LastShapeMasteryGranted { get; private set; }
+
+        /// <summary>
+        /// Current level per exact shape, from "Piece Mastery" purchases
+        /// (see GrantShapeMastery/ApplyShapeMasteryBonus) — 1 (no bonus)
+        /// for any shape never leveled up. Unlike the modifier-level system
+        /// (<see cref="_modifierLevels"/>, parallel to <see
+        /// cref="_activeModifiers"/>), this isn't tied to any held modifier
+        /// slot — a shape's level persists independently of anything the
+        /// player currently holds, keyed directly by <see cref="ShapeId"/>.
+        /// </summary>
+        private readonly Dictionary<ShapeId, int> _shapeMasteryLevels = new Dictionary<ShapeId, int>();
+
+        /// <summary>Current level of <paramref name="shape"/> (1 if never leveled up by a Piece Mastery purchase).</summary>
+        public int GetShapeMasteryLevel(ShapeId shape)
+        {
+            return _shapeMasteryLevels.TryGetValue(shape, out var level) ? level : 1;
+        }
+
         /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
@@ -494,6 +514,7 @@ namespace Contigu.Core
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
+            ApplyShapeMasteryBonus(shape, placement);
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
@@ -891,6 +912,28 @@ namespace Contigu.Core
             scoreEvent.TriggeringModifier = slotModifier.Value;
             scoreEvent.TriggeringModifierIndex = slotIndex;
             events.Add(scoreEvent);
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>
+        /// "Piece Mastery": (level - 1) flat points when the placed piece's
+        /// exact shape has been leveled up by a Piece Mastery purchase (see
+        /// GetShapeMasteryLevel/GrantShapeMastery) — 0 (no-op, no event) for
+        /// a shape still at its default level 1. Resolved here rather than
+        /// in GridManager since the level is RunManager-only state, same
+        /// post-hoc pattern as ApplyHandSlotModifierBonus above.
+        /// </summary>
+        private void ApplyShapeMasteryBonus(PieceShape shape, PlacementResult placement)
+        {
+            int bonus = GetShapeMasteryLevel(shape.Id) - 1;
+            if (bonus <= 0)
+            {
+                return;
+            }
+
+            placement.ShapeMasteryBonus += bonus;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.ShapeMastery, placement.PlacedCells[0], bonus));
             placement.ScoreEvents = events;
         }
 
@@ -1801,17 +1844,22 @@ namespace Contigu.Core
                 return true;
             }
 
-            // The two Bank-pool upgrades with RequiresSubChoice false — see
-            // UpgradeCatalog.BankPool — are Joker and Random Modifier, so
-            // it's always one of these two. Each applies through its own
-            // dedicated path (ApplyJoker / GrantRandomModifier, not the
+            // The three Bank-pool upgrades with RequiresSubChoice false —
+            // see UpgradeCatalog.BankPool — are Joker, Random Modifier and
+            // Piece Mastery. Each applies through its own dedicated path
+            // (ApplyJoker / GrantRandomModifier / GrantShapeMastery, not a
             // generic Apply) so the actual thing rolled can be surfaced
-            // (LastJokerShapeAdded / LastRandomModifierGranted) for the
-            // reveal to show (see UpgradeRevealView) instead of just naming
+            // (LastJokerShapeAdded / LastRandomModifierGranted /
+            // LastShapeMasteryGranted) for the reveal to show (see
+            // UpgradeRevealView / ShapeCarouselView) instead of just naming
             // the upgrade.
             if (upgrade.Id == UpgradeId.JokerPiece)
             {
                 LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
+            }
+            else if (upgrade.Id == UpgradeId.PieceMastery)
+            {
+                LastShapeMasteryGranted = GrantShapeMastery();
             }
             else
             {
@@ -1835,6 +1883,13 @@ namespace Contigu.Core
         {
             LastRandomModifierGranted = GrantRandomModifier();
             return LastRandomModifierGranted;
+        }
+
+        /// <summary>Debug-only helper: exercises "Piece Mastery"'s exact grant (GrantShapeMastery), bypassing the shop entirely — same rationale as DebugTriggerRandomModifierGrant, and useful here too since which shape gets offered is otherwise left to the shop's own roll.</summary>
+        public ShapeId DebugTriggerShapeMasteryGrant()
+        {
+            LastShapeMasteryGranted = GrantShapeMastery();
+            return LastShapeMasteryGranted.Value;
         }
 
         /// <summary>
@@ -1942,6 +1997,21 @@ namespace Contigu.Core
             var picked = available[_rng.Next(available.Count)].Id;
             AddActiveModifier(picked);
             _lastPurchasedModifierId = picked;
+            return picked;
+        }
+
+        /// <summary>
+        /// "Piece Mastery": picks a random exact shape (uniform over all 8 —
+        /// no exclusion, unlike GrantRandomModifier, since a shape can
+        /// always be leveled up further) and levels it up by 1. Always
+        /// succeeds — there's no cap to hit, so unlike GrantRandomModifier
+        /// this never returns null.
+        /// </summary>
+        private ShapeId GrantShapeMastery()
+        {
+            var shapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
+            var picked = shapes[_rng.Next(shapes.Length)];
+            _shapeMasteryLevels[picked] = GetShapeMasteryLevel(picked) + 1;
             return picked;
         }
 

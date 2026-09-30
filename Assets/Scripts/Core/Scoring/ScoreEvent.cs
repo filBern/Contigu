@@ -35,7 +35,10 @@ namespace Contigu.Core
         LueurBonus,
 
         /// <summary>A genuine ADDITIVE "+Mult" contribution (Balatro-style), as opposed to <see cref="ModifierMultiplier"/>'s multiplicative "xN" — see <see cref="PlacementResult.AdditiveMultBonus"/>. Amount is how much this modifier ADDS to that pool (1 for a "+1 Mult" modifier), not a point value and not a factor to multiply by.</summary>
-        MultBonus
+        MultBonus,
+
+        /// <summary>A flat per-placement bonus from the "Piece Mastery" upgrade (see <see cref="PlacementResult.ShapeMasteryBonus"/>, <see cref="RunManager.GetShapeMasteryLevel"/>) — not tied to any <see cref="ModifierId"/> or <see cref="PieceTrait"/>, unlike <see cref="Modifier"/>/<see cref="Trait"/>: a persistent per-exact-shape level the player bought from the shop, independent of both systems.</summary>
+        ShapeMastery
     }
 
     /// <summary>
