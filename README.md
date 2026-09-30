@@ -6259,3 +6259,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `LueurBonus` dans `PlayPlacementSequence`) l'étaient. Ajouté
   `SfxManager.Play(SfxId.LueurGain)` dans sa boucle, une fois par pièce
   convertie.
+- **Compteur de Lueur du shop déplacé à droite et agrandi** : sur
+  rapport explicite avec capture d'écran, cerclant l'espace vide à
+  droite de l'écran ("Dans le shop, le compteur de lueur devrait être à
+  droite en gros pour qu'il soit clairement identifiable") —
+  `ShopView`'s `lueurContainer` (icône losange + nombre, sans préfixe
+  texte, même convention que partout ailleurs) était ancré en haut au
+  centre, sous le header, à une taille de police de 20 — bien plus
+  petit que le même losange de `HudView` (44). Déplacé en haut à droite
+  (`anchorMin/Max = (1,1)`) et agrandi à 56 (icône 28px, plus grosse
+  que celle du HUD) — le shop est le seul écran où le joueur dépense
+  réellement cette monnaie, elle mérite d'y être le nombre le plus
+  visible à l'écran plutôt qu'un petit readout sous le titre.

@@ -97,13 +97,21 @@ namespace Contigu.Presentation
             // the itch page mockups: "au lieu de marquer Lueur: ... mettre le
             // petit losange orange") — kept consistent across every screen
             // that shows this currency rather than fixing only the HUD.
+            // Moved to the top-right corner and enlarged well past HudView's
+            // own 44pt (explicit report, with a screenshot circling the
+            // shop's empty right-hand side: "le compteur de lueur devrait
+            // être à droite en gros pour qu'il soit clairement
+            // identifiable") — the shop is the one screen where the player
+            // actually SPENDS it, so it deserves to read as the single most
+            // prominent number on screen, not a small readout tucked under
+            // the header.
             var lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
-            lueurContainer.anchorMin = new Vector2(0.5f, 1f);
-            lueurContainer.anchorMax = new Vector2(0.5f, 1f);
-            lueurContainer.pivot = new Vector2(0.5f, 1f);
-            lueurContainer.anchoredPosition = new Vector2(0f, -62f);
+            lueurContainer.anchorMin = new Vector2(1f, 1f);
+            lueurContainer.anchorMax = new Vector2(1f, 1f);
+            lueurContainer.pivot = new Vector2(1f, 1f);
+            lueurContainer.anchoredPosition = new Vector2(-40f, -60f);
             var lueurLayout = lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            lueurLayout.spacing = 6f;
+            lueurLayout.spacing = 10f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childForceExpandWidth = false;
             lueurLayout.childForceExpandHeight = false;
@@ -112,13 +120,13 @@ namespace Contigu.Presentation
             lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var lueurIcon = UIFactory.CreatePanel(lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
-            lueurIcon.rectTransform.sizeDelta = new Vector2(12f, 12f);
+            lueurIcon.rectTransform.sizeDelta = new Vector2(28f, 28f);
             lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
-            lueurIconLayout.preferredWidth = 20f;
-            lueurIconLayout.preferredHeight = 20f;
+            lueurIconLayout.preferredWidth = 40f;
+            lueurIconLayout.preferredHeight = 40f;
 
-            _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 20, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 56, VisualDefaults.GoldenColor);
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
