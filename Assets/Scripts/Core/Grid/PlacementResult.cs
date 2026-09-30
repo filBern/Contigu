@@ -135,10 +135,10 @@ namespace Contigu.Core
         /// <summary>Sum of every bonus produced directly by the placed piece's own <see cref="PieceTrait"/> (e.g. Mirror Tile's duplicated group bonus) rather than by a Cell flag — see <see cref="ScoreEventType.Trait"/>. Populated by RunManager, not GridManager, since GridManager knows nothing about PieceTrait.</summary>
         public int TraitBonus;
 
-        /// <summary>Flat bonus from the "Piece Mastery" upgrade (see <see cref="ScoreEventType.ShapeMastery"/>, <see cref="RunManager.GetShapeMasteryLevel"/>) — (level - 1) points when the placed piece's exact shape has been leveled up, 0 otherwise. Populated by RunManager, same post-hoc pattern as <see cref="TraitBonus"/>, since GridManager knows nothing about upgrade-granted shape levels.</summary>
+        /// <summary>Sum of every cell's <see cref="Cell.ShapeMasteryBonus"/> stamp scored this placement (see <see cref="ScoreEventType.ShapeMastery"/>) — unlike <see cref="TraitBonus"/>, this is populated directly by GridManager from the cells' own persistent stamps (RunManager.StampMasteryBonuses sets those stamps before GridManager.PlacePiece runs, so a later placement that merely regrows an already-leveled group rescores it too, not just the piece that was leveled at purchase time).</summary>
         public int ShapeMasteryBonus;
 
-        /// <summary>Piece Mastery's exact sibling, from the "Color Mastery" upgrade (see <see cref="ScoreEventType.ColorMastery"/>, <see cref="RunManager.GetColorMasteryLevel"/>) — (level - 1) points when the placed piece's own color has been leveled up, 0 otherwise.</summary>
+        /// <summary>Piece Mastery's exact sibling, summed from every cell's <see cref="Cell.ColorMasteryBonus"/> stamp (see <see cref="ScoreEventType.ColorMastery"/>) — same GridManager-populated, persistent-stamp pattern as <see cref="ShapeMasteryBonus"/>.</summary>
         public int ColorMasteryBonus;
 
         public IReadOnlyList<Vector2Int> ClearedCells = System.Array.Empty<Vector2Int>();

@@ -369,6 +369,45 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_ShapeMasteryBonus_SumsPerCell_AndFiresAgainEveryTimeItsGroupIsRescored()
+        {
+            // Same "persistent per-cell stamp, rescored every time this
+            // cell's group scores again" pattern as Golden/Seeder above —
+            // stamping the Cell fields directly here, as RunManager's
+            // StampMasteryBonuses does before GridManager.PlacePiece runs.
+            // On explicit report: "J'ai seulement eu un point bonus pour la
+            // pièce au lieu d'un point bonus pour chaque tuile... chaque
+            // fois que cette tuile est comptabilisé on fait +1" — a 2-cell
+            // piece stamped at (level - 1) = 1 must score +2, not +1, and
+            // that +2 must recur on every later rescore of its group.
+            var grid = new GridManager();
+            var domino = PieceShapeCatalog.Get(ShapeId.DomH);
+            grid.GetCell(0, 0).ShapeMasteryBonus = 1;
+            grid.GetCell(1, 0).ShapeMasteryBonus = 1;
+
+            var first = grid.PlacePiece(domino, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(2, first.ShapeMasteryBonus);
+
+            var second = grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Coral, 2, 0);
+            Assert.AreEqual(2, second.ShapeMasteryBonus, "Growing the same-color group rescores the stamped cells too, not just their own original placement.");
+        }
+
+        [Test]
+        public void PlacePiece_ColorMasteryBonus_SumsPerCell_AndFiresAgainEveryTimeItsGroupIsRescored()
+        {
+            var grid = new GridManager();
+            var domino = PieceShapeCatalog.Get(ShapeId.DomH);
+            grid.GetCell(0, 0).ColorMasteryBonus = 1;
+            grid.GetCell(1, 0).ColorMasteryBonus = 1;
+
+            var first = grid.PlacePiece(domino, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(2, first.ColorMasteryBonus);
+
+            var second = grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Coral, 2, 0);
+            Assert.AreEqual(2, second.ColorMasteryBonus, "Growing the same-color group rescores the stamped cells too, not just their own original placement.");
+        }
+
+        [Test]
         public void PlacePiece_GoldenCell_DoesNotFire_WhenUnrelatedPlacementElsewhere()
         {
             var grid = new GridManager();

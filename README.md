@@ -6505,3 +6505,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   in the codebase" — vrai jusqu'à ces deux nouveaux fichiers). Retiré
   des deux ; la taille seule porte l'emphase, même convention que
   partout ailleurs dans le jeu.
+- **Bonus Mastery par tuile plutôt que par pièce, corrigé** : sur
+  rapport explicite ("J'ai seulement eu un point bonus pour la pièce
+  au lieu d'un point bonus pour chaque tuile. Chaque tuile devient
+  niveau 2. Donc chaque fois que cette tuile est comptabilisé on fait
+  +1") — Piece Mastery et Color Mastery appliquaient leur bonus comme
+  un montant fixe une seule fois par placement (calculé après coup
+  dans `RunManager`, sans jamais toucher au `Cell` lui-même), ce qui
+  sous-comptait toute pièce de plus d'une tuile et ne se redéclenchait
+  jamais sur un placement ultérieur qui ne faisait que regrossir le
+  même groupe. Refait pour suivre exactement le même patron que les
+  tuiles dorées "Seeder" : deux nouveaux champs persistants
+  `Cell.ShapeMasteryBonus`/`Cell.ColorMasteryBonus`, tamponnés sur
+  chaque tuile de la pièce (une nouvelle méthode
+  `RunManager.StampMasteryBonuses`, appelée avant
+  `GridManager.PlacePiece`) plutôt que calculés après coup ; la boucle
+  de score par groupe dans `GridManager.PlacePiece` les relit
+  désormais tuile par tuile, exactement comme `Cell.IsGolden`, donc
+  chaque tuile Mastery recompte sa propre valeur à chaque fois que son
+  groupe est re-marqué — y compris bien après le placement qui l'a
+  montée de niveau. Deux nouveaux tests dans `GridManagerTests.cs`
+  vérifient qu'une pièce à 2 tuiles compte bien +2 (pas +1) et que ce
+  bonus se redéclenche sur un placement ultérieur qui fait juste
+  grossir le même groupe ; les tests existants de `RunManagerTests.cs`
+  corrigés pour tenir compte du nombre de tuiles de la pièce testée.

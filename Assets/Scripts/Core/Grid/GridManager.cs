@@ -311,6 +311,8 @@ namespace Contigu.Core
             int lineClearMultiplier = ComputeLineClearMultiplier(groupCells);
             int groupBonus = 0;
             int goldenBonus = 0;
+            int shapeMasteryBonus = 0;
+            int colorMasteryBonus = 0;
 
             for (int i = 0; i < groupCells.Count; i++)
             {
@@ -332,12 +334,33 @@ namespace Contigu.Core
                     goldenBonus += ScoringConstants.GoldenCellBonus;
                     events.Add(new ScoreEvent(ScoreEventType.Golden, groupCells[i], ScoringConstants.GoldenCellBonus));
                 }
+
+                // Piece/Color Mastery: same "fires every time this cell's
+                // group scores again, not just when placed" rule as Golden
+                // above — each cell was stamped with its own frozen bonus
+                // at placement time (see RunManager.PlacePiece, before this
+                // method runs), on explicit report that a flat once-per-
+                // PLACEMENT bonus undercounted a multi-cell piece ("Chaque
+                // tuile devient niveau 2. Donc chaque fois que cette tuile
+                // est comptabilisé on fait +1").
+                if (cell.ShapeMasteryBonus > 0)
+                {
+                    shapeMasteryBonus += cell.ShapeMasteryBonus;
+                    events.Add(new ScoreEvent(ScoreEventType.ShapeMastery, groupCells[i], cell.ShapeMasteryBonus));
+                }
+                if (cell.ColorMasteryBonus > 0)
+                {
+                    colorMasteryBonus += cell.ColorMasteryBonus;
+                    events.Add(new ScoreEvent(ScoreEventType.ColorMastery, groupCells[i], cell.ColorMasteryBonus));
+                }
             }
 
             result.GroupBonus = groupBonus;
             result.GoldenBonus = goldenBonus;
             result.GroupMultiplier = groupMultiplier;
             result.LineClearMultiplier = lineClearMultiplier;
+            result.ShapeMasteryBonus = shapeMasteryBonus;
+            result.ColorMasteryBonus = colorMasteryBonus;
 
             int modifierBonus = 0;
             int modifierMultiplier = 1;

@@ -1013,14 +1013,18 @@ namespace Contigu.Tests
             }
             Assert.IsTrue(leveledShape.HasValue, "Test setup sanity: some shape should reach level 3 within 100 grants");
 
-            // PieceShape.Id (what ApplyShapeMasteryBonus actually checks)
-            // is unaffected by a hand token's own random rotation, so
-            // matching the token's unrotated Shape directly is enough here.
+            // PieceShape.Id (what StampMasteryBonuses actually checks) is
+            // unaffected by a hand token's own random rotation, so matching
+            // the token's unrotated Shape directly is enough here. The
+            // bonus is per-cell (on explicit report: "un point bonus pour
+            // chaque tuile" — not once per placement), so a multi-cell
+            // shape's total is (level - 1) times its own cell count.
             int slot = ChurnUntilHandMatches(run, t => t.Shape == leveledShape.Value);
+            int cellCount = PieceShapeCatalog.Get(leveledShape.Value).Cells.Count;
             var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(run.GetShapeMasteryLevel(leveledShape.Value) - 1, outcome.Placement.ShapeMasteryBonus);
+            Assert.AreEqual((run.GetShapeMasteryLevel(leveledShape.Value) - 1) * cellCount, outcome.Placement.ShapeMasteryBonus);
         }
 
         [Test]
@@ -1099,11 +1103,15 @@ namespace Contigu.Tests
             }
             Assert.IsTrue(leveledColor.HasValue, "Test setup sanity: some color should reach level 3 within 100 grants");
 
+            // Same per-cell accounting as Piece Mastery above: the bonus is
+            // (level - 1) times the placed piece's own cell count, not a
+            // flat amount regardless of how many tiles it covers.
             int slot = ChurnUntilHandMatches(run, t => t.Color == leveledColor.Value);
+            int cellCount = PieceShapeCatalog.Get(run.Deck.Hand[slot].Value.Shape).Cells.Count;
             var outcome = run.PlacePiece(slot, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(run.GetColorMasteryLevel(leveledColor.Value) - 1, outcome.Placement.ColorMasteryBonus);
+            Assert.AreEqual((run.GetColorMasteryLevel(leveledColor.Value) - 1) * cellCount, outcome.Placement.ColorMasteryBonus);
         }
 
         [Test]

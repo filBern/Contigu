@@ -234,7 +234,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// Current level per exact shape, from "Piece Mastery" purchases
-        /// (see GrantShapeMastery/ApplyShapeMasteryBonus) — 1 (no bonus)
+        /// (see GrantShapeMastery/StampMasteryBonuses) — 1 (no bonus)
         /// for any shape never leveled up. Unlike the modifier-level system
         /// (<see cref="_modifierLevels"/>, parallel to <see
         /// cref="_activeModifiers"/>), this isn't tied to any held modifier
@@ -252,7 +252,7 @@ namespace Contigu.Core
         /// <summary>Piece Mastery's exact sibling (on explicit request: "Il faudrait faire la même chose avec les couleurs") — same mechanics, keyed by PieceColor instead of ShapeId.</summary>
         public PieceColor? LastColorMasteryGranted { get; private set; }
 
-        /// <summary>Current level per color, from "Color Mastery" purchases (see GrantColorMastery/ApplyColorMasteryBonus) — 1 (no bonus) for any color never leveled up.</summary>
+        /// <summary>Current level per color, from "Color Mastery" purchases (see GrantColorMastery/StampMasteryBonuses) — 1 (no bonus) for any color never leveled up.</summary>
         private readonly Dictionary<PieceColor, int> _colorMasteryLevels = new Dictionary<PieceColor, int>();
 
         /// <summary>Current level of <paramref name="color"/> (1 if never leveled up by a Color Mastery purchase).</summary>
@@ -517,6 +517,7 @@ namespace Contigu.Core
                 }
             }
 
+            StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
             var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers, _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
@@ -526,8 +527,6 @@ namespace Contigu.Core
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
-            ApplyShapeMasteryBonus(shape, placement);
-            ApplyColorMasteryBonus(placementColor, placement);
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
@@ -593,6 +592,41 @@ namespace Contigu.Core
             }
             Lueur += lockOutcome.LueurEarned;
             return lockOutcome.LockedCells;
+        }
+
+        /// <summary>
+        /// Stamps EVERY cell of this placement's own piece (shape.Cells
+        /// offsets against the (x,y) anchor) with whatever flat Mastery
+        /// bonus its exact shape/color currently carries — 0 (no-op) for
+        /// either axis never leveled up. Must run before <see
+        /// cref="GridManager.PlacePiece"/>, which reads <see
+        /// cref="Cell.ShapeMasteryBonus"/>/<see cref="Cell.ColorMasteryBonus"/>
+        /// in its own per-cell group-scoring loop — same "stamp the cell
+        /// before Grid.PlacePiece runs its scoring pass" ordering as <see
+        /// cref="ApplyTokenTrait"/>, and the same reason: a per-cell stamp
+        /// (frozen at whatever level applied at placement time, never
+        /// retroactively bumped by a later Mastery purchase) rescores every
+        /// time this cell's group scores again, not just now — on explicit
+        /// report that a flat once-per-PLACEMENT bonus undercounted a
+        /// multi-cell piece ("Chaque tuile devient niveau 2. Donc chaque
+        /// fois que cette tuile est comptabilisé on fait +1").
+        /// </summary>
+        private void StampMasteryBonuses(PieceShape shape, PieceColor color, int x, int y)
+        {
+            int shapeBonus = GetShapeMasteryLevel(shape.Id) - 1;
+            int colorBonus = GetColorMasteryLevel(color) - 1;
+            if (shapeBonus <= 0 && colorBonus <= 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                var pos = shape.Cells[i] + new Vector2Int(x, y);
+                var cell = Grid.GetCell(pos);
+                cell.ShapeMasteryBonus = shapeBonus;
+                cell.ColorMasteryBonus = colorBonus;
+            }
         }
 
         /// <summary>
@@ -928,42 +962,6 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
-        /// <summary>
-        /// "Piece Mastery": (level - 1) flat points when the placed piece's
-        /// exact shape has been leveled up by a Piece Mastery purchase (see
-        /// GetShapeMasteryLevel/GrantShapeMastery) — 0 (no-op, no event) for
-        /// a shape still at its default level 1. Resolved here rather than
-        /// in GridManager since the level is RunManager-only state, same
-        /// post-hoc pattern as ApplyHandSlotModifierBonus above.
-        /// </summary>
-        private void ApplyShapeMasteryBonus(PieceShape shape, PlacementResult placement)
-        {
-            int bonus = GetShapeMasteryLevel(shape.Id) - 1;
-            if (bonus <= 0)
-            {
-                return;
-            }
-
-            placement.ShapeMasteryBonus += bonus;
-            var events = new List<ScoreEvent>(placement.ScoreEvents);
-            events.Add(new ScoreEvent(ScoreEventType.ShapeMastery, placement.PlacedCells[0], bonus));
-            placement.ScoreEvents = events;
-        }
-
-        /// <summary>Piece Mastery's exact sibling — (level - 1) flat points when the placed piece's own color has been leveled up by a Color Mastery purchase (see GetColorMasteryLevel/GrantColorMastery). <paramref name="color"/> is the placement's REAL resolved color (post-Chameleon, if applicable) — same "own color" RunManager.PlacePiece already resolves for ApplyPostPlacementTraitBonus.</summary>
-        private void ApplyColorMasteryBonus(PieceColor color, PlacementResult placement)
-        {
-            int bonus = GetColorMasteryLevel(color) - 1;
-            if (bonus <= 0)
-            {
-                return;
-            }
-
-            placement.ColorMasteryBonus += bonus;
-            var events = new List<ScoreEvent>(placement.ScoreEvents);
-            events.Add(new ScoreEvent(ScoreEventType.ColorMastery, placement.PlacedCells[0], bonus));
-            placement.ScoreEvents = events;
-        }
 
         /// <summary>
         /// Enchanted Cards (CartesEnchantees), Multitude (ninth batch) and

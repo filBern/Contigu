@@ -31,6 +31,25 @@ namespace Contigu.Core
         public bool IsMultiplierZone;
 
         /// <summary>
+        /// Flat bonus from a "Piece Mastery" purchase, stamped once at
+        /// placement time from whatever level the piece's exact shape had
+        /// THEN (RunManager.PlacePiece, before GridManager.PlacePiece runs)
+        /// — 0 if that shape was never leveled up, or wasn't yet when this
+        /// tile was placed. A later Piece Mastery purchase only affects
+        /// tiles placed AFTER it; this one's value is frozen. Same
+        /// "persistent per-cell stamp, rescored every time this cell's
+        /// group scores again" pattern as <see cref="IsGolden"/>'s
+        /// "Seeder" case (on explicit report: "Chaque tuile devient niveau
+        /// 2. Donc chaque fois que cette tuile est comptabilisé on fait
+        /// +1" — a flat bonus applied once per PLACEMENT, not once per
+        /// tile, undercounted a multi-cell piece).
+        /// </summary>
+        public int ShapeMasteryBonus;
+
+        /// <summary>Piece Mastery's exact sibling, from a "Color Mastery" purchase — same per-cell stamp-and-rescore pattern as <see cref="ShapeMasteryBonus"/>, keyed by the tile's own color instead of its piece's shape.</summary>
+        public int ColorMasteryBonus;
+
+        /// <summary>
         /// "Bastion Tile" stamp (spec extension, explicit request — "Locked
         /// cell upgraded. N'est pas cleared mais fait quand même les points
         /// cleared"): set together with <see cref="IsLocked"/> once a
@@ -81,6 +100,8 @@ namespace Contigu.Core
             IsMultiplierZone = false;
             IsBastion = false;
             OriginTrait = null;
+            ShapeMasteryBonus = 0;
+            ColorMasteryBonus = 0;
         }
 
         public void ResetForNewRound()
@@ -93,6 +114,8 @@ namespace Contigu.Core
             IsMultiplierZone = false;
             IsBastion = false;
             OriginTrait = null;
+            ShapeMasteryBonus = 0;
+            ColorMasteryBonus = 0;
         }
     }
 }
