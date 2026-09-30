@@ -12,14 +12,11 @@ namespace Contigu.Presentation
     /// static class) wherever this file's "using UnityEngine;" and a caller
     /// elsewhere might both be in scope.
     ///
-    /// <see cref="MasterVolume"/> is the only one anything actually listens
-    /// to today (applied to AudioListener.volume — see
-    /// GameBootstrap.ApplyVolumeSettings): Contigu has no music/SFX clips or
-    /// AudioMixer yet (a completely silent game so far, confirmed by
-    /// grepping the whole project for AudioSource/AudioClip/AudioMixer
-    /// before adding this), so <see cref="MusicVolume"/>/<see
-    /// cref="SfxVolume"/> are stored ready for whichever audio pipeline
-    /// gets built later, with no audible effect right now.
+    /// <see cref="MasterVolume"/> is applied to AudioListener.volume (see
+    /// GameBootstrap.ApplyVolumeSettings), scaling every AudioSource in the
+    /// scene at once; <see cref="MusicVolume"/>/<see cref="SfxVolume"/> are
+    /// applied directly to SfxManager's own two AudioSources instead, since
+    /// there's still no AudioMixer to route a real Music/SFX bus through.
     /// </summary>
     public static class VolumeSettings
     {

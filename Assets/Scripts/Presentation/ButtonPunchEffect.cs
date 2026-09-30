@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Contigu.Presentation
 {
@@ -9,17 +10,25 @@ namespace Contigu.Presentation
     /// triggered by a button click instead of a score event. Added to every
     /// button by UIFactory.FinishButton so all of them (Choose, Cancel,
     /// color picks, restart, ...) get the same tactile click feedback
-    /// without each call site wiring it up itself.
+    /// without each call site wiring it up itself. Also the single place
+    /// every button's hover/click SFX plays from, for the same "every
+    /// button funnels through here" reason (see SfxManager).
     /// </summary>
-    public sealed class ButtonPunchEffect : MonoBehaviour
+    public sealed class ButtonPunchEffect : MonoBehaviour, IPointerEnterHandler
     {
         private const float PunchDuration = 0.16f;
         private const float PunchMinScale = 0.9f;
 
         private Coroutine _routine;
 
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            SfxManager.Play(SfxId.ButtonHover);
+        }
+
         public void Punch()
         {
+            SfxManager.Play(SfxId.ButtonClick);
             if (_routine != null)
             {
                 StopCoroutine(_routine);

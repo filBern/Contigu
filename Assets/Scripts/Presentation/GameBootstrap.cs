@@ -100,12 +100,10 @@ namespace Contigu.Presentation
             ColorblindMode.Changed += OnColorblindModeChanged;
 
             // Applies the persisted Master volume immediately at launch,
-            // then again any time SettingsView's slider changes it — the
-            // only one of the 3 volume sliders with anything to actually
-            // drive today (see VolumeSettings's own doc comment for why
-            // Music/SFX don't do anything audible yet).
+            // then again any time SettingsView's slider changes it.
             VolumeSettings.Changed += ApplyVolumeSettings;
             ApplyVolumeSettings();
+            SfxManager.PlayMusic();
 
             // The main menu now lives in its own scene (MainMenuBootstrap,
             // see Assets/Scenes/MainMenu.unity — spec extension, explicit
@@ -607,6 +605,11 @@ namespace Contigu.Presentation
                 // this is just defense in depth.
                 return;
             }
+            // Fires for BOTH a plain click and a drag's own start (see
+            // HandView.SelectSlot, called from both BeginSlotDrag and
+            // OnSlotClicked) — one hook covers "Ramasser une pièce" for
+            // either interaction.
+            SfxManager.Play(SfxId.PickUpPiece);
             var token = slot.Value;
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
@@ -640,6 +643,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            SfxManager.Play(SfxId.Shuffle);
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
             _handView.Refresh();
@@ -678,9 +682,11 @@ namespace Contigu.Presentation
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
+                SfxManager.Play(SfxId.InvalidDrop);
                 SetStatusText("Invalid placement there.");
                 return;
             }
+            SfxManager.Play(SfxId.ValidDrop);
 
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
@@ -743,6 +749,7 @@ namespace Contigu.Presentation
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore)
         {
             var placement = outcome.Placement;
+            SfxManager.ResetComboPitch();
 
             // Lueur groups play first, ahead of the score cascade below (on
             // explicit request) — each group pulses its own cells, flies a
@@ -772,6 +779,7 @@ namespace Contigu.Presentation
                     Vector3 center = centerSum / cellsWithTransform;
                     _feedbackLayer.SpawnFlyingPopup(center, _hudView.LueurLabelTransform, "+" + group.Amount, VisualDefaults.GoldenColor);
                 }
+                SfxManager.Play(SfxId.LueurGain);
 
                 displayedLueur += group.Amount;
                 _hudView.SetLueur(displayedLueur);
@@ -836,6 +844,7 @@ namespace Contigu.Presentation
                         _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
+                    SfxManager.Play(SfxId.LueurGain);
                     displayedLueur += scoreEvent.Amount;
                     _hudView.SetLueur(displayedLueur);
                     yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
@@ -881,6 +890,7 @@ namespace Contigu.Presentation
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
+                SfxManager.PlayComboTick();
 
                 displayedRoundScore += scoreEvent.Amount;
                 chipsTotal += scoreEvent.Amount;
@@ -892,6 +902,13 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
+            if (placement.ClearedCells.Count > 0)
+            {
+                // One whoosh for the whole clear, not per cell — "plus
+                // marquant que le score de groupe", a single distinct
+                // moment rather than a rapid burst of dings.
+                SfxManager.Play(SfxId.LineClear);
+            }
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
@@ -951,6 +968,7 @@ namespace Contigu.Presentation
                 // cells count toward both, Tinted only toward GroupMultiplier), so
                 // it's the more informative single label even when the two differ.
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
+                SfxManager.PlayComboTick();
 
                 // GroupMultiplier/LineClearMultiplier land on the CHIPS side
                 // of the Balatro-style split (see PlacementResult.Chips),
@@ -1016,6 +1034,7 @@ namespace Contigu.Presentation
                     _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.Danger);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                 }
+                SfxManager.PlayComboTick();
 
                 float subtotalSoFar = displayedRoundScore - roundScoreBefore;
                 int extra = Mathf.RoundToInt(subtotalSoFar * (multTotal / multBefore - 1f));

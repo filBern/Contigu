@@ -6182,3 +6182,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   par 2 (arrondi vers le bas) — +4 Mult à pleine capacité au lieu de +8,
   garde son identité "récompense la collection" sans dominer les autres
   modifiers +Mult fixes.
+- **Intégration audio : P1 (boucle de jeu) + P3 (UI générale)** : le
+  joueur a ajouté les fichiers `Assets/Resources/SFX/*` correspondant à
+  la liste de SFX à trouver donnée plus tôt dans la session ("J'ai
+  ajouté les P1 et P3 dans le dossier SFX que j'ai commited") — cette
+  entrée câble ces clips au jeu, jusque-là complètement silencieux.
+  Nouveau `SfxManager` (classe statique, sans MonoBehaviour propre à
+  construire — crée paresseusement un unique GameObject caché
+  `DontDestroyOnLoad` au premier appel, donc utilisable aussi bien
+  depuis `GameBootstrap` que `MainMenuBootstrap`, deux scènes
+  distinctes) : deux `AudioSource` (un pour les one-shots via
+  `PlayOneShot`, un pour la musique en boucle), volume appliqué depuis
+  `VolumeSettings.SfxVolume`/`MusicVolume` (Master reste géré séparément
+  via `AudioListener.volume`, déjà en place). `PlayComboTick` rejoue
+  `Score.wav` avec un pitch qui monte à chaque cran sur TOUTE la cascade
+  d'un placement (points ET rattrapage de Mult) plutôt que de repartir à
+  chaque section — une seule mécanique couvre à la fois "Score d'un
+  groupe" et "Incrément de combo" de la liste, avec le carré technique
+  demandé (légère randomisation de pitch sur les sons fréquents).
+  Câblé : ramasser une pièce (`HandView.SlotSelected`, drag ET clic),
+  poser une pièce valide/invalide, clear de ligne/colonne (un seul
+  whoosh pour tout le clear, pas par tuile), gain de Lueur, shuffle de
+  la main, survol/clic de bouton (centralisé dans `ButtonPunchEffect`,
+  déjà attaché à tous les boutons), navigation du carousel de
+  challenges, ouverture/fermeture des overlays Deck/Tutorial/Challenge
+  Select, et la musique de fond au lancement. P2 (shop/modifiers/
+  victoire/défaite) n'a pas encore de clips — à faire une fois
+  ajoutés.

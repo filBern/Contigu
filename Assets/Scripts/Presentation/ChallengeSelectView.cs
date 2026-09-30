@@ -152,7 +152,11 @@ namespace Contigu.Presentation
         /// <summary>Curries the step direction (-1 left, +1 right) into a plain Action, since UIFactory.CreateButton's onClick has no parameters to pass one through directly.</summary>
         private Action Step(int direction)
         {
-            return () => ShowChallengeAt(_currentIndex + direction);
+            return () =>
+            {
+                SfxManager.Play(SfxId.CarouselTick);
+                ShowChallengeAt(_currentIndex + direction);
+            };
         }
 
         private void OnPlayClicked()
@@ -162,6 +166,7 @@ namespace Contigu.Presentation
 
         public void Show(MetaStats metaStats)
         {
+            SfxManager.Play(SfxId.Overlay);
             _metaStats = metaStats;
             ShowChallengeAt(0);
             _root.gameObject.SetActive(true);
@@ -169,6 +174,7 @@ namespace Contigu.Presentation
 
         public void Hide()
         {
+            SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(false);
         }
 

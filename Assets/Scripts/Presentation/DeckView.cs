@@ -117,12 +117,14 @@ namespace Contigu.Presentation
 
         public void Show()
         {
+            SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(true);
             RebuildRows();
         }
 
         public void Hide()
         {
+            SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(false);
         }
 

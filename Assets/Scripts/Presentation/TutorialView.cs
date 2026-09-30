@@ -53,11 +53,13 @@ namespace Contigu.Presentation
 
         public void Show()
         {
+            SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(true);
         }
 
         public void Hide()
         {
+            SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(false);
         }
 
