@@ -6529,3 +6529,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   bonus se redéclenche sur un placement ultérieur qui fait juste
   grossir le même groupe ; les tests existants de `RunManagerTests.cs`
   corrigés pour tenir compte du nombre de tuiles de la pièce testée.
+- **Nouveau visuel de bouton fourni par le joueur** : sur demande
+  explicite ("J'ai ajouté 160x48 [...] peux-tu remplacer les boutons
+  existants? Il est blanc, tu peux le recolorier a bon escient") —
+  l'asset `Assets/Resources/Buttons/160x48.png` (rectangle arrondi
+  blanc ~132x40, rayon de coin ~18px) remplace la forme des deux
+  sprites de fond de bouton (`pill_button_blue.png`/
+  `pill_button_danger.png`, chargés par `UISprites`), qui pilotent TOUS
+  les boutons du jeu (Play, Buy, Confirm, Reroll, etc.) puisqu'ils
+  passent tous par `UIFactory.CreateButton`. Recoloré par une simple
+  multiplication par pixel (valeur de gris × couleur cible), ce qui
+  préserve la bande d'ombre du bas proportionnellement dans les deux
+  teintes (bleu #65AED6 pour l'action positive, rouge/danger #B56D7F
+  pour l'action négative) sans la redessiner à la main. Bordure
+  9-slice ajustée à 18/0/18/0 (au lieu de 24/0/24/0) pour matcher le
+  nouveau rayon de coin, plus petit que l'ancien sprite. L'asset brut
+  fourni est supprimé du dépôt une fois replié dans les deux variantes
+  colorées, qui sont les seules que le code charge réellement.

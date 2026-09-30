@@ -51,16 +51,18 @@ namespace Contigu.Presentation
         /// <summary>
         /// Background for a primary "Choose"/confirm action button — every
         /// positive-action button in the game (Play, Buy, Confirm, Next
-        /// round, the Shuffle button, etc.). A flat rounded pill with a
-        /// subtle darker bottom band, baked in Python/Pillow to match the
-        /// button style from the itch.io page mockups (explicit request,
-        /// after seeing them: "j'aime vraiment beaucoup la version des
-        /// boutons que tu as fait ... remplacer mes boutons existants") —
-        /// replaces the old "Colorful UI" pack's glossier 3D-bevel
-        /// blueButton.png sprite. A new project asset (Assets/Resources/
-        /// Icons/pill_button_blue.png) rather than overwriting the vendored
-        /// pack file, same convention as GoldenTile.png/LockedTile.png in
-        /// this same folder.
+        /// round, the Shuffle button, etc.). Sourced from a hand-authored
+        /// art asset the player supplied directly (a plain white rounded
+        /// rect, ~132x40, corner radius ~18px), then recolored here by a
+        /// straight per-pixel multiply against this button's own fill color
+        /// — every pixel's gray value (R channel; the source is true
+        /// grayscale) scales this color, so the source's baked-in bottom
+        /// shading band survives as a proportionally darker shade of
+        /// whatever color it's tinted to, rather than being redrawn by
+        /// hand. 9-slice border is 18/0/18/0 (left/bottom/right/top) to
+        /// match this asset's own corner radius — see this same folder's
+        /// sibling <see cref="CancelButtonBackground"/>, tinted from the
+        /// exact same source PNG.
         /// </summary>
         public static Sprite ChooseButtonBackground
         {
