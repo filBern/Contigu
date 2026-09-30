@@ -6546,3 +6546,11 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   nouveau rayon de coin, plus petit que l'ancien sprite. L'asset brut
   fourni est supprimé du dépôt une fois replié dans les deux variantes
   colorées, qui sont les seules que le code charge réellement.
+- **Retrait du contour sur les boutons** : sur demande explicite
+  ("Peux-tu retirer le contour sur les boutons, ça fait très peu
+  quali") — `UIFactory.FinishButton` n'appelle plus `AddThickOutline`,
+  ce qui retire le contour noir épais "comic" de TOUS les boutons du
+  jeu d'un coup (ils passent tous par cette même méthode). Les autres
+  éléments (cartes du shop, panneaux, badges, slots de main, etc.) qui
+  appellent `AddThickOutline` directement de leur côté gardent leur
+  contour — seul celui des boutons est retiré.
