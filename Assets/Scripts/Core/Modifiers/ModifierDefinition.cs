@@ -435,46 +435,6 @@ namespace Contigu.Core
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Large Format Glow",
             "+4 pts per group cell on 4-cell pieces (Square or any Tetromino).");
 
-        // ---- Twelfth batch: per-exact-shape "Mastery" modifiers (on
-        // explicit request) — a flat +1 pts every time you place this
-        // exact shape. Each is its own catalog entry so the player picks
-        // which shape to specialize in; holding N copies of the same one
-        // stacks to +N automatically (the existing unlimited-duplicate-
-        // modifiers system already sums every copy's own event), no
-        // separate per-shape counter needed.
-
-        public static readonly ModifierDefinition MasterySingle = new ModifierDefinition(
-            ModifierId.MasterySingle, ModifierCategory.Formes, "Single Mastery",
-            "+1 pts when you place a Single. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasteryDomH = new ModifierDefinition(
-            ModifierId.MasteryDomH, ModifierCategory.Formes, "Domino Mastery",
-            "+1 pts when you place a Domino. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasteryTriL = new ModifierDefinition(
-            ModifierId.MasteryTriL, ModifierCategory.Formes, "L-Tromino Mastery",
-            "+1 pts when you place an L-Tromino. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasteryTriIH = new ModifierDefinition(
-            ModifierId.MasteryTriIH, ModifierCategory.Formes, "I-Tromino Mastery",
-            "+1 pts when you place an I-Tromino. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasterySq2 = new ModifierDefinition(
-            ModifierId.MasterySq2, ModifierCategory.Formes, "Square Mastery",
-            "+1 pts when you place a Square. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasteryLTetro = new ModifierDefinition(
-            ModifierId.MasteryLTetro, ModifierCategory.Formes, "L-Tetromino Mastery",
-            "+1 pts when you place an L-Tetromino. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasteryTTetro = new ModifierDefinition(
-            ModifierId.MasteryTTetro, ModifierCategory.Formes, "T-Tetromino Mastery",
-            "+1 pts when you place a T-Tetromino. Stacks with every copy held.");
-
-        public static readonly ModifierDefinition MasterySTetro = new ModifierDefinition(
-            ModifierId.MasterySTetro, ModifierCategory.Formes, "S-Tetromino Mastery",
-            "+1 pts when you place an S-Tetromino. Stacks with every copy held.");
-
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -491,8 +451,7 @@ namespace Contigu.Core
             Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude,
             Experience,
             FormatPetitSpecialiste, FormatMoyenSpecialiste, FormatGrandSpecialiste,
-            FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
-            MasterySingle, MasteryDomH, MasteryTriL, MasteryTriIH, MasterySq2, MasteryLTetro, MasteryTTetro, MasterySTetro
+            FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow
         };
 
         public static ModifierDefinition Get(ModifierId id)
