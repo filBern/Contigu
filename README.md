@@ -6322,3 +6322,7 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   par `Refresh` (le round ne change jamais au milieu de la cascade de
   popups que `SetScores` anime), et lu par `SetScores` pour préfixer le
   label : "Round 3/8  —  1050 / 2000".
+- **Compteur de Lueur du shop décalé vers la gauche** : sur demande
+  explicite ("Le compteur de lueur dans le shop devrait être un peu
+  plus a gauche") — était collé au bord droit (`-40f` depuis l'ancre
+  droite) ; décalé à `-160f`.

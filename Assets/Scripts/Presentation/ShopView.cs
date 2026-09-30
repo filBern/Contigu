@@ -119,12 +119,15 @@ namespace Contigu.Presentation
             // once that first pass was seen in place: "Le nombre de lueur
             // doit être plus gros et centré verticalement dans le shop. Il
             // devrait aussi pulse en grosseur un peu tranquillement pour le
-            // mettre en valeur".
+            // mettre en valeur". Nudged further left on a further explicit
+            // follow-up ("Le compteur de lueur dans le shop devrait être un
+            // peu plus a gauche") — was sitting flush against the right
+            // edge.
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
             _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
             _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
             _lueurContainer.pivot = new Vector2(1f, 0.5f);
-            _lueurContainer.anchoredPosition = new Vector2(-40f, 0f);
+            _lueurContainer.anchoredPosition = new Vector2(-160f, 0f);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 14f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
