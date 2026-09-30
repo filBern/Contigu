@@ -1218,11 +1218,15 @@ namespace Contigu.Core
             return amount;
         }
 
-        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately), on explicit request ("un modifier +1 mult chaque modifier possédé").</summary>
+        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately) divided by ScoringConstants.SolidariteModifierCountDivisor — halved from a flat +1 per modifier on explicit report ("Solidarity modifier est vraiment beaucoup trop puissant").</summary>
         private static int ApplySolidarite(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
-            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], modifierCount));
-            return modifierCount;
+            int bonus = modifierCount / ScoringConstants.SolidariteModifierCountDivisor;
+            if (bonus > 0)
+            {
+                events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], bonus));
+            }
+            return bonus;
         }
 
         /// <summary>Dwindling (Epuisement): the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the NEXT placement (floored at 0) — on explicit request ("+100pts, réduit de 5 a chaque coup"). Permanent for the whole run, same as Gradient's counter — NOT reset by ResetForNewRound (see _epuisementValue's own doc comment for why the earlier per-round reset was removed).</summary>

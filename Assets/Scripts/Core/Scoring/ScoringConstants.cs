@@ -268,6 +268,23 @@ namespace Contigu.Core
         /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
         public const int MultCinqRisqueBonus = 5;
 
+        /// <summary>
+        /// Solidarity (Solidarite): total modifiers currently held (this one
+        /// included, every duplicate copy counting separately) divided by
+        /// this many, floored, to get the +Mult contributed — halved from a
+        /// flat +1 Mult per modifier held, on explicit report that it was
+        /// "vraiment beaucoup trop puissant": every single modifier
+        /// purchase, of ANY kind, passively buffed this one too, for free,
+        /// scaling it up to +EconomyConstants.MaxActiveModifiers Mult
+        /// (currently 8) at a full build with zero setup of its own —
+        /// stronger than MultQuatre's flat +4 the moment a run owns 5+
+        /// modifiers. Halving it (+4 Mult at a full 8-modifier build,
+        /// instead of +8) keeps the "reward collecting modifiers" identity
+        /// while bringing it back in line with the other flat +Mult
+        /// modifiers.
+        /// </summary>
+        public const int SolidariteModifierCountDivisor = 2;
+
         /// <summary>Enchanted Cards: upgraded (enchanted) cards currently in the deck, PLUS 1 (so it's never literally zero — "starting at one"), divided by this many and floored, to get the +Mult contributed — i.e. +0.1 Mult per upgraded card, counting from a baseline of 1, kept as a clean integer step instead of introducing fractional Mult (same reasoning as Density above).</summary>
         public const int CartesEnchanteesUpgradedCardsPerMultStep = 10;
 

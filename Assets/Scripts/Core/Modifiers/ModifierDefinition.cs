@@ -373,7 +373,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solidarite = new ModifierDefinition(
             ModifierId.Solidarite, ModifierCategory.Roguelike, "Solidarity",
-            "+1 Mult per modifier held, this one included.");
+            "+1 Mult per 2 modifiers held, this one included.");
 
         public static readonly ModifierDefinition Copieur = new ModifierDefinition(
             ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
@@ -389,7 +389,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+100 pts, -5 per placement for the rest of the run (down to 0, never resets).");
+            "+100 pts, -5 per placement for the rest of the run — destroyed once it hits 0.");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",

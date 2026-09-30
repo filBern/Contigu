@@ -298,7 +298,7 @@ namespace Contigu.Core
                 case ModifierId.Epuisement:
                     return "Currently +" + Mathf.RoundToInt(Grid.EpuisementCurrentBonus * levelFactor) + " pts";
                 case ModifierId.Solidarite:
-                    return "Currently +" + FormatMultDisplay(_activeModifiers.Count * levelFactor) + " Mult";
+                    return "Currently +" + FormatMultDisplay((_activeModifiers.Count / ScoringConstants.SolidariteModifierCountDivisor) * levelFactor) + " Mult";
                 case ModifierId.Multitude:
                     return "Currently +" + Mathf.RoundToInt(Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard * levelFactor) + " pts";
                 case ModifierId.CartesEnchantees:
@@ -492,6 +492,7 @@ namespace Contigu.Core
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
             CountModifierUsage(placement);
+            RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
             // ModifierLueurBonus is a second, independent source of Lueur
@@ -1335,6 +1336,34 @@ namespace Contigu.Core
             if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement() && ShufflesRemaining <= 0)
             {
                 State = RunState.RunDefeat;
+            }
+        }
+
+        /// <summary>
+        /// Dwindling (Epuisement): once its decaying bonus (see
+        /// GridManager.EpuisementCurrentBonus) has fully bottomed out at 0,
+        /// it can never earn another point for the rest of the run (its
+        /// value is permanent and never resets) — removed the instant that
+        /// happens, on explicit request ("Dwilding modifier devrait être
+        /// détruit lorsqu'il est rendu a 0"), freeing its modifier slot
+        /// instead of leaving a permanently-dead entry sitting in it.
+        /// _activeModifiers can never hold more than one copy of Epuisement
+        /// (RollBlisterSlot excludes modifiers already owned), so IndexOf is
+        /// unambiguous. A no-op — including on every placement before
+        /// Epuisement is ever held, since GridManager.EpuisementCurrentBonus
+        /// only starts decaying once it's actually dispatched — whenever the
+        /// bonus is still above 0 or Epuisement isn't currently held.
+        /// </summary>
+        private void RemoveDepletedEpuisement()
+        {
+            if (Grid.EpuisementCurrentBonus > 0)
+            {
+                return;
+            }
+            int index = _activeModifiers.IndexOf(ModifierId.Epuisement);
+            if (index >= 0)
+            {
+                RemoveActiveModifierAt(index);
             }
         }
 

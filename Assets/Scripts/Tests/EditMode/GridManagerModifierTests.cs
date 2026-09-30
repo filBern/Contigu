@@ -2130,17 +2130,21 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Solidarite_AddsMultEqualToTotalModifierCountHeld()
+        public void Solidarite_AddsMultEqualToHalfTotalModifierCountHeld()
         {
+            // Halved from a flat +1 Mult per modifier held, on explicit
+            // report ("Solidarity modifier est vraiment beaucoup trop
+            // puissant") — see ScoringConstants.SolidariteModifierCountDivisor.
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Solidarite, ModifierId.MultUn, ModifierId.MultDeux };
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            // Solidarite adds Mult equal to activeModifiers.Count (3 held here,
-            // itself included) on top of MultUn/MultDeux's own contributions.
-            Assert.AreEqual(3 + ScoringConstants.MultUnBonus + ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus);
+            // Solidarite adds Mult equal to activeModifiers.Count / 2 (3 held
+            // here, itself included, floored to 1) on top of MultUn/MultDeux's
+            // own contributions.
+            Assert.AreEqual(3 / ScoringConstants.SolidariteModifierCountDivisor + ScoringConstants.MultUnBonus + ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -2152,7 +2156,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(4, result.AdditiveMultBonus, "Each of the 2 Solidarite copies adds Mult equal to the full 2-modifier count");
+            Assert.AreEqual(2, result.AdditiveMultBonus, "Each of the 2 Solidarite copies adds Mult equal to half the full 2-modifier count (1 each)");
         }
 
         [Test]

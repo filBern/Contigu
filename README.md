@@ -6158,3 +6158,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   plus récents. Aucun test n'asserte sur le texte exact des
   descriptions ; seul le contenu des chaînes change, pas la structure
   des catalogues.
+- **Dwindling détruit une fois son bonus tombé à 0** : sur demande
+  explicite ("Dwilding modifier devrait être détruit lorsqu'il est
+  rendu a 0") — son bonus (`GridManager.EpuisementCurrentBonus`) était
+  déjà permanent et plafonné à 0 pour le reste du run, mais restait
+  assis dans un slot de modifier pour toujours, complètement inutile.
+  Nouveau `RunManager.RemoveDepletedEpuisement`, appelé après chaque
+  placement : dès que le bonus tombe à 0, le modifier est retiré de
+  `ActiveModifiers` (libérant le slot), via le même `RemoveActiveModifierAt`
+  que Risky Mult (MultCinqRisque) utilise déjà pour sa propre perte de
+  fin de round. `_activeModifiers` ne peut jamais contenir plus d'une
+  copie de Dwindling (le shop exclut déjà les modifiers déjà possédés),
+  donc `IndexOf` est sans ambiguïté.
+- **Solidarity trop puissant : bonus réduit de moitié** : sur rapport
+  explicite ("Solidarity modifier est vraiment beaucoup trop puissant")
+  — le modifier donnait +1 Mult PAR modifier possédé (lui-même inclus),
+  sans aucune condition : chaque achat de modifier, peu importe lequel,
+  le rendait passivement plus fort, gratuitement, jusqu'à +8 Mult à
+  pleine capacité (`EconomyConstants.MaxActiveModifiers` = 8) sans setup
+  propre — plus fort que MultQuatre (+4 fixe) dès 5 modifiers possédés.
+  Nouvelle constante `ScoringConstants.SolidariteModifierCountDivisor =
+  2` : le bonus est maintenant le nombre de modifiers possédés divisé
+  par 2 (arrondi vers le bas) — +4 Mult à pleine capacité au lieu de +8,
+  garde son identité "récompense la collection" sans dominer les autres
+  modifiers +Mult fixes.

@@ -2624,6 +2624,39 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Epuisement_IsRemovedFromActiveModifiers_OnceItsBonusReachesZero()
+        {
+            // On explicit request: "Dwilding modifier devrait être détruit
+            // lorsqu'il est rendu a 0" — see RunManager.RemoveDepletedEpuisement.
+            var run = new RunManager(new SystemRandomProvider(1));
+            GiveActiveModifier(run, ModifierId.Epuisement);
+
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var decayModifiers = new List<ModifierId> { ModifierId.Epuisement };
+            // Decays Grid's shared _epuisementValue down to its last
+            // non-zero step (5) via direct GridManager placements —
+            // bypassing RunManager so these don't each need their own
+            // valid hand slot. Confined to columns 0-4 and rows 0-3 so no
+            // row/column ever completes and clears (irrelevant to the
+            // decay itself, just avoids incidental line-clear noise).
+            int decayPlacements = ScoringConstants.EpuisementStartingBonus / ScoringConstants.EpuisementDecayPerPlacement - 1;
+            for (int i = 0; i < decayPlacements; i++)
+            {
+                int x = i % 5;
+                int y = i / 5;
+                run.Grid.PlacePiece(single, PieceColor.Coral, x, y, decayModifiers);
+            }
+            Assert.AreEqual(ScoringConstants.EpuisementDecayPerPlacement, run.Grid.EpuisementCurrentBonus, "One decay step left before it bottoms out");
+
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+            var outcome = run.PlacePiece(slot, 5, 5);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, run.Grid.EpuisementCurrentBonus);
+            CollectionAssert.DoesNotContain(run.ActiveModifiers, ModifierId.Epuisement, "Should be destroyed the instant its bonus bottoms out at 0");
+        }
+
+        [Test]
         public void MultCinqRisque_GivesFlatAdditiveMultBonus_LikeMultUn()
         {
             var run = new RunManager(new NeverZeroRandomProvider());
@@ -2827,13 +2860,16 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GetProgressiveModifierStateText_Solidarite_ReflectsTotalModifiersHeld()
+        public void GetProgressiveModifierStateText_Solidarite_ReflectsHalfTotalModifiersHeld()
         {
+            // Halved from a flat +1 Mult per modifier held, on explicit
+            // report ("Solidarity modifier est vraiment beaucoup trop
+            // puissant") — see ScoringConstants.SolidariteModifierCountDivisor.
             var run = new RunManager(new SystemRandomProvider(1));
             run.DebugGrantModifier(ModifierId.Solidarite);
             run.DebugGrantModifier(ModifierId.MultUn);
 
-            Assert.AreEqual("Currently +2 Mult", run.GetProgressiveModifierStateText(ModifierId.Solidarite));
+            Assert.AreEqual("Currently +1 Mult", run.GetProgressiveModifierStateText(ModifierId.Solidarite));
         }
 
         [Test]
