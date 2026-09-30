@@ -6343,3 +6343,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     dérotationnés en carrés ET recolorés en `UITheme.Success` (menthe),
     clairement distincts de la Lueur sur les deux plans (forme et
     couleur). Le losange tourné doré redevient exclusif à l'icône Lueur.
+- **Le mot "Lueur" remplacé par le symbole losange dans les descriptions** :
+  sur demande explicite ("Changer le mot lueur dans les description de
+  modifiers et upgrades pour le symbole losange jaune") — les 5
+  descriptions de modifiers mentionnant "Lueur" (`ArcEnCielLueur`,
+  `AlternanceLueur`, `MonochromeLigneLueur`, `CollectionneurLueur`,
+  `RepetitionLueur`) remplacent maintenant le mot par le glyphe ◆
+  (U+25C6), déjà encapsulé dans sa propre balise `<color=#F0B38D>` (la
+  même couleur dorée que l'icône Lueur du HUD/shop) directement dans la
+  chaîne de description. Aucune description d'upgrade ne mentionnait le
+  mot. `DescriptionTextFormatter` : la règle de colorisation du mot
+  "lueur" devient morte (le mot n'apparaît plus nulle part) et a été
+  retirée.
