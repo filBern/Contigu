@@ -884,9 +884,17 @@ namespace Contigu.Presentation
                 // au points et non au mult"). ModifierMultiplier/MultBonus
                 // events (genuinely Mult) get their own red popups on their
                 // own badge, handled earlier in this loop, not here.
+                // Trait events (Void, Mirror, Seeder, Detonator, ...) used to
+                // get their own UITheme.PanelLight popup color, but that's
+                // the theme's cream/beige panel background — nearly
+                // invisible against the board (explicit report: "Le +10
+                // point popup de la void tile est en beige, il devrait être
+                // en noir... tous les textes pop up de points de tous les
+                // upgrades tiles ont le même problème"). They now fall
+                // through to the same near-black UITheme.TextPrimary every
+                // plain points popup already uses.
                 Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
-                    : scoreEvent.Type == ScoreEventType.Trait ? UITheme.PanelLight
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);

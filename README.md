@@ -6366,3 +6366,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   importe où la description s'affiche (tooltip, carte de shop, carte
   d'upgrade...). Les 11 appels de `Colorize` dans le projet passent
   maintenant chacun leur propre taille de police de base.
+- **Popups de points des tuiles-upgrades passés du beige au noir** : sur
+  rapport explicite ("Le +10 point popup de la void tile est en beige,
+  il devrait être en noir... tous les textes pop up de points de tous
+  les upgrades tiles ont le même problème") — `GameBootstrap`'s
+  `ScoreEventType.Trait` branch utilisait `UITheme.PanelLight` (le beige
+  clair `#fff7e8` des panneaux), quasi invisible sur le plateau ; retiré
+  pour que tout événement Trait (Void, Mirror, Seeder, Detonator,
+  Chameleon, Spark, Kamikaze) retombe sur le même `UITheme.TextPrimary`
+  quasi-noir que chaque popup de points ordinaire.
