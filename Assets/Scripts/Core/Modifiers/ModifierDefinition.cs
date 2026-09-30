@@ -116,7 +116,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Mason",
-            "x2 Mult when no row/column is completed.");
+            "+2 Mult when no row/column is completed.");
 
         public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
@@ -179,23 +179,28 @@ namespace Contigu.Core
         // type de pièce doivent une version +pts et une version +mult") —
         // Éclat (below) already covers the +pts side for colors; the 10 new
         // Forme*Points modifiers (ninth batch, further down) now cover it
-        // for shapes.
+        // for shapes. Devotion (only — Forme* stays a genuine xN) was later
+        // converted BACK to additive, at a higher flat value, on explicit
+        // request ("converting some multiplicative sources to additive") —
+        // its per-color condition fires reliably enough (~1-in-4 placements)
+        // that the old xN was compounding too easily with the game's other
+        // "always-on" multiplicative modifiers.
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Red Devotion",
-            "x2 Mult on Red pieces.");
+            "+3 Mult on Red pieces.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
             ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Blue Devotion",
-            "x2 Mult on Blue pieces.");
+            "+3 Mult on Blue pieces.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
             ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Yellow Devotion",
-            "x2 Mult on Yellow pieces.");
+            "+3 Mult on Yellow pieces.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
             ModifierId.DevotionLime, ModifierCategory.Couleurs, "Green Devotion",
-            "x2 Mult on Green pieces.");
+            "+3 Mult on Green pieces.");
 
         // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
         // The 3 slot modifiers can't be evaluated by GridManager at all — it has
@@ -206,15 +211,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
             ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
-            "x2 Mult on the whole score when played from hand slot 1.");
+            "+3 Mult when played from hand slot 1.");
 
         public static readonly ModifierDefinition SlotDeux = new ModifierDefinition(
             ModifierId.SlotDeux, ModifierCategory.Roguelike, "Slot 2 Loyalty",
-            "x2 Mult on the whole score when played from hand slot 2.");
+            "+3 Mult when played from hand slot 2.");
 
         public static readonly ModifierDefinition SlotTrois = new ModifierDefinition(
             ModifierId.SlotTrois, ModifierCategory.Roguelike, "Slot 3 Loyalty",
-            "x2 Mult on the whole score when played from hand slot 3.");
+            "+3 Mult when played from hand slot 3.");
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",
@@ -296,7 +301,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
-            "x2 Mult when this piece's color differs from the last one played.");
+            "+2 Mult when this piece's color differs from the last one played.");
 
         public static readonly ModifierDefinition Combo = new ModifierDefinition(
             ModifierId.Combo, ModifierCategory.Destruction, "Combo",

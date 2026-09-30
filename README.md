@@ -6399,3 +6399,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   intactes lors de ce premier redessin (donc encore vides à l'écran),
   et ne sont révélées qu'au `Refresh()` de fin de séquence, comme le
   reste. `GameBootstrap` lui passe `outcome.BossLockedCells`.
+- **9 modifiers multiplicatifs convertis en Mult additif** : sur
+  discussion ("Le joueur est vraiment trop encouragé de prendre que les
+  modifiers qui jouent avec le mult, il devrait y avoir moins" →
+  "converting some multiplicative sources to additive") — `PlacementResult.Mult`
+  plie chaque `ScoreEvent` de gauche à droite : un `ModifierMultiplier`
+  MULTIPLIE le total, un `MultBonus` l'ADDITIONNE ; ~26 modifiers
+  utilisaient le premier, ce qui compose de façon exponentielle d'un
+  modifier à l'autre. Les 9 dont la condition se déclenche de façon
+  quasi garantie à CHAQUE pose — donc celles qui empilaient le plus
+  systématiquement — passent au second :
+  - `DevotionCoral/Teal/Violet/Lime` (Red/Blue/Yellow/Green Devotion) :
+    `x2 Mult` sur la couleur → `+3 Mult` (`ScoringConstants.
+    DevotionBonus`, event `MultBonus`, `ApplyColorDevotionBonus` dans
+    `GridManager`). Le tie-break `ResolveJokerColorForModifiers` (quelle
+    couleur choisir pour une pièce Joker) est ajusté en conséquence
+    (`groupBonus * DevotionBonus` au lieu de `groupBonus *
+    (DevotionMultiplier - 1)`).
+  - `SlotUn/Deux/Trois` (Slot 1/2/3 Loyalty) : `x2 Mult sur TOUT le
+    score` → `+3 Mult` (`ScoringConstants.SlotLoyaltyBonus`,
+    `RunManager.ApplyHandSlotModifierBonus`).
+  - `Macon` (Mason) : `x2 Mult` si aucune ligne complétée → `+2 Mult`
+    (`ScoringConstants.MaconBonus`, `ApplyMaconBonus`). A nécessité
+    d'ajouter un champ `AdditiveMult` à `GridManager.
+    PostClearModifierContext` (jusqu'ici seul le `PreClearModifierContext`
+    en avait un) et un nouveau paramètre `out int additiveMultBonus` sur
+    `ApplyPostClearModifiers`, Maçon étant le premier modifier additif
+    évalué après le clear des lignes.
+  - `AlternancePieces` (Color Switch) : `x2 Mult` si couleur différente
+    de la précédente → `+2 Mult` (`ScoringConstants.
+    AlternancePiecesBonus`).
+
+  Les modifiers plus rares/situationnels (Prisme, Rafale, Combo, la
+  famille de line-clear stacking, Architecte, Format* Specialist, etc.)
+  restent multiplicatifs — ce sont les moments de gros payoff qu'on
+  veut garder. Tests mis à jour dans `GridManagerModifierTests.cs` et
+  `RunManagerTests.cs` pour lire `AdditiveMultBonus` au lieu de
+  `ModifierMultiplier` sur ces 9 modifiers.

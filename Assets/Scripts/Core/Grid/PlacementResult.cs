@@ -70,13 +70,19 @@ namespace Contigu.Core
         /// Multiplies this placement's WHOLE total score (see <see
         /// cref="TotalScore"/>), same tier as <see cref="ComboMultiplier"/>
         /// — the aggregate of every "xN"-style modifier now held (Prisme,
-        /// Architecte, Tricolore, Complémentaire, Îlot, Maçon,
+        /// Architecte, Tricolore, Complémentaire, Îlot,
         /// Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale, Pont,
-        /// Grosse Famille, Repetition, Alternance des pièces, Minimaliste,
+        /// Grosse Famille, Repetition, Minimaliste, the Format* Specialists,
         /// and the 6 line-pattern modifiers), converted from a flat +pts
         /// bonus to a real multiplier on explicit request ("j'aimerais qu'on
-        /// utilise plus de multiplicateur dans les modifiers"). 1 when none
-        /// of them fired this placement; stacks multiplicatively with itself
+        /// utilise plus de multiplicateur dans les modifiers"). Devotion*,
+        /// Slot Loyalty*, Maçon and Alternance des pièces used to be part of
+        /// this family too — converted to a flat +Mult instead (see <see
+        /// cref="AdditiveMultBonus"/>) on explicit request ("converting some
+        /// multiplicative sources to additive"): their trigger conditions
+        /// fire reliably enough every placement that the old xN was
+        /// compounding too easily with everything else here. 1 when none of
+        /// these fired this placement; stacks multiplicatively with itself
         /// (several firing at once, or a "per line"/"per bridge" one firing
         /// more than once) same as every other multiplier field here.
         /// </summary>
@@ -110,8 +116,9 @@ namespace Contigu.Core
         /// devrait +n mult au lieu de xn mult ET devrait être un float au
         /// lieu d'un int"). Kept separate from <see cref="AdditiveMultBonus"/>
         /// (int) so that field stays exact for its existing readers
-        /// (MultUn/Deux/Quatre, Solidarite, MultCinqRisque, all genuinely
-        /// whole numbers) — this adds in on top when computing <see
+        /// (MultUn/Deux/Quatre, Solidarite, MultCinqRisque, Devotion*, Slot
+        /// Loyalty*, Maçon, Alternance des pièces — all genuinely whole
+        /// numbers) — this adds in on top when computing <see
         /// cref="Mult"/>. 0 when none of the three is held (or, for
         /// Densite specifically, while the board is still empty — unlike
         /// Enchanted Cards/Experience, Densite has no "start at 1" baseline
@@ -230,10 +237,10 @@ namespace Contigu.Core
         /// x2 puisque chaque calcul est fait de gauche à droite et non
         /// selon la priorité des opérations PEDMAS"). A "+N Mult" modifier
         /// (MultUn/Deux/Quatre, Risky Mult, Solidarité, Enchanted Cards,
-        /// Experience, Densité) ADDS N to the running total; an "xN"
-        /// modifier (Prisme, Devotion*, the line-pattern family, Combo,
-        /// Slot Loyalty, ...) MULTIPLIES it — exactly which one each
-        /// event is comes from its own <see
+        /// Experience, Densité, Devotion*, Slot Loyalty*, Maçon, Alternance
+        /// des pièces) ADDS N to the running total; an "xN" modifier
+        /// (Prisme, the line-pattern family, Combo, ...) MULTIPLIES it —
+        /// exactly which one each event is comes from its own <see
         /// cref="ScoreEventType"/>. Reading off the events (rather than the
         /// old separately-summed <see cref="AdditiveMultBonus"/>/<see
         /// cref="ModifierMultiplier"/>/<see cref="ComboMultiplier"/>/<see

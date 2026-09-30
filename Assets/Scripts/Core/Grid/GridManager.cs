@@ -390,10 +390,11 @@ namespace Contigu.Core
             float modifierProgressiveAdditiveMult = 0f;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveAdditiveMult, modifierLevels);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveAdditiveMult, out int postAdditiveMult, modifierLevels);
                 modifierMultiplier *= postMultiplier;
                 modifierLueurBonus += postLueur;
                 modifierProgressiveAdditiveMult += postProgressiveAdditiveMult;
+                modifierAdditiveMultBonus += postAdditiveMult;
             }
 
             result.ModifierBonus = modifierBonus;
@@ -587,10 +588,10 @@ namespace Contigu.Core
                 { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Emmitouflee, ctx => ApplyEmmitouflee(ctx.GroupCells, ctx.Events) },
                 { ModifierId.Jardinier, ctx => ApplyJardinier(ctx.GroupCells, ctx.Events) },
-                { ModifierId.DevotionCoral, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionTeal, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionViolet, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionLime, ctx => { ctx.Multiplier *= ApplyColorDevotionMultiplier(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionLime, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatPetitSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatMoyenSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatGrandSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -614,7 +615,7 @@ namespace Contigu.Core
                 { ModifierId.GrosseFamille, ctx => { ctx.Multiplier *= ApplyGrosseFamille(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Repetition, ctx => { ctx.Multiplier *= ApplyRepetition(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.RepetitionLueur, ctx => { ctx.Lueur += ApplyRepetitionLueur(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.AlternancePieces, ctx => { ctx.Multiplier *= ApplyAlternancePieces(ctx.OwnColor, ctx.PreviousPlacedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.AlternancePieces, ctx => { ctx.AdditiveMult += ApplyAlternancePieces(ctx.OwnColor, ctx.PreviousPlacedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Precision, ctx => ApplyPrecision(ctx.PlacedCells, ctx.Events) },
                 { ModifierId.Surpopulation, ctx => ApplySurpopulation(ctx.PlacedCells, ctx.Events) },
                 { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
@@ -648,7 +649,7 @@ namespace Contigu.Core
             // modifier below normally just never matches it. When Joker is
             // held, this instead resolves to whichever of the 4 base colors
             // would score the most from the Devotion/Éclat modifiers
-            // currently active, so ApplyColorDevotionMultiplier/ApplyEclat
+            // currently active, so ApplyColorDevotionBonus/ApplyEclat
             // below use THIS instead of re-reading the cell directly.
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
@@ -699,16 +700,16 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>"Devotion" (per-color): xN multiplier (see ScoringConstants.DevotionMultiplier) when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers). Was "fully doubles this placement's group bonus" (additive); converted to a genuine multiplier so every color/shape modifier has both a +pts version (Éclat below/the new Forme*Points siblings) and a +mult one, on explicit request. Returns 1 (no-op) otherwise.</summary>
-        private static int ApplyColorDevotionMultiplier(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        /// <summary>"Devotion" (per-color): flat +Mult (additive, see PlacementResult.AdditiveMultBonus, see ScoringConstants.DevotionBonus) when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers). Returns 0 (no-op) otherwise.</summary>
+        private static int ApplyColorDevotionBonus(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (ownColor != targetColor)
             {
-                return 1;
+                return 0;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.DevotionMultiplier));
-            return ScoringConstants.DevotionMultiplier;
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionBonus));
+            return ScoringConstants.DevotionBonus;
         }
 
         /// <summary>
@@ -1241,16 +1242,16 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Color Switch (Alternance des pièces): xN multiplier (see ScoringConstants.AlternancePiecesMultiplier) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier. Returns 1 (no-op) otherwise.</summary>
+        /// <summary>Color Switch (Alternance des pièces): flat +Mult (additive, see PlacementResult.AdditiveMultBonus, see ScoringConstants.AlternancePiecesBonus) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" (Alternance) modifier. Returns 0 (no-op) otherwise.</summary>
         private static int ApplyAlternancePieces(PieceColor ownColor, PieceColor? previousPlacedColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (!previousPlacedColor.HasValue || previousPlacedColor.Value == ownColor)
             {
-                return 1;
+                return 0;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.AlternancePiecesMultiplier));
-            return ScoringConstants.AlternancePiecesMultiplier;
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.AlternancePiecesBonus));
+            return ScoringConstants.AlternancePiecesBonus;
         }
 
         /// <summary>Precision: bonus per placed cell when EVERY one of this placement's own cells has at least one pre-existing filled orthogonal neighbor (this placement's own other cells don't count).</summary>
@@ -1377,15 +1378,15 @@ namespace Contigu.Core
                 int score = 0;
                 if (ContainsModifier(activeModifiers, DevotionModifierFor(candidate)))
                 {
-                    // Devotion is now a genuine xN multiplier (see
-                    // ApplyColorDevotionMultiplier), not an additive
-                    // "doubles the group bonus" — its points-equivalent
-                    // "extra" for this comparison is groupBonus times
-                    // (multiplier - 1), same as every other xN catch-up
-                    // elsewhere (e.g. GameBootstrap's multipliedExtra).
-                    // With the multiplier at 2 this is still exactly
-                    // groupBonus, so this heuristic's behavior is unchanged.
-                    score += groupBonus * (ScoringConstants.DevotionMultiplier - 1);
+                    // Devotion is a flat +Mult (additive, see
+                    // ApplyColorDevotionBonus), not a genuine multiplier —
+                    // its points-equivalent "extra" for this comparison
+                    // scales with groupBonus the same way an xN catch-up
+                    // would (e.g. GameBootstrap's multipliedExtra), using
+                    // DevotionBonus directly as that scale factor, so a
+                    // bigger group still favors whichever color has an
+                    // applicable Devotion modifier.
+                    score += groupBonus * ScoringConstants.DevotionBonus;
                 }
                 if (ContainsModifier(activeModifiers, EclatModifierFor(candidate)))
                 {
@@ -1455,6 +1456,7 @@ namespace Contigu.Core
             public int Multiplier = 1;
             public int Lueur;
             public float ProgressiveAdditiveMult;
+            public int AdditiveMult;
         }
 
         private delegate int PostClearModifierEffect(PostClearModifierContext ctx);
@@ -1471,7 +1473,7 @@ namespace Contigu.Core
             {
                 { ModifierId.Collectionneur, ctx => ApplyCollectionneur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events) },
                 { ModifierId.CollectionneurLueur, ctx => { ctx.Lueur += ApplyCollectionneurLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Macon, ctx => { ctx.Multiplier *= ApplyMacon(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Macon, ctx => { ctx.AdditiveMult += ApplyMaconBonus(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Demolisseur, ctx => { ctx.Multiplier *= ApplyDemolisseur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.ArcEnCiel, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine); return 0; } },
                 { ModifierId.ArcEnCielLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, EconomyConstants.ArcEnCielLueurPerLine); return 0; } },
@@ -1489,7 +1491,7 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveAdditiveMult, IReadOnlyList<int> modifierLevels = null)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveAdditiveMult, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)
         {
             var ctx = new PostClearModifierContext
             {
@@ -1509,8 +1511,9 @@ namespace Contigu.Core
 
                 // Same reasoning as ApplyPreClearModifiers above — only this
                 // call's own ctx.Lueur delta is rescaled, and
-                // ctx.Multiplier/ctx.ProgressiveAdditiveMult are left alone
-                // since Mult is events-derived, not read from them.
+                // ctx.Multiplier/ctx.ProgressiveAdditiveMult/ctx.AdditiveMult
+                // are left alone since Mult is events-derived, not read from
+                // them.
                 float levelFactor = GetModifierLevelFactor(modifierLevels, i);
                 if (levelFactor != 1f)
                 {
@@ -1525,6 +1528,7 @@ namespace Contigu.Core
             modifierMultiplier = ctx.Multiplier;
             lueurBonus = ctx.Lueur;
             progressiveAdditiveMult = ctx.ProgressiveAdditiveMult;
+            additiveMultBonus = ctx.AdditiveMult;
             return total;
         }
 
@@ -2050,16 +2054,16 @@ namespace Contigu.Core
             return InBounds(x, y) && _cells[x, y].HasAnyModifier;
         }
 
-        /// <summary>Maçon: xN multiplier (see ScoringConstants.MaconMultiplier) for a placement that clears no line/column at all. Returns 1 (no-op) otherwise.</summary>
-        private int ApplyMacon(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        /// <summary>Maçon: flat +Mult (additive, see PlacementResult.AdditiveMultBonus, see ScoringConstants.MaconBonus) for a placement that clears no line/column at all. Returns 0 (no-op) otherwise.</summary>
+        private int ApplyMaconBonus(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (clearInfo.ClearedCells.Count > 0)
             {
-                return 1;
+                return 0;
             }
 
-            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.MaconMultiplier));
-            return ScoringConstants.MaconMultiplier;
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.MaconBonus));
+            return ScoringConstants.MaconBonus;
         }
 
         /// <summary>Démolisseur: xN multiplier (see ScoringConstants.DemolisseurMultiplierPerLine) PER simultaneously-cleared line, once at least DemolisseurMinLines rows/columns clear at once — stacks multiplicatively (3 lines at once is xN*xN*xN). Returns 1 (no-op) otherwise.</summary>

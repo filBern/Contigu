@@ -100,8 +100,8 @@ namespace Contigu.Core
         /// <summary>Carrefour: bonus per group cell whose 4 cardinal neighbors are filled with at least 2 colors different from BOTH each other and the cell's own color.</summary>
         public const int CarrefourBonusPerCell = 12;
 
-        /// <summary>Maçon: xN multiplier for a placement that clears no line/column at all.</summary>
-        public const int MaconMultiplier = 2;
+        /// <summary>Maçon: flat +Mult (additive, see PlacementResult.AdditiveMultBonus) for a placement that clears no line/column at all — converted from a genuine "xN" multiplier on explicit request ("converting some multiplicative sources to additive", one of the modifiers whose condition is common enough to fire on nearly every placement, so the old xN was compounding too reliably with the game's other "always-on" multiplicative modifiers).</summary>
+        public const int MaconBonus = 2;
 
         /// <summary>Démolisseur: xN multiplier PER LINE, only once at least this many rows/columns clear simultaneously (stacks — 3 lines at once is xN*xN*xN).</summary>
         public const int DemolisseurMultiplierPerLine = 2;
@@ -152,8 +152,8 @@ namespace Contigu.Core
 
         // ---- Fourth batch of modifier bonuses (see ModifierCatalog) ----
 
-        /// <summary>Slot N Loyalty: xN multiplier on this placement's ENTIRE score (see RunManager.ApplyHandSlotModifierBonus) when played from the matching hand slot — was "doubles just the group bonus", changed to double everything on explicit request ("au lieu de double group placement, on va tout doubler").</summary>
-        public const int SlotLoyaltyMultiplier = 2;
+        /// <summary>Slot N Loyalty: flat +Mult (additive, see PlacementResult.AdditiveMultBonus) when played from the matching hand slot (see RunManager.ApplyHandSlotModifierBonus) — was "doubles just the group bonus", then a genuine "xN" multiplying the whole score ("au lieu de double group placement, on va tout doubler"), then converted to additive on explicit request ("converting some multiplicative sources to additive") — its condition (1-in-3 hand slots) fires reliably enough every placement that the old xN was compounding too consistently with the game's other "always-on" multiplicative modifiers.</summary>
+        public const int SlotLoyaltyBonus = 3;
 
         /// <summary>Grand Format: bonus per placed cell when the piece being placed has at least this many cells.</summary>
         public const int GrandFormatBonusPerCell = 8;
@@ -220,8 +220,8 @@ namespace Contigu.Core
         /// <summary>Big Family (Grosse Famille): xN multiplier when this placement's color exists in exactly one connected group on the whole board — no other same-color cell anywhere else.</summary>
         public const int GrosseFamilleMultiplier = 2;
 
-        /// <summary>Color Switch (Alternance des pièces): xN multiplier when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier.</summary>
-        public const int AlternancePiecesMultiplier = 2;
+        /// <summary>Color Switch (Alternance des pièces): flat +Mult (additive, see PlacementResult.AdditiveMultBonus) when this piece's color differs from the immediately previous placement's color this round — the piece-to-piece sibling of the existing line-level "Alternation" modifier. Converted from a genuine "xN" multiplier on explicit request ("converting some multiplicative sources to additive") — this condition (any color change) is common enough to fire on most placements, so the old xN was compounding too reliably with the game's other "always-on" multiplicative modifiers.</summary>
+        public const int AlternancePiecesBonus = 2;
 
         /// <summary>Combo: multiplies this placement's ENTIRE total score (see PlacementResult.ComboMultiplier) when the immediately previous placement this round cleared a line — the only modifier that's a true multiplier rather than a flat/per-cell bonus, on explicit request.</summary>
         public const int ComboMultiplierFactor = 2;
@@ -247,8 +247,8 @@ namespace Contigu.Core
         public const int MultDeuxBonus = 2;
         public const int MultQuatreBonus = 4;
 
-        /// <summary>Devotion (per-color): xN multiplier when placing a piece of the matching color — was "doubles this placement's group bonus" (additive), converted to a genuine multiplier like every other "+mult"-style modifier, on explicit request that every color/shape modifier have both a +pts version (Éclat/the new Forme*Points siblings) and a +mult version.</summary>
-        public const int DevotionMultiplier = 2;
+        /// <summary>Devotion (per-color): flat +Mult (additive, see PlacementResult.AdditiveMultBonus) when placing a piece of the matching color. History: started as "doubles this placement's group bonus" (additive), converted to a genuine "xN" multiplier so every color/shape modifier had both a +pts version (Éclat/the new Forme*Points siblings) and a +mult version, then converted back to additive (at a higher value than before) on explicit request ("converting some multiplicative sources to additive") — with 4 colors this fires on roughly 1-in-4 placements, reliable enough that the old xN was compounding too easily with the game's other "always-on" multiplicative modifiers.</summary>
+        public const int DevotionBonus = 3;
 
         /// <summary>
         /// Format* "Specialist" (per-piece-size TIER, not per-exact-shape —

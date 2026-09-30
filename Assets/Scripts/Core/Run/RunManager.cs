@@ -846,19 +846,22 @@ namespace Contigu.Core
         private static readonly ModifierId?[] HandSlotModifiers = { ModifierId.SlotUn, ModifierId.SlotDeux, ModifierId.SlotTrois };
 
         /// <summary>
-        /// "Slot N Loyalty": xN multiplier (see ScoringConstants.SlotLoyaltyMultiplier)
-        /// on this placement's ENTIRE score when the piece was played from hand
-        /// slot <paramref name="handIndex"/> (0-based) and the matching modifier
-        /// is active — was "doubles just the group bonus", changed to double
-        /// everything on explicit request ("au lieu de double group placement,
-        /// on va tout doubler"), so it now multiplies the same
-        /// PlacementResult.ModifierMultiplier field GridManager's own xN
-        /// modifiers use instead of adding to ModifierBonus. Unlike every other
-        /// modifier, GridManager.PlacePiece can't evaluate this itself — it has
-        /// no idea which of the 3 hand slots a piece came from, only this
-        /// method's caller (PlacePiece(handIndex, x, y)) does — so it's
-        /// resolved here, the same post-hoc pattern already used for the
-        /// second-batch PieceTrait kinds (see ApplyPostPlacementTraitBonus).
+        /// "Slot N Loyalty": flat +Mult (additive, see
+        /// PlacementResult.AdditiveMultBonus, see ScoringConstants.SlotLoyaltyBonus)
+        /// when the piece was played from hand slot <paramref name="handIndex"/>
+        /// (0-based) and the matching modifier is active. History: "doubles just
+        /// the group bonus" (additive), then a genuine xN multiplier on the
+        /// whole score ("au lieu de double group placement, on va tout
+        /// doubler"), then converted back to additive on explicit request
+        /// ("converting some multiplicative sources to additive") — with 3
+        /// slots this fires reliably enough (1-in-3 placements) that the old
+        /// xN was compounding too consistently with the game's other
+        /// "always-on" multiplicative modifiers. Unlike every other modifier,
+        /// GridManager.PlacePiece can't evaluate this itself — it has no idea
+        /// which of the 3 hand slots a piece came from, only this method's
+        /// caller (PlacePiece(handIndex, x, y)) does — so it's resolved here,
+        /// the same post-hoc pattern already used for the second-batch
+        /// PieceTrait kinds (see ApplyPostPlacementTraitBonus).
         /// </summary>
         private void ApplyHandSlotModifierBonus(int handIndex, PlacementResult placement)
         {
@@ -873,8 +876,6 @@ namespace Contigu.Core
                 return;
             }
 
-            placement.ModifierMultiplier *= ScoringConstants.SlotLoyaltyMultiplier;
-            var events = new List<ScoreEvent>(placement.ScoreEvents);
             // Its own position in _activeModifiers — needed so PlacementResult.Mult's
             // ordered left-to-right fold (see its own doc comment) places this
             // correctly relative to every other Mult modifier instead of
@@ -883,7 +884,10 @@ namespace Contigu.Core
             // Mult is events-driven, so scaling this event's Amount is all a
             // leveled Slot Loyalty needs.
             int slotIndex = _activeModifiers.IndexOf(slotModifier.Value);
-            var scoreEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], Mathf.RoundToInt(ScoringConstants.SlotLoyaltyMultiplier * GetModifierLevelFactor(slotIndex)));
+            int bonus = Mathf.RoundToInt(ScoringConstants.SlotLoyaltyBonus * GetModifierLevelFactor(slotIndex));
+            placement.AdditiveMultBonus += bonus;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            var scoreEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], bonus);
             scoreEvent.TriggeringModifier = slotModifier.Value;
             scoreEvent.TriggeringModifierIndex = slotIndex;
             events.Add(scoreEvent);

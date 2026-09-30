@@ -434,7 +434,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.MaconMultiplier, result.ModifierMultiplier);
+            Assert.AreEqual(ScoringConstants.MaconBonus, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -450,7 +450,7 @@ namespace Contigu.Tests
             }
             var finalResult = grid.PlacePiece(single, PieceColor.Teal, GridManager.Size - 1, 0, modifiers);
 
-            Assert.AreEqual(1, finalResult.ModifierMultiplier);
+            Assert.AreEqual(0, finalResult.AdditiveMultBonus);
         }
 
         [Test]
@@ -995,7 +995,7 @@ namespace Contigu.Tests
         // ---- Third batch (basic per-color / per-shape modifiers) ----
 
         [Test]
-        public void DevotionCoral_AppliesX2Multiplier_WhenPlacementColorMatches()
+        public void DevotionCoral_AppliesFlatMultBonus_WhenPlacementColorMatches()
         {
             var grid = new GridManager();
             var square = PieceShapeCatalog.Get(ShapeId.Sq2);
@@ -1003,7 +1003,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.DevotionMultiplier, result.ModifierMultiplier, "Devotion is now a genuine xN multiplier (ninth batch), not an additive bonus — Éclat is the +pts version");
+            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus, "Devotion is a flat +Mult (additive) — converted back from a genuine xN multiplier on explicit request (\"converting some multiplicative sources to additive\") — Éclat is the +pts version");
         }
 
         [Test]
@@ -1015,7 +1015,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
 
-            Assert.AreEqual(1, result.ModifierMultiplier);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1036,8 +1036,8 @@ namespace Contigu.Tests
             {
                 var grid = new GridManager();
                 var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
-                int expected = baseColors[i] == matchingColor ? ScoringConstants.DevotionMultiplier : 1;
-                Assert.AreEqual(expected, result.ModifierMultiplier, id + " vs " + baseColors[i]);
+                int expected = baseColors[i] == matchingColor ? ScoringConstants.DevotionBonus : 0;
+                Assert.AreEqual(expected, result.AdditiveMultBonus, id + " vs " + baseColors[i]);
             }
         }
 
@@ -1687,10 +1687,10 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0);
 
             var differentColor = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.AlternancePiecesMultiplier, differentColor.ModifierMultiplier);
+            Assert.AreEqual(ScoringConstants.AlternancePiecesBonus, differentColor.AdditiveMultBonus);
 
             var sameColor = grid.PlacePiece(single, PieceColor.Teal, 5, 5, modifiers);
-            Assert.AreEqual(1, sameColor.ModifierMultiplier);
+            Assert.AreEqual(0, sameColor.AdditiveMultBonus);
         }
 
         [Test]
@@ -1819,15 +1819,17 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
 
-            // Devotion(Coral) would only add groupBonus*(DevotionMultiplier-1)
-            // (see ResolveJokerColorForModifiers, the group's own triangular
-            // bonus for 2 cells); Éclat(Lime) adds group-size *
-            // EclatBonusPerCell (2*4=8) — Lime wins, so only Éclat actually
-            // fires, not Devotion.
-            int devotionWouldGive = ExpectedGroupBonus(domH.Cells.Count) * (ScoringConstants.DevotionMultiplier - 1);
+            // Devotion(Coral) would add groupBonus*DevotionBonus (see
+            // ResolveJokerColorForModifiers, the group's own triangular
+            // bonus for 2 cells, scaled by Devotion's flat +Mult value since
+            // it's additive now); Éclat(Lime) adds group-size *
+            // EclatBonusPerCell (2*4=8) — Coral wins here, so Devotion
+            // actually fires (into AdditiveMultBonus), not Éclat.
+            int devotionWouldGive = ExpectedGroupBonus(domH.Cells.Count) * ScoringConstants.DevotionBonus;
             int eclatWouldGive = domH.Cells.Count * ScoringConstants.EclatBonusPerCell;
-            Assert.Greater(eclatWouldGive, devotionWouldGive, "Test setup sanity: Éclat should be the bigger prize here");
-            Assert.AreEqual(eclatWouldGive, result.ModifierBonus);
+            Assert.Greater(devotionWouldGive, eclatWouldGive, "Test setup sanity: Devotion should be the bigger prize here");
+            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus);
+            Assert.AreEqual(0, result.ModifierBonus, "Éclat shouldn't have fired — the Joker resolved to Coral, not Lime");
         }
 
         [Test]

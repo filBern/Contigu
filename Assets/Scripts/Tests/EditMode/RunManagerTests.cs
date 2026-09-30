@@ -2459,7 +2459,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void SlotUn_MultipliesEntireScore_WhenPlacingFromHandSlotZero()
+        public void SlotUn_AddsFlatMultBonus_WhenPlacingFromHandSlotZero()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.SlotUn);
@@ -2467,7 +2467,7 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(ScoringConstants.SlotLoyaltyMultiplier, outcome.Placement.ModifierMultiplier);
+            Assert.AreEqual(ScoringConstants.SlotLoyaltyBonus, outcome.Placement.AdditiveMultBonus);
         }
 
         [Test]
@@ -2488,8 +2488,8 @@ namespace Contigu.Tests
                 var outcome = run.PlacePiece(handIndex, 0, 0);
 
                 Assert.IsTrue(outcome.Placement.Success, id + " vs hand index " + handIndex);
-                int expected = handIndex == matchingHandIndex ? ScoringConstants.SlotLoyaltyMultiplier : 1;
-                Assert.AreEqual(expected, outcome.Placement.ModifierMultiplier, id + " vs hand index " + handIndex);
+                int expected = handIndex == matchingHandIndex ? ScoringConstants.SlotLoyaltyBonus : 0;
+                Assert.AreEqual(expected, outcome.Placement.AdditiveMultBonus, id + " vs hand index " + handIndex);
             }
         }
 
