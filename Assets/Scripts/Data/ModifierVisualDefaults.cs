@@ -106,7 +106,17 @@ namespace Contigu.Data
             { ModifierId.FormatGrandSpecialiste, "F3" },
             { ModifierId.FormatPetitGlow, "G1" },
             { ModifierId.FormatMoyenGlow, "G2" },
-            { ModifierId.FormatGrandGlow, "G3" }
+            { ModifierId.FormatGrandGlow, "G3" },
+            // Twelfth batch: per-exact-shape Mastery — "K" prefix (Mult*
+            // already claims "M"), one digit per ShapeId.
+            { ModifierId.MasterySingle, "K1" },
+            { ModifierId.MasteryDomH, "K2" },
+            { ModifierId.MasteryTriL, "K3" },
+            { ModifierId.MasteryTriIH, "K4" },
+            { ModifierId.MasterySq2, "K5" },
+            { ModifierId.MasteryLTetro, "K6" },
+            { ModifierId.MasteryTTetro, "K7" },
+            { ModifierId.MasterySTetro, "K8" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

@@ -145,6 +145,30 @@ namespace Contigu.Core
         FormatGrandSpecialiste,
         FormatPetitGlow,
         FormatMoyenGlow,
-        FormatGrandGlow
+        FormatGrandGlow,
+
+        // ---- Twelfth batch: per-EXACT-shape "Mastery" modifiers (on
+        // explicit request: "une des formes recevrait un upgrade qui
+        // permettrait à la pièce de rajouter 1 point... nombre d'upgrade
+        // infinie par shape") — a flat +1 pts every time you place THIS
+        // exact shape, stacking with every duplicate copy held (no
+        // separate counter needed: the existing "unlimited duplicate
+        // modifiers" system already sums N copies' worth of events on a
+        // matching placement). Revisits the same "one modifier per exact
+        // shape" axis the eleventh batch's curation pass deliberately
+        // collapsed away (see its own doc comment: "20 near-identical...
+        // modifiers diluted the shop pool for a fairly minor axis") — kept
+        // anyway since unbounded stacking is a meaningfully different
+        // value proposition from the old flat xN/+pts versions that
+        // prompted that removal, but worth knowing if the pool ever feels
+        // diluted again.
+        MasterySingle,
+        MasteryDomH,
+        MasteryTriL,
+        MasteryTriIH,
+        MasterySq2,
+        MasteryLTetro,
+        MasteryTTetro,
+        MasterySTetro
     }
 }

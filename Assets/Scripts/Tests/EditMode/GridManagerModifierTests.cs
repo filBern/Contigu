@@ -2131,6 +2131,66 @@ namespace Contigu.Tests
             Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + shape);
         }
 
+        // ---- Twelfth batch: per-exact-shape Mastery modifiers ----
+
+        [Test]
+        public void MasteryTriL_FiresOnlyForItsExactShape_NotJustAnyThreeCellPiece()
+        {
+            // TriL and TriIH both have 3 cells but are different shapes —
+            // this is exactly what distinguishes Mastery (per-EXACT-shape)
+            // from the Format* tiers (per-size-tier) above.
+            var gridMatch = new GridManager();
+            var triL = PieceShapeCatalog.Get(ShapeId.TriL);
+            var matchResult = gridMatch.PlacePiece(triL, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.MasteryTriL });
+            Assert.AreEqual(ScoringConstants.MasteryBonusPerStack, matchResult.ModifierBonus);
+
+            var gridOtherShape = new GridManager();
+            var triIH = PieceShapeCatalog.Get(ShapeId.TriIH);
+            var otherShapeResult = gridOtherShape.PlacePiece(triIH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.MasteryTriL });
+            Assert.AreEqual(0, otherShapeResult.ModifierBonus, "Same cell count (3) as TriL, but a different exact shape — shouldn't fire");
+        }
+
+        [Test]
+        public void MasteryModifiers_EachOnlyFiresForItsOwnShape()
+        {
+            AssertMasteryFiresOnlyForShape(ModifierId.MasterySingle, ShapeId.Single);
+            AssertMasteryFiresOnlyForShape(ModifierId.MasteryDomH, ShapeId.DomH);
+            AssertMasteryFiresOnlyForShape(ModifierId.MasterySq2, ShapeId.Sq2);
+            AssertMasteryFiresOnlyForShape(ModifierId.MasteryLTetro, ShapeId.LTetro);
+            AssertMasteryFiresOnlyForShape(ModifierId.MasteryTTetro, ShapeId.TTetro);
+            AssertMasteryFiresOnlyForShape(ModifierId.MasterySTetro, ShapeId.STetro);
+        }
+
+        private static void AssertMasteryFiresOnlyForShape(ModifierId id, ShapeId matchingShape)
+        {
+            var modifiers = new List<ModifierId> { id };
+            foreach (ShapeId candidate in System.Enum.GetValues(typeof(ShapeId)))
+            {
+                var grid = new GridManager();
+                var shape = PieceShapeCatalog.Get(candidate);
+                var result = grid.PlacePiece(shape, PieceColor.Coral, 0, 0, modifiers);
+                int expected = candidate == matchingShape ? ScoringConstants.MasteryBonusPerStack : 0;
+                Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + candidate);
+            }
+        }
+
+        [Test]
+        public void MasteryModifier_StacksForFree_WhenHeldAsMultipleCopies()
+        {
+            // No separate per-shape counter: holding N copies of the same
+            // Mastery modifier just means N entries in activeModifiers,
+            // each contributing its own event — infinite stacking comes
+            // for free from the existing unlimited-duplicate-modifiers
+            // system (explicit request: "nombre d'upgrade infinie par shape").
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MasterySingle, ModifierId.MasterySingle, ModifierId.MasterySingle };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(3 * ScoringConstants.MasteryBonusPerStack, result.ModifierBonus);
+        }
+
         [Test]
         public void Solidarite_AddsMultEqualToHalfTotalModifierCountHeld()
         {

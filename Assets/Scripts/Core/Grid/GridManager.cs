@@ -637,7 +637,15 @@ namespace Contigu.Core
                 // before it instead of adding Copieur itself (see
                 // RunManager.BuyBlisterSlot), so this entry should never
                 // actually be looked up in practice.
-                { ModifierId.Copieur, ctx => 0 }
+                { ModifierId.Copieur, ctx => 0 },
+                { ModifierId.MasterySingle, ctx => ApplyShapeMastery(ShapeId.Single, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasteryDomH, ctx => ApplyShapeMastery(ShapeId.DomH, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasteryTriL, ctx => ApplyShapeMastery(ShapeId.TriL, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasteryTriIH, ctx => ApplyShapeMastery(ShapeId.TriIH, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasterySq2, ctx => ApplyShapeMastery(ShapeId.Sq2, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasteryLTetro, ctx => ApplyShapeMastery(ShapeId.LTetro, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasteryTTetro, ctx => ApplyShapeMastery(ShapeId.TTetro, ctx.Shape, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.MasterySTetro, ctx => ApplyShapeMastery(ShapeId.STetro, ctx.Shape, ctx.PlacedCells, ctx.Events) }
             };
         }
 
@@ -732,6 +740,18 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.FormeSpecialistMultiplier));
             return ScoringConstants.FormeSpecialistMultiplier;
+        }
+
+        /// <summary>A Mastery modifier (twelfth batch): flat ScoringConstants.MasteryBonusPerStack points when the placed piece's shape is exactly <paramref name="targetShape"/> — checked against PieceShape.Id, which a rotation never changes. Returns 0 (no-op) otherwise. Holding several copies of the same Mastery modifier stacks for free: each copy is its own entry in activeModifiers, so this runs once per copy and every run's event adds to the same total.</summary>
+        private static int ApplyShapeMastery(ShapeId targetShape, PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (shape.Id != targetShape)
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], ScoringConstants.MasteryBonusPerStack));
+            return ScoringConstants.MasteryBonusPerStack;
         }
 
         /// <summary>Grand Format: bonus per placed cell (the piece's own cell count, not the merged group) once the placed piece is at least ScoringConstants.GrandFormatMinPieceSize cells.</summary>

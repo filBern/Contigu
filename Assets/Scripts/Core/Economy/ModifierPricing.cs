@@ -150,6 +150,18 @@ namespace Contigu.Core
                 case ModifierId.FormatMoyenGlow: return 5;
                 case ModifierId.FormatGrandGlow: return 6;
 
+                // ---- Twelfth batch: per-exact-shape Mastery, a small flat
+                // bonus meant to be bought many times over a run — priced
+                // at the floor so stacking several copies stays affordable.
+                case ModifierId.MasterySingle: return 4;
+                case ModifierId.MasteryDomH: return 4;
+                case ModifierId.MasteryTriL: return 4;
+                case ModifierId.MasteryTriIH: return 4;
+                case ModifierId.MasterySq2: return 4;
+                case ModifierId.MasteryLTetro: return 4;
+                case ModifierId.MasteryTTetro: return 4;
+                case ModifierId.MasterySTetro: return 4;
+
                 default:
                     return -1;
             }

@@ -6436,3 +6436,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   veut garder. Tests mis à jour dans `GridManagerModifierTests.cs` et
   `RunManagerTests.cs` pour lire `AdditiveMultBonus` au lieu de
   `ModifierMultiplier` sur ces 9 modifiers.
+- **8 nouveaux modifiers "Mastery" (douzième batch), un par forme
+  exacte** : sur discussion de design ("une des formes recevrait un
+  upgrade qui permettrait à la pièce de rajouter 1 point à son nombre
+  de point... nombre d'upgrade infinie par shape") — `MasterySingle`,
+  `MasteryDomH`, `MasteryTriL`, `MasteryTriIH`, `MasterySq2`,
+  `MasteryLTetro`, `MasteryTTetro`, `MasterySTetro` : chacun +1 pt
+  (`ScoringConstants.MasteryBonusPerStack`, `GridManager.
+  ApplyShapeMastery`, comparé à `PieceShape.Id` — pas juste le nombre
+  de cellules, pour bien distinguer par exemple TriL de TriIH qui ont
+  toutes deux 3 cellules) quand la pièce posée est exactement cette
+  forme. L'empilement "infini" vient gratuitement du système existant
+  de modifiers dupliqués sans limite — acheter une 2e copie du même
+  Mastery ajoute juste une 2e entrée dans `activeModifiers`, chacune
+  contribuant son propre événement, sans nécessiter de compteur par
+  forme dédié. Prix fixé à 4 (le plancher), pensé pour être acheté
+  plusieurs fois dans une run. À noter : ceci ravive délibérément l'axe
+  "un modifier par forme exacte" que le onzième batch (curation pass)
+  avait justement retiré pour éviter de diluer le pool du shop (voir le
+  commentaire de `ModifierId`) — jugé different cette fois car
+  l'empilement infini change la proposition de valeur, mais à surveiller
+  si le pool redevient dilué.

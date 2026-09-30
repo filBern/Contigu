@@ -265,6 +265,9 @@ namespace Contigu.Core
         /// <summary>The "+pts" sibling of each Format* "Specialist" tier above — bonus per scored group cell when the placed piece's cell count falls in the tier, same pattern as Éclat's per-color bonus.</summary>
         public const int FormeGlowBonusPerCell = 4;
 
+        /// <summary>Twelfth batch: each Mastery modifier's flat points bonus per copy held, when the placed piece is its exact shape — infinite stacking comes from holding multiple copies of the same modifier (already supported), not from this constant growing.</summary>
+        public const int MasteryBonusPerStack = 1;
+
         /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
         public const int MultCinqRisqueBonus = 5;
 
