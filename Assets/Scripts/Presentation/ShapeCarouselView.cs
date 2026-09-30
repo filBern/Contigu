@@ -257,8 +257,13 @@ namespace Contigu.Presentation
             glyphBox.anchoredPosition = new Vector2(0f, -16f);
             ShapePreviewFactory.BuildMono(glyphBox, PieceShapeCatalog.Get(id), MonoShapeColor);
 
+            // No FontStyle.Bold (see UpgradeCardFactory's own comment on
+            // this) — the Digitalt font has no true bold face, so Unity's
+            // legacy Text synthesizes one by double-drawing a shifted
+            // copy, which reads as blurry rather than bold (explicit
+            // report: "Les titre et level pour les cartes de mastery sont
+            // flou a cause du blur"). Size alone carries the emphasis.
             var name = UIFactory.CreateText(cardImage.transform, "Name", VisualDefaults.GetShapeName(id), 18, UITheme.TextPrimary);
-            name.fontStyle = FontStyle.Bold;
             name.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             name.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             name.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -267,7 +272,6 @@ namespace Contigu.Presentation
 
             string levelLine = level > 1 ? "Level " + level : "Level 1";
             var levelText = UIFactory.CreateText(cardImage.transform, "Level", levelLine, 16, VisualDefaults.GoldenColor);
-            levelText.fontStyle = FontStyle.Bold;
             levelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             levelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             levelText.rectTransform.pivot = new Vector2(0.5f, 1f);

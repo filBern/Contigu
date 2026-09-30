@@ -6494,3 +6494,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   miroirs ajoutés dans `RunManagerTests.cs` (achat réel, défaut niveau
   1, non-plafonnement, bonus de score réel, absence de bonus sur une
   couleur jamais montée).
+- **Titre/niveau flous sur les cartes Mastery, corrigé** : sur rapport
+  explicite ("Les titre et level pour les cartes de mastery sont flou
+  a cause du blur") — `ShapeCarouselView`/`ColorCarouselView`
+  appliquaient `FontStyle.Bold` sur ces deux textes ; la police
+  Digitalt n'a pas de vraie graisse grasse, donc Unity la simule en
+  redessinant une copie décalée, ce qui donne cet effet flou plutôt
+  que gras — exactement le même bug déjà documenté (et évité) dans
+  `UpgradeCardFactory` ("No FontStyle.Bold here... used nowhere else
+  in the codebase" — vrai jusqu'à ces deux nouveaux fichiers). Retiré
+  des deux ; la taille seule porte l'emphase, même convention que
+  partout ailleurs dans le jeu.
