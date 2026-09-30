@@ -6209,3 +6209,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Select, et la musique de fond au lancement. P2 (shop/modifiers/
   victoire/défaite) n'a pas encore de clips — à faire une fois
   ajoutés.
+- **Ajustements audio suite aux premiers tests** : trois retours
+  explicites après le câblage initial des SFX —
+  - *"Le son de score doit avoir plus de variation over time,
+    légèrement"* : `PlayComboTick` ajoute maintenant un petit jitter
+    aléatoire (`ComboPitchJitter = 0.02`) par-dessus sa rampe de pitch
+    déjà montante, au lieu d'une progression parfaitement déterministe.
+  - *"Le whoosh doit être plus long"* : `Whoosh.wav` s'est avéré être un
+    clip source très court (~125ms). Sans nouvel outil audio disponible
+    dans cet environnement (pas de ffmpeg/sox/numpy/librosa) pour faire
+    un vrai time-stretch préservant le pitch, `SfxManager.Play` joue
+    maintenant `LineClear`/`Overlay` à un pitch de base réduit
+    (`WhooshPitch = 0.5`), ce qui ralentit aussi la lecture et double
+    grossièrement sa durée perçue (~250ms) — un vrai fix demanderait un
+    fichier source effectivement plus long.
+  - *"La musique doit être 75% plus faible"* : nouvelle constante
+    `MusicVolumeScale = 0.25`, appliquée par-dessus le slider Music des
+    settings plutôt que de changer sa plage 0-1 par défaut.

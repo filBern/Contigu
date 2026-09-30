@@ -47,6 +47,24 @@ namespace Contigu.Presentation
         // end up in ultrasonic-chipmunk territory.
         private const float ComboPitchStep = 0.035f;
         private const float ComboPitchMax = 1.6f;
+        // Small extra jitter on top of the rising ladder itself — on
+        // explicit request ("Le son de score doit avoir plus de variation
+        // over time, légèrement"), smaller than PitchJitter above since
+        // this one already varies step to step on its own.
+        private const float ComboPitchJitter = 0.02f;
+        // Whoosh.wav (LineClear/Overlay) is a genuinely tiny source clip —
+        // ~125ms — so lowering its pitch (which also slows its playback
+        // rate, stretching duration) is the only length lever available
+        // without a longer replacement file, on explicit request ("Le
+        // whoosh doit être plus long"). 0.5 roughly doubles it to ~250ms.
+        // A proper fix still needs an actually-longer source recording;
+        // this only stretches what's already there.
+        private const float WhooshPitch = 0.5f;
+        // BackgroundMusic.wav plays much louder than the SFX relative to
+        // it, on explicit report ("La musique doit être 75% plus faible")
+        // — cut to a quarter of whatever the Music slider says, rather
+        // than changing the slider's own 0-1 range/default.
+        private const float MusicVolumeScale = 0.25f;
 
         private static AudioSource _sfxSource;
         private static AudioSource _musicSource;
@@ -95,7 +113,7 @@ namespace Contigu.Presentation
             // — these two just need their own Music/Sfx slider applied on
             // top of that.
             _sfxSource.volume = VolumeSettings.SfxVolume;
-            _musicSource.volume = VolumeSettings.MusicVolume;
+            _musicSource.volume = VolumeSettings.MusicVolume * MusicVolumeScale;
         }
 
         /// <summary>Starts the background music loop — a no-op if it's already playing (safe to call again from either scene's bootstrap) or if the clip failed to load.</summary>
@@ -115,7 +133,8 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            _sfxSource.pitch = 1f + Random.Range(-PitchJitter, PitchJitter);
+            float basePitch = id == SfxId.LineClear || id == SfxId.Overlay ? WhooshPitch : 1f;
+            _sfxSource.pitch = basePitch + Random.Range(-PitchJitter, PitchJitter);
             _sfxSource.PlayOneShot(clip);
         }
 
@@ -140,7 +159,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            _sfxSource.pitch = Mathf.Min(ComboPitchMax, 1f + _comboStep * ComboPitchStep);
+            _sfxSource.pitch = Mathf.Min(ComboPitchMax, 1f + _comboStep * ComboPitchStep + Random.Range(-ComboPitchJitter, ComboPitchJitter));
             _comboStep++;
             _sfxSource.PlayOneShot(clip);
         }
