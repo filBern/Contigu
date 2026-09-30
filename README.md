@@ -6383,3 +6383,19 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   maintenant aussi détruite, avec le même bonus
   `ScoringConstants.KamikazeBonusPerDestroyedCell` par tuile que chaque
   autre tuile détruite.
+- **Le X du boss n'apparaît plus avant le décompte des points** : sur
+  rapport explicite ("Les X du boss devrait apparaitre après avoir
+  calculé tous les points de la pièce posé, pas avant de comptabiliser
+  les points") — le verrouillage du round boss (voir
+  `RunManager.ApplyBossLockTick`) tourne de façon synchrone dans Core
+  dès `PlacePiece`, donc `Cell.IsLocked` était déjà vrai au moment où
+  `GameBootstrap` appelait `_gridView.RefreshHoldingClearedCells(...)`
+  juste après — un redessin complet de la grille qui affichait le "X"
+  instantanément, bien avant que `PlayPlacementSequence` ait fini
+  d'animer les popups de score (son propre `_gridView.Refresh()` en
+  toute fin de séquence ne faisait donc plus rien de neuf). `GridView.
+  RefreshHoldingClearedCells` prend maintenant un paramètre optionnel
+  `deferredLockCells` : les cases qu'il contient sont laissées
+  intactes lors de ce premier redessin (donc encore vides à l'écran),
+  et ne sont révélées qu'au `Refresh()` de fin de séquence, comme le
+  reste. `GameBootstrap` lui passe `outcome.BossLockedCells`.

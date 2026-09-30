@@ -710,7 +710,11 @@ namespace Contigu.Presentation
                     heldTraits.Add(null);
                 }
             }
-            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits);
+            // Boss-locked cells (outcome.BossLockedCells) are deliberately
+            // held back from this immediate redraw and only revealed once
+            // PlayPlacementSequence's own end-of-sequence Refresh() runs —
+            // see RefreshHoldingClearedCells's doc comment.
+            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, outcome.BossLockedCells);
             _handView.Refresh();
             RefreshShuffleButton();
             // Round/budget update immediately; the score AND Lueur numbers

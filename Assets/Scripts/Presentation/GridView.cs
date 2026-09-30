@@ -282,8 +282,20 @@ namespace Contigu.Presentation
         /// (already-cleared) grid state — used to hold a just-completed line
         /// visually filled while its score is still playing out, before
         /// <see cref="ClearCellVisual"/> empties each cell in turn.
+        /// <paramref name="deferredLockCells"/> are left entirely untouched
+        /// (on explicit report: "Les X du boss devrait apparaitre après
+        /// avoir calculé tous les points de la pièce posé, pas avant de
+        /// comptabiliser les points") — a boss-round lock tick already
+        /// flipped these cells' Cell.IsLocked in Core by the time this
+        /// runs (GameBootstrap calls this right after RunManager.PlacePiece
+        /// returns, before the score-popup sequence even starts), so
+        /// redrawing them here would show their "X" obstacle instantly
+        /// instead of only once GridView.Refresh() reveals them at the end
+        /// of that sequence. Skipping them leaves their prior (still empty,
+        /// unlocked) visual in place until then — safe since a lock tick
+        /// only ever targets cells that were already empty.
         /// </summary>
-        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits)
+        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredLockCells = null)
         {
             var overrideColor = new Dictionary<Vector2Int, PieceColor>();
             var overrideTrait = new Dictionary<Vector2Int, PieceTrait?>();
@@ -293,11 +305,24 @@ namespace Contigu.Presentation
                 overrideTrait[heldCells[i]] = heldTraits[i];
             }
 
+            var deferred = new HashSet<Vector2Int>();
+            if (deferredLockCells != null)
+            {
+                for (int i = 0; i < deferredLockCells.Count; i++)
+                {
+                    deferred.Add(deferredLockCells[i]);
+                }
+            }
+
             for (int x = 0; x < GridManager.Size; x++)
             {
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var pos = new Vector2Int(x, y);
+                    if (deferred.Contains(pos))
+                    {
+                        continue;
+                    }
                     if (overrideColor.TryGetValue(pos, out var color))
                     {
                         _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos]);
