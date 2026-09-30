@@ -1874,17 +1874,24 @@ namespace Contigu.Tests
 
             const int anchorX = 3;
             const int anchorY = 3;
+            var token = run.Deck.Hand[slot].Value;
             FillCell(run.Grid, anchorX - 1, anchorY, PieceColor.Teal);
             FillCell(run.Grid, anchorX + 1, anchorY, PieceColor.Lime);
 
             var outcome = run.PlacePiece(slot, anchorX, anchorY);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(2, outcome.Placement.DestroyedCells.Count);
+            // The trait cell itself is also destroyed now (on explicit
+            // request: "L'upgrade kamikaze devrait détruire sa propre
+            // tuile aussi, pas juste les 8 autour"), so 3 cells total: the
+            // 2 surrounding ones plus the trait cell.
+            Assert.AreEqual(3, outcome.Placement.DestroyedCells.Count);
             CollectionAssert.Contains(outcome.Placement.DestroyedCells, new Vector2Int(anchorX - 1, anchorY));
             CollectionAssert.Contains(outcome.Placement.DestroyedCells, new Vector2Int(anchorX + 1, anchorY));
+            CollectionAssert.Contains(outcome.Placement.DestroyedCells, new Vector2Int(anchorX, anchorY));
             CollectionAssert.Contains(outcome.Placement.DestroyedCellColors, (PieceColor?)PieceColor.Teal);
             CollectionAssert.Contains(outcome.Placement.DestroyedCellColors, (PieceColor?)PieceColor.Lime);
+            CollectionAssert.Contains(outcome.Placement.DestroyedCellColors, (PieceColor?)token.Color);
         }
 
         [Test]
@@ -2190,7 +2197,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_KamikazeTrait_DestroysItsEightSurroundingTilesAndScoresPerTileDestroyed()
+        public void PlacePiece_KamikazeTrait_DestroysItselfAndItsEightSurroundingTilesAndScoresPerTileDestroyed()
         {
             var run = new RunManager(new SystemRandomProvider(1));
             run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
@@ -2208,10 +2215,13 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(slot, 4, 4);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(8 * ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
+            // 8 surrounding tiles plus the trait cell itself (on explicit
+            // request: "L'upgrade kamikaze devrait détruire sa propre
+            // tuile aussi, pas juste les 8 autour").
+            Assert.AreEqual(9 * ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
             Assert.IsFalse(run.Grid.GetCell(3, 3).IsFilled);
             Assert.IsFalse(run.Grid.GetCell(5, 5).IsFilled);
-            Assert.IsTrue(run.Grid.GetCell(4, 4).IsFilled, "The Kamikaze tile itself should survive");
+            Assert.IsFalse(run.Grid.GetCell(4, 4).IsFilled, "The Kamikaze tile itself should also be destroyed");
         }
 
         [Test]
@@ -2245,12 +2255,14 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
             Assert.IsTrue(outcome.Placement.Success);
-            // The board was otherwise empty, so the only cell eligible for
-            // Kamikaze to destroy is this same placement's OTHER cell — the
-            // trait cell itself is never a candidate (Moore neighborhood
-            // excludes its own center).
-            Assert.AreEqual(1, outcome.Placement.DestroyedCells.Count);
-            Assert.AreEqual(ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
+            // The board was otherwise empty, so the only cells eligible for
+            // Kamikaze to destroy are this same placement's OTHER cell and
+            // the trait cell itself — the latter is also a candidate now
+            // (on explicit request: "L'upgrade kamikaze devrait détruire
+            // sa propre tuile aussi, pas juste les 8 autour"), so both of
+            // the piece's 2 cells end up destroyed.
+            Assert.AreEqual(2, outcome.Placement.DestroyedCells.Count);
+            Assert.AreEqual(2 * ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus);
             int filledCount = 0;
             foreach (var offset in shape.Cells)
             {
@@ -2259,7 +2271,7 @@ namespace Contigu.Tests
                     filledCount++;
                 }
             }
-            Assert.AreEqual(1, filledCount, "Exactly one of the piece's 2 cells should survive — the trait cell itself");
+            Assert.AreEqual(0, filledCount, "Neither of the piece's 2 cells should survive — the trait cell now destroys itself too");
         }
 
         [Test]

@@ -1151,20 +1151,33 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Kamikaze Tile": destroys every already-filled, unlocked cell in
-        /// the enchanted cell's 8 surrounding tiles (Moore neighborhood) —
-        /// including this SAME placement's own other cells, if the piece
-        /// it's part of has more than one (on explicit request: "The
-        /// kamikaze tile shouldn't exclude it's own tiles" — no longer the
-        /// "protect what was just placed" convention Void Tile still uses)
-        /// — scoring ScoringConstants.KamikazeBonusPerDestroyedCell per
-        /// tile actually destroyed. The trait cell itself is never a
-        /// candidate (it's the center of the 8-neighbor search, not one of
-        /// the 8 neighbors).
+        /// "Kamikaze Tile": destroys the enchanted cell ITSELF plus every
+        /// already-filled, unlocked cell in its 8 surrounding tiles (Moore
+        /// neighborhood) — including this SAME placement's own other
+        /// cells, if the piece it's part of has more than one (on explicit
+        /// request: "The kamikaze tile shouldn't exclude it's own tiles"
+        /// — no longer the "protect what was just placed" convention Void
+        /// Tile still uses). The trait cell's own destruction was added on
+        /// a further explicit request ("L'upgrade kamikaze devrait
+        /// détruire sa propre tuile aussi, pas juste les 8 autour") — it
+        /// was previously spared, being the center of the 8-neighbor
+        /// search rather than one of the 8 neighbors. Scores
+        /// ScoringConstants.KamikazeBonusPerDestroyedCell per tile actually
+        /// destroyed, the trait cell included.
         /// </summary>
         private void ApplyKamikazeEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
             int destroyed = 0;
+
+            var centerCell = Grid.GetCell(traitCellPos.x, traitCellPos.y);
+            if (centerCell.IsFilled && !centerCell.IsLocked)
+            {
+                var centerColor = centerCell.FilledColor;
+                centerCell.ClearFill();
+                destroyed++;
+                AddDestroyedCell(placement, traitCellPos, centerColor);
+            }
+
             for (int dx = -1; dx <= 1; dx++)
             {
                 for (int dy = -1; dy <= 1; dy++)

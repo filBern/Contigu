@@ -85,7 +85,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion:
                     return "Locks in place instead of clearing, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
-                    return "Also destroys its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
+                    return "Destroys itself and its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
                 default:
                     return string.Empty;
             }

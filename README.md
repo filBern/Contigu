@@ -6375,3 +6375,11 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   pour que tout événement Trait (Void, Mirror, Seeder, Detonator,
   Chameleon, Spark, Kamikaze) retombe sur le même `UITheme.TextPrimary`
   quasi-noir que chaque popup de points ordinaire.
+- **La tuile Kamikaze se détruit maintenant elle-même aussi** : sur
+  demande explicite ("L'upgrade kamikaze devrait détruire sa propre
+  tuile aussi, pas juste les 8 autour") — `RunManager.ApplyKamikazeEffect`
+  détruisait les 8 tuiles voisines (Moore) mais épargnait toujours la
+  tuile enchantée elle-même (le centre de la recherche) ; elle est
+  maintenant aussi détruite, avec le même bonus
+  `ScoringConstants.KamikazeBonusPerDestroyedCell` par tuile que chaque
+  autre tuile détruite.

@@ -197,7 +197,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
-            "A tile that also destroys its 8 surrounding tiles when placed (+6 per tile destroyed).", false, UpgradeRarity.Rare);
+            "A tile that destroys itself and its 8 surrounding tiles when placed (+6 per tile destroyed).", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition[] All =
         {

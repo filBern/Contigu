@@ -193,7 +193,7 @@ namespace Contigu.Core
 
         // ---- Third batch of tile-upgrade (PieceTrait) bonuses ----
 
-        /// <summary>Kamikaze Tile: bonus per surrounding tile actually destroyed, including this same placement's own other cells (on explicit request: "The kamikaze tile shouldn't exclude it's own tiles").</summary>
+        /// <summary>Kamikaze Tile: bonus per tile actually destroyed, including this same placement's own other cells (on explicit request: "The kamikaze tile shouldn't exclude it's own tiles") and the trait cell itself (on further explicit request: "L'upgrade kamikaze devrait détruire sa propre tuile aussi, pas juste les 8 autour").</summary>
         public const int KamikazeBonusPerDestroyedCell = 6;
 
         /// <summary>
