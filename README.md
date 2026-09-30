@@ -6271,3 +6271,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   que celle du HUD) — le shop est le seul écran où le joueur dépense
   réellement cette monnaie, elle mérite d'y être le nombre le plus
   visible à l'écran plutôt qu'un petit readout sous le titre.
+- **Prix du reroll découplé des achats de slots** : sur demande explicite
+  ("Les reroll devraient augmenter de prix seulement lorsqu'on reroll")
+  — `GetRerollPrice`/`GetBlisterSlotPrice`/`GetUpgradeSlotPrice`
+  partageaient tous le même compteur `_purchasesThisVisit`, donc acheter
+  un modifier ou un upgrade faisait AUSSI grimper le prix du reroll (et
+  inversement, rerollait faisait grimper le prix des slots). Nouveau
+  compteur séparé `_rerollsThisVisit`, incrémenté uniquement par
+  `RerollShop` et lu uniquement par `GetRerollPrice` — chaque action
+  n'escalade maintenant que sa propre ligne de prix, complètement
+  découplées dans les deux sens.

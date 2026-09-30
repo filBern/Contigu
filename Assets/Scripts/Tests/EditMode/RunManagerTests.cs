@@ -385,6 +385,52 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void RerollPrice_EscalatesWithEachRerollThisVisit()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(1000000);
+            int firstPrice = run.GetRerollPrice();
+
+            Assert.IsTrue(run.RerollShop());
+            int secondPrice = run.GetRerollPrice();
+
+            Assert.Greater(secondPrice, firstPrice, "Every reroll this visit should raise the price of the next one");
+        }
+
+        [Test]
+        public void RerollPrice_DoesNotEscalate_FromABlisterSlotPurchase()
+        {
+            // On explicit request: "Les reroll devraient augmenter de prix
+            // seulement lorsqu'on reroll" — a slot purchase used to also
+            // raise the reroll price (shared counter); now it shouldn't.
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(1000000);
+            int priceBefore = run.GetRerollPrice();
+
+            Assert.IsTrue(run.BuyBlisterSlot(0));
+
+            Assert.AreEqual(priceBefore, run.GetRerollPrice(), "A slot purchase should not raise the reroll price");
+        }
+
+        [Test]
+        public void BlisterSlotPrice_DoesNotEscalate_FromAReroll()
+        {
+            // Fully decoupled the other way too — a reroll shouldn't raise
+            // Blister slot prices either, now that each action only
+            // escalates its own price line.
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugGrantLueur(1000000);
+            int priceBefore = run.GetBlisterSlotPrice(0);
+
+            Assert.IsTrue(run.RerollShop());
+
+            Assert.AreEqual(priceBefore, run.GetBlisterSlotPrice(0), "A reroll should not raise Blister slot prices");
+        }
+
+        [Test]
         public void GetBlisterSlotPrice_MatchesModifierPricingOrUpgradeBasePrice_BeforeAnyPurchaseThisVisit()
         {
             // No purchase yet this visit, so the usual escalation is a no-op

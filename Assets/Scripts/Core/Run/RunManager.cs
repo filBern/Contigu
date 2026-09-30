@@ -182,8 +182,11 @@ namespace Contigu.Core
         private readonly ShopSlot[] _blisterSlots = new ShopSlot[EconomyConstants.ShopBlisterSlotCount];
         private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
 
-        /// <summary>How many purchases (slot buys AND rerolls) have happened in the CURRENT shop visit — every one raises the price of everything else still on offer (see GetSlotPrice/GetRerollPrice), reset to 0 each time the shop opens.</summary>
+        /// <summary>How many slot purchases (Blister or Casino) have happened in the CURRENT shop visit — every one raises the price of every OTHER slot still on offer (see GetBlisterSlotPrice/GetUpgradeSlotPrice), reset to 0 each time the shop opens. Kept separate from <see cref="_rerollsThisVisit"/> (on explicit report: "Les reroll devraient augmenter de prix seulement lorsqu'on reroll") — a slot purchase no longer escalates the reroll price, only rerolling itself does.</summary>
         private int _purchasesThisVisit;
+
+        /// <summary>How many times the shop has been rerolled this visit — drives ONLY GetRerollPrice's own escalation (see _purchasesThisVisit's doc comment for why this is a separate counter), reset to 0 each time the shop opens.</summary>
+        private int _rerollsThisVisit;
 
         /// <summary>The "Blister" section (see EconomyConstants.ShopBlisterSlotCount) — a modifier OR upgrade, drawn from one shared bag, always fully revealed. Never touched by RerollShop.</summary>
         public IReadOnlyList<ShopSlot> ShopBlisterSlots
@@ -1408,6 +1411,7 @@ namespace Contigu.Core
         private void OpenShop()
         {
             _purchasesThisVisit = 0;
+            _rerollsThisVisit = 0;
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
@@ -1586,7 +1590,7 @@ namespace Contigu.Core
 
         public int GetRerollPrice()
         {
-            return ComputePrice(EconomyConstants.ShopRerollBasePrice);
+            return Mathf.RoundToInt(EconomyConstants.ShopRerollBasePrice * (1f + EconomyConstants.ShopPriceEscalationPerPurchase * _rerollsThisVisit));
         }
 
         private int ComputePrice(int basePrice)
@@ -2004,8 +2008,10 @@ namespace Contigu.Core
         /// held (the upgrade is already applied by then) — this only
         /// replaces the SLOT OFFER itself, giving the player a fresh
         /// purchasable pick where a spent one used to sit. Costs Lueur (see
-        /// GetRerollPrice), and itself counts toward this visit's price
-        /// escalation like any other purchase.
+        /// GetRerollPrice), escalating only from further rerolls this same
+        /// visit (see _rerollsThisVisit) — no longer from slot purchases,
+        /// on explicit report: "Les reroll devraient augmenter de prix
+        /// seulement lorsqu'on reroll".
         /// </summary>
         public bool RerollShop()
         {
@@ -2020,7 +2026,7 @@ namespace Contigu.Core
             }
 
             Lueur -= price;
-            _purchasesThisVisit++;
+            _rerollsThisVisit++;
             for (int i = 0; i < _upgradeSlots.Length; i++)
             {
                 _upgradeSlots[i] = RollUpgradeSlot();
