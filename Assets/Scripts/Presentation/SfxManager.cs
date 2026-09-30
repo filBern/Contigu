@@ -52,14 +52,22 @@ namespace Contigu.Presentation
         // over time, légèrement"), smaller than PitchJitter above since
         // this one already varies step to step on its own.
         private const float ComboPitchJitter = 0.02f;
-        // Whoosh.wav (LineClear/Overlay) is a genuinely tiny source clip —
-        // ~125ms — so lowering its pitch (which also slows its playback
-        // rate, stretching duration) is the only length lever available
-        // without a longer replacement file, on explicit request ("Le
-        // whoosh doit être plus long"). 0.5 roughly doubles it to ~250ms.
-        // A proper fix still needs an actually-longer source recording;
-        // this only stretches what's already there.
-        private const float WhooshPitch = 0.5f;
+        // Whoosh.wav is a genuinely tiny source clip — ~125ms. LineClear
+        // now fires once PER cleared/destroyed cell (on explicit request:
+        // "être trigger chaque fois qu'une tuile est cleared ou
+        // détruite"), which can stack up several plays in quick
+        // succession, so it needs to stay SNAPPY rather than the slower,
+        // longer take Overlay still uses — on the immediate explicit
+        // follow-up ("Le whoosh doit être plus rapide"), pitched UP
+        // instead, shortening it to ~100ms.
+        private const float LineClearPitch = 1.25f;
+        // Overlay open/close is a single, one-off moment (not stacked),
+        // so it keeps the slower/longer take from the earlier request
+        // ("Le whoosh doit être plus long") — lowering pitch also slows
+        // playback, stretching duration, the only length lever available
+        // without a longer replacement file. A proper fix for either
+        // still needs an actually different source recording.
+        private const float OverlayPitch = 0.5f;
         // BackgroundMusic.wav plays much louder than the SFX relative to
         // it, on explicit report ("La musique doit être 75% plus faible")
         // — cut to a quarter of whatever the Music slider says, rather
@@ -133,7 +141,9 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            float basePitch = id == SfxId.LineClear || id == SfxId.Overlay ? WhooshPitch : 1f;
+            float basePitch = id == SfxId.LineClear ? LineClearPitch
+                : id == SfxId.Overlay ? OverlayPitch
+                : 1f;
             _sfxSource.pitch = basePitch + Random.Range(-PitchJitter, PitchJitter);
             _sfxSource.PlayOneShot(clip);
         }

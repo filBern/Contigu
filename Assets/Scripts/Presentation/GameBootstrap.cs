@@ -902,19 +902,17 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
-            if (placement.ClearedCells.Count > 0)
-            {
-                // One whoosh for the whole clear, not per cell — "plus
-                // marquant que le score de groupe", a single distinct
-                // moment rather than a rapid burst of dings.
-                SfxManager.Play(SfxId.LineClear);
-            }
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
                 _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell, UITheme.Success);
                 _gridView.PulseCell(pos.x, pos.y);
+                // On explicit request: "être trigger chaque fois qu'une
+                // tuile est cleared ou détruite" — one whoosh per cell
+                // (also see the DestroyedCells loop below), not once for
+                // the whole clear.
+                SfxManager.Play(SfxId.LineClear);
                 // Small burst as the tile actually empties (explicit
                 // request: "un petit vfx lorsqu'on clear une tile ou qu'on
                 // la détruit") — tinted to the color it had right before
@@ -947,6 +945,7 @@ namespace Contigu.Presentation
                 _gridView.PulseCell(pos.x, pos.y);
                 _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary);
                 _gridView.ClearCellVisual(pos.x, pos.y);
+                SfxManager.Play(SfxId.LineClear);
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;

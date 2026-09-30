@@ -6235,3 +6235,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   le même point d'accroche joue maintenant aussi `SfxId.CarouselTick`,
   un tick par badge qui passe sous le cadre, ralentissant naturellement
   avec la décélération ease-out du spin.
+- **Whoosh déclenché par tuile, et plus rapide** : sur demande explicite
+  ("Le whoosh doit être plus rapide mais être trigger chaque fois qu'une
+  tuile est cleared ou détruite") — remplace le "un seul whoosh pour
+  tout le clear" de l'intégration initiale. `GameBootstrap.
+  PlayPlacementSequence` joue maintenant `SfxId.LineClear` une fois par
+  cellule dans la boucle `ClearedCells` ET dans la boucle
+  `DestroyedCells` (Void/Kamikaze — n'avait aucun son jusqu'ici).
+  Puisqu'il peut maintenant s'empiler plusieurs fois de suite, son pitch
+  est séparé de celui d'`Overlay` (qui garde le pitch plus lent/plus
+  long demandé plus tôt, un seul déclenchement à la fois donc pas de
+  souci d'empilement) : nouvelle constante `LineClearPitch = 1.25`
+  (raccourcit `Whoosh.wav` à ~100ms) contre `OverlayPitch = 0.5`
+  (~250ms) conservée séparément.
