@@ -42,25 +42,30 @@ namespace Contigu.Presentation
             container.position = anchor.position + new Vector3(jitterX, 0f, 0f);
             container.sizeDelta = new Vector2(160f, 40f);
 
-            // Small beige diamond backdrop (explicit request: "un petit
-            // losange derrière les pop up de score avec la couleur ... beige
-            // du background de la liste de modifiers", i.e. UITheme.Panel)
-            // — same rotated-square motif as the Lueur icon and the modifier
-            // badge index number. Sized down from an initial 40px on
-            // explicit follow-up report ("le losange de popups de score est
-            // trop gros").
-            var diamond = UIFactory.CreatePanel(container, "Diamond", UITheme.Panel);
-            diamond.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            diamond.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            diamond.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            diamond.rectTransform.anchoredPosition = Vector2.zero;
-            diamond.rectTransform.sizeDelta = new Vector2(26f, 26f);
-            diamond.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            // Small beige backdrop (explicit request: "un petit losange
+            // derrière les pop up de score avec la couleur ... beige du
+            // background de la liste de modifiers", i.e. UITheme.Panel).
+            // Sized down from an initial 40px on explicit follow-up report
+            // ("le losange de popups de score est trop gros"), then un-
+            // rotated back into a plain square on further explicit report
+            // that the rotated-diamond motif was showing up in too many
+            // places ("A plusieurs endroits pour le pointage et pour les
+            // modifiers on utilise des losanges jaune alors que ça devrait
+            // être réservé a la currency (lueur)") — the 45°-rotated
+            // "diamond" shape is now exclusively HudView/ShopView's own
+            // Lueur icon, so every score popup reuses this same backdrop
+            // shape without also borrowing its distinctive rotation.
+            var backdrop = UIFactory.CreatePanel(container, "Backdrop", UITheme.Panel);
+            backdrop.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            backdrop.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            backdrop.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            backdrop.rectTransform.anchoredPosition = Vector2.zero;
+            backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f);
 
             var popup = UIFactory.CreateText(container, "Popup", text, 22, color);
             UIFactory.StretchFull(popup.rectTransform);
 
-            StartCoroutine(AnimatePopup(container, diamond, popup));
+            StartCoroutine(AnimatePopup(container, backdrop, popup));
         }
 
         /// <summary>
@@ -125,7 +130,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private IEnumerator AnimatePopup(RectTransform container, Image diamond, Text text)
+        private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text)
         {
             // Slow, readable float+fade — several of these play in a staggered
             // sequence per placement, so each one needs enough time on screen to
@@ -135,7 +140,7 @@ namespace Contigu.Presentation
             float t = 0f;
             Vector3 startPos = container.position;
             Color textColor = text.color;
-            Color diamondColor = diamond.color;
+            Color backdropColor = backdrop.color;
 
             while (t < duration)
             {
@@ -150,9 +155,9 @@ namespace Contigu.Presentation
                 tc.a = alpha;
                 text.color = tc;
 
-                var dc = diamondColor;
+                var dc = backdropColor;
                 dc.a = alpha;
-                diamond.color = dc;
+                backdrop.color = dc;
 
                 yield return null;
             }

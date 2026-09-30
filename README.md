@@ -6326,3 +6326,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   explicite ("Le compteur de lueur dans le shop devrait être un peu
   plus a gauche") — était collé au bord droit (`-40f` depuis l'ancre
   droite) ; décalé à `-160f`.
+- **Le losange doré réservé à la Lueur** : sur rapport explicite ("A
+  plusieurs endroits pour le pointage et pour les modifiers on utilise
+  des losanges jaune alors que ça devrait être réservé a la currency
+  (lueur)") — audit de chaque élément tourné à 45° (`Quaternion.Euler(0,
+  0, 45)`) dans tout le projet : 2 usages légitimes (l'icône Lueur de
+  `HudView`/`ShopView`, et le prix en Lueur du bouton d'achat) et 2
+  usages à corriger :
+  - `FeedbackLayer.SpawnPopup` : le fond derrière chaque popup de score
+    ("pointage") reprenait la même rotation en losange (couleur beige,
+    pas dorée, mais même motif visuel réutilisé) — dérotationné en
+    simple carré.
+  - `ModifierPanelView` : les badges "index" (numéro de position) et
+    "level" (Lv2, Lv3...) sur chaque badge de modifier utilisaient EN
+    PLUS la couleur dorée elle-même (`VisualDefaults.GoldenColor`) —
+    dérotationnés en carrés ET recolorés en `UITheme.Success` (menthe),
+    clairement distincts de la Lueur sur les deux plans (forme et
+    couleur). Le losange tourné doré redevient exclusif à l'icône Lueur.

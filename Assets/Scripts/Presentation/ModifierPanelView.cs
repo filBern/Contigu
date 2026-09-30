@@ -326,18 +326,23 @@ namespace Contigu.Presentation
                 // now follows this exact list order, see
                 // PlacementResult.Mult, so the player needs to see it to
                 // arrange x-modifiers after +modifiers). Top-left corner, on
-                // a small rotated-square "diamond" backdrop (explicit
-                // request: "mettre un petit losange sous le chiffre" — same
-                // motif as HudView's Lueur icon) instead of the dark text
+                // a small square backdrop (explicit request: "mettre un
+                // petit losange sous le chiffre") instead of the dark text
                 // Outline this used before, for legibility over any badge
-                // color/icon underneath.
-                var indexBg = UIFactory.CreatePanel(badge.transform, "IndexBg", VisualDefaults.GoldenColor);
+                // color/icon underneath. No longer rotated into a "diamond",
+                // and no longer gold, on further explicit report that the
+                // rotated-diamond motif and its color were showing up in too
+                // many places outside the Lueur currency itself ("A
+                // plusieurs endroits pour le pointage et pour les modifiers
+                // on utilise des losanges jaune alors que ça devrait être
+                // réservé a la currency (lueur)") — HudView/ShopView's own
+                // Lueur icon is now the ONLY gold diamond in the game.
+                var indexBg = UIFactory.CreatePanel(badge.transform, "IndexBg", UITheme.Success);
                 indexBg.rectTransform.anchorMin = new Vector2(0f, 1f);
                 indexBg.rectTransform.anchorMax = new Vector2(0f, 1f);
                 indexBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 indexBg.rectTransform.anchoredPosition = new Vector2(15f, -15f);
                 indexBg.rectTransform.sizeDelta = new Vector2(30f, 30f);
-                indexBg.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
                 var indexLabel = UIFactory.CreateText(badge.transform, "Index", (i + 1).ToString(), Mathf.RoundToInt(IndexLabelSize), UITheme.TextPrimary);
                 indexLabel.raycastTarget = false;
@@ -349,19 +354,19 @@ namespace Contigu.Presentation
 
                 // "Modifier Upgrade" level badge (see ModifierLevelUtility)
                 // — bottom-right corner, mirroring the top-left index
-                // diamond's motif, but only shown once a slot is actually
-                // leveled past 1: every badge carrying the same tag all the
-                // time would be visual noise for the overwhelming majority
-                // that are never upgraded.
+                // badge's own (no longer diamond, no longer gold — see its
+                // own comment above) motif, but only shown once a slot is
+                // actually leveled past 1: every badge carrying the same tag
+                // all the time would be visual noise for the overwhelming
+                // majority that are never upgraded.
                 if (level > 1)
                 {
-                    var levelBg = UIFactory.CreatePanel(badge.transform, "LevelBg", VisualDefaults.GoldenColor);
+                    var levelBg = UIFactory.CreatePanel(badge.transform, "LevelBg", UITheme.Success);
                     levelBg.rectTransform.anchorMin = new Vector2(1f, 0f);
                     levelBg.rectTransform.anchorMax = new Vector2(1f, 0f);
                     levelBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                     levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f);
                     levelBg.rectTransform.sizeDelta = new Vector2(34f, 34f);
-                    levelBg.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
                     var levelLabel = UIFactory.CreateText(badge.transform, "Level", "Lv" + level, Mathf.RoundToInt(IndexLabelSize * 0.8f), UITheme.TextPrimary);
                     levelLabel.raycastTarget = false;
