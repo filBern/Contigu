@@ -299,6 +299,13 @@ namespace Contigu.Presentation
                 {
                     lastShownIndex = centeredIndex;
                     UpdateCard(_reelModifierIds[centeredIndex]);
+                    // On explicit request: "Le tick du carousel doit être
+                    // trigger chaque fois qu'un modifier arrive au centre
+                    // du carousel" — same moment UpdateCard already keys
+                    // off, one tick per badge that passes under the
+                    // highlight, naturally slowing down with the reel's own
+                    // ease-out deceleration.
+                    SfxManager.Play(SfxId.CarouselTick);
                 }
                 yield return null;
             }

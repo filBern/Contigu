@@ -6226,3 +6226,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - *"La musique doit être 75% plus faible"* : nouvelle constante
     `MusicVolumeScale = 0.25`, appliquée par-dessus le slider Music des
     settings plutôt que de changer sa plage 0-1 par défaut.
+- **CarouselTick sur le carousel de modifiers (reveal au démarrage /
+  Random Modifier)** : sur demande explicite ("Le tick du carousel doit
+  être trigger chaque fois qu'un modifier arrive au centre du
+  carousel") — `ModifierCarouselView.SpinRoutine` détectait déjà quel
+  badge est actuellement centré sous le cadre en surbrillance
+  (`centeredIndex != lastShownIndex`, qui déclenche déjà `UpdateCard`) ;
+  le même point d'accroche joue maintenant aussi `SfxId.CarouselTick`,
+  un tick par badge qui passe sous le cadre, ralentissant naturellement
+  avec la décélération ease-out du spin.
