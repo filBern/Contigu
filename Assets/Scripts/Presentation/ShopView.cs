@@ -67,9 +67,20 @@ namespace Contigu.Presentation
         private const float SectionGap = 20f;
         private const float LabelToCardsGap = 24f;
 
+        // Slow, gentle scale wobble on the Lueur readout (explicit request:
+        // "Il devrait aussi pulse en grosseur un peu tranquillement pour le
+        // mettre en valeur") — same sine-wave technique as GameBootstrap's
+        // PulseStatusText, tuned a bit slower/subtler than that one's own
+        // 0.05/1.5 since this number needs to stay legible, not just catch
+        // the eye.
+        private const float LueurPulseAmplitude = 0.06f;
+        private const float LueurPulseSpeed = 1.1f;
+
         private TooltipView _tooltip;
         private RectTransform _root;
         private Text _lueurLabel;
+        private RectTransform _lueurContainer;
+        private Coroutine _lueurPulseCoroutine;
         private RectTransform _blisterCardsContainer;
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
@@ -97,36 +108,40 @@ namespace Contigu.Presentation
             // the itch page mockups: "au lieu de marquer Lueur: ... mettre le
             // petit losange orange") — kept consistent across every screen
             // that shows this currency rather than fixing only the HUD.
-            // Moved to the top-right corner and enlarged well past HudView's
-            // own 44pt (explicit report, with a screenshot circling the
-            // shop's empty right-hand side: "le compteur de lueur devrait
-            // être à droite en gros pour qu'il soit clairement
-            // identifiable") — the shop is the one screen where the player
-            // actually SPENDS it, so it deserves to read as the single most
-            // prominent number on screen, not a small readout tucked under
-            // the header.
-            var lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
-            lueurContainer.anchorMin = new Vector2(1f, 1f);
-            lueurContainer.anchorMax = new Vector2(1f, 1f);
-            lueurContainer.pivot = new Vector2(1f, 1f);
-            lueurContainer.anchoredPosition = new Vector2(-40f, -60f);
-            var lueurLayout = lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            lueurLayout.spacing = 10f;
+            // Moved to the right edge and enlarged well past HudView's own
+            // 44pt (explicit report, with a screenshot circling the shop's
+            // empty right-hand side: "le compteur de lueur devrait être à
+            // droite en gros pour qu'il soit clairement identifiable") — the
+            // shop is the one screen where the player actually SPENDS it, so
+            // it deserves to read as the single most prominent number on
+            // screen. Re-centered vertically and enlarged again, plus a slow
+            // pulse (see PulseLueurLabel), on immediate explicit follow-up
+            // once that first pass was seen in place: "Le nombre de lueur
+            // doit être plus gros et centré verticalement dans le shop. Il
+            // devrait aussi pulse en grosseur un peu tranquillement pour le
+            // mettre en valeur".
+            _lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
+            _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
+            _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
+            _lueurContainer.pivot = new Vector2(1f, 0.5f);
+            _lueurContainer.anchoredPosition = new Vector2(-40f, 0f);
+            var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
+            lueurLayout.spacing = 14f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childForceExpandWidth = false;
             lueurLayout.childForceExpandHeight = false;
-            var lueurFitter = lueurContainer.gameObject.AddComponent<ContentSizeFitter>();
+            var lueurFitter = _lueurContainer.gameObject.AddComponent<ContentSizeFitter>();
             lueurFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var lueurIcon = UIFactory.CreatePanel(lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
-            lueurIcon.rectTransform.sizeDelta = new Vector2(28f, 28f);
+            var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
+            lueurIcon.rectTransform.sizeDelta = new Vector2(40f, 40f);
             lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
-            lueurIconLayout.preferredWidth = 40f;
-            lueurIconLayout.preferredHeight = 40f;
+            lueurIconLayout.preferredWidth = 58f;
+            lueurIconLayout.preferredHeight = 58f;
 
-            _lueurLabel = UIFactory.CreateText(lueurContainer, "Lueur", "", 56, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "Lueur", "", 84, VisualDefaults.GoldenColor);
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -207,11 +222,32 @@ namespace Contigu.Presentation
         {
             _root.gameObject.SetActive(true);
             Refresh(run);
+            if (_lueurPulseCoroutine == null)
+            {
+                _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
+            }
         }
 
         public void Hide()
         {
             _root.gameObject.SetActive(false);
+            if (_lueurPulseCoroutine != null)
+            {
+                StopCoroutine(_lueurPulseCoroutine);
+                _lueurPulseCoroutine = null;
+            }
+            _lueurContainer.localScale = Vector3.one;
+        }
+
+        /// <summary>Continuous, gentle sine-wave scale wobble on the Lueur readout, same technique as GameBootstrap.PulseStatusText — runs only while the shop is actually open (started/stopped by Show/Hide), so it doesn't keep ticking uselessly in the background between shop visits.</summary>
+        private System.Collections.IEnumerator PulseLueurLabel()
+        {
+            while (true)
+            {
+                float scale = 1f + LueurPulseAmplitude * Mathf.Sin(Time.time * LueurPulseSpeed);
+                _lueurContainer.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
         }
 
         /// <summary>Rebuilds every card from the run's current shop state — called on Show and after every purchase/reroll so prices, affordability and "sold" states stay accurate.</summary>

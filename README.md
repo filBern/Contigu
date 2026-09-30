@@ -6301,3 +6301,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     aussi un budget de pièces réduit (22 contre 28) ET le verrouillage
     du boss. Ramené à ~x1.92, sous le ratio du round 7 plutôt qu'au
     dessus.
+- **Compteur de Lueur du shop : centré verticalement, encore agrandi,
+  pulse doucement** : sur demande explicite, juste après avoir vu le
+  premier passage en place ("Le nombre de lueur doit être plus gros et
+  centré verticalement dans le shop. Il devrait aussi aussi pulse en
+  grosseur un peu tranquillement pour le mettre en valeur") — ancré
+  maintenant au milieu du bord droit (`anchorMin/Max = (1, 0.5)`) au
+  lieu du coin haut-droit, police 84 (icône 40px) au lieu de 56, et
+  nouveau `ShopView.PulseLueurLabel` : même technique de wobble
+  sinusoïdal que `GameBootstrap.PulseStatusText`, démarré/arrêté par
+  `Show`/`Hide` pour ne pas tourner inutilement quand le shop est
+  fermé.
+- **Round affiché sur la barre de score** : sur demande explicite ("Il
+  faut mettre a quelle round on est rendu sur le nombre total a
+  réussir") — la barre de score en haut de l'écran affichait seulement
+  "roundScore / quota" (ex: "300 / 300"), sans indiquer à quelle round
+  on est rendu, alors que l'affichage du round avait été retiré lors
+  d'une refonte précédente ("Replaces the old text-only readout...").
+  Nouveau `HudView.SetRound(roundNumber, roundCount)`, appelé une fois
+  par `Refresh` (le round ne change jamais au milieu de la cascade de
+  popups que `SetScores` anime), et lu par `SetScores` pour préfixer le
+  label : "Round 3/8  —  1050 / 2000".

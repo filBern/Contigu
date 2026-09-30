@@ -37,6 +37,14 @@ namespace Contigu.Presentation
         private Text _piecesLabel;
         private RectTransform _lueurContainer;
         private Text _lueurLabel;
+        // Folded into the score bar's own label (see SetRound/SetScores)
+        // rather than a separate readout — on explicit request: "il faut
+        // mettre a quelle round on est rendu sur le nombre total a
+        // réussir". Defaults match round 1 of an 8-round run so the very
+        // first SetScores call (before Refresh's own SetRound runs) never
+        // shows a stale 0/0.
+        private int _roundNumber = 1;
+        private int _roundCount = RunConfig.RoundCount;
 
         public void Build(Transform parent)
         {
@@ -209,9 +217,17 @@ namespace Contigu.Presentation
 
         public void Refresh(RunManager run)
         {
+            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount);
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             SetScores(run.RoundScore, run.CurrentQuota);
             SetLueur(run.Lueur);
+        }
+
+        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade.</summary>
+        public void SetRound(int roundNumber, int roundCount)
+        {
+            _roundNumber = roundNumber;
+            _roundCount = roundCount;
         }
 
         /// <summary>
@@ -238,7 +254,7 @@ namespace Contigu.Presentation
         /// </summary>
         public void SetScores(int roundScore, int quota)
         {
-            _scoreLabel.text = roundScore + " / " + quota;
+            _scoreLabel.text = "Round " + _roundNumber + "/" + _roundCount + "  —  " + roundScore + " / " + quota;
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
         }
 
