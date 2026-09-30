@@ -6248,3 +6248,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   souci d'empilement) : nouvelle constante `LineClearPitch = 1.25`
   (raccourcit `Whoosh.wav` à ~100ms) contre `OverlayPitch = 0.5`
   (~250ms) conservée séparément.
+- **Son de Lueur manquant sur le bonus de fin de round** : sur rapport
+  explicite ("Il manque le bruit de lueur a la fin d'une round lorsqu'on
+  récupère de la currency") — `GameBootstrap.
+  PlayRoundEndLueurBonusSequence` (le "+1" qui vole de la barre de
+  pièces vers le compteur de Lueur pour chaque pièce non utilisée
+  quand un round se termine avant d'épuiser son budget) n'avait jamais
+  été câblé lors de l'intégration initiale des SFX — seuls les deux
+  autres points de gain de Lueur (`LueurGroups` et l'événement
+  `LueurBonus` dans `PlayPlacementSequence`) l'étaient. Ajouté
+  `SfxManager.Play(SfxId.LueurGain)` dans sa boucle, une fois par pièce
+  convertie.

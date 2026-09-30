@@ -1175,6 +1175,7 @@ namespace Contigu.Presentation
                 _hudView.SetPieces(displayedPieces, _run.CurrentBudget);
                 _feedbackLayer.SpawnFlyingPopup(fromAnchor.position, _hudView.LueurLabelTransform, "+1", VisualDefaults.GoldenColor);
                 _hudView.SetLueur(displayedLueur);
+                SfxManager.Play(SfxId.LueurGain);
                 yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);
             }
 
