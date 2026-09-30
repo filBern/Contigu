@@ -21,10 +21,15 @@ namespace Contigu.Core
         /// ("Le boss ajoute trop de tuile maintenant qu'on est rendu en
         /// 6x6") — the old numbers (14 cells locked over a 22-piece boss
         /// round) ate ~22% of an 8x8 board but ~39% of the smaller 6x6 one;
-        /// halving brings it back down to ~19%, close to the original
-        /// proportion.
+        /// halving brought it down to ~19%. Still reported too hard after
+        /// that ("Le boss est beaucoup trop difficile"), so
+        /// <see cref="BossLockPiecesInterval"/> was widened 3 -> 5 (now
+        /// matching Chaos' own pace — see ChallengeCatalog.Chaos) instead of
+        /// dropping cells-per-interval below 1: only 4 ticks fit in a
+        /// 22-piece boss round at this pace, ~4 cells locked (~11% of the
+        /// board) instead of ~7 (~19%).
         /// </summary>
-        public const int BossLockPiecesInterval = 3;
+        public const int BossLockPiecesInterval = 5;
         public const int BossLockCellsPerInterval = 1;
 
         /// <summary>
@@ -52,6 +57,17 @@ namespace Contigu.Core
         /// upgrades yet, so it isn't where the game was reported to feel
         /// easy.
         ///
+        /// Round 8's own ratio (37000/17200 ≈ x2.15) was the single steepest
+        /// jump in this whole curve, landing on the one round that ALSO cuts
+        /// the piece budget (see PieceBudgets below, 22 vs round 7's 28) and
+        /// layers the boss's cell-lock on top (see BossLockPiecesInterval/
+        /// BossLockCellsPerInterval) — on explicit report that the boss was
+        /// still too hard even after those were eased ("Le boss est
+        /// beaucoup trop difficile"), pulled back to ~x1.92 (33000), closer
+        /// to round 7's own ratio (17200/8200 ≈ x2.10) instead of exceeding
+        /// it, so the final round isn't ALSO the sharpest score-quota spike
+        /// on top of its other two difficulty levers.
+        ///
         /// NOTE for whoever tunes this next: PlayRoundToAwaitingShop (the
         /// EditMode helper backing most shop/modifier tests) does NOT need
         /// these numbers to be reachable by real placement — it fast-
@@ -67,7 +83,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly int[] Quotas =
         {
-            300, 550, 1050, 2000, 4000, 8200, 17200, 37000
+            300, 550, 1050, 2000, 4000, 8200, 17200, 33000
         };
 
         public static readonly int[] PieceBudgets =

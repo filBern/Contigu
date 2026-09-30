@@ -41,7 +41,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
         };
 
-        /// <summary>Same quotas/budgets/starting deck as Classic — only the boss changes: its cell-lock ticks every round (not just the last), at a gentler pace than Classic's own finale (1 cell every 5 pieces here, vs. every 3 for Classic's single boss round).</summary>
+        /// <summary>Same quotas/budgets/starting deck as Classic — only the boss changes: its cell-lock ticks every round instead of just the last one, at the SAME per-tick pace as Classic's own finale now uses (1 cell every 5 pieces — both were originally every 3, eased together on repeated reports the boss was too hard) — the difference is purely how many rounds it's active for, not its rate within one.</summary>
         public static readonly ChallengeDefinition Chaos = new ChallengeDefinition
         {
             Id = ChallengeId.Chaos,

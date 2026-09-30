@@ -6281,3 +6281,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `RerollShop` et lu uniquement par `GetRerollPrice` — chaque action
   n'escalade maintenant que sa propre ligne de prix, complètement
   découplées dans les deux sens.
+- **Boss round encore trop difficile : verrouillage et quota du round 8
+  encore réduits** : sur rapport explicite ("Le boss est beaucoup trop
+  difficile"), après avoir déjà réduit le rythme de verrouillage plus
+  tôt dans la session — question de clarification posée, réponse :
+  "le verrouillage de cases (encore)" ET "le quota du round 8". Deux
+  changements :
+  - `RunConfig.BossLockPiecesInterval` élargi de 3 à 5 (déjà au minimum
+    utile de 1 cellule par intervalle, donc l'intervalle était le seul
+    levier restant) — même rythme que Chaos maintenant (voir
+    `ChallengeCatalog.Chaos`, dont le commentaire différencie
+    maintenant les deux uniquement par NOMBRE DE ROUNDS actifs, plus
+    par rythme). Sur le boss round de Classic (budget de 22 pièces) :
+    ~4 cellules verrouillées au total (~11% du plateau) au lieu de ~7
+    (~19%).
+  - `RunConfig.Quotas[7]` (round 8) réduit de 37000 à 33000 — c'était le
+    bond round-sur-round le plus abrupt de toute la courbe (x2.15,
+    contre x2.10 pour le bond du round 7), sur le SEUL round qui cumule
+    aussi un budget de pièces réduit (22 contre 28) ET le verrouillage
+    du boss. Ramené à ~x1.92, sous le ratio du round 7 plutôt qu'au
+    dessus.
