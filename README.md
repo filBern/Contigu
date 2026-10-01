@@ -6602,3 +6602,8 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Corrigé au passage un commentaire de `RunManager.
   ApplyPurchasedUpgrade` resté obsolète depuis le split Mastery
   (citait encore `UpgradeCatalog.BankPool` pour Piece/Color Mastery).
+- **Rééquilibrage des % du shop Casino** : sur demande explicite ("10%
+  Modifier / 40% Mastery / 40% Piece Upgrade / 10% Tile Upgrade") —
+  Tile Upgrade cède 10 points (20% → 10%) pour ramener Mastery et
+  Piece Upgrade à 40% chacun à parts égales, Modifier restant à 10%.
+  Simple changement des 4 constantes dans `EconomyConstants.cs`.

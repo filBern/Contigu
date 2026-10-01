@@ -81,21 +81,22 @@ namespace Contigu.Core
         /// modifier"), and on the explicit frequency complaint that came
         /// with it ("le type random modifier arrive un peu trop souvent
         /// comme upgrade") got a deliberately modest top-level share rather
-        /// than an even quarter — 10/35/35/20 (Modifier/Mastery/Bank/Grid),
-        /// cutting Random Modifier's own overall odds roughly in half (it
-        /// also lost its old in-pool weight bump — see UpgradeSystem.
-        /// GetWeight — on top of this smaller pool-level share).
+        /// than an even quarter — first 10/35/35/20, then explicitly
+        /// rebalanced to 10/40/40/10 (Modifier/Mastery/Bank/Grid): Grid
+        /// gave up its own 10 points to bring Mastery and Piece Upgrade back
+        /// up to equal 40% billing, on top of Random Modifier already
+        /// losing its old in-pool weight bump (see UpgradeSystem.GetWeight).
         /// </summary>
         public const int ModifierUpgradePoolChancePercent = 10;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int MasteryUpgradePoolChancePercent = 35;
+        public const int MasteryUpgradePoolChancePercent = 40;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int BankUpgradePoolChancePercent = 35;
+        public const int BankUpgradePoolChancePercent = 40;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int GridUpgradePoolChancePercent = 20;
+        public const int GridUpgradePoolChancePercent = 10;
 
         /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>
         public const int MaxActiveModifiers = 8;
