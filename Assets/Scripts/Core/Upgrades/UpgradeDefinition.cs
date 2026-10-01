@@ -64,19 +64,20 @@ namespace Contigu.Core
         /// purchase, like Joker — see RunManager.BuyUpgradeSlot/
         /// GrantRandomModifier) since there's nothing for the player to pick:
         /// the whole point is not knowing which modifier they'll get.
-        /// Rarity bumped Uncommon -> Common (on explicit report: "Après plus
-        /// d'une dizaine de reroll je n'ai jamais eu de random modifier" —
-        /// the math checked out as unlucky-but-plausible rather than a bug,
-        /// ~15% chance of a 0-sighting streak across 12 rerolls at Uncommon,
-        /// given the shop's own 50/50 Bank/Grid pool split on top of the
-        /// weighted pick within Bank's now-5-entry pool — but the player
-        /// confirmed they wanted it more frequent regardless). Now matches
-        /// Duplicate/Joker's weight, roughly doubling its odds per upgrade
-        /// slot (~7.7% -> ~13.3%) and cutting the 12-reroll never-seen-it
-        /// chance from ~15% to ~4%.
+        /// Rarity bumped Uncommon -> Common, then back to Uncommon (on
+        /// explicit report, the second time: "le type random modifier
+        /// arrive un peu trop souvent comme upgrade") — now in its own
+        /// Modifier pool alongside Modifier Upgrade (explicit request:
+        /// "L'upgrade 'upgrade modifier' devrait être dans le type random
+        /// modifier"; see UpgradeCatalog.ModifierPool), which also dropped
+        /// the special +12 draft-weight override this upgrade used to get
+        /// (see UpgradeSystem.GetWeight) — it no longer needs a thumb on
+        /// the scale to be found once it isn't buried among 7 other Bank
+        /// items, so it now shares a plain 50/50 split with Modifier
+        /// Upgrade purely from both being Uncommon.
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
-            UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
+            UpgradeId.RandomModifier, UpgradePool.Modifier, "Random Modifier",
             "Grants one random modifier you don't already have.", false, UpgradeRarity.Uncommon);
 
         // ---- Fourth batch (Bank pool, on explicit request) ----
@@ -125,7 +126,7 @@ namespace Contigu.Core
         /// the modifier cap.
         /// </summary>
         public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
-            UpgradeId.ModifierUpgrade, UpgradePool.Bank, "Modifier Upgrade",
+            UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Modifier Upgrade",
             "Choose one of your active modifiers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
         // Descriptions below all follow the same short "S.."
@@ -232,13 +233,19 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomPiece
         };
 
         /// <summary>Split out of BankPool into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type") — previously these two were just two more entries among BankPool's 9, sharing its "Piece Upgrade" label; now they get their own "Mastery Upgrade" label (see UpgradeVisualDefaults.GetPoolLabel) and their own independent shop-roll odds (see RunManager.RollUpgradeSlot/EconomyConstants.MasteryUpgradePoolChancePercent).</summary>
         public static readonly UpgradeDefinition[] MasteryPool =
         {
             PieceMastery, ColorMastery
+        };
+
+        /// <summary>Split out of BankPool right after Mastery was (explicit request: "L'upgrade 'upgrade modifier' devrait être dans le type random modifier" — plus a frequency complaint: "le type random modifier arrive un peu trop souvent comme upgrade") — same pattern as MasteryPool: its own "Modifier Upgrade" label and its own (deliberately modest) shop-roll odds, see EconomyConstants.ModifierUpgradePoolChancePercent.</summary>
+        public static readonly UpgradeDefinition[] ModifierPool =
+        {
+            RandomModifier, ModifierUpgrade
         };
 
         public static readonly UpgradeDefinition[] GridPool =

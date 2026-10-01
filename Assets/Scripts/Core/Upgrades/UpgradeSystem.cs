@@ -36,6 +36,9 @@ namespace Contigu.Core
                 case UpgradePool.Mastery:
                     options = UpgradeCatalog.MasteryPool;
                     break;
+                case UpgradePool.Modifier:
+                    options = UpgradeCatalog.ModifierPool;
+                    break;
                 default:
                     options = UpgradeCatalog.GridPool;
                     break;
@@ -73,22 +76,19 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Draft weight for one upgrade — its rarity's weight (see
-        /// UpgradeRarityUtility.GetDraftWeight), except Random Modifier,
-        /// which gets a small permanent bump on top of its own Common
-        /// weight (explicit request: "On peut augmenter un peu les chances
-        /// d'avoir un random modifier"). At 12 (vs. Common's own 8, and
-        /// 2/4/8 for the rest of the Bank pool), it goes from ~13.3% to
-        /// ~17.6% of any upgrade-slot roll — a modest push past Duplicate/
-        /// Joker rather than the earlier x12.5 boost to 100 used purely to
-        /// validate the reveal pipeline, which has since been reverted.
+        /// Draft weight for one upgrade — just its rarity's weight (see
+        /// UpgradeRarityUtility.GetDraftWeight). Random Modifier used to get
+        /// a flat +12 override here, boosting it past its own Uncommon
+        /// weight so it wouldn't get lost among Bank's other 7 entries
+        /// (explicit request: "On peut augmenter un peu les chances d'avoir
+        /// un random modifier") — removed once it got its own small
+        /// Modifier pool alongside Modifier Upgrade (on a later, opposite
+        /// complaint: "le type random modifier arrive un peu trop souvent
+        /// comme upgrade"), where a plain Uncommon weight already gives it
+        /// a simple 50/50 split with its one pool-mate, no override needed.
         /// </summary>
         private static int GetWeight(UpgradeDefinition upgrade)
         {
-            if (upgrade.Id == UpgradeId.RandomModifier)
-            {
-                return 12;
-            }
             return UpgradeRarityUtility.GetDraftWeight(upgrade.Rarity);
         }
 

@@ -1644,11 +1644,18 @@ namespace Contigu.Core
         {
             int roll = _rng.Next(100);
             UpgradePool pool;
-            if (roll < EconomyConstants.MasteryUpgradePoolChancePercent)
+            int modifierCutoff = EconomyConstants.ModifierUpgradePoolChancePercent;
+            int masteryCutoff = modifierCutoff + EconomyConstants.MasteryUpgradePoolChancePercent;
+            int bankCutoff = masteryCutoff + EconomyConstants.BankUpgradePoolChancePercent;
+            if (roll < modifierCutoff)
+            {
+                pool = UpgradePool.Modifier;
+            }
+            else if (roll < masteryCutoff)
             {
                 pool = UpgradePool.Mastery;
             }
-            else if (roll < EconomyConstants.MasteryUpgradePoolChancePercent + EconomyConstants.BankUpgradePoolChancePercent)
+            else if (roll < bankCutoff)
             {
                 pool = UpgradePool.Bank;
             }
@@ -1883,9 +1890,9 @@ namespace Contigu.Core
                 return true;
             }
 
-            // The four Bank-pool upgrades with RequiresSubChoice false —
-            // see UpgradeCatalog.BankPool — are Joker, Random Modifier,
-            // Piece Mastery and Color Mastery. Each applies through its own
+            // The remaining upgrades with RequiresSubChoice false — Joker
+            // (Bank pool), Random Modifier (Modifier pool), Piece Mastery
+            // and Color Mastery (Mastery pool) — apply through their own
             // dedicated path (ApplyJoker / GrantRandomModifier /
             // GrantShapeMastery / GrantColorMastery, not a generic Apply) so
             // the actual thing rolled can be surfaced (LastJokerShapeAdded /

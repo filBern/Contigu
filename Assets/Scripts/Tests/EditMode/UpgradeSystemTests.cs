@@ -40,6 +40,38 @@ namespace Contigu.Tests
             }
         }
 
+        /// <summary>Modifier (Random Modifier + Modifier Upgrade) split out of Bank the same way, right after Mastery (explicit request: "L'upgrade 'upgrade modifier' devrait être dans le type random modifier") — same pool-purity check.</summary>
+        [Test]
+        public void RollFromPool_Modifier_OnlyReturnsModifierUpgrades()
+        {
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+            for (int seed = 0; seed < 20; seed++)
+            {
+                var picked = system.RollFromPool(UpgradePool.Modifier);
+                Assert.AreEqual(UpgradePool.Modifier, picked.Pool);
+            }
+        }
+
+        /// <summary>Random Modifier lost its old +12 draft-weight override once it got its own small 2-item pool (explicit report: "le type random modifier arrive un peu trop souvent comme upgrade") — both entries are Uncommon, so it should land roughly 50/50 with Modifier Upgrade rather than dominating it.</summary>
+        [Test]
+        public void RollFromPool_OverManySeeds_PicksRandomModifierAndModifierUpgradeAtComparableRates()
+        {
+            int randomModifierCount = 0;
+            int modifierUpgradeCount = 0;
+            for (int seed = 0; seed < 500; seed++)
+            {
+                var system = new UpgradeSystem(new SystemRandomProvider(seed));
+                var picked = system.RollFromPool(UpgradePool.Modifier);
+                if (picked.Id == UpgradeId.RandomModifier) randomModifierCount++;
+                if (picked.Id == UpgradeId.ModifierUpgrade) modifierUpgradeCount++;
+            }
+
+            Assert.Greater(randomModifierCount, 0);
+            Assert.Greater(modifierUpgradeCount, 0);
+            int diff = System.Math.Abs(randomModifierCount - modifierUpgradeCount);
+            Assert.Less(diff, (randomModifierCount + modifierUpgradeCount) / 2, "Same Uncommon rarity now that the +12 override is gone, so neither should come up roughly twice as often as the other");
+        }
+
         [Test]
         public void RollFromPool_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
         {

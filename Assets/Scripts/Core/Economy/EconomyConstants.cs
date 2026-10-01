@@ -68,23 +68,33 @@ namespace Contigu.Core
         public const int ShopUpgradeSlotCount = 2;
 
         /// <summary>
-        /// Chance that a Casino upgrade slot rolls from each of the 3 pools
+        /// Chance that a Casino upgrade slot rolls from each of the 4 pools
         /// — must sum to 100 (see RunManager.RollUpgradeSlot). Mastery used
         /// to just be 2 more entries inside Bank's own weighted pool; once
         /// it became its own UpgradePool (explicit request: "séparer les
         /// mastery upgrades des pieces upgrades pour qu'elles soient leur
         /// propre type"), its odds needed an explicit top-level cut of what
-        /// used to be Bank's whole 75% share — 40/40/20 (explicit choice,
-        /// over keeping Grid's old 25% untouched or splitting all 3 evenly)
-        /// keeps Grid close to its old share while giving Mastery and the
-        /// rest of Bank (Piece Upgrade) equal billing.
+        /// used to be Bank's whole 75% share — first 40/40/20 (Mastery/
+        /// Bank/Grid). Modifier (Random Modifier + Modifier Upgrade) was
+        /// split out of Bank the same way right after (explicit request:
+        /// "L'upgrade 'upgrade modifier' devrait être dans le type random
+        /// modifier"), and on the explicit frequency complaint that came
+        /// with it ("le type random modifier arrive un peu trop souvent
+        /// comme upgrade") got a deliberately modest top-level share rather
+        /// than an even quarter — 10/35/35/20 (Modifier/Mastery/Bank/Grid),
+        /// cutting Random Modifier's own overall odds roughly in half (it
+        /// also lost its old in-pool weight bump — see UpgradeSystem.
+        /// GetWeight — on top of this smaller pool-level share).
         /// </summary>
-        public const int MasteryUpgradePoolChancePercent = 40;
+        public const int ModifierUpgradePoolChancePercent = 10;
 
-        /// <summary>See <see cref="MasteryUpgradePoolChancePercent"/>.</summary>
-        public const int BankUpgradePoolChancePercent = 40;
+        /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
+        public const int MasteryUpgradePoolChancePercent = 35;
 
-        /// <summary>See <see cref="MasteryUpgradePoolChancePercent"/>.</summary>
+        /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
+        public const int BankUpgradePoolChancePercent = 35;
+
+        /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
         public const int GridUpgradePoolChancePercent = 20;
 
         /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>

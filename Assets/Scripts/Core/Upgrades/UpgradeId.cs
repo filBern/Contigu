@@ -6,13 +6,17 @@ namespace Contigu.Core
     /// upgrades pour qu'elles soient leur propre type") — see
     /// UpgradeCatalog.MasteryPool and UpgradeVisualDefaults.GetPoolLabel for
     /// its "Mastery Upgrade" label, and RunManager.RollUpgradeSlot for the
-    /// shop's 3-way roll weighting between this, Bank, and Grid.
+    /// shop's roll weighting between the pools. Modifier (Random Modifier/
+    /// Modifier Upgrade) split out the same way right after (explicit
+    /// request: "L'upgrade 'upgrade modifier' devrait être dans le type
+    /// random modifier") — see UpgradeCatalog.ModifierPool.
     /// </summary>
     public enum UpgradePool
     {
         Bank,
         Grid,
-        Mastery
+        Mastery,
+        Modifier
     }
 
     /// <summary>The 5 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>

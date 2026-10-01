@@ -6585,3 +6585,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   moins souvent que `DuplicatePiece` n'avait plus de sens une fois les
   deux à la même rareté — remplacé par un test qui vérifie qu'elles
   apparaissent maintenant à un taux comparable.
+- **Modifier (Random Modifier/Modifier Upgrade) devient aussi son
+  propre type** : sur demande explicite ("L'upgrade 'upgrade
+  modifier' devrait être dans le type random modifier"), suivie d'une
+  plainte de fréquence ("le type random modifier arrive un peu trop
+  souvent comme upgrade") — même traitement que Mastery juste avant :
+  nouveau `UpgradePool.Modifier` + `UpgradeCatalog.ModifierPool`,
+  étiquette "Modifier Upgrade" propre, et ses propres chances au
+  tirage d'un slot Casino — 10% Modifier / 35% Mastery / 35% Piece
+  Upgrade / 20% Tile Upgrade (choix confirmé par le joueur, coupant
+  d'un coup la part globale de Random Modifier). Retiré au passage le
+  bonus de poids +12 que Random Modifier avait dans
+  `UpgradeSystem.GetWeight` — il n'en a plus besoin maintenant qu'il
+  n'est plus noyé parmi 7 autres items Bank, et partage un simple
+  50/50 Uncommon avec Modifier Upgrade dans son propre petit pool.
+  Corrigé au passage un commentaire de `RunManager.
+  ApplyPurchasedUpgrade` resté obsolète depuis le split Mastery
+  (citait encore `UpgradeCatalog.BankPool` pour Piece/Color Mastery).
