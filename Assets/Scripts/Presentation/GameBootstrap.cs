@@ -1388,7 +1388,7 @@ namespace Contigu.Presentation
             }
             else
             {
-                _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates);
+                _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates, _run);
             }
         }
 

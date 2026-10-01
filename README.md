@@ -6641,3 +6641,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   avant la réduction de 30% appliquée aux vues de pièces. Alignées sur
   les mêmes valeurs que `DraftView` (140→98, 116→81) pour que les deux
   types de picker à 5 cartes se ressemblent.
+- **Niveau de Mastery affiché sous chaque pièce du picker Retirer/
+  Dupliquer/Recolorer** : sur demande explicite ("Remove a piece, il
+  faudrait mettre le level de la pièce sous son preview pour avoir une
+  meilleur idée de ce qu'on remove") — `DraftView.BuildTypePreviewCell`
+  affiche maintenant "Lv. N" sous chaque candidat, même formule et
+  même style que `PieceChoiceView` (niveau couleur + niveau forme - 1).
+  Affiché pour Dupliquer/Recolorer aussi puisqu'ils partagent cette
+  même fonction de construction de carte et que l'info est tout aussi
+  pertinente pour eux — un label nom/compte avait été explicitement
+  refusé ici par le passé, mais ce n'était pas ce qu'on demandait
+  cette fois. `ShowForPendingUpgrade` prend maintenant un `RunManager`
+  en plus pour calculer ce niveau ; `PreviewCellSize` remonté à 112
+  (la taille de carte de `PieceChoiceView`) pour laisser la place au
+  label — `PreviewSize` (le glyphe lui-même) reste à 81, aligné avec
+  `TileChoiceView`.

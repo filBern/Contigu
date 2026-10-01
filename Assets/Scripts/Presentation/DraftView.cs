@@ -28,9 +28,15 @@ namespace Contigu.Presentation
         // carte de piece 30% plus petit" — applies here too, same "5 piece
         // candidate cards" shape as PieceChoiceView, just for Retirer/
         // Dupliquer/Recolorer's existing-deck-type picker instead of Random
-        // Piece's freshly-rolled candidates).
-        private const float PreviewCellSize = 98f;
+        // Piece's freshly-rolled candidates). PreviewCellSize bumped back up
+        // to 112 (PieceChoiceView's own CellSize) once the type picker
+        // started showing a level label under each preview — see
+        // BuildTypePreviewCell — which needs the same headroom
+        // PieceChoiceView's cells already budget for theirs; PreviewSize
+        // (the glyph itself) stays matched to TileChoiceView's 81.
+        private const float PreviewCellSize = 112f;
         private const float PreviewSize = 81f;
+        private const float LevelLabelHeight = 20f;
         private const float ConfirmHeight = 46f;
         private const float TitleHeight = 40f;
         private const float BlockSpacing = 24f;
@@ -51,6 +57,7 @@ namespace Contigu.Presentation
 
         private DeckManager _deck;
         private TooltipView _tooltip;
+        private RunManager _run;
         private RectTransform _root;
         private RectTransform _cardInstance;
         private float _bodyTopY;
@@ -89,11 +96,14 @@ namespace Contigu.Presentation
         /// name="candidateTypes"/> (RunManager.PendingUpgradeTypeCandidates)
         /// is the up-to-5 subset of the deck's composition to actually offer
         /// — explicit request, the type picker used to list every distinct
-        /// type in the deck at once.
+        /// type in the deck at once. <paramref name="run"/> is only needed
+        /// for each candidate's Mastery level label — see
+        /// BuildTypePreviewCell.
         /// </summary>
-        public void ShowForPendingUpgrade(UpgradeDefinition def, IReadOnlyList<(ShapeId Shape, PieceColor Color)> candidateTypes)
+        public void ShowForPendingUpgrade(UpgradeDefinition def, IReadOnlyList<(ShapeId Shape, PieceColor Color)> candidateTypes, RunManager run)
         {
             _typeCandidates = candidateTypes;
+            _run = run;
             _root.gameObject.SetActive(true);
             ClearChildren();
 
@@ -203,13 +213,20 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// One candidate in the type picker — just a shape/color preview
-        /// (same look as a hand slot, see ShapePreviewFactory), no name/count
-        /// label (explicit request). Click selects it exclusively (radio-
-        /// button style, since exactly one type is ever needed here); the
-        /// Confirm button — not this click — is what actually commits to it,
-        /// on explicit request ("il faut un confirm au lieu d'un immediate
-        /// effect").
+        /// One candidate in the type picker — a shape/color preview (same
+        /// look as a hand slot, see ShapePreviewFactory) plus its combined
+        /// Mastery level below it (same "Lv. N" label and formula as
+        /// PieceChoiceView's candidates — explicit request, specifically
+        /// about Retirer: "il faudrait mettre le level de la pièce sous son
+        /// preview pour avoir une meilleure idée de ce qu'on remove";
+        /// shown for Dupliquer/Recolorer too since they share this same
+        /// cell builder and the level is just as relevant context for
+        /// either — a plain count/name label was explicitly turned down
+        /// here before, but Mastery level wasn't part of that ask). Click
+        /// selects it exclusively (radio-button style, since exactly one
+        /// type is ever needed here); the Confirm button — not this click —
+        /// is what actually commits to it, on explicit request ("il faut un
+        /// confirm au lieu d'un immediate effect").
         /// </summary>
         private void BuildTypePreviewCell(int index)
         {
@@ -230,12 +247,21 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            previewContainer.anchoredPosition = Vector2.zero;
+            previewContainer.anchoredPosition = new Vector2(0f, 13f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
             _typePreviewContainerByIndex[index] = previewContainer;
 
             var trait = FindRepresentativeTrait(shape, color);
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, cell.gameObject);
+
+            int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
+            var levelLabel = UIFactory.CreateText(cell.transform, "TypeLevel", "Lv. " + level, 14, Color.black);
+            levelLabel.raycastTarget = false;
+            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+            levelLabel.rectTransform.sizeDelta = new Vector2(0f, LevelLabelHeight);
         }
 
         /// <summary>
@@ -354,6 +380,12 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
+            // Same +13 offset as its row-mates in BuildTypePreviewCell (even
+            // though this transient clone never gets its own level label)
+            // so its piece glyph lines up with theirs instead of sitting
+            // lower, now that the cell is taller than the glyph to leave
+            // room for that label.
+            previewContainer.anchoredPosition = new Vector2(0f, 13f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, clone.gameObject);
 
