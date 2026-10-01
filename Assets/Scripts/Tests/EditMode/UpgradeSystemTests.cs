@@ -28,6 +28,18 @@ namespace Contigu.Tests
             }
         }
 
+        /// <summary>Mastery split out of Bank into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type") — same pool-purity check as the Bank/Grid tests above.</summary>
+        [Test]
+        public void RollFromPool_Mastery_OnlyReturnsMasteryUpgrades()
+        {
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+            for (int seed = 0; seed < 20; seed++)
+            {
+                var picked = system.RollFromPool(UpgradePool.Mastery);
+                Assert.AreEqual(UpgradePool.Mastery, picked.Pool);
+            }
+        }
+
         [Test]
         public void RollFromPool_OverManySeeds_PicksCommonRarityUpgradesMoreOftenThanRare()
         {
@@ -49,13 +61,16 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RollFromPool_OverManySeeds_PicksRemovePieceFarLessOftenThanDuplicatePiece()
+        public void RollFromPool_OverManySeeds_PicksRemovePieceAndDuplicatePieceAtComparableRates()
         {
-            // RemovePiece was dropped from Common to Rare (on explicit
-            // report: "L'upgrade 'remove a piece' est beaucoup trop
-            // fréquente et surtout chiante en début de partie") — a 4x cut
-            // in its draft weight relative to its still-Common Bank-pool
-            // sibling DuplicatePiece.
+            // RemovePiece used to be dropped to Rare (on explicit report:
+            // "L'upgrade 'remove a piece' est beaucoup trop fréquente et
+            // surtout chiante en début de partie"), a 4x cut below its
+            // Common Bank-pool sibling DuplicatePiece — but it was bumped
+            // back up to Common (same push that split Mastery into its own
+            // pool), so that gap is gone: both are Common now and should
+            // come up at roughly the same rate, neither dominating the
+            // other the way the old Rare-vs-Common test checked for.
             int removeCount = 0;
             int duplicateCount = 0;
             for (int seed = 0; seed < 500; seed++)
@@ -66,7 +81,10 @@ namespace Contigu.Tests
                 if (picked.Id == UpgradeId.DuplicatePiece) duplicateCount++;
             }
 
-            Assert.Greater(duplicateCount, removeCount, "Common-rarity DuplicatePiece should come up more often than Rare-rarity RemovePiece");
+            Assert.Greater(removeCount, 0);
+            Assert.Greater(duplicateCount, 0);
+            int diff = System.Math.Abs(removeCount - duplicateCount);
+            Assert.Less(diff, (removeCount + duplicateCount) / 2, "Same Common rarity now, so neither should come up roughly twice as often as the other");
         }
 
         [Test]

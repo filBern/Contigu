@@ -445,7 +445,11 @@ namespace Contigu.Presentation
             // named outright instead of showing the generic Bank-pool
             // "Piece upgrade" label.
             bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
-            string cardLabel = isRandomModifier ? "Random modifier" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool) + " upgrade";
+            // GetPoolLabel already ends in "Upgrade" ("Piece Upgrade", "Tile
+            // Upgrade", and now "Mastery Upgrade" once Mastery got its own
+            // pool) — no longer appending a second, redundant " upgrade"
+            // (was rendering as e.g. "Piece Upgrade upgrade" on this card).
+            string cardLabel = isRandomModifier ? "Random modifier" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
             var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);

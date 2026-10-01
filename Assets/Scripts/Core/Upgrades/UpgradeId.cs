@@ -1,9 +1,18 @@
 namespace Contigu.Core
 {
+    /// <summary>
+    /// Mastery (Piece Mastery/Color Mastery) was split out of Bank into its
+    /// own pool (explicit request: "séparer les mastery upgrades des pieces
+    /// upgrades pour qu'elles soient leur propre type") — see
+    /// UpgradeCatalog.MasteryPool and UpgradeVisualDefaults.GetPoolLabel for
+    /// its "Mastery Upgrade" label, and RunManager.RollUpgradeSlot for the
+    /// shop's 3-way roll weighting between this, Bank, and Grid.
+    /// </summary>
     public enum UpgradePool
     {
         Bank,
-        Grid
+        Grid,
+        Mastery
     }
 
     /// <summary>The 5 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>

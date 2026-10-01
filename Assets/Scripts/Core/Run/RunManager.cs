@@ -1642,14 +1642,25 @@ namespace Contigu.Core
 
         private ShopSlot RollUpgradeSlot()
         {
-            var pool = _rng.Next(100) < EconomyConstants.BankUpgradePoolChancePercent
-                ? UpgradePool.Bank
-                : UpgradePool.Grid;
+            int roll = _rng.Next(100);
+            UpgradePool pool;
+            if (roll < EconomyConstants.MasteryUpgradePoolChancePercent)
+            {
+                pool = UpgradePool.Mastery;
+            }
+            else if (roll < EconomyConstants.MasteryUpgradePoolChancePercent + EconomyConstants.BankUpgradePoolChancePercent)
+            {
+                pool = UpgradePool.Bank;
+            }
+            else
+            {
+                pool = UpgradePool.Grid;
+            }
             var upgrade = Upgrades.RollFromPool(pool);
             return ShopSlot.ForUpgrade(upgrade);
         }
 
-        /// <summary>Current Lueur price of Blister slot <paramref name="index"/> — a Modifier-kind slot varies per modifier (see ModifierPricing, on explicit request); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice). Either way includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
+        /// <summary>Current Lueur price of Blister slot <paramref name="index"/> — a Modifier-kind slot varies per modifier (see ModifierPricing, on explicit request); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice) — Mastery-pool slots share Bank's price, the ternary below only special-cases Grid. Either way includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
         public int GetBlisterSlotPrice(int index)
         {
             if (index < 0 || index >= _blisterSlots.Length || _blisterSlots[index] == null)
@@ -1663,7 +1674,7 @@ namespace Contigu.Core
             return ComputePrice(basePrice);
         }
 
-        /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation.</summary>
+        /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation. Mastery-pool slots share Bank's (lower) price — not called out separately below since the check is just "is it Grid".</summary>
         public int GetUpgradeSlotPrice(int index)
         {
             if (index < 0 || index >= _upgradeSlots.Length || _upgradeSlots[index] == null)

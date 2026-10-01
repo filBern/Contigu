@@ -40,13 +40,14 @@ namespace Contigu.Data
             }
         }
 
-        /// <summary>Player-facing label for an UpgradePool — "Bank"/"Grid" are internal holdovers from the pre-5.4 fixed-grid-cell design (see README); the pool itself is unchanged, only how it reads here.</summary>
+        /// <summary>Player-facing label for an UpgradePool — "Bank"/"Grid" are internal holdovers from the pre-5.4 fixed-grid-cell design (see README); the pool itself is unchanged, only how it reads here. Mastery was split out of Bank into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type"), so it gets its own label rather than sharing "Piece Upgrade".</summary>
         public static string GetPoolLabel(UpgradePool pool)
         {
             switch (pool)
             {
                 case UpgradePool.Bank: return "Piece Upgrade";
                 case UpgradePool.Grid: return "Tile Upgrade";
+                case UpgradePool.Mastery: return "Mastery Upgrade";
                 default: return pool.ToString();
             }
         }

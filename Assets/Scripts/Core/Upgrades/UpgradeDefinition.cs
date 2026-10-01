@@ -213,12 +213,12 @@ namespace Contigu.Core
         /// leveling up, no cap.
         /// </summary>
         public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
-            UpgradeId.PieceMastery, UpgradePool.Bank, "Piece Mastery",
+            UpgradeId.PieceMastery, UpgradePool.Mastery, "Piece Mastery",
             "Levels up one random piece shape — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
 
         /// <summary>Sixth batch (on explicit request: "Il faudrait faire la même chose avec les couleurs") — Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
-            UpgradeId.ColorMastery, UpgradePool.Bank, "Color Mastery",
+            UpgradeId.ColorMastery, UpgradePool.Mastery, "Color Mastery",
             "Levels up one random piece color — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition[] All =
@@ -232,7 +232,13 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade, PieceMastery, ColorMastery
+            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade
+        };
+
+        /// <summary>Split out of BankPool into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type") — previously these two were just two more entries among BankPool's 9, sharing its "Piece Upgrade" label; now they get their own "Mastery Upgrade" label (see UpgradeVisualDefaults.GetPoolLabel) and their own independent shop-roll odds (see RunManager.RollUpgradeSlot/EconomyConstants.MasteryUpgradePoolChancePercent).</summary>
+        public static readonly UpgradeDefinition[] MasteryPool =
+        {
+            PieceMastery, ColorMastery
         };
 
         public static readonly UpgradeDefinition[] GridPool =

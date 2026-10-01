@@ -27,7 +27,19 @@ namespace Contigu.Core
         /// </summary>
         public UpgradeDefinition RollFromPool(UpgradePool pool)
         {
-            var options = pool == UpgradePool.Bank ? UpgradeCatalog.BankPool : UpgradeCatalog.GridPool;
+            IReadOnlyList<UpgradeDefinition> options;
+            switch (pool)
+            {
+                case UpgradePool.Bank:
+                    options = UpgradeCatalog.BankPool;
+                    break;
+                case UpgradePool.Mastery:
+                    options = UpgradeCatalog.MasteryPool;
+                    break;
+                default:
+                    options = UpgradeCatalog.GridPool;
+                    break;
+            }
             return PickWeighted(options, _rng);
         }
 

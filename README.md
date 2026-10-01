@@ -6564,3 +6564,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Passé en filtrage Bilinéaire pour ces deux sprites uniquement (les
   autres sprites du dossier, en vrai pixel art, gardent leur filtrage
   Point d'origine).
+- **Mastery devient son propre type d'upgrade** : sur demande
+  explicite ("J'aimerais qu'on sépare les mastery upgrades des pieces
+  upgrades pour qu'elles soient leur propre type") — Piece Mastery et
+  Color Mastery n'étaient que 2 entrées de plus dans le pool Bank
+  (partageant son étiquette "Piece Upgrade" avec Remove/Duplicate/
+  Joker/Recolor/Random Piece/Random Modifier/Modifier Upgrade).
+  Nouveau `UpgradePool.Mastery` + `UpgradeCatalog.MasteryPool`,
+  étiquette "Mastery Upgrade" propre (`UpgradeVisualDefaults.
+  GetPoolLabel`), et ses propres chances au tirage d'un slot Casino du
+  shop plutôt que d'être noyé dans le reste du pool Bank — demandé en
+  retour : 40% Mastery / 40% Piece Upgrade / 20% Tile Upgrade (au lieu
+  de 75% Bank incluant Mastery / 25% Grid), voir `RunManager.
+  RollUpgradeSlot`/`EconomyConstants.MasteryUpgradePoolChancePercent`.
+  Corrigé au passage un doublon de texte pré-existant sur les cartes
+  mystère du shop ("Piece Upgrade upgrade").
+  Au passage, CI était rouge depuis le dernier push direct du joueur
+  (rareté de `RemovePiece` remontée de Rare à Common) : le test
+  statistique qui vérifiait que `RemovePiece` apparaissait BEAUCOUP
+  moins souvent que `DuplicatePiece` n'avait plus de sens une fois les
+  deux à la même rareté — remplacé par un test qui vérifie qu'elles
+  apparaissent maintenant à un taux comparable.
