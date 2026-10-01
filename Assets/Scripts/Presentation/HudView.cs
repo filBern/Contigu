@@ -32,6 +32,7 @@ namespace Contigu.Presentation
         // shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
+        private bool _isEndless;
 
         public void Build(Transform parent, Transform lueurParent)
         {
@@ -152,17 +153,18 @@ namespace Contigu.Presentation
 
         public void Refresh(RunManager run)
         {
-            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount);
+            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount, run.IsEndless);
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             SetScores(run.RoundScore, run.CurrentQuota);
             SetLueur(run.Lueur);
         }
 
-        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade.</summary>
-        public void SetRound(int roundNumber, int roundCount)
+        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade. <paramref name="isEndless"/> drops the "/roundCount" denominator (explicit request added Endless mode — a fixed cap no longer applies once the player keeps going past it, so "Round 9/8" would misread as overshooting a limit).</summary>
+        public void SetRound(int roundNumber, int roundCount, bool isEndless)
         {
             _roundNumber = roundNumber;
             _roundCount = roundCount;
+            _isEndless = isEndless;
         }
 
         /// <summary>
@@ -189,7 +191,8 @@ namespace Contigu.Presentation
         /// </summary>
         public void SetScores(int roundScore, int quota)
         {
-            _scoreLabel.text = "Round " + _roundNumber + "/" + _roundCount + "  —  " + roundScore + " / " + quota;
+            string roundLabel = _isEndless ? "Round " + _roundNumber : "Round " + _roundNumber + "/" + _roundCount;
+            _scoreLabel.text = roundLabel + "  —  " + roundScore + " / " + quota;
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
         }
 

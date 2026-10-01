@@ -44,6 +44,36 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Folds in a run that kept going past its scheduled victory
+        /// (explicit request: "j'aimerais que le joueur ait l'option
+        /// d'aller en endless mode... pour continuer sa run"), eventually
+        /// ending in <see cref="RunState.RunDefeat"/> while <see
+        /// cref="RunManager.IsEndless"/>. Deliberately NOT RecordRunOutcome
+        /// called a second time: that run's TotalRunsPlayed/TotalVictories/
+        /// victory-bonus Stars were already folded in the moment it first
+        /// reached RunVictory, and doing so again here would double-count
+        /// a single physical run as two. Only <paramref
+        /// name="additionalRoundsCleared"/> (the endless rounds played
+        /// beyond the scheduled run, i.e. not already paid for) earns more
+        /// Stars, and BestScore/BestRoundReached still take the new highs
+        /// if the endless stretch beat them — which it almost always will,
+        /// since score only ever goes up within a run.
+        /// </summary>
+        public static MetaStats RecordEndlessExtension(MetaStats current, int finalScore, int additionalRoundsCleared, int roundReached)
+        {
+            return new MetaStats
+            {
+                TotalRunsPlayed = current.TotalRunsPlayed,
+                TotalVictories = current.TotalVictories,
+                BestScore = System.Math.Max(current.BestScore, finalScore),
+                BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached),
+                Stars = current.Stars + additionalRoundsCleared,
+                MarathonUnlocked = current.MarathonUnlocked,
+                ChaosUnlocked = current.ChaosUnlocked
+            };
+        }
+
+        /// <summary>
         /// Spends Stars to unlock <paramref name="challenge"/> — a no-op
         /// success (nothing charged) if it's already unlocked, a no-op
         /// failure if the player can't afford it. Never mutates <paramref

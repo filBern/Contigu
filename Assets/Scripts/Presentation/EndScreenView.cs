@@ -4,15 +4,19 @@ using UnityEngine;
 
 namespace Contigu.Presentation
 {
-    /// <summary>Full-screen victory/defeat overlay with a restart button.</summary>
+    /// <summary>Full-screen victory/defeat overlay with a restart button — on Victory, also an "Endless" button (explicit request: "j'aimerais que le joueur ait l'option d'aller en endless mode... pour continuer sa run ou de retourner au menu") to keep the same run going past its scheduled last round instead of ending it.</summary>
     public sealed class EndScreenView : MonoBehaviour
     {
         public event Action RestartRequested;
+
+        /// <summary>Fires only from the Victory screen's "Continue" button — never shown/wired on Defeat, since there's no scheduled run left to extend once the player has actually lost.</summary>
+        public event Action ContinueEndlessRequested;
 
         private RectTransform _root;
         private UnityEngine.UI.Text _titleText;
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
+        private UnityEngine.UI.Button _continueButton;
 
         public RectTransform Build(Transform parent)
         {
@@ -38,11 +42,27 @@ namespace Contigu.Presentation
             _metaStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _metaStatsText.rectTransform.sizeDelta = new Vector2(700f, 60f);
 
+            // Side by side (same -120/+120 spacing as ShopView's Reroll/
+            // Leave pair) once Victory has something to offer besides
+            // restarting — Continue on the left, New Run on the right.
+            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue (Endless)", UISprites.ChooseButtonBackground, 18);
+            var continueRect = _continueButton.GetComponent<RectTransform>();
+            continueRect.anchorMin = new Vector2(0.5f, 0.28f);
+            continueRect.anchorMax = new Vector2(0.5f, 0.28f);
+            continueRect.pivot = new Vector2(0.5f, 0.5f);
+            continueRect.anchoredPosition = new Vector2(-120f, 0f);
+            continueRect.sizeDelta = new Vector2(220f, 52f);
+            _continueButton.onClick.AddListener(() =>
+            {
+                if (ContinueEndlessRequested != null) ContinueEndlessRequested();
+            });
+
             var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UISprites.ChooseButtonBackground, 18);
             var rect = restartBtn.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.28f);
             rect.anchorMax = new Vector2(0.5f, 0.28f);
             rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(120f, 0f);
             rect.sizeDelta = new Vector2(220f, 52f);
             restartBtn.onClick.AddListener(() =>
             {
@@ -59,6 +79,7 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Success;
             _subtitleText.text = "Run complete — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
+            _continueButton.gameObject.SetActive(true);
             _root.gameObject.SetActive(true);
         }
 
@@ -68,6 +89,7 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Danger;
             _subtitleText.text = "Quota not reached — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
+            _continueButton.gameObject.SetActive(false);
             _root.gameObject.SetActive(true);
         }
 
@@ -83,8 +105,12 @@ namespace Contigu.Presentation
             string bestScoreLine = isNewBestScore
                 ? "Best score: " + metaStats.BestScore + " — new record!"
                 : "Best score: " + metaStats.BestScore;
+            // No longer "/RunConfig.RoundCount" (explicit request added
+            // Endless mode, so BestRoundReached can now run past the
+            // scheduled 8 — "X/8" would misread as somehow falling short
+            // of a cap that no longer exists).
             _metaStatsText.text = bestScoreLine
-                + "\nBest round reached: " + metaStats.BestRoundReached + "/" + RunConfig.RoundCount
+                + "\nBest round reached: " + metaStats.BestRoundReached
                 + "   ·   Runs played: " + metaStats.TotalRunsPlayed
                 + "   ·   Victories: " + metaStats.TotalVictories;
             _metaStatsText.color = isNewBestScore ? UITheme.Success : UITheme.TextMutedOnBackground;

@@ -116,6 +116,84 @@ namespace Contigu.Tests
             Assert.IsFalse(updated.ChaosUnlocked);
         }
 
+        // ---- RecordEndlessExtension (explicit request: "j'aimerais que
+        // le joueur ait l'option d'aller en endless mode... pour continuer
+        // sa run") — RunDefeat's counterpart to RecordRunOutcome once a run
+        // kept going past its scheduled Victory (see RunManager.IsEndless),
+        // deliberately NOT the same method: that run's TotalRunsPlayed/
+        // TotalVictories/victory-bonus Stars were already folded in the
+        // moment it first reached RunVictory, so calling RecordRunOutcome
+        // a second time here would double-count one physical run as two. ----
+
+        [Test]
+        public void RecordEndlessExtension_NeverIncrementsTotalRunsPlayedOrTotalVictories()
+        {
+            var current = new MetaStats { TotalRunsPlayed = 3, TotalVictories = 1 };
+
+            var updated = MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 3, roundReached: 11);
+
+            Assert.AreEqual(3, updated.TotalRunsPlayed, "The victory that unlocked Endless already counted this as one run played.");
+            Assert.AreEqual(1, updated.TotalVictories, "The victory that unlocked Endless already counted this as one victory.");
+        }
+
+        [Test]
+        public void RecordEndlessExtension_AwardsOneStarPerAdditionalRoundCleared_NoVictoryBonus()
+        {
+            var current = new MetaStats { Stars = 10 };
+
+            var updated = MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 3, roundReached: 11);
+
+            Assert.AreEqual(13, updated.Stars, "3 more rounds cleared should earn exactly 3 more Stars — rounds 1-8's Stars and the victory bonus were already paid out by RecordRunOutcome.");
+        }
+
+        [Test]
+        public void RecordEndlessExtension_RaisesBestScoreAndBestRoundReached_WhenHigher()
+        {
+            var current = new MetaStats { BestScore = 40000, BestRoundReached = 8 };
+
+            var updated = MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 3, roundReached: 11);
+
+            Assert.AreEqual(50000, updated.BestScore);
+            Assert.AreEqual(11, updated.BestRoundReached, "BestRoundReached should be free to climb past the old scheduled RoundCount once Endless exists.");
+        }
+
+        [Test]
+        public void RecordEndlessExtension_KeepsThePriorBests_WhenNotHigher()
+        {
+            var current = new MetaStats { BestScore = 90000, BestRoundReached = 15 };
+
+            var updated = MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 3, roundReached: 11);
+
+            Assert.AreEqual(90000, updated.BestScore, "A worse endless stretch must never lower the recorded best score.");
+            Assert.AreEqual(15, updated.BestRoundReached, "A shorter endless stretch must never lower the recorded best round.");
+        }
+
+        [Test]
+        public void RecordEndlessExtension_PreservesStarsAndUnlockedChallenges()
+        {
+            var current = new MetaStats { Stars = 12, MarathonUnlocked = true, ChaosUnlocked = false };
+
+            var updated = MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 2, roundReached: 10);
+
+            Assert.AreEqual(14, updated.Stars);
+            Assert.IsTrue(updated.MarathonUnlocked, "Recording an endless extension must never forget an already-unlocked challenge.");
+            Assert.IsFalse(updated.ChaosUnlocked);
+        }
+
+        [Test]
+        public void RecordEndlessExtension_NeverMutatesTheInputStats()
+        {
+            var current = new MetaStats { TotalRunsPlayed = 3, TotalVictories = 1, BestScore = 40000, BestRoundReached = 8, Stars = 10 };
+
+            MetaStatsRecorder.RecordEndlessExtension(current, finalScore: 50000, additionalRoundsCleared: 3, roundReached: 11);
+
+            Assert.AreEqual(3, current.TotalRunsPlayed);
+            Assert.AreEqual(1, current.TotalVictories);
+            Assert.AreEqual(40000, current.BestScore);
+            Assert.AreEqual(8, current.BestRoundReached);
+            Assert.AreEqual(10, current.Stars);
+        }
+
         [Test]
         public void TryUnlockChallenge_Classic_AlwaysSucceedsWithoutSpendingStars()
         {

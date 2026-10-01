@@ -6656,3 +6656,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (la taille de carte de `PieceChoiceView`) pour laisser la place au
   label — `PreviewSize` (le glyphe lui-même) reste à 81, aligné avec
   `TileChoiceView`.
+- **Mode Endless après la victoire** : sur demande explicite ("Après 8
+  rounds, on garde l'écran de victoire, mais j'aimerais que le joueur
+  ait l'option d'aller en endless mode, toujours avec un boss chaque 4
+  rounds, pour continuer sa run ou de retourner au menu") — l'écran de
+  victoire garde son bouton "New Run" et gagne un bouton "Continue
+  (Endless)". Nouveau `RunManager.IsEndless` + `ContinueEndless()` :
+  rouvre le shop de la ronde 8 exactement comme n'importe quelle fin
+  de ronde normale (plutôt que de sauter direct à la ronde 9), puisque
+  la seule raison pour laquelle ce shop était sauté était que la run
+  allait se terminer — ce qui n'est plus vrai une fois ce bouton
+  cliqué. `CurrentQuota`/`CurrentBudget` lisent maintenant au-delà du
+  tableau Quotas/PieceBudgets du challenge une fois en Endless : le
+  quota continue de grimper avec le même ratio que les 2 dernières
+  rondes programmées (Classic : 33000/17200 ≈ x1.92, appliqué en
+  boucle), et le budget de pièces répète en boucle les 4 dernières
+  entrées programmées (Classic : 28/28/28/22) — ce qui garde
+  naturellement un boss toutes les 4 rondes en Endless aussi, puisque
+  `IsBossRound`/`RunConfig.BossRoundInterval` n'ont jamais dépendu de
+  la taille du tableau. Corrigé au passage deux affichages "X/8" qui
+  auraient semblé casser un plafond qui n'existe plus une fois en
+  Endless (le HUD en jeu et le récap de fin de run). Pour éviter de
+  compter une même run deux fois dans les statistiques meta si elle
+  finit par perdre en Endless (`MetaStatsRecorder.
+  RecordEndlessExtension`, distinct de `RecordRunOutcome`) : la
+  victoire initiale paie déjà TotalRunsPlayed/TotalVictories/le bonus
+  de victoire, donc la défaite éventuelle en Endless ne paie plus que
+  les étoiles des rondes *additionnelles* effectivement passées.

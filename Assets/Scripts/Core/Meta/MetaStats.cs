@@ -19,7 +19,7 @@ namespace Contigu.Core
         public int TotalVictories;
         public int BestScore;
 
-        /// <summary>Highest round NUMBER (1-based, see RunManager.CurrentRoundNumber) ever reached across every run — RunConfig.RoundCount (8) on any past victory, since clearing the boss round means reaching it.</summary>
+        /// <summary>Highest round NUMBER (1-based, see RunManager.CurrentRoundNumber) ever reached across every run — at least RunConfig.RoundCount (8) on any past victory, since clearing the boss round means reaching it, but free to climb past that once a run goes Endless (see RunManager.IsEndless/ContinueEndless, MetaStatsRecorder.RecordEndlessExtension).</summary>
         public int BestRoundReached;
 
         /// <summary>Cross-run currency (see MetaStatsRecorder.RecordRunOutcome for how a run earns it, TryUnlockChallenge for how it's spent). Explicit fields per non-Classic challenge rather than a generic collection — only 3 challenges exist, and JsonUtility doesn't serialize a HashSet/Dictionary cleanly.</summary>
