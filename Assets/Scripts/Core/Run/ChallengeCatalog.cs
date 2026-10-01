@@ -11,12 +11,12 @@ namespace Contigu.Core
     /// </summary>
     public static class ChallengeCatalog
     {
-        /// <summary>The original, unchanged run — same numbers as RunConfig, just wrapped so RunManager can read every challenge the same way instead of special-casing Classic.</summary>
+        /// <summary>The original run — same quotas/budgets as RunConfig, with a random boss effect every four rounds.</summary>
         public static readonly ChallengeDefinition Classic = new ChallengeDefinition
         {
             Id = ChallengeId.Classic,
             Name = "Classic",
-            Description = "The original run: 8 rounds, the boss only starts locking cells on the last one.",
+            Description = "Eight rounds. Every four rounds, face a random boss rule: the board locks cells, a hand slot is locked, or one color scores no points.",
             UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -31,7 +31,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Marathon,
             Name = "Marathon",
-            Description = "A smaller starting deck and tighter piece budgets every round, with quotas trimmed to match.",
+            Description = "A smaller starting deck and tighter piece budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
             Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200 },
@@ -41,12 +41,12 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
         };
 
-        /// <summary>Same quotas/budgets/starting deck as Classic — only the boss changes: its cell-lock ticks every round instead of just the last one, at the SAME per-tick pace as Classic's own finale now uses (1 cell every 5 pieces — both were originally every 3, eased together on repeated reports the boss was too hard) — the difference is purely how many rounds it's active for, not its rate within one.</summary>
+        /// <summary>Same quotas/budgets/starting deck as Classic. Chaos adds its gradual cell-lock every round on top of the random scheduled boss effect at rounds 4 and 8.</summary>
         public static readonly ChallengeDefinition Chaos = new ChallengeDefinition
         {
             Id = ChallengeId.Chaos,
             Name = "Chaos",
-            Description = "The boss's cell-lock is active from round 1, at a gentler pace throughout instead of one big spike at the end.",
+            Description = "The board's cell-lock is active from round 1 at a gentler pace. Every four rounds, an additional random boss rule appears.",
             UnlockCost = 10,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,

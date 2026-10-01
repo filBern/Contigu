@@ -31,7 +31,7 @@ namespace Contigu.Presentation
 
         public void OnDrag(PointerEventData eventData)
         {
-            _owner.DragSlot(eventData);
+            _owner.DragSlot(_index, eventData);
         }
 
         public void OnEndDrag(PointerEventData eventData)

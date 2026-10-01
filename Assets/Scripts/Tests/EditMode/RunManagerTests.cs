@@ -2459,7 +2459,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_DuringBossRound_LocksOneMoreFreeCellEveryFivePiecesPlayed()
+        public void PlacePiece_WhenCellLockIsTheBossEffect_LocksOneMoreFreeCellEveryFivePiecesPlayed()
         {
             // Boss round rework (on explicit request — "le boss est beaucoup
             // trop difficile, on va faire autre chose"): no more upfront
@@ -2472,9 +2472,19 @@ namespace Contigu.Tests
             // 3 -> 5 on a further explicit report that it was STILL too
             // hard ("Le boss est beaucoup trop difficile") — now matching
             // Chaos' own pace (see ChallengeCatalog.Chaos).
-            var run = new RunManager(new SystemRandomProvider(5));
-            AdvanceToRound(run, RunConfig.BossRoundIndex);
+            RunManager run = null;
+            for (int seed = 0; seed < 256 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                AdvanceToRound(candidate, 3);
+                if (candidate.CurrentBossEffect == BossEffect.ProgressiveCellLock)
+                {
+                    run = candidate;
+                }
+            }
+            Assert.IsNotNull(run, "A seed should select the progressive cell-lock boss effect");
             Assert.IsTrue(run.IsBossRound);
+            Assert.AreEqual(BossEffect.ProgressiveCellLock, run.CurrentBossEffect);
             Assert.AreEqual(0, CountLockedCells(run.Grid), "Boss round should no longer lock cells upfront");
 
             for (int i = 0; i < 4; i++)
@@ -2512,11 +2522,88 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RunManager_ClassicChallenge_NeverActivatesTheBossBeforeTheLastRound()
+        public void RunManager_ClassicChallenge_StartsWithoutBossInRoundOne()
         {
             var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Classic);
 
             Assert.IsFalse(run.IsBossRound);
+        }
+
+        [Test]
+        public void RunManager_ClassicBossEffectsAreScheduledEveryFourRounds()
+        {
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Classic);
+            AdvanceToRound(run, 2);
+            Assert.IsFalse(run.IsBossRound, "Round 3 is not a boss round");
+
+            AdvanceToRound(run, 3);
+            Assert.IsTrue(run.IsBossRound, "Round 4 should be a boss round");
+            Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
+
+            AdvanceToRound(run, 4);
+            Assert.IsFalse(run.IsBossRound, "Round 5 is not a boss round");
+            Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
+
+            AdvanceToRound(run, 7);
+            Assert.IsTrue(run.IsBossRound, "Round 8 should be a boss round");
+            Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
+        }
+
+        [Test]
+        public void RunManager_LockedBossSlotCannotBePlayedAndShuffleKeepsItsSlotLocked()
+        {
+            RunManager run = null;
+            for (int seed = 0; seed < 256 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                AdvanceToRound(candidate, 3);
+                if (candidate.CurrentBossEffect == BossEffect.LockedHandSlot)
+                {
+                    run = candidate;
+                }
+            }
+            Assert.IsNotNull(run, "A seed should select the locked-hand-slot boss effect");
+
+            int lockedIndex = run.BossLockedHandSlotIndex.Value;
+            var rejected = run.PlacePiece(lockedIndex, 0, 0);
+            Assert.IsFalse(rejected.Placement.Success);
+
+            Assert.IsTrue(run.ShuffleHand(), "The boss slot lock should not disable Shuffle");
+            Assert.AreEqual(lockedIndex, run.BossLockedHandSlotIndex.Value, "The lock applies to the slot for the whole round, including after a shuffle");
+            Assert.IsTrue(run.IsHandSlotLocked(lockedIndex));
+            Assert.IsFalse(run.IsHandSlotLocked((lockedIndex + 1) % DeckManager.HandSize));
+        }
+
+        [Test]
+        public void RunManager_CursedColorCanBePlayedButItsPlacementScoresZero()
+        {
+            RunManager run = null;
+            int handIndex = -1;
+            for (int seed = 0; seed < 512 && run == null; seed++)
+            {
+                var candidate = new RunManager(new SystemRandomProvider(seed));
+                AdvanceToRound(candidate, 3);
+                if (candidate.CurrentBossEffect != BossEffect.CursedColor)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < candidate.Deck.Hand.Count; i++)
+                {
+                    if (candidate.Deck.Hand[i].HasValue && candidate.Deck.Hand[i].Value.Color == candidate.BossCursedColor.Value)
+                    {
+                        run = candidate;
+                        handIndex = i;
+                        break;
+                    }
+                }
+            }
+            Assert.IsNotNull(run, "A seeded round should offer a playable piece in the cursed color");
+
+            var outcome = run.PlacePiece(handIndex, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success, "The cursed color remains playable");
+            Assert.AreEqual(0, outcome.Placement.TotalScore, "The cursed color yields no points");
         }
 
         [Test]

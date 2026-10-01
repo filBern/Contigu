@@ -58,11 +58,13 @@ namespace Contigu.Presentation
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
         private Text[] _slotLevelLabels;
+        private Text[] _slotLockLabels;
         private Button _shuffleButton;
         private Text _shuffleCountLabel;
         private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
+        private int? _bossLockedSlotIndex;
 
         private Transform _dragLayerParent;
         private RectTransform _dragGhost;
@@ -107,6 +109,7 @@ namespace Contigu.Presentation
             _slotButtons = new Button[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
             _slotLevelLabels = new Text[DeckManager.HandSize];
+            _slotLockLabels = new Text[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
@@ -142,9 +145,18 @@ namespace Contigu.Presentation
                 levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 3f);
                 levelLabel.rectTransform.sizeDelta = new Vector2(0f, SlotLevelLabelHeight);
 
+                var lockLabel = UIFactory.CreateText(slot.transform, "BossLock", "", 11, UITheme.Danger);
+                lockLabel.raycastTarget = false;
+                lockLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+                lockLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+                lockLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+                lockLabel.rectTransform.anchoredPosition = new Vector2(0f, -5f);
+                lockLabel.rectTransform.sizeDelta = new Vector2(0f, 18f);
+
                 _slotBackgrounds[i] = slot;
                 _previewContainers[i] = previewContainer;
                 _slotLevelLabels[i] = levelLabel;
+                _slotLockLabels[i] = lockLabel;
             }
 
             BuildShuffleButton(container);
@@ -239,7 +251,7 @@ namespace Contigu.Presentation
 
         public void BeginSlotDrag(int index)
         {
-            if (!_interactable || !_deck.Hand[index].HasValue)
+            if (!_interactable || IsBossLockedSlot(index) || !_deck.Hand[index].HasValue)
             {
                 return;
             }
@@ -262,9 +274,9 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Kept for immediacy during an actual drag gesture — Update() already tracks the cursor every frame regardless of drag state, but forwarding the drag's own event here avoids a single-frame lag while the pointer is moving fast.</summary>
-        public void DragSlot(PointerEventData eventData)
+        public void DragSlot(int index, PointerEventData eventData)
         {
-            if (_selectedIndex < 0)
+            if (_selectedIndex != index)
             {
                 return;
             }
@@ -325,7 +337,7 @@ namespace Contigu.Presentation
 
         private void OnSlotClicked(int idx)
         {
-            if (!_interactable || !_deck.Hand[idx].HasValue)
+            if (!_interactable || IsBossLockedSlot(idx) || !_deck.Hand[idx].HasValue)
             {
                 return;
             }
@@ -356,6 +368,11 @@ namespace Contigu.Presentation
             }
         }
 
+        private bool IsBossLockedSlot(int index)
+        {
+            return _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == index;
+        }
+
         public void ClearSelection()
         {
             _selectedIndex = -1;
@@ -374,12 +391,34 @@ namespace Contigu.Presentation
         public void SetInteractable(bool interactable)
         {
             _interactable = interactable;
-            for (int i = 0; i < _slotButtons.Length; i++)
-            {
-                _slotButtons[i].interactable = interactable;
-            }
+            UpdateSlotInteractability();
             _shuffleButton.interactable = interactable && _shuffleAllowed;
             UpdateSelectionVisuals();
+        }
+
+        /// <summary>Applies or clears the boss's round-long hand-slot lock without preventing Shuffle.</summary>
+        public void SetBossLockedSlot(int? slotIndex)
+        {
+            _bossLockedSlotIndex = slotIndex;
+            if (_selectedIndex >= 0 && _bossLockedSlotIndex == _selectedIndex)
+            {
+                ClearSelection();
+                if (SelectionCleared != null)
+                {
+                    SelectionCleared();
+                }
+            }
+            UpdateSlotInteractability();
+            UpdateSelectionVisuals();
+        }
+
+        private void UpdateSlotInteractability()
+        {
+            for (int i = 0; i < _slotButtons.Length; i++)
+            {
+                bool bossLocked = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
+                _slotButtons[i].interactable = _interactable && !bossLocked;
+            }
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
@@ -387,6 +426,7 @@ namespace Contigu.Presentation
         {
             _run = run;
             _deck = run.Deck;
+            _bossLockedSlotIndex = run.BossLockedHandSlotIndex;
             _selectedIndex = -1;
             _interactable = true;
             // In case a piece was still selected (and its cursor ghost
@@ -421,7 +461,14 @@ namespace Contigu.Presentation
                 // (see VisualDefaults.LockedColor) — dims toward the
                 // background instead of a one-off grey, so it reads as part
                 // of the same visual language rather than a new state.
-                _slotBackgrounds[i].color = _interactable ? baseColor : Color.Lerp(baseColor, UITheme.Background, 0.7f);
+                bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
+                _slotBackgrounds[i].color = !_interactable
+                    ? Color.Lerp(baseColor, UITheme.Background, 0.7f)
+                    : lockedByBoss ? Color.Lerp(baseColor, UITheme.Background, 0.55f) : baseColor;
+                if (_slotLockLabels != null)
+                {
+                    _slotLockLabels[i].text = lockedByBoss ? "LOCKED" : string.Empty;
+                }
             }
         }
 
@@ -448,6 +495,7 @@ namespace Contigu.Presentation
                     _slotLevelLabels[i].text = string.Empty;
                 }
             }
+            UpdateSlotInteractability();
             UpdateSelectionVisuals();
         }
 

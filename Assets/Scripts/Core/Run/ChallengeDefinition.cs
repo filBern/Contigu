@@ -1,5 +1,14 @@
 namespace Contigu.Core
 {
+    /// <summary>Randomly selected special mechanic for a scheduled boss round.</summary>
+    public enum BossEffect
+    {
+        None,
+        ProgressiveCellLock,
+        LockedHandSlot,
+        CursedColor
+    }
+
     /// <summary>
     /// Everything a challenge (see ChallengeId/ChallengeCatalog) overrides
     /// about a run's rules — RunManager reads these instead of RunConfig's
@@ -21,7 +30,7 @@ namespace Contigu.Core
         public int[] Quotas;
         public int[] PieceBudgets;
 
-        /// <summary>True for Chaos: the boss cell-lock ticks every round instead of only the last one (see RunManager.IsBossRound).</summary>
+        /// <summary>True for Chaos: the progressive grid cell-lock ticks every round in addition to the scheduled random boss effects.</summary>
         public bool BossActiveEveryRound;
 
         public int BossLockPiecesInterval;

@@ -381,6 +381,15 @@ namespace Contigu.Core
 
         public RunState State { get; private set; }
 
+        /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds.</summary>
+        public BossEffect CurrentBossEffect { get; private set; }
+
+        /// <summary>The hand slot disabled for this boss round, or null for other boss effects.</summary>
+        public int? BossLockedHandSlotIndex { get; private set; }
+
+        /// <summary>The base color that scores no points this boss round, or null for other boss effects.</summary>
+        public PieceColor? BossCursedColor { get; private set; }
+
         public int CurrentRoundNumber
         {
             get { return CurrentRoundIndex + 1; }
@@ -396,10 +405,21 @@ namespace Contigu.Core
             get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
         }
 
-        /// <summary>Classic/Marathon: only the last round. Chaos: every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
+        /// <summary>Classic/Marathon: rounds 4 and 8. Chaos also keeps its cell-lock active every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
         public bool IsBossRound
         {
-            get { return _challenge.BossActiveEveryRound || CurrentRoundIndex == _challenge.BossRoundIndex; }
+            get { return _challenge.BossActiveEveryRound || (CurrentRoundIndex + 1) % RunConfig.BossRoundInterval == 0; }
+        }
+
+        public bool IsHandSlotLocked(int handIndex)
+        {
+            return BossLockedHandSlotIndex.HasValue && BossLockedHandSlotIndex.Value == handIndex;
+        }
+
+        /// <summary>Returns whether the current boss curse disables points for this resolved piece color.</summary>
+        public bool IsColorCursed(PieceColor color)
+        {
+            return BossCursedColor.HasValue && BossCursedColor.Value == color;
         }
 
         /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic (the original run) when omitted — keeps every existing call site (tests included) on the standard rules without having to pass one explicitly.</summary>
@@ -422,6 +442,7 @@ namespace Contigu.Core
         private void StartRound()
         {
             Grid.ResetForNewRound();
+            RollBossEffectForRound();
             // No more upfront lock here — the boss round now ratchets up
             // gradually instead, see ApplyBossLockTick (called from
             // PlacePiece every _challenge.BossLockPiecesInterval pieces).
@@ -448,6 +469,28 @@ namespace Contigu.Core
             EvaluateRoundEnd();
         }
 
+        private void RollBossEffectForRound()
+        {
+            CurrentBossEffect = BossEffect.None;
+            BossLockedHandSlotIndex = null;
+            BossCursedColor = null;
+            if ((CurrentRoundIndex + 1) % RunConfig.BossRoundInterval != 0)
+            {
+                return;
+            }
+
+            CurrentBossEffect = (BossEffect)(1 + _rng.Next(3));
+            if (CurrentBossEffect == BossEffect.LockedHandSlot)
+            {
+                BossLockedHandSlotIndex = _rng.Next(DeckManager.HandSize);
+            }
+            else if (CurrentBossEffect == BossEffect.CursedColor)
+            {
+                var colors = PieceColorUtility.BaseColors;
+                BossCursedColor = colors[_rng.Next(colors.Count)];
+            }
+        }
+
         /// <summary>
         /// Attempts to place the hand piece at <paramref name="handIndex"/> anchored
         /// at (x, y). Returns the full outcome including whether the round/run
@@ -464,6 +507,11 @@ namespace Contigu.Core
             if (handIndex < 0 || handIndex >= DeckManager.HandSize || !Deck.Hand[handIndex].HasValue)
             {
                 return new PlacementOutcome(PlacementResult.Failure("Invalid hand index"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
+            }
+
+            if (IsHandSlotLocked(handIndex))
+            {
+                return new PlacementOutcome(PlacementResult.Failure("This hand slot is locked by the boss"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
             var token = Deck.Hand[handIndex].Value;
@@ -527,6 +575,10 @@ namespace Contigu.Core
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
+            if (BossCursedColor.HasValue)
+            {
+                ApplyCursedColorScoreRule(placement, BossCursedColor.Value);
+            }
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
@@ -543,7 +595,8 @@ namespace Contigu.Core
             PiecesRemainingThisRound--;
 
             IReadOnlyList<Vector2Int> bossLockedCells = System.Array.Empty<Vector2Int>();
-            if (IsBossRound)
+            bool cellLockActive = _challenge.BossActiveEveryRound || CurrentBossEffect == BossEffect.ProgressiveCellLock;
+            if (cellLockActive)
             {
                 int piecesPlayedThisRound = CurrentBudget - PiecesRemainingThisRound;
                 if (piecesPlayedThisRound > 0 && piecesPlayedThisRound % _challenge.BossLockPiecesInterval == 0)
@@ -592,6 +645,73 @@ namespace Contigu.Core
             }
             Lueur += lockOutcome.LueurEarned;
             return lockOutcome.LockedCells;
+        }
+
+        /// <summary>Removes point events tied to the cursed color while preserving play legality, clears, Lueur, and non-point multiplier effects.</summary>
+        private void ApplyCursedColorScoreRule(PlacementResult placement, PieceColor cursedColor)
+        {
+            var clearedColors = new Dictionary<Vector2Int, PieceColor>();
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                clearedColors[placement.ClearedCells[i]] = placement.ClearedCellColors[i];
+            }
+            for (int i = 0; i < placement.DestroyedCells.Count; i++)
+            {
+                if (placement.DestroyedCellColors[i].HasValue)
+                {
+                    clearedColors[placement.DestroyedCells[i]] = placement.DestroyedCellColors[i].Value;
+                }
+            }
+
+            var keptEvents = new List<ScoreEvent>(placement.ScoreEvents.Count);
+            placement.GroupBonus = 0;
+            placement.GoldenBonus = 0;
+            placement.LineClearScore = 0;
+            placement.ModifierBonus = 0;
+            placement.TraitBonus = 0;
+            placement.ShapeMasteryBonus = 0;
+            placement.ColorMasteryBonus = 0;
+
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (IsPointEvent(scoreEvent.Type) && IsPositionColor(scoreEvent.Position, clearedColors, cursedColor))
+                {
+                    continue;
+                }
+
+                keptEvents.Add(scoreEvent);
+                switch (scoreEvent.Type)
+                {
+                    case ScoreEventType.Group: placement.GroupBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Golden: placement.GoldenBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.LineClear:
+                    case ScoreEventType.Bastion: placement.LineClearScore += scoreEvent.Amount; break;
+                    case ScoreEventType.Modifier: placement.ModifierBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Trait: placement.TraitBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ShapeMastery: placement.ShapeMasteryBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ColorMastery: placement.ColorMasteryBonus += scoreEvent.Amount; break;
+                }
+            }
+            placement.ScoreEvents = keptEvents;
+        }
+
+        private static bool IsPointEvent(ScoreEventType type)
+        {
+            return type == ScoreEventType.Group || type == ScoreEventType.Golden ||
+                type == ScoreEventType.LineClear || type == ScoreEventType.Bastion ||
+                type == ScoreEventType.Modifier || type == ScoreEventType.Trait ||
+                type == ScoreEventType.ShapeMastery || type == ScoreEventType.ColorMastery;
+        }
+
+        private bool IsPositionColor(Vector2Int position, Dictionary<Vector2Int, PieceColor> clearedColors, PieceColor cursedColor)
+        {
+            if (clearedColors.TryGetValue(position, out var clearedColor))
+            {
+                return clearedColor == cursedColor;
+            }
+            var cell = Grid.GetCell(position);
+            return cell.IsFilled && cell.FilledColor == cursedColor;
         }
 
         /// <summary>
@@ -1480,7 +1600,7 @@ namespace Contigu.Core
             var shapes = new List<PieceShape>(hand.Count);
             for (int i = 0; i < hand.Count; i++)
             {
-                if (!hand[i].HasValue)
+                if (!hand[i].HasValue || IsHandSlotLocked(i))
                 {
                     continue;
                 }

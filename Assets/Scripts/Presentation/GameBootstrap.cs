@@ -850,6 +850,7 @@ namespace Contigu.Presentation
             // across the individual catch-up steps.
             int chipsTotal = 0;
             float multTotal = 1f;
+            bool masteryBonusShown = false;
             _comboView.Show(0, 1f);
             // Multiplies every stagger wait below — starts at 1 (full pace)
             // and shrinks by ComboSpeedupFactor after each combo addition,
@@ -864,6 +865,39 @@ namespace Contigu.Presentation
                 if (scoreEvent.Type == ScoreEventType.LineClear)
                 {
                     continue; // played below, synced with each cell's visual clear
+                }
+
+                if (scoreEvent.Type == ScoreEventType.ShapeMastery || scoreEvent.Type == ScoreEventType.ColorMastery)
+                {
+                    // Mastery bonuses are stamped per tile and therefore
+                    // arrive as many small events. Present their placement
+                    // total once, instead of showing repeated +1 popups.
+                    if (masteryBonusShown)
+                    {
+                        continue;
+                    }
+
+                    int masteryBonus = placement.ShapeMasteryBonus + placement.ColorMasteryBonus;
+                    if (masteryBonus <= 0)
+                    {
+                        continue;
+                    }
+
+                    masteryBonusShown = true;
+                    _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+                    var masteryAnchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
+                    _feedbackLayer.SpawnPopup(masteryAnchor, "+" + masteryBonus, UITheme.TextPrimary);
+                    SfxManager.PlayComboTick();
+
+                    displayedRoundScore += masteryBonus;
+                    chipsTotal += masteryBonus;
+                    _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
+                    _comboView.Show(chipsTotal, multTotal);
+                    _comboView.PulseChips();
+
+                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
+                    staggerSpeed *= ComboSpeedupFactor;
+                    continue;
                 }
 
                 if (scoreEvent.Type == ScoreEventType.ModifierMultiplier || scoreEvent.Type == ScoreEventType.MultBonus)
@@ -1435,9 +1469,34 @@ namespace Contigu.Presentation
             }
             _shopView.Hide();
             RefreshAll();
-            SetStatusText(_run.IsBossRound
-                ? "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " pieces played, the boss locks " + _run.Challenge.BossLockCellsPerInterval + " more cells."
-                : "New round: select a piece, then click the grid.");
+            SetStatusText(GetCurrentRoundStatus());
+        }
+
+        private string GetCurrentRoundStatus()
+        {
+            string status;
+            switch (_run.CurrentBossEffect)
+            {
+                case BossEffect.ProgressiveCellLock:
+                    status = "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " pieces, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock.";
+                    break;
+                case BossEffect.LockedHandSlot:
+                    status = "Boss round: hand slot " + (_run.BossLockedHandSlotIndex.Value + 1) + " is locked for this round.";
+                    break;
+                case BossEffect.CursedColor:
+                    status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " pieces score 0 points this round.";
+                    break;
+                default:
+                    status = _run.Challenge.BossActiveEveryRound
+                        ? "Chaos: every " + _run.Challenge.BossLockPiecesInterval + " pieces, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
+                        : "New round: select a piece, then click the grid.";
+                    break;
+            }
+            if (_run.Challenge.BossActiveEveryRound && _run.CurrentBossEffect != BossEffect.None && _run.CurrentBossEffect != BossEffect.ProgressiveCellLock)
+            {
+                status += " Chaos also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " pieces.";
+            }
+            return status;
         }
 
         /// <summary>
@@ -1544,6 +1603,7 @@ namespace Contigu.Presentation
         private void RefreshAll(bool refreshModifierPanel = true)
         {
             _gridView.Refresh();
+            _handView.SetBossLockedSlot(_run.BossLockedHandSlotIndex);
             _handView.Refresh();
             RefreshShuffleButton();
             _hudView.Refresh(_run);

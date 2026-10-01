@@ -4,7 +4,8 @@ namespace Contigu.Core
     public static class RunConfig
     {
         public const int RoundCount = 8;
-        public const int BossRoundIndex = RoundCount - 1; // round 8 (0-based index 7)
+        public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 8 (0-based index 7)
+        public const int BossRoundInterval = 4;
 
         /// <summary>
         /// Boss round mechanic (replaces the old upfront 14-cell lock at

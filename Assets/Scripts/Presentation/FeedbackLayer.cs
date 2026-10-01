@@ -7,6 +7,8 @@ namespace Contigu.Presentation
     /// <summary>Spawns short-lived floating "+N" popups for score feedback (spec 9.7).</summary>
     public sealed class FeedbackLayer : MonoBehaviour
     {
+        private const float ScoreBackdropOpacity = 0.5f;
+        private const float ScoreBackdropSpinDegreesPerSecond = 720f;
         private RectTransform _root;
 
         public RectTransform Build(Transform parent)
@@ -61,6 +63,9 @@ namespace Contigu.Presentation
             backdrop.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             backdrop.rectTransform.anchoredPosition = Vector2.zero;
             backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f);
+            var backdropColor = backdrop.color;
+            backdropColor.a = ScoreBackdropOpacity;
+            backdrop.color = backdropColor;
 
             var popup = UIFactory.CreateText(container, "Popup", text, 22, color);
             UIFactory.StretchFull(popup.rectTransform);
@@ -156,8 +161,9 @@ namespace Contigu.Presentation
                 text.color = tc;
 
                 var dc = backdropColor;
-                dc.a = alpha;
+                dc.a = backdropColor.a * alpha;
                 backdrop.color = dc;
+                backdrop.rectTransform.Rotate(0f, 0f, ScoreBackdropSpinDegreesPerSecond * Time.deltaTime);
 
                 yield return null;
             }
