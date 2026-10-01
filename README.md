@@ -6632,3 +6632,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   centré) c'est bien `DraftView` qui avait ce bug, pas la réduction de
   30% des cartes en elle-même. Passé au même calcul "mesurer tout,
   centrer le bloc entier" que les deux autres vues.
+- **Cartes de tiles (TileChoiceView) rapetissées pour matcher les
+  pieces** : sur rapport explicite ("Les tiles upgrades 5 tiles
+  preview sont plus gros que sur les pieces upgrades, il faudrait les
+  rapetisser un peu") — `TileChoiceView` (le picker à 5 tuiles pour
+  les upgrades Grid-pool comme Golden Cells/Tinted Cells/etc.) gardait
+  encore ses tailles d'origine (`CellSize` 140, `PreviewSize` 116) de
+  avant la réduction de 30% appliquée aux vues de pièces. Alignées sur
+  les mêmes valeurs que `DraftView` (140→98, 116→81) pour que les deux
+  types de picker à 5 cartes se ressemblent.

@@ -21,8 +21,12 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float CellSize = 140f;
-        private const float PreviewSize = 116f;
+        // 30% smaller than the original 140/116, matching PieceChoiceView/
+        // DraftView's own piece cards (explicit report: "Les tiles upgrades
+        // 5 tiles preview sont plus gros que sur les pieces upgrades, il
+        // faudrait les rapetisser un peu").
+        private const float CellSize = 98f;
+        private const float PreviewSize = 81f;
         private const float BadgeFadeDuration = 0.35f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
