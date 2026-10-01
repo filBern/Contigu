@@ -23,14 +23,22 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "How to Play", 32, UITheme.TextOnBackground);
+            var rulesCard = UIFactory.CreatePanel(_root, "RulesCard", UITheme.Panel);
+            UIFactory.AddThickOutline(rulesCard, UITheme.Border);
+            rulesCard.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rulesCard.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            rulesCard.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            rulesCard.rectTransform.anchoredPosition = new Vector2(0f, 15f);
+            rulesCard.rectTransform.sizeDelta = new Vector2(1120f, 700f);
+
+            var header = UIFactory.CreateText(_root, "Header", "How to Play", 32, UITheme.TextPrimary);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
             header.rectTransform.anchoredPosition = new Vector2(0f, -36f);
             header.rectTransform.sizeDelta = new Vector2(1000f, 46f);
 
-            var body = UIFactory.CreateText(_root, "Body", BuildRulesText(), 17, UITheme.TextOnBackground, TextAnchor.UpperLeft);
+            var body = UIFactory.CreateText(_root, "Body", BuildRulesText(), 17, UITheme.TextPrimary, TextAnchor.UpperLeft);
             body.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             body.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             body.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -88,10 +96,10 @@ namespace Contigu.Presentation
             string text = null;
             for (int i = 0; i < sections.Length; i++)
             {
-                string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + DescriptionTextFormatter.Colorize(sections[i].Body, 17);
+                string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\n" + DescriptionTextFormatter.Colorize("Tab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings", 17);
+            text += "\n\nTab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings";
             return text;
         }
     }

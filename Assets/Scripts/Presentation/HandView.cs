@@ -27,6 +27,12 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewWidth = 100f;
         private const float DragGhostPreviewHeight = 110f;
         private const float SlotLevelLabelHeight = 22f;
+        private const float HandBoxPadding = 12f;
+        private const float SlotWidth = 120f;
+        private const float SlotHeight = 140f;
+        private const float SlotSpacing = 16f;
+        private const float ShuffleButtonWidth = 46f;
+        private const float ShuffleButtonHeight = 48f;
         // On explicit clarification: the "100%" the player wants over a
         // valid spot is the GRID's own footprint preview (GridCellView.
         // SetHoverTint, already exactly cell-snapped) — not the cursor
@@ -36,14 +42,13 @@ namespace Contigu.Presentation
         // everywhere else as the "not placed yet" cue.
         private const float CursorGhostValidAlpha = 0f;
         private const float CursorGhostInvalidAlpha = 0.5f;
-        private const float ShuffleBadgeSize = 26f;
 
         public event Action<int> SlotSelected;
 
         /// <summary>Fires when re-clicking the already-selected slot toggles it off (on explicit request) — GameBootstrap uses this to clear the grid's selected-shape preview the same way a successful placement does.</summary>
         public event Action SelectionCleared;
 
-        /// <summary>Fires when the player clicks the Shuffle button below the hand — GameBootstrap forwards this to RunManager.ShuffleHand and refreshes the hand/button state with the result (see RunManager.ShuffleHand/ShufflesRemaining).</summary>
+        /// <summary>Fires when the player clicks the Shuffle icon on the hand box — GameBootstrap forwards this to RunManager.ShuffleHand and refreshes the hand/button state with the result (see RunManager.ShuffleHand/ShufflesRemaining).</summary>
         public event Action ShuffleRequested;
 
         private DeckManager _deck;
@@ -76,15 +81,27 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
             _dragLayerParent = parent;
 
-            var container = UIFactory.CreateUIObject("HandContainer", parent);
-            var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 16f;
+            float slotsWidth = DeckManager.HandSize * SlotWidth + (DeckManager.HandSize - 1) * SlotSpacing;
+            var containerImage = UIFactory.CreatePanel(parent, "HandContainer", Color.white);
+            containerImage.sprite = UISprites.SlotGroupBackground;
+            containerImage.type = Image.Type.Simple;
+            containerImage.raycastTarget = false;
+            var container = containerImage.rectTransform;
+            // Asset bounds: 3 × 120px slots + 2 × 16px gaps, with 12px
+            // padding on each side = 416 × 164 UI units. SlotGroup.png is
+            // displayed across these bounds.
+            container.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, SlotHeight + HandBoxPadding * 2f);
+
+            var slotsRow = UIFactory.CreateUIObject("SlotsRow", container);
+            slotsRow.anchorMin = new Vector2(0.5f, 0.5f);
+            slotsRow.anchorMax = new Vector2(0.5f, 0.5f);
+            slotsRow.pivot = new Vector2(0.5f, 0.5f);
+            slotsRow.sizeDelta = new Vector2(slotsWidth, SlotHeight);
+            var layout = slotsRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = SlotSpacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
-            var fitter = container.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             _slotBackgrounds = new Image[DeckManager.HandSize];
             _slotButtons = new Button[DeckManager.HandSize];
@@ -94,15 +111,14 @@ namespace Contigu.Presentation
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
                 int idx = i;
-                var slot = UIFactory.CreateSlicedImage(container, "Slot" + i, UISprites.CardBackground);
+                var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.CardBackground);
                 UIFactory.AddThickOutline(slot, UITheme.Border);
-                slot.rectTransform.sizeDelta = new Vector2(120f, 140f);
-                // Plain Image/Button has no ILayoutElement, so without this the
-                // parent VerticalLayoutGroup has no size to read and collapses
-                // the slot toward zero instead of respecting sizeDelta.
+                slot.rectTransform.sizeDelta = new Vector2(SlotWidth, SlotHeight);
+                // Plain Image/Button has no ILayoutElement, so the row's
+                // HorizontalLayoutGroup needs explicit preferred dimensions.
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
-                slotLayout.preferredWidth = 120f;
-                slotLayout.preferredHeight = 140f;
+                slotLayout.preferredWidth = SlotWidth;
+                slotLayout.preferredHeight = SlotHeight;
                 var btn = slot.gameObject.AddComponent<Button>();
                 btn.onClick.AddListener(() => OnSlotClicked(idx));
                 _slotButtons[i] = btn;
@@ -139,61 +155,32 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Below the 3 hand slots, in the same VerticalLayoutGroup container
-        /// so it stays grouped with the hand — re-rolls all 3 slots at once
+        /// Anchored inside the hand box's upper-right corner — re-rolls all 3 slots at once
         /// for a limited number of uses per run (spec extension, explicit
         /// request: "un bouton shuffle qui permet de shuffle les 3 slots de
         /// pièce au hasard. Le joueur a droit à 10 shuffle"). Reuses the
-        /// same blue "primary action" sprite as the draft's Choose button
-        /// (on the same "New Run button like Choose button" precedent)
-        /// rather than the red Cancel one, since this is a positive action
-        /// the player opts into, not a dismissal.
+        /// supplied round Shuffle icon, with the remaining-use count centered
+        /// on top of it instead of a text label.
         /// </summary>
         private void BuildShuffleButton(Transform container)
         {
-            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "Shuffle", UISprites.ChooseButtonBackground, 16);
-            // The container's VerticalLayoutGroup never sets
-            // childControlWidth/childControlHeight (stays at Unity's
-            // compiled-in false default — see Build() above), so it only
-            // ever POSITIONS a child using its LayoutElement's preferred
-            // size, it never RESIZES the child's own RectTransform to
-            // match. Every other element in this same container (the 3
-            // hand slots) sets BOTH its own sizeDelta directly AND a
-            // matching LayoutElement — missing the sizeDelta half here left
-            // the button at whatever size a freshly created RectTransform
-            // defaults to (bug report: "je ne vois pas de shuffle button"),
-            // correctly spaced in the layout but with nothing actually
-            // drawn at that size.
-            _shuffleButton.GetComponent<RectTransform>().sizeDelta = new Vector2(120f, 44f);
-            var layout = _shuffleButton.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 120f;
-            layout.preferredHeight = 44f;
+            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ShuffleIcon, 15);
+            var shuffleImage = _shuffleButton.GetComponent<Image>();
+            shuffleImage.type = Image.Type.Simple;
+            shuffleImage.color = UITheme.LightBlue;
+            var buttonRect = _shuffleButton.GetComponent<RectTransform>();
+            buttonRect.anchorMin = new Vector2(1f, 1f);
+            buttonRect.anchorMax = new Vector2(1f, 1f);
+            buttonRect.pivot = new Vector2(1f, 1f);
+            buttonRect.anchoredPosition = new Vector2(20f, 20f);
+            buttonRect.sizeDelta = new Vector2(ShuffleButtonWidth, ShuffleButtonHeight);
 
-            // Remaining-count badge, top-right corner of the button
-            // (explicit request: "au lieu d'avoir (10) pour le shuffle,
-            // j'aimerais qu'on utilise Ellipse 19.png en haut à droite du
-            // bouton et qu'on mette le nombre de shuffle restant au
-            // milieu") — replaces the "Shuffle (10)" label text, which
-            // used to wrap to 2 lines; the button's own label is now just
-            // the static "Shuffle" set above. Offset tuned across several
-            // in-game screenshots: first pushed out past the corner
-            // ("encore plus en haut à droite", from sitting mostly inside
-            // the button), then pulled back in twice ("un peu moins en
-            // haut à droite", then "encore un peu plus proche") after
-            // that first push left a visible gap floating the badge clear
-            // of the button.
-            // raycastTarget off on both — sitting mostly outside the
-            // button's own bounds at its corner, either would otherwise
-            // steal clicks that should reach the Button underneath instead.
-            var badge = UIFactory.CreateSlicedImage(_shuffleButton.transform, "CountBadge", UISprites.CountBadge);
-            badge.raycastTarget = false;
-            badge.rectTransform.anchorMin = new Vector2(1f, 1f);
-            badge.rectTransform.anchorMax = new Vector2(1f, 1f);
-            badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchoredPosition = Vector2.zero;
-            badge.rectTransform.sizeDelta = new Vector2(ShuffleBadgeSize, ShuffleBadgeSize);
-
-            _shuffleCountLabel = UIFactory.CreateText(badge.transform, "Count", "", 13, UITheme.TextPrimary);
+            // The icon itself is the button background; show the remaining
+            // shuffle count centered directly over it, with no word label or
+            // separate count badge.
+            _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
+            _shuffleCountLabel.text = _run.ShufflesRemaining.ToString();
+            _shuffleCountLabel.color = UITheme.TextPrimary;
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);
 
@@ -206,7 +193,7 @@ namespace Contigu.Presentation
             });
         }
 
-        /// <summary>Updates the Shuffle button's corner-badge count and enabled state — called by GameBootstrap whenever RunManager.ShufflesRemaining changes (a successful shuffle, or a fresh/restarted run). Combined with <see cref="_interactable"/> (see SetInteractable) so a shuffle can't be triggered mid-animation any more than a slot click can.</summary>
+        /// <summary>Updates the Shuffle icon's centered remaining-use count and enabled state — called by GameBootstrap whenever RunManager.ShufflesRemaining changes (a successful shuffle, or a fresh/restarted run). Combined with <see cref="_interactable"/> (see SetInteractable) so a shuffle can't be triggered mid-animation any more than a slot click can.</summary>
         public void SetShuffleState(int remaining, bool canShuffle)
         {
             _shuffleCountLabel.text = remaining.ToString();

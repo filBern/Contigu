@@ -18,19 +18,6 @@ namespace Contigu.Presentation
     public sealed class HudView : MonoBehaviour
     {
         private const float BarHeight = 68f;
-        // Below GameBootstrap's status text ("Select or drag a piece onto
-        // the grid.", anchored top-center at y=-80, 26 tall — see
-        // GameBootstrap.BuildUI) — on explicit request: "j'aimerais qu'il
-        // soit sous le texte Drag or click". Kept as a documented constant
-        // rather than read from that Text directly, same
-        // cross-referenced-magic-number precedent as BarHeight above. Gap
-        // tightened 10->2 when the label doubled in size (below) — the grid
-        // itself starts at y≈-163 (8*54 + 7*6 = 474 total, centered on an
-        // 800-tall canvas — see GridView.Build/VisualDefaults.GridCellSize),
-        // so there's only ~83px of headroom below the status text for this
-        // label to grow into before it'd start overlapping the board.
-        private const float LueurLabelY = -(80f + 26f + 2f);
-
         private RectTransform _scoreFillRect;
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
@@ -46,16 +33,16 @@ namespace Contigu.Presentation
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
 
-        public void Build(Transform parent)
+        public void Build(Transform parent, Transform lueurParent)
         {
             BuildBar(parent, "ScoreBar", UITheme.ButtonSelected, top: true, out _scoreFillRect, out _scoreLabel);
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
 
-            // Persistent readout centered below the status text (moved there
-            // and enlarged on explicit request — was a small top-right
-            // corner readout, then 18->22, now doubled again to 44 on
-            // further explicit request: "Le compteur de lueur devrait être
-            // 2x plus gros") — Lueur is a whole-run currency (see
+            // Persistent readout displayed outside and above the combo card
+            // (moved here from below the status text on explicit request —
+            // was a small top-right corner readout, then 18->22->44->66->99;
+            // now slightly reduced to 84 after the layout review) — Lueur is a
+            // whole-run currency (see
             // RunManager.Lueur), not tied to either bar's own round-scoped
             // progress, so it gets its own spot rather than folding into the
             // score bar's label. The "Lueur: " text prefix is gone (explicit
@@ -63,20 +50,14 @@ namespace Contigu.Presentation
             // marquer Lueur: ... mettre le petit losange orange") — a small
             // rotated-square "diamond" icon stands in for it instead, since
             // no gem/diamond sprite exists in the Colorful UI pack. Icon and
-            // number live in their own HorizontalLayoutGroup container
-            // (ContentSizeFitter-driven, same auto-width-stays-centered
-            // pattern as HandView's hand container) so the pair re-centers
-            // itself as the number's digit count changes, rather than the
-            // icon sitting at a fixed offset from a text block whose width
-            // varies.
-            _lueurContainer = UIFactory.CreateUIObject("LueurContainer", parent);
-            _lueurContainer.anchorMin = new Vector2(0.5f, 1f);
-            _lueurContainer.anchorMax = new Vector2(0.5f, 1f);
-            _lueurContainer.pivot = new Vector2(0.5f, 1f);
-            _lueurContainer.anchoredPosition = new Vector2(0f, LueurLabelY);
+            // number use a horizontal layout group and size themselves to
+            // their contents, staying centered as the number's digit count grows.
+            _lueurContainer = UIFactory.CreateUIObject("LueurContainer", lueurParent);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            lueurLayout.spacing = 10f;
+            lueurLayout.spacing = 19f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
+            lueurLayout.childControlWidth = true;
+            lueurLayout.childControlHeight = true;
             lueurLayout.childForceExpandWidth = false;
             lueurLayout.childForceExpandHeight = false;
             var lueurFitter = _lueurContainer.gameObject.AddComponent<ContentSizeFitter>();
@@ -84,9 +65,7 @@ namespace Contigu.Presentation
             lueurFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
-            // Slightly smaller than the original 22px (explicit report: "le
-            // losange de lueur est legerement trop gros").
-            lueurIcon.rectTransform.sizeDelta = new Vector2(18f, 18f);
+            lueurIcon.rectTransform.sizeDelta = new Vector2(35f, 35f);
             lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             // Plain Image has no ILayoutElement, so without this the
             // HorizontalLayoutGroup gives it zero width to work with (same
@@ -95,55 +74,11 @@ namespace Contigu.Presentation
             // for the diamond's rotated corners (18 * sqrt(2) ≈ 25px
             // diagonal) without crowding the number next to it.
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
-            lueurIconLayout.preferredWidth = 28f;
-            lueurIconLayout.preferredHeight = 28f;
+            lueurIconLayout.preferredWidth = 54f;
+            lueurIconLayout.preferredHeight = 54f;
 
-            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 44, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
-
-            BuildScoringBaseline(parent);
-        }
-
-        /// <summary>
-        /// Static bullet-point reference for the scoring rules that always
-        /// apply (independent of any modifier), how Lueur is earned/spent,
-        /// and the deck-view hint, in the top-right corner (on explicit
-        /// request: "un texte bullet point avec la baseline du pointage" +
-        /// "une mention tab to open piece deck ... quelque part dans
-        /// l'écran" + "il manque aussi une mention sur comment on gagne des
-        /// points de lueur et à quoi ça sert") — moved up to sit right below
-        /// the top bar now that the Lueur readout that used to occupy that
-        /// spot moved to below the status text instead (see LueurLabelY).
-        /// Built once and never refreshed — none of this ever changes mid-run.
-        /// </summary>
-        private static void BuildScoringBaseline(Transform parent)
-        {
-            string[] lines =
-            {
-                "• Group: 1st tile 1 pt, 2nd 2 pts, 3rd 3 pts...",
-                "• Line/column clear: 3 pts per tile",
-                "• Golden tile: +18 pts",
-                "• Line/column clear: +2 Lueur per distinct color in it",
-                "• Lueur: spend it in the shop on modifiers/upgrades",
-                "• Shuffle: re-roll your hand, limited uses per run",
-                "• Tab: view piece deck",
-                "• C: toggle colorblind mode",
-                "• H: show the rules again",
-                "• Esc: settings",
-                "• X: sell the modifier you're hovering"
-            };
-            string text = DescriptionTextFormatter.Colorize(lines[0], 15);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                text += "\n" + DescriptionTextFormatter.Colorize(lines[i], 15);
-            }
-
-            var label = UIFactory.CreateText(parent, "ScoringBaseline", text, 15, UITheme.TextMutedOnBackground, TextAnchor.UpperRight);
-            label.rectTransform.anchorMin = new Vector2(1f, 1f);
-            label.rectTransform.anchorMax = new Vector2(1f, 1f);
-            label.rectTransform.pivot = new Vector2(1f, 1f);
-            label.rectTransform.anchoredPosition = new Vector2(-16f, -(BarHeight + 8f));
-            label.rectTransform.sizeDelta = new Vector2(280f, 200f);
         }
 
         /// <summary>

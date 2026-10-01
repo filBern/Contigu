@@ -165,7 +165,7 @@ namespace Contigu.Presentation
         /// entirely (see ShopView) and never show a level (nothing bought
         /// yet has one).
         /// </summary>
-        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, int, string> progressiveStateProvider = null, System.Func<int, int> levelProvider = null)
+        public RectTransform Build(Transform parent, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider, System.Func<ModifierId, int, string> progressiveStateProvider = null, System.Func<int, int> levelProvider = null, float horizontalCenterX = 0f)
         {
             _tooltip = tooltip;
             _usageCountProvider = usageCountProvider;
@@ -183,16 +183,14 @@ namespace Contigu.Presentation
             var panel = UIFactory.CreatePanel(parent, "ModifierPanel", UITheme.Panel);
             UIFactory.AddThickOutline(panel, UITheme.Border);
             _root = panel.rectTransform;
-            // Vertically centered, STATIC size — the panel never resizes at
-            // runtime anymore (see the class doc comment), so there's no
-            // longer a header-jump or 9-slice-at-small-size risk from a
-            // center pivot the way there was while sizeDelta.y changed
-            // every Refresh.
-            _root.anchorMin = new Vector2(0f, 0.5f);
-            _root.anchorMax = new Vector2(0f, 0.5f);
-            _root.pivot = new Vector2(0f, 0.5f);
+            // Vertically centered, STATIC size and centered horizontally in
+            // the gap between the grid and screen edge; the panel never
+            // resizes at runtime (see the class doc comment).
+            _root.anchorMin = new Vector2(0.5f, 0.5f);
+            _root.anchorMax = new Vector2(0.5f, 0.5f);
+            _root.pivot = new Vector2(0.5f, 0.5f);
             _root.sizeDelta = new Vector2(PanelWidth, PanelHeight);
-            _root.anchoredPosition = new Vector2(40f, 0f);
+            _root.anchoredPosition = new Vector2(horizontalCenterX, 0f);
 
             // Flat mustard header band standing in for panel_bg's own baked
             // header art — same idea, built from a plain rectangle in the

@@ -37,6 +37,7 @@ namespace Contigu.Presentation
         public static readonly Color PanelLight = new Color(1f, 0.969f, 0.910f); // #fff7e8
         public static readonly Color ButtonIdle = new Color(1f, 0.969f, 0.910f); // #fff7e8
         public static readonly Color ButtonSelected = new Color(1f, 0.773f, 0.239f); // #ffc53d
+        public static readonly Color LightBlue = new Color(0.396f, 0.682f, 0.839f); // #65AED6
         public static readonly Color TextPrimary = new Color(0.075f, 0.129f, 0.180f); // #13212e
         // Same hex as TextPrimary, dimmed via alpha rather than a separate flat
         // color — matches the original palette's own "same hex, lower alpha"

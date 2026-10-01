@@ -450,10 +450,18 @@ namespace Contigu.Presentation
             var mainRoot = UIFactory.CreateUIObject("MainRoot", canvas);
             UIFactory.StretchFull(mainRoot);
 
+            _comboView = gameObject.AddComponent<ComboView>();
+            var comboRect = _comboView.Build(mainRoot);
+            comboRect.anchorMin = new Vector2(0.5f, 0.5f);
+            comboRect.anchorMax = new Vector2(0.5f, 0.5f);
+            comboRect.pivot = new Vector2(0.5f, 0.5f);
+            comboRect.anchoredPosition = new Vector2(0f, 65f);
+
             // Both progress bars pin themselves to the top/bottom edges inside
             // HudView.Build — nothing to position here.
             _hudView = gameObject.AddComponent<HudView>();
-            _hudView.Build(mainRoot);
+            _hudView.Build(mainRoot, mainRoot);
+            _hudView.SetLueur(_run.Lueur);
 
             _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMutedOnBackground);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -464,9 +472,8 @@ namespace Contigu.Presentation
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
             StartStatusPulse();
 
-            // Dead center of the screen — the top/bottom progress bars and the
-            // status text float above it rather than pushing it down, so the
-            // grid itself isn't biased toward the top.
+            // Slightly above screen center to make room for the horizontal
+            // hand row below while keeping a clear gap below the status text.
             // Built before GridView/HandView since both need a live
             // TooltipView to hover (grid cells' trait-origin badges and
             // hand pieces' trait badges, respectively).
@@ -478,39 +485,41 @@ namespace Contigu.Presentation
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = Vector2.zero;
+            gridRect.anchoredPosition = new Vector2(0f, 55f);
 
-            // To the right of the grid, vertically centered on it (which is
-            // now screen center too). Grid right edge sits 177 (half of its
-            // 354-wide 6x6+spacing footprint, see GridView.Build) from screen
-            // center; the hand's own width is 120 (its slot width, via
-            // ContentSizeFitter) so its center needs to clear the grid by
-            // 177 + a 24 gap + its own half-width (60).
+            // Center each side panel in the horizontal gap between the grid
+            // edge and the corresponding screen edge. Using the live canvas
+            // width keeps this centered when the aspect ratio changes.
+            float halfGridWidth = gridRect.rect.width * 0.5f;
+            float canvasWidth = mainRoot.rect.width;
+            if (canvasWidth <= 0f && Screen.height > 0)
+            {
+                // CanvasScaler matches height to the 800-unit reference.
+                canvasWidth = 800f * Screen.width / Screen.height;
+            }
+            float halfCanvasWidth = canvasWidth * 0.5f;
+            float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
+            comboRect.anchoredPosition = new Vector2(sidePanelCenterX, 65f);
+
+            var lueurRect = _hudView.LueurLabelTransform;
+            lueurRect.anchorMin = new Vector2(0.5f, 0.5f);
+            lueurRect.anchorMax = new Vector2(0.5f, 0.5f);
+            lueurRect.pivot = new Vector2(0.5f, 0.5f);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
+            lueurRect.anchoredPosition = new Vector2(
+                sidePanelCenterX,
+                comboRect.anchoredPosition.y + comboRect.rect.height * 0.5f + 12f + lueurRect.rect.height * 0.5f);
+
+            // Center the three horizontal piece slots beneath the grid;
+            // HandView anchors Shuffle separately just to the row's right.
             _handView = gameObject.AddComponent<HandView>();
             var handRect = _handView.Build(mainRoot, _run, _tooltipView);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            handRect.anchoredPosition = new Vector2(261f, 0f);
-
-            _comboView = gameObject.AddComponent<ComboView>();
-            var comboRect = _comboView.Build(mainRoot);
-            comboRect.anchorMin = new Vector2(0.5f, 0f);
-            comboRect.anchorMax = new Vector2(0.5f, 0f);
-            comboRect.pivot = new Vector2(0.5f, 0.5f);
-            // In the gap between the grid's bottom edge and the pieces bar
-            // flush against the screen's bottom edge. Grid is centered on an
-            // always-800-tall canvas (CanvasScaler matches height) and 354
-            // tall (6x6+spacing footprint, see GridView.Build), so its bottom
-            // edge sits 400 - 354/2 = 223 above the bottom. The pieces bar is
-            // 68 tall (see HudView.BarHeight). Midpoint between the grid's
-            // bottom and the bar's top: (223 + 68) / 2 = 145.5 — nudged up
-            // the same few px as before (explicit request: "Remonte le
-            // encore un peu") for extra clearance from the bar; the smaller
-            // board leaves far more slack here than the old 8x8 footprint did.
-            comboRect.anchoredPosition = new Vector2(0f, 148f);
-            // No explicit sizeDelta — ComboView's own ContentSizeFitter
-            // sizes it to fit its two pills (chips + mult).
+            handRect.anchoredPosition = new Vector2(0f, -230f);
+            BuildComboUtilityButtons(comboRect);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -551,7 +560,7 @@ namespace Contigu.Presentation
             // _run is reassigned on restart but this view is never rebuilt,
             // only Refreshed, so a bound delegate would keep querying the
             // old, discarded run forever.
-            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index));
+            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
             // Reordering (drag-and-drop or tap-tap swap, on explicit
             // request: modifier order now determines scoring order, see
             // PlacementResult.Mult) — same "read the current _run field at
@@ -602,6 +611,36 @@ namespace Contigu.Presentation
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
+        }
+
+        /// <summary>Quick access to the deck and rules, anchored below the combo card so their position follows its content-driven height.</summary>
+        private void BuildComboUtilityButtons(Transform comboParent)
+        {
+            var deckButton = UIFactory.CreateButton(comboParent, "ShowDeckButton", "Show deck", UISprites.HandUtilityButtonBackground, 12);
+            var deckLabel = deckButton.GetComponentInChildren<Text>();
+            deckLabel.color = Color.black;
+            deckLabel.fontSize = 25;
+            var deckRect = deckButton.GetComponent<RectTransform>();
+            deckRect.anchorMin = new Vector2(0.5f, 0f);
+            deckRect.anchorMax = new Vector2(0.5f, 0f);
+            deckRect.pivot = new Vector2(0.5f, 1f);
+            deckRect.anchoredPosition = new Vector2(-81f, -24f);
+            deckRect.sizeDelta = new Vector2(150f, 46.5f);
+            deckButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            deckButton.onClick.AddListener(() => _deckView.Show());
+
+            var rulesButton = UIFactory.CreateButton(comboParent, "ShowRulesButton", "Show rules", UISprites.HandUtilityButtonBackground, 12);
+            var rulesLabel = rulesButton.GetComponentInChildren<Text>();
+            rulesLabel.color = Color.black;
+            rulesLabel.fontSize = 25;
+            var rulesRect = rulesButton.GetComponent<RectTransform>();
+            rulesRect.anchorMin = new Vector2(0.5f, 0f);
+            rulesRect.anchorMax = new Vector2(0.5f, 0f);
+            rulesRect.pivot = new Vector2(0.5f, 1f);
+            rulesRect.anchoredPosition = new Vector2(81f, -24f);
+            rulesRect.sizeDelta = new Vector2(150f, 46.5f);
+            rulesButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            rulesButton.onClick.AddListener(() => _tutorialView.Show());
         }
 
         private void OnHandSlotSelected(int handIndex)
@@ -1341,7 +1380,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.RandomPiece)
             {
-                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending);
+                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending, _run);
             }
             else if (pending.Id == UpgradeId.ModifierUpgrade)
             {
@@ -1508,7 +1547,6 @@ namespace Contigu.Presentation
             _handView.Refresh();
             RefreshShuffleButton();
             _hudView.Refresh(_run);
-            _comboView.Hide();
             if (refreshModifierPanel)
             {
                 _modifierPanelView.Refresh(_run.ActiveModifiers);

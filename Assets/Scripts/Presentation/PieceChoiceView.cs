@@ -23,8 +23,9 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class PieceChoiceView : MonoBehaviour
     {
-        private const float CellSize = 140f;
+        private const float CellSize = 160f;
         private const float PreviewSize = 116f;
+        private const float LevelLabelHeight = 20f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
         private const float BlockSpacing = 24f;
@@ -95,7 +96,7 @@ namespace Contigu.Presentation
             return _root;
         }
 
-        public void Show(IReadOnlyList<PieceToken> candidates, UpgradeDefinition def)
+        public void Show(IReadOnlyList<PieceToken> candidates, UpgradeDefinition def, RunManager run)
         {
             _candidates.Clear();
             _candidates.AddRange(candidates);
@@ -116,7 +117,7 @@ namespace Contigu.Presentation
             }
             for (int i = 0; i < _candidates.Count; i++)
             {
-                BuildPreviewCell(i);
+                BuildPreviewCell(i, run);
             }
 
             LayoutBlock(card.sizeDelta.y);
@@ -143,7 +144,7 @@ namespace Contigu.Presentation
             _confirmRect.anchoredPosition = new Vector2(0f, y);
         }
 
-        private void BuildPreviewCell(int index)
+        private void BuildPreviewCell(int index, RunManager run)
         {
             var cell = UIFactory.CreatePanel(_previewsContainer, "Piece_" + index, UITheme.ButtonIdle);
             cell.rectTransform.sizeDelta = new Vector2(CellSize, CellSize);
@@ -159,7 +160,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            previewContainer.anchoredPosition = Vector2.zero;
+            previewContainer.anchoredPosition = new Vector2(0f, 18f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
 
             // The trait (if any) was already rolled for this candidate — no
@@ -168,6 +169,15 @@ namespace Contigu.Presentation
             // outcome left to reveal.
             var token = _candidates[index];
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, token.Trait, _tooltip, cell.gameObject);
+
+            int level = run.GetColorMasteryLevel(token.Color) + run.GetShapeMasteryLevel(token.Shape) - 1;
+            var levelLabel = UIFactory.CreateText(cell.transform, "PieceLevel", "Lv. " + level, 14, Color.black);
+            levelLabel.raycastTarget = false;
+            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+            levelLabel.rectTransform.sizeDelta = new Vector2(0f, LevelLabelHeight);
         }
 
         private void OnCellClicked(int index)

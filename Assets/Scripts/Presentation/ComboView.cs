@@ -29,10 +29,11 @@ namespace Contigu.Presentation
         // pulse de moitié") — was +0.4 (1.4x peak), now +0.2 (1.2x peak).
         private const float PulsePeakScale = 1.2f;
         private const float PulsePeakFraction = 0.4f;
-        private const float PillWidth = 84f;
-        private const float PillHeight = 46f;
-        private const float PillSpacing = 8f;
-        private const float TotalRowSpacing = 3f;
+        private const float PillWidth = 120.9f;
+        private const float PillHeight = 66.3f;
+        private const float PillSpacing = 11.55f;
+        private const float XLabelWidth = 23.1f;
+        private const float TotalRowSpacing = 4.35f;
 
         private RectTransform _root;
         private Text _totalText;
@@ -46,6 +47,15 @@ namespace Contigu.Presentation
         public RectTransform Build(Transform parent)
         {
             _root = UIFactory.CreateUIObject("ComboView", parent);
+            var backgroundRect = UIFactory.CreateUIObject("Background", _root);
+            UIFactory.StretchFull(backgroundRect);
+            var background = backgroundRect.gameObject.AddComponent<Image>();
+            background.sprite = UISprites.ComboBackground;
+            background.type = Image.Type.Simple;
+            background.color = Color.white;
+            background.raycastTarget = false;
+            backgroundRect.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
             var rootLayout = _root.gameObject.AddComponent<VerticalLayoutGroup>();
             rootLayout.spacing = TotalRowSpacing;
             rootLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -65,39 +75,17 @@ namespace Contigu.Presentation
             // stay in sync and the gap is just the spacing below.
             rootLayout.childControlWidth = true;
             rootLayout.childControlHeight = true;
-            // A few pixels of top padding (explicit request: "le texte de
-            // combo total devrait être ... quelques pixel plus bas") so the
-            // total sits a touch lower instead of flush against the top of
-            // this block. Trimmed from an initial 6px (together with
-            // totalLayout.preferredHeight below and TotalRowSpacing above)
-            // once fixing the internal gap (see childControlHeight above)
-            // revealed the whole block had grown taller than the fixed
-            // 105.5px gap between the grid's bottom edge and the pieces bar
-            // (see GameBootstrap's comboRect comment) — enough to overlap
-            // the bar (explicit report with screenshot: "il y a un overlap
-            // là avec mult et addition de combo"). Trimmed once more, 3->2,
-            // to free up a bit more slack for the position nudge below.
-            rootLayout.padding = new RectOffset(0, 0, 2, 0);
+            // Keep the panel padding proportional as the combo display grows.
+            rootLayout.padding = new RectOffset(12, 12, 12, 12);
             var rootFitter = _root.gameObject.AddComponent<ContentSizeFitter>();
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // Running total (chips x mult) — sits above the breakdown, on
-            // explicit follow-up request ("rajouter en dessous ou en haut
-            // de ces deux chiffres le score total du placement"). Beige
-            // (UITheme.Panel — explicit request: "les textes de scores en
-            // bas de la grille soit de la couleur beige"), since this
-            // floats directly over the bare navy Background rather than a
-            // light panel like most of the reskinned text.
-            // Font size 50% bigger than the original 30 (explicit request:
-            // "Le texte de combo total devrait être 50% plus gros").
-            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 45, UITheme.Panel);
+            // Running total (chips x mult) — enlarged with the rest of the combo panel.
+            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 65, Color.black);
             var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
             totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
-            // Trimmed from 54 to 48 (see the padding comment above) — still
-            // comfortably tall enough for the 45pt digits, which have no
-            // descenders to clear.
-            totalLayout.preferredHeight = 48f;
+            totalLayout.preferredHeight = 69f;
 
             var row = UIFactory.CreateUIObject("Row", _root);
             var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -109,7 +97,7 @@ namespace Contigu.Presentation
             rowFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rowFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var rowLayoutElement = row.gameObject.AddComponent<LayoutElement>();
-            rowLayoutElement.preferredWidth = PillWidth * 2f + PillSpacing + 16f;
+            rowLayoutElement.preferredWidth = PillWidth * 2f + XLabelWidth + PillSpacing * 2f;
             rowLayoutElement.preferredHeight = PillHeight;
 
             var chipsPill = UIFactory.CreateSlicedImage(row, "ChipsPill", UISprites.ChooseButtonBackground);
@@ -118,12 +106,12 @@ namespace Contigu.Presentation
             chipsLayout.preferredWidth = PillWidth;
             chipsLayout.preferredHeight = PillHeight;
             _chipsPill = chipsPill.rectTransform;
-            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 26, Color.white);
+            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 38, Color.white);
             UIFactory.StretchFull(_chipsText.rectTransform);
 
-            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 22, UITheme.Panel);
+            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 32, UITheme.Panel);
             var xLayout = xLabel.gameObject.AddComponent<LayoutElement>();
-            xLayout.preferredWidth = 16f;
+            xLayout.preferredWidth = XLabelWidth;
             xLayout.preferredHeight = PillHeight;
 
             var multPill = UIFactory.CreateSlicedImage(row, "MultPill", UISprites.CancelButtonBackground);
@@ -132,10 +120,11 @@ namespace Contigu.Presentation
             multLayout.preferredWidth = PillWidth;
             multLayout.preferredHeight = PillHeight;
             _multPill = multPill.rectTransform;
-            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 26, Color.white);
+            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 38, Color.white);
             UIFactory.StretchFull(_multText.rectTransform);
 
-            _root.gameObject.SetActive(false);
+            // Visible from the start with the initial readout: 0 points,
+            // x1 multiplier and 0 total combo score.
             return _root;
         }
 
