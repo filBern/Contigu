@@ -34,6 +34,12 @@ namespace Contigu.Presentation
         private const float ConfirmHeight = 46f;
         private const float TitleHeight = 40f;
         private const float BlockSpacing = 24f;
+        // The canvas is always exactly this tall in its own local units
+        // regardless of actual window size (CanvasScaler matches on height
+        // — see GameBootstrap.BuildCanvas), so centering math done in this
+        // space holds for any resolution. Same constant/convention as
+        // PieceChoiceView/TileChoiceView.
+        private const float CanvasHeight = 800f;
         private const float FadeDuration = 0.4f;
         // A brief hold after a fade finishes so the player actually
         // registers the piece disappearing/appearing before the whole
@@ -105,16 +111,24 @@ namespace Contigu.Presentation
             _cardInstance.anchorMin = new Vector2(0.5f, 1f);
             _cardInstance.anchorMax = new Vector2(0.5f, 1f);
             _cardInstance.pivot = new Vector2(0.5f, 1f);
-            const float cardTopY = -20f;
             const float gapBelowCard = 24f;
-            _cardInstance.anchoredPosition = new Vector2(0f, cardTopY);
             // Measured, not guessed — UpgradeCardFactory.Build already
             // computed the card's real height (it varies with the
             // description's length), so everything below it is placed
             // relative to that instead of a fixed offset that would either
             // overlap a long description or leave a big gap under a short
-            // one.
-            _bodyTopY = cardTopY - _cardInstance.sizeDelta.y - gapBelowCard;
+            // one. The whole block (card+title+preview row+Confirm) is now
+            // vertically centered on screen too (same "measure everything,
+            // center the whole block" approach as PieceChoiceView/
+            // TileChoiceView) instead of pinned 20px from the top regardless
+            // of content height — on explicit report: "ajuster la position
+            // vertical de tout au centre de l'écran" (this view used to
+            // hardcode cardTopY = -20f, hugging the top of the screen).
+            float cardHeight = _cardInstance.sizeDelta.y;
+            float totalHeight = cardHeight + gapBelowCard + TitleHeight + PreviewCellSize + BlockSpacing + ConfirmHeight;
+            float cardTopY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
+            _cardInstance.anchoredPosition = new Vector2(0f, cardTopY);
+            _bodyTopY = cardTopY - cardHeight - gapBelowCard;
 
             ShowTypeChoice(def);
         }

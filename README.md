@@ -6621,3 +6621,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   remove/duplicate/add..." — le picker à 5 cartes montre déjà
   visuellement ce qu'il y a à choisir, la description répétait juste
   la même chose en plus long.
+- **Écran Retirer/Dupliquer/Recolorer pas centré verticalement,
+  corrigé** : sur rapport explicite ("Il faut ajuster la position
+  vertial de tout au centre de l'écran"), confirmé "trop haut (colle
+  vers le haut de l'écran)" — `DraftView` (le picker de type de pièce
+  pour Retirer/Dupliquer/Recolorer) plaçait sa carte à une position
+  FIXE (`cardTopY = -20f`, collée en haut de l'écran) au lieu de
+  centrer le bloc comme le font déjà `PieceChoiceView`/`TileChoiceView`
+  — contrairement à `PieceChoiceView` (qui, lui, était déjà bien
+  centré) c'est bien `DraftView` qui avait ce bug, pas la réduction de
+  30% des cartes en elle-même. Passé au même calcul "mesurer tout,
+  centrer le bloc entier" que les deux autres vues.
