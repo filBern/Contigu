@@ -1,5 +1,6 @@
 using System;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -25,6 +26,7 @@ namespace Contigu.Presentation
         private const float DragGhostHeight = 140f;
         private const float DragGhostPreviewWidth = 100f;
         private const float DragGhostPreviewHeight = 110f;
+        private const float SlotLevelLabelHeight = 22f;
         // On explicit clarification: the "100%" the player wants over a
         // valid spot is the GRID's own footprint preview (GridCellView.
         // SetHoverTint, already exactly cell-snapped) — not the cursor
@@ -45,10 +47,12 @@ namespace Contigu.Presentation
         public event Action ShuffleRequested;
 
         private DeckManager _deck;
+        private RunManager _run;
         private TooltipView _tooltip;
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
+        private Text[] _slotLevelLabels;
         private Button _shuffleButton;
         private Text _shuffleCountLabel;
         private bool _shuffleAllowed = true;
@@ -65,9 +69,10 @@ namespace Contigu.Presentation
             get { return _selectedIndex; }
         }
 
-        public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
+        public RectTransform Build(Transform parent, RunManager run, TooltipView tooltip)
         {
-            _deck = deck;
+            _run = run;
+            _deck = run.Deck;
             _tooltip = tooltip;
             _dragLayerParent = parent;
 
@@ -84,6 +89,7 @@ namespace Contigu.Presentation
             _slotBackgrounds = new Image[DeckManager.HandSize];
             _slotButtons = new Button[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
+            _slotLevelLabels = new Text[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
@@ -104,19 +110,25 @@ namespace Contigu.Presentation
                 var dragHandler = slot.gameObject.AddComponent<HandSlotDragHandler>();
                 dragHandler.Init(this, idx);
 
-                // Fills most of the slot now that there's no name/color label
-                // below it — the shape + color-icon preview alone (plus the
-                // color-icon badge on each filled square) is clear enough on
-                // its own.
+                // Leave room at the bottom for the piece's combined mastery level.
                 var previewContainer = UIFactory.CreateUIObject("Preview", slot.transform);
                 previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
                 previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
                 previewContainer.pivot = new Vector2(0.5f, 0.5f);
-                previewContainer.anchoredPosition = Vector2.zero;
+                previewContainer.anchoredPosition = new Vector2(0f, 10f);
                 previewContainer.sizeDelta = new Vector2(100f, 110f);
+
+                var levelLabel = UIFactory.CreateText(slot.transform, "PieceLevel", "", 14, Color.black);
+                levelLabel.raycastTarget = false;
+                levelLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+                levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+                levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+                levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 3f);
+                levelLabel.rectTransform.sizeDelta = new Vector2(0f, SlotLevelLabelHeight);
 
                 _slotBackgrounds[i] = slot;
                 _previewContainers[i] = previewContainer;
+                _slotLevelLabels[i] = levelLabel;
             }
 
             BuildShuffleButton(container);
@@ -384,9 +396,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
-        public void Rebind(DeckManager deck)
+        public void Rebind(RunManager run)
         {
-            _deck = deck;
+            _run = run;
+            _deck = run.Deck;
             _selectedIndex = -1;
             _interactable = true;
             // In case a piece was still selected (and its cursor ghost
@@ -440,6 +453,12 @@ namespace Contigu.Presentation
                     var token = _deck.Hand[i].Value;
                     var rotation = _deck.HandRotations[i];
                     BuildShapePreview(preview, token, rotation, _slotBackgrounds[i].gameObject);
+                    int level = _run.GetColorMasteryLevel(token.Color) + _run.GetShapeMasteryLevel(token.Shape) - 1;
+                    _slotLevelLabels[i].text = "Lv. " + level;
+                }
+                else
+                {
+                    _slotLevelLabels[i].text = string.Empty;
                 }
             }
             UpdateSelectionVisuals();

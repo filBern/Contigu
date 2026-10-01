@@ -1642,7 +1642,9 @@ namespace Contigu.Core
 
         private ShopSlot RollUpgradeSlot()
         {
-            var pool = _rng.Next(2) == 0 ? UpgradePool.Bank : UpgradePool.Grid;
+            var pool = _rng.Next(100) < EconomyConstants.BankUpgradePoolChancePercent
+                ? UpgradePool.Bank
+                : UpgradePool.Grid;
             var upgrade = Upgrades.RollFromPool(pool);
             return ShopSlot.ForUpgrade(upgrade);
         }

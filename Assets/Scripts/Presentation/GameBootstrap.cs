@@ -487,7 +487,7 @@ namespace Contigu.Presentation
             // ContentSizeFitter) so its center needs to clear the grid by
             // 177 + a 24 gap + its own half-width (60).
             _handView = gameObject.AddComponent<HandView>();
-            var handRect = _handView.Build(mainRoot, _run.Deck, _tooltipView);
+            var handRect = _handView.Build(mainRoot, _run, _tooltipView);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
@@ -569,7 +569,7 @@ namespace Contigu.Presentation
             };
 
             _deckView = gameObject.AddComponent<DeckView>();
-            _deckView.Build(mainRoot, _run.Deck, _tooltipView);
+            _deckView.Build(mainRoot, _run, _tooltipView);
 
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
@@ -1480,10 +1480,10 @@ namespace Contigu.Presentation
             _isPlayingPlacementSequence = false;
             _run = new RunManager(new SystemRandomProvider(), challenge);
             _gridView.Rebind(_run.Grid);
-            _handView.Rebind(_run.Deck);
+            _handView.Rebind(_run);
             _draftView.Rebind(_run.Deck);
             _tileChoiceView.Rebind(_run.Deck);
-            _deckView.Rebind(_run.Deck);
+            _deckView.Rebind(_run);
             _deckView.Hide();
 
             // RefreshAll runs BEFORE granting the starting modifier, so the

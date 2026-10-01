@@ -68,7 +68,7 @@ namespace Contigu.Core
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
             ModifierId.Prisme, ModifierCategory.Couleurs, "Prism",
-            "x3 Mult if 3 different colors are touched.");
+            "x3 Mult if 3 different colors are touched other than the one placed.");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",

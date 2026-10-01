@@ -17,29 +17,38 @@ namespace Contigu.Presentation
     /// the pick/sub-choice flow around it.
     ///
     /// Grouped by color into its own labeled section per PieceColor, each a
-    /// narrow multi-column wrap of small type cards (on explicit report —
+    /// single horizontal line of compact type cards (on explicit report —
     /// "L'écran du deck est vraiment chaotique, j'aimerais que les pièces
     /// soient filtered par couleur et qu'elles prennent moins de largeur
     /// chacune": the original single ungrouped 3-column grid mixed every
     /// color together in whatever order DeckManager.GetDeckComposition's
     /// dictionary happened to iterate, at a fixed 300px-wide card for what
     /// amounts to a small shape preview and an "xN" label). Manually
-    /// positioned section-by-section (no LayoutGroup) since each section's
-    /// row count — and so its height — depends on how many distinct types
-    /// that color actually has in the deck.
+    /// positioned section-by-section (no LayoutGroup) so every color's
+    /// cards stay centered under its heading.
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
-        private const float CardWidth = 140f;
-        private const float CardHeight = 46f;
-        private const float CardSpacing = 8f;
-        private const int ColumnsPerSection = 6;
-        private const float RowPreviewSize = 30f;
-        private const float SectionHeaderHeight = 22f;
-        private const float SectionHeaderToGridGap = 4f;
-        private const float SectionGap = 14f;
-        private const float ListWidth = 920f;
+        private const float CardWidth = 135f;
+        private const float CardHeight = 90f;
+        private const float CardSpacing = 6.25f;
+        private const float RowPreviewSize = 56.25f;
+        private const float PreviewTileSize = 18.75f;
+        private const float LevelLabelHeight = 20f;
+        private const float SectionHeaderHeight = 27.5f;
+        private const float SectionHeaderToGridGap = 5f;
+        private const float SectionGap = 8f;
+        private const float ListWidth = 1150f;
+        private const float ListHeight = 700f;
 
+        // One column per possible shape keeps all shapes of a color on a
+        // single line (Joker uses the same bounded shape catalog).
+        private static int ColumnsPerSection
+        {
+            get { return InitialDeckFactory.ShapeOrder.Length; }
+        }
+
+        private RunManager _run;
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
@@ -51,9 +60,10 @@ namespace Contigu.Presentation
             get { return _root != null && _root.gameObject.activeSelf; }
         }
 
-        public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
+        public RectTransform Build(Transform parent, RunManager run, TooltipView tooltip)
         {
-            _deck = deck;
+            _run = run;
+            _deck = run.Deck;
             _tooltip = tooltip;
 
             var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", new Color(0f, 0f, 0f, 0.82f));
@@ -82,14 +92,14 @@ namespace Contigu.Presentation
             _listContainer.anchorMax = new Vector2(0.5f, 1f);
             _listContainer.pivot = new Vector2(0.5f, 1f);
             _listContainer.anchoredPosition = new Vector2(0f, -110f);
-            _listContainer.sizeDelta = new Vector2(ListWidth, 560f);
+            _listContainer.sizeDelta = new Vector2(ListWidth, ListHeight);
 
             var closeBtn = UIFactory.CreateButton(_root, "Close", "Close", UISprites.CancelButtonBackground);
             var closeRect = closeBtn.GetComponent<RectTransform>();
-            closeRect.anchorMin = new Vector2(0.5f, 0f);
-            closeRect.anchorMax = new Vector2(0.5f, 0f);
-            closeRect.pivot = new Vector2(0.5f, 0f);
-            closeRect.anchoredPosition = new Vector2(0f, 30f);
+            closeRect.anchorMin = new Vector2(1f, 1f);
+            closeRect.anchorMax = new Vector2(1f, 1f);
+            closeRect.pivot = new Vector2(1f, 1f);
+            closeRect.anchoredPosition = new Vector2(-30f, -30f);
             closeRect.sizeDelta = new Vector2(160f, 44f);
             closeBtn.onClick.AddListener(Hide);
 
@@ -98,9 +108,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Points this view at a different (e.g. freshly restarted) DeckManager instance.</summary>
-        public void Rebind(DeckManager deck)
+        public void Rebind(RunManager run)
         {
-            _deck = deck;
+            _run = run;
+            _deck = run.Deck;
         }
 
         public void Toggle()
@@ -161,7 +172,7 @@ namespace Contigu.Presentation
 
             // Every section shares the SAME horizontal offset/width (based
             // on whichever section actually has the most distinct types,
-            // capped at ColumnsPerSection) rather than each hugging the
+            // capped at the number of possible shapes) rather than each hugging the
             // container's own left edge — on explicit report, with every
             // color under a full row the whole block still sat flush left
             // inside the wider fixed-width container instead of reading as
@@ -198,7 +209,7 @@ namespace Contigu.Presentation
         /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's own centered columns below it. Returns the Y cursor for whatever comes next.</summary>
         private float BuildColorSectionHeader(PieceColor color, float y, float xOffset, float contentWidth)
         {
-            var label = UIFactory.CreateText(_listContainer, "Header_" + color, VisualDefaults.GetColorName(color).ToUpperInvariant(), 15, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
+            var label = UIFactory.CreateText(_listContainer, "Header_" + color, VisualDefaults.GetColorName(color).ToUpperInvariant(), 19, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
             label.rectTransform.anchorMin = new Vector2(0f, 1f);
             label.rectTransform.anchorMax = new Vector2(0f, 1f);
             label.rectTransform.pivot = new Vector2(0f, 1f);
@@ -207,7 +218,7 @@ namespace Contigu.Presentation
             return y - SectionHeaderHeight;
         }
 
-        /// <summary>Wraps <paramref name="types"/> across ColumnsPerSection narrow columns, as many rows as needed, every column starting at <paramref name="xOffset"/> — the same offset every section shares, so columns stay aligned across the whole (centered) block. Returns the Y cursor for whatever comes next.</summary>
+        /// <summary>Places all shape cards in one centered horizontal row for this color, with each card aligned to the same columns used by the other sections. Returns the Y cursor for whatever comes next.</summary>
         private float BuildColorSectionGrid(List<(ShapeId Shape, int Count)> types, PieceColor color, float y, float xOffset)
         {
             for (int i = 0; i < types.Count; i++)
@@ -246,18 +257,29 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0f, 0.5f);
             previewContainer.anchorMax = new Vector2(0f, 0.5f);
             previewContainer.pivot = new Vector2(0f, 0.5f);
-            previewContainer.anchoredPosition = new Vector2(6f, 0f);
+            previewContainer.anchoredPosition = new Vector2(9.375f, 11.875f);
             previewContainer.sizeDelta = new Vector2(RowPreviewSize, RowPreviewSize);
 
             var trait = FindRepresentativeTrait(shape, color);
-            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject);
+            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject, PreviewTileSize);
 
-            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 14, UITheme.TextPrimary);
+            int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
+            var levelLabel = UIFactory.CreateText(row.transform, "Level", "Lv. " + level, 14, Color.black);
+            levelLabel.raycastTarget = false;
+            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            levelLabel.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            levelLabel.rectTransform.pivot = new Vector2(0f, 0.5f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, -28.125f);
+            levelLabel.rectTransform.sizeDelta = new Vector2(52.5f, LevelLabelHeight);
+
+            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 18, UITheme.TextPrimary);
             countLabel.rectTransform.anchorMin = new Vector2(1f, 0.5f);
             countLabel.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             countLabel.rectTransform.pivot = new Vector2(1f, 0.5f);
-            countLabel.rectTransform.anchoredPosition = new Vector2(-8f, 0f);
-            countLabel.rectTransform.sizeDelta = new Vector2(34f, 26f);
+            // Pull the count inward so it stays visually close to the piece
+            // instead of scaling up the old empty gap along with the card.
+            countLabel.rectTransform.anchoredPosition = new Vector2(-14f, 0f);
+            countLabel.rectTransform.sizeDelta = new Vector2(50f, 32.5f);
         }
 
         /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait.</summary>

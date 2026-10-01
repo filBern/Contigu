@@ -18,8 +18,9 @@ namespace Contigu.Presentation
     {
         /// <summary>
         /// Fills <paramref name="container"/> (its sizeDelta sets the preview's
-        /// pixel budget — cell size is computed to fit inside it) with one
-        /// square per cell of <paramref name="shape"/>. When
+        /// pixel budget — cell size is computed to fit inside it unless
+        /// <paramref name="fixedCellSize"/> is supplied) with one square per
+        /// cell of <paramref name="shape"/>. When
         /// <paramref name="trait"/> is given, its enchanted cell also gets a
         /// small corner badge; hovering it shows <paramref name="tooltip"/>
         /// with the trait's name/effect, and clicking it forwards the click to
@@ -28,8 +29,10 @@ namespace Contigu.Presentation
         /// Returns that badge's RectTransform (null if <paramref name="trait"/>
         /// is null) — TileChoiceView uses it to fade a preview badge in when
         /// the player selects that piece, rather than having it just appear.
+        /// <paramref name="fixedCellSize"/> lets compact catalogs use equal
+        /// tile dimensions across shapes of different bounding-box sizes.
         /// </summary>
-        public static RectTransform Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget)
+        public static RectTransform Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget, float? fixedCellSize = null)
         {
             RectTransform builtBadge = null;
             int maxX = 0;
@@ -51,7 +54,9 @@ namespace Contigu.Presentation
             // actually renders once placed) — fits within the box exactly
             // as before for a shape that already needs more room than that,
             // just never stretches to a size the grid itself never shows.
-            float cell = Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
+            float cell = fixedCellSize.HasValue
+                ? fixedCellSize.Value
+                : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
             var fillColor = VisualDefaults.GetColor(color);
 
             Vector2Int? traitPos = trait.HasValue ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;

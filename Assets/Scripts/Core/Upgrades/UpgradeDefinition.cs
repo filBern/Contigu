@@ -40,7 +40,7 @@ namespace Contigu.Core
         // being weaker than another option.
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
             UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose a piece type; remove one copy from the deck.", true, UpgradeRarity.Rare);
+            "Choose a piece type; remove one copy from the deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
@@ -77,7 +77,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Bank, "Random Modifier",
-            "Grants one random modifier you don't already have.", false, UpgradeRarity.Common);
+            "Grants one random modifier you don't already have.", false, UpgradeRarity.Uncommon);
 
         // ---- Fourth batch (Bank pool, on explicit request) ----
 
@@ -128,76 +128,76 @@ namespace Contigu.Core
             UpgradeId.ModifierUpgrade, UpgradePool.Bank, "Modifier Upgrade",
             "Choose one of your active modifiers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
-        // Descriptions below all follow the same short "A tile that ..."
+        // Descriptions below all follow the same short "S.."
         // pattern, describing the trait itself rather than how many pieces
         // get it — that count is a shop mechanic (see
         // EconomyConstants.ShopTileChoiceCount, picked by the player in
         // TileChoiceView), not a property of the upgrade, so it doesn't
         // belong baked into the text (on explicit request — it used to say
-        // "3 pieces get a tile that ...").
+        // "3 pieces get S..").
         public static readonly UpgradeDefinition GoldenCells = new UpgradeDefinition(
             UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
-            "A tile that scores +18 flat when placed.", false, UpgradeRarity.Common);
+            "Scores +18 flat when placed.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "A tile that doubles group and golden score (not line-clear), tinted to the piece's color.", false, UpgradeRarity.Common);
+            "Doubles group and golden score (not line-clear), tinted to the piece's color.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "A tile that doubles the whole placement's score, line-clear included.", false, UpgradeRarity.Uncommon);
+            "Doubles the whole placement's score, line-clear included.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
             UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",
-            "A tile that also makes its 4 neighbors score golden (+18 each).", false, UpgradeRarity.Uncommon);
+            "Makes itself and its 4 neighbors score golden if same color.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
             UpgradeId.MultiplierBeacon, UpgradePool.Grid, "Multiplier Beacon",
-            "A tile that turns its whole row/column into multipliers for that placement.", false, UpgradeRarity.Rare);
+            "Turns its whole row/column into multipliers for that placement.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
             UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Tile",
-            "A tile that copies its group bonus onto one random other tile in the group.", false, UpgradeRarity.Uncommon);
+            "Copies its group bonus onto one random other tile in the group.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
-            "A tile that stays golden for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
+            "Stays golden for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
 
         // ---- Second batch (7 more tile upgrades, on explicit request) ----
 
         public static readonly UpgradeDefinition CatalystTile = new UpgradeDefinition(
             UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Tile",
-            "A tile that scores extra for every pre-existing cell merged into its group.", false, UpgradeRarity.Uncommon);
+            "Scores extra for every pre-existing cell merged into its group.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
             UpgradeId.TwinTile, UpgradePool.Grid, "Twin Tile",
-            "A tile that copies its group bonus onto EVERY other tile in the group.", false, UpgradeRarity.Rare);
+            "Copies its group bonus onto EVERY other tile in the group.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DetonatorTile = new UpgradeDefinition(
             UpgradeId.DetonatorTile, UpgradePool.Grid, "Detonator Tile",
-            "A tile that doubles the line-clear bonus if it clears a row or column.", false, UpgradeRarity.Uncommon);
+            "Doubles the line-clear bonus if it clears a row or column.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition ChameleonTile = new UpgradeDefinition(
             UpgradeId.ChameleonTile, UpgradePool.Grid, "Chameleon Tile",
-            "A tile that recolors the WHOLE piece to match a filled neighbor when placed.", false, UpgradeRarity.Common);
+            "Recolors the WHOLE piece to match a filled neighbor when placed.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition SparkTile = new UpgradeDefinition(
             UpgradeId.SparkTile, UpgradePool.Grid, "Spark Tile",
-            "A tile that scores more the longer since the last line clear this round.", false, UpgradeRarity.Common);
+            "Scores more the longer since the last line clear this round.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition VoidTile = new UpgradeDefinition(
             UpgradeId.VoidTile, UpgradePool.Grid, "Void Tile",
-            "A tile that also clears one random filled tile elsewhere on the grid (+10 for the tile broken).", false, UpgradeRarity.Rare);
+            "Clears one random filled tile elsewhere on the grid (+10 for the tile broken).", false, UpgradeRarity.Rare);
 
         // ---- Third batch (2 more tile upgrades, on explicit request) ----
 
         public static readonly UpgradeDefinition BastionTile = new UpgradeDefinition(
             UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Tile",
-            "A tile that locks in place instead of clearing, but keeps scoring every line it completes.", false, UpgradeRarity.Uncommon);
+            "Won't be removed when line a line is cleared.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
-            "A tile that destroys itself and its 8 surrounding tiles when placed (+6 per tile destroyed).", false, UpgradeRarity.Rare);
+            "Destroys itself and its 8 surrounding tiles (+6 per tile destroyed).", false, UpgradeRarity.Rare);
 
         /// <summary>
         /// Fifth batch (on explicit request — a corrected redo: "les
@@ -214,12 +214,12 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
             UpgradeId.PieceMastery, UpgradePool.Bank, "Piece Mastery",
-            "Levels up one random piece shape — its tiles score +1 pts per level past the first.", false, UpgradeRarity.Uncommon);
+            "Levels up one random piece shape — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
 
         /// <summary>Sixth batch (on explicit request: "Il faudrait faire la même chose avec les couleurs") — Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
             UpgradeId.ColorMastery, UpgradePool.Bank, "Color Mastery",
-            "Levels up one random piece color — its tiles score +1 pts per level past the first.", false, UpgradeRarity.Uncommon);
+            "Levels up one random piece color — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition[] All =
         {
