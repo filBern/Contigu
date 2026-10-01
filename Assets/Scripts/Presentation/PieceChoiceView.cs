@@ -23,8 +23,10 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class PieceChoiceView : MonoBehaviour
     {
-        private const float CellSize = 160f;
-        private const float PreviewSize = 116f;
+        // 30% smaller than the original 160/116 (explicit request: "met les
+        // carte de piece 30% plus petit").
+        private const float CellSize = 112f;
+        private const float PreviewSize = 81f;
         private const float LevelLabelHeight = 20f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
@@ -160,7 +162,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            previewContainer.anchoredPosition = new Vector2(0f, 18f);
+            previewContainer.anchoredPosition = new Vector2(0f, 13f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
 
             // The trait (if any) was already rolled for this candidate — no

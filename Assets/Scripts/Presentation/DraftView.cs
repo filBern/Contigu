@@ -24,8 +24,13 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
-        private const float PreviewCellSize = 140f;
-        private const float PreviewSize = 116f;
+        // 30% smaller than the original 140/116 (explicit request: "met les
+        // carte de piece 30% plus petit" — applies here too, same "5 piece
+        // candidate cards" shape as PieceChoiceView, just for Retirer/
+        // Dupliquer/Recolorer's existing-deck-type picker instead of Random
+        // Piece's freshly-rolled candidates).
+        private const float PreviewCellSize = 98f;
+        private const float PreviewSize = 81f;
         private const float ConfirmHeight = 46f;
         private const float TitleHeight = 40f;
         private const float BlockSpacing = 24f;

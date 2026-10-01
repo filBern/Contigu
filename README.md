@@ -6607,3 +6607,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Tile Upgrade cède 10 points (20% → 10%) pour ramener Mastery et
   Piece Upgrade à 40% chacun à parts égales, Modifier restant à 10%.
   Simple changement des 4 constantes dans `EconomyConstants.cs`.
+- **Cartes de pièces 30% plus petites + descriptions raccourcies** :
+  sur demande explicite ("Pour les upgrades qui montrent 5 pièces,
+  met les carte de piece 30% plus petit. Aussi pas besoin de la
+  description complete... Idem pour duplicate piece ou remove
+  piece"). Les deux vues qui montrent 5 cartes de pièce sélectionnables
+  — `PieceChoiceView` (Random Piece, candidats fraîchement tirés) et
+  `DraftView` (Retirer/Dupliquer/Recolorer, types déjà dans le deck) —
+  ont leurs constantes de taille réduites de 30% (`CellSize` 160→112,
+  `PreviewCellSize` 140→98, `PreviewSize` 116→81 dans les deux). Les
+  descriptions de `RemovePiece`/`DuplicatePiece`/`RandomPiece` dans
+  `UpgradeDefinition.cs` sont raccourcies à "Choose 1 piece to
+  remove/duplicate/add..." — le picker à 5 cartes montre déjà
+  visuellement ce qu'il y a à choisir, la description répétait juste
+  la même chose en plus long.

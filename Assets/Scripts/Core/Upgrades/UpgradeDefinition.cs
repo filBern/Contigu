@@ -37,14 +37,19 @@ namespace Contigu.Core
         // UpgradeRarityUtility.GetDraftWeight), same tier as the most
         // situational Grid-pool upgrades, since permanently shrinking the
         // deck is the one Bank-pool pick that can backfire rather than just
-        // being weaker than another option.
+        // being weaker than another option. Description shortened (on
+        // explicit request, grouping this with DuplicatePiece and
+        // RandomPiece below: "pas besoin de la description complete...
+        // Idem pour duplicate piece ou remove piece") — the longer original
+        // wording ("Choose a piece type; remove one copy from the deck.")
+        // said the same thing the 5-card picker it opens already shows.
         public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
             UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose a piece type; remove one copy from the deck.", true, UpgradeRarity.Common);
+            "Choose 1 piece to remove from your deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
-            "Choose a piece type; add one extra copy to the deck.", true, UpgradeRarity.Common);
+            "Choose 1 piece to duplicate in your deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
             UpgradeId.JokerPiece, UpgradePool.Bank, "Joker piece",
@@ -98,11 +103,16 @@ namespace Contigu.Core
         /// RunManager.PendingUpgradePieceCandidates/ResolveUpgradePieceChoice
         /// pair and Presentation.PieceChoiceView instead of reusing
         /// DraftView (which only knows how to show plain (Shape, Color)
-        /// types, never a trait preview).
+        /// types, never a trait preview). Description shortened (explicit
+        /// request: "pas besoin de la description complete 'Choose 1 of 5
+        /// random pieces to add to your deck; each may already carry a
+        /// special tile'. Juste garder 'choose 1 piece to add to your
+        /// deck'") — RemovePiece/DuplicatePiece's descriptions above were
+        /// trimmed the same way, same reasoning (see their own comment).
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
-            "Choose 1 of 5 random pieces to add to your deck; each may already carry a special tile.", true, UpgradeRarity.Common);
+            "Choose 1 piece to add to your deck.", true, UpgradeRarity.Common);
 
         /// <summary>
         /// Spec extension, explicit request: "J'aimerais rajouter un type
