@@ -6683,3 +6683,45 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   victoire initiale paie déjà TotalRunsPlayed/TotalVictories/le bonus
   de victoire, donc la défaite éventuelle en Endless ne paie plus que
   les étoiles des rondes *additionnelles* effectivement passées.
+- **Système d'ennemis / autobattling (vertical slice)** : sur demande
+  explicite ("Je veux faire un shift du jeu pour ne pas simplement
+  être un simple puzzle mais ajouter un petit peu d'autobattling"),
+  d'après un GDD étendu fourni par le joueur (nouvelle section "07
+  Enemy System & Combat"). Nouveau namespace `Contigu.Core.Enemies` :
+  `EnemyId`/`EnemyDefinition`/`EnemyCatalog` (3 ennemis construits
+  pour cette première passe : Basic, Locker, Poisoner — Heavy Locker/
+  Plague/Thief/Reclaimer/Leech restent à faire), `EnemyInstance`
+  (HP courant, état propre à Locker/Poisoner) et `EncounterCatalog`
+  (quel(s) ennemi(s) pour quelle ronde — pour l'instant seulement les
+  rondes 1 à 4 de Classic : Basic, Locker, Poisoner, puis Locker+
+  Poisoner en ronde 4 à la place d'un vrai boss). Décisions de design
+  confirmées explicitement par le joueur avant le code : les dégâts
+  = le score du placement (pas de nouvelle stat d'attaque), tuer
+  tous les ennemis d'une ronde remplace la quota comme condition de
+  victoire ("il n'y a plus de quota"), et l'Endless (hors scope ici)
+  scalerait par plus d'ennemis simultanés plutôt que par du HP. Le
+  refill de main par vague ("quand les 3 slots sont vides, un Shuffle
+  gratuit remplit la main") existait déjà tel quel dans
+  `DeckManager.PlayFromHand` — rien à changer là, seulement router
+  les 3 points d'appel de `Deck.DrawNewHand` à travers un nouveau
+  `RunManager.DrawFreshHand` qui résout d'abord l'effet "On Shuffle"
+  de chaque ennemi vivant (Locker déplace son verrou de case — réutilise
+  `GridManager.LockFreeCellsAndCheckClears` — ; Poisoner empoisonne
+  une case déjà remplie, cumulatif, via un nouveau `Cell.IsPoisoned`).
+  Un placement qui rescore un groupe à travers une case empoisonnée
+  compte négatif pour cette case précise (`RunManager.
+  ApplyPoisonScoreRule`, même squelette que `ApplyCursedColorScoreRule`
+  pour le boss "Cursed Color" mais qui inverse le signe au lieu de
+  retirer l'événement) — assez pour littéralement soigner l'ennemi si
+  le score net du placement devient négatif. `EvaluateRoundEnd`
+  bascule sur "tous les ennemis morts" au lieu de "quota atteinte"
+  uniquement quand `RunManager.HasActiveEncounter` est vrai ; partout
+  ailleurs (rondes 5 à 8, Endless, Marathon, Chaos) la quota continue
+  de gouverner exactement comme avant. `DebugForceRoundComplete` (le
+  raccourci utilisé par ~70 tests EditMode préexistants pour sauter
+  une ronde) tue maintenant aussi tous les ennemis d'un coup en plus
+  de fixer RoundScore à la quota, pour rester compatible avec cette
+  suite de tests existante sans la réécrire. Volontairement scope à
+  Core seulement pour cette passe (le HUD/la Presentation n'affichent
+  pas encore les ennemis/leur HP/le poison/le verrou — prochaine étape
+  logique avant que ce soit vraiment jouable en Unity).

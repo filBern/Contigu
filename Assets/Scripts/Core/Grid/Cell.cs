@@ -23,6 +23,16 @@ namespace Contigu.Core
         /// <summary>Only ever true during the boss round (spec 6.1).</summary>
         public bool IsLocked;
 
+        /// <summary>
+        /// "Poisoner" enemy mechanic (spec extension, explicit request:
+        /// "ajouter un petit peu d'autobattling" — see GDD §07/RunManager.
+        /// ResolvePoisonerShuffleEffect): any point event scored on this
+        /// cell counts negative instead of positive while this is true (see
+        /// RunManager.ApplyPoisonScoreRule). Only ever true on an already-
+        /// FILLED cell — an empty one has nothing to invert yet.
+        /// </summary>
+        public bool IsPoisoned;
+
         public bool IsGolden;
 
         public bool IsTinted;
@@ -95,6 +105,7 @@ namespace Contigu.Core
         {
             IsFilled = false;
             FilledColor = null;
+            IsPoisoned = false;
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
@@ -109,6 +120,7 @@ namespace Contigu.Core
             IsFilled = false;
             FilledColor = null;
             IsLocked = false;
+            IsPoisoned = false;
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;

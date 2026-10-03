@@ -125,6 +125,13 @@ namespace Contigu.Tests
         public void Round_EndsImmediately_WhenQuotaReached_RegardlessOfRemainingBudget()
         {
             var run = new RunManager(new SystemRandomProvider(42));
+            // Round 1 is now a combat encounter (see RunManager.HasActiveEncounter/
+            // EncounterCatalog — explicit request: "ajouter un petit peu
+            // d'autobattling"), where this round's own win condition is
+            // "every enemy dead", not quota. This test is specifically about
+            // the QUOTA path, so it needs a round EncounterCatalog hasn't
+            // touched — round 5 (index 4) is the first one still quota-governed.
+            AdvanceToRound(run, 4);
 
             // Every cell is golden so score accumulates fast regardless of shape,
             // color or adjacency luck — this test is about the round-end STATE
@@ -158,7 +165,7 @@ namespace Contigu.Tests
 
             Assert.AreEqual(EconomyConstants.ShopBlisterSlotCount, run.ShopBlisterSlots.Count);
             Assert.AreEqual(EconomyConstants.ShopUpgradeSlotCount, run.ShopUpgradeSlots.Count);
-            Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
+            Assert.AreEqual(5, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
 
             run.DebugGrantModifier(ModifierId.Prisme);
             bool left = run.LeaveShop();
@@ -166,9 +173,9 @@ namespace Contigu.Tests
             Assert.IsTrue(left);
             Assert.AreEqual(1, run.ActiveModifiers.Count);
             Assert.AreEqual(ModifierId.Prisme, run.ActiveModifiers[0]);
-            Assert.AreEqual(2, run.CurrentRoundNumber);
+            Assert.AreEqual(6, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
-            Assert.AreEqual(RunConfig.PieceBudgets[1], run.PiecesRemainingThisRound);
+            Assert.AreEqual(RunConfig.PieceBudgets[5], run.PiecesRemainingThisRound);
             Assert.AreEqual(RunState.InProgress, run.State);
         }
 

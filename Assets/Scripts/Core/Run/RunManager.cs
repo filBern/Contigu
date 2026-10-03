@@ -384,8 +384,38 @@ namespace Contigu.Core
         /// <summary>True once the player has cleared the scheduled run (round <see cref="ChallengeDefinition.RoundCount"/>) and chosen "Continue" on the victory screen instead of returning to the menu — see <see cref="ContinueEndless"/>. Never resets to false mid-run; the run's only way out from here is an eventual <see cref="RunState.RunDefeat"/>, there is no second <see cref="RunState.RunVictory"/>.</summary>
         public bool IsEndless { get; private set; }
 
-        /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds.</summary>
+        /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds. Always None for a round that has an active enemy encounter (see <see cref="HasActiveEncounter"/>) — the two systems never run at once.</summary>
         public BossEffect CurrentBossEffect { get; private set; }
+
+        private IReadOnlyList<EnemyInstance> _currentEncounter = System.Array.Empty<EnemyInstance>();
+
+        /// <summary>
+        /// This round's enemies (spec extension, explicit request: "ajouter
+        /// un petit peu d'autobattling" — see GDD §07/EncounterCatalog), in
+        /// their authored order. Empty for any round EncounterCatalog has
+        /// nothing authored for yet — see <see cref="HasActiveEncounter"/>,
+        /// which is what RunManager actually branches on.
+        /// </summary>
+        public IReadOnlyList<EnemyInstance> CurrentEncounter
+        {
+            get { return _currentEncounter; }
+        }
+
+        /// <summary>
+        /// True while this round is a combat encounter rather than a quota
+        /// round — <see cref="EvaluateRoundEnd"/>'s victory condition
+        /// becomes "every enemy here is dead" instead of "RoundScore reached
+        /// CurrentQuota" (see <see cref="AllEnemiesDefeated"/>), every
+        /// placement's score damages the front alive enemy instead of (or
+        /// as well as) banking toward a quota (see
+        /// <see cref="ApplyDamageToEncounter"/>), and every Shuffle resolves
+        /// each alive enemy's own effect first (see
+        /// <see cref="ResolveEnemyShuffleEffects"/>).
+        /// </summary>
+        public bool HasActiveEncounter
+        {
+            get { return _currentEncounter.Count > 0; }
+        }
 
         /// <summary>The hand slot disabled for this boss round, or null for other boss effects.</summary>
         public int? BossLockedHandSlotIndex { get; private set; }
@@ -473,7 +503,19 @@ namespace Contigu.Core
         private void StartRound()
         {
             Grid.ResetForNewRound();
-            RollBossEffectForRound();
+            _currentEncounter = BuildEncounter(CurrentRoundIndex);
+            if (HasActiveEncounter)
+            {
+                // The two systems never run at once — see HasActiveEncounter's
+                // own doc comment.
+                CurrentBossEffect = BossEffect.None;
+                BossLockedHandSlotIndex = null;
+                BossCursedColor = null;
+            }
+            else
+            {
+                RollBossEffectForRound();
+            }
             // No more upfront lock here — the boss round now ratchets up
             // gradually instead, see ApplyBossLockTick (called from
             // PlacePiece every _challenge.BossLockPiecesInterval pieces).
@@ -485,7 +527,7 @@ namespace Contigu.Core
             // tail end before the player has even picked their upgrade.
             if (Deck.IsHandFullyEmpty())
             {
-                Deck.DrawNewHand();
+                DrawFreshHand();
             }
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
@@ -598,6 +640,12 @@ namespace Contigu.Core
 
             StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
+            // Snapshot BEFORE Grid.PlacePiece, same reasoning as the
+            // Chameleon/Spark reads above: a poisoned cell this placement
+            // happens to also clear would read back "not poisoned" once
+            // Cell.ClearFill resets the flag, so ApplyPoisonScoreRule reads
+            // from this frozen set instead of the grid's post-placement state.
+            var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
             var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers, _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
             if (token.Trait.HasValue)
@@ -610,6 +658,10 @@ namespace Contigu.Core
             {
                 ApplyCursedColorScoreRule(placement, BossCursedColor.Value);
             }
+            if (poisonedPositions != null && poisonedPositions.Count > 0)
+            {
+                ApplyPoisonScoreRule(placement, poisonedPositions);
+            }
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
@@ -618,6 +670,10 @@ namespace Contigu.Core
             // (see PlacementResult.ModifierLueurBonus) — the 5 Lueur-earning
             // modifiers, on top of the line-clearing LueurEarned above.
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
+            if (HasActiveEncounter)
+            {
+                ApplyDamageToEncounter(placement.TotalScore);
+            }
             // Don't auto-refill yet — if this placement also ends the round,
             // drawing the next 3 pieces here would hand them out before the
             // player has even picked this round's upgrade (see StartRound,
@@ -640,7 +696,7 @@ namespace Contigu.Core
 
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
             {
-                Deck.DrawNewHand();
+                DrawFreshHand();
                 // EvaluateRoundEnd's stuck-check above deliberately skips an
                 // EMPTY hand (nothing to evaluate yet) — but the fresh hand
                 // just drawn is no longer empty, and might itself have no
@@ -1446,7 +1502,13 @@ namespace Contigu.Core
         /// for manually testing upgrades. No-op if the run isn't currently
         /// InProgress. Pure core logic (no UnityEditor dependency), so the
         /// method itself ships in real builds too; only its call site is
-        /// gated behind #if UNITY_EDITOR.
+        /// gated behind #if UNITY_EDITOR. Still sets RoundScore to
+        /// CurrentQuota unconditionally (even on an encounter round, where
+        /// that number no longer drives EvaluateRoundEnd) so every existing
+        /// caller/test that reads it back keeps seeing the same value —
+        /// encounter rounds additionally need every enemy actually dead
+        /// (see DebugDefeatAllEnemies), since EvaluateRoundEnd ignores
+        /// RoundScore entirely once HasActiveEncounter is true.
         /// </summary>
         public RunState DebugForceRoundComplete()
         {
@@ -1455,8 +1517,27 @@ namespace Contigu.Core
                 return State;
             }
             RoundScore = CurrentQuota;
+            if (HasActiveEncounter)
+            {
+                DebugDefeatAllEnemies();
+            }
             EvaluateRoundEnd();
             return State;
+        }
+
+        /// <summary>Debug-only helper: kills every enemy in <see cref="CurrentEncounter"/> outright (same cleanup as a real kill — see CleanUpDefeatedEnemy) — DebugForceRoundComplete's encounter-round counterpart to setting RoundScore to CurrentQuota.</summary>
+        private void DebugDefeatAllEnemies()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                enemy.ApplyDamage(enemy.Definition.MaxHp);
+                CleanUpDefeatedEnemy(enemy);
+            }
         }
 
         /// <summary>
@@ -1516,44 +1597,36 @@ namespace Contigu.Core
                 return false;
             }
             ShufflesRemaining--;
-            Deck.DrawNewHand();
+            DrawFreshHand();
             EvaluateRoundEnd();
             return true;
         }
 
+        /// <summary>
+        /// Every place RunManager deals a fresh hand (StartRound's own
+        /// initial draw, PlacePiece's post-placement empty-hand refill, and
+        /// a manual ShuffleHand) IS a "Shuffle" per the GDD's own definition
+        /// — so every one of those call sites goes through here instead of
+        /// Deck.DrawNewHand directly, resolving each alive enemy's own
+        /// On-Shuffle effect first (GDD §07: "All enemy Shuffle effects
+        /// resolve before the new tiles appear in the 3 hand slots").
+        /// No-op beyond the draw itself when there's no active encounter.
+        /// </summary>
+        private void DrawFreshHand()
+        {
+            if (HasActiveEncounter)
+            {
+                ResolveEnemyShuffleEffects();
+            }
+            Deck.DrawNewHand();
+        }
+
         private void EvaluateRoundEnd()
         {
-            if (RoundScore >= CurrentQuota)
+            bool roundCleared = HasActiveEncounter ? AllEnemiesDefeated() : RoundScore >= CurrentQuota;
+            if (roundCleared)
             {
-                // Balance fix (spec extension, explicit request): a strong
-                // early modifier can reach quota almost instantly, leaving
-                // most of the round's piece budget unused and starving the
-                // player of Lueur income for the shop. Converting every
-                // unused piece into +1 Lueur means finishing a round FAST
-                // still pays out close to what grinding it out fully would
-                // have. LastRoundEndLueurBonus is read once by the
-                // presentation layer (GameBootstrap.PlayRoundEndLueurBonusSequence)
-                // to replay this as a "+1 Lueur" popup per unused piece,
-                // flying from the pieces bar to the Lueur counter, before
-                // the shop actually opens — Lueur itself is already final
-                // here, same "core computes the end state instantly,
-                // presentation fakes the gradual reveal" convention as
-                // every other scoring event in PlacePiece.
-                LastRoundEndLueurBonus = PiecesRemainingThisRound;
-                Lueur += LastRoundEndLueurBonus;
-                ApplyMultCinqRisqueLossChance();
-                // Only ever true once (round 8's own CurrentRoundIndex, 7,
-                // can't recur) — every round past it, endless or not, falls
-                // straight into the AwaitingShop branch below like any
-                // other round-end. See ContinueEndless for how the player
-                // actually gets from here back into that normal flow.
-                if (CurrentRoundIndex == _challenge.RoundCount - 1)
-                {
-                    State = RunState.RunVictory;
-                    return;
-                }
-                State = RunState.AwaitingShop;
-                OpenShop();
+                CompleteRoundSuccessfully();
                 return;
             }
 
@@ -1581,6 +1654,243 @@ namespace Contigu.Core
             if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement() && ShufflesRemaining <= 0)
             {
                 State = RunState.RunDefeat;
+            }
+        }
+
+        /// <summary>
+        /// The "round cleared" branch shared by both of EvaluateRoundEnd's
+        /// win conditions (quota reached, or — see HasActiveEncounter —
+        /// every enemy defeated): banks the unused-piece-budget Lueur
+        /// bonus, rolls Risky Mult's loss chance, and transitions to either
+        /// RunVictory (the scheduled run's last round) or AwaitingShop.
+        /// </summary>
+        private void CompleteRoundSuccessfully()
+        {
+            // Balance fix (spec extension, explicit request): a strong
+            // early modifier can reach quota almost instantly, leaving
+            // most of the round's piece budget unused and starving the
+            // player of Lueur income for the shop. Converting every
+            // unused piece into +1 Lueur means finishing a round FAST
+            // still pays out close to what grinding it out fully would
+            // have. LastRoundEndLueurBonus is read once by the
+            // presentation layer (GameBootstrap.PlayRoundEndLueurBonusSequence)
+            // to replay this as a "+1 Lueur" popup per unused piece,
+            // flying from the pieces bar to the Lueur counter, before
+            // the shop actually opens — Lueur itself is already final
+            // here, same "core computes the end state instantly,
+            // presentation fakes the gradual reveal" convention as
+            // every other scoring event in PlacePiece.
+            LastRoundEndLueurBonus = PiecesRemainingThisRound;
+            Lueur += LastRoundEndLueurBonus;
+            ApplyMultCinqRisqueLossChance();
+            // Only ever true once (round 8's own CurrentRoundIndex, 7,
+            // can't recur) — every round past it, endless or not, falls
+            // straight into the AwaitingShop branch below like any
+            // other round-end. See ContinueEndless for how the player
+            // actually gets from here back into that normal flow.
+            if (CurrentRoundIndex == _challenge.RoundCount - 1)
+            {
+                State = RunState.RunVictory;
+                return;
+            }
+            State = RunState.AwaitingShop;
+            OpenShop();
+        }
+
+        /// <summary>True once every enemy in <see cref="CurrentEncounter"/> is dead — vacuously true (and never actually read, since <see cref="HasActiveEncounter"/> gates every caller) for an empty encounter.</summary>
+        private bool AllEnemiesDefeated()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                if (!_currentEncounter[i].IsDead)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Builds this round's enemies fresh from EncounterCatalog's authored EnemyIds (see HasActiveEncounter's own doc comment) — a brand-new EnemyInstance per id, even one that also appeared in an earlier round.</summary>
+        private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)
+        {
+            var ids = EncounterCatalog.GetEncounter(_challenge.Id, roundIndex);
+            if (ids.Count == 0)
+            {
+                return System.Array.Empty<EnemyInstance>();
+            }
+
+            var instances = new List<EnemyInstance>(ids.Count);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                instances.Add(new EnemyInstance(EnemyCatalog.Get(ids[i])));
+            }
+            return instances;
+        }
+
+        /// <summary>Damages the first ALIVE enemy in encounter order (GDD §07: "Which enemy should I kill first?" — targeting is always front-to-back, never split or chosen) — can be negative (see EnemyInstance.ApplyDamage). Cleans up the kill immediately if this hit was lethal.</summary>
+        private void ApplyDamageToEncounter(int damage)
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.ApplyDamage(damage))
+                {
+                    CleanUpDefeatedEnemy(enemy);
+                }
+                break;
+            }
+        }
+
+        /// <summary>GDD §07: "When an enemy dies, its active effects are cancelled/cleaned up immediately." Locker's current lock is released; every tile Poisoner itself poisoned is normalized.</summary>
+        private void CleanUpDefeatedEnemy(EnemyInstance enemy)
+        {
+            if (enemy.LockedCell.HasValue)
+            {
+                Grid.GetCell(enemy.LockedCell.Value).IsLocked = false;
+                enemy.LockedCell = null;
+            }
+            for (int i = 0; i < enemy.PoisonedCells.Count; i++)
+            {
+                Grid.GetCell(enemy.PoisonedCells[i]).IsPoisoned = false;
+            }
+            enemy.ClearPoisonedCells();
+        }
+
+        /// <summary>
+        /// Resolves every alive enemy's own On-Shuffle effect, in encounter
+        /// order (GDD §07: "Enemy order is therefore part of the puzzle").
+        /// Called from <see cref="DrawFreshHand"/>, always before the fresh
+        /// hand is actually dealt.
+        /// </summary>
+        private void ResolveEnemyShuffleEffects()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.Definition.Id == EnemyId.Locker)
+                {
+                    ResolveLockerShuffleEffect(enemy);
+                }
+                else if (enemy.Definition.Id == EnemyId.Poisoner)
+                {
+                    ResolvePoisonerShuffleEffect(enemy);
+                }
+            }
+        }
+
+        /// <summary>GDD §07: "On each Shuffle, locks 1 grid case. The previous lock is removed at the next Shuffle and a new case is selected." Reuses the existing boss-round cell-lock machinery (one cell, same score/Lueur-folding-in as a boss lock tick) rather than a separate lock path.</summary>
+        private void ResolveLockerShuffleEffect(EnemyInstance locker)
+        {
+            if (locker.LockedCell.HasValue)
+            {
+                Grid.GetCell(locker.LockedCell.Value).IsLocked = false;
+                locker.LockedCell = null;
+            }
+
+            var lockOutcome = Grid.LockFreeCellsAndCheckClears(1, _rng);
+            if (lockOutcome.LineClearScore > 0)
+            {
+                RoundScore += lockOutcome.LineClearScore;
+                TotalScore += lockOutcome.LineClearScore;
+            }
+            Lueur += lockOutcome.LueurEarned;
+            if (lockOutcome.LockedCells.Count > 0)
+            {
+                locker.LockedCell = lockOutcome.LockedCells[0];
+            }
+        }
+
+        /// <summary>GDD §07: "On each Shuffle, poisons 1 tile." Unlike Locker's roaming single lock, poison accumulates — only targets an already-FILLED, not-yet-poisoned cell (an empty one has no points to invert yet); a no-op tick if none exists.</summary>
+        private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner)
+        {
+            var candidates = new List<Vector2Int>();
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    var cell = Grid.GetCell(x, y);
+                    if (cell.IsFilled && !cell.IsPoisoned)
+                    {
+                        candidates.Add(new Vector2Int(x, y));
+                    }
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                return;
+            }
+
+            var pos = candidates[_rng.Next(candidates.Count)];
+            Grid.GetCell(pos).IsPoisoned = true;
+            poisoner.AddPoisonedCell(pos);
+        }
+
+        /// <summary>Every currently-poisoned position across every alive Poisoner instance in <see cref="CurrentEncounter"/> — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>
+        private HashSet<Vector2Int> GetPoisonedPositionsSnapshot()
+        {
+            var snapshot = new HashSet<Vector2Int>();
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.Definition.Id != EnemyId.Poisoner)
+                {
+                    continue;
+                }
+                for (int j = 0; j < enemy.PoisonedCells.Count; j++)
+                {
+                    snapshot.Add(enemy.PoisonedCells[j]);
+                }
+            }
+            return snapshot;
+        }
+
+        /// <summary>
+        /// GDD §07/Poisoner: "Points generated by poisoned tiles are
+        /// negative." Same preserve-clears/Lueur/non-point-multiplier-effects
+        /// contract as <see cref="ApplyCursedColorScoreRule"/>, but NEGATES
+        /// a poisoned position's point events instead of dropping them —
+        /// poison is a cost, not an exemption, and <see
+        /// cref="EnemyInstance.ApplyDamage"/> reads the resulting (possibly
+        /// net-negative) TotalScore as this placement's damage, so playing
+        /// into poison can genuinely heal the enemy back up.
+        /// </summary>
+        private static void ApplyPoisonScoreRule(PlacementResult placement, HashSet<Vector2Int> poisonedPositions)
+        {
+            placement.GroupBonus = 0;
+            placement.GoldenBonus = 0;
+            placement.LineClearScore = 0;
+            placement.ModifierBonus = 0;
+            placement.TraitBonus = 0;
+            placement.ShapeMasteryBonus = 0;
+            placement.ColorMasteryBonus = 0;
+
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (IsPointEvent(scoreEvent.Type) && scoreEvent.Amount > 0 && poisonedPositions.Contains(scoreEvent.Position))
+                {
+                    scoreEvent.Amount = -scoreEvent.Amount;
+                }
+
+                switch (scoreEvent.Type)
+                {
+                    case ScoreEventType.Group: placement.GroupBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Golden: placement.GoldenBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.LineClear:
+                    case ScoreEventType.Bastion: placement.LineClearScore += scoreEvent.Amount; break;
+                    case ScoreEventType.Modifier: placement.ModifierBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Trait: placement.TraitBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ShapeMastery: placement.ShapeMasteryBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ColorMastery: placement.ColorMasteryBonus += scoreEvent.Amount; break;
+                }
             }
         }
 
