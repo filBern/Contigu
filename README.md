@@ -6786,3 +6786,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      garde sa place dans la rangée mais devient gris quasi-transparent
      plutôt que de disparaître, pour que l'ordre/le compte ne bouge
      jamais visuellement.
+- **Bande d'ennemis + HP sous l'icône** : sur demande explicite
+  ("Peux-tu ajouter une bande en haut de l'écran avec une couleur
+  clair pour mettre les ennemies à l'intérieur. Aussi il faut ajouter
+  la vie d'un ennemi sous lui"). `HudView.BuildEnemyBand` remplace
+  l'ancienne rangée flottante par un vrai bandeau (`UITheme.PanelLight`,
+  même hauteur que l'ancienne barre de quota pour garder le même
+  espacement avec le texte de statut) qui s'affiche/se cache avec elle.
+  Chaque icône d'ennemi est maintenant dans son propre "slot" (icône +
+  label HP empilés verticalement via un `LayoutElement` de taille
+  fixe) au lieu d'avoir le texte HP superposé par-dessus l'icône —
+  le HP se lit maintenant juste en dessous, jamais sur l'icône elle-même.

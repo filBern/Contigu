@@ -52,7 +52,13 @@ namespace Contigu.Presentation
 
         private const int MaxEnemyIcons = 3;
         private const float EnemyIconSize = 44f;
-        private GameObject _enemyIconRow;
+        private const float EnemySlotWidth = 76f;
+        // Same height as the quota bar it replaces (BarHeight) so the status
+        // text below (GameBootstrap, fixed at y=-80) keeps the exact same
+        // 12px gap either way.
+        private const float EnemyBandHeight = BarHeight;
+        private GameObject _enemyBandRoot;
+        private readonly List<GameObject> _enemySlots = new List<GameObject>();
         private readonly List<Image> _enemyIconImages = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
 
@@ -61,7 +67,7 @@ namespace Contigu.Presentation
             BuildBar(parent, "ScoreBar", UITheme.ButtonSelected, top: true, out _scoreFillRect, out _scoreLabel);
             _scoreBarRoot = _scoreFillRect.parent.gameObject;
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
-            BuildEnemyIconRow(parent);
+            BuildEnemyBand(parent);
 
             // Persistent readout displayed outside and above the combo card
             // (moved here from below the status text on explicit request —
@@ -156,51 +162,74 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// A row of small square portraits, one per enemy slot up to <see
+        /// A light band flush against the top edge (explicit request:
+        /// "ajouter une bande en haut de l'écran avec une couleur clair
+        /// pour mettre les ennemies à l'intérieur"), holding a row of small
+        /// square portraits — one per enemy slot up to <see
         /// cref="MaxEnemyIcons"/>, left-to-right in encounter/targeting
         /// order (GDD §07: "Which enemy should I kill first?" — leftmost is
         /// always the one taking damage — see RunManager.
-        /// ApplyDamageToEncounter) — spec extension, explicit request:
-        /// "Enleve la progress bar pour le quota. Au lieu met une petite
-        /// image en haut pour chaque ennemi de gauche a droite pour la
-        /// priorité". Built once, hidden until SetEncounter populates and
-        /// shows exactly as many slots as the current round's encounter has.
+        /// ApplyDamageToEncounter), each with its own HP readout directly
+        /// BELOW its icon (explicit request: "il faut ajouter la vie d'un
+        /// ennemi sous lui") rather than overlaid on it. Built once, hidden
+        /// until SetEncounter populates and shows exactly as many slots as
+        /// the current round's encounter has.
         /// </summary>
-        private void BuildEnemyIconRow(Transform parent)
+        private void BuildEnemyBand(Transform parent)
         {
-            var root = UIFactory.CreateUIObject("EnemyIconRow", parent);
-            root.anchorMin = new Vector2(0.5f, 1f);
-            root.anchorMax = new Vector2(0.5f, 1f);
-            root.pivot = new Vector2(0.5f, 1f);
-            root.anchoredPosition = new Vector2(0f, -4f);
-            var layout = root.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12f;
+            var band = UIFactory.CreatePanel(parent, "EnemyBand", UITheme.PanelLight);
+            UIFactory.AddThickOutline(band, UITheme.Border);
+            band.rectTransform.anchorMin = new Vector2(0f, 1f);
+            band.rectTransform.anchorMax = new Vector2(1f, 1f);
+            band.rectTransform.pivot = new Vector2(0.5f, 1f);
+            band.rectTransform.anchoredPosition = Vector2.zero;
+            band.rectTransform.sizeDelta = new Vector2(0f, EnemyBandHeight);
+            _enemyBandRoot = band.gameObject;
+
+            var row = UIFactory.CreateUIObject("EnemyIconRow", band.transform);
+            row.anchorMin = new Vector2(0.5f, 0.5f);
+            row.anchorMax = new Vector2(0.5f, 0.5f);
+            row.pivot = new Vector2(0.5f, 0.5f);
+            row.anchoredPosition = Vector2.zero;
+            var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 10f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
-            var fitter = root.gameObject.AddComponent<ContentSizeFitter>();
+            var fitter = row.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            _enemyIconRow = root.gameObject;
 
             for (int i = 0; i < MaxEnemyIcons; i++)
             {
-                var icon = UIFactory.CreatePanel(root, "EnemyIcon" + i, UITheme.Danger);
+                var slot = UIFactory.CreateUIObject("EnemySlot" + i, row);
+                var slotLayoutElement = slot.gameObject.AddComponent<LayoutElement>();
+                slotLayoutElement.preferredWidth = EnemySlotWidth;
+                slotLayoutElement.preferredHeight = EnemyIconSize + 20f;
+
+                var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, UITheme.Danger);
+                icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                icon.rectTransform.pivot = new Vector2(0.5f, 1f);
+                icon.rectTransform.anchoredPosition = Vector2.zero;
                 icon.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
                 UIFactory.AddThickOutline(icon, UITheme.Border);
 
-                var label = UIFactory.CreateText(icon.transform, "Hp", "", 12, UITheme.TextPrimary);
-                label.rectTransform.anchorMin = new Vector2(0f, 0f);
-                label.rectTransform.anchorMax = new Vector2(1f, 0f);
-                label.rectTransform.pivot = new Vector2(0.5f, 0f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, 2f);
-                label.rectTransform.sizeDelta = new Vector2(0f, 14f);
+                // Directly BELOW the icon, not overlaid on it — explicit
+                // request above.
+                var label = UIFactory.CreateText(slot, "Hp", "", 13, UITheme.TextPrimary);
+                label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                label.rectTransform.pivot = new Vector2(0.5f, 1f);
+                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconSize + 2f));
+                label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 16f);
 
-                icon.gameObject.SetActive(false);
+                slot.gameObject.SetActive(false);
+                _enemySlots.Add(slot.gameObject);
                 _enemyIconImages.Add(icon);
                 _enemyIconLabels.Add(label);
             }
-            _enemyIconRow.SetActive(false);
+            _enemyBandRoot.SetActive(false);
         }
 
         /// <summary>Resizes a bar's fill rect so its right edge sits at <paramref name="ratio"/> (0-1) of the bar's width.</summary>
@@ -237,7 +266,7 @@ namespace Contigu.Presentation
                 {
                     _isEncounterMode = false;
                     _scoreBarRoot.SetActive(true);
-                    _enemyIconRow.SetActive(false);
+                    _enemyBandRoot.SetActive(false);
                 }
                 SetScores(run.RoundScore, run.CurrentQuota);
             }
@@ -289,19 +318,20 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Hides the quota bar entirely and shows one small square per
-        /// enemy in <paramref name="encounter"/> instead, left-to-right in
-        /// targeting order (spec extension, explicit request: "Enleve la
-        /// progress bar pour le quota. Au lieu met une petite image en
-        /// haut pour chaque ennemi de gauche a droite pour la priorité" —
-        /// the leftmost icon is always the one actually taking damage, see
-        /// RunManager.ApplyDamageToEncounter). Each icon is tinted by enemy
-        /// identity (<see cref="EnemyIconColor"/>) and carries its own
-        /// "current/max HP" label; a dead enemy's icon stays in its slot
-        /// (so the roster's own order/count never visibly shifts) but
-        /// dims heavily. Caps at <see cref="MaxEnemyIcons"/> slots — this
-        /// vertical slice never schedules more than 2 (see
-        /// EncounterCatalog's round 4).
+        /// Hides the quota bar entirely and shows the light enemy band
+        /// instead, with one small square per enemy in <paramref
+        /// name="encounter"/>, left-to-right in targeting order (spec
+        /// extension, explicit request: "Enleve la progress bar pour le
+        /// quota. Au lieu met une petite image en haut pour chaque ennemi
+        /// de gauche a droite pour la priorité" — the leftmost icon is
+        /// always the one actually taking damage, see RunManager.
+        /// ApplyDamageToEncounter). Each icon is tinted by enemy identity
+        /// (<see cref="EnemyIconColor"/>) and carries its own "current/max
+        /// HP" label directly below it ("il faut ajouter la vie d'un
+        /// ennemi sous lui"); a dead enemy's slot stays in place (so the
+        /// roster's own order/count never visibly shifts) but dims heavily.
+        /// Caps at <see cref="MaxEnemyIcons"/> slots — this vertical slice
+        /// never schedules more than 2 (see EncounterCatalog's round 4).
         /// </summary>
         public void SetEncounter(IReadOnlyList<EnemyInstance> encounter)
         {
@@ -309,13 +339,13 @@ namespace Contigu.Presentation
             {
                 _isEncounterMode = true;
                 _scoreBarRoot.SetActive(false);
-                _enemyIconRow.SetActive(true);
+                _enemyBandRoot.SetActive(true);
             }
 
-            for (int i = 0; i < _enemyIconImages.Count; i++)
+            for (int i = 0; i < _enemySlots.Count; i++)
             {
                 bool show = i < encounter.Count;
-                _enemyIconImages[i].gameObject.SetActive(show);
+                _enemySlots[i].SetActive(show);
                 if (!show)
                 {
                     continue;
