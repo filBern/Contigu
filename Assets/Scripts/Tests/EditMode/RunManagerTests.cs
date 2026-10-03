@@ -124,14 +124,19 @@ namespace Contigu.Tests
         [Test]
         public void Round_EndsImmediately_WhenQuotaReached_RegardlessOfRemainingBudget()
         {
-            var run = new RunManager(new SystemRandomProvider(42));
-            // Round 1 is now a combat encounter (see RunManager.HasActiveEncounter/
+            // Marathon rather than the default Classic: Classic's own round
+            // 1 is now a combat encounter (see RunManager.HasActiveEncounter/
             // EncounterCatalog — explicit request: "ajouter un petit peu
-            // d'autobattling"), where this round's own win condition is
-            // "every enemy dead", not quota. This test is specifically about
-            // the QUOTA path, so it needs a round EncounterCatalog hasn't
-            // touched — round 5 (index 4) is the first one still quota-governed.
-            AdvanceToRound(run, 4);
+            // d'autobattling"), where the round's win condition is "every
+            // enemy dead", not quota. This test is specifically about the
+            // QUOTA path (and relies on reaching it well before this
+            // golden-cell board of only 36 cells fills up — Classic's own
+            // later quota-governed rounds climb too steep for that),
+            // so it needs a challenge EncounterCatalog never touches at
+            // all — Marathon's round 1 quota (250) is even smaller than
+            // Classic's own (300) and plays by the exact same rules
+            // otherwise.
+            var run = new RunManager(new SystemRandomProvider(42), ChallengeCatalog.Marathon);
 
             // Every cell is golden so score accumulates fast regardless of shape,
             // color or adjacency luck — this test is about the round-end STATE
@@ -165,7 +170,7 @@ namespace Contigu.Tests
 
             Assert.AreEqual(EconomyConstants.ShopBlisterSlotCount, run.ShopBlisterSlots.Count);
             Assert.AreEqual(EconomyConstants.ShopUpgradeSlotCount, run.ShopUpgradeSlots.Count);
-            Assert.AreEqual(5, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
+            Assert.AreEqual(1, run.CurrentRoundNumber, "Round shouldn't advance yet — the shop is still open");
 
             run.DebugGrantModifier(ModifierId.Prisme);
             bool left = run.LeaveShop();
@@ -173,9 +178,9 @@ namespace Contigu.Tests
             Assert.IsTrue(left);
             Assert.AreEqual(1, run.ActiveModifiers.Count);
             Assert.AreEqual(ModifierId.Prisme, run.ActiveModifiers[0]);
-            Assert.AreEqual(6, run.CurrentRoundNumber);
+            Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
-            Assert.AreEqual(RunConfig.PieceBudgets[5], run.PiecesRemainingThisRound);
+            Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[1], run.PiecesRemainingThisRound);
             Assert.AreEqual(RunState.InProgress, run.State);
         }
 
@@ -2479,10 +2484,16 @@ namespace Contigu.Tests
             // 3 -> 5 on a further explicit report that it was STILL too
             // hard ("Le boss est beaucoup trop difficile") — now matching
             // Chaos' own pace (see ChallengeCatalog.Chaos).
+            // Marathon rather than the default Classic: Classic's own round
+            // 4 is now one of this vertical slice's encounter rounds (see
+            // EncounterCatalog), which suppresses the BossEffect roll this
+            // test is actually about (see RunManager.HasActiveEncounter) —
+            // Marathon shares the exact same BossRoundInterval/BossEffect
+            // machinery and isn't touched by EncounterCatalog at all.
             RunManager run = null;
             for (int seed = 0; seed < 256 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
+                var candidate = new RunManager(new SystemRandomProvider(seed), ChallengeCatalog.Marathon);
                 AdvanceToRound(candidate, 3);
                 if (candidate.CurrentBossEffect == BossEffect.ProgressiveCellLock)
                 {
@@ -2545,7 +2556,14 @@ namespace Contigu.Tests
 
             AdvanceToRound(run, 3);
             Assert.IsTrue(run.IsBossRound, "Round 4 should be a boss round");
-            Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
+            // Round 4 is ALSO one of this vertical slice's encounter rounds
+            // (see EncounterCatalog) — the old BossEffect roll is
+            // deliberately suppressed in favor of the Locker+Poisoner
+            // encounter (see RunManager.HasActiveEncounter), so
+            // CurrentBossEffect stays None here even though IsBossRound is
+            // still true by the numbers.
+            Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
+            Assert.IsTrue(run.HasActiveEncounter);
 
             AdvanceToRound(run, 4);
             Assert.IsFalse(run.IsBossRound, "Round 5 is not a boss round");
@@ -2553,7 +2571,11 @@ namespace Contigu.Tests
 
             AdvanceToRound(run, 7);
             Assert.IsTrue(run.IsBossRound, "Round 8 should be a boss round");
+            // Round 8 is past this vertical slice's encounter scope (see
+            // EncounterCatalog), so the old BossEffect roll still applies
+            // exactly as before.
             Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
+            Assert.IsFalse(run.HasActiveEncounter);
         }
 
         // ---- Endless mode (explicit request: "j'aimerais que le joueur
@@ -2675,10 +2697,12 @@ namespace Contigu.Tests
         [Test]
         public void RunManager_LockedBossSlotCannotBePlayedAndShuffleKeepsItsSlotLocked()
         {
+            // Marathon rather than the default Classic — see the identical
+            // note on PlacePiece_WhenCellLockIsTheBossEffect... above.
             RunManager run = null;
             for (int seed = 0; seed < 256 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
+                var candidate = new RunManager(new SystemRandomProvider(seed), ChallengeCatalog.Marathon);
                 AdvanceToRound(candidate, 3);
                 if (candidate.CurrentBossEffect == BossEffect.LockedHandSlot)
                 {
@@ -2700,11 +2724,13 @@ namespace Contigu.Tests
         [Test]
         public void RunManager_CursedColorCanBePlayedButItsPlacementScoresZero()
         {
+            // Marathon rather than the default Classic — see the identical
+            // note on PlacePiece_WhenCellLockIsTheBossEffect... above.
             RunManager run = null;
             int handIndex = -1;
             for (int seed = 0; seed < 512 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
+                var candidate = new RunManager(new SystemRandomProvider(seed), ChallengeCatalog.Marathon);
                 AdvanceToRound(candidate, 3);
                 if (candidate.CurrentBossEffect != BossEffect.CursedColor)
                 {
