@@ -3271,20 +3271,28 @@ namespace Contigu.Tests
         /// Plays one piece guaranteed to carry a trait (every deck token must
         /// already be tagged, e.g. via TagGoldenTokensRandom(Deck.DeckCount,
         /// ...)) and returns the outcome — used to drive Experience's
-        /// _specialPiecesPlayedCount counter up by exactly 1 per call. Tries
-        /// every occupied hand slot (every one already qualifies as
+        /// _specialPiecesPlayedCount counter up by exactly 1 per call (a
+        /// whole-RUN counter, never reset per round — see RunManager's own
+        /// field — so continuing into a later round mid-sequence is fine).
+        /// Tries every occupied hand slot (every one already qualifies as
         /// "special" per the tagging precondition above, so there's no need
         /// to churn for a specific match) rather than just the first one,
-        /// and shuffles for a fresh hand if NONE of the 3 fit anywhere right
-        /// now — same resilience PlayRoundToAwaitingShop already relies on
-        /// for a tight board — instead of asserting failure over one
-        /// specific piece's own placement luck.
+        /// shuffles for a fresh hand if NONE of the 3 fit anywhere right now
+        /// (same resilience PlayRoundToAwaitingShop already relies on for a
+        /// tight board), and leaves the shop for free if golden-trait-boosted
+        /// scoring happened to reach the round's own quota along the way —
+        /// instead of asserting failure over one specific piece's own luck,
+        /// or over a round ending earlier than the caller expected.
         /// </summary>
         private static PlacementOutcome PlaceOneSpecialPiece(RunManager run)
         {
             int guard = 0;
             while (true)
             {
+                if (run.State == RunState.AwaitingShop)
+                {
+                    run.LeaveShop();
+                }
                 for (int i = 0; i < DeckManager.HandSize; i++)
                 {
                     if (!run.Deck.Hand[i].HasValue)
@@ -3297,12 +3305,19 @@ namespace Contigu.Tests
                     var anchor = FindAnyValidAnchor(run.Grid, shape);
                     if (anchor.HasValue)
                     {
-                        return run.PlacePiece(i, anchor.Value.x, anchor.Value.y);
+                        var outcome = run.PlacePiece(i, anchor.Value.x, anchor.Value.y);
+                        if (outcome.Placement.Success)
+                        {
+                            return outcome;
+                        }
                     }
                 }
-                Assert.IsTrue(run.ShuffleHand(), "Ran out of room AND shuffles while playing special pieces");
+                if (run.State == RunState.InProgress)
+                {
+                    Assert.IsTrue(run.ShuffleHand(), "Ran out of room AND shuffles while playing special pieces");
+                }
                 guard++;
-                Assert.Less(guard, 50, "Should find a placeable special piece well within a few reshuffles");
+                Assert.Less(guard, 50, "Should find a placeable special piece well within a few reshuffles/rounds");
             }
         }
 
