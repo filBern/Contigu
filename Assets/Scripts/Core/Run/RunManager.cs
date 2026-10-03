@@ -525,9 +525,16 @@ namespace Contigu.Core
             // round, so the fresh hand is drawn here, for the round it
             // actually belongs to, rather than during the previous round's
             // tail end before the player has even picked their upgrade.
+            // Deliberately plain Deck.DrawNewHand, NOT DrawFreshHand: this
+            // is this round's STARTING hand, same as the very first hand
+            // the whole run ever deals (in DeckManager's own constructor,
+            // before any encounter exists) — not a Shuffle the player
+            // triggered by emptying their hand DURING this round, so no
+            // enemy here should get an on-Shuffle tick before the player
+            // has placed a single piece against it.
             if (Deck.IsHandFullyEmpty())
             {
-                DrawFreshHand();
+                Deck.DrawNewHand();
             }
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
@@ -1603,14 +1610,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Every place RunManager deals a fresh hand (StartRound's own
-        /// initial draw, PlacePiece's post-placement empty-hand refill, and
-        /// a manual ShuffleHand) IS a "Shuffle" per the GDD's own definition
-        /// — so every one of those call sites goes through here instead of
-        /// Deck.DrawNewHand directly, resolving each alive enemy's own
+        /// A Shuffle TRIGGERED DURING this round — PlacePiece's own
+        /// post-placement empty-hand refill, and a manual ShuffleHand — per
+        /// the GDD's own definition, resolving each alive enemy's own
         /// On-Shuffle effect first (GDD §07: "All enemy Shuffle effects
-        /// resolve before the new tiles appear in the 3 hand slots").
-        /// No-op beyond the draw itself when there's no active encounter.
+        /// resolve before the new tiles appear in the 3 hand slots") before
+        /// Deck.DrawNewHand actually deals the fresh hand. Deliberately NOT
+        /// used for StartRound's own carried-over-hand-was-empty draw — see
+        /// its own comment for why that one is exempt. No-op beyond the
+        /// draw itself when there's no active encounter.
         /// </summary>
         private void DrawFreshHand()
         {

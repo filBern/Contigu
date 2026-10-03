@@ -6702,12 +6702,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   scalerait par plus d'ennemis simultanés plutôt que par du HP. Le
   refill de main par vague ("quand les 3 slots sont vides, un Shuffle
   gratuit remplit la main") existait déjà tel quel dans
-  `DeckManager.PlayFromHand` — rien à changer là, seulement router
-  les 3 points d'appel de `Deck.DrawNewHand` à travers un nouveau
-  `RunManager.DrawFreshHand` qui résout d'abord l'effet "On Shuffle"
-  de chaque ennemi vivant (Locker déplace son verrou de case — réutilise
+  `DeckManager.PlayFromHand` — rien à changer là, seulement router les
+  2 points d'appel de `Deck.DrawNewHand` qui sont de VRAIS Shuffles
+  déclenchés PENDANT la ronde (le refill après un placement, et un
+  Shuffle manuel) à travers un nouveau `RunManager.DrawFreshHand` qui
+  résout d'abord l'effet "On Shuffle" de chaque ennemi vivant (Locker
+  déplace son verrou de case — réutilise
   `GridManager.LockFreeCellsAndCheckClears` — ; Poisoner empoisonne
   une case déjà remplie, cumulatif, via un nouveau `Cell.IsPoisoned`).
+  Le 3e point d'appel (la main de DÉPART d'une ronde, dans
+  `StartRound`, quand la main héritée de la ronde précédente était
+  déjà vide) reste un `Deck.DrawNewHand` tout simple exprès — sinon un
+  ennemi pouvait parfois déclencher son effet avant même que le
+  joueur ait posé une seule pièce contre lui, selon que la main se
+  soit vidée exactement à la fin de la ronde précédente ou pas ; un
+  test existant (`MultCinqRisque_GivesFlatAdditiveMultBonus_
+  LikeMultUn`) est tombé en CI exactement sur ce cas de figure
+  (Locker verrouillait (0,0) avant le `PlacePiece(0, 0, 0)` du test).
   Un placement qui rescore un groupe à travers une case empoisonnée
   compte négatif pour cette case précise (`RunManager.
   ApplyPoisonScoreRule`, même squelette que `ApplyCursedColorScoreRule`
