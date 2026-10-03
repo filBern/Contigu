@@ -2881,7 +2881,7 @@ namespace Contigu.Tests
         [Test]
         public void SlotUn_AddsFlatMultBonus_WhenPlacingFromHandSlotZero()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.SlotUn);
 
             var outcome = run.PlacePiece(0, 0, 0);
@@ -2902,7 +2902,7 @@ namespace Contigu.Tests
         {
             for (int handIndex = 0; handIndex < DeckManager.HandSize; handIndex++)
             {
-                var run = new RunManager(new SystemRandomProvider(1));
+                var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
                 GiveActiveModifier(run, id);
 
                 var outcome = run.PlacePiece(handIndex, 0, 0);
@@ -2916,7 +2916,7 @@ namespace Contigu.Tests
         [Test]
         public void GetModifierUsageCount_IncrementsEachTimeTheModifierScores()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.SlotUn);
             Assert.AreEqual(0, run.GetModifierUsageCount(ModifierId.SlotUn));
 
@@ -2939,7 +2939,7 @@ namespace Contigu.Tests
         [Test]
         public void GetModifierUsageCount_StaysZero_ForAModifierThatNeverFires()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.SlotUn);
 
             // Placing from hand slot 1 never triggers SlotUn (matches slot 0 only).
@@ -2958,7 +2958,7 @@ namespace Contigu.Tests
             // see PlacementResult.ModifierMultiplier) would silently stop
             // ever incrementing this stat, even though it still fires every
             // placement it qualifies for.
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Architecte);
 
             int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Sq2);
@@ -2977,7 +2977,7 @@ namespace Contigu.Tests
             // RunManager.Lueur (see PlacementResult.ModifierLueurBonus —
             // the first of the 5 Lueur-earning modifiers, spec extension)
             // and GetModifierUsageCount (ScoreEventType.LueurBonus).
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.RepetitionLueur);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
 
@@ -3090,7 +3090,7 @@ namespace Contigu.Tests
         [Test]
         public void MultCinqRisque_CanBeLost_AtRoundEnd_WhenTheLossRollHits()
         {
-            var run = new RunManager(new AlwaysZeroRandomProvider());
+            var run = new RunManager(new AlwaysZeroRandomProvider(), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.MultCinqRisque);
 
             PlayRoundToAwaitingShop(run);
@@ -3101,7 +3101,7 @@ namespace Contigu.Tests
         [Test]
         public void MultCinqRisque_Survives_AtRoundEnd_WhenTheLossRollMisses()
         {
-            var run = new RunManager(new NeverZeroRandomProvider());
+            var run = new RunManager(new NeverZeroRandomProvider(), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.MultCinqRisque);
 
             PlayRoundToAwaitingShop(run);
@@ -3114,7 +3114,7 @@ namespace Contigu.Tests
         {
             // On explicit request: "Dwilding modifier devrait être détruit
             // lorsqu'il est rendu a 0" — see RunManager.RemoveDepletedEpuisement.
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Epuisement);
 
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -3145,7 +3145,7 @@ namespace Contigu.Tests
         [Test]
         public void MultCinqRisque_GivesFlatAdditiveMultBonus_LikeMultUn()
         {
-            var run = new RunManager(new NeverZeroRandomProvider());
+            var run = new RunManager(new NeverZeroRandomProvider(), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.MultCinqRisque);
 
             var outcome = run.PlacePiece(0, 0, 0);
@@ -3161,7 +3161,7 @@ namespace Contigu.Tests
             // float au lieu d'arrondir a la baisse" — the OLD integer-step
             // behavior floored this to 0 (no bonus at all); the true value
             // is 0.9, and it now applies in full via ProgressiveAdditiveMult.
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
             run.Deck.TagGoldenTokensRandom(8, new SystemRandomProvider(2)); // 1 (baseline) + 8 = 9 -> 9/10 = 0.9
 
@@ -3175,7 +3175,7 @@ namespace Contigu.Tests
         [Test]
         public void CartesEnchantees_GivesOneMult_AtTenUpgradedCards_CountingFromABaselineOfOne()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
             run.Deck.TagGoldenTokensRandom(9, new SystemRandomProvider(2)); // 1 (baseline) + 9 = 10 -> 10/10 = 1.0
 
@@ -3188,7 +3188,7 @@ namespace Contigu.Tests
         [Test]
         public void CartesEnchantees_GivesTwoMult_AtTwentyUpgradedCards()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
             run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2)); // 1 (baseline) + 19 = 20 -> 20/10 = 2.0
 
@@ -3207,7 +3207,7 @@ namespace Contigu.Tests
             // Amount stays a rounded int (chip/usage bookkeeping still
             // wants a whole number), but PreciseAmount now carries the
             // exact value for the popup to show instead.
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
             run.Deck.TagGoldenTokensRandom(11, new SystemRandomProvider(2)); // 1 (baseline) + 11 = 12 -> 12/10 = 1.2
 
@@ -3231,7 +3231,7 @@ namespace Contigu.Tests
         [Test]
         public void Multitude_GivesFlatPointsEqualToDeckSize()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Multitude);
 
             var outcome = run.PlacePiece(0, 0, 0);
@@ -3280,7 +3280,7 @@ namespace Contigu.Tests
             // Same explicit request as CartesEnchantees above — the true
             // value (0.9) now applies in full via ProgressiveAdditiveMult,
             // instead of the old integer-step behavior flooring it to 0.
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Experience);
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
 
@@ -3298,7 +3298,7 @@ namespace Contigu.Tests
         [Test]
         public void Experience_GivesOneMult_AtNineSpecialPiecesPlayed_CountingFromABaselineOfOne()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Experience);
             run.Deck.TagGoldenTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
 
@@ -3448,7 +3448,7 @@ namespace Contigu.Tests
         [Test]
         public void GetProgressiveModifierStateText_Experience_ShowsItsAdditiveContributionWithABaselineOfOne()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
             GiveActiveModifier(run, ModifierId.Experience);
 
             Assert.AreEqual("Currently +0.1 Mult", run.GetProgressiveModifierStateText(ModifierId.Experience));
