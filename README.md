@@ -6878,3 +6878,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   automatique de fin de main (où `_gridView.RefreshHoldingClearedCells`
   tourne déjà). Ajout d'un `_gridView.Refresh()` après un shuffle manuel
   réussi.
+- **Carte du combo toujours hors écran en Full HD** : sur rapport explicite,
+  après le premier clampage ("En full HD resolution, la box de combo est
+  toujours hors écran a droite") — un ratio large (FHD = 16:9) devrait
+  pourtant largement avoir la place nécessaire avec le clamp déjà en place.
+  La cause réelle : `GameBootstrap.BuildUI` lisait `mainRoot.rect.width`
+  pour connaître la largeur du canvas, mais ce `RectTransform` n'est garanti
+  correct qu'une fois que le `CanvasScaler` a appliqué son facteur
+  d'échelle — pas forcément déjà fait au moment où ce `Build` tourne — donc
+  cette lecture pouvait renvoyer une largeur bien plus PETITE que la vraie,
+  sous-clampant `sidePanelCenterX` et laissant la carte dépasser le vrai
+  bord (large) de l'écran une fois le canvas réellement calé. Remplacé par
+  un calcul direct depuis `Screen.width`/`Screen.height` (même formule que
+  le `CanvasScaler`, match-height sur la référence de 800 — voir
+  `BuildCanvas`), fiable dès la première frame, indépendant du timing du
+  `CanvasScaler`.

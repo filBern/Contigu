@@ -509,15 +509,24 @@ namespace Contigu.Presentation
             gridRect.anchoredPosition = new Vector2(0f, 55f);
 
             // Center each side panel in the horizontal gap between the grid
-            // edge and the corresponding screen edge. Using the live canvas
-            // width keeps this centered when the aspect ratio changes.
+            // edge and the corresponding screen edge. Computed straight from
+            // Screen.width/height (matching CanvasScaler's own match-height
+            // formula — see BuildCanvas) rather than read back off
+            // mainRoot.rect.width: that RectTransform is only guaranteed
+            // correct once the Canvas has actually applied CanvasScaler's
+            // scale factor, which isn't guaranteed to have happened yet by
+            // the time this synchronous Build call runs, so it could still
+            // reflect a stale/default size here — on a wide-aspect screen
+            // that silently computes too SMALL a canvasWidth, which
+            // UNDER-clamps sidePanelCenterX below and leaves the combo card
+            // hanging off the real (correctly wide) screen's right edge once
+            // the Canvas actually settles (explicit report, after the first
+            // clamp fix: "En full HD resolution, la box de combo est
+            // toujours hors écran a droite" — full HD is a WIDE aspect
+            // ratio, so the fix should have had plenty of room to work with
+            // if canvasWidth had been measured correctly).
             float halfGridWidth = gridRect.rect.width * 0.5f;
-            float canvasWidth = mainRoot.rect.width;
-            if (canvasWidth <= 0f && Screen.height > 0)
-            {
-                // CanvasScaler matches height to the 800-unit reference.
-                canvasWidth = 800f * Screen.width / Screen.height;
-            }
+            float canvasWidth = Screen.height > 0 ? 800f * Screen.width / Screen.height : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
             float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
 
