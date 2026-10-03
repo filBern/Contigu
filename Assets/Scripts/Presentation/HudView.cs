@@ -53,17 +53,24 @@ namespace Contigu.Presentation
         private const int MaxEnemyIcons = 3;
         private const float EnemyIconSize = 44f;
         private const float EnemySlotWidth = 76f;
-        // Same height as the quota bar it replaces (BarHeight) so the status
-        // text below (GameBootstrap, fixed at y=-80) keeps the exact same
-        // 12px gap either way.
-        private const float EnemyBandHeight = BarHeight;
+        // Gap above the icon within its slot, pushing it down from the very
+        // top of the band — explicit request: "l'ennemi est trop haut".
+        private const float EnemyIconTopPadding = 14f;
+        // Taller than the plain score bar it replaces (was just BarHeight)
+        // to fit EnemyIconTopPadding above the icon without crowding its HP
+        // label below — GameBootstrap's status text position derives from
+        // this directly (see BuildUI) so the two can never drift apart.
+        public const float EnemyBandHeight = BarHeight + EnemyIconTopPadding;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
         private readonly List<Image> _enemyIconImages = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
+        private readonly List<EnemyIconView> _enemyIconViews = new List<EnemyIconView>();
+        private TooltipView _tooltip;
 
-        public void Build(Transform parent, Transform lueurParent)
+        public void Build(Transform parent, Transform lueurParent, TooltipView tooltip)
         {
+            _tooltip = tooltip;
             BuildBar(parent, "ScoreBar", UITheme.ButtonSelected, top: true, out _scoreFillRect, out _scoreLabel);
             _scoreBarRoot = _scoreFillRect.parent.gameObject;
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
@@ -205,15 +212,21 @@ namespace Contigu.Presentation
                 var slot = UIFactory.CreateUIObject("EnemySlot" + i, row);
                 var slotLayoutElement = slot.gameObject.AddComponent<LayoutElement>();
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
-                slotLayoutElement.preferredHeight = EnemyIconSize + 20f;
+                slotLayoutElement.preferredHeight = EnemyIconTopPadding + EnemyIconSize + 20f;
 
                 var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, UITheme.Danger);
                 icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 icon.rectTransform.pivot = new Vector2(0.5f, 1f);
-                icon.rectTransform.anchoredPosition = Vector2.zero;
+                icon.rectTransform.anchoredPosition = new Vector2(0f, -EnemyIconTopPadding);
                 icon.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
                 UIFactory.AddThickOutline(icon, UITheme.Border);
+
+                // Hover tooltip with this enemy's On-Shuffle effect (explicit
+                // request: "pouvoir hover sur l'ennemi pour avoir plus de
+                // détails sur ce qu'il fait comme effet lorsqu'on
+                // shuffle") — Init'd fresh each SetEncounter call below.
+                var iconView = icon.gameObject.AddComponent<EnemyIconView>();
 
                 // Directly BELOW the icon, not overlaid on it — explicit
                 // request above.
@@ -221,13 +234,14 @@ namespace Contigu.Presentation
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 label.rectTransform.pivot = new Vector2(0.5f, 1f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconSize + 2f));
+                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize + 2f));
                 label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 16f);
 
                 slot.gameObject.SetActive(false);
                 _enemySlots.Add(slot.gameObject);
                 _enemyIconImages.Add(icon);
                 _enemyIconLabels.Add(label);
+                _enemyIconViews.Add(iconView);
             }
             _enemyBandRoot.SetActive(false);
         }
@@ -354,7 +368,29 @@ namespace Contigu.Presentation
                 var enemy = encounter[i];
                 _enemyIconImages[i].color = EnemyIconColor(enemy);
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.Definition.MaxHp;
+                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, enemy.Definition.Description);
             }
+        }
+
+        /// <summary>
+        /// Overrides just one enemy slot's HP label, without touching
+        /// anything else — lets the presentation layer hold a slot's HP at
+        /// its pre-placement value through the score cascade and then
+        /// animate it down in sync with the combo total (spec extension,
+        /// explicit request: "il faut faire les dégâts seulement à la fin
+        /// du calcule ... une animation où on descend le pointage du combo
+        /// pour le transférer en dégâts progressif"), the same "presentation
+        /// layer animates progressively" idea as <see cref="SetScores"/>.
+        /// No-op if <paramref name="index"/> is out of range or its slot
+        /// isn't currently shown.
+        /// </summary>
+        public void SetEnemyHpDisplay(int index, int hp, int maxHp)
+        {
+            if (index < 0 || index >= _enemyIconLabels.Count || !_enemySlots[index].activeSelf)
+            {
+                return;
+            }
+            _enemyIconLabels[index].text = hp + "/" + maxHp;
         }
 
         /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was.</summary>

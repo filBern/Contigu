@@ -6797,3 +6797,47 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   label HP empilés verticalement via un `LayoutElement` de taille
   fixe) au lieu d'avoir le texte HP superposé par-dessus l'icône —
   le HP se lit maintenant juste en dessous, jamais sur l'icône elle-même.
+- **Dégâts différés en fin de calcul + drain combo→dégâts, bandeau
+  d'ennemi plus bas, tooltip d'effet au survol** : sur demande
+  explicite ("Lorsqu'on compte le pointage du combo d'une pièce, il
+  faut faire les dégâts seulement à la fin du calcule et j'aimerais
+  qu'on attende 1 seconde avant de commencer une animation où on
+  descend le pointage du combo pour le transférer en dégâts
+  progressif. Aussi l'ennemi est trop haut. Il faut aussi pouvoir
+  hover sur l'ennemi pour avoir plus de détails sur ce qu'il fait
+  comme effet lorsqu'on shuffle").
+  1. `GameBootstrap.OnCellClicked` capture maintenant le HP de l'ennemi
+     ciblé (le premier vivant, voir `ApplyDamageToEncounter`) avant et
+     après `RunManager.PlacePiece`, et tient son affichage (`HudView.
+     SetEnemyHpDisplay`) à la valeur d'avant pendant toute la cascade
+     de score existante — exactement comme `roundScoreBefore`/
+     `lueurBefore` le font déjà pour le score et la Lueur. Une fois la
+     cascade et le force-sync du total terminés, `PlayPlacementSequence`
+     attend 1 seconde (`WaitForSeconds(1f)`) puis lance une nouvelle
+     coroutine `DrainComboIntoDamage` qui fait descendre en lockstep,
+     sur 0.6s, le total du combo (`ComboView.SetTotal`, nouvelle
+     méthode qui ne touche pas aux pastilles chips/mult déjà figées)
+     vers 0 et le HP affiché de l'ennemi vers sa valeur finale — le
+     score "se transfère" visuellement en dégâts. Sauté entièrement
+     si le total est ≤ 0 (un placement entièrement scoré à travers du
+     poison soigne l'ennemi au lieu de lui faire mal — rien à "drainer").
+  2. `HudView.EnemyBandHeight` passe de `BarHeight` (68) à `BarHeight +
+     EnemyIconTopPadding` (82, nouvelle constante = 14) et chaque icône
+     est maintenant décalée de `EnemyIconTopPadding` vers le bas dans
+     son slot au lieu d'être collée en haut — l'ennemi n'est plus
+     plaqué contre le tout haut de l'écran. Le décalage vertical fixe
+     du texte de statut dans `GameBootstrap.BuildUI` dérive maintenant
+     directement de `HudView.EnemyBandHeight` plutôt que d'être une
+     valeur en dur (-80), pour que les deux ne puissent plus jamais
+     diverger.
+  3. Nouveau `Presentation.EnemyIconView` (même patron que
+     `PoisonBadgeView`/`TraitBadgeView`, mais sans forwarding de clic,
+     l'icône ne chevauchant rien de cliquable) : affiche le
+     `TooltipView` partagé avec le nom et la nouvelle description
+     d'effet de l'ennemi (`EnemyDefinition.Description`, ajoutée et
+     renseignée pour Basic/Locker/Poisoner dans `EnemyCatalog`) au
+     survol. `HudView.BuildEnemyBand` ajoute ce composant à chaque
+     icône et `SetEncounter` l'initialise à chaque refresh ; la
+     construction de `TooltipView` dans `GameBootstrap.BuildUI` est
+     déplacée avant celle de `HudView` (au lieu d'après) pour pouvoir
+     la lui passer.

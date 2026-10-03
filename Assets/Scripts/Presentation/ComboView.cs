@@ -150,6 +150,19 @@ namespace Contigu.Presentation
             _totalText.text = Mathf.RoundToInt(chips * mult).ToString();
         }
 
+        /// <summary>
+        /// Overrides just the running-total readout, without touching the
+        /// (by this point frozen) chips/mult pills — used by
+        /// GameBootstrap's post-cascade "drain" animation to count the
+        /// total down toward 0 as it's transferred into enemy damage (spec
+        /// extension, explicit request: "une animation où on descend le
+        /// pointage du combo pour le transférer en dégâts progressif").
+        /// </summary>
+        public void SetTotal(int total)
+        {
+            _totalText.text = total.ToString();
+        }
+
         private static string FormatMult(float mult)
         {
             float rounded = Mathf.Round(mult);

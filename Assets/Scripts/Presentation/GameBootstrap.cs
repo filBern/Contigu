@@ -471,29 +471,36 @@ namespace Contigu.Presentation
             comboRect.pivot = new Vector2(0.5f, 0.5f);
             comboRect.anchoredPosition = new Vector2(0f, 65f);
 
+            // Built before HudView/GridView/HandView since all three need a
+            // live TooltipView to hover (the enemy band's icons, grid cells'
+            // trait-origin badges and hand pieces' trait badges,
+            // respectively) — moved ahead of HudView.Build specifically for
+            // the enemy icon hover tooltip (explicit request: "pouvoir
+            // hover sur l'ennemi pour avoir plus de détails sur ce qu'il
+            // fait comme effet lorsqu'on shuffle").
+            _tooltipView = gameObject.AddComponent<TooltipView>();
+            _tooltipView.Build(mainRoot);
+
             // Both progress bars pin themselves to the top/bottom edges inside
             // HudView.Build — nothing to position here.
             _hudView = gameObject.AddComponent<HudView>();
-            _hudView.Build(mainRoot, mainRoot);
+            _hudView.Build(mainRoot, mainRoot, _tooltipView);
             _hudView.SetLueur(_run.Lueur);
 
             _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMutedOnBackground);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
-            // Below the top bar (68 tall, see HudView.BarHeight) with a 12px gap.
-            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -80f);
+            // Below the top bar/enemy band (see HudView.EnemyBandHeight,
+            // taller than the plain score bar so the enemy icons sit lower
+            // and clear of the screen edge — explicit request: "l'ennemi
+            // est trop haut") with a 12px gap.
+            _statusText.rectTransform.anchoredPosition = new Vector2(0f, -(HudView.EnemyBandHeight + 12f));
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
             StartStatusPulse();
 
             // Slightly above screen center to make room for the horizontal
             // hand row below while keeping a clear gap below the status text.
-            // Built before GridView/HandView since both need a live
-            // TooltipView to hover (grid cells' trait-origin badges and
-            // hand pieces' trait badges, respectively).
-            _tooltipView = gameObject.AddComponent<TooltipView>();
-            _tooltipView.Build(mainRoot);
-
             _gridView = gameObject.AddComponent<GridView>();
             var gridRect = _gridView.Build(mainRoot, _run.Grid, CellSize, _tooltipView);
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -741,6 +748,15 @@ namespace Contigu.Presentation
             int roundScoreBefore = _run.RoundScore;
             int lueurBefore = _run.Lueur;
 
+            // Snapshot the front (targeted) enemy's HP BEFORE the placement
+            // mutates it, so its damage can be held back and then drained
+            // in alongside the combo total instead of jumping instantly
+            // (explicit request: "il faut faire les dégâts seulement à la
+            // fin du calcule" — see RunManager.ApplyDamageToEncounter for
+            // why index 0 among the alive ones is always the one hit).
+            int damagedEnemyIndex = FindFrontAliveEnemyIndex();
+            int enemyHpBefore = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
+
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
@@ -749,6 +765,9 @@ namespace Contigu.Presentation
                 return;
             }
             SfxManager.Play(SfxId.ValidDrop);
+
+            int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
+            int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.MaxHp : 0;
 
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
@@ -782,9 +801,16 @@ namespace Contigu.Presentation
             // Round/budget update immediately; the score AND Lueur numbers
             // themselves stay at their pre-placement values until
             // PlayPlacementSequence catches them up in step with each popup.
+            // Same hold-back for the targeted enemy's HP, drained down only
+            // once the combo total itself finishes draining (see
+            // DrainComboIntoDamage).
             _hudView.Refresh(_run);
             _hudView.SetLueur(lueurBefore);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
+            if (damagedEnemyIndex >= 0)
+            {
+                _hudView.SetEnemyHpDisplay(damagedEnemyIndex, enemyHpBefore, enemyMaxHp);
+            }
             SetStatusText(IdleStatusMessage);
 
             _isPlayingPlacementSequence = true;
@@ -794,7 +820,25 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, enemyHpBefore, enemyHpAfter, enemyMaxHp));
+        }
+
+        /// <summary>Index of the enemy <see cref="Core.RunManager.ApplyDamageToEncounter"/> would hit right now — the first ALIVE one in encounter order — or -1 if there's no active encounter this round. Read BEFORE PlacePiece so OnCellClicked can hold that slot's HP display at its pre-placement value (see OnCellClicked/PlayPlacementSequence).</summary>
+        private int FindFrontAliveEnemyIndex()
+        {
+            if (!_run.HasActiveEncounter)
+            {
+                return -1;
+            }
+            var encounter = _run.CurrentEncounter;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (!encounter[i].IsDead)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /// <summary>
@@ -812,7 +856,8 @@ namespace Contigu.Presentation
         /// (draft/victory/defeat), so nothing interrupts the player while
         /// they're still reading their score.
         /// </summary>
-        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore)
+        private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
+            int damagedEnemyIndex, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1190,11 +1235,50 @@ namespace Contigu.Presentation
                 _gridView.Refresh();
             }
 
+            // Only once the combo total itself is finished (and not before —
+            // explicit request: "il faut faire les dégâts seulement à la fin
+            // du calcule"), wait 1s so the player can read the final number,
+            // then drain it down to 0 while transferring it into the
+            // targeted enemy's HP ("une animation où on descend le pointage
+            // du combo pour le transférer en dégâts progressif"). Skipped
+            // for a non-positive total (a placement scored entirely through
+            // poison nets a heal, not damage — nothing positive to drain).
+            if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
+            {
+                yield return new WaitForSeconds(1f);
+                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, enemyHpBefore, enemyHpAfter, enemyMaxHp);
+            }
+
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
             RefreshShuffleButton();
             _modifierPanelView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
+        }
+
+        /// <summary>
+        /// Counts the combo total down from <paramref name="startTotal"/> to
+        /// 0 while the targeted enemy's HP ticks down from <paramref
+        /// name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the
+        /// visual "transfer" of the combo score into damage (spec
+        /// extension, explicit request above). Called once per placement,
+        /// after PlayPlacementSequence's own score/clear cascade and 1s
+        /// pause have already finished.
+        /// </summary>
+        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, int hpBefore, int hpAfter, int maxHp)
+        {
+            const float duration = 0.6f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                _comboView.SetTotal(Mathf.RoundToInt(Mathf.Lerp(startTotal, 0f, p)));
+                _hudView.SetEnemyHpDisplay(enemyIndex, Mathf.RoundToInt(Mathf.Lerp(hpBefore, hpAfter, p)), maxHp);
+                yield return null;
+            }
+            _comboView.SetTotal(0);
+            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp);
         }
 
         /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — used by the two Mult catch-up popups above so a progressive modifier's true fractional contribution (Densité, Cartes Enchantées, Expérience) reads clearly without cluttering the common case (every other modifier, always a whole number) with a needless ".0".</summary>
