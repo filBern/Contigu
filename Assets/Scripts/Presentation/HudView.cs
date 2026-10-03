@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -33,6 +34,20 @@ namespace Contigu.Presentation
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
         private bool _isEndless;
+
+        /// <summary>
+        /// True while the score bar is showing an enemy encounter (see
+        /// SetEncounter) instead of score/quota — set by SetEncounter,
+        /// cleared by Refresh whenever RunManager.HasActiveEncounter is
+        /// false. While true, SetScores becomes a no-op (spec extension,
+        /// explicit request: "ajouter un petit peu d'autobattling") so
+        /// GameBootstrap's own progressive-score-popup calls (written for
+        /// the quota bar, see PlayPlacementSequence) can't clobber the
+        /// encounter display they don't know exists — this vertical slice
+        /// doesn't animate enemy HP progressively, it just always shows the
+        /// current (already-final) value.
+        /// </summary>
+        private bool _isEncounterMode;
 
         public void Build(Transform parent, Transform lueurParent)
         {
@@ -155,7 +170,15 @@ namespace Contigu.Presentation
         {
             SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount, run.IsEndless);
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
-            SetScores(run.RoundScore, run.CurrentQuota);
+            if (run.HasActiveEncounter)
+            {
+                SetEncounter(run.CurrentEncounter);
+            }
+            else
+            {
+                _isEncounterMode = false;
+                SetScores(run.RoundScore, run.CurrentQuota);
+            }
             SetLueur(run.Lueur);
         }
 
@@ -187,13 +210,66 @@ namespace Contigu.Presentation
         /// Updates just the score bar, without touching the pieces bar — lets
         /// the presentation layer animate the score up progressively in sync
         /// with score popups instead of always jumping straight to the final
-        /// value.
+        /// value. No-op while <see cref="_isEncounterMode"/> is set (see its
+        /// own doc comment) — GameBootstrap calls this unconditionally
+        /// throughout its score-popup cascade regardless of round type.
         /// </summary>
         public void SetScores(int roundScore, int quota)
         {
+            if (_isEncounterMode)
+            {
+                return;
+            }
             string roundLabel = _isEndless ? "Round " + _roundNumber : "Round " + _roundNumber + "/" + _roundCount;
             _scoreLabel.text = roundLabel + "  —  " + roundScore + " / " + quota;
+            _scoreFillRect.GetComponent<Image>().color = UITheme.ButtonSelected;
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
+        }
+
+        /// <summary>
+        /// Repurposes the score bar to show the current encounter's front
+        /// ALIVE enemy (spec extension, explicit request: "ajouter un petit
+        /// peu d'autobattling" — see RunManager.CurrentEncounter) instead of
+        /// score/quota — same bar, same "Round N" prefix, but its label
+        /// reads "Name — HP/MaxHp" and its fill ratio tracks CurrentHp/MaxHp
+        /// instead, tinted danger-red rather than the quota bar's gold (see
+        /// UITheme.Danger — damage is a cost, not a reward). A second enemy
+        /// still alive behind the front one (see EncounterCatalog — round 4
+        /// pairs Locker+Poisoner) is called out with a "(+N in queue)"
+        /// suffix rather than its own bar, since only the front enemy can
+        /// take damage at all (see RunManager.ApplyDamageToEncounter).
+        /// Falls back to the LAST entry once every enemy is dead (the round
+        /// is ending anyway at that point — see RunManager.
+        /// CompleteRoundSuccessfully — so this is only ever visible for an
+        /// instant before the shop takes over).
+        /// </summary>
+        public void SetEncounter(IReadOnlyList<EnemyInstance> encounter)
+        {
+            _isEncounterMode = true;
+
+            EnemyInstance front = encounter[encounter.Count - 1];
+            int queuedAliveBehindFront = 0;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (!encounter[i].IsDead)
+                {
+                    front = encounter[i];
+                    for (int j = i + 1; j < encounter.Count; j++)
+                    {
+                        if (!encounter[j].IsDead)
+                        {
+                            queuedAliveBehindFront++;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            string roundLabel = _isEndless ? "Round " + _roundNumber : "Round " + _roundNumber + "/" + _roundCount;
+            string queueSuffix = queuedAliveBehindFront > 0 ? " (+" + queuedAliveBehindFront + " in queue)" : "";
+            _scoreLabel.text = roundLabel + "  —  " + front.Definition.Name + " — " + front.CurrentHp + " / " + front.Definition.MaxHp + " HP" + queueSuffix;
+            _scoreFillRect.GetComponent<Image>().color = UITheme.Danger;
+            SetRatio(_scoreFillRect, front.Definition.MaxHp > 0 ? (float)front.CurrentHp / front.Definition.MaxHp : 0f);
         }
 
         /// <summary>

@@ -167,6 +167,20 @@ namespace Contigu.Presentation
             badgeSpecialOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgeSpecial.gameObject.SetActive(false);
 
+            // "Poisoner" enemy mechanic (spec extension, explicit request:
+            // "ajouter un petit peu d'autobattling" — see Cell.IsPoisoned/
+            // RunManager.ResolvePoisonerShuffleEffect) — bottom-left corner,
+            // the one spot the other three corner badges above leave free.
+            var badgePoison = UIFactory.CreatePanel(cellGo, "BadgePoison", UITheme.Danger);
+            UIFactory.SetAnchor(badgePoison.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f));
+            badgePoison.rectTransform.pivot = new Vector2(0f, 0f);
+            badgePoison.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgePoison.rectTransform.anchoredPosition = new Vector2(3f, 3f);
+            var badgePoisonOutline = badgePoison.gameObject.AddComponent<Outline>();
+            badgePoisonOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            badgePoisonOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            badgePoison.gameObject.SetActive(false);
+
             // Colorblind-mode shape (see ColorblindMode/
             // ColorblindShapeFactory) — centered, created before
             // InvalidMarker below so a transient hover-invalid preview
@@ -205,7 +219,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, lineClearOverlay, _tooltip);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgePoison, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, lineClearOverlay, _tooltip);
             _cells[x, y] = cellView;
         }
 

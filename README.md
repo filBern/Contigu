@@ -6736,3 +6736,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Core seulement pour cette passe (le HUD/la Presentation n'affichent
   pas encore les ennemis/leur HP/le poison/le verrou — prochaine étape
   logique avant que ce soit vraiment jouable en Unity).
+- **Système d'ennemis — affichage en jeu** : suite directe de l'item
+  précédent, sur demande explicite ("Le HUD/la Presentation n'affichent
+  pas encore les ennemis, leur HP, le poison ou le verrou ... C'est la
+  suite logique avant que ce soit vraiment jouable"). La barre de
+  score en haut du HUD se transforme pendant un round de combat
+  (`HudView.SetEncounter`, appelé depuis `Refresh` quand `RunManager.
+  HasActiveEncounter` est vrai) : elle affiche le nom et le HP de
+  l'ennemi actuellement visé (celui qui encaisse les dégâts en premier
+  — voir `RunManager.ApplyDamageToEncounter`) au lieu du score/quota,
+  remplie en rouge danger (`UITheme.Danger`) plutôt qu'en or, avec un
+  "(+N in queue)" si un 2e ennemi encore vivant attend derrière (ronde
+  4 : Locker+Poisoner). Un nouveau drapeau interne `_isEncounterMode`
+  rend `SetScores` muet pendant ce temps, pour que les nombreux appels
+  "progressifs" existants de `GameBootstrap.PlayPlacementSequence`
+  (pensés pour la barre de quota) n'écrasent pas l'affichage ennemi —
+  volontairement pas d'animation progressive du HP pendant la séquence
+  de score pour cette passe, juste la valeur finale affichée dès le
+  début. Le texte de statut (`GameBootstrap.GetCurrentRoundStatus`)
+  liste aussi les ennemis de la ronde ("Enemy encounter: Locker,
+  Poisoner", avec "(defeated)" une fois morts). Sur la grille, le
+  verrou de Locker réutilise tel quel le visuel de case verrouillée
+  déjà existant (`Cell.IsLocked`, rien à faire) ; un nouveau badge
+  coin bas-gauche (le seul des 4 coins encore libre) affiche
+  `Cell.IsPoisoned` en rouge danger, même pattern que le badge golden
+  existant (`GridCellView`/`GridView`).

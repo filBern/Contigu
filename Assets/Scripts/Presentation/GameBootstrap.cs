@@ -1512,6 +1512,16 @@ namespace Contigu.Presentation
 
         private string GetCurrentRoundStatus()
         {
+            // Spec extension, explicit request: "ajouter un petit peu
+            // d'autobattling" — an active encounter always suppresses the
+            // old BossEffect roll (see RunManager.HasActiveEncounter), so
+            // this short-circuits before the switch below would otherwise
+            // just fall through to its generic "New round..." default.
+            if (_run.HasActiveEncounter)
+            {
+                return BuildEncounterStatus(_run.CurrentEncounter);
+            }
+
             string status;
             switch (_run.CurrentBossEffect)
             {
@@ -1535,6 +1545,26 @@ namespace Contigu.Presentation
                 status += " Chaos also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " pieces.";
             }
             return status;
+        }
+
+        /// <summary>Lists every enemy in this round's encounter by name (spec extension, explicit request: "ajouter un petit peu d'autobattling") — a defeated one stays listed, marked "(defeated)", rather than dropped, so the count always visibly matches EncounterCatalog's own authored roster for the round.</summary>
+        private static string BuildEncounterStatus(IReadOnlyList<EnemyInstance> encounter)
+        {
+            var text = new System.Text.StringBuilder("Enemy encounter: ");
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (i > 0)
+                {
+                    text.Append(", ");
+                }
+                text.Append(encounter[i].Definition.Name);
+                if (encounter[i].IsDead)
+                {
+                    text.Append(" (defeated)");
+                }
+            }
+            text.Append(". Defeat them all to clear the round.");
+            return text.ToString();
         }
 
         /// <summary>

@@ -25,6 +25,7 @@ namespace Contigu.Presentation
         private Image _fillTile;
         private Image _badgeGolden;
         private Image _badgeSpecial;
+        private Image _badgePoison;
         private Image _invalidMarker;
         private Text _effectLabel;
         private Image _badgeTraitOrigin;
@@ -39,7 +40,7 @@ namespace Contigu.Presentation
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -48,6 +49,7 @@ namespace Contigu.Presentation
             _fillTile = fillTile;
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
+            _badgePoison = badgePoison;
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
@@ -163,6 +165,12 @@ namespace Contigu.Presentation
             {
                 _badgeSpecial.color = VisualDefaults.GetColor(cell.TintedColor);
             }
+
+            // "Poisoner" enemy mechanic (spec extension, explicit request:
+            // "ajouter un petit peu d'autobattling" — see Cell.IsPoisoned/
+            // RunManager.ApplyPoisonScoreRule): any point this cell scores
+            // from here on counts negative instead of positive.
+            _badgePoison.gameObject.SetActive(cell.IsPoisoned);
 
             // Cosmetic reminder of which deck upgrade originally enchanted
             // this cell (see Cell.OriginTrait) — independent of the
