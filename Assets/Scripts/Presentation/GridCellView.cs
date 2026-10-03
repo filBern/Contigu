@@ -26,6 +26,7 @@ namespace Contigu.Presentation
         private Image _badgeGolden;
         private Image _badgeSpecial;
         private Image _badgePoison;
+        private PoisonBadgeView _poisonBadgeView;
         private Image _invalidMarker;
         private Text _effectLabel;
         private Image _badgeTraitOrigin;
@@ -50,6 +51,7 @@ namespace Contigu.Presentation
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;
             _badgePoison = badgePoison;
+            _poisonBadgeView = badgePoison.gameObject.AddComponent<PoisonBadgeView>();
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
@@ -169,8 +171,16 @@ namespace Contigu.Presentation
             // "Poisoner" enemy mechanic (spec extension, explicit request:
             // "ajouter un petit peu d'autobattling" — see Cell.IsPoisoned/
             // RunManager.ApplyPoisonScoreRule): any point this cell scores
-            // from here on counts negative instead of positive.
+            // from here on counts negative instead of positive. Tooltip on
+            // hover (explicit request: "Il n'y a pas de tooltip pour la
+            // tile empoisonné, il en faut un") — same lazy Init-on-render
+            // pattern as the trait-origin badge below, since this badge's
+            // own Init (above) runs before _tooltip is assigned.
             _badgePoison.gameObject.SetActive(cell.IsPoisoned);
+            if (cell.IsPoisoned)
+            {
+                _poisonBadgeView.Init(_tooltip, gameObject);
+            }
 
             // Cosmetic reminder of which deck upgrade originally enchanted
             // this cell (see Cell.OriginTrait) — independent of the

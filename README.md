@@ -6761,3 +6761,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   coin bas-gauche (le seul des 4 coins encore libre) affiche
   `Cell.IsPoisoned` en rouge danger, même pattern que le badge golden
   existant (`GridCellView`/`GridView`).
+- **Système d'ennemis — 3 ajustements** : sur demande explicite ("Il
+  n'y a pas de tooltip pour la tile empoisonné, il en faut un" /
+  "LA locked cell ne peut être dans une cleared line" / "Enleve la
+  progress bar pour le quota. Au lieu met une petite image en haut
+  pour chaque ennemi de gauche a droite pour la priorité").
+  1. Nouveau `PoisonBadgeView` (même pattern que `TraitBadgeView`) :
+     survoler le badge de poison affiche le `TooltipView` partagé
+     avec son explication, au lieu de rester muet.
+  2. `RunManager.ResolveLockerShuffleEffect` verrouille maintenant via
+     `GridManager.LockRandomCells` (verrou simple, sans re-vérifier
+     les lignes) au lieu de `LockFreeCellsAndCheckClears` — le verrou
+     de Locker ne peut donc plus jamais compléter et clear une ligne
+     tout seul ; ce comportement reste spécifique à l'ancien effet de
+     boss ProgressiveCellLock (`ApplyBossLockTick`), pas à cet ennemi.
+  3. `HudView` cache complètement la barre de score pendant un round
+     de combat (au lieu de la détourner pour afficher le HP) et montre
+     à la place une rangée de jusqu'à 3 petites icônes carrées, une
+     par ennemi de `RunManager.CurrentEncounter`, dans l'ordre gauche
+     à droite = ordre de priorité (le plus à gauche encaisse toujours
+     les dégâts en premier — voir `ApplyDamageToEncounter`). Chaque
+     icône garde sa teinte propre (Locker en bleu clair, Poisoner en
+     rouge danger) et son propre texte "HP actuel/max" ; un ennemi mort
+     garde sa place dans la rangée mais devient gris quasi-transparent
+     plutôt que de disparaître, pour que l'ordre/le compte ne bouge
+     jamais visuellement.

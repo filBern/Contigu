@@ -1794,7 +1794,17 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>GDD §07: "On each Shuffle, locks 1 grid case. The previous lock is removed at the next Shuffle and a new case is selected." Reuses the existing boss-round cell-lock machinery (one cell, same score/Lueur-folding-in as a boss lock tick) rather than a separate lock path.</summary>
+        /// <summary>
+        /// GDD §07: "On each Shuffle, locks 1 grid case. The previous lock
+        /// is removed at the next Shuffle and a new case is selected."
+        /// Uses the plain <see cref="GridManager.LockRandomCells"/> (no
+        /// line-clear re-check) rather than the old boss tick's
+        /// LockFreeCellsAndCheckClears — explicit request: "LA locked cell
+        /// ne peut être dans une cleared line". Locker's own lock should
+        /// never itself be the reason a row/column completes and clears;
+        /// that remains specific to the pre-existing ProgressiveCellLock
+        /// boss effect (see ApplyBossLockTick), not this enemy.
+        /// </summary>
         private void ResolveLockerShuffleEffect(EnemyInstance locker)
         {
             if (locker.LockedCell.HasValue)
@@ -1803,16 +1813,10 @@ namespace Contigu.Core
                 locker.LockedCell = null;
             }
 
-            var lockOutcome = Grid.LockFreeCellsAndCheckClears(1, _rng);
-            if (lockOutcome.LineClearScore > 0)
+            var locked = Grid.LockRandomCells(1, _rng);
+            if (locked.Count > 0)
             {
-                RoundScore += lockOutcome.LineClearScore;
-                TotalScore += lockOutcome.LineClearScore;
-            }
-            Lueur += lockOutcome.LueurEarned;
-            if (lockOutcome.LockedCells.Count > 0)
-            {
-                locker.LockedCell = lockOutcome.LockedCells[0];
+                locker.LockedCell = locked[0];
             }
         }
 

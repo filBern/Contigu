@@ -36,23 +36,32 @@ namespace Contigu.Presentation
         private bool _isEndless;
 
         /// <summary>
-        /// True while the score bar is showing an enemy encounter (see
-        /// SetEncounter) instead of score/quota — set by SetEncounter,
-        /// cleared by Refresh whenever RunManager.HasActiveEncounter is
-        /// false. While true, SetScores becomes a no-op (spec extension,
-        /// explicit request: "ajouter un petit peu d'autobattling") so
-        /// GameBootstrap's own progressive-score-popup calls (written for
-        /// the quota bar, see PlayPlacementSequence) can't clobber the
-        /// encounter display they don't know exists — this vertical slice
-        /// doesn't animate enemy HP progressively, it just always shows the
-        /// current (already-final) value.
+        /// True while the score bar is hidden in favor of the enemy icon
+        /// row (see SetEncounter) — set by SetEncounter, cleared by Refresh
+        /// whenever RunManager.HasActiveEncounter is false. While true,
+        /// SetScores becomes a no-op (spec extension, explicit request:
+        /// "ajouter un petit peu d'autobattling") so GameBootstrap's own
+        /// progressive-score-popup calls (written for the quota bar, see
+        /// PlayPlacementSequence) can't re-show a bar that no longer means
+        /// anything this round.
         /// </summary>
         private bool _isEncounterMode;
+
+        /// <summary>The ScoreBar's own root (its track Image's GameObject) — hidden entirely during an encounter round rather than repurposed, on explicit request: "Enleve la progress bar pour le quota. Au lieu met une petite image en haut pour chaque ennemi". Captured by climbing from _scoreFillRect (its own parent) rather than widening BuildBar's signature just for this.</summary>
+        private GameObject _scoreBarRoot;
+
+        private const int MaxEnemyIcons = 3;
+        private const float EnemyIconSize = 44f;
+        private GameObject _enemyIconRow;
+        private readonly List<Image> _enemyIconImages = new List<Image>();
+        private readonly List<Text> _enemyIconLabels = new List<Text>();
 
         public void Build(Transform parent, Transform lueurParent)
         {
             BuildBar(parent, "ScoreBar", UITheme.ButtonSelected, top: true, out _scoreFillRect, out _scoreLabel);
+            _scoreBarRoot = _scoreFillRect.parent.gameObject;
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
+            BuildEnemyIconRow(parent);
 
             // Persistent readout displayed outside and above the combo card
             // (moved here from below the status text on explicit request —
@@ -146,6 +155,54 @@ namespace Contigu.Presentation
             label = text;
         }
 
+        /// <summary>
+        /// A row of small square portraits, one per enemy slot up to <see
+        /// cref="MaxEnemyIcons"/>, left-to-right in encounter/targeting
+        /// order (GDD §07: "Which enemy should I kill first?" — leftmost is
+        /// always the one taking damage — see RunManager.
+        /// ApplyDamageToEncounter) — spec extension, explicit request:
+        /// "Enleve la progress bar pour le quota. Au lieu met une petite
+        /// image en haut pour chaque ennemi de gauche a droite pour la
+        /// priorité". Built once, hidden until SetEncounter populates and
+        /// shows exactly as many slots as the current round's encounter has.
+        /// </summary>
+        private void BuildEnemyIconRow(Transform parent)
+        {
+            var root = UIFactory.CreateUIObject("EnemyIconRow", parent);
+            root.anchorMin = new Vector2(0.5f, 1f);
+            root.anchorMax = new Vector2(0.5f, 1f);
+            root.pivot = new Vector2(0.5f, 1f);
+            root.anchoredPosition = new Vector2(0f, -4f);
+            var layout = root.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            var fitter = root.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            _enemyIconRow = root.gameObject;
+
+            for (int i = 0; i < MaxEnemyIcons; i++)
+            {
+                var icon = UIFactory.CreatePanel(root, "EnemyIcon" + i, UITheme.Danger);
+                icon.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
+                UIFactory.AddThickOutline(icon, UITheme.Border);
+
+                var label = UIFactory.CreateText(icon.transform, "Hp", "", 12, UITheme.TextPrimary);
+                label.rectTransform.anchorMin = new Vector2(0f, 0f);
+                label.rectTransform.anchorMax = new Vector2(1f, 0f);
+                label.rectTransform.pivot = new Vector2(0.5f, 0f);
+                label.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+                label.rectTransform.sizeDelta = new Vector2(0f, 14f);
+
+                icon.gameObject.SetActive(false);
+                _enemyIconImages.Add(icon);
+                _enemyIconLabels.Add(label);
+            }
+            _enemyIconRow.SetActive(false);
+        }
+
         /// <summary>Resizes a bar's fill rect so its right edge sits at <paramref name="ratio"/> (0-1) of the bar's width.</summary>
         private static void SetRatio(RectTransform fillRect, float ratio)
         {
@@ -176,7 +233,12 @@ namespace Contigu.Presentation
             }
             else
             {
-                _isEncounterMode = false;
+                if (_isEncounterMode)
+                {
+                    _isEncounterMode = false;
+                    _scoreBarRoot.SetActive(true);
+                    _enemyIconRow.SetActive(false);
+                }
                 SetScores(run.RoundScore, run.CurrentQuota);
             }
             SetLueur(run.Lueur);
@@ -227,49 +289,60 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Repurposes the score bar to show the current encounter's front
-        /// ALIVE enemy (spec extension, explicit request: "ajouter un petit
-        /// peu d'autobattling" — see RunManager.CurrentEncounter) instead of
-        /// score/quota — same bar, same "Round N" prefix, but its label
-        /// reads "Name — HP/MaxHp" and its fill ratio tracks CurrentHp/MaxHp
-        /// instead, tinted danger-red rather than the quota bar's gold (see
-        /// UITheme.Danger — damage is a cost, not a reward). A second enemy
-        /// still alive behind the front one (see EncounterCatalog — round 4
-        /// pairs Locker+Poisoner) is called out with a "(+N in queue)"
-        /// suffix rather than its own bar, since only the front enemy can
-        /// take damage at all (see RunManager.ApplyDamageToEncounter).
-        /// Falls back to the LAST entry once every enemy is dead (the round
-        /// is ending anyway at that point — see RunManager.
-        /// CompleteRoundSuccessfully — so this is only ever visible for an
-        /// instant before the shop takes over).
+        /// Hides the quota bar entirely and shows one small square per
+        /// enemy in <paramref name="encounter"/> instead, left-to-right in
+        /// targeting order (spec extension, explicit request: "Enleve la
+        /// progress bar pour le quota. Au lieu met une petite image en
+        /// haut pour chaque ennemi de gauche a droite pour la priorité" —
+        /// the leftmost icon is always the one actually taking damage, see
+        /// RunManager.ApplyDamageToEncounter). Each icon is tinted by enemy
+        /// identity (<see cref="EnemyIconColor"/>) and carries its own
+        /// "current/max HP" label; a dead enemy's icon stays in its slot
+        /// (so the roster's own order/count never visibly shifts) but
+        /// dims heavily. Caps at <see cref="MaxEnemyIcons"/> slots — this
+        /// vertical slice never schedules more than 2 (see
+        /// EncounterCatalog's round 4).
         /// </summary>
         public void SetEncounter(IReadOnlyList<EnemyInstance> encounter)
         {
-            _isEncounterMode = true;
-
-            EnemyInstance front = encounter[encounter.Count - 1];
-            int queuedAliveBehindFront = 0;
-            for (int i = 0; i < encounter.Count; i++)
+            if (!_isEncounterMode)
             {
-                if (!encounter[i].IsDead)
-                {
-                    front = encounter[i];
-                    for (int j = i + 1; j < encounter.Count; j++)
-                    {
-                        if (!encounter[j].IsDead)
-                        {
-                            queuedAliveBehindFront++;
-                        }
-                    }
-                    break;
-                }
+                _isEncounterMode = true;
+                _scoreBarRoot.SetActive(false);
+                _enemyIconRow.SetActive(true);
             }
 
-            string roundLabel = _isEndless ? "Round " + _roundNumber : "Round " + _roundNumber + "/" + _roundCount;
-            string queueSuffix = queuedAliveBehindFront > 0 ? " (+" + queuedAliveBehindFront + " in queue)" : "";
-            _scoreLabel.text = roundLabel + "  —  " + front.Definition.Name + " — " + front.CurrentHp + " / " + front.Definition.MaxHp + " HP" + queueSuffix;
-            _scoreFillRect.GetComponent<Image>().color = UITheme.Danger;
-            SetRatio(_scoreFillRect, front.Definition.MaxHp > 0 ? (float)front.CurrentHp / front.Definition.MaxHp : 0f);
+            for (int i = 0; i < _enemyIconImages.Count; i++)
+            {
+                bool show = i < encounter.Count;
+                _enemyIconImages[i].gameObject.SetActive(show);
+                if (!show)
+                {
+                    continue;
+                }
+
+                var enemy = encounter[i];
+                _enemyIconImages[i].color = EnemyIconColor(enemy);
+                _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.Definition.MaxHp;
+            }
+        }
+
+        /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was.</summary>
+        private static Color EnemyIconColor(EnemyInstance enemy)
+        {
+            if (enemy.IsDead)
+            {
+                return new Color(0.5f, 0.5f, 0.5f, 0.35f);
+            }
+            switch (enemy.Definition.Id)
+            {
+                case EnemyId.Locker:
+                    return UITheme.LightBlue;
+                case EnemyId.Poisoner:
+                    return UITheme.Danger;
+                default:
+                    return UITheme.TextMuted;
+            }
         }
 
         /// <summary>
