@@ -3188,7 +3188,12 @@ namespace Contigu.Tests
         [Test]
         public void CartesEnchantees_GivesTwoMult_AtTwentyUpgradedCards()
         {
-            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+            // Needs Classic's own bigger 32-piece starting deck — unlike
+            // every other GiveActiveModifier-based test here, this one tags
+            // 19 distinct cards, more than Marathon's whole 13-piece deck
+            // (see InitialDeckFactory.MarathonCopiesPerShape) could ever
+            // supply regardless of RNG.
+            var run = new RunManager(new SystemRandomProvider(1));
             GiveActiveModifier(run, ModifierId.CartesEnchantees);
             run.Deck.TagGoldenTokensRandom(19, new SystemRandomProvider(2)); // 1 (baseline) + 19 = 20 -> 20/10 = 2.0
 
@@ -3262,16 +3267,43 @@ namespace Contigu.Tests
         // "Currently ..." line for every progressive/incremental modifier,
         // on explicit request).
 
-        /// <summary>Plays one piece guaranteed to carry a trait (every deck token must already be tagged, e.g. via TagGoldenTokensRandom(Deck.DeckCount, ...)) and returns the outcome — used to drive Experience's _specialPiecesPlayedCount counter up by exactly 1 per call.</summary>
+        /// <summary>
+        /// Plays one piece guaranteed to carry a trait (every deck token must
+        /// already be tagged, e.g. via TagGoldenTokensRandom(Deck.DeckCount,
+        /// ...)) and returns the outcome — used to drive Experience's
+        /// _specialPiecesPlayedCount counter up by exactly 1 per call. Tries
+        /// every occupied hand slot (every one already qualifies as
+        /// "special" per the tagging precondition above, so there's no need
+        /// to churn for a specific match) rather than just the first one,
+        /// and shuffles for a fresh hand if NONE of the 3 fit anywhere right
+        /// now — same resilience PlayRoundToAwaitingShop already relies on
+        /// for a tight board — instead of asserting failure over one
+        /// specific piece's own placement luck.
+        /// </summary>
         private static PlacementOutcome PlaceOneSpecialPiece(RunManager run)
         {
-            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue);
-            var token = run.Deck.Hand[slot].Value;
-            var rotation = run.Deck.HandRotations[slot];
-            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            var anchor = FindAnyValidAnchor(run.Grid, shape);
-            Assert.IsTrue(anchor.HasValue, "Ran out of room while playing special pieces");
-            return run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            int guard = 0;
+            while (true)
+            {
+                for (int i = 0; i < DeckManager.HandSize; i++)
+                {
+                    if (!run.Deck.Hand[i].HasValue)
+                    {
+                        continue;
+                    }
+                    var token = run.Deck.Hand[i].Value;
+                    var rotation = run.Deck.HandRotations[i];
+                    var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+                    var anchor = FindAnyValidAnchor(run.Grid, shape);
+                    if (anchor.HasValue)
+                    {
+                        return run.PlacePiece(i, anchor.Value.x, anchor.Value.y);
+                    }
+                }
+                Assert.IsTrue(run.ShuffleHand(), "Ran out of room AND shuffles while playing special pieces");
+                guard++;
+                Assert.Less(guard, 50, "Should find a placeable special piece well within a few reshuffles");
+            }
         }
 
         [Test]
