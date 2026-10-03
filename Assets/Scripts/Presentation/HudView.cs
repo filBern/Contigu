@@ -366,41 +366,49 @@ namespace Contigu.Presentation
                 }
 
                 var enemy = encounter[i];
-                _enemyIconImages[i].color = EnemyIconColor(enemy);
+                _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, enemy.IsDead);
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.Definition.MaxHp;
                 _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, enemy.Definition.Description);
             }
         }
 
         /// <summary>
-        /// Overrides just one enemy slot's HP label, without touching
-        /// anything else — lets the presentation layer hold a slot's HP at
-        /// its pre-placement value through the score cascade and then
-        /// animate it down in sync with the combo total (spec extension,
-        /// explicit request: "il faut faire les dégâts seulement à la fin
-        /// du calcule ... une animation où on descend le pointage du combo
-        /// pour le transférer en dégâts progressif"), the same "presentation
-        /// layer animates progressively" idea as <see cref="SetScores"/>.
-        /// No-op if <paramref name="index"/> is out of range or its slot
-        /// isn't currently shown.
+        /// Overrides just one enemy slot's HP label AND dead/alive tint,
+        /// without touching anything else — lets the presentation layer
+        /// hold a slot's HP (and its icon's color) at its pre-placement
+        /// value through the score cascade and then animate both down in
+        /// sync with the combo total (spec extension, explicit requests:
+        /// "il faut faire les dégâts seulement à la fin du calcule ... une
+        /// animation où on descend le pointage du combo pour le transférer
+        /// en dégâts progressif", then "les ennemies deviennent mort avant
+        /// l'animation de dégât, il faut vraiment attendre que l'ennemi
+        /// soit rendu à 0hp" — <paramref name="isDead"/> lets the caller
+        /// keep the icon tinted as still-alive throughout the drain and
+        /// only flip it to the dead/gray tint on the very last frame, once
+        /// the displayed HP has actually reached 0, instead of the real
+        /// model's already-dead state leaking into the icon's color early),
+        /// the same "presentation layer animates progressively" idea as
+        /// <see cref="SetScores"/>. No-op if <paramref name="index"/> is out
+        /// of range or its slot isn't currently shown.
         /// </summary>
-        public void SetEnemyHpDisplay(int index, int hp, int maxHp)
+        public void SetEnemyHpDisplay(int index, int hp, int maxHp, EnemyId identity, bool isDead)
         {
             if (index < 0 || index >= _enemyIconLabels.Count || !_enemySlots[index].activeSelf)
             {
                 return;
             }
             _enemyIconLabels[index].text = hp + "/" + maxHp;
+            _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
         }
 
-        /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was.</summary>
-        private static Color EnemyIconColor(EnemyInstance enemy)
+        /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was. Takes <paramref name="isDead"/> explicitly rather than reading EnemyInstance.IsDead directly so SetEnemyHpDisplay's held/animated calls can report death on their own schedule, independent of the live model's already-updated state (see its own doc comment).</summary>
+        private static Color EnemyIconColor(EnemyId identity, bool isDead)
         {
-            if (enemy.IsDead)
+            if (isDead)
             {
                 return new Color(0.5f, 0.5f, 0.5f, 0.35f);
             }
-            switch (enemy.Definition.Id)
+            switch (identity)
             {
                 case EnemyId.Locker:
                     return UITheme.LightBlue;

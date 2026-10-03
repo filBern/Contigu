@@ -6841,3 +6841,40 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      construction de `TooltipView` dans `GameBootstrap.BuildUI` est
      déplacée avant celle de `HudView` (au lieu d'après) pour pouvoir
      la lui passer.
+- **Carte du combo clampée à l'écran** : sur rapport explicite ("Dependant
+  de la resolution le pointage du combo est un peu hors ecran"), sur un
+  ratio d'écran étroit/portrait la carte du combo (positionnée au milieu
+  de l'espace entre le bord de la grille et le bord de l'écran) pouvait
+  être plus large que cet espace et dépasser hors de l'écran. `GameBootstrap.
+  BuildUI` force maintenant un rebuild de layout de `comboRect` AVANT de
+  calculer sa position (au lieu d'après), pour connaître sa largeur réelle,
+  puis clampe `sidePanelCenterX` (partagé avec le readout Lueur et, en
+  négatif, `ModifierPanelView`, plus étroit) pour que le bord droit de la
+  carte ne dépasse jamais le bord de l'écran, quitte à se rapprocher un peu
+  plus de la grille que le centrage parfait ne le voudrait.
+- **L'icône d'ennemi ne devient "morte" qu'une fois le drain terminé** : sur
+  rapport explicite ("Les ennemies deviennent mort avant l'animation de
+  dégât, il faut vraiment attendre que l'ennemi soit rendu à 0hp"), même si
+  le label HP restait bien tenu à sa valeur d'avant pendant la cascade (voir
+  bullet précédent), `HudView.SetEncounter` lisait `EnemyInstance.IsDead`
+  en direct sur le modèle — déjà vrai dès `RunManager.PlacePiece` — donc la
+  teinte grise "mort" de l'icône apparaissait instantanément, avant même le
+  délai d'1s et l'animation de drain. `HudView.SetEnemyHpDisplay` prend
+  maintenant `EnemyId identity` et `bool isDead` explicites (au lieu de lire
+  le modèle) pour retenir la teinte "vivant" tout au long du hold et du
+  drain, et ne bascule la teinte à "mort" que sur la toute dernière frame de
+  `GameBootstrap.DrainComboIntoDamage`, une fois le HP affiché réellement
+  descendu à 0.
+- **Le Shuffle manuel ne rafraîchissait pas la grille** : sur rapport
+  explicite ("j'ai fait un shuffle avant d'avoir 0 slots rempli et les
+  ennemies n'ont pas trigger leur effet. C'est pas à chaque 3 pièce joué
+  forcement") — l'effet de Shuffle de Locker/Poisoner se déclenchait bel et
+  bien dans le modèle (`RunManager.ShuffleHand` appelle déjà `DrawFreshHand`
+  → `ResolveEnemyShuffleEffects`, peu importe si la main était pleine ou
+  vide), mais `GameBootstrap.OnShuffleRequested` ne rafraîchissait que la
+  main (`_handView.Refresh()`), jamais la grille — le nouveau verrou de
+  Locker ou la nouvelle tuile empoisonnée de Poisoner ne s'affichaient donc
+  jamais après un clic sur le bouton Shuffle, seulement après un refill
+  automatique de fin de main (où `_gridView.RefreshHoldingClearedCells`
+  tourne déjà). Ajout d'un `_gridView.Refresh()` après un shuffle manuel
+  réussi.

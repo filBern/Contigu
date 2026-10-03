@@ -520,13 +520,29 @@ namespace Contigu.Presentation
             }
             float halfCanvasWidth = canvasWidth * 0.5f;
             float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
+
+            // Clamp so the combo card — the widest thing placed at
+            // sidePanelCenterX (wider than ModifierPanelView's own fixed
+            // 230, which mirrors this same X on the left) — never hangs off
+            // the actual screen edge on a narrow/portrait aspect ratio
+            // (explicit report: "Dependant de la resolution le pointage du
+            // combo est un peu hors ecran"). Needs the card's real
+            // (content-fitted) width, so the rebuild that used to happen
+            // further down runs here first instead. Prioritizes staying
+            // on-screen over keeping the panel perfectly centered in its gap.
+            LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
+            const float SidePanelEdgeMargin = 12f;
+            float maxSidePanelCenterX = halfCanvasWidth - comboRect.rect.width * 0.5f - SidePanelEdgeMargin;
+            if (sidePanelCenterX > maxSidePanelCenterX)
+            {
+                sidePanelCenterX = maxSidePanelCenterX;
+            }
             comboRect.anchoredPosition = new Vector2(sidePanelCenterX, 65f);
 
             var lueurRect = _hudView.LueurLabelTransform;
             lueurRect.anchorMin = new Vector2(0.5f, 0.5f);
             lueurRect.anchorMax = new Vector2(0.5f, 0.5f);
             lueurRect.pivot = new Vector2(0.5f, 0.5f);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
             lueurRect.anchoredPosition = new Vector2(
                 sidePanelCenterX,
@@ -716,6 +732,18 @@ namespace Contigu.Presentation
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
             _handView.Refresh();
+            // A manual Shuffle resolves each alive enemy's own On-Shuffle
+            // effect exactly like the automatic post-placement refill does
+            // (RunManager.DrawFreshHand/ResolveEnemyShuffleEffects — not
+            // gated on the hand having actually run out: "C'est pas à
+            // chaque 3 pièce joué forcement"), which can move Locker's lock
+            // or add a new Poisoner tile. Those are GRID effects, not hand
+            // effects, so without this refresh the model updates correctly
+            // but the lock/poison badge never appears on screen (explicit
+            // report: "j'ai fait un shuffle avant d'avoir 0 slots rempli et
+            // les ennemies n'ont pas trigger leur effet" — it DID trigger,
+            // it just wasn't drawn).
+            _gridView.Refresh();
             RefreshShuffleButton();
             SetStatusText(IdleStatusMessage);
             HandleStateTransition(_run.State);
@@ -756,6 +784,7 @@ namespace Contigu.Presentation
             // why index 0 among the alive ones is always the one hit).
             int damagedEnemyIndex = FindFrontAliveEnemyIndex();
             int enemyHpBefore = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
+            EnemyId damagedEnemyId = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.Id : default;
 
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
@@ -809,7 +838,12 @@ namespace Contigu.Presentation
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
             if (damagedEnemyIndex >= 0)
             {
-                _hudView.SetEnemyHpDisplay(damagedEnemyIndex, enemyHpBefore, enemyMaxHp);
+                // isDead: false — even if this hit was lethal, the player
+                // hasn't seen the HP actually reach 0 yet, so the icon must
+                // still read as alive here (explicit request: "les ennemies
+                // deviennent mort avant l'animation de dégât, il faut
+                // vraiment attendre que l'ennemi soit rendu à 0hp").
+                _hudView.SetEnemyHpDisplay(damagedEnemyIndex, enemyHpBefore, enemyMaxHp, damagedEnemyId, false);
             }
             SetStatusText(IdleStatusMessage);
 
@@ -820,7 +854,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, enemyHpBefore, enemyHpAfter, enemyMaxHp));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp));
         }
 
         /// <summary>Index of the enemy <see cref="Core.RunManager.ApplyDamageToEncounter"/> would hit right now — the first ALIVE one in encounter order — or -1 if there's no active encounter this round. Read BEFORE PlacePiece so OnCellClicked can hold that slot's HP display at its pre-placement value (see OnCellClicked/PlayPlacementSequence).</summary>
@@ -857,7 +891,7 @@ namespace Contigu.Presentation
         /// they're still reading their score.
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
-            int damagedEnemyIndex, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp)
+            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1246,7 +1280,7 @@ namespace Contigu.Presentation
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
                 yield return new WaitForSeconds(1f);
-                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, enemyHpBefore, enemyHpAfter, enemyMaxHp);
+                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
             }
 
             _isPlayingPlacementSequence = false;
@@ -1265,7 +1299,7 @@ namespace Contigu.Presentation
         /// after PlayPlacementSequence's own score/clear cascade and 1s
         /// pause have already finished.
         /// </summary>
-        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, int hpBefore, int hpAfter, int maxHp)
+        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
         {
             const float duration = 0.6f;
             float t = 0f;
@@ -1274,11 +1308,17 @@ namespace Contigu.Presentation
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
                 _comboView.SetTotal(Mathf.RoundToInt(Mathf.Lerp(startTotal, 0f, p)));
-                _hudView.SetEnemyHpDisplay(enemyIndex, Mathf.RoundToInt(Mathf.Lerp(hpBefore, hpAfter, p)), maxHp);
+                // isDead stays false for every in-between frame, even if the
+                // lerp happens to pass through 0 on its way — the icon only
+                // turns "dead" on the very last frame below, once the HP
+                // shown has truly finished landing on hpAfter (explicit
+                // request: "il faut vraiment attendre que l'ennemi soit
+                // rendu à 0hp").
+                _hudView.SetEnemyHpDisplay(enemyIndex, Mathf.RoundToInt(Mathf.Lerp(hpBefore, hpAfter, p)), maxHp, identity, false);
                 yield return null;
             }
             _comboView.SetTotal(0);
-            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp);
+            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp, identity, hpAfter <= 0);
         }
 
         /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — used by the two Mult catch-up popups above so a progressive modifier's true fractional contribution (Densité, Cartes Enchantées, Expérience) reads clearly without cluttering the common case (every other modifier, always a whole number) with a needless ".0".</summary>
