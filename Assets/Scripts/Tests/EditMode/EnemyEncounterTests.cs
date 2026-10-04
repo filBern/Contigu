@@ -688,6 +688,25 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void ShuffleHand_SetsThiefStoleOnLastShuffle_OnlyWhenAnAliveThiefActuallySteals()
+        {
+            // Explicit request: "Thief manque un effet visuel pour
+            // indiquer qu'il vole une pièce" — this flag is what
+            // Presentation reads right after ShuffleHand/PlacePiece to
+            // know whether to show that effect at all (see
+            // GameBootstrap.PlayThiefStealEffect).
+            var withThief = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(withThief, 6); // round 7 (index 6): Thief + Leech
+            Assert.IsTrue(withThief.ShuffleHand());
+            Assert.IsTrue(withThief.ThiefStoleOnLastShuffle);
+
+            var withoutThief = new RunManager(new SystemRandomProvider(1));
+            // Round 1 (index 0): Basic alone — no Thief in this encounter.
+            Assert.IsTrue(withoutThief.ShuffleHand());
+            Assert.IsFalse(withoutThief.ThiefStoleOnLastShuffle);
+        }
+
+        [Test]
         public void Reclaimer_HealsByTheExactMagnitude_OfAnyNegativePoisonScoreEvent()
         {
             // Redesign, explicit request: "Chaque points négatifs triggered

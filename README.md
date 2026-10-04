@@ -7182,3 +7182,38 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   l'ancien filtre `IsFilled` pour rester déterministes utilisent
   maintenant un nouveau helper `PoisonEveryCellExcept` qui empoisonne
   toutes les autres cases pour isoler une cible unique.
+- **Effet visuel manquant pour le vol de Thief + contamination révélée
+  trop tôt** : sur demande explicite ("Thief manque un effet visuel
+  pour indiquer qu'il vole une pièce et donc il réduit ton deck de 1 a
+  chaque shuffle jusqu'à ce qu'il meurt" + "Lorsqu'une tuile empoisonné
+  est triggered, on attend la fin du comptage de point avant de la
+  faire reproduire a une tuile adjacente"). Pour Thief : contrairement
+  aux effets de Locker/Poisoner (basés sur la grille, découverts par
+  `GameBootstrap.SnapshotEnemyEffectCells`), le vol de Thief ne touche
+  que la main — rien à diff. Nouveau `RunManager.ThiefStoleOnLastShuffle`
+  (mis à jour dans `DrawFreshHand`, `ResolveThiefShuffleEffect` retourne
+  maintenant un bool), lu par un nouveau `GameBootstrap.
+  PlayThiefStealEffect` (popup "Stole a piece!" sur l'icône de Thief via
+  un nouveau `HudView.GetEnemyIconTransform`, + le son PickUpPiece) —
+  appelé immédiatement après un Shuffle manuel, ou différé jusqu'à la
+  toute fin de `PlayPlacementSequence` (après `_handView.Refresh()`)
+  quand le vol vient de l'auto-refill déclenché par un placement, pour
+  rester synchronisé avec le reste des effets différés. Pour la
+  contamination : sa cause réelle n'était PAS le timing de
+  `ApplyPoisonScoreRule` lui-même (déjà appelé au bon moment dans
+  `RunManager.PlacePiece`, et déjà couvert par le même avant/après diff
+  que Locker/Poisoner via `SnapshotEnemyEffectCells`, qui lit
+  `enemy.PoisonedCells` sans distinction) mais `GridView.ClearHover` :
+  `GameBootstrap.OnCellClicked` appelait `_gridView.SetSelectedShape(null)`
+  juste après le placement, dont `ClearHover` redessine directement
+  depuis l'état LIVE de la grille chaque cellule de l'empreinte de hover
+  — presque toujours les cases que CE placement vient de poser — avant
+  même que `RefreshHoldingClearedCells` (qui respecte le différé) ait pu
+  s'exécuter. Si la contamination retombait justement sur une de ces
+  cases (très probable : la pièce qui triggered le poison est presque
+  toujours adjacente à lui), son badge apparaissait donc instantanément.
+  Nouveau `GridView.ClearSelectionStateOnly` : même reset d'état que
+  `SetSelectedShape(null)`, mais SANS le redessin par cellule de
+  `ClearHover` — utilisé à la place dans `OnCellClicked`, puisque
+  `RefreshHoldingClearedCells`, juste après, redessine de toute façon
+  toute la grille avec le bon traitement différé.

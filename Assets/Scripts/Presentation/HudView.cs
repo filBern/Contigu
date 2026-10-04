@@ -417,6 +417,16 @@ namespace Contigu.Presentation
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
         }
 
+        /// <summary>Anchor for a feedback popup on a given enemy slot's own icon (same "badge transform" idea as ModifierPanelView.GetBadgeTransform) — used for Thief's steal effect (explicit request: "Thief manque un effet visuel pour indiquer qu'il vole une pièce"). Null if out of range or that slot isn't currently shown.</summary>
+        public RectTransform GetEnemyIconTransform(int index)
+        {
+            if (index < 0 || index >= _enemyIconImages.Count || !_enemySlots[index].activeSelf)
+            {
+                return null;
+            }
+            return _enemyIconImages[index].rectTransform;
+        }
+
         /// <summary>
         /// Fades a defeated enemy's icon and HP label out to fully
         /// transparent over <paramref name="duration"/> seconds — explicit

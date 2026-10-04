@@ -789,6 +789,7 @@ namespace Contigu.Presentation
             // les ennemies n'ont pas trigger leur effet" — it DID trigger,
             // it just wasn't drawn).
             _gridView.Refresh();
+            PlayThiefStealEffect();
             RefreshShuffleButton();
             SetStatusText(IdleStatusMessage);
             HandleStateTransition(_run.State);
@@ -855,6 +856,14 @@ namespace Contigu.Presentation
             }
             SfxManager.Play(SfxId.ValidDrop);
 
+            // Only valid to read right after a call that actually ran
+            // DrawFreshHand THIS placement (see handWasAboutToAutoRefill) —
+            // RunManager.ThiefStoleOnLastShuffle otherwise still holds
+            // whatever an EARLIER, unrelated Shuffle left it at, which
+            // would wrongly re-trigger PlayThiefStealEffect for a
+            // placement that never shuffled at all.
+            bool thiefStoleThisPlacement = handWasAboutToAutoRefill && _run.ThiefStoleOnLastShuffle;
+
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.MaxHp : 0;
             // Only cells whose locked/poisoned status actually CHANGED this
@@ -889,7 +898,15 @@ namespace Contigu.Presentation
             }
 
             _handView.SetShufflePulsing(false);
-            _gridView.SetSelectedShape(null);
+            // ClearSelectionStateOnly, NOT SetSelectedShape(null) — the
+            // latter's ClearHover would redraw the hover footprint (almost
+            // always this exact placement's own cells) from LIVE grid
+            // state, which can leak a contamination spread or an
+            // auto-refill-triggered lock/poison move early if it landed on
+            // one of them (see ClearSelectionStateOnly's own doc comment).
+            // RefreshHoldingClearedCells below redraws every cell anyway,
+            // with the correct held/deferred treatment.
+            _gridView.ClearSelectionStateOnly();
             _handView.ClearSelection();
 
             // Hold any completed line/column, or a Void/Kamikaze destruction,
@@ -957,7 +974,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, deferredRevealCells));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, deferredRevealCells, thiefStoleThisPlacement));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -1013,6 +1030,40 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
+        /// Thief's own visual cue (explicit request: "Thief manque un
+        /// effet visuel pour indiquer qu'il vole une pièce") — a popup on
+        /// its own enemy icon plus the same whoosh PickUpPiece already uses
+        /// elsewhere for "a piece just left the board". RunManager.
+        /// ThiefStoleOnLastShuffle is the only way Presentation can tell
+        /// this happened at all, since (unlike Locker's lock/Poisoner's
+        /// poison) a hand-only effect leaves no trace for
+        /// SnapshotEnemyEffectCells to diff. No-op if nothing actually
+        /// stole this Shuffle, or if Thief's own icon isn't on screen for
+        /// some reason.
+        /// </summary>
+        private void PlayThiefStealEffect()
+        {
+            if (!_run.ThiefStoleOnLastShuffle)
+            {
+                return;
+            }
+            var encounter = _run.CurrentEncounter;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (encounter[i].Definition.Id == EnemyId.Thief)
+                {
+                    var anchor = _hudView.GetEnemyIconTransform(i);
+                    if (anchor != null)
+                    {
+                        _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger);
+                    }
+                    SfxManager.Play(SfxId.PickUpPiece);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
         /// Plays a placement's full feedback sequence in order: first each
         /// Lueur group, one at a time — pulsing its cells and flying a popup
         /// to the Lueur label, advancing that display progressively as it
@@ -1029,7 +1080,7 @@ namespace Contigu.Presentation
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
-            List<Vector2Int> deferredRevealCells)
+            List<Vector2Int> deferredRevealCells, bool thiefStoleThisPlacement)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1465,6 +1516,10 @@ namespace Contigu.Presentation
             // HandView.RefreshHoldingEmpty) — a harmless no-op resync
             // otherwise.
             _handView.Refresh();
+            if (thiefStoleThisPlacement)
+            {
+                PlayThiefStealEffect();
+            }
 
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);

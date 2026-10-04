@@ -1630,6 +1630,21 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// Whether the most recently resolved Shuffle (manual <see
+        /// cref="ShuffleHand"/>, or the auto-refill <see cref="PlacePiece"/>
+        /// triggers when a placement empties the hand) actually stole a
+        /// piece via an alive Thief — explicit request: "Thief manque un
+        /// effet visuel pour indiquer qu'il vole une pièce". Grid-based
+        /// enemy effects (Locker's lock, Poisoner's poison) are discovered
+        /// by Presentation through a before/after snapshot of the grid
+        /// itself (see GameBootstrap.SnapshotEnemyEffectCells); Thief's
+        /// steal touches only the hand, which has no such snapshot, so this
+        /// flag is the equivalent for Presentation to read right after
+        /// calling ShuffleHand/PlacePiece and show a one-off effect.
+        /// </summary>
+        public bool ThiefStoleOnLastShuffle { get; private set; }
+
+        /// <summary>
         /// A Shuffle TRIGGERED DURING this round — PlacePiece's own
         /// post-placement empty-hand refill, and a manual ShuffleHand — per
         /// the GDD's own definition, resolving each alive enemy's own
@@ -1647,10 +1662,7 @@ namespace Contigu.Core
                 ResolveEnemyShuffleEffects();
             }
             Deck.DrawNewHand();
-            if (HasActiveEncounter)
-            {
-                ResolveThiefShuffleEffect();
-            }
+            ThiefStoleOnLastShuffle = HasActiveEncounter && ResolveThiefShuffleEffect();
         }
 
         private void EvaluateRoundEnd()
@@ -2004,20 +2016,27 @@ namespace Contigu.Core
         /// Unlike every other enemy's On-Shuffle effect (grid-based,
         /// resolved via ResolveEnemyShuffleEffects BEFORE Deck.DrawNewHand),
         /// Thief needs the FRESH hand to already exist to steal from it —
-        /// so DrawFreshHand calls this separately, AFTER the deal. Invisible
-        /// to the player either way: nothing is shown until the whole
-        /// Shuffle resolves.
+        /// so DrawFreshHand calls this separately, AFTER the deal. Returns
+        /// whether any alive Thief actually stole something (see
+        /// ThiefStoleOnLastShuffle), so Presentation can show its own
+        /// effect for it — the steal itself still happens invisibly here,
+        /// before anything is drawn either way.
         /// </summary>
-        private void ResolveThiefShuffleEffect()
+        private bool ResolveThiefShuffleEffect()
         {
+            bool stole = false;
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
                 if (!enemy.IsDead && enemy.Definition.Id == EnemyId.Thief)
                 {
-                    Deck.StealRandomHandTile(_rng);
+                    if (Deck.StealRandomHandTile(_rng))
+                    {
+                        stole = true;
+                    }
                 }
             }
+            return stole;
         }
 
         /// <summary>Every currently-poisoned position across every alive enemy instance in <see cref="CurrentEncounter"/>, regardless of which one owns it (Poisoner, Plague, or a cell "contamination" spread onto — see ContaminateAdjacentCell) — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>

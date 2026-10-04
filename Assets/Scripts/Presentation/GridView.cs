@@ -395,6 +395,33 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
+        /// Same state reset as <see cref="SetSelectedShape"/>(null), but
+        /// WITHOUT ClearHover's own per-cell <see cref="RefreshCell"/> calls
+        /// — those read each hover-footprint cell's LIVE grid state, which
+        /// leaks a just-triggered "contamination" spread (see RunManager.
+        /// ContaminateAdjacentCell) or an auto-refill-triggered lock/poison
+        /// move early whenever it happens to land on the piece's own
+        /// just-placed cell (almost always also the hover footprint, since
+        /// a click places where it was last hovered) — before the score
+        /// cascade has even started (follow-up explicit request: "on
+        /// attend la fin du comptage de point avant de la faire reproduire
+        /// à une tuile adjacente"). Used by OnCellClicked right before its
+        /// own RefreshHoldingClearedCells call, which is about to redraw
+        /// EVERY cell anyway (this one included) with the correct
+        /// held/deferred treatment — so the state reset here only needs to
+        /// clear the bookkeeping, not pre-empt that redraw.
+        /// </summary>
+        public void ClearSelectionStateOnly()
+        {
+            _selectedShape = null;
+            _selectedColor = null;
+            _selectedTrait = null;
+            _lastHoverOrigin = null;
+            _hoveredFootprint.Clear();
+            _lineClearPreviewCells.Clear();
+        }
+
+        /// <summary>
         /// The last placement ORIGIN actually rendered by OnCellHoverEnter
         /// below (not the raw x/y it was called with — several raw cells
         /// can resolve to the same origin, e.g. via GetPlacementOrigin's own
