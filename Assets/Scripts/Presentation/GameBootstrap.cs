@@ -708,12 +708,31 @@ namespace Contigu.Presentation
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
-            SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
+
+            // Checked up front instead of letting the player discover it by
+            // clicking around the board (explicit request: "on empêche le
+            // joueur de perdre son temps a essayer de trouver un endroit a
+            // placer la piece") — if this exact piece has nowhere legal to
+            // go anywhere on the grid, say so immediately and point at
+            // Shuffle with a slow pulse ("on devrait mettre en valeur le
+            // shuffle button en même temps") instead of the usual "drag to
+            // place" prompt.
+            if (!_run.Grid.HasAnyValidPlacement(new[] { shape }))
+            {
+                _handView.SetShufflePulsing(true);
+                SetStatusText("This piece can't be placed anywhere — try shuffling your hand.");
+            }
+            else
+            {
+                _handView.SetShufflePulsing(false);
+                SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
+            }
         }
 
         /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>
         private void OnHandSelectionCleared()
         {
+            _handView.SetShufflePulsing(false);
             _gridView.SetSelectedShape(null);
             SetStatusText(IdleStatusMessage);
         }
@@ -738,6 +757,7 @@ namespace Contigu.Presentation
                 return;
             }
             SfxManager.Play(SfxId.Shuffle);
+            _handView.SetShufflePulsing(false);
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
             _handView.Refresh();
@@ -852,6 +872,7 @@ namespace Contigu.Presentation
                 }
             }
 
+            _handView.SetShufflePulsing(false);
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
 
@@ -1539,6 +1560,11 @@ namespace Contigu.Presentation
 
         private void HandleStateTransition(RunState state)
         {
+            // Stops a Shuffle-button pulse left running from a selected
+            // piece that had nowhere to go, in case the run ends (or moves
+            // to the shop) before the player ever clears that selection
+            // themselves.
+            _handView.SetShufflePulsing(false);
             switch (state)
             {
                 case RunState.AwaitingShop:

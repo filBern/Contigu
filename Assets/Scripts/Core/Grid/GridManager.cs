@@ -2407,14 +2407,14 @@ namespace Contigu.Core
             return result;
         }
 
-        /// <summary>Same rule as <see cref="IsRowComplete"/> (every unlocked cell filled, at least one unlocked cell), but also treats every cell in <paramref name="footprint"/> as filled, regardless of its actual current state — the hypothetical placement <see cref="PreviewClearedLineCells"/> checks.</summary>
+        /// <summary>Same rule as <see cref="IsRowComplete"/> (every unlocked cell filled, at least one unlocked cell, a Locker obstacle cell never skipped — see Cell.IsLineClearObstacle), but also treats every cell in <paramref name="footprint"/> as filled, regardless of its actual current state — the hypothetical placement <see cref="PreviewClearedLineCells"/> checks.</summary>
         private bool IsRowCompleteWithFootprint(int y, HashSet<Vector2Int> footprint)
         {
             bool hasUnlockedCell = false;
             for (int x = 0; x < Size; x++)
             {
                 var cell = _cells[x, y];
-                if (cell.IsLocked)
+                if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
                 }
@@ -2434,7 +2434,7 @@ namespace Contigu.Core
             for (int y = 0; y < Size; y++)
             {
                 var cell = _cells[x, y];
-                if (cell.IsLocked)
+                if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
                 }

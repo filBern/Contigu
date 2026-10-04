@@ -7011,3 +7011,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   Changé pour `== 0` et affiche maintenant le vrai montant signé en rouge
   quand négatif, même pattern que les autres popups de score déjà
   corrigés pour le poison.
+- **Le highlight de prévisualisation de clear ignorait aussi le verrou de
+  Locker** : rapport de suivi, après confirmation que le vrai clear était
+  bien bloqué ("En fait je ne peux pas line break mais j'ai toujours le
+  highlight de line clear avant de deposer une pièce"). `GridManager.
+  PreviewClearedLineCells` (le highlight doré au survol) a son propre
+  couple `IsRowCompleteWithFootprint`/`IsColumnCompleteWithFootprint`,
+  séparé de `IsRowComplete`/`IsColumnComplete`, qui avait le même bug
+  "ignore toute cellule verrouillée" — pas couvert par le premier fix. Même
+  correctif appliqué : une cellule `IsLineClearObstacle` n'est plus
+  ignorée. Nouveau test `Locker_LockedCellAlsoBlocksTheLineClearPreviewHighlight`.
+- **Pièce injouable → message + pulse du bouton Shuffle** : sur demande
+  explicite ("Can't place piece error message (on empêche le joueur de
+  perdre son temps a essayer de trouver un endroit a placer la piece). On
+  devrait mettre en valeur le shuffle button en même temps (slow pulse)").
+  `GameBootstrap.OnHandSlotSelected` vérifie maintenant immédiatement
+  `GridManager.HasAnyValidPlacement` pour la pièce sélectionnée ; si elle
+  n'a nulle part où aller, affiche "This piece can't be placed anywhere —
+  try shuffling your hand." au lieu du prompt habituel et démarre un pulse
+  lent (nouveau `HandView.SetShufflePulsing`, même "breathing" sinusoïdal
+  que le pulse du texte de statut idle) sur le bouton Shuffle. Le pulse
+  s'arrête dès que la sélection change/se vide, après un shuffle, un
+  placement réussi, ou une transition de state (victoire/défaite/shop).
+- **Bouton New Run centré en cas de défaite** : sur demande explicite ("Si
+  on a perdu la partie, le bouton new run doit être centré
+  horizontalement"). `EndScreenView` positionnait "New Run" à +120 en X
+  pour s'asseoir à côté du bouton "Continue (Endless)" — correct sur
+  Victoire, mais le bouton Continue est caché sur Défaite
+  (`_continueButton.gameObject.SetActive(false)`) sans que New Run soit
+  repositionné, le laissant décentré vers la droite tout seul.
+  `ShowDefeat` le recentre maintenant à 0 ; `ShowVictory` le replace à
+  +120 (le même bouton est réutilisé entre les deux écrans).

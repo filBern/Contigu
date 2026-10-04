@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -42,6 +43,12 @@ namespace Contigu.Presentation
         // everywhere else as the "not placed yet" cue.
         private const float CursorGhostValidAlpha = 0f;
         private const float CursorGhostInvalidAlpha = 0.5f;
+        // Same slow "breathing" feel as GameBootstrap's idle status-text
+        // pulse (StatusPulseAmplitude/Speed) — explicit request: "On
+        // devrait mettre en valeur le shuffle button en même temps (slow
+        // pulse)".
+        private const float ShufflePulseAmplitude = 0.08f;
+        private const float ShufflePulseSpeed = 1.5f;
 
         public event Action<int> SlotSelected;
 
@@ -61,6 +68,7 @@ namespace Contigu.Presentation
         private Text[] _slotLockLabels;
         private Button _shuffleButton;
         private Text _shuffleCountLabel;
+        private Coroutine _shufflePulseCoroutine;
         private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
@@ -211,6 +219,45 @@ namespace Contigu.Presentation
             _shuffleCountLabel.text = remaining.ToString();
             _shuffleAllowed = canShuffle;
             _shuffleButton.interactable = _interactable && _shuffleAllowed;
+        }
+
+        /// <summary>
+        /// Starts/stops a slow "breathing" scale pulse on the Shuffle
+        /// button — GameBootstrap turns this on the moment the player
+        /// selects a piece that has nowhere valid to go anywhere on the
+        /// board (explicit request: "on empêche le joueur de perdre son
+        /// temps a essayer de trouver un endroit a placer la piece ... on
+        /// devrait mettre en valeur le shuffle button en même temps (slow
+        /// pulse)"), pointing them at the way out instead of leaving them to
+        /// discover Shuffle on their own. Same continuous sine-wave idea as
+        /// GameBootstrap's own idle status-text pulse, just on this button.
+        /// </summary>
+        public void SetShufflePulsing(bool pulsing)
+        {
+            if (pulsing)
+            {
+                if (_shufflePulseCoroutine == null)
+                {
+                    _shufflePulseCoroutine = StartCoroutine(PulseShuffleButton());
+                }
+                return;
+            }
+            if (_shufflePulseCoroutine != null)
+            {
+                StopCoroutine(_shufflePulseCoroutine);
+                _shufflePulseCoroutine = null;
+                _shuffleButton.transform.localScale = Vector3.one;
+            }
+        }
+
+        private IEnumerator PulseShuffleButton()
+        {
+            while (true)
+            {
+                float scale = 1f + ShufflePulseAmplitude * Mathf.Sin(Time.time * ShufflePulseSpeed);
+                _shuffleButton.transform.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
         }
 
         /// <summary>

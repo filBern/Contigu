@@ -17,6 +17,7 @@ namespace Contigu.Presentation
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
         private UnityEngine.UI.Button _continueButton;
+        private RectTransform _restartButtonRect;
 
         public RectTransform Build(Transform parent)
         {
@@ -59,6 +60,7 @@ namespace Contigu.Presentation
 
             var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UISprites.ChooseButtonBackground, 18);
             var rect = restartBtn.GetComponent<RectTransform>();
+            _restartButtonRect = rect;
             rect.anchorMin = new Vector2(0.5f, 0.28f);
             rect.anchorMax = new Vector2(0.5f, 0.28f);
             rect.pivot = new Vector2(0.5f, 0.5f);
@@ -80,6 +82,8 @@ namespace Contigu.Presentation
             _subtitleText.text = "Run complete — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             _continueButton.gameObject.SetActive(true);
+            // Side by side with Continue — see Build's own -120/+120 comment.
+            _restartButtonRect.anchoredPosition = new Vector2(120f, 0f);
             _root.gameObject.SetActive(true);
         }
 
@@ -90,6 +94,12 @@ namespace Contigu.Presentation
             _subtitleText.text = "Quota not reached — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             _continueButton.gameObject.SetActive(false);
+            // No Continue button on Defeat (there's no scheduled run left to
+            // extend), so New Run is the only button here — center it
+            // instead of leaving it offset where it sat next to Continue
+            // (explicit request: "Si on a perdu la partie, le bouton new
+            // run doit être centré horizontalement").
+            _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
             _root.gameObject.SetActive(true);
         }
 

@@ -221,6 +221,48 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Locker_LockedCellAlsoBlocksTheLineClearPreviewHighlight()
+        {
+            // Follow-up explicit report, after confirming the real clear is
+            // correctly blocked: "En fait je ne peux pas line break mais
+            // j'ai toujours le highlight de line clear avant de deposer une
+            // pièce" — GridManager.PreviewClearedLineCells (the hover
+            // highlight) had the exact same "skip every locked cell" bug as
+            // the real clear check, via its own IsRowCompleteWithFootprint/
+            // IsColumnCompleteWithFootprint.
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 1); // round 2 (index 1): Locker alone
+            var locker = run.CurrentEncounter[0];
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsTrue(locker.LockedCell.HasValue);
+            var lockedPos = locker.LockedCell.Value;
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == lockedPos.x)
+                {
+                    continue;
+                }
+                var cell = run.Grid.GetCell(x, lockedPos.y);
+                cell.IsFilled = true;
+                cell.FilledColor = PieceColor.Coral;
+            }
+
+            // Preview a placement elsewhere, nowhere near the locked row.
+            int otherY = (lockedPos.y + 1) % GridManager.Size;
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            Assert.IsTrue(run.Grid.CanPlace(single, 0, otherY));
+            var preview = run.Grid.PreviewClearedLineCells(single, 0, otherY);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                Assert.IsFalse(preview.Contains(new Vector2Int(x, lockedPos.y)),
+                    "The row containing Locker's locked cell should never be previewed as clearable");
+            }
+        }
+
+        [Test]
         public void Poisoner_PoisonsOneFilledCellPerShuffle_AndNormalizesThemAllOnDeath()
         {
             var run = new RunManager(new SystemRandomProvider(1));
