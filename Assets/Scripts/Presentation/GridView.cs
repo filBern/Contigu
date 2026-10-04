@@ -307,7 +307,14 @@ namespace Contigu.Presentation
         /// instead of only once GridView.Refresh() reveals them at the end
         /// of that sequence. Skipping them leaves their prior (still empty,
         /// unlocked) visual in place until then — safe since a lock tick
-        /// only ever targets cells that were already empty.
+        /// only ever targets cells that were already empty. EXCEPT when a
+        /// deferred cell is ALSO one of this same placement's own
+        /// <paramref name="heldCells"/> (its own line clear just emptied a
+        /// cell whose poison/lock ALSO happened to move elsewhere this same
+        /// tick, via an auto-refill-triggered Shuffle) — that one still
+        /// needs the normal held-filled treatment now, so its clear
+        /// animation plays in step with its neighbors instead of freezing
+        /// on a stale pre-clear draw until the final reveal.
         /// </summary>
         public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredLockCells = null)
         {
@@ -333,13 +340,28 @@ namespace Contigu.Presentation
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var pos = new Vector2Int(x, y);
-                    if (deferred.Contains(pos))
-                    {
-                        continue;
-                    }
+                    // The held-fill override always wins over a deferred
+                    // skip, even for a cell that happens to be in BOTH sets
+                    // — e.g. a poisoned cell this placement's own line clear
+                    // just emptied, where that SAME placement also auto-
+                    // refilled the hand and triggered a Shuffle that moved
+                    // Poisoner's poison elsewhere, releasing THIS cell's
+                    // flag in the same tick (still the exact same recurring
+                    // report: "la tuile empoisonné est présentement
+                    // supprimé trop tôt visuellement"). Checking deferred
+                    // FIRST used to skip such a cell entirely, leaving it
+                    // frozen on whatever ClearHover had already drawn
+                    // instead of the proper "held filled" look the rest of
+                    // this same line clear gets — it needs its clear
+                    // animation to play like its neighbors, not to also wait
+                    // for the final end-of-sequence Refresh().
                     if (overrideColor.TryGetValue(pos, out var color))
                     {
                         _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos]);
+                    }
+                    else if (deferred.Contains(pos))
+                    {
+                        continue;
                     }
                     else
                     {

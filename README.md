@@ -7117,3 +7117,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ronde/Endless. Nouveaux tints `HudView.EnemyIconColor` pour les 5
   (bleu/rouge plus saturés pour les versions Boss de Locker/Poisoner,
   or pour Thief, vert pour Reclaimer, violet pour Leech).
+- **Tuile empoisonnée cleared toujours retirée trop tôt visuellement
+  (cas résiduel)** : sur rapport explicite ("On a toujours le même
+  problème de tuile empoisonné cleared qui se fait retirer visuellement
+  trop tôt"), malgré le fix précédent du même nom. La vraie cause
+  restante : `GridView.RefreshHoldingClearedCells` vérifiait
+  `deferredLockCells` AVANT le "held fill" de ce placement — une
+  cellule qui est à la FOIS dans `heldCells` (ce placement vient de la
+  clear) ET dans `deferredRevealCells` (son statut poison/lock a AUSSI
+  changé ce même tick, via le Shuffle qu'un auto-refill de main
+  déclenche en plein milieu de `RunManager.PlacePiece` — très courant,
+  puisque ça arrive à chaque 3e pièce jouée, et Poisoner fait toujours
+  rouler son poison vers une nouvelle case à CE Shuffle, qu'il ait ou
+  non un rapport avec ce placement) se faisait donc entièrement
+  `continue`-er — ZÉRO traitement, ni normal ni "tenue remplie" —
+  restant figée sur le dessin périmé de `ClearHover` au lieu de jouer
+  son burst de clear comme ses voisines. La boucle de
+  `RefreshHoldingClearedCells` vérifie maintenant le "held fill"
+  EN PREMIER (il a toujours priorité, qu'il y ait aussi un
+  `deferredRevealCells` ou pas) — seule une cellule purement différée
+  (jamais touchée par CE placement) reste sautée jusqu'au `Refresh()`
+  final.
