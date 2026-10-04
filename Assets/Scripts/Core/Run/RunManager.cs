@@ -1758,7 +1758,9 @@ namespace Contigu.Core
         {
             if (enemy.LockedCell.HasValue)
             {
-                Grid.GetCell(enemy.LockedCell.Value).IsLocked = false;
+                var lockedCell = Grid.GetCell(enemy.LockedCell.Value);
+                lockedCell.IsLocked = false;
+                lockedCell.IsLineClearObstacle = false;
                 enemy.LockedCell = null;
             }
             for (int i = 0; i < enemy.PoisonedCells.Count; i++)
@@ -1803,13 +1805,21 @@ namespace Contigu.Core
         /// ne peut être dans une cleared line". Locker's own lock should
         /// never itself be the reason a row/column completes and clears;
         /// that remains specific to the pre-existing ProgressiveCellLock
-        /// boss effect (see ApplyBossLockTick), not this enemy.
+        /// boss effect (see ApplyBossLockTick), not this enemy. Also stamps
+        /// Cell.IsLineClearObstacle so the row/column it sits in can't be
+        /// cleared by a LATER placement either, for as long as the lock
+        /// stays there (follow-up explicit request: "Tu ne devrais pas
+        /// pouvoir clear une ligne qui contient une locked cell" — the old
+        /// boss lock and a Bastion cell are deliberately exempt from this,
+        /// see Cell.IsLineClearObstacle's own doc comment).
         /// </summary>
         private void ResolveLockerShuffleEffect(EnemyInstance locker)
         {
             if (locker.LockedCell.HasValue)
             {
-                Grid.GetCell(locker.LockedCell.Value).IsLocked = false;
+                var previousCell = Grid.GetCell(locker.LockedCell.Value);
+                previousCell.IsLocked = false;
+                previousCell.IsLineClearObstacle = false;
                 locker.LockedCell = null;
             }
 
@@ -1817,6 +1827,7 @@ namespace Contigu.Core
             if (locked.Count > 0)
             {
                 locker.LockedCell = locked[0];
+                Grid.GetCell(locked[0]).IsLineClearObstacle = true;
             }
         }
 

@@ -174,6 +174,53 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Locker_LockedCellBlocksItsWholeRowFromClearing()
+        {
+            // Explicit request: "Tu ne devrais pas pouvoir clear une ligne
+            // qui contient une locked cell" — unlike the old boss
+            // ProgressiveCellLock and a Bastion cell (both deliberately
+            // exempt, see Cell.IsLineClearObstacle), a row/column containing
+            // Locker's own lock must never complete, even once every other
+            // cell in it is filled.
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 1); // round 2 (index 1): Locker alone
+            var locker = run.CurrentEncounter[0];
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsTrue(locker.LockedCell.HasValue);
+            var lockedPos = locker.LockedCell.Value;
+            Assert.IsTrue(run.Grid.GetCell(lockedPos).IsLineClearObstacle);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == lockedPos.x)
+                {
+                    continue;
+                }
+                var cell = run.Grid.GetCell(x, lockedPos.y);
+                cell.IsFilled = true;
+                cell.FilledColor = PieceColor.Coral;
+            }
+
+            // A real placement elsewhere still runs GridManager's normal
+            // clear-check, which must leave the locked row untouched.
+            int otherY = (lockedPos.y + 1) % GridManager.Size;
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var result = run.Grid.PlacePiece(single, PieceColor.Teal, 0, otherY);
+            Assert.IsTrue(result.Success);
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == lockedPos.x)
+                {
+                    continue;
+                }
+                Assert.IsTrue(run.Grid.GetCell(x, lockedPos.y).IsFilled,
+                    "A row containing Locker's locked cell should never clear");
+            }
+        }
+
+        [Test]
         public void Poisoner_PoisonsOneFilledCellPerShuffle_AndNormalizesThemAllOnDeath()
         {
             var run = new RunManager(new SystemRandomProvider(1));

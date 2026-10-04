@@ -2846,7 +2846,15 @@ namespace Contigu.Core
             for (int x = 0; x < Size; x++)
             {
                 var cell = _cells[x, y];
-                if (cell.IsLocked)
+                // A Locker obstacle cell is NOT skipped like an ordinary
+                // locked cell (old boss ProgressiveCellLock, Bastion) — it
+                // falls through to the IsFilled check below exactly like an
+                // unlocked cell, which it can never pass (CanPlace already
+                // refuses it), so a row/column containing one can simply
+                // never complete while it's there (explicit request: "Tu ne
+                // devrais pas pouvoir clear une ligne qui contient une
+                // locked cell").
+                if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
                 }
@@ -2865,7 +2873,7 @@ namespace Contigu.Core
             for (int y = 0; y < Size; y++)
             {
                 var cell = _cells[x, y];
-                if (cell.IsLocked)
+                if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
                 }

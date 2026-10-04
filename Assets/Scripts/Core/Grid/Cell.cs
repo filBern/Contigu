@@ -20,8 +20,25 @@ namespace Contigu.Core
         public bool IsFilled;
         public PieceColor? FilledColor;
 
-        /// <summary>Only ever true during the boss round (spec 6.1).</summary>
+        /// <summary>Only ever true during the boss round (spec 6.1), or for Locker's own roaming lock (see IsLineClearObstacle).</summary>
         public bool IsLocked;
+
+        /// <summary>
+        /// True only for Locker's own lock (spec extension, explicit
+        /// request: "Tu ne devrais pas pouvoir clear une ligne qui contient
+        /// une locked cell"): unlike the old boss round's ProgressiveCellLock
+        /// (LockFreeCellsAndCheckClears) and a Bastion cell (IsBastion),
+        /// which are BOTH deliberately designed to let a row/column complete
+        /// and clear around (or even because of) them, a cell Locker has
+        /// locked is meant to be a genuine obstacle — GridManager.
+        /// IsRowComplete/IsColumnComplete treat it as an ordinary unfilled
+        /// cell (which it can never actually become, since CanPlace already
+        /// refuses any locked cell) instead of skipping it, so the whole
+        /// line it sits in simply can never complete while Locker's lock is
+        /// there. Set/cleared together with IsLocked by
+        /// RunManager.ResolveLockerShuffleEffect/CleanUpDefeatedEnemy only.
+        /// </summary>
+        public bool IsLineClearObstacle;
 
         /// <summary>
         /// "Poisoner" enemy mechanic (spec extension, explicit request:
@@ -130,6 +147,7 @@ namespace Contigu.Core
             IsFilled = false;
             FilledColor = null;
             IsLocked = false;
+            IsLineClearObstacle = false;
             IsPoisoned = false;
             IsGolden = false;
             IsTinted = false;

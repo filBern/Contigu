@@ -6956,3 +6956,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
      `HudView.SetEncounter` ne retouche plus la teinte/couleur d'un
      ennemi déjà mort (pour ne pas annuler le fade out au prochain
      `Refresh` déclenché par le placement suivant).
+- **Une ligne contenant une locked cell de Locker ne peut plus être clear**
+  : sur rapport explicite ("Tu ne devrais pas pouvoir clear une ligne qui
+  contient une locked cell"). `GridManager.IsRowComplete`/`IsColumnComplete`
+  ignoraient purement et simplement toute cellule `IsLocked` pour décider
+  si une ligne était complète — un comportement voulu pour le verrou du
+  boss (`ProgressiveCellLock`/`LockFreeCellsAndCheckClears`, conçu pour
+  laisser une ligne se compléter autour de son verrou) et pour une tuile
+  Bastion (`IsBastion`, conçue pour continuer à faire gagner le bonus de
+  clear sans jamais se vider), mais ça permettait aussi, par effet de bord,
+  de clear une ligne complète autour du verrou de l'ennemi Locker — vidant
+  l'obstacle de tout son intérêt. Nouveau `Cell.IsLineClearObstacle`,
+  posé/retiré uniquement par `RunManager.ResolveLockerShuffleEffect`/
+  `CleanUpDefeatedEnemy` en même temps que `IsLocked` : une cellule avec ce
+  drapeau n'est plus ignorée dans `IsRowComplete`/`IsColumnComplete` (elle
+  tombe dans la vérification `IsFilled` normale, qu'elle ne peut jamais
+  passer puisque `CanPlace` refuse déjà d'y poser une pièce) — toute la
+  ligne/colonne qui la contient ne peut donc plus jamais se compléter tant
+  que ce verrou précis est là. Le verrou du boss et Bastion restent
+  inchangés (aucun des deux ne pose ce nouveau drapeau).
