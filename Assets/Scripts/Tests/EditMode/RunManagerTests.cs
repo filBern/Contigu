@@ -2571,11 +2571,12 @@ namespace Contigu.Tests
 
             AdvanceToRound(run, 7);
             Assert.IsTrue(run.IsBossRound, "Round 8 should be a boss round");
-            // Round 8 is past this vertical slice's encounter scope (see
-            // EncounterCatalog), so the old BossEffect roll still applies
-            // exactly as before.
-            Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
-            Assert.IsFalse(run.HasActiveEncounter);
+            // Round 8 is now ALSO an encounter round — a solo Heavy Locker
+            // boss fight (see EncounterCatalog, follow-up explicit request:
+            // "Ajoutons de nouveaux ennemies et boss") — so the old
+            // BossEffect roll is suppressed here too, same as round 4.
+            Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
+            Assert.IsTrue(run.HasActiveEncounter);
         }
 
         // ---- Endless mode (explicit request: "j'aimerais que le joueur
