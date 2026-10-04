@@ -6893,3 +6893,66 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   le `CanvasScaler`, match-height sur la référence de 800 — voir
   `BuildCanvas`), fiable dès la première frame, indépendant du timing du
   `CanvasScaler`.
+- **Effets de tuiles différés jusqu'à l'ennemi à 0hp, shuffle/effets
+  d'ennemi différés, poison affecte aussi les modifiers (ex. Contrast),
+  poison survit au clear jusqu'au prochain shuffle (roaming comme
+  Locker), +3/-3 sur une tuile clear empoisonnée, fade out de l'ennemi
+  à 0hp** : sur demandes explicites successives :
+  1. *"Les effets de tuiles s'effacent avant que l'ennemi soit rendu a
+     0hp dans le HUD ce qui est confusing"* — `GameBootstrap.
+     PlayPlacementSequence` compte maintenant les points des tuiles
+     clear/détruites PENDANT la cascade de score comme avant, mais ne
+     les vide plus visuellement (burst + `ClearCellVisual`, nouveau
+     `PlayTileClearBursts`) qu'une fois le drain de dégâts (et son
+     éventuel fade out) terminé, via un nouveau `deferTileClear`
+     (actif seulement si un ennemi encaisse vraiment des dégâts
+     positifs ce placement — un round sans combat garde l'ancien
+     timing immédiat).
+  2. *"Il faut attendre la fin de décompte de point avant de faire
+     l'action de shuffle et les effets des ennemies qui vont avec"* —
+     `RunManager.PlacePiece` continue d'exécuter le refill de main et
+     les effets de Shuffle des ennemis de façon synchrone (changer ce
+     timing côté Core aurait cassé un grand nombre de tests existants
+     qui dépendent du refill immédiat), mais `GameBootstrap.
+     OnCellClicked` capture maintenant un snapshot de chaque cellule
+     verrouillée/empoisonnée avant/après le placement et les tient
+     cachées (`GridView.RefreshHoldingClearedCells`'s
+     `deferredLockCells`, déjà utilisé pour le boss) ainsi que la main
+     elle-même (nouveau `HandView.RefreshHoldingEmpty`) jusqu'à la
+     toute fin de la séquence — le joueur ne voit donc le nouveau
+     verrou/poison ni la nouvelle main qu'une fois son placement
+     entièrement résolu.
+  3. *"Valider pour les poison tiles, si un modifier utilise cette
+     case là spécifiquement c'est négatif aussi. Exemple pour le
+     modifier contrast, si la tuile adjacente d'une autre couleur est
+     négative"* — nouveau `ScoreEvent.ReferencedPosition` (en plus de
+     `Position`), renseigné par `GridManager.ApplyContraste` avec la
+     cellule contrastante qui a déclenché le bonus ;
+     `RunManager.ApplyPoisonScoreRule` bascule maintenant un événement
+     en négatif si `Position` OU `ReferencedPosition` est empoisonné.
+  4. *"Lorsqu'une poison tile est cleared, elle doit rester présente
+     sur la grille. Pas la tuile, seulement l'effet poison jusqu'au
+     prochain shuffle. Les poison tiles doivent être retiré lors d'un
+     shuffle pour mieux être replacé aléatoirement, comme pour les
+     locked cell. Idem pour le +3 de cleared cell, il doit faire -3"*
+     — `Cell.ClearFill` ne réinitialise plus `IsPoisoned` (seul
+     `ResetForNewRound` le fait, en début de round) ; `RunManager.
+     ResolvePoisonerShuffleEffect` relâche maintenant SES cellules
+     empoisonnées avant d'en choisir une nouvelle, exactement comme
+     `ResolveLockerShuffleEffect` (plus d'accumulation : une seule
+     tuile empoisonnée à la fois). Le +3 par tuile clear était déjà
+     correctement inversé en -3 côté Core (`ApplyPoisonScoreRule`
+     couvrait déjà `ScoreEventType.LineClear`) mais `GameBootstrap`
+     affichait un "+3" codé en dur peu importe le signe réel — la
+     boucle de score des `ClearedCells` lit maintenant le montant signé
+     réel dans `placement.ScoreEvents`. Au passage, le popup générique
+     de la cascade de score (tous types confondus) affichait aussi
+     toujours "+" devant un montant négatif ("+-12") — corrigé pour
+     afficher le signe réel en rouge (`UITheme.Danger`).
+  5. *"Lorsqu'un ennemi se rend a 0HP, attends 0.25 secondes puis fait
+     une animation de fade out"* — nouveau `HudView.FadeOutEnemySlot`,
+     appelé par `GameBootstrap.DrainComboIntoDamage` après un délai de
+     0.25s une fois le HP affiché réellement descendu à 0.
+     `HudView.SetEncounter` ne retouche plus la teinte/couleur d'un
+     ennemi déjà mort (pour ne pas annuler le fade out au prochain
+     `Refresh` déclenché par le placement suivant).

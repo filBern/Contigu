@@ -1986,23 +1986,30 @@ namespace Contigu.Core
             {
                 var pos = placedCells[i];
                 var ownColor = _cells[pos.x, pos.y].FilledColor.Value;
-                if (!HasContrastingNeighbor(pos.x, pos.y, ownColor))
+                if (!TryFindContrastingNeighbor(pos.x, pos.y, ownColor, out Vector2Int neighbor))
                 {
                     continue;
                 }
 
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ContrasteBonusPerCell));
+                // ReferencedPosition lets RunManager.ApplyPoisonScoreRule
+                // also flip this event negative when the CONTRASTING
+                // NEIGHBOR itself is poisoned, not just pos — see
+                // ScoreEvent.ReferencedPosition's own doc comment.
+                events.Add(new ScoreEvent(ScoreEventType.Modifier, pos, ScoringConstants.ContrasteBonusPerCell) { ReferencedPosition = neighbor });
                 total += ScoringConstants.ContrasteBonusPerCell;
             }
             return total;
         }
 
-        private bool HasContrastingNeighbor(int x, int y, PieceColor ownColor)
+        /// <summary>Same 4-neighbor check HasContrastingNeighbor used to do alone, now also reporting back WHICH neighbor qualified (the first found, in a fixed left/right/down/up order) — needed so ApplyContraste can tag its ScoreEvent with ReferencedPosition.</summary>
+        private bool TryFindContrastingNeighbor(int x, int y, PieceColor ownColor, out Vector2Int neighbor)
         {
-            return IsFilledWithDifferentColor(x - 1, y, ownColor)
-                || IsFilledWithDifferentColor(x + 1, y, ownColor)
-                || IsFilledWithDifferentColor(x, y - 1, ownColor)
-                || IsFilledWithDifferentColor(x, y + 1, ownColor);
+            if (IsFilledWithDifferentColor(x - 1, y, ownColor)) { neighbor = new Vector2Int(x - 1, y); return true; }
+            if (IsFilledWithDifferentColor(x + 1, y, ownColor)) { neighbor = new Vector2Int(x + 1, y); return true; }
+            if (IsFilledWithDifferentColor(x, y - 1, ownColor)) { neighbor = new Vector2Int(x, y - 1); return true; }
+            if (IsFilledWithDifferentColor(x, y + 1, ownColor)) { neighbor = new Vector2Int(x, y + 1); return true; }
+            neighbor = default;
+            return false;
         }
 
         private bool IsFilledWithDifferentColor(int x, int y, PieceColor ownColor)

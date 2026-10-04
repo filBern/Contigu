@@ -1820,9 +1820,25 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>GDD §07: "On each Shuffle, poisons 1 tile." Unlike Locker's roaming single lock, poison accumulates — only targets an already-FILLED, not-yet-poisoned cell (an empty one has no points to invert yet); a no-op tick if none exists.</summary>
+        /// <summary>
+        /// GDD §07: "On each Shuffle, poisons 1 tile." Now roams exactly
+        /// like Locker's single lock instead of accumulating (explicit
+        /// request: "Les poison tiles doivent être retiré lors d'un
+        /// shuffle pour mieux être replacé aléatoirement, comme pour les
+        /// locked cell") — releases every cell this instance poisoned so
+        /// far (including one a line clear already emptied but left
+        /// poisoned — see Cell.ClearFill) before picking a new one. Only
+        /// targets an already-FILLED, not-yet-poisoned cell (an empty one
+        /// has no points to invert yet); a no-op tick if none exists.
+        /// </summary>
         private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner)
         {
+            for (int i = 0; i < poisoner.PoisonedCells.Count; i++)
+            {
+                Grid.GetCell(poisoner.PoisonedCells[i]).IsPoisoned = false;
+            }
+            poisoner.ClearPoisonedCells();
+
             var candidates = new List<Vector2Int>();
             for (int x = 0; x < GridManager.Size; x++)
             {
@@ -1887,7 +1903,16 @@ namespace Contigu.Core
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                if (IsPointEvent(scoreEvent.Type) && scoreEvent.Amount > 0 && poisonedPositions.Contains(scoreEvent.Position))
+                // A modifier that reads a SECOND cell to decide its own
+                // eligibility (e.g. Contraste reading a contrasting
+                // neighbor — see ScoreEvent.ReferencedPosition) is just as
+                // much "using" a poisoned tile as one scored directly on
+                // it, so it flips negative too (explicit request: "si un
+                // modifier utilise cette case là spécifiquement c'est
+                // négatif aussi").
+                bool touchesPoison = poisonedPositions.Contains(scoreEvent.Position)
+                    || (scoreEvent.ReferencedPosition.HasValue && poisonedPositions.Contains(scoreEvent.ReferencedPosition.Value));
+                if (IsPointEvent(scoreEvent.Type) && scoreEvent.Amount > 0 && touchesPoison)
                 {
                     scoreEvent.Amount = -scoreEvent.Amount;
                 }

@@ -28,8 +28,17 @@ namespace Contigu.Core
         /// "ajouter un petit peu d'autobattling" — see GDD §07/RunManager.
         /// ResolvePoisonerShuffleEffect): any point event scored on this
         /// cell counts negative instead of positive while this is true (see
-        /// RunManager.ApplyPoisonScoreRule). Only ever true on an already-
-        /// FILLED cell — an empty one has nothing to invert yet.
+        /// RunManager.ApplyPoisonScoreRule). Only ever SET on an already-
+        /// FILLED cell (an empty one has nothing to invert yet), but can
+        /// persist on an now-EMPTY cell afterwards — <see cref="ClearFill"/>
+        /// deliberately leaves it alone (explicit request: "Lorsqu'une
+        /// poison tile est cleared, elle doit rester présente sur la grille.
+        /// Pas la tuile, seulement l'effet poison jusqu'au prochain
+        /// shuffle"): the hazard stays attached to this grid POSITION, not
+        /// to whichever tile happened to be filling it, until the next
+        /// Shuffle rolls it away (see RunManager.ResolvePoisonerShuffleEffect,
+        /// which now releases its own previous poisoned cell first, exactly
+        /// like Locker's roaming lock).
         /// </summary>
         public bool IsPoisoned;
 
@@ -99,13 +108,14 @@ namespace Contigu.Core
         /// mid-round (including a "Seeder" cell, permanently golden for the
         /// rest of the round otherwise) kept its stamp even once genuinely
         /// empty — an unrelated piece placed in that same spot later would
-        /// then inherit an enchantment it never actually earned.
+        /// then inherit an enchantment it never actually earned. <see
+        /// cref="IsPoisoned"/> is deliberately left alone, same reasoning as
+        /// IsLocked — see its own doc comment.
         /// </summary>
         public void ClearFill()
         {
             IsFilled = false;
             FilledColor = null;
-            IsPoisoned = false;
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;

@@ -499,6 +499,36 @@ namespace Contigu.Presentation
             UpdateSelectionVisuals();
         }
 
+        /// <summary>
+        /// Same as <see cref="Refresh"/>, except every slot is shown empty
+        /// regardless of the live model — used when this placement emptied
+        /// the hand and RunManager.PlacePiece already auto-refilled it with
+        /// a brand new hand (and resolved each alive enemy's own On-Shuffle
+        /// effect) internally, synchronously, before any animation even
+        /// started: without this hold, the new pieces (and the enemy's
+        /// freshly moved lock/poison — see GridView.RefreshHoldingClearedCells's
+        /// deferredLockCells) would already be visible while the player is
+        /// still watching THIS placement's own score/damage play out
+        /// (explicit request: "il faut attendre la fin de décompte de point
+        /// avant de faire l'action de shuffle et les effets des ennemies
+        /// qui vont avec"). GameBootstrap calls a plain <see cref="Refresh"/>
+        /// again once that sequence finishes to reveal the real hand.
+        /// </summary>
+        public void RefreshHoldingEmpty()
+        {
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                var preview = _previewContainers[i];
+                for (int c = preview.childCount - 1; c >= 0; c--)
+                {
+                    Destroy(preview.GetChild(c).gameObject);
+                }
+                _slotLevelLabels[i].text = string.Empty;
+            }
+            UpdateSlotInteractability();
+            UpdateSelectionVisuals();
+        }
+
         private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation, GameObject clickForwardTarget)
         {
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);

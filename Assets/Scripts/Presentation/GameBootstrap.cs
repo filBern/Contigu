@@ -795,6 +795,21 @@ namespace Contigu.Presentation
             int enemyHpBefore = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             EnemyId damagedEnemyId = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.Id : default;
 
+            // Snapshot of every cell an alive Locker/Poisoner currently has
+            // locked/poisoned, BEFORE this placement — RunManager.PlacePiece
+            // can trigger an auto-refill (if this placement empties the
+            // hand) which resolves each enemy's own On-Shuffle effect
+            // synchronously, moving Locker's lock or re-rolling Poisoner's
+            // tile, all before any animation even starts. Diffed against
+            // the same snapshot taken again right after, so whichever cells
+            // actually changed can be held back from view (see below) until
+            // this placement's own feedback sequence finishes playing
+            // (explicit request: "il faut attendre la fin de décompte de
+            // point avant de faire l'action de shuffle et les effets des
+            // ennemies qui vont avec").
+            bool handWasAboutToAutoRefill = IsHandAboutToAutoRefill(handIndex);
+            var enemyEffectCellsBefore = SnapshotEnemyEffectCells();
+
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
@@ -806,6 +821,9 @@ namespace Contigu.Presentation
 
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.MaxHp : 0;
+            var deferredRevealCells = new List<Vector2Int>(outcome.BossLockedCells);
+            deferredRevealCells.AddRange(enemyEffectCellsBefore);
+            deferredRevealCells.AddRange(SnapshotEnemyEffectCells());
 
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
@@ -829,12 +847,24 @@ namespace Contigu.Presentation
                     heldTraits.Add(null);
                 }
             }
-            // Boss-locked cells (outcome.BossLockedCells) are deliberately
-            // held back from this immediate redraw and only revealed once
-            // PlayPlacementSequence's own end-of-sequence Refresh() runs —
-            // see RefreshHoldingClearedCells's doc comment.
-            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, outcome.BossLockedCells);
-            _handView.Refresh();
+            // Boss-locked cells AND any Locker/Poisoner cell this placement's
+            // own auto-refill just changed (deferredRevealCells) are
+            // deliberately held back from this immediate redraw and only
+            // revealed once PlayPlacementSequence's own end-of-sequence
+            // Refresh() runs — see RefreshHoldingClearedCells's doc comment.
+            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredRevealCells);
+            // Same hold for the hand itself when this placement's own
+            // auto-refill already dealt the NEXT hand — PlayPlacementSequence
+            // reveals it for real once the sequence finishes (see
+            // HandView.RefreshHoldingEmpty's own doc comment).
+            if (handWasAboutToAutoRefill)
+            {
+                _handView.RefreshHoldingEmpty();
+            }
+            else
+            {
+                _handView.Refresh();
+            }
             RefreshShuffleButton();
             // Round/budget update immediately; the score AND Lueur numbers
             // themselves stay at their pre-placement values until
@@ -863,7 +893,41 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, deferredRevealCells));
+        }
+
+        /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
+        private bool IsHandAboutToAutoRefill(int handIndex)
+        {
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (i != handIndex && _run.Deck.Hand[i].HasValue)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Every cell currently locked by an alive Locker or poisoned by an alive Poisoner — see OnCellClicked's before/after diff.</summary>
+        private List<Vector2Int> SnapshotEnemyEffectCells()
+        {
+            var cells = new List<Vector2Int>();
+            if (!_run.HasActiveEncounter)
+            {
+                return cells;
+            }
+            var encounter = _run.CurrentEncounter;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                var enemy = encounter[i];
+                if (enemy.LockedCell.HasValue)
+                {
+                    cells.Add(enemy.LockedCell.Value);
+                }
+                cells.AddRange(enemy.PoisonedCells);
+            }
+            return cells;
         }
 
         /// <summary>Index of the enemy <see cref="Core.RunManager.ApplyDamageToEncounter"/> would hit right now — the first ALIVE one in encounter order — or -1 if there's no active encounter this round. Read BEFORE PlacePiece so OnCellClicked can hold that slot's HP display at its pre-placement value (see OnCellClicked/PlayPlacementSequence).</summary>
@@ -900,10 +964,22 @@ namespace Contigu.Presentation
         /// they're still reading their score.
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
-            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp)
+            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
+            List<Vector2Int> deferredRevealCells)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
+
+            // Whether this placement's cleared/destroyed tiles should keep
+            // showing as still-filled past the score cascade below, only
+            // actually emptying once the enemy damage drain (and death
+            // fade-out) finishes — explicit report: "Les effets de tuiles
+            // s'effacent avant que l'ennemi soit rendu a 0hp dans le HUD ce
+            // qui est confusing". Scoped to placements that actually drive
+            // a drain (same condition as the drain itself, further below)
+            // so an ordinary non-combat placement's tiles still clear
+            // inline as they always have, unaffected.
+            bool deferTileClear = damagedEnemyIndex >= 0 && placement.TotalScore > 0;
 
             // Lueur groups play first, ahead of the score cascade below (on
             // explicit request) — each group pulses its own cells, flies a
@@ -1081,11 +1157,20 @@ namespace Contigu.Presentation
                 // upgrades tiles ont le même problème"). They now fall
                 // through to the same near-black UITheme.TextPrimary every
                 // plain points popup already uses.
-                Color color = scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
+                // A poisoned position (see RunManager.ApplyPoisonScoreRule)
+                // can flip ANY of these event types negative, Modifier
+                // included (explicit request: "si un modifier utilise cette
+                // case là spécifiquement c'est négatif aussi") — shown in
+                // red with its real sign instead of the type's usual color
+                // and an always-"+" prefix, which used to read as a
+                // nonsensical "+-N".
+                bool negative = scoreEvent.Amount < 0;
+                Color color = negative ? UITheme.Danger
+                    : scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
-                _feedbackLayer.SpawnPopup(anchor, "+" + scoreEvent.Amount, color);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + scoreEvent.Amount, color);
                 SfxManager.PlayComboTick();
 
                 displayedRoundScore += scoreEvent.Amount;
@@ -1098,27 +1183,39 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
+            // Per-cell signed amount for each cleared cell (poison can flip
+            // a cell's own +LineClearBonusPerCell negative — see
+            // RunManager.ApplyPoisonScoreRule/explicit request: "Idem pour
+            // le +3 de cleared cell, il doit faire -3") — looked up from the
+            // actual ScoreEvents instead of assuming every cell is worth
+            // the flat +ScoringConstants.LineClearBonusPerCell.
+            var clearedCellAmounts = new Dictionary<Vector2Int, int>();
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var e = placement.ScoreEvents[i];
+                if (e.Type == ScoreEventType.LineClear)
+                {
+                    clearedCellAmounts[e.Position] = e.Amount;
+                }
+            }
+
+            // Scoring only here — the ACTUAL visual clearing (burst + empty
+            // the tile, see PlayTileClearBursts) runs right after this loop
+            // UNLESS deferTileClear is set, in which case it's held until
+            // well after the enemy damage drain further down instead (see
+            // its own doc comment above).
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
+                int amount = clearedCellAmounts.TryGetValue(pos, out int signed) ? signed : ScoringConstants.LineClearBonusPerCell;
+                bool negative = amount < 0;
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
-                _feedbackLayer.SpawnPopup(anchor, "+" + ScoringConstants.LineClearBonusPerCell, UITheme.Success);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.Success);
                 _gridView.PulseCell(pos.x, pos.y);
-                // On explicit request: "être trigger chaque fois qu'une
-                // tuile est cleared ou détruite" — one whoosh per cell
-                // (also see the DestroyedCells loop below), not once for
-                // the whole clear.
                 SfxManager.Play(SfxId.LineClear);
-                // Small burst as the tile actually empties (explicit
-                // request: "un petit vfx lorsqu'on clear une tile ou qu'on
-                // la détruit") — tinted to the color it had right before
-                // clearing, same held-color source PulseCell/ClearCellVisual
-                // implicitly rely on via RefreshHoldingClearedCells.
-                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]));
-                _gridView.ClearCellVisual(pos.x, pos.y);
 
-                displayedRoundScore += ScoringConstants.LineClearBonusPerCell;
-                chipsTotal += ScoringConstants.LineClearBonusPerCell;
+                displayedRoundScore += amount;
+                chipsTotal += amount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
                 _comboView.PulseChips();
@@ -1127,24 +1224,9 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
-            // Void Tile / Kamikaze Tile destructions — same burst as a line
-            // clear above, but with no per-cell score popup of their own
-            // (their points already showed as a single Trait ScoreEvent
-            // earlier in this sequence, at the enchanted cell, not per
-            // destroyed cell). Held visually filled until now the same way
-            // ClearedCells are (see RunManager.PlacePiece's call into
-            // RefreshHoldingClearedCells below).
-            for (int i = 0; i < placement.DestroyedCells.Count; i++)
+            if (!deferTileClear)
             {
-                var pos = placement.DestroyedCells[i];
-                var color = placement.DestroyedCellColors[i];
-                _gridView.PulseCell(pos.x, pos.y);
-                _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary);
-                _gridView.ClearCellVisual(pos.x, pos.y);
-                SfxManager.Play(SfxId.LineClear);
-
-                yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, LineClearStaggerSeconds * staggerSpeed));
-                staggerSpeed *= ComboSpeedupFactor;
+                yield return PlayTileClearBursts(placement);
             }
 
             // GroupMultiplier (Tinted+Multiplier-Zone cells) and LineClearMultiplier
@@ -1268,16 +1350,6 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
             }
 
-            if (outcome.BossLockedCells.Count > 0)
-            {
-                // The boss just locked more cells (see ChallengeDefinition.BossLockPiecesInterval)
-                // outside of anything this sequence already animated above —
-                // a full refresh is the simplest way to surface them (and any
-                // Bastion cell they might have grazed) without a bespoke
-                // per-cell lock animation.
-                _gridView.Refresh();
-            }
-
             // Only once the combo total itself is finished (and not before —
             // explicit request: "il faut faire les dégâts seulement à la fin
             // du calcule"), wait 1s so the player can read the final number,
@@ -1292,11 +1364,86 @@ namespace Contigu.Presentation
                 yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
             }
 
+            // Only NOW — after the enemy has actually finished draining
+            // (and fading out, if this hit was lethal) — do the cleared/
+            // destroyed cells actually visually empty (explicit report:
+            // "Les effets de tuiles s'effacent avant que l'ennemi soit
+            // rendu a 0hp dans le HUD ce qui est confusing"). Their points
+            // already counted during the score cascade above.
+            if (deferTileClear)
+            {
+                yield return PlayTileClearBursts(placement);
+            }
+
+            // Boss-locked cells (ChallengeDefinition.BossLockPiecesInterval)
+            // and any Locker/Poisoner cell this placement's own auto-refill
+            // changed (see OnCellClicked's deferredRevealCells) were held
+            // back from view this whole time — a full refresh is the
+            // simplest way to surface them (and any Bastion cell they might
+            // have grazed) without a bespoke per-cell animation, now that
+            // the rest of the sequence (including the enemy's own death)
+            // has fully played out.
+            if (deferredRevealCells.Count > 0)
+            {
+                _gridView.Refresh();
+            }
+            // Reveals the real hand for real if it was held empty (see
+            // HandView.RefreshHoldingEmpty) — a harmless no-op resync
+            // otherwise.
+            _handView.Refresh();
+
             _isPlayingPlacementSequence = false;
             _handView.SetInteractable(true);
             RefreshShuffleButton();
             _modifierPanelView.SetInteractable(true);
             HandleStateTransition(outcome.StateAfter);
+        }
+
+        /// <summary>
+        /// The actual visual clearing of this placement's cleared/destroyed
+        /// cells — a burst VFX plus emptying the tile, one cell at a time —
+        /// with no score popup of its own (that already happened earlier in
+        /// PlayPlacementSequence's own score cascade). Called from two spots
+        /// in PlayPlacementSequence depending on deferTileClear: right after
+        /// the score cascade for an ordinary placement, or after the enemy
+        /// damage drain/fade-out for one that's draining combo into damage
+        /// (see deferTileClear's own doc comment).
+        /// </summary>
+        private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement)
+        {
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                var pos = placement.ClearedCells[i];
+                // On explicit request: "être trigger chaque fois qu'une
+                // tuile est cleared ou détruite" — one whoosh per cell
+                // (also see the DestroyedCells loop below), not once for
+                // the whole clear.
+                SfxManager.Play(SfxId.LineClear);
+                // Small burst as the tile actually empties (explicit
+                // request: "un petit vfx lorsqu'on clear une tile ou qu'on
+                // la détruit") — tinted to the color it had right before
+                // clearing, same held-color source PulseCell/ClearCellVisual
+                // implicitly rely on via RefreshHoldingClearedCells.
+                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]));
+                _gridView.ClearCellVisual(pos.x, pos.y);
+                yield return new WaitForSeconds(MinStaggerSeconds);
+            }
+            // Void Tile / Kamikaze Tile destructions — same burst as a line
+            // clear above, but with no per-cell score popup of their own
+            // (their points already showed as a single Trait ScoreEvent
+            // earlier in this sequence, at the enchanted cell, not per
+            // destroyed cell). Held visually filled until now the same way
+            // ClearedCells are (see RunManager.PlacePiece's call into
+            // RefreshHoldingClearedCells).
+            for (int i = 0; i < placement.DestroyedCells.Count; i++)
+            {
+                var pos = placement.DestroyedCells[i];
+                var color = placement.DestroyedCellColors[i];
+                _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary);
+                _gridView.ClearCellVisual(pos.x, pos.y);
+                SfxManager.Play(SfxId.LineClear);
+                yield return new WaitForSeconds(MinStaggerSeconds);
+            }
         }
 
         /// <summary>
@@ -1327,7 +1474,19 @@ namespace Contigu.Presentation
                 yield return null;
             }
             _comboView.SetTotal(0);
-            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp, identity, hpAfter <= 0);
+            bool isDead = hpAfter <= 0;
+            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp, identity, isDead);
+
+            if (isDead)
+            {
+                // Explicit request: "Lorsqu'un ennemi se rend a 0HP, attends
+                // 0.25 secondes puis fait une animation de fade out" — the
+                // pause gives the player a beat to register the kill (and
+                // the dead-gray tint just applied above) before the icon
+                // actually fades away.
+                yield return new WaitForSeconds(0.25f);
+                yield return _hudView.FadeOutEnemySlot(enemyIndex, 0.3f);
+            }
         }
 
         /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — used by the two Mult catch-up popups above so a progressive modifier's true fractional contribution (Densité, Cartes Enchantées, Expérience) reads clearly without cluttering the common case (every other modifier, always a whole number) with a needless ".0".</summary>

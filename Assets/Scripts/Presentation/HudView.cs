@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
@@ -366,7 +367,22 @@ namespace Contigu.Presentation
                 }
 
                 var enemy = encounter[i];
-                _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, enemy.IsDead);
+                // Deliberately does NOT touch color/alpha for an already-
+                // dead enemy — this is called after EVERY placement
+                // (GameBootstrap.OnCellClicked), including ones that don't
+                // target this slot at all, so re-applying the plain dead-gray
+                // tint here would instantly erase whatever FadeOutEnemySlot
+                // is (or already has) faded it to. A genuinely FRESH enemy
+                // at this slot (a new round — EnemyInstance is never reused
+                // across rounds) is never dead on its very first Refresh, so
+                // this still resets the tint/alpha for it correctly; a
+                // currently-alive enemy's tint is kept in sync every time as
+                // before.
+                if (!enemy.IsDead)
+                {
+                    _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
+                    _enemyIconLabels[i].color = UITheme.TextPrimary;
+                }
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.Definition.MaxHp;
                 _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, enemy.Definition.Description);
             }
@@ -399,6 +415,42 @@ namespace Contigu.Presentation
             }
             _enemyIconLabels[index].text = hp + "/" + maxHp;
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
+        }
+
+        /// <summary>
+        /// Fades a defeated enemy's icon and HP label out to fully
+        /// transparent over <paramref name="duration"/> seconds — explicit
+        /// request: "Lorsqu'un ennemi se rend a 0HP, attends 0.25 secondes
+        /// puis fait une animation de fade out" (the 0.25s wait itself is
+        /// the caller's job, before yielding into this — see GameBootstrap.
+        /// DrainComboIntoDamage). The slot itself is deliberately left
+        /// active rather than hidden outright, same reasoning as
+        /// EnemyIconColor's dead-gray tint: a defeated enemy keeps its
+        /// place in the row instead of shifting the others (see
+        /// SetEncounter's own doc comment). Meant to be yielded directly by
+        /// the caller's own coroutine, not run through StartCoroutine.
+        /// </summary>
+        public IEnumerator FadeOutEnemySlot(int index, float duration)
+        {
+            if (index < 0 || index >= _enemySlots.Count || !_enemySlots[index].activeSelf)
+            {
+                yield break;
+            }
+            var icon = _enemyIconImages[index];
+            var label = _enemyIconLabels[index];
+            Color iconStart = icon.color;
+            Color labelStart = label.color;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float alpha = 1f - Mathf.Clamp01(t / duration);
+                icon.color = new Color(iconStart.r, iconStart.g, iconStart.b, iconStart.a * alpha);
+                label.color = new Color(labelStart.r, labelStart.g, labelStart.b, labelStart.a * alpha);
+                yield return null;
+            }
+            icon.color = new Color(iconStart.r, iconStart.g, iconStart.b, 0f);
+            label.color = new Color(labelStart.r, labelStart.g, labelStart.b, 0f);
         }
 
         /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was. Takes <paramref name="isDead"/> explicitly rather than reading EnemyInstance.IsDead directly so SetEnemyHpDisplay's held/animated calls can report death on their own schedule, independent of the live model's already-updated state (see its own doc comment).</summary>

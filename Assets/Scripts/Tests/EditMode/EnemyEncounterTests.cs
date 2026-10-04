@@ -256,6 +256,119 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Poisoner_PoisonRoamsOneCellAtATime_NeverAccumulatingAcrossShuffles()
+        {
+            // Explicit request: "Les poison tiles doivent être retiré lors
+            // d'un shuffle pour mieux être replacé aléatoirement, comme pour
+            // les locked cell" — Poisoner's poison now roams exactly like
+            // Locker's lock (see Locker_LocksOneCellPerShuffle... above)
+            // instead of accumulating one more cell every Shuffle.
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            var poisoner = run.CurrentEncounter[0];
+
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    var cell = run.Grid.GetCell(x, y);
+                    cell.IsFilled = true;
+                    cell.FilledColor = PieceColor.Coral;
+                }
+            }
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.AreEqual(1, poisoner.PoisonedCells.Count);
+            Assert.AreEqual(1, CountPoisonedCells(run.Grid));
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.AreEqual(1, poisoner.PoisonedCells.Count);
+            Assert.AreEqual(1, CountPoisonedCells(run.Grid));
+        }
+
+        [Test]
+        public void Poisoner_PoisonSurvivesALineClear_UntilTheNextShuffleRemovesIt()
+        {
+            // Explicit request: "Lorsqu'une poison tile est cleared, elle
+            // doit rester présente sur la grille. Pas la tuile, seulement
+            // l'effet poison jusqu'au prochain shuffle."
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            var target = new Vector2Int(0, 0);
+            run.Grid.GetCell(target).IsFilled = true;
+            run.Grid.GetCell(target).FilledColor = PieceColor.Coral;
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsTrue(run.Grid.GetCell(target).IsPoisoned);
+
+            run.Grid.GetCell(target).ClearFill();
+
+            Assert.IsFalse(run.Grid.GetCell(target).IsFilled);
+            Assert.IsTrue(run.Grid.GetCell(target).IsPoisoned,
+                "Poison should stay attached to the grid position until the next Shuffle, even once the tile itself is cleared/emptied");
+        }
+
+        [Test]
+        public void Contraste_FlipsNegative_WhenItsContrastingNeighborIsPoisoned()
+        {
+            // Explicit request: "Valider pour les poison tiles, si un
+            // modifier utilise cette case là spécifiquement c'est négatif
+            // aussi. Exemple pour le modifier contrast, si la tuile
+            // adjacente d'une autre couleur est négative."
+            var run = new RunManager(new SystemRandomProvider(5));
+            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            run.DebugGrantModifier(ModifierId.Contraste);
+
+            int slotA = FirstOccupiedHandSlot(run);
+            run.Deck.RecolorHandToken(slotA, PieceColor.Coral);
+            var tokenA = run.Deck.Hand[slotA].Value;
+            var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[slotA]);
+            var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
+            Assert.IsTrue(anchorA.HasValue);
+            var outcomeA = run.PlacePiece(slotA, anchorA.Value.x, anchorA.Value.y);
+            Assert.IsTrue(outcomeA.Placement.Success);
+
+            // Manually poison one of the cells THIS placement itself just
+            // filled, bypassing the real Shuffle-targeting RNG — same
+            // deterministic bypass as Poisoner_RescoringAGroupThroughItsPoisonedCell...
+            var poisonedPos = outcomeA.Placement.PlacedCells[0];
+            run.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            run.CurrentEncounter[0].AddPoisonedCell(poisonedPos);
+
+            int slotB = -1;
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (i != slotA && run.Deck.Hand[i].HasValue)
+                {
+                    slotB = i;
+                    break;
+                }
+            }
+            Assert.GreaterOrEqual(slotB, 0, "Hand should still have another piece to play this round");
+            // A DIFFERENT color than the poisoned cell so Contraste actually
+            // triggers against it.
+            run.Deck.RecolorHandToken(slotB, PieceColor.Teal);
+            var tokenB = run.Deck.Hand[slotB].Value;
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[slotB]);
+            var anchorB = FindAnchorTouchingCell(run.Grid, shapeB, poisonedPos);
+            Assert.IsTrue(anchorB.HasValue, "Should find room to place a different-colored piece next to the poisoned cell");
+
+            var outcomeB = run.PlacePiece(slotB, anchorB.Value.x, anchorB.Value.y);
+            Assert.IsTrue(outcomeB.Placement.Success);
+
+            bool foundNegatedContraste = false;
+            for (int i = 0; i < outcomeB.Placement.ScoreEvents.Count; i++)
+            {
+                var evt = outcomeB.Placement.ScoreEvents[i];
+                if (evt.Type == ScoreEventType.Modifier && evt.ReferencedPosition == poisonedPos && evt.Amount < 0)
+                {
+                    foundNegatedContraste = true;
+                }
+            }
+            Assert.IsTrue(foundNegatedContraste, "Contraste's own bonus should flip negative when the contrasting neighbor it read is poisoned");
+        }
+
+        [Test]
         public void EnemyInstance_ApplyDamage_NegativeDamageHealsItBackUp_ClampedAtMaxHp()
         {
             var enemy = new EnemyInstance(EnemyCatalog.Basic);
@@ -288,6 +401,19 @@ namespace Contigu.Tests
             foreach (var pos in GridManager.AllPositions())
             {
                 if (grid.GetCell(pos).IsLocked)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static int CountPoisonedCells(GridManager grid)
+        {
+            int count = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (grid.GetCell(pos).IsPoisoned)
                 {
                     count++;
                 }

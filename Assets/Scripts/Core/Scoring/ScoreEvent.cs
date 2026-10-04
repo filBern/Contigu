@@ -106,6 +106,20 @@ namespace Contigu.Core
         /// </summary>
         public float? PreciseAmount;
 
+        /// <summary>
+        /// A SECOND grid position this event's own eligibility actually
+        /// depended on, beyond <see cref="Position"/> itself — null for
+        /// every event type that only ever reads its own cell. Set by
+        /// GridManager.ApplyContraste to the contrasting neighbor cell that
+        /// triggered it (spec extension, explicit request: "si un modifier
+        /// utilise cette case là spécifiquement c'est négatif aussi.
+        /// Exemple pour le modifier contrast, si la tuile adjacente d'une
+        /// autre couleur est négative"): RunManager.ApplyPoisonScoreRule
+        /// also negates this event when THIS position is poisoned, not just
+        /// when <see cref="Position"/> is.
+        /// </summary>
+        public Vector2Int? ReferencedPosition;
+
         public ScoreEvent(ScoreEventType type, Vector2Int position, int amount)
         {
             Type = type;
