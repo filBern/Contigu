@@ -23,31 +23,48 @@ namespace Contigu.Tests
         {
             Assert.AreEqual(1, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0).Count);
             Assert.AreEqual(EnemyId.Basic, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0)[0]);
-            Assert.AreEqual(1, EncounterCatalog.GetEncounter(ChallengeId.Classic, 1).Count);
-            Assert.AreEqual(EnemyId.Locker, EncounterCatalog.GetEncounter(ChallengeId.Classic, 1)[0]);
-            Assert.AreEqual(1, EncounterCatalog.GetEncounter(ChallengeId.Classic, 2).Count);
-            Assert.AreEqual(EnemyId.Poisoner, EncounterCatalog.GetEncounter(ChallengeId.Classic, 2)[0]);
+
+            // Basic appended to most rounds (explicit request: "ajouter des
+            // basics enemies dans les niveaux") — always last, never
+            // disturbing whichever enemy was already leading.
+            var round2 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 1);
+            Assert.AreEqual(2, round2.Count);
+            Assert.AreEqual(EnemyId.Locker, round2[0]);
+            Assert.AreEqual(EnemyId.Basic, round2[1]);
+
+            var round3 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 2);
+            Assert.AreEqual(2, round3.Count);
+            Assert.AreEqual(EnemyId.Poisoner, round3[0]);
+            Assert.AreEqual(EnemyId.Basic, round3[1]);
 
             var round4 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 3);
-            Assert.AreEqual(2, round4.Count);
+            Assert.AreEqual(3, round4.Count);
             Assert.AreEqual(EnemyId.Locker, round4[0]);
             Assert.AreEqual(EnemyId.Poisoner, round4[1]);
+            Assert.AreEqual(EnemyId.Basic, round4[2]);
 
+            // Poisoner must stay FIRST in both Round5 and Round6 (explicit
+            // bug report: "la round avec le reclaimer, il doit se trouver
+            // après l'empoisonneur") — the front-targeting/grow tension
+            // only works that way (see EnemyInstance.HealOrGrow).
             var round5 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 4);
             Assert.AreEqual(2, round5.Count);
             Assert.AreEqual(EnemyId.Poisoner, round5[0]);
             Assert.AreEqual(EnemyId.Reclaimer, round5[1]);
 
             var round6 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 5);
-            Assert.AreEqual(2, round6.Count);
-            Assert.AreEqual(EnemyId.Reclaimer, round6[0]);
-            Assert.AreEqual(EnemyId.Poisoner, round6[1]);
+            Assert.AreEqual(3, round6.Count);
+            Assert.AreEqual(EnemyId.Poisoner, round6[0]);
+            Assert.AreEqual(EnemyId.Reclaimer, round6[1]);
+            Assert.AreEqual(EnemyId.Basic, round6[2]);
 
             var round7 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 6);
-            Assert.AreEqual(2, round7.Count);
+            Assert.AreEqual(3, round7.Count);
             Assert.AreEqual(EnemyId.Thief, round7[0]);
             Assert.AreEqual(EnemyId.Leech, round7[1]);
+            Assert.AreEqual(EnemyId.Basic, round7[2]);
 
+            // Round 8 deliberately left alone — "un seul ennemi costaud".
             var round8 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 7);
             Assert.AreEqual(1, round8.Count);
             Assert.AreEqual(EnemyId.HeavyLocker, round8[0]);
@@ -80,9 +97,10 @@ namespace Contigu.Tests
 
             Assert.IsTrue(run.IsBossRound, "Round 4 is still every-4th-round by the numbers");
             Assert.IsTrue(run.HasActiveEncounter);
-            Assert.AreEqual(2, run.CurrentEncounter.Count);
+            Assert.AreEqual(3, run.CurrentEncounter.Count);
             Assert.AreEqual(EnemyId.Locker, run.CurrentEncounter[0].Definition.Id);
             Assert.AreEqual(EnemyId.Poisoner, run.CurrentEncounter[1].Definition.Id);
+            Assert.AreEqual(EnemyId.Basic, run.CurrentEncounter[2].Definition.Id);
             // The two systems never run at once (see RunManager.HasActiveEncounter).
             Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
             Assert.IsNull(run.BossLockedHandSlotIndex);
@@ -612,6 +630,35 @@ namespace Contigu.Tests
             Assert.IsTrue(enemy.ApplyDamage(1), "The exact lethal hit should report true");
             Assert.IsTrue(enemy.IsDead);
             Assert.IsFalse(enemy.ApplyDamage(50), "Hitting an already-dead enemy again should report false, not re-trigger a kill");
+        }
+
+        [Test]
+        public void EnemyInstance_HealOrGrow_WhileAtFullHealth_GrowsMaxAndCurrentHp()
+        {
+            // Explicit request: "j'aimerais ajouter pour le reclaimer que
+            // s'il est heal ET qu'il est full health, il augmente son max
+            // health et son health pour devenir plus fort."
+            var enemy = new EnemyInstance(EnemyCatalog.Reclaimer);
+            int maxBefore = enemy.CurrentMaxHp;
+            Assert.AreEqual(maxBefore, enemy.CurrentHp, "Should start at full HP");
+
+            enemy.HealOrGrow(50);
+
+            Assert.AreEqual(maxBefore + 50, enemy.CurrentMaxHp, "Already-full heal should grow the ceiling");
+            Assert.AreEqual(maxBefore + 50, enemy.CurrentHp, "...and heal up to that new, grown ceiling");
+        }
+
+        [Test]
+        public void EnemyInstance_HealOrGrow_WhileNotFull_ClampsNormally_NoGrowth()
+        {
+            var enemy = new EnemyInstance(EnemyCatalog.Reclaimer);
+            int maxBefore = enemy.CurrentMaxHp;
+            enemy.ApplyDamage(50);
+
+            enemy.HealOrGrow(1000);
+
+            Assert.AreEqual(maxBefore, enemy.CurrentMaxHp, "Wasn't full before this heal, so no growth");
+            Assert.AreEqual(maxBefore, enemy.CurrentHp, "Just clamps at the ordinary (un-grown) max, same as Heal");
         }
 
         [Test]

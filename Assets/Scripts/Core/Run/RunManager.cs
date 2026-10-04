@@ -1551,7 +1551,7 @@ namespace Contigu.Core
                 {
                     continue;
                 }
-                enemy.ApplyDamage(enemy.Definition.MaxHp);
+                enemy.ApplyDamage(enemy.CurrentMaxHp);
                 CleanUpDefeatedEnemy(enemy);
             }
         }
@@ -1998,7 +1998,25 @@ namespace Contigu.Core
             return null;
         }
 
-        /// <summary>"Reclaimer" redesign (explicit request: "Chaque points négatifs triggered par une tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce montant là") — heals every alive Reclaimer instance by <paramref name="totalPoisonMagnitude"/>, the sum of every point this placement lost to poison this placement (see ApplyPoisonScoreRule's return value). Replaces Reclaimer's old On-Shuffle consume-and-heal effect entirely — it no longer has one (see ResolveEnemyShuffleEffects).</summary>
+        /// <summary>
+        /// "Reclaimer" redesign (explicit request: "Chaque points négatifs
+        /// triggered par une tuile empoisonné, l'ennemi reclaimer récupère
+        /// en point de vie ce montant là") — heals every alive Reclaimer
+        /// instance by <paramref name="totalPoisonMagnitude"/>, the sum of
+        /// every point this placement lost to poison this placement (see
+        /// ApplyPoisonScoreRule's return value). Replaces Reclaimer's old
+        /// On-Shuffle consume-and-heal effect entirely — it no longer has
+        /// one (see ResolveEnemyShuffleEffects). Goes through <see
+        /// cref="EnemyInstance.HealOrGrow"/>, NOT the plain Heal every
+        /// other healer uses (follow-up explicit request: "j'aimerais
+        /// ajouter pour le reclaimer que s'il est heal ET qu'il est full
+        /// health, il augmente son max health et son health pour devenir
+        /// plus fort") — a heal landing while already at full HP grows it
+        /// permanently stronger instead of being wasted, which is what
+        /// makes "tuer l'empoisonneur sans trop heal le reclaimer" an
+        /// actual tension: the longer the Poisoner survives, the more
+        /// chances Reclaimer gets to overflow-heal and grow.
+        /// </summary>
         private void HealReclaimer(int totalPoisonMagnitude)
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -2006,7 +2024,7 @@ namespace Contigu.Core
                 var enemy = _currentEncounter[i];
                 if (enemy.Definition.Id == EnemyId.Reclaimer)
                 {
-                    enemy.Heal(totalPoisonMagnitude);
+                    enemy.HealOrGrow(totalPoisonMagnitude);
                 }
             }
         }

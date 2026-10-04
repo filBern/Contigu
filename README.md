@@ -7331,3 +7331,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   "n'exclut JAMAIS, même au plancher" — et nouveaux tests pour
   `ReplaceOneOfType`/`GetReplacementCandidateTypesFor`, incluant le cas
   dégénéré à un seul type).
+- **Basics ajoutés aux rounds, ordre Reclaimer corrigé, et Reclaimer qui
+  grossit** : sur demande explicite ("Le jeu est beaucoup trop facile, je
+  ne perd jamais, peux-tu ajouter des basics enemies dans les niveaux. Ça
+  va aider le joueur a se sentir plus puissant au lieu. Aussi, la round
+  avec le reclaimer, il doit se trouver après l'empoisonneur. Aussi
+  j'aimerais ajouter pour le reclaimer que s'il est heal ET qu'il est
+  full health, il augmente son max health et son health pour devenir
+  plus fort. Il faudra donc tuer l'empoisoneur sans trop heal le
+  reclaimer"). Trois changements : (1) `EncounterCatalog` ajoute
+  `EnemyId.Basic` à la fin des rounds 2, 3, 4, 6 et 7 (jamais en
+  premier — plus de HP total à vider sans déranger le ciblage du front
+  (`RunManager.ApplyDamageToEncounter`) ni les index déjà utilisés par
+  les tests existants ; Round1 et Round8 ("un seul ennemi costaud")
+  restent intacts) ; (2) Round6 réordonné pour mettre `Poisoner` avant
+  `Reclaimer` (bug : c'était inversé) ; (3) nouveau
+  `EnemyInstance.CurrentMaxHp`, un plafond de HP par instance (jamais la
+  `EnemyDefinition` statique et partagée — la muter affecterait toutes
+  les copies de cet ennemi, dans toutes les rounds, dans tous les runs)
+  et nouvelle méthode `EnemyInstance.HealOrGrow`, volontairement séparée
+  du `Heal` générique (Leech et le soin-via-dégâts-négatifs restent sur
+  l'ancien comportement) : si l'ennemi est déjà à son plafond quand ce
+  soin arrive, le plafond ET le HP actuel augmentent tous les deux du
+  montant du soin, au lieu d'être gaspillé. `RunManager.HealReclaimer`
+  appelle maintenant `HealOrGrow` au lieu de `Heal` — combiné au
+  réordonnancement du Round6, tuer le Poisoner avant qu'il ne fasse
+  trop grossir le Reclaimer devient une vraie tension stratégique.
+  Affichages HP (`GameBootstrap`/`HudView`) et `DebugDefeatAllEnemies`
+  mis à jour pour lire `CurrentMaxHp` au lieu de `Definition.MaxHp`.
+  Tests : `EncounterCatalog_AllEightClassicRounds_HaveAnEncounter` et le
+  test du Round4 boss réécrits pour les nouveaux comptes/Basic, et
+  nouveaux tests dédiés pour `HealOrGrow` (grossit si déjà plein, sinon
+  se comporte comme l'ancien `Heal`).

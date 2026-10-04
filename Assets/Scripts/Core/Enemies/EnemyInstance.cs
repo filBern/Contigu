@@ -15,6 +15,17 @@ namespace Contigu.Core
         public EnemyDefinition Definition { get; }
         public int CurrentHp { get; private set; }
 
+        /// <summary>
+        /// This instance's own HP ceiling — starts equal to <see
+        /// cref="EnemyDefinition.MaxHp"/> but can grow past it (see <see
+        /// cref="HealOrGrow"/>), so it's tracked per-instance rather than
+        /// read straight off the shared <see cref="Definition"/> (which
+        /// every instance of the same EnemyId points at — mutating IT
+        /// would grow every copy of this enemy across every round of every
+        /// run at once).
+        /// </summary>
+        public int CurrentMaxHp { get; private set; }
+
         public bool IsDead
         {
             get { return CurrentHp <= 0; }
@@ -34,7 +45,8 @@ namespace Contigu.Core
         public EnemyInstance(EnemyDefinition definition)
         {
             Definition = definition;
-            CurrentHp = definition.MaxHp;
+            CurrentMaxHp = definition.MaxHp;
+            CurrentHp = CurrentMaxHp;
         }
 
         public void AddPoisonedCell(Vector2Int pos)
@@ -51,9 +63,11 @@ namespace Contigu.Core
         /// "Reclaimer" (redesign — explicit request: "Chaque points
         /// négatifs triggered par une tuile empoisonné, l'ennemi reclaimer
         /// récupère en point de vie ce montant là") — clamped at <see
-        /// cref="EnemyDefinition.MaxHp"/>, same ceiling <see
-        /// cref="ApplyDamage"/>'s own negative-damage healing already
-        /// respects.
+        /// cref="CurrentMaxHp"/>, same ceiling <see cref="ApplyDamage"/>'s
+        /// own negative-damage healing already respects. Leech's own heal
+        /// (RunManager.HealLeech) also goes through here and never grows —
+        /// see <see cref="HealOrGrow"/> for the Reclaimer-only variant that
+        /// does.
         /// </summary>
         public void Heal(int amount)
         {
@@ -61,18 +75,55 @@ namespace Contigu.Core
             {
                 return;
             }
-            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, Definition.MaxHp);
+            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, CurrentMaxHp);
+        }
+
+        /// <summary>
+        /// "Reclaimer" grow mechanic (explicit request: "j'aimerais
+        /// ajouter pour le reclaimer que s'il est heal ET qu'il est full
+        /// health, il augmente son max health et son health pour devenir
+        /// plus fort. Il faudra donc tuer l'empoisonneur sans trop heal le
+        /// reclaimer") — a heal that arrives while ALREADY at <see
+        /// cref="CurrentMaxHp"/> doesn't just cap out and go to waste: it
+        /// raises BOTH CurrentMaxHp and CurrentHp by the same amount
+        /// instead, making this instance permanently tougher. A heal that
+        /// only PARTIALLY overflows (not yet full before this heal, but
+        /// would exceed the cap) still just clamps normally like <see
+        /// cref="Heal"/> — growth is specifically for being AT full
+        /// already when more healing arrives, not for any excess. Used
+        /// only by RunManager.HealReclaimer — every other healer in the
+        /// game (Leech, poison's own negative-damage-heals-the-front-
+        /// enemy-back-up via ApplyDamage) stays capped at its ordinary
+        /// CurrentMaxHp with no growth.
+        /// </summary>
+        public void HealOrGrow(int amount)
+        {
+            if (IsDead || amount <= 0)
+            {
+                return;
+            }
+            if (CurrentHp >= CurrentMaxHp)
+            {
+                CurrentMaxHp += amount;
+                CurrentHp += amount;
+                return;
+            }
+            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, CurrentMaxHp);
         }
 
         /// <summary>
         /// Applies <paramref name="damage"/> (this run's own placement score
-        /// — see RunManager.ApplyDamageToEncounter) clamped to [0, MaxHp].
-        /// Can be negative: a placement that scored through one of this
-        /// instance's own poisoned tiles comes out net-negative (see
-        /// RunManager.ApplyPoisonScoreRule), which HEALS this enemy back up
-        /// instead of damaging it — intentional, the cost of playing into
-        /// poison. Returns true if this hit just brought it from alive to
-        /// dead (false if it was already dead, or if it survives).
+        /// — see RunManager.ApplyDamageToEncounter) clamped to [0,
+        /// CurrentMaxHp]. Can be negative: a placement that scored through
+        /// one of this instance's own poisoned tiles comes out net-negative
+        /// (see RunManager.ApplyPoisonScoreRule), which HEALS this enemy
+        /// back up instead of damaging it — intentional, the cost of
+        /// playing into poison; capped at the ordinary CurrentMaxHp, never
+        /// triggers Reclaimer's own growth (see HealOrGrow — that's
+        /// deliberately only reachable through RunManager.HealReclaimer's
+        /// own poison-magnitude heal, not through absorbing damage as the
+        /// front target). Returns true if this hit just brought it from
+        /// alive to dead (false if it was already dead, or if it survives).
         /// </summary>
         public bool ApplyDamage(int damage)
         {
@@ -80,7 +131,7 @@ namespace Contigu.Core
             {
                 return false;
             }
-            CurrentHp = Mathf.Clamp(CurrentHp - damage, 0, Definition.MaxHp);
+            CurrentHp = Mathf.Clamp(CurrentHp - damage, 0, CurrentMaxHp);
             return IsDead;
         }
     }

@@ -383,7 +383,10 @@ namespace Contigu.Presentation
                     _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
                     _enemyIconLabels[i].color = UITheme.TextPrimary;
                 }
-                _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.Definition.MaxHp;
+                // CurrentMaxHp, not Definition.MaxHp — Reclaimer's own
+                // ceiling can grow past the shared Definition's value (see
+                // EnemyInstance.HealOrGrow).
+                _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, enemy.Definition.Description);
             }
         }

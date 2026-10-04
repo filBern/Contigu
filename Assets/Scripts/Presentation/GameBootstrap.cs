@@ -865,7 +865,11 @@ namespace Contigu.Presentation
             bool thiefStoleThisPlacement = handWasAboutToAutoRefill && _run.ThiefStoleOnLastShuffle;
 
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
-            int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.MaxHp : 0;
+            // CurrentMaxHp, not Definition.MaxHp — Reclaimer's own ceiling
+            // can grow past the shared Definition's value (see
+            // EnemyInstance.HealOrGrow), so this must track the real,
+            // possibly-already-grown cap for its own HP bar to read right.
+            int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentMaxHp : 0;
             // Only cells whose locked/poisoned status actually CHANGED this
             // placement (added or removed by its own auto-refill) need to
             // stay hidden — the symmetric difference of the two snapshots,
