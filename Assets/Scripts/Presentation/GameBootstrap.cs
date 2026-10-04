@@ -821,9 +821,36 @@ namespace Contigu.Presentation
 
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.MaxHp : 0;
+            // Only cells whose locked/poisoned status actually CHANGED this
+            // placement (added or removed by its own auto-refill) need to
+            // stay hidden — the symmetric difference of the two snapshots,
+            // NOT their union. A cell that was (and still is) poisoned
+            // regardless of this placement — including the very cell this
+            // placement's own line clear just went through — must NOT end
+            // up in here, or RefreshHoldingClearedCells below would skip it
+            // entirely instead of giving it its normal held-filled
+            // treatment, leaving it stuck showing whatever ClearHover
+            // already (prematurely) drew for it until the final reveal
+            // (explicit report: "la tuile empoisonnée est présentement
+            // supprimée trop tôt visuellement").
+            var enemyEffectCellsAfter = SnapshotEnemyEffectCells();
+            var beforeSet = new HashSet<Vector2Int>(enemyEffectCellsBefore);
+            var afterSet = new HashSet<Vector2Int>(enemyEffectCellsAfter);
             var deferredRevealCells = new List<Vector2Int>(outcome.BossLockedCells);
-            deferredRevealCells.AddRange(enemyEffectCellsBefore);
-            deferredRevealCells.AddRange(SnapshotEnemyEffectCells());
+            foreach (var pos in beforeSet)
+            {
+                if (!afterSet.Contains(pos))
+                {
+                    deferredRevealCells.Add(pos);
+                }
+            }
+            foreach (var pos in afterSet)
+            {
+                if (!beforeSet.Contains(pos))
+                {
+                    deferredRevealCells.Add(pos);
+                }
+            }
 
             _gridView.SetSelectedShape(null);
             _handView.ClearSelection();
@@ -1057,7 +1084,7 @@ namespace Contigu.Presentation
                     }
 
                     int masteryBonus = placement.ShapeMasteryBonus + placement.ColorMasteryBonus;
-                    if (masteryBonus <= 0)
+                    if (masteryBonus == 0)
                     {
                         continue;
                     }
@@ -1065,7 +1092,17 @@ namespace Contigu.Presentation
                     masteryBonusShown = true;
                     _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
                     var masteryAnchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                    _feedbackLayer.SpawnPopup(masteryAnchor, "+" + masteryBonus, UITheme.TextPrimary);
+                    // A poisoned tile flips its own mastery bonus negative
+                    // too (RunManager.ApplyPoisonScoreRule already covers
+                    // ScoreEventType.ShapeMastery/ColorMastery — explicit
+                    // request: "Les points bonus de level d'une pièce
+                    // doivent aussi être comptabilisé négativement lorsqu'une
+                    // de ses tuiles est empoisonné") — this just used to
+                    // silently skip showing it at all whenever the aggregate
+                    // went non-positive, instead of showing the real negative
+                    // value.
+                    bool masteryNegative = masteryBonus < 0;
+                    _feedbackLayer.SpawnPopup(masteryAnchor, (masteryNegative ? "" : "+") + masteryBonus, masteryNegative ? UITheme.Danger : UITheme.TextPrimary);
                     SfxManager.PlayComboTick();
 
                     displayedRoundScore += masteryBonus;

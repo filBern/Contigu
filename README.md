@@ -6975,3 +6975,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ligne/colonne qui la contient ne peut donc plus jamais se compléter tant
   que ce verrou précis est là. Le verrou du boss et Bastion restent
   inchangés (aucun des deux ne pose ce nouveau drapeau).
+- **Tuile empoisonnée clear trop tôt / doit garder son état visuel** : sur
+  rapport explicite ("Lorsqu'une ligne est cleared avec une tuile
+  empoisonné, la tuile empoisonné est présentement supprimé trop tôt
+  visuellement, elle doit se supprimé en même temps que les autres dans le
+  bon ordre. D'ailleurs il faut garder le state empoisonné visuellement
+  aussi"). La vraie cause : `GameBootstrap.OnCellClicked` construisait
+  `deferredRevealCells` en concaténant les DEUX snapshots complets
+  (avant/après placement) de chaque cellule verrouillée/empoisonnée, au
+  lieu de leur différence symétrique — n'importe quelle cellule
+  empoisonnée AVANT ce placement ET toujours empoisonnée APRÈS (le cas
+  normal d'une tuile empoisonnée qui se fait clear ce tour-ci, sans
+  rapport avec un éventuel refill de main) se retrouvait donc à tort dans
+  `deferredRevealCells`. `GridView.RefreshHoldingClearedCells` ignore
+  complètement toute cellule présente dans `deferredLockCells` — cette
+  tuile ne recevait donc JAMAIS son traitement normal "tenue remplie avec
+  sa couleur d'avant clear", restant plutôt affichée telle que
+  `GridView.ClearHover` (déclenché juste avant par
+  `_gridView.SetSelectedShape(null)`) l'avait déjà dessinée — son vrai
+  état (vide, mais badge poison visible puisqu'il persiste maintenant
+  après `ClearFill`) — jusqu'au refresh final. `deferredRevealCells` ne
+  contient maintenant que les cellules dont le statut a VRAIMENT changé
+  (différence symétrique avant/après), donc une tuile empoisonnée qui se
+  fait clear suit exactement le même traitement que ses voisines (tenue
+  avec son badge poison, puis vidée au même moment, dans le même ordre,
+  par `PlayTileClearBursts`).
+- **Bonus de palier (Piece/Color Mastery) invisible quand négatif** : sur
+  rapport explicite ("Les points bonus de level d'une pièce doivent aussi
+  être comptabilisé négativement lorsqu'une de ses tuiles est empoisonné")
+  — `RunManager.ApplyPoisonScoreRule` couvrait déjà `ScoreEventType.
+  ShapeMastery`/`ColorMastery` et recalculait correctement l'agrégat en
+  négatif, mais `GameBootstrap`'s popup de bonus de palier faisait
+  `if (masteryBonus <= 0) { continue; }` — un bonus négatif (ou nul)
+  n'était donc jamais affiché ni compté dans le score progressif affiché.
+  Changé pour `== 0` et affiche maintenant le vrai montant signé en rouge
+  quand négatif, même pattern que les autres popups de score déjà
+  corrigés pour le poison.
