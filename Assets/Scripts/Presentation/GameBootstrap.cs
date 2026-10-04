@@ -1803,7 +1803,7 @@ namespace Contigu.Presentation
             }
             if (pending.Pool == UpgradePool.Grid)
             {
-                _tileChoiceView.Show(_run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending);
+                _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending);
             }
             else if (pending.Id == UpgradeId.RandomPiece)
             {

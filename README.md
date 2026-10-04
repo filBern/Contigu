@@ -7042,3 +7042,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   repositionné, le laissant décentré vers la droite tout seul.
   `ShowDefeat` le recentre maintenant à 0 ; `ShowVictory` le replace à
   +120 (le même bouton est réutilisé entre les deux écrans).
+- **Niveau des pièces manquant à l'écran de choix de tuile upgrade** : sur
+  demande explicite ("Golden cell et mirror tile upgrade il manque le lvl
+  des pièces"). `TileChoiceView` (l'écran "Select N pieces" où on choisit
+  quelles pièces du deck reçoivent une tuile upgrade Grid-pool fraîchement
+  achetée — Golden, Tinted, Multiplier, Blast, Beacon, Mirror, Seeder,
+  Catalyst, Twin ou Detonator) n'affichait aucun niveau de palier sur ses
+  cartes candidates, contrairement à `DraftView`/`DeckView`/
+  `PieceChoiceView`/`HandView`, qui montrent toutes un "Lv. X" — rendant
+  difficile de savoir quelle copie (parmi plusieurs du même type)
+  enchanter en priorité. `TileChoiceView.Show` prend maintenant aussi le
+  `RunManager` courant et chaque carte candidate affiche son propre
+  "Lv. X" (`GetColorMasteryLevel` + `GetShapeMasteryLevel` - 1), même
+  calcul et même layout "espace réservé en bas" que partout ailleurs.

@@ -27,6 +27,7 @@ namespace Contigu.Presentation
         // faudrait les rapetisser un peu").
         private const float CellSize = 98f;
         private const float PreviewSize = 81f;
+        private const float LevelLabelHeight = 18f;
         private const float BadgeFadeDuration = 0.35f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
@@ -40,6 +41,7 @@ namespace Contigu.Presentation
         /// <summary>Fires with the chosen deck indices once the player confirms.</summary>
         public event Action<IReadOnlyList<int>> TileChoiceConfirmed;
 
+        private RunManager _run;
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
@@ -120,8 +122,9 @@ namespace Contigu.Presentation
             _deck = deck;
         }
 
-        public void Show(DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def)
+        public void Show(RunManager run, DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def)
         {
+            _run = run;
             _deck = deck;
             _candidates.Clear();
             _candidates.AddRange(candidateDeckIndices);
@@ -197,11 +200,27 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            previewContainer.anchoredPosition = Vector2.zero;
+            // Nudged up to leave room at the bottom for the level label
+            // below — same "leave room at the bottom" layout DraftView/
+            // PieceChoiceView/DeckView/HandView already use for their own
+            // piece-level labels (explicit report: "Golden cell et mirror
+            // tile upgrade il manque le lvl des pièces" — this candidate-
+            // piece picker had no level label at all, for any trait).
+            previewContainer.anchoredPosition = new Vector2(0f, LevelLabelHeight * 0.5f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);
+
+            var token = _deck.Deck[deckIndex];
+            int level = _run.GetColorMasteryLevel(token.Color) + _run.GetShapeMasteryLevel(token.Shape) - 1;
+            var levelLabel = UIFactory.CreateText(cell.transform, "PieceLevel", "Lv. " + level, 13, Color.black);
+            levelLabel.raycastTarget = false;
+            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 1f);
+            levelLabel.rectTransform.sizeDelta = new Vector2(0f, LevelLabelHeight);
         }
 
         /// <summary>
