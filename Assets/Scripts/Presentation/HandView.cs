@@ -49,11 +49,20 @@ namespace Contigu.Presentation
         // pulse)".
         private const float ShufflePulseAmplitude = 0.08f;
         private const float ShufflePulseSpeed = 1.5f;
+        // Short, decaying side-to-side shake — explicit request: "qu'on lui
+        // fasse une animation de vibration courte" — on a slot the player
+        // just tried to pick up but can't (see SelectSlot).
+        private const float UnplayableShakeDuration = 0.3f;
+        private const float UnplayableShakeMagnitude = 8f;
+        private const float UnplayableShakeCycles = 4f;
 
         public event Action<int> SlotSelected;
 
         /// <summary>Fires when re-clicking the already-selected slot toggles it off (on explicit request) — GameBootstrap uses this to clear the grid's selected-shape preview the same way a successful placement does.</summary>
         public event Action SelectionCleared;
+
+        /// <summary>Fires instead of <see cref="SlotSelected"/> when the player tries to pick up a piece that has no valid placement anywhere on the grid (explicit request: "Lorsqu'une pièce ne peut pas être joué, j'aimerais qu'elle ne puisse pas être récupéré") — the slot shakes (see UnplayableShakeDuration) and stays unselected; GameBootstrap uses this to show an emphasized status message and pulse the Shuffle button.</summary>
+        public event Action<int> SlotUnplayable;
 
         /// <summary>Fires when the player clicks the Shuffle icon on the hand box — GameBootstrap forwards this to RunManager.ShuffleHand and refreshes the hand/button state with the result (see RunManager.ShuffleHand/ShufflesRemaining).</summary>
         public event Action ShuffleRequested;
@@ -69,6 +78,7 @@ namespace Contigu.Presentation
         private Button _shuffleButton;
         private Text _shuffleCountLabel;
         private Coroutine _shufflePulseCoroutine;
+        private Coroutine[] _shakeCoroutines;
         private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
@@ -118,6 +128,7 @@ namespace Contigu.Presentation
             _previewContainers = new RectTransform[DeckManager.HandSize];
             _slotLevelLabels = new Text[DeckManager.HandSize];
             _slotLockLabels = new Text[DeckManager.HandSize];
+            _shakeCoroutines = new Coroutine[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
@@ -406,6 +417,28 @@ namespace Contigu.Presentation
 
         private void SelectSlot(int idx)
         {
+            // Checked up front, before the piece is actually picked up —
+            // explicit request: "Lorsqu'une pièce ne peut pas être joué,
+            // j'aimerais qu'elle ne puisse pas être récupéré" — a piece
+            // with nowhere legal to go anywhere on the board never becomes
+            // selected/draggable; it just shakes in place instead.
+            var token = _deck.Hand[idx].Value;
+            var rotation = _deck.HandRotations[idx];
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
+            if (!_run.Grid.HasAnyValidPlacement(new[] { shape }))
+            {
+                if (_shakeCoroutines[idx] != null)
+                {
+                    StopCoroutine(_shakeCoroutines[idx]);
+                }
+                _shakeCoroutines[idx] = StartCoroutine(ShakeSlot(idx));
+                if (SlotUnplayable != null)
+                {
+                    SlotUnplayable(idx);
+                }
+                return;
+            }
+
             _selectedIndex = idx;
             UpdateSelectionVisuals();
             ShowCursorGhost(idx);
@@ -413,6 +446,25 @@ namespace Contigu.Presentation
             {
                 SlotSelected(idx);
             }
+        }
+
+        /// <summary>Short, decaying side-to-side shake on a slot's own background — see UnplayableShakeDuration's own doc comment.</summary>
+        private IEnumerator ShakeSlot(int index)
+        {
+            var rect = _slotBackgrounds[index].rectTransform;
+            Vector2 originalPos = rect.anchoredPosition;
+            float t = 0f;
+            while (t < UnplayableShakeDuration)
+            {
+                t += Time.deltaTime;
+                float progress = Mathf.Clamp01(t / UnplayableShakeDuration);
+                float damping = 1f - progress;
+                float offsetX = Mathf.Sin(progress * UnplayableShakeCycles * Mathf.PI * 2f) * UnplayableShakeMagnitude * damping;
+                rect.anchoredPosition = originalPos + new Vector2(offsetX, 0f);
+                yield return null;
+            }
+            rect.anchoredPosition = originalPos;
+            _shakeCoroutines[index] = null;
         }
 
         private bool IsBossLockedSlot(int index)

@@ -43,6 +43,8 @@ namespace Contigu.Presentation
         private const float StatusPulseAmplitude = 0.05f;
         private const float StatusPulseSpeed = 1.5f;
         private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
+        private const int DefaultStatusFontSize = 19;
+        private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
 
         private RunManager _run;
@@ -369,9 +371,18 @@ namespace Contigu.Presentation
         /// stays still, since a constant pulse there would compete with the
         /// message actually being new/important.
         /// </summary>
-        private void SetStatusText(string text)
+        /// <summary>
+        /// <paramref name="emphasize"/> bumps the status text up to <see
+        /// cref="EmphasizedStatusFontSize"/> instead of its default <see
+        /// cref="DefaultStatusFontSize"/> — explicit request: "le message
+        /// qu'on ne peut pas la poser soit plus gros", for the "this piece
+        /// can't be placed anywhere" warning specifically. Every other
+        /// caller leaves it at the default size.
+        /// </summary>
+        private void SetStatusText(string text, bool emphasize = false)
         {
             _statusText.text = text;
+            _statusText.fontSize = emphasize ? EmphasizedStatusFontSize : DefaultStatusFontSize;
             if (text == IdleStatusMessage)
             {
                 StartStatusPulse();
@@ -487,7 +498,7 @@ namespace Contigu.Presentation
             _hudView.Build(mainRoot, mainRoot, _tooltipView);
             _hudView.SetLueur(_run.Lueur);
 
-            _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, 19, UITheme.TextMutedOnBackground);
+            _statusText = UIFactory.CreateText(mainRoot, "Status", IdleStatusMessage, DefaultStatusFontSize, UITheme.TextMutedOnBackground);
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -644,6 +655,7 @@ namespace Contigu.Presentation
             _gridView.CellClicked += OnCellClicked;
             _gridView.HoverValidityChanged += _handView.SetHoveringValidDrop;
             _handView.SlotSelected += OnHandSlotSelected;
+            _handView.SlotUnplayable += OnHandSlotUnplayable;
             _handView.SelectionCleared += OnHandSelectionCleared;
             _handView.ShuffleRequested += OnShuffleRequested;
             _shopView.BlisterBuyRequested += OnBlisterBuyRequested;
@@ -702,31 +714,35 @@ namespace Contigu.Presentation
             // Fires for BOTH a plain click and a drag's own start (see
             // HandView.SelectSlot, called from both BeginSlotDrag and
             // OnSlotClicked) — one hook covers "Ramasser une pièce" for
-            // either interaction.
+            // either interaction. HandView itself already refused the
+            // selection entirely (see SlotUnplayable below) if this piece
+            // has nowhere legal to go, so by the time this fires the piece
+            // is always actually placeable somewhere.
             SfxManager.Play(SfxId.PickUpPiece);
             var token = slot.Value;
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
+            _handView.SetShufflePulsing(false);
+            SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
+        }
 
-            // Checked up front instead of letting the player discover it by
-            // clicking around the board (explicit request: "on empêche le
-            // joueur de perdre son temps a essayer de trouver un endroit a
-            // placer la piece") — if this exact piece has nowhere legal to
-            // go anywhere on the grid, say so immediately and point at
-            // Shuffle with a slow pulse ("on devrait mettre en valeur le
-            // shuffle button en même temps") instead of the usual "drag to
-            // place" prompt.
-            if (!_run.Grid.HasAnyValidPlacement(new[] { shape }))
-            {
-                _handView.SetShufflePulsing(true);
-                SetStatusText("This piece can't be placed anywhere — try shuffling your hand.");
-            }
-            else
-            {
-                _handView.SetShufflePulsing(false);
-                SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
-            }
+        /// <summary>
+        /// HandView refused to pick up this slot's piece because it has no
+        /// valid placement anywhere on the board (explicit request:
+        /// "Lorsqu'une pièce ne peut pas être joué, j'aimerais qu'elle ne
+        /// puisse pas être récupéré" — the slot itself already played its
+        /// own short shake, see HandView.ShakeSlot). Says so in an
+        /// emphasized (larger) status message ("le message qu'on ne peut
+        /// pas la poser soit plus gros") and points at Shuffle with a slow
+        /// pulse ("on devrait mettre en valeur le shuffle button en même
+        /// temps") instead of letting the player keep clicking around the
+        /// board to discover it themselves.
+        /// </summary>
+        private void OnHandSlotUnplayable(int handIndex)
+        {
+            _handView.SetShufflePulsing(true);
+            SetStatusText("This piece can't be placed anywhere — try shuffling your hand.", emphasize: true);
         }
 
         /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>

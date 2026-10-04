@@ -7055,3 +7055,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `RunManager` courant et chaque carte candidate affiche son propre
   "Lv. X" (`GetColorMasteryLevel` + `GetShapeMasteryLevel` - 1), même
   calcul et même layout "espace réservé en bas" que partout ailleurs.
+- **Pièce injouable : plus récupérable, vibration courte, message plus
+  gros** : sur demande explicite ("Lorsqu'une pièce ne peut pas être
+  joué, j'aimerais qu'elle ne puisse pas être récupéré. Qu'on lui fasse
+  une animation de vibration courte et que le message qu'on ne peut pas
+  la poser soit plus gros"). `HandView.SelectSlot` (point d'entrée commun
+  au clic ET au début d'un drag) vérifie maintenant `GridManager.
+  HasAnyValidPlacement` AVANT de sélectionner quoi que ce soit — une
+  pièce sans emplacement valide ne devient jamais sélectionnée/
+  déplaçable : elle joue juste une courte vibration décroissante sur
+  place (nouveau `HandView.ShakeSlot`, protégé contre le chevauchement
+  si on reclique pendant l'animation) et un nouvel événement
+  `SlotUnplayable` prévient `GameBootstrap`, qui affiche le message
+  d'avertissement avec une taille de police plus grande (nouveau
+  paramètre `emphasize` sur `SetStatusText`, 27 au lieu de 19) et
+  déclenche toujours le pulse du bouton Shuffle.
