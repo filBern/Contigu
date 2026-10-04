@@ -7070,3 +7070,50 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   d'avertissement avec une taille de police plus grande (nouveau
   paramètre `emphasize` sur `SetStatusText`, 27 au lieu de 19) et
   déclenche toujours le pulse du bouton Shuffle.
+- **5 nouveaux ennemis + boss (suite du vertical slice)** : sur demande
+  explicite ("Ajoutons de nouveaux ennemies et boss"), en reprenant le
+  GDD fourni par le joueur (section "07 Enemy System & Combat") pour
+  construire les 5 ennemis qui restaient en commentaire depuis la
+  première passe — réponses explicites du joueur avant le code :
+  source des mécaniques = "Je te redonne le GDD" (pas d'invention),
+  scope = "Les 5 d'un coup", format boss = "Un seul ennemi costaud".
+  `EnemyId`/`EnemyCatalog` : `HeavyLocker` (Creator/Boss, 1200 HP,
+  réutilise tel quel le verrou roaming de `Locker` — le GDD dit "locks
+  1 grid case", même vocabulaire que `Locker`, donc une case de grille
+  et pas un slot de main), `Plague` (Creator/Boss, 1800 HP, réutilise
+  le poison roaming de `Poisoner` généralisé à `count` cases — 5 au
+  lieu de 1), `Thief` (Creator/Boss, 1000 HP, vole 1 pièce aléatoire de
+  la main à chaque Shuffle — nouveau `DeckManager.StealRandomHandTile`,
+  la pièce part au FOND de la pioche, le deck ne rétrécit jamais),
+  `Reclaimer` (Reactor/Boss, 1100 HP, consomme TOUTES les cases
+  empoisonnées de la grille à chaque Shuffle et se soigne de 1 HP par
+  case consommée — nouveau `EnemyInstance.Heal`/`RemovePoisonedCell`)
+  et `Leech` (Reactor seul, pas Boss, 600 HP, se soigne quand le joueur
+  clear une ligne — nouveau `PlacementResult.ClearedLineCount` distinct
+  du `LineClearCellCount` existant qui compte les CASES pas les
+  lignes, nouveau `ScoringConstants.LeechHealPerLineClear` = 15, hook
+  dans `RunManager.PlacePiece`). Nouvelle valeur `EnemyRole.Reactor`
+  (le GDD tague certains ennemis "Creator/Boss" ou "Reactor/Boss" —
+  choix pris de toujours privilégier le tag Boss quand le GDD en donne
+  deux). `RunManager.ResolveEnemyShuffleEffects` reste l'unique point
+  de résolution pour les effets basés sur la grille (Locker/
+  HeavyLocker/Poisoner/Plague/Reclaimer, dans l'ordre d'encounter —
+  c'est ce qui fait marcher naturellement l'interaction "Order-based"
+  du GDD entre Poisoner et Reclaimer, sans cas spécial : Poisoner avant
+  Reclaimer le nourrit avec du poison frais, Reclaimer avant Poisoner
+  n'a rien à manger encore) ; Thief est résolu séparément, APRÈS
+  `Deck.DrawNewHand()` plutôt qu'avant comme tous les autres effets,
+  puisqu'il doit voler dans la main qui vient d'être distribuée.
+  `EncounterCatalog` complète maintenant les rondes 5 à 8 de Classic :
+  ronde 5 = Poisoner+Reclaimer, ronde 6 = Reclaimer+Poisoner (ordre
+  inversé, pour enseigner l'interaction dans les deux sens), ronde 7 =
+  Thief+Leech (l'exemple de progression du GDD cite exactement cette
+  paire), ronde 8 (2e ronde boss de Classic) = Heavy Locker seul — le
+  candidat Boss le plus autonome des 4 parmi Heavy Locker/Plague/Thief/
+  Reclaimer, choix personnel non explicitement confirmé par le joueur
+  au-delà de ses 3 réponses ci-dessus. Plague n'est pour l'instant
+  planifié dans aucune ronde (testé directement via un nouveau
+  `RunManager.DebugSetEncounter`) — reste disponible pour une future
+  ronde/Endless. Nouveaux tints `HudView.EnemyIconColor` pour les 5
+  (bleu/rouge plus saturés pour les versions Boss de Locker/Poisoner,
+  or pour Thief, vert pour Reclaimer, violet pour Leech).

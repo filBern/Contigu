@@ -680,6 +680,10 @@ namespace Contigu.Core
             if (HasActiveEncounter)
             {
                 ApplyDamageToEncounter(placement.TotalScore);
+                if (placement.ClearedLineCount > 0)
+                {
+                    HealLeech(placement.ClearedLineCount);
+                }
             }
             // Don't auto-refill yet — if this placement also ends the round,
             // drawing the next 3 pieces here would hand them out before the
@@ -1568,6 +1572,17 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>Debug-only helper: replaces the current encounter outright with brand-new instances of exactly these ids, bypassing EncounterCatalog entirely — lets EditMode tests exercise an enemy (e.g. Plague) that this first authored pass never schedules on its own round, without waiting on a future EncounterCatalog entry to exist.</summary>
+        public void DebugSetEncounter(params EnemyId[] ids)
+        {
+            var instances = new List<EnemyInstance>(ids.Length);
+            for (int i = 0; i < ids.Length; i++)
+            {
+                instances.Add(new EnemyInstance(EnemyCatalog.Get(ids[i])));
+            }
+            _currentEncounter = instances;
+        }
+
         /// <summary>Debug-only helper: adds Lueur directly, bypassing gameplay entirely — same "skip the grind" spirit as <see cref="DebugGrantModifier"/>, used by EditMode tests that need to exercise shop purchases without earning real Lueur from line clears first.</summary>
         public void DebugGrantLueur(int amount)
         {
@@ -1627,6 +1642,10 @@ namespace Contigu.Core
                 ResolveEnemyShuffleEffects();
             }
             Deck.DrawNewHand();
+            if (HasActiveEncounter)
+            {
+                ResolveThiefShuffleEffect();
+            }
         }
 
         private void EvaluateRoundEnd()
@@ -1753,6 +1772,19 @@ namespace Contigu.Core
             }
         }
 
+        /// <summary>"Leech" (GDD §07: "Heals when the player destroys a line. The effect stops when it dies.") — heals every alive Leech instance <see cref="ScoringConstants.LeechHealPerLineClear"/> HP per row/column this placement cleared (see PlacementResult.ClearedLineCount). EnemyInstance.Heal itself no-ops once dead, so no extra guard is needed for "the effect stops when it dies."</summary>
+        private void HealLeech(int clearedLineCount)
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.Definition.Id == EnemyId.Leech)
+                {
+                    enemy.Heal(ScoringConstants.LeechHealPerLineClear * clearedLineCount);
+                }
+            }
+        }
+
         /// <summary>GDD §07: "When an enemy dies, its active effects are cancelled/cleaned up immediately." Locker's current lock is released; every tile Poisoner itself poisoned is normalized.</summary>
         private void CleanUpDefeatedEnemy(EnemyInstance enemy)
         {
@@ -1774,7 +1806,10 @@ namespace Contigu.Core
         /// Resolves every alive enemy's own On-Shuffle effect, in encounter
         /// order (GDD §07: "Enemy order is therefore part of the puzzle").
         /// Called from <see cref="DrawFreshHand"/>, always before the fresh
-        /// hand is actually dealt.
+        /// hand is actually dealt. HeavyLocker/Plague are Locker's/
+        /// Poisoner's own mechanics at boss scale (see EnemyCatalog); Thief
+        /// is deliberately NOT handled here (see ResolveThiefShuffleEffect's
+        /// own doc comment for why).
         /// </summary>
         private void ResolveEnemyShuffleEffects()
         {
@@ -1785,13 +1820,21 @@ namespace Contigu.Core
                 {
                     continue;
                 }
-                if (enemy.Definition.Id == EnemyId.Locker)
+                if (enemy.Definition.Id == EnemyId.Locker || enemy.Definition.Id == EnemyId.HeavyLocker)
                 {
                     ResolveLockerShuffleEffect(enemy);
                 }
                 else if (enemy.Definition.Id == EnemyId.Poisoner)
                 {
-                    ResolvePoisonerShuffleEffect(enemy);
+                    ResolvePoisonerShuffleEffect(enemy, 1);
+                }
+                else if (enemy.Definition.Id == EnemyId.Plague)
+                {
+                    ResolvePoisonerShuffleEffect(enemy, 5);
+                }
+                else if (enemy.Definition.Id == EnemyId.Reclaimer)
+                {
+                    ResolveReclaimerShuffleEffect(enemy);
                 }
             }
         }
@@ -1832,17 +1875,19 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07: "On each Shuffle, poisons 1 tile." Now roams exactly
-        /// like Locker's single lock instead of accumulating (explicit
-        /// request: "Les poison tiles doivent être retiré lors d'un
-        /// shuffle pour mieux être replacé aléatoirement, comme pour les
-        /// locked cell") — releases every cell this instance poisoned so
-        /// far (including one a line clear already emptied but left
-        /// poisoned — see Cell.ClearFill) before picking a new one. Only
-        /// targets an already-FILLED, not-yet-poisoned cell (an empty one
-        /// has no points to invert yet); a no-op tick if none exists.
+        /// GDD §07: "On each Shuffle, poisons 1 tile" (Poisoner, count=1)
+        /// or "Poisons 5 tiles" (Plague, count=5 — spec extension, see
+        /// EnemyCatalog.Plague). Roams exactly like Locker's single lock
+        /// instead of accumulating (explicit request: "Les poison tiles
+        /// doivent être retiré lors d'un shuffle pour mieux être replacé
+        /// aléatoirement, comme pour les locked cell") — releases every
+        /// cell this instance poisoned so far (including one a line clear
+        /// already emptied but left poisoned — see Cell.ClearFill) before
+        /// picking new ones. Only targets already-FILLED, not-yet-poisoned
+        /// cells (an empty one has no points to invert yet); picks as many
+        /// of <paramref name="count"/> as there are candidates available.
         /// </summary>
-        private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner)
+        private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner, int count)
         {
             for (int i = 0; i < poisoner.PoisonedCells.Count; i++)
             {
@@ -1862,14 +1907,82 @@ namespace Contigu.Core
                     }
                 }
             }
-            if (candidates.Count == 0)
-            {
-                return;
-            }
 
-            var pos = candidates[_rng.Next(candidates.Count)];
-            Grid.GetCell(pos).IsPoisoned = true;
-            poisoner.AddPoisonedCell(pos);
+            for (int i = 0; i < count && candidates.Count > 0; i++)
+            {
+                int idx = _rng.Next(candidates.Count);
+                var pos = candidates[idx];
+                candidates.RemoveAt(idx);
+                Grid.GetCell(pos).IsPoisoned = true;
+                poisoner.AddPoisonedCell(pos);
+            }
+        }
+
+        /// <summary>
+        /// GDD §07: "On Shuffle, consumes poisoned tiles and heals 1 HP
+        /// per poisoned tile consumed." Scans the WHOLE grid (not just
+        /// this instance's own tracking — Reclaimer has none of its own)
+        /// for any currently-poisoned cell, normalizes each one, and heals
+        /// 1 HP per cell consumed. Must also scrub the cell out of
+        /// whichever OTHER enemy instance's own PoisonedCells list still
+        /// references it (see RemovePoisonFromOwner) so
+        /// GetPoisonedPositionsSnapshot — which reads enemy.PoisonedCells,
+        /// not Cell.IsPoisoned, for scoring — never goes stale. Resolving
+        /// Reclaimer in encounter order AFTER a Poisoner/Plague lets it
+        /// consume the poison they just placed THIS shuffle; resolving it
+        /// BEFORE them only lets it consume whatever (if anything) survived
+        /// from the previous shuffle — the GDD's own "Order-based
+        /// interactions" falls out of this ordering for free, no special
+        /// casing needed.
+        /// </summary>
+        private void ResolveReclaimerShuffleEffect(EnemyInstance reclaimer)
+        {
+            int consumed = 0;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    var pos = new Vector2Int(x, y);
+                    var cell = Grid.GetCell(pos);
+                    if (cell.IsPoisoned)
+                    {
+                        cell.IsPoisoned = false;
+                        RemovePoisonFromOwner(pos);
+                        consumed++;
+                    }
+                }
+            }
+            reclaimer.Heal(consumed);
+        }
+
+        /// <summary>Removes <paramref name="pos"/> from every enemy instance's own PoisonedCells bookkeeping in the current encounter (see EnemyInstance.RemovePoisonedCell) — called whenever something other than that instance's own next Shuffle consumes the tile first, e.g. ResolveReclaimerShuffleEffect.</summary>
+        private void RemovePoisonFromOwner(Vector2Int pos)
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                _currentEncounter[i].RemovePoisonedCell(pos);
+            }
+        }
+
+        /// <summary>
+        /// GDD §07: "On each Shuffle, steals 1 random tile from the hand."
+        /// Unlike every other enemy's On-Shuffle effect (grid-based,
+        /// resolved via ResolveEnemyShuffleEffects BEFORE Deck.DrawNewHand),
+        /// Thief needs the FRESH hand to already exist to steal from it —
+        /// so DrawFreshHand calls this separately, AFTER the deal. Invisible
+        /// to the player either way: nothing is shown until the whole
+        /// Shuffle resolves.
+        /// </summary>
+        private void ResolveThiefShuffleEffect()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (!enemy.IsDead && enemy.Definition.Id == EnemyId.Thief)
+                {
+                    Deck.StealRandomHandTile(_rng);
+                }
+            }
         }
 
         /// <summary>Every currently-poisoned position across every alive Poisoner instance in <see cref="CurrentEncounter"/> — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>

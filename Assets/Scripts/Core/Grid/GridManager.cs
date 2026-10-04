@@ -379,6 +379,7 @@ namespace Contigu.Core
             result.ClearedCellColors = clearInfo.ClearedCellColors;
             result.ClearedCellTraits = clearInfo.ClearedCellTraits;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
+            result.ClearedLineCount = clearInfo.ClearedLineCount;
             // Bastion cells (Cell.IsBastion) earn the same per-cell bonus as
             // an actually-cleared cell without being in ClearedCells (they're
             // never emptied) — see CollectLineCell/BastionBonusCells.

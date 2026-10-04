@@ -36,6 +36,9 @@ namespace Contigu.Core
         /// <summary>Multiplier applied to a placement's whole group+golden bonus AND its line-clear bonus when the group contains a multiplier-zone cell — broader reach than TintedMatchMultiplier, matching its higher (Uncommon vs Common) rarity.</summary>
         public const int MultiplierZoneMultiplier = 2;
 
+        /// <summary>"Leech" enemy mechanic (spec extension — GDD §07: "Heals when the player destroys a line") — HP healed PER ROW/COLUMN cleared, not per cell (see PlacementResult.ClearedLineCount/RunManager.PlacePiece's own Leech hook). Not a GDD-specified number; expect this to drift as balance work continues, same as every enemy's own MaxHp.</summary>
+        public const int LeechHealPerLineClear = 15;
+
         // ---- Modifier bonuses (see ModifierCatalog) ----
         // A good number of the modifiers below were converted from a flat
         // "+X pts" bonus to a "xN" MULTIPLIER (feeding

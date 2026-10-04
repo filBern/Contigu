@@ -152,6 +152,16 @@ namespace Contigu.Core
         public int LineClearCellCount;
 
         /// <summary>
+        /// How many rows/columns this placement completed and cleared —
+        /// unlike <see cref="LineClearCellCount"/> (total CELLS emptied,
+        /// which double-counts a cell shared by a completed row AND
+        /// column), this is the straight count of lines themselves. Used
+        /// by RunManager to heal the "Leech" enemy (spec extension — GDD
+        /// §07: "Heals when the player destroys a line").
+        /// </summary>
+        public int ClearedLineCount;
+
+        /// <summary>
         /// Cell(s) destroyed by a trait effect (Void Tile's random clear,
         /// Kamikaze Tile's surrounding-tile wipe) rather than by completing
         /// a line — distinct from <see cref="ClearedCells"/>, which

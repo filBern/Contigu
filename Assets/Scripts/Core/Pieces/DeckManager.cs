@@ -121,6 +121,40 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// "Thief" enemy mechanic (spec extension — GDD §07: "On each
+        /// Shuffle, steals 1 random tile from the hand"): empties one
+        /// random currently-occupied hand slot, returning its token to the
+        /// bottom of the draw pile rather than destroying it outright — the
+        /// deck's own composition never shrinks, the piece is just
+        /// unavailable until a later Shuffle happens to draw it again. A
+        /// no-op (returns false) if every slot is already empty. Called
+        /// from RunManager.DrawFreshHand AFTER the fresh hand is dealt
+        /// (Thief needs it to exist to steal from), distinct from every
+        /// other enemy's On-Shuffle effect (grid-based, resolved before the
+        /// deal) — invisible either way, since nothing is shown to the
+        /// player until the whole Shuffle resolves.
+        /// </summary>
+        public bool StealRandomHandTile(IRandomProvider rng)
+        {
+            var occupied = new List<int>();
+            for (int i = 0; i < HandSize; i++)
+            {
+                if (_hand[i].HasValue)
+                {
+                    occupied.Add(i);
+                }
+            }
+            if (occupied.Count == 0)
+            {
+                return false;
+            }
+            int idx = occupied[rng.Next(occupied.Count)];
+            _drawPile.Insert(0, _hand[idx].Value);
+            _hand[idx] = null;
+            return true;
+        }
+
+        /// <summary>
         /// Empties the <paramref name="handIndex"/> slot in place — the other
         /// slots are never shifted (on explicit request; see the field
         /// comment on <see cref="_hand"/>). Per spec 4.2, a fresh hand of 3

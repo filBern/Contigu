@@ -47,6 +47,28 @@ namespace Contigu.Core
             _poisonedCells.Clear();
         }
 
+        /// <summary>Removes one specific cell from this instance's own poisoned-cells bookkeeping if present (no-op otherwise) — used when something OTHER than this instance's own next Shuffle un-poisons the cell first, e.g. "Reclaimer" consuming it (see RunManager.ResolveReclaimerShuffleEffect), so this instance's own list never goes stale against the grid's real Cell.IsPoisoned state.</summary>
+        public void RemovePoisonedCell(Vector2Int pos)
+        {
+            _poisonedCells.Remove(pos);
+        }
+
+        /// <summary>
+        /// "Reclaimer"/future healers (spec extension — GDD §07: "heals 1
+        /// HP per poisoned tile consumed") — clamped at <see
+        /// cref="EnemyDefinition.MaxHp"/>, same ceiling <see
+        /// cref="ApplyDamage"/>'s own negative-damage healing already
+        /// respects.
+        /// </summary>
+        public void Heal(int amount)
+        {
+            if (IsDead || amount <= 0)
+            {
+                return;
+            }
+            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, Definition.MaxHp);
+        }
+
         /// <summary>
         /// Applies <paramref name="damage"/> (this run's own placement score
         /// — see RunManager.ApplyDamageToEncounter) clamped to [0, MaxHp].

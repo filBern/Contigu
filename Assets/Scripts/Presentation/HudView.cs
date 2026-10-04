@@ -466,6 +466,19 @@ namespace Contigu.Presentation
                     return UITheme.LightBlue;
                 case EnemyId.Poisoner:
                     return UITheme.Danger;
+                // HeavyLocker/Plague are Locker's/Poisoner's own Boss-tier
+                // escalations (see EnemyCatalog) — same family hue, darker
+                // and more saturated to read as "the tougher version".
+                case EnemyId.HeavyLocker:
+                    return new Color(0.173f, 0.384f, 0.573f); // darker/more saturated LightBlue
+                case EnemyId.Plague:
+                    return new Color(0.671f, 0.169f, 0.235f); // darker/more saturated Danger
+                case EnemyId.Thief:
+                    return UITheme.ButtonSelected; // gold — stealing
+                case EnemyId.Reclaimer:
+                    return UITheme.Success; // green — it's the healer
+                case EnemyId.Leech:
+                    return new Color(0.573f, 0.329f, 0.667f); // purple — the other healer, kept visually distinct from Reclaimer
                 default:
                     return UITheme.TextMuted;
             }
