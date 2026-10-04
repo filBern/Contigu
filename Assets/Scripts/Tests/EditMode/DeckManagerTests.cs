@@ -241,6 +241,79 @@ namespace Contigu.Tests
             Assert.IsFalse(dm.DuplicateOfType(ShapeId.STetro, PieceColor.Joker));
         }
 
+        // ---- "Replace a piece" (redesign of "Remove a piece", explicit
+        // request: "Les upgrades 'remove' sont vraiment chiante, peux-tu la
+        // changer pour un replace?") ----
+
+        [Test]
+        public void ReplaceOneOfType_RemovesOneAddsOne_NetCountUnchanged()
+        {
+            var tokens = new List<PieceToken>
+            {
+                new PieceToken(ShapeId.Single, PieceColor.Coral),
+                new PieceToken(ShapeId.Single, PieceColor.Coral),
+                new PieceToken(ShapeId.Sq2, PieceColor.Teal)
+            };
+            var dm = new DeckManager(tokens, new SystemRandomProvider(1));
+            int before = dm.DeckCount;
+
+            bool replaced = dm.ReplaceOneOfType(ShapeId.Single, PieceColor.Coral, ShapeId.Sq2, PieceColor.Teal);
+
+            Assert.IsTrue(replaced);
+            Assert.AreEqual(before, dm.DeckCount, "Net deck count should never change — one removed, one added");
+            Assert.AreEqual(1, dm.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Coral)));
+            Assert.AreEqual(2, dm.Deck.Count(t => t.Matches(ShapeId.Sq2, PieceColor.Teal)));
+        }
+
+        [Test]
+        public void ReplaceOneOfType_UnknownRemoveType_Fails()
+        {
+            var dm = MakeMinimalDeck(); // all Single/Coral
+            int before = dm.DeckCount;
+
+            Assert.IsFalse(dm.ReplaceOneOfType(ShapeId.STetro, PieceColor.Joker, ShapeId.Single, PieceColor.Coral));
+            Assert.AreEqual(before, dm.DeckCount);
+        }
+
+        [Test]
+        public void ReplaceOneOfType_UnknownAddType_Fails()
+        {
+            var dm = MakeMinimalDeck(); // all Single/Coral
+            int before = dm.DeckCount;
+
+            Assert.IsFalse(dm.ReplaceOneOfType(ShapeId.Single, PieceColor.Coral, ShapeId.STetro, PieceColor.Joker));
+            Assert.AreEqual(before, dm.DeckCount);
+        }
+
+        [Test]
+        public void ReplaceOneOfType_NeverBlockedByMinDeckFloor()
+        {
+            // Unlike the old RemoveOneOfType, exactly MinDeckSize tokens
+            // should still allow a Replace — the net count never drops
+            // below the floor since a duplicate goes right back in.
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < DeckManager.MinDeckSize - 1; i++)
+            {
+                tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
+            }
+            tokens.Add(new PieceToken(ShapeId.Sq2, PieceColor.Teal));
+            var dm = new DeckManager(tokens, new SystemRandomProvider(1));
+            Assert.AreEqual(DeckManager.MinDeckSize, dm.DeckCount);
+
+            Assert.IsTrue(dm.ReplaceOneOfType(ShapeId.Single, PieceColor.Coral, ShapeId.Sq2, PieceColor.Teal));
+            Assert.AreEqual(DeckManager.MinDeckSize, dm.DeckCount);
+        }
+
+        [Test]
+        public void ReplaceOneOfType_SameTypeForBoth_IsHarmlessNoOp()
+        {
+            var dm = MakeMinimalDeck();
+            int before = dm.DeckCount;
+
+            Assert.IsTrue(dm.ReplaceOneOfType(ShapeId.Single, PieceColor.Coral, ShapeId.Single, PieceColor.Coral));
+            Assert.AreEqual(before, dm.DeckCount);
+        }
+
         [Test]
         public void AddJoker_AddsAJokerColoredTokenOfSomeShape()
         {

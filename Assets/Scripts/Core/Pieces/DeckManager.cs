@@ -274,6 +274,42 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>
+        /// "Replace a piece" — redesign of the old "Remove a piece"
+        /// (explicit request: "Les upgrades 'remove' sont vraiment
+        /// chiante, peux-tu la changer pour un replace?"). Removing a type
+        /// outright used to shrink the deck toward MinDeckSize, which could
+        /// backfire; this instead removes one copy of (<paramref
+        /// name="removeShape"/>, <paramref name="removeColor"/>) and
+        /// immediately adds one copy of (<paramref name="addShape"/>,
+        /// <paramref name="addColor"/>) — both types must already exist in
+        /// the deck (see UpgradeSystem.GetCandidateTypesFor/
+        /// GetReplacementCandidateTypesFor, which only ever offer real deck
+        /// types), so the net deck count never changes and MinDeckSize is
+        /// never a concern. Replacing a type with itself is a harmless
+        /// no-op (removes then immediately re-adds one copy) rather than an
+        /// error, in case a degenerate (near single-type) deck ever forces
+        /// that choice.
+        /// </summary>
+        public bool ReplaceOneOfType(ShapeId removeShape, PieceColor removeColor, ShapeId addShape, PieceColor addColor)
+        {
+            int idx = _deck.FindIndex(t => t.Matches(removeShape, removeColor));
+            if (idx < 0 || !_deck.Exists(t => t.Matches(addShape, addColor)))
+            {
+                return false;
+            }
+
+            _deck.RemoveAt(idx);
+            int dpIdx = _drawPile.FindIndex(t => t.Matches(removeShape, removeColor));
+            if (dpIdx >= 0)
+            {
+                _drawPile.RemoveAt(dpIdx);
+            }
+
+            AddToken(new PieceToken(addShape, addColor));
+            return true;
+        }
+
         /// <summary>Adds a joker-colored piece in a uniformly random shape (on explicit request — used to always be a fixed Single tile). Returns the shape actually rolled so the caller (see UpgradeSystem.ApplyJoker) can show the player what was really added instead of just naming the upgrade.</summary>
         public ShapeId AddJoker(IRandomProvider rng)
         {

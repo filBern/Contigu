@@ -93,7 +93,7 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Applies a Bank-pool upgrade that needs a sub-choice (Retirer/
+        /// Applies a Bank-pool upgrade that needs a sub-choice (Replace/
         /// Dupliquer/Recolorer) directly to the deck. Joker — the one Bank
         /// upgrade with no sub-choice — goes through <see cref="ApplyJoker"/>
         /// instead, not here (see RunManager.BuyUpgradeSlot). Grid-pool
@@ -101,16 +101,16 @@ namespace Contigu.Core
         /// always resolves them via <see cref="ApplyToChosenTiles"/> instead,
         /// since the player picks which deck tokens receive the trait rather
         /// than it being assigned at random (spec: "un choix de 5 tiles").
-        /// Returns false if the sub-choice couldn't be resolved (e.g.
-        /// removing the last copy of a type while the deck is at its floor)
-        /// or if <paramref name="upgrade"/> isn't one of the three above.
+        /// Returns false if the sub-choice couldn't be resolved (e.g. either
+        /// of Replace's two chosen types no longer exists) or if <paramref
+        /// name="upgrade"/> isn't one of the three above.
         /// </summary>
         public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, DeckManager deck)
         {
             switch (upgrade.Id)
             {
-                case UpgradeId.RemovePiece:
-                    return deck.RemoveOneOfType(subChoice.Shape, subChoice.Color);
+                case UpgradeId.ReplacePiece:
+                    return deck.ReplaceOneOfType(subChoice.Shape, subChoice.Color, subChoice.AddShape, subChoice.AddColor);
 
                 case UpgradeId.DuplicatePiece:
                     return deck.DuplicateOfType(subChoice.Shape, subChoice.Color);
@@ -229,10 +229,15 @@ namespace Contigu.Core
 
         /// <summary>
         /// The candidate piece TYPES to show for <paramref name="upgrade"/>'s
-        /// sub-choice (Retirer/Dupliquer/Recolorer) — empty for anything else
-        /// (Grid-pool, or Bank with no sub-choice like Joker). Retirer
-        /// additionally filters to types the deck can actually still remove
-        /// (see DeckManager.CanRemove), same floor Apply itself enforces.
+        /// FIRST sub-choice step (Replace/Dupliquer/Recolorer — which type
+        /// to act on) — empty for anything else (Grid-pool, or Bank with no
+        /// sub-choice like Joker). No eligibility filter needed any more:
+        /// unlike the old "Remove a piece" (which had to stay above
+        /// DeckManager.MinDeckSize, since it genuinely shrank the deck),
+        /// Replace immediately adds a duplicate of another type right back
+        /// (see GetReplacementCandidateTypesFor/DeckManager.
+        /// ReplaceOneOfType), so the net count never changes and any type
+        /// currently in the deck is always a valid pick.
         /// </summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetCandidateTypesFor(UpgradeDefinition upgrade, DeckManager deck)
         {
@@ -240,10 +245,30 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<(ShapeId, PieceColor)>();
             }
-            System.Func<(ShapeId Shape, PieceColor Color), bool> eligible = upgrade.Id == UpgradeId.RemovePiece
-                ? (System.Func<(ShapeId Shape, PieceColor Color), bool>)(t => deck.CanRemove(t.Shape, t.Color))
-                : null;
-            return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
+            return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng);
+        }
+
+        /// <summary>
+        /// "Replace a piece"'s SECOND sub-choice step: which existing deck
+        /// type to duplicate in place of <paramref name="excludeShape"/>/
+        /// <paramref name="excludeColor"/> (the type just picked to go away
+        /// — see GetCandidateTypesFor for the first step). Excluded from
+        /// its own candidate list so the player isn't offered the pointless
+        /// no-op of "replacing" a type with itself; falls back to including
+        /// it anyway if that exclusion would leave zero candidates (a
+        /// deck that's down to a single type), so the picker never comes up
+        /// empty.
+        /// </summary>
+        public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetReplacementCandidateTypesFor(DeckManager deck, ShapeId excludeShape, PieceColor excludeColor)
+        {
+            System.Func<(ShapeId Shape, PieceColor Color), bool> excludeChosen =
+                t => t.Shape != excludeShape || t.Color != excludeColor;
+            var candidates = deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng, excludeChosen);
+            if (candidates.Count > 0)
+            {
+                return candidates;
+            }
+            return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng);
         }
 
         /// <summary>Public so Presentation can preview a Grid upgrade's trait on a candidate piece before it's actually applied (see TileChoiceView) — everything else about resolving/applying an upgrade still goes through an UpgradeSystem instance.</summary>

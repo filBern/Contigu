@@ -10,23 +10,25 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Sub-choice overlay for a Bank-pool upgrade the shop just revealed
-    /// (Retirer/Dupliquer/Recolorer need a piece type, and Recolorer also a
-    /// target color — Joker has no sub-choice and never reaches this view at
-    /// all, see RunManager.BuyUpgradeSlot). Used to be the whole round-end
-    /// draft (a grid of 3 cards to pick from) before the Lueur shop replaced
-    /// that entirely (spec extension, explicit request) — this is now only
-    /// the piece/color picker half of that old flow, entered directly via
-    /// <see cref="ShowForPendingUpgrade"/> instead of by choosing a card.
-    /// Still shows the upgrade's own card (see UpgradeCardFactory) as a
-    /// fixed header above the picker, on explicit request — a mystery shop
-    /// slot only ever showed its UpgradePool before purchase, so this is the
+    /// (Replace/Dupliquer/Recolorer need a piece type; Recolorer also needs
+    /// a target color, Replace a SECOND piece type — see <see
+    /// cref="ShowReplacementTypeChoice"/> — Joker has no sub-choice and
+    /// never reaches this view at all, see RunManager.BuyUpgradeSlot). Used
+    /// to be the whole round-end draft (a grid of 3 cards to pick from)
+    /// before the Lueur shop replaced that entirely (spec extension,
+    /// explicit request) — this is now only the piece/color picker half of
+    /// that old flow, entered directly via <see
+    /// cref="ShowForPendingUpgrade"/> instead of by choosing a card. Still
+    /// shows the upgrade's own card (see UpgradeCardFactory) as a fixed
+    /// header above the picker, on explicit request — a mystery shop slot
+    /// only ever showed its UpgradePool before purchase, so this is the
     /// first moment the player can actually read what they got.
     /// </summary>
     public sealed class DraftView : MonoBehaviour
     {
         // 30% smaller than the original 140/116 (explicit request: "met les
         // carte de piece 30% plus petit" — applies here too, same "5 piece
-        // candidate cards" shape as PieceChoiceView, just for Retirer/
+        // candidate cards" shape as PieceChoiceView, just for Replace/
         // Dupliquer/Recolorer's existing-deck-type picker instead of Random
         // Piece's freshly-rolled candidates). PreviewCellSize bumped back up
         // to 112 (PieceChoiceView's own CellSize) once the type picker
@@ -69,6 +71,17 @@ namespace Contigu.Presentation
         private readonly Dictionary<int, RectTransform> _typePreviewContainerByIndex = new Dictionary<int, RectTransform>();
         private int _selectedTypeIndex = -1;
 
+        // "Replace a piece"'s own 2-step state (redesign, explicit request:
+        // "Les upgrades 'remove' sont vraiment chiante, peux-tu la changer
+        // pour un replace?") — step 1 picks the type going away
+        // (_replaceRemoveShape/Color, captured right as step 2 opens);
+        // step 2 reuses this SAME type-grid picker for which existing type
+        // to duplicate instead, distinguished from a plain step 1 by
+        // _isReplaceStepTwo (see OnTypeConfirmClicked).
+        private bool _isReplaceStepTwo;
+        private ShapeId _replaceRemoveShape;
+        private PieceColor _replaceRemoveColor;
+
         public RectTransform Build(Transform parent, DeckManager deck, TooltipView tooltip)
         {
             _deck = deck;
@@ -89,8 +102,8 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Opens straight to the sub-choice this upgrade needs — the piece
-        /// type for Retirer/Dupliquer/Recolorer, then (Recolorer only) the
-        /// target color. <paramref name="def"/> must be a Bank-pool upgrade
+        /// type for Replace/Dupliquer/Recolorer, then the target color
+        /// (Recolorer) or a second piece type (Replace). <paramref name="def"/> must be a Bank-pool upgrade
         /// with <see cref="UpgradeDefinition.RequiresSubChoice"/> true (the
         /// shop never calls this for anything else). <paramref
         /// name="candidateTypes"/> (RunManager.PendingUpgradeTypeCandidates)
@@ -104,6 +117,7 @@ namespace Contigu.Presentation
         {
             _typeCandidates = candidateTypes;
             _run = run;
+            _isReplaceStepTwo = false;
             _root.gameObject.SetActive(true);
             ClearChildren();
 
@@ -161,14 +175,14 @@ namespace Contigu.Presentation
             }
         }
 
-        private void ShowTypeChoice(UpgradeDefinition def)
+        private void ShowTypeChoice(UpgradeDefinition def, string titleText = "Choose a piece type")
         {
             ClearChildren();
             _selectedTypeIndex = -1;
             _typeCellByIndex.Clear();
             _typePreviewContainerByIndex.Clear();
 
-            var title = UIFactory.CreateText(_root, "Title", "Choose a piece type", 22, UITheme.TextOnBackground);
+            var title = UIFactory.CreateText(_root, "Title", titleText, 22, UITheme.TextOnBackground);
             title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             title.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -267,8 +281,8 @@ namespace Contigu.Presentation
         /// <summary>
         /// The trait carried by the first deck token matching (shape, color)
         /// that has one, or null if none of that type's copies are enchanted.
-        /// Since Retirer/Dupliquer/Recolorer all operate on a TYPE rather than
-        /// a specific token (see DeckManager.RemoveOneOfType and friends),
+        /// Since Replace/Dupliquer/Recolorer all operate on a TYPE rather than
+        /// a specific token (see DeckManager.ReplaceOneOfType and friends),
         /// this is necessarily a representative sample when several copies of
         /// the same type carry different traits — showing "this type has an
         /// enchanted copy" rather than promising which exact copy an action
@@ -305,10 +319,22 @@ namespace Contigu.Presentation
             }
             var shape = _typeCandidates[_selectedTypeIndex].Shape;
             var color = _typeCandidates[_selectedTypeIndex].Color;
-            var sub = new UpgradeSubChoice(shape, color);
 
             SetTypeCellsInteractable(false);
             _typeConfirmButton.interactable = false;
+
+            if (_isReplaceStepTwo)
+            {
+                // Step 2 of "Replace a piece": shape/color here is the
+                // EXISTING type the player just picked to duplicate in
+                // place of whatever step 1 faded out (_replaceRemoveShape/
+                // Color) — see ShowReplacementTypeChoice.
+                var replaceSub = new UpgradeSubChoice(_replaceRemoveShape, _replaceRemoveColor, addShape: shape, addColor: color);
+                StartCoroutine(FadeInDuplicateThenFinalize(shape, color, replaceSub));
+                return;
+            }
+
+            var sub = new UpgradeSubChoice(shape, color);
 
             if (def.Id == UpgradeId.RecolorPiece)
             {
@@ -317,9 +343,13 @@ namespace Contigu.Presentation
                 ShowColorChoice(shape, color);
                 return;
             }
-            if (def.Id == UpgradeId.RemovePiece)
+            if (def.Id == UpgradeId.ReplacePiece)
             {
-                StartCoroutine(FadeOutSelectedThenFinalize(_typePreviewContainerByIndex[_selectedTypeIndex], sub));
+                // Not a final commit yet either — fades the chosen piece's
+                // preview out (same visual "it's leaving" cue the old
+                // Remove had), then advances to step 2: which existing type
+                // replaces it.
+                StartCoroutine(FadeOutSelectedThenAdvance(_typePreviewContainerByIndex[_selectedTypeIndex], () => ShowReplacementTypeChoice(shape, color)));
                 return;
             }
             if (def.Id == UpgradeId.DuplicatePiece)
@@ -328,6 +358,16 @@ namespace Contigu.Presentation
                 return;
             }
             FinalizeChoice(sub);
+        }
+
+        /// <summary>"Replace a piece"'s second step (redesign, explicit request: "Les upgrades 'remove' sont vraiment chiante, peux-tu la changer pour un replace?") — reuses the SAME type-grid picker as step 1, just with a different title and candidate list: every OTHER existing deck type (see UpgradeSystem.GetReplacementCandidateTypesFor), excluding the one just picked to go away so the player is never offered the pointless no-op of replacing it with itself.</summary>
+        private void ShowReplacementTypeChoice(ShapeId removeShape, PieceColor removeColor)
+        {
+            _replaceRemoveShape = removeShape;
+            _replaceRemoveColor = removeColor;
+            _isReplaceStepTwo = true;
+            _typeCandidates = _run.Upgrades.GetReplacementCandidateTypesFor(_deck, removeShape, removeColor);
+            ShowTypeChoice(UpgradeCatalog.ReplacePiece, "Choose a piece to duplicate instead");
         }
 
         private void SetTypeCellsInteractable(bool interactable)
@@ -342,8 +382,8 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Retirer: fades the chosen piece's preview out to visualize it leaving the deck, then resolves — explicit request.</summary>
-        private IEnumerator FadeOutSelectedThenFinalize(RectTransform previewContainer, UpgradeSubChoice sub)
+        /// <summary>Replace (step 1 of 2): fades the chosen piece's preview out to visualize it leaving the deck, same visual the old one-step Remove used, then runs <paramref name="onComplete"/> instead of finalizing outright — here, that's advancing to step 2 (see ShowReplacementTypeChoice) rather than resolving the upgrade.</summary>
+        private IEnumerator FadeOutSelectedThenAdvance(RectTransform previewContainer, Action onComplete)
         {
             var canvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
             float elapsed = 0f;
@@ -363,7 +403,7 @@ namespace Contigu.Presentation
             }
             canvasGroup.alpha = 0f;
             yield return new WaitForSeconds(PostFadeHold);
-            FinalizeChoice(sub);
+            onComplete();
         }
 
         /// <summary>Dupliquer: fades a NEW copy of the chosen piece in next to it to visualize the extra copy being added, then resolves — explicit request. Purely visual: DeckManager.DuplicateOfType is what actually adds the real copy once <see cref="SubChoiceConfirmed"/> fires.</summary>

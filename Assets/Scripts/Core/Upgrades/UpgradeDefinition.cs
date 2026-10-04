@@ -36,16 +36,21 @@ namespace Contigu.Core
         // début de partie") — a 4x cut in its draft weight (8 -> 2, see
         // UpgradeRarityUtility.GetDraftWeight), same tier as the most
         // situational Grid-pool upgrades, since permanently shrinking the
-        // deck is the one Bank-pool pick that can backfire rather than just
-        // being weaker than another option. Description shortened (on
-        // explicit request, grouping this with DuplicatePiece and
-        // RandomPiece below: "pas besoin de la description complete...
-        // Idem pour duplicate piece ou remove piece") — the longer original
-        // wording ("Choose a piece type; remove one copy from the deck.")
-        // said the same thing the 5-card picker it opens already shows.
-        public static readonly UpgradeDefinition RemovePiece = new UpgradeDefinition(
-            UpgradeId.RemovePiece, UpgradePool.Bank, "Remove a piece",
-            "Choose 1 piece to remove from your deck.", true, UpgradeRarity.Common);
+        // deck was the one Bank-pool pick that could backfire rather than
+        // just being weaker than another option. Redesigned from the ground
+        // up into a straight swap (follow-up explicit request: "Les
+        // upgrades 'remove' sont vraiment chiante, peux-tu la changer pour
+        // un replace?") — see UpgradeId.ReplacePiece/DeckManager.
+        // ReplaceOneOfType — so it no longer has that downside at all;
+        // rarity left at Common regardless, since bumping it back up wasn't
+        // part of the request. Description shortened (on explicit request,
+        // grouping this with DuplicatePiece and RandomPiece below: "pas
+        // besoin de la description complete... Idem pour duplicate piece ou
+        // remove piece") — the longer original wording said the same thing
+        // the picker it opens already shows.
+        public static readonly UpgradeDefinition ReplacePiece = new UpgradeDefinition(
+            UpgradeId.ReplacePiece, UpgradePool.Bank, "Replace a piece",
+            "Choose 1 piece to replace with a duplicate of another.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
@@ -107,7 +112,7 @@ namespace Contigu.Core
         /// request: "pas besoin de la description complete 'Choose 1 of 5
         /// random pieces to add to your deck; each may already carry a
         /// special tile'. Juste garder 'choose 1 piece to add to your
-        /// deck'") — RemovePiece/DuplicatePiece's descriptions above were
+        /// deck'") — ReplacePiece/DuplicatePiece's descriptions above were
         /// trimmed the same way, same reasoning (see their own comment).
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
@@ -234,7 +239,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] All =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
+            ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
             GoldenCells, TintedCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
@@ -243,7 +248,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] BankPool =
         {
-            RemovePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomPiece
+            ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomPiece
         };
 
         /// <summary>Split out of BankPool into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type") — previously these two were just two more entries among BankPool's 9, sharing its "Piece Upgrade" label; now they get their own "Mastery Upgrade" label (see UpgradeVisualDefaults.GetPoolLabel) and their own independent shop-roll odds (see RunManager.RollUpgradeSlot/EconomyConstants.MasteryUpgradePoolChancePercent).</summary>

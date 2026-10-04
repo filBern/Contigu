@@ -22,7 +22,16 @@ namespace Contigu.Core
     /// <summary>The 5 Bank upgrades + 13 Grid (piece-enchantment) upgrades from spec 5.3 / 5.4, in two batches.</summary>
     public enum UpgradeId
     {
-        RemovePiece,
+        /// <summary>
+        /// Was "Remove a piece" — redesigned (explicit request: "Les
+        /// upgrades 'remove' sont vraiment chiante, peux-tu la changer pour
+        /// un replace?") into a straight swap between two types already in
+        /// the deck (see UpgradeSystem.Apply/DeckManager.ReplaceOneOfType):
+        /// removing a type outright used to shrink the deck, which could
+        /// backfire; replacing it with a duplicate of another type already
+        /// owned keeps the deck size exactly where it was.
+        /// </summary>
+        ReplacePiece,
         DuplicatePiece,
         JokerPiece,
         RecolorPiece,

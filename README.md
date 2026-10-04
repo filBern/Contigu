@@ -7301,3 +7301,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   l'état réel (verrouillé, vide) ne s'affiche plus que lors du vrai
   reveal (`ClearCellVisual`/`Refresh()` final), jamais pendant la tenue
   "encore remplie".
+- **Redesign "Remove a piece" → "Replace a piece"** : sur demande
+  explicite ("Les upgrades 'remove' sont vraiment chiante, peux-tu la
+  changer pour un replace?"), avec le choix du joueur clarifié par
+  question ("Échanger contre une pièce déjà dans le deck" — pas de
+  nouvelle pièce introduite, juste rebalancer les proportions du deck
+  actuel). Retirer un type rétrécissait le deck en permanence, ce qui
+  pouvait backfire — `UpgradeId.RemovePiece` renommé `ReplacePiece`,
+  nouveau `DeckManager.ReplaceOneOfType(removeShape, removeColor,
+  addShape, addColor)` qui retire 1 copie d'un type ET ajoute 1 copie
+  d'un AUTRE type déjà présent dans le deck, dans la même opération —
+  le compte net ne change jamais, donc plus aucun souci avec
+  `MinDeckSize` (`CanRemove`/`RemoveOneOfType` restent inchangés,
+  toujours utilisés comme utilitaires généraux ailleurs). Nouveau
+  sous-choix en 2 étapes dans `DraftView` (même pattern que Recolorer,
+  qui enchaîne déjà un 2e écran après le premier) : étape 1 choisit le
+  type à retirer (`ShowTypeChoice`, candidats sans plus aucun filtre de
+  plancher — nouveau), fade-out de sa preview (même effet visuel que
+  l'ancien Remove), puis étape 2 (`ShowReplacementTypeChoice`, même
+  grille réutilisée avec un titre différent) choisit le type EXISTANT
+  à dupliquer à la place — nouveau `UpgradeSystem.
+  GetReplacementCandidateTypesFor`, qui exclut le type qu'on vient de
+  choisir de retirer (pour ne jamais proposer le no-op "remplacer X par
+  X"), avec un fallback qui le réincluent si le deck n'a plus qu'un
+  seul type. `UpgradeSubChoice` gagne deux champs `AddShape`/
+  `AddColor` pour porter ce second choix jusqu'à `UpgradeSystem.Apply`.
+  Tests : `DeckManagerTests`/`UpgradeSystemTests` réécrits pour le
+  nouveau comportement (plus de test "exclut si au plancher" — devenu
+  "n'exclut JAMAIS, même au plancher" — et nouveaux tests pour
+  `ReplaceOneOfType`/`GetReplacementCandidateTypesFor`, incluant le cas
+  dégénéré à un seul type).

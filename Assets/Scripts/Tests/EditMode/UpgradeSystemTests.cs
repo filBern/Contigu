@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Contigu.Core;
 using NUnit.Framework;
 
@@ -93,54 +94,64 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RollFromPool_OverManySeeds_PicksRemovePieceAndDuplicatePieceAtComparableRates()
+        public void RollFromPool_OverManySeeds_PicksReplacePieceAndDuplicatePieceAtComparableRates()
         {
-            // RemovePiece used to be dropped to Rare (on explicit report:
-            // "L'upgrade 'remove a piece' est beaucoup trop fréquente et
-            // surtout chiante en début de partie"), a 4x cut below its
-            // Common Bank-pool sibling DuplicatePiece — but it was bumped
-            // back up to Common (same push that split Mastery into its own
-            // pool), so that gap is gone: both are Common now and should
-            // come up at roughly the same rate, neither dominating the
-            // other the way the old Rare-vs-Common test checked for.
-            int removeCount = 0;
+            // ReplacePiece (née RemovePiece) used to be dropped to Rare (on
+            // explicit report: "L'upgrade 'remove a piece' est beaucoup
+            // trop fréquente et surtout chiante en début de partie"), a 4x
+            // cut below its Common Bank-pool sibling DuplicatePiece — but
+            // it was bumped back up to Common (same push that split
+            // Mastery into its own pool), so that gap is gone: both are
+            // Common now and should come up at roughly the same rate,
+            // neither dominating the other the way the old Rare-vs-Common
+            // test checked for.
+            int replaceCount = 0;
             int duplicateCount = 0;
             for (int seed = 0; seed < 500; seed++)
             {
                 var system = new UpgradeSystem(new SystemRandomProvider(seed));
                 var picked = system.RollFromPool(UpgradePool.Bank);
-                if (picked.Id == UpgradeId.RemovePiece) removeCount++;
+                if (picked.Id == UpgradeId.ReplacePiece) replaceCount++;
                 if (picked.Id == UpgradeId.DuplicatePiece) duplicateCount++;
             }
 
-            Assert.Greater(removeCount, 0);
+            Assert.Greater(replaceCount, 0);
             Assert.Greater(duplicateCount, 0);
-            int diff = System.Math.Abs(removeCount - duplicateCount);
-            Assert.Less(diff, (removeCount + duplicateCount) / 2, "Same Common rarity now, so neither should come up roughly twice as often as the other");
+            int diff = System.Math.Abs(replaceCount - duplicateCount);
+            Assert.Less(diff, (replaceCount + duplicateCount) / 2, "Same Common rarity now, so neither should come up roughly twice as often as the other");
         }
 
         [Test]
-        public void Apply_RemovePiece_DelegatesToDeck()
+        public void Apply_ReplacePiece_DelegatesToDeck_SwappingOneTypeForAnother()
         {
-            var tokens = new List<PieceToken>();
-            for (int i = 0; i < DeckManager.MinDeckSize + 1; i++)
+            // Redesign, explicit request: "Les upgrades 'remove' sont
+            // vraiment chiante, peux-tu la changer pour un replace?" —
+            // Replace swaps a duplicate of one EXISTING type for one copy
+            // of another, so the deck's net count never changes (unlike
+            // the old Remove, which shrank it).
+            var tokens = new List<PieceToken>
             {
-                tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral));
-            }
+                new PieceToken(ShapeId.Single, PieceColor.Coral),
+                new PieceToken(ShapeId.Sq2, PieceColor.Teal)
+            };
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
             var system = new UpgradeSystem(new SystemRandomProvider(1));
 
-            bool applied = system.Apply(UpgradeCatalog.RemovePiece, new UpgradeSubChoice(ShapeId.Single, PieceColor.Coral), deck);
+            bool applied = system.Apply(UpgradeCatalog.ReplacePiece,
+                new UpgradeSubChoice(ShapeId.Single, PieceColor.Coral, addShape: ShapeId.Sq2, addColor: PieceColor.Teal),
+                deck);
 
             Assert.IsTrue(applied);
-            Assert.AreEqual(DeckManager.MinDeckSize, deck.DeckCount);
+            Assert.AreEqual(2, deck.DeckCount, "Net count should stay the same — one removed, one added");
+            Assert.AreEqual(0, deck.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Coral)));
+            Assert.AreEqual(2, deck.Deck.Count(t => t.Matches(ShapeId.Sq2, PieceColor.Teal)));
         }
 
         [Test]
         public void Apply_JokerPiece_ReturnsFalse_JokerGoesThroughApplyJokerInstead()
         {
             // Joker is the one Bank upgrade with no sub-choice, so unlike
-            // RemovePiece/DuplicatePiece/RecolorPiece it never actually goes
+            // ReplacePiece/DuplicatePiece/RecolorPiece it never actually goes
             // through Apply in production (see RunManager.BuyUpgradeSlot) —
             // ApplyJoker below is its real path.
             var deck = MakeTwentyTokenDeck();
@@ -261,13 +272,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GetCandidateTypesFor_RemovePiece_ExcludesTypesTheDeckCantActuallyRemove()
+        public void GetCandidateTypesFor_ReplacePiece_NeverExcludesAnyType_EvenAtTheMinDeckFloor()
         {
-            // Exactly MinDeckSize tokens — CanRemove is false for every type
-            // present (removing any copy would drop the deck below its
-            // floor), so none should qualify. One copy each of all 8
-            // distinct shapes (8 tokens) plus 2 extra copies (Single,
-            // DomH) to reach exactly MinDeckSize=10.
+            // Redesign, explicit request: "Les upgrades 'remove' sont
+            // vraiment chiante, peux-tu la changer pour un replace?" —
+            // unlike the old Remove (which excluded every type once the
+            // deck was down to exactly MinDeckSize, since removing any of
+            // them would have dropped below the floor), Replace never
+            // shrinks the deck at all, so every type stays a valid first-
+            // step candidate regardless. Exactly MinDeckSize tokens: one
+            // copy each of all 8 distinct shapes, plus 2 extra copies
+            // (Single, DomH).
             var tokens = new List<PieceToken>();
             foreach (var shape in InitialDeckFactory.ShapeOrder)
             {
@@ -279,9 +294,49 @@ namespace Contigu.Tests
             var deck = new DeckManager(tokens, new SystemRandomProvider(1));
             var system = new UpgradeSystem(new SystemRandomProvider(1));
 
-            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.RemovePiece, deck);
+            var candidates = system.GetCandidateTypesFor(UpgradeCatalog.ReplacePiece, deck);
 
-            Assert.AreEqual(0, candidates.Count);
+            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, candidates.Count);
+        }
+
+        [Test]
+        public void GetReplacementCandidateTypesFor_ExcludesTheChosenRemovalType()
+        {
+            var tokens = new List<PieceToken>();
+            foreach (var shape in InitialDeckFactory.ShapeOrder)
+            {
+                tokens.Add(new PieceToken(shape, PieceColor.Coral));
+            }
+            var deck = new DeckManager(tokens, new SystemRandomProvider(1));
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetReplacementCandidateTypesFor(deck, ShapeId.Single, PieceColor.Coral);
+
+            Assert.IsFalse(candidates.Any(c => c.Shape == ShapeId.Single && c.Color == PieceColor.Coral),
+                "The type just picked to go away should never be offered as its own replacement");
+        }
+
+        [Test]
+        public void GetReplacementCandidateTypesFor_FallsBackToTheExcludedType_WhenItsTheOnlyOneLeft()
+        {
+            // A degenerate (single-type) deck has nothing else to offer —
+            // the picker should still return something rather than coming
+            // up empty, even if that means falling back to the "replace it
+            // with itself" no-op (see DeckManager.ReplaceOneOfType's own
+            // doc comment on that case).
+            var tokens = new List<PieceToken>
+            {
+                new PieceToken(ShapeId.Single, PieceColor.Coral),
+                new PieceToken(ShapeId.Single, PieceColor.Coral)
+            };
+            var deck = new DeckManager(tokens, new SystemRandomProvider(1));
+            var system = new UpgradeSystem(new SystemRandomProvider(1));
+
+            var candidates = system.GetReplacementCandidateTypesFor(deck, ShapeId.Single, PieceColor.Coral);
+
+            Assert.AreEqual(1, candidates.Count);
+            Assert.AreEqual(ShapeId.Single, candidates[0].Shape);
+            Assert.AreEqual(PieceColor.Coral, candidates[0].Color);
         }
 
         [Test]

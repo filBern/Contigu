@@ -2547,7 +2547,7 @@ namespace Contigu.Core
         /// eligibility/price checks before calling this). A Bank-pool
         /// upgrade with no sub-choice (Joker) applies immediately and
         /// leaves PendingUpgrade null; one that needs a sub-choice
-        /// (Retirer/Dupliquer/Recolorer) or a Grid-pool upgrade (needs a
+        /// (Replace/Dupliquer/Recolorer) or a Grid-pool upgrade (needs a
         /// tile choice, see PendingUpgradeTileCandidates) leaves
         /// PendingUpgrade set until <see cref="ResolveUpgradeSubChoice"/>/
         /// <see cref="ResolveUpgradeTileChoice"/> finishes it — nothing
@@ -2562,7 +2562,7 @@ namespace Contigu.Core
                 return true;
             }
 
-            // Random Piece is Bank pool WITH a sub-choice, like Retirer/
+            // Random Piece is Bank pool WITH a sub-choice, like Replace/
             // Dupliquer/Recolorer below, but its candidates are freshly
             // rolled pieces rather than existing deck types — handled by
             // its own Pending*/Resolve* pair (see PendingUpgradePieceCandidates/
@@ -2792,7 +2792,7 @@ namespace Contigu.Core
             return picked;
         }
 
-        /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>
+        /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color, or for Replace which SECOND piece type to duplicate in its place). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>
         public bool ResolveUpgradeSubChoice(UpgradeSubChoice subChoice)
         {
             if (PendingUpgrade == null || PendingUpgrade.Pool != UpgradePool.Bank)
