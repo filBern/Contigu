@@ -7217,3 +7217,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `ClearHover` — utilisé à la place dans `OnCellClicked`, puisque
   `RefreshHoldingClearedCells`, juste après, redessine de toute façon
   toute la grille avec le bon traitement différé.
+- **Contraste du texte "Level" sur la carte de reveal mastery, montant
+  aléatoire pour les upgrades mastery, total par couleur dans l'écran
+  de deck** : trois demandes explicites. (1) "Pour les upgrades
+  mastery, le text level nb jaune n'est pas lisible" — `ShapeCarouselView.
+  UpdateCard`/`ColorCarouselView.UpdateCard` peignaient leur ligne
+  "Level N" en `VisualDefaults.GoldenColor` (jaune vif, #ffc53d) sur le
+  fond de carte `UITheme.Panel` (crème très clair, #fff7e8) — quasiment
+  invisible, les deux étant presque blancs. Changé pour `UITheme.
+  TextPrimary`, la même couleur sombre déjà utilisée pour le Name/Desc
+  juste en-dessous sur cette même carte ; le cadre doré du reveal porte
+  déjà le thème "spécial" sans que le texte ait besoin de le répéter.
+  (2) "Pour les upgrades mastery j'aimerais qu'on donne aléatoirement
+  1, 2 ou 3 niveau" — `RunManager.GrantShapeMastery`/`GrantColorMastery`
+  montaient toujours exactement +1 ; nouveau `EconomyConstants.
+  MasteryUpgradeMaxLevelGain = 3`, et chaque achat monte maintenant de
+  1 à 3 niveaux au hasard (`1 + _rng.Next(MasteryUpgradeMaxLevelGain)`).
+  La carte de reveal affiche déjà le niveau RÉSULTANT (lu après le
+  grant), donc rien à changer côté présentation pour que le vrai
+  montant s'affiche. Tests réécrits dans `RunManagerTests.cs` : les
+  deux tests qui vérifiaient "toujours exactement +1" acceptent
+  maintenant une plage [niveau+1, niveau+3] ; les deux tests
+  d'invariant de comptage (50 grants) vérifient une plage de total au
+  lieu d'une égalité stricte. (3) "Dans l'écran de deck j'aimerais
+  savoir combien de pièce il y a de cette couleur" — chaque carte de
+  `DeckView` affichait déjà son propre "xN" par (forme, couleur), mais
+  rien ne sommait ces comptes par couleur nulle part à l'écran.
+  `DeckView.BuildColorSectionHeader` prend maintenant aussi le total de
+  cette couleur (sommé dans `RebuildRows` sur tous les types de la
+  section) et l'affiche directement dans l'en-tête, ex. "CORAL (14)".

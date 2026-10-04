@@ -260,7 +260,11 @@ namespace Contigu.Presentation
             name.rectTransform.anchoredPosition = new Vector2(0f, -(16f + CardGlyphBoxSize + 8f));
 
             string levelLine = level > 1 ? "Level " + level : "Level 1";
-            var levelText = UIFactory.CreateText(cardImage.transform, "Level", levelLine, 16, VisualDefaults.GoldenColor);
+            // Same contrast fix as ShapeCarouselView.UpdateCard — bright
+            // gold on this card's own light UITheme.Panel background was
+            // nearly invisible (explicit report: "le text level nb jaune
+            // n'est pas lisible").
+            var levelText = UIFactory.CreateText(cardImage.transform, "Level", levelLine, 16, UITheme.TextPrimary);
             levelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             levelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             levelText.rectTransform.pivot = new Vector2(0.5f, 1f);

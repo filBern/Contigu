@@ -184,9 +184,15 @@ namespace Contigu.Presentation
             float y = 0f;
             for (int i = 0; i < sections.Count; i++)
             {
-                y = BuildColorSectionHeader(sections[i].Color, y, xOffset, contentWidth);
+                int colorTotal = 0;
+                var types = sections[i].Types;
+                for (int t = 0; t < types.Count; t++)
+                {
+                    colorTotal += types[t].Count;
+                }
+                y = BuildColorSectionHeader(sections[i].Color, colorTotal, y, xOffset, contentWidth);
                 y -= SectionHeaderToGridGap;
-                y = BuildColorSectionGrid(sections[i].Types, sections[i].Color, y, xOffset);
+                y = BuildColorSectionGrid(types, sections[i].Color, y, xOffset);
                 y -= SectionGap;
             }
         }
@@ -206,10 +212,11 @@ namespace Contigu.Presentation
             return result;
         }
 
-        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's own centered columns below it. Returns the Y cursor for whatever comes next.</summary>
-        private float BuildColorSectionHeader(PieceColor color, float y, float xOffset, float contentWidth)
+        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Now also states <paramref name="totalCount"/>, this color's own piece total across every shape (explicit request: "j'aimerais savoir combien de pièce il y a de cette couleur") — the per-card "xN" labels below only break it down by shape, never summed anywhere on screen otherwise. Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's own centered columns below it. Returns the Y cursor for whatever comes next.</summary>
+        private float BuildColorSectionHeader(PieceColor color, int totalCount, float y, float xOffset, float contentWidth)
         {
-            var label = UIFactory.CreateText(_listContainer, "Header_" + color, VisualDefaults.GetColorName(color).ToUpperInvariant(), 19, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
+            string headerText = VisualDefaults.GetColorName(color).ToUpperInvariant() + " (" + totalCount + ")";
+            var label = UIFactory.CreateText(_listContainer, "Header_" + color, headerText, 19, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
             label.rectTransform.anchorMin = new Vector2(0f, 1f);
             label.rectTransform.anchorMax = new Vector2(0f, 1f);
             label.rectTransform.pivot = new Vector2(0f, 1f);

@@ -98,6 +98,15 @@ namespace Contigu.Core
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
         public const int GridUpgradePoolChancePercent = 10;
 
+        /// <summary>
+        /// "Piece Mastery"/"Color Mastery" (see RunManager.GrantShapeMastery/
+        /// GrantColorMastery): each purchase now grants a random amount of
+        /// levels from 1 up to this many (inclusive), instead of always
+        /// exactly 1 — explicit request: "Pour les upgrades mastery
+        /// j'aimerais qu'on donne aléatoirement 1, 2 ou 3 niveau".
+        /// </summary>
+        public const int MasteryUpgradeMaxLevelGain = 3;
+
         /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>
         public const int MaxActiveModifiers = 8;
 

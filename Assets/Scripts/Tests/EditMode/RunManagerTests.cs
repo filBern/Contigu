@@ -970,7 +970,14 @@ namespace Contigu.Tests
             Assert.IsTrue(bought);
             Assert.IsNull(run.PendingUpgrade, "Piece Mastery has no sub-choice, so it should apply immediately");
             Assert.IsTrue(run.LastShapeMasteryGranted.HasValue);
-            Assert.AreEqual(2, run.GetShapeMasteryLevel(run.LastShapeMasteryGranted.Value), "A shape never leveled up before should go from level 1 to level 2");
+            // Redesign, explicit request: "Pour les upgrades mastery
+            // j'aimerais qu'on donne aléatoirement 1, 2 ou 3 niveau" — a
+            // shape never leveled up before (level 1) should now land
+            // somewhere in [2, 1 + MasteryUpgradeMaxLevelGain], not always
+            // exactly 2.
+            int level = run.GetShapeMasteryLevel(run.LastShapeMasteryGranted.Value);
+            Assert.GreaterOrEqual(level, 2);
+            Assert.LessOrEqual(level, 1 + EconomyConstants.MasteryUpgradeMaxLevelGain);
         }
 
         [Test]
@@ -981,12 +988,13 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void DebugTriggerShapeMasteryGrant_EachCallLevelsUpExactlyOneShapeByOne_NoCap()
+        public void DebugTriggerShapeMasteryGrant_EachCallLevelsUpSomeShapeByOneToThree_NoCap()
         {
             // Pure counting invariant, so it's deterministic regardless of
             // which shapes the RNG actually lands on: every single grant
-            // adds exactly 1 to SOME shape's level (explicit request:
-            // "nombre d'upgrade infinie par shape" — no cap to hit).
+            // adds 1 to MasteryUpgradeMaxLevelGain to SOME shape's level
+            // (explicit requests: "nombre d'upgrade infinie par shape" — no
+            // cap to hit — then "donne aléatoirement 1, 2 ou 3 niveau").
             var run = new RunManager(new SystemRandomProvider(1));
             const int grants = 50;
             for (int i = 0; i < grants; i++)
@@ -999,7 +1007,8 @@ namespace Contigu.Tests
             {
                 totalLevelsGained += run.GetShapeMasteryLevel(shape) - 1;
             }
-            Assert.AreEqual(grants, totalLevelsGained, "Every grant should add exactly 1 to some shape's level");
+            Assert.GreaterOrEqual(totalLevelsGained, grants * 1, "Every grant should add at least 1 to some shape's level");
+            Assert.LessOrEqual(totalLevelsGained, grants * EconomyConstants.MasteryUpgradeMaxLevelGain, "Every grant should add at most MasteryUpgradeMaxLevelGain to some shape's level");
         }
 
         [Test]
@@ -1068,7 +1077,10 @@ namespace Contigu.Tests
             Assert.IsTrue(bought);
             Assert.IsNull(run.PendingUpgrade, "Color Mastery has no sub-choice, so it should apply immediately");
             Assert.IsTrue(run.LastColorMasteryGranted.HasValue);
-            Assert.AreEqual(2, run.GetColorMasteryLevel(run.LastColorMasteryGranted.Value), "A color never leveled up before should go from level 1 to level 2");
+            // Same redesign as Piece Mastery — see its own test above.
+            int level = run.GetColorMasteryLevel(run.LastColorMasteryGranted.Value);
+            Assert.GreaterOrEqual(level, 2);
+            Assert.LessOrEqual(level, 1 + EconomyConstants.MasteryUpgradeMaxLevelGain);
         }
 
         [Test]
@@ -1079,8 +1091,9 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void DebugTriggerColorMasteryGrant_EachCallLevelsUpExactlyOneColorByOne_NoCap()
+        public void DebugTriggerColorMasteryGrant_EachCallLevelsUpSomeColorByOneToThree_NoCap()
         {
+            // Same redesign as the Piece Mastery counting invariant above.
             var run = new RunManager(new SystemRandomProvider(1));
             const int grants = 50;
             for (int i = 0; i < grants; i++)
@@ -1093,7 +1106,8 @@ namespace Contigu.Tests
             {
                 totalLevelsGained += run.GetColorMasteryLevel(color) - 1;
             }
-            Assert.AreEqual(grants, totalLevelsGained, "Every grant should add exactly 1 to some color's level");
+            Assert.GreaterOrEqual(totalLevelsGained, grants * 1, "Every grant should add at least 1 to some color's level");
+            Assert.LessOrEqual(totalLevelsGained, grants * EconomyConstants.MasteryUpgradeMaxLevelGain, "Every grant should add at most MasteryUpgradeMaxLevelGain to some color's level");
         }
 
         [Test]

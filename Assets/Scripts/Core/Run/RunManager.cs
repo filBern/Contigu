@@ -2766,24 +2766,29 @@ namespace Contigu.Core
         /// <summary>
         /// "Piece Mastery": picks a random exact shape (uniform over all 8 —
         /// no exclusion, unlike GrantRandomModifier, since a shape can
-        /// always be leveled up further) and levels it up by 1. Always
-        /// succeeds — there's no cap to hit, so unlike GrantRandomModifier
-        /// this never returns null.
+        /// always be leveled up further) and levels it up by a random
+        /// amount from 1 to <see cref="EconomyConstants.MasteryUpgradeMaxLevelGain"/>
+        /// (explicit request: "Pour les upgrades mastery j'aimerais qu'on
+        /// donne aléatoirement 1, 2 ou 3 niveau" — was always exactly 1).
+        /// Always succeeds — there's no cap to hit, so unlike
+        /// GrantRandomModifier this never returns null.
         /// </summary>
         private ShapeId GrantShapeMastery()
         {
             var shapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
             var picked = shapes[_rng.Next(shapes.Length)];
-            _shapeMasteryLevels[picked] = GetShapeMasteryLevel(picked) + 1;
+            int gain = 1 + _rng.Next(EconomyConstants.MasteryUpgradeMaxLevelGain);
+            _shapeMasteryLevels[picked] = GetShapeMasteryLevel(picked) + gain;
             return picked;
         }
 
-        /// <summary>"Color Mastery": Piece Mastery's exact sibling — picks a random BASE color (PieceColorUtility.BaseColors, so never Joker) and levels it up by 1. Always succeeds, same as GrantShapeMastery.</summary>
+        /// <summary>"Color Mastery": Piece Mastery's exact sibling — picks a random BASE color (PieceColorUtility.BaseColors, so never Joker) and levels it up by the same random 1-to-<see cref="EconomyConstants.MasteryUpgradeMaxLevelGain"/> amount. Always succeeds, same as GrantShapeMastery.</summary>
         private PieceColor GrantColorMastery()
         {
             var colors = PieceColorUtility.BaseColors;
             var picked = colors[_rng.Next(colors.Count)];
-            _colorMasteryLevels[picked] = GetColorMasteryLevel(picked) + 1;
+            int gain = 1 + _rng.Next(EconomyConstants.MasteryUpgradeMaxLevelGain);
+            _colorMasteryLevels[picked] = GetColorMasteryLevel(picked) + gain;
             return picked;
         }
 
