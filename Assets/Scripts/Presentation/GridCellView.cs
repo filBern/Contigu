@@ -88,7 +88,23 @@ namespace Contigu.Presentation
             // trait-origin badge below), not like the empty "locked obstacle"
             // look every other locked cell gets, since it's meant to read as
             // a permanently-scoring tile rather than dead space.
-            bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion;
+            //
+            // Also excluded while fillColorOverride is set — that's the
+            // "held" rendering GridView.RefreshHoldingClearedCells uses to
+            // keep a just-completed line looking filled during the score
+            // cascade, before its own clear-burst actually empties it (see
+            // ClearCellVisual). If this SAME placement's own auto-refill
+            // also moved Locker's lock onto one of the cells that row just
+            // cleared — now empty in Core, and therefore a valid new lock
+            // target — rendering the "X" obstacle here would instantly
+            // break that illusion: the row would show a lock sitting on a
+            // tile that's still supposed to look intact mid-cascade
+            // (explicit report: "j'ai une locked cell qui est apparu sur
+            // cette même ligne avant même que la ligne soit disparu
+            // visuellement"). The real (post-clear, now-locked) state still
+            // shows correctly once ClearCellVisual/the final Refresh()
+            // calls ApplyState with no override.
+            bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion && !fillColorOverride.HasValue;
 
             if (renderAsLockedObstacle)
             {

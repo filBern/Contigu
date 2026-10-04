@@ -7279,3 +7279,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   score total du placement (Core, `PlacementResult.TotalScore`) est
   inchangé ; seule la façon de répartir son affichage entre les popups
   change.
+- **Locked cell affichée trop tôt sur une ligne en train de clear**
+  : sur rapport explicite ("J'ai line break a ma dernière slot de
+  disponible et j'ai une locked cell qui est apparu sur cette même
+  ligne avant même que la ligne soit disparu visuellement. Aucun
+  problème de calcule"). En posant sa dernière pièce de la main ET
+  complétant une ligne, l'auto-refill déclenche un Shuffle qui peut
+  déplacer le verrou de Locker — or les cases de la ligne qu'on vient
+  juste de clear sont redevenues vides EN CORE avant ce Shuffle,
+  donc elles sont des cibles valides pour le nouveau verrou. La vraie
+  cause : `GridCellView.ApplyState` vérifiait `cell.IsLocked`
+  AVANT de vérifier `fillColorOverride` — le "held fill" que
+  `GridView.RefreshHoldingClearedCells` utilise pour garder une ligne
+  qui vient d'être complétée visuellement intacte pendant la cascade
+  de score, en attendant son burst de clear (voir `ClearCellVisual`).
+  Résultat : dès que le verrou retombait sur une case de cette ligne,
+  son obstacle "X" s'affichait instantanément, par-dessus une tuile
+  encore censée paraître remplie — brisant l'illusion avant même que
+  la ligne ait fini sa propre animation de clear. `renderAsLockedObstacle`
+  exclut maintenant aussi le cas où `fillColorOverride` est fourni —
+  l'état réel (verrouillé, vide) ne s'affiche plus que lors du vrai
+  reveal (`ClearCellVisual`/`Refresh()` final), jamais pendant la tenue
+  "encore remplie".
