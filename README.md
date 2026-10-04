@@ -7246,3 +7246,36 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `DeckView.BuildColorSectionHeader` prend maintenant aussi le total de
   cette couleur (sommé dans `RebuildRows` sur tous les types de la
   section) et l'affiche directement dans l'en-tête, ex. "CORAL (14)".
+- **Redesign de l'affichage du bonus de mastery pour éviter la
+  confusion avec le poison** : sur demande explicite ("Les tuiles
+  empoisonnés sont problématique pour la manière qu'on vois les points
+  apparaitre, si la tuile empoisonné est la première a être
+  comptabilisé, le bonus de level apparait en positif sur cette pièce,
+  ce qui est confusing. Je te propose que chaque lvl soit ajouté à la
+  base de pointage de la tuile"). La vraie cause : `GameBootstrap.
+  PlayPlacementSequence` sortait les events `ShapeMastery`/
+  `ColorMastery` de la boucle par-cellule et les affichait comme UN
+  SEUL popup agrégé pour tout le placement, épinglé à la position du
+  PREMIER event mastery rencontré — si cette cellule-là était
+  empoisonnée mais que le total agrégé restait positif grâce aux
+  AUTRES cellules du placement, le "+N" atterrissait en plein sur une
+  tuile empoisonnée, donnant l'impression qu'elle avait gagné des
+  points alors que sa propre contribution était négative. Chaque
+  cellule n'a qu'un seul niveau de mastery figé par pièce (`Cell.
+  ShapeMasteryBonus`/`ColorMasteryBonus`, estampillé au moment du
+  placement), donc un groupe connecté formé de plusieurs pièces posées
+  à des moments différents peut avoir des montants de mastery
+  différents cellule par cellule — exactement ce que montre l'exemple
+  du joueur ("+1, +3 (parce que +2 et +1 de level), +3, +6 (parce que
+  +4 et +2 de lvl), +5"). Nouveau dictionnaire `masteryByPosition`
+  (sommé une fois au début de la séquence) ; les events `ShapeMastery`/
+  `ColorMastery` ne produisent plus leur propre popup du tout — leur
+  montant est maintenant ajouté directement au popup `Group` de LEUR
+  PROPRE cellule. Comme `RunManager.ApplyPoisonScoreRule` flippe déjà
+  chaque event indépendamment (Group ET ShapeMastery ET ColorMastery
+  d'une même cellule empoisonnée sont CHACUN déjà négatifs avant que
+  Presentation les voie), le montant combiné par cellule a toujours un
+  signe cohérent — jamais de +N affiché sur une tuile empoisonnée. Le
+  score total du placement (Core, `PlacementResult.TotalScore`) est
+  inchangé ; seule la façon de répartir son affichage entre les popups
+  change.

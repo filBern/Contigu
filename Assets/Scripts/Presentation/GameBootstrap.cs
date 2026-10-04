@@ -1144,7 +1144,36 @@ namespace Contigu.Presentation
             // across the individual catch-up steps.
             int chipsTotal = 0;
             float multTotal = 1f;
-            bool masteryBonusShown = false;
+            // Redesign, explicit request: "Les tuiles empoisonnées sont
+            // problématique pour la manière qu'on vois les points
+            // apparaitre, si la tuile empoisonné est la première a être
+            // comptabilisé, le bonus de level apparait en positif sur
+            // cette pièce, ce qui est confusing" — ShapeMastery/
+            // ColorMastery used to be pulled out of the per-cell loop
+            // entirely and shown as ONE aggregate popup for the whole
+            // placement, pinned to whichever cell's mastery event happened
+            // to come first in ScoreEvents. If THAT cell was poisoned but
+            // the placement's OTHER cells' mastery still summed positive
+            // overall, the aggregate's "+N" landed squarely on a poisoned
+            // tile — looking like that specific tile earned a positive
+            // bonus, when its own true contribution was negative. Folded
+            // into each cell's own Group popup instead (see this dictionary
+            // and the Group branch below): every tile's displayed number is
+            // now its own true total, mastery included, so a poisoned
+            // cell's popup is correctly negative on its own, never
+            // borrowing another cell's sign. ("+1, +2, +3, +4, +5" becomes
+            // e.g. "+1, +3, +3, +6, +5" when some of those cells also carry
+            // +1/+2 of their own frozen mastery level.)
+            var masteryByPosition = new Dictionary<Vector2Int, int>();
+            for (int e = 0; e < placement.ScoreEvents.Count; e++)
+            {
+                var masteryEvent = placement.ScoreEvents[e];
+                if (masteryEvent.Type == ScoreEventType.ShapeMastery || masteryEvent.Type == ScoreEventType.ColorMastery)
+                {
+                    masteryByPosition.TryGetValue(masteryEvent.Position, out int soFar);
+                    masteryByPosition[masteryEvent.Position] = soFar + masteryEvent.Amount;
+                }
+            }
             _comboView.Show(0, 1f);
             // Multiplies every stagger wait below — starts at 1 (full pace)
             // and shrinks by ComboSpeedupFactor after each combo addition,
@@ -1163,44 +1192,9 @@ namespace Contigu.Presentation
 
                 if (scoreEvent.Type == ScoreEventType.ShapeMastery || scoreEvent.Type == ScoreEventType.ColorMastery)
                 {
-                    // Mastery bonuses are stamped per tile and therefore
-                    // arrive as many small events. Present their placement
-                    // total once, instead of showing repeated +1 popups.
-                    if (masteryBonusShown)
-                    {
-                        continue;
-                    }
-
-                    int masteryBonus = placement.ShapeMasteryBonus + placement.ColorMasteryBonus;
-                    if (masteryBonus == 0)
-                    {
-                        continue;
-                    }
-
-                    masteryBonusShown = true;
-                    _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
-                    var masteryAnchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                    // A poisoned tile flips its own mastery bonus negative
-                    // too (RunManager.ApplyPoisonScoreRule already covers
-                    // ScoreEventType.ShapeMastery/ColorMastery — explicit
-                    // request: "Les points bonus de level d'une pièce
-                    // doivent aussi être comptabilisé négativement lorsqu'une
-                    // de ses tuiles est empoisonné") — this just used to
-                    // silently skip showing it at all whenever the aggregate
-                    // went non-positive, instead of showing the real negative
-                    // value.
-                    bool masteryNegative = masteryBonus < 0;
-                    _feedbackLayer.SpawnPopup(masteryAnchor, (masteryNegative ? "" : "+") + masteryBonus, masteryNegative ? UITheme.Danger : UITheme.TextPrimary);
-                    SfxManager.PlayComboTick();
-
-                    displayedRoundScore += masteryBonus;
-                    chipsTotal += masteryBonus;
-                    _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
-                    _comboView.Show(chipsTotal, multTotal);
-                    _comboView.PulseChips();
-
-                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
-                    staggerSpeed *= ComboSpeedupFactor;
+                    // Folded into its own cell's Group popup instead — see
+                    // masteryByPosition's own doc comment above and the
+                    // Group branch below.
                     continue;
                 }
 
@@ -1289,17 +1283,28 @@ namespace Contigu.Presentation
                 // red with its real sign instead of the type's usual color
                 // and an always-"+" prefix, which used to read as a
                 // nonsensical "+-N".
-                bool negative = scoreEvent.Amount < 0;
+                // Group popups fold in that SAME cell's own ShapeMastery/
+                // ColorMastery amount, if any (see masteryByPosition's own
+                // doc comment above) — both were already independently
+                // flipped negative by ApplyPoisonScoreRule when this cell
+                // is poisoned, so the combined total's sign is never in
+                // conflict between the two.
+                int displayAmount = scoreEvent.Amount;
+                if (scoreEvent.Type == ScoreEventType.Group && masteryByPosition.TryGetValue(scoreEvent.Position, out int masteryAtThisCell))
+                {
+                    displayAmount += masteryAtThisCell;
+                }
+                bool negative = displayAmount < 0;
                 Color color = negative ? UITheme.Danger
                     : scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
-                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + scoreEvent.Amount, color);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color);
                 SfxManager.PlayComboTick();
 
-                displayedRoundScore += scoreEvent.Amount;
-                chipsTotal += scoreEvent.Amount;
+                displayedRoundScore += displayAmount;
+                chipsTotal += displayAmount;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
                 _comboView.Show(chipsTotal, multTotal);
                 _comboView.PulseChips();
