@@ -25,7 +25,7 @@ namespace Contigu.Core
 
         private readonly List<Vector2Int> _poisonedCells = new List<Vector2Int>();
 
-        /// <summary>Poisoner only: every cell THIS instance has poisoned so far — unlike Locker's single roaming lock, poison accumulates every Shuffle and only clears when this instance dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>
+        /// <summary>Poisoner/Plague: every cell THIS instance has poisoned so far, including any extra cell "contamination" spread onto a neighbor in between Shuffles (see RunManager.ContaminateAdjacentCell) — unlike Locker's single roaming lock, poison accumulates until this instance's next Shuffle releases the whole list at once, or until it dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>
         public IReadOnlyList<Vector2Int> PoisonedCells
         {
             get { return _poisonedCells; }
@@ -47,15 +47,10 @@ namespace Contigu.Core
             _poisonedCells.Clear();
         }
 
-        /// <summary>Removes one specific cell from this instance's own poisoned-cells bookkeeping if present (no-op otherwise) — used when something OTHER than this instance's own next Shuffle un-poisons the cell first, e.g. "Reclaimer" consuming it (see RunManager.ResolveReclaimerShuffleEffect), so this instance's own list never goes stale against the grid's real Cell.IsPoisoned state.</summary>
-        public void RemovePoisonedCell(Vector2Int pos)
-        {
-            _poisonedCells.Remove(pos);
-        }
-
         /// <summary>
-        /// "Reclaimer"/future healers (spec extension — GDD §07: "heals 1
-        /// HP per poisoned tile consumed") — clamped at <see
+        /// "Reclaimer" (redesign — explicit request: "Chaque points
+        /// négatifs triggered par une tuile empoisonné, l'ennemi reclaimer
+        /// récupère en point de vie ce montant là") — clamped at <see
         /// cref="EnemyDefinition.MaxHp"/>, same ceiling <see
         /// cref="ApplyDamage"/>'s own negative-damage healing already
         /// respects.

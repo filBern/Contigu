@@ -283,23 +283,26 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Poisoner_PoisonsOneFilledCellPerShuffle_AndNormalizesThemAllOnDeath()
+        public void Poisoner_CanPoisonAnEmptyCell_NotJustAFilledOne_AndNormalizesOnDeath()
         {
+            // Redesign, explicit request: "Toutes les tuiles peuvent être
+            // empoisonné, pas juste les tuiles rempli" — unlike the old
+            // filled-only targeting, an EMPTY cell is now just as valid a
+            // candidate. Pre-poison every other cell so this Shuffle's only
+            // remaining candidate is the one deliberately left EMPTY,
+            // regardless of RNG state.
             var run = new RunManager(new SystemRandomProvider(1));
             AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
             var poisoner = run.CurrentEncounter[0];
             Assert.AreEqual(EnemyId.Poisoner, poisoner.Definition.Id);
 
-            // Poisoner only ever targets an already-FILLED cell (GDD §07) —
-            // manually fill exactly one so the very first Shuffle has a
-            // single, unambiguous candidate regardless of RNG state.
             var target = new Vector2Int(0, 0);
-            run.Grid.GetCell(target).IsFilled = true;
-            run.Grid.GetCell(target).FilledColor = PieceColor.Coral;
+            PoisonEveryCellExcept(run.Grid, target);
 
             Assert.IsTrue(run.ShuffleHand());
 
-            Assert.IsTrue(run.Grid.GetCell(target).IsPoisoned);
+            Assert.IsFalse(run.Grid.GetCell(target).IsFilled, "Target should still be empty");
+            Assert.IsTrue(run.Grid.GetCell(target).IsPoisoned, "An empty cell should now be a valid poison target");
             Assert.AreEqual(1, poisoner.PoisonedCells.Count);
             Assert.AreEqual(target, poisoner.PoisonedCells[0]);
 
@@ -365,6 +368,111 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PoisonedTile_WhenTriggeredByScoring_ContaminatesOneOrthogonallyAdjacentCell()
+        {
+            // Redesign, explicit request: "Si une tuile empoisonnée est
+            // triggered, une de ses 4 tuile adjacente est contaminée."
+            var run = new RunManager(new SystemRandomProvider(5));
+            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            var poisoner = run.CurrentEncounter[0];
+
+            int slotA = FirstOccupiedHandSlot(run);
+            var tokenA = run.Deck.Hand[slotA].Value;
+            var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[slotA]);
+            var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
+            Assert.IsTrue(anchorA.HasValue);
+            var outcomeA = run.PlacePiece(slotA, anchorA.Value.x, anchorA.Value.y);
+            Assert.IsTrue(outcomeA.Placement.Success);
+
+            var poisonedPos = outcomeA.Placement.PlacedCells[0];
+            run.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            poisoner.AddPoisonedCell(poisonedPos);
+
+            int slotB = -1;
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (i != slotA && run.Deck.Hand[i].HasValue)
+                {
+                    slotB = i;
+                    break;
+                }
+            }
+            Assert.GreaterOrEqual(slotB, 0, "Hand should still have another piece to play this round");
+            run.Deck.RecolorHandToken(slotB, tokenA.Color);
+            var tokenB = run.Deck.Hand[slotB].Value;
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[slotB]);
+            var anchorB = FindAnchorTouchingCell(run.Grid, shapeB, poisonedPos);
+            Assert.IsTrue(anchorB.HasValue, "Should find room to grow the group right next to the poisoned cell");
+
+            var outcomeB = run.PlacePiece(slotB, anchorB.Value.x, anchorB.Value.y);
+            Assert.IsTrue(outcomeB.Placement.Success);
+
+            Assert.AreEqual(2, CountPoisonedCells(run.Grid), "Triggering the poisoned tile should contaminate exactly 1 extra cell, on top of the original");
+            Assert.AreEqual(2, poisoner.PoisonedCells.Count, "The contaminated cell should be owned by the same Poisoner instance");
+
+            bool foundAdjacentContamination = false;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (pos != poisonedPos && run.Grid.GetCell(pos).IsPoisoned)
+                {
+                    int manhattan = Mathf.Abs(pos.x - poisonedPos.x) + Mathf.Abs(pos.y - poisonedPos.y);
+                    Assert.AreEqual(1, manhattan, "Contamination should land on an orthogonally adjacent cell");
+                    foundAdjacentContamination = true;
+                }
+            }
+            Assert.IsTrue(foundAdjacentContamination);
+        }
+
+        [Test]
+        public void Contamination_ExtraPoisonedCellsAreAlsoReleased_OnThePoisonersNextShuffle()
+        {
+            // Follow-up explicit request: "Toutes les tuiles supplémentaires
+            // sont aussi effacé on shuffle" — the existing roam-release-all
+            // logic in ResolvePoisonerShuffleEffect already covers this for
+            // free, since contamination adds to the SAME instance's own
+            // PoisonedCells list.
+            var run = new RunManager(new SystemRandomProvider(5));
+            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            var poisoner = run.CurrentEncounter[0];
+
+            int slotA = FirstOccupiedHandSlot(run);
+            var tokenA = run.Deck.Hand[slotA].Value;
+            var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[slotA]);
+            var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
+            Assert.IsTrue(anchorA.HasValue);
+            var outcomeA = run.PlacePiece(slotA, anchorA.Value.x, anchorA.Value.y);
+            Assert.IsTrue(outcomeA.Placement.Success);
+
+            var poisonedPos = outcomeA.Placement.PlacedCells[0];
+            run.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            poisoner.AddPoisonedCell(poisonedPos);
+
+            int slotB = -1;
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (i != slotA && run.Deck.Hand[i].HasValue)
+                {
+                    slotB = i;
+                    break;
+                }
+            }
+            Assert.GreaterOrEqual(slotB, 0, "Hand should still have another piece to play this round");
+            run.Deck.RecolorHandToken(slotB, tokenA.Color);
+            var tokenB = run.Deck.Hand[slotB].Value;
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[slotB]);
+            var anchorB = FindAnchorTouchingCell(run.Grid, shapeB, poisonedPos);
+            Assert.IsTrue(anchorB.HasValue);
+
+            run.PlacePiece(slotB, anchorB.Value.x, anchorB.Value.y);
+            Assert.AreEqual(2, CountPoisonedCells(run.Grid), "Should have 1 original + 1 contaminated cell before the next Shuffle");
+
+            Assert.IsTrue(run.ShuffleHand());
+
+            Assert.AreEqual(1, poisoner.PoisonedCells.Count, "The Shuffle should release every tracked cell (original AND contaminated) before picking exactly 1 new one");
+            Assert.AreEqual(1, CountPoisonedCells(run.Grid));
+        }
+
+        [Test]
         public void Poisoner_PoisonRoamsOneCellAtATime_NeverAccumulatingAcrossShuffles()
         {
             // Explicit request: "Les poison tiles doivent être retiré lors
@@ -406,6 +514,10 @@ namespace Contigu.Tests
             var target = new Vector2Int(0, 0);
             run.Grid.GetCell(target).IsFilled = true;
             run.Grid.GetCell(target).FilledColor = PieceColor.Coral;
+            // Any cell is now a valid poison candidate (see
+            // Poisoner_CanPoisonAnEmptyCell...), so pre-poison every OTHER
+            // cell to keep this Shuffle's target deterministic.
+            PoisonEveryCellExcept(run.Grid, target);
 
             Assert.IsTrue(run.ShuffleHand());
             Assert.IsTrue(run.Grid.GetCell(target).IsPoisoned);
@@ -576,18 +688,86 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Reclaimer_ConsumesTheFreshTilePoisonerJustPlaced_SameShuffle_HealingOneHp_AndScrubsItFromPoisonersOwnList()
+        public void Reclaimer_HealsByTheExactMagnitude_OfAnyNegativePoisonScoreEvent()
         {
-            // GDD §07 "Order-based interactions": "Poisoner creates poison
-            // before Reclaimer acts, allowing Reclaimer to consume it and
-            // heal" — both resolve within the SAME Shuffle call, sequentially
-            // in encounter order, so Reclaimer eats what Poisoner just placed
-            // moments earlier in this very tick.
+            // Redesign, explicit request: "Chaque points négatifs triggered
+            // par une tuile empoisonné, l'ennemi reclaimer récupère en
+            // point de vie ce montant là" — Reclaimer no longer has an
+            // On-Shuffle effect at all; it heals reactively, in lockstep
+            // with ApplyPoisonScoreRule flipping a placement's own score
+            // events negative. Basic goes first in encounter order so
+            // ApplyDamageToEncounter's own front-enemy hit lands on IT, not
+            // Reclaimer — keeping Reclaimer's HP change attributable to
+            // nothing but the new poison heal.
+            var run = new RunManager(new SystemRandomProvider(5));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Reclaimer);
+            var reclaimer = run.CurrentEncounter[1];
+            reclaimer.ApplyDamage(500);
+            int hpBefore = reclaimer.CurrentHp;
+
+            // Same deterministic "poison one of this placement's own just-
+            // filled cells, then grow the group through it" setup as
+            // Poisoner_RescoringAGroupThroughItsPoisonedCell....
+            int slotA = FirstOccupiedHandSlot(run);
+            var tokenA = run.Deck.Hand[slotA].Value;
+            var shapeA = PieceShapeCatalog.GetRotated(tokenA.Shape, run.Deck.HandRotations[slotA]);
+            var anchorA = FindAnyValidAnchor(run.Grid, shapeA);
+            Assert.IsTrue(anchorA.HasValue);
+            var outcomeA = run.PlacePiece(slotA, anchorA.Value.x, anchorA.Value.y);
+            Assert.IsTrue(outcomeA.Placement.Success);
+
+            var poisonedPos = outcomeA.Placement.PlacedCells[0];
+            run.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            // Ownership can be anyone's — GetPoisonedPositionsSnapshot reads
+            // every enemy's own PoisonedCells list, not Cell.IsPoisoned
+            // directly, so this cell needs SOME owner to be seen as poisoned
+            // for scoring purposes at all (see RunManager.PlacePiece).
+            reclaimer.AddPoisonedCell(poisonedPos);
+
+            int slotB = -1;
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (i != slotA && run.Deck.Hand[i].HasValue)
+                {
+                    slotB = i;
+                    break;
+                }
+            }
+            Assert.GreaterOrEqual(slotB, 0, "Hand should still have another piece to play this round");
+            run.Deck.RecolorHandToken(slotB, tokenA.Color);
+            var tokenB = run.Deck.Hand[slotB].Value;
+            var shapeB = PieceShapeCatalog.GetRotated(tokenB.Shape, run.Deck.HandRotations[slotB]);
+            var anchorB = FindAnchorTouchingCell(run.Grid, shapeB, poisonedPos);
+            Assert.IsTrue(anchorB.HasValue, "Should find room to grow the group right next to the poisoned cell");
+
+            var outcomeB = run.PlacePiece(slotB, anchorB.Value.x, anchorB.Value.y);
+            Assert.IsTrue(outcomeB.Placement.Success);
+
+            int expectedMagnitude = 0;
+            for (int i = 0; i < outcomeB.Placement.ScoreEvents.Count; i++)
+            {
+                var evt = outcomeB.Placement.ScoreEvents[i];
+                if (evt.Amount < 0)
+                {
+                    expectedMagnitude += -evt.Amount;
+                }
+            }
+            Assert.Greater(expectedMagnitude, 0, "This placement should have scored at least one negative event through the poisoned cell");
+            Assert.AreEqual(hpBefore + expectedMagnitude, reclaimer.CurrentHp);
+        }
+
+        [Test]
+        public void Reclaimer_HasNoOnShuffleEffectOfItsOwn_AnyMore()
+        {
+            // The old "consumes poisoned tiles on Shuffle" mechanic is gone
+            // entirely (redesign) — a Shuffle by itself, with poison
+            // present elsewhere on the board, should never change
+            // Reclaimer's HP; only an actual scoring event through poison
+            // does (see Reclaimer_HealsByTheExactMagnitude...).
             var run = new RunManager(new SystemRandomProvider(1));
             run.DebugSetEncounter(EnemyId.Poisoner, EnemyId.Reclaimer);
-            var poisoner = run.CurrentEncounter[0];
             var reclaimer = run.CurrentEncounter[1];
-            reclaimer.ApplyDamage(50); // so healing is actually observable below MaxHp
+            reclaimer.ApplyDamage(50);
             int hpBefore = reclaimer.CurrentHp;
 
             run.Grid.GetCell(0, 0).IsFilled = true;
@@ -595,25 +775,7 @@ namespace Contigu.Tests
 
             Assert.IsTrue(run.ShuffleHand());
 
-            Assert.AreEqual(0, poisoner.PoisonedCells.Count, "Reclaimer consuming the tile must scrub it from Poisoner's own bookkeeping too, not just the grid");
-            Assert.AreEqual(0, CountPoisonedCells(run.Grid));
-            Assert.AreEqual(hpBefore + 1, reclaimer.CurrentHp, "Reclaimer should have healed exactly 1 HP for the 1 tile Poisoner just placed");
-        }
-
-        [Test]
-        public void Reclaimer_BeforePoisonerInEncounterOrder_HealsNothing_SinceThePoisonDoesNotExistYet()
-        {
-            // GDD §07: "Reclaimer acts before the new poison exists, so it
-            // heals less or not at all; Poisoner then creates the poison."
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugSetEncounter(EnemyId.Reclaimer, EnemyId.Poisoner);
-            var reclaimer = run.CurrentEncounter[0];
-            reclaimer.ApplyDamage(50);
-            int hpBefore = reclaimer.CurrentHp;
-
-            Assert.IsTrue(run.ShuffleHand());
-
-            Assert.AreEqual(hpBefore, reclaimer.CurrentHp, "With no poison yet existing when Reclaimer acts first, it should heal nothing this Shuffle");
+            Assert.AreEqual(hpBefore, reclaimer.CurrentHp, "A Shuffle alone should never heal Reclaimer any more");
         }
 
         [Test]
@@ -730,6 +892,18 @@ namespace Contigu.Tests
                 }
             }
             return count;
+        }
+
+        /// <summary>Poisons every cell on the grid except <paramref name="except"/> — used to keep a Poisoner Shuffle's RNG-picked target deterministic now that any cell (filled or empty) is a valid candidate, by leaving exactly one.</summary>
+        private static void PoisonEveryCellExcept(GridManager grid, Vector2Int except)
+        {
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (pos != except)
+                {
+                    grid.GetCell(pos).IsPoisoned = true;
+                }
+            }
         }
 
         private static Vector2Int? FindAnyValidAnchor(GridManager grid, PieceShape shape)

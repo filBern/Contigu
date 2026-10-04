@@ -45,17 +45,23 @@ namespace Contigu.Core
         /// "ajouter un petit peu d'autobattling" — see GDD §07/RunManager.
         /// ResolvePoisonerShuffleEffect): any point event scored on this
         /// cell counts negative instead of positive while this is true (see
-        /// RunManager.ApplyPoisonScoreRule). Only ever SET on an already-
-        /// FILLED cell (an empty one has nothing to invert yet), but can
-        /// persist on an now-EMPTY cell afterwards — <see cref="ClearFill"/>
-        /// deliberately leaves it alone (explicit request: "Lorsqu'une
-        /// poison tile est cleared, elle doit rester présente sur la grille.
-        /// Pas la tuile, seulement l'effet poison jusqu'au prochain
-        /// shuffle"): the hazard stays attached to this grid POSITION, not
-        /// to whichever tile happened to be filling it, until the next
-        /// Shuffle rolls it away (see RunManager.ResolvePoisonerShuffleEffect,
-        /// which now releases its own previous poisoned cell first, exactly
-        /// like Locker's roaming lock).
+        /// RunManager.ApplyPoisonScoreRule). Can be set on ANY cell, filled
+        /// or empty alike (follow-up explicit request: "Toutes les tuiles
+        /// peuvent être empoisonné, pas juste les tuiles rempli") — an
+        /// empty one simply sits there as a trap for whatever piece lands
+        /// on it later. Persists on a now-EMPTY cell after a line clear —
+        /// <see cref="ClearFill"/> deliberately leaves it alone (explicit
+        /// request: "Lorsqu'une poison tile est cleared, elle doit rester
+        /// présente sur la grille. Pas la tuile, seulement l'effet poison
+        /// jusqu'au prochain shuffle"): the hazard stays attached to this
+        /// grid POSITION, not to whichever tile happened to be filling it,
+        /// until the next Shuffle rolls it away (see RunManager.
+        /// ResolvePoisonerShuffleEffect, which now releases its own
+        /// previous poisoned cell first, exactly like Locker's roaming
+        /// lock) — or until "contamination" spreads it onto a neighbor in
+        /// the meantime (see RunManager.ContaminateAdjacentCell, follow-up
+        /// explicit request: "Si une tuile empoisonnée est triggered, une
+        /// de ses 4 tuile adjacente est contaminée").
         /// </summary>
         public bool IsPoisoned;
 

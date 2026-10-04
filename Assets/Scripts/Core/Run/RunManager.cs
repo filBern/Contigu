@@ -665,9 +665,10 @@ namespace Contigu.Core
             {
                 ApplyCursedColorScoreRule(placement, BossCursedColor.Value);
             }
+            int poisonMagnitudeForReclaimer = 0;
             if (poisonedPositions != null && poisonedPositions.Count > 0)
             {
-                ApplyPoisonScoreRule(placement, poisonedPositions);
+                poisonMagnitudeForReclaimer = ApplyPoisonScoreRule(placement, poisonedPositions);
             }
             CountModifierUsage(placement);
             RemoveDepletedEpuisement();
@@ -683,6 +684,10 @@ namespace Contigu.Core
                 if (placement.ClearedLineCount > 0)
                 {
                     HealLeech(placement.ClearedLineCount);
+                }
+                if (poisonMagnitudeForReclaimer > 0)
+                {
+                    HealReclaimer(poisonMagnitudeForReclaimer);
                 }
             }
             // Don't auto-refill yet — if this placement also ends the round,
@@ -1809,7 +1814,12 @@ namespace Contigu.Core
         /// hand is actually dealt. HeavyLocker/Plague are Locker's/
         /// Poisoner's own mechanics at boss scale (see EnemyCatalog); Thief
         /// is deliberately NOT handled here (see ResolveThiefShuffleEffect's
-        /// own doc comment for why).
+        /// own doc comment for why). Reclaimer has no On-Shuffle effect at
+        /// all any more — it now heals reactively off poison's own negative
+        /// scoring instead (see HealReclaimer/ApplyPoisonScoreRule, explicit
+        /// redesign request: "Chaque points négatifs triggered par une
+        /// tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce
+        /// montant là").
         /// </summary>
         private void ResolveEnemyShuffleEffects()
         {
@@ -1831,10 +1841,6 @@ namespace Contigu.Core
                 else if (enemy.Definition.Id == EnemyId.Plague)
                 {
                     ResolvePoisonerShuffleEffect(enemy, 5);
-                }
-                else if (enemy.Definition.Id == EnemyId.Reclaimer)
-                {
-                    ResolveReclaimerShuffleEffect(enemy);
                 }
             }
         }
@@ -1881,11 +1887,15 @@ namespace Contigu.Core
         /// instead of accumulating (explicit request: "Les poison tiles
         /// doivent être retiré lors d'un shuffle pour mieux être replacé
         /// aléatoirement, comme pour les locked cell") — releases every
-        /// cell this instance poisoned so far (including one a line clear
-        /// already emptied but left poisoned — see Cell.ClearFill) before
-        /// picking new ones. Only targets already-FILLED, not-yet-poisoned
-        /// cells (an empty one has no points to invert yet); picks as many
-        /// of <paramref name="count"/> as there are candidates available.
+        /// cell this instance poisoned so far, INCLUDING any cell
+        /// contamination (see ContaminateAdjacentCell) added to this same
+        /// instance's own list since its last Shuffle (follow-up explicit
+        /// request: "Toutes les tuiles supplémentaires sont aussi effacé on
+        /// shuffle") — before picking <paramref name="count"/> new ones. Any
+        /// not-yet-poisoned cell is a valid target now, filled or empty
+        /// alike (follow-up explicit request: "Toutes les tuiles peuvent
+        /// être empoisonné, pas juste les tuiles rempli") — an empty one
+        /// simply sits as a trap for whatever piece lands there later.
         /// </summary>
         private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner, int count)
         {
@@ -1901,7 +1911,7 @@ namespace Contigu.Core
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var cell = Grid.GetCell(x, y);
-                    if (cell.IsFilled && !cell.IsPoisoned)
+                    if (!cell.IsPoisoned)
                     {
                         candidates.Add(new Vector2Int(x, y));
                     }
@@ -1919,48 +1929,73 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07: "On Shuffle, consumes poisoned tiles and heals 1 HP
-        /// per poisoned tile consumed." Scans the WHOLE grid (not just
-        /// this instance's own tracking — Reclaimer has none of its own)
-        /// for any currently-poisoned cell, normalizes each one, and heals
-        /// 1 HP per cell consumed. Must also scrub the cell out of
-        /// whichever OTHER enemy instance's own PoisonedCells list still
-        /// references it (see RemovePoisonFromOwner) so
-        /// GetPoisonedPositionsSnapshot — which reads enemy.PoisonedCells,
-        /// not Cell.IsPoisoned, for scoring — never goes stale. Resolving
-        /// Reclaimer in encounter order AFTER a Poisoner/Plague lets it
-        /// consume the poison they just placed THIS shuffle; resolving it
-        /// BEFORE them only lets it consume whatever (if anything) survived
-        /// from the previous shuffle — the GDD's own "Order-based
-        /// interactions" falls out of this ordering for free, no special
-        /// casing needed.
+        /// "Contamination" (spec extension, explicit request: "Si une tuile
+        /// empoisonnée est triggered, une de ses 4 tuile adjacente est
+        /// contaminée") — called from ApplyPoisonScoreRule once per distinct
+        /// poisoned position a placement actually scored negatively
+        /// through. Poisons one random orthogonally-adjacent, not-yet-
+        /// poisoned cell (in-bounds only; a no-op if every neighbor is
+        /// already poisoned or <paramref name="pos"/>'s own poison isn't
+        /// owned by any living enemy instance), adding it to the SAME
+        /// instance's own PoisonedCells list so it rolls away at that
+        /// instance's next Shuffle exactly like the original cell did (see
+        /// ResolvePoisonerShuffleEffect's own doc comment).
         /// </summary>
-        private void ResolveReclaimerShuffleEffect(EnemyInstance reclaimer)
+        private void ContaminateAdjacentCell(Vector2Int pos)
         {
-            int consumed = 0;
-            for (int x = 0; x < GridManager.Size; x++)
+            EnemyInstance owner = FindPoisonOwner(pos);
+            if (owner == null)
             {
-                for (int y = 0; y < GridManager.Size; y++)
+                return;
+            }
+
+            var offsets = new Vector2Int[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+            var candidates = new List<Vector2Int>();
+            for (int i = 0; i < offsets.Length; i++)
+            {
+                var neighbor = pos + offsets[i];
+                if (GridManager.InBounds(neighbor.x, neighbor.y) && !Grid.GetCell(neighbor).IsPoisoned)
                 {
-                    var pos = new Vector2Int(x, y);
-                    var cell = Grid.GetCell(pos);
-                    if (cell.IsPoisoned)
-                    {
-                        cell.IsPoisoned = false;
-                        RemovePoisonFromOwner(pos);
-                        consumed++;
-                    }
+                    candidates.Add(neighbor);
                 }
             }
-            reclaimer.Heal(consumed);
+            if (candidates.Count == 0)
+            {
+                return;
+            }
+
+            var target = candidates[_rng.Next(candidates.Count)];
+            Grid.GetCell(target).IsPoisoned = true;
+            owner.AddPoisonedCell(target);
         }
 
-        /// <summary>Removes <paramref name="pos"/> from every enemy instance's own PoisonedCells bookkeeping in the current encounter (see EnemyInstance.RemovePoisonedCell) — called whenever something other than that instance's own next Shuffle consumes the tile first, e.g. ResolveReclaimerShuffleEffect.</summary>
-        private void RemovePoisonFromOwner(Vector2Int pos)
+        /// <summary>The enemy instance whose own PoisonedCells list currently tracks <paramref name="pos"/>, or null if nothing in the current encounter owns it (dead enemies are cleaned up immediately on death, so this only ever finds a living owner).</summary>
+        private EnemyInstance FindPoisonOwner(Vector2Int pos)
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
-                _currentEncounter[i].RemovePoisonedCell(pos);
+                var enemy = _currentEncounter[i];
+                for (int j = 0; j < enemy.PoisonedCells.Count; j++)
+                {
+                    if (enemy.PoisonedCells[j] == pos)
+                    {
+                        return enemy;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>"Reclaimer" redesign (explicit request: "Chaque points négatifs triggered par une tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce montant là") — heals every alive Reclaimer instance by <paramref name="totalPoisonMagnitude"/>, the sum of every point this placement lost to poison this placement (see ApplyPoisonScoreRule's return value). Replaces Reclaimer's old On-Shuffle consume-and-heal effect entirely — it no longer has one (see ResolveEnemyShuffleEffects).</summary>
+        private void HealReclaimer(int totalPoisonMagnitude)
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.Definition.Id == EnemyId.Reclaimer)
+                {
+                    enemy.Heal(totalPoisonMagnitude);
+                }
             }
         }
 
@@ -1985,17 +2020,13 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Every currently-poisoned position across every alive Poisoner instance in <see cref="CurrentEncounter"/> — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>
+        /// <summary>Every currently-poisoned position across every alive enemy instance in <see cref="CurrentEncounter"/>, regardless of which one owns it (Poisoner, Plague, or a cell "contamination" spread onto — see ContaminateAdjacentCell) — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>
         private HashSet<Vector2Int> GetPoisonedPositionsSnapshot()
         {
             var snapshot = new HashSet<Vector2Int>();
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
-                if (enemy.Definition.Id != EnemyId.Poisoner)
-                {
-                    continue;
-                }
                 for (int j = 0; j < enemy.PoisonedCells.Count; j++)
                 {
                     snapshot.Add(enemy.PoisonedCells[j]);
@@ -2012,9 +2043,18 @@ namespace Contigu.Core
         /// poison is a cost, not an exemption, and <see
         /// cref="EnemyInstance.ApplyDamage"/> reads the resulting (possibly
         /// net-negative) TotalScore as this placement's damage, so playing
-        /// into poison can genuinely heal the enemy back up.
+        /// into poison can genuinely heal the enemy back up. Returns the
+        /// total magnitude flipped negative this placement (0 if none),
+        /// which the caller feeds into <see cref="HealReclaimer"/> (explicit
+        /// redesign request: "Chaque points négatifs triggered par une
+        /// tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce
+        /// montant là") — and spreads "contamination" (see
+        /// ContaminateAdjacentCell) from every distinct poisoned position
+        /// actually triggered this way (follow-up explicit request: "Si une
+        /// tuile empoisonnée est triggered, une de ses 4 tuile adjacente
+        /// est contaminée").
         /// </summary>
-        private static void ApplyPoisonScoreRule(PlacementResult placement, HashSet<Vector2Int> poisonedPositions)
+        private int ApplyPoisonScoreRule(PlacementResult placement, HashSet<Vector2Int> poisonedPositions)
         {
             placement.GroupBonus = 0;
             placement.GoldenBonus = 0;
@@ -2023,6 +2063,9 @@ namespace Contigu.Core
             placement.TraitBonus = 0;
             placement.ShapeMasteryBonus = 0;
             placement.ColorMasteryBonus = 0;
+
+            int totalPoisonMagnitude = 0;
+            var triggeredPositions = new HashSet<Vector2Int>();
 
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -2038,6 +2081,15 @@ namespace Contigu.Core
                     || (scoreEvent.ReferencedPosition.HasValue && poisonedPositions.Contains(scoreEvent.ReferencedPosition.Value));
                 if (IsPointEvent(scoreEvent.Type) && scoreEvent.Amount > 0 && touchesPoison)
                 {
+                    totalPoisonMagnitude += scoreEvent.Amount;
+                    if (poisonedPositions.Contains(scoreEvent.Position))
+                    {
+                        triggeredPositions.Add(scoreEvent.Position);
+                    }
+                    if (scoreEvent.ReferencedPosition.HasValue && poisonedPositions.Contains(scoreEvent.ReferencedPosition.Value))
+                    {
+                        triggeredPositions.Add(scoreEvent.ReferencedPosition.Value);
+                    }
                     scoreEvent.Amount = -scoreEvent.Amount;
                 }
 
@@ -2053,6 +2105,13 @@ namespace Contigu.Core
                     case ScoreEventType.ColorMastery: placement.ColorMasteryBonus += scoreEvent.Amount; break;
                 }
             }
+
+            foreach (var pos in triggeredPositions)
+            {
+                ContaminateAdjacentCell(pos);
+            }
+
+            return totalPoisonMagnitude;
         }
 
         /// <summary>

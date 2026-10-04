@@ -22,10 +22,10 @@ namespace Contigu.Core
         /// <summary>Round 4 is Classic's first scheduled boss round (RunConfig.BossRoundInterval) — stands in for a real Boss-tagged enemy with the two Creators fought together instead.</summary>
         private static readonly EnemyId[] Round4 = { EnemyId.Locker, EnemyId.Poisoner };
 
-        /// <summary>Teaches the GDD's own "Order-based interactions" example (§07: "Poisoner creates poison before Reclaimer acts, allowing Reclaimer to consume it and heal") — Poisoner resolves first in encounter order, feeding Reclaimer.</summary>
+        /// <summary>Pairs the poison creator with its own counter — Reclaimer now heals reactively off any poison-negative score anywhere on the board (see RunManager.HealReclaimer), so this pairing no longer depends on encounter order the way the GDD's original Reclaimer design did; kept as Round5/Round6's thematic couple regardless.</summary>
         private static readonly EnemyId[] Round5 = { EnemyId.Poisoner, EnemyId.Reclaimer };
 
-        /// <summary>Same pairing as Round5, reversed — "Reclaimer acts before the new poison exists, so it heals less or not at all; Poisoner then creates the poison" (GDD §07), teaching that order itself is the puzzle.</summary>
+        /// <summary>Same pairing as Round5, reversed order — harmless now that Reclaimer has no On-Shuffle effect of its own to be sequenced against (see Round5's own doc comment).</summary>
         private static readonly EnemyId[] Round6 = { EnemyId.Reclaimer, EnemyId.Poisoner };
 
         /// <summary>GDD §07's own example progression: "...multi-pressure encounters involving Thief and Leech."</summary>

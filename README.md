@@ -7138,3 +7138,47 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `deferredRevealCells` ou pas) — seule une cellule purement différée
   (jamais touchée par CE placement) reste sautée jusqu'au `Refresh()`
   final.
+- **Redesign Reclaimer + tuiles empoisonnées** : sur demande explicite.
+  Reclaimer ("Chaque points négatifs triggered par une tuile empoisonné,
+  l'ennemi reclaimer récupère en point de vie ce montant là") perd
+  entièrement son ancien effet On-Shuffle (consommer les tuiles
+  empoisonnées de la grille — et sa dépendance à l'ordre d'encounter
+  avec Poisoner qui allait avec, désormais sans objet) : `RunManager.
+  ApplyPoisonScoreRule` retourne maintenant le montant total retourné
+  négatif par le poison sur ce placement, et un nouveau `RunManager.
+  HealReclaimer` soigne chaque Reclaimer vivant de ce montant — réactif
+  à chaque pose, plus du tout au Shuffle. `ResolveReclaimerShuffleEffect`
+  et son helper `RemovePoisonFromOwner` sont supprimés (code mort).
+  Tuiles empoisonnées, deux changements : (1) "Toutes les tuiles peuvent
+  être empoisonné, pas juste les tuiles rempli" — `ResolvePoisonerShuffleEffect`
+  (Poisoner ET Plague) ne filtre plus sur `Cell.IsFilled`, n'importe
+  quelle case non-empoisonnée est une cible valide, posée comme un piège
+  pour une pièce future. (2) "Si une tuile empoisonnée est triggered,
+  une de ses 4 tuile adjacente est contaminée. Toutes les tuiles
+  supplémentaires sont aussi effacé on shuffle" — nouveau
+  `RunManager.ContaminateAdjacentCell`, appelé depuis
+  `ApplyPoisonScoreRule` pour chaque position empoisonnée distincte dont
+  un score event vient d'être flippé négatif ce placement : empoisonne
+  1 voisin orthogonal au hasard (pas déjà empoisonné), ajouté à la liste
+  `PoisonedCells` du MÊME propriétaire (nouveau `RunManager.
+  FindPoisonOwner`) — la boucle "libère tout puis repose N cases"
+  déjà existante dans `ResolvePoisonerShuffleEffect` efface donc déjà
+  gratuitement toute la contamination accumulée au prochain Shuffle,
+  sans changement de code supplémentaire là. Corrigé au passage, trouvé
+  en implémentant ceci : `GetPoisonedPositionsSnapshot` filtrait sur
+  `EnemyId.Poisoner` uniquement — les tuiles empoisonnées par Plague (ou
+  par contamination sur une instance Plague) n'étaient donc jamais vues
+  par `ApplyPoisonScoreRule` du tout ; lit maintenant `PoisonedCells` de
+  CHAQUE ennemi, sans filtre. `EncounterCatalog`'s rondes 5/6 (Poisoner+
+  Reclaimer, puis inversé) gardent leur duo thématique mais leurs
+  commentaires n'affirment plus une dépendance à l'ordre désormais
+  fausse. Tests réécrits dans `EnemyEncounterTests.cs` : les deux
+  anciens tests Reclaimer (consommation au Shuffle, dépendance d'ordre)
+  remplacés par un test de soin réactif par montant exact et un test
+  confirmant l'absence totale d'effet On-Shuffle ; nouveau
+  `RunManager.DebugSetEncounter` déjà existant réutilisé. Nouveaux tests
+  pour le ciblage de case vide et la contamination (spread + effacement
+  au Shuffle suivant) ; les deux tests Poisoner qui dépendaient de
+  l'ancien filtre `IsFilled` pour rester déterministes utilisent
+  maintenant un nouveau helper `PoisonEveryCellExcept` qui empoisonne
+  toutes les autres cases pour isoler une cible unique.
