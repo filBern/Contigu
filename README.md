@@ -7405,3 +7405,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `Refresh()` entre les deux fades force l'alpha à 0 dans la MÊME
   frame (avant tout `yield`) pour éviter un flash à pleine opacité le
   temps qu'un fade-in démarre.
+- **Fade un élément à la fois (pas les 3 en même temps)** : sur
+  demande explicite ("Les fade in et fade out doivent se faire un
+  élément a la fois, exemple un slot a la fois et non les 3 a la
+  fois"), suivi direct du point précédent. `HandView.FadeSlotPieces`
+  et `GridView.FadeMalus` fadaient jusqu'ici les 3 slots/toutes les
+  cases malus ensemble, via un seul Lerp partagé — réécrits pour
+  fader chaque slot/case l'un après l'autre (`yield return` en
+  boucle sur une nouvelle coroutine par élément,
+  `FadeOneSlot`/`FadeOneCellMalus`), chacun sa propre durée complète
+  plutôt qu'une seule durée partagée par le groupe entier. `GridView.
+  FadeMalus` capture d'abord la liste des cases actuellement malus
+  (nouveau `GridCellView.IsShowingMalus`) avant de les fader une à
+  une, pour ne jamais boucler sur des cases qui n'ont rien à montrer.
+  `ShuffleFadeDuration` (dans `GameBootstrap`) réduit de 0.2s à 0.12s
+  puisqu'il s'applique maintenant PAR élément et non plus pour tout
+  le groupe à la fois — sinon 3 slots en séquence auraient pris 3x
+  plus de temps qu'avant.

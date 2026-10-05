@@ -590,26 +590,35 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Fades every hand slot's piece preview — not the slot background/
-        /// level/lock chrome — linearly between alpha <paramref name="from"/>
-        /// and <paramref name="to"/> over <paramref name="duration"/>
-        /// seconds. Explicit request ("Animation de fade out des pièces
-        /// dans les slots si shuffle manuel" / "Animation de fade in des
-        /// pièces dans les slots"): GameBootstrap drives a Shuffle's whole
-        /// event order around this and GridView.FadeMalus. Empty slots fade
-        /// too, harmlessly — there's nothing to see there either way.
+        /// Fades each hand slot's piece preview — not the slot background/
+        /// level/lock chrome — ONE SLOT AT A TIME, left to right, each
+        /// taking <paramref name="duration"/> seconds, rather than all 3
+        /// moving together (explicit request: "Les fade in et fade out
+        /// doivent se faire un élément a la fois, exemple un slot a la
+        /// fois et non les 3 a la fois"). GameBootstrap drives a Shuffle's
+        /// whole event order around this and GridView.FadeMalus. Empty
+        /// slots fade too, harmlessly — there's nothing to see there
+        /// either way.
         /// </summary>
         public IEnumerator FadeSlotPieces(float from, float to, float duration)
         {
-            SetSlotPiecesAlpha(from);
+            for (int i = 0; i < _previewCanvasGroups.Length; i++)
+            {
+                yield return FadeOneSlot(_previewCanvasGroups[i], from, to, duration);
+            }
+        }
+
+        private static IEnumerator FadeOneSlot(CanvasGroup group, float from, float to, float duration)
+        {
+            group.alpha = from;
             float t = 0f;
             while (t < duration)
             {
                 t += Time.deltaTime;
-                SetSlotPiecesAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
+                group.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(t / duration));
                 yield return null;
             }
-            SetSlotPiecesAlpha(to);
+            group.alpha = to;
         }
 
         public void Refresh()

@@ -46,8 +46,14 @@ namespace Contigu.Presentation
         // (auto-refill) Shuffle's own event sequence (explicit request:
         // "Lors d'un shuffle manuel ou automatique, voici l'ordre des
         // évènements que je veux") — see PlayManualShuffleSequence and
-        // PlayPlacementSequence's own handWasAboutToAutoRefill branch.
-        private const float ShuffleFadeDuration = 0.2f;
+        // PlayPlacementSequence's own handWasAboutToAutoRefill branch. PER
+        // ELEMENT, not for the whole group — HandView.FadeSlotPieces/
+        // GridView.FadeMalus each fade one slot/cell at a time rather than
+        // all of them together (explicit follow-up request: "Les fade in
+        // et fade out doivent se faire un élément a la fois ... et non les
+        // 3 a la fois"), so a shorter value here keeps the total sequence
+        // (up to 3 slots, plus however many malus cells) from dragging.
+        private const float ShuffleFadeDuration = 0.12f;
         private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
         private const int DefaultStatusFontSize = 19;
         private const int EmphasizedStatusFontSize = 27;

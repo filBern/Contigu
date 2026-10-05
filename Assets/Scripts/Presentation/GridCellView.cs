@@ -248,6 +248,12 @@ namespace Contigu.Presentation
         /// wide fade of every enemy-placed debuff as part of
         /// GameBootstrap's own Shuffle event sequencing.
         /// </summary>
+        /// <summary>Whether this cell is currently showing ANY malus visual (see SetMalusAlpha) — used by GridView.FadeMalus to collect just the cells actually worth animating, rather than looping every grid cell for ones that no-op.</summary>
+        public bool IsShowingMalus()
+        {
+            return _isShowingLockedObstacle || _isShowingPoisonBadge;
+        }
+
         public void SetMalusAlpha(float alpha)
         {
             if (_isShowingLockedObstacle)
