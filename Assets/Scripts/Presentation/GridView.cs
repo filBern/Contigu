@@ -296,25 +296,35 @@ namespace Contigu.Presentation
         /// (already-cleared) grid state — used to hold a just-completed line
         /// visually filled while its score is still playing out, before
         /// <see cref="ClearCellVisual"/> empties each cell in turn.
-        /// <paramref name="deferredLockCells"/> are left entirely untouched
-        /// (on explicit report: "Les X du boss devrait apparaitre après
-        /// avoir calculé tous les points de la pièce posé, pas avant de
-        /// comptabiliser les points") — a boss-round lock tick already
-        /// flipped these cells' Cell.IsLocked in Core by the time this
-        /// runs (GameBootstrap calls this right after RunManager.PlacePiece
-        /// returns, before the score-popup sequence even starts), so
-        /// redrawing them here would show their "X" obstacle instantly
-        /// instead of only once GridView.Refresh() reveals them at the end
-        /// of that sequence. Skipping them leaves their prior (still empty,
-        /// unlocked) visual in place until then — safe since a lock tick
-        /// only ever targets cells that were already empty. EXCEPT when a
-        /// deferred cell is ALSO one of this same placement's own
-        /// <paramref name="heldCells"/> (its own line clear just emptied a
-        /// cell whose poison/lock ALSO happened to move elsewhere this same
-        /// tick, via an auto-refill-triggered Shuffle) — that one still
-        /// needs the normal held-filled treatment now, so its clear
-        /// animation plays in step with its neighbors instead of freezing
-        /// on a stale pre-clear draw until the final reveal.
+        /// <paramref name="deferredLockCells"/> render with their TRUE
+        /// current fill state but their locked-obstacle look/poison badge
+        /// hidden (<see cref="GridCellView.ApplyState"/>'s suppressMalus),
+        /// instead of their actual state outright (on explicit report:
+        /// "Les X du boss devrait apparaitre après avoir calculé tous les
+        /// points de la pièce posé, pas avant de comptabiliser les points")
+        /// — a boss-round lock tick (or a poison "contamination" spread)
+        /// already flipped these cells' Cell.IsLocked/IsPoisoned in Core by
+        /// the time this runs (GameBootstrap calls this right after
+        /// RunManager.PlacePiece returns, before the score-popup sequence
+        /// even starts), so redrawing them with their REAL state here would
+        /// show the "X" obstacle or poison badge instantly instead of only
+        /// once GridView.Refresh() reveals them at the end of that
+        /// sequence. This used to skip them entirely instead (leaving
+        /// whatever they looked like a frame ago in place), which relied on
+        /// a lock tick only ever targeting an already-empty cell — true for
+        /// a boss lock tick, but NOT for contamination, which can land on
+        /// one of THIS SAME placement's own just-filled footprint cells:
+        /// skipping it then left it frozen on its stale pre-click hover-
+        /// tint for the whole score cascade instead of showing the piece it
+        /// was actually just filled with (bug report: "la tuile qui va
+        /// être empoisonné devient grisâtre avant même que les points
+        /// commencent a etre compté"). EXCEPT when a deferred cell is ALSO
+        /// one of this same placement's own <paramref name="heldCells"/>
+        /// (its own line clear just emptied a cell whose poison/lock ALSO
+        /// happened to move elsewhere this same tick, via an auto-refill-
+        /// triggered Shuffle) — that one still needs the normal held-filled
+        /// treatment instead, so its clear animation plays in step with its
+        /// neighbors.
         /// </summary>
         public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredLockCells = null)
         {
@@ -361,7 +371,7 @@ namespace Contigu.Presentation
                     }
                     else if (deferred.Contains(pos))
                     {
-                        continue;
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: true);
                     }
                     else
                     {

@@ -7435,3 +7435,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   défaut, donc chaque autre appelant garde son comportement exact) —
   le popup du Thief seul passe `floatDown: true` pour flotter vers le
   bas de son icône à la place.
+- **Fix : la tuile qui va être empoisonnée devenait grisâtre avant le
+  décompte des points** : bug report explicite ("Lorsque je dépose
+  une pièce avant un shuffle ou qu'une tuile empoisonné se décuple la
+  tuile qui va être empoisonné devient grisâtre avant même que les
+  points commencent a etre compté"). `GridView.
+  RefreshHoldingClearedCells` tenait une cellule "deferred" (dont le
+  lock/poison vient tout juste d'être appliqué en Core par l'auto-
+  refill de cette même pose, mais qui ne doit pas encore se révéler à
+  l'écran) complètement intouchée — en pariant que ce genre de
+  cellule était toujours vide avant ET après (vrai pour un lock
+  périodique de boss, mais PAS pour la contamination du poison, qui
+  peut justement tomber sur une des cases que CETTE pose vient tout
+  juste de remplir). Une case ainsi "deferred" restait donc figée sur
+  son dernier rendu — le survol vert/rouge de prévisualisation d'avant
+  le clic (`GridCellView.SetHoverTint`, jamais réinitialisé par
+  `ClearSelectionStateOnly`, volontairement, pour ne pas révéler le
+  poison trop tôt) — jusqu'à la révélation finale en fin de séquence,
+  d'où le "grisâtre" prématuré. Fix : nouveau paramètre
+  `suppressMalus` sur `GridCellView.ApplyState` qui dessine l'état de
+  remplissage RÉEL et actuel de la cellule (donc la pièce qu'on vient
+  de poser s'affiche tout de suite, écrasant le survol figé) tout en
+  cachant seulement son obstacle verrouillé/badge de poison —
+  `RefreshHoldingClearedCells` l'utilise maintenant au lieu de ne rien
+  dessiner du tout pour chaque cellule deferred.
