@@ -49,9 +49,14 @@ namespace Contigu.Presentation
         /// side panel passes one, non-null only past level 1 — so a
         /// LEVELED modifier's tooltip shows its true, scaled effect instead
         /// of just the unleveled base numbers baked into its static
-        /// Description.
+        /// Description. <paramref name="showSellValue"/> defaults to false;
+        /// only the persistent side panel passes true, on explicit request
+        /// ("j'aimerais qu'on ajoute la sell value d'un modifier en haut a
+        /// droite de son tooltip") — a modifier is only actually sellable
+        /// (RunManager.SellModifier) once it's in that list, so draft/shop
+        /// candidate badges never show one.
         /// </summary>
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null)
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
         {
             var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
@@ -94,7 +99,7 @@ namespace Contigu.Presentation
             if (attachTooltip)
             {
                 var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
-                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider, levelStateProvider);
+                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider, levelStateProvider, showSellValue);
             }
 
             return badge;

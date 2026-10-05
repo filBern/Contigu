@@ -7363,3 +7363,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   test du Round4 boss réécrits pour les nouveaux comptes/Basic, et
   nouveaux tests dédiés pour `HealOrGrow` (grossit si déjà plein, sinon
   se comporte comme l'ancien `Heal`).
+- **Sell value dans le tooltip des modifiers** : sur demande explicite
+  ("J'aimerais qu'on ajoute la sell value d'un modifier en haut a
+  droite de son tooltip"). Nouveau label dans `TooltipView` (coin
+  haut-droit, même ligne que le nom, en doré comme partout ailleurs où
+  la Lueur s'affiche), affiché seulement quand `Show()` reçoit une
+  valeur (`sellValue`, optionnelle) — le nom du modifier réduit sa
+  largeur pour lui laisser la place, sans toucher aux autres appelants
+  (enemy/trait/poison tooltips) qui n'en passent jamais. `ModifierBadgeView`
+  calcule cette valeur avec exactement la même formule que
+  `RunManager.SellModifier` (`ModifierPricing.GetPrice(id) - 1`), mais
+  seulement quand son nouveau flag `showSellValue` est vrai — threadé
+  depuis `ModifierBadgeFactory.Create` jusqu'à `ModifierPanelView`
+  (le panneau des modifiers possédés, les seuls réellement vendables) ;
+  les badges du draft/upgrade choice et des cartes du shop n'activent
+  jamais ce flag, puisque ces modifiers-là ne sont pas encore possédés.

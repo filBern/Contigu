@@ -1,3 +1,4 @@
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,12 +20,17 @@ namespace Contigu.Presentation
         private const float ShowMargin = 16f;
         private const float NameHeight = 24f;
         private const float SubtitleHeight = 18f;
+        // Reserved on the right of the Name row whenever a sell value is
+        // shown (see Show()'s sellValue parameter), so a long modifier name
+        // never runs under it.
+        private const float SellValueWidth = 56f;
 
         private RectTransform _root;
         private RectTransform _panel;
         private Text _nameLabel;
         private Text _subtitleLabel;
         private Text _descLabel;
+        private Text _sellValueLabel;
 
         public RectTransform Build(Transform parent)
         {
@@ -54,6 +60,22 @@ namespace Contigu.Presentation
             _nameLabel.rectTransform.pivot = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding);
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 22f);
+
+            // Sell value (explicit request: "j'aimerais qu'on ajoute la
+            // sell value d'un modifier en haut a droite de son tooltip") —
+            // top-right corner of the panel, same row as the Name. Only the
+            // persistent modifier side panel (owned, sellable modifiers)
+            // passes a value into Show(); every other caller (draft cards,
+            // enemy/trait/poison tooltips) leaves it null and this stays
+            // hidden, same opt-in pattern as the subtitle line.
+            _sellValueLabel = UIFactory.CreateText(_panel, "SellValue", "", 13, VisualDefaults.GoldenColor, TextAnchor.UpperRight);
+            _sellValueLabel.raycastTarget = false;
+            _sellValueLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
+            _sellValueLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _sellValueLabel.rectTransform.pivot = new Vector2(1f, 1f);
+            _sellValueLabel.rectTransform.anchoredPosition = new Vector2(-Padding, -Padding);
+            _sellValueLabel.rectTransform.sizeDelta = new Vector2(SellValueWidth, 22f);
+            _sellValueLabel.gameObject.SetActive(false);
 
             _subtitleLabel = UIFactory.CreateText(_panel, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
             _subtitleLabel.fontStyle = FontStyle.Italic;
@@ -87,9 +109,17 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null)
         {
             _nameLabel.text = name;
+
+            bool hasSellValue = sellValue.HasValue;
+            _sellValueLabel.gameObject.SetActive(hasSellValue);
+            if (hasSellValue)
+            {
+                _sellValueLabel.text = "Sell " + sellValue.Value;
+            }
+            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - (hasSellValue ? SellValueWidth : 0f), 22f);
 
             bool hasSubtitle = !string.IsNullOrEmpty(subtitle);
             _subtitleLabel.gameObject.SetActive(hasSubtitle);

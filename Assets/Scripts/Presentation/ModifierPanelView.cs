@@ -309,7 +309,7 @@ namespace Contigu.Presentation
                 System.Func<ModifierId, string> rowLevelState = level > 1
                     ? (System.Func<ModifierId, string>)(rowId => "Level " + level + " — x" + ModifierLevelUtility.LevelToFactor(level).ToString(System.Globalization.CultureInfo.InvariantCulture) + " effect")
                     : null;
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState);
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState, showSellValue: true);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);

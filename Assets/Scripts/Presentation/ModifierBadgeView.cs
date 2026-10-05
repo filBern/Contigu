@@ -12,6 +12,7 @@ namespace Contigu.Presentation
         private System.Func<ModifierId, int> _usageCountProvider;
         private System.Func<ModifierId, string> _progressiveStateProvider;
         private System.Func<ModifierId, string> _levelStateProvider;
+        private bool _showSellValue;
 
         // Whether the pointer is currently resting over this badge — while
         // true, Update() below keeps re-pushing fresh content into the
@@ -26,13 +27,14 @@ namespace Contigu.Presentation
         // display staleness bug, not a scoring one).
         private bool _hovering;
 
-        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null)
+        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
         {
             _tooltip = tooltip;
             _def = def;
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
             _levelStateProvider = levelStateProvider;
+            _showSellValue = showSellValue;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -94,7 +96,14 @@ namespace Contigu.Presentation
                     description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
                 }
             }
-            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle);
+            // Sell value (explicit request: "j'aimerais qu'on ajoute la sell
+            // value d'un modifier en haut a droite de son tooltip") — same
+            // formula as RunManager.SellModifier (base price minus 1), shown
+            // only for badges the side panel builds (this modifier is
+            // already owned and sellable); draft/shop-candidate badges never
+            // pass showSellValue, since those aren't owned yet.
+            int? sellValue = _showSellValue ? ModifierPricing.GetPrice(_def.Id) - 1 : (int?)null;
+            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, sellValue: sellValue);
         }
     }
 }
