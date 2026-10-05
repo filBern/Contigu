@@ -1133,7 +1133,14 @@ namespace Contigu.Presentation
                     var anchor = _hudView.GetEnemyIconTransform(i);
                     if (anchor != null)
                     {
-                        _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger);
+                        // floatDown: true — this anchor sits up in the HUD's
+                        // enemy band, near the very top of the screen;
+                        // SpawnPopup's usual float-UP would run the text off
+                        // the top edge (explicit bug report: "L'animation du
+                        // thief doit aller vers le bas de l'ennemi, pas le
+                        // haut sinon la pièce montré sort de l'écran par le
+                        // haut").
+                        _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger, floatDown: true);
                     }
                     SfxManager.Play(SfxId.PickUpPiece);
                     return;

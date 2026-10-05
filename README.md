@@ -7422,3 +7422,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   puisqu'il s'applique maintenant PAR élément et non plus pour tout
   le groupe à la fois — sinon 3 slots en séquence auraient pris 3x
   plus de temps qu'avant.
+- **Fix : le popup du vol du Thief sortait de l'écran par le haut** :
+  bug report explicite ("L'animation du thief doit aller vers le bas
+  de l'ennemi, pas le haut sinon la pièce montré sort de l'écran par
+  le haut"). `FeedbackLayer.SpawnPopup`/`AnimatePopup` ne flottaient
+  que vers le HAUT (+60 unités) — correct pour tous les autres
+  appelants (cases de la grille, centre d'un combo/multiplicateur),
+  mais l'ancre du popup de vol du Thief (`GameBootstrap.
+  PlayThiefStealEffect`, sur l'icône de Thief dans la bande d'ennemis
+  du HUD, déjà tout en haut de l'écran) poussait le texte hors-écran.
+  Nouveau paramètre optionnel `floatDown` sur `SpawnPopup` (faux par
+  défaut, donc chaque autre appelant garde son comportement exact) —
+  le popup du Thief seul passe `floatDown: true` pour flotter vers le
+  bas de son icône à la place.

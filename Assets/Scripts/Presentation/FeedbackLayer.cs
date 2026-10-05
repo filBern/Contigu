@@ -22,7 +22,19 @@ namespace Contigu.Presentation
             return root;
         }
 
-        public void SpawnPopup(RectTransform anchor, string text, Color color)
+        /// <summary>
+        /// <paramref name="floatDown"/> flips the usual float-UP direction
+        /// to float DOWN instead — explicit bug report: the Thief steal
+        /// popup (anchored on Thief's own enemy icon, up in the HUD's
+        /// enemy band near the top of the screen) floated up like every
+        /// other popup here and ran off the top of the screen ("L'animation
+        /// du thief doit aller vers le bas de l'ennemi, pas le haut sinon
+        /// la pièce montré sort de l'écran par le haut"). Every other
+        /// caller anchors comfortably lower (grid cells, the combo/
+        /// multiplier center of a placement), so they all keep the
+        /// original upward float by leaving this false.
+        /// </summary>
+        public void SpawnPopup(RectTransform anchor, string text, Color color, bool floatDown = false)
         {
             if (anchor == null)
             {
@@ -70,7 +82,7 @@ namespace Contigu.Presentation
             var popup = UIFactory.CreateText(container, "Popup", text, 22, color);
             UIFactory.StretchFull(popup.rectTransform);
 
-            StartCoroutine(AnimatePopup(container, backdrop, popup));
+            StartCoroutine(AnimatePopup(container, backdrop, popup, floatDown));
         }
 
         /// <summary>
@@ -135,7 +147,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text)
+        private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text, bool floatDown)
         {
             // Slow, readable float+fade — several of these play in a staggered
             // sequence per placement, so each one needs enough time on screen to
@@ -146,12 +158,13 @@ namespace Contigu.Presentation
             Vector3 startPos = container.position;
             Color textColor = text.color;
             Color backdropColor = backdrop.color;
+            float verticalSign = floatDown ? -1f : 1f;
 
             while (t < duration)
             {
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
-                container.position = startPos + new Vector3(0f, 60f * p, 0f);
+                container.position = startPos + new Vector3(0f, verticalSign * 60f * p, 0f);
 
                 float fadeP = Mathf.Clamp01((p - holdFraction) / (1f - holdFraction));
                 float alpha = Mathf.Lerp(1f, 0f, fadeP);
