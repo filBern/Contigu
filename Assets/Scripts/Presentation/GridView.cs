@@ -385,6 +385,47 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Instantly sets every cell's malus alpha, with no animation (see GridCellView.SetMalusAlpha) — used right before/after Refresh() so FadeMalus can fade from/to a clean, pop-free state.</summary>
+        public void SetMalusAlpha(float alpha)
+        {
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    _cells[x, y].SetMalusAlpha(alpha);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fades every currently-shown "malus" (Locker's locked-obstacle
+        /// cells + Poisoner's poison badges), grid-wide, linearly between
+        /// alpha <paramref name="from"/> and <paramref name="to"/> over
+        /// <paramref name="duration"/> seconds — explicit request: on a
+        /// Shuffle (manual or automatic), ALL of the board's existing
+        /// enemy debuffs fade out as one wipe before the new hand is
+        /// dealt, then whichever ones the Shuffle just left behind
+        /// (possibly the exact same cells, possibly moved by a Locker/
+        /// Poisoner On-Shuffle effect) fade back in, rather than popping
+        /// straight to their new state. This never decides WHICH cells are
+        /// a malus — only how visible the ones that already are show up
+        /// as — so GameBootstrap always calls it right around a Refresh()
+        /// (see PlayManualShuffleSequence / PlayPlacementSequence's own
+        /// handWasAboutToAutoRefill branch).
+        /// </summary>
+        public System.Collections.IEnumerator FadeMalus(float from, float to, float duration)
+        {
+            SetMalusAlpha(from);
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                SetMalusAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
+                yield return null;
+            }
+            SetMalusAlpha(to);
+        }
+
         public void SetSelectedShape(PieceShape shape, PieceColor? color = null, PieceTrait? trait = null)
         {
             _selectedShape = shape;

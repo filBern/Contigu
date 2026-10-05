@@ -7378,3 +7378,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (le panneau des modifiers possédés, les seuls réellement vendables) ;
   les badges du draft/upgrade choice et des cartes du shop n'activent
   jamais ce flag, puisque ces modifiers-là ne sont pas encore possédés.
+- **Ordre d'évènements animé pour le Shuffle (manuel et automatique)** :
+  sur demande explicite ("Lors d'un shuffle manuel ou automatique,
+  voici l'ordre des évènements que je veux: Animation de fade out des
+  pièces dans les slots si shuffle manuel / Animation de fade out de
+  tous les malus sur l'écran / Animation de fade in des pièces dans
+  les slots / Animation de fade in des malus des ennemies"). Les deux
+  chemins (bouton Shuffle manuel dans `GameBootstrap.
+  PlayManualShuffleSequence`, et le refill automatique d'une
+  placement qui vide la main, dans `PlayPlacementSequence`'s
+  `handWasAboutToAutoRefill` branch) suivent maintenant le même ordre
+  animé au lieu d'un `Refresh()` instantané — le chemin automatique
+  saute seulement la toute première étape (la main est déjà montrée
+  vide depuis `HandView.RefreshHoldingEmpty`, bien avant ce point).
+  "Malus" = tout debuff placé par un ennemi actuellement affiché sur
+  la grille (l'obstacle verrouillé de Locker, le badge de poison de
+  Poisoner) — fade en un seul coup grille-entière (nouveau
+  `GridView.FadeMalus`/`GridCellView.SetMalusAlpha`, qui ne touchent
+  QUE ces visuels-là sur chaque tuile, jamais son fill/background
+  normal), pas une diff cellule par cellule, puisque la demande vise
+  TOUS les malus, pas seulement ceux qu'un effet On-Shuffle de
+  Locker/Poisoner a réellement déplacés. Les pièces des slots de main
+  (nouveau `HandView.FadeSlotPieces`/`SetSlotPiecesAlpha`, sur un
+  `CanvasGroup` par slot qui n'enveloppe QUE l'aperçu de la pièce, pas
+  le fond/niveau/lock de la slot) fade de la même façon. Chaque
+  `Refresh()` entre les deux fades force l'alpha à 0 dans la MÊME
+  frame (avant tout `yield`) pour éviter un flash à pleine opacité le
+  temps qu'un fade-in démarre.

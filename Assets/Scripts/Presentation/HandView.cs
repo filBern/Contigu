@@ -73,6 +73,7 @@ namespace Contigu.Presentation
         private Image[] _slotBackgrounds;
         private Button[] _slotButtons;
         private RectTransform[] _previewContainers;
+        private CanvasGroup[] _previewCanvasGroups;
         private Text[] _slotLevelLabels;
         private Text[] _slotLockLabels;
         private Button _shuffleButton;
@@ -126,6 +127,7 @@ namespace Contigu.Presentation
             _slotBackgrounds = new Image[DeckManager.HandSize];
             _slotButtons = new Button[DeckManager.HandSize];
             _previewContainers = new RectTransform[DeckManager.HandSize];
+            _previewCanvasGroups = new CanvasGroup[DeckManager.HandSize];
             _slotLevelLabels = new Text[DeckManager.HandSize];
             _slotLockLabels = new Text[DeckManager.HandSize];
             _shakeCoroutines = new Coroutine[DeckManager.HandSize];
@@ -155,6 +157,12 @@ namespace Contigu.Presentation
                 previewContainer.pivot = new Vector2(0.5f, 0.5f);
                 previewContainer.anchoredPosition = new Vector2(0f, 10f);
                 previewContainer.sizeDelta = new Vector2(100f, 110f);
+                // Wraps just the piece's own preview (not the slot's
+                // background/level/lock chrome) so a Shuffle can fade the
+                // piece alone in/out — explicit request: "Animation de fade
+                // out des pièces dans les slots si shuffle manuel" / "...de
+                // fade in des pièces dans les slots" (see FadeSlotPieces).
+                var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
 
                 var levelLabel = UIFactory.CreateText(slot.transform, "PieceLevel", "", 14, Color.black);
                 levelLabel.raycastTarget = false;
@@ -174,6 +182,7 @@ namespace Contigu.Presentation
 
                 _slotBackgrounds[i] = slot;
                 _previewContainers[i] = previewContainer;
+                _previewCanvasGroups[i] = previewCanvasGroup;
                 _slotLevelLabels[i] = levelLabel;
                 _slotLockLabels[i] = lockLabel;
             }
@@ -569,6 +578,38 @@ namespace Contigu.Presentation
                     _slotLockLabels[i].text = lockedByBoss ? "LOCKED" : string.Empty;
                 }
             }
+        }
+
+        /// <summary>Instantly sets every hand slot's piece preview alpha, with no animation — slot chrome (background/level/lock labels) is untouched. Used right before <see cref="Refresh"/> rebuilds the pieces, so the new ones start invisible and a follow-up <see cref="FadeSlotPieces"/> can fade them in instead of popping at full opacity.</summary>
+        public void SetSlotPiecesAlpha(float alpha)
+        {
+            for (int i = 0; i < _previewCanvasGroups.Length; i++)
+            {
+                _previewCanvasGroups[i].alpha = alpha;
+            }
+        }
+
+        /// <summary>
+        /// Fades every hand slot's piece preview — not the slot background/
+        /// level/lock chrome — linearly between alpha <paramref name="from"/>
+        /// and <paramref name="to"/> over <paramref name="duration"/>
+        /// seconds. Explicit request ("Animation de fade out des pièces
+        /// dans les slots si shuffle manuel" / "Animation de fade in des
+        /// pièces dans les slots"): GameBootstrap drives a Shuffle's whole
+        /// event order around this and GridView.FadeMalus. Empty slots fade
+        /// too, harmlessly — there's nothing to see there either way.
+        /// </summary>
+        public IEnumerator FadeSlotPieces(float from, float to, float duration)
+        {
+            SetSlotPiecesAlpha(from);
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                SetSlotPiecesAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(t / duration)));
+                yield return null;
+            }
+            SetSlotPiecesAlpha(to);
         }
 
         public void Refresh()

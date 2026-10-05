@@ -41,6 +41,14 @@ namespace Contigu.Presentation
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
+        // Which of this cell's visuals, if any, are currently an enemy-
+        // placed "malus" (Locker's locked-obstacle look / Poisoner's poison
+        // badge) — set each time ApplyState renders, read by SetMalusAlpha
+        // so GridView.FadeMalus can fade exactly those, and nothing else on
+        // this cell, as part of GameBootstrap's Shuffle event sequencing.
+        private bool _isShowingLockedObstacle;
+        private bool _isShowingPoisonBadge;
+
         public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
         {
             _owner = owner;
@@ -105,6 +113,7 @@ namespace Contigu.Presentation
             // shows correctly once ClearCellVisual/the final Refresh()
             // calls ApplyState with no override.
             bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion && !fillColorOverride.HasValue;
+            _isShowingLockedObstacle = renderAsLockedObstacle;
 
             if (renderAsLockedObstacle)
             {
@@ -193,6 +202,7 @@ namespace Contigu.Presentation
             // pattern as the trait-origin badge below, since this badge's
             // own Init (above) runs before _tooltip is assigned.
             _badgePoison.gameObject.SetActive(cell.IsPoisoned);
+            _isShowingPoisonBadge = cell.IsPoisoned;
             if (cell.IsPoisoned)
             {
                 _poisonBadgeView.Init(_tooltip, gameObject);
@@ -227,6 +237,29 @@ namespace Contigu.Presentation
             // hides them again.
             _invalidMarker.gameObject.SetActive(false);
             _lineClearOverlay.SetActive(false);
+        }
+
+        /// <summary>
+        /// Sets the alpha of just this cell's "malus" visuals — the
+        /// locked-obstacle look and/or the poison badge, whichever this
+        /// cell was last rendered with (see ApplyState) — leaving its
+        /// normal tile fill/background completely untouched when neither
+        /// applies. Explicit request: GridView.FadeMalus drives a grid-
+        /// wide fade of every enemy-placed debuff as part of
+        /// GameBootstrap's own Shuffle event sequencing.
+        /// </summary>
+        public void SetMalusAlpha(float alpha)
+        {
+            if (_isShowingLockedObstacle)
+            {
+                var c = Background.color;
+                Background.color = new Color(c.r, c.g, c.b, alpha);
+            }
+            if (_isShowingPoisonBadge)
+            {
+                var c = _badgePoison.color;
+                _badgePoison.color = new Color(c.r, c.g, c.b, alpha);
+            }
         }
 
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
