@@ -1247,51 +1247,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GrantStartingModifier_AddsExactlyOneModifier_AndSetsTheProperty()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            Assert.AreEqual(0, run.ActiveModifiers.Count, "Untouched until GrantStartingModifier is actually called — a fresh run holds nothing on its own");
-
-            var granted = run.GrantStartingModifier();
-
-            Assert.AreEqual(1, run.ActiveModifiers.Count);
-            Assert.AreEqual(granted, run.ActiveModifiers[0]);
-            Assert.AreEqual(granted, run.StartingModifier);
-        }
-
-        [Test]
-        public void GrantStartingModifier_NeverGrantsCopieur_ItselfAsAStartingModifier()
-        {
-            // Not a real exclusion — Copieur is a perfectly valid catalog
-            // entry to hold from the start, it just never has anything to
-            // copy yet (see Copieur_IsANoOp_WhenNothingHasBeenPurchasedYetThisRun).
-            // This just documents that GrantStartingModifier doesn't set
-            // _lastPurchasedModifierId, unlike a real purchase — verified
-            // indirectly below via Copieur staying a no-op right after it.
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.GrantStartingModifier();
-            PlayRoundToAwaitingShop(run);
-
-            BuyModifierByIdViaShop(run, ModifierId.Copieur);
-
-            Assert.AreEqual(1, run.ActiveModifiers.Count, "The starting modifier plus nothing else — Copieur had nothing purchased yet to copy");
-        }
-
-        [Test]
-        public void GrantStartingModifier_PicksFromTheWholeCatalog_WithNoExclusionNeeded()
-        {
-            var seenIds = new HashSet<ModifierId>();
-            for (int seed = 0; seed < 200; seed++)
-            {
-                var run = new RunManager(new SystemRandomProvider(seed));
-                var granted = run.GrantStartingModifier();
-                seenIds.Add(granted);
-            }
-
-            Assert.Greater(seenIds.Count, 1, "200 different seeds should land on more than a single fixed modifier");
-        }
-
-        [Test]
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
             RunManager run = null;

@@ -9,21 +9,19 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Slot-machine-style overlay for revealing a modifier the player
-    /// didn't pick themselves — originally just the free modifier
-    /// RunManager.GrantStartingModifier grants at the start of a run
-    /// (spec extension, explicit request: "au départ d'une run, il y ait
-    /// un carousel qui choisissent un modifier au hasard, comme pour
-    /// dicter une stratégie initiale que le joueur devra utiliser"), and
-    /// reused for the shop's "Random Modifier" upgrade grant too (explicit
-    /// follow-up request: "pour l'upgrade random modifier, j'aimerais
-    /// qu'on utilise l'animation carousel comme en début de run" — see
-    /// GameBootstrap.OnUpgradeBuyClicked/DebugTriggerRandomModifierShortcut).
-    /// The <paramref name="title"/> argument on <see cref="Show"/> is what
-    /// tells the two contexts apart on screen. A horizontal reel of random
-    /// modifier badges (see ModifierBadgeFactory) spins under a fixed
-    /// highlight frame and decelerates onto the real pick, then the same
-    /// modifier-card presentation (via ModifierCardFactory) reveals its
-    /// name/icon/description below, blocking until dismissed.
+    /// didn't pick themselves — the shop's "Random Modifier" upgrade grant
+    /// (explicit request: "pour l'upgrade random modifier, j'aimerais qu'on
+    /// utilise l'animation carousel" — see GameBootstrap.
+    /// OnUpgradeBuyClicked/DebugTriggerRandomModifierShortcut). Originally
+    /// also used for a free modifier granted at the very start of every
+    /// run (removed on explicit request: "Retire le starting modifier"),
+    /// which is why <see cref="Show"/> still takes a <paramref
+    /// name="title"/> argument distinguishing contexts even though only
+    /// one remains. A horizontal reel of random modifier badges (see
+    /// ModifierBadgeFactory) spins under a fixed highlight frame and
+    /// decelerates onto the real pick, then the same modifier-card
+    /// presentation (via ModifierCardFactory) reveals its name/icon/
+    /// description below, blocking until dismissed.
     /// </summary>
     public sealed class ModifierCarouselView : MonoBehaviour
     {
@@ -172,16 +170,13 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// <paramref name="granted"/> is either RunManager.StartingModifier
-        /// or RunManager.LastRandomModifierGranted, depending on the
-        /// caller — already picked and applied by the time this shows; the
-        /// spin is purely presentational suspense, same as
-        /// UpgradeRevealView's reveal never gambles with anything Core
-        /// hasn't already resolved. <paramref name="title"/> distinguishes
-        /// the two contexts on screen — defaults to the original
-        /// start-of-run wording so that call site needn't pass one.
+        /// <paramref name="granted"/> is RunManager.LastRandomModifierGranted
+        /// — already picked and applied by the time this shows; the spin is
+        /// purely presentational suspense, same as UpgradeRevealView's
+        /// reveal never gambles with anything Core hasn't already
+        /// resolved. <paramref name="title"/> is shown above the reel.
         /// </summary>
-        public void Show(ModifierId granted, string title = "Starting modifier")
+        public void Show(ModifierId granted, string title)
         {
             _titleText.text = title;
 

@@ -7543,3 +7543,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   (2 colonnes × 4 lignes) — `DisplayRows` réduit à 2 (2×2 = 4) pour
   garder cet invariant exact plutôt que de laisser 2 lignes vides en
   permanence.
+- **Retrait du starting modifier** : sur demande explicite ("Retire
+  le starting modifier"). Supprimé `RunManager.GrantStartingModifier`/
+  `StartingModifier` en entier — ce freebie donnait un modifier
+  aléatoire gratuit au tout début de chaque run, révélé via le
+  caroussel (`GameBootstrap.StartNewRun`). Le caroussel
+  (`ModifierCarouselView`) reste en place puisqu'il est aussi réutilisé
+  par l'upgrade shop "Random Modifier" — seul l'appel de début de run
+  disparaît, `Show`'s paramètre `title` (son défaut "Starting modifier"
+  n'avait plus de sens) devient maintenant obligatoire. Le tutoriel,
+  auparavant différé jusqu'à la fermeture du caroussel de départ pour
+  éviter d'empiler deux overlays bloquants, s'affiche maintenant
+  directement dans `OnChallengeChosen` — `_showTutorialAfterCarousel`
+  et sa logique dans `OnModifierCarouselDismissed` supprimés, devenus
+  inutiles. Les 3 tests `GrantStartingModifier_*` dans
+  `RunManagerTests.cs` retirés.

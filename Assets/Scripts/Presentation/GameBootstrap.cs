@@ -102,11 +102,6 @@ namespace Contigu.Presentation
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
         private bool _isPlayingPlacementSequence;
-        // Set right before the very first ModifierCarouselView.Show of a
-        // launch, so TutorialView only ever opens on top of it (see
-        // OnModifierCarouselDismissed) instead of the two overlays stacking
-        // at the same time.
-        private bool _showTutorialAfterCarousel;
 
         private void Awake()
         {
@@ -2276,40 +2271,25 @@ namespace Contigu.Presentation
             _metaStatsRoundsCreditedThisRun = 0;
             StartNewRun(challenge);
 
-            // Deferred until the starting-modifier carousel is dismissed
-            // (see OnModifierCarouselDismissed) instead of shown right here
-            // — both are blocking, full-screen overlays, and showing them
-            // at the same time would stack one on top of the other.
             if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
             {
                 PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
                 PlayerPrefs.Save();
-                _showTutorialAfterCarousel = true;
+                _tutorialView.Show();
             }
         }
 
         private void OnModifierCarouselDismissed()
         {
-            // Only now does the modifier panel learn about whichever
-            // modifier the carousel just revealed — the starting modifier
-            // (RunManager.GrantStartingModifier, granted back in
-            // StartNewRun) or a shop-bought Random Modifier
+            // Only now does the modifier panel learn about the shop-bought
+            // Random Modifier the carousel just revealed
             // (RunManager.LastRandomModifierGranted, granted in
             // OnUpgradeBuyRequested). Refreshing any earlier let the badge
             // show up in the left-side panel, behind the carousel, WHILE
-            // the spin was still playing — explicit reports for both:
-            // "le starting modifier apparait avant même qu'il soit
-            // sélectionné dans le caroussel, il ne doit apparaitre
-            // qu'après", then again once Random Modifier started reusing
-            // this same carousel: "Le nouveau random modifier devrait
-            // apparaitre dans la liste après avoir appuyé sur OK".
+            // the spin was still playing (explicit report: "Le nouveau
+            // random modifier devrait apparaitre dans la liste après avoir
+            // appuyé sur OK").
             _modifierPanelView.Refresh(_run.ActiveModifiers);
-
-            if (_showTutorialAfterCarousel)
-            {
-                _showTutorialAfterCarousel = false;
-                _tutorialView.Show();
-            }
         }
 
         private void StartNewRun(ChallengeDefinition challenge)
@@ -2323,19 +2303,8 @@ namespace Contigu.Presentation
             _deckView.Rebind(_run);
             _deckView.Hide();
 
-            // RefreshAll runs BEFORE granting the starting modifier, so the
-            // modifier panel it refreshes still shows the run's pre-grant
-            // (empty) state — see OnModifierCarouselDismissed for where the
-            // panel actually learns about it, once the carousel reveal is
-            // done with it.
             RefreshAll();
             SetStatusText(IdleStatusMessage);
-
-            // A fresh strategy to build the run around, dictated rather
-            // than chosen (spec extension, explicit request — see
-            // RunManager.GrantStartingModifier).
-            var startingModifier = _run.GrantStartingModifier();
-            _modifierCarouselView.Show(startingModifier);
         }
 
         /// <summary><paramref name="refreshModifierPanel"/> defaults to true; OnUpgradeBuyRequested passes false when a Random Modifier grant is about to reveal through the carousel, deferring the panel's own refresh until that reveal is dismissed (see its own comment for why).</summary>
