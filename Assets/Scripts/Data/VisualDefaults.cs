@@ -5,10 +5,9 @@ using UnityEngine;
 namespace Contigu.Data
 {
     /// <summary>
-    /// Built-in display defaults (colors and names) so the game is fully playable
-    /// without anyone having to create <see cref="PieceColorDatabase"/> /
-    /// <see cref="PieceShapeDatabase"/> assets in the editor first. A database
-    /// asset, if assigned on <c>GameBootstrap</c>, overrides these per-entry.
+    /// Built-in display defaults (colors and names) for every <see cref="PieceColor"/>
+    /// and <see cref="ShapeId"/> — the only source of this display metadata; no
+    /// ScriptableObject override mechanism exists.
     ///
     /// The 4 base piece colors (on explicit request — a graphical overhaul of
     /// the grid/tiles, "les 4 types de tuiles deviennent rouge, bleu, vert et

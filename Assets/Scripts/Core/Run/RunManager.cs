@@ -447,12 +447,6 @@ namespace Contigu.Core
             return BossLockedHandSlotIndex.HasValue && BossLockedHandSlotIndex.Value == handIndex;
         }
 
-        /// <summary>Returns whether the current boss curse disables points for this resolved piece color.</summary>
-        public bool IsColorCursed(PieceColor color)
-        {
-            return BossCursedColor.HasValue && BossCursedColor.Value == color;
-        }
-
         /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic (the original run) when omitted — keeps every existing call site (tests included) on the standard rules without having to pass one explicitly.</summary>
         public RunManager(IRandomProvider rng, ChallengeDefinition challenge = null)
         {

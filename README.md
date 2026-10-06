@@ -7720,3 +7720,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   comparaison de référence sur la liste d'encounter, puisque
   `BuildEncounter` construit une toute nouvelle liste à chaque
   round).
+- **Nettoyage de dette technique** : sur demande explicite ("Enlève
+  le code mort"), suite à un audit complet du projet. Supprimé
+  `RunManager.IsColorCursed` (méthode publique sans aucun appelant —
+  `GameBootstrap` et les tests lisent directement
+  `BossCursedColor.HasValue`/`.Value`). Supprimé les 4 fichiers
+  ScriptableObject jamais branchés `PieceColorSO.cs`,
+  `PieceShapeSO.cs`, `PieceColorDatabase.cs`, `PieceShapeDatabase.cs`
+  (aucun asset `.asset` de ce type n'existe dans le projet, et rien
+  ne permet de les assigner sur `GameBootstrap`) et corrigé le
+  commentaire de doc obsolète de `VisualDefaults.cs` qui prétendait
+  encore qu'une telle database pouvait overrider ces valeurs.
