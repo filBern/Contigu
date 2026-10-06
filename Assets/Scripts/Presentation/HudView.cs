@@ -71,6 +71,26 @@ namespace Contigu.Presentation
         public const float EnemyBandHeight = BarHeight + EnemyIconTopPadding;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
+
+        /// <summary>
+        /// True once a slot's death has actually been REVEALED (its icon
+        /// tinted dead-gray by <see cref="SetEnemyHpDisplay"/> — not merely
+        /// true in Core, which happens well before the drain animation
+        /// even starts) — on explicit bug report: "lorsqu'un ennemi meurt,
+        /// on peut toujours hover par dessus pour afficher son tooltip,
+        /// j'aimerais qu'il soit détruit et que les ennemis se recentre
+        /// dans l'écran". <see cref="SetEncounter"/> reads this (not
+        /// EnemyInstance.IsDead directly) to decide whether to keep
+        /// reactivating the slot, so a kill this same placement is still
+        /// held alive-looking until the animation actually reaches 0 (see
+        /// SetEnemyHpDisplay's own doc comment) before it's ever hidden.
+        /// Reset back to all-false the moment a NEW round's encounter
+        /// arrives (see SetEncounter's own reference check).
+        /// </summary>
+        private readonly bool[] _enemySlotRevealedDead = new bool[MaxEnemyIcons];
+
+        /// <summary>Which EnemyInstance list <see cref="_enemySlotRevealedDead"/> was last reset for — compared by reference (BuildEncounter constructs a brand-new list every round) to detect a new round's encounter, never by value.</summary>
+        private IReadOnlyList<EnemyInstance> _lastEncounterRefForDeathReveal;
         private readonly List<Image> _enemyIconImages = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
         private readonly List<EnemyIconView> _enemyIconViews = new List<EnemyIconView>();
@@ -349,8 +369,15 @@ namespace Contigu.Presentation
         /// ApplyDamageToEncounter). Each icon is tinted by enemy identity
         /// (<see cref="EnemyIconColor"/>) and carries its own "current/max
         /// HP" label directly below it ("il faut ajouter la vie d'un
-        /// ennemi sous lui"); a dead enemy's slot stays in place (so the
-        /// roster's own order/count never visibly shifts) but dims heavily.
+        /// ennemi sous lui"); a slot whose death has already been revealed
+        /// (see <see cref="_enemySlotRevealedDead"/>) is hidden outright
+        /// instead of staying in place dimmed — on explicit bug report:
+        /// "lorsqu'un ennemi meurt, on peut toujours hover par dessus pour
+        /// afficher son tooltip, j'aimerais qu'il soit détruit et que les
+        /// ennemis se recentre dans l'écran" — HorizontalLayoutGroup
+        /// re-centers the remaining active icons on its own once a slot
+        /// is actually deactivated, and an inactive GameObject can't raise
+        /// the pointer events EnemyIconView's tooltip relies on either.
         /// Caps at <see cref="MaxEnemyIcons"/> slots — EncounterCatalog's
         /// own rounds never schedule more than that many at once.
         /// </summary>
@@ -362,10 +389,15 @@ namespace Contigu.Presentation
                 _scoreBarRoot.SetActive(false);
                 _enemyBandRoot.SetActive(true);
             }
+            if (!ReferenceEquals(encounter, _lastEncounterRefForDeathReveal))
+            {
+                _lastEncounterRefForDeathReveal = encounter;
+                System.Array.Clear(_enemySlotRevealedDead, 0, _enemySlotRevealedDead.Length);
+            }
 
             for (int i = 0; i < _enemySlots.Count; i++)
             {
-                bool show = i < encounter.Count;
+                bool show = i < encounter.Count && !_enemySlotRevealedDead[i];
                 _enemySlots[i].SetActive(show);
                 if (!show)
                 {
@@ -438,6 +470,14 @@ namespace Contigu.Presentation
             }
             _enemyIconLabels[index].text = hp + "/" + maxHp;
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
+            if (isDead)
+            {
+                // The exact moment this kill is first visually revealed —
+                // see _enemySlotRevealedDead's own doc comment for why
+                // SetEncounter reads this instead of EnemyInstance.IsDead
+                // directly.
+                _enemySlotRevealedDead[index] = true;
+            }
         }
 
         /// <summary>Anchor for a feedback popup on a given enemy slot's own icon (same "badge transform" idea as ModifierPanelView.GetBadgeTransform) — used for Thief's steal effect (explicit request: "Thief manque un effet visuel pour indiquer qu'il vole une pièce"). Null if out of range or that slot isn't currently shown.</summary>
@@ -456,11 +496,17 @@ namespace Contigu.Presentation
         /// request: "Lorsqu'un ennemi se rend a 0HP, attends 0.25 secondes
         /// puis fait une animation de fade out" (the 0.25s wait itself is
         /// the caller's job, before yielding into this — see GameBootstrap.
-        /// DrainComboIntoDamage). The slot itself is deliberately left
-        /// active rather than hidden outright, same reasoning as
-        /// EnemyIconColor's dead-gray tint: a defeated enemy keeps its
-        /// place in the row instead of shifting the others (see
-        /// SetEncounter's own doc comment). Meant to be yielded directly by
+        /// DrainComboIntoDamage) — then deactivates the slot outright
+        /// (explicit bug report: "lorsqu'un ennemi meurt, on peut toujours
+        /// hover par dessus pour afficher son tooltip, j'aimerais qu'il
+        /// soit détruit et que les ennemis se recentre dans l'écran"):
+        /// HorizontalLayoutGroup excludes an inactive child from its own
+        /// layout pass, so the remaining alive icons re-center on their
+        /// own, and an inactive GameObject can no longer raise the pointer
+        /// events EnemyIconView's tooltip needs either. SetEncounter won't
+        /// ever reactivate it again this round (see
+        /// _enemySlotRevealedDead, already set by the SetEnemyHpDisplay
+        /// call that preceded this one). Meant to be yielded directly by
         /// the caller's own coroutine, not run through StartCoroutine.
         /// </summary>
         public IEnumerator FadeOutEnemySlot(int index, float duration)
@@ -484,6 +530,7 @@ namespace Contigu.Presentation
             }
             icon.color = new Color(iconStart.r, iconStart.g, iconStart.b, 0f);
             label.color = new Color(labelStart.r, labelStart.g, labelStart.b, 0f);
+            _enemySlots[index].SetActive(false);
         }
 
         /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was. Takes <paramref name="isDead"/> explicitly rather than reading EnemyInstance.IsDead directly so SetEnemyHpDisplay's held/animated calls can report death on their own schedule, independent of the live model's already-updated state (see its own doc comment).</summary>

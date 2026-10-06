@@ -7698,3 +7698,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `EnemyEncounterTests.cs` (un par type de combat) et
   `DeckManagerTests.cs`/`UpgradeSystemTests.cs`/`RunManagerTests.cs`
   (le tirage aléatoire du type de combat).
+- **Fix : tooltip d'un ennemi mort + re-centrage de la bande** : sur
+  rapport de bug explicite ("Il y a une feature qui me semble être
+  un bug, lorsqu'un ennemi meurt, on peut toujours hover par dessus
+  pour afficher son tooltip, j'aimerais qu'il soit détruit et que
+  les ennemis se recentre dans l'ecran"). `HudView.FadeOutEnemySlot`
+  désactive maintenant réellement le slot (`SetActive(false)`) une
+  fois son fade-out terminé, au lieu de le laisser actif à alpha 0
+  comme avant — un `GameObject` inactif ne peut plus déclencher les
+  événements de pointeur dont `EnemyIconView` a besoin pour son
+  tooltip, et `HorizontalLayoutGroup` exclut automatiquement un
+  enfant inactif de son calcul de mise en page, donc les ennemis
+  encore vivants se recentrent tout seuls dans la bande. Nouveau
+  champ `HudView._enemySlotRevealedDead` (par slot) pour empêcher
+  `SetEncounter` (appelé après CHAQUE placement) de réactiver un
+  slot dont la mort vient d'être révélée visuellement — sans ça, le
+  prochain `Refresh()` aurait immédiatement annulé la désactivation,
+  puisque `EnemyInstance.IsDead` est déjà vrai côté Core bien avant
+  que l'animation de dégâts n'ait fini de descendre à 0. Ce drapeau
+  se remet à zéro dès qu'un nouveau round démarre (détecté par
+  comparaison de référence sur la liste d'encounter, puisque
+  `BuildEncounter` construit une toute nouvelle liste à chaque
+  round).
