@@ -51,7 +51,12 @@ namespace Contigu.Presentation
         /// <summary>The ScoreBar's own root (its track Image's GameObject) — hidden entirely during an encounter round rather than repurposed, on explicit request: "Enleve la progress bar pour le quota. Au lieu met une petite image en haut pour chaque ennemi". Captured by climbing from _scoreFillRect (its own parent) rather than widening BuildBar's signature just for this.</summary>
         private GameObject _scoreBarRoot;
 
-        private const int MaxEnemyIcons = 3;
+        // Raised from 3 (redesign, explicit request: "des niveaux avec de
+        // plus en plus d'ennemis" — EncounterCatalog's Round8 now schedules
+        // 5 at once) — the row's own HorizontalLayoutGroup/ContentSizeFitter
+        // already auto-sizes to however many slots exist, so this only
+        // needed the cap raised, no layout rework.
+        private const int MaxEnemyIcons = 5;
         private const float EnemyIconSize = 44f;
         private const float EnemySlotWidth = 76f;
         // Gap above the icon within its slot, pushing it down from the very
@@ -345,8 +350,8 @@ namespace Contigu.Presentation
         /// HP" label directly below it ("il faut ajouter la vie d'un
         /// ennemi sous lui"); a dead enemy's slot stays in place (so the
         /// roster's own order/count never visibly shifts) but dims heavily.
-        /// Caps at <see cref="MaxEnemyIcons"/> slots — this vertical slice
-        /// never schedules more than 2 (see EncounterCatalog's round 4).
+        /// Caps at <see cref="MaxEnemyIcons"/> slots — EncounterCatalog's
+        /// own rounds never schedule more than that many at once.
         /// </summary>
         public void SetEncounter(IReadOnlyList<EnemyInstance> encounter)
         {

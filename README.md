@@ -7500,3 +7500,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   popup par cellule de cette méthode. Nouveau `FindAliveEnemyIndex`,
   un helper générique réutilisable pour retrouver l'index d'un ennemi
   vivant par `EnemyId` dans l'encounter courant.
+- **Redesign des 8 rounds Classic : escalade d'ennemis, Basic en tête,
+  fin du boss solo HeavyLocker** : sur demande explicite ("Le boss
+  heavy locker je le trouve pas extraordinaire, on devrait juste
+  faire des niveaux avec de plus en plus d'ennemis avec des
+  combinaisons différentes. Peut-être mettre des basic enemi en début
+  de file pour laisser le temps aux autre d'instaurer des malus").
+  `EncounterCatalog` réécrit en entier : Basic passe maintenant en
+  PREMIÈRE position de chaque round à partir du round 2 (au lieu
+  d'être ajouté en dernier) — `RunManager.ApplyDamageToEncounter`
+  cible toujours le premier ennemi VIVANT, donc Basic absorbe les
+  premiers dégâts, laissant aux ennemis derrière lui (Locker/Poisoner/
+  etc.) quelques Shuffles pour installer leurs effets avant que le
+  joueur puisse les toucher. Le nombre d'ennemis augmente round après
+  round (1→2→2→3→3→4→4→5) plutôt que d'avoir un seul boss à grosse vie
+  qui porte un round seul — le round 8 (la finale) remplace le
+  HeavyLocker solo par un vrai gauntlet à 5 ennemis (Basic, Heavy
+  Locker, Poisoner, Thief, Leech), qui réutilise HeavyLocker sans le
+  faire porter le round seul. L'ordre Poisoner-avant-Reclaimer est
+  préservé aux rounds 5/6 (toujours nécessaire pour la tension du
+  grow — voir `EnemyInstance.HealOrGrow`). Fix nécessaire découvert en
+  implémentant : `HudView.MaxEnemyIcons` était à 3 (jamais dépassé par
+  l'ancienne table) — monté à 5, puisque les rounds 6/7/8 en ont
+  maintenant besoin de 4-5 ; la rangée d'icônes (HorizontalLayoutGroup
+  + ContentSizeFitter) s'adapte déjà automatiquement au nombre de
+  slots, donc seul le plafond avait besoin de changer. Tous les tests
+  de `EnemyEncounterTests.cs` qui indexaient `CurrentEncounter[0]`
+  pour "l'ennemi principal" d'un round via `AdvanceToRound` ont été
+  corrigés pour les nouveaux index (Basic est maintenant systématiquement
+  l'index 0 dans ces rounds) ; les tests qui construisent leur
+  encounter directement via `DebugSetEncounter` (Reclaimer, Plague)
+  restent inchangés, puisqu'ils ne passent jamais par `EncounterCatalog`.

@@ -24,50 +24,63 @@ namespace Contigu.Tests
             Assert.AreEqual(1, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0).Count);
             Assert.AreEqual(EnemyId.Basic, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0)[0]);
 
-            // Basic appended to most rounds (explicit request: "ajouter des
-            // basics enemies dans les niveaux") — always last, never
-            // disturbing whichever enemy was already leading.
+            // Basic now LEADS every round from here on (redesign, explicit
+            // request: "des niveaux avec de plus en plus d'ennemis... Basic
+            // enemi en début de file pour laisser le temps aux autre
+            // d'instaurer des malus") instead of being appended last —
+            // it's the front-targeted (first-damaged) enemy, buying the
+            // enemy(ies) behind it a few Shuffles before the player can
+            // touch them.
             var round2 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 1);
             Assert.AreEqual(2, round2.Count);
-            Assert.AreEqual(EnemyId.Locker, round2[0]);
-            Assert.AreEqual(EnemyId.Basic, round2[1]);
+            Assert.AreEqual(EnemyId.Basic, round2[0]);
+            Assert.AreEqual(EnemyId.Locker, round2[1]);
 
             var round3 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 2);
             Assert.AreEqual(2, round3.Count);
-            Assert.AreEqual(EnemyId.Poisoner, round3[0]);
-            Assert.AreEqual(EnemyId.Basic, round3[1]);
+            Assert.AreEqual(EnemyId.Basic, round3[0]);
+            Assert.AreEqual(EnemyId.Poisoner, round3[1]);
 
             var round4 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 3);
             Assert.AreEqual(3, round4.Count);
-            Assert.AreEqual(EnemyId.Locker, round4[0]);
-            Assert.AreEqual(EnemyId.Poisoner, round4[1]);
-            Assert.AreEqual(EnemyId.Basic, round4[2]);
+            Assert.AreEqual(EnemyId.Basic, round4[0]);
+            Assert.AreEqual(EnemyId.Locker, round4[1]);
+            Assert.AreEqual(EnemyId.Poisoner, round4[2]);
 
-            // Poisoner must stay FIRST in both Round5 and Round6 (explicit
-            // bug report: "la round avec le reclaimer, il doit se trouver
-            // après l'empoisonneur") — the front-targeting/grow tension
-            // only works that way (see EnemyInstance.HealOrGrow).
+            // Poisoner must stay right before Reclaimer in both Round5 and
+            // Round6 (explicit bug report: "la round avec le reclaimer, il
+            // doit se trouver après l'empoisonneur") — the front-targeting/
+            // grow tension only works that way (see EnemyInstance.HealOrGrow).
             var round5 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 4);
-            Assert.AreEqual(2, round5.Count);
-            Assert.AreEqual(EnemyId.Poisoner, round5[0]);
-            Assert.AreEqual(EnemyId.Reclaimer, round5[1]);
+            Assert.AreEqual(3, round5.Count);
+            Assert.AreEqual(EnemyId.Basic, round5[0]);
+            Assert.AreEqual(EnemyId.Poisoner, round5[1]);
+            Assert.AreEqual(EnemyId.Reclaimer, round5[2]);
 
             var round6 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 5);
-            Assert.AreEqual(3, round6.Count);
-            Assert.AreEqual(EnemyId.Poisoner, round6[0]);
-            Assert.AreEqual(EnemyId.Reclaimer, round6[1]);
-            Assert.AreEqual(EnemyId.Basic, round6[2]);
+            Assert.AreEqual(4, round6.Count);
+            Assert.AreEqual(EnemyId.Basic, round6[0]);
+            Assert.AreEqual(EnemyId.Poisoner, round6[1]);
+            Assert.AreEqual(EnemyId.Reclaimer, round6[2]);
+            Assert.AreEqual(EnemyId.Locker, round6[3]);
 
             var round7 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 6);
-            Assert.AreEqual(3, round7.Count);
-            Assert.AreEqual(EnemyId.Thief, round7[0]);
-            Assert.AreEqual(EnemyId.Leech, round7[1]);
-            Assert.AreEqual(EnemyId.Basic, round7[2]);
+            Assert.AreEqual(4, round7.Count);
+            Assert.AreEqual(EnemyId.Basic, round7[0]);
+            Assert.AreEqual(EnemyId.Thief, round7[1]);
+            Assert.AreEqual(EnemyId.Leech, round7[2]);
+            Assert.AreEqual(EnemyId.Locker, round7[3]);
 
-            // Round 8 deliberately left alone — "un seul ennemi costaud".
+            // Round 8 is the Classic run's finale — a full 5-enemy gauntlet
+            // now (redesign, explicit report: "Le boss heavy locker je le
+            // trouve pas extraordinaire") instead of a lone HeavyLocker.
             var round8 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 7);
-            Assert.AreEqual(1, round8.Count);
-            Assert.AreEqual(EnemyId.HeavyLocker, round8[0]);
+            Assert.AreEqual(5, round8.Count);
+            Assert.AreEqual(EnemyId.Basic, round8[0]);
+            Assert.AreEqual(EnemyId.HeavyLocker, round8[1]);
+            Assert.AreEqual(EnemyId.Poisoner, round8[2]);
+            Assert.AreEqual(EnemyId.Thief, round8[3]);
+            Assert.AreEqual(EnemyId.Leech, round8[4]);
 
             // Round 9+ (there is no round 9 in Classic's 8-round run),
             // Endless, and every non-Classic challenge are deliberately
@@ -98,9 +111,9 @@ namespace Contigu.Tests
             Assert.IsTrue(run.IsBossRound, "Round 4 is still every-4th-round by the numbers");
             Assert.IsTrue(run.HasActiveEncounter);
             Assert.AreEqual(3, run.CurrentEncounter.Count);
-            Assert.AreEqual(EnemyId.Locker, run.CurrentEncounter[0].Definition.Id);
-            Assert.AreEqual(EnemyId.Poisoner, run.CurrentEncounter[1].Definition.Id);
-            Assert.AreEqual(EnemyId.Basic, run.CurrentEncounter[2].Definition.Id);
+            Assert.AreEqual(EnemyId.Basic, run.CurrentEncounter[0].Definition.Id);
+            Assert.AreEqual(EnemyId.Locker, run.CurrentEncounter[1].Definition.Id);
+            Assert.AreEqual(EnemyId.Poisoner, run.CurrentEncounter[2].Definition.Id);
             // The two systems never run at once (see RunManager.HasActiveEncounter).
             Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
             Assert.IsNull(run.BossLockedHandSlotIndex);
@@ -188,8 +201,8 @@ namespace Contigu.Tests
         public void Locker_LocksOneCellPerShuffle_MovesItNextShuffle_AndReleasesItOnDeath()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 1); // round 2 (index 1): Locker alone
-            var locker = run.CurrentEncounter[0];
+            AdvanceToRound(run, 1); // round 2 (index 1): Basic, Locker
+            var locker = run.CurrentEncounter[1];
             Assert.AreEqual(EnemyId.Locker, locker.Definition.Id);
             Assert.IsNull(locker.LockedCell);
 
@@ -221,8 +234,8 @@ namespace Contigu.Tests
             // Locker's own lock must never complete, even once every other
             // cell in it is filled.
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 1); // round 2 (index 1): Locker alone
-            var locker = run.CurrentEncounter[0];
+            AdvanceToRound(run, 1); // round 2 (index 1): Basic, Locker
+            var locker = run.CurrentEncounter[1];
 
             Assert.IsTrue(run.ShuffleHand());
             Assert.IsTrue(locker.LockedCell.HasValue);
@@ -269,8 +282,8 @@ namespace Contigu.Tests
             // the real clear check, via its own IsRowCompleteWithFootprint/
             // IsColumnCompleteWithFootprint.
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 1); // round 2 (index 1): Locker alone
-            var locker = run.CurrentEncounter[0];
+            AdvanceToRound(run, 1); // round 2 (index 1): Basic, Locker
+            var locker = run.CurrentEncounter[1];
 
             Assert.IsTrue(run.ShuffleHand());
             Assert.IsTrue(locker.LockedCell.HasValue);
@@ -310,8 +323,8 @@ namespace Contigu.Tests
             // remaining candidate is the one deliberately left EMPTY,
             // regardless of RNG state.
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
-            var poisoner = run.CurrentEncounter[0];
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
+            var poisoner = run.CurrentEncounter[1];
             Assert.AreEqual(EnemyId.Poisoner, poisoner.Definition.Id);
 
             var target = new Vector2Int(0, 0);
@@ -334,7 +347,7 @@ namespace Contigu.Tests
         public void Poisoner_RescoringAGroupThroughItsPoisonedCell_FlipsThatCellsOwnScoreEventNegative()
         {
             var run = new RunManager(new SystemRandomProvider(5));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
 
             int slotA = FirstOccupiedHandSlot(run);
             var tokenA = run.Deck.Hand[slotA].Value;
@@ -350,7 +363,7 @@ namespace Contigu.Tests
             // mechanism itself is covered separately).
             var poisonedPos = outcomeA.Placement.PlacedCells[0];
             run.Grid.GetCell(poisonedPos).IsPoisoned = true;
-            run.CurrentEncounter[0].AddPoisonedCell(poisonedPos);
+            run.CurrentEncounter[1].AddPoisonedCell(poisonedPos);
 
             int slotB = -1;
             for (int i = 0; i < DeckManager.HandSize; i++)
@@ -391,8 +404,8 @@ namespace Contigu.Tests
             // Redesign, explicit request: "Si une tuile empoisonnée est
             // triggered, une de ses 4 tuile adjacente est contaminée."
             var run = new RunManager(new SystemRandomProvider(5));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
-            var poisoner = run.CurrentEncounter[0];
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
+            var poisoner = run.CurrentEncounter[1];
 
             int slotA = FirstOccupiedHandSlot(run);
             var tokenA = run.Deck.Hand[slotA].Value;
@@ -450,8 +463,8 @@ namespace Contigu.Tests
             // free, since contamination adds to the SAME instance's own
             // PoisonedCells list.
             var run = new RunManager(new SystemRandomProvider(5));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
-            var poisoner = run.CurrentEncounter[0];
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
+            var poisoner = run.CurrentEncounter[1];
 
             int slotA = FirstOccupiedHandSlot(run);
             var tokenA = run.Deck.Hand[slotA].Value;
@@ -499,8 +512,8 @@ namespace Contigu.Tests
             // Locker's lock (see Locker_LocksOneCellPerShuffle... above)
             // instead of accumulating one more cell every Shuffle.
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
-            var poisoner = run.CurrentEncounter[0];
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
+            var poisoner = run.CurrentEncounter[1];
 
             for (int x = 0; x < GridManager.Size; x++)
             {
@@ -528,7 +541,7 @@ namespace Contigu.Tests
             // doit rester présente sur la grille. Pas la tuile, seulement
             // l'effet poison jusqu'au prochain shuffle."
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
             var target = new Vector2Int(0, 0);
             run.Grid.GetCell(target).IsFilled = true;
             run.Grid.GetCell(target).FilledColor = PieceColor.Coral;
@@ -555,7 +568,7 @@ namespace Contigu.Tests
             // aussi. Exemple pour le modifier contrast, si la tuile
             // adjacente d'une autre couleur est négative."
             var run = new RunManager(new SystemRandomProvider(5));
-            AdvanceToRound(run, 2); // round 3 (index 2): Poisoner alone
+            AdvanceToRound(run, 2); // round 3 (index 2): Basic, Poisoner
             run.DebugGrantModifier(ModifierId.Contraste);
 
             int slotA = FirstOccupiedHandSlot(run);
@@ -572,7 +585,7 @@ namespace Contigu.Tests
             // deterministic bypass as Poisoner_RescoringAGroupThroughItsPoisonedCell...
             var poisonedPos = outcomeA.Placement.PlacedCells[0];
             run.Grid.GetCell(poisonedPos).IsPoisoned = true;
-            run.CurrentEncounter[0].AddPoisonedCell(poisonedPos);
+            run.CurrentEncounter[1].AddPoisonedCell(poisonedPos);
 
             int slotB = -1;
             for (int i = 0; i < DeckManager.HandSize; i++)
@@ -665,8 +678,8 @@ namespace Contigu.Tests
         public void HeavyLocker_LocksOneCellPerShuffle_SameMechanicAsLocker_JustAtBossHp()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 7); // round 8 (index 7): Heavy Locker solo
-            var heavyLocker = run.CurrentEncounter[0];
+            AdvanceToRound(run, 7); // round 8 (index 7): Basic, Heavy Locker, Poisoner, Thief, Leech
+            var heavyLocker = run.CurrentEncounter[1];
             Assert.AreEqual(EnemyId.HeavyLocker, heavyLocker.Definition.Id);
             Assert.AreEqual(EnemyCatalog.HeavyLocker.MaxHp, heavyLocker.CurrentHp);
             Assert.IsNull(heavyLocker.LockedCell);
@@ -717,7 +730,7 @@ namespace Contigu.Tests
         public void Thief_StealsOneRandomHandTileOnShuffle_WithoutShrinkingTheDeck()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Thief + Leech
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
             int deckSizeBefore = run.Deck.DeckCount;
 
             Assert.IsTrue(run.ShuffleHand());
@@ -743,7 +756,7 @@ namespace Contigu.Tests
             // know whether to show that effect at all (see
             // GameBootstrap.PlayThiefStealEffect).
             var withThief = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(withThief, 6); // round 7 (index 6): Thief + Leech
+            AdvanceToRound(withThief, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
             Assert.IsTrue(withThief.ShuffleHand());
             Assert.IsTrue(withThief.ThiefStoleOnLastShuffle);
 
@@ -848,8 +861,8 @@ namespace Contigu.Tests
         public void Leech_HealsOnLineClear_ViaRunManagerPlacePiece()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Thief + Leech
-            var leech = run.CurrentEncounter[1];
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
+            var leech = run.CurrentEncounter[2];
             Assert.AreEqual(EnemyId.Leech, leech.Definition.Id);
             leech.ApplyDamage(100);
             int hpBefore = leech.CurrentHp;
@@ -869,8 +882,8 @@ namespace Contigu.Tests
         public void Leech_StopsHealing_OnceDead()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Thief + Leech
-            var leech = run.CurrentEncounter[1];
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
+            var leech = run.CurrentEncounter[2];
             leech.ApplyDamage(leech.Definition.MaxHp); // kill it
             Assert.IsTrue(leech.IsDead);
 

@@ -15,58 +15,51 @@ namespace Contigu.Core
     /// </summary>
     public static class EncounterCatalog
     {
-        // Basic appended to most rounds (explicit request: "Le jeu est
-        // beaucoup trop facile, je ne perd jamais, peux-tu ajouter des
-        // basics enemies dans les niveaux. Ça va aider le joueur a se
-        // sentir plus puissant au lieu") — more total HP to clear per
-        // round (objectively less easy), but since Basic itself is a
-        // trivial, no-special-effect kill, it reads as an easy mop-up
-        // rather than a harder puzzle, which is the "feel more powerful"
-        // part of the request. Always appended LAST, never leading — for
-        // Round5/Round6 that's also load-bearing: Poisoner must stay the
-        // FRONT (first-targeted) enemy for their own order-dependent
-        // tension (see Round5's own doc comment), and appending Basic
-        // after Reclaimer never disturbs that. Round1 (the very first
-        // introduction) and Round8 (explicitly "un seul ennemi costaud")
-        // are deliberately left alone.
+        // Redesign (explicit request: "on devrait juste faire des niveaux
+        // avec de plus en plus d'ennemis avec des combinaisons différentes.
+        // Peut-être mettre des basic enemi en début de file pour laisser le
+        // temps aux autre d'instaurer des malus" — follow-up to "Le boss
+        // heavy locker je le trouve pas extraordinaire", i.e. a lone
+        // HeavyLocker HP-sponge round wasn't interesting enough on its
+        // own). Every round from here on LEADS with a Basic (RunManager.
+        // ApplyDamageToEncounter always hits the front ALIVE enemy, so
+        // Basic — trivial, no special effect — soaks the first few
+        // placements' damage, buying the enemy(ies) behind it a few
+        // Shuffles to actually establish their lock/poison/steal before
+        // the player can touch them) instead of being appended last as
+        // filler. Enemy COUNT escalates round over round instead of a
+        // single big-HP boss carrying a round alone; HeavyLocker still
+        // shows up (Round8), just as part of a real multi-enemy gauntlet
+        // rather than a solo tank fight.
         private static readonly EnemyId[] Round1 = { EnemyId.Basic };
-        private static readonly EnemyId[] Round2 = { EnemyId.Locker, EnemyId.Basic };
-        private static readonly EnemyId[] Round3 = { EnemyId.Poisoner, EnemyId.Basic };
+        private static readonly EnemyId[] Round2 = { EnemyId.Basic, EnemyId.Locker };
+        private static readonly EnemyId[] Round3 = { EnemyId.Basic, EnemyId.Poisoner };
 
         /// <summary>Round 4 is Classic's first scheduled boss round (RunConfig.BossRoundInterval) — stands in for a real Boss-tagged enemy with the two Creators fought together instead.</summary>
-        private static readonly EnemyId[] Round4 = { EnemyId.Locker, EnemyId.Poisoner, EnemyId.Basic };
+        private static readonly EnemyId[] Round4 = { EnemyId.Basic, EnemyId.Locker, EnemyId.Poisoner };
 
         /// <summary>
-        /// Pairs the poison creator with its own counter. Poisoner MUST
-        /// stay first — explicit request, follow-up to the Reclaimer grow
-        /// mechanic (see EnemyInstance.HealOrGrow): "Il faudra donc tuer
-        /// l'empoisonneur sans trop heal le reclaimer" only works as an
-        /// actual tension if the player's damage lands on Poisoner first
-        /// (RunManager.ApplyDamageToEncounter always hits the front alive
-        /// enemy) — Reclaimer sitting second just grows quietly in the
+        /// Pairs the poison creator with its own counter, both now behind
+        /// the leading Basic. Poisoner must stay in front of Reclaimer —
+        /// follow-up to the Reclaimer grow mechanic (see EnemyInstance.
+        /// HealOrGrow): "Il faudra donc tuer l'empoisonneur sans trop heal
+        /// le reclaimer" only works as an actual tension if the player's
+        /// damage lands on Poisoner before Reclaimer (RunManager.
+        /// ApplyDamageToEncounter always hits the front alive enemy) —
+        /// Reclaimer sitting behind it just grows quietly in the
         /// background off whatever poison-scoring happens while Poisoner
         /// is still alive, exactly the risk the player is meant to manage.
         /// </summary>
-        private static readonly EnemyId[] Round5 = { EnemyId.Poisoner, EnemyId.Reclaimer };
+        private static readonly EnemyId[] Round5 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Reclaimer };
 
-        /// <summary>
-        /// Same pairing as Round5 — used to be deliberately REVERSED here
-        /// to teach the GDD's original Shuffle-order dependency, but that
-        /// dependency is gone now that Reclaimer heals reactively off
-        /// poison-negative scoring instead of consuming poison on its own
-        /// Shuffle (see HealReclaimer). Explicit bug report once the grow
-        /// mechanic made order matter again for a NEW reason (targeting,
-        /// not Shuffle sequencing): "la round avec le reclaimer, il doit se
-        /// trouver après l'empoisonneur" — fixed to match Round5's own
-        /// order, now escalated with an extra Basic for this later round.
-        /// </summary>
-        private static readonly EnemyId[] Round6 = { EnemyId.Poisoner, EnemyId.Reclaimer, EnemyId.Basic };
+        /// <summary>Same Poisoner-before-Reclaimer pairing as Round5, escalated with a 4th enemy for this later round.</summary>
+        private static readonly EnemyId[] Round6 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Reclaimer, EnemyId.Locker };
 
-        /// <summary>GDD §07's own example progression: "...multi-pressure encounters involving Thief and Leech."</summary>
-        private static readonly EnemyId[] Round7 = { EnemyId.Thief, EnemyId.Leech, EnemyId.Basic };
+        /// <summary>GDD §07's own example progression: "...multi-pressure encounters involving Thief and Leech" — escalated with a 4th enemy for this later round.</summary>
+        private static readonly EnemyId[] Round7 = { EnemyId.Basic, EnemyId.Thief, EnemyId.Leech, EnemyId.Locker };
 
-        /// <summary>Round 8 is Classic's second scheduled boss round — a single beefy enemy (explicit request: "Un seul ennemi costaud"); Heavy Locker is the cleanest standalone fight of the 4 Boss-tagged candidates, since its lock-and-kill loop doesn't depend on any other enemy to be meaningful. Deliberately NOT padded with a Basic like the other rounds — a dedicated solo boss round stays solo.</summary>
-        private static readonly EnemyId[] Round8 = { EnemyId.HeavyLocker };
+        /// <summary>Round 8 is Classic's second scheduled boss round and the Classic run's finale — a full 5-enemy gauntlet instead of a lone HeavyLocker (explicit report: "Le boss heavy locker je le trouve pas extraordinaire"), reusing every Creator/Boss introduced so far behind the leading Basic.</summary>
+        private static readonly EnemyId[] Round8 = { EnemyId.Basic, EnemyId.HeavyLocker, EnemyId.Poisoner, EnemyId.Thief, EnemyId.Leech };
 
         public static IReadOnlyList<EnemyId> GetEncounter(ChallengeId challenge, int roundIndex)
         {
