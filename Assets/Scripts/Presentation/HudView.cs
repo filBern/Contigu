@@ -392,8 +392,22 @@ namespace Contigu.Presentation
                 // ceiling can grow past the shared Definition's value (see
                 // EnemyInstance.HealOrGrow).
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
-                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, enemy.Definition.Description);
+                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy));
             }
+        }
+
+        /// <summary>Color Hater/Shape Hater's tooltip names the SPECIFIC color/shape this instance was randomly assigned on spawn (EnemyInstance.HatedColor/HatedShape) rather than the Definition's generic "one at random" text, so the player can actually plan around it. Every other enemy's description is returned unchanged.</summary>
+        private static string HaterDescription(EnemyInstance enemy)
+        {
+            if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
+            {
+                return "Hates " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + ". Every point scored through a " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + " tile is cancelled for the rest of the round.";
+            }
+            if (enemy.Definition.Id == EnemyId.ShapeHater && enemy.HatedShape.HasValue)
+            {
+                return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape. Every point scored through a tile originally placed by a " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " is cancelled for the rest of the round.";
+            }
+            return enemy.Definition.Description;
         }
 
         /// <summary>

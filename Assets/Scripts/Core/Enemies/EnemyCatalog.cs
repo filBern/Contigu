@@ -27,7 +27,13 @@ namespace Contigu.Core
         /// <summary>"Leech" (GDD §07: Reactor, "High HP. Heals when the player destroys a line. The effect stops when it dies.") — not Boss-tagged, unlike the other 4 new enemies above (per the GDD's own Role column). See RunManager.PlacePiece's own Leech heal hook.</summary>
         public static readonly EnemyDefinition Leech = new EnemyDefinition { Id = EnemyId.Leech, Name = "Leech", Role = EnemyRole.Reactor, MaxHp = 900, Description = "Heals " + ScoringConstants.LeechHealPerLineClear + " HP every time you clear a row or column, for as long as it's alive." };
 
-        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech };
+        /// <summary>"Color Hater" (explicit request: "J'aimerais rajouter un boss: Color hater. Tous les points effectué par une certaine couleur sont annulé") — picks one random base color on spawn (see RunManager.BuildEncounter) and cancels every point event tied to it for the rest of the round, via the same rule the old quota system's "Cursed Color" boss effect already used (see RunManager.ApplyCursedColorScoreRule). The HUD names the actual picked color (see HudView.SetEncounter).</summary>
+        public static readonly EnemyDefinition ColorHater = new EnemyDefinition { Id = EnemyId.ColorHater, Name = "Color Hater", Role = EnemyRole.Boss, MaxHp = 1500, Description = "Hates one color at random. Every point scored through a tile of that color is cancelled for the rest of the round." };
+
+        /// <summary>"Shape Hater" (explicit request: "Idem pour les shapes, il faut un Shape hater") — Color Hater's exact mirror, keyed by which piece-shape originally filled each cell (see Cell.FilledShapeId) instead of its color (see RunManager.ApplyShapeHaterScoreRule).</summary>
+        public static readonly EnemyDefinition ShapeHater = new EnemyDefinition { Id = EnemyId.ShapeHater, Name = "Shape Hater", Role = EnemyRole.Boss, MaxHp = 1500, Description = "Hates one piece shape at random. Every point scored through a tile originally placed by that shape is cancelled for the rest of the round." };
+
+        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater };
 
         public static EnemyDefinition Get(EnemyId id)
         {

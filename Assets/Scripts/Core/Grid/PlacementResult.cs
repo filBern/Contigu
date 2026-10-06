@@ -146,6 +146,9 @@ namespace Contigu.Core
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
         public IReadOnlyList<PieceColor> ClearedCellColors = System.Array.Empty<PieceColor>();
 
+        /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> right before it was cleared, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (see RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule.</summary>
+        public IReadOnlyList<ShapeId> ClearedCellShapes = System.Array.Empty<ShapeId>();
+
         /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> right before it was cleared (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>, so a tile's trait badge disappears in step with the tile itself instead of at the start of the score cascade.</summary>
         public IReadOnlyList<PieceTrait?> ClearedCellTraits = System.Array.Empty<PieceTrait?>();
 
@@ -178,6 +181,9 @@ namespace Contigu.Core
 
         /// <summary>Each destroyed cell's color right before it was destroyed, parallel to <see cref="DestroyedCells"/> — nullable only defensively (a destroyed cell was necessarily filled, so this should never actually be null in practice), matching <see cref="Cell.FilledColor"/>'s own type.</summary>
         public IReadOnlyList<PieceColor?> DestroyedCellColors = System.Array.Empty<PieceColor?>();
+
+        /// <summary>Each destroyed cell's <see cref="Cell.FilledShapeId"/> right before it was destroyed, parallel to <see cref="DestroyedCells"/> — <see cref="ClearedCellShapes"/>'s own sibling for the destroy path, same nullable-only-defensively contract as <see cref="DestroyedCellColors"/>.</summary>
+        public IReadOnlyList<ShapeId?> DestroyedCellShapes = System.Array.Empty<ShapeId?>();
 
         /// <summary>
         /// "Lueur" currency earned by this placement's own line clears —

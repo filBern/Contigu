@@ -662,6 +662,10 @@ namespace Contigu.Core
             {
                 ApplyCursedColorScoreRule(placement, BossCursedColor.Value);
             }
+            if (HasActiveEncounter)
+            {
+                ApplyHaterScoreRules(placement);
+            }
             int poisonMagnitudeForReclaimer = 0;
             if (poisonedPositions != null && poisonedPositions.Count > 0)
             {
@@ -812,6 +816,86 @@ namespace Contigu.Core
             }
             var cell = Grid.GetCell(position);
             return cell.IsFilled && cell.FilledColor == cursedColor;
+        }
+
+        /// <summary>"Shape Hater" (explicit request: "Idem pour les shapes, il faut un Shape hater") — <see cref="ApplyCursedColorScoreRule"/>'s exact mirror, keyed by <see cref="Cell.FilledShapeId"/>/<see cref="PlacementResult.ClearedCellShapes"/>/<see cref="PlacementResult.DestroyedCellShapes"/> instead of color.</summary>
+        private void ApplyShapeHaterScoreRule(PlacementResult placement, ShapeId hatedShape)
+        {
+            var clearedShapes = new Dictionary<Vector2Int, ShapeId>();
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                clearedShapes[placement.ClearedCells[i]] = placement.ClearedCellShapes[i];
+            }
+            for (int i = 0; i < placement.DestroyedCells.Count; i++)
+            {
+                if (placement.DestroyedCellShapes[i].HasValue)
+                {
+                    clearedShapes[placement.DestroyedCells[i]] = placement.DestroyedCellShapes[i].Value;
+                }
+            }
+
+            var keptEvents = new List<ScoreEvent>(placement.ScoreEvents.Count);
+            placement.GroupBonus = 0;
+            placement.GoldenBonus = 0;
+            placement.LineClearScore = 0;
+            placement.ModifierBonus = 0;
+            placement.TraitBonus = 0;
+            placement.ShapeMasteryBonus = 0;
+            placement.ColorMasteryBonus = 0;
+
+            for (int i = 0; i < placement.ScoreEvents.Count; i++)
+            {
+                var scoreEvent = placement.ScoreEvents[i];
+                if (IsPointEvent(scoreEvent.Type) && IsPositionShape(scoreEvent.Position, clearedShapes, hatedShape))
+                {
+                    continue;
+                }
+
+                keptEvents.Add(scoreEvent);
+                switch (scoreEvent.Type)
+                {
+                    case ScoreEventType.Group: placement.GroupBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Golden: placement.GoldenBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.LineClear:
+                    case ScoreEventType.Bastion: placement.LineClearScore += scoreEvent.Amount; break;
+                    case ScoreEventType.Modifier: placement.ModifierBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.Trait: placement.TraitBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ShapeMastery: placement.ShapeMasteryBonus += scoreEvent.Amount; break;
+                    case ScoreEventType.ColorMastery: placement.ColorMasteryBonus += scoreEvent.Amount; break;
+                }
+            }
+            placement.ScoreEvents = keptEvents;
+        }
+
+        private bool IsPositionShape(Vector2Int position, Dictionary<Vector2Int, ShapeId> clearedShapes, ShapeId hatedShape)
+        {
+            if (clearedShapes.TryGetValue(position, out var clearedShape))
+            {
+                return clearedShape == hatedShape;
+            }
+            var cell = Grid.GetCell(position);
+            return cell.IsFilled && cell.FilledShapeId == hatedShape;
+        }
+
+        /// <summary>Finds and applies both Color Hater's and Shape Hater's score-cancellation rules for this placement, if either is alive in the current encounter — same loop-by-index convention as <see cref="HealLeech"/>/<see cref="HealReclaimer"/> (the "max one of each per round" authoring rule means at most one of each ever matches, but this loop doesn't assume it).</summary>
+        private void ApplyHaterScoreRules(PlacementResult placement)
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
+                {
+                    ApplyCursedColorScoreRule(placement, enemy.HatedColor.Value);
+                }
+                else if (enemy.Definition.Id == EnemyId.ShapeHater && enemy.HatedShape.HasValue)
+                {
+                    ApplyShapeHaterScoreRule(placement, enemy.HatedShape.Value);
+                }
+            }
         }
 
         /// <summary>
@@ -1120,7 +1204,7 @@ namespace Contigu.Core
         }
 
         /// <summary>Records one cell a trait effect (Void Tile/Kamikaze Tile) destroyed, same mutate-the-lists-directly convention as <see cref="AddTraitBonus"/> — see <see cref="PlacementResult.DestroyedCells"/> for why this is separate from <see cref="PlacementResult.ClearedCells"/>.</summary>
-        private static void AddDestroyedCell(PlacementResult placement, Vector2Int pos, PieceColor? color)
+        private static void AddDestroyedCell(PlacementResult placement, Vector2Int pos, PieceColor? color, ShapeId? shapeId)
         {
             var cells = new List<Vector2Int>(placement.DestroyedCells);
             cells.Add(pos);
@@ -1128,6 +1212,9 @@ namespace Contigu.Core
             var colors = new List<PieceColor?>(placement.DestroyedCellColors);
             colors.Add(color);
             placement.DestroyedCellColors = colors;
+            var shapes = new List<ShapeId?>(placement.DestroyedCellShapes);
+            shapes.Add(shapeId);
+            placement.DestroyedCellShapes = shapes;
         }
 
         // Which SlotUn/Deux/Trois modifier corresponds to each 0-based hand index.
@@ -1413,10 +1500,10 @@ namespace Contigu.Core
         /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Scores ScoringConstants.VoidBonusPerDestroyedCell for the broken tile (on explicit request: "Le void tile, quand elle est triggered dans la grille, faire +10 pour la tuile brisé" — previously pure risk/utility with no score of its own); a no-op if nothing else on the grid is eligible.</summary>
         private void ApplyVoidEffect(PlacementResult placement)
         {
-            var cleared = Grid.ClearRandomFilledCell(_rng, placement.PlacedCells, out var clearedColor);
+            var cleared = Grid.ClearRandomFilledCell(_rng, placement.PlacedCells, out var clearedColor, out var clearedShape);
             if (cleared.HasValue)
             {
-                AddDestroyedCell(placement, cleared.Value, clearedColor);
+                AddDestroyedCell(placement, cleared.Value, clearedColor, clearedShape);
                 AddTraitBonus(placement, cleared.Value, ScoringConstants.VoidBonusPerDestroyedCell);
             }
         }
@@ -1466,9 +1553,10 @@ namespace Contigu.Core
             if (centerCell.IsFilled && !centerCell.IsLocked)
             {
                 var centerColor = centerCell.FilledColor;
+                var centerShape = centerCell.FilledShapeId;
                 centerCell.ClearFill();
                 destroyed++;
-                AddDestroyedCell(placement, traitCellPos, centerColor);
+                AddDestroyedCell(placement, traitCellPos, centerColor, centerShape);
             }
 
             for (int dx = -1; dx <= 1; dx++)
@@ -1495,9 +1583,10 @@ namespace Contigu.Core
                     }
 
                     var color = cell.FilledColor;
+                    var shapeId = cell.FilledShapeId;
                     cell.ClearFill();
                     destroyed++;
-                    AddDestroyedCell(placement, pos, color);
+                    AddDestroyedCell(placement, pos, color, shapeId);
                 }
             }
 
@@ -1763,7 +1852,18 @@ namespace Contigu.Core
             var instances = new List<EnemyInstance>(ids.Count);
             for (int i = 0; i < ids.Count; i++)
             {
-                instances.Add(new EnemyInstance(EnemyCatalog.Get(ids[i])));
+                var instance = new EnemyInstance(EnemyCatalog.Get(ids[i]));
+                if (ids[i] == EnemyId.ColorHater)
+                {
+                    var colors = PieceColorUtility.BaseColors;
+                    instance.HatedColor = colors[_rng.Next(colors.Count)];
+                }
+                else if (ids[i] == EnemyId.ShapeHater)
+                {
+                    var shapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
+                    instance.HatedShape = shapes[_rng.Next(shapes.Length)];
+                }
+                instances.Add(instance);
             }
             return instances;
         }

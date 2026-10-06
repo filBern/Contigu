@@ -902,6 +902,57 @@ namespace Contigu.Tests
             Assert.AreEqual(0, leech.CurrentHp, "A dead Leech should never heal back up, even when a line clears");
         }
 
+        [Test]
+        public void ColorHater_CancelsAllPointsForItsHatedColor_ButNotOtherColors()
+        {
+            // Explicit request: "J'aimerais rajouter un boss: Color hater.
+            // Tous les points effectué par une certaine couleur sont
+            // annulé" — same mechanism as the old quota system's
+            // "Cursed Color" boss effect (see RunManagerTests.
+            // RunManager_CursedColorCanBePlayedButItsPlacementScoresZero),
+            // just keyed off a per-instance EnemyInstance.HatedColor
+            // instead of RunManager.BossCursedColor.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.ColorHater);
+            var hater = run.CurrentEncounter[0];
+
+            int handIndex = FirstOccupiedHandSlot(run);
+            hater.HatedColor = run.Deck.Hand[handIndex].Value.Color;
+
+            var outcome = run.PlacePiece(handIndex, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success, "The hated color remains playable");
+            Assert.AreEqual(0, outcome.Placement.TotalScore, "Every point scored through the hated color should be cancelled");
+        }
+
+        [Test]
+        public void ShapeHater_CancelsAllPointsForItsHatedShape_ButNotOtherShapes()
+        {
+            // Explicit request: "Idem pour les shapes, il faut un Shape
+            // hater" — ColorHater's exact mirror, keyed by Cell.
+            // FilledShapeId/EnemyInstance.HatedShape instead of color.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.ShapeHater);
+            var hater = run.CurrentEncounter[0];
+            hater.HatedShape = ShapeId.Single;
+
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success, "The hated shape remains playable");
+            Assert.AreEqual(0, outcome.Placement.TotalScore, "Every point scored through a tile originally placed by the hated shape should be cancelled");
+
+            // A DIFFERENT shape placed well away from the first (no shared
+            // group) should score normally — proves the cancellation is
+            // keyed to the hated shape specifically, not just "any lone
+            // placement scores 0".
+            int otherSlot = ChurnUntilHandMatches(run, t => t.Shape != ShapeId.Single);
+            var otherShape = PieceShapeCatalog.GetRotated(run.Deck.Hand[otherSlot].Value.Shape, run.Deck.HandRotations[otherSlot]);
+            var anchor = FindAnyValidAnchor(run.Grid, otherShape);
+            Assert.IsTrue(anchor.HasValue);
+            var otherOutcome = run.PlacePiece(otherSlot, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(otherOutcome.Placement.Success);
+            Assert.Greater(otherOutcome.Placement.TotalScore, 0, "A non-hated shape's points should score normally");
+        }
+
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
         private static Vector2Int? FindRowCompletingAnchor(GridManager grid)
         {

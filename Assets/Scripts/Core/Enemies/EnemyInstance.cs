@@ -34,6 +34,12 @@ namespace Contigu.Core
         /// <summary>Locker only: the cell it currently has locked, or null before its first Shuffle tick or once it's dead (see RunManager.ResolveLockerShuffleEffect/CleanUpDefeatedEnemy).</summary>
         public Vector2Int? LockedCell;
 
+        /// <summary>Color Hater only: the one base color it was randomly assigned on spawn (see RunManager.BuildEncounter), never changes for the rest of this instance's life. Null for every other EnemyId.</summary>
+        public PieceColor? HatedColor;
+
+        /// <summary>Shape Hater only: Color Hater's exact mirror, the one piece shape it was randomly assigned on spawn (see RunManager.BuildEncounter). Null for every other EnemyId.</summary>
+        public ShapeId? HatedShape;
+
         private readonly List<Vector2Int> _poisonedCells = new List<Vector2Int>();
 
         /// <summary>Poisoner/Plague: every cell THIS instance has poisoned so far, including any extra cell "contamination" spread onto a neighbor in between Shuffles (see RunManager.ContaminateAdjacentCell) — unlike Locker's single roaming lock, poison accumulates until this instance's next Shuffle releases the whole list at once, or until it dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>

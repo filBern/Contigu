@@ -20,6 +20,18 @@ namespace Contigu.Core
         public bool IsFilled;
         public PieceColor? FilledColor;
 
+        /// <summary>
+        /// Which shape originally filled this cell (spec extension, explicit
+        /// request: "Shape hater" — "Idem [au Color Hater] pour les
+        /// shapes") — same persistent-stamp convention as <see
+        /// cref="FilledColor"/>, so a group re-scored by a LATER, unrelated
+        /// placement still correctly remembers which shape originally
+        /// placed each of its older cells (see RunManager.
+        /// ApplyShapeHaterScoreRule). Cleared alongside FilledColor by <see
+        /// cref="ClearFill"/>/<see cref="ResetForNewRound"/>.
+        /// </summary>
+        public ShapeId? FilledShapeId;
+
         /// <summary>Only ever true during the boss round (spec 6.1), or for Locker's own roaming lock (see IsLineClearObstacle).</summary>
         public bool IsLocked;
 
@@ -139,6 +151,7 @@ namespace Contigu.Core
         {
             IsFilled = false;
             FilledColor = null;
+            FilledShapeId = null;
             IsGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
@@ -152,6 +165,7 @@ namespace Contigu.Core
         {
             IsFilled = false;
             FilledColor = null;
+            FilledShapeId = null;
             IsLocked = false;
             IsLineClearObstacle = false;
             IsPoisoned = false;

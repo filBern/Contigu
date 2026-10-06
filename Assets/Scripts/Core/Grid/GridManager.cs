@@ -255,6 +255,7 @@ namespace Contigu.Core
                 var cell = _cells[x, y];
                 cell.IsFilled = true;
                 cell.FilledColor = color;
+                cell.FilledShapeId = shape.Id;
                 placedCells.Add(new Vector2Int(x, y));
             }
 
@@ -377,6 +378,7 @@ namespace Contigu.Core
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
             result.ClearedCellColors = clearInfo.ClearedCellColors;
+            result.ClearedCellShapes = clearInfo.ClearedCellShapes;
             result.ClearedCellTraits = clearInfo.ClearedCellTraits;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             result.ClearedLineCount = clearInfo.ClearedLineCount;
@@ -2721,6 +2723,9 @@ namespace Contigu.Core
             /// <summary>Each cleared cell's color as it was right before clearing, parallel to <see cref="ClearedCells"/> — the presentation layer needs this to keep rendering a completed line as still-filled while it holds before clearing.</summary>
             public readonly IReadOnlyList<PieceColor> ClearedCellColors;
 
+            /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> as it was right before clearing, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule, since the cell's own shape stamp is already gone from Core by the time that rule runs.</summary>
+            public readonly IReadOnlyList<ShapeId> ClearedCellShapes;
+
             /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> as it was right before clearing (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>.</summary>
             public readonly IReadOnlyList<PieceTrait?> ClearedCellTraits;
 
@@ -2739,10 +2744,11 @@ namespace Contigu.Core
             /// </summary>
             public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
+                ClearedCellShapes = clearedCellShapes;
                 ClearedCellTraits = clearedCellTraits;
                 ClearedLineCount = clearedLineCount;
                 ClearedLines = clearedLines;
@@ -2790,17 +2796,19 @@ namespace Contigu.Core
 
             var cleared = new List<Vector2Int>(cellsToClear.Count);
             var clearedColors = new List<PieceColor>(cellsToClear.Count);
+            var clearedShapes = new List<ShapeId>(cellsToClear.Count);
             var clearedTraits = new List<PieceTrait?>(cellsToClear.Count);
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
                 clearedColors.Add(cell.FilledColor.Value); // capture before clearing
+                clearedShapes.Add(cell.FilledShapeId.Value); // capture before clearing
                 clearedTraits.Add(cell.OriginTrait); // capture before clearing
                 cell.ClearFill();
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
+            return new ClearInfo(cleared, clearedColors, clearedShapes, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
         }
 
         /// <summary>
@@ -3006,13 +3014,14 @@ namespace Contigu.Core
         /// </summary>
         public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude)
         {
-            return ClearRandomFilledCell(rng, exclude, out _);
+            return ClearRandomFilledCell(rng, exclude, out _, out _);
         }
 
-        /// <summary>Same as the 2-argument overload, but also hands back the cleared cell's color (before it was cleared) via <paramref name="clearedColor"/> — null when nothing was eligible — so RunManager.ApplyVoidEffect can pass it on to <see cref="PlacementResult.DestroyedCellColors"/> for the presentation layer's destroy VFX.</summary>
-        public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude, out PieceColor? clearedColor)
+        /// <summary>Same as the 2-argument overload, but also hands back the cleared cell's color and <see cref="Cell.FilledShapeId"/> (before it was cleared) via <paramref name="clearedColor"/>/<paramref name="clearedShape"/> — both null when nothing was eligible — so RunManager.ApplyVoidEffect can pass them on to <see cref="PlacementResult.DestroyedCellColors"/>/<see cref="PlacementResult.DestroyedCellShapes"/> for the presentation layer's destroy VFX and Color/Shape Hater's own score-cancelling rule.</summary>
+        public Vector2Int? ClearRandomFilledCell(IRandomProvider rng, IReadOnlyList<Vector2Int> exclude, out PieceColor? clearedColor, out ShapeId? clearedShape)
         {
             clearedColor = null;
+            clearedShape = null;
             var excludeSet = new HashSet<Vector2Int>(exclude);
             var candidates = new List<Vector2Int>();
             foreach (var pos in AllPositions())
@@ -3032,6 +3041,7 @@ namespace Contigu.Core
             var chosen = candidates[rng.Next(candidates.Count)];
             var chosenCell = GetCell(chosen);
             clearedColor = chosenCell.FilledColor;
+            clearedShape = chosenCell.FilledShapeId;
             chosenCell.ClearFill();
             return chosen;
         }

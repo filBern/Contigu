@@ -7582,3 +7582,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   MaxHp`), donc seul le catalogue avait besoin de changer ; un
   commentaire obsolète dans `EnemyEncounterTests.cs` ("Basic (150 HP)")
   mis à jour.
+- **Nouveaux boss Color Hater / Shape Hater** : sur demande explicite
+  ("J'aimerais rajouter un boss: Color hater. Tous les points
+  effectué par une certaine couleur sont annulé. Idem pour les
+  shapes, il faut un Shape hater. Il ne peut pas y avoir plus d'un de
+  chaque par round"). `Color Hater` réutilise directement le mécanisme
+  existant de l'ancien système de boss à quota ("Cursed Color",
+  `RunManager.ApplyCursedColorScoreRule`) : à son apparition
+  (`BuildEncounter`), il tire une couleur de base au hasard
+  (`EnemyInstance.HatedColor`), et chaque placement annule tout
+  événement de score touchant une case de cette couleur. `Shape Hater`
+  est son miroir exact, mais aucune mémoire par-case de la FORME
+  d'origine n'existait dans le Core (seule `Cell.FilledColor` existait,
+  pas d'équivalent pour la shape) — ajout de `Cell.FilledShapeId`,
+  propagé partout où `FilledColor` l'était déjà (`GridManager.PlacePiece`/
+  `ClearInfo`/`CheckAndClearLines`/`ClearRandomFilledCell`,
+  `PlacementResult.ClearedCellShapes`/`DestroyedCellShapes`,
+  `RunManager.AddDestroyedCell`/`ApplyKamikazeEffect`/`ApplyVoidEffect`),
+  pour que `RunManager.ApplyShapeHaterScoreRule`/`IsPositionShape`
+  (nouveaux, miroirs exacts de `ApplyCursedColorScoreRule`/
+  `IsPositionColor`) puissent annuler les points d'une case même
+  rescorée par un placement ultérieur sans lien, exactement comme
+  Color Hater le fait déjà pour la couleur. Les deux effets sont
+  appliqués ensemble par `RunManager.ApplyHaterScoreRules`, câblé dans
+  `PlacePiece` avant le calcul de `RoundScore`/`TotalScore` (même point
+  que `BossCursedColor`, puisque les deux systèmes de boss ne tournent
+  jamais en même temps). `EnemyCatalog` leur donne 1500 HP chacun
+  (même palier que Thief) et le tooltip du HUD
+  (`HudView.SetEncounter`/`HaterDescription`) affiche la couleur/forme
+  précise tirée au sort via `VisualDefaults.GetColorName`/
+  `GetShapeName`, plutôt qu'un texte générique "au hasard". La
+  contrainte "jamais plus d'un de chaque par round" est une règle
+  d'auteur pour `EncounterCatalog` à respecter plus tard — ces deux
+  ennemis ne sont pas encore assignés à un round précis. Tests ajoutés
+  dans `EnemyEncounterTests.cs` (`ColorHater_CancelsAllPointsForItsHatedColor...`/
+  `ShapeHater_CancelsAllPointsForItsHatedShape...`) via le nouvel
+  helper de debug `DebugSetEncounter` déjà existant.

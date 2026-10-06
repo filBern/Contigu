@@ -7,6 +7,11 @@ namespace Contigu.Core
     /// escalations of Locker/Poisoner plus two new mechanics (see
     /// EnemyRole), added on a later explicit request: "Ajoutons de
     /// nouveaux ennemies et boss". Leech is a non-Boss Reactor.
+    /// ColorHater/ShapeHater are a further pair of bosses (explicit
+    /// request: "J'aimerais rajouter un boss: Color hater ... Idem pour
+    /// les shapes, il faut un Shape hater") — see EnemyInstance.
+    /// HatedColor/HatedShape and RunManager.ApplyCursedColorScoreRule/
+    /// ApplyShapeHaterScoreRule.
     /// </summary>
     public enum EnemyId
     {
@@ -17,6 +22,8 @@ namespace Contigu.Core
         Plague,
         Thief,
         Reclaimer,
-        Leech
+        Leech,
+        ColorHater,
+        ShapeHater
     }
 }
