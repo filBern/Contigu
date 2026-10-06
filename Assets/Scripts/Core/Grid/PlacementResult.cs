@@ -146,8 +146,8 @@ namespace Contigu.Core
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
         public IReadOnlyList<PieceColor> ClearedCellColors = System.Array.Empty<PieceColor>();
 
-        /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> right before it was cleared, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (see RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule.</summary>
-        public IReadOnlyList<ShapeId> ClearedCellShapes = System.Array.Empty<ShapeId>();
+        /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> right before it was cleared, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (see RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule. Nullable, unlike ClearedCellColors — a cell filled directly rather than through GridManager.PlacePiece never had a shape stamped on it at all.</summary>
+        public IReadOnlyList<ShapeId?> ClearedCellShapes = System.Array.Empty<ShapeId?>();
 
         /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> right before it was cleared (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>, so a tile's trait badge disappears in step with the tile itself instead of at the start of the score cascade.</summary>
         public IReadOnlyList<PieceTrait?> ClearedCellTraits = System.Array.Empty<PieceTrait?>();

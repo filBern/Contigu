@@ -824,7 +824,10 @@ namespace Contigu.Core
             var clearedShapes = new Dictionary<Vector2Int, ShapeId>();
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
-                clearedShapes[placement.ClearedCells[i]] = placement.ClearedCellShapes[i];
+                if (placement.ClearedCellShapes[i].HasValue)
+                {
+                    clearedShapes[placement.ClearedCells[i]] = placement.ClearedCellShapes[i].Value;
+                }
             }
             for (int i = 0; i < placement.DestroyedCells.Count; i++)
             {

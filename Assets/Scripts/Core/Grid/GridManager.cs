@@ -2723,8 +2723,8 @@ namespace Contigu.Core
             /// <summary>Each cleared cell's color as it was right before clearing, parallel to <see cref="ClearedCells"/> — the presentation layer needs this to keep rendering a completed line as still-filled while it holds before clearing.</summary>
             public readonly IReadOnlyList<PieceColor> ClearedCellColors;
 
-            /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> as it was right before clearing, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule, since the cell's own shape stamp is already gone from Core by the time that rule runs.</summary>
-            public readonly IReadOnlyList<ShapeId> ClearedCellShapes;
+            /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> as it was right before clearing, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule, since the cell's own shape stamp is already gone from Core by the time that rule runs. Nullable, unlike ClearedCellColors — a cell filled directly (test setup, or any pre-existing board state never routed through <see cref="PlacePiece"/>) never had a shape stamped on it at all.</summary>
+            public readonly IReadOnlyList<ShapeId?> ClearedCellShapes;
 
             /// <summary>Each cleared cell's <see cref="Cell.OriginTrait"/> as it was right before clearing (null where there wasn't one), parallel to <see cref="ClearedCells"/> — same held-until-clear purpose as <see cref="ClearedCellColors"/>.</summary>
             public readonly IReadOnlyList<PieceTrait?> ClearedCellTraits;
@@ -2744,7 +2744,7 @@ namespace Contigu.Core
             /// </summary>
             public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId?> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
@@ -2796,13 +2796,13 @@ namespace Contigu.Core
 
             var cleared = new List<Vector2Int>(cellsToClear.Count);
             var clearedColors = new List<PieceColor>(cellsToClear.Count);
-            var clearedShapes = new List<ShapeId>(cellsToClear.Count);
+            var clearedShapes = new List<ShapeId?>(cellsToClear.Count);
             var clearedTraits = new List<PieceTrait?>(cellsToClear.Count);
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
                 clearedColors.Add(cell.FilledColor.Value); // capture before clearing
-                clearedShapes.Add(cell.FilledShapeId.Value); // capture before clearing
+                clearedShapes.Add(cell.FilledShapeId); // capture before clearing — nullable, see ClearedCellShapes' own doc comment
                 clearedTraits.Add(cell.OriginTrait); // capture before clearing
                 cell.ClearFill();
                 cleared.Add(pos);
