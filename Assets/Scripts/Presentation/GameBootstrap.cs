@@ -906,6 +906,16 @@ namespace Contigu.Presentation
             int enemyHpBefore = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             EnemyId damagedEnemyId = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.Id : default;
 
+            // Same idea for Leech's own heal (explicit request: "une
+            // animation de heal +15 lorsqu'il se fait heal") — snapshotting
+            // its HP before lets PlayLeechHealEffect show the ACTUAL amount
+            // gained (EnemyInstance.Heal clamps at CurrentMaxHp), rather
+            // than just assuming the full ScoringConstants.
+            // LeechHealPerLineClear every time, which would overstate it
+            // once Leech is already near full HP.
+            int leechIndex = FindAliveEnemyIndex(EnemyId.Leech);
+            int leechHpBeforeHeal = leechIndex >= 0 ? _run.CurrentEncounter[leechIndex].CurrentHp : 0;
+
             // Snapshot of every cell an alive Locker/Poisoner currently has
             // locked/poisoned, BEFORE this placement — RunManager.PlacePiece
             // can trigger an auto-refill (if this placement empties the
@@ -937,6 +947,8 @@ namespace Contigu.Presentation
             // would wrongly re-trigger PlayThiefStealEffect for a
             // placement that never shuffled at all.
             bool thiefStoleThisPlacement = handWasAboutToAutoRefill && _run.ThiefStoleOnLastShuffle;
+
+            int leechHealAmount = leechIndex >= 0 ? _run.CurrentEncounter[leechIndex].CurrentHp - leechHpBeforeHeal : 0;
 
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
             // CurrentMaxHp, not Definition.MaxHp — Reclaimer's own ceiling
@@ -1085,7 +1097,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -1206,7 +1218,8 @@ namespace Contigu.Presentation
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
-            bool hasDeferredGridChange, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill)
+            bool hasDeferredGridChange, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
+            int leechIndex, int leechHealAmount)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1482,7 +1495,7 @@ namespace Contigu.Presentation
 
             if (!deferTileClear)
             {
-                yield return PlayTileClearBursts(placement);
+                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount);
             }
 
             // GroupMultiplier (Tinted+Multiplier-Zone cells) and LineClearMultiplier
@@ -1628,7 +1641,7 @@ namespace Contigu.Presentation
             // already counted during the score cascade above.
             if (deferTileClear)
             {
-                yield return PlayTileClearBursts(placement);
+                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount);
             }
 
             // Boss-locked cells, any Locker/Poisoner cell this placement's
@@ -1714,9 +1727,14 @@ namespace Contigu.Presentation
         /// in PlayPlacementSequence depending on deferTileClear: right after
         /// the score cascade for an ordinary placement, or after the enemy
         /// damage drain/fade-out for one that's draining combo into damage
-        /// (see deferTileClear's own doc comment).
+        /// (see deferTileClear's own doc comment). Runs EXACTLY once per
+        /// placement regardless of which of those two call sites fires, so
+        /// it's also the single spot where Leech's own heal popup (explicit
+        /// request: "une animation de heal +15 lorsqu'il se fait heal") is
+        /// shown — right as the line clear that caused it visually empties,
+        /// same causal pairing as every other per-cell popup here.
         /// </summary>
-        private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement)
+        private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement, int leechIndex, int leechHealAmount)
         {
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
@@ -1751,6 +1769,44 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.LineClear);
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
+            if (leechHealAmount > 0)
+            {
+                PlayLeechHealEffect(leechIndex, leechHealAmount);
+            }
+        }
+
+        /// <summary>
+        /// Leech's own heal popup (explicit request: "une animation de
+        /// heal +15 lorsqu'il se fait heal") — floatDown: true for the same
+        /// reason as PlayThiefStealEffect's own popup: this anchor sits up
+        /// in the HUD's enemy band, near the very top of the screen, and
+        /// SpawnPopup's usual float-UP would run it off the top edge.
+        /// </summary>
+        private void PlayLeechHealEffect(int leechIndex, int healAmount)
+        {
+            var anchor = _hudView.GetEnemyIconTransform(leechIndex);
+            if (anchor != null)
+            {
+                _feedbackLayer.SpawnPopup(anchor, "+" + healAmount, UITheme.Success, floatDown: true);
+            }
+        }
+
+        /// <summary>Index of the first alive enemy in CurrentEncounter matching <paramref name="id"/>, or -1 if there's no active encounter or none alive — see OnCellClicked's own Leech HP snapshot.</summary>
+        private int FindAliveEnemyIndex(EnemyId id)
+        {
+            if (!_run.HasActiveEncounter)
+            {
+                return -1;
+            }
+            var encounter = _run.CurrentEncounter;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (encounter[i].Definition.Id == id && !encounter[i].IsDead)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /// <summary>

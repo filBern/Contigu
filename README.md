@@ -7485,3 +7485,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   dès qu'il y a un changement deferred (`hasDeferredGridChange`), pas
   seulement quand la main se recharge — le fade des pièces de main ne
   joue que si la main s'est vraiment rechargée.
+- **Popup de heal pour Leech** : sur demande explicite ("Pour
+  l'ennemi Leech, peux-tu faire une animation de heal +15 lorsqu'il
+  se fait heal?"). `OnCellClicked` capture le HP de Leech avant la
+  pose et calcule le gain RÉEL après (`EnemyInstance.Heal` plafonne à
+  `CurrentMaxHp`, donc le gain peut être inférieur aux +15 habituels
+  si Leech était déjà presque plein) ; nouveau `PlayLeechHealEffect`
+  affiche un popup "+N" (vert, `UITheme.Success`) sur l'icône de
+  Leech — `floatDown: true` pour la même raison que le popup de vol du
+  Thief (l'icône est tout en haut du HUD). Déclenché depuis
+  `PlayTileClearBursts` (appelée une seule fois par pose, peu importe
+  le chemin `deferTileClear`), juste au moment où la ligne qui cause
+  le heal se vide visuellement — le même lien causal que chaque autre
+  popup par cellule de cette méthode. Nouveau `FindAliveEnemyIndex`,
+  un helper générique réutilisable pour retrouver l'index d'un ennemi
+  vivant par `EnemyId` dans l'encounter courant.
