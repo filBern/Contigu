@@ -85,7 +85,7 @@ namespace Contigu.Presentation
         {
             (string Header, string Body)[] sections =
             {
-                ("GOAL", "Reach each round's score quota before you run out of pieces. Clear all 8 rounds to win the run."),
+                ("GOAL", "Clear each round — reach its score quota or defeat its enemies before you run out of pieces. Clear all 15 rounds to win the run."),
                 ("PLACING PIECES", "Drag or click a piece from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on."),
                 ("LINE AND COLUMN CLEARS", "Fill an entire row or column and it clears: +3 pts per tile. Clearing a line containing several distinct colors also earns Lueur (+2 Lueur per distinct color in it)."),
                 ("LUEUR AND THE SHOP", "Between rounds, spend Lueur in the shop on modifiers and upgrades. Modifiers apply to every placement, in the order you arrange them (drag or tap two to swap) — some add flat bonuses, some multiply."),

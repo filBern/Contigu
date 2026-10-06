@@ -19,7 +19,7 @@ namespace Contigu.Tests
     public class EnemyEncounterTests
     {
         [Test]
-        public void EncounterCatalog_AllEightClassicRounds_HaveAnEncounter()
+        public void EncounterCatalog_AllFifteenClassicRounds_HaveAnEncounter()
         {
             Assert.AreEqual(1, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0).Count);
             Assert.AreEqual(EnemyId.Basic, EncounterCatalog.GetEncounter(ChallengeId.Classic, 0)[0]);
@@ -88,10 +88,65 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Thief, round8[3]);
             Assert.AreEqual(EnemyId.Leech, round8[4]);
 
-            // Round 9+ (there is no round 9 in Classic's 8-round run),
-            // Endless, and every non-Classic challenge are deliberately
-            // left on the old quota system for now.
-            Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Classic, 8).Count);
+            // Act 2 (explicit request: "Est-ce que tu peux faire 15
+            // rounds ... Je te fais confiance sur l'enchainement des
+            // enemy encounters") — debuts Plague, then both new Haters,
+            // never more than one ColorHater/ShapeHater in the same round.
+            var round9 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 8);
+            Assert.AreEqual(3, round9.Count);
+            Assert.AreEqual(EnemyId.Basic, round9[0]);
+            Assert.AreEqual(EnemyId.Locker, round9[1]);
+            Assert.AreEqual(EnemyId.Plague, round9[2]);
+
+            var round10 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 9);
+            Assert.AreEqual(3, round10.Count);
+            Assert.AreEqual(EnemyId.Basic, round10[0]);
+            Assert.AreEqual(EnemyId.ColorHater, round10[1]);
+            Assert.AreEqual(EnemyId.Thief, round10[2]);
+
+            var round11 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 10);
+            Assert.AreEqual(3, round11.Count);
+            Assert.AreEqual(EnemyId.Basic, round11[0]);
+            Assert.AreEqual(EnemyId.ShapeHater, round11[1]);
+            Assert.AreEqual(EnemyId.Leech, round11[2]);
+
+            var round12 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 11);
+            Assert.AreEqual(4, round12.Count);
+            Assert.AreEqual(EnemyId.Basic, round12[0]);
+            Assert.AreEqual(EnemyId.Poisoner, round12[1]);
+            Assert.AreEqual(EnemyId.Plague, round12[2]);
+            Assert.AreEqual(EnemyId.Reclaimer, round12[3]);
+
+            var round13 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 12);
+            Assert.AreEqual(4, round13.Count);
+            Assert.AreEqual(EnemyId.Basic, round13[0]);
+            Assert.AreEqual(EnemyId.ColorHater, round13[1]);
+            Assert.AreEqual(EnemyId.ShapeHater, round13[2]);
+            Assert.AreEqual(EnemyId.Thief, round13[3]);
+
+            var round14 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 13);
+            Assert.AreEqual(5, round14.Count);
+            Assert.AreEqual(EnemyId.Basic, round14[0]);
+            Assert.AreEqual(EnemyId.HeavyLocker, round14[1]);
+            Assert.AreEqual(EnemyId.Poisoner, round14[2]);
+            Assert.AreEqual(EnemyId.Plague, round14[3]);
+            Assert.AreEqual(EnemyId.Leech, round14[4]);
+
+            // Round 15 is the true finale — the biggest roster of the
+            // whole run.
+            var round15 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 14);
+            Assert.AreEqual(6, round15.Count);
+            Assert.AreEqual(EnemyId.Basic, round15[0]);
+            Assert.AreEqual(EnemyId.HeavyLocker, round15[1]);
+            Assert.AreEqual(EnemyId.ColorHater, round15[2]);
+            Assert.AreEqual(EnemyId.ShapeHater, round15[3]);
+            Assert.AreEqual(EnemyId.Thief, round15[4]);
+            Assert.AreEqual(EnemyId.Leech, round15[5]);
+
+            // Round 16+ (there is no round 16 in Classic's 15-round run)
+            // and every non-Classic challenge are deliberately left on the
+            // old quota system for now.
+            Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Classic, 15).Count);
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0).Count);
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Chaos, 0).Count);
         }

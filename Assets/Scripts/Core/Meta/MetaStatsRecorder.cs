@@ -20,7 +20,7 @@ namespace Contigu.Core
         /// reset a player's Stars balance and unlocked challenges back to
         /// zero/locked. <paramref name="roundReached"/> follows the same
         /// convention the caller (GameBootstrap) already used before Stars
-        /// existed: RunConfig.RoundCount (8) on victory, CurrentRoundNumber
+        /// existed: RunConfig.RoundCount on victory, CurrentRoundNumber
         /// (1-based) on defeat — so "rounds actually cleared" is
         /// <paramref name="roundReached"/> itself on victory (every round
         /// including the boss was cleared) or <paramref name="roundReached"/>
@@ -38,36 +38,6 @@ namespace Contigu.Core
                 BestScore = System.Math.Max(current.BestScore, finalScore),
                 BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached),
                 Stars = current.Stars + starsEarned,
-                MarathonUnlocked = current.MarathonUnlocked,
-                ChaosUnlocked = current.ChaosUnlocked
-            };
-        }
-
-        /// <summary>
-        /// Folds in a run that kept going past its scheduled victory
-        /// (explicit request: "j'aimerais que le joueur ait l'option
-        /// d'aller en endless mode... pour continuer sa run"), eventually
-        /// ending in <see cref="RunState.RunDefeat"/> while <see
-        /// cref="RunManager.IsEndless"/>. Deliberately NOT RecordRunOutcome
-        /// called a second time: that run's TotalRunsPlayed/TotalVictories/
-        /// victory-bonus Stars were already folded in the moment it first
-        /// reached RunVictory, and doing so again here would double-count
-        /// a single physical run as two. Only <paramref
-        /// name="additionalRoundsCleared"/> (the endless rounds played
-        /// beyond the scheduled run, i.e. not already paid for) earns more
-        /// Stars, and BestScore/BestRoundReached still take the new highs
-        /// if the endless stretch beat them — which it almost always will,
-        /// since score only ever goes up within a run.
-        /// </summary>
-        public static MetaStats RecordEndlessExtension(MetaStats current, int finalScore, int additionalRoundsCleared, int roundReached)
-        {
-            return new MetaStats
-            {
-                TotalRunsPlayed = current.TotalRunsPlayed,
-                TotalVictories = current.TotalVictories,
-                BestScore = System.Math.Max(current.BestScore, finalScore),
-                BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached),
-                Stars = current.Stars + additionalRoundsCleared,
                 MarathonUnlocked = current.MarathonUnlocked,
                 ChaosUnlocked = current.ChaosUnlocked
             };

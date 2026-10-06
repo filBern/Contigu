@@ -15,11 +15,11 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RunConfig_ArraysHaveEightEntries()
+        public void RunConfig_ArraysHaveFifteenEntries()
         {
-            Assert.AreEqual(8, RunConfig.Quotas.Length);
-            Assert.AreEqual(8, RunConfig.PieceBudgets.Length);
-            Assert.AreEqual(7, RunConfig.BossRoundIndex);
+            Assert.AreEqual(15, RunConfig.Quotas.Length);
+            Assert.AreEqual(15, RunConfig.PieceBudgets.Length);
+            Assert.AreEqual(14, RunConfig.BossRoundIndex);
         }
 
         [Test]
@@ -2546,122 +2546,6 @@ namespace Contigu.Tests
             // BossEffect roll is suppressed here too, same as round 4.
             Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
             Assert.IsTrue(run.HasActiveEncounter);
-        }
-
-        // ---- Endless mode (explicit request: "j'aimerais que le joueur
-        // ait l'option d'aller en endless mode, toujours avec un boss
-        // chaque 4 rounds, pour continuer sa run ou de retourner au
-        // menu") ----
-
-        [Test]
-        public void ContinueEndless_Fails_WhenNotInRunVictory()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-
-            Assert.IsFalse(run.ContinueEndless());
-            Assert.IsFalse(run.IsEndless);
-            Assert.AreEqual(RunState.InProgress, run.State);
-        }
-
-        [Test]
-        public void ContinueEndless_FromRunVictory_SetsIsEndlessAndOpensTheShop()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, run.Challenge.RoundCount - 1);
-            run.DebugForceRoundComplete();
-            Assert.AreEqual(RunState.RunVictory, run.State, "Reaching the final scheduled round's quota should still show Victory first");
-
-            bool continued = run.ContinueEndless();
-
-            Assert.IsTrue(continued);
-            Assert.IsTrue(run.IsEndless);
-            Assert.AreEqual(RunState.AwaitingShop, run.State, "Continuing should open the same shop a normal round-end would have, not skip straight to round 9");
-            Assert.AreEqual(run.Challenge.RoundCount - 1, run.CurrentRoundIndex, "Still round 8's own shop visit — LeaveShop is what actually advances to round 9");
-        }
-
-        [Test]
-        public void ContinueEndless_FromAnyOtherState_NeverFlipsIsEndless()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugForceRoundComplete(); // now AwaitingShop, not RunVictory
-
-            Assert.IsFalse(run.ContinueEndless());
-            Assert.IsFalse(run.IsEndless);
-        }
-
-        [Test]
-        public void CurrentQuota_PastRound8_ExtendsByTheSameRatioAsTheLastTwoScheduledRounds()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceThroughVictoryIntoEndless(run);
-
-            // Math.Pow, not repeated multiplication, to match
-            // ComputeEndlessQuota's own exact floating-point path bit for
-            // bit — any other order of operations risks a 1-off rounding
-            // mismatch right at a .5 boundary.
-            var quotas = ChallengeCatalog.Classic.Quotas;
-            double ratio = (double)quotas[7] / quotas[6];
-            int expectedRound9Quota = (int)System.Math.Round(quotas[7] * System.Math.Pow(ratio, 1));
-            Assert.AreEqual(expectedRound9Quota, run.CurrentQuota, "Round 9 should extrapolate round 7->8's own ~x1.92 ratio rather than inventing a new number");
-
-            AdvanceToRound(run, 9); // was already at index 8 (round 9); this reaches round 10
-            int expectedRound10Quota = (int)System.Math.Round(quotas[7] * System.Math.Pow(ratio, 2));
-            Assert.AreEqual(expectedRound10Quota, run.CurrentQuota, "Round 10 should apply that same ratio a second time");
-        }
-
-        [Test]
-        public void CurrentBudget_PastRound8_CyclesTheLastFourScheduledEntries_AndKeepsTheBossCadence()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceThroughVictoryIntoEndless(run);
-
-            var budgets = ChallengeCatalog.Classic.PieceBudgets;
-            Assert.AreEqual(budgets[4], run.CurrentBudget, "Round 9 should reuse round 5's budget — the first of the repeating 4-round cycle");
-            Assert.IsFalse(run.IsBossRound);
-
-            AdvanceToRound(run, 9); // was already at index 8 (round 9); this reaches round 10
-            Assert.AreEqual(budgets[5], run.CurrentBudget);
-            Assert.IsFalse(run.IsBossRound);
-
-            AdvanceToRound(run, 10); // round 11
-            Assert.AreEqual(budgets[6], run.CurrentBudget);
-            Assert.IsFalse(run.IsBossRound);
-
-            AdvanceToRound(run, 11); // round 12
-            Assert.AreEqual(budgets[7], run.CurrentBudget, "Round 12 should reuse round 8's own lighter boss-round budget");
-            Assert.IsTrue(run.IsBossRound, "Every 4th round, including endless ones, should stay a boss round");
-            Assert.AreNotEqual(BossEffect.None, run.CurrentBossEffect);
-        }
-
-        [Test]
-        public void EvaluateRoundEnd_NeverReturnsToRunVictory_OnceEndless()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceThroughVictoryIntoEndless(run);
-
-            // Several more endless rounds, including a second boss round —
-            // none of them should ever re-trigger RunVictory, only ever
-            // AwaitingShop (see EvaluateRoundEnd's one-time equality check
-            // against CurrentRoundIndex).
-            for (int i = 0; i < 5; i++)
-            {
-                run.DebugForceRoundComplete();
-                Assert.AreEqual(RunState.AwaitingShop, run.State);
-                run.LeaveShop();
-            }
-        }
-
-        /// <summary>Drives a fresh Classic-shaped run through its scheduled Victory and into Endless via ContinueEndless + LeaveShop, landing at the very start of round 9 (CurrentRoundIndex 8).</summary>
-        private static void AdvanceThroughVictoryIntoEndless(RunManager run)
-        {
-            AdvanceToRound(run, run.Challenge.RoundCount - 1);
-            run.DebugForceRoundComplete();
-            Assert.AreEqual(RunState.RunVictory, run.State);
-            Assert.IsTrue(run.ContinueEndless());
-            Assert.AreEqual(RunState.AwaitingShop, run.State);
-            run.LeaveShop();
-            Assert.AreEqual(RunState.InProgress, run.State);
-            Assert.AreEqual(run.Challenge.RoundCount, run.CurrentRoundIndex);
         }
 
         [Test]

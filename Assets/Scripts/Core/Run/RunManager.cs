@@ -378,9 +378,6 @@ namespace Contigu.Core
 
         public RunState State { get; private set; }
 
-        /// <summary>True once the player has cleared the scheduled run (round <see cref="ChallengeDefinition.RoundCount"/>) and chosen "Continue" on the victory screen instead of returning to the menu — see <see cref="ContinueEndless"/>. Never resets to false mid-run; the run's only way out from here is an eventual <see cref="RunState.RunDefeat"/>, there is no second <see cref="RunState.RunVictory"/>.</summary>
-        public bool IsEndless { get; private set; }
-
         /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds. Always None for a round that has an active enemy encounter (see <see cref="HasActiveEncounter"/>) — the two systems never run at once.</summary>
         public BossEffect CurrentBossEffect { get; private set; }
 
@@ -425,42 +422,15 @@ namespace Contigu.Core
             get { return CurrentRoundIndex + 1; }
         }
 
-        /// <summary>
-        /// Past the challenge's own scheduled Quotas array (only once the
-        /// player has cleared it and chosen to keep going — see
-        /// <see cref="IsEndless"/>/<see cref="ContinueEndless"/>), the
-        /// quota keeps climbing by the SAME ratio as the last two scheduled
-        /// rounds (Classic: 33000/17200 ≈ x1.92) applied repeatedly,
-        /// instead of inventing new numbers — explicit request: "j'aimerais
-        /// que le joueur ait l'option d'aller en endless mode, toujours
-        /// avec un boss chaque 4 rounds, pour continuer sa run".
-        /// </summary>
+        /// <summary>This round's score target — Marathon/Chaos race it directly (no authored encounter); Classic/Chaos still read it for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition instead.</summary>
         public int CurrentQuota
         {
-            get { return CurrentRoundIndex < _challenge.Quotas.Length ? _challenge.Quotas[CurrentRoundIndex] : ComputeEndlessQuota(CurrentRoundIndex); }
+            get { return _challenge.Quotas[CurrentRoundIndex]; }
         }
 
-        /// <summary>Same endless extension as <see cref="CurrentQuota"/>, but cycling the scheduled PieceBudgets' own LAST 4 entries (Classic: 28/28/28/22) repeatedly instead of extrapolating a trend — that foursome is already the established "lighter budget on the boss round" pattern (see RunConfig.PieceBudgets), and <see cref="RunConfig.BossRoundInterval"/> keeps every 4th endless round a boss round the same way, so reusing it keeps the two in lockstep.</summary>
         public int CurrentBudget
         {
-            get { return CurrentRoundIndex < _challenge.PieceBudgets.Length ? _challenge.PieceBudgets[CurrentRoundIndex] : ComputeEndlessBudget(CurrentRoundIndex); }
-        }
-
-        private int ComputeEndlessQuota(int roundIndex)
-        {
-            var quotas = _challenge.Quotas;
-            int lastIndex = quotas.Length - 1;
-            double ratio = (double)quotas[lastIndex] / quotas[lastIndex - 1];
-            double value = quotas[lastIndex] * System.Math.Pow(ratio, roundIndex - lastIndex);
-            return (int)System.Math.Round(value);
-        }
-
-        private int ComputeEndlessBudget(int roundIndex)
-        {
-            var budgets = _challenge.PieceBudgets;
-            int cycleLength = System.Math.Min(4, budgets.Length);
-            int offset = (roundIndex - budgets.Length) % cycleLength;
-            return budgets[budgets.Length - cycleLength + offset];
+            get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
         }
 
         /// <summary>Classic/Marathon: rounds 4 and 8. Chaos also keeps its cell-lock active every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
@@ -1816,11 +1786,8 @@ namespace Contigu.Core
             LastRoundEndLueurBonus = PiecesRemainingThisRound;
             Lueur += LastRoundEndLueurBonus;
             ApplyMultCinqRisqueLossChance();
-            // Only ever true once (round 8's own CurrentRoundIndex, 7,
-            // can't recur) — every round past it, endless or not, falls
-            // straight into the AwaitingShop branch below like any
-            // other round-end. See ContinueEndless for how the player
-            // actually gets from here back into that normal flow.
+            // Only ever true once (the challenge's own final
+            // CurrentRoundIndex, RoundCount - 1, can't recur).
             if (CurrentRoundIndex == _challenge.RoundCount - 1)
             {
                 State = RunState.RunVictory;
@@ -2998,34 +2965,6 @@ namespace Contigu.Core
                 return false;
             }
             AdvanceRound();
-            return true;
-        }
-
-        /// <summary>
-        /// "Continue" on the victory screen (explicit request: "j'aimerais
-        /// que le joueur ait l'option d'aller en endless mode... pour
-        /// continuer sa run ou de retourner au menu") — only valid right
-        /// after clearing the scheduled run (<see cref="RunState.
-        /// RunVictory"/>). Opens the shop exactly like any other round-end
-        /// would have (the round-8 Lueur bonus is already credited — see
-        /// EvaluateRoundEnd — so there's something to actually spend before
-        /// continuing), rather than skipping straight to round 9: the only
-        /// reason that shop visit was ever skipped was that the run was
-        /// about to end outright, which is no longer true once the player
-        /// picks this. <see cref="IsEndless"/> flips on permanently; the
-        /// next <see cref="LeaveShop"/> advances into round 9 same as ever,
-        /// where <see cref="CurrentQuota"/>/<see cref="CurrentBudget"/>
-        /// start extending past the challenge's own scheduled arrays.
-        /// </summary>
-        public bool ContinueEndless()
-        {
-            if (State != RunState.RunVictory)
-            {
-                return false;
-            }
-            IsEndless = true;
-            State = RunState.AwaitingShop;
-            OpenShop();
             return true;
         }
 

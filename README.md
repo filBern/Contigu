@@ -7618,3 +7618,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   dans `EnemyEncounterTests.cs` (`ColorHater_CancelsAllPointsForItsHatedColor...`/
   `ShapeHater_CancelsAllPointsForItsHatedShape...`) via le nouvel
   helper de debug `DebugSetEncounter` déjà existant.
+- **15 rounds, retrait du endless mode** : sur demande explicite ("Est-ce
+  que tu peux faire 15 rounds une fois que les CI sont verte? On enleve
+  le endless mode aussi. Je te fais confiance sur l'enchainement des
+  enemy encounters" / "Fait un cleanup du code pour retirer ce qui n'est
+  plus nécessaire"). `RunConfig.RoundCount` passe de 8 à 15, `Quotas`/
+  `PieceBudgets` étendus (Classic/Chaos directement, Marathon avec ses
+  propres valeurs réduites ~15-20%, même convention que les 8 premiers
+  rounds). `EncounterCatalog` gagne un "Act 2" (Round9-15) entièrement
+  nouveau — enchaînement laissé à ma discrétion : Round9 débute Plague
+  (jamais utilisé avant), Round10/11 débutent Color Hater/Shape Hater
+  (chacun seul dans son round, jamais les deux même type ensemble),
+  Round12 double la pression de poison (Poisoner+Plague devant
+  Reclaimer, même convention que Round5/6), Round13 combine les deux
+  Haters (toujours un seul de chaque, respecte la contrainte), Round14
+  ramène HeavyLocker, et Round15 est la vraie finale (6 ennemis : Basic,
+  HeavyLocker, ColorHater, ShapeHater, Thief, Leech — tout ce qui a été
+  introduit depuis Round8). `HudView.MaxEnemyIcons` monté de 5 à 6 pour
+  ce roster. Le endless mode est retiré en entier : `RunManager.
+  IsEndless`/`ContinueEndless`/`ComputeEndlessQuota`/
+  `ComputeEndlessBudget` supprimés (`CurrentQuota`/`CurrentBudget`
+  redeviennent une simple lecture d'array), `EndScreenView` perd son
+  bouton "Continue (Endless)" (Victory a maintenant le même bouton
+  "New Run" centré que Defeat), `GameBootstrap` perd
+  `OnContinueEndlessRequested`/`RecordEndlessDefeat`/
+  `_metaStatsRoundsCreditedThisRun`, `MetaStatsRecorder.
+  RecordEndlessExtension` supprimé. Tests Endless retirés dans
+  `RunManagerTests.cs`/`MetaStatsRecorderTests.cs`; `EnemyEncounterTests.cs`
+  étendu pour couvrir les 7 nouveaux rounds.

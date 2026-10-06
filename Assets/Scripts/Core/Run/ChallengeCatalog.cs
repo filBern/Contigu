@@ -16,7 +16,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Classic,
             Name = "Classic",
-            Description = "Eight rounds. Every four rounds, face a random boss rule: the board locks cells, a hand slot is locked, or one color scores no points.",
+            Description = "15 rounds, each its own enemy encounter.",
             UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -34,8 +34,8 @@ namespace Contigu.Core
             Description = "A smaller starting deck and tighter piece budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
-            Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200 },
-            PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18 },
+            Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200, 17500, 32000, 58000, 105000, 190000, 340000, 600000 },
+            PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
             BossActiveEveryRound = false,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval

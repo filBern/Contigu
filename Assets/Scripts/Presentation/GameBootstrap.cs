@@ -63,20 +63,6 @@ namespace Contigu.Presentation
         private IMetaStatsStore _metaStatsStore;
         private MetaStats _metaStats;
 
-        /// <summary>
-        /// How many rounds' worth of Stars/BestRoundReached this run has
-        /// already had folded into <see cref="_metaStats"/> — only ever
-        /// set to <see cref="ChallengeDefinition.RoundCount"/> the moment
-        /// RunVictory first fires (see HandleStateTransition), then read
-        /// back if the player went Endless and the run eventually ends in
-        /// RunDefeat, so that final recording only pays out for the
-        /// ADDITIONAL endless rounds instead of re-crediting rounds 1-8 on
-        /// top of what Victory already paid (see MetaStatsRecorder.
-        /// RecordEndlessExtension). Reset on every new run (see
-        /// OnChallengeChosen) so a later run doesn't inherit a stale value.
-        /// </summary>
-        private int _metaStatsRoundsCreditedThisRun;
-
         private GridView _gridView;
         private HandView _handView;
         private HudView _hudView;
@@ -674,7 +660,6 @@ namespace Contigu.Presentation
             _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
-            _endScreenView.ContinueEndlessRequested += OnContinueEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }
@@ -1881,16 +1866,13 @@ namespace Contigu.Presentation
                 case RunState.RunVictory:
                 {
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
-                    _metaStatsRoundsCreditedThisRun = _run.Challenge.RoundCount;
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
                     break;
                 }
 
                 case RunState.RunDefeat:
                 {
-                    bool isNewBestScore = _run.IsEndless
-                        ? RecordEndlessDefeat()
-                        : RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
+                    bool isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
                     _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore);
                     break;
                 }
@@ -1967,26 +1949,6 @@ namespace Contigu.Presentation
         {
             bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
             _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory);
-            _metaStatsStore.Save(_metaStats);
-            return isNewBestScore;
-        }
-
-        /// <summary>
-        /// RunDefeat's counterpart to RecordRunOutcome when the run was
-        /// already won and kept going into Endless (<see cref="RunManager.
-        /// IsEndless"/>) — this physical run's TotalRunsPlayed/
-        /// TotalVictories/victory-bonus Stars were already folded in by
-        /// RecordRunOutcome the moment RunVictory first fired, so this only
-        /// pays out Stars for the rounds cleared SINCE then (see
-        /// _metaStatsRoundsCreditedThisRun) and still refreshes BestScore/
-        /// BestRoundReached — see MetaStatsRecorder.RecordEndlessExtension.
-        /// </summary>
-        private bool RecordEndlessDefeat()
-        {
-            int roundsCleared = _run.CurrentRoundNumber - 1;
-            int additionalRounds = roundsCleared - _metaStatsRoundsCreditedThisRun;
-            bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
-            _metaStats = MetaStatsRecorder.RecordEndlessExtension(_metaStats, _run.TotalScore, additionalRounds, roundsCleared);
             _metaStatsStore.Save(_metaStats);
             return isNewBestScore;
         }
@@ -2235,16 +2197,6 @@ namespace Contigu.Presentation
             _challengeSelectView.Show(_metaStats);
         }
 
-        /// <summary>"Continue (Endless)" on the victory screen — resumes the SAME run instead of ending it (see RunManager.ContinueEndless), straight into the normal AwaitingShop/shop flow its own HandleStateTransition branch already knows how to show.</summary>
-        private void OnContinueEndlessRequested()
-        {
-            _endScreenView.Hide();
-            if (_run.ContinueEndless())
-            {
-                HandleStateTransition(_run.State);
-            }
-        }
-
         /// <summary>
         /// Spends Stars to unlock <paramref name="challenge"/> if it isn't
         /// already (a no-op charge for Classic/an already-unlocked one —
@@ -2268,7 +2220,6 @@ namespace Contigu.Presentation
             _metaStatsStore.Save(_metaStats);
 
             _challengeSelectView.Hide();
-            _metaStatsRoundsCreditedThisRun = 0;
             StartNewRun(challenge);
 
             if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)

@@ -34,7 +34,6 @@ namespace Contigu.Presentation
         // shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
-        private bool _isEndless;
 
         /// <summary>
         /// True while the score bar is hidden in favor of the enemy icon
@@ -56,7 +55,10 @@ namespace Contigu.Presentation
         // 5 at once) — the row's own HorizontalLayoutGroup/ContentSizeFitter
         // already auto-sizes to however many slots exist, so this only
         // needed the cap raised, no layout rework.
-        private const int MaxEnemyIcons = 5;
+        // Raised from 5 (explicit request: "Est-ce que tu peux faire 15
+        // rounds" — EncounterCatalog's new Round15 finale schedules 6 at
+        // once).
+        private const int MaxEnemyIcons = 6;
         private const float EnemyIconSize = 44f;
         private const float EnemySlotWidth = 76f;
         // Gap above the icon within its slot, pushing it down from the very
@@ -274,7 +276,7 @@ namespace Contigu.Presentation
 
         public void Refresh(RunManager run)
         {
-            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount, run.IsEndless);
+            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount);
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             if (run.HasActiveEncounter)
             {
@@ -293,12 +295,11 @@ namespace Contigu.Presentation
             SetLueur(run.Lueur);
         }
 
-        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade. <paramref name="isEndless"/> drops the "/roundCount" denominator (explicit request added Endless mode — a fixed cap no longer applies once the player keeps going past it, so "Round 9/8" would misread as overshooting a limit).</summary>
-        public void SetRound(int roundNumber, int roundCount, bool isEndless)
+        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade.</summary>
+        public void SetRound(int roundNumber, int roundCount)
         {
             _roundNumber = roundNumber;
             _roundCount = roundCount;
-            _isEndless = isEndless;
         }
 
         /// <summary>
@@ -331,7 +332,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            string roundLabel = _isEndless ? "Round " + _roundNumber : "Round " + _roundNumber + "/" + _roundCount;
+            string roundLabel = "Round " + _roundNumber + "/" + _roundCount;
             _scoreLabel.text = roundLabel + "  —  " + roundScore + " / " + quota;
             _scoreFillRect.GetComponent<Image>().color = UITheme.ButtonSelected;
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);

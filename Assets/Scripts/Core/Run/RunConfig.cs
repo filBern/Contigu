@@ -3,8 +3,12 @@ namespace Contigu.Core
     /// <summary>Reference run-structure values from spec section 6.</summary>
     public static class RunConfig
     {
-        public const int RoundCount = 8;
-        public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 8 (0-based index 7)
+        // Raised from 8 (explicit request: "Est-ce que tu peux faire 15
+        // rounds ... On enleve le endless mode aussi" — a fixed 15-round
+        // run instead of a scheduled 8 extended indefinitely by Endless
+        // mode, which is removed entirely).
+        public const int RoundCount = 15;
+        public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 15 (0-based index 14)
         public const int BossRoundInterval = 4;
 
         /// <summary>
@@ -81,15 +85,29 @@ namespace Contigu.Core
         /// cell/zero-modifier grind, not a real balance ceiling, so don't
         /// re-derive quota values from whether that specific test happens
         /// to pass.
+        ///
+        /// Rounds 9-15 (explicit request: "Est-ce que tu peux faire 15
+        /// rounds") continue the same accelerating curve, rather than the
+        /// old Endless mode's formulaic extrapolation (removed along with
+        /// Endless itself). Classic's own win condition no longer reads
+        /// these at all past round 8 — EncounterCatalog now authors every
+        /// one of its 15 rounds, so <see cref="RunManager.
+        /// HasActiveEncounter"/> is true throughout and <see
+        /// cref="RunManager.EvaluateRoundEnd"/> checks "every enemy dead"
+        /// instead of "quota reached" — but Marathon/Chaos (no authored
+        /// encounters) still race these numbers directly, and Classic/
+        /// Chaos still read them for display/DebugForceRoundComplete.
         /// </summary>
         public static readonly int[] Quotas =
         {
-            300, 550, 1050, 2000, 4000, 8200, 17200, 33000
+            300, 550, 1050, 2000, 4000, 8200, 17200, 33000,
+            60000, 115000, 225000, 440000, 850000, 1600000, 2900000
         };
 
         public static readonly int[] PieceBudgets =
         {
-            24, 24, 26, 26, 28, 28, 28, 22
+            24, 24, 26, 26, 28, 28, 28, 22,
+            28, 28, 28, 30, 30, 32, 34
         };
     }
 }
