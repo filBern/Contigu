@@ -97,9 +97,21 @@ namespace Contigu.Presentation
         /// then left it frozen on its stale pre-click hover-tint instead of
         /// showing the piece it was actually just filled with (bug report:
         /// "la tuile qui va être empoisonné devient grisâtre avant même que
-        /// les points commencent a etre compté").
+        /// les points commencent a etre compté"). <paramref
+        /// name="forceShowLocked"/>/<paramref name="forceShowPoisoned"/> are
+        /// the opposite case — a lock/poison THIS placement just RELEASED
+        /// (Locker/Poisoner's own On-Shuffle effect moving it away, or the
+        /// owning enemy dying from this placement's own damage — see
+        /// RunManager.CleanUpDefeatedEnemy) renders as if it were still
+        /// locked/poisoned (regardless of Cell.IsLocked/IsPoisoned already
+        /// being false in Core) until the real reveal, instead of instantly
+        /// showing its already-released look (explicit bug report: "Les
+        /// locked cells sont enlevé visuellement trop tôt... Idem pour les
+        /// cell empoisonné") — this also keeps it correctly flagged for
+        /// GridView.FadeMalus to fade OUT along with the rest, rather than
+        /// never being treated as malus at all once it's silently released.
         /// </summary>
-        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false)
+        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false, bool forceShowLocked = false, bool forceShowPoisoned = false)
         {
             bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
@@ -126,7 +138,7 @@ namespace Contigu.Presentation
             // visuellement"). The real (post-clear, now-locked) state still
             // shows correctly once ClearCellVisual/the final Refresh()
             // calls ApplyState with no override.
-            bool renderAsLockedObstacle = cell.IsLocked && !cell.IsBastion && !fillColorOverride.HasValue && !suppressMalus;
+            bool renderAsLockedObstacle = (cell.IsLocked || forceShowLocked) && !cell.IsBastion && !fillColorOverride.HasValue && !suppressMalus;
             _isShowingLockedObstacle = renderAsLockedObstacle;
 
             if (renderAsLockedObstacle)
@@ -215,7 +227,7 @@ namespace Contigu.Presentation
             // tile empoisonné, il en faut un") — same lazy Init-on-render
             // pattern as the trait-origin badge below, since this badge's
             // own Init (above) runs before _tooltip is assigned.
-            bool showPoisonBadge = cell.IsPoisoned && !suppressMalus;
+            bool showPoisonBadge = (cell.IsPoisoned || forceShowPoisoned) && !suppressMalus;
             _badgePoison.gameObject.SetActive(showPoisonBadge);
             _isShowingPoisonBadge = showPoisonBadge;
             if (showPoisonBadge)

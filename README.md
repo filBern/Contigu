@@ -7459,3 +7459,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   cachant seulement son obstacle verrouillé/badge de poison —
   `RefreshHoldingClearedCells` l'utilise maintenant au lieu de ne rien
   dessiner du tout pour chaque cellule deferred.
+- **Fix : les locked/poisoned cells relâchées disparaissaient trop
+  tôt, sans fade** : bug report explicite ("Les locked cells sont
+  enlevé visuellement trop tôt. Ça doit se faire après le décompte
+  des points, après l'animation de fade out des pièces dans les
+  slots si shuffle manuel. N'oublie pas de les fade out aussi" + "Idem
+  pour les cell empoisonné"). Quand un lock/poison est RELÂCHÉ (le
+  Shuffle de Locker/Poisoner le déplace ailleurs, OU l'ennemi qui le
+  possédait meurt des dégâts de CETTE même pose — voir
+  `RunManager.CleanUpDefeatedEnemy`, qui ne passe par AUCUN Shuffle),
+  la cellule montrait instantanément son vrai état déverrouillé/
+  dépoisonné dès le retour de `PlacePiece`, bien avant le décompte des
+  points — et sans jamais fader, puisque `PlayPlacementSequence` ne
+  revisitait la grille avec fade que si la main s'était auto-rechargée
+  (`handWasAboutToAutoRefill`), jamais pour une relâche causée par la
+  mort d'un ennemi seule. `GameBootstrap.SnapshotEnemyEffectCells`
+  retourne maintenant deux listes séparées (locked/poisoned) au lieu
+  d'une seule combinée, pour distinguer un lock/poison GAGNÉ (reste
+  cachée, `suppressMalus`, comportement inchangé) d'un lock/poison
+  RELÂCHÉ (nouveaux `forceShowLocked`/`forceShowPoisoned` sur
+  `GridCellView.ApplyState` — continue de s'afficher COMME SI encore
+  verrouillée/empoisonnée, et reste donc correctement signalée à
+  `GridView.FadeMalus` pour fader avec le reste). `PlayPlacementSequence`
+  applique maintenant la séquence fade-out-malus/refresh/fade-in-malus
+  dès qu'il y a un changement deferred (`hasDeferredGridChange`), pas
+  seulement quand la main se recharge — le fade des pièces de main ne
+  joue que si la main s'est vraiment rechargée.

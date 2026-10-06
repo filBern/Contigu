@@ -919,7 +919,7 @@ namespace Contigu.Presentation
             // point avant de faire l'action de shuffle et les effets des
             // ennemies qui vont avec").
             bool handWasAboutToAutoRefill = IsHandAboutToAutoRefill(handIndex);
-            var enemyEffectCellsBefore = SnapshotEnemyEffectCells();
+            SnapshotEnemyEffectCells(out var lockedCellsBefore, out var poisonedCellsBefore);
 
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
@@ -945,35 +945,67 @@ namespace Contigu.Presentation
             // possibly-already-grown cap for its own HP bar to read right.
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentMaxHp : 0;
             // Only cells whose locked/poisoned status actually CHANGED this
-            // placement (added or removed by its own auto-refill) need to
-            // stay hidden — the symmetric difference of the two snapshots,
-            // NOT their union. A cell that was (and still is) poisoned
-            // regardless of this placement — including the very cell this
-            // placement's own line clear just went through — must NOT end
-            // up in here, or RefreshHoldingClearedCells below would skip it
-            // entirely instead of giving it its normal held-filled
-            // treatment, leaving it stuck showing whatever ClearHover
-            // already (prematurely) drew for it until the final reveal
-            // (explicit report: "la tuile empoisonnée est présentement
-            // supprimée trop tôt visuellement").
-            var enemyEffectCellsAfter = SnapshotEnemyEffectCells();
-            var beforeSet = new HashSet<Vector2Int>(enemyEffectCellsBefore);
-            var afterSet = new HashSet<Vector2Int>(enemyEffectCellsAfter);
-            var deferredRevealCells = new List<Vector2Int>(outcome.BossLockedCells);
-            foreach (var pos in beforeSet)
+            // placement (added or removed by its own auto-refill, OR by an
+            // enemy dying from this placement's own damage — see
+            // CleanUpDefeatedEnemy) need to stay hidden — the symmetric
+            // difference of the two snapshots, NOT their union. A cell that
+            // was (and still is) poisoned regardless of this placement —
+            // including the very cell this placement's own line clear just
+            // went through — must NOT end up in here, or
+            // RefreshHoldingClearedCells below would give it the wrong
+            // deferred treatment instead of its normal held-filled one,
+            // leaving it stuck showing whatever ClearHover already
+            // (prematurely) drew for it until the final reveal (explicit
+            // report: "la tuile empoisonnée est présentement supprimée trop
+            // tôt visuellement"). Split into GAINED (new lock/poison this
+            // placement added — stays hidden/suppressed, same as before)
+            // and RELEASED (a lock/poison this placement just removed —
+            // kept LOOKING locked/poisoned instead, see RefreshHoldingClearedCells)
+            // since those two need opposite rendering treatment while
+            // deferred (explicit bug report: "Les locked cells sont enlevé
+            // visuellement trop tôt" + "Idem pour les cell empoisonné" — a
+            // released cell used to just show its TRUE, already-unlocked/
+            // unpoisoned state immediately, instead of staying hidden and
+            // then fading out in step with the rest of the reveal).
+            SnapshotEnemyEffectCells(out var lockedCellsAfter, out var poisonedCellsAfter);
+            var lockedBeforeSet = new HashSet<Vector2Int>(lockedCellsBefore);
+            var lockedAfterSet = new HashSet<Vector2Int>(lockedCellsAfter);
+            var poisonedBeforeSet = new HashSet<Vector2Int>(poisonedCellsBefore);
+            var poisonedAfterSet = new HashSet<Vector2Int>(poisonedCellsAfter);
+
+            var deferredNewMalusCells = new List<Vector2Int>(outcome.BossLockedCells);
+            foreach (var pos in lockedAfterSet)
             {
-                if (!afterSet.Contains(pos))
+                if (!lockedBeforeSet.Contains(pos))
                 {
-                    deferredRevealCells.Add(pos);
+                    deferredNewMalusCells.Add(pos);
                 }
             }
-            foreach (var pos in afterSet)
+            foreach (var pos in poisonedAfterSet)
             {
-                if (!beforeSet.Contains(pos))
+                if (!poisonedBeforeSet.Contains(pos))
                 {
-                    deferredRevealCells.Add(pos);
+                    deferredNewMalusCells.Add(pos);
                 }
             }
+
+            var deferredReleasedLockedCells = new List<Vector2Int>();
+            foreach (var pos in lockedBeforeSet)
+            {
+                if (!lockedAfterSet.Contains(pos))
+                {
+                    deferredReleasedLockedCells.Add(pos);
+                }
+            }
+            var deferredReleasedPoisonedCells = new List<Vector2Int>();
+            foreach (var pos in poisonedBeforeSet)
+            {
+                if (!poisonedAfterSet.Contains(pos))
+                {
+                    deferredReleasedPoisonedCells.Add(pos);
+                }
+            }
+            bool hasDeferredGridChange = deferredNewMalusCells.Count > 0 || deferredReleasedLockedCells.Count > 0 || deferredReleasedPoisonedCells.Count > 0;
 
             _handView.SetShufflePulsing(false);
             // ClearSelectionStateOnly, NOT SetSelectedShape(null) — the
@@ -1007,11 +1039,12 @@ namespace Contigu.Presentation
                 }
             }
             // Boss-locked cells AND any Locker/Poisoner cell this placement's
-            // own auto-refill just changed (deferredRevealCells) are
-            // deliberately held back from this immediate redraw and only
-            // revealed once PlayPlacementSequence's own end-of-sequence
-            // Refresh() runs — see RefreshHoldingClearedCells's doc comment.
-            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredRevealCells);
+            // own auto-refill (or an enemy dying from its own damage) just
+            // changed are deliberately held back from this immediate
+            // redraw and only revealed once PlayPlacementSequence's own
+            // end-of-sequence reveal runs — see RefreshHoldingClearedCells's
+            // doc comment.
+            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
             // Same hold for the hand itself when this placement's own
             // auto-refill already dealt the NEXT hand — PlayPlacementSequence
             // reveals it for real once the sequence finishes (see
@@ -1052,7 +1085,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, deferredRevealCells, thiefStoleThisPlacement, handWasAboutToAutoRefill));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -1068,13 +1101,22 @@ namespace Contigu.Presentation
             return true;
         }
 
-        /// <summary>Every cell currently locked by an alive Locker or poisoned by an alive Poisoner — see OnCellClicked's before/after diff.</summary>
-        private List<Vector2Int> SnapshotEnemyEffectCells()
+        /// <summary>
+        /// Every cell currently locked by an alive Locker, and separately
+        /// every cell currently poisoned by an alive Poisoner — kept as two
+        /// distinct lists (not one combined one) so OnCellClicked's before/
+        /// after diff can tell a RELEASED lock apart from a RELEASED
+        /// poison, and render each with the right look (see
+        /// GridCellView.ApplyState's forceShowLocked/forceShowPoisoned)
+        /// while it's held back from view.
+        /// </summary>
+        private void SnapshotEnemyEffectCells(out List<Vector2Int> lockedCells, out List<Vector2Int> poisonedCells)
         {
-            var cells = new List<Vector2Int>();
+            lockedCells = new List<Vector2Int>();
+            poisonedCells = new List<Vector2Int>();
             if (!_run.HasActiveEncounter)
             {
-                return cells;
+                return;
             }
             var encounter = _run.CurrentEncounter;
             for (int i = 0; i < encounter.Count; i++)
@@ -1082,11 +1124,10 @@ namespace Contigu.Presentation
                 var enemy = encounter[i];
                 if (enemy.LockedCell.HasValue)
                 {
-                    cells.Add(enemy.LockedCell.Value);
+                    lockedCells.Add(enemy.LockedCell.Value);
                 }
-                cells.AddRange(enemy.PoisonedCells);
+                poisonedCells.AddRange(enemy.PoisonedCells);
             }
-            return cells;
         }
 
         /// <summary>Index of the enemy <see cref="Core.RunManager.ApplyDamageToEncounter"/> would hit right now — the first ALIVE one in encounter order — or -1 if there's no active encounter this round. Read BEFORE PlacePiece so OnCellClicked can hold that slot's HP display at its pre-placement value (see OnCellClicked/PlayPlacementSequence).</summary>
@@ -1165,7 +1206,7 @@ namespace Contigu.Presentation
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
-            List<Vector2Int> deferredRevealCells, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill)
+            bool hasDeferredGridChange, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1590,22 +1631,35 @@ namespace Contigu.Presentation
                 yield return PlayTileClearBursts(placement);
             }
 
-            // Boss-locked cells (ChallengeDefinition.BossLockPiecesInterval)
-            // and any Locker/Poisoner cell this placement's own auto-refill
-            // changed (see OnCellClicked's deferredRevealCells) were held
-            // back from view this whole time — a full refresh is the
-            // simplest way to surface them (and any Bastion cell they might
-            // have grazed), now that the rest of the sequence (including
-            // the enemy's own death) has fully played out.
+            // Boss-locked cells, any Locker/Poisoner cell this placement's
+            // own auto-refill changed, AND any lock/poison an enemy dying
+            // from this placement's own damage just released (see
+            // OnCellClicked's deferredNewMalusCells/deferredReleasedLocked
+            // Cells/deferredReleasedPoisonedCells) were held back from view
+            // this whole time — a full refresh is the simplest way to
+            // surface them (and any Bastion cell they might have grazed),
+            // now that the rest of the sequence (including the enemy's own
+            // death) has fully played out.
             //
-            // When this placement's own auto-refill actually ran a Shuffle
-            // (handWasAboutToAutoRefill), that reveal follows the SAME
-            // fade-out-malus/fade-in-hand/fade-in-malus order the manual
-            // Shuffle button uses (see PlayManualShuffleSequence's own doc
-            // comment) — just without that one's first step, since the
-            // hand was already shown emptied the instant THIS placement
-            // emptied it (HandView.RefreshHoldingEmpty, back in
-            // OnCellClicked), long before this point runs.
+            // Whenever there's anything deferred at all (hasDeferredGrid
+            // Change), that reveal follows the SAME fade-out-malus/fade-in-
+            // malus order the manual Shuffle button uses (see
+            // PlayManualShuffleSequence's own doc comment) — explicit bug
+            // report: "Les locked cells sont enlevé visuellement trop tôt.
+            // Ça doit se faire après le décompte des points... N'oublie pas
+            // de les fade out aussi" + "Idem pour les cell empoisonné" — a
+            // released lock/poison used to just show its true, already-
+            // released state the INSTANT this method was called (a plain
+            // Refresh(), no fade, and only gated on handWasAboutToAutoRefill
+            // rather than on there being anything deferred at all — an
+            // enemy dying from this placement's own damage releases its
+            // lock/poison with NO Shuffle involved whatsoever). Now any
+            // deferred change gets the fade, whether or not the hand itself
+            // also auto-refilled this placement; the hand's own fade-in
+            // only plays when it actually did (handWasAboutToAutoRefill) —
+            // without that, the hand was never hidden in the first place
+            // (see HandView.RefreshHoldingEmpty), so there's nothing of
+            // its own to reveal, just the grid's malus.
             if (handWasAboutToAutoRefill)
             {
                 yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
@@ -1626,12 +1680,19 @@ namespace Contigu.Presentation
                 }
                 yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
             }
+            else if (hasDeferredGridChange)
+            {
+                yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
+                _gridView.Refresh();
+                _gridView.SetMalusAlpha(0f);
+                yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
+                // Reveals the real hand for real if it was held empty (see
+                // HandView.RefreshHoldingEmpty) — a harmless no-op resync
+                // here, since handWasAboutToAutoRefill is false.
+                _handView.Refresh();
+            }
             else
             {
-                if (deferredRevealCells.Count > 0)
-                {
-                    _gridView.Refresh();
-                }
                 // Reveals the real hand for real if it was held empty (see
                 // HandView.RefreshHoldingEmpty) — a harmless no-op resync
                 // otherwise.

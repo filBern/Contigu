@@ -296,7 +296,7 @@ namespace Contigu.Presentation
         /// (already-cleared) grid state — used to hold a just-completed line
         /// visually filled while its score is still playing out, before
         /// <see cref="ClearCellVisual"/> empties each cell in turn.
-        /// <paramref name="deferredLockCells"/> render with their TRUE
+        /// <paramref name="deferredNewMalusCells"/> render with their TRUE
         /// current fill state but their locked-obstacle look/poison badge
         /// hidden (<see cref="GridCellView.ApplyState"/>'s suppressMalus),
         /// instead of their actual state outright (on explicit report:
@@ -318,15 +318,26 @@ namespace Contigu.Presentation
         /// tint for the whole score cascade instead of showing the piece it
         /// was actually just filled with (bug report: "la tuile qui va
         /// être empoisonné devient grisâtre avant même que les points
-        /// commencent a etre compté"). EXCEPT when a deferred cell is ALSO
-        /// one of this same placement's own <paramref name="heldCells"/>
-        /// (its own line clear just emptied a cell whose poison/lock ALSO
-        /// happened to move elsewhere this same tick, via an auto-refill-
-        /// triggered Shuffle) — that one still needs the normal held-filled
+        /// commencent a etre compté").
+        /// <paramref name="deferredReleasedLockedCells"/>/<paramref
+        /// name="deferredReleasedPoisonedCells"/> are the opposite case — a
+        /// lock/poison this SAME placement just RELEASED (an On-Shuffle
+        /// effect moving it away, or its owning enemy dying from this
+        /// placement's own damage) — these render as if STILL locked/
+        /// poisoned (<see cref="GridCellView.ApplyState"/>'s
+        /// forceShowLocked/forceShowPoisoned), instead of their already-
+        /// released TRUE state, until the real reveal (explicit bug
+        /// report: "Les locked cells sont enlevé visuellement trop tôt...
+        /// Idem pour les cell empoisonné").
+        /// EXCEPT when a deferred cell (gained OR released) is ALSO one of
+        /// this same placement's own <paramref name="heldCells"/> (its own
+        /// line clear just emptied a cell whose poison/lock ALSO happened
+        /// to move elsewhere this same tick, via an auto-refill-triggered
+        /// Shuffle) — that one still needs the normal held-filled
         /// treatment instead, so its clear animation plays in step with its
         /// neighbors.
         /// </summary>
-        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredLockCells = null)
+        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredNewMalusCells = null, IReadOnlyList<Vector2Int> deferredReleasedLockedCells = null, IReadOnlyList<Vector2Int> deferredReleasedPoisonedCells = null)
         {
             var overrideColor = new Dictionary<Vector2Int, PieceColor>();
             var overrideTrait = new Dictionary<Vector2Int, PieceTrait?>();
@@ -336,14 +347,9 @@ namespace Contigu.Presentation
                 overrideTrait[heldCells[i]] = heldTraits[i];
             }
 
-            var deferred = new HashSet<Vector2Int>();
-            if (deferredLockCells != null)
-            {
-                for (int i = 0; i < deferredLockCells.Count; i++)
-                {
-                    deferred.Add(deferredLockCells[i]);
-                }
-            }
+            var deferredNew = ToSet(deferredNewMalusCells);
+            var releasedLocked = ToSet(deferredReleasedLockedCells);
+            var releasedPoisoned = ToSet(deferredReleasedPoisonedCells);
 
             for (int x = 0; x < GridManager.Size; x++)
             {
@@ -369,7 +375,11 @@ namespace Contigu.Presentation
                     {
                         _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos]);
                     }
-                    else if (deferred.Contains(pos))
+                    else if (releasedLocked.Contains(pos) || releasedPoisoned.Contains(pos))
+                    {
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), forceShowLocked: releasedLocked.Contains(pos), forceShowPoisoned: releasedPoisoned.Contains(pos));
+                    }
+                    else if (deferredNew.Contains(pos))
                     {
                         _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: true);
                     }
@@ -379,6 +389,19 @@ namespace Contigu.Presentation
                     }
                 }
             }
+        }
+
+        private static HashSet<Vector2Int> ToSet(IReadOnlyList<Vector2Int> positions)
+        {
+            var set = new HashSet<Vector2Int>();
+            if (positions != null)
+            {
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    set.Add(positions[i]);
+                }
+            }
+            return set;
         }
 
         /// <summary>Re-renders one cell from the grid's actual current state — used to visually empty a single cell of a line as it clears.</summary>
