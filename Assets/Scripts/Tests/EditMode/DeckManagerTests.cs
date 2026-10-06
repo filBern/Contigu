@@ -320,7 +320,7 @@ namespace Contigu.Tests
             var dm = MakeMinimalDeck();
             int before = dm.DeckCount;
 
-            dm.AddJoker(new SystemRandomProvider(1));
+            dm.AddJoker(new SystemRandomProvider(1), out _);
 
             Assert.AreEqual(before + 1, dm.DeckCount);
             Assert.IsTrue(dm.Deck.Any(t => t.Color == PieceColor.Joker));
@@ -333,12 +333,34 @@ namespace Contigu.Tests
             for (int seed = 0; seed < 100; seed++)
             {
                 var dm = MakeMinimalDeck();
-                dm.AddJoker(new SystemRandomProvider(seed));
+                dm.AddJoker(new SystemRandomProvider(seed), out _);
                 var added = dm.Deck.Last(t => t.Color == PieceColor.Joker);
                 shapesSeen.Add(added.Shape);
             }
 
             Assert.Greater(shapesSeen.Count, 1, "AddJoker should pick a random shape, not always Single");
+        }
+
+        [Test]
+        public void AddJoker_AlwaysTagsOneOfTheFiveCombatKinds()
+        {
+            // Explicit request: "J'aimerais que toutes les pièces jokers
+            // soient particulières... des upgrades qui affectent
+            // directement la manière de se battre" — every Joker gets
+            // exactly one, never none, picked uniformly.
+            var kindsSeen = new HashSet<PieceTraitKind>();
+            for (int seed = 0; seed < 200; seed++)
+            {
+                var dm = MakeMinimalDeck();
+                dm.AddJoker(new SystemRandomProvider(seed), out var combatKind);
+                Assert.IsTrue(PieceTrait.IsJokerCombatKind(combatKind));
+                var added = dm.Deck.Last(t => t.Color == PieceColor.Joker);
+                Assert.IsTrue(added.Trait.HasValue);
+                Assert.AreEqual(combatKind, added.Trait.Value.Kind);
+                kindsSeen.Add(combatKind);
+            }
+
+            Assert.AreEqual(PieceTrait.JokerCombatKinds.Length, kindsSeen.Count, "200 seeds should be more than enough to roll all 5 combat kinds at least once");
         }
 
         [Test]
@@ -484,8 +506,8 @@ namespace Contigu.Tests
             // from candidacy entirely rather than getting a permanently
             // dead enchantment.
             var dm = MakeMinimalDeck();
-            dm.AddJoker(new SystemRandomProvider(1));
-            dm.AddJoker(new SystemRandomProvider(2));
+            dm.AddJoker(new SystemRandomProvider(1), out _);
+            dm.AddJoker(new SystemRandomProvider(2), out _);
 
             var tagged = dm.TagTintedTokensRandom(dm.DeckCount, new SystemRandomProvider(6));
 

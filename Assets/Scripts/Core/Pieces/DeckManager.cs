@@ -310,11 +310,24 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Adds a joker-colored piece in a uniformly random shape (on explicit request — used to always be a fixed Single tile). Returns the shape actually rolled so the caller (see UpgradeSystem.ApplyJoker) can show the player what was really added instead of just naming the upgrade.</summary>
-        public ShapeId AddJoker(IRandomProvider rng)
+        /// <summary>
+        /// Adds a joker-colored piece in a uniformly random shape (on
+        /// explicit request — used to always be a fixed Single tile),
+        /// ALSO tagged with one of the 5 Joker-exclusive combat traits
+        /// (explicit request: "J'aimerais que toutes les pièces jokers
+        /// soient particulières... des upgrades qui affectent directement
+        /// la manière de se battre"), rolled independently and uniformly
+        /// from <see cref="PieceTrait.JokerCombatKinds"/> — every Joker
+        /// gets exactly one, never none. Returns the shape actually rolled
+        /// (<paramref name="combatKind"/> carries the trait roll) so the
+        /// caller (see UpgradeSystem.ApplyJoker) can show the player what
+        /// was really added instead of just naming the upgrade.
+        /// </summary>
+        public ShapeId AddJoker(IRandomProvider rng, out PieceTraitKind combatKind)
         {
             var shape = InitialDeckFactory.ShapeOrder[rng.Next(InitialDeckFactory.ShapeOrder.Length)];
-            AddToken(new PieceToken(shape, PieceColor.Joker));
+            combatKind = PieceTrait.JokerCombatKinds[rng.Next(PieceTrait.JokerCombatKinds.Length)];
+            AddToken(new PieceToken(shape, PieceColor.Joker, new PieceTrait(combatKind, 0)));
             return shape;
         }
 

@@ -223,6 +223,9 @@ namespace Contigu.Core
         /// <summary>The shape most recently rolled by a Joker purchase (see BuyUpgradeSlot/UpgradeSystem.ApplyJoker) — read once by the presentation layer (UpgradeRevealView) right after the purchase to show the real piece that got added instead of just describing the upgrade in text. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
+        /// <summary>LastJokerShapeAdded's own sibling — the Joker-exclusive combat trait (see PieceTrait.JokerCombatKinds) that same purchase also rolled (explicit request: "J'aimerais que toutes les pièces jokers soient particulières... des upgrades qui affectent directement la manière de se battre"). Meaningless before any Joker purchase this run.</summary>
+        public PieceTraitKind LastJokerCombatKindAdded { get; private set; }
+
         /// <summary>The modifier most recently granted by a "Random Modifier" purchase (see BuyUpgradeSlot/GrantRandomModifier) — read once by the presentation layer (UpgradeRevealView) right after the purchase. Null if the gamble didn't pay off (already at EconomyConstants.MaxActiveModifiers, or — practically impossible — every modifier already held), in which case the purchase still cost its Lueur but granted nothing. Meaningless before any Random Modifier purchase this run.</summary>
         public ModifierId? LastRandomModifierGranted { get; private set; }
 
@@ -613,7 +616,7 @@ namespace Contigu.Core
             }
 
             StampMasteryBonuses(shape, placementColor, x, y);
-            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos);
+            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos, shape, x, y);
             // Snapshot BEFORE Grid.PlacePiece, same reasoning as the
             // Chameleon/Spark reads above: a poisoned cell this placement
             // happens to also clear would read back "not poisoned" once
@@ -651,7 +654,20 @@ namespace Contigu.Core
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
             if (HasActiveEncounter)
             {
-                ApplyDamageToEncounter(placement.TotalScore);
+                // A Joker piece carrying one of the 5 combat traits
+                // retargets (or splits) this placement's damage instead of
+                // the ordinary front-alive-enemy hit (explicit request:
+                // "J'aimerais que toutes les pièces jokers soient
+                // particulières... des upgrades qui affectent directement
+                // la manière de se battre").
+                if (token.Trait.HasValue && PieceTrait.IsJokerCombatKind(token.Trait.Value.Kind))
+                {
+                    ApplyJokerCombatDamage(token.Trait.Value.Kind, placement.TotalScore);
+                }
+                else
+                {
+                    ApplyDamageToEncounter(placement.TotalScore);
+                }
                 if (placement.ClearedLineCount > 0)
                 {
                     HealLeech(placement.ClearedLineCount);
@@ -924,7 +940,7 @@ namespace Contigu.Core
         /// the resulting PlacementResult/grid state (see
         /// <see cref="ApplyPostPlacementTraitBonus"/>).
         /// </summary>
-        private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos)
+        private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos, PieceShape shape, int anchorX, int anchorY)
         {
             var transientCells = new List<Cell>();
             if (!trait.HasValue)
@@ -939,6 +955,23 @@ namespace Contigu.Core
             // trait kind — not added to transientCells, so ClearTokenTraitCells
             // never touches it (see Cell.OriginTrait).
             cell.OriginTrait = trait.Value;
+
+            // Joker's own combat traits badge EVERY cell of the piece, not
+            // just this one (explicit request: "chaque tuile aura
+            // l'upgrade") — purely cosmetic, same as the stamp right above;
+            // the actual one-shot combat effect still only resolves once
+            // per placement regardless (see RunManager.ApplyJokerCombatDamage).
+            if (PieceTrait.IsJokerCombatKind(trait.Value.Kind))
+            {
+                for (int i = 0; i < shape.Cells.Count; i++)
+                {
+                    var otherPos = new Vector2Int(anchorX, anchorY) + shape.Cells[i];
+                    if (otherPos != pos)
+                    {
+                        Grid.GetCell(otherPos.x, otherPos.y).OriginTrait = trait.Value;
+                    }
+                }
+            }
 
             switch (trait.Value.Kind)
             {
@@ -1003,6 +1036,20 @@ namespace Contigu.Core
                     // can't lock its cell yet: Grid.PlacePiece's own
                     // internal CanPlace re-check would then see this
                     // placement's own cell as already locked and reject it.
+                    break;
+
+                case PieceTraitKind.Bombe:
+                case PieceTraitKind.Range:
+                case PieceTraitKind.Eclat:
+                case PieceTraitKind.Precision:
+                case PieceTraitKind.Sangsue:
+                    // Joker-exclusive combat traits — never score anything
+                    // of their own (the OriginTrait stamp above/the
+                    // all-cell loop just above the switch are purely
+                    // cosmetic); their actual effect is resolved from
+                    // PlacePiece's own HasActiveEncounter block, after
+                    // Grid.PlacePiece returns the final TotalScore to
+                    // redirect (see ApplyJokerCombatDamage).
                     break;
             }
             return transientCells;
@@ -1856,6 +1903,165 @@ namespace Contigu.Core
             }
         }
 
+        /// <summary>
+        /// Dispatches to whichever Joker-exclusive combat trait (see
+        /// PieceTrait.JokerCombatKinds) this placement's piece carried,
+        /// instead of the ordinary front-alive-enemy hit <see
+        /// cref="ApplyDamageToEncounter"/> always applies (explicit
+        /// request: "J'aimerais que toutes les pièces jokers soient
+        /// particulières avec tuiles upgradé, mais des upgrades qui
+        /// affectent directement la manière de se battre").
+        /// </summary>
+        private void ApplyJokerCombatDamage(PieceTraitKind kind, int damage)
+        {
+            switch (kind)
+            {
+                case PieceTraitKind.Bombe:
+                    ApplyBombeDamage(damage);
+                    break;
+                case PieceTraitKind.Range:
+                    ApplyRangeDamage(damage);
+                    break;
+                case PieceTraitKind.Eclat:
+                    ApplyEclatDamage(damage);
+                    break;
+                case PieceTraitKind.Precision:
+                    ApplyPrecisionDamage(damage);
+                    break;
+                case PieceTraitKind.Sangsue:
+                    ApplySangsueDamage(damage);
+                    break;
+                default:
+                    ApplyDamageToEncounter(damage);
+                    break;
+            }
+        }
+
+        /// <summary>How many enemies in <see cref="_currentEncounter"/> are currently alive — "Bombe" splits damage across exactly this many.</summary>
+        private int CountAliveEnemies()
+        {
+            int count = 0;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                if (!_currentEncounter[i].IsDead)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>"Bombe" (explicit request: "divize équitablement les dégâts sur tous les ennemies présent") — splits this placement's damage EQUALLY across every alive enemy instead of just the front one. Integer division: a non-exact split quietly rounds each share down rather than handing the remainder to any particular enemy.</summary>
+        private void ApplyBombeDamage(int damage)
+        {
+            int aliveCount = CountAliveEnemies();
+            if (aliveCount == 0)
+            {
+                return;
+            }
+            int share = damage / aliveCount;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.ApplyDamage(share))
+                {
+                    CleanUpDefeatedEnemy(enemy);
+                }
+            }
+        }
+
+        /// <summary>"Range" (explicit request: "attaque le dernier ennemi en liste") — damages the LAST alive enemy in encounter order instead of the front one; otherwise the exact same single-target rule as <see cref="ApplyDamageToEncounter"/>.</summary>
+        private void ApplyRangeDamage(int damage)
+        {
+            for (int i = _currentEncounter.Count - 1; i >= 0; i--)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.ApplyDamage(damage))
+                {
+                    CleanUpDefeatedEnemy(enemy);
+                }
+                break;
+            }
+        }
+
+        /// <summary>
+        /// "Éclat" — damages the front alive enemy same as the default
+        /// rule, but any OVERKILL (damage beyond its remaining HP)
+        /// cascades onto the next alive enemy in line, and so on, until
+        /// the damage runs out or no enemies remain. A non-positive damage
+        /// total (a placement scored entirely through poison, netting a
+        /// heal instead) never cascades — falls back to the ordinary
+        /// single-target rule, same as every other kind, since "overkill"
+        /// has no meaning for a heal.
+        /// </summary>
+        private void ApplyEclatDamage(int damage)
+        {
+            if (damage <= 0)
+            {
+                ApplyDamageToEncounter(damage);
+                return;
+            }
+            int remainingDamage = damage;
+            for (int i = 0; i < _currentEncounter.Count && remainingDamage > 0; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                int hpBeforeThisHit = enemy.CurrentHp;
+                if (enemy.ApplyDamage(remainingDamage))
+                {
+                    CleanUpDefeatedEnemy(enemy);
+                }
+                remainingDamage -= hpBeforeThisHit;
+            }
+        }
+
+        /// <summary>"Précision" — always damages whichever ALIVE enemy currently has the LOWEST HP, ignoring the usual front-to-back order — a finishing blow instead of chipping at the front.</summary>
+        private void ApplyPrecisionDamage(int damage)
+        {
+            EnemyInstance weakest = null;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (weakest == null || enemy.CurrentHp < weakest.CurrentHp)
+                {
+                    weakest = enemy;
+                }
+            }
+            if (weakest == null)
+            {
+                return;
+            }
+            if (weakest.ApplyDamage(damage))
+            {
+                CleanUpDefeatedEnemy(weakest);
+            }
+        }
+
+        /// <summary>"Sangsue" — damages the front alive enemy exactly like the default rule, but also converts <see cref="ScoringConstants.SangsueLueurFraction"/> of the damage dealt into bonus Lueur (rounded down), tying combat back into the economy. Only a positive damage total siphons anything — a poison-flipped negative placement still heals the enemy same as ever, but grants no Lueur for it.</summary>
+        private void ApplySangsueDamage(int damage)
+        {
+            ApplyDamageToEncounter(damage);
+            if (damage > 0)
+            {
+                Lueur += Mathf.FloorToInt(damage * ScoringConstants.SangsueLueurFraction);
+            }
+        }
+
         /// <summary>"Leech" (GDD §07: "Heals when the player destroys a line. The effect stops when it dies.") — heals every alive Leech instance <see cref="ScoringConstants.LeechHealPerLineClear"/> HP per row/column this placement cleared (see PlacementResult.ClearedLineCount). EnemyInstance.Heal itself no-ops once dead, so no extra guard is needed for "the effect stops when it dies."</summary>
         private void HealLeech(int clearedLineCount)
         {
@@ -2692,7 +2898,8 @@ namespace Contigu.Core
             // instead of just naming the upgrade.
             if (upgrade.Id == UpgradeId.JokerPiece)
             {
-                LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
+                LastJokerShapeAdded = Upgrades.ApplyJoker(Deck, out var combatKind);
+                LastJokerCombatKindAdded = combatKind;
             }
             else if (upgrade.Id == UpgradeId.PieceMastery)
             {

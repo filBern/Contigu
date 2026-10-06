@@ -876,15 +876,36 @@ namespace Contigu.Presentation
             int roundScoreBefore = _run.RoundScore;
             int lueurBefore = _run.Lueur;
 
-            // Snapshot the front (targeted) enemy's HP BEFORE the placement
-            // mutates it, so its damage can be held back and then drained
-            // in alongside the combo total instead of jumping instantly
+            // Snapshot the targeted enemy/enemies' HP BEFORE the placement
+            // mutates it, so damage can be held back and then drained in
+            // alongside the combo total instead of jumping instantly
             // (explicit request: "il faut faire les dégâts seulement à la
-            // fin du calcule" — see RunManager.ApplyDamageToEncounter for
-            // why index 0 among the alive ones is always the one hit).
-            int damagedEnemyIndex = FindFrontAliveEnemyIndex();
-            int enemyHpBefore = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
-            EnemyId damagedEnemyId = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].Definition.Id : default;
+            // fin du calcule"). Index 0 among the alive ones is the
+            // default target (RunManager.ApplyDamageToEncounter); a Joker
+            // piece carrying one of the 5 combat traits (explicit request:
+            // "J'aimerais que toutes les pièces jokers soient
+            // particulières... des upgrades qui affectent directement la
+            // manière de se battre") can retarget the back (Range), the
+            // weakest alive enemy (Précision), or spread across several
+            // (Bombe/Éclat) — see FindDamagedEnemyIndices, which mirrors
+            // RunManager.ApplyJokerCombatDamage's own targeting read-only,
+            // purely so this animation knows who to watch. Only index 0 of
+            // the list (the "primary" target) gets the smooth drain below;
+            // any further index is a Bombe/Éclat candidate, snapped to its
+            // final value once the primary drain finishes instead (see
+            // DrainSecondaryEnemyHits) — Range/Précision/the ordinary
+            // single-target case never produce a second entry at all.
+            var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex);
+            var enemyHpBeforeList = new List<int>(damagedEnemyIndices.Count);
+            var enemyIdList = new List<EnemyId>(damagedEnemyIndices.Count);
+            for (int i = 0; i < damagedEnemyIndices.Count; i++)
+            {
+                enemyHpBeforeList.Add(_run.CurrentEncounter[damagedEnemyIndices[i]].CurrentHp);
+                enemyIdList.Add(_run.CurrentEncounter[damagedEnemyIndices[i]].Definition.Id);
+            }
+            int damagedEnemyIndex = damagedEnemyIndices.Count > 0 ? damagedEnemyIndices[0] : -1;
+            int enemyHpBefore = enemyHpBeforeList.Count > 0 ? enemyHpBeforeList[0] : 0;
+            EnemyId damagedEnemyId = enemyIdList.Count > 0 ? enemyIdList[0] : default;
 
             // Same idea for Leech's own heal (explicit request: "une
             // animation de heal +15 lorsqu'il se fait heal") — snapshotting
@@ -936,6 +957,23 @@ namespace Contigu.Presentation
             // EnemyInstance.HealOrGrow), so this must track the real,
             // possibly-already-grown cap for its own HP bar to read right.
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentMaxHp : 0;
+
+            // Bombe/Éclat's own further candidates (index 1+ of
+            // damagedEnemyIndices) — only the ones that actually changed HP
+            // become real drain targets, since Éclat's cascade only reaches
+            // as far as its overkill goes and Bombe always lists every
+            // alive enemy as a candidate even though a dead one scores 0
+            // share. See DrainSecondaryEnemyHits.
+            var secondaryDrainTargets = new List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)>();
+            for (int i = 1; i < damagedEnemyIndices.Count; i++)
+            {
+                int idx = damagedEnemyIndices[i];
+                int hpAfterSecondary = _run.CurrentEncounter[idx].CurrentHp;
+                if (hpAfterSecondary != enemyHpBeforeList[i])
+                {
+                    secondaryDrainTargets.Add((idx, enemyIdList[i], enemyHpBeforeList[i], hpAfterSecondary, _run.CurrentEncounter[idx].CurrentMaxHp));
+                }
+            }
             // Only cells whose locked/poisoned status actually CHANGED this
             // placement (added or removed by its own auto-refill, OR by an
             // enemy dying from this placement's own damage — see
@@ -1068,6 +1106,15 @@ namespace Contigu.Presentation
                 // vraiment attendre que l'ennemi soit rendu à 0hp").
                 _hudView.SetEnemyHpDisplay(damagedEnemyIndex, enemyHpBefore, enemyMaxHp, damagedEnemyId, false);
             }
+            // Same hold-back for every Bombe/Éclat secondary target — the
+            // Refresh above already drew their true post-placement (possibly
+            // dead) state, same as it would have for the primary target
+            // without the override right above.
+            for (int i = 0; i < secondaryDrainTargets.Count; i++)
+            {
+                var heldTarget = secondaryDrainTargets[i];
+                _hudView.SetEnemyHpDisplay(heldTarget.Index, heldTarget.HpBefore, heldTarget.MaxHp, heldTarget.Identity, false);
+            }
             SetStatusText(IdleStatusMessage);
 
             _isPlayingPlacementSequence = true;
@@ -1077,7 +1124,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -1122,22 +1169,88 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Index of the enemy <see cref="Core.RunManager.ApplyDamageToEncounter"/> would hit right now — the first ALIVE one in encounter order — or -1 if there's no active encounter this round. Read BEFORE PlacePiece so OnCellClicked can hold that slot's HP display at its pre-placement value (see OnCellClicked/PlayPlacementSequence).</summary>
-        private int FindFrontAliveEnemyIndex()
+        /// <summary>
+        /// Every enemy index this placement's damage could plausibly touch,
+        /// read BEFORE PlacePiece (same purpose as the old single-target
+        /// FindFrontAliveEnemyIndex it replaces — so OnCellClicked can hold
+        /// each one's HP display at its pre-placement value). Index 0 is
+        /// always the "primary" target, the one DrainComboIntoDamage
+        /// smoothly lerps; any further index is a Bombe/Éclat candidate for
+        /// DrainSecondaryEnemyHits. Mirrors RunManager.
+        /// ApplyJokerCombatDamage's own targeting read-only — Core is still
+        /// the one actually applying the damage, this just needs to know
+        /// who to watch (explicit request: "J'aimerais que toutes les
+        /// pièces jokers soient particulières... des upgrades qui
+        /// affectent directement la manière de se battre").
+        /// </summary>
+        private List<int> FindDamagedEnemyIndices(int handIndex)
         {
+            var result = new List<int>();
             if (!_run.HasActiveEncounter)
             {
-                return -1;
+                return result;
             }
             var encounter = _run.CurrentEncounter;
+            var token = _run.Deck.Hand[handIndex];
+            PieceTraitKind? kind = token.HasValue && token.Value.Trait.HasValue ? token.Value.Trait.Value.Kind : (PieceTraitKind?)null;
+
+            if (kind == PieceTraitKind.Range)
+            {
+                // Back-to-front instead of front-to-back — the only
+                // difference from the default rule below.
+                for (int i = encounter.Count - 1; i >= 0; i--)
+                {
+                    if (!encounter[i].IsDead)
+                    {
+                        result.Add(i);
+                        return result;
+                    }
+                }
+                return result;
+            }
+
+            if (kind == PieceTraitKind.Precision)
+            {
+                int weakest = -1;
+                for (int i = 0; i < encounter.Count; i++)
+                {
+                    if (encounter[i].IsDead)
+                    {
+                        continue;
+                    }
+                    if (weakest < 0 || encounter[i].CurrentHp < encounter[weakest].CurrentHp)
+                    {
+                        weakest = i;
+                    }
+                }
+                if (weakest >= 0)
+                {
+                    result.Add(weakest);
+                }
+                return result;
+            }
+
+            // Default (every other kind, including no trait at all) and
+            // Sangsue both hit only the front alive enemy, same as
+            // RunManager.ApplyDamageToEncounter. Bombe/Éclat can reach
+            // further ones too — every other alive enemy is listed right
+            // after it as a CANDIDATE; the exact subset either actually
+            // touches depends on this placement's own final damage total,
+            // not known yet at this point, so DrainSecondaryEnemyHits'
+            // caller filters this list down to whichever candidates' HP
+            // actually changed.
             for (int i = 0; i < encounter.Count; i++)
             {
                 if (!encounter[i].IsDead)
                 {
-                    return i;
+                    result.Add(i);
                 }
             }
-            return -1;
+            if (kind != PieceTraitKind.Bombe && kind != PieceTraitKind.Eclat && result.Count > 1)
+            {
+                result.RemoveRange(1, result.Count - 1);
+            }
+            return result;
         }
 
         /// <summary>
@@ -1199,7 +1312,8 @@ namespace Contigu.Presentation
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
             bool hasDeferredGridChange, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
-            int leechIndex, int leechHealAmount)
+            int leechIndex, int leechHealAmount,
+            List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)> secondaryDrainTargets)
         {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
@@ -1611,6 +1725,12 @@ namespace Contigu.Presentation
             {
                 yield return new WaitForSeconds(1f);
                 yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
+                // Bombe/Éclat's further targets (explicit request: "bombe:
+                // divize équitablement les dégâts sur tous les ennemies
+                // présent") — snapped straight to their own final value
+                // right after the primary target's smooth drain finishes,
+                // rather than a second parallel lerp.
+                yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
 
             // Only NOW — after the enemy has actually finished draining
@@ -1832,6 +1952,32 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Bombe/Éclat's own further targets (explicit request: "bombe:
+        /// divize équitablement les dégâts sur tous les ennemies présent") —
+        /// each one jumps straight from its held pre-placement HP to its
+        /// real final value (no lerp, unlike <see cref="DrainComboIntoDamage"/>'s
+        /// single primary target) and, if that was lethal, waits and fades
+        /// out exactly the same way. Entries whose HP never actually
+        /// changed (a Bombe candidate that was already dead, or an Éclat
+        /// candidate the cascade never reached) were already filtered out
+        /// by the caller, so every entry here really did take damage.
+        /// </summary>
+        private System.Collections.IEnumerator DrainSecondaryEnemyHits(List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)> targets)
+        {
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var target = targets[i];
+                bool isDead = target.HpAfter <= 0;
+                _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);
+                if (isDead)
+                {
+                    yield return new WaitForSeconds(0.25f);
+                    yield return _hudView.FadeOutEnemySlot(target.Index, 0.3f);
+                }
+            }
+        }
+
         /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — used by the two Mult catch-up popups above so a progressive modifier's true fractional contribution (Densité, Cartes Enchantées, Expérience) reads clearly without cluttering the common case (every other modifier, always a whole number) with a needless ".0".</summary>
         private static string FormatMultAmount(float value)
         {
@@ -2045,7 +2191,7 @@ namespace Contigu.Presentation
                 // to show.
                 if (revealedUpgrade.Id == UpgradeId.JokerPiece)
                 {
-                    _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
+                    _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker, new PieceTrait(_run.LastJokerCombatKindAdded, 0));
                 }
                 else if (revealedUpgrade.Id == UpgradeId.PieceMastery && _run.LastShapeMasteryGranted.HasValue)
                 {

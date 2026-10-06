@@ -90,13 +90,17 @@ namespace Contigu.Presentation
         /// specific piece the upgrade actually added (Joker — see
         /// RunManager.LastJokerShapeAdded), previewed below the card so the
         /// player sees exactly what they got, not just its name.
+        /// <paramref name="trait"/> is Joker's own combat trait (see
+        /// RunManager.LastJokerCombatKindAdded) — passed straight through to
+        /// ShapePreviewFactory, which badges every cell of the preview for a
+        /// Joker-exclusive kind, same as the piece will show in hand.
         /// </summary>
-        public void Show(UpgradeDefinition def, ShapeId pieceShape, PieceColor pieceColor)
+        public void Show(UpgradeDefinition def, ShapeId pieceShape, PieceColor pieceColor, PieceTrait? trait = null)
         {
             ShowInternal(def, () =>
             {
                 _previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
-                ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, null, _tooltip, null);
+                ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, trait, _tooltip, null);
                 return PreviewSize;
             });
         }

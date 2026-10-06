@@ -319,5 +319,8 @@ namespace Contigu.Core
         public const int FormatPetitMaxCells = 2;
         public const int FormatMoyenCells = 3;
         public const int FormatGrandMinCells = 4;
+
+        /// <summary>"Sangsue" (Joker-exclusive combat trait, see PieceTrait.JokerCombatKinds) — fraction of the damage it deals to its target that also converts into bonus Lueur (floored), see RunManager.ApplySangsueDamage.</summary>
+        public const float SangsueLueurFraction = 0.25f;
     }
 }

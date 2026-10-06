@@ -1008,6 +1008,141 @@ namespace Contigu.Tests
             Assert.Greater(otherOutcome.Placement.TotalScore, 0, "A non-hated shape's points should score normally");
         }
 
+        [Test]
+        public void Bombe_SplitsDamageEquallyAcrossEveryAliveEnemy()
+        {
+            // Explicit request: "bombe: divize équitablement les dégâts
+            // sur tous les ennemies présent".
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Basic, EnemyId.Basic);
+            var e0 = run.CurrentEncounter[0];
+            var e1 = run.CurrentEncounter[1];
+            var e2 = run.CurrentEncounter[2];
+            e1.ApplyDamage(e1.CurrentMaxHp); // kill the middle one — only e0/e2 should share the split
+            Assert.IsTrue(e1.IsDead);
+            int hp0Before = e0.CurrentHp;
+            int hp2Before = e2.CurrentHp;
+
+            // A 2-cell shape (not Single) guarantees a nonzero per-enemy
+            // share once split in two (progressive group scoring: a lone
+            // Single would only ever score 1 point, which floor-divides to
+            // a silent, untestable 0 share).
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.DomH, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Bombe);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            int expectedShare = totalScore / 2;
+            Assert.Greater(expectedShare, 0, "Need a large enough score for the split to actually be observable");
+            Assert.AreEqual(hp0Before - expectedShare, e0.CurrentHp);
+            Assert.AreEqual(hp2Before - expectedShare, e2.CurrentHp);
+            Assert.IsTrue(e1.IsDead, "Bombe should never revive an already-dead enemy");
+        }
+
+        [Test]
+        public void Range_DamagesTheLastAliveEnemyInsteadOfTheFront()
+        {
+            // Explicit request: "Range: attaque le dernier ennemi en liste".
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Basic);
+            var front = run.CurrentEncounter[0];
+            var back = run.CurrentEncounter[1];
+            int frontHpBefore = front.CurrentHp;
+            int backHpBefore = back.CurrentHp;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Range);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            Assert.AreEqual(frontHpBefore, front.CurrentHp, "Range should never touch the front enemy");
+            Assert.AreEqual(backHpBefore - outcome.Placement.TotalScore, back.CurrentHp);
+        }
+
+        [Test]
+        public void Precision_AlwaysDamagesTheWeakestAliveEnemy_RegardlessOfOrder()
+        {
+            // Explicit request: find 2 more combat-upgrade ideas — Précision
+            // always finishes off whichever alive enemy has the least HP.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Basic, EnemyId.Basic);
+            var e0 = run.CurrentEncounter[0];
+            var e1 = run.CurrentEncounter[1];
+            var e2 = run.CurrentEncounter[2];
+            // e2 (LAST in order) is made the weakest, to prove targeting
+            // ignores front-to-back order entirely.
+            e0.ApplyDamage(50);
+            e1.ApplyDamage(20);
+            e2.ApplyDamage(150);
+            int e0HpBefore = e0.CurrentHp;
+            int e1HpBefore = e1.CurrentHp;
+            int e2HpBefore = e2.CurrentHp;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Precision, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Precision);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            Assert.AreEqual(e2HpBefore - outcome.Placement.TotalScore, e2.CurrentHp, "Précision should hit the weakest alive enemy (e2), not the front one");
+            Assert.AreEqual(e0HpBefore, e0.CurrentHp);
+            Assert.AreEqual(e1HpBefore, e1.CurrentHp);
+        }
+
+        [Test]
+        public void Eclat_OverkillCascadesToTheNextAliveEnemy()
+        {
+            // Explicit request: find 2 more combat-upgrade ideas — Éclat
+            // pierces through a lethal hit into whatever's behind it.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Basic);
+            var front = run.CurrentEncounter[0];
+            var next = run.CurrentEncounter[1];
+            front.ApplyDamage(front.CurrentMaxHp - 1); // leaves exactly 1 HP
+            Assert.AreEqual(1, front.CurrentHp);
+            int nextHpBefore = next.CurrentHp;
+
+            // A 2-cell shape (not Single) guarantees this placement's own
+            // group scores at least 1+2=3 points (progressive group
+            // scoring), comfortably more than front's 1 remaining HP, so
+            // the cascade actually has overkill to carry forward.
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.DomH, PieceColor.Joker, new PieceTrait(PieceTraitKind.Eclat, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Eclat);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            Assert.Greater(totalScore, 1, "Need more damage than front's 1 remaining HP for this test to actually produce overkill");
+            Assert.IsTrue(front.IsDead);
+            Assert.AreEqual(nextHpBefore - (totalScore - 1), next.CurrentHp, "The overkill (totalScore minus front's 1 HP) should cascade onto the next alive enemy");
+        }
+
+        [Test]
+        public void Sangsue_DamagesTheFrontEnemy_AndConvertsAFractionOfDamageIntoLueur()
+        {
+            // Explicit request: find 2 more combat-upgrade ideas — Sangsue
+            // ties combat back into the Lueur economy.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            var front = run.CurrentEncounter[0];
+            int frontHpBefore = front.CurrentHp;
+            int lueurBefore = run.Lueur;
+
+            // A 4-cell shape scores 1+2+3+4=10 (progressive group scoring)
+            // — large enough that 25% of it floors to a clearly nonzero,
+            // testable Lueur gain, unlike a lone Single's 1-point score.
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Sangsue, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Sangsue);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            Assert.AreEqual(frontHpBefore - totalScore, front.CurrentHp);
+            int expectedLueurGain = Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction);
+            Assert.Greater(expectedLueurGain, 0, "Need a large enough score for the Lueur siphon to actually be observable");
+            Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
+        }
+
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
         private static Vector2Int? FindRowCompletingAnchor(GridManager grid)
         {

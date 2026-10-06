@@ -128,11 +128,12 @@ namespace Contigu.Core
         /// DeckManager.AddJoker) so RunManager can surface it as
         /// LastJokerShapeAdded, letting the reveal (UpgradeRevealView) show
         /// the real piece that got added instead of just naming the
-        /// upgrade.
+        /// upgrade. <paramref name="combatKind"/> carries the combat trait
+        /// AddJoker also rolled, surfaced the same way as LastJokerCombatKindAdded.
         /// </summary>
-        public ShapeId ApplyJoker(DeckManager deck)
+        public ShapeId ApplyJoker(DeckManager deck, out PieceTraitKind combatKind)
         {
-            return deck.AddJoker(_rng);
+            return deck.AddJoker(_rng, out combatKind);
         }
 
         /// <summary>

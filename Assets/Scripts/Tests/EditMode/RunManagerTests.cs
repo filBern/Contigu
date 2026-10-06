@@ -889,6 +889,9 @@ namespace Contigu.Tests
             var addedToken = run.Deck.Deck[run.Deck.Deck.Count - 1];
             Assert.AreEqual(PieceColor.Joker, addedToken.Color);
             Assert.AreEqual(run.LastJokerShapeAdded, addedToken.Shape, "LastJokerShapeAdded should match the piece actually added, for UpgradeRevealView to preview");
+            Assert.IsTrue(PieceTrait.IsJokerCombatKind(run.LastJokerCombatKindAdded), "Every Joker piece should be tagged with one of the 5 combat traits");
+            Assert.IsTrue(addedToken.Trait.HasValue);
+            Assert.AreEqual(run.LastJokerCombatKindAdded, addedToken.Trait.Value.Kind);
         }
 
         /// <summary>Same seed-search trick as BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded, for the other no-sub-choice Bank upgrade (spec extension, explicit request: "j'aimerais qu'on rajoute random modifier dans la liste de possibilité d'apparaitre").</summary>

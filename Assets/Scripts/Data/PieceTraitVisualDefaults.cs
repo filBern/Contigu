@@ -28,6 +28,14 @@ namespace Contigu.Data
         private static readonly Color BastionBadgeColor = new Color(0.380f, 0.263f, 0.388f); // #614363
         private static readonly Color KamikazeBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f (same family as Detonator/destruction)
 
+        // Joker-exclusive combat traits (see PieceTraitKind's own doc
+        // comment) all share Joker's own vivid purple (VisualDefaults.
+        // ColorMap[PieceColor.Joker]) rather than getting 5 new one-off
+        // colors — the badge is too small to tell 5 apart by hue anyway,
+        // and the shared color itself signals "this is a Joker thing" at a
+        // glance; the hover tooltip is what actually tells them apart.
+        private static readonly Color JokerCombatBadgeColor = new Color(0.608f, 0.349f, 0.714f); // #9b59b6
+
         public static string GetName(PieceTraitKind kind)
         {
             switch (kind)
@@ -47,6 +55,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Void: return "Void Tile";
                 case PieceTraitKind.Bastion: return "Bastion Tile";
                 case PieceTraitKind.Kamikaze: return "Kamikaze Tile";
+                case PieceTraitKind.Bombe: return "Bombe";
+                case PieceTraitKind.Range: return "Range";
+                case PieceTraitKind.Eclat: return "Éclat";
+                case PieceTraitKind.Precision: return "Précision";
+                case PieceTraitKind.Sangsue: return "Sangsue";
                 default: return kind.ToString();
             }
         }
@@ -86,6 +99,16 @@ namespace Contigu.Data
                     return "Locks in place instead of clearing, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
                     return "Destroys itself and its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
+                case PieceTraitKind.Bombe:
+                    return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
+                case PieceTraitKind.Range:
+                    return "Damages the LAST alive enemy in the encounter order instead of the front one.";
+                case PieceTraitKind.Eclat:
+                    return "Damages the front alive enemy, but any overkill beyond its remaining HP cascades onto the next alive enemy, and so on.";
+                case PieceTraitKind.Precision:
+                    return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one — a finishing blow.";
+                case PieceTraitKind.Sangsue:
+                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Lueur.";
                 default:
                     return string.Empty;
             }
@@ -145,6 +168,12 @@ namespace Contigu.Data
                     return BastionBadgeColor;
                 case PieceTraitKind.Kamikaze:
                     return KamikazeBadgeColor;
+                case PieceTraitKind.Bombe:
+                case PieceTraitKind.Range:
+                case PieceTraitKind.Eclat:
+                case PieceTraitKind.Precision:
+                case PieceTraitKind.Sangsue:
+                    return JokerCombatBadgeColor;
                 default:
                     return Color.gray;
             }

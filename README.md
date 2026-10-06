@@ -7646,3 +7646,55 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   RecordEndlessExtension` supprimé. Tests Endless retirés dans
   `RunManagerTests.cs`/`MetaStatsRecorderTests.cs`; `EnemyEncounterTests.cs`
   étendu pour couvrir les 7 nouveaux rounds.
+- **Pièces Joker spéciales : 5 upgrades de combat** : sur demande
+  explicite ("J'aimerais rajouter quelque chose de complexe au jeu.
+  J'aimerais que toutes les pièces jokers soient particulières avec
+  tuiles upgradé, mais des upgrades qui affectent directement la
+  manière de se battre : bombe : divize équitablement les dégâts sur
+  tous les ennemies présent ; Range : attaque le dernier ennemi en
+  liste ; Trouve moi au moins 3 autres type d'upgrade réservé aux
+  jokers. Sachant que pour représenter visuellement, chaque tuile
+  aura l'upgrade mais l'upgrade sera trigger une seule fois"). En
+  plus de Bombe/Range, j'ai proposé et implémenté 3 upgrades
+  supplémentaires : **Éclat** (dégâts au premier ennemi, le surplus
+  "overkill" cascade sur le suivant), **Précision** (cible toujours
+  l'ennemi vivant avec le moins de PV, peu importe l'ordre) et
+  **Sangsue** (dégâts normaux au premier ennemi + convertit 25% des
+  dégâts en Lueur bonus). 5 nouveaux `PieceTraitKind` (Bombe/Range/
+  Eclat/Precision/Sangsue) réservés aux Jokers — jamais offerts par
+  la boutique de tuiles (`UpgradeSystem.TraitKindFor` ne les mappe à
+  aucun `UpgradeId`). `DeckManager.AddJoker` tire désormais aussi un
+  de ces 5 types au hasard (en plus de la forme), toujours exactement
+  un par Joker, jamais aucun — `RunManager.LastJokerCombatKindAdded`
+  le surface au même titre que `LastJokerShapeAdded` pour la reprise
+  (`UpgradeRevealView`). Le comportement wildcard existant des Jokers
+  (couleur joker pour le scoring) reste intact — l'upgrade de combat
+  s'ajoute, ne remplace rien. Dans `RunManager.PlacePiece`, le bloc
+  `HasActiveEncounter` route maintenant vers
+  `ApplyJokerCombatDamage` (nouveau) quand la pièce jouée est un
+  Joker, au lieu du `ApplyDamageToEncounter` par défaut (premier
+  ennemi vivant) — chaque type a sa propre méthode
+  (`ApplyBombeDamage`/`ApplyRangeDamage`/`ApplyEclatDamage`/
+  `ApplyPrecisionDamage`/`ApplySangsueDamage`). Représentation
+  visuelle : "chaque tuile aura l'upgrade mais l'upgrade sera trigger
+  une seule fois" — `RunManager.ApplyTokenTrait` stamp maintenant
+  `Cell.OriginTrait` sur TOUTES les cases de la pièce (pas seulement
+  la case enchantée) quand le trait est un type de combat Joker, et
+  `ShapePreviewFactory.Build` badge chaque case de l'aperçu (main,
+  deck, boutique de reprise) de la même façon — mais l'effet de
+  combat lui-même ne se déclenche qu'une seule fois par placement,
+  peu importe le nombre de cases de la pièce, puisqu'il est résolu
+  une seule fois dans `PlacePiece` à partir du score final de tout le
+  placement. Tooltip du badge adapté (`TraitBadgeView`) pour afficher
+  "Joker-exclusive" plutôt qu'une rareté/pool de boutique qui
+  n'existe pas pour ces types. Côté présentation, l'animation de
+  "drain" du combo vers les PV de l'ennemi (`GameBootstrap.
+  DrainComboIntoDamage`) ne supposait qu'une seule cible (le premier
+  ennemi vivant) — généralisée via `FindDamagedEnemyIndices`/
+  `DrainSecondaryEnemyHits` pour cibler correctement Range (dernier),
+  Précision (le plus faible), et animer Bombe/Éclat sur plusieurs
+  ennemis à la fois sans jamais montrer un ennemi "mort" avant que
+  son animation de PV n'ait vraiment atteint 0. Tests ajoutés dans
+  `EnemyEncounterTests.cs` (un par type de combat) et
+  `DeckManagerTests.cs`/`UpgradeSystemTests.cs`/`RunManagerTests.cs`
+  (le tirage aléatoire du type de combat).

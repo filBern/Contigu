@@ -22,13 +22,19 @@ namespace Contigu.Presentation
         /// <paramref name="fixedCellSize"/> is supplied) with one square per
         /// cell of <paramref name="shape"/>. When
         /// <paramref name="trait"/> is given, its enchanted cell also gets a
-        /// small corner badge; hovering it shows <paramref name="tooltip"/>
-        /// with the trait's name/effect, and clicking it forwards the click to
+        /// small corner badge — EVERY cell gets one instead, for a Joker-
+        /// exclusive combat kind (see PieceTrait.IsJokerCombatKind, explicit
+        /// request: "chaque tuile aura l'upgrade"), since those tag the
+        /// whole piece rather than one specific cell; hovering it shows
+        /// <paramref name="tooltip"/> with the trait's name/effect, and
+        /// clicking it forwards the click to
         /// <paramref name="clickForwardTarget"/> so the badge never swallows a
         /// click meant for whatever bigger clickable element it sits inside.
-        /// Returns that badge's RectTransform (null if <paramref name="trait"/>
+        /// Returns the LAST badge built's RectTransform (null if <paramref name="trait"/>
         /// is null) — TileChoiceView uses it to fade a preview badge in when
-        /// the player selects that piece, rather than having it just appear.
+        /// the player selects that piece, rather than having it just appear
+        /// (only ever one badge in that case, since Grid-pool shop traits
+        /// are never a Joker-exclusive combat kind).
         /// <paramref name="fixedCellSize"/> lets compact catalogs use equal
         /// tile dimensions across shapes of different bounding-box sizes.
         /// </summary>
@@ -59,7 +65,8 @@ namespace Contigu.Presentation
                 : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
             var fillColor = VisualDefaults.GetColor(color);
 
-            Vector2Int? traitPos = trait.HasValue ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
+            bool badgeEveryCell = trait.HasValue && PieceTrait.IsJokerCombatKind(trait.Value.Kind);
+            Vector2Int? traitPos = trait.HasValue && !badgeEveryCell ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
 
             float startX = -(cols * cell) / 2f + cell / 2f;
             // Y increases UPWARD, matching GridView's own convention — otherwise
@@ -96,7 +103,7 @@ namespace Contigu.Presentation
                         BuildColorblindShape(img.transform, color, cell);
                     }
 
-                    if (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y))
+                    if (badgeEveryCell || (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y)))
                     {
                         // Sized relative to the cell itself rather than a
                         // fixed 14px — at HandView's larger preview box
