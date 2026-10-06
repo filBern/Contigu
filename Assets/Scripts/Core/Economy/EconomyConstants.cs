@@ -107,8 +107,8 @@ namespace Contigu.Core
         /// </summary>
         public const int MasteryUpgradeMaxLevelGain = 3;
 
-        /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together.</summary>
-        public const int MaxActiveModifiers = 8;
+        /// <summary>Hard cap on how many modifiers the player can hold at once — the shop lets Lueur buy modifiers far more freely than the old one-per-round draft ever could, so unlike that system this one needs a ceiling. Lowered from 10 to 8 (explicit request: "réduire à 8 la quantité de modifiers"), alongside the steeper Quotas curve (see RunConfig) — on explicit report the run was ending every round with ~50% of its piece budget still unused, so both the difficulty curve and the modifier-stacking ceiling that was outpacing it needed to come down/up together. Lowered again to 4 (explicit request: "Change le nombre maximum de modifiers a 4").</summary>
+        public const int MaxActiveModifiers = 4;
 
         public const int BankUpgradeShopBasePrice = 3;
         public const int GridUpgradeShopBasePrice = 3;

@@ -7531,3 +7531,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   l'index 0 dans ces rounds) ; les tests qui construisent leur
   encounter directement via `DebugSetEncounter` (Reclaimer, Plague)
   restent inchangés, puisqu'ils ne passent jamais par `EncounterCatalog`.
+- **Cap de modifiers actifs réduit à 4** : sur demande explicite
+  ("Change le nombre maximum de modifiers a 4"). `EconomyConstants.
+  MaxActiveModifiers` passe de 8 à 4 — tout le reste (RunManager, le
+  shop, `ModifierUpgradeChoiceView`, les tests) lit déjà cette
+  constante symboliquement, donc rien d'autre n'avait besoin de
+  changer côté logique. `ModifierPanelView`'s panneau à hauteur
+  STATIQUE (choisie ainsi après plusieurs essais de resize dynamique
+  qui avaient chacun leur propre glitch de rendu 9-slice) était
+  explicitement dimensionné pour "exactement MaxActiveModifiers"
+  (2 colonnes × 4 lignes) — `DisplayRows` réduit à 2 (2×2 = 4) pour
+  garder cet invariant exact plutôt que de laisser 2 lignes vides en
+  permanence.

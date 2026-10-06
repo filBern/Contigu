@@ -279,12 +279,14 @@ namespace Contigu.Core
         /// "vraiment beaucoup trop puissant": every single modifier
         /// purchase, of ANY kind, passively buffed this one too, for free,
         /// scaling it up to +EconomyConstants.MaxActiveModifiers Mult
-        /// (currently 8) at a full build with zero setup of its own —
+        /// (currently 4) at a full build with zero setup of its own —
         /// stronger than MultQuatre's flat +4 the moment a run owns 5+
-        /// modifiers. Halving it (+4 Mult at a full 8-modifier build,
-        /// instead of +8) keeps the "reward collecting modifiers" identity
-        /// while bringing it back in line with the other flat +Mult
-        /// modifiers.
+        /// modifiers (no longer reachable now that the cap itself is 4, but
+        /// the halving stays — see MaxActiveModifiers's own history of
+        /// being lowered further still). Halving it (+2 Mult at a full
+        /// 4-modifier build, instead of +4) keeps the "reward collecting
+        /// modifiers" identity while bringing it back in line with the
+        /// other flat +Mult modifiers.
         /// </summary>
         public const int SolidariteModifierCountDivisor = 2;
 
