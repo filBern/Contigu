@@ -7731,3 +7731,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   ne permet de les assigner sur `GameBootstrap`) et corrigé le
   commentaire de doc obsolète de `VisualDefaults.cs` qui prétendait
   encore qu'une telle database pouvait overrider ces valeurs.
+- **2 nouveaux modifiers de parité de groupe** : sur demande
+  explicite ("On pourrait rajouter des modifiers par rapport a la
+  grosseur des group cell (pair vs impair)"). `Pair`/`Impair`
+  ajoutés à `ModifierId`/`ModifierCatalog` — même forme qu'
+  Architecte/Îlot (xN Mult, condition booléenne à usage unique, pas
+  un bonus par case) : x2 Mult quand le groupe scoré par ce placement
+  a un nombre de cases pair (`Pair`) ou impair (`Impair`). Implémenté
+  dans `GridManager.ApplyParitePaire`/`ApplyPariteImpaire`, branché
+  dans `BuildPreClearEffects` comme tout autre modifier. Prix de
+  boutique 5 chacun (`ModifierPricing`, x2 fiable ~1 fois sur 2).
+  Tests ajoutés dans `GridManagerModifierTests.cs`.
+- **Buff des modifiers "+pts" (hors Mult)** : sur demande explicite
+  ("Les modifiers qui ajoute des pts combo (pas les mult) sont pas
+  très bon comparé aux mult, on pourrait les upgrade un peu"). Toute
+  constante `ScoringConstants` derrière un modifier à bonus de points
+  plat/par-case (Chaîne, Méga-chaîne, Forteresse, Prisonnier,
+  Collectionneur, Couronne, Carrefour, Cercle Chromatique,
+  Monochrome, Contraste, Emmitouflée, Jardinier, Grand Format, Hors
+  Norme, Éclat x4, Diagonale, Nid, Petit Format, Encerclement,
+  Boucher, Precision, Surpopulation, Format*Glow x3, Épuisement,
+  Multitude) relevée d'environ 50 % — les modifiers purement +Mult
+  (Devotion, MultUn/Deux/Quatre, Solidarité, etc.) et les modifiers
+  de Lueur ne sont pas concernés, puisque la demande ciblait
+  spécifiquement les points "combo" face aux multiplicateurs. Les
+  descriptions de `ModifierCatalog` mises à jour avec les nouvelles
+  valeurs ; les tests référencent déjà les constantes symboliquement
+  donc n'ont pas eu besoin d'être changés.
+- **Ennemis +100 % de PV** : sur demande explicite ("Augmente de
+  100% les pH des ennemis"). Tous les `MaxHp` d'`EnemyCatalog`
+  doublés (ex. Basic 225->450, Plague 2700->5400), par-dessus le
+  +50 % déjà appliqué une fois précédemment — aucun changement de
+  mécanique, uniquement la valeur brute de PV de chaque ennemi.

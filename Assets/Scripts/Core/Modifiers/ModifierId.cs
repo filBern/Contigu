@@ -145,6 +145,14 @@ namespace Contigu.Core
         FormatGrandSpecialiste,
         FormatPetitGlow,
         FormatMoyenGlow,
-        FormatGrandGlow
+        FormatGrandGlow,
+
+        // ---- Twelfth batch (on explicit request — "On pourrait rajouter
+        // des modifiers par rapport a la grosseur des group cell (pair vs
+        // impair)") — a pair keyed on the scored group's total cell count
+        // being even or odd, same xN-multiplier shape as Architecte/Îlot
+        // (a one-shot boolean condition, not a per-cell scaling bonus).
+        Pair,
+        Impair
     }
 }

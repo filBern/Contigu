@@ -106,7 +106,10 @@ namespace Contigu.Data
             { ModifierId.FormatGrandSpecialiste, "F3" },
             { ModifierId.FormatPetitGlow, "G1" },
             { ModifierId.FormatMoyenGlow, "G2" },
-            { ModifierId.FormatGrandGlow, "G3" }
+            { ModifierId.FormatGrandGlow, "G3" },
+            // Twelfth batch: group-size parity
+            { ModifierId.Pair, "PI" },
+            { ModifierId.Impair, "IM" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

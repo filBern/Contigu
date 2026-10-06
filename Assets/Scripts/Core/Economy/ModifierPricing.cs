@@ -150,6 +150,10 @@ namespace Contigu.Core
                 case ModifierId.FormatMoyenGlow: return 5;
                 case ModifierId.FormatGrandGlow: return 6;
 
+                // ---- Twelfth batch: group-size parity ----
+                case ModifierId.Pair: return 5; // x2, fires on ~half of placements
+                case ModifierId.Impair: return 5; // x2, fires on ~half of placements
+
                 default:
                     return -1;
             }

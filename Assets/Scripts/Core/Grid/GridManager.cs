@@ -645,6 +645,8 @@ namespace Contigu.Core
                 { ModifierId.Precision, ctx => ApplyPrecision(ctx.PlacedCells, ctx.Events) },
                 { ModifierId.Surpopulation, ctx => ApplySurpopulation(ctx.PlacedCells, ctx.Events) },
                 { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 // Joker: no score of its own — purely a passive rule change
                 // resolved before the loop starts (see JokerResolvedColor)
                 // for Devotion/Éclat to read.
@@ -870,6 +872,30 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.SolitaireMultiplier));
             return ScoringConstants.SolitaireMultiplier;
+        }
+
+        /// <summary>Pair: xN multiplier (see ScoringConstants.PairMultiplier) when this placement's scored group has an EVEN total cell count. Returns 1 (no-op) otherwise.</summary>
+        private static int ApplyParitePaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (groupCells.Count % 2 != 0)
+            {
+                return 1;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.PairMultiplier));
+            return ScoringConstants.PairMultiplier;
+        }
+
+        /// <summary>Impair: xN multiplier (see ScoringConstants.ImpairMultiplier) when this placement's scored group has an ODD total cell count — Pair's exact mirror. Returns 1 (no-op) otherwise.</summary>
+        private static int ApplyPariteImpaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (groupCells.Count % 2 == 0)
+            {
+                return 1;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.ImpairMultiplier));
+            return ScoringConstants.ImpairMultiplier;
         }
 
         /// <summary>Petit Format: bonus per placed cell when the piece being placed has at most ScoringConstants.PetitFormatMaxPieceSize cells — the small-piece mirror of Grand Format.</summary>

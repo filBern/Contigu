@@ -1259,6 +1259,39 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Pair_FiresWhenTheScoredGroupHasAnEvenCellCount()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Pair };
+
+            // Brand new 2-cell group — even.
+            var even = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.PairMultiplier, even.ModifierMultiplier);
+
+            // Merges into the existing group for a 3-cell (odd) group.
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var odd = grid.PlacePiece(single, PieceColor.Coral, 2, 0, modifiers);
+            Assert.AreEqual(1, odd.ModifierMultiplier);
+        }
+
+        [Test]
+        public void Impair_FiresWhenTheScoredGroupHasAnOddCellCount()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Impair };
+
+            // Brand new 1-cell group — odd.
+            var odd = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+            Assert.AreEqual(ScoringConstants.ImpairMultiplier, odd.ModifierMultiplier);
+
+            // Merges into the existing group for a 2-cell (even) group.
+            var even = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
+            Assert.AreEqual(1, even.ModifierMultiplier);
+        }
+
+        [Test]
         public void PetitFormat_FiresOnlyForPiecesOfAtMostTwoCells()
         {
             var grid = new GridManager();

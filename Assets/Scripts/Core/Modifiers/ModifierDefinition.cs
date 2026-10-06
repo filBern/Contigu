@@ -72,19 +72,19 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
-            "+10 pts if the group has 5+ cells.");
+            "+15 pts if the group has 5+ cells.");
 
         public static readonly ModifierDefinition MegaChaine = new ModifierDefinition(
             ModifierId.MegaChaine, ModifierCategory.Connexions, "Mega Chain",
-            "+30 pts if the group has 10+ cells, +5 pts per cell past that.");
+            "+45 pts if the group has 10+ cells, +8 pts per cell past that.");
 
         public static readonly ModifierDefinition Forteresse = new ModifierDefinition(
             ModifierId.Forteresse, ModifierCategory.Voisinage, "Fortress",
-            "+6 pts per fully surrounded group cell.");
+            "+9 pts per fully surrounded group cell.");
 
         public static readonly ModifierDefinition Prisonnier = new ModifierDefinition(
             ModifierId.Prisonnier, ModifierCategory.Voisinage, "Prisoner",
-            "+4 pts per group cell with all 4 sides filled.");
+            "+6 pts per group cell with all 4 sides filled.");
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
             ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
@@ -92,7 +92,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
-            "+8 pts per distinct color in cleared cells.");
+            "+12 pts per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
@@ -108,11 +108,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
-            "+5 pts per group cell on the grid's edge.");
+            "+8 pts per group cell on the grid's edge.");
 
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
             ModifierId.Carrefour, ModifierCategory.Voisinage, "Crossroads",
-            "+12 pts per group cell surrounded by 2+ colors.");
+            "+18 pts per group cell surrounded by 2+ colors.");
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Mason",
@@ -127,15 +127,15 @@ namespace Contigu.Core
         // explicit request to make it worth chasing.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
             ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
-            "+35 pts per group cell surrounded by all 4 colors.");
+            "+52 pts per group cell surrounded by all 4 colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
             ModifierId.Monochrome, ModifierCategory.Roguelike, "Monochrome",
-            "+3 pts per group cell if the group has no jokers.");
+            "+5 pts per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
             ModifierId.Contraste, ModifierCategory.Couleurs, "Contrast",
-            "+6 pts per placed cell next to a different color.");
+            "+9 pts per placed cell next to a different color.");
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
             ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
@@ -143,11 +143,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
             ModifierId.Emmitouflee, ModifierCategory.Voisinage, "Cocooned",
-            "+8 pts per group cell with all 4 diagonals filled.");
+            "+12 pts per group cell with all 4 diagonals filled.");
 
         public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
             ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
-            "+6 pts per group cell next to an upgraded tile.");
+            "+9 pts per group cell next to an upgraded tile.");
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
@@ -223,37 +223,37 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",
-            "+8 pts per cell for pieces with 3+ cells.");
+            "+12 pts per cell for pieces with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
             ModifierId.HorsNorme, ModifierCategory.Roguelike, "Off-Size",
-            "+12 pts if the piece isn't exactly 3 cells.");
+            "+18 pts if the piece isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Red Glow",
-            "+4 pts per group cell on Red pieces.");
+            "+6 pts per group cell on Red pieces.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
             ModifierId.EclatTeal, ModifierCategory.Couleurs, "Blue Glow",
-            "+4 pts per group cell on Blue pieces.");
+            "+6 pts per group cell on Blue pieces.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
             ModifierId.EclatViolet, ModifierCategory.Couleurs, "Yellow Glow",
-            "+4 pts per group cell on Yellow pieces.");
+            "+6 pts per group cell on Yellow pieces.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Green Glow",
-            "+4 pts per group cell on Green pieces.");
+            "+6 pts per group cell on Green pieces.");
 
         // ---- Fifth batch: 8 new ideas (on explicit request) ----
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
-            "+5 pts per group cell on either main diagonal.");
+            "+8 pts per group cell on either main diagonal.");
 
         public static readonly ModifierDefinition Nid = new ModifierDefinition(
             ModifierId.Nid, ModifierCategory.Voisinage, "Nest",
-            "+3 pts per group cell with exactly 3 sides filled.");
+            "+5 pts per group cell with exactly 3 sides filled.");
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
@@ -269,7 +269,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
             ModifierId.PetitFormat, ModifierCategory.Roguelike, "Small Format",
-            "+5 pts per cell for pieces with 2 or fewer cells.");
+            "+8 pts per cell for pieces with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
@@ -285,11 +285,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Encerclement = new ModifierDefinition(
             ModifierId.Encerclement, ModifierCategory.Voisinage, "Encirclement",
-            "+6 pts per group cell boxed in on all 8 sides (filled or edge).");
+            "+9 pts per group cell boxed in on all 8 sides (filled or edge).");
 
         public static readonly ModifierDefinition Boucher = new ModifierDefinition(
             ModifierId.Boucher, ModifierCategory.Voisinage, "Sealer",
-            "+10 pts per pre-existing tile this placement newly encircles.");
+            "+15 pts per pre-existing tile this placement newly encircles.");
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
             ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Big Family",
@@ -309,11 +309,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Precision = new ModifierDefinition(
             ModifierId.Precision, ModifierCategory.Voisinage, "Precision",
-            "+5 pts per cell if every cell of the piece touches a filled tile.");
+            "+8 pts per cell if every cell of the piece touches a filled tile.");
 
         public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
             ModifierId.Surpopulation, ModifierCategory.Voisinage, "Overcrowding",
-            "+8 pts per cell if every cell of the piece touches 2+ filled tiles.");
+            "+12 pts per cell if every cell of the piece touches 2+ filled tiles.");
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
             ModifierId.Minimaliste, ModifierCategory.Voisinage, "Minimalist",
@@ -394,11 +394,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+100 pts, -5 per placement for the rest of the run — destroyed once it hits 0.");
+            "+150 pts, -5 per placement for the rest of the run — destroyed once it hits 0.");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
-            "+1 pt per piece currently in your deck.");
+            "+2 pts per piece currently in your deck.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
             ModifierId.Experience, ModifierCategory.Roguelike, "Experience",
@@ -425,15 +425,27 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition FormatPetitGlow = new ModifierDefinition(
             ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Small Format Glow",
-            "+4 pts per group cell on pieces with 2 or fewer cells (Single, Domino).");
+            "+6 pts per group cell on pieces with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenGlow = new ModifierDefinition(
             ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Medium Format Glow",
-            "+4 pts per group cell on 3-cell pieces (any Tromino).");
+            "+6 pts per group cell on 3-cell pieces (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandGlow = new ModifierDefinition(
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Large Format Glow",
-            "+4 pts per group cell on 4-cell pieces (Square or any Tetromino).");
+            "+6 pts per group cell on 4-cell pieces (Square or any Tetromino).");
+
+        // ---- Twelfth batch (on explicit request — "On pourrait rajouter
+        // des modifiers par rapport a la grosseur des group cell (pair vs
+        // impair)") ----
+
+        public static readonly ModifierDefinition Pair = new ModifierDefinition(
+            ModifierId.Pair, ModifierCategory.Roguelike, "Even",
+            "x2 Mult when the scored group has an even number of cells.");
+
+        public static readonly ModifierDefinition Impair = new ModifierDefinition(
+            ModifierId.Impair, ModifierCategory.Roguelike, "Odd",
+            "x2 Mult when the scored group has an odd number of cells.");
 
         public static readonly ModifierDefinition[] All =
         {
@@ -451,7 +463,8 @@ namespace Contigu.Core
             Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude,
             Experience,
             FormatPetitSpecialiste, FormatMoyenSpecialiste, FormatGrandSpecialiste,
-            FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow
+            FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
+            Pair, Impair
         };
 
         public static ModifierDefinition Get(ModifierId id)
