@@ -157,7 +157,7 @@ namespace Contigu.Tests
             // Every cell golden so score accumulates fast — same proven
             // setup as RunManagerTests' own quota tests, just used here to
             // show the round now ends on the ENCOUNTER, not the quota: round
-            // 1's Basic (150 HP) dies in 1-2 placements, well under the old
+            // 1's Basic (225 HP) dies in 1-2 placements, well under the old
             // 300-point quota.
             foreach (var pos in GridManager.AllPositions())
             {

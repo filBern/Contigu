@@ -7573,3 +7573,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   pas par EnemyId), donc aucun changement de Core n'était nécessaire
   au-delà du tableau lui-même. Tests mis à jour pour les nouveaux
   index dans `EnemyEncounterTests.cs`.
+- **+50% de HP sur tous les ennemis** : sur demande explicite
+  ("Augmente de 50% les HP des ennemis (tous)"). Chaque `MaxHp` dans
+  `EnemyCatalog` augmenté de 50% : Basic 150→225, Locker 400→600,
+  Poisoner 700→1050, Heavy Locker 1200→1800, Plague 1800→2700, Thief
+  1000→1500, Reclaimer 1100→1650, Leech 600→900. Tous les tests lisent
+  déjà ces valeurs symboliquement (`Definition.MaxHp`/`EnemyCatalog.X.
+  MaxHp`), donc seul le catalogue avait besoin de changer ; un
+  commentaire obsolète dans `EnemyEncounterTests.cs` ("Basic (150 HP)")
+  mis à jour.
