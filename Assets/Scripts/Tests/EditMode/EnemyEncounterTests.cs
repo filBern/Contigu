@@ -57,19 +57,25 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Poisoner, round5[1]);
             Assert.AreEqual(EnemyId.Reclaimer, round5[2]);
 
+            // Round6's 4th enemy is a SECOND Poisoner, not Locker (explicit
+            // request: "round 6, remplace le locker par un autre poisoner
+            // et met le avant le reclaimer") — both Poisoners still stay
+            // ahead of Reclaimer.
             var round6 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 5);
             Assert.AreEqual(4, round6.Count);
             Assert.AreEqual(EnemyId.Basic, round6[0]);
             Assert.AreEqual(EnemyId.Poisoner, round6[1]);
-            Assert.AreEqual(EnemyId.Reclaimer, round6[2]);
-            Assert.AreEqual(EnemyId.Locker, round6[3]);
+            Assert.AreEqual(EnemyId.Poisoner, round6[2]);
+            Assert.AreEqual(EnemyId.Reclaimer, round6[3]);
 
+            // Locker moved ahead of Thief/Leech (explicit request: "round
+            // 7, met le locket devant le thief").
             var round7 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 6);
             Assert.AreEqual(4, round7.Count);
             Assert.AreEqual(EnemyId.Basic, round7[0]);
-            Assert.AreEqual(EnemyId.Thief, round7[1]);
-            Assert.AreEqual(EnemyId.Leech, round7[2]);
-            Assert.AreEqual(EnemyId.Locker, round7[3]);
+            Assert.AreEqual(EnemyId.Locker, round7[1]);
+            Assert.AreEqual(EnemyId.Thief, round7[2]);
+            Assert.AreEqual(EnemyId.Leech, round7[3]);
 
             // Round 8 is the Classic run's finale — a full 5-enemy gauntlet
             // now (redesign, explicit report: "Le boss heavy locker je le
@@ -730,7 +736,7 @@ namespace Contigu.Tests
         public void Thief_StealsOneRandomHandTileOnShuffle_WithoutShrinkingTheDeck()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
             int deckSizeBefore = run.Deck.DeckCount;
 
             Assert.IsTrue(run.ShuffleHand());
@@ -756,7 +762,7 @@ namespace Contigu.Tests
             // know whether to show that effect at all (see
             // GameBootstrap.PlayThiefStealEffect).
             var withThief = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(withThief, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
+            AdvanceToRound(withThief, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
             Assert.IsTrue(withThief.ShuffleHand());
             Assert.IsTrue(withThief.ThiefStoleOnLastShuffle);
 
@@ -861,8 +867,8 @@ namespace Contigu.Tests
         public void Leech_HealsOnLineClear_ViaRunManagerPlacePiece()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
-            var leech = run.CurrentEncounter[2];
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
+            var leech = run.CurrentEncounter[3];
             Assert.AreEqual(EnemyId.Leech, leech.Definition.Id);
             leech.ApplyDamage(100);
             int hpBefore = leech.CurrentHp;
@@ -882,8 +888,8 @@ namespace Contigu.Tests
         public void Leech_StopsHealing_OnceDead()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Thief, Leech, Locker
-            var leech = run.CurrentEncounter[2];
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
+            var leech = run.CurrentEncounter[3];
             leech.ApplyDamage(leech.Definition.MaxHp); // kill it
             Assert.IsTrue(leech.IsDead);
 

@@ -52,11 +52,17 @@ namespace Contigu.Core
         /// </summary>
         private static readonly EnemyId[] Round5 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Reclaimer };
 
-        /// <summary>Same Poisoner-before-Reclaimer pairing as Round5, escalated with a 4th enemy for this later round.</summary>
-        private static readonly EnemyId[] Round6 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Reclaimer, EnemyId.Locker };
+        /// <summary>
+        /// Same Poisoner-before-Reclaimer pairing as Round5, escalated with
+        /// a 4th enemy — a SECOND Poisoner instead of Locker (explicit
+        /// request: "round 6, remplace le locker par un autre poisoner et
+        /// met le avant le reclaimer"), doubling the poison pressure ahead
+        /// of Reclaimer rather than adding an unrelated lock mechanic.
+        /// </summary>
+        private static readonly EnemyId[] Round6 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Poisoner, EnemyId.Reclaimer };
 
-        /// <summary>GDD §07's own example progression: "...multi-pressure encounters involving Thief and Leech" — escalated with a 4th enemy for this later round.</summary>
-        private static readonly EnemyId[] Round7 = { EnemyId.Basic, EnemyId.Thief, EnemyId.Leech, EnemyId.Locker };
+        /// <summary>GDD §07's own example progression: "...multi-pressure encounters involving Thief and Leech" — escalated with a 4th enemy for this later round, Locker moved ahead of Thief (explicit request: "round 7, met le locket devant le thief").</summary>
+        private static readonly EnemyId[] Round7 = { EnemyId.Basic, EnemyId.Locker, EnemyId.Thief, EnemyId.Leech };
 
         /// <summary>Round 8 is Classic's second scheduled boss round and the Classic run's finale — a full 5-enemy gauntlet instead of a lone HeavyLocker (explicit report: "Le boss heavy locker je le trouve pas extraordinaire"), reusing every Creator/Boss introduced so far behind the leading Basic.</summary>
         private static readonly EnemyId[] Round8 = { EnemyId.Basic, EnemyId.HeavyLocker, EnemyId.Poisoner, EnemyId.Thief, EnemyId.Leech };

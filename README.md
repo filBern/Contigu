@@ -7558,3 +7558,18 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   et sa logique dans `OnModifierCarouselDismissed` supprimés, devenus
   inutiles. Les 3 tests `GrantStartingModifier_*` dans
   `RunManagerTests.cs` retirés.
+- **Ajustements des rounds 6 et 7** : sur demande explicite ("round
+  6, remplace le locker par un autre poisoner et met le avant le
+  reclaimer" / "round 7, met le locket devant le thief"). Round6
+  devient `{ Basic, Poisoner, Poisoner, Reclaimer }` — le Locker est
+  retiré et remplacé par un second Poisoner, placé avant Reclaimer
+  (comme le premier), doublant la pression de poison avant lui au
+  lieu d'ajouter un mécanisme de lock sans lien. Round7 devient
+  `{ Basic, Locker, Thief, Leech }` — le Locker passe devant Thief/
+  Leech au lieu d'être en dernier. Le Core gère déjà nativement deux
+  instances du même `EnemyId` dans un encounter (chaque `EnemyInstance`
+  garde son propre `PoisonedCells`/`LockedCell`, et
+  `ResolveEnemyShuffleEffects`/`FindPoisonOwner` itèrent par instance,
+  pas par EnemyId), donc aucun changement de Core n'était nécessaire
+  au-delà du tableau lui-même. Tests mis à jour pour les nouveaux
+  index dans `EnemyEncounterTests.cs`.
