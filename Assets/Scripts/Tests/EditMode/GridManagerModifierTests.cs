@@ -1847,19 +1847,25 @@ namespace Contigu.Tests
         public void Joker_ResolvesAJokerPieceToWhicheverColorMaximizesDevotionOrEclat()
         {
             var grid = new GridManager();
-            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            // 4 cells (not DomH's 2) — Devotion's triangular group bonus
+            // scales quadratically with cell count while Éclat's is only
+            // linear, so a big enough piece is needed for Devotion to stay
+            // ahead now that Éclat's own per-cell bonus was raised (explicit
+            // request: "Les modifiers qui ajoute des pts combo ... on
+            // pourrait les upgrade un peu").
+            var sq2 = PieceShapeCatalog.Get(ShapeId.Sq2);
             var modifiers = new List<ModifierId> { ModifierId.Joker, ModifierId.DevotionCoral, ModifierId.EclatLime };
 
-            var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
+            var result = grid.PlacePiece(sq2, PieceColor.Joker, 0, 0, modifiers);
 
             // Devotion(Coral) would add groupBonus*DevotionBonus (see
             // ResolveJokerColorForModifiers, the group's own triangular
-            // bonus for 2 cells, scaled by Devotion's flat +Mult value since
+            // bonus for 4 cells, scaled by Devotion's flat +Mult value since
             // it's additive now); Éclat(Lime) adds group-size *
-            // EclatBonusPerCell (2*4=8) — Coral wins here, so Devotion
-            // actually fires (into AdditiveMultBonus), not Éclat.
-            int devotionWouldGive = ExpectedGroupBonus(domH.Cells.Count) * ScoringConstants.DevotionBonus;
-            int eclatWouldGive = domH.Cells.Count * ScoringConstants.EclatBonusPerCell;
+            // EclatBonusPerCell (4*6=24) — Coral still wins here, so
+            // Devotion actually fires (into AdditiveMultBonus), not Éclat.
+            int devotionWouldGive = ExpectedGroupBonus(sq2.Cells.Count) * ScoringConstants.DevotionBonus;
+            int eclatWouldGive = sq2.Cells.Count * ScoringConstants.EclatBonusPerCell;
             Assert.Greater(devotionWouldGive, eclatWouldGive, "Test setup sanity: Devotion should be the bigger prize here");
             Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus);
             Assert.AreEqual(0, result.ModifierBonus, "Éclat shouldn't have fired — the Joker resolved to Coral, not Lime");

@@ -206,14 +206,20 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void AllEnemiesDefeated_EndsTheRound_WellBeforeTheOldQuotaWouldHaveBeenReached()
+        public void AllEnemiesDefeated_EndsTheRound_WithoutExhaustingThePieceBudget()
         {
             var run = new RunManager(new SystemRandomProvider(42));
             // Every cell golden so score accumulates fast — same proven
             // setup as RunManagerTests' own quota tests, just used here to
-            // show the round now ends on the ENCOUNTER, not the quota: round
-            // 1's Basic (225 HP) dies in 1-2 placements, well under the old
-            // 300-point quota.
+            // show the round now ends on the ENCOUNTER, not the (now
+            // largely vestigial for Classic, see RunConfig.Quotas) quota.
+            // Doesn't compare RoundScore against CurrentQuota any more
+            // (explicit request doubled every EnemyCatalog.MaxHp — "Augmente
+            // de 100% les pH des ennemis" — which pushed round 1's Basic
+            // past the legacy 300-point quota: killing it legitimately now
+            // takes more score than that moot number, so the only
+            // meaningful invariant left is that the encounter still ends
+            // the round before the piece budget runs out).
             foreach (var pos in GridManager.AllPositions())
             {
                 run.Grid.GetCell(pos).IsGolden = true;
@@ -236,7 +242,7 @@ namespace Contigu.Tests
 
             Assert.AreEqual(RunState.AwaitingShop, run.State);
             Assert.IsTrue(run.CurrentEncounter[0].IsDead);
-            Assert.Less(run.RoundScore, run.CurrentQuota, "Should have ended via Basic dying, not via reaching the old 300-point quota");
+            Assert.Less(piecesPlaced, budget, "Should have ended via Basic dying, not via exhausting the round's piece budget");
         }
 
         [Test]

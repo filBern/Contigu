@@ -1403,15 +1403,22 @@ namespace Contigu.Tests
             {
                 // Safety valve: this helper's contract is just "get THIS
                 // round to AwaitingShop, deterministically" — real greedy
-                // placement is just the means, and RunConfig.Quotas is
-                // tuned/re-tuned for actual gameplay balance independently
-                // of what a golden-cell/no-modifier/fixed-seed grind can
-                // reach within one round's piece budget. Once down to the
-                // round's last piece with quota still unmet, fast-forward
-                // exactly like AdvanceToRound's own DebugForceRoundComplete
-                // instead of risking the "ran out of budget" defeat path in
-                // RunManager.EvaluateRoundEnd.
-                if (run.RoundScore < run.CurrentQuota && run.PiecesRemainingThisRound <= 1)
+                // placement is just the means, and RunConfig.Quotas/enemy
+                // MaxHp are tuned/re-tuned for actual gameplay balance
+                // independently of what a golden-cell/no-modifier/fixed-seed
+                // grind can reach within one round's piece budget. Once down
+                // to the round's last piece with the round not yet cleared,
+                // fast-forward exactly like AdvanceToRound's own
+                // DebugForceRoundComplete instead of risking the "ran out of
+                // budget" defeat path in RunManager.EvaluateRoundEnd. Was
+                // gated on "run.RoundScore < run.CurrentQuota" until an
+                // encounter-round enemy's MaxHp got tuned high enough that a
+                // dying-but-not-dead-yet enemy (RoundScore already past the
+                // now largely unused quota, since HasActiveEncounter rounds
+                // end on AllEnemiesDefeated, not on quota) could still run
+                // the round's piece budget all the way down to 0 and hit the
+                // real defeat path before this valve ever triggered.
+                if (run.PiecesRemainingThisRound <= 1)
                 {
                     run.DebugForceRoundComplete();
                     break;
