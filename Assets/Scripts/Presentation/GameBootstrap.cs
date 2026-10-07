@@ -888,14 +888,17 @@ namespace Contigu.Presentation
             // manière de se battre") can retarget the back (Range), the
             // weakest alive enemy (Précision), or spread across several
             // (Bombe/Éclat) — see FindDamagedEnemyIndices, which mirrors
-            // RunManager.ApplyJokerCombatDamage's own targeting read-only,
-            // purely so this animation knows who to watch. Only index 0 of
+            // RunManager.ApplyJokerCombatOrDefaultDamage's own targeting
+            // read-only (including an OLDER Joker piece's trait
+            // retriggering once this placement's merge pulls its stamped
+            // cells back into a scored group), purely so this animation
+            // knows who to watch. Only index 0 of
             // the list (the "primary" target) gets the smooth drain below;
             // any further index is a Bombe/Éclat candidate, snapped to its
             // final value once the primary drain finishes instead (see
             // DrainSecondaryEnemyHits) — Range/Précision/the ordinary
             // single-target case never produce a second entry at all.
-            var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex);
+            var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex, x, y);
             var enemyHpBeforeList = new List<int>(damagedEnemyIndices.Count);
             var enemyIdList = new List<EnemyId>(damagedEnemyIndices.Count);
             for (int i = 0; i < damagedEnemyIndices.Count; i++)
@@ -1183,7 +1186,56 @@ namespace Contigu.Presentation
         /// pièces jokers soient particulières... des upgrades qui
         /// affectent directement la manière de se battre").
         /// </summary>
-        private List<int> FindDamagedEnemyIndices(int handIndex)
+        /// <summary>
+        /// Which combat kind should drive <see
+        /// cref="FindDamagedEnemyIndices"/>'s targeting prediction, read
+        /// from a prospective placement's whole merged group rather than
+        /// just the placed token's own trait — mirrors RunManager.
+        /// ApplyJokerCombatOrDefaultDamage's own group scan (see its doc
+        /// comment) purely so this animation preview knows who to watch,
+        /// including when an OLDER Joker piece's stamped cells are the
+        /// ones that get pulled back into a merge (explicit request: "Pour
+        /// les jokers, s'ils sont retrigger plus tard dans une pièce jouée,
+        /// son effet aussi est retrigger"). If BOTH a spreading kind
+        /// (Bombe/Éclat) and a single-target one (Range/Précision/Sangsue)
+        /// are present at once — two separate older Joker pieces of
+        /// different kinds merged together by this same placement, a rare
+        /// edge case — the spreading kind wins: its "list every alive
+        /// enemy as a candidate" animation safely covers whichever
+        /// narrower target the other kind would also touch, same
+        /// candidates-filtered-by-actual-HP-diff safety net already used
+        /// for Bombe/Éclat alone.
+        /// </summary>
+        private PieceTraitKind? FindPriorityCombatKind(List<Vector2Int> groupCells)
+        {
+            bool hasSpreadingKind = false;
+            PieceTraitKind? singleTargetKind = null;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                var origin = _run.Grid.GetCell(pos.x, pos.y).OriginTrait;
+                if (!origin.HasValue || !PieceTrait.IsJokerCombatKind(origin.Value.Kind))
+                {
+                    continue;
+                }
+                var kind = origin.Value.Kind;
+                if (kind == PieceTraitKind.Bombe || kind == PieceTraitKind.Eclat)
+                {
+                    hasSpreadingKind = true;
+                }
+                else if (singleTargetKind == null)
+                {
+                    singleTargetKind = kind;
+                }
+            }
+            if (hasSpreadingKind)
+            {
+                return PieceTraitKind.Bombe;
+            }
+            return singleTargetKind;
+        }
+
+        private List<int> FindDamagedEnemyIndices(int handIndex, int anchorX, int anchorY)
         {
             var result = new List<int>();
             if (!_run.HasActiveEncounter)
@@ -1191,8 +1243,15 @@ namespace Contigu.Presentation
                 return result;
             }
             var encounter = _run.CurrentEncounter;
-            var token = _run.Deck.Hand[handIndex];
-            PieceTraitKind? kind = token.HasValue && token.Value.Trait.HasValue ? token.Value.Trait.Value.Kind : (PieceTraitKind?)null;
+            var tokenSlot = _run.Deck.Hand[handIndex];
+            PieceTraitKind? kind = null;
+            if (tokenSlot.HasValue)
+            {
+                var token = tokenSlot.Value;
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, _run.Deck.HandRotations[handIndex]);
+                var previewGroup = _run.Grid.PreviewGroup(shape, token.Color, anchorX, anchorY);
+                kind = FindPriorityCombatKind(previewGroup);
+            }
 
             if (kind == PieceTraitKind.Range)
             {

@@ -70,10 +70,9 @@ namespace Contigu.Core
         /// négatifs triggered par une tuile empoisonné, l'ennemi reclaimer
         /// récupère en point de vie ce montant là") — clamped at <see
         /// cref="CurrentMaxHp"/>, same ceiling <see cref="ApplyDamage"/>'s
-        /// own negative-damage healing already respects. Leech's own heal
-        /// (RunManager.HealLeech) also goes through here and never grows —
-        /// see <see cref="HealOrGrow"/> for the Reclaimer-only variant that
-        /// does.
+        /// own negative-damage healing already respects — see <see
+        /// cref="HealOrGrow"/> for the Reclaimer/Leech variant that grows
+        /// the ceiling instead of capping out.
         /// </summary>
         public void Heal(int amount)
         {
@@ -96,10 +95,12 @@ namespace Contigu.Core
         /// only PARTIALLY overflows (not yet full before this heal, but
         /// would exceed the cap) still just clamps normally like <see
         /// cref="Heal"/> — growth is specifically for being AT full
-        /// already when more healing arrives, not for any excess. Used
-        /// only by RunManager.HealReclaimer — every other healer in the
-        /// game (Leech, poison's own negative-damage-heals-the-front-
-        /// enemy-back-up via ApplyDamage) stays capped at its ordinary
+        /// already when more healing arrives, not for any excess. Used by
+        /// RunManager.HealReclaimer and RunManager.HealLeech (explicit
+        /// request: "le boss leech ... il devient de plus en plus fort s'il
+        /// est déjà full, son max HP augmente aussi") — poison's own
+        /// negative-damage-heals-the-front-enemy-back-up (via ApplyDamage)
+        /// is the only healer left that stays capped at its ordinary
         /// CurrentMaxHp with no growth.
         /// </summary>
         public void HealOrGrow(int amount)

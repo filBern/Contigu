@@ -653,15 +653,14 @@ namespace Contigu.Core
                 // the ordinary front-alive-enemy hit (explicit request:
                 // "J'aimerais que toutes les pièces jokers soient
                 // particulières... des upgrades qui affectent directement
-                // la manière de se battre").
-                if (token.Trait.HasValue && PieceTrait.IsJokerCombatKind(token.Trait.Value.Kind))
-                {
-                    ApplyJokerCombatDamage(token.Trait.Value.Kind, placement.TotalScore);
-                }
-                else
-                {
-                    ApplyDamageToEncounter(placement.TotalScore);
-                }
+                // la manière de se battre") — and the same applies again
+                // whenever an OLDER Joker piece's stamped cells get pulled
+                // into THIS placement's scored group (explicit request:
+                // "Pour les jokers, s'ils sont retrigger plus tard dans une
+                // pièce jouée, son effet aussi est retrigger"), so this
+                // scans the whole group rather than just this token's own
+                // trait.
+                ApplyJokerCombatOrDefaultDamage(placement.GroupCells, placement.TotalScore);
                 if (placement.ClearedLineCount > 0)
                 {
                     HealLeech(placement.ClearedLineCount);
@@ -1898,13 +1897,74 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Dispatches to whichever Joker-exclusive combat trait (see
-        /// PieceTrait.JokerCombatKinds) this placement's piece carried,
-        /// instead of the ordinary front-alive-enemy hit <see
-        /// cref="ApplyDamageToEncounter"/> always applies (explicit
-        /// request: "J'aimerais que toutes les pièces jokers soient
-        /// particulières avec tuiles upgradé, mais des upgrades qui
-        /// affectent directement la manière de se battre").
+        /// Scans this placement's whole scored group (see
+        /// PlacementResult.GroupCells) for every DISTINCT Joker-exclusive
+        /// combat trait kind (see PieceTrait.JokerCombatKinds) stamped on
+        /// any of its cells' <see cref="Cell.OriginTrait"/> — not just the
+        /// cells this placement itself just filled — and dispatches this
+        /// placement's damage through each one found, via <see
+        /// cref="ApplyJokerCombatDamage"/>, instead of the ordinary
+        /// front-alive-enemy hit. Falls back to <see
+        /// cref="ApplyDamageToEncounter"/> when the group carries none.
+        /// Covers both the currently-placed token's own combat trait (its
+        /// cells are always part of their own group) AND an OLDER Joker
+        /// piece's combat trait retriggering once this placement's merge
+        /// pulls its already-stamped cells back into a newly scored group
+        /// (explicit request: "Pour les jokers, s'ils sont retrigger plus
+        /// tard dans une pièce jouée, son effet aussi est retrigger") —
+        /// same "rescored in full every time the group grows" spirit as
+        /// Golden's own re-trigger behavior. A kind is deduplicated across
+        /// however many of the group's cells carry it (one piece's combat
+        /// trait always badges every one of its own cells, see
+        /// RunManager.ApplyTokenTrait), so it still fires only ONCE per
+        /// placement, same as a lone Joker piece's own trait already did —
+        /// two SEPARATE Joker pieces of the same combat kind merged into
+        /// one group count as a single trigger of that kind, not two,
+        /// since nothing short of a per-cell placement identity (not
+        /// tracked anywhere in this project) could tell them apart.
+        /// </summary>
+        private void ApplyJokerCombatOrDefaultDamage(IReadOnlyList<Vector2Int> groupCells, int damage)
+        {
+            List<PieceTraitKind> kindsFound = null;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                var pos = groupCells[i];
+                var origin = Grid.GetCell(pos.x, pos.y).OriginTrait;
+                if (!origin.HasValue || !PieceTrait.IsJokerCombatKind(origin.Value.Kind))
+                {
+                    continue;
+                }
+                if (kindsFound == null)
+                {
+                    kindsFound = new List<PieceTraitKind>();
+                }
+                if (!kindsFound.Contains(origin.Value.Kind))
+                {
+                    kindsFound.Add(origin.Value.Kind);
+                }
+            }
+
+            if (kindsFound == null)
+            {
+                ApplyDamageToEncounter(damage);
+                return;
+            }
+
+            for (int i = 0; i < kindsFound.Count; i++)
+            {
+                ApplyJokerCombatDamage(kindsFound[i], damage);
+            }
+        }
+
+        /// <summary>
+        /// Dispatches to a single Joker-exclusive combat trait kind (see
+        /// PieceTrait.JokerCombatKinds), instead of the ordinary
+        /// front-alive-enemy hit <see cref="ApplyDamageToEncounter"/>
+        /// always applies (explicit request: "J'aimerais que toutes les
+        /// pièces jokers soient particulières avec tuiles upgradé, mais des
+        /// upgrades qui affectent directement la manière de se battre") —
+        /// called once per distinct kind found by <see
+        /// cref="ApplyJokerCombatOrDefaultDamage"/>.
         /// </summary>
         private void ApplyJokerCombatDamage(PieceTraitKind kind, int damage)
         {
@@ -2056,7 +2116,21 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>"Leech" (GDD §07: "Heals when the player destroys a line. The effect stops when it dies.") — heals every alive Leech instance <see cref="ScoringConstants.LeechHealPerLineClear"/> HP per row/column this placement cleared (see PlacementResult.ClearedLineCount). EnemyInstance.Heal itself no-ops once dead, so no extra guard is needed for "the effect stops when it dies."</summary>
+        /// <summary>
+        /// "Leech" (GDD §07: "Heals when the player destroys a line. The
+        /// effect stops when it dies.") — heals every alive Leech instance
+        /// <see cref="ScoringConstants.LeechHealPerLineClear"/> HP per
+        /// row/column this placement cleared (see
+        /// PlacementResult.ClearedLineCount). Goes through <see
+        /// cref="EnemyInstance.HealOrGrow"/>, not the plain <see
+        /// cref="EnemyInstance.Heal"/> (explicit request: "il devient de
+        /// plus en plus fort s'il est déjà full, son max HP augmente
+        /// aussi") — Reclaimer's own grow-on-overflow-heal mechanic, now
+        /// shared by Leech too: a heal landing while it's already at full
+        /// HP raises its ceiling instead of going to waste. HealOrGrow
+        /// itself no-ops once dead, so no extra guard is needed for "the
+        /// effect stops when it dies."
+        /// </summary>
         private void HealLeech(int clearedLineCount)
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -2064,7 +2138,7 @@ namespace Contigu.Core
                 var enemy = _currentEncounter[i];
                 if (enemy.Definition.Id == EnemyId.Leech)
                 {
-                    enemy.Heal(ScoringConstants.LeechHealPerLineClear * clearedLineCount);
+                    enemy.HealOrGrow(ScoringConstants.LeechHealPerLineClear * clearedLineCount);
                 }
             }
         }

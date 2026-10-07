@@ -15,6 +15,21 @@ namespace Contigu.Core
         public IReadOnlyList<Vector2Int> PlacedCells = System.Array.Empty<Vector2Int>();
 
         /// <summary>
+        /// Every cell in this placement's resulting connected same-color
+        /// group (see GridManager.FindConnectedGroup) — a superset of <see
+        /// cref="PlacedCells"/> once this placement merges into a
+        /// pre-existing group. Used by RunManager to find any Joker-exclusive
+        /// combat trait (see PieceTrait.JokerCombatKinds) stamped on an
+        /// OLDER cell that this placement's merge just pulled back into a
+        /// scored group, so its combat effect retriggers too (explicit
+        /// request: "Pour les jokers, s'ils sont retrigger plus tard dans
+        /// une pièce jouée, son effet aussi est retrigger") — same
+        /// "rescored in full every time the group grows" spirit as Golden's
+        /// own re-trigger behavior.
+        /// </summary>
+        public IReadOnlyList<Vector2Int> GroupCells = System.Array.Empty<Vector2Int>();
+
+        /// <summary>
         /// Score from this placement's resulting connected same-color group
         /// (group size x per-cell value), UNMULTIPLIED — rescored in full
         /// every time the group grows. Any tinted/multiplier-zone factor no

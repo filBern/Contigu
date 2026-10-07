@@ -7763,3 +7763,36 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   doublés (ex. Basic 225->450, Plague 2700->5400), par-dessus le
   +50 % déjà appliqué une fois précédemment — aucun changement de
   mécanique, uniquement la valeur brute de PV de chaque ennemi.
+- **Retrigger des upgrades de combat Joker** : sur demande explicite
+  ("Pour les jokers, s'ils sont retrigger plus tard dans une pièce
+  jouée, son effet aussi est retrigger"). Jusqu'ici, l'effet de
+  combat (Bombe/Range/Éclat/Précision/Sangsue) d'une pièce Joker ne
+  se déclenchait qu'une seule fois, au moment même de son placement
+  — si son groupe était agrandi plus tard par une pièce différente
+  (rescoring complet du groupe, même logique que les cases dorées),
+  l'effet ne se redéclenchait pas. Nouveau champ
+  `PlacementResult.GroupCells` (toutes les cases du groupe scoré,
+  pas juste celles posées ce tour-ci, exposé par
+  `GridManager.PlacePiece`) scanné par la nouvelle
+  `RunManager.ApplyJokerCombatOrDefaultDamage` : chaque type de
+  combat trouvé sur n'importe quelle case du groupe (même une case
+  posée lors d'un tour précédent) redéclenche son effet avec le
+  score de CE placement — dédupliqué par type (une pièce Joker
+  badge déjà toutes ses propres cases du même type, donc un seul
+  déclenchement par type même si plusieurs de ses cases sont dans le
+  groupe). `GameBootstrap.FindDamagedEnemyIndices` mis à jour en
+  parallèle (nouvelle `FindPriorityCombatKind`, via
+  `GridManager.PreviewGroup`) pour que l'animation de dégâts cible
+  les bons ennemis même quand le retrigger vient d'une pièce plus
+  ancienne. Nouveau test
+  `JokerCombatTrait_RetriggersWhenALaterPlacementMergesIntoItsStampedGroup`
+  dans `EnemyEncounterTests.cs`.
+- **Boss Leech : heal 250/ligne + grandit déjà plein** : sur demande
+  explicite ("Pour le boss leech, il doit se heal de 250 a chaque
+  line break + il devient de plus en plus fort s'il est déjà full,
+  son max HP augmente aussi"). `ScoringConstants.LeechHealPerLineClear`
+  relevé de 15 à 250. `RunManager.HealLeech` utilise maintenant
+  `EnemyInstance.HealOrGrow` (déjà utilisé par Reclaimer) au lieu du
+  simple `Heal` — un heal qui arrive alors que Leech est déjà à PV
+  max augmente son plafond (`CurrentMaxHp`) au lieu d'être gâché.
+  Nouveau test `Leech_HealingWhileAlreadyFull_GrowsItsMaxHp`.

@@ -946,6 +946,32 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Leech_HealingWhileAlreadyFull_GrowsItsMaxHp()
+        {
+            // Explicit request: "Pour le boss leech ... il devient de plus
+            // en plus fort s'il est déjà full, son max HP augmente aussi" —
+            // Reclaimer's own grow-on-overflow-heal mechanic (see
+            // EnemyInstance.HealOrGrow), now shared by Leech.
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
+            var leech = run.CurrentEncounter[3];
+            Assert.AreEqual(EnemyId.Leech, leech.Definition.Id);
+            int maxBefore = leech.CurrentMaxHp;
+            Assert.AreEqual(maxBefore, leech.CurrentHp, "Should start at full HP");
+
+            int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
+            var anchor = FindRowCompletingAnchor(run.Grid);
+            Assert.IsTrue(anchor.HasValue, "Should find a row with exactly 1 cell free for the Single piece to complete");
+
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(1, outcome.Placement.ClearedLineCount);
+            Assert.AreEqual(maxBefore + ScoringConstants.LeechHealPerLineClear, leech.CurrentMaxHp,
+                "Already-full Leech should grow its max HP from the line-clear heal, same as Reclaimer");
+            Assert.AreEqual(maxBefore + ScoringConstants.LeechHealPerLineClear, leech.CurrentHp);
+        }
+
+        [Test]
         public void Leech_StopsHealing_OnceDead()
         {
             var run = new RunManager(new SystemRandomProvider(1));
@@ -1147,6 +1173,43 @@ namespace Contigu.Tests
             int expectedLueurGain = Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction);
             Assert.Greater(expectedLueurGain, 0, "Need a large enough score for the Lueur siphon to actually be observable");
             Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
+        }
+
+        [Test]
+        public void JokerCombatTrait_RetriggersWhenALaterPlacementMergesIntoItsStampedGroup()
+        {
+            // Explicit request: "Pour les jokers, s'ils sont retrigger plus
+            // tard dans une pièce jouée, son effet aussi est retrigger".
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Basic);
+            var e0 = run.CurrentEncounter[0];
+            var e1 = run.CurrentEncounter[1];
+
+            // First placement: a lone Joker Bombe piece — fires once, same
+            // as the existing Bombe test above.
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            int jokerSlot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Bombe);
+            var firstOutcome = run.PlacePiece(jokerSlot, 0, 0);
+            Assert.IsTrue(firstOutcome.Placement.Success);
+            int hp0AfterFirst = e0.CurrentHp;
+            int hp1AfterFirst = e1.CurrentHp;
+
+            // Second placement: an ORDINARY (non-Joker, untagged) piece
+            // adjacent to the Joker cell — a Joker cell's wildcard color
+            // always matches (see GridManager.TryVisitGroupNeighbor), so
+            // this merges into the same group, rescoring it and — per this
+            // fix — retriggering Bombe's already-stamped effect too.
+            int ordinarySlot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single && t.Color != PieceColor.Joker && !t.Trait.HasValue);
+            var secondOutcome = run.PlacePiece(ordinarySlot, 1, 0);
+            Assert.IsTrue(secondOutcome.Placement.Success);
+            Assert.AreEqual(2, secondOutcome.Placement.GroupCells.Count, "Should have merged with the Joker cell into one 2-cell group");
+
+            int secondScore = secondOutcome.Placement.TotalScore;
+            int expectedShare = secondScore / 2; // Bombe splits equally across the 2 alive enemies
+            Assert.Greater(expectedShare, 0, "Need a nonzero split for the retrigger to actually be observable");
+            Assert.AreEqual(hp0AfterFirst - expectedShare, e0.CurrentHp,
+                "Bombe should retrigger and split this SECOND placement's damage too, now that merging pulled its already-stamped cell into the scored group");
+            Assert.AreEqual(hp1AfterFirst - expectedShare, e1.CurrentHp);
         }
 
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
