@@ -931,7 +931,15 @@ namespace Contigu.Tests
             AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
             var leech = run.CurrentEncounter[3];
             Assert.AreEqual(EnemyId.Leech, leech.Definition.Id);
-            leech.ApplyDamage(100);
+            // More than LeechHealPerLineClear, so the heal below lands
+            // strictly below CurrentMaxHp — a heal that OVERFLOWS past the
+            // cap while not already AT full just clamps with no growth
+            // (see EnemyInstance.HealOrGrow's own documented contract,
+            // covered by EnemyInstance_HealOrGrow_WhileNotFull_
+            // ClampsNormally_NoGrowth); this test is about the plain
+            // per-line heal amount, not that edge case (see
+            // Leech_HealingWhileAlreadyFull_GrowsItsMaxHp for growth).
+            leech.ApplyDamage(ScoringConstants.LeechHealPerLineClear + 50);
             int hpBefore = leech.CurrentHp;
 
             int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
