@@ -1145,53 +1145,52 @@ namespace Contigu.Tests
             Assert.AreEqual(2 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
         }
 
+        // Cadence's own condition pair (Pair/Impair + FormatXSpecialiste)
+        // always also contributes ITS OWN real xN multiplier whenever
+        // held, same as holding either alone — so these tests compare
+        // against a baseline measured WITHOUT Cadence instead of hardcoding
+        // the combined product, which would otherwise silently depend on
+        // ScoringConstants.PairMultiplier/FormatSpecialistMultiplier too.
+
         [Test]
         public void Cadence_FiresOnlyWhenBothAHeldParityConditionAndAHeldFormatTierMatch()
         {
-            var grid = new GridManager();
             var domH = PieceShapeCatalog.Get(ShapeId.DomH); // 2-cell piece, alone: even group (Pair) and Petit tier
-            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair, ModifierId.FormatPetitSpecialiste };
+            var baseline = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Pair, ModifierId.FormatPetitSpecialiste });
+            var withCadence = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair, ModifierId.FormatPetitSpecialiste });
 
-            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(ScoringConstants.CadenceMultiplier, result.ModifierMultiplier);
+            Assert.AreEqual(baseline.ModifierMultiplier * ScoringConstants.CadenceMultiplier, withCadence.ModifierMultiplier);
         }
 
         [Test]
         public void Cadence_DoesNotFire_WhenNoFormatTierIsHeld()
         {
-            var grid = new GridManager();
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
-            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair };
+            var baseline = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Pair });
+            var withCadence = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair });
 
-            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(1, result.ModifierMultiplier, "Parity matches but no Format tier is held");
+            Assert.AreEqual(baseline.ModifierMultiplier, withCadence.ModifierMultiplier, "Parity matches but no Format tier is held, so Cadence adds nothing on top of Pair's own multiplier");
         }
 
         [Test]
         public void Cadence_DoesNotFire_WhenNoParityModifierIsHeld()
         {
-            var grid = new GridManager();
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
-            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.FormatPetitSpecialiste };
+            var baseline = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.FormatPetitSpecialiste });
+            var withCadence = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Cadence, ModifierId.FormatPetitSpecialiste });
 
-            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(1, result.ModifierMultiplier, "Format tier matches but no Pair/Impair is held");
+            Assert.AreEqual(baseline.ModifierMultiplier, withCadence.ModifierMultiplier, "Format tier matches but no Pair/Impair is held, so Cadence adds nothing on top of Format's own multiplier");
         }
 
         [Test]
         public void Cadence_DoesNotFire_WhenTheHeldParityConditionDoesNotMatchThisGroup()
         {
-            var grid = new GridManager();
             var domH = PieceShapeCatalog.Get(ShapeId.DomH); // even (2-cell) group
             // Impair wants an ODD group — mismatch, even with a matching Format tier held.
-            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Impair, ModifierId.FormatPetitSpecialiste };
+            var baseline = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Impair, ModifierId.FormatPetitSpecialiste });
+            var withCadence = new GridManager().PlacePiece(domH, PieceColor.Coral, 0, 0, new List<ModifierId> { ModifierId.Cadence, ModifierId.Impair, ModifierId.FormatPetitSpecialiste });
 
-            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(1, result.ModifierMultiplier);
+            Assert.AreEqual(baseline.ModifierMultiplier, withCadence.ModifierMultiplier);
         }
 
         [Test]
