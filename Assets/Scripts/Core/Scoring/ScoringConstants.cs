@@ -356,5 +356,17 @@ namespace Contigu.Core
 
         /// <summary>Arsenal (axis 2): +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 5 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
         public const int ArsenalMultPerDistinctCombatKind = 1;
+
+        // ---- Fourteenth batch: more synergy pass (on explicit request —
+        // see ModifierId's own doc comment on this batch) ----
+
+        /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which BOTH Devotion and Éclat are currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
+        public const int CollectionChromatiqueMultPerCompletePair = 2;
+
+        /// <summary>Cadence: xN multiplier (see GridManager.ApplyCadence) when this placement's group parity matches a held Pair/Impair modifier AND its piece size matches a held Format* Specialist tier, both at once.</summary>
+        public const int CadenceMultiplier = 2;
+
+        /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — Sangsue's own fraction generalized to fire alongside every combat kind, not just Sangsue. Set lower than Sangsue's own (0.25f) since it fires on strictly more placements.</summary>
+        public const float SiphonLueurFraction = 0.15f;
     }
 }

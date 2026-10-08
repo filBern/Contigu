@@ -2009,6 +2009,20 @@ namespace Contigu.Core
             {
                 ApplyJokerCombatDamage(kindsFound[i], boostedDamage);
             }
+
+            // Siphon (synergy pass, "Lueur ↔ tout type de combat"):
+            // Sangsue's own siphon generalized to ANY combat kind found
+            // above, not just Sangsue itself — fires once per placement
+            // off the same boosted damage total every kind above just
+            // used, regardless of how many enemies it actually reached
+            // (Bombe's split, Éclat's cascade, ...), same "one siphon per
+            // placement" simplicity as Sangsue's own. Stacks independently
+            // with Sangsue if both are held and Sangsue is among the
+            // kinds found.
+            if (boostedDamage > 0 && _activeModifiers.Contains(ModifierId.Siphon))
+            {
+                Lueur += Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction);
+            }
         }
 
         /// <summary>

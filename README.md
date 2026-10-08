@@ -7834,3 +7834,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Tests ajoutés dans `GridManagerModifierTests.cs` (paire Devotion/
     Éclat, Polyvalence), `RunManagerTests.cs` (Arsenal) et
     `EnemyEncounterTests.cs` (Renfort Joker).
+- **4 modifiers de synergie supplémentaires** : sur demande explicite
+  ("As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes"),
+  suite à 4 nouvelles pistes proposées.
+  - **Collection Chromatique** (le "trio" couleur, adapté en
+    pratique puisqu'il n'existe pas de 3e modifier par couleur pour
+    l'instant) : +2 Mult par couleur pour laquelle Devotion ET Éclat
+    sont TOUS LES DEUX possédés, jusqu'à +8 à une couverture
+    complète des 4 couleurs.
+  - **Cadence** (synergie Pair/Impair ↔ Format) : x2 Mult quand ce
+    placement respecte à LA FOIS une condition de parité possédée
+    (Pair/Impair) ET un palier Format Specialiste possédé (Petit/
+    Moyen/Grand), au même moment — relie 2 familles de modifiers
+    déjà existantes qui s'ignoraient.
+  - **Écho** (le "catalyseur" : copie le modifier à sa gauche) :
+    rejoue l'effet du modifier immédiatement à sa gauche dans
+    l'ordre des modifiers possédés, comme si on en possédait une 2e
+    copie, pour ce placement seulement. Nouveau champ
+    `PreClearModifierContext.CurrentIndex` (position du modifier en
+    cours dans la liste, mis à jour à chaque itération de
+    `ApplyPreClearModifiers`) pour qu'Écho retrouve son voisin de
+    gauche. Ne chaîne jamais sur un autre Écho (sinon récursion
+    infinie garantie, puisque l'appel imbriqué ne fait jamais
+    avancer `CurrentIndex`) — testé explicitement par
+    `Echo_DoesNotChainIntoAnotherEcho`.
+  - **Siphon** (généralisation de Sangsue à tous les types de
+    combat) : convertit 15 % des dégâts de N'IMPORTE QUEL trait de
+    combat Joker (pas seulement Sangsue) en Lueur bonus — se
+    cumule indépendamment avec Sangsue si les deux sont possédés en
+    même temps.
+  - Tests ajoutés dans `GridManagerModifierTests.cs` (Collection
+    Chromatique, Cadence, Écho) et `EnemyEncounterTests.cs`
+    (Siphon).

@@ -113,7 +113,12 @@ namespace Contigu.Data
             // Thirteenth batch: synergy pass
             { ModifierId.Polyvalence, "PV" },
             { ModifierId.RenfortJoker, "RJ" },
-            { ModifierId.Arsenal, "AS" }
+            { ModifierId.Arsenal, "AS" },
+            // Fourteenth batch: more synergy pass
+            { ModifierId.CollectionChromatique, "CC" },
+            { ModifierId.Cadence, "CD" },
+            { ModifierId.Echo, "EC" },
+            { ModifierId.Siphon, "SI" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

@@ -1265,6 +1265,49 @@ namespace Contigu.Tests
                 "RenfortJoker should never boost an ordinary (non-Joker-combat) placement's damage");
         }
 
+        [Test]
+        public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur_NotJustSangsue()
+        {
+            // Explicit request: generalize Sangsue's siphon to every combat
+            // kind ("un modifier qui convertit une partie des PV retirés à
+            // un ennemi en Lueur bonus pour TOUT type de combat (pas juste
+            // Sangsue)").
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            run.DebugGrantModifier(ModifierId.Siphon);
+            int lueurBefore = run.Lueur;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Range);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            int expectedLueurGain = Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction);
+            Assert.Greater(expectedLueurGain, 0, "Need a large enough score for the siphon to actually be observable");
+            Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
+        }
+
+        [Test]
+        public void Siphon_StacksWithSangsue_WhenBothAreHeldOnASangsuePlacement()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            run.DebugGrantModifier(ModifierId.Siphon);
+            int lueurBefore = run.Lueur;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Sangsue, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Sangsue);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            int expectedFromSangsue = Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction);
+            int expectedFromSiphon = Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction);
+            Assert.AreEqual(lueurBefore + expectedFromSangsue + expectedFromSiphon, run.Lueur,
+                "Both siphons should stack independently on a Sangsue placement");
+        }
+
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
         private static Vector2Int? FindRowCompletingAnchor(GridManager grid)
         {

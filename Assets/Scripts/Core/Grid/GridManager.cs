@@ -568,6 +568,9 @@ namespace Contigu.Core
             public PieceColor JokerResolvedColor;
             public int ActiveModifierCount;
             public IReadOnlyList<ModifierId> ActiveModifiers;
+
+            /// <summary>This modifier's own position in <see cref="ActiveModifiers"/> for the iteration currently invoking an effect delegate — set fresh by <see cref="ApplyPreClearModifiers"/> right before each call, so a modifier like Écho can look at its neighbors (see GridManager.ApplyEcho).</summary>
+            public int CurrentIndex;
             public int Multiplier = 1;
             public int Lueur;
             public int AdditiveMult;
@@ -650,15 +653,20 @@ namespace Contigu.Core
                 { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Polyvalence, ctx => { ctx.AdditiveMult += ApplyPolyvalence(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
-                // Renfort Joker/Arsenal: not scored here at all — Renfort
-                // Joker scales ENEMY DAMAGE, not the player's own score
-                // (see RunManager.ApplyJokerCombatOrDefaultDamage), and
-                // Arsenal needs to scan the deck (GridManager has no
-                // DeckManager reference), resolved post-hoc in RunManager.
+                // Renfort Joker/Arsenal/Siphon: not scored here at all —
+                // Renfort Joker and Siphon scale ENEMY DAMAGE / Lueur
+                // around it, not the player's own score (see RunManager.
+                // ApplyJokerCombatOrDefaultDamage), and Arsenal needs to
+                // scan the deck (GridManager has no DeckManager
+                // reference), resolved post-hoc in RunManager.
                 // ApplyDeckStateModifierBonuses alongside CartesEnchantees/
                 // Multitude/Experience.
                 { ModifierId.RenfortJoker, ctx => 0 },
                 { ModifierId.Arsenal, ctx => 0 },
+                { ModifierId.Siphon, ctx => 0 },
+                { ModifierId.CollectionChromatique, ctx => { ctx.AdditiveMult += ApplyCollectionChromatique(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Cadence, ctx => { ctx.Multiplier *= ApplyCadence(ctx.ActiveModifiers, ctx.Shape, ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Echo, ctx => ApplyEcho(ctx) },
                 // Joker: no score of its own — purely a passive rule change
                 // resolved before the loop starts (see JokerResolvedColor)
                 // for Devotion/Éclat to read.
@@ -714,6 +722,7 @@ namespace Contigu.Core
                 var id = activeModifiers[i];
                 int eventsBefore = events.Count;
                 int lueurBefore = ctx.Lueur;
+                ctx.CurrentIndex = i;
                 int bonus = _preClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
 
                 // Rescales THIS modifier's own contribution only — never the
@@ -787,6 +796,92 @@ namespace Contigu.Core
             int bonus = categoriesSeen.Count * ScoringConstants.PolyvalenceMultPerCategory;
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], bonus));
             return bonus;
+        }
+
+        /// <summary>Collection Chromatique (synergy pass, axis 1 — the "trio" idea, practically adapted since there's no natural 3rd per-color modifier yet): +N Mult (see ScoringConstants.CollectionChromatiqueMultPerCompletePair), N = how many of the 4 base colors have BOTH their Devotion and Éclat modifier currently held — reuses DevotionModifierFor/EclatModifierFor, the same per-color lookup Joker resolution already relies on.</summary>
+        private static int ApplyCollectionChromatique(IReadOnlyList<ModifierId> activeModifiers, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int completePairs = 0;
+            var baseColors = PieceColorUtility.BaseColors;
+            for (int i = 0; i < baseColors.Count; i++)
+            {
+                if (ContainsModifier(activeModifiers, DevotionModifierFor(baseColors[i])) && ContainsModifier(activeModifiers, EclatModifierFor(baseColors[i])))
+                {
+                    completePairs++;
+                }
+            }
+
+            int bonus = completePairs * ScoringConstants.CollectionChromatiqueMultPerCompletePair;
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>
+        /// Cadence (synergy pass, axis "Pair/Impair ↔ Format"): xN
+        /// multiplier (see ScoringConstants.CadenceMultiplier) when THIS
+        /// placement satisfies BOTH a held parity condition (Pair wants an
+        /// even scored group, Impair an odd one) AND a held Format*
+        /// Specialist tier (Petit/Moyen/Grand, keyed on the PLACED piece's
+        /// own cell count, same boundaries as ApplyFormatSpecialistMultiplier)
+        /// at once — ties two existing, otherwise unrelated modifier
+        /// families together. Returns 1 (no-op) unless both sides match;
+        /// Pair/Impair/Format* themselves still score their own bonus
+        /// independently via their own dictionary entries.
+        /// </summary>
+        private static int ApplyCadence(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            bool parityMatches =
+                (ContainsModifier(activeModifiers, ModifierId.Pair) && groupCells.Count % 2 == 0) ||
+                (ContainsModifier(activeModifiers, ModifierId.Impair) && groupCells.Count % 2 != 0);
+            if (!parityMatches)
+            {
+                return 1;
+            }
+
+            int cellCount = shape.Cells.Count;
+            bool formatMatches =
+                (ContainsModifier(activeModifiers, ModifierId.FormatPetitSpecialiste) && cellCount <= ScoringConstants.FormatPetitMaxCells) ||
+                (ContainsModifier(activeModifiers, ModifierId.FormatMoyenSpecialiste) && cellCount == ScoringConstants.FormatMoyenCells) ||
+                (ContainsModifier(activeModifiers, ModifierId.FormatGrandSpecialiste) && cellCount >= ScoringConstants.FormatGrandMinCells);
+            if (!formatMatches)
+            {
+                return 1;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.CadenceMultiplier));
+            return ScoringConstants.CadenceMultiplier;
+        }
+
+        /// <summary>
+        /// Écho (synergy pass, "catalyseur" idea): replays whatever
+        /// modifier sits immediately to Écho's own left in <see
+        /// cref="PreClearModifierContext.ActiveModifiers"/> (<see
+        /// cref="PreClearModifierContext.CurrentIndex"/> minus 1) by
+        /// invoking that modifier's own effect delegate a SECOND time for
+        /// this same placement — "as if you held a second copy of it".
+        /// Returns 0 (no-op) if Écho is the leftmost held modifier, or if
+        /// its left neighbor is ANOTHER Écho (never chains — the only way
+        /// this could otherwise recurse without bound). The replayed
+        /// call's own ScoreEvents get tagged as Écho's own by the normal
+        /// post-call TagNewEvents in ApplyPreClearModifiers, exactly as if
+        /// Écho itself had produced them — correct for the Mult fold's own
+        /// purchase-order rule, since that's where Écho actually sits.
+        /// </summary>
+        private int ApplyEcho(PreClearModifierContext ctx)
+        {
+            int leftIndex = ctx.CurrentIndex - 1;
+            if (leftIndex < 0)
+            {
+                return 0;
+            }
+
+            var targetId = ctx.ActiveModifiers[leftIndex];
+            if (targetId == ModifierId.Echo)
+            {
+                return 0;
+            }
+
+            return _preClearEffects.TryGetValue(targetId, out var targetEffect) ? targetEffect(ctx) : 0;
         }
 
         /// <summary>

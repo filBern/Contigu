@@ -1114,6 +1114,128 @@ namespace Contigu.Tests
             Assert.AreEqual(2 * ScoringConstants.PolyvalenceMultPerCategory, result.AdditiveMultBonus);
         }
 
+        // ---- Fourteenth batch: more synergy pass (on explicit request —
+        // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
+
+        [Test]
+        public void CollectionChromatique_GivesMultPerColorWithBothDevotionAndEclatHeld()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Coral: complete pair. Teal: only Devotion (incomplete, shouldn't count).
+            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.EclatCoral, ModifierId.DevotionTeal };
+
+            // Placed as Violet so Devotion/Éclat's OWN conditions never
+            // fire themselves, isolating CollectionChromatique's own
+            // contribution to AdditiveMultBonus.
+            var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void CollectionChromatique_CountsEachCompletePairAcrossColors()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.EclatCoral, ModifierId.DevotionTeal, ModifierId.EclatTeal };
+
+            var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
+
+            Assert.AreEqual(2 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void Cadence_FiresOnlyWhenBothAHeldParityConditionAndAHeldFormatTierMatch()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH); // 2-cell piece, alone: even group (Pair) and Petit tier
+            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair, ModifierId.FormatPetitSpecialiste };
+
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.CadenceMultiplier, result.ModifierMultiplier);
+        }
+
+        [Test]
+        public void Cadence_DoesNotFire_WhenNoFormatTierIsHeld()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Pair };
+
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(1, result.ModifierMultiplier, "Parity matches but no Format tier is held");
+        }
+
+        [Test]
+        public void Cadence_DoesNotFire_WhenNoParityModifierIsHeld()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
+            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.FormatPetitSpecialiste };
+
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(1, result.ModifierMultiplier, "Format tier matches but no Pair/Impair is held");
+        }
+
+        [Test]
+        public void Cadence_DoesNotFire_WhenTheHeldParityConditionDoesNotMatchThisGroup()
+        {
+            var grid = new GridManager();
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH); // even (2-cell) group
+            // Impair wants an ODD group — mismatch, even with a matching Format tier held.
+            var modifiers = new List<ModifierId> { ModifierId.Cadence, ModifierId.Impair, ModifierId.FormatPetitSpecialiste };
+
+            var result = grid.PlacePiece(domH, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(1, result.ModifierMultiplier);
+        }
+
+        [Test]
+        public void Echo_ReplaysTheModifierImmediatelyToItsLeft()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MultDeux, ModifierId.Echo };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(2 * ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus, "Echo should replay MultDeux's own +2 Mult a second time");
+        }
+
+        [Test]
+        public void Echo_DoesNothing_WhenItIsTheLeftmostHeldModifier()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Echo, ModifierId.MultDeux };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus, "Nothing to Echo's left, so only MultDeux's own bonus should apply");
+        }
+
+        [Test]
+        public void Echo_DoesNotChainIntoAnotherEcho()
+        {
+            // Regression guard: without the "never copy another Echo"
+            // check, 2 adjacent Echoes would recurse without bound (each
+            // one's own ctx.CurrentIndex never advances inside the nested
+            // call) and stack-overflow.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.MultDeux, ModifierId.Echo, ModifierId.Echo };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            // The first Echo replays MultDeux once more; the second Echo's
+            // left neighbor is the first Echo, refused, so no further replay.
+            Assert.AreEqual(2 * ScoringConstants.MultDeuxBonus, result.AdditiveMultBonus);
+        }
+
         // ---- Format Specialist — curation pass, on explicit request:
         // "que me propose tu pour faire passer le jeu à un state
         // supérieur" -> "attaquons celui la". 10 per-SHAPE Specialist

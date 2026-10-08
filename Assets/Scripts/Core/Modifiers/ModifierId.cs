@@ -166,6 +166,21 @@ namespace Contigu.Core
         // ModifierId at all — see GridManager.ApplyDevotionEclatPairBonus.
         Polyvalence,
         RenfortJoker,
-        Arsenal
+        Arsenal,
+
+        // ---- Fourteenth batch: more synergy pass (on explicit request —
+        // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
+
+        /// <summary>+Mult per color for which BOTH Devotion and Éclat are held — the "trio" idea extended practically, since there's no natural 3rd per-color modifier to chase yet (see ModifierDefinition.CollectionChromatique).</summary>
+        CollectionChromatique,
+
+        /// <summary>Ties the group-parity pair (Pair/Impair) to the Format* size tiers — xN Mult when THIS placement satisfies a held parity condition AND a held Format tier condition at once (see GridManager.ApplyCadence).</summary>
+        Cadence,
+
+        /// <summary>Replays whatever modifier sits immediately to its own left in the player's held order, for this placement only — "as if holding a second copy of it" (see GridManager.ApplyEcho). Never chains into another Écho.</summary>
+        Echo,
+
+        /// <summary>Sangsue's own Lueur siphon, generalized to fire alongside ANY Joker combat trait kind, not just Sangsue itself (see RunManager.ApplyJokerCombatOrDefaultDamage) — stacks independently if Sangsue is also held and also fires.</summary>
+        Siphon
     }
 }

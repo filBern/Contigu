@@ -465,6 +465,25 @@ namespace Contigu.Core
             ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
             "+1 Mult per distinct Joker combat trait kind currently in your deck.");
 
+        // ---- Fourteenth batch: more synergy pass (on explicit request —
+        // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
+
+        public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
+            ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Color Collection",
+            "+2 Mult per color for which you hold BOTH its Devotion and Éclat modifier.");
+
+        public static readonly ModifierDefinition Cadence = new ModifierDefinition(
+            ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
+            "x2 Mult when this placement matches BOTH a held Pair/Impair condition AND a held Format Specialist tier at once.");
+
+        public static readonly ModifierDefinition Echo = new ModifierDefinition(
+            ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
+            "Replays whatever modifier sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
+
+        public static readonly ModifierDefinition Siphon = new ModifierDefinition(
+            ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
+            "Converts 15% of the damage from any Joker combat trait into bonus Lueur. Stacks with Sangsue.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -483,7 +502,8 @@ namespace Contigu.Core
             FormatPetitSpecialiste, FormatMoyenSpecialiste, FormatGrandSpecialiste,
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
             Pair, Impair,
-            Polyvalence, RenfortJoker, Arsenal
+            Polyvalence, RenfortJoker, Arsenal,
+            CollectionChromatique, Cadence, Echo, Siphon
         };
 
         public static ModifierDefinition Get(ModifierId id)
