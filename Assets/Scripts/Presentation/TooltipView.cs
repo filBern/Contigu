@@ -61,12 +61,9 @@ namespace Contigu.Presentation
             _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding);
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 22f);
 
-            // Sell value (explicit request: "j'aimerais qu'on ajoute la
-            // sell value d'un modifier en haut a droite de son tooltip") —
-            // top-right corner of the panel, same row as the Name. Only the
-            // persistent modifier side panel (owned, sellable modifiers)
-            // passes a value into Show(); every other caller (draft cards,
-            // enemy/trait/poison tooltips) leaves it null and this stays
+            // Sell value: top-right corner of the panel, same row as the
+            // Name. Only the persistent modifier side panel passes a value
+            // into Show(); every other caller leaves it null and this stays
             // hidden, same opt-in pattern as the subtitle line.
             _sellValueLabel = UIFactory.CreateText(_panel, "SellValue", "", 13, VisualDefaults.GoldenColor, TextAnchor.UpperRight);
             _sellValueLabel.raycastTarget = false;
@@ -133,13 +130,9 @@ namespace Contigu.Presentation
             _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - usedHeight);
             _descLabel.text = description;
 
-            // Height fits the actual description length instead of a fixed
-            // constant (explicit request: "j'aimerais que la hauteur du
-            // tooltip soit dynamique pour qu'il fit avec la longueur du
-            // texte"). Text.preferredHeight already reflects wrapping at the
-            // label's current (fixed) width, since UIFactory.CreateText sets
-            // horizontalOverflow = Wrap on every Text it builds — the panel's
-            // own width never changes, only its height.
+            // Height fits the actual description length. Text.preferredHeight
+            // already reflects wrapping at the label's current fixed width,
+            // since UIFactory.CreateText sets horizontalOverflow = Wrap.
             float descHeight = _descLabel.preferredHeight;
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, descHeight);
             _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight);
@@ -166,13 +159,10 @@ namespace Contigu.Presentation
             float halfW = _root.rect.width / 2f;
             float halfH = _root.rect.height / 2f;
 
-            // Never sit on top of the icon being inspected (explicit
-            // request: "je propose qu'il ne soit jamais dessus l'icon qu'on
-            // est en train d'essayer de comprendre") — clear the anchor's
-            // own bounds entirely rather than just nudging by a flat margin
+            // Never sit on top of the icon being inspected: clear the
+            // anchor's bounds entirely rather than nudging by a flat margin
             // from its center, and flip to its left side when there isn't
-            // room to its right, so it's never pushed back over the anchor
-            // by the screen-edge clamp below.
+            // room to its right.
             float anchorHalfW = anchor.rect.width * 0.5f;
             float anchorHalfH = anchor.rect.height * 0.5f;
 

@@ -5,7 +5,7 @@ namespace Contigu.Core
 {
     /// <summary>
     /// Everything that happened as a result of placing one piece: enough detail
-    /// for the presentation layer to show floating "+X" feedback per spec 9.7.
+    /// for the presentation layer to show floating "+X" feedback.
     /// </summary>
     public sealed class PlacementResult
     {
@@ -20,12 +20,8 @@ namespace Contigu.Core
         /// cref="PlacedCells"/> once this placement merges into a
         /// pre-existing group. Used by RunManager to find any Joker-exclusive
         /// combat trait (see PieceTrait.JokerCombatKinds) stamped on an
-        /// OLDER cell that this placement's merge just pulled back into a
-        /// scored group, so its combat effect retriggers too (explicit
-        /// request: "Pour les jokers, s'ils sont retrigger plus tard dans
-        /// une pièce jouée, son effet aussi est retrigger") — same
-        /// "rescored in full every time the group grows" spirit as Golden's
-        /// own re-trigger behavior.
+        /// older cell that this placement's merge just pulled back into a
+        /// scored group, so its combat effect retriggers too.
         /// </summary>
         public IReadOnlyList<Vector2Int> GroupCells = System.Array.Empty<Vector2Int>();
 
@@ -42,105 +38,61 @@ namespace Contigu.Core
         /// <summary>
         /// Aggregate multiplier from this placement's tinted-match/
         /// multiplier-zone cells (see GridManager.ComputeGroupMultiplier),
-        /// applied ONCE to the sum of <see cref="GroupBonus"/> + <see
-        /// cref="GoldenBonus"/> in <see cref="TotalScore"/> — Balatro-style
-        /// "apply the multiplier at the end" (explicit request), instead of
-        /// being baked per-cell into GroupBonus alone like before. 1 when
-        /// nothing in this placement's group carried either flag. Never
-        /// applies to ModifierBonus/TraitBonus, which stay fully
-        /// independent additive amounts.
+        /// applied once to the sum of <see cref="GroupBonus"/> + <see
+        /// cref="GoldenBonus"/> in <see cref="TotalScore"/>. 1 when nothing
+        /// in this placement's group carried either flag. Never applies to
+        /// ModifierBonus/TraitBonus, which stay independent additive amounts.
         /// </summary>
         public int GroupMultiplier = 1;
 
         /// <summary>
         /// Aggregate multiplier from this placement's multiplier-zone cells
-        /// ONLY (see GridManager.ComputeLineClearMultiplier) — applied to
+        /// only (see GridManager.ComputeLineClearMultiplier) — applied to
         /// <see cref="LineClearScore"/> alone in <see cref="TotalScore"/>.
         /// Deliberately excludes Tinted cells, unlike <see
-        /// cref="GroupMultiplier"/>: Tinted Tile and Multiplier Zone were
-        /// functionally identical once Tinted's color always matched its
-        /// own piece (see DeckManager.TagTintedTokensRandom), which made the
-        /// cheaper Common-rarity Tinted strictly redundant with the
-        /// Uncommon-rarity Multiplier Zone (explicit player feedback: "A ce
-        /// moment elle a le même effet que MultiplierZone, il faudrait
-        /// trouver une manière de les différencier"). Splitting the
-        /// line-clear bonus out keeps Tinted a real, always-firing, but
-        /// narrower effect. 1 when nothing in this placement's group is a
-        /// multiplier zone.
+        /// cref="GroupMultiplier"/>, keeping Tinted a narrower effect. 1
+        /// when nothing in this placement's group is a multiplier zone.
         /// </summary>
         public int LineClearMultiplier = 1;
 
         /// <summary>
-        /// Multiplies this placement's WHOLE total score (see <see
-        /// cref="TotalScore"/>) — the "Combo" modifier's doing (on explicit
-        /// request: "x2 sur le score TOTAL de la pose"). 1 when Combo isn't
-        /// held or didn't fire; stacks (x4, x8, ...) if held more than once,
-        /// same convention as <see cref="GroupMultiplier"/>. Combo used to be
-        /// the only true placement-wide multiplier modifier — see <see
-        /// cref="ModifierMultiplier"/>, which now covers many more.
+        /// Multiplies this placement's whole total score (see <see
+        /// cref="TotalScore"/>) — the "Combo" modifier's doing. 1 when Combo
+        /// isn't held or didn't fire; stacks (x4, x8, ...) if held more than
+        /// once, same convention as <see cref="GroupMultiplier"/>.
         /// </summary>
         public int ComboMultiplier = 1;
 
         /// <summary>
-        /// Multiplies this placement's WHOLE total score (see <see
+        /// Multiplies this placement's whole total score (see <see
         /// cref="TotalScore"/>), same tier as <see cref="ComboMultiplier"/>
-        /// — the aggregate of every "xN"-style modifier now held (Prisme,
-        /// Architecte, Tricolore, Complémentaire, Îlot,
-        /// Démolisseur, Dégradé, Solitaire, Espace Libre, Rafale, Pont,
-        /// Grosse Famille, Repetition, Minimaliste, the Format* Specialists,
-        /// and the 6 line-pattern modifiers), converted from a flat +pts
-        /// bonus to a real multiplier on explicit request ("j'aimerais qu'on
-        /// utilise plus de multiplicateur dans les modifiers"). Devotion*,
-        /// Slot Loyalty*, Maçon and Alternance des pièces used to be part of
-        /// this family too — converted to a flat +Mult instead (see <see
-        /// cref="AdditiveMultBonus"/>) on explicit request ("converting some
-        /// multiplicative sources to additive"): their trigger conditions
-        /// fire reliably enough every placement that the old xN was
-        /// compounding too easily with everything else here. 1 when none of
-        /// these fired this placement; stacks multiplicatively with itself
-        /// (several firing at once, or a "per line"/"per bridge" one firing
-        /// more than once) same as every other multiplier field here.
+        /// — the aggregate of every "xN"-style modifier currently held. 1
+        /// when none of these fired this placement; stacks multiplicatively
+        /// with itself (several firing at once, or a "per line"/"per bridge"
+        /// one firing more than once), same as every other multiplier field
+        /// here.
         /// </summary>
         public int ModifierMultiplier = 1;
 
         /// <summary>
-        /// A genuine ADDITIVE "+Mult" pool (Balatro-style), distinct from
-        /// <see cref="ModifierMultiplier"/>'s multiplicative "xN" family —
-        /// spec extension, explicit request ("+1 mult, +2 mult et +4 mult",
-        /// "+1 mult chaque modifier possédé", etc., phrased with a literal
-        /// "+" rather than "x"). 0 when nothing contributed. <see
-        /// cref="Mult"/> applies it as (1 + AdditiveMultBonus) — e.g. a
-        /// single "+1 Mult" modifier makes Mult exactly double, matching
-        /// how a lone "x2" ModifierMultiplier modifier would, but this pool
-        /// adds instead of multiplying when more than one contributes (two
-        /// "+1 Mult" modifiers together are (1+1+1)=x3, not x2*x2=x4).
+        /// A genuine additive "+Mult" pool, distinct from <see
+        /// cref="ModifierMultiplier"/>'s multiplicative "xN" family. 0 when
+        /// nothing contributed. <see cref="Mult"/> applies it as (1 +
+        /// AdditiveMultBonus) — e.g. a single "+1 Mult" modifier makes Mult
+        /// exactly double, but this pool adds instead of multiplying when
+        /// more than one contributes (two "+1 Mult" modifiers together are
+        /// (1+1+1)=x3, not x2*x2=x4).
         /// </summary>
         public int AdditiveMultBonus;
 
         /// <summary>
-        /// TRUE fractional ADDITIVE "+Mult" contribution from Density
+        /// True fractional additive "+Mult" contribution from Density
         /// (Densité), Enchanted Cards, and Experience (see GridManager.
-        /// ApplyDensite/RunManager.ApplyDeckStateModifierBonuses) — 0.1 per
-        /// filled tile/upgraded card/special piece played, computed as a
-        /// genuine float instead of the integer-stepped approximation
-        /// previously used to avoid float in the pipeline (on explicit
-        /// request: "Les upgrade progressive, on doit multiplier comme si
-        /// c'était un float au lieu d'arrondir a la baisse. On arrondit le
-        /// score total de la pièce posé par la suite" — Densite joined this
-        /// same pool later, converted from a multiplier: "Density modifier
-        /// devrait +n mult au lieu de xn mult ET devrait être un float au
-        /// lieu d'un int"). Kept separate from <see cref="AdditiveMultBonus"/>
-        /// (int) so that field stays exact for its existing readers
-        /// (MultUn/Deux/Quatre, Solidarite, MultCinqRisque, Devotion*, Slot
-        /// Loyalty*, Maçon, Alternance des pièces — all genuinely whole
-        /// numbers) — this adds in on top when computing <see
-        /// cref="Mult"/>. 0 when none of the three is held (or, for
-        /// Densite specifically, while the board is still empty — unlike
-        /// Enchanted Cards/Experience, Densite has no "start at 1" baseline
-        /// forcing it above zero, since a genuinely empty board correctly
-        /// contributing +0 Mult is fine for an additive term, where it
-        /// would have been a score-killing x0 under the old multiplicative
-        /// version).
+        /// ApplyDensite/RunManager.ApplyDeckStateModifierBonuses) — computed
+        /// as a genuine float, kept separate from <see cref="AdditiveMultBonus"/>
+        /// (int) so that field stays exact for its other, whole-number-only
+        /// contributors. Added in on top when computing <see cref="Mult"/>.
+        /// 0 when none of the three is held.
         /// </summary>
         public float ProgressiveAdditiveMult;
 
@@ -171,11 +123,10 @@ namespace Contigu.Core
 
         /// <summary>
         /// How many rows/columns this placement completed and cleared —
-        /// unlike <see cref="LineClearCellCount"/> (total CELLS emptied,
-        /// which double-counts a cell shared by a completed row AND
+        /// unlike <see cref="LineClearCellCount"/> (total cells emptied,
+        /// which double-counts a cell shared by a completed row and
         /// column), this is the straight count of lines themselves. Used
-        /// by RunManager to heal the "Leech" enemy (spec extension — GDD
-        /// §07: "Heals when the player destroys a line").
+        /// by RunManager to heal the "Leech" enemy.
         /// </summary>
         public int ClearedLineCount;
 
@@ -186,11 +137,7 @@ namespace Contigu.Core
         /// GridManager.CheckAndClearLines alone populates. Populated by
         /// RunManager (see ApplyVoidEffect/ApplyKamikazeEffect), same
         /// Core-doesn't-know-about-PieceTrait split as <see
-        /// cref="TraitBonus"/> — lets the presentation layer play the same
-        /// "tile just went away" feedback (a burst VFX, see
-        /// GridCellView.PlayClearBurst) for a destroyed cell as for a
-        /// cleared one (explicit request: "un petit vfx lorsqu'on clear une
-        /// tile ou qu'on la détruit").
+        /// cref="TraitBonus"/>.
         /// </summary>
         public IReadOnlyList<Vector2Int> DestroyedCells = System.Array.Empty<Vector2Int>();
 
@@ -224,16 +171,10 @@ namespace Contigu.Core
         /// <summary>
         /// Lueur earned from the player's active modifiers this placement —
         /// a second, independent source of Lueur alongside <see
-        /// cref="LueurEarned"/> (spec extension, explicit request: "quelques
-        /// modifiers qui rapportent des lueur"). Kept as its own field
-        /// rather than folded into LueurEarned so that field's own
-        /// contract ("always exactly the sum of LueurGroups") stays true —
-        /// RunManager adds both together when crediting the run's Lueur
-        /// total. See <see cref="ScoreEventType.LueurBonus"/> for the
-        /// individual events behind this sum (one per qualifying
-        /// modifier occurrence, tagged with which one via <see
-        /// cref="ScoreEvent.TriggeringModifier"/>, same as <see
-        /// cref="ModifierBonus"/>/<see cref="ModifierMultiplier"/>).
+        /// cref="LueurEarned"/>. Kept as its own field rather than folded
+        /// into LueurEarned so that field's own contract ("always exactly
+        /// the sum of LueurGroups") stays true — RunManager adds both
+        /// together when crediting the run's Lueur total.
         /// </summary>
         public int ModifierLueurBonus;
 
@@ -246,13 +187,12 @@ namespace Contigu.Core
         public IReadOnlyList<ScoreEvent> ScoreEvents = System.Array.Empty<ScoreEvent>();
 
         /// <summary>
-        /// Balatro-style "chips" — every additive scoring source folded
-        /// together, including the per-cell <see cref="GroupMultiplier"/>/
-        /// <see cref="LineClearMultiplier"/> (Tinted/Multiplier Zone cells)
-        /// but NOT the placement-wide <see cref="ModifierMultiplier"/>/<see
-        /// cref="ComboMultiplier"/> (see <see cref="Mult"/> for those).
-        /// <see cref="TotalScore"/> is always exactly Chips * <see
-        /// cref="Mult"/>.
+        /// Every additive scoring source folded together, including the
+        /// per-cell <see cref="GroupMultiplier"/>/<see cref="LineClearMultiplier"/>
+        /// (Tinted/Multiplier Zone cells) but not the placement-wide <see
+        /// cref="ModifierMultiplier"/>/<see cref="ComboMultiplier"/> (see
+        /// <see cref="Mult"/> for those). <see cref="TotalScore"/> is always
+        /// exactly Chips * <see cref="Mult"/>.
         /// </summary>
         public int Chips
         {
@@ -260,40 +200,22 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Balatro-style "mult", starting at 1 — but unlike a plain "sum
-        /// every +Mult, multiply in every xN" pool, this now folds every
-        /// Mult-contributing <see cref="ScoreEvents"/> entry (<see
-        /// cref="ScoreEventType.ModifierMultiplier"/>/<see
-        /// cref="ScoreEventType.MultBonus"/>) strictly left to right, in
-        /// the order the player actually holds those modifiers (<see
-        /// cref="ScoreEvent.TriggeringModifierIndex"/> — the modifier's own
-        /// position in RunManager.ActiveModifiers), NOT by operator
-        /// precedence (on explicit request: "leur pointage se fasse par
-        /// ordre d'index. Le premier acheté est le premier index" +
-        /// "1(par défaut) x2 +2 +5 est moins grand que 1(par défaut) +2 +5
-        /// x2 puisque chaque calcul est fait de gauche à droite et non
-        /// selon la priorité des opérations PEDMAS"). A "+N Mult" modifier
-        /// (MultUn/Deux/Quatre, Risky Mult, Solidarité, Enchanted Cards,
-        /// Experience, Densité, Devotion*, Slot Loyalty*, Maçon, Alternance
-        /// des pièces) ADDS N to the running total; an "xN" modifier
-        /// (Prisme, the line-pattern family, Combo, ...) MULTIPLIES it —
-        /// exactly which one each event is comes from its own <see
-        /// cref="ScoreEventType"/>. Reading off the events (rather than the
-        /// old separately-summed <see cref="AdditiveMultBonus"/>/<see
-        /// cref="ModifierMultiplier"/>/<see cref="ComboMultiplier"/>/<see
-        /// cref="ProgressiveAdditiveMult"/> fields, which are still
-        /// populated as an aggregate rollup for other readers/tests but no
-        /// longer drive the actual score) is what makes this order-sensitive at
-        /// all — those fields collapse every + into one sum and every x
-        /// into one product before combining the two, which is
-        /// mathematically order-INDEPENDENT (a sum and a product are each
-        /// commutative on their own) and could never honor a purchase
-        /// order no matter how the player arranged their modifiers. <see
-        /// cref="ScoreEvent.PreciseAmount"/> is used over the rounded <see
-        /// cref="ScoreEvent.Amount"/> wherever a modifier set it (Densité/
-        /// Enchanted Cards/Experience), so progressive modifiers keep full
-        /// precision through the whole fold — only <see cref="TotalScore"/>
-        /// rounds, once, at the very end.
+        /// Starts at 1 and folds every Mult-contributing <see
+        /// cref="ScoreEvents"/> entry (<see cref="ScoreEventType.ModifierMultiplier"/>/<see
+        /// cref="ScoreEventType.MultBonus"/>) strictly left to right, in the
+        /// order the player holds those modifiers (<see
+        /// cref="ScoreEvent.TriggeringModifierIndex"/>), not by operator
+        /// precedence: a "+N Mult" event adds N to the running total, an
+        /// "xN" event multiplies it. This is why the fold reads off
+        /// <see cref="ScoreEvents"/> rather than the separately-summed
+        /// <see cref="AdditiveMultBonus"/>/<see cref="ModifierMultiplier"/>/<see
+        /// cref="ComboMultiplier"/>/<see cref="ProgressiveAdditiveMult"/>
+        /// fields (still populated for other readers/tests but order-
+        /// independent, since summing then multiplying can't honor purchase
+        /// order). <see cref="ScoreEvent.PreciseAmount"/> is used over the
+        /// rounded <see cref="ScoreEvent.Amount"/> wherever a modifier set
+        /// it, so progressive modifiers keep full precision through the
+        /// fold — only <see cref="TotalScore"/> rounds, once, at the end.
         /// </summary>
         public float Mult
         {
@@ -308,11 +230,8 @@ namespace Contigu.Core
                         multEvents.Add(e);
                     }
                 }
-                // Stable by construction: two events sharing the same index
-                // are always the SAME modifier's own multiple firings (a
-                // modifier is never partly "+" and partly "x"), so their
-                // relative order never matters — a plain (unstable) sort is
-                // safe here.
+                // Two events sharing the same index are always the same
+                // modifier's own multiple firings, so an unstable sort is safe.
                 multEvents.Sort((a, b) => a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex));
 
                 float mult = 1f;

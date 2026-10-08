@@ -7,24 +7,14 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Overlay shown once a shop upgrade purchase reveals "Random Piece"
-    /// (spec extension, explicit request: "Propose 5 choix de pièces et le
-    /// joueur en sélectionne une. Chaque pièce a un pourcentage de chance
-    /// d'être upgradé avec une tuile spéciale") — the player picks ONE of
-    /// RunManager.PendingUpgradePieceCandidates to add to their deck.
-    /// Structurally close to TileChoiceView (same measured, vertically
-    /// centered card+title+previews+Confirm block), but simpler in two
-    /// ways: candidates are whole PieceToken values handed straight from
-    /// Core rather than deck indices (there's no deck to look them up in —
-    /// they don't exist yet), and any trait a candidate carries was already
-    /// rolled by UpgradeSystem.GetCandidatePiecesFor, so it's just shown
-    /// outright rather than progressively previewed on selection the way
-    /// TileChoiceView's speculative trait preview is.
+    /// Overlay shown once a shop upgrade purchase reveals "Random Piece": the player picks one of
+    /// RunManager.PendingUpgradePieceCandidates to add to their deck. Structurally close to TileChoiceView
+    /// (same measured, vertically centered card+title+previews+Confirm block), but candidates are whole
+    /// PieceToken values straight from Core, and any trait was already rolled by
+    /// UpgradeSystem.GetCandidatePiecesFor so it's shown outright rather than previewed on selection.
     /// </summary>
     public sealed class PieceChoiceView : MonoBehaviour
     {
-        // 30% smaller than the original 160/116 (explicit request: "met les
-        // carte de piece 30% plus petit").
         private const float CellSize = 112f;
         private const float PreviewSize = 81f;
         private const float LevelLabelHeight = 20f;
@@ -64,8 +54,7 @@ namespace Contigu.Presentation
             _cardContainer.anchorMin = new Vector2(0.5f, 1f);
             _cardContainer.anchorMax = new Vector2(0.5f, 1f);
             _cardContainer.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the whole block's
-            // layout — see LayoutBlock.
+            // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
 
             _title = UIFactory.CreateText(_root, "Title", "Choose a piece", 22, UITheme.TextOnBackground);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -165,10 +154,7 @@ namespace Contigu.Presentation
             previewContainer.anchoredPosition = new Vector2(0f, 13f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
 
-            // The trait (if any) was already rolled for this candidate — no
-            // "preview on select" step needed the way TileChoiceView's
-            // speculative trait preview has, since there's no hidden
-            // outcome left to reveal.
+            // The trait (if any) was already rolled for this candidate, so it's shown outright.
             var token = _candidates[index];
             ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, token.Trait, _tooltip, cell.gameObject);
 

@@ -47,8 +47,7 @@ namespace Contigu.Core
     /// <summary>
     /// A single, atomic point-scoring event tied to one grid cell — the building
     /// block behind a placement's aggregate score, so the presentation layer can
-    /// show each contribution individually instead of one lump total (spec 9.7's
-    /// "+X" feedback, made granular).
+    /// show each contribution individually instead of one lump total.
     /// </summary>
     public sealed class ScoreEvent
     {
@@ -82,41 +81,34 @@ namespace Contigu.Core
         /// activeModifiers list that produced this event (GridManager's own
         /// loop index when it dispatched to that modifier's Apply* method —
         /// see GridManager.TagNewEvents) — 0 when <see cref="TriggeringModifier"/>
-        /// is null. Distinct copies of the SAME modifier id can coexist
+        /// is null. Distinct copies of the same modifier id can coexist
         /// (Copieur/"Mimic" duplicates an id rather than being its own), so
         /// the id alone can't tell two of them apart; this lets the
         /// presentation layer (ModifierPanelView.GetBadgeTransform) anchor
         /// this event's popup on the specific badge that actually produced
-        /// it instead of always the first one showing that id (on explicit
-        /// report: "le texte de bonus est sur le modifier copié et non la
-        /// copie créé").
+        /// it instead of always the first one showing that id.
         /// </summary>
         public int TriggeringModifierIndex;
 
         /// <summary>
-        /// The TRUE, unrounded contribution behind <see cref="Amount"/> — only
+        /// The true, unrounded contribution behind <see cref="Amount"/> — only
         /// set for a <see cref="ScoreEventType.MultBonus"/> event from a
         /// genuinely fractional modifier (Enchanted Cards/Experience, see
         /// RunManager.ApplyDeckStateModifierBonuses), null everywhere else.
         /// <see cref="Amount"/> stays a rounded int (still used for chip/usage
         /// bookkeeping that expects a whole number); this lets the popup show
-        /// the precise value instead (on explicit report: "le popup de score
-        /// qui apparait est un int et non un float donc au lieu de voir +1.3
-        /// je vois +1 malgré le fait que le mult est bien augmenté de 1.3").
+        /// the precise value instead.
         /// </summary>
         public float? PreciseAmount;
 
         /// <summary>
-        /// A SECOND grid position this event's own eligibility actually
+        /// A second grid position this event's own eligibility actually
         /// depended on, beyond <see cref="Position"/> itself — null for
         /// every event type that only ever reads its own cell. Set by
         /// GridManager.ApplyContraste to the contrasting neighbor cell that
-        /// triggered it (spec extension, explicit request: "si un modifier
-        /// utilise cette case là spécifiquement c'est négatif aussi.
-        /// Exemple pour le modifier contrast, si la tuile adjacente d'une
-        /// autre couleur est négative"): RunManager.ApplyPoisonScoreRule
-        /// also negates this event when THIS position is poisoned, not just
-        /// when <see cref="Position"/> is.
+        /// triggered it: RunManager.ApplyPoisonScoreRule also negates this
+        /// event when this position is poisoned, not just when <see
+        /// cref="Position"/> is.
         /// </summary>
         public Vector2Int? ReferencedPosition;
 

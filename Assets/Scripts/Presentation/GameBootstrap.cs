@@ -17,42 +17,25 @@ namespace Contigu.Presentation
         private const float CellSize = VisualDefaults.GridCellSize;
         private const float ScoreEventStaggerSeconds = 0.22f;
         private const float LineClearStaggerSeconds = 0.14f;
-        // Lueur groups play before anything else in the sequence (explicit
-        // request: "au début du décompte du score") and don't share the
-        // score cascade's own combo speedup ramp — a flat, slightly slower
-        // pace since each one also has to wait for its flying popup to
-        // actually land (see FeedbackLayer.SpawnFlyingPopup) before the
-        // reveal reads clearly.
+        // Lueur groups play before the score cascade, at a flat pace (not
+        // the combo speedup ramp) since each one waits for its flying popup
+        // to land before the reveal reads clearly.
         private const float LueurGroupStaggerSeconds = 0.3f;
-        // Each combo addition waits 3% less than the previous one (on
-        // explicit request — 10% was too fast), so a big combo doesn't make
-        // the player sit through a long, linearly-paced popup sequence —
-        // floored so a very long chain still keeps a perceptible beat
-        // instead of collapsing to an instant dump.
+        // Each combo addition waits 3% less than the previous one, floored
+        // so a long chain still keeps a perceptible beat instead of
+        // collapsing to an instant dump.
         private const float ComboSpeedupFactor = 0.97f;
         private const float MinStaggerSeconds = 0.1f;
-        // Round-end "unused piece -> Lueur" popup sequence (see
-        // PlayRoundEndLueurBonusSequence) — faster than LueurGroupStaggerSeconds
-        // since this can run once per unused piece in the round's whole
-        // budget (up to ~24), not just once per scored group.
         private const float RoundEndLueurBonusStaggerSeconds = 0.1f;
-        // Slow "breathing" pulse on the idle status prompt (on explicit
-        // request: "j'aimerais qu'il pulse lentement") — a gentle ±5% scale
-        // wobble, not the sharper one-shot flash ModifierPanelView.Pulse
-        // uses for score feedback.
+        // Gentle ±5% scale wobble, distinct from ModifierPanelView.Pulse's
+        // sharper one-shot flash used for score feedback.
         private const float StatusPulseAmplitude = 0.05f;
         private const float StatusPulseSpeed = 1.5f;
-        // Shared by both the manual Shuffle button and an automatic
-        // (auto-refill) Shuffle's own event sequence (explicit request:
-        // "Lors d'un shuffle manuel ou automatique, voici l'ordre des
-        // évènements que je veux") — see PlayManualShuffleSequence and
-        // PlayPlacementSequence's own handWasAboutToAutoRefill branch. PER
-        // ELEMENT, not for the whole group — HandView.FadeSlotPieces/
-        // GridView.FadeMalus each fade one slot/cell at a time rather than
-        // all of them together (explicit follow-up request: "Les fade in
-        // et fade out doivent se faire un élément a la fois ... et non les
-        // 3 a la fois"), so a shorter value here keeps the total sequence
-        // (up to 3 slots, plus however many malus cells) from dragging.
+        // Shared by the manual Shuffle button and an auto-refill Shuffle's
+        // event sequence (see PlayManualShuffleSequence and
+        // PlayPlacementSequence's handWasAboutToAutoRefill branch). Applied
+        // per element — HandView.FadeSlotPieces/GridView.FadeMalus fade one
+        // slot/cell at a time, not the whole group at once.
         private const float ShuffleFadeDuration = 0.12f;
         private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
         private const int DefaultStatusFontSize = 19;
@@ -102,12 +85,9 @@ namespace Contigu.Presentation
             WireEvents();
             RefreshAll();
 
-            // Re-renders every already-built piece-color view immediately on
-            // toggle (see ColorblindMode) rather than waiting for the next
-            // unrelated refresh — RefreshAll covers the grid/hand/HUD/
-            // modifier panel; the shop and deck-view overlay are only
-            // rebuilt too if actually open right now, since a hidden one
-            // will render correctly the next time it's shown anyway.
+            // RefreshAll covers grid/hand/HUD/modifier panel; the shop and
+            // deck-view overlay are only rebuilt if actually open, since a
+            // hidden one renders correctly next time it's shown anyway.
             ColorblindMode.Changed += OnColorblindModeChanged;
 
             // Applies the persisted Master volume immediately at launch,
@@ -116,18 +96,11 @@ namespace Contigu.Presentation
             ApplyVolumeSettings();
             SfxManager.PlayMusic();
 
-            // The main menu now lives in its own scene (MainMenuBootstrap,
-            // see Assets/Scenes/MainMenu.unity — spec extension, explicit
-            // request: "j'aurais aimé qu'il soit dans une scene a part")
-            // instead of being built and shown/hidden inside this same
-            // scene; its "Play" button loads this scene fresh via
-            // SceneManager.LoadScene, so ChallengeSelectView is shown
-            // immediately here instead, blocking, on top of the Classic run
-            // built just above: OnChallengeChosen replaces it with whichever
-            // challenge is actually picked, even Classic again, so nothing
-            // about that initial run is ever actually played. TutorialView's
-            // own first-launch auto-show (see OnChallengeChosen) fires right
-            // after, once a challenge is locked in.
+            // MainMenuBootstrap's "Play" button loads this scene fresh, so
+            // the Classic run built above is never actually played —
+            // ChallengeSelectView replaces it with whichever challenge gets
+            // picked. TutorialView's first-launch auto-show (see
+            // OnChallengeChosen) fires right after.
             _challengeSelectView.Show(_metaStats);
         }
 
@@ -174,56 +147,31 @@ namespace Contigu.Presentation
                 DebugGrantStarsShortcut();
             }
 #endif
-            // Tab toggles the deck-view overlay (on explicit request: an
-            // in-game way to check the deck's composition without waiting
-            // for the next draft) — always available, not an editor-only
-            // debug shortcut like F9 above.
+            // Unlike the F-key shortcuts above, these bindings are always
+            // available, including in real builds.
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 _deckView.Toggle();
             }
-            // C toggles colorblind mode (see ColorblindMode) — same
-            // "always-available, not editor-only" reasoning as Tab above;
-            // an accessibility setting has to be reachable in a real build,
-            // not just in the editor.
             if (Input.GetKeyDown(KeyCode.C))
             {
                 ColorblindMode.Toggle();
             }
-            // H reopens the rules overlay (see TutorialView) — shown once
-            // automatically on first launch, always reachable again after
-            // that, same "always-available" reasoning as Tab/C above.
             if (Input.GetKeyDown(KeyCode.H))
             {
                 _tutorialView.Show();
             }
-            // Escape toggles the Settings overlay (see SettingsView) — same
-            // "always-available" reasoning as Tab/C/H above; free key, no
-            // existing binding anywhere else in this codebase.
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 _settingsView.Toggle();
             }
-            // X sells whichever modifier badge the pointer is currently
-            // resting over (spec extension, explicit request: "Le joueur
-            // devrait pouvoir sell modifier lorsqu'il hover dessus + un
-            // input que tu peux choisir" — X chosen since it's free and
-            // reads as "remove/discard" in most games, same "always-
-            // available" reasoning as the other bindings above).
             if (Input.GetKeyDown(KeyCode.X))
             {
                 TrySellHoveredModifier();
             }
         }
 
-        /// <summary>
-        /// Sells whichever modifier badge is currently hovered (see
-        /// ModifierPanelView.HoveredRowIndex — already -1 while the panel
-        /// is blocked, e.g. mid-animation) via RunManager.SellModifier, and
-        /// flies the refund from that badge to the Lueur label same as any
-        /// other Lueur gain. No-op if nothing's hovered or the run is in a
-        /// state (victory/defeat) where touching modifiers makes no sense.
-        /// </summary>
+        /// <summary>Sells the currently hovered modifier badge; ModifierPanelView.HoveredRowIndex is -1 while the panel is blocked mid-animation. No-op if nothing's hovered or the run isn't InProgress/AwaitingShop.</summary>
         private void TrySellHoveredModifier()
         {
             if (_run.State != RunState.InProgress && _run.State != RunState.AwaitingShop)
@@ -251,28 +199,16 @@ namespace Contigu.Presentation
             _hudView.SetLueur(_run.Lueur);
             if (_run.State == RunState.AwaitingShop)
             {
-                // Selling while the shop is open can un-cap "Full (N)"
-                // buttons (Random Modifier, Modifier Upgrade) — those read
-                // ActiveModifiers.Count only when built/refreshed, so
-                // without this they kept showing "Full" after a sale took
-                // the count back under the cap (bug report: "le statut des
-                // boutons n'est pas a jour, ça m'indique toujours full").
+                // A sale can drop ActiveModifiers.Count back under the cap,
+                // which un-caps the shop's "Full" buttons — refresh to
+                // reflect that.
                 _shopView.Refresh(_run);
             }
             SetStatusText("Sold " + ModifierCatalog.Get(id).Name + " for " + refundedLueur + " Lueur.");
         }
 
 #if UNITY_EDITOR
-        /// <summary>
-        /// Editor-only debug shortcut (F7): forces upgrade slot 0 to be
-        /// "Random Modifier" while the shop is open, so the REAL "Buy"
-        /// button (BuyUpgradeSlot, via ShopView) can be clicked normally —
-        /// on explicit report that it still never showed up after nearly 20
-        /// real purchases even though F8's debug-triggered grant worked
-        /// fine, to test whether BuyUpgradeSlot's own branching (not just
-        /// the shop's roll odds) is where the problem is. No-op with a
-        /// status message if the shop isn't currently open.
-        /// </summary>
+        /// <summary>Editor-only debug shortcut (F7): forces upgrade slot 0 to "Random Modifier" so the real Buy button path (BuyUpgradeSlot) can be tested directly. No-op with a status message if the shop isn't open.</summary>
         private void DebugForceUpgradeSlotShortcut()
         {
             if (!_run.DebugForceUpgradeSlotToRandomModifier(0))
@@ -284,15 +220,7 @@ namespace Contigu.Presentation
             SetStatusText("F7: upgrade slot 1 is now Random Modifier — buy it for real.");
         }
 
-        /// <summary>
-        /// Editor-only debug shortcut (F8): directly triggers the "Random
-        /// Modifier" upgrade's grant + reveal, bypassing the shop entirely —
-        /// on explicit report ("Encore une fois je ne les ai pas vu en plus
-        /// d'une vingtaine") lets the purchase/grant/reveal pipeline be
-        /// tested with certainty, independent of the shop's own roll odds
-        /// (see RunManager.DebugTriggerRandomModifierGrant). Works any time,
-        /// not just while the shop is open, unlike a real purchase.
-        /// </summary>
+        /// <summary>Editor-only debug shortcut (F8): triggers the Random Modifier grant+reveal directly, bypassing the shop's roll odds. Works any time, unlike a real purchase.</summary>
         private void DebugTriggerRandomModifierShortcut()
         {
             var granted = _run.DebugTriggerRandomModifierGrant();
@@ -307,12 +235,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Editor-only debug shortcut (F9): instantly completes the current
-        /// round so the upgrade draft appears right away — lets upgrades be
-        /// tested without grinding out a full round for real. Stripped from
-        /// real builds by the UNITY_EDITOR guard around this whole block.
-        /// </summary>
+        /// <summary>Editor-only debug shortcut (F9): instantly completes the current round.</summary>
         private void DebugForceRoundWin()
         {
             if (_isPlayingPlacementSequence || _run.State != RunState.InProgress)
@@ -324,13 +247,7 @@ namespace Contigu.Presentation
             HandleStateTransition(state);
         }
 
-        /// <summary>
-        /// Editor-only debug shortcut (F10): grants 100 Lueur instantly, on
-        /// explicit request — lets the shop be tested (or just played with)
-        /// without grinding out real line clears for it first. Same
-        /// "skip the grind" spirit as F9 above, and likewise stripped from
-        /// real builds by the UNITY_EDITOR guard around this whole block.
-        /// </summary>
+        /// <summary>Editor-only debug shortcut (F10): grants 100 Lueur instantly.</summary>
         private void DebugGrantLueurShortcut()
         {
             _run.DebugGrantLueur(100);
@@ -338,15 +255,7 @@ namespace Contigu.Presentation
             _shopView.Refresh(_run);
         }
 
-        /// <summary>
-        /// Editor-only debug shortcut (F11): grants 100 Stars instantly and
-        /// saves right away, on explicit request ("il me faut un cheat pour
-        /// les unlock") — lets Marathon/Chaos be tested (or the picker's
-        /// unlock flow itself) without grinding out real runs for Stars
-        /// first. Same "skip the grind" spirit as F10 above. Refreshing
-        /// the picker is harmless even while it's hidden — it just re-reads
-        /// whatever's current the next time it's shown.
-        /// </summary>
+        /// <summary>Editor-only debug shortcut (F11): grants 100 Stars instantly and saves. Refreshing the picker is harmless even while hidden — it re-reads current state next time it's shown.</summary>
         private void DebugGrantStarsShortcut()
         {
             _metaStats.Stars += 100;
@@ -355,23 +264,7 @@ namespace Contigu.Presentation
         }
 #endif
 
-        /// <summary>
-        /// Sets the status line's text, starting or stopping its slow
-        /// "breathing" pulse depending on whether it's showing the default
-        /// idle prompt (on explicit request: "j'aimerais qu'il pulse
-        /// lentement et qu'il soit légèrement plus gros") — every other
-        /// status message (a piece selected, an error, a round transition)
-        /// stays still, since a constant pulse there would compete with the
-        /// message actually being new/important.
-        /// </summary>
-        /// <summary>
-        /// <paramref name="emphasize"/> bumps the status text up to <see
-        /// cref="EmphasizedStatusFontSize"/> instead of its default <see
-        /// cref="DefaultStatusFontSize"/> — explicit request: "le message
-        /// qu'on ne peut pas la poser soit plus gros", for the "this piece
-        /// can't be placed anywhere" warning specifically. Every other
-        /// caller leaves it at the default size.
-        /// </summary>
+        /// <summary>Starts/stops the idle-prompt pulse depending on whether <paramref name="text"/> is the default idle message; other callers leave it off. <paramref name="emphasize"/> bumps the font size to <see cref="EmphasizedStatusFontSize"/>.</summary>
         private void SetStatusText(string text, bool emphasize = false)
         {
             _statusText.text = text;
@@ -432,21 +325,18 @@ namespace Contigu.Presentation
 
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            // Rounds every UI element's rendered position to a whole pixel —
-            // without it, ScaleWithScreenSize's non-integer scale factor on
-            // most window sizes leaves text sitting at sub-pixel offsets,
-            // which reads as soft/blurry under anti-aliasing (most visible
-            // on Digitalt's thick strokes at small sizes).
+            // Rounds UI element positions to whole pixels — without it,
+            // ScaleWithScreenSize's non-integer scale factor leaves text at
+            // sub-pixel offsets that read as blurry under anti-aliasing.
             canvas.pixelPerfect = true;
 
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 800f);
-            // Our whole layout is a fixed-height vertical stack (HUD + status +
-            // grid + hand), so match on HEIGHT (1) rather than blend width/height
-            // (0.5): with match=1 the canvas is always exactly 800 units tall
-            // regardless of the window's aspect ratio, so the hand row at the
-            // bottom never gets squeezed off-screen on wide/short windows.
+            // The layout is a fixed-height vertical stack (HUD + status +
+            // grid + hand), so match on HEIGHT (1): the canvas is always
+            // exactly 800 units tall regardless of aspect ratio, so the
+            // hand row never gets squeezed off-screen on wide/short windows.
             scaler.matchWidthOrHeight = 1f;
 
             canvasGo.AddComponent<GraphicRaycaster>();
@@ -476,12 +366,8 @@ namespace Contigu.Presentation
             comboRect.anchoredPosition = new Vector2(0f, 65f);
 
             // Built before HudView/GridView/HandView since all three need a
-            // live TooltipView to hover (the enemy band's icons, grid cells'
-            // trait-origin badges and hand pieces' trait badges,
-            // respectively) — moved ahead of HudView.Build specifically for
-            // the enemy icon hover tooltip (explicit request: "pouvoir
-            // hover sur l'ennemi pour avoir plus de détails sur ce qu'il
-            // fait comme effet lorsqu'on shuffle").
+            // live TooltipView to hover (enemy icons, grid trait badges,
+            // hand piece trait badges).
             _tooltipView = gameObject.AddComponent<TooltipView>();
             _tooltipView.Build(mainRoot);
 
@@ -495,10 +381,8 @@ namespace Contigu.Presentation
             _statusText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _statusText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _statusText.rectTransform.pivot = new Vector2(0.5f, 1f);
-            // Below the top bar/enemy band (see HudView.EnemyBandHeight,
-            // taller than the plain score bar so the enemy icons sit lower
-            // and clear of the screen edge — explicit request: "l'ennemi
-            // est trop haut") with a 12px gap.
+            // Below the top bar/enemy band (HudView.EnemyBandHeight is
+            // taller than the plain score bar) with a 12px gap.
             _statusText.rectTransform.anchoredPosition = new Vector2(0f, -(HudView.EnemyBandHeight + 12f));
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
             StartStatusPulse();
@@ -512,37 +396,23 @@ namespace Contigu.Presentation
             gridRect.pivot = new Vector2(0.5f, 0.5f);
             gridRect.anchoredPosition = new Vector2(0f, 55f);
 
-            // Center each side panel in the horizontal gap between the grid
-            // edge and the corresponding screen edge. Computed straight from
-            // Screen.width/height (matching CanvasScaler's own match-height
-            // formula — see BuildCanvas) rather than read back off
-            // mainRoot.rect.width: that RectTransform is only guaranteed
-            // correct once the Canvas has actually applied CanvasScaler's
-            // scale factor, which isn't guaranteed to have happened yet by
-            // the time this synchronous Build call runs, so it could still
-            // reflect a stale/default size here — on a wide-aspect screen
-            // that silently computes too SMALL a canvasWidth, which
-            // UNDER-clamps sidePanelCenterX below and leaves the combo card
-            // hanging off the real (correctly wide) screen's right edge once
-            // the Canvas actually settles (explicit report, after the first
-            // clamp fix: "En full HD resolution, la box de combo est
-            // toujours hors écran a droite" — full HD is a WIDE aspect
-            // ratio, so the fix should have had plenty of room to work with
-            // if canvasWidth had been measured correctly).
+            // Center each side panel in the gap between the grid edge and
+            // the screen edge. Computed from Screen.width/height (matching
+            // CanvasScaler's match-height formula — see BuildCanvas) rather
+            // than mainRoot.rect.width, which isn't guaranteed to reflect
+            // CanvasScaler's applied scale factor yet at this point in a
+            // synchronous Build call, and could under-compute canvasWidth
+            // on a wide-aspect screen.
             float halfGridWidth = gridRect.rect.width * 0.5f;
             float canvasWidth = Screen.height > 0 ? 800f * Screen.width / Screen.height : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
             float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
 
-            // Clamp so the combo card — the widest thing placed at
-            // sidePanelCenterX (wider than ModifierPanelView's own fixed
-            // 230, which mirrors this same X on the left) — never hangs off
-            // the actual screen edge on a narrow/portrait aspect ratio
-            // (explicit report: "Dependant de la resolution le pointage du
-            // combo est un peu hors ecran"). Needs the card's real
-            // (content-fitted) width, so the rebuild that used to happen
-            // further down runs here first instead. Prioritizes staying
-            // on-screen over keeping the panel perfectly centered in its gap.
+            // Clamp so the combo card (the widest thing at sidePanelCenterX)
+            // never hangs off the screen edge on a narrow aspect ratio.
+            // Needs the card's real, content-fitted width, hence the forced
+            // rebuild here. Prioritizes staying on-screen over exact
+            // centering in the gap.
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
             const float SidePanelEdgeMargin = 12f;
             float maxSidePanelCenterX = halfCanvasWidth - comboRect.rect.width * 0.5f - SidePanelEdgeMargin;
@@ -605,17 +475,13 @@ namespace Contigu.Presentation
             _colorCarouselView.Build(mainRoot);
 
             _modifierPanelView = gameObject.AddComponent<ModifierPanelView>();
-            // Lambda (not the method group _run.GetModifierUsageCount) so a
-            // restart's new RunManager instance is picked up automatically —
-            // _run is reassigned on restart but this view is never rebuilt,
-            // only Refreshed, so a bound delegate would keep querying the
-            // old, discarded run forever.
+            // Lambda, not a method group, so a restart's new RunManager is
+            // picked up automatically — _run is reassigned on restart but
+            // this view is only Refreshed, never rebuilt.
             _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
-            // Reordering (drag-and-drop or tap-tap swap, on explicit
-            // request: modifier order now determines scoring order, see
-            // PlacementResult.Mult) — same "read the current _run field at
-            // invocation time" reasoning as the lambdas just above, so a
-            // restart's fresh RunManager is picked up automatically.
+            // Modifier order determines scoring order (see
+            // PlacementResult.Mult); same lambda-captures-_run reasoning as
+            // above.
             _modifierPanelView.SwapRequested += (a, b) =>
             {
                 _run.SwapModifiers(a, b);
@@ -703,13 +569,11 @@ namespace Contigu.Presentation
                 // this is just defense in depth.
                 return;
             }
-            // Fires for BOTH a plain click and a drag's own start (see
-            // HandView.SelectSlot, called from both BeginSlotDrag and
-            // OnSlotClicked) — one hook covers "Ramasser une pièce" for
-            // either interaction. HandView itself already refused the
-            // selection entirely (see SlotUnplayable below) if this piece
-            // has nowhere legal to go, so by the time this fires the piece
-            // is always actually placeable somewhere.
+            // Fires for both a plain click and a drag start (see
+            // HandView.SelectSlot, called from BeginSlotDrag and
+            // OnSlotClicked). HandView already refused the selection (see
+            // SlotUnplayable below) if the piece has nowhere to go, so it's
+            // always placeable by the time this runs.
             SfxManager.Play(SfxId.PickUpPiece);
             var token = slot.Value;
             var rotation = _run.Deck.HandRotations[handIndex];
@@ -719,18 +583,7 @@ namespace Contigu.Presentation
             SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
         }
 
-        /// <summary>
-        /// HandView refused to pick up this slot's piece because it has no
-        /// valid placement anywhere on the board (explicit request:
-        /// "Lorsqu'une pièce ne peut pas être joué, j'aimerais qu'elle ne
-        /// puisse pas être récupéré" — the slot itself already played its
-        /// own short shake, see HandView.ShakeSlot). Says so in an
-        /// emphasized (larger) status message ("le message qu'on ne peut
-        /// pas la poser soit plus gros") and points at Shuffle with a slow
-        /// pulse ("on devrait mettre en valeur le shuffle button en même
-        /// temps") instead of letting the player keep clicking around the
-        /// board to discover it themselves.
-        /// </summary>
+        /// <summary>HandView refused to pick up this slot's piece because it has no valid placement anywhere (the slot itself already played its shake, see HandView.ShakeSlot). Shows an emphasized status message and pulses Shuffle.</summary>
         private void OnHandSlotUnplayable(int handIndex)
         {
             _handView.SetShufflePulsing(true);
@@ -745,24 +598,15 @@ namespace Contigu.Presentation
             SetStatusText(IdleStatusMessage);
         }
 
-        /// <summary>
-        /// The Shuffle button (see HandView.BuildShuffleButton) — re-rolls
-        /// the hand and, on a stuck-and-now-out-of-shuffles hand, ends the
-        /// run right away instead of waiting for a placement attempt that
-        /// can never come (same reasoning as PlacePiece's own post-refill
-        /// stuck check). Any current selection/preview is cleared first
-        /// since the hand it pointed at no longer exists.
-        /// </summary>
+        /// <summary>Re-rolls the hand; on a stuck, out-of-shuffles hand, ends the run immediately rather than waiting for a placement that can never come (same reasoning as PlacePiece's post-refill stuck check).</summary>
         private void OnShuffleRequested()
         {
             if (_isPlayingPlacementSequence)
             {
                 return;
             }
-            // Same eligibility check RunManager.ShuffleHand itself makes —
-            // read-only here (not yet spending the charge) so this can bail
-            // out before any animation starts at all, exactly like the old
-            // immediate behavior did.
+            // Same eligibility check as RunManager.ShuffleHand, read-only
+            // here, so this bails before any animation starts.
             if (_run.State != RunState.InProgress || _run.ShufflesRemaining <= 0)
             {
                 return;
@@ -770,22 +614,7 @@ namespace Contigu.Presentation
             StartCoroutine(PlayManualShuffleSequence());
         }
 
-        /// <summary>
-        /// Manual Shuffle's own event order (explicit request: "Lors d'un
-        /// shuffle manuel ou automatique, voici l'ordre des évènements que
-        /// je veux: Animation de fade out des pièces dans les slots si
-        /// shuffle manuel / Animation de fade out de tous les malus sur
-        /// l'écran / Animation de fade in des pièces dans les slots /
-        /// Animation de fade in des malus des ennemies"). "Malus" here
-        /// means every enemy-placed debuff currently shown on the grid —
-        /// Locker's locked-obstacle look and Poisoner's poison badge (see
-        /// GridView.FadeMalus) — faded as one wipe-and-redraw rather than
-        /// diffed cell by cell, since the request is for ALL of them, not
-        /// just whichever ones a Locker/Poisoner On-Shuffle effect actually
-        /// moved. The automatic (auto-refill) path in PlayPlacementSequence
-        /// follows the same order, minus this sequence's own first step —
-        /// see its own handWasAboutToAutoRefill branch for why.
-        /// </summary>
+        /// <summary>Event order: fade out hand slot pieces, fade out all enemy malus (Locker locks, Poisoner badges — see GridView.FadeMalus, wiped and redrawn as one group rather than diffed cell by cell), fade in slot pieces, fade in malus. The auto-refill path in PlayPlacementSequence follows the same order minus this sequence's first step (see its handWasAboutToAutoRefill branch).</summary>
         private System.Collections.IEnumerator PlayManualShuffleSequence()
         {
             _isPlayingPlacementSequence = true;
@@ -816,24 +645,16 @@ namespace Contigu.Presentation
 
             _handView.SetSlotPiecesAlpha(0f);
             _handView.Refresh();
-            // A manual Shuffle resolves each alive enemy's own On-Shuffle
-            // effect exactly like the automatic post-placement refill does
-            // (RunManager.DrawFreshHand/ResolveEnemyShuffleEffects — not
-            // gated on the hand having actually run out: "C'est pas à
-            // chaque 3 pièce joué forcement"), which can move Locker's lock
-            // or add a new Poisoner tile. Those are GRID effects, not hand
-            // effects, so without this refresh the model updates correctly
-            // but the lock/poison badge never appears on screen (explicit
-            // report: "j'ai fait un shuffle avant d'avoir 0 slots rempli et
-            // les ennemies n'ont pas trigger leur effet" — it DID trigger,
-            // it just wasn't drawn).
+            // A manual Shuffle resolves each alive enemy's On-Shuffle effect
+            // (RunManager.DrawFreshHand/ResolveEnemyShuffleEffects), which
+            // can move Locker's lock or add a Poisoner tile — a grid effect,
+            // so it needs its own refresh or the badge never appears on
+            // screen even though the model already updated.
             _gridView.Refresh();
-            // Zeroed in the SAME frame as the Refresh() above, before
-            // anything yields — ApplyState always paints a fresh (opaque)
-            // malus look, so without this the hand's own fade-in below
-            // would run for a few frames with the new malus already
-            // sitting at full alpha, then FadeMalus's own reset-to-0 would
-            // make it visibly pop back out before fading in again.
+            // Zeroed in the same frame as Refresh() above, before anything
+            // yields — ApplyState always paints malus opaque, so without
+            // this it would flash at full alpha before FadeMalus resets it
+            // to 0.
             _gridView.SetMalusAlpha(0f);
 
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
@@ -876,28 +697,17 @@ namespace Contigu.Presentation
             int roundScoreBefore = _run.RoundScore;
             int lueurBefore = _run.Lueur;
 
-            // Snapshot the targeted enemy/enemies' HP BEFORE the placement
-            // mutates it, so damage can be held back and then drained in
-            // alongside the combo total instead of jumping instantly
-            // (explicit request: "il faut faire les dégâts seulement à la
-            // fin du calcule"). Index 0 among the alive ones is the
-            // default target (RunManager.ApplyDamageToEncounter); a Joker
-            // piece carrying one of the 5 combat traits (explicit request:
-            // "J'aimerais que toutes les pièces jokers soient
-            // particulières... des upgrades qui affectent directement la
-            // manière de se battre") can retarget the back (Range), the
-            // weakest alive enemy (Précision), or spread across several
-            // (Bombe/Éclat) — see FindDamagedEnemyIndices, which mirrors
-            // RunManager.ApplyJokerCombatOrDefaultDamage's own targeting
-            // read-only (including an OLDER Joker piece's trait
-            // retriggering once this placement's merge pulls its stamped
-            // cells back into a scored group), purely so this animation
-            // knows who to watch. Only index 0 of
-            // the list (the "primary" target) gets the smooth drain below;
-            // any further index is a Bombe/Éclat candidate, snapped to its
-            // final value once the primary drain finishes instead (see
-            // DrainSecondaryEnemyHits) — Range/Précision/the ordinary
-            // single-target case never produce a second entry at all.
+            // Snapshot the targeted enemy/enemies' HP before the placement
+            // mutates it, so damage can be held back and drained in
+            // alongside the combo total instead of jumping instantly.
+            // Index 0 is the primary target — the default front enemy, or
+            // whichever a Joker combat trait retargets (back for Range,
+            // weakest for Précision, spread for Bombe/Éclat) — see
+            // FindDamagedEnemyIndices, which mirrors RunManager.
+            // ApplyJokerCombatOrDefaultDamage's targeting read-only. Only
+            // index 0 gets the smooth drain below; any further index is a
+            // Bombe/Éclat candidate snapped to its final value by
+            // DrainSecondaryEnemyHits.
             var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex, x, y);
             var enemyHpBeforeList = new List<int>(damagedEnemyIndices.Count);
             var enemyIdList = new List<EnemyId>(damagedEnemyIndices.Count);
@@ -910,28 +720,22 @@ namespace Contigu.Presentation
             int enemyHpBefore = enemyHpBeforeList.Count > 0 ? enemyHpBeforeList[0] : 0;
             EnemyId damagedEnemyId = enemyIdList.Count > 0 ? enemyIdList[0] : default;
 
-            // Same idea for Leech's own heal (explicit request: "une
-            // animation de heal +15 lorsqu'il se fait heal") — snapshotting
-            // its HP before lets PlayLeechHealEffect show the ACTUAL amount
-            // gained (EnemyInstance.Heal clamps at CurrentMaxHp), rather
-            // than just assuming the full ScoringConstants.
-            // LeechHealPerLineClear every time, which would overstate it
-            // once Leech is already near full HP.
+            // Same idea for Leech's heal — snapshotting HP before lets
+            // PlayLeechHealEffect show the actual amount gained
+            // (EnemyInstance.Heal clamps at CurrentMaxHp) rather than
+            // assuming the full ScoringConstants.LeechHealPerLineClear,
+            // which would overstate it near full HP.
             int leechIndex = FindAliveEnemyIndex(EnemyId.Leech);
             int leechHpBeforeHeal = leechIndex >= 0 ? _run.CurrentEncounter[leechIndex].CurrentHp : 0;
 
             // Snapshot of every cell an alive Locker/Poisoner currently has
-            // locked/poisoned, BEFORE this placement — RunManager.PlacePiece
-            // can trigger an auto-refill (if this placement empties the
-            // hand) which resolves each enemy's own On-Shuffle effect
-            // synchronously, moving Locker's lock or re-rolling Poisoner's
-            // tile, all before any animation even starts. Diffed against
-            // the same snapshot taken again right after, so whichever cells
-            // actually changed can be held back from view (see below) until
-            // this placement's own feedback sequence finishes playing
-            // (explicit request: "il faut attendre la fin de décompte de
-            // point avant de faire l'action de shuffle et les effets des
-            // ennemies qui vont avec").
+            // locked/poisoned, before this placement — PlacePiece can
+            // trigger a synchronous auto-refill that resolves each enemy's
+            // On-Shuffle effect, moving the lock or re-rolling the poison
+            // tile, before any animation starts. Diffed against the same
+            // snapshot taken again right after so whichever cells changed
+            // can be held back from view until this placement's feedback
+            // sequence finishes.
             bool handWasAboutToAutoRefill = IsHandAboutToAutoRefill(handIndex);
             SnapshotEnemyEffectCells(out var lockedCellsBefore, out var poisonedCellsBefore);
 
@@ -944,28 +748,23 @@ namespace Contigu.Presentation
             }
             SfxManager.Play(SfxId.ValidDrop);
 
-            // Only valid to read right after a call that actually ran
-            // DrawFreshHand THIS placement (see handWasAboutToAutoRefill) —
-            // RunManager.ThiefStoleOnLastShuffle otherwise still holds
-            // whatever an EARLIER, unrelated Shuffle left it at, which
-            // would wrongly re-trigger PlayThiefStealEffect for a
-            // placement that never shuffled at all.
+            // Only valid right after a call that ran DrawFreshHand this
+            // placement — otherwise ThiefStoleOnLastShuffle still holds a
+            // stale value from an earlier, unrelated Shuffle.
             bool thiefStoleThisPlacement = handWasAboutToAutoRefill && _run.ThiefStoleOnLastShuffle;
 
             int leechHealAmount = leechIndex >= 0 ? _run.CurrentEncounter[leechIndex].CurrentHp - leechHpBeforeHeal : 0;
 
             int enemyHpAfter = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentHp : 0;
-            // CurrentMaxHp, not Definition.MaxHp — Reclaimer's own ceiling
-            // can grow past the shared Definition's value (see
-            // EnemyInstance.HealOrGrow), so this must track the real,
-            // possibly-already-grown cap for its own HP bar to read right.
+            // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can
+            // grow past the shared Definition value (see
+            // EnemyInstance.HealOrGrow).
             int enemyMaxHp = damagedEnemyIndex >= 0 ? _run.CurrentEncounter[damagedEnemyIndex].CurrentMaxHp : 0;
 
-            // Bombe/Éclat's own further candidates (index 1+ of
+            // Bombe/Éclat's further candidates (index 1+ of
             // damagedEnemyIndices) — only the ones that actually changed HP
-            // become real drain targets, since Éclat's cascade only reaches
-            // as far as its overkill goes and Bombe always lists every
-            // alive enemy as a candidate even though a dead one scores 0
+            // become real drain targets, since Bombe always lists every
+            // alive enemy as a candidate even though a dead one scores no
             // share. See DrainSecondaryEnemyHits.
             var secondaryDrainTargets = new List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)>();
             for (int i = 1; i < damagedEnemyIndices.Count; i++)
@@ -977,29 +776,10 @@ namespace Contigu.Presentation
                     secondaryDrainTargets.Add((idx, enemyIdList[i], enemyHpBeforeList[i], hpAfterSecondary, _run.CurrentEncounter[idx].CurrentMaxHp));
                 }
             }
-            // Only cells whose locked/poisoned status actually CHANGED this
-            // placement (added or removed by its own auto-refill, OR by an
-            // enemy dying from this placement's own damage — see
-            // CleanUpDefeatedEnemy) need to stay hidden — the symmetric
-            // difference of the two snapshots, NOT their union. A cell that
-            // was (and still is) poisoned regardless of this placement —
-            // including the very cell this placement's own line clear just
-            // went through — must NOT end up in here, or
-            // RefreshHoldingClearedCells below would give it the wrong
-            // deferred treatment instead of its normal held-filled one,
-            // leaving it stuck showing whatever ClearHover already
-            // (prematurely) drew for it until the final reveal (explicit
-            // report: "la tuile empoisonnée est présentement supprimée trop
-            // tôt visuellement"). Split into GAINED (new lock/poison this
-            // placement added — stays hidden/suppressed, same as before)
-            // and RELEASED (a lock/poison this placement just removed —
-            // kept LOOKING locked/poisoned instead, see RefreshHoldingClearedCells)
-            // since those two need opposite rendering treatment while
-            // deferred (explicit bug report: "Les locked cells sont enlevé
-            // visuellement trop tôt" + "Idem pour les cell empoisonné" — a
-            // released cell used to just show its TRUE, already-unlocked/
-            // unpoisoned state immediately, instead of staying hidden and
-            // then fading out in step with the rest of the reveal).
+            // Only cells whose status actually changed stay hidden — the
+            // symmetric difference of the two snapshots, not the union.
+            // GAINED stays hidden; RELEASED looks locked/poisoned until the
+            // reveal (see RefreshHoldingClearedCells).
             SnapshotEnemyEffectCells(out var lockedCellsAfter, out var poisonedCellsAfter);
             var lockedBeforeSet = new HashSet<Vector2Int>(lockedCellsBefore);
             var lockedAfterSet = new HashSet<Vector2Int>(lockedCellsAfter);
@@ -1041,23 +821,18 @@ namespace Contigu.Presentation
             bool hasDeferredGridChange = deferredNewMalusCells.Count > 0 || deferredReleasedLockedCells.Count > 0 || deferredReleasedPoisonedCells.Count > 0;
 
             _handView.SetShufflePulsing(false);
-            // ClearSelectionStateOnly, NOT SetSelectedShape(null) — the
-            // latter's ClearHover would redraw the hover footprint (almost
-            // always this exact placement's own cells) from LIVE grid
-            // state, which can leak a contamination spread or an
-            // auto-refill-triggered lock/poison move early if it landed on
-            // one of them (see ClearSelectionStateOnly's own doc comment).
-            // RefreshHoldingClearedCells below redraws every cell anyway,
-            // with the correct held/deferred treatment.
+            // ClearSelectionStateOnly, not SetSelectedShape(null) — the
+            // latter's ClearHover redraws the hover footprint from live
+            // grid state, which can leak an auto-refill-triggered lock/
+            // poison move early. RefreshHoldingClearedCells below redraws
+            // every cell with the correct held/deferred treatment anyway.
             _gridView.ClearSelectionStateOnly();
             _handView.ClearSelection();
 
-            // Hold any completed line/column, or a Void/Kamikaze destruction,
-            // visually filled (instead of instantly vanishing) while its
-            // score is still playing out — the destroy burst PlayPlacement
-            // Sequence spawns for each below (explicit request: "un petit
-            // vfx lorsqu'on clear une tile ou qu'on la détruit") needs a
-            // still-filled tile to play against, same as a line clear does.
+            // Hold any completed line/column, or a Void/Kamikaze
+            // destruction, visually filled instead of instantly vanishing
+            // while its score plays out — the destroy burst needs a
+            // still-filled tile to play against.
             var heldCells = new List<Vector2Int>(outcome.Placement.ClearedCells);
             var heldColors = new List<PieceColor>(outcome.Placement.ClearedCellColors);
             var heldTraits = new List<PieceTrait?>(outcome.Placement.ClearedCellTraits);
@@ -1071,17 +846,14 @@ namespace Contigu.Presentation
                     heldTraits.Add(null);
                 }
             }
-            // Boss-locked cells AND any Locker/Poisoner cell this placement's
-            // own auto-refill (or an enemy dying from its own damage) just
-            // changed are deliberately held back from this immediate
-            // redraw and only revealed once PlayPlacementSequence's own
-            // end-of-sequence reveal runs — see RefreshHoldingClearedCells's
-            // doc comment.
+            // Boss-locked cells and any Locker/Poisoner cell this
+            // placement's auto-refill (or an enemy death) just changed are
+            // held back from this redraw, revealed only once
+            // PlayPlacementSequence's end-of-sequence reveal runs.
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
-            // Same hold for the hand itself when this placement's own
-            // auto-refill already dealt the NEXT hand — PlayPlacementSequence
-            // reveals it for real once the sequence finishes (see
-            // HandView.RefreshHoldingEmpty's own doc comment).
+            // Same hold for the hand when auto-refill already dealt the
+            // next hand — PlayPlacementSequence reveals it once the
+            // sequence finishes (see HandView.RefreshHoldingEmpty).
             if (handWasAboutToAutoRefill)
             {
                 _handView.RefreshHoldingEmpty();
@@ -1091,28 +863,23 @@ namespace Contigu.Presentation
                 _handView.Refresh();
             }
             RefreshShuffleButton();
-            // Round/budget update immediately; the score AND Lueur numbers
-            // themselves stay at their pre-placement values until
-            // PlayPlacementSequence catches them up in step with each popup.
-            // Same hold-back for the targeted enemy's HP, drained down only
-            // once the combo total itself finishes draining (see
-            // DrainComboIntoDamage).
+            // Round/budget update immediately; score and Lueur stay at
+            // pre-placement values until PlayPlacementSequence catches them
+            // up in step with each popup — same hold-back for the targeted
+            // enemy's HP, drained only once DrainComboIntoDamage runs.
             _hudView.Refresh(_run);
             _hudView.SetLueur(lueurBefore);
             _hudView.SetScores(roundScoreBefore, _run.CurrentQuota);
             if (damagedEnemyIndex >= 0)
             {
-                // isDead: false — even if this hit was lethal, the player
-                // hasn't seen the HP actually reach 0 yet, so the icon must
-                // still read as alive here (explicit request: "les ennemies
-                // deviennent mort avant l'animation de dégât, il faut
-                // vraiment attendre que l'ennemi soit rendu à 0hp").
+                // isDead: false — even if this hit is lethal, the player
+                // hasn't seen HP reach 0 yet, so the icon must still read
+                // as alive here.
                 _hudView.SetEnemyHpDisplay(damagedEnemyIndex, enemyHpBefore, enemyMaxHp, damagedEnemyId, false);
             }
             // Same hold-back for every Bombe/Éclat secondary target — the
-            // Refresh above already drew their true post-placement (possibly
-            // dead) state, same as it would have for the primary target
-            // without the override right above.
+            // Refresh above already drew their true post-placement
+            // (possibly dead) state.
             for (int i = 0; i < secondaryDrainTargets.Count; i++)
             {
                 var heldTarget = secondaryDrainTargets[i];
@@ -1143,15 +910,7 @@ namespace Contigu.Presentation
             return true;
         }
 
-        /// <summary>
-        /// Every cell currently locked by an alive Locker, and separately
-        /// every cell currently poisoned by an alive Poisoner — kept as two
-        /// distinct lists (not one combined one) so OnCellClicked's before/
-        /// after diff can tell a RELEASED lock apart from a RELEASED
-        /// poison, and render each with the right look (see
-        /// GridCellView.ApplyState's forceShowLocked/forceShowPoisoned)
-        /// while it's held back from view.
-        /// </summary>
+        /// <summary>Every cell locked by an alive Locker and every cell poisoned by an alive Poisoner, kept as two separate lists so OnCellClicked's before/after diff can distinguish a released lock from a released poison (see GridCellView.ApplyState's forceShowLocked/forceShowPoisoned).</summary>
         private void SnapshotEnemyEffectCells(out List<Vector2Int> lockedCells, out List<Vector2Int> poisonedCells)
         {
             lockedCells = new List<Vector2Int>();
@@ -1172,40 +931,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Every enemy index this placement's damage could plausibly touch,
-        /// read BEFORE PlacePiece (same purpose as the old single-target
-        /// FindFrontAliveEnemyIndex it replaces — so OnCellClicked can hold
-        /// each one's HP display at its pre-placement value). Index 0 is
-        /// always the "primary" target, the one DrainComboIntoDamage
-        /// smoothly lerps; any further index is a Bombe/Éclat candidate for
-        /// DrainSecondaryEnemyHits. Mirrors RunManager.
-        /// ApplyJokerCombatDamage's own targeting read-only — Core is still
-        /// the one actually applying the damage, this just needs to know
-        /// who to watch (explicit request: "J'aimerais que toutes les
-        /// pièces jokers soient particulières... des upgrades qui
-        /// affectent directement la manière de se battre").
-        /// </summary>
-        /// <summary>
-        /// Which combat kind should drive <see
-        /// cref="FindDamagedEnemyIndices"/>'s targeting prediction, read
-        /// from a prospective placement's whole merged group rather than
-        /// just the placed token's own trait — mirrors RunManager.
-        /// ApplyJokerCombatOrDefaultDamage's own group scan (see its doc
-        /// comment) purely so this animation preview knows who to watch,
-        /// including when an OLDER Joker piece's stamped cells are the
-        /// ones that get pulled back into a merge (explicit request: "Pour
-        /// les jokers, s'ils sont retrigger plus tard dans une pièce jouée,
-        /// son effet aussi est retrigger"). If BOTH a spreading kind
-        /// (Bombe/Éclat) and a single-target one (Range/Précision/Sangsue)
-        /// are present at once — two separate older Joker pieces of
-        /// different kinds merged together by this same placement, a rare
-        /// edge case — the spreading kind wins: its "list every alive
-        /// enemy as a candidate" animation safely covers whichever
-        /// narrower target the other kind would also touch, same
-        /// candidates-filtered-by-actual-HP-diff safety net already used
-        /// for Bombe/Éclat alone.
-        /// </summary>
+        /// <summary>Which combat kind drives FindDamagedEnemyIndices's targeting prediction, read from the placement's whole merged group rather than just the placed token's own trait (mirrors RunManager.ApplyJokerCombatOrDefaultDamage's group scan). If both a spreading kind (Bombe/Éclat) and a single-target one are present at once, the spreading kind wins — its "every alive enemy" animation safely covers the narrower target too.</summary>
         private PieceTraitKind? FindPriorityCombatKind(List<Vector2Int> groupCells)
         {
             bool hasSpreadingKind = false;
@@ -1235,6 +961,7 @@ namespace Contigu.Presentation
             return singleTargetKind;
         }
 
+        /// <summary>Every enemy index this placement's damage could plausibly touch, read before PlacePiece so OnCellClicked can hold each one's HP display at its pre-placement value. Index 0 is the primary target, the one DrainComboIntoDamage smoothly lerps; further indices are Bombe/Éclat candidates for DrainSecondaryEnemyHits.</summary>
         private List<int> FindDamagedEnemyIndices(int handIndex, int anchorX, int anchorY)
         {
             var result = new List<int>();
@@ -1289,15 +1016,11 @@ namespace Contigu.Presentation
                 return result;
             }
 
-            // Default (every other kind, including no trait at all) and
-            // Sangsue both hit only the front alive enemy, same as
-            // RunManager.ApplyDamageToEncounter. Bombe/Éclat can reach
-            // further ones too — every other alive enemy is listed right
-            // after it as a CANDIDATE; the exact subset either actually
-            // touches depends on this placement's own final damage total,
-            // not known yet at this point, so DrainSecondaryEnemyHits'
-            // caller filters this list down to whichever candidates' HP
-            // actually changed.
+            // Default (including no trait) and Sangsue both hit only the
+            // front alive enemy. Bombe/Éclat can reach further ones — every
+            // other alive enemy is listed as a candidate, filtered down
+            // later by DrainSecondaryEnemyHits' caller to whichever ones
+            // actually took damage.
             for (int i = 0; i < encounter.Count; i++)
             {
                 if (!encounter[i].IsDead)
@@ -1312,18 +1035,7 @@ namespace Contigu.Presentation
             return result;
         }
 
-        /// <summary>
-        /// Thief's own visual cue (explicit request: "Thief manque un
-        /// effet visuel pour indiquer qu'il vole une pièce") — a popup on
-        /// its own enemy icon plus the same whoosh PickUpPiece already uses
-        /// elsewhere for "a piece just left the board". RunManager.
-        /// ThiefStoleOnLastShuffle is the only way Presentation can tell
-        /// this happened at all, since (unlike Locker's lock/Poisoner's
-        /// poison) a hand-only effect leaves no trace for
-        /// SnapshotEnemyEffectCells to diff. No-op if nothing actually
-        /// stole this Shuffle, or if Thief's own icon isn't on screen for
-        /// some reason.
-        /// </summary>
+        /// <summary>RunManager.ThiefStoleOnLastShuffle is the only way Presentation can tell a Thief steal happened — unlike Locker/Poisoner, a hand-only effect leaves no trace for SnapshotEnemyEffectCells to diff. No-op if nothing stole this Shuffle, or if Thief's icon isn't on screen.</summary>
         private void PlayThiefStealEffect()
         {
             if (!_run.ThiefStoleOnLastShuffle)
@@ -1338,13 +1050,9 @@ namespace Contigu.Presentation
                     var anchor = _hudView.GetEnemyIconTransform(i);
                     if (anchor != null)
                     {
-                        // floatDown: true — this anchor sits up in the HUD's
-                        // enemy band, near the very top of the screen;
-                        // SpawnPopup's usual float-UP would run the text off
-                        // the top edge (explicit bug report: "L'animation du
-                        // thief doit aller vers le bas de l'ennemi, pas le
-                        // haut sinon la pièce montré sort de l'écran par le
-                        // haut").
+                        // floatDown: true — this anchor sits near the top of
+                        // the screen; SpawnPopup's usual float-up would run
+                        // the text off the top edge.
                         _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger, floatDown: true);
                     }
                     SfxManager.Play(SfxId.PickUpPiece);
@@ -1354,19 +1062,12 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Plays a placement's full feedback sequence in order: first each
-        /// Lueur group, one at a time — pulsing its cells and flying a popup
-        /// to the Lueur label, advancing that display progressively as it
-        /// goes (explicit request: "au début du décompte du score" — before
-        /// anything else, and "progressif et non d'un coup") — then each
-        /// golden/group score popup one at a time, pulsing its cell and
-        /// advancing the HUD's score bar at that exact moment, so the
-        /// displayed score climbs progressively instead of jumping straight
-        /// to the final value — then, only once that's done, clears any
-        /// completed line/column one cell at a time (each with its own
-        /// popup and score bump), and only then advances the run state
-        /// (draft/victory/defeat), so nothing interrupts the player while
-        /// they're still reading their score.
+        /// Plays a placement's full feedback sequence in order: each Lueur
+        /// group (pulsing its cells, flying a popup to the Lueur label,
+        /// advancing that display), then each golden/group score popup
+        /// (advancing the score bar as it goes), then any completed line/
+        /// column clearing one cell at a time, and only then advances the
+        /// run state — so nothing interrupts the player mid-readout.
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
@@ -1377,20 +1078,17 @@ namespace Contigu.Presentation
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
 
-            // Whether this placement's cleared/destroyed tiles should keep
-            // showing as still-filled past the score cascade below, only
-            // actually emptying once the enemy damage drain (and death
-            // fade-out) finishes — explicit report: "Les effets de tuiles
-            // s'effacent avant que l'ennemi soit rendu a 0hp dans le HUD ce
-            // qui est confusing". Scoped to placements that actually drive
-            // a drain (same condition as the drain itself, further below)
-            // so an ordinary non-combat placement's tiles still clear
-            // inline as they always have, unaffected.
+            // Whether cleared/destroyed tiles should keep showing as
+            // still-filled past the score cascade, only actually emptying
+            // once the enemy damage drain (and death fade-out) finishes.
+            // Scoped to placements that actually drive a drain (same
+            // condition as the drain itself, further below) so an ordinary
+            // non-combat placement's tiles still clear inline as usual.
             bool deferTileClear = damagedEnemyIndex >= 0 && placement.TotalScore > 0;
 
-            // Lueur groups play first, ahead of the score cascade below (on
-            // explicit request) — each group pulses its own cells, flies a
-            // "+N" popup from the group's own center to the Lueur label
+            // Lueur groups play first, ahead of the score cascade — each
+            // group pulses its own cells, flies a "+N" popup from the
+            // group's own center to the Lueur label
             // (see FeedbackLayer.SpawnFlyingPopup), and only then bumps the
             // displayed Lueur total, so it visibly climbs one group at a
             // time instead of jumping straight to the final value.
@@ -1425,37 +1123,19 @@ namespace Contigu.Presentation
             }
 
             int displayedRoundScore = roundScoreBefore;
-            // Mirrors PlacementResult.Chips/.Mult progressively as the
-            // sequence plays, rather than only computing them at the very
-            // end — chipsTotal * multTotal always equals the placement's
-            // own subtotal so far (displayedRoundScore - roundScoreBefore),
-            // same invariant as Chips * Mult == TotalScore in Core. multTotal
-            // is a float, not an int, since Mult itself is now (progressive
-            // modifiers keep full precision — see PlacementResult.Mult); a
-            // final sync below guards against any float-rounding drift
-            // across the individual catch-up steps.
+            // Mirrors PlacementResult.Chips/.Mult progressively: chipsTotal
+            // * multTotal always equals the placement's subtotal so far
+            // (displayedRoundScore - roundScoreBefore), same invariant as
+            // Chips * Mult == TotalScore in Core. multTotal is a float since
+            // progressive modifiers keep full precision; a final sync below
+            // guards against float-rounding drift across catch-up steps.
             int chipsTotal = 0;
             float multTotal = 1f;
-            // Redesign, explicit request: "Les tuiles empoisonnées sont
-            // problématique pour la manière qu'on vois les points
-            // apparaitre, si la tuile empoisonné est la première a être
-            // comptabilisé, le bonus de level apparait en positif sur
-            // cette pièce, ce qui est confusing" — ShapeMastery/
-            // ColorMastery used to be pulled out of the per-cell loop
-            // entirely and shown as ONE aggregate popup for the whole
-            // placement, pinned to whichever cell's mastery event happened
-            // to come first in ScoreEvents. If THAT cell was poisoned but
-            // the placement's OTHER cells' mastery still summed positive
-            // overall, the aggregate's "+N" landed squarely on a poisoned
-            // tile — looking like that specific tile earned a positive
-            // bonus, when its own true contribution was negative. Folded
-            // into each cell's own Group popup instead (see this dictionary
-            // and the Group branch below): every tile's displayed number is
-            // now its own true total, mastery included, so a poisoned
-            // cell's popup is correctly negative on its own, never
-            // borrowing another cell's sign. ("+1, +2, +3, +4, +5" becomes
-            // e.g. "+1, +3, +3, +6, +5" when some of those cells also carry
-            // +1/+2 of their own frozen mastery level.)
+            // ShapeMastery/ColorMastery is folded into each cell's own
+            // Group popup (via this dictionary and the Group branch below)
+            // rather than shown as one aggregate, so a poisoned cell's
+            // popup is always correctly negative on its own, never
+            // borrowing another cell's sign.
             var masteryByPosition = new Dictionary<Vector2Int, int>();
             for (int e = 0; e < placement.ScoreEvents.Count; e++)
             {
@@ -1467,11 +1147,10 @@ namespace Contigu.Presentation
                 }
             }
             _comboView.Show(0, 1f);
-            // Multiplies every stagger wait below — starts at 1 (full pace)
-            // and shrinks by ComboSpeedupFactor after each combo addition,
-            // shared across score events, line clears AND the multiplier
-            // catch-up, so the whole sequence accelerates together as one
-            // continuous combo rather than each section restarting at full pace.
+            // Multiplies every stagger wait below, shrinking by
+            // ComboSpeedupFactor after each addition; shared across score
+            // events, line clears and the multiplier catch-up so the whole
+            // sequence accelerates as one continuous combo.
             float staggerSpeed = 1f;
 
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
@@ -1492,26 +1171,20 @@ namespace Contigu.Presentation
 
                 if (scoreEvent.Type == ScoreEventType.ModifierMultiplier || scoreEvent.Type == ScoreEventType.MultBonus)
                 {
-                    // Every Mult-contributing event (both the "xN" and the
-                    // "+N Mult" families) is handled together, AFTER this
-                    // loop, strictly in modifier-index order — not here in
-                    // whatever order GridManager happened to compute them
-                    // (pre-clear pass, then post-clear pass, then
-                    // RunManager's hand-slot/deck-state ones) — see the
-                    // ordered catch-up below and PlacementResult.Mult's own
-                    // doc comment for why (on explicit request: "leur
-                    // pointage se fasse par ordre d'index").
+                    // Every Mult-contributing event ("xN" and "+N Mult"
+                    // families) is handled together after this loop, in
+                    // strict modifier-index order — not in whatever order
+                    // GridManager computed them. See the ordered catch-up
+                    // below and PlacementResult.Mult's doc comment.
                     continue;
                 }
 
                 if (scoreEvent.Type == ScoreEventType.LueurBonus)
                 {
-                    // Lueur (not score) from one of the player's active
-                    // modifiers (see PlacementResult.ModifierLueurBonus) — a
-                    // second, independent source of the same currency as the
-                    // LueurGroups loop above, so it reuses the exact same
-                    // flying-popup-to-the-Lueur-label visual, plus the usual
-                    // badge pulse every other modifier event gets.
+                    // Lueur (not score) from an active modifier (see
+                    // PlacementResult.ModifierLueurBonus) — reuses the same
+                    // flying-popup visual as the LueurGroups loop above,
+                    // plus the usual badge pulse.
                     if (scoreEvent.TriggeringModifier.HasValue)
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
@@ -1527,22 +1200,17 @@ namespace Contigu.Presentation
                     continue;
                 }
 
-                // The tile(s) that actually earned this event's points always
-                // pulse — for a Modifier event this is on top of the badge
-                // pulse below, not instead of it (on explicit request). A
-                // per-cell modifier (Forteresse, Carrefour, etc.) gets one
-                // ScoreEvent per qualifying cell, each with its own Position,
-                // so this naturally pulses every one of them in turn as the
-                // sequence plays; a flat-bonus modifier (Prisme, Devotion,
-                // etc.) only ever has the one representative cell to pulse.
+                // A per-cell modifier (Forteresse, Carrefour, etc.) gets one
+                // ScoreEvent per qualifying cell, so this naturally pulses
+                // each in turn; a flat-bonus modifier only has the one
+                // representative cell.
                 _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
 
                 RectTransform anchor;
                 if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)
                 {
-                    // Popup shows on the modifier's own badge instead of the
-                    // tile (on explicit request) — falls back to the tile if
-                    // the badge can't be found for some reason.
+                    // Popup shows on the modifier's badge, falling back to
+                    // the tile if the badge can't be found.
                     anchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                         ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
@@ -1552,35 +1220,17 @@ namespace Contigu.Presentation
                     anchor = _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
                 }
 
-                // A Modifier event is always a POINTS bonus (see
-                // PlacementResult.ModifierBonus) — blue like every other
-                // points popup, never red (on explicit report: "+100 pts du
-                // dweling et le texte est apparu rouge... c'est par rapport
-                // au points et non au mult"). ModifierMultiplier/MultBonus
-                // events (genuinely Mult) get their own red popups on their
-                // own badge, handled earlier in this loop, not here.
-                // Trait events (Void, Mirror, Seeder, Detonator, ...) used to
-                // get their own UITheme.PanelLight popup color, but that's
-                // the theme's cream/beige panel background — nearly
-                // invisible against the board (explicit report: "Le +10
-                // point popup de la void tile est en beige, il devrait être
-                // en noir... tous les textes pop up de points de tous les
-                // upgrades tiles ont le même problème"). They now fall
-                // through to the same near-black UITheme.TextPrimary every
-                // plain points popup already uses.
-                // A poisoned position (see RunManager.ApplyPoisonScoreRule)
-                // can flip ANY of these event types negative, Modifier
-                // included (explicit request: "si un modifier utilise cette
-                // case là spécifiquement c'est négatif aussi") — shown in
-                // red with its real sign instead of the type's usual color
-                // and an always-"+" prefix, which used to read as a
-                // nonsensical "+-N".
-                // Group popups fold in that SAME cell's own ShapeMastery/
-                // ColorMastery amount, if any (see masteryByPosition's own
-                // doc comment above) — both were already independently
-                // flipped negative by ApplyPoisonScoreRule when this cell
-                // is poisoned, so the combined total's sign is never in
-                // conflict between the two.
+                // A Modifier event is always a points bonus (see
+                // PlacementResult.ModifierBonus), colored like any other
+                // points popup — ModifierMultiplier/MultBonus (genuinely
+                // Mult) get their own red popups, handled earlier in this
+                // loop. A poisoned position (RunManager.ApplyPoisonScoreRule)
+                // can flip any event type negative, Modifier included —
+                // shown in red with its real sign and an always-"+" prefix.
+                // Group popups fold in the same cell's ShapeMastery/
+                // ColorMastery amount, if any (masteryByPosition above) —
+                // both are already independently flipped by poison, so the
+                // combined sign is never in conflict.
                 int displayAmount = scoreEvent.Amount;
                 if (scoreEvent.Type == ScoreEventType.Group && masteryByPosition.TryGetValue(scoreEvent.Position, out int masteryAtThisCell))
                 {
@@ -1606,11 +1256,10 @@ namespace Contigu.Presentation
             }
 
             // Per-cell signed amount for each cleared cell (poison can flip
-            // a cell's own +LineClearBonusPerCell negative — see
-            // RunManager.ApplyPoisonScoreRule/explicit request: "Idem pour
-            // le +3 de cleared cell, il doit faire -3") — looked up from the
-            // actual ScoreEvents instead of assuming every cell is worth
-            // the flat +ScoringConstants.LineClearBonusPerCell.
+            // a cell's +LineClearBonusPerCell negative — see
+            // RunManager.ApplyPoisonScoreRule) — looked up from the actual
+            // ScoreEvents instead of assuming every cell is worth the flat
+            // +ScoringConstants.LineClearBonusPerCell.
             var clearedCellAmounts = new Dictionary<Vector2Int, int>();
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -1621,11 +1270,10 @@ namespace Contigu.Presentation
                 }
             }
 
-            // Scoring only here — the ACTUAL visual clearing (burst + empty
+            // Scoring only here — the actual visual clearing (burst + empty
             // the tile, see PlayTileClearBursts) runs right after this loop
-            // UNLESS deferTileClear is set, in which case it's held until
-            // well after the enemy damage drain further down instead (see
-            // its own doc comment above).
+            // unless deferTileClear is set, in which case it's held until
+            // after the enemy damage drain further down.
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
@@ -1651,13 +1299,12 @@ namespace Contigu.Presentation
                 yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount);
             }
 
-            // GroupMultiplier (Tinted+Multiplier-Zone cells) and LineClearMultiplier
-            // (Multiplier-Zone cells only — see PlacementResult.LineClearMultiplier
-            // for why Tinted stops short of the line-clear bonus) are each applied
-            // once over their own share of the placement's total, Balatro-style,
-            // rather than inflating each individual popup above — so the "extra"
-            // they add still needs its own catch-up moment here or the displayed
-            // score would end up short of placement.TotalScore.
+            // GroupMultiplier (Tinted+Multiplier-Zone cells) and
+            // LineClearMultiplier (Multiplier-Zone cells only — see
+            // PlacementResult.LineClearMultiplier) are each applied once
+            // over their own share of the total, Balatro-style, rather than
+            // inflating each popup above, so the "extra" needs its own
+            // catch-up here or the displayed score ends up short.
             int multipliedExtra = (placement.GroupBonus + placement.GoldenBonus) * (placement.GroupMultiplier - 1)
                 + placement.LineClearScore * (placement.LineClearMultiplier - 1);
             if (multipliedExtra > 0)
@@ -1669,11 +1316,10 @@ namespace Contigu.Presentation
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
                 SfxManager.PlayComboTick();
 
-                // GroupMultiplier/LineClearMultiplier land on the CHIPS side
-                // of the Balatro-style split (see PlacementResult.Chips),
-                // not the red mult pill — they're baked per-cell into a
-                // group/line-clear term rather than a placement-wide factor
-                // like ModifierMultiplier/ComboMultiplier below.
+                // Lands on the CHIPS side of the Balatro-style split (see
+                // PlacementResult.Chips), not the red mult pill — baked
+                // per-cell rather than a placement-wide factor like
+                // ModifierMultiplier/ComboMultiplier below.
                 displayedRoundScore += multipliedExtra;
                 chipsTotal += multipliedExtra;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
@@ -1683,21 +1329,13 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
             }
 
-            // Every Mult-contributing modifier (the "+N Mult" family —
-            // MultUn/Deux/Quatre, Risky Mult, Solidarité, Enchanted Cards,
-            // Experience — AND the "xN" family — Prisme, Devotion*, the
-            // line-pattern family, Combo, Slot Loyalty, Densité, ...) now
-            // catches up in ONE pass, strictly in modifier-index order
-            // (mirrors PlacementResult.Mult's own ordered fold exactly — on
-            // explicit request: "leur pointage se fasse par ordre d'index.
-            // Le premier acheté est le premier index" + the follow-up
-            // clarifying it's a strict left-to-right fold, not PEMDAS).
-            // Each modifier already flashed its own "xN"/"+N" popup on its
-            // badge back in the main event loop above — this only handles
-            // the actual score catch-up, one step per modifier, in the
-            // exact order that determines the final total, so a player who
-            // put their xN AFTER their +N modifiers visibly sees the bigger
-            // jump happen in that same order.
+            // Every Mult-contributing modifier (the "+N Mult" family and the
+            // "xN" family) catches up in one pass, strictly in
+            // modifier-index order — mirrors PlacementResult.Mult's own
+            // ordered fold (a strict left-to-right fold, not PEMDAS). Each
+            // modifier already flashed its own popup in the main loop
+            // above; this handles the score catch-up in the exact order
+            // that determines the final total.
             var multEvents = new List<ScoreEvent>();
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
@@ -1746,92 +1384,64 @@ namespace Contigu.Presentation
                 staggerSpeed *= ComboSpeedupFactor;
             }
 
-            // "Combo" (see PlacementResult.ComboMultiplier) is now just
-            // another ModifierMultiplier event in the loop above (see
-            // GridManager.ComputeComboMultiplier), so it no longer needs
-            // its own separate catch-up here — but it keeps its distinct
-            // "COMBO xN" center-screen callout, on top of the ordinary
-            // per-badge popup every other Mult modifier gets, since it's
-            // reacting to the ROUND's streak state rather than a modifier
-            // condition on this one placement.
+            // "Combo" (see PlacementResult.ComboMultiplier) is just another
+            // ModifierMultiplier event in the loop above, already caught up
+            // — this only adds its distinct "COMBO xN" center-screen
+            // callout, since it reacts to the round's streak state rather
+            // than a per-modifier condition.
             if (placement.ComboMultiplier > 1)
             {
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
                 _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.Success);
             }
 
-            // Force-sync to the authoritative total — a no-op whenever
-            // nothing progressive fired (the catch-ups above stayed exact
-            // integer math, as before), but guards against the float
-            // rounding in the two catch-ups above ever drifting the
-            // displayed running total away from placement.TotalScore by a
-            // point or two.
+            // Force-sync to the authoritative total — guards against float
+            // rounding in the two catch-ups above drifting the displayed
+            // total away from placement.TotalScore by a point or two.
             if (displayedRoundScore != roundScoreBefore + placement.TotalScore)
             {
                 displayedRoundScore = roundScoreBefore + placement.TotalScore;
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
             }
 
-            // Only once the combo total itself is finished (and not before —
-            // explicit request: "il faut faire les dégâts seulement à la fin
-            // du calcule"), wait 1s so the player can read the final number,
-            // then drain it down to 0 while transferring it into the
-            // targeted enemy's HP ("une animation où on descend le pointage
-            // du combo pour le transférer en dégâts progressif"). Skipped
-            // for a non-positive total (a placement scored entirely through
+            // Only once the combo total is finished, wait 1s so the player
+            // can read the final number, then drain it down to 0 while
+            // transferring it into the targeted enemy's HP. Skipped for a
+            // non-positive total (a placement scored entirely through
             // poison nets a heal, not damage — nothing positive to drain).
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
                 yield return new WaitForSeconds(1f);
                 yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
-                // Bombe/Éclat's further targets (explicit request: "bombe:
-                // divize équitablement les dégâts sur tous les ennemies
-                // présent") — snapped straight to their own final value
-                // right after the primary target's smooth drain finishes,
-                // rather than a second parallel lerp.
+                // Bombe/Éclat's further targets snap straight to their final
+                // value right after the primary target's smooth drain
+                // finishes, rather than a second parallel lerp.
                 yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
 
-            // Only NOW — after the enemy has actually finished draining
-            // (and fading out, if this hit was lethal) — do the cleared/
-            // destroyed cells actually visually empty (explicit report:
-            // "Les effets de tuiles s'effacent avant que l'ennemi soit
-            // rendu a 0hp dans le HUD ce qui est confusing"). Their points
-            // already counted during the score cascade above.
+            // Only now — after the enemy has finished draining (and fading
+            // out, if lethal) — do the cleared/destroyed cells actually
+            // visually empty. Their points already counted during the
+            // score cascade above.
             if (deferTileClear)
             {
                 yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount);
             }
 
             // Boss-locked cells, any Locker/Poisoner cell this placement's
-            // own auto-refill changed, AND any lock/poison an enemy dying
-            // from this placement's own damage just released (see
-            // OnCellClicked's deferredNewMalusCells/deferredReleasedLocked
-            // Cells/deferredReleasedPoisonedCells) were held back from view
-            // this whole time — a full refresh is the simplest way to
-            // surface them (and any Bastion cell they might have grazed),
-            // now that the rest of the sequence (including the enemy's own
-            // death) has fully played out.
+            // auto-refill changed, and any lock/poison an enemy dying from
+            // this placement's damage just released were held back from
+            // view this whole time — a full refresh surfaces them now that
+            // the rest of the sequence (including any enemy death) has
+            // played out.
             //
-            // Whenever there's anything deferred at all (hasDeferredGrid
-            // Change), that reveal follows the SAME fade-out-malus/fade-in-
-            // malus order the manual Shuffle button uses (see
-            // PlayManualShuffleSequence's own doc comment) — explicit bug
-            // report: "Les locked cells sont enlevé visuellement trop tôt.
-            // Ça doit se faire après le décompte des points... N'oublie pas
-            // de les fade out aussi" + "Idem pour les cell empoisonné" — a
-            // released lock/poison used to just show its true, already-
-            // released state the INSTANT this method was called (a plain
-            // Refresh(), no fade, and only gated on handWasAboutToAutoRefill
-            // rather than on there being anything deferred at all — an
-            // enemy dying from this placement's own damage releases its
-            // lock/poison with NO Shuffle involved whatsoever). Now any
-            // deferred change gets the fade, whether or not the hand itself
-            // also auto-refilled this placement; the hand's own fade-in
-            // only plays when it actually did (handWasAboutToAutoRefill) —
-            // without that, the hand was never hidden in the first place
-            // (see HandView.RefreshHoldingEmpty), so there's nothing of
-            // its own to reveal, just the grid's malus.
+            // Whenever anything is deferred, the reveal follows the same
+            // fade-out-malus/fade-in-malus order the manual Shuffle button
+            // uses (see PlayManualShuffleSequence). The hand's own fade-in
+            // only plays when it actually auto-refilled this placement —
+            // otherwise the hand was never hidden (see
+            // HandView.RefreshHoldingEmpty), so there's nothing of its own
+            // to reveal, just the grid's malus.
             if (handWasAboutToAutoRefill)
             {
                 yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
@@ -1840,9 +1450,8 @@ namespace Contigu.Presentation
                 _handView.Refresh();
                 _gridView.Refresh();
                 // Same same-frame zeroing as PlayManualShuffleSequence —
-                // ApplyState always paints a fresh, opaque malus look, so
-                // without this the hand's own fade-in below would run with
-                // the new malus already sitting at full alpha.
+                // ApplyState always paints malus opaque, so without this it
+                // would briefly flash at full alpha.
                 _gridView.SetMalusAlpha(0f);
 
                 yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
@@ -1879,46 +1488,29 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// The actual visual clearing of this placement's cleared/destroyed
-        /// cells — a burst VFX plus emptying the tile, one cell at a time —
-        /// with no score popup of its own (that already happened earlier in
-        /// PlayPlacementSequence's own score cascade). Called from two spots
-        /// in PlayPlacementSequence depending on deferTileClear: right after
-        /// the score cascade for an ordinary placement, or after the enemy
-        /// damage drain/fade-out for one that's draining combo into damage
-        /// (see deferTileClear's own doc comment). Runs EXACTLY once per
-        /// placement regardless of which of those two call sites fires, so
-        /// it's also the single spot where Leech's own heal popup (explicit
-        /// request: "une animation de heal +15 lorsqu'il se fait heal") is
-        /// shown — right as the line clear that caused it visually empties,
-        /// same causal pairing as every other per-cell popup here.
+        /// The actual visual clearing of cleared/destroyed cells — burst VFX
+        /// plus emptying the tile, one cell at a time, with no score popup
+        /// of its own (that already happened in the score cascade). Runs
+        /// exactly once per placement regardless of whether it's called
+        /// right after the score cascade or deferred until after the enemy
+        /// damage drain (see deferTileClear), so it's also the single spot
+        /// where Leech's heal popup is shown.
         /// </summary>
         private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement, int leechIndex, int leechHealAmount)
         {
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
-                // On explicit request: "être trigger chaque fois qu'une
-                // tuile est cleared ou détruite" — one whoosh per cell
-                // (also see the DestroyedCells loop below), not once for
-                // the whole clear.
                 SfxManager.Play(SfxId.LineClear);
-                // Small burst as the tile actually empties (explicit
-                // request: "un petit vfx lorsqu'on clear une tile ou qu'on
-                // la détruit") — tinted to the color it had right before
-                // clearing, same held-color source PulseCell/ClearCellVisual
-                // implicitly rely on via RefreshHoldingClearedCells.
+                // Tinted to the color the cell had right before clearing,
+                // via RefreshHoldingClearedCells's held color.
                 _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]));
                 _gridView.ClearCellVisual(pos.x, pos.y);
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
             // Void Tile / Kamikaze Tile destructions — same burst as a line
-            // clear above, but with no per-cell score popup of their own
-            // (their points already showed as a single Trait ScoreEvent
-            // earlier in this sequence, at the enchanted cell, not per
-            // destroyed cell). Held visually filled until now the same way
-            // ClearedCells are (see RunManager.PlacePiece's call into
-            // RefreshHoldingClearedCells).
+            // clear above, but no per-cell score popup (their points already
+            // showed as a single Trait ScoreEvent at the enchanted cell).
             for (int i = 0; i < placement.DestroyedCells.Count; i++)
             {
                 var pos = placement.DestroyedCells[i];
@@ -1934,13 +1526,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Leech's own heal popup (explicit request: "une animation de
-        /// heal +15 lorsqu'il se fait heal") — floatDown: true for the same
-        /// reason as PlayThiefStealEffect's own popup: this anchor sits up
-        /// in the HUD's enemy band, near the very top of the screen, and
-        /// SpawnPopup's usual float-UP would run it off the top edge.
-        /// </summary>
+        /// <summary>floatDown: true for the same reason as PlayThiefStealEffect's popup — this anchor sits near the top of the screen, and SpawnPopup's usual float-up would run it off the edge.</summary>
         private void PlayLeechHealEffect(int leechIndex, int healAmount)
         {
             var anchor = _hudView.GetEnemyIconTransform(leechIndex);
@@ -1968,15 +1554,7 @@ namespace Contigu.Presentation
             return -1;
         }
 
-        /// <summary>
-        /// Counts the combo total down from <paramref name="startTotal"/> to
-        /// 0 while the targeted enemy's HP ticks down from <paramref
-        /// name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the
-        /// visual "transfer" of the combo score into damage (spec
-        /// extension, explicit request above). Called once per placement,
-        /// after PlayPlacementSequence's own score/clear cascade and 1s
-        /// pause have already finished.
-        /// </summary>
+        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage.</summary>
         private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
         {
             const float duration = 0.6f;
@@ -1987,11 +1565,9 @@ namespace Contigu.Presentation
                 float p = Mathf.Clamp01(t / duration);
                 _comboView.SetTotal(Mathf.RoundToInt(Mathf.Lerp(startTotal, 0f, p)));
                 // isDead stays false for every in-between frame, even if the
-                // lerp happens to pass through 0 on its way — the icon only
-                // turns "dead" on the very last frame below, once the HP
-                // shown has truly finished landing on hpAfter (explicit
-                // request: "il faut vraiment attendre que l'ennemi soit
-                // rendu à 0hp").
+                // lerp passes through 0 on its way — the icon only turns
+                // "dead" on the last frame below, once HP truly lands on
+                // hpAfter.
                 _hudView.SetEnemyHpDisplay(enemyIndex, Mathf.RoundToInt(Mathf.Lerp(hpBefore, hpAfter, p)), maxHp, identity, false);
                 yield return null;
             }
@@ -2001,26 +1577,19 @@ namespace Contigu.Presentation
 
             if (isDead)
             {
-                // Explicit request: "Lorsqu'un ennemi se rend a 0HP, attends
-                // 0.25 secondes puis fait une animation de fade out" — the
-                // pause gives the player a beat to register the kill (and
-                // the dead-gray tint just applied above) before the icon
-                // actually fades away.
+                // Pause gives the player a beat to register the kill (and
+                // the dead-gray tint just applied) before the icon fades.
                 yield return new WaitForSeconds(0.25f);
                 yield return _hudView.FadeOutEnemySlot(enemyIndex, 0.3f);
             }
         }
 
         /// <summary>
-        /// Bombe/Éclat's own further targets (explicit request: "bombe:
-        /// divize équitablement les dégâts sur tous les ennemies présent") —
-        /// each one jumps straight from its held pre-placement HP to its
-        /// real final value (no lerp, unlike <see cref="DrainComboIntoDamage"/>'s
-        /// single primary target) and, if that was lethal, waits and fades
-        /// out exactly the same way. Entries whose HP never actually
-        /// changed (a Bombe candidate that was already dead, or an Éclat
-        /// candidate the cascade never reached) were already filtered out
-        /// by the caller, so every entry here really did take damage.
+        /// Bombe/Éclat's further targets — each jumps straight from its held
+        /// pre-placement HP to its final value (no lerp, unlike <see
+        /// cref="DrainComboIntoDamage"/>'s primary target) and, if lethal,
+        /// fades out the same way. Entries whose HP never changed were
+        /// already filtered out by the caller.
         /// </summary>
         private System.Collections.IEnumerator DrainSecondaryEnemyHits(List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)> targets)
         {
@@ -2086,29 +1655,17 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Replays the round-end "unused piece budget -> Lueur" bonus
-        /// RunManager.EvaluateRoundEnd already applied to Lueur in full
-        /// (spec extension, explicit request — balance fix: a strong early
-        /// modifier can reach quota almost instantly, leaving most of the
-        /// round's piece budget unused and starving Lueur income for the
-        /// shop; see RunManager.LastRoundEndLueurBonus). One tick per
-        /// unused piece: the pieces bar counts down toward 0 and a "+1"
-        /// popup flies from it to the Lueur label (same
-        /// FeedbackLayer.SpawnFlyingPopup used for in-round Lueur group
-        /// popups — see PlayPlacementSequence), pulsing the Lueur readout
-        /// up to match. Purely a presentation replay — Core's Lueur/
+        /// RunManager.EvaluateRoundEnd already applied to Lueur in full (see
+        /// RunManager.LastRoundEndLueurBonus). One tick per unused piece:
+        /// the pieces bar counts down and a "+1" popup flies to the Lueur
+        /// label. Purely a presentation replay — Core's Lueur/
         /// PiecesRemainingThisRound are already final; only the local
-        /// displayed values animate. The shop only opens once this
-        /// finishes.
+        /// displayed values animate. The shop opens once this finishes.
         ///
-        /// Blocks hand/modifier-panel input for its whole duration, same as
-        /// PlayPlacementSequence — by the time HandleStateTransition calls
-        /// this, that OTHER sequence has already re-enabled the hand (see
-        /// its own end), so without this a piece could still be selected
-        /// here (bug report: "j'ai été capable et maintenant le ghost
-        /// overlay est stuck sur mon curseur" — HandView's drag ghost,
-        /// shown the instant a slot is selected, has no way to know a new
-        /// round-end sequence started right after the one that re-enabled
-        /// it, and the shop opening afterward never clears it either).
+        /// Blocks hand/modifier-panel input for its whole duration — by the
+        /// time HandleStateTransition calls this, PlayPlacementSequence has
+        /// already re-enabled the hand, so without this a piece could still
+        /// be selected (and its drag ghost left stuck) between the two.
         /// </summary>
         private System.Collections.IEnumerator PlayRoundEndLueurBonusSequence()
         {
@@ -2139,17 +1696,7 @@ namespace Contigu.Presentation
             _shopView.Show(_run);
         }
 
-        /// <summary>
-        /// Meta-progression (spec extension, explicit request: "enchaînons
-        /// sur la meta progression" -> lightweight option chosen: stats/
-        /// best-score tracking only, no gameplay effect). Folds this run's
-        /// outcome into the persisted MetaStats and saves immediately —
-        /// same "commit right away, don't wait for a graceful shutdown"
-        /// reasoning as every other piece of run state, since there's no
-        /// guaranteed exit hook in a WebGL/browser build. Returns whether
-        /// this run's score is a new all-time best, for the end screen's
-        /// "new record" callout.
-        /// </summary>
+        /// <summary>Folds this run's outcome into the persisted MetaStats and saves immediately — there's no guaranteed exit hook in a WebGL/browser build. Returns whether this run's score is a new all-time best, for the end screen's "new record" callout.</summary>
         private bool RecordRunOutcome(bool victory, int roundReached)
         {
             bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
@@ -2158,9 +1705,6 @@ namespace Contigu.Presentation
             return isNewBestScore;
         }
 
-        // ---- Lueur shop (spec extension, explicit request — replaces the
-        // old draft/modifier-pick screens entirely) ----
-
         private void OnBlisterBuyRequested(int index)
         {
             if (index < 0 || index >= _run.ShopBlisterSlots.Count || _run.ShopBlisterSlots[index] == null)
@@ -2168,12 +1712,11 @@ namespace Contigu.Presentation
                 return;
             }
             var slot = _run.ShopBlisterSlots[index];
-            // A Modifier-kind slot applies outright, same as the old
-            // modifier-only section — no follow-up screen needed. An
-            // Upgrade-kind slot needs the exact same reveal/sub-choice
-            // dispatch a Casino purchase does (see HandleUpgradePurchaseResult) —
-            // its identity was already visible before buying, but WHAT
-            // happens next (tile choice, piece choice, ...) is unchanged.
+            // A Modifier-kind slot applies outright, no follow-up screen
+            // needed. An Upgrade-kind slot needs the same reveal/sub-choice
+            // dispatch a Casino purchase does (see
+            // HandleUpgradePurchaseResult) — its identity was already
+            // visible before buying, but what happens next is unchanged.
             bool isUpgrade = slot.Kind == ShopSlotKind.Upgrade;
             var revealedUpgrade = isUpgrade ? slot.HiddenUpgrade : null;
 
@@ -2214,26 +1757,17 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Shared post-purchase reveal/follow-up dispatch for an upgrade
-        /// just bought, whichever section it came from (Casino via
-        /// OnUpgradeBuyRequested, or a Blister slot's Upgrade-kind case via
-        /// OnBlisterBuyRequested) — the resolution logic (tile choice, piece
-        /// choice, modifier-upgrade choice, generic sub-choice draft, or an
-        /// immediate Joker/Random Modifier reveal) only depends on
-        /// RunManager.PendingUpgrade/LastRandomModifierGranted, never on
-        /// which shop section triggered it.
+        /// just bought, whichever shop section it came from — the
+        /// resolution logic only depends on RunManager.PendingUpgrade/
+        /// LastRandomModifierGranted, never on which section triggered it.
         /// </summary>
         private void HandleUpgradePurchaseResult(UpgradeDefinition revealedUpgrade)
         {
             var pending = _run.PendingUpgrade;
             // Deferred until the carousel is dismissed (see
-            // OnModifierCarouselDismissed) instead of refreshed right here
-            // — same "don't let the panel spoil the reveal" reasoning as
-            // the starting-modifier carousel (explicit report: "Le nouveau
-            // random modifier devrait apparaitre dans la liste après avoir
-            // appuyé sur OK"). Core has already granted it (RunManager.
-            // LastRandomModifierGranted) — only the panel's own refresh
-            // needs to wait; everything else (grid/hand/HUD/shop) updates
-            // immediately as usual.
+            // OnModifierCarouselDismissed) so the panel doesn't spoil the
+            // reveal. Core has already granted it — only the panel's own
+            // refresh needs to wait; everything else updates immediately.
             bool willShowModifierCarousel = pending == null && revealedUpgrade.Id == UpgradeId.RandomModifier && _run.LastRandomModifierGranted.HasValue;
             RefreshAll(refreshModifierPanel: !willShowModifierCarousel);
             _shopView.Refresh(_run);
@@ -2241,13 +1775,9 @@ namespace Contigu.Presentation
             if (pending == null)
             {
                 // A Bank upgrade with no sub-choice (Joker or Random
-                // Modifier) — already applied; still show the reveal card so
-                // the player can see what it was, with a preview of the
-                // actual piece added (Joker) or the actual modifier granted
-                // (Random Modifier). No reveal at all in the rare case the
-                // gamble didn't pay off (RunManager.LastRandomModifierGranted
-                // null — already at the modifier cap) since there's nothing
-                // to show.
+                // Modifier) — already applied; still shows the reveal card.
+                // No reveal at all if the gamble didn't pay off
+                // (LastRandomModifierGranted null — already at the cap).
                 if (revealedUpgrade.Id == UpgradeId.JokerPiece)
                 {
                     _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker, new PieceTrait(_run.LastJokerCombatKindAdded, 0));
@@ -2334,11 +1864,9 @@ namespace Contigu.Presentation
 
         private string GetCurrentRoundStatus()
         {
-            // Spec extension, explicit request: "ajouter un petit peu
-            // d'autobattling" — an active encounter always suppresses the
-            // old BossEffect roll (see RunManager.HasActiveEncounter), so
-            // this short-circuits before the switch below would otherwise
-            // just fall through to its generic "New round..." default.
+            // An active encounter always suppresses the BossEffect roll
+            // (see RunManager.HasActiveEncounter), so this short-circuits
+            // before the switch below falls through to its generic default.
             if (_run.HasActiveEncounter)
             {
                 return BuildEncounterStatus(_run.CurrentEncounter);
@@ -2369,7 +1897,7 @@ namespace Contigu.Presentation
             return status;
         }
 
-        /// <summary>Lists every enemy in this round's encounter by name (spec extension, explicit request: "ajouter un petit peu d'autobattling") — a defeated one stays listed, marked "(defeated)", rather than dropped, so the count always visibly matches EncounterCatalog's own authored roster for the round.</summary>
+        /// <summary>Lists every enemy in this round's encounter by name — a defeated one stays listed, marked "(defeated)", rather than dropped, so the count always matches EncounterCatalog's roster for the round.</summary>
         private static string BuildEncounterStatus(IReadOnlyList<EnemyInstance> encounter)
         {
             var text = new System.Text.StringBuilder("Enemy encounter: ");
@@ -2389,30 +1917,14 @@ namespace Contigu.Presentation
             return text.ToString();
         }
 
-        /// <summary>
-        /// "New Run" now always goes back through the challenge picker
-        /// instead of immediately restarting the same challenge (spec
-        /// extension, explicit request: "Meta progression avec différents
-        /// challenge...") — see OnChallengeChosen for what actually starts
-        /// the next run once one is picked there.
-        /// </summary>
+        /// <summary>"New Run" goes back through the challenge picker rather than immediately restarting the same challenge — see OnChallengeChosen for what starts the next run once one is picked.</summary>
         private void OnRestartRequested()
         {
             _endScreenView.Hide();
             _challengeSelectView.Show(_metaStats);
         }
 
-        /// <summary>
-        /// Spends Stars to unlock <paramref name="challenge"/> if it isn't
-        /// already (a no-op charge for Classic/an already-unlocked one —
-        /// see MetaStatsRecorder.TryUnlockChallenge), persists that
-        /// immediately for the same "no guaranteed exit hook" reason every
-        /// other MetaStats write does, then starts the run. The picker
-        /// only ever calls this for a challenge it already rendered as
-        /// affordable, but TryUnlockChallenge is re-checked here anyway
-        /// rather than trusted blindly, since it's the one thing in this
-        /// whole flow that actually spends the player's currency.
-        /// </summary>
+        /// <summary>Spends Stars to unlock <paramref name="challenge"/> if it isn't already (a no-op charge for Classic/an already-unlocked one — see MetaStatsRecorder.TryUnlockChallenge), persists immediately, then starts the run. Re-checked here rather than trusted blindly, since this is the one thing in this flow that spends currency.</summary>
         private void OnChallengeChosen(ChallengeDefinition challenge)
         {
             var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(_metaStats, challenge);
@@ -2438,13 +1950,9 @@ namespace Contigu.Presentation
         private void OnModifierCarouselDismissed()
         {
             // Only now does the modifier panel learn about the shop-bought
-            // Random Modifier the carousel just revealed
-            // (RunManager.LastRandomModifierGranted, granted in
-            // OnUpgradeBuyRequested). Refreshing any earlier let the badge
-            // show up in the left-side panel, behind the carousel, WHILE
-            // the spin was still playing (explicit report: "Le nouveau
-            // random modifier devrait apparaitre dans la liste après avoir
-            // appuyé sur OK").
+            // Random Modifier the carousel just revealed — refreshing
+            // earlier would show the badge in the side panel while the
+            // carousel's spin was still playing.
             _modifierPanelView.Refresh(_run.ActiveModifiers);
         }
 

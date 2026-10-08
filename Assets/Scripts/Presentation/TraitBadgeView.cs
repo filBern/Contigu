@@ -28,21 +28,12 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            // GridCellView.SetHoverTint activates this badge to preview the
-            // trait a valid placement would grant, without ever calling
-            // Init() on it (only ApplyState does, once the trait is
-            // actually placed) — so _tooltip can still be null here if the
-            // player's cursor happens to sit on the badge's corner while
-            // only hovering a placement preview (NullReferenceException
-            // bug report).
+            // GridCellView.SetHoverTint activates this badge to preview a placement without calling Init() (only ApplyState does), so _tooltip can be null here.
             if (_tooltip == null)
             {
                 return;
             }
-            // Joker-exclusive combat kinds never go through the shop's
-            // rarity-weighted draft at all (every Joker piece is tagged at
-            // random the moment it's added — see DeckManager.AddJoker), so
-            // "Common · Grid pool" would be actively misleading here.
+            // Joker-exclusive combat kinds never go through the shop's rarity-weighted draft (every Joker piece is tagged at random when added; see DeckManager.AddJoker), so "Common · Grid pool" would be misleading here.
             if (PieceTrait.IsJokerCombatKind(_trait.Kind))
             {
                 var jokerColor = VisualDefaults.GetColor(PieceColor.Joker);
@@ -63,13 +54,7 @@ namespace Contigu.Presentation
             _tooltip.Hide();
         }
 
-        /// <summary>
-        /// A badge can be destroyed while still hovered — e.g.
-        /// TileChoiceView rebuilds a preview the instant its cell is
-        /// clicked to deselect it, which never fires OnPointerExit first —
-        /// leaving the tooltip stuck open for a trait that's no longer even
-        /// there. Same unconditional Hide() as OnPointerExit above.
-        /// </summary>
+        /// <summary>A badge can be destroyed while still hovered without OnPointerExit firing first, leaving the tooltip stuck open.</summary>
         private void OnDestroy()
         {
             if (_tooltip != null)
@@ -78,17 +63,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Same fix as <see cref="OnDestroy"/>, for the more common case on
-        /// the grid: GridCellView never destroys this badge, it just
-        /// SetActive(false)s it via ApplyState once the cell's OriginTrait
-        /// clears (a line/column clear, or a Void/Kamikaze destruction) —
-        /// which doesn't fire OnPointerExit either, so a tooltip left open
-        /// while hovering a tile upgrade badge stayed stuck even after the
-        /// tile it described was gone (explicit bug report: "Lorsqu'une
-        /// tuile est cleared pendant qu'on hover sur son upgrade, le
-        /// tooltip devrait être hidden").
-        /// </summary>
+        /// <summary>Same fix as <see cref="OnDestroy"/>: GridCellView SetActive(false)s this badge via ApplyState when the cell's OriginTrait clears, which also doesn't fire OnPointerExit.</summary>
         private void OnDisable()
         {
             if (_tooltip != null)

@@ -32,20 +32,15 @@ namespace Contigu.Presentation
         private Image _badgeTraitOrigin;
         private TraitBadgeView _traitOriginBadgeView;
         private Image _colorblindShape;
-        // A GameObject, not an Image — it's a wrapper around 4 border bars
-        // (see GridView.BuildLineClearBorder), toggled as one unit rather
-        // than being a single Graphic itself.
+        // A GameObject, not an Image — wraps 4 border bars (see GridView.BuildLineClearBorder), toggled as one unit.
         private GameObject _lineClearOverlay;
         private TooltipView _tooltip;
 
         private GridView _owner;
         private Coroutine _pulseCoroutine;
 
-        // Which of this cell's visuals, if any, are currently an enemy-
-        // placed "malus" (Locker's locked-obstacle look / Poisoner's poison
-        // badge) — set each time ApplyState renders, read by SetMalusAlpha
-        // so GridView.FadeMalus can fade exactly those, and nothing else on
-        // this cell, as part of GameBootstrap's Shuffle event sequencing.
+        // Which of this cell's visuals, if any, are currently an enemy-placed malus — set each time ApplyState
+        // renders, read by SetMalusAlpha so GridView.FadeMalus can fade exactly those and nothing else.
         private bool _isShowingLockedObstacle;
         private bool _isShowingPoisonBadge;
 
@@ -70,46 +65,16 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Renders this cell from <paramref name="cell"/>'s current state, unless
-        /// <paramref name="fillColorOverride"/> is given — then it's painted as
-        /// filled with that color regardless of the cell's actual (possibly
-        /// already-cleared) fill state. Used to hold a just-completed line
-        /// visually filled while its score is still being shown, before the
-        /// clear animation actually empties it (see GridView).
-        /// <paramref name="originTraitOverride"/> follows the same "held"
-        /// convention: whenever <paramref name="fillColorOverride"/> is given,
-        /// this is used instead of the cell's own (possibly already-cleared)
-        /// OriginTrait, so the trait badge disappears exactly when the clear
-        /// animation empties THIS cell rather than the instant the line clear
-        /// actually happened in Core (bug report: the badge used to vanish at
-        /// the very start of the score cascade, before the tile itself
-        /// visually cleared).
-        /// <paramref name="suppressMalus"/> renders this cell's TRUE current
-        /// fill/golden/tinted state (unlike <paramref name="fillColorOverride"/>,
-        /// which fakes an already-cleared cell as still filled) while hiding
-        /// just its locked-obstacle look and poison badge — used by
-        /// GridView.RefreshHoldingClearedCells for a deferred cell whose
-        /// lock/poison this SAME placement's own auto-refill just added,
-        /// instead of skipping its render entirely. Skipping used to assume
-        /// such a cell was always empty both before and after (true for a
-        /// boss lock tick), but poison "contamination" can land on one of
-        /// THIS placement's own just-filled footprint cells — skipping it
-        /// then left it frozen on its stale pre-click hover-tint instead of
-        /// showing the piece it was actually just filled with (bug report:
-        /// "la tuile qui va être empoisonné devient grisâtre avant même que
-        /// les points commencent a etre compté"). <paramref
-        /// name="forceShowLocked"/>/<paramref name="forceShowPoisoned"/> are
-        /// the opposite case — a lock/poison THIS placement just RELEASED
-        /// (Locker/Poisoner's own On-Shuffle effect moving it away, or the
-        /// owning enemy dying from this placement's own damage — see
-        /// RunManager.CleanUpDefeatedEnemy) renders as if it were still
-        /// locked/poisoned (regardless of Cell.IsLocked/IsPoisoned already
-        /// being false in Core) until the real reveal, instead of instantly
-        /// showing its already-released look (explicit bug report: "Les
-        /// locked cells sont enlevé visuellement trop tôt... Idem pour les
-        /// cell empoisonné") — this also keeps it correctly flagged for
-        /// GridView.FadeMalus to fade OUT along with the rest, rather than
-        /// never being treated as malus at all once it's silently released.
+        /// Renders this cell from <paramref name="cell"/>'s current state, unless <paramref name="fillColorOverride"/>
+        /// is given, in which case it's painted as filled with that color regardless of the cell's actual
+        /// (possibly already-cleared) state — used to hold a just-completed line visually filled while its
+        /// score plays out, before the clear animation empties it. <paramref name="originTraitOverride"/>
+        /// follows the same convention for the trait-origin badge.
+        /// <paramref name="suppressMalus"/> renders the cell's true fill state while hiding its locked-obstacle
+        /// look and poison badge, used for a deferred cell whose lock/poison this same placement just added.
+        /// <paramref name="forceShowLocked"/>/<paramref name="forceShowPoisoned"/> render as if still
+        /// locked/poisoned even though the underlying state already released, until the real reveal, and keep
+        /// the cell flagged for GridView.FadeMalus to fade out along with the rest.
         /// </summary>
         public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false, bool forceShowLocked = false, bool forceShowPoisoned = false)
         {
@@ -117,27 +82,10 @@ namespace Contigu.Presentation
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
             PieceTrait? originTrait = fillColorOverride.HasValue ? originTraitOverride : cell.OriginTrait;
 
-            // A Bastion cell (see Cell.IsBastion) is locked AND filled at the
-            // same time — it renders like any other filled tile (plus its
-            // trait-origin badge below), not like the empty "locked obstacle"
-            // look every other locked cell gets, since it's meant to read as
-            // a permanently-scoring tile rather than dead space.
-            //
-            // Also excluded while fillColorOverride is set — that's the
-            // "held" rendering GridView.RefreshHoldingClearedCells uses to
-            // keep a just-completed line looking filled during the score
-            // cascade, before its own clear-burst actually empties it (see
-            // ClearCellVisual). If this SAME placement's own auto-refill
-            // also moved Locker's lock onto one of the cells that row just
-            // cleared — now empty in Core, and therefore a valid new lock
-            // target — rendering the "X" obstacle here would instantly
-            // break that illusion: the row would show a lock sitting on a
-            // tile that's still supposed to look intact mid-cascade
-            // (explicit report: "j'ai une locked cell qui est apparu sur
-            // cette même ligne avant même que la ligne soit disparu
-            // visuellement"). The real (post-clear, now-locked) state still
-            // shows correctly once ClearCellVisual/the final Refresh()
-            // calls ApplyState with no override.
+            // A Bastion cell (see Cell.IsBastion) is locked AND filled at the same time — it renders like any
+            // other filled tile rather than the empty "locked obstacle" look other locked cells get.
+            // Also excluded while fillColorOverride is set (the "held" rendering during a score cascade),
+            // so a lock added to a just-cleared cell this same placement doesn't break that illusion.
             bool renderAsLockedObstacle = (cell.IsLocked || forceShowLocked) && !cell.IsBastion && !fillColorOverride.HasValue && !suppressMalus;
             _isShowingLockedObstacle = renderAsLockedObstacle;
 
@@ -156,13 +104,8 @@ namespace Contigu.Presentation
             }
             else if (isFilled)
             {
-                // The shared card art (see VisualDefaults.TileSprite),
-                // tinted the pure piece color once filled — a golden cell's
-                // own background is never tinted (that would shift the
-                // piece's actual color); its golden status is conveyed by
-                // the badge and effect label below instead, which persist
-                // regardless of fill state. Falls back to the old flat fill
-                // if the sprite failed to load.
+                // Shared card art tinted to the pure piece color — a golden cell's background is never
+                // tinted itself, its golden status is conveyed by the badge/effect label instead.
                 Background.sprite = VisualDefaults.TileSprite;
                 Background.color = VisualDefaults.GetColor(filledColor.Value);
             }
@@ -173,17 +116,11 @@ namespace Contigu.Presentation
             }
             else
             {
-                // Own natural (untinted) color, on explicit request: "une
-                // empty tile ressemble a card_bg_3.png".
                 Background.sprite = VisualDefaults.TileSprite;
                 Background.color = VisualDefaults.TileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
             }
 
-            // Neutral frame/bevel overlay on top of the flat fill, below
-            // every badge — only shown as a fallback for an actually-filled,
-            // non-obstacle cell when TileSprite itself failed to load, since
-            // that sprite's own card border already gives filled cells the
-            // "distinct block" look this used to add on its own.
+            // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.
             bool showFillTile = isFilled && !renderAsLockedObstacle && VisualDefaults.TileSprite == null && VisualDefaults.FillTileSprite != null;
             _fillTile.gameObject.SetActive(showFillTile);
             if (showFillTile)
@@ -219,14 +156,9 @@ namespace Contigu.Presentation
                 _badgeSpecial.color = VisualDefaults.GetColor(cell.TintedColor);
             }
 
-            // "Poisoner" enemy mechanic (spec extension, explicit request:
-            // "ajouter un petit peu d'autobattling" — see Cell.IsPoisoned/
-            // RunManager.ApplyPoisonScoreRule): any point this cell scores
-            // from here on counts negative instead of positive. Tooltip on
-            // hover (explicit request: "Il n'y a pas de tooltip pour la
-            // tile empoisonné, il en faut un") — same lazy Init-on-render
-            // pattern as the trait-origin badge below, since this badge's
-            // own Init (above) runs before _tooltip is assigned.
+            // Poisoner mechanic (see Cell.IsPoisoned/RunManager.ApplyPoisonScoreRule): points scored here
+            // count negative instead of positive. Tooltip Init is lazy since the badge's own Init above
+            // runs before _tooltip is assigned.
             bool showPoisonBadge = (cell.IsPoisoned || forceShowPoisoned) && !suppressMalus;
             _badgePoison.gameObject.SetActive(showPoisonBadge);
             _isShowingPoisonBadge = showPoisonBadge;
@@ -235,11 +167,8 @@ namespace Contigu.Presentation
                 _poisonBadgeView.Init(_tooltip, gameObject);
             }
 
-            // Cosmetic reminder of which deck upgrade originally enchanted
-            // this cell (see Cell.OriginTrait) — independent of the
-            // Golden/Tinted/MultiplierZone badges above, which most trait
-            // kinds only carry for the one placement that scores them, so
-            // this is often the only on-grid trace left of a trait pick.
+            // Marks which deck upgrade originally enchanted this cell (see Cell.OriginTrait), independent
+            // of the Golden/Tinted/MultiplierZone badges above.
             bool showTraitOrigin = originTrait.HasValue;
             _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
             if (showTraitOrigin)
@@ -266,21 +195,13 @@ namespace Contigu.Presentation
             _lineClearOverlay.SetActive(false);
         }
 
-        /// <summary>
-        /// Sets the alpha of just this cell's "malus" visuals — the
-        /// locked-obstacle look and/or the poison badge, whichever this
-        /// cell was last rendered with (see ApplyState) — leaving its
-        /// normal tile fill/background completely untouched when neither
-        /// applies. Explicit request: GridView.FadeMalus drives a grid-
-        /// wide fade of every enemy-placed debuff as part of
-        /// GameBootstrap's own Shuffle event sequencing.
-        /// </summary>
-        /// <summary>Whether this cell is currently showing ANY malus visual (see SetMalusAlpha) — used by GridView.FadeMalus to collect just the cells actually worth animating, rather than looping every grid cell for ones that no-op.</summary>
+        /// <summary>Whether this cell is currently showing any malus visual — used by GridView.FadeMalus to collect just the cells worth animating.</summary>
         public bool IsShowingMalus()
         {
             return _isShowingLockedObstacle || _isShowingPoisonBadge;
         }
 
+        /// <summary>Sets the alpha of just this cell's malus visuals (locked-obstacle look and/or poison badge), leaving its normal tile fill untouched otherwise.</summary>
         public void SetMalusAlpha(float alpha)
         {
             if (_isShowingLockedObstacle)
@@ -320,23 +241,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Tints the cell green/red for valid/invalid placement preview —
-        /// the tile's own tinted card shape (see ApplyState) only appears
-        /// once actually placed, so hovering previews position/validity via
-        /// this overlay alone rather than the piece's own color. When
-        /// invalid, also shows a solid red marker — the background tint
-        /// alone was easy to miss. <paramref name="previewTrait"/>
-        /// additionally previews the SAME top-right trait-origin badge
-        /// <see cref="ApplyState"/> shows once placed, on the one cell that
-        /// would actually carry the placed piece's enchantment (see
-        /// PieceTrait) — used to show the old top-left/bottom-right badges
-        /// instead (whichever of Golden/Special matched the trait kind),
-        /// which put the preview in a different corner than both the
-        /// hand-slot badge and the actual placed badge (bug report: "dans la
-        /// slot le badge est en haut a gauche, dans le preview ... en bas a
-        /// droite et lorsqu'il est déposé il devient en haut a droite").
-        /// ClearHover's follow-up ApplyState call resets everything once the
-        /// hover ends.
+        /// Tints the cell green/red for valid/invalid placement preview, since the tile's own tinted card
+        /// shape only appears once actually placed. When invalid, also shows a solid red marker.
+        /// <paramref name="previewTrait"/> previews the same top-right trait-origin badge <see cref="ApplyState"/>
+        /// shows once placed, on the cell that would carry the piece's enchantment. ClearHover's follow-up
+        /// ApplyState call resets everything once the hover ends.
         /// </summary>
         public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null)
         {
@@ -356,19 +265,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Gold border marking this cell as part of a row/column that
-        /// would clear if the currently-hovered piece were placed here (see
-        /// GridManager.PreviewClearedLineCells/GridView.OnCellHoverEnter) —
-        /// explicit request: "j'aimerais qu'on fasse un highlight de la
-        /// ligne qui serait cleared", refined to an outline rather than a
-        /// full tile wash on a follow-up request: "au lieu de highlight la
-        /// tuile au complet ... highlight seulement le contour". A separate
-        /// overlay layer rather than folding this into SetHoverTint's own
-        /// green/red Lerp, since most of a cleared line's cells are
-        /// pre-existing tiles that need to keep showing their own true fill
-        /// color underneath, not get blended toward validity-tint colors
-        /// that have nothing to do with a line clear. Reset by the next real
-        /// ApplyState render, same as the other hover-only decorations.
+        /// Gold border marking this cell as part of a row/column that would clear if the hovered piece were
+        /// placed here (see GridManager.PreviewClearedLineCells/GridView.OnCellHoverEnter). A separate overlay
+        /// layer rather than folding into SetHoverTint's own green/red Lerp, since a cleared line's pre-existing
+        /// cells need to keep showing their true fill color underneath. Reset by the next ApplyState render.
         /// </summary>
         public void SetLineClearPreview(bool active)
         {
@@ -404,16 +304,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Small radial burst of fading squares in <paramref name="color"/>,
-        /// played right as this cell empties — a completed line/column
-        /// clearing, or a trait effect (Void Tile/Kamikaze Tile) destroying
-        /// it — explicit request: "un petit vfx lorsqu'on clear une tile ou
-        /// qu'on la détruit". Self-contained, fire-and-forget (unlike <see
-        /// cref="Pulse"/> it's never re-triggered mid-flight, so it doesn't
-        /// need a stored Coroutine handle to stop/restart) — spawns its own
-        /// short-lived particle children instead of animating this cell's
-        /// own transform, so it plays independently of any Pulse happening
-        /// on the same cell at the same time.
+        /// Small radial burst of fading squares in <paramref name="color"/>, played as this cell empties.
+        /// Self-contained fire-and-forget (unlike <see cref="Pulse"/> it's never re-triggered mid-flight) —
+        /// spawns its own particle children rather than animating this cell's transform, so it plays
+        /// independently of any concurrent Pulse.
         /// </summary>
         public void PlayClearBurst(Color color)
         {

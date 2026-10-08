@@ -4,14 +4,10 @@ using UnityEngine.EventSystems;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Attached to a grid cell's poison badge (see GridCellView.ApplyState/
-    /// GridView.CreateCell) — shows the shared <see cref="TooltipView"/>
-    /// explaining <see cref="Contigu.Core.Cell.IsPoisoned"/> on hover
-    /// (explicit request: "Il n'y a pas de tooltip pour la tile
-    /// empoisonné, il en faut un"). Forwards clicks to the cell itself
-    /// (<see cref="_clickForwardTarget"/>) so hovering/clicking this small
-    /// corner badge never swallows the click that would otherwise place a
-    /// piece here — same pattern as <see cref="TraitBadgeView"/>.
+    /// Attached to a grid cell's poison badge (see GridCellView.ApplyState/GridView.CreateCell) — shows the
+    /// shared <see cref="TooltipView"/> explaining <see cref="Contigu.Core.Cell.IsPoisoned"/> on hover.
+    /// Forwards clicks to the cell itself (<see cref="_clickForwardTarget"/>) so clicking this small corner
+    /// badge never swallows the click that would otherwise place a piece here — same pattern as <see cref="TraitBadgeView"/>.
     /// </summary>
     public sealed class PoisonBadgeView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
@@ -45,7 +41,7 @@ namespace Contigu.Presentation
             _tooltip.Hide();
         }
 
-        /// <summary>Same "don't leave the tooltip stuck open" fix as TraitBadgeView.OnDisable — GridCellView never destroys this badge, it just SetActive(false)s it once the cell's no longer poisoned, which doesn't fire OnPointerExit.</summary>
+        /// <summary>GridCellView never destroys this badge, just SetActive(false)s it, which doesn't fire OnPointerExit — same fix as TraitBadgeView.OnDisable.</summary>
         private void OnDisable()
         {
             if (_tooltip != null)

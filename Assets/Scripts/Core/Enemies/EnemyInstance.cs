@@ -66,13 +66,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Reclaimer" (redesign — explicit request: "Chaque points
-        /// négatifs triggered par une tuile empoisonné, l'ennemi reclaimer
-        /// récupère en point de vie ce montant là") — clamped at <see
-        /// cref="CurrentMaxHp"/>, same ceiling <see cref="ApplyDamage"/>'s
-        /// own negative-damage healing already respects — see <see
-        /// cref="HealOrGrow"/> for the Reclaimer/Leech variant that grows
-        /// the ceiling instead of capping out.
+        /// Clamped at <see cref="CurrentMaxHp"/>, same ceiling <see
+        /// cref="ApplyDamage"/>'s own negative-damage healing already
+        /// respects — see <see cref="HealOrGrow"/> for the Reclaimer/Leech
+        /// variant that grows the ceiling instead of capping out.
         /// </summary>
         public void Heal(int amount)
         {
@@ -84,21 +81,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Reclaimer" grow mechanic (explicit request: "j'aimerais
-        /// ajouter pour le reclaimer que s'il est heal ET qu'il est full
-        /// health, il augmente son max health et son health pour devenir
-        /// plus fort. Il faudra donc tuer l'empoisonneur sans trop heal le
-        /// reclaimer") — a heal that arrives while ALREADY at <see
-        /// cref="CurrentMaxHp"/> doesn't just cap out and go to waste: it
-        /// raises BOTH CurrentMaxHp and CurrentHp by the same amount
-        /// instead, making this instance permanently tougher. A heal that
-        /// only PARTIALLY overflows (not yet full before this heal, but
-        /// would exceed the cap) still just clamps normally like <see
-        /// cref="Heal"/> — growth is specifically for being AT full
-        /// already when more healing arrives, not for any excess. Used by
-        /// RunManager.HealReclaimer and RunManager.HealLeech (explicit
-        /// request: "le boss leech ... il devient de plus en plus fort s'il
-        /// est déjà full, son max HP augmente aussi") — poison's own
+        /// A heal that arrives while already at <see cref="CurrentMaxHp"/>
+        /// doesn't just cap out and go to waste: it raises both CurrentMaxHp
+        /// and CurrentHp by the same amount instead, making this instance
+        /// permanently tougher. A heal that only partially overflows (not
+        /// yet full before this heal, but would exceed the cap) still just
+        /// clamps normally like <see cref="Heal"/> — growth is specifically
+        /// for being at full already when more healing arrives. Used by
+        /// RunManager.HealReclaimer and RunManager.HealLeech — poison's own
         /// negative-damage-heals-the-front-enemy-back-up (via ApplyDamage)
         /// is the only healer left that stays capped at its ordinary
         /// CurrentMaxHp with no growth.

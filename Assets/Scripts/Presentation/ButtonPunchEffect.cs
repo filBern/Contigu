@@ -5,14 +5,9 @@ using UnityEngine.EventSystems;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Brief scale-punch (squish down, spring back) played on click — same
-    /// scale-bounce technique as GridCellView.Pulse()/ComboView.PulseChips(), just
-    /// triggered by a button click instead of a score event. Added to every
-    /// button by UIFactory.FinishButton so all of them (Choose, Cancel,
-    /// color picks, restart, ...) get the same tactile click feedback
-    /// without each call site wiring it up itself. Also the single place
-    /// every button's hover/click SFX plays from, for the same "every
-    /// button funnels through here" reason (see SfxManager).
+    /// Brief scale-punch (squish down, spring back) played on click — same scale-bounce technique as
+    /// GridCellView.Pulse()/ComboView.PulseChips(). Added to every button by UIFactory.FinishButton, and the
+    /// single place every button's hover/click SFX plays from (see SfxManager).
     /// </summary>
     public sealed class ButtonPunchEffect : MonoBehaviour, IPointerEnterHandler
     {

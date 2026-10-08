@@ -5,18 +5,9 @@ using UnityEngine;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Small black geometric shapes for ColorblindMode's per-color symbol
-    /// (on explicit request: "j'aimerais qu'on ne réutilise pas les icon
-    /// que j'avais fait, j'aimerais plus que tu fasse des petites formes
-    /// géométrique noir au milieu de la tuile un peu comme un jeu de
-    /// carte" — replaces the earlier one-letter-per-color text label,
-    /// deliberately NOT the old deleted per-color icon files: these are
-    /// generated procedurally at runtime instead of loaded from any art
-    /// asset, so nothing here reuses that old set). One white-on-
-    /// transparent shape per PieceColor, tinted black by the Image that
-    /// displays it (see GridCellView/ShapePreviewFactory) — built once and
-    /// cached, since every filled tile of the same color reuses the
-    /// identical sprite.
+    /// Small geometric shapes for ColorblindMode's per-color symbol, generated procedurally at runtime. One
+    /// white-on-transparent shape per PieceColor, tinted black by the Image that displays it (see
+    /// GridCellView/ShapePreviewFactory) — built once and cached.
     /// </summary>
     public static class ColorblindShapeFactory
     {
@@ -59,19 +50,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// <paramref name="dx"/>/<paramref name="dy"/> are offsets from the
-        /// texture's own center, in the [-0.5, 0.5] unit range one axis'
-        /// full size covers — five simple, unambiguous silhouettes, one
-        /// per PieceColor: circle, square, upward triangle, diamond
-        /// (Coral/Teal/Violet/Lime, matching their existing red/blue/
-        /// yellow/green display order — see VisualDefaults.ColorMap), and
-        /// a cross for Joker, the one color the other four shapes don't
-        /// use so it never gets mistaken for a "real" piece color.
-        /// Internal (not private): BackgroundShapeFactory reuses this exact
-        /// point-in-shape math at a much higher texture resolution for the
-        /// animated background's own geometric shapes — <paramref
-        /// name="color"/> is just a shape SELECTOR there, its actual
-        /// piece-color meaning is irrelevant to that caller.
+        /// <paramref name="dx"/>/<paramref name="dy"/> are offsets from the texture's own center, in the
+        /// [-0.5, 0.5] range. One silhouette per PieceColor: circle, square, upward triangle, diamond
+        /// (Coral/Teal/Violet/Lime), and a cross for Joker. Internal (not private): BackgroundShapeFactory
+        /// reuses this same point-in-shape math at higher resolution, using <paramref name="color"/> purely
+        /// as a shape selector.
         /// </summary>
         internal static bool IsInsideShape(PieceColor color, float dx, float dy)
         {

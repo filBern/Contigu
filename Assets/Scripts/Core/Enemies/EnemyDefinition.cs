@@ -7,10 +7,9 @@ namespace Contigu.Core
         public string Name;
         public EnemyRole Role;
 
-        /// <summary>Initial tuning value, not derived from any spec number (the GDD only says "Low HP"/"High HP") — expect this to drift as balance work continues, same as RunConfig.Quotas/PieceBudgets.</summary>
         public int MaxHp;
 
-        /// <summary>Plain-English summary of this enemy's On-Shuffle effect (spec extension, explicit request: "pouvoir hover sur l'ennemi pour avoir plus de détails sur ce qu'il fait comme effet lorsqu'on shuffle") — shown by Presentation.EnemyIconView's hover tooltip.</summary>
+        /// <summary>Plain-English summary of this enemy's On-Shuffle effect — shown by Presentation.EnemyIconView's hover tooltip.</summary>
         public string Description;
     }
 }

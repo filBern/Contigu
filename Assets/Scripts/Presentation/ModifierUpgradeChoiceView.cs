@@ -7,17 +7,13 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Overlay shown once a shop upgrade purchase reveals "Modifier
-    /// Upgrade" (spec extension, explicit request: "J'aimerais rajouter un
-    /// type d'upgrade dans le shop: Modifier upgrade, ce serait pour
-    /// upgrader un modifier que le joueur possède") — the player picks ONE
-    /// of their currently active modifiers (RunManager.ActiveModifiers
-    /// itself, no separate candidate list — every owned modifier is
-    /// eligible, see RunManager.BuyUpgradeSlot) to raise its level (see
-    /// ModifierLevelUtility). Structurally the same measured, centered
-    /// card+title+picker+Confirm block as PieceChoiceView/TileChoiceView,
-    /// but the picker is a multi-row GRID (up to EconomyConstants.
-    /// MaxActiveModifiers candidates, not a fixed 5) instead of a single
+    /// Overlay shown once a shop upgrade purchase reveals "Modifier Upgrade".
+    /// The player picks one of their currently active modifiers (every owned
+    /// modifier is eligible, see RunManager.BuyUpgradeSlot) to raise its
+    /// level (see ModifierLevelUtility). Structurally the same measured,
+    /// centered card+title+picker+Confirm block as PieceChoiceView/
+    /// TileChoiceView, but the picker is a multi-row grid (up to
+    /// EconomyConstants.MaxActiveModifiers candidates) instead of a single
     /// horizontal row, and each cell shows the modifier's own badge (icon +
     /// current level, if any) rather than a piece preview.
     /// </summary>

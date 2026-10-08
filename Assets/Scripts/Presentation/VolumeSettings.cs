@@ -4,19 +4,16 @@ using UnityEngine;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Persisted volume prefs for SettingsView (spec extension, explicit
-    /// request: "un menu settings pour gérer le volume de musique, de sfx,
-    /// général"). Same PlayerPrefs-backed, load-once-at-static-init pattern
-    /// as ColorblindMode. Named "VolumeSettings" rather than "AudioSettings"
-    /// to avoid colliding with UnityEngine.AudioSettings (a real built-in
-    /// static class) wherever this file's "using UnityEngine;" and a caller
-    /// elsewhere might both be in scope.
+    /// Persisted volume prefs for SettingsView. Same PlayerPrefs-backed,
+    /// load-once-at-static-init pattern as ColorblindMode. Named
+    /// "VolumeSettings" rather than "AudioSettings" to avoid colliding with
+    /// UnityEngine.AudioSettings.
     ///
     /// <see cref="MasterVolume"/> is applied to AudioListener.volume (see
     /// GameBootstrap.ApplyVolumeSettings), scaling every AudioSource in the
     /// scene at once; <see cref="MusicVolume"/>/<see cref="SfxVolume"/> are
-    /// applied directly to SfxManager's own two AudioSources instead, since
-    /// there's still no AudioMixer to route a real Music/SFX bus through.
+    /// applied directly to SfxManager's two AudioSources instead, since
+    /// there's no AudioMixer to route a real Music/SFX bus through.
     /// </summary>
     public static class VolumeSettings
     {

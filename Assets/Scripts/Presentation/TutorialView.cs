@@ -3,15 +3,10 @@ using UnityEngine;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Full-screen "How to Play" overlay (spec extension, explicit request
-    /// — "tutoriel / écran de règles", picked as the next step after
-    /// colorblind mode: the game previously had zero in-game explanation
-    /// of its rules anywhere, the biggest gap for a new player). Shown
-    /// automatically once, the very first time the game is ever launched
-    /// (see GameBootstrap.Awake, gated on the same PlayerPrefs-flag
-    /// pattern as ColorblindMode), and reachable again any time via the H
-    /// key — same "always-available, not editor-only" reasoning as
-    /// Tab/C.
+    /// Full-screen "How to Play" overlay. Shown automatically once, the
+    /// first time the game is ever launched (see GameBootstrap.Awake, gated
+    /// on a PlayerPrefs flag like ColorblindMode), and reachable again any
+    /// time via the H key.
     /// </summary>
     public sealed class TutorialView : MonoBehaviour
     {
@@ -71,13 +66,7 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        // Font size for a section header, up from the 17 the body text
-        // itself renders at (see Build) — on explicit report the plain-
-        // uppercase headers (see BuildRulesText's own doc comment for why
-        // they're not <b>) still didn't stand out enough: "Les secondary
-        // title devraient être plus gros". A <size=> tag is a true rescale
-        // (not a faux style Unity has to synthesize by redrawing the
-        // glyph, unlike <b>), so it carries none of that blur risk.
+        // Larger than the body text's own size (see Build). A <size=> tag is a true rescale, unlike <b>, which Unity synthesizes by redrawing the glyph and can read as blurry.
         private const int HeaderFontSize = 24;
 
         /// <summary>Six short sections covering everything a new player needs before their first placement. Headers are kept out of DescriptionTextFormatter.Colorize entirely (only each section's body line goes through it) — otherwise a header like "LUEUR AND THE SHOP" would have its own leading &lt;size=&gt; tag glued onto "LUEUR", which stops the keyword match from firing on the very word it's supposed to recognize.</summary>

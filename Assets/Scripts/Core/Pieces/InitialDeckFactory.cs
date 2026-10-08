@@ -3,10 +3,9 @@ using System.Collections.Generic;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Builds the starting 32-token deck (spec 4.5, revised — see Build's own
-    /// doc comment): every one of the 8 shapes in every one of the 4 base
-    /// colors, exactly once each, no Joker at the start (Joker is only
-    /// obtainable via the "Joker piece" upgrade).
+    /// Builds the starting 32-token deck: every one of the 8 shapes in every
+    /// one of the 4 base colors, exactly once each, no Joker at the start
+    /// (Joker is only obtainable via the "Joker piece" upgrade).
     /// </summary>
     public static class InitialDeckFactory
     {
@@ -18,7 +17,7 @@ namespace Contigu.Core
             ShapeId.Sq2, ShapeId.LTetro, ShapeId.TTetro, ShapeId.STetro
         };
 
-        /// <summary>The "Marathon" challenge's smaller starting deck (spec extension, explicit request — see ChallengeCatalog.Marathon), sums to 13: every shape still gets at least 1 copy (never below DeckManager.MinDeckSize=10, kept well above it), just fewer of each than the standard deck, and — unlike Build() below — not every shape reaches every color, on purpose: a smaller, less complete deck is exactly what makes Marathon harder.</summary>
+        /// <summary>The "Marathon" challenge's smaller starting deck (see ChallengeCatalog.Marathon), sums to 13: every shape still gets at least 1 copy (never below DeckManager.MinDeckSize=10), just fewer of each than the standard deck, and — unlike Build() below — not every shape reaches every color, on purpose: a smaller, less complete deck is exactly what makes Marathon harder.</summary>
         private static readonly Dictionary<ShapeId, int> MarathonCopiesPerShape = new Dictionary<ShapeId, int>
         {
             { ShapeId.Single, 2 },
@@ -33,22 +32,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// One copy of every (shape, color) combination — 8 x 4 = 32
-        /// tokens. DomV and TriIV used to be 2 of the 10 shapes here, each
-        /// getting their own (shape, color) combinations — removed as
-        /// ShapeId entries entirely (see ShapeId's own doc comment) since
-        /// they were fully redundant with DomH/TriIH under the random
-        /// per-hand-slot rotation every piece already gets (explicit
-        /// request, with a screenshot circling the resulting duplicate-
-        /// looking rows in the deck view: "j'aimerais vraiment que les deux
-        /// versions soulignées ne soit qu'un seul"). Previously (before that)
-        /// a fixed 24-token deck with an uneven number of copies per shape
-        /// cycled across colors via a running cursor — which meant a shape
-        /// with only 2 or 3 copies could never reach all 4 colors, so a
-        /// given color could be missing shapes entirely (on explicit
-        /// report, spotted via the new color-grouped DeckView: "Il manque
-        /// des pièces dans le deck non? Single tile green, etc." ->
-        /// "J'aimerais que toutes les couleurs aient toutes les formes").
-        /// Full, uniform coverage instead: no shape/color combination is
+        /// tokens. Full, uniform coverage: no shape/color combination is
         /// ever absent from the starting deck.
         /// </summary>
         public static List<PieceToken> Build()

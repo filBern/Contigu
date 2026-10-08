@@ -8,14 +8,8 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Two progress bars, flush against the top and bottom edges of the
-    /// screen and spanning its full width (no margin), built from flat
-    /// geometric rectangles in UITheme colors (see BuildBar) — the top
-    /// bar tracks round score against the round's quota, the bottom bar
-    /// tracks remaining piece budget for the round. Replaces the old
-    /// text-only readout (round number, round score, total score) — the
-    /// run's overall progress isn't shown moment-to-moment, just what the
-    /// player needs to finish the current round.
+    /// Two full-width progress bars flush against the top and bottom edges of the screen: the top bar tracks
+    /// round score against the round's quota, the bottom bar tracks remaining piece budget for the round.
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
@@ -26,70 +20,34 @@ namespace Contigu.Presentation
         private Text _piecesLabel;
         private RectTransform _lueurContainer;
         private Text _lueurLabel;
-        // Folded into the score bar's own label (see SetRound/SetScores)
-        // rather than a separate readout — on explicit request: "il faut
-        // mettre a quelle round on est rendu sur le nombre total a
-        // réussir". Defaults match round 1 of an 8-round run so the very
-        // first SetScores call (before Refresh's own SetRound runs) never
-        // shows a stale 0/0.
+        // Defaults match round 1 so the first SetScores call (before Refresh's own SetRound runs) never shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
 
-        /// <summary>
-        /// True while the score bar is hidden in favor of the enemy icon
-        /// row (see SetEncounter) — set by SetEncounter, cleared by Refresh
-        /// whenever RunManager.HasActiveEncounter is false. While true,
-        /// SetScores becomes a no-op (spec extension, explicit request:
-        /// "ajouter un petit peu d'autobattling") so GameBootstrap's own
-        /// progressive-score-popup calls (written for the quota bar, see
-        /// PlayPlacementSequence) can't re-show a bar that no longer means
-        /// anything this round.
-        /// </summary>
+        /// <summary>True while the score bar is hidden in favor of the enemy icon row. While true, SetScores is a no-op.</summary>
         private bool _isEncounterMode;
 
-        /// <summary>The ScoreBar's own root (its track Image's GameObject) — hidden entirely during an encounter round rather than repurposed, on explicit request: "Enleve la progress bar pour le quota. Au lieu met une petite image en haut pour chaque ennemi". Captured by climbing from _scoreFillRect (its own parent) rather than widening BuildBar's signature just for this.</summary>
+        /// <summary>The ScoreBar's own root, hidden entirely during an encounter round. Captured by climbing from _scoreFillRect's parent rather than widening BuildBar's signature just for this.</summary>
         private GameObject _scoreBarRoot;
 
-        // Raised from 3 (redesign, explicit request: "des niveaux avec de
-        // plus en plus d'ennemis" — EncounterCatalog's Round8 now schedules
-        // 5 at once) — the row's own HorizontalLayoutGroup/ContentSizeFitter
-        // already auto-sizes to however many slots exist, so this only
-        // needed the cap raised, no layout rework.
-        // Raised from 5 (explicit request: "Est-ce que tu peux faire 15
-        // rounds" — EncounterCatalog's new Round15 finale schedules 6 at
-        // once).
         private const int MaxEnemyIcons = 6;
         private const float EnemyIconSize = 44f;
         private const float EnemySlotWidth = 76f;
-        // Gap above the icon within its slot, pushing it down from the very
-        // top of the band — explicit request: "l'ennemi est trop haut".
         private const float EnemyIconTopPadding = 14f;
-        // Taller than the plain score bar it replaces (was just BarHeight)
-        // to fit EnemyIconTopPadding above the icon without crowding its HP
-        // label below — GameBootstrap's status text position derives from
-        // this directly (see BuildUI) so the two can never drift apart.
+        // GameBootstrap's status text position derives from this directly (see BuildUI), so the two stay in sync.
         public const float EnemyBandHeight = BarHeight + EnemyIconTopPadding;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
 
         /// <summary>
-        /// True once a slot's death has actually been REVEALED (its icon
-        /// tinted dead-gray by <see cref="SetEnemyHpDisplay"/> — not merely
-        /// true in Core, which happens well before the drain animation
-        /// even starts) — on explicit bug report: "lorsqu'un ennemi meurt,
-        /// on peut toujours hover par dessus pour afficher son tooltip,
-        /// j'aimerais qu'il soit détruit et que les ennemis se recentre
-        /// dans l'écran". <see cref="SetEncounter"/> reads this (not
-        /// EnemyInstance.IsDead directly) to decide whether to keep
-        /// reactivating the slot, so a kill this same placement is still
-        /// held alive-looking until the animation actually reaches 0 (see
-        /// SetEnemyHpDisplay's own doc comment) before it's ever hidden.
-        /// Reset back to all-false the moment a NEW round's encounter
-        /// arrives (see SetEncounter's own reference check).
+        /// True once a slot's death has actually been revealed (icon tinted dead-gray by
+        /// <see cref="SetEnemyHpDisplay"/>, not merely true in Core). <see cref="SetEncounter"/> reads this
+        /// instead of EnemyInstance.IsDead so a kill stays alive-looking until the HP drain animation finishes.
+        /// Reset to all-false when a new round's encounter arrives.
         /// </summary>
         private readonly bool[] _enemySlotRevealedDead = new bool[MaxEnemyIcons];
 
-        /// <summary>Which EnemyInstance list <see cref="_enemySlotRevealedDead"/> was last reset for — compared by reference (BuildEncounter constructs a brand-new list every round) to detect a new round's encounter, never by value.</summary>
+        /// <summary>Which EnemyInstance list <see cref="_enemySlotRevealedDead"/> was last reset for — compared by reference, never by value.</summary>
         private IReadOnlyList<EnemyInstance> _lastEncounterRefForDeathReveal;
         private readonly List<Image> _enemyIconImages = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
@@ -104,20 +62,8 @@ namespace Contigu.Presentation
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
             BuildEnemyBand(parent);
 
-            // Persistent readout displayed outside and above the combo card
-            // (moved here from below the status text on explicit request —
-            // was a small top-right corner readout, then 18->22->44->66->99;
-            // now slightly reduced to 84 after the layout review) — Lueur is a
-            // whole-run currency (see
-            // RunManager.Lueur), not tied to either bar's own round-scoped
-            // progress, so it gets its own spot rather than folding into the
-            // score bar's label. The "Lueur: " text prefix is gone (explicit
-            // request, after seeing the itch page mockups: "au lieu de
-            // marquer Lueur: ... mettre le petit losange orange") — a small
-            // rotated-square "diamond" icon stands in for it instead, since
-            // no gem/diamond sprite exists in the Colorful UI pack. Icon and
-            // number use a horizontal layout group and size themselves to
-            // their contents, staying centered as the number's digit count grows.
+            // Lueur is a whole-run currency (see RunManager.Lueur), shown as a rotated-square "diamond" icon
+            // plus number in a horizontal layout group that sizes to its contents.
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", lueurParent);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 19f;
@@ -133,12 +79,7 @@ namespace Contigu.Presentation
             var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
             lueurIcon.rectTransform.sizeDelta = new Vector2(35f, 35f);
             lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-            // Plain Image has no ILayoutElement, so without this the
-            // HorizontalLayoutGroup gives it zero width to work with (same
-            // gotcha as HandView's Shuffle button — see BuildShuffleButton).
-            // Sized a bit larger than the 18px square itself to leave room
-            // for the diamond's rotated corners (18 * sqrt(2) ≈ 25px
-            // diagonal) without crowding the number next to it.
+            // Plain Image has no ILayoutElement, so without this the HorizontalLayoutGroup gives it zero width.
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
             lueurIconLayout.preferredWidth = 54f;
             lueurIconLayout.preferredHeight = 54f;
@@ -147,39 +88,21 @@ namespace Contigu.Presentation
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
         }
 
-        /// <summary>
-        /// Own flat geometric bar (a plain cream track rectangle plus a
-        /// solid-color fill rectangle) instead of the "Colorful UI" pack's
-        /// rounded-pill slider sprites — on explicit request, after seeing
-        /// them next to the new DA ("refaire l'asset ... des deux progress
-        /// bar"): those sprites' own baked-in purple/blue art doesn't follow
-        /// UITheme at all (CreateSlicedImage tints sprites white, i.e. not
-        /// at all), so they kept showing their old colors no matter what
-        /// the rest of the reskin changed. A plain rectangle also fits this
-        /// bar's own "flush against the screen edge, full width" shape
-        /// better than a rounded pill did.
-        /// </summary>
+        /// <summary>Builds a flat track rectangle plus a solid-color fill rectangle, rather than a sprite-based slider, so the bar fully follows UITheme colors.</summary>
         private static void BuildBar(Transform parent, string name, Color fillColor, bool top,
             out RectTransform fillRect, out Text label)
         {
             float edgeY = top ? 1f : 0f;
-            // Both bars share the same flat track color and only differ by
-            // fill color.
             var bg = UIFactory.CreatePanel(parent, name, UITheme.PanelLight);
             UIFactory.AddThickOutline(bg, UITheme.Border);
-            // Stretched full-width (anchor min/max x = 0/1) and flush against
-            // the top or bottom edge (anchor, pivot and anchoredPosition all
-            // pinned to that same edge — zero anchoredPosition means no gap).
+            // Stretched full-width and flush against the top or bottom edge (zero anchoredPosition means no gap).
             bg.rectTransform.anchorMin = new Vector2(0f, edgeY);
             bg.rectTransform.anchorMax = new Vector2(1f, edgeY);
             bg.rectTransform.pivot = new Vector2(0.5f, edgeY);
             bg.rectTransform.anchoredPosition = Vector2.zero;
             bg.rectTransform.sizeDelta = new Vector2(0f, BarHeight);
 
-            // The fill's RIGHT edge is driven directly by anchorMax.x (see
-            // SetRatio) — a pure layout resize, not Image.Type.Filled — so
-            // the bar's width is guaranteed to track the ratio with no
-            // dependency on fill-shader/mesh behavior.
+            // The fill's right edge is driven directly by anchorMax.x (see SetRatio), a layout resize rather than Image.Type.Filled.
             var fillImg = UIFactory.CreatePanel(bg.transform, "Fill", fillColor);
             var rt = fillImg.rectTransform;
             rt.anchorMin = new Vector2(0f, 0f);
@@ -187,8 +110,6 @@ namespace Contigu.Presentation
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            // Dark text — the track/fill are both light (cream/mustard/mint)
-            // now, unlike the old dark-purple sprite this used to sit on.
             var text = UIFactory.CreateText(bg.transform, "Label", "", 32, UITheme.TextPrimary);
             UIFactory.StretchFull(text.rectTransform);
 
@@ -197,18 +118,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// A light band flush against the top edge (explicit request:
-        /// "ajouter une bande en haut de l'écran avec une couleur clair
-        /// pour mettre les ennemies à l'intérieur"), holding a row of small
-        /// square portraits — one per enemy slot up to <see
-        /// cref="MaxEnemyIcons"/>, left-to-right in encounter/targeting
-        /// order (GDD §07: "Which enemy should I kill first?" — leftmost is
-        /// always the one taking damage — see RunManager.
-        /// ApplyDamageToEncounter), each with its own HP readout directly
-        /// BELOW its icon (explicit request: "il faut ajouter la vie d'un
-        /// ennemi sous lui") rather than overlaid on it. Built once, hidden
-        /// until SetEncounter populates and shows exactly as many slots as
-        /// the current round's encounter has.
+        /// A light band flush against the top edge holding a row of small square portraits, one per enemy
+        /// slot up to <see cref="MaxEnemyIcons"/>, left-to-right in targeting order (leftmost always takes
+        /// damage first, see RunManager.ApplyDamageToEncounter), each with an HP readout below its icon.
+        /// Built once, hidden until SetEncounter populates and shows the slots the current encounter needs.
         /// </summary>
         private void BuildEnemyBand(Transform parent)
         {
@@ -250,14 +163,9 @@ namespace Contigu.Presentation
                 icon.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
                 UIFactory.AddThickOutline(icon, UITheme.Border);
 
-                // Hover tooltip with this enemy's On-Shuffle effect (explicit
-                // request: "pouvoir hover sur l'ennemi pour avoir plus de
-                // détails sur ce qu'il fait comme effet lorsqu'on
-                // shuffle") — Init'd fresh each SetEncounter call below.
+                // Hover tooltip with this enemy's On-Shuffle effect — Init'd fresh each SetEncounter call below.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
 
-                // Directly BELOW the icon, not overlaid on it — explicit
-                // request above.
                 var label = UIFactory.CreateText(slot, "Hp", "", 13, UITheme.TextPrimary);
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -282,13 +190,13 @@ namespace Contigu.Presentation
             fillRect.anchorMax = max;
         }
 
-        /// <summary>Anchor for the Lueur readout (icon + number together) — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence) instead of just adding the total in one lump sum.</summary>
+        /// <summary>Anchor for the Lueur readout — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence).</summary>
         public RectTransform LueurLabelTransform
         {
             get { return _lueurContainer; }
         }
 
-        /// <summary>Anchor on the pieces bar — the presentation layer flies each round-end "unused piece -> Lueur" popup FROM this point (see GameBootstrap.PlayRoundEndLueurBonusSequence), the mirror image of LueurLabelTransform above as a destination.</summary>
+        /// <summary>Anchor on the pieces bar — the presentation layer flies each round-end "unused piece -> Lueur" popup from this point (see GameBootstrap.PlayRoundEndLueurBonusSequence).</summary>
         public RectTransform PiecesBarTransform
         {
             get { return _piecesLabel.rectTransform; }
@@ -315,37 +223,20 @@ namespace Contigu.Presentation
             SetLueur(run.Lueur);
         }
 
-        /// <summary>Which round is currently in progress, folded into the score bar's own label by SetScores (on explicit request: "il faut mettre a quelle round on est rendu sur le nombre total a réussir") — stored rather than passed to SetScores directly since the round itself never changes across that method's own many progressive-update calls within a single placement's score cascade.</summary>
+        /// <summary>Which round is in progress, folded into the score bar's label by SetScores. Stored rather than passed to SetScores directly since it doesn't change across a single placement's score cascade.</summary>
         public void SetRound(int roundNumber, int roundCount)
         {
             _roundNumber = roundNumber;
             _roundCount = roundCount;
         }
 
-        /// <summary>
-        /// Updates just the Lueur label, without touching anything else —
-        /// same idea as <see cref="SetScores"/>, lets the presentation layer
-        /// animate Lueur up progressively (one group at a time) instead of
-        /// always jumping straight to the final value. Used to also pulse
-        /// the label on every increase, removed outright on explicit
-        /// request ("Enlève le pulse complètement sur l'effet lueur en
-        /// haut de la grille") after several rounds of trying to tune its
-        /// intensity/positioning/timing down to something that still read
-        /// as too much.
-        /// </summary>
+        /// <summary>Updates just the Lueur label, letting the presentation layer animate it up progressively instead of jumping straight to the final value.</summary>
         public void SetLueur(int lueur)
         {
             _lueurLabel.text = lueur.ToString();
         }
 
-        /// <summary>
-        /// Updates just the score bar, without touching the pieces bar — lets
-        /// the presentation layer animate the score up progressively in sync
-        /// with score popups instead of always jumping straight to the final
-        /// value. No-op while <see cref="_isEncounterMode"/> is set (see its
-        /// own doc comment) — GameBootstrap calls this unconditionally
-        /// throughout its score-popup cascade regardless of round type.
-        /// </summary>
+        /// <summary>Updates just the score bar, letting the presentation layer animate it in sync with score popups. No-op while <see cref="_isEncounterMode"/> is set.</summary>
         public void SetScores(int roundScore, int quota)
         {
             if (_isEncounterMode)
@@ -359,27 +250,12 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Hides the quota bar entirely and shows the light enemy band
-        /// instead, with one small square per enemy in <paramref
-        /// name="encounter"/>, left-to-right in targeting order (spec
-        /// extension, explicit request: "Enleve la progress bar pour le
-        /// quota. Au lieu met une petite image en haut pour chaque ennemi
-        /// de gauche a droite pour la priorité" — the leftmost icon is
-        /// always the one actually taking damage, see RunManager.
-        /// ApplyDamageToEncounter). Each icon is tinted by enemy identity
-        /// (<see cref="EnemyIconColor"/>) and carries its own "current/max
-        /// HP" label directly below it ("il faut ajouter la vie d'un
-        /// ennemi sous lui"); a slot whose death has already been revealed
-        /// (see <see cref="_enemySlotRevealedDead"/>) is hidden outright
-        /// instead of staying in place dimmed — on explicit bug report:
-        /// "lorsqu'un ennemi meurt, on peut toujours hover par dessus pour
-        /// afficher son tooltip, j'aimerais qu'il soit détruit et que les
-        /// ennemis se recentre dans l'écran" — HorizontalLayoutGroup
-        /// re-centers the remaining active icons on its own once a slot
-        /// is actually deactivated, and an inactive GameObject can't raise
-        /// the pointer events EnemyIconView's tooltip relies on either.
-        /// Caps at <see cref="MaxEnemyIcons"/> slots — EncounterCatalog's
-        /// own rounds never schedule more than that many at once.
+        /// Hides the quota bar and shows the enemy band instead, with one icon per enemy in
+        /// <paramref name="encounter"/>, left-to-right in targeting order (leftmost always takes damage
+        /// first, see RunManager.ApplyDamageToEncounter). Each icon is tinted by identity
+        /// (<see cref="EnemyIconColor"/>) with a current/max HP label below it. A slot whose death has
+        /// already been revealed (see <see cref="_enemySlotRevealedDead"/>) is hidden outright rather than
+        /// dimmed, so HorizontalLayoutGroup re-centers the remaining icons. Caps at <see cref="MaxEnemyIcons"/>.
         /// </summary>
         public void SetEncounter(IReadOnlyList<EnemyInstance> encounter)
         {
@@ -405,31 +281,20 @@ namespace Contigu.Presentation
                 }
 
                 var enemy = encounter[i];
-                // Deliberately does NOT touch color/alpha for an already-
-                // dead enemy — this is called after EVERY placement
-                // (GameBootstrap.OnCellClicked), including ones that don't
-                // target this slot at all, so re-applying the plain dead-gray
-                // tint here would instantly erase whatever FadeOutEnemySlot
-                // is (or already has) faded it to. A genuinely FRESH enemy
-                // at this slot (a new round — EnemyInstance is never reused
-                // across rounds) is never dead on its very first Refresh, so
-                // this still resets the tint/alpha for it correctly; a
-                // currently-alive enemy's tint is kept in sync every time as
-                // before.
+                // Deliberately skips color/alpha for an already-dead enemy: this runs after every placement,
+                // and re-applying the dead-gray tint here would erase whatever FadeOutEnemySlot is fading to.
                 if (!enemy.IsDead)
                 {
                     _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
                     _enemyIconLabels[i].color = UITheme.TextPrimary;
                 }
-                // CurrentMaxHp, not Definition.MaxHp — Reclaimer's own
-                // ceiling can grow past the shared Definition's value (see
-                // EnemyInstance.HealOrGrow).
+                // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy));
             }
         }
 
-        /// <summary>Color Hater/Shape Hater's tooltip names the SPECIFIC color/shape this instance was randomly assigned on spawn (EnemyInstance.HatedColor/HatedShape) rather than the Definition's generic "one at random" text, so the player can actually plan around it. Every other enemy's description is returned unchanged.</summary>
+        /// <summary>Color Hater/Shape Hater's tooltip names the specific color/shape this instance was randomly assigned on spawn, rather than the Definition's generic text. Every other enemy's description is returned unchanged.</summary>
         private static string HaterDescription(EnemyInstance enemy)
         {
             if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
@@ -444,23 +309,12 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Overrides just one enemy slot's HP label AND dead/alive tint,
-        /// without touching anything else — lets the presentation layer
-        /// hold a slot's HP (and its icon's color) at its pre-placement
-        /// value through the score cascade and then animate both down in
-        /// sync with the combo total (spec extension, explicit requests:
-        /// "il faut faire les dégâts seulement à la fin du calcule ... une
-        /// animation où on descend le pointage du combo pour le transférer
-        /// en dégâts progressif", then "les ennemies deviennent mort avant
-        /// l'animation de dégât, il faut vraiment attendre que l'ennemi
-        /// soit rendu à 0hp" — <paramref name="isDead"/> lets the caller
-        /// keep the icon tinted as still-alive throughout the drain and
-        /// only flip it to the dead/gray tint on the very last frame, once
-        /// the displayed HP has actually reached 0, instead of the real
-        /// model's already-dead state leaking into the icon's color early),
-        /// the same "presentation layer animates progressively" idea as
-        /// <see cref="SetScores"/>. No-op if <paramref name="index"/> is out
-        /// of range or its slot isn't currently shown.
+        /// Overrides just one enemy slot's HP label and dead/alive tint, letting the presentation layer hold
+        /// a slot's HP at its pre-placement value through the score cascade and animate it down in sync with
+        /// the combo total. <paramref name="isDead"/> lets the caller keep the icon tinted alive throughout
+        /// the drain and flip it to dead/gray only once the displayed HP reaches 0, instead of the model's
+        /// already-dead state leaking into the icon early. No-op if <paramref name="index"/> is out of range
+        /// or its slot isn't shown.
         /// </summary>
         public void SetEnemyHpDisplay(int index, int hp, int maxHp, EnemyId identity, bool isDead)
         {
@@ -472,15 +326,12 @@ namespace Contigu.Presentation
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
             if (isDead)
             {
-                // The exact moment this kill is first visually revealed —
-                // see _enemySlotRevealedDead's own doc comment for why
-                // SetEncounter reads this instead of EnemyInstance.IsDead
-                // directly.
+                // The exact moment this kill is first visually revealed — see _enemySlotRevealedDead's own doc comment.
                 _enemySlotRevealedDead[index] = true;
             }
         }
 
-        /// <summary>Anchor for a feedback popup on a given enemy slot's own icon (same "badge transform" idea as ModifierPanelView.GetBadgeTransform) — used for Thief's steal effect (explicit request: "Thief manque un effet visuel pour indiquer qu'il vole une pièce"). Null if out of range or that slot isn't currently shown.</summary>
+        /// <summary>Anchor for a feedback popup on a given enemy slot's icon — used for Thief's steal effect. Null if out of range or that slot isn't shown.</summary>
         public RectTransform GetEnemyIconTransform(int index)
         {
             if (index < 0 || index >= _enemyIconImages.Count || !_enemySlots[index].activeSelf)
@@ -491,23 +342,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Fades a defeated enemy's icon and HP label out to fully
-        /// transparent over <paramref name="duration"/> seconds — explicit
-        /// request: "Lorsqu'un ennemi se rend a 0HP, attends 0.25 secondes
-        /// puis fait une animation de fade out" (the 0.25s wait itself is
-        /// the caller's job, before yielding into this — see GameBootstrap.
-        /// DrainComboIntoDamage) — then deactivates the slot outright
-        /// (explicit bug report: "lorsqu'un ennemi meurt, on peut toujours
-        /// hover par dessus pour afficher son tooltip, j'aimerais qu'il
-        /// soit détruit et que les ennemis se recentre dans l'écran"):
-        /// HorizontalLayoutGroup excludes an inactive child from its own
-        /// layout pass, so the remaining alive icons re-center on their
-        /// own, and an inactive GameObject can no longer raise the pointer
-        /// events EnemyIconView's tooltip needs either. SetEncounter won't
-        /// ever reactivate it again this round (see
-        /// _enemySlotRevealedDead, already set by the SetEnemyHpDisplay
-        /// call that preceded this one). Meant to be yielded directly by
-        /// the caller's own coroutine, not run through StartCoroutine.
+        /// Fades a defeated enemy's icon and HP label to fully transparent over <paramref name="duration"/>
+        /// seconds, then deactivates the slot: HorizontalLayoutGroup excludes an inactive child from layout,
+        /// so remaining icons re-center automatically. SetEncounter won't reactivate it again this round (see
+        /// _enemySlotRevealedDead). Meant to be yielded directly by the caller's own coroutine, not run
+        /// through StartCoroutine.
         /// </summary>
         public IEnumerator FadeOutEnemySlot(int index, float duration)
         {
@@ -533,7 +372,7 @@ namespace Contigu.Presentation
             _enemySlots[index].SetActive(false);
         }
 
-        /// <summary>Flat per-identity tint for an enemy's icon (no sprite art exists yet for any enemy) — a defeated one dims to near-transparent gray regardless of identity, so "dead" always reads the same way no matter which enemy it was. Takes <paramref name="isDead"/> explicitly rather than reading EnemyInstance.IsDead directly so SetEnemyHpDisplay's held/animated calls can report death on their own schedule, independent of the live model's already-updated state (see its own doc comment).</summary>
+        /// <summary>Flat per-identity tint for an enemy's icon. A defeated one dims to near-transparent gray regardless of identity. Takes <paramref name="isDead"/> explicitly so SetEnemyHpDisplay's animated calls can report death on their own schedule, independent of the model's already-updated state.</summary>
         private static Color EnemyIconColor(EnemyId identity, bool isDead)
         {
             if (isDead)
@@ -546,9 +385,7 @@ namespace Contigu.Presentation
                     return UITheme.LightBlue;
                 case EnemyId.Poisoner:
                     return UITheme.Danger;
-                // HeavyLocker/Plague are Locker's/Poisoner's own Boss-tier
-                // escalations (see EnemyCatalog) — same family hue, darker
-                // and more saturated to read as "the tougher version".
+                // HeavyLocker/Plague are Locker's/Poisoner's Boss-tier escalations: same family hue, darker and more saturated.
                 case EnemyId.HeavyLocker:
                     return new Color(0.173f, 0.384f, 0.573f); // darker/more saturated LightBlue
                 case EnemyId.Plague:
@@ -564,13 +401,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Updates just the pieces bar, without touching the score bar — same
-        /// "presentation layer animates progressively" idea as <see
-        /// cref="SetScores"/>, used by GameBootstrap.PlayRoundEndLueurBonusSequence
-        /// to count the bar down one unused piece at a time as each converts
-        /// into +1 Lueur, instead of jumping straight to empty.
-        /// </summary>
+        /// <summary>Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down one unused piece at a time instead of jumping straight to empty.</summary>
         public void SetPieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;

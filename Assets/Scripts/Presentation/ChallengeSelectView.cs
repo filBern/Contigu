@@ -7,27 +7,11 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Pre-run challenge picker (spec extension, explicit request: "Meta
-    /// progression avec différents challenge qui offrent différents boss
-    /// et état de depart", "Débloqués progressivement" — see
-    /// ChallengeCatalog/MetaStats.Stars/MetaStatsRecorder.
-    /// TryUnlockChallenge). Shown at every launch and every "New Run" (not
-    /// just the first ever session) — the game's first real pre-run menu,
-    /// since it previously just booted straight into a Classic run.
-    ///
-    /// A single-card carousel (explicit request: "j'aimerais qu'on fasse un
-    /// caroussel avec les challenges au cas ou je finis par en avoir
-    /// plusieurs", with 2 buttons to step left/right) rather than one card
-    /// per ChallengeCatalog entry laid out side by side — that fixed-width
-    /// row would only get more cramped as more challenges are added, while
-    /// a carousel's own width never depends on how many there are. One
-    /// card's worth of UI is built once and rebound to whichever entry is
-    /// currently shown (see ShowChallengeAt). Classic always plays
-    /// immediately; Marathon/Chaos show their Stars cost while locked and
-    /// unlock-then-play in the same click once affordable — no separate
-    /// confirm step, since spending Stars here is never a mistake a player
-    /// needs protecting from (it only ever buys permanent access, never
-    /// removes anything).
+    /// Pre-run challenge picker shown at every launch and every "New Run" (see ChallengeCatalog/MetaStats.Stars/
+    /// MetaStatsRecorder.TryUnlockChallenge). A single-card carousel, stepped left/right, rather than one card
+    /// per entry laid out side by side, since its width stays constant regardless of how many challenges exist.
+    /// One card's UI is built once and rebound to whichever entry is shown (see ShowChallengeAt). A locked
+    /// challenge unlocks and plays in the same click once affordable — no separate confirm step.
     /// </summary>
     public sealed class ChallengeSelectView : MonoBehaviour
     {
@@ -91,7 +75,7 @@ namespace Contigu.Presentation
         private void BuildCard(Transform parent)
         {
             _card = UIFactory.CreateSlicedImage(parent, "Card", UISprites.CardBackground);
-            _card.color = UITheme.Panel; // same cream card fill ShopView's own cards use — TextPrimary/TextMuted below stay dark, since UITheme.Panel is light in the current DA.
+            _card.color = UITheme.Panel;
             UIFactory.AddThickOutline(_card, UITheme.Border);
             _card.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             _card.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -113,12 +97,7 @@ namespace Contigu.Presentation
             _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f);
             _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 28f, 150f);
 
-            // Coral, not the gold used for the Stars readout above (explicit
-            // report: "le texte Locked n'est pas lisible en jaune") — gold
-            // reads fine on the dark overlay behind the Stars label, but has
-            // poor contrast against this card's own light cream fill; coral
-            // already reads as "blocked/invalid" everywhere else in the DA
-            // (see UITheme.Danger/HoverInvalid).
+            // Coral rather than gold: gold has poor contrast against this card's light fill, and coral already reads as "blocked" elsewhere (see UITheme.Danger/HoverInvalid).
             _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 15, UITheme.Danger);
             _statusLabel.rectTransform.anchorMin = new Vector2(0.5f, 0f);
             _statusLabel.rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -185,14 +164,7 @@ namespace Contigu.Presentation
             RefreshCurrentCard();
         }
 
-        /// <summary>
-        /// Moves the carousel to <paramref name="index"/>, wrapping around
-        /// at either end (explicit request's own "carousel" framing implies
-        /// endless stepping, not a dead stop at the first/last entry) —
-        /// C#'s % can return a negative result for a negative dividend, so
-        /// this adds the length back in before the final mod rather than
-        /// using % directly on a possibly-negative index.
-        /// </summary>
+        /// <summary>Moves the carousel to <paramref name="index"/>, wrapping at either end. C#'s % can return a negative result for a negative dividend, so the length is added back before the final mod.</summary>
         private void ShowChallengeAt(int index)
         {
             int count = ChallengeCatalog.All.Length;

@@ -20,58 +20,36 @@ namespace Contigu.Presentation
     }
 
     /// <summary>
-    /// Plain static class (no MonoBehaviour host of its own to build/wire —
-    /// lazily creates one hidden, DontDestroyOnLoad GameObject on first use)
-    /// so both GameBootstrap (gameplay scene) and MainMenuBootstrap (its own
-    /// separate scene) can call into the exact same instance without either
-    /// one owning it — same "first real caller wins" laziness as
-    /// VolumeSettings' own PlayerPrefs-backed statics.
-    ///
-    /// Built from the P1 (main gameplay loop) and P3 (general UI) sound
-    /// effects (see README's own SFX list) — P2 (shop/modifiers/victory/
-    /// defeat) has no clips yet, added once those exist. One clip can cover
-    /// more than one SfxId (Whoosh for both LineClear and Overlay; Score is
-    /// also PlayComboTick's clip) rather than 1:1, since several distinct
-    /// game moments share the same "character" the SFX list asked for.
+    /// Plain static class that lazily creates one hidden, DontDestroyOnLoad
+    /// GameObject on first use, so both GameBootstrap and MainMenuBootstrap
+    /// can call into the same instance without either one owning it. One
+    /// clip can cover more than one SfxId (Whoosh for both LineClear and
+    /// Overlay; Score is also PlayComboTick's clip).
     /// </summary>
     public static class SfxManager
     {
         private const string ClipFolder = "SFX/";
-        // Small per-play pitch jitter on every one-shot (explicit note from
-        // the original SFX request: "prévoir 2-3 variantes par son fréquent
-        // ... avec une légère randomisation de pitch — sinon le son de
-        // placement qui joue 200 fois par run va vite fatiguer l'oreille").
+        // Small per-play pitch jitter on every one-shot, so a sound played
+        // many times per run doesn't fatigue the ear.
         private const float PitchJitter = 0.05f;
-        // The "combo" (see PlayComboTick) rises in pitch across a WHOLE
+        // The "combo" (see PlayComboTick) rises in pitch across a whole
         // placement's score cascade, capped so a very long combo doesn't
         // end up in ultrasonic-chipmunk territory.
         private const float ComboPitchStep = 0.035f;
         private const float ComboPitchMax = 1.6f;
-        // Small extra jitter on top of the rising ladder itself — on
-        // explicit request ("Le son de score doit avoir plus de variation
-        // over time, légèrement"), smaller than PitchJitter above since
-        // this one already varies step to step on its own.
+        // Small extra jitter on top of the rising ladder itself, smaller
+        // than PitchJitter since this one already varies step to step.
         private const float ComboPitchJitter = 0.02f;
-        // Whoosh.wav is a genuinely tiny source clip — ~125ms. LineClear
-        // now fires once PER cleared/destroyed cell (on explicit request:
-        // "être trigger chaque fois qu'une tuile est cleared ou
-        // détruite"), which can stack up several plays in quick
-        // succession, so it needs to stay SNAPPY rather than the slower,
-        // longer take Overlay still uses — on the immediate explicit
-        // follow-up ("Le whoosh doit être plus rapide"), pitched UP
-        // instead, shortening it to ~100ms.
+        // Whoosh.wav is a tiny source clip (~125ms). LineClear can stack up
+        // several plays in quick succession, so it's pitched up to stay
+        // snappy (~100ms), while Overlay keeps the slower, longer take.
         private const float LineClearPitch = 1.25f;
-        // Overlay open/close is a single, one-off moment (not stacked),
-        // so it keeps the slower/longer take from the earlier request
-        // ("Le whoosh doit être plus long") — lowering pitch also slows
-        // playback, stretching duration, the only length lever available
-        // without a longer replacement file. A proper fix for either
-        // still needs an actually different source recording.
+        // Overlay open/close is a single, one-off moment; lowering pitch
+        // slows playback, stretching duration since no longer source clip
+        // exists for it.
         private const float OverlayPitch = 0.5f;
-        // BackgroundMusic.wav plays much louder than the SFX relative to
-        // it, on explicit report ("La musique doit être 75% plus faible")
-        // — cut to a quarter of whatever the Music slider says, rather
-        // than changing the slider's own 0-1 range/default.
+        // BackgroundMusic.wav plays much louder than the SFX relative to it,
+        // so it's cut to a quarter of whatever the Music slider says.
         private const float MusicVolumeScale = 0.25f;
 
         private static AudioSource _sfxSource;
@@ -117,9 +95,8 @@ namespace Contigu.Presentation
         private static void ApplyVolumes()
         {
             // AudioListener.volume (see GameBootstrap.ApplyVolumeSettings)
-            // already scales EVERY AudioSource in the scene by MasterVolume
-            // — these two just need their own Music/Sfx slider applied on
-            // top of that.
+            // already scales every AudioSource in the scene by MasterVolume;
+            // these two just need their own Music/Sfx slider applied on top.
             _sfxSource.volume = VolumeSettings.SfxVolume;
             _musicSource.volume = VolumeSettings.MusicVolume * MusicVolumeScale;
         }
@@ -156,11 +133,9 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Score.wav, one step further up a rising-pitch ladder that spans
-        /// the WHOLE placement cascade (points AND Mult catch-up ticks
-        /// alike — see ResetComboPitch) rather than restarting per section,
-        /// so the whole sequence reads as one continuous building combo
-        /// (on explicit request: "Incrément de combo — un tic/ding qui
-        /// monte en pitch à chaque cran").
+        /// the whole placement cascade (points and Mult catch-up ticks
+        /// alike, see ResetComboPitch) rather than restarting per section,
+        /// so the sequence reads as one continuous building combo.
         /// </summary>
         public static void PlayComboTick()
         {

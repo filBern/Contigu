@@ -11,7 +11,7 @@ namespace Contigu.Core
         /// <summary>Budget exhausted without reaching the quota: the run is over.</summary>
         RunDefeat,
 
-        /// <summary>Round 8 (boss) cleared: the run is won.</summary>
+        /// <summary>Final round cleared: the run is won.</summary>
         RunVictory
     }
 }

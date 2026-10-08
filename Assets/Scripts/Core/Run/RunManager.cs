@@ -4,15 +4,12 @@ using UnityEngine;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Orchestrates the 8-round run: quotas, piece budgets, boss round locking,
-    /// and the win/lose transition into the upgrade draft (spec sections 1 and 6).
+    /// Orchestrates the run: quotas, piece budgets, boss round locking, and
+    /// the win/lose transition into the shop.
     ///
-    /// A round ends the instant its quota is reached (success), or as soon as
-    /// either its piece budget runs out or its hand becomes unplayable AND
-    /// out of shuffles — no legal placement left anywhere on the grid for
-    /// any of the 3 hand pieces, and no ShufflesRemaining charge left to
-    /// re-roll them — without having reached the quota (defeat). See
-    /// ShuffleHand.
+    /// A round ends when its quota is reached (success), or when its piece
+    /// budget runs out, or its hand is unplayable with no shuffles left to
+    /// re-roll it (defeat). See <see cref="ShuffleHand"/>.
     /// </summary>
     public sealed class RunManager
     {
@@ -22,53 +19,38 @@ namespace Contigu.Core
 
         private readonly List<ModifierId> _activeModifiers = new List<ModifierId>();
 
-        // Parallel to _activeModifiers (same index == same slot), never
-        // exposed as its own list — kept a plain List<int> rather than
-        // promoting _activeModifiers itself to hold (ModifierId, int)
-        // pairs, since ActiveModifiers's type is read directly by ~150
-        // GridManagerModifierTests call sites and several RunManagerTests
-        // collection-equality asserts that would all break for a change
-        // completely unrelated to what they're actually testing. Every
-        // mutation of _activeModifiers (add/remove/swap/move) MUST mirror
-        // the same operation here in the same call — see AddActiveModifier/
-        // RemoveActiveModifierAt below, the only two places that touch
-        // _activeModifiers.Add/RemoveAt directly; Swap/MoveModifier mirror
-        // inline since they're simple index swaps, not a count change.
+        // Parallel to _activeModifiers (same index == same slot). Every
+        // mutation of _activeModifiers (add/remove/swap/move) must mirror the
+        // same operation here - see AddActiveModifier/RemoveActiveModifierAt,
+        // and the inline swaps in SwapModifiers/MoveModifier.
         private readonly List<int> _modifierLevels = new List<int>();
 
-        /// <summary>Modifiers currently held by the player, persisting for the whole run (never reset between rounds). Capped at EconomyConstants.MaxActiveModifiers now that the shop lets Lueur buy them far more freely than the old one-per-round draft ever could.</summary>
+        /// <summary>Modifiers currently held by the player, persisting for the whole run. Capped at <see cref="EconomyConstants.MaxActiveModifiers"/>.</summary>
         public IReadOnlyList<ModifierId> ActiveModifiers
         {
             get { return _activeModifiers; }
         }
 
-        /// <summary>
-        /// The level of the modifier at <paramref name="index"/> in <see
-        /// cref="ActiveModifiers"/> — 1 (today's exact, un-leveled
-        /// behavior) for anything never touched by the "Modifier Upgrade"
-        /// shop upgrade (see ResolveModifierUpgradeChoice), or an
-        /// out-of-range index. See ModifierLevelUtility for how a level
-        /// translates into a scoring multiplier.
-        /// </summary>
+        /// <summary>The level of the modifier at <paramref name="index"/> in <see cref="ActiveModifiers"/> (1 if never leveled, or an out-of-range index).</summary>
         public int GetModifierLevel(int index)
         {
             return index >= 0 && index < _modifierLevels.Count ? _modifierLevels[index] : 1;
         }
 
-        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> (see ModifierLevelUtility) — used by ApplyHandSlotModifierBonus/ApplyDeckStateModifierBonuses below, the 4 modifiers resolved here in RunManager rather than through GridManager's own dispatch tables (see GridManager.GetModifierLevelFactor for its own, otherwise-identical counterpart).</summary>
+        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> (see <see cref="ModifierLevelUtility"/>).</summary>
         private float GetModifierLevelFactor(int index)
         {
             return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index));
         }
 
-        /// <summary>Every place that adds a new modifier slot (a real purchase, Copieur's copy, the Random Modifier gamble, or the free starting grant) goes through here — the ONLY place _activeModifiers.Add is called — so a fresh slot's level (always 1) can never be forgotten.</summary>
+        /// <summary>The only place that adds a slot to <see cref="_activeModifiers"/> - keeps a fresh slot's level in sync.</summary>
         private void AddActiveModifier(ModifierId id)
         {
             _activeModifiers.Add(id);
             _modifierLevels.Add(1);
         }
 
-        /// <summary>Counterpart to AddActiveModifier — the ONLY place _activeModifiers.RemoveAt is called, so a removed slot's level always disappears along with it instead of leaking into whatever modifier happens to reflow into that index afterward.</summary>
+        /// <summary>The only place that removes a slot from <see cref="_activeModifiers"/> - keeps its level entry in sync.</summary>
         private void RemoveActiveModifierAt(int index)
         {
             _activeModifiers.RemoveAt(index);
@@ -76,13 +58,9 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Swaps the modifiers at two positions in <see
-        /// cref="ActiveModifiers"/> — the "tap 2 modifiers to swap them"
-        /// reordering gesture (see Presentation.ModifierPanelView), on
-        /// explicit request: modifier order now determines scoring order
-        /// (see PlacementResult.Mult's ordered fold), and the player needs
-        /// a way to arrange it — "mettre les x après les +". A no-op for an
-        /// out-of-range or identical pair.
+        /// Swaps the modifiers at two positions in <see cref="ActiveModifiers"/>.
+        /// Modifier order determines scoring order (see PlacementResult.Mult's
+        /// ordered fold). A no-op for an out-of-range or identical pair.
         /// </summary>
         public void SwapModifiers(int indexA, int indexB)
         {
@@ -95,9 +73,7 @@ namespace Contigu.Core
             _activeModifiers[indexA] = _activeModifiers[indexB];
             _activeModifiers[indexB] = temp;
 
-            // Level belongs to the specific granted copy, not the slot
-            // position — it must travel WITH the modifier it was spent on,
-            // not stay behind at the old index.
+            // Level travels with the modifier, not the slot position.
             var tempLevel = _modifierLevels[indexA];
             _modifierLevels[indexA] = _modifierLevels[indexB];
             _modifierLevels[indexB] = tempLevel;
@@ -105,13 +81,8 @@ namespace Contigu.Core
 
         /// <summary>
         /// Moves the modifier at <paramref name="fromIndex"/> to <paramref
-        /// name="toIndex"/>, shifting every modifier in between by one
-        /// position — the drag-and-drop reordering gesture (see
-        /// Presentation.ModifierPanelView), sibling of <see
-        /// cref="SwapModifiers"/> above but a true re-insertion rather than
-        /// a 2-way swap, matching how dragging a card into a new slot
-        /// behaves everywhere else in the game (e.g. HandView). A no-op for
-        /// an out-of-range or identical pair.
+        /// name="toIndex"/>, shifting the modifiers in between by one position.
+        /// A no-op for an out-of-range or identical pair.
         /// </summary>
         public void MoveModifier(int fromIndex, int toIndex)
         {
@@ -124,8 +95,7 @@ namespace Contigu.Core
             _activeModifiers.RemoveAt(fromIndex);
             _activeModifiers.Insert(toIndex, moved);
 
-            // Same "level travels with the modifier, not the slot" reasoning
-            // as SwapModifiers above.
+            // Level travels with the modifier, not the slot position.
             var movedLevel = _modifierLevels[fromIndex];
             _modifierLevels.RemoveAt(fromIndex);
             _modifierLevels.Insert(toIndex, movedLevel);
@@ -133,16 +103,10 @@ namespace Contigu.Core
 
         /// <summary>
         /// Sells the modifier at <paramref name="index"/> in <see
-        /// cref="ActiveModifiers"/> for Lueur (spec extension, explicit
-        /// request: "Le joueur devrait pouvoir sell modifier lorsqu'il
-        /// hover dessus" — see Presentation.GameBootstrap's key binding).
-        /// Refunds <see cref="ModifierPricing"/>'s BASE catalog price minus
-        /// 1 ("Le prix de vente d'un modifier est prix initial-1"), never
-        /// whatever escalated price a shop purchase of it might actually
-        /// have cost, and the same amount regardless of how it was
-        /// obtained (bought, Copieur-copied, or the free starting
-        /// modifier). No-op (returns false, nothing sold or refunded) for
-        /// an out-of-range index.
+        /// cref="ActiveModifiers"/> for Lueur. Refunds <see
+        /// cref="ModifierPricing"/>'s base catalog price minus 1, never the
+        /// escalated price actually paid. No-op (returns false) for an
+        /// out-of-range index.
         /// </summary>
         public bool SellModifier(int index, out int refundedLueur)
         {
@@ -164,104 +128,97 @@ namespace Contigu.Core
             return index >= 0 && index < _activeModifiers.Count;
         }
 
-        /// <summary>The last REAL modifier actually added by a shop purchase this run (never Copieur/Mimic itself, see BuyBlisterSlot) — null until the player's first purchase. "Mimic" (Copieur) reads this to decide which modifier it copies.</summary>
+        /// <summary>The last modifier actually added by a shop purchase this run (never Copieur itself) - null until the first purchase.</summary>
         private ModifierId? _lastPurchasedModifierId;
 
         /// <summary>
-        /// "Lueur" currency (spec extension, explicit request — a Balatro-
-        /// style economy): earned by clearing lines with DIVERSE colors (see
-        /// GridManager.PlacementResult.LueurEarned), persists for the whole
-        /// run like <see cref="TotalScore"/>, and spent in the between-round
-        /// shop (see <see cref="ShopBlisterSlots"/>/<see cref="ShopUpgradeSlots"/>).
+        /// Currency earned by clearing lines with diverse colors (see
+        /// GridManager.PlacementResult.LueurEarned), persists for the whole run,
+        /// and is spent in the between-round shop.
         /// </summary>
         public int Lueur { get; private set; }
 
-        /// <summary>How many hand shuffles the player has left this run (spec extension, explicit request — see RunConfig.StartingShuffleCount/ShuffleHand). Persists across rounds like Lueur, never reset by StartRound.</summary>
+        /// <summary>How many hand shuffles the player has left this run. Persists across rounds, never reset by StartRound.</summary>
         public int ShufflesRemaining { get; private set; }
 
         private readonly ShopSlot[] _blisterSlots = new ShopSlot[EconomyConstants.ShopBlisterSlotCount];
         private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
 
-        /// <summary>How many slot purchases (Blister or Casino) have happened in the CURRENT shop visit — every one raises the price of every OTHER slot still on offer (see GetBlisterSlotPrice/GetUpgradeSlotPrice), reset to 0 each time the shop opens. Kept separate from <see cref="_rerollsThisVisit"/> (on explicit report: "Les reroll devraient augmenter de prix seulement lorsqu'on reroll") — a slot purchase no longer escalates the reroll price, only rerolling itself does.</summary>
+        /// <summary>How many slot purchases have happened in the current shop visit - raises the price of every other slot still on offer (see GetBlisterSlotPrice/GetUpgradeSlotPrice). Reset to 0 each time the shop opens. Separate from <see cref="_rerollsThisVisit"/>: a slot purchase no longer escalates the reroll price.</summary>
         private int _purchasesThisVisit;
 
-        /// <summary>How many times the shop has been rerolled this visit — drives ONLY GetRerollPrice's own escalation (see _purchasesThisVisit's doc comment for why this is a separate counter), reset to 0 each time the shop opens.</summary>
+        /// <summary>How many times the shop has been rerolled this visit - drives only GetRerollPrice's escalation. Reset to 0 each time the shop opens.</summary>
         private int _rerollsThisVisit;
 
-        /// <summary>The "Blister" section (see EconomyConstants.ShopBlisterSlotCount) — a modifier OR upgrade, drawn from one shared bag, always fully revealed. Never touched by RerollShop.</summary>
+        /// <summary>The "Blister" section - a modifier or upgrade, drawn from one shared bag, always fully revealed. Never touched by RerollShop.</summary>
         public IReadOnlyList<ShopSlot> ShopBlisterSlots
         {
             get { return _blisterSlots; }
         }
 
-        /// <summary>The "Casino" section (see EconomyConstants.ShopUpgradeSlotCount) — always an Upgrade-kind slot, only its UpgradePool shown until purchased. The only section RerollShop touches.</summary>
+        /// <summary>The "Casino" section - always an Upgrade-kind slot, only its UpgradePool shown until purchased. The only section RerollShop touches.</summary>
         public IReadOnlyList<ShopSlot> ShopUpgradeSlots
         {
             get { return _upgradeSlots; }
         }
 
         /// <summary>
-        /// Non-null while a purchased Upgrade slot still needs a follow-up
-        /// from the player before the shop can be used for anything else —
-        /// a sub-choice (Bank pool: which piece type, and for Recolorer
-        /// which target color) or a tile choice (Grid pool: which of
-        /// <see cref="PendingUpgradeTileCandidates"/> receive the trait).
-        /// Cleared once <see cref="ResolveUpgradeSubChoice"/> or
-        /// <see cref="ResolveUpgradeTileChoice"/> succeeds.
+        /// Non-null while a purchased Upgrade slot still needs a follow-up from
+        /// the player before the shop can be used again: a sub-choice (Bank
+        /// pool) or a tile choice (Grid pool, see
+        /// <see cref="PendingUpgradeTileCandidates"/>). Cleared once <see
+        /// cref="ResolveUpgradeSubChoice"/> or <see
+        /// cref="ResolveUpgradeTileChoice"/> succeeds.
         /// </summary>
         public UpgradeDefinition PendingUpgrade { get; private set; }
 
-        /// <summary>Candidate deck token indices for <see cref="PendingUpgrade"/> — only populated (non-empty) when it's a Grid-pool upgrade; empty for a Bank-pool one, which needs a sub-choice instead.</summary>
+        /// <summary>Candidate deck token indices for <see cref="PendingUpgrade"/> - only populated for a Grid-pool upgrade; empty for a Bank-pool one, which needs a sub-choice instead.</summary>
         public IReadOnlyList<int> PendingUpgradeTileCandidates { get; private set; }
 
-        /// <summary>Candidate piece TYPES for <see cref="PendingUpgrade"/>'s sub-choice — only populated (non-empty) for a Bank-pool upgrade that needs one (Retirer/Dupliquer/Recolorer); empty otherwise. Capped the same way PendingUpgradeTileCandidates is, so the type picker never lists the whole deck composition at once.</summary>
+        /// <summary>Candidate piece types for <see cref="PendingUpgrade"/>'s sub-choice - only populated for a Bank-pool upgrade that needs one (Retirer/Dupliquer/Recolorer); empty otherwise.</summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> PendingUpgradeTypeCandidates { get; private set; }
 
-        /// <summary>Candidate freshly-rolled PIECES (trait included) for <see cref="PendingUpgrade"/>'s sub-choice — only populated for "Random Piece" (see UpgradeSystem.GetCandidatePiecesFor); empty otherwise. A separate list from PendingUpgradeTypeCandidates since these don't exist in the deck yet — there's no deck index to hand back, the token itself IS the candidate.</summary>
+        /// <summary>Candidate freshly-rolled pieces (trait included) for <see cref="PendingUpgrade"/>'s sub-choice - only populated for "Random Piece"; empty otherwise, since these tokens don't exist in the deck yet.</summary>
         public IReadOnlyList<PieceToken> PendingUpgradePieceCandidates { get; private set; }
 
-        /// <summary>The shape most recently rolled by a Joker purchase (see BuyUpgradeSlot/UpgradeSystem.ApplyJoker) — read once by the presentation layer (UpgradeRevealView) right after the purchase to show the real piece that got added instead of just describing the upgrade in text. Meaningless before any Joker purchase this run.</summary>
+        /// <summary>The shape most recently rolled by a Joker purchase - read once by the presentation layer right after the purchase. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
-        /// <summary>LastJokerShapeAdded's own sibling — the Joker-exclusive combat trait (see PieceTrait.JokerCombatKinds) that same purchase also rolled (explicit request: "J'aimerais que toutes les pièces jokers soient particulières... des upgrades qui affectent directement la manière de se battre"). Meaningless before any Joker purchase this run.</summary>
+        /// <summary>The Joker-exclusive combat trait that same purchase also rolled (see <see cref="PieceTrait.JokerCombatKinds"/>). Meaningless before any Joker purchase this run.</summary>
         public PieceTraitKind LastJokerCombatKindAdded { get; private set; }
 
-        /// <summary>The modifier most recently granted by a "Random Modifier" purchase (see BuyUpgradeSlot/GrantRandomModifier) — read once by the presentation layer (UpgradeRevealView) right after the purchase. Null if the gamble didn't pay off (already at EconomyConstants.MaxActiveModifiers, or — practically impossible — every modifier already held), in which case the purchase still cost its Lueur but granted nothing. Meaningless before any Random Modifier purchase this run.</summary>
+        /// <summary>The modifier most recently granted by a "Random Modifier" purchase - read once by the presentation layer. Null if the gamble granted nothing (already at the cap, or every modifier already held). Meaningless before any such purchase this run.</summary>
         public ModifierId? LastRandomModifierGranted { get; private set; }
 
-        /// <summary>The shape most recently leveled up by a "Piece Mastery" purchase (see BuyUpgradeSlot/GrantShapeMastery) — read once by the presentation layer (ShapeCarouselView) to know which shape the spin has to land on. Null before any Piece Mastery purchase this run.</summary>
+        /// <summary>The shape most recently leveled up by a "Piece Mastery" purchase - read once by the presentation layer. Null before any such purchase this run.</summary>
         public ShapeId? LastShapeMasteryGranted { get; private set; }
 
         /// <summary>
-        /// Current level per exact shape, from "Piece Mastery" purchases
-        /// (see GrantShapeMastery/StampMasteryBonuses) — 1 (no bonus)
-        /// for any shape never leveled up. Unlike the modifier-level system
-        /// (<see cref="_modifierLevels"/>, parallel to <see
-        /// cref="_activeModifiers"/>), this isn't tied to any held modifier
-        /// slot — a shape's level persists independently of anything the
-        /// player currently holds, keyed directly by <see cref="ShapeId"/>.
+        /// Current level per exact shape, from "Piece Mastery" purchases - 1
+        /// (no bonus) for any shape never leveled up. Independent of any held
+        /// modifier slot, keyed directly by <see cref="ShapeId"/>.
         /// </summary>
         private readonly Dictionary<ShapeId, int> _shapeMasteryLevels = new Dictionary<ShapeId, int>();
 
-        /// <summary>Current level of <paramref name="shape"/> (1 if never leveled up by a Piece Mastery purchase).</summary>
+        /// <summary>Current level of <paramref name="shape"/> (1 if never leveled up).</summary>
         public int GetShapeMasteryLevel(ShapeId shape)
         {
             return _shapeMasteryLevels.TryGetValue(shape, out var level) ? level : 1;
         }
 
-        /// <summary>Piece Mastery's exact sibling (on explicit request: "Il faudrait faire la même chose avec les couleurs") — same mechanics, keyed by PieceColor instead of ShapeId.</summary>
+        /// <summary>Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId.</summary>
         public PieceColor? LastColorMasteryGranted { get; private set; }
 
-        /// <summary>Current level per color, from "Color Mastery" purchases (see GrantColorMastery/StampMasteryBonuses) — 1 (no bonus) for any color never leveled up.</summary>
+        /// <summary>Current level per color, from "Color Mastery" purchases - 1 (no bonus) for any color never leveled up.</summary>
         private readonly Dictionary<PieceColor, int> _colorMasteryLevels = new Dictionary<PieceColor, int>();
 
-        /// <summary>Current level of <paramref name="color"/> (1 if never leveled up by a Color Mastery purchase).</summary>
+        /// <summary>Current level of <paramref name="color"/> (1 if never leveled up).</summary>
         public int GetColorMasteryLevel(PieceColor color)
         {
             return _colorMasteryLevels.TryGetValue(color, out var level) ? level : 1;
         }
 
-        /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run — see <see cref="CountModifierUsage"/>. Read via <see cref="GetModifierUsageCount"/>.</summary>
+        /// <summary>How many times each modifier has actually fired (scored at least one point) so far this run. Read via <see cref="GetModifierUsageCount"/>.</summary>
         private readonly Dictionary<ModifierId, int> _modifierUsageCounts = new Dictionary<ModifierId, int>();
 
         /// <summary>How many times <paramref name="id"/> has fired this run (0 if never, or not currently held).</summary>
@@ -270,54 +227,27 @@ namespace Contigu.Core
             return _modifierUsageCounts.TryGetValue(id, out var count) ? count : 0;
         }
 
-        /// <summary>How many pieces carrying a trait ("special" pieces) have been PLACED so far this run — Experience's driver, the played-count counterpart to CountUpgradedDeckCards' "currently in deck" count. Permanent for the whole run, same as Gradient's counter (nothing in the spec calls for resetting it, and it isn't tied to round-scoped grid state the way Epuisement is).</summary>
+        /// <summary>How many trait-carrying pieces have been placed so far this run - Experience's driver. Permanent for the whole run.</summary>
         private int _specialPiecesPlayedCount;
 
         /// <summary>
-        /// The CURRENT effective state of a progressive/incremental modifier,
-        /// formatted for its tooltip (on explicit request: "Tous les
-        /// modifiers avec des bonus incrémentaux, il faut afficher dans le
-        /// tooltip l'état progressif du modifier (ex: Currently x2.3)") —
-        /// null for every modifier whose bonus is fixed and doesn't grow or
-        /// shrink over the round/run (that's most of them). Modifiers whose
-        /// counter is a genuine whole number (Gradient, Repetition,
-        /// Solidarite, Epuisement, Multitude) show a plain integer — Repetition's
-        /// is a PREVIEW of what its own NEXT placement would score if it kept
-        /// the streak alive (see GridManager.RepetitionCurrentMultiplier),
-        /// unlike the others here which report what their OWN LAST
-        /// placement already applied. Densite/CartesEnchantees/Experience
-        /// are ADDITIVE contributors to the SAME "+Mult" pool as
-        /// Solidarite/MultUn (see PlacementResult.ProgressiveAdditiveMult),
-        /// not a multiplier of their own, so they show "+N Mult", NOT "xN"
-        /// — showing "x" here was a bug for CartesEnchantees/Experience
-        /// (on explicit report: "tu as oublié la baseline de 1 et non de
-        /// 0"): their own raw contribution starts at +0.1 (never +0,
-        /// "counting from a baseline of 1" card), which read as a NERF
-        /// ("x0.1") under the old "x" phrasing instead of the bonus it
-        /// actually is. Densite joined this same "+N Mult" family later,
-        /// converted from an "xN" multiplier (explicit request: "Density
-        /// modifier devrait +n mult au lieu de xn mult ET devrait être un
-        /// float au lieu d'un int") — unlike the other two, it has no
-        /// "start at 1" baseline (a genuinely empty board correctly shows
-        /// "+0 Mult"). The separate "+1" that makes the OVERALL Mult never
-        /// drop below x1 is PlacementResult.Mult's own baseline, added
-        /// once, game-wide, not specific to any of these three modifiers.
+        /// The current effective state of a progressive/incremental modifier,
+        /// formatted for its tooltip - null for a modifier whose bonus doesn't
+        /// grow or shrink over the round/run. Gradient/Repetition/Densite/
+        /// Epuisement/Solidarite/Multitude report a plain number; Repetition's
+        /// is a preview of its own next placement's value (see
+        /// GridManager.RepetitionCurrentMultiplier), the others report their
+        /// own last placement's value. CartesEnchantees/Experience/Densite are
+        /// additive contributors to the same "+Mult" pool as
+        /// Solidarite/MultUn (see PlacementResult.ProgressiveAdditiveMult), so
+        /// they show "+N Mult" rather than "xN".
         ///
         /// <paramref name="index"/> is this slot's own position in <see
-        /// cref="ActiveModifiers"/> (optional, -1 by default) — when given,
-        /// every case below is scaled by that slot's own level factor (see
-        /// ModifierLevelUtility), matching the scaling every one of these
-        /// already gets for real at score time (ApplyDeckStateModifierBonuses'
-        /// own <c>* GetModifierLevelFactor(i)</c>, or the generic per-event
-        /// rescale in GridManager.ApplyPreClearModifiers/ApplyPostClearModifiers
-        /// for the 3 Grid-tracked ones). Left at -1 (factor 1, today's exact
-        /// behavior) by every caller that doesn't know its own slot index —
-        /// bug fix (on explicit report: "Enchanted cards modifier on dirait
-        /// que le max est 1.0"): without this, a leveled-up copy's tooltip
-        /// kept showing the UN-leveled value, which for Enchanted Cards
-        /// naturally caps just under +1.0 Mult at level 1 (its formula only
-        /// exceeds 1.0 past 9 upgraded deck cards) — reading exactly like a
-        /// hard ceiling even though the modifier was actually scoring more.
+        /// cref="ActiveModifiers"/> (optional, -1 by default) - when given,
+        /// the value is scaled by that slot's level factor (see
+        /// ModifierLevelUtility), matching the scaling applied at score time.
+        /// Left at -1 (factor 1) by a caller that doesn't know its own slot
+        /// index.
         /// </summary>
         public string GetProgressiveModifierStateText(ModifierId id, int index = -1)
         {
@@ -349,7 +279,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise — same conditional formatting as ComboView's mult pill, so the tooltip and the in-placement popups never disagree on how a given value reads.</summary>
+        /// <summary>Whole number when <paramref name="value"/> is (near enough) an integer, one decimal otherwise - matches ComboView's mult pill formatting.</summary>
         private static string FormatMultDisplay(float value)
         {
             float rounded = Mathf.Round(value);
@@ -357,17 +287,16 @@ namespace Contigu.Core
             {
                 return Mathf.RoundToInt(value).ToString();
             }
-            // Invariant culture — "F1" would otherwise render with a comma
-            // decimal separator ("2,3") under a French system locale, and
-            // this string is also parsed back out nowhere, so there's no
-            // reason to let it vary.
+            // Invariant culture - "F1" would otherwise use a comma decimal
+            // separator under a French system locale, and this string is never
+            // parsed back.
             return value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private readonly IRandomProvider _rng;
         private readonly ChallengeDefinition _challenge;
 
-        /// <summary>The challenge this run was started with (see ChallengeCatalog) — read by Presentation for the boss-round status text and to show which challenge is currently in play.</summary>
+        /// <summary>The challenge this run was started with (see ChallengeCatalog).</summary>
         public ChallengeDefinition Challenge
         {
             get { return _challenge; }
@@ -380,22 +309,20 @@ namespace Contigu.Core
         public int TotalScore { get; private set; }
         public int PiecesRemainingThisRound { get; private set; }
 
-        /// <summary>How much Lueur the round that just ended converted its unused piece budget into (see EvaluateRoundEnd) — 0 until the first round ends, read once by GameBootstrap right after transitioning to AwaitingShop to replay it as a popup sequence, then meaningless again until the next round ends.</summary>
+        /// <summary>How much Lueur the round that just ended converted its unused piece budget into (see EvaluateRoundEnd) - 0 until the first round ends, read once by GameBootstrap right after transitioning to AwaitingShop.</summary>
         public int LastRoundEndLueurBonus { get; private set; }
 
         public RunState State { get; private set; }
 
-        /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds. Always None for a round that has an active enemy encounter (see <see cref="HasActiveEncounter"/>) — the two systems never run at once.</summary>
+        /// <summary>The randomly rolled boss rule for this round; None on non-boss rounds, and always None while <see cref="HasActiveEncounter"/> is true - the two systems never run at once.</summary>
         public BossEffect CurrentBossEffect { get; private set; }
 
         private IReadOnlyList<EnemyInstance> _currentEncounter = System.Array.Empty<EnemyInstance>();
 
         /// <summary>
-        /// This round's enemies (spec extension, explicit request: "ajouter
-        /// un petit peu d'autobattling" — see GDD §07/EncounterCatalog), in
-        /// their authored order. Empty for any round EncounterCatalog has
-        /// nothing authored for yet — see <see cref="HasActiveEncounter"/>,
-        /// which is what RunManager actually branches on.
+        /// This round's enemies, in their authored order. Empty for any round
+        /// EncounterCatalog has nothing authored for - see <see
+        /// cref="HasActiveEncounter"/>, which RunManager actually branches on.
         /// </summary>
         public IReadOnlyList<EnemyInstance> CurrentEncounter
         {
@@ -404,14 +331,11 @@ namespace Contigu.Core
 
         /// <summary>
         /// True while this round is a combat encounter rather than a quota
-        /// round — <see cref="EvaluateRoundEnd"/>'s victory condition
-        /// becomes "every enemy here is dead" instead of "RoundScore reached
-        /// CurrentQuota" (see <see cref="AllEnemiesDefeated"/>), every
-        /// placement's score damages the front alive enemy instead of (or
-        /// as well as) banking toward a quota (see
-        /// <see cref="ApplyDamageToEncounter"/>), and every Shuffle resolves
-        /// each alive enemy's own effect first (see
-        /// <see cref="ResolveEnemyShuffleEffects"/>).
+        /// round - <see cref="EvaluateRoundEnd"/>'s victory condition becomes
+        /// "every enemy dead" instead of reaching <see cref="CurrentQuota"/>,
+        /// and every placement's score damages the front alive enemy (see
+        /// <see cref="ApplyDamageToEncounter"/>) instead of only banking
+        /// toward quota.
         /// </summary>
         public bool HasActiveEncounter
         {
@@ -429,7 +353,7 @@ namespace Contigu.Core
             get { return CurrentRoundIndex + 1; }
         }
 
-        /// <summary>This round's score target — Marathon/Chaos race it directly (no authored encounter); Classic/Chaos still read it for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition instead.</summary>
+        /// <summary>This round's score target. Still read for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition.</summary>
         public int CurrentQuota
         {
             get { return _challenge.Quotas[CurrentRoundIndex]; }
@@ -440,7 +364,7 @@ namespace Contigu.Core
             get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
         }
 
-        /// <summary>Classic/Marathon: rounds 4 and 8. Chaos also keeps its cell-lock active every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
+        /// <summary>Classic/Marathon: rounds 4 and 8. Chaos keeps its cell-lock active every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
         public bool IsBossRound
         {
             get { return _challenge.BossActiveEveryRound || (CurrentRoundIndex + 1) % RunConfig.BossRoundInterval == 0; }
@@ -451,7 +375,7 @@ namespace Contigu.Core
             return BossLockedHandSlotIndex.HasValue && BossLockedHandSlotIndex.Value == handIndex;
         }
 
-        /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic (the original run) when omitted — keeps every existing call site (tests included) on the standard rules without having to pass one explicitly.</summary>
+        /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic when omitted.</summary>
         public RunManager(IRandomProvider rng, ChallengeDefinition challenge = null)
         {
             _rng = rng;
@@ -474,8 +398,8 @@ namespace Contigu.Core
             _currentEncounter = BuildEncounter(CurrentRoundIndex);
             if (HasActiveEncounter)
             {
-                // The two systems never run at once — see HasActiveEncounter's
-                // own doc comment.
+                // The two systems never run at once - see HasActiveEncounter's own
+                // doc comment.
                 CurrentBossEffect = BossEffect.None;
                 BossLockedHandSlotIndex = null;
                 BossCursedColor = null;
@@ -484,22 +408,17 @@ namespace Contigu.Core
             {
                 RollBossEffectForRound();
             }
-            // No more upfront lock here — the boss round now ratchets up
-            // gradually instead, see ApplyBossLockTick (called from
-            // PlacePiece every _challenge.BossLockPiecesInterval pieces).
-            // Normally a no-op (the hand carries over from the previous
-            // round untouched) — only fires for the deferred draw PlacePiece
-            // skips when the placement that empties the hand also ends the
-            // round, so the fresh hand is drawn here, for the round it
-            // actually belongs to, rather than during the previous round's
-            // tail end before the player has even picked their upgrade.
-            // Deliberately plain Deck.DrawNewHand, NOT DrawFreshHand: this
-            // is this round's STARTING hand, same as the very first hand
-            // the whole run ever deals (in DeckManager's own constructor,
-            // before any encounter exists) — not a Shuffle the player
-            // triggered by emptying their hand DURING this round, so no
-            // enemy here should get an on-Shuffle tick before the player
-            // has placed a single piece against it.
+            // The boss round lock ratchets up gradually instead of all at once -
+            // see ApplyBossLockTick, called from PlacePiece every
+            // _challenge.BossLockPiecesInterval pieces.
+            // Normally a no-op (the hand carries over from the previous round
+            // untouched) - only fires when the placement that empties the hand
+            // also ends the round, so PlacePiece defers the draw here instead of
+            // dealing it before the player has picked this round's upgrade.
+            // Deliberately plain Deck.DrawNewHand, not DrawFreshHand: this is the
+            // round's starting hand, not a Shuffle triggered mid-round, so no
+            // enemy here should get an on-Shuffle tick before the player has
+            // placed a single piece against it.
             if (Deck.IsHandFullyEmpty())
             {
                 Deck.DrawNewHand();
@@ -510,10 +429,8 @@ namespace Contigu.Core
             State = RunState.InProgress;
 
             // Same stuck-check PlacePiece runs after a mid-round redraw (see
-            // there) — covers the rare case of a boss round's locked cells
-            // leaving zero legal placements for the very first hand of the
-            // round, which would otherwise go undetected until the player
-            // gave up trying.
+            // there) - covers a boss round's locked cells leaving zero legal
+            // placements for the round's very first hand.
             EvaluateRoundEnd();
         }
 
@@ -540,10 +457,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Attempts to place the hand piece at <paramref name="handIndex"/> anchored
-        /// at (x, y). Returns the full outcome including whether the round/run
-        /// ended as a result. No-ops (placement fails, state untouched) if the run
-        /// isn't currently InProgress or the placement is invalid.
+        /// <summary>
+        /// Attempts to place the hand piece at <paramref name="handIndex"/>
+        /// anchored at (x, y). No-ops (placement fails, state untouched) if
+        /// the run isn't InProgress or the placement is invalid.
         /// </summary>
         public PlacementOutcome PlacePiece(int handIndex, int x, int y)
         {
@@ -575,21 +492,16 @@ namespace Contigu.Core
                 ? new Vector2Int(x, y) + shape.Cells[token.Trait.Value.LocalCellIndex]
                 : (Vector2Int?)null;
 
-            // Two traits need grid state read BEFORE Grid.PlacePiece mutates
-            // it: Chameleon overrides the color the piece actually places
-            // as, and Spark needs the no-clear streak as it stood before
-            // this placement (Grid.PlacePiece itself updates that streak for
-            // the NEXT placement to read, so reading it any later would see
-            // this placement's own outcome instead of the one it's scoring
-            // against).
+            // Chameleon and Spark both need grid state read BEFORE Grid.PlacePiece
+            // mutates it: Chameleon overrides the color the piece places as, and
+            // Spark needs the no-clear streak as it stood before this placement
+            // (Grid.PlacePiece updates that streak for the NEXT placement to
+            // read).
             PieceColor placementColor = token.Color;
             int sparkStreakBeforePlacement = 0;
             if (token.Trait.HasValue)
             {
-                // Experience's driver — every trait kind counts as "special",
-                // incremented here regardless of which branch below fires
-                // (on explicit request: "un modifier +0.1 mult pour chaque
-                // carte spéciale joué").
+                // Experience's driver - every trait kind counts as "special".
                 _specialPiecesPlayedCount++;
                 var kind = token.Trait.Value.Kind;
                 if (kind == PieceTraitKind.Chameleon)
@@ -597,13 +509,10 @@ namespace Contigu.Core
                     placementColor = ResolveChameleonColor(shape, x, y, traitCellPos.Value, token.Color);
                     if (placementColor != token.Color)
                     {
-                        // "Si une pièce est recolorée, elle est recolorée
-                        // dans le deck aussi" — see DeckManager.RecolorHandToken.
-                        // Must run before Deck.PlayFromHand below clears this
-                        // slot (harmless either way — PlayFromHand never
-                        // touches the deck itself — but this is the one spot
-                        // that still has both handIndex and the resolved
-                        // color in scope together).
+                        // Recoloring also updates the deck copy, not just this placement.
+                        // Must run before Deck.PlayFromHand below clears this slot (the one
+                        // spot that still has both handIndex and the resolved color in
+                        // scope together).
                         Deck.RecolorHandToken(handIndex, placementColor);
                     }
                 }
@@ -616,10 +525,8 @@ namespace Contigu.Core
             StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos, shape, x, y);
             // Snapshot BEFORE Grid.PlacePiece, same reasoning as the
-            // Chameleon/Spark reads above: a poisoned cell this placement
-            // happens to also clear would read back "not poisoned" once
-            // Cell.ClearFill resets the flag, so ApplyPoisonScoreRule reads
-            // from this frozen set instead of the grid's post-placement state.
+            // Chameleon/Spark reads above: a poisoned cell this placement clears
+            // would read back "not poisoned" once Cell.ClearFill resets the flag.
             var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
             var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers, _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
@@ -646,24 +553,16 @@ namespace Contigu.Core
             RemoveDepletedEpuisement();
             RoundScore += placement.TotalScore;
             TotalScore += placement.TotalScore;
-            // ModifierLueurBonus is a second, independent source of Lueur
-            // (see PlacementResult.ModifierLueurBonus) — the 5 Lueur-earning
-            // modifiers, on top of the line-clearing LueurEarned above.
+            // ModifierLueurBonus is a second, independent source of Lueur, on top
+            // of the line-clearing LueurEarned above.
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
             if (HasActiveEncounter)
             {
-                // A Joker piece carrying one of the 5 combat traits
-                // retargets (or splits) this placement's damage instead of
-                // the ordinary front-alive-enemy hit (explicit request:
-                // "J'aimerais que toutes les pièces jokers soient
-                // particulières... des upgrades qui affectent directement
-                // la manière de se battre") — and the same applies again
-                // whenever an OLDER Joker piece's stamped cells get pulled
-                // into THIS placement's scored group (explicit request:
-                // "Pour les jokers, s'ils sont retrigger plus tard dans une
-                // pièce jouée, son effet aussi est retrigger"), so this
-                // scans the whole group rather than just this token's own
-                // trait.
+                // A Joker piece carrying a combat trait retargets (or splits) this
+                // placement's damage instead of the ordinary front-alive-enemy hit -
+                // and the same applies whenever an older Joker piece's stamped cells
+                // get pulled into this placement's scored group, so this scans the
+                // whole group rather than just this token's own trait.
                 ApplyJokerCombatOrDefaultDamage(placement.GroupCells, placement.TotalScore);
                 if (placement.ClearedLineCount > 0)
                 {
@@ -674,10 +573,9 @@ namespace Contigu.Core
                     HealReclaimer(poisonMagnitudeForReclaimer);
                 }
             }
-            // Don't auto-refill yet — if this placement also ends the round,
+            // Don't auto-refill yet - if this placement also ends the round,
             // drawing the next 3 pieces here would hand them out before the
-            // player has even picked this round's upgrade (see StartRound,
-            // which draws instead in that case).
+            // player has picked this round's upgrade (see StartRound).
             Deck.PlayFromHand(handIndex, refillIfEmpty: false);
             PiecesRemainingThisRound--;
 
@@ -697,14 +595,9 @@ namespace Contigu.Core
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
             {
                 DrawFreshHand();
-                // EvaluateRoundEnd's stuck-check above deliberately skips an
-                // EMPTY hand (nothing to evaluate yet) — but the fresh hand
-                // just drawn is no longer empty, and might itself have no
-                // legal placement anywhere on the board. Without this
-                // second check, that stuck state went undetected entirely
-                // (bug report: "je ne peux pas jouer de tuile et pourtant
-                // je n'ai pas perdu") until the player tried a placement,
-                // which never comes since none is legal.
+                // EvaluateRoundEnd's stuck-check above deliberately skips an empty
+                // hand - but the fresh hand just drawn might itself have no legal
+                // placement anywhere on the board, so it needs its own check here.
                 EvaluateRoundEnd();
             }
 
@@ -713,14 +606,10 @@ namespace Contigu.Core
 
         /// <summary>
         /// Boss round mechanic (see ChallengeDefinition.BossLockPiecesInterval):
-        /// locks _challenge.BossLockCellsPerInterval more random empty cells and
-        /// folds in any score that locking happens to produce (see
-        /// GridManager.LockFreeCellsAndCheckClears) — "après avoir compté
-        /// les bonus" this placement's own score is already in RoundScore/
-        /// TotalScore by the time this runs, so the lock's score is simply
-        /// added on top of it, same as any other placement. Returns the
-        /// newly locked cells so the presentation layer can refresh their
-        /// visuals.
+        /// locks _challenge.BossLockCellsPerInterval more random empty cells
+        /// and folds in any score that locking produces (see
+        /// GridManager.LockFreeCellsAndCheckClears). Returns the newly locked
+        /// cells so the presentation layer can refresh their visuals.
         /// </summary>
         private IReadOnlyList<Vector2Int> ApplyBossLockTick()
         {
@@ -801,7 +690,7 @@ namespace Contigu.Core
             return cell.IsFilled && cell.FilledColor == cursedColor;
         }
 
-        /// <summary>"Shape Hater" (explicit request: "Idem pour les shapes, il faut un Shape hater") — <see cref="ApplyCursedColorScoreRule"/>'s exact mirror, keyed by <see cref="Cell.FilledShapeId"/>/<see cref="PlacementResult.ClearedCellShapes"/>/<see cref="PlacementResult.DestroyedCellShapes"/> instead of color.</summary>
+        /// <summary>"Shape Hater" - <see cref="ApplyCursedColorScoreRule"/>'s exact mirror, keyed by <see cref="Cell.FilledShapeId"/> instead of color.</summary>
         private void ApplyShapeHaterScoreRule(PlacementResult placement, ShapeId hatedShape)
         {
             var clearedShapes = new Dictionary<Vector2Int, ShapeId>();
@@ -863,7 +752,7 @@ namespace Contigu.Core
             return cell.IsFilled && cell.FilledShapeId == hatedShape;
         }
 
-        /// <summary>Finds and applies both Color Hater's and Shape Hater's score-cancellation rules for this placement, if either is alive in the current encounter — same loop-by-index convention as <see cref="HealLeech"/>/<see cref="HealReclaimer"/> (the "max one of each per round" authoring rule means at most one of each ever matches, but this loop doesn't assume it).</summary>
+        /// <summary>Applies Color Hater's and/or Shape Hater's score-cancellation rule for this placement, if either is alive in the current encounter.</summary>
         private void ApplyHaterScoreRules(PlacementResult placement)
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -885,21 +774,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Stamps EVERY cell of this placement's own piece (shape.Cells
-        /// offsets against the (x,y) anchor) with whatever flat Mastery
-        /// bonus its exact shape/color currently carries — 0 (no-op) for
-        /// either axis never leveled up. Must run before <see
+        /// Stamps every cell of this placement's own piece with whatever flat
+        /// Mastery bonus its exact shape/color currently carries (0 for an
+        /// axis never leveled up). Must run before <see
         /// cref="GridManager.PlacePiece"/>, which reads <see
         /// cref="Cell.ShapeMasteryBonus"/>/<see cref="Cell.ColorMasteryBonus"/>
-        /// in its own per-cell group-scoring loop — same "stamp the cell
-        /// before Grid.PlacePiece runs its scoring pass" ordering as <see
-        /// cref="ApplyTokenTrait"/>, and the same reason: a per-cell stamp
-        /// (frozen at whatever level applied at placement time, never
-        /// retroactively bumped by a later Mastery purchase) rescores every
-        /// time this cell's group scores again, not just now — on explicit
-        /// report that a flat once-per-PLACEMENT bonus undercounted a
-        /// multi-cell piece ("Chaque tuile devient niveau 2. Donc chaque
-        /// fois que cette tuile est comptabilisé on fait +1").
+        /// in its group-scoring loop. The stamp is frozen at whatever level
+        /// applied at placement time, so a later Mastery purchase never
+        /// retroactively changes it, but it does rescore every time this
+        /// cell's group scores again.
         /// </summary>
         private void StampMasteryBonuses(PieceShape shape, PieceColor color, int x, int y)
         {
@@ -923,19 +806,13 @@ namespace Contigu.Core
         /// If <paramref name="trait"/> is present, stamps the grid cell(s) its
         /// effect touches with the matching golden/tinted/multiplier flag(s)
         /// just before <see cref="GridManager.PlacePiece"/> scores this
-        /// placement — reusing the grid's existing modifier-scoring machinery
-        /// for what is now a one-time, piece-carried enchantment (spec 5.4
-        /// redesign) rather than a permanent cell property. Returns every cell
-        /// that should be un-stamped again once scoring is done (see
-        /// <see cref="ClearTokenTraitCells"/>) — every kind except
-        /// <see cref="PieceTraitKind.Seeder"/> (whose stamp is meant to stay
-        /// until the round itself resets it, see Cell.ResetForNewRound) and
-        /// the second/third-batch kinds (Mirror, Catalyst, Twin,
-        /// Detonator, Chameleon, Spark, Void, Bastion, Kamikaze), none of
-        /// which stamp a cell at all — their effects are resolved either
-        /// before Grid.PlacePiece runs (Chameleon) or after it returns, from
-        /// the resulting PlacementResult/grid state (see
-        /// <see cref="ApplyPostPlacementTraitBonus"/>).
+        /// placement. Returns every cell that should be un-stamped again once
+        /// scoring is done (see <see cref="ClearTokenTraitCells"/>) - every
+        /// kind except <see cref="PieceTraitKind.Seeder"/> (stays until
+        /// Cell.ResetForNewRound) and the kinds whose effects resolve before
+        /// Grid.PlacePiece runs (Chameleon) or after it returns (see <see
+        /// cref="ApplyPostPlacementTraitBonus"/>), none of which stamp a cell
+        /// at all.
         /// </summary>
         private List<Cell> ApplyTokenTrait(PieceTrait? trait, Vector2Int? traitCellPos, PieceShape shape, int anchorX, int anchorY)
         {
@@ -948,16 +825,14 @@ namespace Contigu.Core
             var pos = traitCellPos.Value;
             var cell = Grid.GetCell(pos.x, pos.y);
 
-            // Cosmetic, persists for the rest of the round regardless of
-            // trait kind — not added to transientCells, so ClearTokenTraitCells
-            // never touches it (see Cell.OriginTrait).
+            // Cosmetic, persists for the rest of the round regardless of trait
+            // kind - not added to transientCells (see Cell.OriginTrait).
             cell.OriginTrait = trait.Value;
 
-            // Joker's own combat traits badge EVERY cell of the piece, not
-            // just this one (explicit request: "chaque tuile aura
-            // l'upgrade") — purely cosmetic, same as the stamp right above;
-            // the actual one-shot combat effect still only resolves once
-            // per placement regardless (see RunManager.ApplyJokerCombatDamage).
+            // Joker's own combat traits badge every cell of the piece, not just
+            // this one - purely cosmetic; the one-shot combat effect still
+            // resolves once per placement regardless (see
+            // RunManager.ApplyJokerCombatDamage).
             if (PieceTrait.IsJokerCombatKind(trait.Value.Kind))
             {
                 for (int i = 0; i < shape.Cells.Count; i++)
@@ -1005,13 +880,11 @@ namespace Contigu.Core
 
                 case PieceTraitKind.Seeder:
                     // Intentionally NOT added to transientCells, so
-                    // ClearTokenTraitCells never un-stamps it right after this
-                    // placement's own scoring — unlike every other trait, this
-                    // one keeps scoring as a normal golden grid cell for the
-                    // rest of the CURRENT ROUND. It's Grid.ResetForNewRound
-                    // (via Cell.ResetForNewRound), not this method, that
-                    // eventually clears it — a permanent-for-the-whole-run
-                    // golden cell was judged too powerful.
+                    // ClearTokenTraitCells never un-stamps it after this placement's own
+                    // scoring - unlike every other trait, this one keeps scoring as a
+                    // normal golden grid cell for the rest of the current round.
+                    // Grid.ResetForNewRound (via Cell.ResetForNewRound) eventually
+                    // clears it.
                     cell.IsGolden = true;
                     break;
 
@@ -1024,15 +897,13 @@ namespace Contigu.Core
                 case PieceTraitKind.Void:
                 case PieceTraitKind.Bastion:
                 case PieceTraitKind.Kamikaze:
-                    // None of these stamp a Cell flag before placement —
-                    // every one of them is either resolved before
-                    // Grid.PlacePiece runs (Chameleon, via placementColor
-                    // above) or computed after it returns, from the
-                    // resulting PlacementResult/grid state (see
-                    // ApplyPostPlacementTraitBonus). Bastion in particular
-                    // can't lock its cell yet: Grid.PlacePiece's own
-                    // internal CanPlace re-check would then see this
-                    // placement's own cell as already locked and reject it.
+                    // None of these stamp a Cell flag before placement - each is either
+                    // resolved before Grid.PlacePiece runs (Chameleon, via
+                    // placementColor above) or computed after it returns (see
+                    // ApplyPostPlacementTraitBonus). Bastion in particular can't lock its
+                    // cell yet: Grid.PlacePiece's own internal CanPlace re-check would
+                    // then see this placement's own cell as already locked and reject
+                    // it.
                     break;
 
                 case PieceTraitKind.Bombe:
@@ -1040,30 +911,24 @@ namespace Contigu.Core
                 case PieceTraitKind.Eclat:
                 case PieceTraitKind.Precision:
                 case PieceTraitKind.Sangsue:
-                    // Joker-exclusive combat traits — never score anything
-                    // of their own (the OriginTrait stamp above/the
-                    // all-cell loop just above the switch are purely
-                    // cosmetic); their actual effect is resolved from
-                    // PlacePiece's own HasActiveEncounter block, after
-                    // Grid.PlacePiece returns the final TotalScore to
-                    // redirect (see ApplyJokerCombatDamage).
+                    // Joker-exclusive combat traits never score anything of their own
+                    // (the OriginTrait stamp is purely cosmetic); their effect is
+                    // resolved from PlacePiece's own HasActiveEncounter block, after
+                    // Grid.PlacePiece returns the final TotalScore to redirect (see
+                    // ApplyJokerCombatDamage).
                     break;
             }
             return transientCells;
         }
 
         /// <summary>
-        /// "Chameleon Tile": resolves the color the WHOLE piece should place
-        /// as — of every already-filled orthogonal neighbor color around the
+        /// "Chameleon Tile": resolves the color the whole piece should place
+        /// as - of every already-filled orthogonal neighbor color around the
         /// enchanted cell, picks whichever would make this placement's own
-        /// resulting group score the most (explicit request: "il devrait
-        /// être jumelé avec le groupe faisant le plus de points", same
-        /// treatment as Joker — see GridManager.ResolveBestJokerGroup),
-        /// instead of just the first one found in a fixed scan order (left,
-        /// right, down, up). Falls back to the piece's own color when no
-        /// neighbor is filled yet (checked before Grid.PlacePiece runs, so
-        /// only PRE-EXISTING board state can match — never another cell of
-        /// this same about-to-be-placed piece).
+        /// resulting group score the most (same treatment as Joker - see
+        /// GridManager.ResolveBestJokerGroup). Falls back to the piece's own
+        /// color when no neighbor is filled yet (checked before
+        /// Grid.PlacePiece runs, so only pre-existing board state can match).
         /// </summary>
         private PieceColor ResolveChameleonColor(PieceShape shape, int anchorX, int anchorY, Vector2Int traitCellPos, PieceColor fallbackColor)
         {
@@ -1157,7 +1022,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Reverts every stamp <see cref="ApplyTokenTrait"/> made — most enchantments fire once, on this placement's own scoring, not as a lasting grid modifier.</summary>
+        /// <summary>Reverts every stamp <see cref="ApplyTokenTrait"/> made - most enchantments fire once, on this placement's own scoring, not as a lasting grid modifier.</summary>
         private static void ClearTokenTraitCells(List<Cell> cells)
         {
             for (int i = 0; i < cells.Count; i++)
@@ -1170,15 +1035,10 @@ namespace Contigu.Core
 
         /// <summary>
         /// Handles every trait kind whose bonus can't be computed by
-        /// GridManager's own per-cell scoring loop (it doesn't know about
-        /// PieceTrait): Mirror/Catalyst/Twin need the group as it stood right
-        /// after scoring, Detonator needs the line-clear outcome, Spark needs
-        /// the pre-placement no-clear streak captured earlier in PlacePiece,
-        /// and Void mutates the grid outside this placement's own cells
-        /// entirely (scoring a flat bonus for the one tile it breaks, if
-        /// any). Golden/Tinted/Multiplier/Blast/
-        /// Beacon/Seeder/Chameleon all resolve elsewhere (Cell-flag stamping
-        /// or, for Chameleon, ResolveChameleonColor) and need nothing here.
+        /// GridManager's own per-cell scoring loop: Mirror/Catalyst/Twin need
+        /// the group as it stood right after scoring, Detonator needs the
+        /// line-clear outcome, Spark needs the pre-placement no-clear streak,
+        /// and Void mutates the grid outside this placement's own cells.
         /// </summary>
         private void ApplyPostPlacementTraitBonus(PieceTrait trait, Vector2Int traitCellPos, int sparkStreakBeforePlacement, PlacementResult placement)
         {
@@ -1211,7 +1071,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Adds a flat trait bonus to <paramref name="placement"/> and appends a matching <see cref="ScoreEventType.Trait"/> event, mutating it directly (its fields are plain mutable ints/lists) so both the score total and the presentation layer's popup feed see it.</summary>
+        /// <summary>Adds a flat trait bonus to <paramref name="placement"/> and appends a matching <see cref="ScoreEventType.Trait"/> event.</summary>
         private static void AddTraitBonus(PlacementResult placement, Vector2Int pos, int bonus)
         {
             placement.TraitBonus += bonus;
@@ -1220,7 +1080,7 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
-        /// <summary>Records one cell a trait effect (Void Tile/Kamikaze Tile) destroyed, same mutate-the-lists-directly convention as <see cref="AddTraitBonus"/> — see <see cref="PlacementResult.DestroyedCells"/> for why this is separate from <see cref="PlacementResult.ClearedCells"/>.</summary>
+        /// <summary>Records one cell a trait effect destroyed - see <see cref="PlacementResult.DestroyedCells"/> for why this is separate from <see cref="PlacementResult.ClearedCells"/>.</summary>
         private static void AddDestroyedCell(PlacementResult placement, Vector2Int pos, PieceColor? color, ShapeId? shapeId)
         {
             var cells = new List<Vector2Int>(placement.DestroyedCells);
@@ -1239,21 +1099,12 @@ namespace Contigu.Core
 
         /// <summary>
         /// "Slot N Loyalty": flat +Mult (additive, see
-        /// PlacementResult.AdditiveMultBonus, see ScoringConstants.SlotLoyaltyBonus)
-        /// when the piece was played from hand slot <paramref name="handIndex"/>
-        /// (0-based) and the matching modifier is active. History: "doubles just
-        /// the group bonus" (additive), then a genuine xN multiplier on the
-        /// whole score ("au lieu de double group placement, on va tout
-        /// doubler"), then converted back to additive on explicit request
-        /// ("converting some multiplicative sources to additive") — with 3
-        /// slots this fires reliably enough (1-in-3 placements) that the old
-        /// xN was compounding too consistently with the game's other
-        /// "always-on" multiplicative modifiers. Unlike every other modifier,
-        /// GridManager.PlacePiece can't evaluate this itself — it has no idea
-        /// which of the 3 hand slots a piece came from, only this method's
-        /// caller (PlacePiece(handIndex, x, y)) does — so it's resolved here,
-        /// the same post-hoc pattern already used for the second-batch
-        /// PieceTrait kinds (see ApplyPostPlacementTraitBonus).
+        /// PlacementResult.AdditiveMultBonus, ScoringConstants.SlotLoyaltyBonus)
+        /// when the piece was played from hand slot <paramref
+        /// name="handIndex"/> (0-based) and the matching modifier is active.
+        /// GridManager can't evaluate this itself - it has no idea which hand
+        /// slot a piece came from, only this method's caller does - so it's
+        /// resolved here post-hoc, same pattern as ApplyPostPlacementTraitBonus.
         /// </summary>
         private void ApplyHandSlotModifierBonus(int handIndex, PlacementResult placement)
         {
@@ -1268,13 +1119,10 @@ namespace Contigu.Core
                 return;
             }
 
-            // Its own position in _activeModifiers — needed so PlacementResult.Mult's
-            // ordered left-to-right fold (see its own doc comment) places this
-            // correctly relative to every other Mult modifier instead of
-            // always applying it last regardless of where the player put it.
-            // Also this slot's own level factor (see ModifierLevelUtility) —
-            // Mult is events-driven, so scaling this event's Amount is all a
-            // leveled Slot Loyalty needs.
+            // Its own position in _activeModifiers, needed so
+            // PlacementResult.Mult's ordered left-to-right fold places this
+            // correctly relative to every other Mult modifier - plus this slot's
+            // own level factor (see ModifierLevelUtility).
             int slotIndex = _activeModifiers.IndexOf(slotModifier.Value);
             int bonus = Mathf.RoundToInt(ScoringConstants.SlotLoyaltyBonus * GetModifierLevelFactor(slotIndex));
             placement.AdditiveMultBonus += bonus;
@@ -1288,17 +1136,13 @@ namespace Contigu.Core
 
 
         /// <summary>
-        /// Enchanted Cards (CartesEnchantees), Multitude (ninth batch) and
-        /// Experience (tenth batch, its "played" counterpart to Enchanted
-        /// Cards' "currently in deck" count) all depend on RunManager-only
-        /// state (upgraded-card count, total deck size, special-pieces-
-        /// played count), not grid/placement state — like
-        /// ApplyHandSlotModifierBonus above, GridManager can't evaluate
-        /// these itself since it knows nothing about the deck (or this
-        /// counter), so they're resolved here instead, the same post-hoc
-        /// pattern. Loops over every held copy of each (rather than just
-        /// checking Contains) so holding any one of them more than once
-        /// stacks, same convention as every other modifier.
+        /// Enchanted Cards, Multitude and Experience all depend on
+        /// RunManager-only state (upgraded-card count, deck size,
+        /// special-pieces-played count), not grid/placement state - like
+        /// ApplyHandSlotModifierBonus, GridManager can't evaluate these
+        /// itself, so they're resolved here post-hoc. Loops over every held
+        /// copy of each so holding more than one stacks, same convention as
+        /// every other modifier.
         /// </summary>
         private void ApplyDeckStateModifierBonuses(PlacementResult placement)
         {
@@ -1313,23 +1157,17 @@ namespace Contigu.Core
                 if (_activeModifiers[i] == ModifierId.CartesEnchantees)
                 {
                     int upgradedCount = CountUpgradedDeckCards();
-                    // TRUE float — no longer floored to a whole "+1 Mult"
-                    // step (on explicit request: "on doit multiplier comme
-                    // si c'était un float au lieu d'arrondir a la baisse").
-                    // Always at least 0.1 ("counting from a baseline of
-                    // 1"), so this always fires, and PreciseAmount lets the
-                    // badge popup show the exact value (e.g. "+1.3") instead
-                    // of a misleadingly rounded "+1" (on explicit report:
-                    // "le popup de score qui apparait est un int et non un
-                    // float"). Scaled by this slot's own level factor (see
+                    // True float, not floored to a whole "+1 Mult" step. Always at
+                    // least 0.1 so this always fires; PreciseAmount lets the badge
+                    // popup show the exact value rather than a misleadingly rounded
+                    // one. Scaled by this slot's own level factor (see
                     // ModifierLevelUtility) same as every other modifier.
                     float trueMult = (1 + upgradedCount) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * GetModifierLevelFactor(i);
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
                     multEvent.TriggeringModifier = ModifierId.CartesEnchantees;
-                    // Its own position in _activeModifiers — see the same
-                    // stamp in ApplyHandSlotModifierBonus for why (feeds
-                    // PlacementResult.Mult's ordered fold).
+                    // Its own position in _activeModifiers - feeds PlacementResult.Mult's
+                    // ordered fold (see ApplyHandSlotModifierBonus).
                     multEvent.TriggeringModifierIndex = i;
                     multEvent.PreciseAmount = trueMult;
                     events.Add(multEvent);
@@ -1345,7 +1183,7 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Experience)
                 {
-                    // Same TRUE-float treatment (and level scaling) as CartesEnchantees above.
+                    // Same true-float treatment (and level scaling) as CartesEnchantees above.
                     float trueMult = (1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * GetModifierLevelFactor(i);
                     placement.ProgressiveAdditiveMult += trueMult;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
@@ -1356,12 +1194,9 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Arsenal)
                 {
-                    // Whole-number count (at most 5 — PieceTrait.
-                    // JokerCombatKinds.Length), so this joins the regular
-                    // AdditiveMultBonus pool like Solidarite/MultUn, not
-                    // the fractional ProgressiveAdditiveMult pool
-                    // CartesEnchantees/Experience use for their much wider,
-                    // genuinely-needs-a-float ranges.
+                    // Whole-number count (at most 5), so this joins the regular
+                    // AdditiveMultBonus pool like Solidarite/MultUn, not the fractional
+                    // ProgressiveAdditiveMult pool CartesEnchantees/Experience use.
                     int bonus = Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * GetModifierLevelFactor(i));
                     placement.AdditiveMultBonus += bonus;
                     var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], bonus);
@@ -1373,7 +1208,7 @@ namespace Contigu.Core
             placement.ScoreEvents = events;
         }
 
-        /// <summary>How many tokens in the whole deck (any pile) currently carry a PieceTrait — the "upgraded card" count Enchanted Cards scales with.</summary>
+        /// <summary>How many tokens in the whole deck currently carry a PieceTrait - the "upgraded card" count Enchanted Cards scales with.</summary>
         private int CountUpgradedDeckCards()
         {
             int count = 0;
@@ -1388,7 +1223,7 @@ namespace Contigu.Core
             return count;
         }
 
-        /// <summary>Arsenal's own driver (synergy pass, axis 2 — explicit request: "synergies combat Joker ↔ reste du deck"): how many DISTINCT Joker-exclusive combat trait kinds (see PieceTrait.JokerCombatKinds) are currently anywhere in the deck — two tokens sharing the same kind (e.g. two Bombe Jokers) count once, same spirit as CountUpgradedDeckCards but keyed on kind instead of "has any trait at all".</summary>
+        /// <summary>Arsenal's driver: how many distinct Joker-exclusive combat trait kinds (see PieceTrait.JokerCombatKinds) are currently anywhere in the deck - duplicates of the same kind count once.</summary>
         private int CountDistinctCombatKindsInDeck()
         {
             var kindsSeen = new HashSet<PieceTraitKind>();
@@ -1403,7 +1238,7 @@ namespace Contigu.Core
             return kindsSeen.Count;
         }
 
-        /// <summary>Polyvalence's own tooltip driver — same distinct-category count as GridManager.ApplyPolyvalence, duplicated here (rather than exposed cross-class) purely so this read-only "currently" display doesn't need a whole placement to compute, the same reason every other case in GetProgressiveModifierStateText reads live state directly instead of waiting for the next score event.</summary>
+        /// <summary>Polyvalence's tooltip driver - same distinct-category count as GridManager.ApplyPolyvalence, duplicated here for this read-only "currently" display.</summary>
         private int CountDistinctModifierCategoriesHeld()
         {
             var categoriesSeen = new HashSet<ModifierCategory>();
@@ -1415,18 +1250,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Tallies every <see cref="ScoreEventType.Modifier"/> AND <see
+        /// Tallies every <see cref="ScoreEventType.Modifier"/> and <see
         /// cref="ScoreEventType.ModifierMultiplier"/> event in this
-        /// placement's final <see cref="PlacementResult.ScoreEvents"/> — called
-        /// last, after every modifier bonus (GridManager's own plus the
-        /// hand-slot ones added above) has already been appended, so it sees
-        /// the complete list regardless of which method actually produced
-        /// each event. Powers the "used N times" tooltip stat (see
-        /// GetModifierUsageCount) — a modifier only counts as "used" the
-        /// instant it actually scores, not just while merely held. Counts
-        /// ModifierMultiplier too since converting a modifier from a flat
-        /// bonus to a multiplier (see PlacementResult.ModifierMultiplier)
-        /// shouldn't silently stop it from ever incrementing this stat again.
+        /// placement's final score events, after every modifier bonus has
+        /// already been appended. Powers the "used N times" tooltip stat -
+        /// a modifier only counts as "used" the instant it actually scores.
         /// </summary>
         private void CountModifierUsage(PlacementResult placement)
         {
@@ -1446,14 +1274,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// The scored group's total cell count, and the SPECIFIC amount the
-        /// cell at <paramref name="cellPos"/> itself earned (0 if that
-        /// position isn't part of the scored group) — group scoring is now
-        /// progressive (the Nth cell scored is worth N*GroupBonusPerCell,
-        /// not a flat shared amount, see GridManager.PlacePiece's group
-        /// loop), so unlike before, a specific cell's own share can no
-        /// longer be read off ANY Group event; it has to be the one at
-        /// that exact position.
+        /// The scored group's total cell count, and the specific amount the
+        /// cell at <paramref name="cellPos"/> itself earned (0 if not part of
+        /// the scored group). Group scoring is progressive (the Nth cell is
+        /// worth N*GroupBonusPerCell), so a specific cell's share can't be
+        /// read off any Group event - it must be the one at that exact
+        /// position.
         /// </summary>
         private static void GetGroupShare(PlacementResult placement, Vector2Int cellPos, out int groupSize, out int cellAmount)
         {
@@ -1476,14 +1302,8 @@ namespace Contigu.Core
 
         /// <summary>
         /// "Mirror Tile": duplicates the enchanted cell's own group-bonus
-        /// share onto ONE random OTHER cell in the scored group. Simplified
-        /// (on explicit request — the original geometric-symmetry rule,
-        /// "the cell reflected through the group's bounding-box center, if
-        /// one exists there", was too hard to reason about at a glance) from
-        /// a rule that only fired for specific symmetric group shapes into
-        /// one that always fires whenever the group has another cell to
-        /// target, same firing condition as Twin Tile. No-op if the group is
-        /// just this placement's own cell.
+        /// share onto one random other cell in the scored group. No-op if
+        /// the group is just this placement's own cell.
         /// </summary>
         private void ApplyMirrorBonus(Vector2Int traitCellPos, PlacementResult placement)
         {
@@ -1555,7 +1375,7 @@ namespace Contigu.Core
             AddTraitBonus(placement, placement.PlacedCells[0], bonus);
         }
 
-        /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid — excludes this placement's own cells (only pre-existing board state is eligible). Scores ScoringConstants.VoidBonusPerDestroyedCell for the broken tile (on explicit request: "Le void tile, quand elle est triggered dans la grille, faire +10 pour la tuile brisé" — previously pure risk/utility with no score of its own); a no-op if nothing else on the grid is eligible.</summary>
+        /// <summary>"Void Tile": clears one random already-filled, unlocked cell elsewhere on the grid (excludes this placement's own cells) and scores ScoringConstants.VoidBonusPerDestroyedCell for it. No-op if nothing else is eligible.</summary>
         private void ApplyVoidEffect(PlacementResult placement)
         {
             var cleared = Grid.ClearRandomFilledCell(_rng, placement.PlacedCells, out var clearedColor, out var clearedShape);
@@ -1567,15 +1387,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Bastion Tile" (spec extension, explicit request — "Locked cell
-        /// upgraded. N'est pas cleared mais fait quand même les points
-        /// cleared"): once this placement itself has fully resolved (its own
+        /// "Bastion Tile": once this placement has fully resolved (its own
         /// line clears included), the enchanted cell locks in place for the
-        /// rest of the round — GridManager.CheckAndClearLines then skips it
+        /// rest of the round - GridManager.CheckAndClearLines then skips it
         /// forever after, but still credits it the line-clear bonus every
         /// time its row/column completes. No-op if this same placement's own
-        /// line clear already wiped the cell before we got here (nothing
-        /// left to lock).
+        /// line clear already wiped the cell before we got here.
         /// </summary>
         private void ApplyBastionEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
@@ -1589,19 +1406,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Kamikaze Tile": destroys the enchanted cell ITSELF plus every
+        /// "Kamikaze Tile": destroys the enchanted cell itself plus every
         /// already-filled, unlocked cell in its 8 surrounding tiles (Moore
-        /// neighborhood) — including this SAME placement's own other
-        /// cells, if the piece it's part of has more than one (on explicit
-        /// request: "The kamikaze tile shouldn't exclude it's own tiles"
-        /// — no longer the "protect what was just placed" convention Void
-        /// Tile still uses). The trait cell's own destruction was added on
-        /// a further explicit request ("L'upgrade kamikaze devrait
-        /// détruire sa propre tuile aussi, pas juste les 8 autour") — it
-        /// was previously spared, being the center of the 8-neighbor
-        /// search rather than one of the 8 neighbors. Scores
-        /// ScoringConstants.KamikazeBonusPerDestroyedCell per tile actually
-        /// destroyed, the trait cell included.
+        /// neighborhood), including this same placement's own other cells.
+        /// Scores ScoringConstants.KamikazeBonusPerDestroyedCell per tile
+        /// actually destroyed, the trait cell included.
         /// </summary>
         private void ApplyKamikazeEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
@@ -1655,20 +1464,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Debug-only helper (wired to an editor-only input shortcut in
-        /// GameBootstrap): instantly completes the current round as if its
-        /// quota had just been reached, so the upgrade draft appears right
-        /// away instead of having to grind out a full round for real — handy
-        /// for manually testing upgrades. No-op if the run isn't currently
-        /// InProgress. Pure core logic (no UnityEditor dependency), so the
-        /// method itself ships in real builds too; only its call site is
-        /// gated behind #if UNITY_EDITOR. Still sets RoundScore to
-        /// CurrentQuota unconditionally (even on an encounter round, where
-        /// that number no longer drives EvaluateRoundEnd) so every existing
-        /// caller/test that reads it back keeps seeing the same value —
-        /// encounter rounds additionally need every enemy actually dead
-        /// (see DebugDefeatAllEnemies), since EvaluateRoundEnd ignores
-        /// RoundScore entirely once HasActiveEncounter is true.
+        /// Debug-only helper: instantly completes the current round as if its
+        /// quota had just been reached. No-op if the run isn't InProgress.
+        /// Pure core logic (no UnityEditor dependency), so the method ships
+        /// in real builds; only its call site is gated behind #if
+        /// UNITY_EDITOR. Still sets RoundScore to CurrentQuota
+        /// unconditionally so every caller/test reading it back sees the same
+        /// value - encounter rounds additionally need every enemy actually
+        /// dead (see DebugDefeatAllEnemies), since EvaluateRoundEnd ignores
+        /// RoundScore once HasActiveEncounter is true.
         /// </summary>
         public RunState DebugForceRoundComplete()
         {
@@ -1685,7 +1489,7 @@ namespace Contigu.Core
             return State;
         }
 
-        /// <summary>Debug-only helper: kills every enemy in <see cref="CurrentEncounter"/> outright (same cleanup as a real kill — see CleanUpDefeatedEnemy) — DebugForceRoundComplete's encounter-round counterpart to setting RoundScore to CurrentQuota.</summary>
+        /// <summary>Debug-only helper: kills every enemy in <see cref="CurrentEncounter"/> outright (same cleanup as a real kill - see CleanUpDefeatedEnemy).</summary>
         private void DebugDefeatAllEnemies()
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -1702,12 +1506,9 @@ namespace Contigu.Core
 
         /// <summary>
         /// Debug-only helper: adds <paramref name="modifierId"/> straight to
-        /// the player's active set, bypassing the shop's random slot roll
-        /// and its Lueur cost entirely — same "skip the grind" spirit as
-        /// <see cref="DebugForceRoundComplete"/>, but with no in-game
-        /// shortcut wired to it (no gameplay reason to skip paying for a
-        /// specific modifier) — used by EditMode tests that need a specific
-        /// modifier active without fighting shop RNG. Still respects
+        /// the player's active set, bypassing the shop entirely. Used by
+        /// EditMode tests that need a specific modifier active without
+        /// fighting shop RNG. Still respects
         /// EconomyConstants.MaxActiveModifiers and never duplicates a
         /// modifier already held.
         /// </summary>
@@ -1721,7 +1522,7 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Debug-only helper: replaces the current encounter outright with brand-new instances of exactly these ids, bypassing EncounterCatalog entirely — lets EditMode tests exercise an enemy (e.g. Plague) that this first authored pass never schedules on its own round, without waiting on a future EncounterCatalog entry to exist.</summary>
+        /// <summary>Debug-only helper: replaces the current encounter outright with brand-new instances of exactly these ids, bypassing EncounterCatalog.</summary>
         public void DebugSetEncounter(params EnemyId[] ids)
         {
             var instances = new List<EnemyInstance>(ids.Length);
@@ -1732,34 +1533,31 @@ namespace Contigu.Core
             _currentEncounter = instances;
         }
 
-        /// <summary>Debug-only helper: adds Lueur directly, bypassing gameplay entirely — same "skip the grind" spirit as <see cref="DebugGrantModifier"/>, used by EditMode tests that need to exercise shop purchases without earning real Lueur from line clears first.</summary>
+        /// <summary>Debug-only helper: adds Lueur directly, bypassing gameplay.</summary>
         public void DebugGrantLueur(int amount)
         {
             Lueur += amount;
         }
 
-        /// <summary>Debug-only helper: pins Lueur to an exact value, bypassing gameplay — lets EditMode tests establish a known baseline before asserting purchase/reroll outcomes, instead of assuming a round-completion helper (e.g. one that fills the board with golden cells to reach quota fast) happens to earn exactly zero incidental Lueur from line clears along the way. That assumption broke silently once InitialDeckFactory's starting deck composition changed and a seeded round started clearing lines it previously didn't.</summary>
+        /// <summary>Debug-only helper: pins Lueur to an exact value, bypassing gameplay - lets EditMode tests establish a known baseline before asserting purchase/reroll outcomes.</summary>
         public void DebugSetLueur(int amount)
         {
             Lueur = amount;
         }
 
-        /// <summary>Debug-only helper: pins ShufflesRemaining to an exact value, bypassing gameplay — mirrors DebugSetLueur, for EditMode tests that need to exercise the stuck-hand defeat check (see EvaluateRoundEnd) without spending real shuffles first, which would re-deal the hand via ShuffleHand and ruin a deliberately set-up deterministic scenario (a specific seed's hand, or one found by searching for a specific shape).</summary>
+        /// <summary>Debug-only helper: pins ShufflesRemaining to an exact value, bypassing gameplay - avoids re-dealing the hand via ShuffleHand for a deliberately set-up deterministic scenario.</summary>
         public void DebugSetShufflesRemaining(int amount)
         {
             ShufflesRemaining = amount;
         }
 
         /// <summary>
-        /// Spends one shuffle charge to re-roll all 3 hand slots at once
-        /// (spec extension, explicit request — see RunConfig.
-        /// StartingShuffleCount/ShufflesRemaining). No-op (returns false,
-        /// nothing spent) when the run isn't InProgress or no charges are
-        /// left. Re-runs EvaluateRoundEnd right after re-rolling since a
-        /// shuffle can turn a stuck hand into a playable one — or, if the
-        /// fresh hand is ALSO unplayable and this was the last charge,
-        /// immediately confirm the loss instead of waiting for the
-        /// player's next placement attempt (there won't be a legal one).
+        /// Spends one shuffle charge to re-roll all 3 hand slots at once.
+        /// No-op (returns false) when the run isn't InProgress or no charges
+        /// are left. Re-runs EvaluateRoundEnd right after re-rolling since a
+        /// shuffle can turn a stuck hand into a playable one - or, if the
+        /// fresh hand is also unplayable and this was the last charge,
+        /// confirm the loss immediately.
         /// </summary>
         public bool ShuffleHand()
         {
@@ -1776,28 +1574,23 @@ namespace Contigu.Core
         /// <summary>
         /// Whether the most recently resolved Shuffle (manual <see
         /// cref="ShuffleHand"/>, or the auto-refill <see cref="PlacePiece"/>
-        /// triggers when a placement empties the hand) actually stole a
-        /// piece via an alive Thief — explicit request: "Thief manque un
-        /// effet visuel pour indiquer qu'il vole une pièce". Grid-based
-        /// enemy effects (Locker's lock, Poisoner's poison) are discovered
-        /// by Presentation through a before/after snapshot of the grid
-        /// itself (see GameBootstrap.SnapshotEnemyEffectCells); Thief's
-        /// steal touches only the hand, which has no such snapshot, so this
-        /// flag is the equivalent for Presentation to read right after
-        /// calling ShuffleHand/PlacePiece and show a one-off effect.
+        /// triggers) actually stole a piece via an alive Thief. Grid-based
+        /// enemy effects are discovered by Presentation through a
+        /// before/after snapshot of the grid itself (see
+        /// GameBootstrap.SnapshotEnemyEffectCells); Thief's steal touches
+        /// only the hand, which has no such snapshot, so this flag is the
+        /// equivalent for Presentation to read right after.
         /// </summary>
         public bool ThiefStoleOnLastShuffle { get; private set; }
 
         /// <summary>
-        /// A Shuffle TRIGGERED DURING this round — PlacePiece's own
-        /// post-placement empty-hand refill, and a manual ShuffleHand — per
-        /// the GDD's own definition, resolving each alive enemy's own
-        /// On-Shuffle effect first (GDD §07: "All enemy Shuffle effects
-        /// resolve before the new tiles appear in the 3 hand slots") before
-        /// Deck.DrawNewHand actually deals the fresh hand. Deliberately NOT
-        /// used for StartRound's own carried-over-hand-was-empty draw — see
-        /// its own comment for why that one is exempt. No-op beyond the
-        /// draw itself when there's no active encounter.
+        /// A Shuffle triggered during this round - PlacePiece's own
+        /// post-placement empty-hand refill, and a manual ShuffleHand -
+        /// resolving each alive enemy's own On-Shuffle effect first (see
+        /// ResolveEnemyShuffleEffects) before Deck.DrawNewHand deals the
+        /// fresh hand. Deliberately not used for StartRound's own
+        /// carried-over-hand-was-empty draw. No-op beyond the draw itself
+        /// when there's no active encounter.
         /// </summary>
         private void DrawFreshHand()
         {
@@ -1825,20 +1618,17 @@ namespace Contigu.Core
             }
 
             // A fully empty hand (PlacePiece defers its refill when the round
-            // might be ending — see PlayFromHand's refillIfEmpty) has
-            // nothing to evaluate yet, so it can never count as "stuck":
-            // skip the check and let the round stay InProgress. PlacePiece's
-            // own post-EvaluateRoundEnd check then draws the next hand right
-            // away, which the NEXT placement will correctly check.
+            // might be ending - see PlayFromHand's refillIfEmpty) has nothing to
+            // evaluate yet, so it can never count as "stuck": skip the check and
+            // let the round stay InProgress. PlacePiece's own
+            // post-EvaluateRoundEnd check then draws the next hand right away,
+            // which the next placement will correctly check.
             //
-            // A stuck hand (no legal placement for any of its 3 pieces) is
-            // only a genuine loss once ShufflesRemaining is ALSO exhausted
-            // (spec extension, explicit request: "il va falloir tweak la
-            // condition de défaite pour valider si le joueur ne peut plus
-            // jouer de pièce ET qu'il n'a plus de shuffle en banque") — with
+            // A stuck hand (no legal placement for any of its 3 pieces) is only
+            // a genuine loss once ShufflesRemaining is also exhausted - with
             // shuffles still in the bank, the player can re-roll the hand
-            // instead of losing outright (see ShuffleHand, which re-runs
-            // this exact check right after re-rolling).
+            // instead of losing outright (see ShuffleHand, which re-runs this
+            // exact check right after re-rolling).
             if (!Deck.IsHandFullyEmpty() && !HasAnyHandPlacement() && ShufflesRemaining <= 0)
             {
                 State = RunState.RunDefeat;
@@ -1847,32 +1637,26 @@ namespace Contigu.Core
 
         /// <summary>
         /// The "round cleared" branch shared by both of EvaluateRoundEnd's
-        /// win conditions (quota reached, or — see HasActiveEncounter —
-        /// every enemy defeated): banks the unused-piece-budget Lueur
-        /// bonus, rolls Risky Mult's loss chance, and transitions to either
-        /// RunVictory (the scheduled run's last round) or AwaitingShop.
+        /// win conditions: banks the unused-piece-budget Lueur bonus, rolls
+        /// Risky Mult's loss chance, and transitions to either RunVictory
+        /// (the run's last round) or AwaitingShop.
         /// </summary>
         private void CompleteRoundSuccessfully()
         {
-            // Balance fix (spec extension, explicit request): a strong
-            // early modifier can reach quota almost instantly, leaving
-            // most of the round's piece budget unused and starving the
-            // player of Lueur income for the shop. Converting every
-            // unused piece into +1 Lueur means finishing a round FAST
-            // still pays out close to what grinding it out fully would
-            // have. LastRoundEndLueurBonus is read once by the
-            // presentation layer (GameBootstrap.PlayRoundEndLueurBonusSequence)
-            // to replay this as a "+1 Lueur" popup per unused piece,
-            // flying from the pieces bar to the Lueur counter, before
-            // the shop actually opens — Lueur itself is already final
-            // here, same "core computes the end state instantly,
-            // presentation fakes the gradual reveal" convention as
-            // every other scoring event in PlacePiece.
+            // Converting every unused piece into +1 Lueur means finishing a
+            // round fast still pays out close to what grinding it out fully
+            // would have. LastRoundEndLueurBonus is read once by the
+            // presentation layer
+            // (GameBootstrap.PlayRoundEndLueurBonusSequence) to replay this as a
+            // "+1 Lueur" popup per unused piece before the shop actually opens -
+            // Lueur itself is already final here, same "core computes the end
+            // state instantly, presentation fakes the gradual reveal"
+            // convention as every other scoring event in PlacePiece.
             LastRoundEndLueurBonus = PiecesRemainingThisRound;
             Lueur += LastRoundEndLueurBonus;
             ApplyMultCinqRisqueLossChance();
-            // Only ever true once (the challenge's own final
-            // CurrentRoundIndex, RoundCount - 1, can't recur).
+            // Only ever true once (the challenge's own final CurrentRoundIndex,
+            // RoundCount - 1, can't recur).
             if (CurrentRoundIndex == _challenge.RoundCount - 1)
             {
                 State = RunState.RunVictory;
@@ -1882,7 +1666,7 @@ namespace Contigu.Core
             OpenShop();
         }
 
-        /// <summary>True once every enemy in <see cref="CurrentEncounter"/> is dead — vacuously true (and never actually read, since <see cref="HasActiveEncounter"/> gates every caller) for an empty encounter.</summary>
+        /// <summary>True once every enemy in <see cref="CurrentEncounter"/> is dead - vacuously true for an empty encounter.</summary>
         private bool AllEnemiesDefeated()
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -1895,7 +1679,7 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Builds this round's enemies fresh from EncounterCatalog's authored EnemyIds (see HasActiveEncounter's own doc comment) — a brand-new EnemyInstance per id, even one that also appeared in an earlier round.</summary>
+        /// <summary>Builds this round's enemies fresh from EncounterCatalog's authored EnemyIds - a brand-new EnemyInstance per id.</summary>
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)
         {
             var ids = EncounterCatalog.GetEncounter(_challenge.Id, roundIndex);
@@ -1923,7 +1707,7 @@ namespace Contigu.Core
             return instances;
         }
 
-        /// <summary>Damages the first ALIVE enemy in encounter order (GDD §07: "Which enemy should I kill first?" — targeting is always front-to-back, never split or chosen) — can be negative (see EnemyInstance.ApplyDamage). Cleans up the kill immediately if this hit was lethal.</summary>
+        /// <summary>Damages the first alive enemy in encounter order (targeting is always front-to-back) - can be negative (see EnemyInstance.ApplyDamage). Cleans up the kill immediately if lethal.</summary>
         private void ApplyDamageToEncounter(int damage)
         {
             for (int i = 0; i < _currentEncounter.Count; i++)
@@ -1943,30 +1727,19 @@ namespace Contigu.Core
 
         /// <summary>
         /// Scans this placement's whole scored group (see
-        /// PlacementResult.GroupCells) for every DISTINCT Joker-exclusive
-        /// combat trait kind (see PieceTrait.JokerCombatKinds) stamped on
-        /// any of its cells' <see cref="Cell.OriginTrait"/> — not just the
-        /// cells this placement itself just filled — and dispatches this
-        /// placement's damage through each one found, via <see
-        /// cref="ApplyJokerCombatDamage"/>, instead of the ordinary
-        /// front-alive-enemy hit. Falls back to <see
-        /// cref="ApplyDamageToEncounter"/> when the group carries none.
-        /// Covers both the currently-placed token's own combat trait (its
-        /// cells are always part of their own group) AND an OLDER Joker
-        /// piece's combat trait retriggering once this placement's merge
-        /// pulls its already-stamped cells back into a newly scored group
-        /// (explicit request: "Pour les jokers, s'ils sont retrigger plus
-        /// tard dans une pièce jouée, son effet aussi est retrigger") —
-        /// same "rescored in full every time the group grows" spirit as
-        /// Golden's own re-trigger behavior. A kind is deduplicated across
-        /// however many of the group's cells carry it (one piece's combat
-        /// trait always badges every one of its own cells, see
-        /// RunManager.ApplyTokenTrait), so it still fires only ONCE per
-        /// placement, same as a lone Joker piece's own trait already did —
-        /// two SEPARATE Joker pieces of the same combat kind merged into
-        /// one group count as a single trigger of that kind, not two,
-        /// since nothing short of a per-cell placement identity (not
-        /// tracked anywhere in this project) could tell them apart.
+        /// PlacementResult.GroupCells) for every distinct Joker-exclusive
+        /// combat trait kind stamped on any of its cells' <see
+        /// cref="Cell.OriginTrait"/> - not just the cells this placement
+        /// itself just filled - and dispatches this placement's damage
+        /// through each one found, via <see cref="ApplyJokerCombatDamage"/>,
+        /// instead of the ordinary front-alive-enemy hit. Falls back to <see
+        /// cref="ApplyDamageToEncounter"/> when the group carries none. This
+        /// also covers an older Joker piece's combat trait retriggering once
+        /// this placement's merge pulls its already-stamped cells into a
+        /// newly scored group. A kind is deduplicated across however many of
+        /// the group's cells carry it, so two separate Joker pieces of the
+        /// same combat kind merged into one group count as a single trigger,
+        /// not two.
         /// </summary>
         private void ApplyJokerCombatOrDefaultDamage(IReadOnlyList<Vector2Int> groupCells, int damage)
         {
@@ -1995,12 +1768,9 @@ namespace Contigu.Core
                 return;
             }
 
-            // Renfort Joker (synergy pass, axis 2 — explicit request:
-            // "synergies combat Joker ↔ reste du deck"): only reachable
-            // once a combat kind was actually found above, by design — an
-            // ordinary front-hit placement (the branch just above) is
-            // never boosted, so this modifier does nothing without Joker
-            // combat pieces to amplify.
+            // Renfort Joker: only reachable once a combat kind was actually
+            // found above, by design - an ordinary front-hit placement is never
+            // boosted.
             int boostedDamage = _activeModifiers.Contains(ModifierId.RenfortJoker)
                 ? Mathf.RoundToInt(damage * (1f + ScoringConstants.RenfortJokerDamageBonusPercent / 100f))
                 : damage;
@@ -2010,15 +1780,11 @@ namespace Contigu.Core
                 ApplyJokerCombatDamage(kindsFound[i], boostedDamage);
             }
 
-            // Siphon (synergy pass, "Lueur ↔ tout type de combat"):
-            // Sangsue's own siphon generalized to ANY combat kind found
-            // above, not just Sangsue itself — fires once per placement
-            // off the same boosted damage total every kind above just
-            // used, regardless of how many enemies it actually reached
-            // (Bombe's split, Éclat's cascade, ...), same "one siphon per
-            // placement" simplicity as Sangsue's own. Stacks independently
-            // with Sangsue if both are held and Sangsue is among the
-            // kinds found.
+            // Siphon: Sangsue's own siphon generalized to any combat kind found
+            // above, not just Sangsue itself - fires once per placement off the
+            // same boosted damage total, regardless of how many enemies it
+            // actually reached. Stacks independently with Sangsue if both are
+            // held and Sangsue is among the kinds found.
             if (boostedDamage > 0 && _activeModifiers.Contains(ModifierId.Siphon))
             {
                 Lueur += Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction);
@@ -2026,13 +1792,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Dispatches to a single Joker-exclusive combat trait kind (see
-        /// PieceTrait.JokerCombatKinds), instead of the ordinary
-        /// front-alive-enemy hit <see cref="ApplyDamageToEncounter"/>
-        /// always applies (explicit request: "J'aimerais que toutes les
-        /// pièces jokers soient particulières avec tuiles upgradé, mais des
-        /// upgrades qui affectent directement la manière de se battre") —
-        /// called once per distinct kind found by <see
+        /// Dispatches to a single Joker-exclusive combat trait kind, instead
+        /// of the ordinary front-alive-enemy hit <see
+        /// cref="ApplyDamageToEncounter"/> always applies - called once per
+        /// distinct kind found by <see
         /// cref="ApplyJokerCombatOrDefaultDamage"/>.
         /// </summary>
         private void ApplyJokerCombatDamage(PieceTraitKind kind, int damage)
@@ -2074,7 +1837,7 @@ namespace Contigu.Core
             return count;
         }
 
-        /// <summary>"Bombe" (explicit request: "divize équitablement les dégâts sur tous les ennemies présent") — splits this placement's damage EQUALLY across every alive enemy instead of just the front one. Integer division: a non-exact split quietly rounds each share down rather than handing the remainder to any particular enemy.</summary>
+        /// <summary>"Bombe" - splits this placement's damage equally across every alive enemy instead of just the front one. Integer division: a non-exact split rounds each share down.</summary>
         private void ApplyBombeDamage(int damage)
         {
             int aliveCount = CountAliveEnemies();
@@ -2097,7 +1860,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>"Range" (explicit request: "attaque le dernier ennemi en liste") — damages the LAST alive enemy in encounter order instead of the front one; otherwise the exact same single-target rule as <see cref="ApplyDamageToEncounter"/>.</summary>
+        /// <summary>"Range" - damages the last alive enemy in encounter order instead of the front one; otherwise the same single-target rule as <see cref="ApplyDamageToEncounter"/>.</summary>
         private void ApplyRangeDamage(int damage)
         {
             for (int i = _currentEncounter.Count - 1; i >= 0; i--)
@@ -2116,14 +1879,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Éclat" — damages the front alive enemy same as the default
-        /// rule, but any OVERKILL (damage beyond its remaining HP)
-        /// cascades onto the next alive enemy in line, and so on, until
-        /// the damage runs out or no enemies remain. A non-positive damage
-        /// total (a placement scored entirely through poison, netting a
-        /// heal instead) never cascades — falls back to the ordinary
-        /// single-target rule, same as every other kind, since "overkill"
-        /// has no meaning for a heal.
+        /// "Eclat" - damages the front alive enemy same as the default rule,
+        /// but any overkill (damage beyond its remaining HP) cascades onto
+        /// the next alive enemy in line, and so on. A non-positive damage
+        /// total never cascades - falls back to the ordinary single-target
+        /// rule, since "overkill" has no meaning for a heal.
         /// </summary>
         private void ApplyEclatDamage(int damage)
         {
@@ -2186,19 +1946,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Leech" (GDD §07: "Heals when the player destroys a line. The
-        /// effect stops when it dies.") — heals every alive Leech instance
-        /// <see cref="ScoringConstants.LeechHealPerLineClear"/> HP per
-        /// row/column this placement cleared (see
-        /// PlacementResult.ClearedLineCount). Goes through <see
+        /// "Leech": heals every alive Leech instance <see
+        /// cref="ScoringConstants.LeechHealPerLineClear"/> HP per row/column
+        /// this placement cleared. Goes through <see
         /// cref="EnemyInstance.HealOrGrow"/>, not the plain <see
-        /// cref="EnemyInstance.Heal"/> (explicit request: "il devient de
-        /// plus en plus fort s'il est déjà full, son max HP augmente
-        /// aussi") — Reclaimer's own grow-on-overflow-heal mechanic, now
-        /// shared by Leech too: a heal landing while it's already at full
-        /// HP raises its ceiling instead of going to waste. HealOrGrow
-        /// itself no-ops once dead, so no extra guard is needed for "the
-        /// effect stops when it dies."
+        /// cref="EnemyInstance.Heal"/> - a heal landing while already at
+        /// full HP raises its ceiling instead of going to waste.
+        /// HealOrGrow itself no-ops once dead.
         /// </summary>
         private void HealLeech(int clearedLineCount)
         {
@@ -2212,7 +1966,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>GDD §07: "When an enemy dies, its active effects are cancelled/cleaned up immediately." Locker's current lock is released; every tile Poisoner itself poisoned is normalized.</summary>
+        /// <summary>When an enemy dies, its active effects are cancelled/cleaned up immediately: Locker's current lock is released, and every tile Poisoner poisoned is normalized.</summary>
         private void CleanUpDefeatedEnemy(EnemyInstance enemy)
         {
             if (enemy.LockedCell.HasValue)
@@ -2230,18 +1984,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// <summary>
         /// Resolves every alive enemy's own On-Shuffle effect, in encounter
-        /// order (GDD §07: "Enemy order is therefore part of the puzzle").
-        /// Called from <see cref="DrawFreshHand"/>, always before the fresh
-        /// hand is actually dealt. HeavyLocker/Plague are Locker's/
-        /// Poisoner's own mechanics at boss scale (see EnemyCatalog); Thief
-        /// is deliberately NOT handled here (see ResolveThiefShuffleEffect's
-        /// own doc comment for why). Reclaimer has no On-Shuffle effect at
-        /// all any more — it now heals reactively off poison's own negative
-        /// scoring instead (see HealReclaimer/ApplyPoisonScoreRule, explicit
-        /// redesign request: "Chaque points négatifs triggered par une
-        /// tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce
-        /// montant là").
+        /// order. Called from <see cref="DrawFreshHand"/>, always before the
+        /// fresh hand is actually dealt. HeavyLocker/Plague are Locker's/
+        /// Poisoner's own mechanics at boss scale. Reclaimer has no
+        /// On-Shuffle effect at all - it heals reactively off poison's own
+        /// negative scoring instead (see HealReclaimer/ApplyPoisonScoreRule).
+        /// </summary>
         /// </summary>
         private void ResolveEnemyShuffleEffects()
         {
@@ -2268,21 +2018,18 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07: "On each Shuffle, locks 1 grid case. The previous lock
-        /// is removed at the next Shuffle and a new case is selected."
-        /// Uses the plain <see cref="GridManager.LockRandomCells"/> (no
-        /// line-clear re-check) rather than the old boss tick's
-        /// LockFreeCellsAndCheckClears — explicit request: "LA locked cell
-        /// ne peut être dans une cleared line". Locker's own lock should
-        /// never itself be the reason a row/column completes and clears;
-        /// that remains specific to the pre-existing ProgressiveCellLock
-        /// boss effect (see ApplyBossLockTick), not this enemy. Also stamps
+        /// Locker locks 1 grid cell per Shuffle; the previous lock is
+        /// released at the next Shuffle and a new cell is selected. Uses the
+        /// plain <see cref="GridManager.LockRandomCells"/> (no line-clear
+        /// re-check), so Locker's own lock should never itself be the reason
+        /// a row/column completes and clears - that remains specific to the
+        /// pre-existing ProgressiveCellLock boss effect (see
+        /// ApplyBossLockTick), not this enemy. Also stamps
         /// Cell.IsLineClearObstacle so the row/column it sits in can't be
-        /// cleared by a LATER placement either, for as long as the lock
-        /// stays there (follow-up explicit request: "Tu ne devrais pas
-        /// pouvoir clear une ligne qui contient une locked cell" — the old
-        /// boss lock and a Bastion cell are deliberately exempt from this,
-        /// see Cell.IsLineClearObstacle's own doc comment).
+        /// cleared by a later placement either, for as long as the lock
+        /// stays there (the old boss lock and a Bastion cell are
+        /// deliberately exempt - see Cell.IsLineClearObstacle's own doc
+        /// comment).
         /// </summary>
         private void ResolveLockerShuffleEffect(EnemyInstance locker)
         {
@@ -2303,21 +2050,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07: "On each Shuffle, poisons 1 tile" (Poisoner, count=1)
-        /// or "Poisons 5 tiles" (Plague, count=5 — spec extension, see
-        /// EnemyCatalog.Plague). Roams exactly like Locker's single lock
-        /// instead of accumulating (explicit request: "Les poison tiles
-        /// doivent être retiré lors d'un shuffle pour mieux être replacé
-        /// aléatoirement, comme pour les locked cell") — releases every
-        /// cell this instance poisoned so far, INCLUDING any cell
-        /// contamination (see ContaminateAdjacentCell) added to this same
-        /// instance's own list since its last Shuffle (follow-up explicit
-        /// request: "Toutes les tuiles supplémentaires sont aussi effacé on
-        /// shuffle") — before picking <paramref name="count"/> new ones. Any
-        /// not-yet-poisoned cell is a valid target now, filled or empty
-        /// alike (follow-up explicit request: "Toutes les tuiles peuvent
-        /// être empoisonné, pas juste les tuiles rempli") — an empty one
-        /// simply sits as a trap for whatever piece lands there later.
+        /// Poisons <paramref name="count"/> tiles per Shuffle (Poisoner: 1,
+        /// Plague: 5). Roams exactly like Locker's single lock instead of
+        /// accumulating: releases every cell this instance poisoned so far,
+        /// including any cell contamination (see ContaminateAdjacentCell)
+        /// added since its last Shuffle, before picking new ones. Any
+        /// not-yet-poisoned cell is a valid target, filled or empty alike -
+        /// an empty one simply sits as a trap for whatever piece lands there
+        /// later.
         /// </summary>
         private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner, int count)
         {
@@ -2351,17 +2091,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Contamination" (spec extension, explicit request: "Si une tuile
-        /// empoisonnée est triggered, une de ses 4 tuile adjacente est
-        /// contaminée") — called from ApplyPoisonScoreRule once per distinct
-        /// poisoned position a placement actually scored negatively
+        /// "Contamination": called from ApplyPoisonScoreRule once per
+        /// distinct poisoned position a placement actually scored negatively
         /// through. Poisons one random orthogonally-adjacent, not-yet-
         /// poisoned cell (in-bounds only; a no-op if every neighbor is
         /// already poisoned or <paramref name="pos"/>'s own poison isn't
-        /// owned by any living enemy instance), adding it to the SAME
+        /// owned by any living enemy instance), adding it to the same
         /// instance's own PoisonedCells list so it rolls away at that
-        /// instance's next Shuffle exactly like the original cell did (see
-        /// ResolvePoisonerShuffleEffect's own doc comment).
+        /// instance's next Shuffle exactly like the original cell did.
         /// </summary>
         private void ContaminateAdjacentCell(Vector2Int pos)
         {
@@ -2409,23 +2146,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Reclaimer" redesign (explicit request: "Chaque points négatifs
-        /// triggered par une tuile empoisonné, l'ennemi reclaimer récupère
-        /// en point de vie ce montant là") — heals every alive Reclaimer
-        /// instance by <paramref name="totalPoisonMagnitude"/>, the sum of
-        /// every point this placement lost to poison this placement (see
-        /// ApplyPoisonScoreRule's return value). Replaces Reclaimer's old
-        /// On-Shuffle consume-and-heal effect entirely — it no longer has
-        /// one (see ResolveEnemyShuffleEffects). Goes through <see
-        /// cref="EnemyInstance.HealOrGrow"/>, NOT the plain Heal every
-        /// other healer uses (follow-up explicit request: "j'aimerais
-        /// ajouter pour le reclaimer que s'il est heal ET qu'il est full
-        /// health, il augmente son max health et son health pour devenir
-        /// plus fort") — a heal landing while already at full HP grows it
-        /// permanently stronger instead of being wasted, which is what
-        /// makes "tuer l'empoisonneur sans trop heal le reclaimer" an
-        /// actual tension: the longer the Poisoner survives, the more
-        /// chances Reclaimer gets to overflow-heal and grow.
+        /// Heals every alive Reclaimer instance by <paramref
+        /// name="totalPoisonMagnitude"/>, the sum of every point this
+        /// placement lost to poison (see ApplyPoisonScoreRule's return
+        /// value). Replaces Reclaimer's old On-Shuffle consume-and-heal
+        /// effect entirely - it no longer has one (see
+        /// ResolveEnemyShuffleEffects). Goes through <see
+        /// cref="EnemyInstance.HealOrGrow"/>, not the plain Heal every other
+        /// healer uses - a heal landing while already at full HP grows it
+        /// permanently stronger instead of being wasted.
         /// </summary>
         private void HealReclaimer(int totalPoisonMagnitude)
         {
@@ -2440,15 +2169,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07: "On each Shuffle, steals 1 random tile from the hand."
-        /// Unlike every other enemy's On-Shuffle effect (grid-based,
-        /// resolved via ResolveEnemyShuffleEffects BEFORE Deck.DrawNewHand),
-        /// Thief needs the FRESH hand to already exist to steal from it —
-        /// so DrawFreshHand calls this separately, AFTER the deal. Returns
+        /// Thief steals 1 random tile from the hand per Shuffle. Unlike
+        /// every other enemy's On-Shuffle effect (grid-based, resolved via
+        /// ResolveEnemyShuffleEffects before Deck.DrawNewHand), Thief needs
+        /// the fresh hand to already exist to steal from it - so
+        /// DrawFreshHand calls this separately, after the deal. Returns
         /// whether any alive Thief actually stole something (see
-        /// ThiefStoleOnLastShuffle), so Presentation can show its own
-        /// effect for it — the steal itself still happens invisibly here,
-        /// before anything is drawn either way.
+        /// ThiefStoleOnLastShuffle).
         /// </summary>
         private bool ResolveThiefShuffleEffect()
         {
@@ -2467,7 +2194,7 @@ namespace Contigu.Core
             return stole;
         }
 
-        /// <summary>Every currently-poisoned position across every alive enemy instance in <see cref="CurrentEncounter"/>, regardless of which one owns it (Poisoner, Plague, or a cell "contamination" spread onto — see ContaminateAdjacentCell) — see PlacePiece's own snapshot-before-mutation comment for why this must be read BEFORE Grid.PlacePiece runs.</summary>
+        /// <summary>Every currently-poisoned position across every alive enemy instance in <see cref="CurrentEncounter"/>, regardless of which one owns it. See PlacePiece's own snapshot-before-mutation comment for why this must be read before Grid.PlacePiece runs.</summary>
         private HashSet<Vector2Int> GetPoisonedPositionsSnapshot()
         {
             var snapshot = new HashSet<Vector2Int>();
@@ -2483,23 +2210,17 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// GDD §07/Poisoner: "Points generated by poisoned tiles are
-        /// negative." Same preserve-clears/Lueur/non-point-multiplier-effects
-        /// contract as <see cref="ApplyCursedColorScoreRule"/>, but NEGATES
-        /// a poisoned position's point events instead of dropping them —
+        /// Negates a poisoned position's point events instead of dropping
+        /// them, with the same preserve-clears/Lueur/non-point-multiplier-
+        /// effects contract as <see cref="ApplyCursedColorScoreRule"/> -
         /// poison is a cost, not an exemption, and <see
         /// cref="EnemyInstance.ApplyDamage"/> reads the resulting (possibly
         /// net-negative) TotalScore as this placement's damage, so playing
         /// into poison can genuinely heal the enemy back up. Returns the
-        /// total magnitude flipped negative this placement (0 if none),
-        /// which the caller feeds into <see cref="HealReclaimer"/> (explicit
-        /// redesign request: "Chaque points négatifs triggered par une
-        /// tuile empoisonné, l'ennemi reclaimer récupère en point de vie ce
-        /// montant là") — and spreads "contamination" (see
-        /// ContaminateAdjacentCell) from every distinct poisoned position
-        /// actually triggered this way (follow-up explicit request: "Si une
-        /// tuile empoisonnée est triggered, une de ses 4 tuile adjacente
-        /// est contaminée").
+        /// total magnitude flipped negative (0 if none), which the caller
+        /// feeds into <see cref="HealReclaimer"/>, and spreads
+        /// "contamination" (see ContaminateAdjacentCell) from every distinct
+        /// poisoned position actually triggered this way.
         /// </summary>
         private int ApplyPoisonScoreRule(PlacementResult placement, HashSet<Vector2Int> poisonedPositions)
         {
@@ -2517,13 +2238,10 @@ namespace Contigu.Core
             for (int i = 0; i < placement.ScoreEvents.Count; i++)
             {
                 var scoreEvent = placement.ScoreEvents[i];
-                // A modifier that reads a SECOND cell to decide its own
-                // eligibility (e.g. Contraste reading a contrasting
-                // neighbor — see ScoreEvent.ReferencedPosition) is just as
-                // much "using" a poisoned tile as one scored directly on
-                // it, so it flips negative too (explicit request: "si un
-                // modifier utilise cette case là spécifiquement c'est
-                // négatif aussi").
+                // A modifier that reads a second cell to decide its own
+                // eligibility (e.g. Contraste reading a contrasting neighbor - see
+                // ScoreEvent.ReferencedPosition) is just as much "using" a poisoned
+                // tile as one scored directly on it, so it flips negative too.
                 bool touchesPoison = poisonedPositions.Contains(scoreEvent.Position)
                     || (scoreEvent.ReferencedPosition.HasValue && poisonedPositions.Contains(scoreEvent.ReferencedPosition.Value));
                 if (IsPointEvent(scoreEvent.Type) && scoreEvent.Amount > 0 && touchesPoison)
@@ -2564,17 +2282,12 @@ namespace Contigu.Core
         /// <summary>
         /// Dwindling (Epuisement): once its decaying bonus (see
         /// GridManager.EpuisementCurrentBonus) has fully bottomed out at 0,
-        /// it can never earn another point for the rest of the run (its
-        /// value is permanent and never resets) — removed the instant that
-        /// happens, on explicit request ("Dwilding modifier devrait être
-        /// détruit lorsqu'il est rendu a 0"), freeing its modifier slot
-        /// instead of leaving a permanently-dead entry sitting in it.
+        /// it can never earn another point for the rest of the run - removed
+        /// the instant that happens, freeing its modifier slot instead of
+        /// leaving a permanently-dead entry sitting in it.
         /// _activeModifiers can never hold more than one copy of Epuisement
         /// (RollBlisterSlot excludes modifiers already owned), so IndexOf is
-        /// unambiguous. A no-op — including on every placement before
-        /// Epuisement is ever held, since GridManager.EpuisementCurrentBonus
-        /// only starts decaying once it's actually dispatched — whenever the
-        /// bonus is still above 0 or Epuisement isn't currently held.
+        /// unambiguous.
         /// </summary>
         private void RemoveDepletedEpuisement()
         {
@@ -2589,7 +2302,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Risky Mult (MultCinqRisque): rolled once PER held copy, right at the end of a successfully completed round (see EvaluateRoundEnd) — on explicit request ("un modifier +5 mult avec une chance sur 5 de perdre le modifier a la fin de la round"). Each copy independently has a 1-in-EconomyConstants.MultCinqRisqueLossChanceDenominator chance to be removed.</summary>
+        /// <summary>Risky Mult (MultCinqRisque): rolled once per held copy, right at the end of a successfully completed round. Each copy independently has a 1-in-EconomyConstants.MultCinqRisqueLossChanceDenominator chance to be removed.</summary>
         private void ApplyMultCinqRisqueLossChance()
         {
             for (int i = _activeModifiers.Count - 1; i >= 0; i--)
@@ -2622,9 +2335,7 @@ namespace Contigu.Core
             return Grid.HasAnyValidPlacement(shapes);
         }
 
-        // ---- Lueur shop (replaces the old round-end draft entirely — spec
-        // extension, explicit request: "je ne veux plus du tout du système
-        // actuel") ----
+        // ---- Lueur shop ----
 
         /// <summary>Rolls every slot fresh — called once, the instant the shop opens (see EvaluateRoundEnd).</summary>
         private void OpenShop()
@@ -2646,26 +2357,17 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// One "Blister" slot's roll (see EconomyConstants.ShopBlisterSlotCount)
-        /// — a single FLAT weighted bag holding every not-yet-held/not-
-        /// already-offered-this-visit modifier (uniform weight, matching
-        /// the Common upgrade-rarity weight) alongside every eligible
-        /// upgrade (its own rarity weight, see UpgradeRarityUtility,
-        /// multiplied by EconomyConstants.BlisterUpgradeWeightMultiplier) —
-        /// explicit request: "mélanger modifiers et upgrades dans un sac et
-        /// en tirer 3 au hasard", resolved (after clarifying the options) as
-        /// one real shared bag rather than an artificial 50/50 split. With
-        /// ~70 modifiers to ~21 upgrades, a perfectly flat weight-8-per-item
-        /// bag put an upgrade's odds around 15-16% per slot — on a follow-up
-        /// report that this read as far too rare ("ils n'apparaissent
-        /// vraiment pas assez souvent"), upgrade weight alone gained the
-        /// multiplier above, bringing it to roughly 35-40% without touching
-        /// modifiers' own (still perfectly uniform) odds among themselves.
-        /// An upgrade needing a prerequisite the player doesn't meet yet
-        /// (Modifier Upgrade with no modifiers owned, Random Modifier
-        /// already at the cap) is excluded from the bag entirely — unlike a
-        /// Casino slot, a Blister slot's exact identity is always visible,
-        /// so an obviously-dead card would just read as broken.
+        /// One "Blister" slot's roll - a single flat weighted bag holding
+        /// every not-yet-held/not-already-offered-this-visit modifier
+        /// (uniform weight, matching the Common upgrade-rarity weight)
+        /// alongside every eligible upgrade (its own rarity weight, see
+        /// UpgradeRarityUtility, multiplied by
+        /// EconomyConstants.BlisterUpgradeWeightMultiplier). An upgrade
+        /// needing a prerequisite the player doesn't meet yet (Modifier
+        /// Upgrade with no modifiers owned, Random Modifier already at the
+        /// cap) is excluded from the bag entirely - unlike a Casino slot, a
+        /// Blister slot's exact identity is always visible, so an
+        /// obviously-dead card would just read as broken.
         /// </summary>
         private ShopSlot RollBlisterSlot()
         {
@@ -2759,7 +2461,7 @@ namespace Contigu.Core
             return false;
         }
 
-        /// <summary>Whether <paramref name="candidate"/> could actually be applied right now — see RollBlisterSlot's own doc comment for why this only matters for Blister, not Casino.</summary>
+        /// <summary>Whether <paramref name="candidate"/> could actually be applied right now - see RollBlisterSlot's own doc comment for why this only matters for Blister, not Casino.</summary>
         private bool IsUpgradeEligibleForOffer(UpgradeDefinition candidate)
         {
             if (candidate.Id == UpgradeId.RandomModifier && _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
@@ -2800,7 +2502,7 @@ namespace Contigu.Core
             return ShopSlot.ForUpgrade(upgrade);
         }
 
-        /// <summary>Current Lueur price of Blister slot <paramref name="index"/> — a Modifier-kind slot varies per modifier (see ModifierPricing, on explicit request); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice) — Mastery-pool slots share Bank's price, the ternary below only special-cases Grid. Either way includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
+        /// <summary>Current Lueur price of Blister slot <paramref name="index"/> - a Modifier-kind slot varies per modifier (see ModifierPricing); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice). Includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
         public int GetBlisterSlotPrice(int index)
         {
             if (index < 0 || index >= _blisterSlots.Length || _blisterSlots[index] == null)
@@ -2814,7 +2516,7 @@ namespace Contigu.Core
             return ComputePrice(basePrice);
         }
 
-        /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> — Grid-pool slots cost more than Bank-pool ones (a permanent piece enchantment is generally the stronger pick), including this visit's escalation. Mastery-pool slots share Bank's (lower) price — not called out separately below since the check is just "is it Grid".</summary>
+        /// <summary>Current Lueur price of upgrade slot <paramref name="index"/> - Grid-pool slots cost more than Bank-pool ones, including this visit's escalation. Mastery-pool slots share Bank's (lower) price.</summary>
         public int GetUpgradeSlotPrice(int index)
         {
             if (index < 0 || index >= _upgradeSlots.Length || _upgradeSlots[index] == null)
@@ -2838,23 +2540,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Buys Blister slot <paramref name="index"/> outright — a
-        /// Modifier-kind slot applies immediately (modifiers are never a
-        /// mystery, so this is the whole purchase, no follow-up needed); an
-        /// Upgrade-kind slot goes through the exact same resolution as a
-        /// Casino purchase (see ApplyPurchasedUpgrade/BuyUpgradeSlot),
-        /// since a Blister slot's upgrade is just as fully rolled — only
-        /// its PRE-purchase visibility differs. Fails (no charge, no state
+        /// Buys Blister slot <paramref name="index"/> outright - a
+        /// Modifier-kind slot applies immediately; an Upgrade-kind slot goes
+        /// through the exact same resolution as a Casino purchase (see
+        /// ApplyPurchasedUpgrade/BuyUpgradeSlot). Fails (no charge, no state
         /// change) if the shop isn't open, the slot is invalid/already
         /// bought, the player can't afford it, or (Modifier-kind only)
-        /// they're already at EconomyConstants.MaxActiveModifiers — an
-        /// Upgrade-kind slot's own prerequisite checks (Random Modifier at
-        /// the cap, Modifier Upgrade with nothing owned) never actually
-        /// fire here in practice since RollBlisterSlot excludes those
-        /// upgrades from the bag entirely, but are kept for defense in
-        /// depth (the player's modifier count can change between the roll
-        /// and the purchase, e.g. buying two Modifier-kind Blister slots
-        /// first).
+        /// they're already at EconomyConstants.MaxActiveModifiers.
+        /// </summary>
         /// </summary>
         public bool BuyBlisterSlot(int index)
         {
@@ -2884,16 +2577,13 @@ namespace Contigu.Core
                 _purchasesThisVisit++;
                 slot.Purchased = true;
 
-                // "Mimic" (Copieur) isn't a real modifier of its own —
-                // buying it adds another copy of whichever modifier was
-                // purchased immediately before it instead (on explicit
-                // request: "un modifier qui copy le modifier précédemment
-                // acheté"). A no-op (still costs Lueur, still marks the
+                // "Mimic" (Copieur) isn't a real modifier of its own - buying it
+                // adds another copy of whichever modifier was purchased immediately
+                // before it instead. A no-op (still costs Lueur, still marks the
                 // slot sold) if nothing has been purchased yet this run.
-                // _lastPurchasedModifierId only ever tracks a REAL
-                // purchase, never Copieur itself, so buying several Mimics
-                // in a row all copy the same underlying modifier rather
-                // than chaining off each other.
+                // _lastPurchasedModifierId only ever tracks a real purchase, never
+                // Copieur itself, so buying several Mimics in a row all copy the
+                // same underlying modifier rather than chaining off each other.
                 if (slot.ModifierId == ModifierId.Copieur)
                 {
                     if (_lastPurchasedModifierId.HasValue)
@@ -2926,19 +2616,16 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Buys Casino upgrade slot <paramref name="index"/> — the specific
+        /// Buys Casino upgrade slot <paramref name="index"/> - the specific
         /// upgrade underneath (only its <see cref="UpgradePool"/> was ever
         /// shown) gets revealed as <see cref="PendingUpgrade"/> (see
-        /// ApplyPurchasedUpgrade for the actual resolution, shared with a
-        /// Blister-kind upgrade purchase). Fails (no charge) under the same
+        /// ApplyPurchasedUpgrade). Fails (no charge) under the same
         /// conditions as <see cref="BuyBlisterSlot"/> (minus the modifier
-        /// cap, which doesn't apply to upgrades in general) — EXCEPT for
-        /// the "Random Modifier" upgrade specifically (explicit report: "si
-        /// le joueur a un random modifier comme upgrade et qu'il est full
-        /// il ne devrait pas pouvoir l'acheter"), which DOES respect the
-        /// cap: buying it while already at EconomyConstants.MaxActiveModifiers
-        /// used to still charge Lueur and simply grant nothing (see
-        /// GrantRandomModifier), silently wasting the purchase.
+        /// cap, which doesn't apply to upgrades in general) except for
+        /// "Random Modifier" specifically, which does respect the cap:
+        /// buying it while already at
+        /// EconomyConstants.MaxActiveModifiers still charges Lueur and
+        /// grants nothing (see GrantRandomModifier).
         /// </summary>
         public bool BuyUpgradeSlot(int index)
         {
@@ -2970,16 +2657,12 @@ namespace Contigu.Core
 
         /// <summary>
         /// Shared resolution for a just-paid-for upgrade purchase, whichever
-        /// section it came from (Blister or Casino — see BuyBlisterSlot/
-        /// BuyUpgradeSlot, which each handle their OWN slot bookkeeping and
-        /// eligibility/price checks before calling this). A Bank-pool
-        /// upgrade with no sub-choice (Joker) applies immediately and
-        /// leaves PendingUpgrade null; one that needs a sub-choice
-        /// (Replace/Dupliquer/Recolorer) or a Grid-pool upgrade (needs a
-        /// tile choice, see PendingUpgradeTileCandidates) leaves
+        /// section it came from (Blister or Casino). A Bank-pool upgrade
+        /// with no sub-choice (Joker) applies immediately and leaves
+        /// PendingUpgrade null; one that needs a sub-choice
+        /// (Replace/Dupliquer/Recolorer) or a Grid-pool upgrade leaves
         /// PendingUpgrade set until <see cref="ResolveUpgradeSubChoice"/>/
-        /// <see cref="ResolveUpgradeTileChoice"/> finishes it — nothing
-        /// else in the shop can be done meanwhile.
+        /// <see cref="ResolveUpgradeTileChoice"/> finishes it.
         /// </summary>
         private bool ApplyPurchasedUpgrade(UpgradeDefinition upgrade)
         {
@@ -2990,13 +2673,11 @@ namespace Contigu.Core
                 return true;
             }
 
-            // Random Piece is Bank pool WITH a sub-choice, like Replace/
-            // Dupliquer/Recolorer below, but its candidates are freshly
-            // rolled pieces rather than existing deck types — handled by
-            // its own Pending*/Resolve* pair (see PendingUpgradePieceCandidates/
-            // ResolveUpgradePieceChoice) instead of falling into the
-            // generic RequiresSubChoice branch just below, which only
-            // knows how to populate PendingUpgradeTypeCandidates.
+            // Random Piece is Bank pool with a sub-choice, like Replace/
+            // Dupliquer/Recolorer below, but its candidates are freshly rolled
+            // pieces rather than existing deck types - handled by its own
+            // Pending*/Resolve* pair (see PendingUpgradePieceCandidates/
+            // ResolveUpgradePieceChoice).
             if (upgrade.Id == UpgradeId.RandomPiece)
             {
                 PendingUpgrade = upgrade;
@@ -3004,12 +2685,10 @@ namespace Contigu.Core
                 return true;
             }
 
-            // Modifier Upgrade is a THIRD distinct Bank sub-choice shape —
-            // unlike Retirer/Dupliquer/Recolorer (pick a deck TYPE) and
-            // Random Piece (pick from freshly-rolled candidates), its
+            // Modifier Upgrade is a third distinct Bank sub-choice shape - its
             // candidates are simply every slot the player already owns
-            // (ActiveModifiers itself), so there's no Pending*Candidates
-            // list to populate here at all — see ResolveModifierUpgradeChoice.
+            // (ActiveModifiers itself), so there's no Pending*Candidates list
+            // to populate here (see ResolveModifierUpgradeChoice).
             if (upgrade.Id == UpgradeId.ModifierUpgrade)
             {
                 PendingUpgrade = upgrade;
@@ -3023,15 +2702,11 @@ namespace Contigu.Core
                 return true;
             }
 
-            // The remaining upgrades with RequiresSubChoice false — Joker
-            // (Bank pool), Random Modifier (Modifier pool), Piece Mastery
-            // and Color Mastery (Mastery pool) — apply through their own
-            // dedicated path (ApplyJoker / GrantRandomModifier /
+            // The remaining upgrades with RequiresSubChoice false apply through
+            // their own dedicated path (ApplyJoker / GrantRandomModifier /
             // GrantShapeMastery / GrantColorMastery, not a generic Apply) so
-            // the actual thing rolled can be surfaced (LastJokerShapeAdded /
-            // LastRandomModifierGranted / LastShapeMasteryGranted /
-            // LastColorMasteryGranted) for the reveal to show (see
-            // UpgradeRevealView / ShapeCarouselView / ColorCarouselView)
+            // the actual thing rolled can be surfaced for the reveal to show
+            // (see UpgradeRevealView / ShapeCarouselView / ColorCarouselView)
             // instead of just naming the upgrade.
             if (upgrade.Id == UpgradeId.JokerPiece)
             {
@@ -3056,13 +2731,9 @@ namespace Contigu.Core
         /// <summary>
         /// Debug-only helper: exercises the exact same effect + reveal-
         /// surfacing (LastRandomModifierGranted) that buying the "Random
-        /// Modifier" upgrade for real would (see BuyUpgradeSlot), without
-        /// needing to find/afford/click it in the shop first — on explicit
-        /// report ("Encore une fois je ne les ai pas vu en plus d'une
-        /// vingtaine [rerolls]") lets the purchase+grant+reveal pipeline be
-        /// tested directly, decoupled from the shop's own roll odds and its
-        /// "mystery box" card (which never shows an upgrade's real name
-        /// before purchase in the first place — see ShopView.BuildUpgradeCard).
+        /// Modifier" upgrade for real would, without needing to
+        /// find/afford/click it in the shop first.
+        /// </summary>
         /// </summary>
         public ModifierId? DebugTriggerRandomModifierGrant()
         {
@@ -3070,14 +2741,14 @@ namespace Contigu.Core
             return LastRandomModifierGranted;
         }
 
-        /// <summary>Debug-only helper: exercises "Piece Mastery"'s exact grant (GrantShapeMastery), bypassing the shop entirely — same rationale as DebugTriggerRandomModifierGrant, and useful here too since which shape gets offered is otherwise left to the shop's own roll.</summary>
+        /// <summary>Debug-only helper: exercises "Piece Mastery"'s exact grant (GrantShapeMastery), bypassing the shop entirely.</summary>
         public ShapeId DebugTriggerShapeMasteryGrant()
         {
             LastShapeMasteryGranted = GrantShapeMastery();
             return LastShapeMasteryGranted.Value;
         }
 
-        /// <summary>Debug-only helper: exercises "Color Mastery"'s exact grant (GrantColorMastery), bypassing the shop entirely — same rationale as DebugTriggerShapeMasteryGrant.</summary>
+        /// <summary>Debug-only helper: exercises "Color Mastery"'s exact grant (GrantColorMastery), bypassing the shop entirely.</summary>
         public PieceColor DebugTriggerColorMasteryGrant()
         {
             LastColorMasteryGranted = GrantColorMastery();
@@ -3085,16 +2756,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Debug-only helper: overwrites upgrade slot <paramref name="index"/>
-        /// (default 0) to be "Random Modifier" outright, bypassing the
-        /// shop's own roll — unlike DebugTriggerRandomModifierGrant above,
-        /// this goes through the REAL purchase button (BuyUpgradeSlot, via
-        /// ShopView's own "Buy" click), exercising its exact branching
-        /// instead of skipping straight to GrantRandomModifier — on explicit
-        /// report that it still never showed up after nearly 20 real
-        /// purchases even though the debug-triggered grant worked fine, to
-        /// rule in/out a bug specific to BuyUpgradeSlot's own code path.
-        /// No-op (false) if the shop isn't currently open.
+        /// Debug-only helper: overwrites upgrade slot <paramref
+        /// name="index"/> (default 0) to be "Random Modifier" outright,
+        /// bypassing the shop's own roll - unlike
+        /// DebugTriggerRandomModifierGrant above, this goes through the real
+        /// purchase button (BuyUpgradeSlot), exercising its exact branching
+        /// instead of skipping straight to GrantRandomModifier. No-op
+        /// (false) if the shop isn't currently open.
         /// </summary>
         public bool DebugForceUpgradeSlotToRandomModifier(int index = 0)
         {
@@ -3107,15 +2775,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Debug-only helper: overwrites Blister slot <paramref name="index"/>
-        /// (default 0) to hold <paramref name="modifierId"/> outright,
-        /// bypassing the shop's own roll — lets a test buy a SPECIFIC
-        /// modifier through the real purchase path (BuyBlisterSlot,
-        /// exercising e.g. Copieur's purchase-time copy logic) without
-        /// rerolling into it, which the Blister section no longer supports
-        /// once rolled (RerollShop only ever touches Casino — explicit
-        /// request: "le bouton reroll ne reroll pas la section 'blister'").
-        /// No-op (false) if the shop isn't currently open.
+        /// Debug-only helper: overwrites Blister slot <paramref
+        /// name="index"/> (default 0) to hold <paramref
+        /// name="modifierId"/> outright, bypassing the shop's own roll -
+        /// lets a test buy a specific modifier through the real purchase
+        /// path (BuyBlisterSlot), which RerollShop can't reach into since it
+        /// only ever touches Casino. No-op (false) if the shop isn't
+        /// currently open.
         /// </summary>
         public bool DebugForceBlisterSlotToModifier(ModifierId modifierId, int index = 0)
         {
@@ -3128,18 +2794,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Random Modifier" upgrade's actual effect (see UpgradeCatalog.
-        /// RandomModifier) — grants one uniformly random modifier the player
-        /// doesn't already hold, from the same catalog RollBlisterSlot
-        /// draws from, minus its "already offered this shop visit" exclusion
-        /// (irrelevant here — nothing is being offered for sale, it's
-        /// granted outright). Updates _lastPurchasedModifierId the same way
-        /// a direct modifier-slot purchase does, so a Copieur bought right
-        /// after can copy whatever this gamble happened to grant. Returns
-        /// null — grants nothing, though the Lueur already spent on the
-        /// upgrade itself is not refunded — if the player is already at
-        /// EconomyConstants.MaxActiveModifiers or (practically impossible)
-        /// already holds every modifier in the catalog.
+        /// "Random Modifier" upgrade's actual effect - grants one uniformly
+        /// random modifier the player doesn't already hold, from the same
+        /// catalog RollBlisterSlot draws from, minus its "already offered
+        /// this shop visit" exclusion. Updates _lastPurchasedModifierId the
+        /// same way a direct modifier-slot purchase does. Returns null -
+        /// grants nothing, though the Lueur already spent is not refunded -
+        /// if the player is already at EconomyConstants.MaxActiveModifiers
+        /// or already holds every modifier in the catalog.
         /// </summary>
         private ModifierId? GrantRandomModifier()
         {
@@ -3167,14 +2829,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Piece Mastery": picks a random exact shape (uniform over all 8 —
-        /// no exclusion, unlike GrantRandomModifier, since a shape can
-        /// always be leveled up further) and levels it up by a random
-        /// amount from 1 to <see cref="EconomyConstants.MasteryUpgradeMaxLevelGain"/>
-        /// (explicit request: "Pour les upgrades mastery j'aimerais qu'on
-        /// donne aléatoirement 1, 2 ou 3 niveau" — was always exactly 1).
-        /// Always succeeds — there's no cap to hit, so unlike
-        /// GrantRandomModifier this never returns null.
+        /// "Piece Mastery": picks a random exact shape (uniform over all 8 -
+        /// no exclusion, since a shape can always be leveled up further) and
+        /// levels it up by a random amount from 1 to <see
+        /// cref="EconomyConstants.MasteryUpgradeMaxLevelGain"/>. Always
+        /// succeeds - there's no cap to hit.
         /// </summary>
         private ShapeId GrantShapeMastery()
         {
@@ -3185,7 +2844,7 @@ namespace Contigu.Core
             return picked;
         }
 
-        /// <summary>"Color Mastery": Piece Mastery's exact sibling — picks a random BASE color (PieceColorUtility.BaseColors, so never Joker) and levels it up by the same random 1-to-<see cref="EconomyConstants.MasteryUpgradeMaxLevelGain"/> amount. Always succeeds, same as GrantShapeMastery.</summary>
+        /// <summary>"Color Mastery": Piece Mastery's exact sibling - picks a random base color (PieceColorUtility.BaseColors, never Joker) and levels it up by the same random amount. Always succeeds.</summary>
         private PieceColor GrantColorMastery()
         {
             var colors = PieceColorUtility.BaseColors;
@@ -3259,26 +2918,17 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Refreshes every CASINO slot — purchased or not — with a new
-        /// random offer. Never touches the Blister section (explicit
-        /// request: "le bouton reroll ne reroll pas la section 'blister'")
-        /// — Blister already shows its exact contents up front, so a
-        /// reroll there would just be "pay Lueur to see 3 different exact
-        /// items," a very different (and not requested) kind of purchase
-        /// from Casino's "pay Lueur to try your luck at the mystery box
-        /// again." Used to only touch still-unsold CASINO slots (leaving a
-        /// "SOLD" one exactly as it was), but on explicit feedback that
-        /// read as reroll silently doing nothing whenever most of the shop
-        /// had already been bought: "mes upgrades et modifiers que j'ai
-        /// acheté sont encore marqué sold, il faut que j'aie tout de
-        /// disponible". Buying a slot still permanently grants whatever it
-        /// held (the upgrade is already applied by then) — this only
-        /// replaces the SLOT OFFER itself, giving the player a fresh
+        /// Refreshes every Casino slot - purchased or not - with a new
+        /// random offer. Never touches the Blister section: it already
+        /// shows its exact contents up front, so a reroll there would just
+        /// be "pay Lueur to see 3 different exact items," a very different
+        /// kind of purchase from Casino's "pay Lueur to try your luck at the
+        /// mystery box again." Buying a slot still permanently grants
+        /// whatever it held (the upgrade is already applied by then) - this
+        /// only replaces the slot offer itself, giving the player a fresh
         /// purchasable pick where a spent one used to sit. Costs Lueur (see
         /// GetRerollPrice), escalating only from further rerolls this same
-        /// visit (see _rerollsThisVisit) — no longer from slot purchases,
-        /// on explicit report: "Les reroll devraient augmenter de prix
-        /// seulement lorsqu'on reroll".
+        /// visit (see _rerollsThisVisit), not from slot purchases.
         /// </summary>
         public bool RerollShop()
         {

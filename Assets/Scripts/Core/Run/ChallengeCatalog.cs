@@ -1,13 +1,9 @@
 namespace Contigu.Core
 {
     /// <summary>
-    /// The 3 selectable challenges (spec extension, explicit request:
-    /// "Meta progression avec différents challenge qui offrent différents
-    /// boss et état de depart", scoped down from "everything unlockable"
-    /// to a concrete first pass, confirmed by the player: "Oui, bon point
-    /// de départ"). Classic is always available; Marathon/Chaos need
-    /// Stars (see MetaStats.Stars/IsUnlocked, MetaStatsRecorder.
-    /// TryUnlockChallenge).
+    /// The 3 selectable challenges. Classic is always available;
+    /// Marathon/Chaos need Stars (see MetaStats.Stars/IsUnlocked,
+    /// MetaStatsRecorder.TryUnlockChallenge).
     /// </summary>
     public static class ChallengeCatalog
     {

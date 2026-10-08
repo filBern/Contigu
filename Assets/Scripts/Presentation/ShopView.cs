@@ -8,41 +8,28 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Between-round Lueur shop. Redesigned (explicit request: "au lieu
-    /// d'une section modifiers et d'une section upgrade, j'aimerais qu'on
-    /// ait une section 'blister'... la section 'casino' avec ce que l'on a
-    /// déjà comme section upgrade") from the old separate modifier/upgrade
-    /// sections into two differently-themed ones: "Blister" (3 slots, a
-    /// modifier OR upgrade drawn from one shared bag — see RunManager.
-    /// RollBlisterSlot — always shown plainly, exactly like the old
-    /// modifier slots were) and "Casino" (2 slots, the original mystery-box
-    /// upgrade section, unchanged — only its UpgradePool is shown until
-    /// bought). Reroll only refreshes Casino (explicit request: "le bouton
-    /// reroll ne reroll pas la section 'blister'") — Blister already shows
-    /// its exact contents up front, so rerolling it would be a different
-    /// kind of purchase than "try the mystery box again." The player can
-    /// buy as many slots as they can afford, in any order, then leave when
-    /// ready — nothing here is a forced single pick like the old draft was.
+    /// Between-round Lueur shop, split into two sections: "Blister" (3 slots,
+    /// a modifier or upgrade drawn from one shared bag, see RunManager.
+    /// RollBlisterSlot, always shown plainly) and "Casino" (2 slots, a
+    /// mystery-box upgrade section where only the UpgradePool is shown until
+    /// bought). Reroll only refreshes Casino, since Blister already shows its
+    /// exact contents up front. The player can buy as many slots as they can
+    /// afford, in any order, then leave when ready.
     /// </summary>
     public sealed class ShopView : MonoBehaviour
     {
         private const float CardWidth = 190f;
-        // Casino ("mystery box") cards only — Blister cards now size
-        // themselves dynamically to fit their name/description, see
-        // BuildBlisterCards.
+        // Casino cards only — Blister cards size themselves dynamically to
+        // fit their name/description, see BuildBlisterCards.
         private const float CardHeight = 200f;
         private const float BadgeSize = 90f;
         private const float BuyButtonHeight = 36f;
         private const float BuyButtonBottomMargin = 12f;
 
-        // Blister card layout (on explicit request: "on peut rajouter le
-        // nom en haut de l'icon et sa description sous son icon" — the card
-        // used to show only the badge + buy button, name/description only
-        // ever appeared in the hover tooltip). Shared by both a Modifier-
-        // kind slot (name/badge/description, via ModifierCardFactory) and
-        // an Upgrade-kind slot (name/rarity+pool swatch/description, via
-        // BuildBlisterUpgradeCard) so the whole row lands on one uniform
-        // height regardless of the mix.
+        // Blister card layout, shared by both a Modifier-kind slot (name/
+        // badge/description, via ModifierCardFactory) and an Upgrade-kind
+        // slot (name/rarity+pool swatch/description, via BuildBlisterUpgradeCard)
+        // so the whole row lands on one uniform height regardless of the mix.
         private const float ModifierCardTopPadding = 10f;
         private const float ModifierCardGap = 6f;
         private const float ModifierNameHeight = 26f;
@@ -57,22 +44,16 @@ namespace Contigu.Presentation
         public event Action LeaveRequested;
 
         // Where the Blister card row starts (top pivot), and the 2 gaps
-        // reused below to place the "Casino" section under it — its own Y
-        // used to be a fixed -344f assuming a fixed CardHeight, which
-        // overlapped the Blister cards once those grew tall enough to fit
-        // a name + description (bug report: "il y a des overlaps entre
-        // modifiers et upgrades"). It's now placed right after however
-        // tall the Blister row actually turns out to be this refresh.
+        // reused below to place the "Casino" section under it. The Casino
+        // section is placed right after however tall the Blister row
+        // actually turns out to be this refresh, since Blister card height
+        // varies with description length.
         private const float ModifierCardsTopY = -124f;
         private const float SectionGap = 20f;
         private const float LabelToCardsGap = 24f;
 
-        // Slow, gentle scale wobble on the Lueur readout (explicit request:
-        // "Il devrait aussi pulse en grosseur un peu tranquillement pour le
-        // mettre en valeur") — same sine-wave technique as GameBootstrap's
-        // PulseStatusText, tuned a bit slower/subtler than that one's own
-        // 0.05/1.5 since this number needs to stay legible, not just catch
-        // the eye.
+        // Slow, gentle scale wobble on the Lueur readout, same sine-wave
+        // technique as GameBootstrap's PulseStatusText.
         private const float LueurPulseAmplitude = 0.06f;
         private const float LueurPulseSpeed = 1.1f;
 
@@ -103,26 +84,10 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -24f);
             header.rectTransform.sizeDelta = new Vector2(900f, 36f);
 
-            // Same "diamond icon instead of a 'Lueur: ' text prefix" treatment
-            // as HudView's own Lueur readout (explicit request, after seeing
-            // the itch page mockups: "au lieu de marquer Lueur: ... mettre le
-            // petit losange orange") — kept consistent across every screen
-            // that shows this currency rather than fixing only the HUD.
-            // Moved to the right edge and enlarged well past HudView's own
-            // 44pt (explicit report, with a screenshot circling the shop's
-            // empty right-hand side: "le compteur de lueur devrait être à
-            // droite en gros pour qu'il soit clairement identifiable") — the
-            // shop is the one screen where the player actually SPENDS it, so
-            // it deserves to read as the single most prominent number on
-            // screen. Re-centered vertically and enlarged again, plus a slow
-            // pulse (see PulseLueurLabel), on immediate explicit follow-up
-            // once that first pass was seen in place: "Le nombre de lueur
-            // doit être plus gros et centré verticalement dans le shop. Il
-            // devrait aussi pulse en grosseur un peu tranquillement pour le
-            // mettre en valeur". Nudged further left on a further explicit
-            // follow-up ("Le compteur de lueur dans le shop devrait être un
-            // peu plus a gauche") — was sitting flush against the right
-            // edge.
+            // Diamond icon instead of a "Lueur: " text prefix, consistent
+            // with HudView's own readout. Larger here than in the HUD, with
+            // a slow pulse (see PulseLueurLabel) since this is the one
+            // screen where the player actually spends it.
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
             _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
             _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
@@ -184,10 +149,8 @@ namespace Contigu.Presentation
             leaveRect.sizeDelta = new Vector2(220f, 46f);
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
-            // Tab opens the deck view from the shop too (on explicit
-            // request: the hint shown on the main game screen — see
-            // HudView — needed here as well since the shop is its own
-            // separate overlay).
+            // Tab opens the deck view from the shop too, since the shop is
+            // its own separate overlay (same hint HudView shows).
             var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view piece deck", 14, UITheme.TextMutedOnBackground);
             var deckHintRect = deckHint.rectTransform;
             deckHintRect.anchorMin = new Vector2(0f, 0f);
@@ -242,7 +205,7 @@ namespace Contigu.Presentation
             _lueurContainer.localScale = Vector3.one;
         }
 
-        /// <summary>Continuous, gentle sine-wave scale wobble on the Lueur readout, same technique as GameBootstrap.PulseStatusText — runs only while the shop is actually open (started/stopped by Show/Hide), so it doesn't keep ticking uselessly in the background between shop visits.</summary>
+        /// <summary>Continuous sine-wave scale wobble on the Lueur readout. Runs only while the shop is open, started/stopped by Show/Hide.</summary>
         private System.Collections.IEnumerator PulseLueurLabel()
         {
             while (true)
@@ -285,17 +248,12 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Builds all Blister cards (a mix of Modifier-kind and Upgrade-kind
-        /// slots, see RunManager.ShopBlisterSlots) in 2 passes so they share
-        /// one uniform height even though each card's description text is a
-        /// different length: pass 1 builds every card and measures its own
-        /// description's natural (wrapped) height via Text.preferredHeight-
-        /// style generation settings (same technique as
-        /// UpgradeCardFactory.PreferredHeight); pass 2 applies the tallest
-        /// one found to every card and its description box, so the buy
-        /// button always lands at the same Y across the row regardless of
-        /// which items are currently offered or their mix. Returns that
-        /// shared card height so the caller can place whatever comes below
-        /// the row (the "Casino" section) without overlapping it.
+        /// slots) in 2 passes so they share one uniform height despite
+        /// differing description lengths: pass 1 builds every card and
+        /// measures its description's natural wrapped height; pass 2 applies
+        /// the tallest one found to every card so the buy button always
+        /// lands at the same Y. Returns that shared card height so the
+        /// caller can place the Casino section below it without overlapping.
         /// </summary>
         private float BuildBlisterCards(RunManager run)
         {
@@ -333,12 +291,12 @@ namespace Contigu.Presentation
             return cardHeight;
         }
 
-        /// <summary>Builds one Blister card's contents (name, bare icon or rarity swatch, description, buy button) and returns its description's own natural height — <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildBlisterCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height. Dispatches on the slot's Kind — a Blister slot's identity is always fully shown, modifier or upgrade alike (explicit request: "on aperçoit 3 modifiers ou upgrades"), unlike a Casino slot.</summary>
+        /// <summary>Builds one Blister card's contents (name, bare icon or rarity swatch, description, buy button) and returns its description's natural height. <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildBlisterCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height.</summary>
         private float BuildBlisterCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
         {
             var slot = run.ShopBlisterSlots[index];
             var card = UIFactory.CreateSlicedImage(_blisterCardsContainer, "BlisterSlot_" + index, UISprites.CardBackground);
-            card.color = UITheme.Panel; // card_bg_3 tinted darker (explicit request), instead of the flat PanelLight fill it used before
+            card.color = UITheme.Panel;
             cardRect = card.rectTransform;
             cardRect.sizeDelta = new Vector2(CardWidth, 0f);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
@@ -365,7 +323,7 @@ namespace Contigu.Presentation
             return descHeight;
         }
 
-        /// <summary>A Blister modifier card's contents — identical to the old, only-ever-modifiers card: name, bare icon, description. No colored background behind the badge (explicit request: "enlever le carré coloré derrière l'icon") and no hover tooltip (explicit request: "Pas besoin du tooltip sur les modifiers qu'on peut acheter dans le shop, seulement dans notre liste de modifiers possédé") — the card already shows its own name/description as static text, so both read as redundant. See ModifierCardFactory for the shared visual (also used by UpgradeRevealView's Random Modifier reveal).</summary>
+        /// <summary>A Blister modifier card's contents: name, bare icon, description. No hover tooltip, since the card already shows name/description as static text. See ModifierCardFactory for the shared visual (also used by UpgradeRevealView's Random Modifier reveal).</summary>
         private float BuildBlisterModifierCardContents(Transform cardTransform, ModifierId modifierId, out RectTransform descRect)
         {
             var def = ModifierCatalog.Get(modifierId);
@@ -374,14 +332,10 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// A Blister upgrade card's contents — mirrors ModifierCardFactory.
-        /// BuildContents' exact layout (same TopPadding/NameHeight/Gap/
-        /// BadgeSize) so a row mixing modifier and upgrade cards still
-        /// shares one uniform height, but shows the upgrade's real name and
-        /// description plainly instead of a "?" mystery hint — unlike a
-        /// Casino card, a Blister slot's identity is never hidden. In place
-        /// of a modifier's icon, a rarity-colored swatch names the
-        /// upgrade's pool ("Piece Upgrade"/"Tile Upgrade" — see
-        /// UpgradeVisualDefaults), since upgrades have no per-item icon art.
+        /// BuildContents' layout (TopPadding/NameHeight/Gap/BadgeSize) so a
+        /// row mixing modifier and upgrade cards shares one uniform height.
+        /// Shows the upgrade's real name/description plainly, with a
+        /// rarity-colored swatch naming its pool in place of a per-item icon.
         /// </summary>
         private float BuildBlisterUpgradeCardContents(Transform cardTransform, UpgradeDefinition def, out RectTransform descRect)
         {
@@ -423,7 +377,7 @@ namespace Contigu.Presentation
         {
             var slot = run.ShopUpgradeSlots[index];
             var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
-            card.color = UITheme.Panel; // card_bg_3 tinted darker (explicit request), instead of the flat PanelLight fill it used before
+            card.color = UITheme.Panel;
             card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
@@ -436,19 +390,11 @@ namespace Contigu.Presentation
             }
 
             // Mystery box — only the pool is shown, never the specific
-            // upgrade (spec: "tout ce que tu sais c'est l'upgrade se situe
-            // dans quel UpgradePool"), even once purchased (the reveal
-            // happens in the follow-up sub-choice/tile-choice overlay
-            // instead, not on this card). Random Modifier is the one
-            // exception (explicit request, while validating its boosted
-            // odds: "je veux que ce soit marqué random modifier") — it's
-            // named outright instead of showing the generic Bank-pool
-            // "Piece upgrade" label.
+            // upgrade, even once purchased (the reveal happens in the
+            // follow-up sub-choice/tile-choice overlay). Random Modifier is
+            // named outright instead of showing the generic pool label.
             bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
-            // GetPoolLabel already ends in "Upgrade" ("Piece Upgrade", "Tile
-            // Upgrade", and now "Mastery Upgrade" once Mastery got its own
-            // pool) — no longer appending a second, redundant " upgrade"
-            // (was rendering as e.g. "Piece Upgrade upgrade" on this card).
+            // GetPoolLabel already ends in "Upgrade", so it isn't appended again here.
             string cardLabel = isRandomModifier ? "Random modifier" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
             var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -465,16 +411,10 @@ namespace Contigu.Presentation
             mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
 
             int price = run.GetUpgradeSlotPrice(index);
-            // Random Modifier is the one upgrade that respects the
-            // modifier cap (explicit report: "si le joueur a un random
-            // modifier comme upgrade et qu'il est full il ne devrait pas
-            // pouvoir l'acheter") — buying it while already full used to
-            // still charge Lueur and grant nothing (see RunManager.
-            // BuyUpgradeSlot). Every other upgrade ignores the cap.
+            // Random Modifier is the one upgrade that respects the modifier
+            // cap; every other upgrade ignores it (see RunManager.BuyUpgradeSlot).
             bool atModifierCap = isRandomModifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            // Modifier Upgrade needs an already-owned modifier to level up
-            // — same "don't sell it with nothing for it to do" precedent
-            // as the cap check above (see RunManager.BuyUpgradeSlot).
+            // Modifier Upgrade needs an already-owned modifier to level up.
             bool isModifierUpgrade = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.ModifierUpgrade;
             bool hasNoModifiersToUpgrade = isModifierUpgrade && run.ActiveModifiers.Count == 0;
             bool blocked = atModifierCap || hasNoModifiersToUpgrade;
@@ -516,7 +456,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>The buy button showed "Buy (123)" as plain text; now it shows the same gold-diamond Lueur icon + number used everywhere else this currency appears (explicit request: "au lieu d'afficher Buy, met l'icon de lueuer"), leaving "Sold" as plain text since there's no price left to show once purchased.</summary>
+        /// <summary>Shows the gold-diamond Lueur icon + price, matching every other place this currency appears; "Sold" is plain text once purchased.</summary>
         private static void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool interactable, Action onClick)
         {
             var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);

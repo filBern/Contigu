@@ -5,13 +5,11 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Builds one modifier's card contents (name, bare icon, description) onto
-    /// an already-created card background — the shared visual ShopView's own
-    /// modifier slots use (background/outline/buy button stay the caller's
-    /// responsibility, since only the shop needs those). Factored out so
-    /// UpgradeRevealView's "you got a Random Modifier" reveal can show the
-    /// granted modifier the same way instead of the bare text label it used
-    /// before (explicit request: "tu peux afficher comme une carte du shop").
+    /// Builds one modifier's card contents (name, bare icon, description)
+    /// onto an already-created card background — the shared visual
+    /// ShopView's modifier slots use (background/outline/buy button stay
+    /// the caller's responsibility). Also used by UpgradeRevealView's
+    /// "Random Modifier" reveal.
     /// </summary>
     public static class ModifierCardFactory
     {
@@ -22,7 +20,7 @@ namespace Contigu.Presentation
         private const int NameFontSize = 16;
         private const int DescFontSize = 12;
 
-        /// <summary>Adds the name label, bare badge, and description text onto <paramref name="cardTransform"/> at <paramref name="width"/>, and returns the description's own natural (unclamped) preferred height — same contract ShopView.BuildModifierCard used before this was extracted, so a caller placing several cards in a row can still sync them to a shared max height. <paramref name="badgeSize"/>/<paramref name="nameHeight"/>/<paramref name="nameFontSize"/>/<paramref name="descFontSize"/> default to the shop's own card sizing; UpgradeRevealView's Random Modifier reveal — the only place showing one modifier card alone rather than a row of several — passes bigger values (explicit request: "grossir la carte modifier dans cet écran là").</summary>
+        /// <summary>Adds the name label, bare badge, and description text onto <paramref name="cardTransform"/> at <paramref name="width"/>, and returns the description's natural (unclamped) preferred height, so a caller placing several cards in a row can sync them to a shared max height. <paramref name="badgeSize"/>/<paramref name="nameHeight"/>/<paramref name="nameFontSize"/>/<paramref name="descFontSize"/> default to the shop's own card sizing.</summary>
         public static float BuildContents(Transform cardTransform, ModifierDefinition def, TooltipView tooltip, float width, out RectTransform descRect,
             float badgeSize = BadgeSize, float nameHeight = NameHeight, int nameFontSize = NameFontSize, int descFontSize = DescFontSize)
         {

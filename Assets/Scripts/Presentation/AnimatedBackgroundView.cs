@@ -6,32 +6,18 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Slowly drifting, slowly rotating geometric shapes behind the whole
-    /// UI (spec extension, explicit request — first a "fond d'écran
-    /// dynamique, qui bouge un peu, un peu comme pour le jeu WordPlay",
-    /// then revised: "je n'aime pas le background, j'aimerais quelque
-    /// chose de plus geometrique qui joue avec les grosseurs et positions
-    /// de shapes et qui est légèrement plus clair que le plain background
-    /// qu'il y avait avant. On garde le plain background aussi comme
-    /// base" — the first pass' soft colored blur-edge blobs are replaced
-    /// here with crisp circles/squares/triangles/diamonds in varied sizes
-    /// and positions, all tinted a single tone-on-tone shade of
-    /// UITheme.Background rather than the game's own piece colors).
+    /// UI: crisp circles/squares/triangles/diamonds in varied sizes and
+    /// positions, tinted a single tone-on-tone shade of UITheme.Background.
     ///
     /// Built as a direct child of the Canvas, right after the flat
-    /// Background panel and before MainRoot (see
-    /// GameBootstrap.BuildCanvas) — that flat panel is kept as the base
-    /// layer underneath, per the explicit "on garde le plain background
-    /// aussi comme base" — so every shape sits ABOVE the flat fill but
-    /// BELOW every real UI element: it only ever shows through the
-    /// negative space around the grid/HUD/hand, never over anything the
-    /// player reads.
+    /// Background panel and before MainRoot (see GameBootstrap.BuildCanvas),
+    /// so every shape sits above the flat fill but below every real UI
+    /// element: it only shows through the negative space around the
+    /// grid/HUD/hand, never over anything the player reads.
     /// </summary>
     public sealed class AnimatedBackgroundView : MonoBehaviour
     {
-        // Slightly lighter than the flat UITheme.Background fill it sits
-        // on top of ("légèrement plus clair que le plain background"), at
-        // a low alpha so overlapping shapes read as subtle layered depth
-        // rather than flat opaque stickers.
+        // Slightly lighter than the flat UITheme.Background fill it sits on top of, at a low alpha so overlapping shapes read as subtle layered depth rather than flat opaque stickers.
         private const float LightenAmount = 0.16f;
         private const float ShapeAlpha = 0.5f;
 
@@ -45,14 +31,7 @@ namespace Contigu.Presentation
             public float RotationDegreesPerSecond;
         }
 
-        // One entry per shape: which silhouette (see BackgroundShapeFactory
-        // — the PieceColor here is purely a shape selector), its size, base
-        // position, drift amplitude/period/phase (so no two shapes move in
-        // sync), and a slow rotation speed — "joue avec les grosseurs et
-        // positions de shapes", spread across the 1280x800 reference
-        // canvas mostly in the margins around the central grid/HUD/hand
-        // column, plus a couple of small ones tucked closer to center
-        // (harmless — anything covered by real UI just never shows).
+        // One entry per shape: which silhouette (see BackgroundShapeFactory; the PieceColor here is purely a shape selector), its size, base position, drift amplitude/period/phase (so no two shapes move in sync), and a slow rotation speed.
         private static readonly (PieceColor Shape, float Size, Vector2 Center, Vector2 Amplitude, Vector2 Period, Vector2 Phase, float RotationSpeed)[] Specs =
         {
             (PieceColor.Coral, 260f, new Vector2(-480f, 280f), new Vector2(70f, 60f), new Vector2(24f, 30f), new Vector2(0f, 1.3f), 2.5f),

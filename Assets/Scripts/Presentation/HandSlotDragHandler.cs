@@ -4,14 +4,13 @@ using UnityEngine.EventSystems;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Attached to one hand slot (see HandView) — forwards uGUI drag events to
-    /// the owning HandView, which handles selecting the slot, showing a ghost
-    /// preview that follows the pointer, and (via GridCellView.OnDrop) placing
-    /// the piece when the pointer is released over a valid grid cell. Coexists
-    /// with the slot's own Button/click handling: Unity's EventSystem only
-    /// fires OnBeginDrag once the pointer moves past its drag threshold, so a
-    /// quick tap still resolves as a plain click (the older toggle-select flow
-    /// some players may still reach for) rather than a drag.
+    /// Attached to one hand slot (see HandView), forwarding uGUI drag events
+    /// to the owning HandView, which handles selecting the slot, showing a
+    /// ghost preview that follows the pointer, and (via GridCellView.OnDrop)
+    /// placing the piece when the pointer is released over a valid grid
+    /// cell. Coexists with the slot's own Button/click handling: Unity's
+    /// EventSystem only fires OnBeginDrag once the pointer moves past its
+    /// drag threshold, so a quick tap still resolves as a plain click.
     /// </summary>
     public sealed class HandSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {

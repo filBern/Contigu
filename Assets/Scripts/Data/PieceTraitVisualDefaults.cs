@@ -5,17 +5,14 @@ namespace Contigu.Data
 {
     /// <summary>
     /// Display defaults for a piece's enchanted-tile badge (see
-    /// Presentation.HandView/GridCellView) — same "no bespoke art yet, colored
-    /// chip + hover tooltip" approach as ModifierVisualDefaults, since the
-    /// badge itself is too small to carry more than a color. Golden/Blast/
-    /// Seeder share one color family (all score as golden), Multiplier/Beacon
-    /// share another (both double the group bonus) — the badge alone can't
-    /// tell those apart, which is exactly what the hover tooltip is for.
+    /// Presentation.HandView/GridCellView). Badges are too small to carry more
+    /// than a color, so traits that behave similarly share a badge color
+    /// (Golden/Blast/Seeder; Multiplier/Beacon) and the hover tooltip is what
+    /// distinguishes them.
     /// </summary>
     public static class PieceTraitVisualDefaults
     {
-        // Same v1 8-color palette as VisualDefaults/UITheme, kept as its own
-        // literal set here rather than referencing Presentation.UITheme —
+        // Kept as its own literal set rather than referencing Presentation.UITheme —
         // Contigu.Data must not depend on Contigu.Presentation (see README).
         private static readonly Color GoldenBadgeColor = new Color(0.941f, 0.702f, 0.553f); // #f0b38d
         private static readonly Color MultiplierBadgeColor = new Color(0.396f, 0.682f, 0.839f); // #65aed6
@@ -28,12 +25,9 @@ namespace Contigu.Data
         private static readonly Color BastionBadgeColor = new Color(0.380f, 0.263f, 0.388f); // #614363
         private static readonly Color KamikazeBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f (same family as Detonator/destruction)
 
-        // Joker-exclusive combat traits (see PieceTraitKind's own doc
-        // comment) all share Joker's own vivid purple (VisualDefaults.
-        // ColorMap[PieceColor.Joker]) rather than getting 5 new one-off
-        // colors — the badge is too small to tell 5 apart by hue anyway,
-        // and the shared color itself signals "this is a Joker thing" at a
-        // glance; the hover tooltip is what actually tells them apart.
+        // Joker-exclusive combat traits all share Joker's own color
+        // (VisualDefaults.ColorMap[PieceColor.Joker]); the hover tooltip
+        // is what distinguishes them from each other.
         private static readonly Color JokerCombatBadgeColor = new Color(0.608f, 0.349f, 0.714f); // #9b59b6
 
         public static string GetName(PieceTraitKind kind)

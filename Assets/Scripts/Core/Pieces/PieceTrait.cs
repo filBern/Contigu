@@ -24,8 +24,6 @@ namespace Contigu.Core
         /// <summary>"Seeder" — like <see cref="Golden"/>, but the golden flag isn't cleared right after scoring like every other trait: the grid cell stays golden for the rest of the CURRENT ROUND (cleared at the next round's reset — permanent for the whole run was too powerful).</summary>
         Seeder,
 
-        // ---- Second batch (7 more, on explicit request — see README) ----
-
         /// <summary>"Catalyst Tile" — scores extra points for every cell in this placement's scored group that was already on the grid before this placement (group size minus this piece's own cell count).</summary>
         Catalyst,
 
@@ -44,28 +42,23 @@ namespace Contigu.Core
         /// <summary>"Void Tile" — also clears one random already-filled, unlocked cell elsewhere on the grid (excluding this placement's own cells) when placed, scoring ScoringConstants.VoidBonusPerDestroyedCell for the broken tile.</summary>
         Void,
 
-        // ---- Third batch (2 more, on explicit request) ----
-
         /// <summary>"Bastion Tile" — once placed, this tile locks in place for the rest of the round: it's never cleared by a completed row/column, but it still scores the line-clear bonus every time one of those completes, as if it actually had been.</summary>
         Bastion,
 
         /// <summary>"Kamikaze Tile" — when placed, destroys itself and its 8 surrounding tiles (including this same placement's own other cells), scoring a flat bonus per tile actually destroyed.</summary>
         Kamikaze,
 
-        // ---- Joker-exclusive combat traits (explicit request: "J'aimerais
-        // que toutes les pièces jokers soient particulières avec tuiles
-        // upgradé, mais des upgrades qui affectent directement la manière
-        // de se battre") — unlike every trait above, these never score
-        // anything on their own: they only change WHICH enemy (or enemies)
-        // this placement's damage lands on during an active encounter (see
-        // RunManager.ApplyJokerCombatDamage), and are never offered through
-        // the ordinary tile-upgrade shop — every Joker piece is tagged with
-        // exactly one, rolled at random the moment it's added to the deck
-        // (see DeckManager.AddJoker). Visually, every CELL of the piece
-        // shows the badge (not just one, like the scoring traits above —
-        // see ShapePreviewFactory.Build/IsJokerCombatKind), but the effect
-        // itself still only fires once per placement regardless of the
-        // piece's cell count.
+        // Joker-exclusive combat traits — unlike every trait above, these
+        // never score anything on their own: they only change which enemy
+        // (or enemies) this placement's damage lands on during an active
+        // encounter (see RunManager.ApplyJokerCombatDamage), and are never
+        // offered through the ordinary tile-upgrade shop — every Joker
+        // piece is tagged with exactly one, rolled at random the moment
+        // it's added to the deck (see DeckManager.AddJoker). Visually,
+        // every cell of the piece shows the badge (not just one, like the
+        // scoring traits above — see ShapePreviewFactory.Build/IsJokerCombatKind),
+        // but the effect itself still only fires once per placement
+        // regardless of the piece's cell count.
 
         /// <summary>"Bombe" — splits this placement's damage EQUALLY across every alive enemy instead of just the front one.</summary>
         Bombe,
@@ -85,12 +78,12 @@ namespace Contigu.Core
 
     /// <summary>
     /// A one-time scoring enchantment tagged onto a single cell of a specific
-    /// <see cref="PieceToken"/> (spec 5.4 redesign: the upgrade marks a piece in
-    /// the deck rather than a fixed grid cell). <see cref="LocalCellIndex"/>
-    /// indexes into the piece's BASE (Deg0) shape's cell list — since
-    /// <see cref="PieceShapeCatalog.GetRotated"/> maps that list 1:1 across every
-    /// rotation, the same index still identifies the correct cell once the piece
-    /// is placed at whatever rotation it was actually dealt.
+    /// <see cref="PieceToken"/> — the upgrade marks a piece in the deck rather
+    /// than a fixed grid cell. <see cref="LocalCellIndex"/> indexes into the
+    /// piece's base (Deg0) shape's cell list — since <see
+    /// cref="PieceShapeCatalog.GetRotated"/> maps that list 1:1 across every
+    /// rotation, the same index still identifies the correct cell once the
+    /// piece is placed at whatever rotation it was actually dealt.
     /// </summary>
     public readonly struct PieceTrait
     {

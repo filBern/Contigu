@@ -3,21 +3,15 @@ using UnityEngine;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Converts a modifier slot's level (see RunManager.GetModifierLevel,
-    /// 1 by default — "un-leveled", today's exact behavior) into the
-    /// scoring multiplier the "Modifier Upgrade" shop upgrade grants
-    /// (spec extension, explicit request: "j'aimerais rajouter un type
-    /// d'upgrade dans le shop: Modifier upgrade, ce serait pour upgrader
-    /// un modifier que le joueur possède" — resolved, after clarifying the
-    /// options, as a generic level system: "chaque modifier gagne un
-    /// niveau qui multiplie son effet"). A single tunable constant here
-    /// scales every modifier in the catalog uniformly regardless of HOW
-    /// its own effect is expressed (flat bonus, xN multiplier, +Mult
-    /// additive, or Lueur) — see GridManager.ApplyPreClearModifiers/
-    /// ApplyPostClearModifiers and RunManager.ApplyDeckStateModifierBonuses/
-    /// ApplyHandSlotModifierBonus for where this actually gets applied,
-    /// generically, without touching any individual modifier's own
-    /// Apply* scoring logic.
+    /// Converts a modifier slot's level (see RunManager.GetModifierLevel, 1
+    /// by default — un-leveled) into the scoring multiplier the "Modifier
+    /// Upgrade" shop upgrade grants. A single tunable constant here scales
+    /// every modifier in the catalog uniformly regardless of how its own
+    /// effect is expressed (flat bonus, xN multiplier, +Mult additive, or
+    /// Lueur) — see GridManager.ApplyPreClearModifiers/ApplyPostClearModifiers
+    /// and RunManager.ApplyDeckStateModifierBonuses/ApplyHandSlotModifierBonus
+    /// for where this actually gets applied, generically, without touching
+    /// any individual modifier's own Apply* scoring logic.
     /// </summary>
     public static class ModifierLevelUtility
     {

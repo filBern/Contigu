@@ -7866,3 +7866,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Tests ajoutés dans `GridManagerModifierTests.cs` (Collection
     Chromatique, Cadence, Écho) et `EnemyEncounterTests.cs`
     (Siphon).
+- **Refonte des commentaires de code** : sur demande explicite
+  ("J'aimerais que tu fasse une refonte des commentaires dans le
+  code pour être plus concis et professionnel"). Les commentaires du
+  code (`Assets/Scripts/Core`, `Data`, `Presentation` — 90 fichiers)
+  citaient souvent les demandes verbatim, l'historique des valeurs
+  changées, les alternatives essayées et rejetées. Tout ça est
+  retiré : il ne reste que des notes techniques courtes (1-3 lignes)
+  sur un invariant ou un piège réellement non évident ; un
+  commentaire qui ne faisait que répéter ce que le code dit déjà
+  est supprimé. ~3484 lignes de commentaires retirées au total
+  (~14 %), zéro ligne de code touchée — vérifié indépendamment en
+  comparant le code dépouillé de ses commentaires avant/après sur
+  chaque fichier. Cet historique de décisions reste uniquement ici,
+  dans le README.

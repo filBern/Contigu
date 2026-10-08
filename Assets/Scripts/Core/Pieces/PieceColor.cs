@@ -2,9 +2,7 @@ using System.Collections.Generic;
 
 namespace Contigu.Core
 {
-    /// <summary>
-    /// The 4 base colors plus the Joker wildcard color (see spec section 4.4).
-    /// </summary>
+    /// <summary>The 4 base colors plus the Joker wildcard color.</summary>
     public enum PieceColor
     {
         Coral,

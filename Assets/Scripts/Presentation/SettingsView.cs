@@ -5,18 +5,10 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Settings overlay (spec extension, explicit request: "un menu
-    /// settings pour gérer le volume de musique, de sfx, général et une
-    /// checkbox pour daltonisme") — reachable any time via the Escape key,
-    /// same "always-available, not editor-only" convention as Tab/C/H (see
-    /// GameBootstrap.Update). Master/Music/SFX are real UnityEngine.UI.
-    /// Slider controls (the first in this codebase — every existing HUD bar
-    /// is a hand-rolled fill-rect instead) persisted via VolumeSettings;
-    /// only Master does anything audible today (see
-    /// GameBootstrap.ApplyVolumeSettings) since Contigu has no music/SFX
-    /// clips yet. The colorblind checkbox is a second, always-visible entry
-    /// point to the exact same ColorblindMode.Toggle() the C key already
-    /// calls — no separate state of its own.
+    /// Settings overlay, reachable any time via the Escape key. Master/Music/SFX are real
+    /// UnityEngine.UI.Slider controls persisted via VolumeSettings; only Master does anything audible today
+    /// (see GameBootstrap.ApplyVolumeSettings). The colorblind checkbox is a second entry point to the same
+    /// ColorblindMode.Toggle() the C key calls — no separate state of its own.
     /// </summary>
     public sealed class SettingsView : MonoBehaviour
     {
@@ -94,7 +86,7 @@ namespace Contigu.Presentation
             });
         }
 
-        /// <summary>Standard 3-part UnityEngine.UI.Slider anatomy (background/fill/handle) built entirely from Colorful UI sprites — the first real Slider in this codebase (every HUD bar elsewhere is a hand-rolled fill-rect instead, since none of them needed to be draggable).</summary>
+        /// <summary>Standard 3-part UnityEngine.UI.Slider anatomy (background/fill/handle).</summary>
         private static Slider BuildSlider(Transform parent, string name, Sprite fillSprite, float initialValue)
         {
             var root = UIFactory.CreateUIObject(name, parent);
@@ -131,7 +123,7 @@ namespace Contigu.Presentation
             return slider;
         }
 
-        /// <summary>A small square Button standing in for a checkbox (no checkmark sprite exists in the Colorful UI pack) — tinted UITheme.ButtonSelected plus a literal "X" label when checked, both driven straight off ColorblindMode.IsEnabled/Toggle(), the exact same state the C key already reads and flips.</summary>
+        /// <summary>A small square Button standing in for a checkbox — tinted and shows an "X" label when checked, driven off ColorblindMode.IsEnabled/Toggle().</summary>
         private static void BuildColorblindRow(Transform parent, float y)
         {
             var labelText = UIFactory.CreateText(parent, "ColorblindLabel", "Colorblind Mode", 18, UITheme.TextOnBackground, TextAnchor.MiddleRight);

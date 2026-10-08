@@ -9,7 +9,7 @@ namespace Contigu.Core
     /// </summary>
     public static class MetaStatsRecorder
     {
-        /// <summary>+1 Star per round actually cleared, on top of a flat bonus for a true victory — on explicit request ("Meta progression avec différents challenge..."): Stars are what unlocks Marathon/Chaos (see ChallengeCatalog/TryUnlockChallenge below), earned by playing rather than bought.</summary>
+        /// <summary>+1 Star per round actually cleared, on top of a flat bonus for a true victory — Stars are what unlocks Marathon/Chaos (see ChallengeCatalog/TryUnlockChallenge below), earned by playing rather than bought.</summary>
         private const int VictoryBonusStars = 2;
 
         /// <summary>

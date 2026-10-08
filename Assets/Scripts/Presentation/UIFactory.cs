@@ -12,19 +12,11 @@ namespace Contigu.Presentation
         private static Font _cachedFont;
 
         /// <summary>
-        /// The "Colorful UI" pack's own "Digitalt" font (Assets/Resources/
-        /// Colorful_UI/colorful/font/), used everywhere text is created
-        /// (titles, labels, buttons, and description paragraphs alike) —
-        /// briefly swapped for Unity's built-in font during the DA reskin,
-        /// reverted back on explicit correction ("La font est la
-        /// Assets/Resources/Colorful_UI/colorful/font"). What read as an
-        /// unwanted "border" around the letters against the new cream
-        /// panels/buttons is this font's own thick, uniform stroke weight,
-        /// baked into its glyphs, not a separate outline effect — it's the
-        /// same thickness this font always had, just more visible now that
-        /// it sits on light backgrounds instead of the old dark ones. Falls
-        /// back to Unity's built-in legacy font if the asset pack isn't
-        /// present (e.g. a checkout that hasn't pulled it yet).
+        /// The "Colorful UI" pack's "Digitalt" font (Assets/Resources/
+        /// Colorful_UI/colorful/font/), used everywhere text is created.
+        /// The font's thick, uniform stroke weight is baked into its glyphs,
+        /// not a separate outline effect. Falls back to Unity's built-in
+        /// legacy font if the asset pack isn't present.
         /// </summary>
         public static Font DefaultFont()
         {
@@ -96,38 +88,23 @@ namespace Contigu.Presentation
         {
             var btn = img.gameObject.AddComponent<Button>();
             // Selectable normally self-assigns this via Reset(), which Unity
-            // only calls for components added through the Inspector — every
-            // button here is built purely from script via AddComponent, so
-            // without this line targetGraphic silently stays null and NONE
-            // of the hover/press color tint below ever actually renders.
+            // only calls for components added through the Inspector; every
+            // button here is built via AddComponent, so this must be set
+            // explicitly or the hover/press tint below never renders.
             btn.targetGraphic = img;
             var colors = btn.colors;
             colors.normalColor = Color.white;
-            // Both states DARKEN from normal instead of highlighted trying to
-            // brighten PAST it — every sprite-skinned button (the vast
-            // majority, e.g. every shop Buy/Reroll/Leave button) starts at a
-            // plain white tint (see CreateSlicedImage), and a color channel
-            // can't exceed 1 on a non-HDR UI Image: the old highlightedColor
-            // of (1.15,1.15,1.15) just clamped back down to white, so hover
-            // showed no visible change at all (bug report, shop buttons:
-            // "ajoute une nuance visuelle pour le hover et le click"). Now
-            // both hover and pressed are always visible regardless of the
-            // button's own base tint, pressed darker than highlighted so the
-            // two stay distinguishable from each other too.
+            // Both states darken from normal rather than highlighted trying
+            // to brighten past it: a color channel can't exceed 1 on a
+            // non-HDR UI Image, so brightening a white base clamps back to
+            // white and shows no visible change.
             colors.highlightedColor = new Color(0.88f, 0.88f, 0.88f, 1f);
             colors.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
             colors.selectedColor = Color.white;
-            // Flat, fully OPAQUE muted gray rather than the old white-at-
-            // 40%-alpha (explicit report: "les disabled states de boutons
-            // dans le shop ne sont pas beau") — that translucent tint let
-            // whatever sat behind the button (the card, the dark overlay,
-            // etc.) show through and blend with the button's own sprite
-            // color, so a disabled button came out as a muddy, inconsistent
-            // color depending on its surroundings instead of a clean,
-            // deliberate "disabled" look. A flat gray reads the same
-            // everywhere, and stays opaque enough for the thick outline
-            // (drawn from this same graphic's alpha) and any dark text/icon
-            // sitting on top (e.g. ShopView's price label) to stay legible.
+            // Flat, fully opaque muted gray so a disabled button reads the
+            // same everywhere regardless of what's behind it, and stays
+            // opaque enough for the thick outline and any text/icon on top
+            // to remain legible.
             colors.disabledColor = new Color(0.62f, 0.62f, 0.62f, 1f);
             btn.colors = colors;
 
@@ -136,45 +113,26 @@ namespace Contigu.Presentation
             var punch = img.gameObject.AddComponent<ButtonPunchEffect>();
             btn.onClick.AddListener(punch.Punch);
 
-            // No thick "comic" outline on buttons specifically (on explicit
-            // report: "retirer le contour sur les boutons, ça fait très peu
-            // quali") — every OTHER card/panel/badge in the game still gets
-            // one via its own direct AddThickOutline call, just not buttons
-            // funneling through here.
+            // Buttons get no thick "comic" outline; every other card/panel/
+            // badge still gets one via its own direct AddThickOutline call.
 
-            // 50% bigger than whatever size the caller asked for (on
-            // explicit request: "Le texte sur tous les bouton peut être 50%
-            // plus gros") — every button in the game goes through this one
-            // spot, so scaling here instead of each of the ~15 call sites'
-            // own fontSize argument covers all of them at once and stays
-            // proportional if a caller ever asks for a smaller/bigger button
-            // label than another.
+            // 50% bigger than whatever size the caller asked for — every
+            // button goes through this one spot, so scaling here covers all
+            // of them at once and stays proportional across call sites.
             var text = CreateText(img.transform, "Label", label, Mathf.RoundToInt(fontSize * 1.5f), UITheme.TextPrimary);
             StretchFull(text.rectTransform);
             return btn;
         }
 
         /// <summary>
-        /// The reference DA's thick "comic" outline around a panel/card
-        /// (explicit request: "changer la DA du jeu ... des contours
-        /// noirs") — a single Outline component, not a hand-rolled 4-bar
-        /// frame like GridView.BuildLineClearBorder/ModifierCarouselView.
-        /// BuildHighlightFrame use elsewhere: those exist specifically to
-        /// outline a see-through or dynamically-resized area, where a
-        /// straight-bar frame is the only thing that actually renders
-        /// correctly. Every target here is an OPAQUE, static-sized Image
-        /// (panel/card fill), so Unity's own Outline works cleanly — its
-        /// ModifyVertices draws 4 diagonal copies of <paramref
-        /// name="target"/>'s own shape (offset (d,d)/(d,-d)/(-d,d)/(-d,-d)),
-        /// which is exactly Unity's standard "add a border" trick and
-        /// already used throughout this codebase for small badges; this
-        /// just applies the same technique at a size that reads clearly on
-        /// full cards too, and follows a 9-sliced sprite's own rounded
-        /// corners automatically since it duplicates that exact alpha
-        /// shape. No longer called from <see cref="FinishButton"/> (on
-        /// explicit report: "retirer le contour sur les boutons, ça fait
-        /// très peu quali") — every button in the game lost this outline,
-        /// every card/panel/badge calling this directly kept it.
+        /// Thick "comic" outline around a panel/card: a single Outline
+        /// component, not a hand-rolled 4-bar frame like GridView.
+        /// BuildLineClearBorder/ModifierCarouselView.BuildHighlightFrame use
+        /// elsewhere (those exist to outline a see-through or dynamically-
+        /// resized area). Every target here is an opaque, static-sized
+        /// Image, so Unity's Outline works cleanly and follows a 9-sliced
+        /// sprite's rounded corners automatically. Not called from
+        /// <see cref="FinishButton"/>; buttons get no outline.
         /// </summary>
         public static void AddThickOutline(Image target, Color color, float thickness = 3f)
         {

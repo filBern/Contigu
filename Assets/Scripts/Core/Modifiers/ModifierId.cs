@@ -1,8 +1,7 @@
 namespace Contigu.Core
 {
     /// <summary>
-    /// Identifies one persistent "modifier" (Joker-like passive, spec extension
-    /// from the modifier brainstorm list) that a player can hold. See
+    /// Identifies one persistent passive modifier that a player can hold. See
     /// <see cref="ModifierCatalog"/> for the effect of each.
     /// </summary>
     public enum ModifierId
@@ -22,11 +21,6 @@ namespace Contigu.Core
         Macon,
         Demolisseur,
 
-        // ---- Second batch (16 more, from the same brainstorm list) ----
-        // CoeurDePierre, DiagonaleVerrouillee and SansDoublon removed (on
-        // explicit request — locked-cell/boss-round mechanics read as too
-        // abstract for too long before a player could act on them). Symetrie
-        // removed separately (on explicit request — unclear, hard to trigger).
         CercleChromatique,
         Monochrome,
         Contraste,
@@ -40,13 +34,11 @@ namespace Contigu.Core
         Bloc,
         MonochromeLigne,
 
-        // ---- Third batch (basic per-color / per-shape modifiers, on explicit request) ----
         DevotionCoral,
         DevotionTeal,
         DevotionViolet,
         DevotionLime,
 
-        // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
         SlotUn,
         SlotDeux,
         SlotTrois,
@@ -57,7 +49,6 @@ namespace Contigu.Core
         EclatViolet,
         EclatLime,
 
-        // ---- Fifth batch (7 more, on explicit request — originally 8, Imminent later removed) ----
         Diagonale,
         Nid,
         Solitaire,
@@ -66,9 +57,6 @@ namespace Contigu.Core
         PetitFormat,
         Fraicheur,
 
-        // ---- Sixth batch (11 more, from a player-authored brainstorm list —
-        // Équilibriste, Longue série and a second "Solitaire" idea were
-        // dropped, see README) ----
         Pont,
         Encerclement,
         Boucher,
@@ -81,34 +69,22 @@ namespace Contigu.Core
         Minimaliste,
         Joker,
 
-        // ---- Seventh batch: progressive modifiers that scale with a
-        // running counter instead of firing at a fixed strength (on
-        // explicit request) ----
+        // Progressive modifiers that scale with a running counter instead
+        // of firing at a fixed strength.
         Densite,
 
-        // ---- Eighth batch: Lueur-earning modifiers, adapted from 5
-        // existing score modifiers (on explicit request: "il faut ajouter
-        // quelques modifiers qui rapportent des lueur... adapter [les
-        // modifiers qu'on a déjà] en version bonus lueur") ----
+        // Lueur-earning modifiers, each adapted from an existing score
+        // modifier, paying Lueur instead of points/a multiplier.
         ArcEnCielLueur,
         AlternanceLueur,
         MonochromeLigneLueur,
         CollectionneurLueur,
         RepetitionLueur,
 
-        // ---- Ninth batch (on explicit request) — 3 flat, unconditional
-        // "+Mult" modifiers (a genuine ADDITIVE mult pool, see
-        // PlacementResult.AdditiveMultBonus, distinct from every "xN"
-        // ModifierMultiplier modifier above); a new "+pts" counterpart for
-        // each of the 10 Forme* shapes (Devotion/Éclat already covered
-        // this split for colors, Forme* only had one version — see the
-        // curation-pass note below, these 10 no longer exist as such);
-        // Solidarite (+N Mult scaling with total modifiers held); Copieur
-        // (copies whichever modifier was bought immediately before it); a
-        // risk/reward +5 mult with a chance to be lost at round end; a
-        // mult bonus scaling with upgraded cards in the deck; a decaying
-        // flat points bonus; and a flat points bonus scaling with total
-        // deck size. See ModifierCatalog for each one's exact effect.
+        // 3 flat, unconditional "+Mult" modifiers (a genuine additive mult
+        // pool, see PlacementResult.AdditiveMultBonus, distinct from every
+        // "xN" ModifierMultiplier modifier above). See ModifierCatalog for
+        // each one's exact effect.
         MultUn,
         MultDeux,
         MultQuatre,
@@ -119,27 +95,14 @@ namespace Contigu.Core
         Epuisement,
         Multitude,
 
-        // ---- Tenth batch (on explicit request) — a mult bonus scaling
-        // with how many special (trait-carrying) pieces have been PLAYED
-        // this run, CartesEnchantees' "played" counterpart to its own
-        // "currently in deck" count.
+        // A mult bonus scaling with how many special (trait-carrying)
+        // pieces have been played this run — CartesEnchantees' "played"
+        // counterpart to its own "currently in deck" count.
         Experience,
 
-        // ---- Eleventh batch: curation pass (on explicit request — "que
-        // me propose tu pour faire passer le jeu à un state supérieur" ->
-        // "attaquons celui la") — replaces the 10 per-SHAPE FormeX
-        // Specialist ids (third batch, above) and their 10 FormeXPoints
-        // "+pts" siblings (ninth batch) with 3 per-SIZE-TIER pairs, grouped
-        // by the placed piece's own cell count: Petit (<=2 cells: Single,
-        // Domino H/V), Moyen (exactly 3: the 3 Trominoes), Grand (>=4
-        // cells: Square, L/T/S-Tetromino). 20 near-identical "xN/+pts if
-        // you play THIS EXACT shape" modifiers diluted the shop pool for a
-        // fairly minor axis (which of 10 shapes you happen to place)
-        // compared to color (Devotion/Éclat, only 4 values, kept as-is).
-        // Same ScoringConstants.FormeSpecialistMultiplier/
-        // FormeGlowBonusPerCell values as every one of the 20 modifiers
-        // this replaces — a pure catalog-size reduction, not a numeric
-        // rebalance.
+        // 3 per-size-tier pairs, grouped by the placed piece's own cell
+        // count: Petit (<=2 cells: Single, Domino H/V), Moyen (exactly 3:
+        // the 3 Trominoes), Grand (>=4 cells: Square, L/T/S-Tetromino).
         FormatPetitSpecialiste,
         FormatMoyenSpecialiste,
         FormatGrandSpecialiste,
@@ -147,29 +110,21 @@ namespace Contigu.Core
         FormatMoyenGlow,
         FormatGrandGlow,
 
-        // ---- Twelfth batch (on explicit request — "On pourrait rajouter
-        // des modifiers par rapport a la grosseur des group cell (pair vs
-        // impair)") — a pair keyed on the scored group's total cell count
-        // being even or odd, same xN-multiplier shape as Architecte/Îlot
-        // (a one-shot boolean condition, not a per-cell scaling bonus).
+        // A pair keyed on the scored group's total cell count being even
+        // or odd, same xN-multiplier shape as Architecte/Îlot (a one-shot
+        // boolean condition, not a per-cell scaling bonus).
         Pair,
         Impair,
 
-        // ---- Thirteenth batch: synergy pass (on explicit request — "Je
-        // veux qu'on regarde plus de synergies" -> "1, 2 et 4" -> "Je veux
-        // juste le 1 et le 2 finalement") — modifiers that reward owning
-        // OTHER specific things (a matching Devotion/Éclat pair, a spread
-        // of modifier categories, a spread of Joker combat trait kinds)
-        // instead of each one scoring in isolation off its own fixed
-        // condition. Polyvalence/Arsenal are new standalone modifiers;
-        // the Devotion/Éclat pairing bonus (axis 1) needed no new
-        // ModifierId at all — see GridManager.ApplyDevotionEclatPairBonus.
+        // Modifiers that reward owning other specific things (a matching
+        // Devotion/Éclat pair, a spread of modifier categories, a spread
+        // of Joker combat trait kinds) instead of each one scoring in
+        // isolation off its own fixed condition. The Devotion/Éclat
+        // pairing bonus needed no new ModifierId at all — see
+        // GridManager.ApplyDevotionEclatPairBonus.
         Polyvalence,
         RenfortJoker,
         Arsenal,
-
-        // ---- Fourteenth batch: more synergy pass (on explicit request —
-        // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
 
         /// <summary>+Mult per color for which BOTH Devotion and Éclat are held — the "trio" idea extended practically, since there's no natural 3rd per-color modifier to chase yet (see ModifierDefinition.CollectionChromatique).</summary>
         CollectionChromatique,

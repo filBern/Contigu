@@ -22,18 +22,7 @@ namespace Contigu.Presentation
             return root;
         }
 
-        /// <summary>
-        /// <paramref name="floatDown"/> flips the usual float-UP direction
-        /// to float DOWN instead — explicit bug report: the Thief steal
-        /// popup (anchored on Thief's own enemy icon, up in the HUD's
-        /// enemy band near the top of the screen) floated up like every
-        /// other popup here and ran off the top of the screen ("L'animation
-        /// du thief doit aller vers le bas de l'ennemi, pas le haut sinon
-        /// la pièce montré sort de l'écran par le haut"). Every other
-        /// caller anchors comfortably lower (grid cells, the combo/
-        /// multiplier center of a placement), so they all keep the
-        /// original upward float by leaving this false.
-        /// </summary>
+        /// <summary><paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for popups anchored near the top of the screen, which would otherwise run off-screen.</summary>
         public void SpawnPopup(RectTransform anchor, string text, Color color, bool floatDown = false)
         {
             if (anchor == null)
@@ -41,11 +30,7 @@ namespace Contigu.Presentation
                 return;
             }
 
-            // This layer is built before ModifierPanelView (see GameBootstrap.
-            // BuildUI), so its popups were sitting BEHIND the panel's opaque
-            // background — invisible whenever a modifier's score popup
-            // anchors on its badge. Always render above everything else on
-            // screen, same fix TooltipView already applies to itself.
+            // Always render above everything else on screen, so a popup anchored behind an opaque panel still shows.
             _root.SetAsLastSibling();
 
             var container = UIFactory.CreateUIObject("PopupContainer", _root);
@@ -56,19 +41,7 @@ namespace Contigu.Presentation
             container.position = anchor.position + new Vector3(jitterX, 0f, 0f);
             container.sizeDelta = new Vector2(160f, 40f);
 
-            // Small beige backdrop (explicit request: "un petit losange
-            // derrière les pop up de score avec la couleur ... beige du
-            // background de la liste de modifiers", i.e. UITheme.Panel).
-            // Sized down from an initial 40px on explicit follow-up report
-            // ("le losange de popups de score est trop gros"), then un-
-            // rotated back into a plain square on further explicit report
-            // that the rotated-diamond motif was showing up in too many
-            // places ("A plusieurs endroits pour le pointage et pour les
-            // modifiers on utilise des losanges jaune alors que ça devrait
-            // être réservé a la currency (lueur)") — the 45°-rotated
-            // "diamond" shape is now exclusively HudView/ShopView's own
-            // Lueur icon, so every score popup reuses this same backdrop
-            // shape without also borrowing its distinctive rotation.
+            // Plain square backdrop — the 45°-rotated "diamond" shape is reserved for HudView/ShopView's Lueur icon.
             var backdrop = UIFactory.CreatePanel(container, "Backdrop", UITheme.Panel);
             backdrop.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             backdrop.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -85,15 +58,7 @@ namespace Contigu.Presentation
             StartCoroutine(AnimatePopup(container, backdrop, popup, floatDown));
         }
 
-        /// <summary>
-        /// Spawns a popup at <paramref name="fromWorldPosition"/> that flies
-        /// toward <paramref name="toAnchor"/> and fades out on arrival —
-        /// used for Lueur group popups, which travel from the middle of the
-        /// scoring group to the Lueur HUD label (explicit request: "les
-        /// points lueur partent du milieu du groupe... et aillent vers le
-        /// texte du score de lueur"), unlike <see cref="SpawnPopup"/>'s
-        /// float-up-in-place.
-        /// </summary>
+        /// <summary>Spawns a popup at <paramref name="fromWorldPosition"/> that flies toward <paramref name="toAnchor"/> and fades out on arrival, unlike <see cref="SpawnPopup"/>'s float-up-in-place.</summary>
         public void SpawnFlyingPopup(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color)
         {
             if (toAnchor == null)
@@ -112,9 +77,7 @@ namespace Contigu.Presentation
         private IEnumerator AnimateFlyingPopup(Text text, RectTransform toAnchor)
         {
             var rect = text.rectTransform;
-            // Faster and ease-IN (accelerating) rather than SpawnPopup's slow
-            // linear float — this one is chasing a fixed destination, so it
-            // should read as being pulled in rather than drifting.
+            // Ease-in (accelerating) rather than a linear float — reads as being pulled toward a fixed destination.
             const float duration = 0.5f;
             float t = 0f;
             Vector3 startPos = rect.position;
@@ -149,9 +112,6 @@ namespace Contigu.Presentation
 
         private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text, bool floatDown)
         {
-            // Slow, readable float+fade — several of these play in a staggered
-            // sequence per placement, so each one needs enough time on screen to
-            // actually be read before the next appears.
             const float duration = 1.3f;
             const float holdFraction = 0.35f; // stay fully opaque before fading
             float t = 0f;

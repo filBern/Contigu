@@ -7,18 +7,14 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// ShapeCarouselView's exact sibling for the "Color Mastery" upgrade
-    /// (spec extension, on explicit request: "Il faudrait faire la même
-    /// chose avec les couleurs") — a reel of the 4 base piece colors
-    /// (PieceColorUtility.BaseColors, never Joker) spins under a fixed
-    /// highlight frame and decelerates onto the color RunManager already
-    /// leveled up (RunManager.GrantColorMastery), then a reveal card shows
-    /// its new level and the resulting per-placement bonus. Unlike
-    /// ShapeCarouselView's grayed-out shapes (shape was the meaningful
-    /// axis there, color irrelevant), each badge/card here shows its
-    /// actual piece color on a neutral square tile (ShapePreviewFactory.
-    /// Build with a plain Square shape) — color IS the meaningful axis
-    /// here, so it has to read at a glance.
+    /// ShapeCarouselView's sibling for the "Color Mastery" upgrade. A reel of
+    /// the 4 base piece colors (PieceColorUtility.BaseColors, never Joker)
+    /// spins under a fixed highlight frame and decelerates onto the color
+    /// RunManager already leveled up (RunManager.GrantColorMastery), then a
+    /// reveal card shows its new level and the resulting per-placement bonus.
+    /// Unlike ShapeCarouselView's grayed-out shapes, each badge/card here
+    /// shows its actual piece color on a neutral square tile, since color is
+    /// the meaningful axis here.
     /// </summary>
     public sealed class ColorCarouselView : MonoBehaviour
     {
@@ -140,7 +136,7 @@ namespace Contigu.Presentation
             right.rectTransform.anchoredPosition = new Vector2(FrameSize / 2f, 0f);
         }
 
-        /// <summary><paramref name="granted"/> is RunManager.LastColorMasteryGranted — already leveled up by the time this shows. <paramref name="newLevel"/> is that color's level AFTER the purchase (RunManager.GetColorMasteryLevel).</summary>
+        /// <summary><paramref name="granted"/> is already leveled up by the time this shows. <paramref name="newLevel"/> is that color's level after the purchase.</summary>
         public void Show(PieceColor granted, int newLevel)
         {
             _titleText.text = "Color Mastery";
@@ -225,7 +221,7 @@ namespace Contigu.Presentation
             _spinCoroutine = null;
         }
 
-        /// <summary>(Re)builds the reveal card for whichever color is currently centered under the highlight — same "fillers show level 1, only the true granted color ever shows the real level" convention as ShapeCarouselView.UpdateCard.</summary>
+        /// <summary>(Re)builds the reveal card for whichever color is currently centered under the highlight. Filler badges show level 1; only the true granted color shows the real level.</summary>
         private void UpdateCard(PieceColor color, int level)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
@@ -246,12 +242,10 @@ namespace Contigu.Presentation
             glyphBox.anchoredPosition = new Vector2(0f, -16f);
             ShapePreviewFactory.Build(glyphBox, PieceShapeCatalog.Get(GlyphShape), color, null, null, null);
 
-            // No FontStyle.Bold (see UpgradeCardFactory's own comment on
-            // this) — the Digitalt font has no true bold face, so Unity's
-            // legacy Text synthesizes one by double-drawing a shifted
-            // copy, which reads as blurry rather than bold (explicit
-            // report: "Les titre et level pour les cartes de mastery sont
-            // flou a cause du blur"). Size alone carries the emphasis.
+            // No FontStyle.Bold: the Digitalt font has no true bold face, so
+            // Unity's legacy Text synthesizes one by double-drawing a
+            // shifted copy, which reads as blurry rather than bold. Size
+            // alone carries the emphasis.
             var name = UIFactory.CreateText(cardImage.transform, "Name", VisualDefaults.GetColorName(color), 18, UITheme.TextPrimary);
             name.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             name.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -260,10 +254,6 @@ namespace Contigu.Presentation
             name.rectTransform.anchoredPosition = new Vector2(0f, -(16f + CardGlyphBoxSize + 8f));
 
             string levelLine = level > 1 ? "Level " + level : "Level 1";
-            // Same contrast fix as ShapeCarouselView.UpdateCard — bright
-            // gold on this card's own light UITheme.Panel background was
-            // nearly invisible (explicit report: "le text level nb jaune
-            // n'est pas lisible").
             var levelText = UIFactory.CreateText(cardImage.transform, "Level", levelLine, 16, UITheme.TextPrimary);
             levelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             levelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);

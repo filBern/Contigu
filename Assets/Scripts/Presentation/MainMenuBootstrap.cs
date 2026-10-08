@@ -6,16 +6,9 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Boots the dedicated main menu scene (Assets/Scenes/MainMenu.unity) —
-    /// spec extension, explicit request: "j'aurais aimé qu'il soit dans une
-    /// scene a part". The main menu used to be built alongside every other
-    /// screen inside the gameplay scene and just shown/hidden like an
-    /// overlay (see GameBootstrap); it's now the sole thing in its own
-    /// scene, loaded first, handing off to the gameplay scene via
-    /// SceneManager.LoadScene once "Play" is clicked. Mirrors
-    /// GameBootstrap's own EventSystem/Canvas/CanvasScaler/
-    /// AnimatedBackgroundView setup exactly, so the two scenes look and
-    /// scale identically and the transition between them isn't jarring.
+    /// Boots the dedicated main menu scene (Assets/Scenes/MainMenu.unity), loaded first and handing off to
+    /// the gameplay scene via SceneManager.LoadScene once "Play" is clicked. Mirrors GameBootstrap's own
+    /// EventSystem/Canvas/CanvasScaler/AnimatedBackgroundView setup so the two scenes look and scale identically.
     /// </summary>
     public sealed class MainMenuBootstrap : MonoBehaviour
     {
@@ -33,19 +26,9 @@ namespace Contigu.Presentation
             _mainMenuView = gameObject.AddComponent<MainMenuView>();
             _mainMenuView.Build(canvasRect);
 
-            // Its own SettingsView instance — Settings is a plain,
-            // self-contained overlay (Master/Music/SFX volume + colorblind
-            // toggle, all persisted via static PlayerPrefs-backed classes),
-            // so building a second one here alongside GameBootstrap's is
-            // safe: neither carries any state of its own beyond what those
-            // static classes already own. Built AFTER MainMenuView (matches
-            // GameBootstrap's own ordering) so it renders as a later sibling
-            // — on TOP of the menu's title/Play/Settings/Exit buttons —
-            // instead of underneath them: those buttons were visibly
-            // (and clickably) poking through the settings overlay before
-            // this ordering fix (explicit report, from a screenshot: "il
-            // faut hide certains éléments du menu lorsqu'on est dans les
-            // settings").
+            // Its own SettingsView instance — safe to build a second one alongside GameBootstrap's, since
+            // Settings carries no state beyond its static PlayerPrefs-backed classes. Built after MainMenuView
+            // so it renders as a later sibling, on top of the menu's buttons rather than underneath them.
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(canvasRect);
 

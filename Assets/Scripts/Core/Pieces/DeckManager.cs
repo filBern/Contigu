@@ -4,8 +4,8 @@ namespace Contigu.Core
 {
     /// <summary>
     /// Owns the persistent run-long deck, a shuffled draw pile, and the current
-    /// hand of 3 pieces (spec section 4). The deck is mutated in place by the
-    /// bank upgrades and never allowed to drop below <see cref="MinDeckSize"/>.
+    /// hand. The deck is mutated in place by bank upgrades and never allowed
+    /// to drop below <see cref="MinDeckSize"/>.
     /// </summary>
     public sealed class DeckManager
     {
@@ -16,11 +16,9 @@ namespace Contigu.Core
         private readonly List<PieceToken> _drawPile = new List<PieceToken>();
         // Fixed-size — always exactly HandSize entries, a null meaning that
         // slot is currently empty. Playing a piece never shifts the other
-        // slots (on explicit request: playing slot 1 while slots 2/3 are
-        // still full used to shift them down into slots 1/2, which also kept
-        // undermining "which slot did this piece come from" for the
-        // Slot Loyalty modifiers) — a slot only refills once the WHOLE hand
-        // is empty (see PlayFromHand/DrawNewHand).
+        // slots (needed so Slot Loyalty modifiers can track which slot a
+        // piece came from) — a slot only refills once the WHOLE hand is
+        // empty (see PlayFromHand/DrawNewHand).
         private readonly List<PieceToken?> _hand = new List<PieceToken?>();
         private readonly List<PieceRotation> _handRotations = new List<PieceRotation>();
         private readonly IRandomProvider _rng;
@@ -100,8 +98,8 @@ namespace Contigu.Core
                 EnsureDrawPileHasEnough(1);
                 if (_drawPile.Count == 0)
                 {
-                    // Deck is empty (should not happen given MinDeckSize > 0)
-                    // — leave this and every remaining slot empty rather than
+                    // Deck is empty (should not happen given MinDeckSize > 0):
+                    // leave this and every remaining slot empty rather than
                     // shrinking the hand below HandSize entries.
                     _hand.Add(null);
                     _handRotations.Add(RandomRotation());
@@ -121,18 +119,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Thief" enemy mechanic (spec extension — GDD §07: "On each
-        /// Shuffle, steals 1 random tile from the hand"): empties one
-        /// random currently-occupied hand slot, returning its token to the
-        /// bottom of the draw pile rather than destroying it outright — the
-        /// deck's own composition never shrinks, the piece is just
-        /// unavailable until a later Shuffle happens to draw it again. A
-        /// no-op (returns false) if every slot is already empty. Called
-        /// from RunManager.DrawFreshHand AFTER the fresh hand is dealt
-        /// (Thief needs it to exist to steal from), distinct from every
-        /// other enemy's On-Shuffle effect (grid-based, resolved before the
-        /// deal) — invisible either way, since nothing is shown to the
-        /// player until the whole Shuffle resolves.
+        /// "Thief" enemy mechanic: empties one random currently-occupied hand
+        /// slot, returning its token to the bottom of the draw pile rather
+        /// than destroying it. No-op (returns false) if every slot is empty.
+        /// Called from RunManager.DrawFreshHand after the fresh hand is dealt.
         /// </summary>
         public bool StealRandomHandTile(IRandomProvider rng)
         {
@@ -155,17 +145,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Empties the <paramref name="handIndex"/> slot in place — the other
-        /// slots are never shifted (on explicit request; see the field
-        /// comment on <see cref="_hand"/>). Per spec 4.2, a fresh hand of 3
-        /// is only drawn once every slot is empty — unless
-        /// <paramref name="refillIfEmpty"/> is false, in which case the
-        /// caller takes responsibility for drawing later (see
-        /// RunManager.PlacePiece: when the placement that empties the hand
-        /// also ends the round, drawing immediately would hand out the NEXT
-        /// round's pieces before the player has even picked their upgrade
-        /// for THIS one — deferred to RunManager.StartRound instead, so the
-        /// fresh hand belongs to the round it's actually drawn for).
+        /// Empties the <paramref name="handIndex"/> slot in place — other
+        /// slots are never shifted (see the field comment on <see cref="_hand"/>).
+        /// A fresh hand is drawn once every slot is empty, unless
+        /// <paramref name="refillIfEmpty"/> is false, in which case the caller
+        /// defers the draw (see RunManager.PlacePiece/StartRound: when the
+        /// placement that empties the hand also ends the round, the fresh
+        /// hand must belong to the next round, not be dealt early).
         /// </summary>
         public void PlayFromHand(int handIndex, bool refillIfEmpty = true)
         {
@@ -206,10 +192,7 @@ namespace Contigu.Core
         /// the deck's composition, randomly sampled — same idea as
         /// <see cref="GetCandidateTokenIndices"/> but per-TYPE rather than
         /// per-token, since a Bank sub-choice (Retirer/Dupliquer/Recolorer)
-        /// acts on a whole type at once. Explicit request: the piece-type
-        /// picker used to list every distinct type in the deck, which could
-        /// run well past a screenful; capped the same way the Grid-pool tile
-        /// choice already was.
+        /// acts on a whole type at once.
         /// </summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetCandidateTypes(int count, IRandomProvider rng, System.Func<(ShapeId Shape, PieceColor Color), bool> eligible = null)
         {
@@ -275,21 +258,13 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Replace a piece" — redesign of the old "Remove a piece"
-        /// (explicit request: "Les upgrades 'remove' sont vraiment
-        /// chiante, peux-tu la changer pour un replace?"). Removing a type
-        /// outright used to shrink the deck toward MinDeckSize, which could
-        /// backfire; this instead removes one copy of (<paramref
-        /// name="removeShape"/>, <paramref name="removeColor"/>) and
-        /// immediately adds one copy of (<paramref name="addShape"/>,
-        /// <paramref name="addColor"/>) — both types must already exist in
-        /// the deck (see UpgradeSystem.GetCandidateTypesFor/
-        /// GetReplacementCandidateTypesFor, which only ever offer real deck
-        /// types), so the net deck count never changes and MinDeckSize is
-        /// never a concern. Replacing a type with itself is a harmless
-        /// no-op (removes then immediately re-adds one copy) rather than an
-        /// error, in case a degenerate (near single-type) deck ever forces
-        /// that choice.
+        /// Removes one copy of (<paramref name="removeShape"/>, <paramref
+        /// name="removeColor"/>) and immediately adds one copy of (<paramref
+        /// name="addShape"/>, <paramref name="addColor"/>) — both types must
+        /// already exist in the deck (see UpgradeSystem.GetCandidateTypesFor/
+        /// GetReplacementCandidateTypesFor), so the net deck count never
+        /// changes and MinDeckSize is never a concern. Replacing a type with
+        /// itself is a harmless no-op.
         /// </summary>
         public bool ReplaceOneOfType(ShapeId removeShape, PieceColor removeColor, ShapeId addShape, PieceColor addColor)
         {
@@ -311,17 +286,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Adds a joker-colored piece in a uniformly random shape (on
-        /// explicit request — used to always be a fixed Single tile),
-        /// ALSO tagged with one of the 5 Joker-exclusive combat traits
-        /// (explicit request: "J'aimerais que toutes les pièces jokers
-        /// soient particulières... des upgrades qui affectent directement
-        /// la manière de se battre"), rolled independently and uniformly
-        /// from <see cref="PieceTrait.JokerCombatKinds"/> — every Joker
-        /// gets exactly one, never none. Returns the shape actually rolled
-        /// (<paramref name="combatKind"/> carries the trait roll) so the
-        /// caller (see UpgradeSystem.ApplyJoker) can show the player what
-        /// was really added instead of just naming the upgrade.
+        /// Adds a joker-colored piece in a uniformly random shape, tagged
+        /// with one of the Joker-exclusive combat traits rolled uniformly
+        /// from <see cref="PieceTrait.JokerCombatKinds"/> — every Joker gets
+        /// exactly one, never none. Returns the shape actually rolled;
+        /// <paramref name="combatKind"/> carries the trait roll.
         /// </summary>
         public ShapeId AddJoker(IRandomProvider rng, out PieceTraitKind combatKind)
         {
@@ -349,21 +318,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Chameleon Tile (explicit request — "si une pièce est recolorée,
-        /// elle est recolorée dans le deck aussi (on garde l'upgrade sur la
-        /// pièce recolorée)"): once RunManager.ResolveChameleonColor
-        /// dynamically resolves this hand token's placement color to
-        /// something other than its own, permanently recolors this exact
-        /// deck entry to match — unlike <see cref="RecolorOneOfType"/>
-        /// (the player-chosen Bank-pool upgrade, which targets an arbitrary
-        /// same-shape/color token and always clears its trait), this keeps
-        /// <see cref="PieceToken.Trait"/> intact, and targets the specific
-        /// hand slot's own token rather than searching by shape/color alone
-        /// (no ambiguity with any other identical token elsewhere in the
-        /// deck). So the next time this same entry is drawn with no filled
-        /// neighbor to react to, it "remembers" the last color it actually
-        /// took on instead of reverting to whatever it started as. No-op if
-        /// the slot is empty.
+        /// Chameleon Tile: once RunManager.ResolveChameleonColor resolves
+        /// this hand token's placement color to something other than its
+        /// own, permanently recolors this exact deck entry to match — unlike
+        /// <see cref="RecolorOneOfType"/>, this keeps <see cref="PieceToken.Trait"/>
+        /// intact and targets the specific hand slot's token by reference
+        /// rather than by shape/color match. No-op if the slot is empty.
         /// </summary>
         public void RecolorHandToken(int handIndex, PieceColor newColor)
         {
@@ -390,15 +350,9 @@ namespace Contigu.Core
 
         /// <summary>
         /// Adds a fully-formed token (shape, color, and optionally an
-        /// already-rolled trait) straight to the deck — public so
-        /// UpgradeSystem.ResolveRandomPieceChoice can add exactly the
-        /// candidate the player picked (see RunManager.
-        /// PendingUpgradePieceCandidates), unlike every other "add a piece"
-        /// path (DuplicateOfType/AddJoker above), which only ever construct
-        /// an UNTAGGED token themselves and rely on a separate Tag* call
-        /// afterward for a trait. Like those, only reaches _deck — not
-        /// _drawPile — so a newly added piece isn't drawable until the next
-        /// reshuffle (same convention as every other deck-growing upgrade).
+        /// already-rolled trait) straight to the deck. Only reaches _deck —
+        /// not _drawPile — so a newly added piece isn't drawable until the
+        /// next reshuffle, same as every other deck-growing upgrade.
         /// </summary>
         public void AddPreparedToken(PieceToken token)
         {
@@ -407,21 +361,11 @@ namespace Contigu.Core
 
         /// <summary>
         /// Mirrors a _deck token edit (<paramref name="before"/> becoming
-        /// <paramref name="after"/>, same shape/color) into whichever of
-        /// _drawPile/_hand currently holds a live copy of it — same idea
-        /// RemoveOneOfType/RecolorOneOfType already follow for their own
-        /// _deck edits. Every Tag* trait-tagging method used to skip this
-        /// entirely (bug report: a shop-purchased tile-upgrade's origin
-        /// badge never actually showed up on the grid) — the tag landed in
-        /// _deck, but the actual PieceToken instance sitting in the draw
-        /// pile or hand (structs are copied by value, so tagging _deck
-        /// doesn't retroactively touch a copy already drawn out of it) kept
-        /// scoring as if untagged until the deck's next full reshuffle,
-        /// which doesn't happen every round — only once _drawPile actually
-        /// runs low (see ReshuffleDrawPile/EnsureDrawPileHasEnough). No-op
-        /// if neither currently holds a matching token — the deck-level tag
-        /// alone is enough then, since that reshuffle will pick it up
-        /// correctly from _deck whenever it does happen.
+        /// <paramref name="after"/>) into whichever of _drawPile/_hand
+        /// currently holds a live copy of it. PieceToken is a struct copied
+        /// by value, so tagging _deck alone would not retroactively update a
+        /// copy already drawn into the draw pile or hand. No-op if neither
+        /// holds a matching token.
         /// </summary>
         private void SyncTagIntoLiveCopy(PieceToken before, PieceToken after)
         {
@@ -446,7 +390,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run golden trait on one random cell each (spec 5.4 redesign).</summary>
+        /// <summary>Tags up to <paramref name="count"/> distinct deck tokens with a permanent-for-the-run golden trait on one random cell each.</summary>
         public IReadOnlyList<int> TagGoldenTokensRandom(int count, IRandomProvider rng)
         {
             return TagRandomTokens(count, rng, (token, localIndex) => new PieceTrait(PieceTraitKind.Golden, localIndex));
@@ -455,21 +399,10 @@ namespace Contigu.Core
         /// <summary>
         /// Tags up to <paramref name="count"/> distinct deck tokens with a
         /// permanent-for-the-run tinted trait on one random cell each. The
-        /// target color is always the TOKEN'S OWN color (never rolled
-        /// independently) — a token's color never changes on its own, so a
-        /// tinted tile always matches and always fires; the earlier
-        /// independent-random-color version left most tinted tiles
-        /// permanently unable to ever match (on explicit player feedback:
-        /// "les tinted tiles sont vraiment chiantes, il se peut qu'elle
-        /// serve a rien parfois" — it wasn't "sometimes", a mismatched tile
-        /// could never trigger for the rest of the run short of a
-        /// Recolorer pick landing on that exact type). Joker tokens are
-        /// excluded from candidacy entirely: a placed Joker cell's own
-        /// FilledColor always stays PieceColor.Joker (never resolved to a
-        /// neighbor's color in storage, see GridManager.PlacePiece), so no
-        /// non-Joker TintedColor could ever match it either — tagging one
-        /// would just recreate the same dead-enchantment problem this fix
-        /// is for.
+        /// target color is always the token's own color, so the tinted
+        /// condition always matches. Joker tokens are excluded: a placed
+        /// Joker cell's FilledColor always stays PieceColor.Joker (see
+        /// GridManager.PlacePiece), so no TintedColor could ever match it.
         /// </summary>
         public IReadOnlyList<int> TagTintedTokensRandom(int count, IRandomProvider rng)
         {
@@ -560,10 +493,7 @@ namespace Contigu.Core
         /// there aren't enough untagged ones — and applies <paramref name="makeTrait"/>
         /// (given the token itself and a random valid local cell index for its
         /// shape) to each. <paramref name="eligible"/>, when given, excludes any
-        /// token it returns false for from candidacy entirely (both the
-        /// untagged-preferred pass and the any-token fallback) — used by
-        /// <see cref="TagTintedTokensRandom"/> to keep Joker tokens out, since
-        /// their trait could never fire either way (see there). Returns the
+        /// token it returns false for from candidacy in both passes. Returns the
         /// tagged deck indices.
         /// </summary>
         private IReadOnlyList<int> TagRandomTokens(int count, IRandomProvider rng, System.Func<PieceToken, int, PieceTrait> makeTrait, System.Func<PieceToken, bool> eligible = null)
@@ -612,12 +542,11 @@ namespace Contigu.Core
 
         /// <summary>
         /// Up to <paramref name="count"/> random distinct deck indices, using
-        /// the EXACT same candidate-selection rule as <see cref="TagRandomTokens"/>
+        /// the same candidate-selection rule as <see cref="TagRandomTokens"/>
         /// (prefer untagged tokens, fall back to any token if there aren't
-        /// enough) — but these are only SHOWN to the player, not tagged. Feeds
-        /// the shop's "choose which tiles get this upgrade" flow (spec: "un
-        /// choix de 5 tiles") — see <see cref="TagSpecificTokens"/> for the
-        /// other half.
+        /// enough) — but these are only shown to the player, not tagged. Feeds
+        /// the shop's "choose which tiles get this upgrade" flow — see
+        /// <see cref="TagSpecificTokens"/> for the other half.
         /// </summary>
         public IReadOnlyList<int> GetCandidateTokenIndices(int count, IRandomProvider rng, System.Func<PieceToken, bool> eligible = null)
         {
@@ -653,15 +582,10 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Tags EXACTLY the given deck indices with a trait of <paramref
+        /// Tags exactly the given deck indices with a trait of <paramref
         /// name="kind"/> — the player-chosen counterpart to the random
-        /// Tag*TokensRandom methods above, used once the shop reveals which
-        /// Grid-pool upgrade a purchased slot actually grants and the player
-        /// picks which of the shown candidates (see
-        /// <see cref="GetCandidateTokenIndices"/>) receive it. One random
-        /// valid local cell index per token, same convention as every
-        /// Tag*TokensRandom method — Tinted is the one kind that also needs
-        /// its target color pinned to the token's own (see
+        /// Tag*TokensRandom methods above. Tinted is the one kind that also
+        /// needs its target color pinned to the token's own (see
         /// TagTintedTokensRandom), handled the same way here.
         /// </summary>
         public void TagSpecificTokens(IReadOnlyList<int> deckIndices, PieceTraitKind kind, IRandomProvider rng)

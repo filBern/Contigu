@@ -6,55 +6,24 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Builds one modifier badge (a category-colored chip showing its 2-letter
-    /// abbreviation, wired to reveal a hover tooltip with the full name/
-    /// description) — shared by the modifier draft cards and the persistent
-    /// modifier side panel so both stay visually and behaviorally consistent.
-    /// A modifier with real icon art (see ModifierVisualDefaults.GetIcon)
-    /// shows that instead, taking priority over everything else below. Absent
-    /// that, one exception, on explicit request: the "Glow" (Éclat) and
-    /// "Devotion" per-color modifiers show an actual colored tile in their
-    /// own color (see ModifierVisualDefaults.GetColorTileColor) instead of
-    /// their opaque 2-letter code — spelling out a color name read as
-    /// unclear jargon compared to just showing it.
+    /// Builds one modifier badge (a category-colored chip showing its 2-letter abbreviation, wired to reveal
+    /// a hover tooltip with the full name/description) — shared by the modifier draft cards and the
+    /// persistent modifier side panel. A modifier with real icon art (see ModifierVisualDefaults.GetIcon)
+    /// shows that instead; absent that, per-color modifiers like "Glow"/"Devotion" show an actual colored
+    /// tile (see ModifierVisualDefaults.GetColorTileColor) instead of the 2-letter code.
     /// </summary>
     public static class ModifierBadgeFactory
     {
         /// <summary>
-        /// <paramref name="usageCountProvider"/> is optional — when given, the
-        /// badge's tooltip additionally shows how many times this modifier
-        /// has fired this run (queried live on each hover, not baked in at
-        /// creation time, since it keeps changing after the badge is built).
-        /// Only the persistent side panel passes one; draft-card badges
-        /// (modifiers not picked yet) leave it null and show no usage line.
-        /// <paramref name="showBackground"/> defaults to true (the usual
-        /// category-colored chip + outline); the shop's own modifier cards
-        /// pass false to show just the bare icon/preview/abbreviation
-        /// instead, on explicit request ("Peux-tu enlever le carré coloré
-        /// derrière l'icon aussi?" — the card now carries the name/
-        /// description as its own text, so the chip read as redundant).
-        /// <paramref name="attachTooltip"/> defaults to true; the shop's
-        /// modifier cards pass false to skip it entirely, on explicit
-        /// request ("Pas besoin du tooltip sur les modifiers qu'on peut
-        /// acheter dans le shop, seulement dans notre liste de modifiers
-        /// possédé") — a shop card already shows its own name/description
-        /// as static text, so a hover tooltip there was pure redundancy;
-        /// only the persistent side panel (badges with no text of their
-        /// own) still needs it. <paramref name="progressiveStateProvider"/>
-        /// mirrors <paramref name="usageCountProvider"/> — only the side
-        /// panel passes one, so a progressive/incremental modifier's
-        /// tooltip can show its current live state (see
-        /// RunManager.GetProgressiveModifierStateText). <paramref
-        /// name="levelStateProvider"/> is the same shape again — only the
-        /// side panel passes one, non-null only past level 1 — so a
-        /// LEVELED modifier's tooltip shows its true, scaled effect instead
-        /// of just the unleveled base numbers baked into its static
-        /// Description. <paramref name="showSellValue"/> defaults to false;
-        /// only the persistent side panel passes true, on explicit request
-        /// ("j'aimerais qu'on ajoute la sell value d'un modifier en haut a
-        /// droite de son tooltip") — a modifier is only actually sellable
-        /// (RunManager.SellModifier) once it's in that list, so draft/shop
-        /// candidate badges never show one.
+        /// <paramref name="usageCountProvider"/> is optional — when given, the badge's tooltip additionally
+        /// shows how many times this modifier has fired this run, queried live on each hover. Only the
+        /// persistent side panel passes one. <paramref name="showBackground"/> defaults to true; the shop's
+        /// modifier cards pass false since their own card text makes the chip redundant.
+        /// <paramref name="attachTooltip"/> defaults to true; the shop's cards pass false since they already
+        /// show name/description as static text. <paramref name="progressiveStateProvider"/> and
+        /// <paramref name="levelStateProvider"/> let the side panel's tooltip show a modifier's current live
+        /// or leveled state instead of its static Description. <paramref name="showSellValue"/> defaults to
+        /// false; only the side panel passes true, since only modifiers in that list are sellable.
         /// </summary>
         public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
         {

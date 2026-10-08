@@ -5,8 +5,8 @@ namespace Contigu.Core
     /// Tokens are value types: two tokens of the same shape+color are
     /// interchangeable, which is all the "Retirer/Dupliquer/Recolorer" upgrades need.
     /// An optional <see cref="Trait"/> tags one of the token's own cells with a
-    /// one-time golden/tinted/multiplier enchantment (spec 5.4 redesign) that
-    /// fires when this specific token is placed.
+    /// one-time golden/tinted/multiplier enchantment that fires when this
+    /// specific token is placed.
     /// </summary>
     public readonly struct PieceToken
     {

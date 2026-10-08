@@ -4,13 +4,13 @@ using UnityEngine;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Every cell of one DISTINCT non-Joker color within a single cleared
+    /// Every cell of one distinct non-Joker color within a single cleared
     /// line (not necessarily adjacent to each other) — worth
-    /// EconomyConstants.LueurPerColorGroup, "2 points par couleur" on
-    /// explicit request. Computed by GridManager.ComputeLueurGroups so the
-    /// presentation layer can animate each color's Lueur separately (pulse
-    /// its cells, then fly a popup from the group's own center to the Lueur
-    /// HUD label) instead of only ever seeing the placement's total.
+    /// EconomyConstants.LueurPerColorGroup. Computed by
+    /// GridManager.ComputeLueurGroups so the presentation layer can animate
+    /// each color's Lueur separately (pulse its cells, then fly a popup
+    /// from the group's own center to the Lueur HUD label) instead of only
+    /// ever seeing the placement's total.
     /// </summary>
     public readonly struct LueurGroup
     {

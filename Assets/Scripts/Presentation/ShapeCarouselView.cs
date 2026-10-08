@@ -7,18 +7,13 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Slot-machine-style overlay for the "Piece Mastery" upgrade — a
-    /// grayed-out reel of all 8 shapes (spec extension, on explicit
-    /// request: "tu vois un carrousel qui parcours tous les types de
-    /// tetromino colorié en gris parce que la couleur importe peu") spins
-    /// under a fixed highlight frame and decelerates onto the shape
-    /// RunManager already leveled up (RunManager.GrantShapeMastery), then
-    /// a reveal card shows its new level and the resulting per-placement
-    /// bonus. Same spin/reel mechanics as ModifierCarouselView (badge size,
-    /// spin duration, easing, winning-index-not-last-slot reasoning) but
-    /// driven by ShapeId instead of ModifierId, and with a much simpler
-    /// fixed-size reveal card (no per-modifier description text to measure
-    /// a dynamic height for).
+    /// Slot-machine-style overlay for the "Piece Mastery" upgrade: a
+    /// grayed-out reel of all 8 shapes spins under a fixed highlight frame
+    /// and decelerates onto the shape RunManager already leveled up
+    /// (RunManager.GrantShapeMastery), then a reveal card shows its new
+    /// level and the resulting per-placement bonus. Same spin/reel
+    /// mechanics as ModifierCarouselView but driven by ShapeId instead of
+    /// ModifierId, with a simpler fixed-size reveal card.
     /// </summary>
     public sealed class ShapeCarouselView : MonoBehaviour
     {
@@ -38,11 +33,6 @@ namespace Contigu.Presentation
         private const float BlockSpacing = 20f;
         private const float CanvasHeight = 800f;
 
-        // Grayed-out silhouette color for every reel badge/card glyph — on
-        // explicit request ("colorié en gris parce que la couleur importe
-        // peu"), reusing ShapePreviewFactory.BuildMono's flat-color mode
-        // (the same one Forme* Specialist modifier badges already use to
-        // show which shape they target).
         private static readonly Color MonoShapeColor = new Color(0.6f, 0.6f, 0.6f);
 
         public event System.Action Dismissed;
@@ -165,9 +155,7 @@ namespace Contigu.Presentation
             _okButton.gameObject.SetActive(false);
             _reelRect.anchoredPosition = Vector2.zero;
 
-            // Purely decorative filler badges, same "a fresh System.Random
-            // is fine here, nothing Core resolves" reasoning as
-            // ModifierCarouselView.
+            // Purely decorative filler badges; a fresh System.Random is fine here since nothing Core resolves.
             var filler = new System.Random();
             var allShapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
             for (int i = 0; i < ReelLength; i++)
@@ -230,13 +218,7 @@ namespace Contigu.Presentation
             _spinCoroutine = null;
         }
 
-        /// <summary>
-        /// (Re)builds the reveal card for whichever shape is currently
-        /// centered under the highlight — filler badges show their own
-        /// name at level 1 (no bonus line, since they weren't actually
-        /// leveled up), only the true <paramref name="granted"/> shape ever
-        /// shows <paramref name="level"/> above 1.
-        /// </summary>
+        /// <summary>(Re)builds the reveal card for whichever shape is currently centered under the highlight; filler badges show level 1 with no bonus line.</summary>
         private void UpdateCard(ShapeId id, int level)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
@@ -257,12 +239,7 @@ namespace Contigu.Presentation
             glyphBox.anchoredPosition = new Vector2(0f, -16f);
             ShapePreviewFactory.BuildMono(glyphBox, PieceShapeCatalog.Get(id), MonoShapeColor);
 
-            // No FontStyle.Bold (see UpgradeCardFactory's own comment on
-            // this) — the Digitalt font has no true bold face, so Unity's
-            // legacy Text synthesizes one by double-drawing a shifted
-            // copy, which reads as blurry rather than bold (explicit
-            // report: "Les titre et level pour les cartes de mastery sont
-            // flou a cause du blur"). Size alone carries the emphasis.
+            // No FontStyle.Bold: the Digitalt font has no true bold face, so Unity's legacy Text synthesizes one by double-drawing a shifted copy, which reads as blurry. Size alone carries the emphasis.
             var name = UIFactory.CreateText(cardImage.transform, "Name", VisualDefaults.GetShapeName(id), 18, UITheme.TextPrimary);
             name.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             name.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -271,14 +248,7 @@ namespace Contigu.Presentation
             name.rectTransform.anchoredPosition = new Vector2(0f, -(16f + CardGlyphBoxSize + 8f));
 
             string levelLine = level > 1 ? "Level " + level : "Level 1";
-            // UITheme.TextPrimary, NOT VisualDefaults.GoldenColor — bright
-            // gold text on this card's own light UITheme.Panel background
-            // (both near-white) read as almost invisible (explicit report:
-            // "le text level nb jaune n'est pas lisible"). Same dark color
-            // the Name/Desc text right below already use on this exact
-            // card; the gold highlight frame around the whole reveal still
-            // carries the "special" flavor without needing the text itself
-            // to repeat it.
+            // UITheme.TextPrimary, not VisualDefaults.GoldenColor: gold text on this light Panel background is nearly invisible.
             var levelText = UIFactory.CreateText(cardImage.transform, "Level", levelLine, 16, UITheme.TextPrimary);
             levelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             levelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);

@@ -4,12 +4,10 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Simple 5-wide x 7-tall dot-matrix glyphs for the letters spelling
-    /// "CONTIGU" — lets MainMenuView spell the game's own name out of the
-    /// same colored square tiles gameplay itself is built from (spec
-    /// extension, explicit request: "on va écrire le nom du jeu Contigu...
-    /// écrit avec des tuiles"). Only the 7 distinct letters the title
-    /// actually needs are defined; add more entries here if a future
-    /// screen needs other letters.
+    /// "CONTIGU", letting MainMenuView spell the game's name out of the same
+    /// colored square tiles gameplay itself is built from. Only the 7
+    /// distinct letters the title actually needs are defined; add more
+    /// entries here if a future screen needs other letters.
     /// </summary>
     public static class TitleTileFont
     {

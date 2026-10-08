@@ -18,25 +18,20 @@ namespace Contigu.Presentation
     {
         /// <summary>
         /// Fills <paramref name="container"/> (its sizeDelta sets the preview's
-        /// pixel budget — cell size is computed to fit inside it unless
+        /// pixel budget; cell size is computed to fit inside it unless
         /// <paramref name="fixedCellSize"/> is supplied) with one square per
-        /// cell of <paramref name="shape"/>. When
-        /// <paramref name="trait"/> is given, its enchanted cell also gets a
-        /// small corner badge — EVERY cell gets one instead, for a Joker-
-        /// exclusive combat kind (see PieceTrait.IsJokerCombatKind, explicit
-        /// request: "chaque tuile aura l'upgrade"), since those tag the
-        /// whole piece rather than one specific cell; hovering it shows
-        /// <paramref name="tooltip"/> with the trait's name/effect, and
-        /// clicking it forwards the click to
-        /// <paramref name="clickForwardTarget"/> so the badge never swallows a
-        /// click meant for whatever bigger clickable element it sits inside.
-        /// Returns the LAST badge built's RectTransform (null if <paramref name="trait"/>
-        /// is null) — TileChoiceView uses it to fade a preview badge in when
-        /// the player selects that piece, rather than having it just appear
-        /// (only ever one badge in that case, since Grid-pool shop traits
-        /// are never a Joker-exclusive combat kind).
-        /// <paramref name="fixedCellSize"/> lets compact catalogs use equal
-        /// tile dimensions across shapes of different bounding-box sizes.
+        /// cell of <paramref name="shape"/>. When <paramref name="trait"/> is
+        /// given, its enchanted cell also gets a small corner badge; every
+        /// cell gets one instead for a Joker-exclusive combat kind (see
+        /// PieceTrait.IsJokerCombatKind), since those tag the whole piece
+        /// rather than one specific cell. Hovering a badge shows
+        /// <paramref name="tooltip"/>; clicking it forwards the click to
+        /// <paramref name="clickForwardTarget"/> so the badge never swallows
+        /// a click meant for a bigger clickable element it sits inside.
+        /// Returns the last badge built's RectTransform (null if
+        /// <paramref name="trait"/> is null). <paramref name="fixedCellSize"/>
+        /// lets compact catalogs use equal tile dimensions across shapes of
+        /// different bounding-box sizes.
         /// </summary>
         public static RectTransform Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget, float? fixedCellSize = null)
         {
@@ -54,12 +49,7 @@ namespace Contigu.Presentation
 
             int cols = maxX + 1;
             int rows = maxY + 1;
-            // Capped at the real grid's own cell size (on explicit player
-            // report — a small shape, most visibly Single, used to stretch
-            // to fill the whole preview box, several times bigger than it
-            // actually renders once placed) — fits within the box exactly
-            // as before for a shape that already needs more room than that,
-            // just never stretches to a size the grid itself never shows.
+            // Capped at the real grid's own cell size so a small shape never stretches larger than it renders once placed.
             float cell = fixedCellSize.HasValue
                 ? fixedCellSize.Value
                 : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
@@ -69,28 +59,20 @@ namespace Contigu.Presentation
             Vector2Int? traitPos = trait.HasValue && !badgeEveryCell ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
 
             float startX = -(cols * cell) / 2f + cell / 2f;
-            // Y increases UPWARD, matching GridView's own convention — otherwise
-            // shapes render vertically flipped from how they actually look once
-            // placed on the grid.
+            // Y increases upward, matching GridView's convention; otherwise shapes render vertically flipped from how they look once placed.
             float startY = -(rows * cell) / 2f + cell / 2f;
 
             for (int y = 0; y < rows; y++)
             {
                 for (int x = 0; x < cols; x++)
                 {
-                    // An unfilled bounding-box square (a shape like an
-                    // L-tromino has some) draws nothing at all — on
-                    // explicit report, its old translucent placeholder
-                    // still read as a distinctly lighter square against a
-                    // card/panel background lighter than pure black:
-                    // "j'aimerais qu'on ait pas le carré ... plus clair,
-                    // il peut être invisible".
+                    // An unfilled bounding-box square (a shape like an L-tromino has some) draws nothing at all.
                     if (!occupied.Contains(new Vector2Int(x, y)))
                     {
                         continue;
                     }
 
-                    // Same shared card art/tint as a filled grid cell (see GridCellView.ApplyState).
+                    // Same card art/tint as a filled grid cell (see GridCellView.ApplyState).
                     var img = UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.TileSprite);
                     img.color = fillColor;
                     img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
@@ -105,12 +87,7 @@ namespace Contigu.Presentation
 
                     if (badgeEveryCell || (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y)))
                     {
-                        // Sized relative to the cell itself rather than a
-                        // fixed 14px — at HandView's larger preview box
-                        // that clamps out to the same 14px as before, but
-                        // at DraftView's much smaller type-row preview a
-                        // fixed 14px badge would nearly cover the whole
-                        // (~15px) cell.
+                        // Sized relative to the cell itself rather than a fixed 14px, since a smaller preview cell would otherwise be nearly covered by the badge.
                         float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
                         builtBadge = BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
                     }
@@ -120,15 +97,7 @@ namespace Contigu.Presentation
             return builtBadge;
         }
 
-        /// <summary>
-        /// Simplified sibling of <see cref="Build"/> — just the shape's
-        /// silhouette as solid squares in one flat color (no piece color,
-        /// colorblind icon or trait badge) — used where something needs to
-        /// show WHICH shape it targets instead of naming it in text (see
-        /// ModifierBadgeFactory, the Forme* "Specialist" modifiers). Only
-        /// filled cells get a square; unlike Build there's no dimmed
-        /// placeholder for empty cells in the bounding box.
-        /// </summary>
+        /// <summary>Simplified sibling of <see cref="Build"/>: just the shape's silhouette as solid squares in one flat color (no piece color, colorblind icon or trait badge). Only filled cells get a square.</summary>
         public static void BuildMono(RectTransform container, PieceShape shape, Color squareColor)
         {
             int maxX = 0;
@@ -174,10 +143,7 @@ namespace Contigu.Presentation
 
         private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)
         {
-            // Top-right corner — same convention as GridCellView's placed
-            // trait-origin badge and its hover-preview equivalent, on
-            // explicit request that all three badge positions match instead
-            // of each living in a different corner.
+            // Top-right corner, same convention as GridCellView's placed trait-origin badge and its hover-preview equivalent.
             var badge = UIFactory.CreatePanel(parent, "TraitBadge", PieceTraitVisualDefaults.GetBadgeColor(trait));
             badge.rectTransform.anchorMin = new Vector2(1f, 1f);
             badge.rectTransform.anchorMax = new Vector2(1f, 1f);

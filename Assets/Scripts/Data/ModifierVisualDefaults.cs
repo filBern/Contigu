@@ -5,18 +5,11 @@ using UnityEngine;
 namespace Contigu.Data
 {
     /// <summary>
-    /// Display defaults for modifier badges. Most modifiers still have no
-    /// bespoke icon art, so their badge falls back to a colored chip (accent
-    /// = its <see cref="ModifierCategory"/>) showing a 2-letter abbreviation
-    /// instead of a picture — the full name/description only shows in a
-    /// hover tooltip (see Presentation.TooltipView). The first 9 catalog
-    /// entries (Prisme..Tricolore) DO have real art now (player-supplied
-    /// PNGs dropped into Assets/Resources/Icons/Modifiers, named after each
-    /// one's own <see cref="ModifierDefinition.Name"/> with spaces
-    /// stripped), loaded via <see cref="GetIcon"/> — same null-means-no-icon-
-    /// yet fallback convention used throughout this project's Resources.Load
-    /// calls. Adding art for another modifier later only needs one more
-    /// entry in the <see cref="Icons"/> dictionary below.
+    /// Display defaults for modifier badges. A modifier without bespoke icon
+    /// art falls back to a colored chip (accent = its <see cref="ModifierCategory"/>)
+    /// showing a 2-letter abbreviation; the full name/description shows in a
+    /// hover tooltip (see Presentation.TooltipView). Icon art is loaded via
+    /// <see cref="GetIcon"/>, which returns null for any modifier without art yet.
     /// </summary>
     public static class ModifierVisualDefaults
     {
@@ -95,37 +88,27 @@ namespace Contigu.Data
             { ModifierId.Epuisement, "EP" },
             { ModifierId.Multitude, "MT" },
             { ModifierId.Experience, "XP" },
-            // Eleventh batch: Format* size tiers (curation pass, replaces
-            // the 10 FormeX/FormeXPoints per-shape abbreviations above) —
-            // no SpecialistShapes entry (see below): a size tier covers
-            // several shapes at once, so no single silhouette would
-            // represent it honestly, unlike the old one-shape-per-modifier
-            // entries. Falls back to this plain abbreviation instead.
+            // Format* size tiers cover several shapes at once, so no single
+            // silhouette represents them; falls back to this abbreviation instead.
             { ModifierId.FormatPetitSpecialiste, "F1" },
             { ModifierId.FormatMoyenSpecialiste, "F2" },
             { ModifierId.FormatGrandSpecialiste, "F3" },
             { ModifierId.FormatPetitGlow, "G1" },
             { ModifierId.FormatMoyenGlow, "G2" },
             { ModifierId.FormatGrandGlow, "G3" },
-            // Twelfth batch: group-size parity
             { ModifierId.Pair, "PI" },
             { ModifierId.Impair, "IM" },
-            // Thirteenth batch: synergy pass
             { ModifierId.Polyvalence, "PV" },
             { ModifierId.RenfortJoker, "RJ" },
             { ModifierId.Arsenal, "AS" },
-            // Fourteenth batch: more synergy pass
             { ModifierId.CollectionChromatique, "CC" },
             { ModifierId.Cadence, "CD" },
             { ModifierId.Echo, "EC" },
             { ModifierId.Siphon, "SI" }
         };
 
-        // One accent per category, reusing the same v1 8-color palette as
-        // VisualDefaults/UITheme — kept as its own literal set here rather than
-        // referencing Presentation.UITheme, since Data must not depend on
-        // Presentation (Contigu.Core / Contigu.Data / Contigu.Presentation are
-        // separate assemblies with dependencies flowing one way — see README).
+        // One accent per category — kept as its own literal set here rather than
+        // referencing Presentation.UITheme, since Data must not depend on Presentation.
         private static readonly Dictionary<ModifierCategory, Color> CategoryColors = new Dictionary<ModifierCategory, Color>
         {
             { ModifierCategory.Couleurs, new Color(0.941f, 0.702f, 0.553f) }, // #f0b38d
@@ -146,11 +129,7 @@ namespace Contigu.Data
             return CategoryColors.TryGetValue(category, out var c) ? c : Color.gray;
         }
 
-        // Originally just the 4 "Glow" (Éclat) modifiers — extended to the 4
-        // "Devotion" ones too (explicit request: "Violet devotion manque le
-        // preview single piece comme icon de modifier", i.e. Devotion was
-        // missing the same treatment its Éclat sibling already got) since
-        // both families are per-color and read exactly the same way: an
+        // Éclat and Devotion are both per-color families, so each shows an
         // actual colored tile instead of an opaque 2-letter code.
         private static readonly Dictionary<ModifierId, PieceColor> ColorTileColors = new Dictionary<ModifierId, PieceColor>
         {
@@ -164,20 +143,16 @@ namespace Contigu.Data
             { ModifierId.DevotionLime, PieceColor.Lime }
         };
 
-        /// <summary>The color an Éclat/Devotion (per-color) modifier is about, or null for every other modifier — same idea as <see cref="GetSpecialistShape"/>: the badge shows an actual colored tile instead of an opaque 2-letter code, on explicit request ("Coral glow et les 3 autres du genre, on peut mettre l'icon d'une simple tuile... ce sera rapidement clair", later extended to Devotion the same way).</summary>
+        /// <summary>The color an Éclat/Devotion (per-color) modifier is about, or null for every other modifier.</summary>
         public static PieceColor? GetColorTileColor(ModifierId id)
         {
             return ColorTileColors.TryGetValue(id, out var color) ? color : (PieceColor?)null;
         }
 
-        // Real per-modifier icon art (player-authored, on explicit request:
-        // "J'ai fait un icon pour les 9 premier modifiers, je les ai nommé
-        // par leur nom dans le dossier Assets/Resources/Icons/Modifiers") —
-        // one PNG per modifier, named after its own ModifierDefinition.Name
-        // with spaces stripped (e.g. "Mega Chain" -> MegaChain.png). Loaded
-        // once here, at startup; Resources.Load returns null for any
-        // modifier without art yet rather than throwing, so GetIcon below
-        // can be called for every modifier unconditionally.
+        // One PNG per modifier, named after its own ModifierDefinition.Name with
+        // spaces stripped (e.g. "Mega Chain" -> MegaChain.png). Resources.Load
+        // returns null for any modifier without art yet rather than throwing,
+        // so GetIcon below can be called for every modifier unconditionally.
         private static readonly Dictionary<ModifierId, Sprite> Icons = new Dictionary<ModifierId, Sprite>
         {
             { ModifierId.Prisme, Resources.Load<Sprite>("Icons/Modifiers/Prism") },

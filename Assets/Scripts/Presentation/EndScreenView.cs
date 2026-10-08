@@ -62,9 +62,6 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Success;
             _subtitleText.text = "Run complete — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
-            // Centered — same single-button layout as ShowDefeat below,
-            // since removing Endless mode left New Run as Victory's only
-            // button too (explicit request: "On enleve le endless mode").
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
             _root.gameObject.SetActive(true);
         }
@@ -75,18 +72,14 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Danger;
             _subtitleText.text = "Quota not reached — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
-            // Centered (explicit request: "Si on a perdu la partie, le
-            // bouton new run doit être centré horizontalement").
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
             _root.gameObject.SetActive(true);
         }
 
         /// <summary>
-        /// Lightweight meta-progression (explicit request: "enchaînons sur
-        /// la meta progression" -> "suivi de stats et meilleurs scores" —
-        /// no gameplay effect, just cross-run stats persisted via
-        /// MetaStatsFileStore). "New record" is highlighted in Success
-        /// color; the rest stays muted like the existing subtitle style.
+        /// Lightweight meta-progression with no gameplay effect, just
+        /// cross-run stats persisted via MetaStatsFileStore. "New record"
+        /// is highlighted in Success color; the rest stays muted.
         /// </summary>
         private void SetMetaStatsText(MetaStats metaStats, bool isNewBestScore)
         {

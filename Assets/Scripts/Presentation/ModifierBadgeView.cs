@@ -16,15 +16,8 @@ namespace Contigu.Presentation
 
         // Whether the pointer is currently resting over this badge — while
         // true, Update() below keeps re-pushing fresh content into the
-        // tooltip every frame. Without this, a badge's "Used Nx this run"/
-        // "Currently ..." line only ever reflected whatever was true the
-        // INSTANT the pointer entered (OnPointerEnter fires once, not
-        // continuously) — the tooltip would show a stale, frozen number for
-        // as long as the player kept hovering, even as more placements kept
-        // changing the real value underneath (on explicit report, for
-        // Épuisement/Dwindling: "ne descend pas sous 95... il devrait
-        // descendre de 5 a chaque pièce joué" — it does, this was purely a
-        // display staleness bug, not a scoring one).
+        // tooltip every frame, since OnPointerEnter only fires once and the
+        // underlying values (usage count, progressive state) keep changing.
         private bool _hovering;
 
         public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
@@ -67,14 +60,10 @@ namespace Contigu.Presentation
                 ? "Used " + _usageCountProvider(_def.Id) + "x this run"
                 : null;
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
-            // Progressive/incremental modifiers (Gradient, Repetition,
-            // Densité, Épuisement, Cartes Enchantées, Multitude,
-            // Solidarité, Experience) get an extra line showing their
-            // CURRENT effective state (on explicit request: "il faut
-            // afficher dans le tooltip l'état progressif du modifier (ex:
-            // Currently x2.3)") — appended to the description rather than
-            // the fixed-height subtitle slot, since the description label
-            // already auto-sizes its height around whatever text it holds.
+            // Progressive/incremental modifiers get an extra line showing
+            // their current effective state, appended to the description
+            // rather than the fixed-height subtitle slot, since the
+            // description label already auto-sizes around its text.
             string progressiveState = _progressiveStateProvider != null ? _progressiveStateProvider(_def.Id) : null;
             if (!string.IsNullOrEmpty(progressiveState))
             {
@@ -82,26 +71,21 @@ namespace Contigu.Presentation
             }
             else
             {
-                // Every OTHER (non-progressive) modifier's Description is
-                // static text baked at base (level-1) numbers — this is the
-                // generic level line instead, covering the other ~40+
-                // modifiers a per-modifier "Currently ..." line was never
-                // written for. Skipped when progressiveState already fired
-                // above: that line already reports the true, level-scaled
-                // value on its own, so both together would just repeat the
-                // same information.
+                // Every other (non-progressive) modifier's Description is
+                // static text baked at base (level-1) numbers, so this
+                // generic level line fills in the level-scaled value.
+                // Skipped when progressiveState already fired above, since
+                // that line already reports the true value.
                 string levelState = _levelStateProvider != null ? _levelStateProvider(_def.Id) : null;
                 if (!string.IsNullOrEmpty(levelState))
                 {
                     description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
                 }
             }
-            // Sell value (explicit request: "j'aimerais qu'on ajoute la sell
-            // value d'un modifier en haut a droite de son tooltip") — same
-            // formula as RunManager.SellModifier (base price minus 1), shown
-            // only for badges the side panel builds (this modifier is
-            // already owned and sellable); draft/shop-candidate badges never
-            // pass showSellValue, since those aren't owned yet.
+            // Same formula as RunManager.SellModifier (base price minus 1),
+            // shown only for badges the side panel builds (already owned
+            // and sellable); draft/shop-candidate badges never pass
+            // showSellValue.
             int? sellValue = _showSellValue ? ModifierPricing.GetPrice(_def.Id) - 1 : (int?)null;
             _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, sellValue: sellValue);
         }

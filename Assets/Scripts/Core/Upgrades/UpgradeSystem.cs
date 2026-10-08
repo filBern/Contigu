@@ -4,10 +4,7 @@ namespace Contigu.Core
 {
     /// <summary>
     /// Resolves upgrades for the Lueur shop (see RunManager.ShopUpgradeSlots)
-    /// and applies a chosen one's effect. The old round-end draft (RollDraft,
-    /// a guaranteed-Bank/guaranteed-Grid/wildcard pick of 3) is gone — every
-    /// upgrade now comes from a purchased shop slot instead (spec extension,
-    /// explicit request: "je ne veux plus du tout du système actuel").
+    /// and applies a chosen one's effect.
     /// </summary>
     public sealed class UpgradeSystem
     {
@@ -75,18 +72,7 @@ namespace Contigu.Core
             return pool[pool.Count - 1];
         }
 
-        /// <summary>
-        /// Draft weight for one upgrade — just its rarity's weight (see
-        /// UpgradeRarityUtility.GetDraftWeight). Random Modifier used to get
-        /// a flat +12 override here, boosting it past its own Uncommon
-        /// weight so it wouldn't get lost among Bank's other 7 entries
-        /// (explicit request: "On peut augmenter un peu les chances d'avoir
-        /// un random modifier") — removed once it got its own small
-        /// Modifier pool alongside Modifier Upgrade (on a later, opposite
-        /// complaint: "le type random modifier arrive un peu trop souvent
-        /// comme upgrade"), where a plain Uncommon weight already gives it
-        /// a simple 50/50 split with its one pool-mate, no override needed.
-        /// </summary>
+        /// <summary>Draft weight for one upgrade — just its rarity's weight (see UpgradeRarityUtility.GetDraftWeight).</summary>
         private static int GetWeight(UpgradeDefinition upgrade)
         {
             return UpgradeRarityUtility.GetDraftWeight(upgrade.Rarity);
@@ -100,10 +86,10 @@ namespace Contigu.Core
         /// (tile-trait) upgrades never go through here either — the shop
         /// always resolves them via <see cref="ApplyToChosenTiles"/> instead,
         /// since the player picks which deck tokens receive the trait rather
-        /// than it being assigned at random (spec: "un choix de 5 tiles").
-        /// Returns false if the sub-choice couldn't be resolved (e.g. either
-        /// of Replace's two chosen types no longer exists) or if <paramref
-        /// name="upgrade"/> isn't one of the three above.
+        /// than it being assigned at random. Returns false if the sub-choice
+        /// couldn't be resolved (e.g. either of Replace's two chosen types
+        /// no longer exists) or if <paramref name="upgrade"/> isn't one of
+        /// the three above.
         /// </summary>
         public bool Apply(UpgradeDefinition upgrade, UpgradeSubChoice subChoice, DeckManager deck)
         {

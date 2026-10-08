@@ -9,19 +9,16 @@ namespace Contigu.Core
     /// <summary>
     /// One purchasable slot in the between-round shop (see
     /// RunManager.ShopBlisterSlots/ShopUpgradeSlots). A Modifier slot shows
-    /// its exact <see cref="ModifierId"/> plainly — on explicit request,
-    /// modifiers are never a mystery ("les modifiers sont précis, pas de
-    /// type"). An Upgrade slot's visibility depends on WHICH section it's
+    /// its exact <see cref="ModifierId"/> plainly — modifiers are never a
+    /// mystery. An Upgrade slot's visibility depends on which section it's
     /// in, not on the slot itself: <see cref="HiddenUpgrade"/> is always
     /// fully resolved the moment the slot is rolled (both sections), but a
     /// "Blister" slot (RunManager.ShopBlisterSlots) shows it plainly same
-    /// as a modifier — on explicit request, "on aperçoit 3 modifiers ou
-    /// upgrades" — while a "Casino" slot (RunManager.ShopUpgradeSlots)
+    /// as a modifier, while a "Casino" slot (RunManager.ShopUpgradeSlots)
     /// still only reveals its <see cref="Core.UpgradePool"/> until
-    /// purchased, the original mystery-box behavior (spec: "tout ce que tu
-    /// sais c'est l'upgrade se situe dans quel UpgradePool"). The
-    /// presentation layer decides which treatment applies purely by which
-    /// of RunManager's two slot arrays a given ShopSlot came from.
+    /// purchased — the original mystery-box behavior. The presentation
+    /// layer decides which treatment applies purely by which of
+    /// RunManager's two slot arrays a given ShopSlot came from.
     /// </summary>
     public sealed class ShopSlot
     {

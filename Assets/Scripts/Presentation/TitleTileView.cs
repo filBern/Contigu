@@ -8,16 +8,9 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// One tile of the main menu's "CONTIGU" title (see MainMenuView) —
-    /// re-tints itself to one of the OTHER 3 board colors on hover
-    /// (explicit request: "lorsqu'on hover sur une tuile, on change sa
-    /// couleur de manière random (une des trois autres couleurs)"), plus a
-    /// brief scale-up-then-back-down pulse (explicit follow-up request:
-    /// "j'aimerais rajouter le petit pulse on hover dans le nom") — same
-    /// constants/coroutine shape as GridCellView.Pulse, so a title tile
-    /// pulses exactly like a real grid cell scoring points does. Joker is
-    /// excluded from the color pool here — it's a deck wildcard, not a
-    /// paintable tile color.
+    /// One tile of the main menu's "CONTIGU" title (see MainMenuView) — re-tints itself to one of the other
+    /// 3 board colors on hover, plus a brief pulse (same constants/coroutine shape as GridCellView.Pulse).
+    /// Joker is excluded from the color pool — it's a deck wildcard, not a paintable tile color.
     /// </summary>
     public sealed class TitleTileView : MonoBehaviour, IPointerEnterHandler
     {

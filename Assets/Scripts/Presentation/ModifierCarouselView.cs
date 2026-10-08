@@ -8,20 +8,12 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Slot-machine-style overlay for revealing a modifier the player
-    /// didn't pick themselves — the shop's "Random Modifier" upgrade grant
-    /// (explicit request: "pour l'upgrade random modifier, j'aimerais qu'on
-    /// utilise l'animation carousel" — see GameBootstrap.
-    /// OnUpgradeBuyClicked/DebugTriggerRandomModifierShortcut). Originally
-    /// also used for a free modifier granted at the very start of every
-    /// run (removed on explicit request: "Retire le starting modifier"),
-    /// which is why <see cref="Show"/> still takes a <paramref
-    /// name="title"/> argument distinguishing contexts even though only
-    /// one remains. A horizontal reel of random modifier badges (see
-    /// ModifierBadgeFactory) spins under a fixed highlight frame and
-    /// decelerates onto the real pick, then the same modifier-card
-    /// presentation (via ModifierCardFactory) reveals its name/icon/
-    /// description below, blocking until dismissed.
+    /// Slot-machine-style overlay for revealing a modifier the player didn't
+    /// pick themselves (the shop's "Random Modifier" upgrade grant). A
+    /// horizontal reel of random modifier badges spins under a fixed
+    /// highlight frame and decelerates onto the real pick, then the same
+    /// modifier-card presentation (via ModifierCardFactory) reveals its
+    /// name/icon/description below, blocking until dismissed.
     /// </summary>
     public sealed class ModifierCarouselView : MonoBehaviour
     {
@@ -31,11 +23,8 @@ namespace Contigu.Presentation
         private const float BadgeSpacing = 110f;
         // Total badges in the strip — every one but WinningIndex is just
         // eye candy the reel blows past on its way there. WinningIndex sits
-        // a few slots before the end (not the last slot) so a handful of
-        // filler badges are still visible sliding past AFTER the reel stops
-        // — landing on the very last badge in the strip made the spin read
-        // as staged rather than random (explicit feedback: "il devrait y
-        // avoir des modifier après pour vraiment montrer le random").
+        // a few slots before the end so a handful of filler badges are
+        // still visible sliding past after the reel stops.
         private const int ReelLength = 22;
         private const int WinningIndex = ReelLength - 6;
         private const float SpinDuration = 2.4f;
@@ -48,9 +37,8 @@ namespace Contigu.Presentation
         private const int ModifierCardDescFontSize = 14;
         private const float OkHeight = 44f;
         private const float BlockSpacing = 20f;
-        // Same "the canvas is always exactly this tall in its own local
-        // units" reasoning as UpgradeRevealView.CanvasHeight — see
-        // GameBootstrap.BuildCanvas.
+        // The canvas is always exactly this tall in its own local units,
+        // same as UpgradeRevealView.CanvasHeight — see GameBootstrap.BuildCanvas.
         private const float CanvasHeight = 800f;
 
         /// <summary>Fires once the player dismisses the reveal.</summary>
@@ -105,15 +93,12 @@ namespace Contigu.Presentation
             _reelRect.anchorMax = new Vector2(0f, 0.5f);
             _reelRect.pivot = new Vector2(0f, 0.5f);
 
-            // Fixed frame in the exact center of the viewport, added AFTER
+            // Fixed frame in the exact center of the viewport, added after
             // the reel so it draws on top of whichever badge is passing
-            // underneath — whichever one is centered here once the spin
-            // stops is the modifier that actually got granted. Built from 4
-            // plain solid bars rather than an Outline component on a
-            // Color.clear Image: Unity's Shadow/Outline effect multiplies
-            // its own effectColor's alpha by the base Graphic's alpha, so on
-            // a fully transparent (alpha 0) base it silently renders
-            // nothing at all — the bug that made this frame invisible.
+            // underneath. Built from 4 plain solid bars rather than an
+            // Outline component on a Color.clear Image: Unity's Shadow/Outline
+            // effect multiplies its effectColor's alpha by the base Graphic's
+            // alpha, so on a fully transparent base it renders nothing.
             BuildHighlightFrame(viewport.transform);
 
             _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
@@ -170,11 +155,9 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// <paramref name="granted"/> is RunManager.LastRandomModifierGranted
-        /// — already picked and applied by the time this shows; the spin is
-        /// purely presentational suspense, same as UpgradeRevealView's
-        /// reveal never gambles with anything Core hasn't already
-        /// resolved. <paramref name="title"/> is shown above the reel.
+        /// <paramref name="granted"/> is already picked and applied by the
+        /// time this shows; the spin is purely presentational suspense.
+        /// <paramref name="title"/> is shown above the reel.
         /// </summary>
         public void Show(ModifierId granted, string title)
         {
@@ -194,25 +177,17 @@ namespace Contigu.Presentation
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
 
-            // The card stays visible for the WHOLE spin, not just the
-            // final reveal — it's kept in sync with whichever badge is
-            // currently centered under the highlight (see SpinRoutine),
-            // right below the reel it mirrors (explicit request/
-            // clarification: "je parlais de faire afficher le modifier
-            // dans le rectangle sous le carrousel... La liste doit être
-            // hidden en attendant" — the reveal CARD should live-update
-            // during the spin, not the separate MODIFIERS side panel).
-            // Only the OK button waits for the spin to actually land, so
-            // the player can't dismiss mid-spin.
+            // The card stays visible for the whole spin, kept in sync with
+            // whichever badge is currently centered under the highlight
+            // (see SpinRoutine). Only the OK button waits for the spin to
+            // actually land, so the player can't dismiss mid-spin.
             _cardContainer.gameObject.SetActive(true);
             _okButton.gameObject.SetActive(false);
             _reelRect.anchoredPosition = Vector2.zero;
 
             // Purely decorative filler badges — a fresh System.Random here
             // (not the run's own seeded IRandomProvider) is fine since none
-            // of this affects anything Core actually resolves. The granted
-            // modifier sits at WinningIndex, not the last slot, so a few
-            // filler badges are still visible past it once the spin stops.
+            // of this affects anything Core actually resolves.
             var filler = new System.Random();
             for (int i = 0; i < ReelLength; i++)
             {
@@ -221,18 +196,11 @@ namespace Contigu.Presentation
                 BuildReelBadge(def, i);
             }
 
-            // Title/viewport position computed ONCE here, using the WINNING
+            // Title/viewport position computed once here, using the winning
             // modifier's own card height as the centering reference, and
-            // never touched again for the rest of the spin (explicit
-            // request: "je ne veux pas que le caroussel bouge horizontalement
-            // [sic — the reel itself only ever slides sideways by design;
-            // this was about the whole block, reel included, visibly
-            // shifting as UpdateCard used to re-center everything around
-            // whichever filler's description was currently showing], que ce
-            // soit le rectangle sous le caroussel [qui] bouge en hauteur en
-            // fonction"). Only the card container (and the OK button under
-            // it) still move, in UpdateCard, to fit each badge's own
-            // description length as it passes by underneath the reel.
+            // never touched again for the rest of the spin. Only the card
+            // container (and the OK button under it) still move, in
+            // UpdateCard, to fit each badge's own description length.
             LayoutFixedPart(MeasureCardHeight(granted));
 
             _root.gameObject.SetActive(true);
@@ -261,18 +229,12 @@ namespace Contigu.Presentation
 
         private IEnumerator SpinRoutine(ModifierId granted)
         {
-            // Slides the reel left until the WinningIndex badge (the real
-            // pick) sits centered under the fixed highlight frame — an
-            // ease-out cubic (fast start, slow finish) rather than the
-            // linear-then-snap every other "juice" coroutine in this game
-            // uses, since a spin reads as fake if it doesn't visibly
-            // decelerate before landing. The reel is anchored to the
-            // viewport's LEFT edge (see _reelRect's anchor in Build), so
-            // centering a badge under the highlight — which sits at the
-            // viewport's true center, ReelWidth/2 from that same left edge
-            // — needs that offset added; without it, the target badge lands
-            // flush against the viewport's left edge instead (the bug that
-            // made the reveal look off-center).
+            // Slides the reel left until the WinningIndex badge sits centered
+            // under the fixed highlight frame, using an ease-out cubic so
+            // the spin visibly decelerates before landing. The reel is
+            // anchored to the viewport's left edge (see _reelRect's anchor
+            // in Build), so centering a badge under the highlight needs
+            // ReelWidth/2 added as an offset.
             float endX = ReelWidth / 2f - WinningIndex * BadgeSpacing;
             float t = 0f;
             int lastShownIndex = -1;
@@ -284,39 +246,28 @@ namespace Contigu.Presentation
                 float x = Mathf.Lerp(0f, endX, eased);
                 _reelRect.anchoredPosition = new Vector2(x, 0f);
 
-                // Whichever badge is CURRENTLY centered under the highlight
-                // right now, mid-spin — same math as endX above, solved the
-                // other way round (position -> index instead of index ->
-                // position). Only rebuilds the card on an actual change, not
-                // every single frame.
+                // Whichever badge is currently centered under the highlight,
+                // solved the other way round from endX above (position ->
+                // index). Only rebuilds the card on an actual change.
                 int centeredIndex = Mathf.Clamp(Mathf.RoundToInt((ReelWidth / 2f - x) / BadgeSpacing), 0, ReelLength - 1);
                 if (centeredIndex != lastShownIndex)
                 {
                     lastShownIndex = centeredIndex;
                     UpdateCard(_reelModifierIds[centeredIndex]);
-                    // On explicit request: "Le tick du carousel doit être
-                    // trigger chaque fois qu'un modifier arrive au centre
-                    // du carousel" — same moment UpdateCard already keys
-                    // off, one tick per badge that passes under the
-                    // highlight, naturally slowing down with the reel's own
-                    // ease-out deceleration.
                     SfxManager.Play(SfxId.CarouselTick);
                 }
                 yield return null;
             }
             _reelRect.anchoredPosition = new Vector2(endX, 0f);
 
-            // Defensive re-sync: the loop's own last tick should already
-            // have landed on WinningIndex (same math as the hard position
-            // snap just above), but this guarantees the card matches the
-            // real grant exactly regardless of any float drift near the
-            // tail end of the spin.
+            // Defensive re-sync, guarding against float drift near the tail
+            // end of the spin.
             UpdateCard(granted);
             _okButton.gameObject.SetActive(true);
             _spinCoroutine = null;
         }
 
-        /// <summary>(Re)builds the reveal card's contents for <paramref name="id"/> and re-anchors it (and the OK button below it) from the fixed <see cref="_fixedCardTopY"/> set once in LayoutFixedPart — called throughout the spin as the centered badge changes, not just once at the end, so the card genuinely mirrors the reel instead of only appearing once it stops. The title and viewport above are untouched here: only the card grows/shrinks with each badge's own description length.</summary>
+        /// <summary>(Re)builds the reveal card's contents for <paramref name="id"/> and re-anchors it (and the OK button below it) from the fixed <see cref="_fixedCardTopY"/> set once in LayoutFixedPart. Called throughout the spin as the centered badge changes. The title and viewport above are untouched here.</summary>
         private void UpdateCard(ModifierId id)
         {
             for (int i = _cardContainer.childCount - 1; i >= 0; i--)
@@ -348,7 +299,7 @@ namespace Contigu.Presentation
             _okRect.anchoredPosition = new Vector2(0f, _fixedCardTopY - cardHeight - BlockSpacing);
         }
 
-        /// <summary>Positions the title and viewport ONCE per Show(), against a total-height estimate built from the WINNING modifier's own card height — never touched again afterwards, so the reel and its highlight frame stay rock-steady for the whole spin regardless of which filler badge's (shorter or longer) description is currently showing in the card below. Also records <see cref="_fixedCardTopY"/>, the Y the card container (and, from it, the OK button) is placed at on every subsequent UpdateCard call.</summary>
+        /// <summary>Positions the title and viewport once per Show(), against a total-height estimate built from the winning modifier's own card height, so the reel and its highlight frame stay steady for the whole spin. Also records <see cref="_fixedCardTopY"/>, the Y the card container (and the OK button) is placed at on every subsequent UpdateCard call.</summary>
         private void LayoutFixedPart(float referenceCardHeight)
         {
             float totalHeight = TitleHeight + BlockSpacing + ReelHeight + BlockSpacing + referenceCardHeight + BlockSpacing + OkHeight;

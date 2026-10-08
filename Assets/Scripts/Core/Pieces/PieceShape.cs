@@ -22,9 +22,9 @@ namespace Contigu.Core
     }
 
     /// <summary>
-    /// Static registry of the 10 fixed shapes described in spec section 4.3,
-    /// plus every shape pre-rotated at each of the 4 quarter-turns
-    /// (<see cref="GetRotated"/>) for the random per-hand-slot rotation feature.
+    /// Static registry of the 10 fixed shapes, plus every shape pre-rotated
+    /// at each of the 4 quarter-turns (<see cref="GetRotated"/>) for the
+    /// random per-hand-slot rotation feature.
     /// </summary>
     public static class PieceShapeCatalog
     {

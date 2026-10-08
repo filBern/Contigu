@@ -11,51 +11,37 @@ namespace Contigu.Core
     /// </summary>
     public sealed class GridManager
     {
-        // Shrunk from 8 (explicit request: "Au lieu d'une grille de 8x8,
-        // peux tu faire 6x6. Ça sera plus dense, plus rapidement complexe")
-        // — a smaller board fills up faster against the SAME piece budgets/
-        // quotas (see RunConfig), which is the whole point: deliberately
-        // left those untouched rather than compensating the difficulty back
-        // down, since that's exactly the "plus rapidement complexe" this
-        // was asked for.
         public const int Size = 6;
 
         private readonly Cell[,] _cells;
 
-        /// <summary>Dispatch table for <see cref="ApplyPreClearModifiers"/> — built once per instance (not static: most entries call INSTANCE ApplyXxx helpers that read <see cref="_cells"/>), replacing what used to be a ~240-line switch statement (tech-debt pass, on explicit request: "j'aimerais qu'on assess la dette technique" -> "fait celui que tu trouve le plus important"). Every individual ApplyXxx helper body is unchanged; only the routing changed.</summary>
+        /// <summary>Dispatch table for <see cref="ApplyPreClearModifiers"/> — built per instance (not static) since most entries call instance ApplyXxx helpers that read <see cref="_cells"/>.</summary>
         private readonly Dictionary<ModifierId, PreClearModifierEffect> _preClearEffects;
 
-        /// <summary>Same rationale as <see cref="_preClearEffects"/>, for <see cref="ApplyPostClearModifiers"/>'s ~90-line switch statement.</summary>
+        /// <summary>Same rationale as <see cref="_preClearEffects"/>, for <see cref="ApplyPostClearModifiers"/>.</summary>
         private readonly Dictionary<ModifierId, PostClearModifierEffect> _postClearEffects;
 
-        /// <summary>Scored group size of the last placement made this round, or null before the round's first placement — tracked for "Momentum" (Dégradé), reset by <see cref="ResetForNewRound"/>.</summary>
+        /// <summary>Scored group size of the last placement made this round, or null before the round's first placement — tracked for Momentum (Dégradé), reset by <see cref="ResetForNewRound"/>.</summary>
         private int? _lastGroupSize;
 
         /// <summary>Consecutive placements made this round without a line/column clear, as of BEFORE the placement currently in progress — see <see cref="PlacementsSinceLastClear"/>.</summary>
         private int _placementsSinceLastClear;
 
-        /// <summary>Shape of the last piece placed this round, or null before the round's first placement — tracked for "Repetition", reset by <see cref="ResetForNewRound"/>.</summary>
+        /// <summary>Shape of the last piece placed this round, or null before the round's first placement — tracked for Repetition, reset by <see cref="ResetForNewRound"/>.</summary>
         private ShapeId? _lastPlacedShapeId;
 
-        /// <summary>How many placements in a row this round (ending at, and including, the most recent one) share the same shape — 1 means no repeat yet (either the round's first placement, or this shape differs from the previous one). Tracked for the progressive "Repetition" modifier, reset by <see cref="ResetForNewRound"/>.</summary>
+        /// <summary>How many placements in a row this round (ending at, and including, the most recent one) share the same shape — 1 means no repeat yet (either the round's first placement, or this shape differs from the previous one). Reset by <see cref="ResetForNewRound"/>.</summary>
         private int _repetitionStreak;
 
-        /// <summary>Fill color of the last piece placed this round, or null before the round's first placement — tracked for "Color Switch" (Alternance des pièces), reset by <see cref="ResetForNewRound"/>.</summary>
+        /// <summary>Fill color of the last piece placed this round, or null before the round's first placement — tracked for Color Switch (Alternance des pièces), reset by <see cref="ResetForNewRound"/>.</summary>
         private PieceColor? _lastPlacedColor;
 
         /// <summary>
-        /// Permanent RUN-long counter for "Gradient" — how many cleared
-        /// rows/columns have EVER satisfied its no-two-adjacent-same-color
+        /// Permanent run-long counter for Gradient: how many cleared
+        /// rows/columns have ever satisfied its no-two-adjacent-same-color
         /// condition, across every round played so far this run. Unlike
         /// every other tracked field on this class, this one is deliberately
-        /// NOT reset by <see cref="ResetForNewRound"/> (explicit request:
-        /// "Gradiant modifier est tellement difficile a faire... Ajoute x1 a
-        /// ton multiplier pour toutes les round a chaque fois que tu réussi
-        /// a accomplir le modifier. Ne se reset jamais.") — Gradient used to
-        /// be a per-placement xN that reset every placement like its 5
-        /// line-pattern siblings (Arc-en-ciel, Alternance...); it's now a
-        /// standalone permanent multiplier that only ever grows for the rest
-        /// of the run, see <see cref="ApplyGradient"/>.
+        /// NOT reset by <see cref="ResetForNewRound"/> — see <see cref="ApplyGradient"/>.
         /// </summary>
         private int _gradientPermanentBonus;
 
@@ -63,50 +49,45 @@ namespace Contigu.Core
         /// Dwindling (Epuisement): the flat points bonus this placement's
         /// own instance of the modifier would grant right now — starts at
         /// ScoringConstants.EpuisementStartingBonus, drops by
-        /// ScoringConstants.EpuisementDecayPerPlacement after EVERY
-        /// placement this modifier is held for, floored at 0. PERMANENT for
-        /// the whole run, same as <see cref="_gradientPermanentBonus"/>
-        /// above — used to reset every round, but that made it plateau
-        /// around its starting value for players whose rounds only fit a
-        /// placement or two before the quota was reached (on explicit
-        /// report: "Dwelding upgrade ne descend pas sous 95, il devrait
-        /// descendre de 5 a chaque pièce joué" — the request's own wording,
-        /// "à chaque pièce joué", has no round-boundary exception).
+        /// ScoringConstants.EpuisementDecayPerPlacement after every
+        /// placement this modifier is held for, floored at 0. Permanent for
+        /// the whole run, same as <see cref="_gradientPermanentBonus"/> —
+        /// NOT reset by <see cref="ResetForNewRound"/>.
         /// </summary>
         private int _epuisementValue = ScoringConstants.EpuisementStartingBonus;
 
         /// <summary>
         /// How many placements in a row this round have gone by without a
-        /// line/column clear, as of right now (i.e. reflecting only
-        /// placements already fully processed by <see cref="PlacePiece"/> —
-        /// read this BEFORE calling PlacePiece for the "Spark Tile" piece
-        /// trait, so a placement's own clear doesn't erase the streak it's
-        /// scoring against). Reset to 0 by <see cref="ResetForNewRound"/>.
+        /// line/column clear, reflecting only placements already fully
+        /// processed by <see cref="PlacePiece"/> — read this BEFORE calling
+        /// PlacePiece for the "Spark Tile" piece trait, so a placement's own
+        /// clear doesn't erase the streak it's scoring against. Reset to 0
+        /// by <see cref="ResetForNewRound"/>.
         /// </summary>
         public int PlacementsSinceLastClear
         {
             get { return _placementsSinceLastClear; }
         }
 
-        /// <summary>Gradient's current permanent multiplier (1 + <see cref="_gradientPermanentBonus"/>) — what it would apply RIGHT NOW if a qualifying line were cleared this instant. Read by the tooltip's progressive-state line (see RunManager.GetProgressiveModifierStateText).</summary>
+        /// <summary>Gradient's current permanent multiplier (1 + <see cref="_gradientPermanentBonus"/>) — what it would apply right now if a qualifying line were cleared this instant.</summary>
         public int GradientCurrentMultiplier
         {
             get { return 1 + _gradientPermanentBonus; }
         }
 
-        /// <summary>Preview of the xN multiplier the NEXT placement would apply if it kept this same-shape streak alive — <see cref="_repetitionStreak"/> + 1 (the streak length that next placement would reach), which is always &gt;= 1 on its own so no extra floor is needed. Read by the tooltip's progressive-state line (see RunManager.GetProgressiveModifierStateText). Fixed on explicit report ("Repitition modifier devrait commencer à 1 au lieu de 0... j'obtiens 2 lorsque je pose ma 3e répétition") — it used to return <see cref="_repetitionStreak"/> directly, i.e. what the LAST placement already applied, one step behind what a player checking it before placing their next piece expects to see.</summary>
+        /// <summary>Preview of the xN multiplier the next placement would apply if it kept this same-shape streak alive — <see cref="_repetitionStreak"/> + 1, the streak length that next placement would reach.</summary>
         public int RepetitionCurrentMultiplier
         {
             get { return _repetitionStreak + 1; }
         }
 
-        /// <summary>Dwindling's current flat points bonus (see <see cref="_epuisementValue"/>) — exactly what the NEXT placement would earn from it right now.</summary>
+        /// <summary>Dwindling's current flat points bonus (see <see cref="_epuisementValue"/>) — what the next placement would earn from it right now.</summary>
         public int EpuisementCurrentBonus
         {
             get { return _epuisementValue; }
         }
 
-        /// <summary>How many cells are filled on the board right now — Density's driver (see <see cref="ApplyDensite"/>), exposed for the tooltip's progressive-state line.</summary>
+        /// <summary>How many cells are filled on the board right now — Density's driver (see <see cref="ApplyDensite"/>).</summary>
         public int FilledCellCount
         {
             get
@@ -163,14 +144,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>
-        /// Clears fill, lock AND modifier state (golden/tinted/multiplier) for
-        /// a new round — see Cell.ResetForNewRound. A "Seeder"-tagged piece's
-        /// golden stamp is the only thing that can still be set here (every
-        /// other trait clears itself within the same placement); this is what
-        /// makes Seeder's effect last "for the rest of the round" rather than
-        /// permanently for the whole run.
-        /// </summary>
+        /// <summary>Clears fill, lock and modifier state (golden/tinted/multiplier) for a new round — see Cell.ResetForNewRound.</summary>
         public void ResetForNewRound()
         {
             for (int x = 0; x < Size; x++)
@@ -209,11 +183,6 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>
-        /// True if at least one of <paramref name="shapes"/> can be placed
-        /// somewhere on the grid right now — used to detect a "stuck" board
-        /// (no legal move left for any piece currently in hand).
-        /// </summary>
         public bool HasAnyValidPlacement(IEnumerable<PieceShape> shapes)
         {
             foreach (var shape in shapes)
@@ -232,12 +201,6 @@ namespace Contigu.Core
             return false;
         }
 
-        /// <summary>
-        /// Places a piece, applying the connected-group bonus, golden bonus, any
-        /// active modifier bonuses, and any resulting line/column clears. Assumes
-        /// the caller already validated the placement (or will inspect the
-        /// returned failure).
-        /// </summary>
         public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null, IReadOnlyList<int> modifierLevels = null)
         {
             if (!CanPlace(shape, anchorX, anchorY))
@@ -265,51 +228,39 @@ namespace Contigu.Core
 
             var events = new List<ScoreEvent>();
 
-            // Group bonus: the whole connected same-color group this placement
-            // touches is rescored in full — every cell in the merged group
-            // contributes again, not just the newly placed ones, like replaying
-            // an extended Scrabble word. All of a piece's own cells are always
-            // mutually connected (every shape in the catalog is edge-connected),
-            // so a single flood-fill from any placed cell finds the whole group.
+            // Every cell in the merged connected group is rescored, not just the
+            // newly placed ones. A piece's own cells are always mutually
+            // connected (every shape in the catalog is edge-connected), so a
+            // single flood-fill from any placed cell finds the whole group.
             var groupCells = FindConnectedGroup(placedCells[0]);
             result.GroupCells = groupCells;
 
-            // Captured before being overwritten below, for "Momentum" (Dégradé)
+            // Captured before being overwritten below, for Momentum (Dégradé)
             // to compare this placement's group size against the previous one.
             int? previousGroupSize = _lastGroupSize;
             _lastGroupSize = groupCells.Count;
 
             // Captured before this placement's own clear (if any) updates the
             // streak below — 0 here means either the immediately previous
-            // placement this round cleared a line, OR this is the round's
+            // placement this round cleared a line, or this is the round's
             // very first placement (previousGroupSize tells them apart) — see
-            // "Rafale" in ApplyPostClearModifiers.
+            // Rafale in ApplyPostClearModifiers.
             int streakBeforePlacement = _placementsSinceLastClear;
 
-            // "Repetition" needs how many placements in a row (ending at THIS
-            // one) share the same shape, not just whether the immediately
-            // previous one matches, so its bonus can scale with streak length
-            // (2nd consecutive same-shape placement is x2, 3rd is x3, etc).
             bool continuesShapeStreak = _lastPlacedShapeId.HasValue && _lastPlacedShapeId.Value == shape.Id;
             _repetitionStreak = continuesShapeStreak ? _repetitionStreak + 1 : 1;
             _lastPlacedShapeId = shape.Id;
-            // Captured before being overwritten below, for "Color Switch"
-            // (different color from last time).
             PieceColor? previousPlacedColor = _lastPlacedColor;
             _lastPlacedColor = color;
 
-            // The tinted-match/multiplier-zone factor is no longer baked into
-            // each cell's own score — it's applied ONCE, at the very end of
-            // this whole placement (see PlacementResult.GroupMultiplier and
-            // .TotalScore), Balatro-style, instead of quietly inflating the
-            // group bonus per cell. Every event below carries its plain,
-            // unmultiplied "standard" amount.
+            // Tinted-match/multiplier-zone factor is applied once, at the end
+            // of this whole placement (see PlacementResult.GroupMultiplier and
+            // .TotalScore), not baked into each cell's own score. Every event
+            // below carries its plain, unmultiplied amount.
             int groupMultiplier = ComputeGroupMultiplier(groupCells);
-            // Computed from the SAME groupCells but only multiplier-zone
-            // cells count (see ComputeLineClearMultiplier) — Tinted no
-            // longer reaches the line-clear bonus, which is what keeps it
-            // distinct from Multiplier Zone now that its color always
-            // matches its own piece.
+            // Same groupCells but only multiplier-zone cells count (see
+            // ComputeLineClearMultiplier) — Tinted never reaches the line-clear
+            // bonus.
             int lineClearMultiplier = ComputeLineClearMultiplier(groupCells);
             int groupBonus = 0;
             int goldenBonus = 0;
@@ -319,17 +270,14 @@ namespace Contigu.Core
             for (int i = 0; i < groupCells.Count; i++)
             {
                 // Progressive: the Nth cell scored (1-indexed) is worth
-                // N * GroupBonusPerCell — see that constant's doc comment.
+                // N * GroupBonusPerCell.
                 int cellScore = (i + 1) * ScoringConstants.GroupBonusPerCell;
                 events.Add(new ScoreEvent(ScoreEventType.Group, groupCells[i], cellScore));
                 groupBonus += cellScore;
 
-                // Golden fires every time the cell is part of a scored group —
-                // not just when it was originally placed — since re-touching a
-                // group rescores every cell in it, golden included. Still a flat
-                // bonus, independent of group size — but now IS multiplied at
-                // the end along with everything else (see GroupMultiplier),
-                // unlike before when it was deliberately exempt.
+                // Golden fires every time the cell is part of a scored group,
+                // not just when it was originally placed, since re-touching a
+                // group rescores every cell in it.
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
                 if (cell.IsGolden)
                 {
@@ -338,13 +286,9 @@ namespace Contigu.Core
                 }
 
                 // Piece/Color Mastery: same "fires every time this cell's
-                // group scores again, not just when placed" rule as Golden
-                // above — each cell was stamped with its own frozen bonus
-                // at placement time (see RunManager.PlacePiece, before this
-                // method runs), on explicit report that a flat once-per-
-                // PLACEMENT bonus undercounted a multi-cell piece ("Chaque
-                // tuile devient niveau 2. Donc chaque fois que cette tuile
-                // est comptabilisé on fait +1").
+                // group scores again" rule as Golden above — each cell was
+                // stamped with its own frozen bonus at placement time (see
+                // RunManager.PlacePiece, before this method runs).
                 if (cell.ShapeMasteryBonus > 0)
                 {
                     shapeMasteryBonus += cell.ShapeMasteryBonus;
@@ -384,19 +328,15 @@ namespace Contigu.Core
             result.LineClearCellCount = clearInfo.ClearedCells.Count;
             result.ClearedLineCount = clearInfo.ClearedLineCount;
             // Bastion cells (Cell.IsBastion) earn the same per-cell bonus as
-            // an actually-cleared cell without being in ClearedCells (they're
-            // never emptied) — see CollectLineCell/BastionBonusCells.
+            // an actually-cleared cell without being in ClearedCells — they're
+            // never emptied (see CollectLineCell/BastionBonusCells).
             result.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
-            // "Lueur" currency — a completely separate axis from score,
-            // driven by color DIVERSITY per cleared line rather than points
-            // (see PlacementResult.LueurEarned/LueurGroups).
+            // Lueur is a separate currency from score, driven by color
+            // diversity per cleared line (see PlacementResult.LueurEarned/LueurGroups).
             var lueurGroups = ComputeLueurGroups(clearInfo.ClearedLines);
             result.LueurGroups = lueurGroups;
             result.LueurEarned = SumLueur(lueurGroups);
 
-            // Updates the streak for the NEXT placement to read (see
-            // PlacementsSinceLastClear) — this placement's own clear (if any)
-            // resets it, otherwise it extends by one.
             _placementsSinceLastClear = clearInfo.ClearedCells.Count > 0 ? 0 : _placementsSinceLastClear + 1;
 
             for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
@@ -408,10 +348,10 @@ namespace Contigu.Core
                 events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], ScoringConstants.LineClearBonusPerCell));
             }
 
-            // "Rafale": did the immediately previous placement this round
-            // also clear a line? previousGroupSize.HasValue rules out the
-            // round's very first placement, which would otherwise look
-            // identical (streak also starts at 0).
+            // Rafale: did the immediately previous placement this round also
+            // clear a line? previousGroupSize.HasValue rules out the round's
+            // very first placement, which would otherwise look identical
+            // (streak also starts at 0).
             bool clearedByPreviousPlacement = previousGroupSize.HasValue && streakBeforePlacement == 0;
 
             float modifierProgressiveAdditiveMult = 0f;
@@ -429,32 +369,16 @@ namespace Contigu.Core
             result.ModifierLueurBonus = modifierLueurBonus;
             result.AdditiveMultBonus = modifierAdditiveMultBonus;
             result.ProgressiveAdditiveMult += modifierProgressiveAdditiveMult;
-            // "Combo": reuses the exact same "did the previous placement
-            // clear?" signal as Rafale, but multiplies the WHOLE placement's
-            // total (see PlacementResult.ComboMultiplier/.TotalScore) — same
-            // tier as ModifierMultiplier above, kept as its own field since
-            // it's resolved from round-streak state Compute*Modifiers above
-            // doesn't otherwise need.
+            // Combo reuses the same "did the previous placement clear?"
+            // signal as Rafale, but multiplies the whole placement's total
+            // (see PlacementResult.ComboMultiplier/.TotalScore).
             result.ComboMultiplier = ComputeComboMultiplier(activeModifiers, clearedByPreviousPlacement, placedCells, events);
             result.ScoreEvents = events;
 
             return result;
         }
 
-        /// <summary>
-        /// "Lueur" currency (see PlacementResult.LueurGroups): every DISTINCT
-        /// non-Joker color within each line this placement cleared becomes
-        /// its own <see cref="LueurGroup"/> (every cell of that color in the
-        /// line, whether or not they're actually adjacent) worth
-        /// EconomyConstants.LueurPerColorGroup — "2 points par couleur", on
-        /// explicit request (was briefly "2 points par groupe", i.e. per
-        /// CONTIGUOUS same-color run instead of per color; changed back to
-        /// per color since that split one color into several paying entries
-        /// whenever it wasn't all adjacent). A line's color sequence is
-        /// exactly what the 8 line-pattern modifiers (Arc-en-ciel,
-        /// Alternance, ...) already read off <see cref="ClearedLine.Colors"/>,
-        /// so this reuses that same data with no extra bookkeeping.
-        /// </summary>
+        /// <summary>Every distinct non-Joker color within each line this placement cleared becomes its own <see cref="LueurGroup"/> (every cell of that color in the line, whether or not they're actually adjacent) worth EconomyConstants.LueurPerColorGroup.</summary>
         private static List<LueurGroup> ComputeLueurGroups(IReadOnlyList<ClearedLine> clearedLines)
         {
             var groups = new List<LueurGroup>();
@@ -477,8 +401,7 @@ namespace Contigu.Core
                     cells.Add(line.IsRow ? new Vector2Int(c, line.Index) : new Vector2Int(line.Index, c));
                 }
                 // Fixed color order (not Dictionary enumeration order, which
-                // isn't guaranteed) so the animation's group-by-group reveal
-                // is consistent from one clear to the next.
+                // isn't guaranteed) so the reveal is consistent between clears.
                 var baseColors = PieceColorUtility.BaseColors;
                 for (int b = 0; b < baseColors.Count; b++)
                 {
@@ -501,20 +424,7 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>
-        /// Stacks x2 per copy of "Combo" held, same convention as <see
-        /// cref="ComputeGroupMultiplier"/> — 1 (no-op) unless the previous
-        /// placement this round cleared a line. Now also emits its own
-        /// ModifierMultiplier <paramref name="events"/> entry (tagged with
-        /// its own position in <paramref name="activeModifiers"/>, same as
-        /// every other modifier via GridManager.TagNewEvents) — needed so
-        /// <see cref="PlacementResult.Mult"/>'s ordered left-to-right fold
-        /// (see its own doc comment) can place Combo correctly relative to
-        /// every other Mult modifier instead of always applying it dead
-        /// last regardless of where the player actually put it in their
-        /// reorderable list (on explicit request: "leur pointage se fasse
-        /// par ordre d'index").
-        /// </summary>
+        /// <summary>Stacks per copy of Combo held — 1 (no-op) unless the previous placement this round cleared a line. Emits its own ModifierMultiplier event tagged with its position in <paramref name="activeModifiers"/> so <see cref="PlacementResult.Mult"/>'s ordered fold applies Combo at the right position relative to other Mult modifiers, rather than always last.</summary>
         private static int ComputeComboMultiplier(IReadOnlyList<ModifierId> activeModifiers, bool clearedByPreviousPlacement, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (activeModifiers == null || !clearedByPreviousPlacement)
@@ -538,22 +448,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Modifiers that need the group/placement state as it stood right before
-        /// line clears wipe completed rows/columns (Prisme/Chaîne/Méga-chaîne need
-        /// the group; Forteresse/Prisonnier need neighbor fill state; Architecte
-        /// only needs the shape). Each active modifier is evaluated once per
-        /// occurrence, so holding the same modifier twice stacks its effect.
-        /// </summary>
-        /// <summary>
         /// Everything a pre-clear modifier's effect delegate (see <see
         /// cref="_preClearEffects"/>) might need to read, plus the
         /// accumulators it mutates as a side effect (Multiplier/Lueur/
         /// AdditiveMult — <see cref="ApplyPreClearModifiers"/> reads these
         /// back out once the whole dispatch loop finishes). One instance is
-        /// built per placement and reused across every active modifier —
-        /// cheaper than threading 9 separate parameters through 56 tiny
-        /// lambdas, and the single obvious place to add a new field the
-        /// next time some future modifier needs one.
+        /// built per placement and reused across every active modifier.
         /// </summary>
         private sealed class PreClearModifierContext
         {
@@ -569,7 +469,7 @@ namespace Contigu.Core
             public int ActiveModifierCount;
             public IReadOnlyList<ModifierId> ActiveModifiers;
 
-            /// <summary>This modifier's own position in <see cref="ActiveModifiers"/> for the iteration currently invoking an effect delegate — set fresh by <see cref="ApplyPreClearModifiers"/> right before each call, so a modifier like Écho can look at its neighbors (see GridManager.ApplyEcho).</summary>
+            /// <summary>This modifier's own position in <see cref="ActiveModifiers"/> for the iteration currently invoking an effect delegate — set fresh before each call so a modifier like Écho can look at its neighbors (see <see cref="ApplyEcho"/>).</summary>
             public int CurrentIndex;
             public int Multiplier = 1;
             public int Lueur;
@@ -578,26 +478,7 @@ namespace Contigu.Core
 
         private delegate int PreClearModifierEffect(PreClearModifierContext ctx);
 
-        /// <summary>
-        /// One entry per pre-clear-evaluable modifier (curation/tech-debt
-        /// pass, on explicit request — "j'aimerais qu'on assess la dette
-        /// technique" -> "Fait celui que tu trouve le plus important"):
-        /// replaces what used to be a 56-case, ~240-line switch statement
-        /// with a lookup table, one line per modifier, built once per
-        /// GridManager instance (needs "this" — most Apply* helpers read
-        /// grid state via <see cref="_cells"/>, so this can't be a static
-        /// table). Every individual Apply* modifier function below is
-        /// UNCHANGED — this only replaces how a <see cref="ModifierId"/>
-        /// gets routed to its own function and how its result (a flat
-        /// bonus, or a multiplier/lueur/mult mutation on the shared <see
-        /// cref="PreClearModifierContext"/>) feeds back into the dispatch
-        /// loop, so it carries none of the actual scoring-logic risk a
-        /// rewrite would. A modifier missing from this table (there
-        /// shouldn't be any within this pre-clear/post-clear/RunManager
-        /// three-way split — see ModifierId's own doc comments on each
-        /// batch) silently contributes 0, matching the old switch's
-        /// `default: bonus = 0;` fallback.
-        /// </summary>
+        /// <summary>One entry per pre-clear-evaluable modifier, built per instance since most Apply* helpers read grid state via <see cref="_cells"/>. A modifier missing from this table silently contributes 0.</summary>
         private Dictionary<ModifierId, PreClearModifierEffect> BuildPreClearEffects()
         {
             return new Dictionary<ModifierId, PreClearModifierEffect>
@@ -653,26 +534,20 @@ namespace Contigu.Core
                 { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Polyvalence, ctx => { ctx.AdditiveMult += ApplyPolyvalence(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
-                // Renfort Joker/Arsenal/Siphon: not scored here at all —
-                // Renfort Joker and Siphon scale ENEMY DAMAGE / Lueur
-                // around it, not the player's own score (see RunManager.
-                // ApplyJokerCombatOrDefaultDamage), and Arsenal needs to
-                // scan the deck (GridManager has no DeckManager
-                // reference), resolved post-hoc in RunManager.
-                // ApplyDeckStateModifierBonuses alongside CartesEnchantees/
-                // Multitude/Experience.
+                // Renfort Joker/Arsenal/Siphon are resolved in RunManager
+                // instead (enemy damage/Lueur scaling, or deck scanning that
+                // GridManager has no reference for).
                 { ModifierId.RenfortJoker, ctx => 0 },
                 { ModifierId.Arsenal, ctx => 0 },
                 { ModifierId.Siphon, ctx => 0 },
                 { ModifierId.CollectionChromatique, ctx => { ctx.AdditiveMult += ApplyCollectionChromatique(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Cadence, ctx => { ctx.Multiplier *= ApplyCadence(ctx.ActiveModifiers, ctx.Shape, ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Echo, ctx => ApplyEcho(ctx) },
-                // Joker: no score of its own — purely a passive rule change
-                // resolved before the loop starts (see JokerResolvedColor)
-                // for Devotion/Éclat to read.
+                // Joker: a passive rule change resolved before the loop starts
+                // (see JokerResolvedColor), no score of its own.
                 { ModifierId.Joker, ctx => 0 },
-                // Combo: not a flat/per-cell bonus — resolved separately as
-                // PlacementResult.ComboMultiplier (see ComputeComboMultiplier).
+                // Combo is resolved separately as PlacementResult.ComboMultiplier
+                // (see ComputeComboMultiplier).
                 { ModifierId.Combo, ctx => 0 },
                 { ModifierId.MultUn, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultUnBonus, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.MultDeux, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultDeuxBonus, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -680,11 +555,9 @@ namespace Contigu.Core
                 { ModifierId.MultCinqRisque, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultCinqRisqueBonus, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Solidarite, ctx => { ctx.AdditiveMult += ApplySolidarite(ctx.ActiveModifierCount, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Epuisement, ctx => ApplyEpuisement(ctx.PlacedCells, ctx.Events) },
-                // Copieur: never actually held — buying it in the shop adds
-                // another copy of whichever modifier was purchased right
-                // before it instead of adding Copieur itself (see
-                // RunManager.BuyBlisterSlot), so this entry should never
-                // actually be looked up in practice.
+                // Copieur is never actually held — buying it adds another copy
+                // of whichever modifier was purchased right before it (see
+                // RunManager.BuyBlisterSlot), so this entry is never looked up.
                 { ModifierId.Copieur, ctx => 0 }
             };
         }
@@ -692,13 +565,12 @@ namespace Contigu.Core
         private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
-            // "Joker": a Joker piece's own cell(s) stay PieceColor.Joker in
-            // storage (see FindConnectedGroup) — every color-conditional
-            // modifier below normally just never matches it. When Joker is
-            // held, this instead resolves to whichever of the 4 base colors
-            // would score the most from the Devotion/Éclat modifiers
-            // currently active, so ApplyColorDevotionBonus/ApplyEclat
-            // below use THIS instead of re-reading the cell directly.
+            // A Joker piece's own cell(s) stay PieceColor.Joker in storage
+            // (see FindConnectedGroup), so every color-conditional modifier
+            // below normally never matches it. When the Joker modifier is
+            // held, this resolves to whichever base color would score the
+            // most from the Devotion/Éclat modifiers currently active, and
+            // ApplyColorDevotionBonus/ApplyEclat use this instead of the cell.
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
             var ctx = new PreClearModifierContext
@@ -725,14 +597,11 @@ namespace Contigu.Core
                 ctx.CurrentIndex = i;
                 int bonus = _preClearEffects.TryGetValue(id, out var effect) ? effect(ctx) : 0;
 
-                // Rescales THIS modifier's own contribution only — never the
-                // other modifiers' ctx changes already folded in by earlier
-                // loop iterations — by diffing ctx.Lueur before/after just
-                // this one call. ctx.Multiplier/ctx.AdditiveMult are
-                // deliberately left untouched: PlacementResult.Mult reads
-                // ScoreEvents exclusively (see its own doc comment), not
-                // those two fields, so TagNewEvents' event-level rescale
-                // below is already sufficient for every xN/+Mult modifier.
+                // Rescales this modifier's own contribution only, by diffing
+                // ctx.Lueur before/after this one call. ctx.Multiplier/
+                // ctx.AdditiveMult are left untouched: PlacementResult.Mult
+                // reads ScoreEvents exclusively, and TagNewEvents' event-level
+                // rescale below is sufficient for every xN/+Mult modifier.
                 float levelFactor = GetModifierLevelFactor(modifierLevels, i);
                 if (levelFactor != 1f)
                 {
@@ -750,7 +619,7 @@ namespace Contigu.Core
             return total;
         }
 
-        /// <summary>"Devotion" (per-color): flat +Mult (additive, see PlacementResult.AdditiveMultBonus, see ScoringConstants.DevotionBonus) when the placement's own fill color matches <paramref name="targetColor"/> — <paramref name="ownColor"/> is the placement's REAL color, unless "Joker" resolves a Joker piece to a different color first (see ResolveJokerColorForModifiers). Returns 0 (no-op) otherwise.</summary>
+        /// <summary>Devotion (per-color): flat +Mult (see PlacementResult.AdditiveMultBonus) when the placement's fill color matches <paramref name="targetColor"/>. <paramref name="ownColor"/> may be Joker-resolved to a different color first (see ResolveJokerColorForModifiers).</summary>
         private static int ApplyColorDevotionBonus(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (ownColor != targetColor)
@@ -762,17 +631,7 @@ namespace Contigu.Core
             return ScoringConstants.DevotionBonus;
         }
 
-        /// <summary>
-        /// Devotion/Éclat pairing bonus (synergy pass, axis 1 — explicit
-        /// request: "synergies entre modifiers eux-mêmes"): extra flat
-        /// +Mult (see ScoringConstants.DevotionEclatPairBonus) when BOTH
-        /// this color's Devotion AND Éclat modifiers are held, checked
-        /// only from the Devotion side (see BuildPreClearEffects) so the
-        /// two modifiers' lambdas never both add it — Éclat's own entry is
-        /// untouched and still fires its usual per-cell +pts bonus
-        /// independently. Returns 0 (no-op) when the color doesn't match,
-        /// or the matching Éclat modifier isn't also held.
-        /// </summary>
+        /// <summary>Extra flat +Mult when both this color's Devotion and Éclat modifiers are held — checked only from the Devotion side so the two modifiers' lambdas never both add it.</summary>
         private static int ApplyDevotionEclatPairBonus(PieceColor targetColor, ModifierId eclatId, IReadOnlyList<ModifierId> activeModifiers, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (ownColor != targetColor || !ContainsModifier(activeModifiers, eclatId))
@@ -784,7 +643,7 @@ namespace Contigu.Core
             return ScoringConstants.DevotionEclatPairBonus;
         }
 
-        /// <summary>Polyvalence (synergy pass, axis 1): +N Mult (see ScoringConstants.PolyvalenceMultPerCategory), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — rewards holding a spread of modifier families instead of stacking only one.</summary>
+        /// <summary>Polyvalence: +N Mult, N = the number of distinct ModifierCategory values among currently held modifiers (this one's own category included).</summary>
         private static int ApplyPolyvalence(IReadOnlyList<ModifierId> activeModifiers, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var categoriesSeen = new HashSet<ModifierCategory>();
@@ -798,7 +657,7 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Collection Chromatique (synergy pass, axis 1 — the "trio" idea, practically adapted since there's no natural 3rd per-color modifier yet): +N Mult (see ScoringConstants.CollectionChromatiqueMultPerCompletePair), N = how many of the 4 base colors have BOTH their Devotion and Éclat modifier currently held — reuses DevotionModifierFor/EclatModifierFor, the same per-color lookup Joker resolution already relies on.</summary>
+        /// <summary>Collection Chromatique: +N Mult, N = how many of the 4 base colors have both their Devotion and Éclat modifier currently held.</summary>
         private static int ApplyCollectionChromatique(IReadOnlyList<ModifierId> activeModifiers, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int completePairs = 0;
@@ -816,18 +675,7 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>
-        /// Cadence (synergy pass, axis "Pair/Impair ↔ Format"): xN
-        /// multiplier (see ScoringConstants.CadenceMultiplier) when THIS
-        /// placement satisfies BOTH a held parity condition (Pair wants an
-        /// even scored group, Impair an odd one) AND a held Format*
-        /// Specialist tier (Petit/Moyen/Grand, keyed on the PLACED piece's
-        /// own cell count, same boundaries as ApplyFormatSpecialistMultiplier)
-        /// at once — ties two existing, otherwise unrelated modifier
-        /// families together. Returns 1 (no-op) unless both sides match;
-        /// Pair/Impair/Format* themselves still score their own bonus
-        /// independently via their own dictionary entries.
-        /// </summary>
+        /// <summary>Cadence: xN multiplier when this placement satisfies both a held parity condition (Pair wants an even scored group, Impair an odd one) and a held Format* Specialist tier (keyed on the placed piece's own cell count). Returns 1 unless both sides match.</summary>
         private static int ApplyCadence(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             bool parityMatches =
@@ -852,21 +700,7 @@ namespace Contigu.Core
             return ScoringConstants.CadenceMultiplier;
         }
 
-        /// <summary>
-        /// Écho (synergy pass, "catalyseur" idea): replays whatever
-        /// modifier sits immediately to Écho's own left in <see
-        /// cref="PreClearModifierContext.ActiveModifiers"/> (<see
-        /// cref="PreClearModifierContext.CurrentIndex"/> minus 1) by
-        /// invoking that modifier's own effect delegate a SECOND time for
-        /// this same placement — "as if you held a second copy of it".
-        /// Returns 0 (no-op) if Écho is the leftmost held modifier, or if
-        /// its left neighbor is ANOTHER Écho (never chains — the only way
-        /// this could otherwise recurse without bound). The replayed
-        /// call's own ScoreEvents get tagged as Écho's own by the normal
-        /// post-call TagNewEvents in ApplyPreClearModifiers, exactly as if
-        /// Écho itself had produced them — correct for the Mult fold's own
-        /// purchase-order rule, since that's where Écho actually sits.
-        /// </summary>
+        /// <summary>Écho: replays whatever modifier sits immediately to its left in <see cref="PreClearModifierContext.ActiveModifiers"/> by invoking that modifier's effect delegate a second time for this placement. Returns 0 if Écho is the leftmost held modifier, or if its left neighbor is another Écho (never chains).</summary>
         private int ApplyEcho(PreClearModifierContext ctx)
         {
             int leftIndex = ctx.CurrentIndex - 1;
@@ -884,16 +718,7 @@ namespace Contigu.Core
             return _preClearEffects.TryGetValue(targetId, out var targetEffect) ? targetEffect(ctx) : 0;
         }
 
-        /// <summary>
-        /// "Specialist" (per-piece-SIZE-TIER, curation pass — was per-exact-
-        /// shape, 10 separate modifiers, before "que me propose tu pour
-        /// faire passer le jeu à un state supérieur" -> "attaquons celui
-        /// la" consolidated them into 3 size tiers): xN multiplier (see
-        /// ScoringConstants.FormeSpecialistMultiplier) when the placed
-        /// piece's own cell count falls within [<paramref name="minCells"/>,
-        /// <paramref name="maxCells"/>] inclusive — same conversion, and for
-        /// the same reason, as Devotion above. Returns 1 (no-op) otherwise.
-        /// </summary>
+        /// <summary>Specialist (per-piece-size-tier): xN multiplier when the placed piece's cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive. Returns 1 otherwise.</summary>
         private static int ApplyFormatSpecialistMultiplier(int minCells, int maxCells, PieceShape shape, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int cellCount = shape.Cells.Count;
@@ -931,7 +756,7 @@ namespace Contigu.Core
             return ScoringConstants.HorsNormeBonus;
         }
 
-        /// <summary>"Éclat" (per-color): flat bonus per scored group cell when the placement's own fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a color match means every group cell counts, unlike Devotion this stays a flat per-tile amount rather than doubling the group bonus. <paramref name="ownColor"/> is the placement's REAL color unless "Joker" resolves it to a different one first (see ResolveJokerColorForModifiers).</summary>
+        /// <summary>Éclat (per-color): flat bonus per scored group cell when the placement's fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a match means every group cell counts. <paramref name="ownColor"/> may be Joker-resolved first (see ResolveJokerColorForModifiers).</summary>
         private static int ApplyEclat(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             if (ownColor != targetColor)
@@ -944,7 +769,7 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>The "+pts" sibling of ApplyFormatSpecialistMultiplier (same curation-pass consolidation, ninth batch originally, on explicit request) — flat bonus (see ScoringConstants.FormeGlowBonusPerCell) per scored group cell when the placed piece's own cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive, mirroring ApplyEclat's per-color role above but for piece size instead of color.</summary>
+        /// <summary>The "+pts" sibling of ApplyFormatSpecialistMultiplier — flat bonus per scored group cell when the placed piece's cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive, mirroring ApplyEclat's per-color role but for piece size.</summary>
         private static int ApplyFormatGlow(int minCells, int maxCells, PieceShape shape, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int cellCount = shape.Cells.Count;
@@ -957,8 +782,6 @@ namespace Contigu.Core
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
             return bonus;
         }
-
-        // ---- Fifth batch of modifier bonuses (8 new ideas, on explicit request — see README) ----
 
         /// <summary>Diagonale: bonus per group cell sitting on either of the grid's two main diagonals (x == y, or x + y == Size - 1).</summary>
         private static int ApplyDiagonale(List<Vector2Int> groupCells, List<ScoreEvent> events)
@@ -1006,7 +829,7 @@ namespace Contigu.Core
             return count;
         }
 
-        /// <summary>Solitaire: xN multiplier (see ScoringConstants.SolitaireMultiplier) when this placement's scored group is entirely its own piece — nothing pre-existing merged into it — AND the piece itself is more than 1 cell (the opposite condition from Catalyst, which rewards merging with pre-existing cells; the size-1 case is already Îlot's). Returns 1 (no-op) otherwise.</summary>
+        /// <summary>Solitaire: xN multiplier when this placement's scored group is entirely its own piece (nothing pre-existing merged into it) and the piece itself is more than 1 cell (the size-1 case is Îlot's). Returns 1 otherwise.</summary>
         private static int ApplySolitaire(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             if (placedCells.Count <= 1 || groupCells.Count != placedCells.Count)
@@ -1098,26 +921,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Density (Densité): progressive +N Mult, the opposite of Espace
-        /// Libre — N is how many cells are filled on the board right after
-        /// this placement (and any of its own line clears), divided by
-        /// ScoringConstants.DensiteFilledCellsPerMultStep as a TRUE float
-        /// (never floored mid-calculation — on explicit request: "on doit
-        /// multiplier comme si c'était un float au lieu d'arrondir a la
-        /// baisse"). Converted from an "xN multiplier" to a "+N Mult"
-        /// additive contributor (explicit request: "Density modifier
-        /// devrait +n mult au lieu de xn mult ET devrait être un float au
-        /// lieu d'un int") — same family as MultUn/CartesEnchantees/
-        /// Experience now, so an empty board correctly contributes +0
-        /// Mult with no special-case floor needed (unlike the old
-        /// multiplicative version, where anything below x1 would have
-        /// been a debuff and had to be clamped up to a no-op x1). The
-        /// per-modifier badge popup shows a rounded whole number
-        /// (ScoreEvent.Amount stays int), but the event's own PreciseAmount
-        /// carries the true float — same as Enchanted Cards/Experience —
-        /// since <see cref="PlacementResult.Mult"/>'s ordered fold reads
-        /// straight off this event, and would otherwise lose precision to
-        /// the rounded Amount.
+        /// Density: progressive +N Mult, the opposite of Espace Libre — N is
+        /// how many cells are filled on the board right after this placement
+        /// (including any of its own line clears), divided by
+        /// ScoringConstants.DensiteFilledCellsPerMultStep as a true float
+        /// (never floored mid-calculation). The badge popup shows a rounded
+        /// whole number (ScoreEvent.Amount stays int), but the event's own
+        /// PreciseAmount carries the true float since <see
+        /// cref="PlacementResult.Mult"/>'s ordered fold reads straight off
+        /// this event and would otherwise lose precision.
         /// </summary>
         private float ApplyDensite(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -1149,9 +961,7 @@ namespace Contigu.Core
             return ScoringConstants.RafaleMultiplier;
         }
 
-        // ---- Sixth batch of modifier bonuses (11 more, player-authored brainstorm — see README) ----
-
-        /// <summary>Bridge (Pont): xN multiplier (see ScoringConstants.PontMultiplierPerBridge) PER pre-existing group this placement bridges together beyond the first one — bridging 2 formerly-separate groups applies once, 3 groups applies twice (stacking multiplicatively), etc. Returns 1 (no-op) if this placement touches at most one pre-existing group (nothing to bridge).</summary>
+        /// <summary>Bridge (Pont): xN multiplier per pre-existing group this placement bridges together beyond the first one — bridging 2 formerly-separate groups applies once, 3 groups applies twice (stacking multiplicatively). Returns 1 if this placement touches at most one pre-existing group.</summary>
         private int ApplyPont(PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int groupsTouched = CountDistinctPreExistingGroupsTouched(placedCells, ownColor);
@@ -1170,15 +980,14 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// How many DISTINCT already-existing connected components (using
+        /// How many distinct already-existing connected components (using
         /// the same color/joker compatibility rule as <see
-        /// cref="FindConnectedGroup"/>) touch this placement's own cells —
-        /// this placement's own cells are excluded from every flood-fill, so
+        /// cref="FindConnectedGroup"/>) touch this placement's own cells.
+        /// This placement's own cells are excluded from every flood-fill, so
         /// two pre-existing groups on opposite sides of the piece are
         /// counted separately even though placing the piece would merge
-        /// them into one (that's exactly what "bridging" means for Pont).
-        /// Each distinct component is only ever counted once even if
-        /// several of the piece's own cells touch it.
+        /// them into one. Each distinct component is only ever counted once
+        /// even if several of the piece's own cells touch it.
         /// </summary>
         private int CountDistinctPreExistingGroupsTouched(List<Vector2Int> placedCells, PieceColor pieceColor)
         {
@@ -1309,15 +1118,7 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>
-        /// Sealer (Boucher): bonus per PRE-EXISTING tile that this placement
-        /// itself causes to become "encircled" (see Encerclement/
-        /// AreAllNeighborsFilledOrOffGrid) — any already-filled tile that
-        /// borders one of this placement's own cells was, by definition, NOT
-        /// fully encircled before this placement (that very neighbor slot
-        /// was still empty), so if it qualifies now, this placement is what
-        /// just sealed it.
-        /// </summary>
+        /// <summary>Sealer (Boucher): bonus per pre-existing tile that this placement itself causes to become encircled (see Encerclement/AreAllNeighborsFilledOrOffGrid) — a tile bordering this placement was by definition not fully encircled before it.</summary>
         private int ApplyBoucher(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             var placedSet = new HashSet<Vector2Int>(placedCells);
@@ -1408,14 +1209,14 @@ namespace Contigu.Core
             return EconomyConstants.RepetitionLueurBonus;
         }
 
-        /// <summary>Shared by the 3 flat, unconditional "+Mult" modifiers (Mult +1/+2/+4) and Risky Mult (ninth batch, on explicit request) — always fires, adds <paramref name="amount"/> to PlacementResult.AdditiveMultBonus (a genuine ADDITIVE pool, unlike every ModifierMultiplier modifier above).</summary>
+        /// <summary>Shared by the 3 flat, unconditional +Mult modifiers (Mult +1/+2/+4) and Risky Mult — always fires, adds <paramref name="amount"/> to PlacementResult.AdditiveMultBonus (a genuine additive pool, unlike every ModifierMultiplier modifier above).</summary>
         private static int ApplyFlatAdditiveMult(int amount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], amount));
             return amount;
         }
 
-        /// <summary>Solidarity (Solidarite): +N Mult (additive, see PlacementResult.AdditiveMultBonus) where N is the total number of modifiers currently held (this one included, every duplicate copy counting separately) divided by ScoringConstants.SolidariteModifierCountDivisor — halved from a flat +1 per modifier on explicit report ("Solidarity modifier est vraiment beaucoup trop puissant").</summary>
+        /// <summary>Solidarity (Solidarite): +N Mult where N is the total number of modifiers currently held (this one included, duplicate copies counting separately) divided by ScoringConstants.SolidariteModifierCountDivisor.</summary>
         private static int ApplySolidarite(int modifierCount, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int bonus = modifierCount / ScoringConstants.SolidariteModifierCountDivisor;
@@ -1426,7 +1227,7 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Dwindling (Epuisement): the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the NEXT placement (floored at 0) — on explicit request ("+100pts, réduit de 5 a chaque coup"). Permanent for the whole run, same as Gradient's counter — NOT reset by ResetForNewRound (see _epuisementValue's own doc comment for why the earlier per-round reset was removed).</summary>
+        /// <summary>Dwindling (Epuisement): returns the current decaying flat points bonus (see _epuisementValue), then drops it by ScoringConstants.EpuisementDecayPerPlacement for the next placement (floored at 0). Permanent for the whole run, same as Gradient's counter — NOT reset by ResetForNewRound.</summary>
         private int ApplyEpuisement(List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int bonus = _epuisementValue;
@@ -1548,15 +1349,11 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Joker" (spec extension, player-authored): when this placement's
-        /// own color is actually <see cref="PieceColor.Joker"/> and the
-        /// "Joker" modifier is held, resolves to whichever of the 4 base
-        /// colors would score the most from the Devotion/Éclat modifiers
-        /// currently active — those are the two families where "this
-        /// placement's own color" directly gates a bonus. Falls back to the
-        /// piece's real color (Joker stays Joker) whenever the modifier
-        /// isn't held, the piece isn't actually a Joker, or no candidate
-        /// color would score anything anyway.
+        /// When this placement's own color is actually <see
+        /// cref="PieceColor.Joker"/> and the Joker modifier is held, resolves
+        /// to whichever base color would score the most from the Devotion/
+        /// Éclat modifiers currently active. Falls back to the piece's real
+        /// color otherwise.
         /// </summary>
         private static PieceColor ResolveJokerColorForModifiers(PieceColor actualColor, IReadOnlyList<ModifierId> activeModifiers, int groupBonus, int groupCellCount)
         {
@@ -1657,12 +1454,7 @@ namespace Contigu.Core
 
         private delegate int PostClearModifierEffect(PostClearModifierContext ctx);
 
-        /// <summary>
-        /// One entry per post-clear-evaluable modifier — same tech-debt
-        /// pass and same rationale as <see cref="BuildPreClearEffects"/>,
-        /// replacing what used to be a 16-case switch statement. Every
-        /// individual Apply* modifier function below is UNCHANGED.
-        /// </summary>
+        /// <summary>One entry per post-clear-evaluable modifier — same rationale as <see cref="BuildPreClearEffects"/>.</summary>
         private Dictionary<ModifierId, PostClearModifierEffect> BuildPostClearEffects()
         {
             return new Dictionary<ModifierId, PostClearModifierEffect>
@@ -1730,22 +1522,12 @@ namespace Contigu.Core
 
         /// <summary>
         /// Stamps every event appended since <paramref name="startIndex"/>
-        /// with the modifier that produced it — <paramref
-        /// name="modifierIndex"/> is that modifier's own position within
-        /// activeModifiers (see ScoreEvent.TriggeringModifierIndex), needed
-        /// because Copieur can make the same id occupy more than one
-        /// position — so the presentation layer knows which one to
-        /// highlight. <paramref name="levelFactor"/> (see
-        /// ModifierLevelUtility, 1f for an un-leveled slot — the
-        /// overwhelmingly common case) also rescales each event's own
-        /// Amount/PreciseAmount right here, generically, for every event
-        /// type at once: this is what makes a leveled xN/+Mult modifier's
-        /// contribution to PlacementResult.Mult actually stronger (Mult is
-        /// derived purely from ScoreEvents, see its own doc comment), and
-        /// keeps a leveled flat/Lueur modifier's on-screen popup consistent
-        /// with the ALSO-separately-scaled ModifierBonus/ModifierLueurBonus
-        /// its caller (ApplyPreClearModifiers/ApplyPostClearModifiers)
-        /// applies to the actual point/Lueur total.
+        /// with the modifier that produced it (<paramref
+        /// name="modifierIndex"/> is its position within activeModifiers,
+        /// needed because Copieur can make the same id occupy more than one
+        /// position). <paramref name="levelFactor"/> also rescales each
+        /// event's Amount/PreciseAmount here, since PlacementResult.Mult is
+        /// derived purely from ScoreEvents.
         /// </summary>
         private static void TagNewEvents(List<ScoreEvent> events, int startIndex, ModifierId id, int modifierIndex, float levelFactor = 1f)
         {
@@ -1764,7 +1546,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> — 1f (no-op) when <paramref name="modifierLevels"/> is null (the vast majority of callers, e.g. every EditMode test that predates leveling) or doesn't cover that index. See ModifierLevelUtility.</summary>
+        /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> — 1f (no-op) when <paramref name="modifierLevels"/> is null or doesn't cover that index. See ModifierLevelUtility.</summary>
         private static float GetModifierLevelFactor(IReadOnlyList<int> modifierLevels, int index)
         {
             if (modifierLevels == null || index < 0 || index >= modifierLevels.Count)
@@ -1794,14 +1576,9 @@ namespace Contigu.Core
         /// <summary>
         /// Every distinct color among the placement's own cells and every cell
         /// orthogonally adjacent to any of them — used by Prisme/Tricolore/
-        /// Complémentaire, which measure color diversity AROUND a placement
-        /// rather than within its scored group. This is deliberately different
-        /// from the connected group: since <see cref="FindConnectedGroup"/>
-        /// locks a group onto a single real color (a joker never bridges two
-        /// different colors together, see its doc comment), a scored group can
-        /// never contain more than one non-joker color, so "distinct colors in
-        /// the group" is never satisfiable and these modifiers look at what the
-        /// placement touches instead.
+        /// Complémentaire, which measure color diversity around a placement
+        /// rather than within its scored group, since a scored group can
+        /// never contain more than one non-joker color (see FindConnectedGroup).
         /// </summary>
         private HashSet<PieceColor> CollectTouchingColors(List<Vector2Int> placedCells)
         {
@@ -2286,7 +2063,7 @@ namespace Contigu.Core
             return multiplier;
         }
 
-        /// <summary>Shared driver for the 5 remaining line-pattern modifiers that just need a per-line yes/no predicate over its ordered color sequence — xN multiplier fires once per qualifying cleared line, stacking multiplicatively (2 qualifying lines at once is xN*xN), reset every placement. Was a flat per-line bonus (ApplyPerLineBonus) before these were converted to multipliers. Gradient used to be the 6th (see <see cref="ApplyGradient"/> for why it's no longer here).</summary>
+        /// <summary>Shared driver for the line-pattern modifiers that need a per-line yes/no predicate over their ordered color sequence — xN multiplier fires once per qualifying cleared line, stacking multiplicatively, reset every placement. Gradient is handled separately (see <see cref="ApplyGradient"/>).</summary>
         private int ApplyPerLineMultiplier(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int multiplierPerLine)
         {
             int multiplier = 1;
@@ -2323,17 +2100,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Gradient (permanent, on explicit request): unlike its 5
-        /// line-pattern siblings above, this one never resets. Every cleared
-        /// row/column in THIS placement satisfying <see cref="IsGradientLine"/>
-        /// PERMANENTLY increments <see cref="_gradientPermanentBonus"/> by 1
-        /// (once per qualifying line, so 2 qualifying lines at once still
-        /// add +2). The returned multiplier is always (1 + that counter) —
-        /// applied to THIS placement immediately (including the very line
-        /// clear that just grew it), and to every placement for the rest of
-        /// the run from then on, whether or not it clears any line at all.
-        /// Returns 1 (no-op) only while the counter is still 0, i.e. Gradient
-        /// has never fired yet this run.
+        /// Gradient never resets, unlike its line-pattern siblings above.
+        /// Every cleared row/column satisfying <see cref="IsGradientLine"/>
+        /// permanently increments <see cref="_gradientPermanentBonus"/> by 1.
+        /// The returned multiplier is always (1 + that counter), applied to
+        /// this placement immediately and to every placement for the rest of
+        /// the run. Returns 1 only while the counter is still 0.
         /// </summary>
         private int ApplyGradient(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
@@ -2529,23 +2301,15 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Every cell of every row/column that WOULD complete (and clear) if
+        /// Every cell of every row/column that would complete (and clear) if
         /// <paramref name="shape"/> were placed at (<paramref name="anchorX"/>,
-        /// <paramref name="anchorY"/>) — same "preview without mutating any
-        /// grid state" idea as <see cref="PreviewGroup"/>, using the exact
-        /// same row/column-complete rule <see cref="CheckAndClearLines"/>
-        /// itself uses (<see cref="IsRowComplete"/>/<see
-        /// cref="IsColumnComplete"/>), just with the hypothetical placement's
-        /// own cells counted as filled too. Lets the presentation layer
-        /// highlight the prospective line(s) while the player is still
-        /// choosing where to drop a piece (explicit request: "j'aimerais
-        /// qu'on fasse un highlight de la ligne qui serait cleared"). Assumes
-        /// the placement is valid (<see cref="CanPlace"/>) — callers should
-        /// check that first, same as <see cref="PreviewGroup"/>. A cell can
-        /// appear more than once if it belongs to both a completing row AND
-        /// a completing column at once — callers that need a de-duplicated
-        /// set should collect these into their own HashSet, same as
-        /// GridView's own hover footprint does elsewhere.
+        /// <paramref name="anchorY"/>), using the same row/column-complete
+        /// rule <see cref="CheckAndClearLines"/> itself uses, without
+        /// mutating grid state. Assumes the placement is valid (<see
+        /// cref="CanPlace"/>). A cell can appear more than once if it
+        /// belongs to both a completing row and a completing column at
+        /// once — callers that need a de-duplicated set should collect
+        /// these into their own HashSet.
         /// </summary>
         public List<Vector2Int> PreviewClearedLineCells(PieceShape shape, int anchorX, int anchorY)
         {
@@ -2622,16 +2386,13 @@ namespace Contigu.Core
 
         /// <summary>
         /// A joker piece's own cells have no fixed color of their own, so
-        /// they can potentially anchor the resulting group on ANY distinct
+        /// they can potentially anchor the resulting group on any distinct
         /// real color reachable through them (through other jokers too — see
-        /// <see cref="FindCandidateAnchorColors"/>). On explicit request
-        /// ("lorsqu'un joker est posé, il devrait être jumelé avec le groupe
-        /// faisant le plus de points"), tries every such candidate color and
-        /// keeps whichever resulting group scores the most (see <see
-        /// cref="EstimateGroupScore"/>), instead of whichever one a fixed
-        /// traversal order happened to reach first. No real-colored neighbor
-        /// anywhere reachable just returns the connected cluster of joker
-        /// cells itself, same as before.
+        /// <see cref="FindCandidateAnchorColors"/>). Tries every such
+        /// candidate color and keeps whichever resulting group scores the
+        /// most (see <see cref="EstimateGroupScore"/>). No real-colored
+        /// neighbor anywhere reachable just returns the connected cluster of
+        /// joker cells itself.
         /// </summary>
         private List<Vector2Int> ResolveBestJokerGroup(List<Vector2Int> seedCells)
         {
@@ -2740,25 +2501,12 @@ namespace Contigu.Core
                 TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
             }
 
-            // A stack-based flood fill visits cells in whatever order the
-            // last-pushed neighbor happens to pop next — it zigzags around
-            // the group rather than sweeping across it, which is what the
-            // per-cell progressive group bonus (PlacePiece's group loop)
-            // and its popup/pulse animation (GameBootstrap) both walk in
-            // (on explicit report: "j'ai l'impression qu'on passe au
-            // travers des pièces... j'aimerais qu'on le fasse pas ordre de
-            // lecture (gauche à droite en partant d'en haut)"). Sorted here
-            // — the one spot every caller (FindConnectedGroup for both a
-            // real placement and PreviewGroup's hover highlight) goes
-            // through — into true reading order: highest Y (the TOP row —
-            // see GridView.Build, y increases upward on screen) first, then
-            // ascending X (left to right) within a row. Purely cosmetic:
-            // the group bonus is a sum of the same N values (1..N times
-            // GroupBonusPerCell) regardless of which specific cell gets
-            // which value, and every other per-cell modifier loop over
-            // groupCells just sums its own bonuses the same way — so this
-            // never changes a placement's total score, only which cell
-            // visibly earns which amount and in what order.
+            // A stack-based flood fill visits cells in an arbitrary order.
+            // Sorted here into reading order (highest Y first — see
+            // GridView.Build, y increases upward on screen — then ascending
+            // X) so the per-cell progressive group bonus and its popup
+            // animation read left-to-right, top-to-bottom. Purely cosmetic:
+            // the group bonus total is unaffected by cell order.
             group.Sort((a, b) =>
             {
                 int rowCompare = b.y.CompareTo(a.y);
@@ -2805,22 +2553,11 @@ namespace Contigu.Core
 
         /// <summary>
         /// Aggregate multiplier from this placement's tinted/multiplier-zone
-        /// cells — applied ONCE to this whole placement's group bonus +
+        /// cells, applied once to this whole placement's group bonus +
         /// golden bonus (see PlacementResult.GroupMultiplier/.TotalScore)
-        /// rather than baked into the group bonus per cell (Balatro-style
-        /// "multiply at the end", explicit request). Each matching tinted
-        /// cell AND each multiplier-zone cell in the group stacks its own x2
-        /// (two of either in the same combo combine to x4, three to x8,
-        /// ...) — multiplier-zone used to only count once regardless of how
-        /// many cells had it, but that made "Multiplier Beacon" (which can
-        /// tag many cells in one row/column at once) pointless beyond a
-        /// single x2, identical to the plain single-cell Multiplier trait.
-        /// Stacking it the same way Tinted already does gives Beacon real
-        /// extra teeth when several of its marked cells land in the same
-        /// scored group, and makes both factors consistent with each other.
-        /// Does NOT reach the line-clear bonus — see
-        /// <see cref="ComputeLineClearMultiplier"/> for that, which is the
-        /// one place Tinted and Multiplier Zone now actually differ.
+        /// rather than baked in per cell. Each matching tinted cell and each
+        /// multiplier-zone cell in the group stacks its own x2. Does not
+        /// reach the line-clear bonus — see <see cref="ComputeLineClearMultiplier"/>.
         /// </summary>
         private int ComputeGroupMultiplier(List<Vector2Int> groupCells)
         {
@@ -2842,17 +2579,7 @@ namespace Contigu.Core
             return multiplier;
         }
 
-        /// <summary>
-        /// Same idea as <see cref="ComputeGroupMultiplier"/>, but counts ONLY
-        /// multiplier-zone cells — Tinted deliberately never reaches
-        /// <see cref="PlacementResult.LineClearScore"/> (see
-        /// <see cref="PlacementResult.LineClearMultiplier"/>). On explicit
-        /// player feedback: once Tinted's target color always matched its
-        /// own piece (see DeckManager.TagTintedTokensRandom), it became
-        /// functionally identical to Multiplier Zone despite being the
-        /// cheaper Common-rarity pick — this is what keeps it a real but
-        /// narrower effect instead of a strictly-better duplicate.
-        /// </summary>
+        /// <summary>Same idea as <see cref="ComputeGroupMultiplier"/>, but counts only multiplier-zone cells — Tinted never reaches <see cref="PlacementResult.LineClearScore"/>.</summary>
         private int ComputeLineClearMultiplier(List<Vector2Int> groupCells)
         {
             int multiplier = 1;
@@ -2926,11 +2653,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>
-        /// A row/column is complete if every non-locked cell in it is filled
-        /// (spec 3.3). A row/column with zero non-locked cells is degenerate and
-        /// never counts as complete.
-        /// </summary>
+        /// <summary>A row/column is complete if every non-locked cell in it is filled. A row/column with zero non-locked cells is degenerate and never counts as complete.</summary>
         private ClearInfo CheckAndClearLines()
         {
             var cellsToClear = new HashSet<Vector2Int>();
@@ -2984,12 +2707,11 @@ namespace Contigu.Core
         /// <summary>
         /// One cell of a row/column just found complete: an unlocked cell is
         /// wiped as normal (added to <paramref name="cellsToClear"/>), but a
-        /// locked Bastion cell (Cell.IsBastion — "n'est pas cleared mais fait
-        /// quand même les points cleared") is never added there — it stays
-        /// filled/locked exactly as it was — and instead earns its line-clear
-        /// bonus through <paramref name="bastionBonus"/>. Both are HashSets so
-        /// a cell shared by a completed row AND a completed column in the same
-        /// placement is only ever credited once.
+        /// locked Bastion cell (Cell.IsBastion) stays filled/locked and
+        /// instead earns its line-clear bonus through <paramref
+        /// name="bastionBonus"/>. Both are HashSets so a cell shared by a
+        /// completed row and column in the same placement is only ever
+        /// credited once.
         /// </summary>
         private void CollectLineCell(Vector2Int pos, HashSet<Vector2Int> cellsToClear, HashSet<Vector2Int> bastionBonus)
         {
@@ -3025,14 +2747,10 @@ namespace Contigu.Core
             for (int x = 0; x < Size; x++)
             {
                 var cell = _cells[x, y];
-                // A Locker obstacle cell is NOT skipped like an ordinary
-                // locked cell (old boss ProgressiveCellLock, Bastion) — it
-                // falls through to the IsFilled check below exactly like an
-                // unlocked cell, which it can never pass (CanPlace already
-                // refuses it), so a row/column containing one can simply
-                // never complete while it's there (explicit request: "Tu ne
-                // devrais pas pouvoir clear une ligne qui contient une
-                // locked cell").
+                // A Locker obstacle cell is not skipped like an ordinary
+                // locked cell: it falls through to the IsFilled check below,
+                // which it can never pass (CanPlace already refuses it), so
+                // a row/column containing one can never complete.
                 if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
@@ -3065,14 +2783,7 @@ namespace Contigu.Core
             return hasUnlockedCell;
         }
 
-        // ---- Persistent modifiers (boss round only, spec 6.1 — golden/tinted/
-        // multiplier are no longer applied to fixed grid cells; see PieceTrait) ----
-
-        /// <summary>
-        /// Locks up to <paramref name="count"/> random cells for the boss round,
-        /// avoiding cells that already carry a golden/tinted/multiplier modifier
-        /// when possible (spec 6.1).
-        /// </summary>
+        /// <summary>Locks up to <paramref name="count"/> random cells for the boss round, avoiding cells that already carry a golden/tinted/multiplier modifier when possible.</summary>
         public IReadOnlyList<Vector2Int> LockRandomCells(int count, IRandomProvider rng)
         {
             var candidates = new List<Vector2Int>();
@@ -3109,17 +2820,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Boss round mechanic (replaces the old upfront-N-cell lock at round
-        /// start — judged too hard on explicit request: "le boss est beaucoup
-        /// trop difficile, on va faire autre chose"): locks up to
-        /// <paramref name="count"/> random still-EMPTY, unlocked cells — never
-        /// a cell the player has actually filled — ratcheting the board's
-        /// playable area down gradually instead of all at once. Locking a cell
-        /// can itself complete a row/column (if every OTHER cell in it was
-        /// already filled or locked) — that's re-validated here via the same
-        /// <see cref="CheckAndClearLines"/> a real placement uses, so it scores
-        /// and clears exactly the same way ("il va falloir valider pour clear
-        /// line si jamais ça permet de clear line").
+        /// Boss round mechanic: locks up to <paramref name="count"/> random
+        /// still-empty, unlocked cells, ratcheting the board's playable area
+        /// down gradually. Locking a cell can itself complete a row/column
+        /// (if every other cell in it was already filled or locked) — that's
+        /// re-validated here via the same <see cref="CheckAndClearLines"/>
+        /// a real placement uses, so it scores and clears the same way.
         /// </summary>
         public BossLockOutcome LockFreeCellsAndCheckClears(int count, IRandomProvider rng)
         {

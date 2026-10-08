@@ -9,7 +9,7 @@ namespace Contigu.Core
         Destruction,
         Roguelike,
 
-        /// <summary>Third batch only — the 10 per-shape modifiers (Formes.*), none of the first two batches needed their own bucket for this.</summary>
+        /// <summary>The per-shape modifiers (Formes.*).</summary>
         Formes
     }
 
@@ -36,33 +36,12 @@ namespace Contigu.Core
     }
 
     /// <summary>
-    /// Modifiers implemented from the much larger brainstorm list (Couleurs /
-    /// Voisinage / Lignes / Connexions / Destruction / "plus roguelike"), in
-    /// two batches (16 + 16). The first batch (Prisme..Démolisseur) is
-    /// computable directly from state <see cref="GridManager.PlacePiece"/>
-    /// already had. The second batch's line-level modifiers (Arc-en-ciel,
-    /// Alternance, Palindrome, Gradient, Bloc, Monochrome-ligne) needed
-    /// <see cref="GridManager.CheckAndClearLines"/> reworked to expose each
-    /// cleared row/column's ordered color sequence BEFORE it's wiped — see
-    /// README. Several names (Complémentaire's exact color pairing, Maçon,
-    /// Démolisseur, and the whole second batch) had only a name + category to
-    /// go on, not original detailed rule text, so their exact trigger
-    /// condition is this project's best-effort interpretation of the theme —
-    /// documented per-modifier below and in the README. Still not delivered:
-    /// the destruction modifiers needing a placement/clear history across a
-    /// round (Overkill, Cascade, Réaction en chaîne, Combo parfait, Nettoyage,
-    /// Récolte) and "Dernier espace" (structurally unreachable — see README).
-    /// Trou dans la Grille, Cœur de Pierre, Diagonale Verrouillée and Sans
-    /// Doublon (all tied to boss-round locked cells) and Symétrie (unclear,
-    /// hard to trigger) were removed on explicit request — see README.
-    ///
-    /// Every description below was shortened on explicit request ("Toutes
-    /// les descriptions d'upgrades et modifiers sont beaucoup trop longues,
-    /// ça devient chiant a lire a la longue, peux-tu les réduires") — same
-    /// mechanic and numbers, fewer words, "multiplier" contracted to "Mult"
-    /// throughout (still colorized red by DescriptionTextFormatter, which
-    /// matches "mult" case-insensitively) to match the newer +Mult
-    /// modifiers' own phrasing.
+    /// Line-level modifiers (Arc-en-ciel, Alternance, Palindrome, Gradient,
+    /// Bloc, Monochrome-ligne) rely on <see cref="GridManager.CheckAndClearLines"/>
+    /// exposing each cleared row/column's ordered color sequence before it's
+    /// wiped. Descriptions use "Mult" for "multiplier" throughout — still
+    /// colorized red by DescriptionTextFormatter, which matches "mult"
+    /// case-insensitively.
     /// </summary>
     public static class ModifierCatalog
     {
@@ -122,9 +101,7 @@ namespace Contigu.Core
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
             "x2 Mult per row/column cleared at once, stacking (2+ only).");
 
-        // Very hard to actually trigger (needs 4 filled cardinal neighbors
-        // showing all 4 base colors at once) — bonus raised 18->35 on
-        // explicit request to make it worth chasing.
+        // Requires 4 filled cardinal neighbors showing all 4 base colors at once.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
             ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
             "+52 pts per group cell surrounded by all 4 colors.");
@@ -173,19 +150,6 @@ namespace Contigu.Core
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
             "x2 Mult per cleared line that's a single color, stacking.");
 
-        // Devotion/Forme* converted from "doubles this placement's group
-        // bonus" (additive) to a genuine xN ModifierMultiplier, on explicit
-        // request ("Tous les modifiers par rapport à la couleur de pièce ou
-        // type de pièce doivent une version +pts et une version +mult") —
-        // Éclat (below) already covers the +pts side for colors; the 10 new
-        // Forme*Points modifiers (ninth batch, further down) now cover it
-        // for shapes. Devotion (only — Forme* stays a genuine xN) was later
-        // converted BACK to additive, at a higher flat value, on explicit
-        // request ("converting some multiplicative sources to additive") —
-        // its per-color condition fires reliably enough (~1-in-4 placements)
-        // that the old xN was compounding too easily with the game's other
-        // "always-on" multiplicative modifiers.
-
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Red Devotion",
             "+3 Mult on Red pieces.");
@@ -202,12 +166,10 @@ namespace Contigu.Core
             ModifierId.DevotionLime, ModifierCategory.Couleurs, "Green Devotion",
             "+3 Mult on Green pieces.");
 
-        // ---- Fourth batch: hand-slot, piece-size and per-color-tile bonuses (on explicit request) ----
-        // The 3 slot modifiers can't be evaluated by GridManager at all — it has
-        // no idea which of the 3 hand slots a piece came from, only RunManager's
-        // PlacePiece(handIndex, x, y) does — so unlike every other modifier here,
-        // they're resolved post-hoc in RunManager, the same pattern already used
-        // for the second-batch PieceTrait kinds (see RunManager.ApplyHandSlotModifierBonus).
+        // The 3 slot modifiers can't be evaluated by GridManager — it doesn't
+        // know which hand slot a piece came from, only RunManager's
+        // PlacePiece(handIndex, x, y) does — so they're resolved post-hoc in
+        // RunManager (see RunManager.ApplyHandSlotModifierBonus).
 
         public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
             ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
@@ -245,8 +207,6 @@ namespace Contigu.Core
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Green Glow",
             "+6 pts per group cell on Green pieces.");
 
-        // ---- Fifth batch: 8 new ideas (on explicit request) ----
-
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
             "+8 pts per group cell on either main diagonal.");
@@ -274,10 +234,6 @@ namespace Contigu.Core
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
             "x2 Mult when this color is new to the board.");
-
-        // ---- Sixth batch: 11 more, from a player-authored brainstorm list
-        // (Équilibriste, Longue série and a second "Solitaire" idea were
-        // dropped — see README) ----
 
         public static readonly ModifierDefinition Pont = new ModifierDefinition(
             ModifierId.Pont, ModifierCategory.Connexions, "Bridge",
@@ -323,24 +279,13 @@ namespace Contigu.Core
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
             "Joker tiles count as whichever color scores best with your Devotion/Glow modifiers.");
 
-        // ---- Seventh batch: progressive modifiers that scale with a
-        // running counter instead of a fixed strength, on explicit request
-        // ("+5 ou x1 pour chaque pièce d'un même type de suite, +10 ou x2
-        // pour la 2e de suite, etc... (x1 par modifiers possédé) (x0.1 par
-        // tuile sur la grille)") — Repetition (above) was adapted the same
-        // way instead of being duplicated. ----
-
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Density",
             "+n Mult, n = filled cells on the board ÷ 10 — scales with how full the board is.");
 
-        // ---- Eighth batch: Lueur-earning modifiers, each adapted from an
-        // existing score modifier of the same shape instead of a new
-        // condition (on explicit request: "il faut ajouter quelques
-        // modifiers qui rapportent des lueur... tu peux t'inspirer des
-        // modifiers qu'on a déjà et les adapter en version bonus lueur") —
-        // same trigger condition as their inspiration, paying Lueur (the
-        // shop currency) instead of points/a multiplier.
+        // Lueur-earning modifiers, each using the same trigger condition as
+        // an existing score modifier but paying Lueur (shop currency)
+        // instead of points or a multiplier.
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
@@ -361,8 +306,6 @@ namespace Contigu.Core
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
             "+5 ◆ when this piece matches the last one's shape.");
-
-        // ---- Ninth batch, on explicit request ----
 
         public static readonly ModifierDefinition MultUn = new ModifierDefinition(
             ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
@@ -404,12 +347,7 @@ namespace Contigu.Core
             ModifierId.Experience, ModifierCategory.Roguelike, "Experience",
             "+0.1 Mult per upgraded piece you've PLAYED this run, starting from a baseline of 1.");
 
-        // ---- Eleventh batch: curation pass (on explicit request — see
-        // ModifierId's own doc comment on this batch) — replaces the 10
-        // FormeX "Specialist" + 10 FormeXPoints "Glow" definitions removed
-        // above with 3 per-size-tier pairs. Same multiplier/bonus values
-        // (ScoringConstants.FormeSpecialistMultiplier/
-        // FormeGlowBonusPerCell) as every one of the 20 they replace.
+        // Per-size-tier pairs; values from ScoringConstants.FormeSpecialistMultiplier/FormeGlowBonusPerCell.
 
         public static readonly ModifierDefinition FormatPetitSpecialiste = new ModifierDefinition(
             ModifierId.FormatPetitSpecialiste, ModifierCategory.Formes, "Small Format Specialist",
@@ -435,10 +373,6 @@ namespace Contigu.Core
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Large Format Glow",
             "+6 pts per group cell on 4-cell pieces (Square or any Tetromino).");
 
-        // ---- Twelfth batch (on explicit request — "On pourrait rajouter
-        // des modifiers par rapport a la grosseur des group cell (pair vs
-        // impair)") ----
-
         public static readonly ModifierDefinition Pair = new ModifierDefinition(
             ModifierId.Pair, ModifierCategory.Roguelike, "Even",
             "x2 Mult when the scored group has an even number of cells.");
@@ -447,11 +381,8 @@ namespace Contigu.Core
             ModifierId.Impair, ModifierCategory.Roguelike, "Odd",
             "x2 Mult when the scored group has an odd number of cells.");
 
-        // ---- Thirteenth batch: synergy pass (on explicit request — see
-        // ModifierId's own doc comment on this batch) — the Devotion/Éclat
-        // same-color pairing bonus (axis 1) needed no new definition here,
-        // just a rule change inside Devotion's own effect (see
-        // GridManager.ApplyDevotionEclatPairBonus).
+        // The Devotion/Éclat same-color pairing bonus needs no definition
+        // here — see GridManager.ApplyDevotionEclatPairBonus.
 
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
             ModifierId.Polyvalence, ModifierCategory.Roguelike, "Polyvalence",
@@ -464,9 +395,6 @@ namespace Contigu.Core
         public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
             ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
             "+1 Mult per distinct Joker combat trait kind currently in your deck.");
-
-        // ---- Fourteenth batch: more synergy pass (on explicit request —
-        // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Color Collection",

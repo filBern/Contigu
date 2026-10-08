@@ -6,20 +6,13 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Crisp, larger-resolution geometric shape sprites for the animated
-    /// background (see AnimatedBackgroundView) — on explicit report ("je
-    /// n'aime pas le background, j'aimerais quelque chose de plus
-    /// geometrique qui joue avec les grosseurs et positions de shapes"),
-    /// replacing the earlier soft blurred-edge color blobs with hard-edged
-    /// shapes instead. Reuses ColorblindShapeFactory.IsInsideShape's exact
-    /// circle/square/triangle/diamond point tests — that class's own
-    /// PieceColor parameter is used here purely as a shape SELECTOR
-    /// (Coral=circle, Teal=square, Violet=triangle, Lime=diamond), its
-    /// actual piece-color meaning is irrelevant to this caller — but at a
-    /// much higher texture resolution (256 vs. 32): those badges only
-    /// ever render at ~20-45px, where 32 is plenty, while a background
-    /// shape stretches to 150-500px, where a 32px source would look
-    /// visibly blurry/pixelated instead of the crisp geometric edges
-    /// asked for.
+    /// background (see AnimatedBackgroundView). Reuses ColorblindShapeFactory.
+    /// IsInsideShape's circle/square/triangle/diamond point tests — that
+    /// class's PieceColor parameter is used here purely as a shape selector
+    /// (Coral=circle, Teal=square, Violet=triangle, Lime=diamond), its actual
+    /// piece-color meaning is irrelevant here — but at a much higher texture
+    /// resolution (256 vs. 32), since a background shape stretches to
+    /// 150-500px where a 32px source would look blurry.
     /// </summary>
     public static class BackgroundShapeFactory
     {

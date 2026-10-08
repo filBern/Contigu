@@ -2,31 +2,17 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Wraps every mention of points (pts/point/points) in blue and every
-    /// mention of a multiplier (multiplier/multipliers/mult/xN — "mult"
-    /// added once the genuine additive "+Mult" modifiers arrived, ninth
-    /// batch) in red, across an upgrade/modifier/piece-trait
-    /// description — on explicit request ("à chaque fois que le mot point
-    /// apparait dans les description, que le mot soit bleu et idem pour le
-    /// rouge et le multiplicateur"), matching the same blue=score/red=
-    /// multiplier convention as the Balatro-style chips/mult pills (see
-    /// ComboView). Relies on Unity's legacy Text component rich-text support
-    /// (&lt;color=#RRGGBB&gt;...&lt;/color&gt;), on by default and never
-    /// disabled anywhere in this project's UIFactory. Only recognizes the
-    /// literal words themselves, not every synonym ("doubles", "+18 flat")
-    /// — a handful of upgrade descriptions that phrase things differently
-    /// simply stay uncolored.
-    /// Descriptions that earn Lueur (the shop currency) no longer spell out
-    /// the word at all — on explicit request ("changer le mot lueur dans
-    /// les description de modifiers et upgrades pour le symbole losange
-    /// jaune"), the literal Lueur-diamond glyph (◆, U+25C6) is embedded
-    /// directly in those description strings instead, and THIS formatter
-    /// colors it gold (same as the word used to be) and, on a further
-    /// explicit request ("Grossis de 50% le symbole lueur dans les
-    /// descriptions"), sizes it 50% larger than the surrounding text —
-    /// hence <see cref="Colorize"/> now needs the caller's base font size,
-    /// since the glyph's target size is relative to whatever context is
-    /// displaying the description (tooltip, shop card, upgrade card, ...
-    /// each uses a different base size).
+    /// mention of a multiplier (multiplier/multipliers/mult/xN) in red,
+    /// across an upgrade/modifier/piece-trait description, matching the
+    /// same blue=score/red=multiplier convention as the Balatro-style
+    /// chips/mult pills (see ComboView). Relies on Unity's legacy Text
+    /// component rich-text support (&lt;color=#RRGGBB&gt;...&lt;/color&gt;),
+    /// on by default. Only recognizes the literal words themselves, not
+    /// every synonym, so a handful of descriptions that phrase things
+    /// differently stay uncolored.
+    /// The literal Lueur-diamond glyph (◆, U+25C6) embedded in descriptions
+    /// is colored gold and sized 50% larger than the surrounding text, hence
+    /// <see cref="Colorize"/> needs the caller's base font size.
     /// </summary>
     public static class DescriptionTextFormatter
     {
@@ -86,17 +72,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// "x2", "x3", ... — the literal multiplier factor token itself, e.g.
-        /// in "x3 multiplier if...". Also catches the placeholder form "xn"
-        /// (e.g. "xn multiplier where n is..." — Repetition, Gradient,
-        /// Densite), on explicit request: "X et N collé ne devrait
-        /// pas arriver dans un mot normal" — "x" immediately followed by a
-        /// single "n" and nothing else never occurs in normal English text,
-        /// so it's safe to always treat it as this same token. Also catches
-        /// a decimal factor like "x2.3" (a single "." with at least one
-        /// digit on each side) — the progressive-modifier tooltip's
-        /// "Currently xY.Z" line (see RunManager.GetProgressiveModifierStateText)
-        /// uses exactly this format for CartesEnchantees/Experience.
+        /// "x2", "x3", ... — the literal multiplier factor token itself.
+        /// Also catches the placeholder form "xn" (used by some modifiers'
+        /// descriptions) and a decimal factor like "x2.3" (a single "."
+        /// with at least one digit on each side, used by progressive-
+        /// modifier tooltips, see RunManager.GetProgressiveModifierStateText).
         /// </summary>
         private static bool IsMultiplierFactor(string lower)
         {

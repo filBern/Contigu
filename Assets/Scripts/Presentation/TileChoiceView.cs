@@ -8,23 +8,12 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Overlay shown once a shop upgrade purchase reveals a Grid-pool
-    /// (piece-trait) upgrade: the player picks which of a handful of
-    /// candidate deck tokens actually receive it (spec: "un choix de 5
-    /// tiles"), instead of the old random assignment. Toggle any candidate
-    /// preview on/off; Confirm enables once exactly
-    /// EconomyConstants.ShopTileChoiceCount are selected (or fewer, if the
-    /// deck didn't even have that many candidates to offer). Shows the
-    /// upgrade's own card (see UpgradeCardFactory) above the previews, on
-    /// explicit request, so a mystery shop slot's reveal is actually
-    /// readable and not just a name.
+    /// Overlay shown once a shop upgrade purchase reveals a Grid-pool (piece-trait) upgrade: the player
+    /// picks which candidate deck tokens receive it. Confirm enables once exactly
+    /// EconomyConstants.ShopTileChoiceCount are selected (or fewer, if the deck has fewer candidates).
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        // 30% smaller than the original 140/116, matching PieceChoiceView/
-        // DraftView's own piece cards (explicit report: "Les tiles upgrades
-        // 5 tiles preview sont plus gros que sur les pieces upgrades, il
-        // faudrait les rapetisser un peu").
         private const float CellSize = 98f;
         private const float PreviewSize = 81f;
         private const float LevelLabelHeight = 18f;
@@ -57,9 +46,7 @@ namespace Contigu.Presentation
         private readonly Dictionary<int, RectTransform> _previewContainerByIndex = new Dictionary<int, RectTransform>();
         private int _requiredCount;
 
-        // Which trait a selected preview should show taking shape on it —
-        // set once per Show() call from the upgrade being resolved, so
-        // OnCellClicked doesn't need to know anything about upgrades itself.
+        // Set once per Show() call from the upgrade being resolved, so OnCellClicked doesn't need to know about upgrades itself.
         private PieceTraitKind? _previewTraitKind;
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
@@ -74,21 +61,15 @@ namespace Contigu.Presentation
             _cardContainer.anchorMin = new Vector2(0.5f, 1f);
             _cardContainer.anchorMax = new Vector2(0.5f, 1f);
             _cardContainer.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the whole block's
-            // layout — see LayoutBlock.
+            // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
 
             _title = UIFactory.CreateText(_root, "Title", "", 22, UITheme.TextOnBackground);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the whole block's
-            // layout — see LayoutBlock.
+            // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
-            // Horizontal instead of the old vertical list (explicit request:
-            // "avoir seulement le preview... et mettre les 5 un a côté de
-            // l'autre") — 5 previews side by side read faster than 5 stacked
-            // rows, and take a lot less vertical space besides.
             _previewsContainer = UIFactory.CreateUIObject("Previews", _root);
             _previewsContainer.anchorMin = new Vector2(0.5f, 1f);
             _previewsContainer.anchorMax = new Vector2(0.5f, 1f);
@@ -107,9 +88,7 @@ namespace Contigu.Presentation
             _confirmRect.anchorMin = new Vector2(0.5f, 1f);
             _confirmRect.anchorMax = new Vector2(0.5f, 1f);
             _confirmRect.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the same
-            // measured, vertically-centered block as everything else above
-            // it — see the comment there.
+            // Vertical position set in Show(), as part of the same measured, vertically-centered block — see LayoutBlock.
             _confirmRect.sizeDelta = new Vector2(200f, ConfirmHeight);
             _confirmButton.onClick.AddListener(OnConfirmClicked);
 
@@ -157,16 +136,7 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(true);
         }
 
-        /// <summary>
-        /// Stacks card/title/previews/Confirm as one block and centers that
-        /// whole block vertically in the overlay, instead of hanging it from
-        /// the top — explicit request, now that previews are a compact
-        /// single row (see BuildPreviewCell) rather than the old vertical
-        /// list, top-anchoring left a big dead gap above Confirm. Every
-        /// height here is either measured (the card, via
-        /// UpgradeCardFactory) or a fixed known constant (everything else),
-        /// never guessed.
-        /// </summary>
+        /// <summary>Stacks card/title/previews/Confirm as one block and centers it vertically in the overlay. Every height here is either measured (the card) or a fixed constant, never guessed.</summary>
         private void LayoutBlock(float cardHeight)
         {
             float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + CellSize + BlockSpacing + ConfirmHeight;
@@ -200,12 +170,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            // Nudged up to leave room at the bottom for the level label
-            // below — same "leave room at the bottom" layout DraftView/
-            // PieceChoiceView/DeckView/HandView already use for their own
-            // piece-level labels (explicit report: "Golden cell et mirror
-            // tile upgrade il manque le lvl des pièces" — this candidate-
-            // piece picker had no level label at all, for any trait).
+            // Nudged up to leave room at the bottom for the level label below.
             previewContainer.anchoredPosition = new Vector2(0f, LevelLabelHeight * 0.5f);
             previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
             _previewContainerByIndex[deckIndex] = previewContainer;
@@ -223,17 +188,7 @@ namespace Contigu.Presentation
             levelLabel.rectTransform.sizeDelta = new Vector2(0f, LevelLabelHeight);
         }
 
-        /// <summary>
-        /// (Re)draws the piece preview for <paramref name="deckIndex"/> —
-        /// plain when not selected, or with a preview of the actual trait
-        /// this upgrade grants when <paramref name="showTrait"/> is true, so
-        /// the player can see exactly what selecting this piece does rather
-        /// than just a generic highlight (explicit request: "faire
-        /// apparaître progressivement le visuel de la tuile upgradée pour
-        /// que le joueur comprenne quelle tuile exactement est affectée").
-        /// The trait shown is a preview only — DeckManager.TagSpecificTokens
-        /// still picks the real cell/color once the choice is confirmed.
-        /// </summary>
+        /// <summary>(Re)draws the piece preview for <paramref name="deckIndex"/> — plain when not selected, or with the actual trait this upgrade grants when <paramref name="showTrait"/> is true. The trait shown is a preview only — DeckManager.TagSpecificTokens still picks the real cell/color once confirmed.</summary>
         private void RebuildPreview(int deckIndex, bool showTrait, bool animate)
         {
             var token = _deck.Deck[deckIndex];
@@ -246,10 +201,7 @@ namespace Contigu.Presentation
             PieceTrait? previewTrait = null;
             if (showTrait && _previewTraitKind.HasValue)
             {
-                // Tinted always tints to the token's own color (see
-                // UpgradeSystem.ApplyToChosenTiles/DeckManager.TagSpecificTokens)
-                // — cell index 0 is just any real cell of the shape, since the
-                // exact cell is likewise only decided for real on confirm.
+                // Tinted always tints to the token's own color; cell index 0 is a placeholder, the exact cell is decided on confirm.
                 PieceColor? tintedColor = _previewTraitKind.Value == PieceTraitKind.Tinted ? (PieceColor?)token.Color : null;
                 previewTrait = new PieceTrait(_previewTraitKind.Value, 0, tintedColor);
             }
@@ -268,9 +220,7 @@ namespace Contigu.Presentation
             float elapsed = 0f;
             while (elapsed < BadgeFadeDuration)
             {
-                // Selecting a different piece before this one finishes fading
-                // in rebuilds (and destroys) this exact badge — bail out
-                // rather than touch a destroyed component.
+                // Selecting a different piece before this finishes fading in destroys this badge — bail out.
                 if (badge == null)
                 {
                     yield break;

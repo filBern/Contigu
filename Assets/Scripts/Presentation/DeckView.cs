@@ -9,23 +9,14 @@ namespace Contigu.Presentation
     /// <summary>
     /// Read-only, toggleable overlay listing the player's full persistent deck
     /// composition (one row per shape/color combo, with its count and a
-    /// representative trait badge if any copy is enchanted) — lets the player
-    /// check what's in their deck without having to wait for the next draft
-    /// (on explicit request). Reuses DraftView's exact row-building approach
-    /// (see BuildTypeRow/FindRepresentativeTrait there) since it's the same
-    /// underlying data (DeckManager.GetDeckComposition), just shown without
-    /// the pick/sub-choice flow around it.
+    /// representative trait badge if any copy is enchanted). Reuses DraftView's
+    /// row-building approach (see BuildTypeRow/FindRepresentativeTrait there)
+    /// since it shares the same underlying data (DeckManager.GetDeckComposition).
     ///
     /// Grouped by color into its own labeled section per PieceColor, each a
-    /// single horizontal line of compact type cards (on explicit report —
-    /// "L'écran du deck est vraiment chaotique, j'aimerais que les pièces
-    /// soient filtered par couleur et qu'elles prennent moins de largeur
-    /// chacune": the original single ungrouped 3-column grid mixed every
-    /// color together in whatever order DeckManager.GetDeckComposition's
-    /// dictionary happened to iterate, at a fixed 300px-wide card for what
-    /// amounts to a small shape preview and an "xN" label). Manually
-    /// positioned section-by-section (no LayoutGroup) so every color's
-    /// cards stay centered under its heading.
+    /// single horizontal line of compact type cards, manually positioned
+    /// section-by-section (no LayoutGroup) so every color's cards stay
+    /// centered under its heading.
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
@@ -139,9 +130,6 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        // Fixed display order (not enum declaration order specifically, but
-        // it happens to match) — Joker last since it's the rare wildcard
-        // case, so it only ever appears once every other section already has.
         private static readonly PieceColor[] ColorSectionOrder =
         {
             PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime, PieceColor.Joker
@@ -170,13 +158,7 @@ namespace Contigu.Presentation
                 }
             }
 
-            // Every section shares the SAME horizontal offset/width (based
-            // on whichever section actually has the most distinct types,
-            // capped at the number of possible shapes) rather than each hugging the
-            // container's own left edge — on explicit report, with every
-            // color under a full row the whole block still sat flush left
-            // inside the wider fixed-width container instead of reading as
-            // centered on screen.
+            // Every section shares the same horizontal offset/width, based on whichever section has the most distinct types (capped at the number of possible shapes), so the whole block reads as centered rather than flush left.
             int columnsUsed = Mathf.Min(ColumnsPerSection, widestSection);
             float contentWidth = columnsUsed * CardWidth + (columnsUsed - 1) * CardSpacing;
             float xOffset = (ListWidth - contentWidth) / 2f;
@@ -197,7 +179,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order — GetDeckComposition's own Dictionary iteration order isn't guaranteed and, in practice, mixes shapes unpredictably (see this class's own doc comment on the original bug report).</summary>
+        /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order; GetDeckComposition's own Dictionary iteration order isn't guaranteed.</summary>
         private List<(ShapeId Shape, int Count)> CollectTypesForColor(IReadOnlyDictionary<(ShapeId Shape, PieceColor Color), int> composition, PieceColor color)
         {
             var result = new List<(ShapeId, int)>();
@@ -212,7 +194,7 @@ namespace Contigu.Presentation
             return result;
         }
 
-        /// <summary>Section label tinted the color it groups — e.g. "CORAL" in Coral's own display color — so the grouping reads at a glance without needing to read the word itself. Now also states <paramref name="totalCount"/>, this color's own piece total across every shape (explicit request: "j'aimerais savoir combien de pièce il y a de cette couleur") — the per-card "xN" labels below only break it down by shape, never summed anywhere on screen otherwise. Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's own centered columns below it. Returns the Y cursor for whatever comes next.</summary>
+        /// <summary>Section label tinted the color it groups, stating <paramref name="totalCount"/> (this color's piece total across every shape). Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's centered columns. Returns the Y cursor for whatever comes next.</summary>
         private float BuildColorSectionHeader(PieceColor color, int totalCount, float y, float xOffset, float contentWidth)
         {
             string headerText = VisualDefaults.GetColorName(color).ToUpperInvariant() + " (" + totalCount + ")";

@@ -3,11 +3,10 @@ namespace Contigu.Core
     /// <summary>
     /// Static description of one upgrade. <see cref="RequiresSubChoice"/> flags
     /// upgrades that need the player to pick a piece type (and/or target color)
-    /// before they can be applied (Retirer/Dupliquer/Recolorer, spec 5.3).
-    /// <see cref="Rarity"/> (spec extension, explicit request) weights how
-    /// often it shows up in a draft — see UpgradeSystem.PickWeighted — and is
-    /// shown to the player alongside <see cref="Pool"/> ("type") on the draft
-    /// card / tile-badge tooltip.
+    /// before they can be applied (Retirer/Dupliquer/Recolorer).
+    /// <see cref="Rarity"/> weights how often it shows up in a draft — see
+    /// UpgradeSystem.PickWeighted — and is shown to the player alongside
+    /// <see cref="Pool"/> ("type") on the draft card / tile-badge tooltip.
     /// </summary>
     public sealed class UpgradeDefinition
     {
@@ -31,23 +30,6 @@ namespace Contigu.Core
 
     public static class UpgradeCatalog
     {
-        // Rarity dropped Common -> Rare (on explicit report: "L'upgrade
-        // 'remove a piece' est beaucoup trop fréquente et surtout chiante en
-        // début de partie") — a 4x cut in its draft weight (8 -> 2, see
-        // UpgradeRarityUtility.GetDraftWeight), same tier as the most
-        // situational Grid-pool upgrades, since permanently shrinking the
-        // deck was the one Bank-pool pick that could backfire rather than
-        // just being weaker than another option. Redesigned from the ground
-        // up into a straight swap (follow-up explicit request: "Les
-        // upgrades 'remove' sont vraiment chiante, peux-tu la changer pour
-        // un replace?") — see UpgradeId.ReplacePiece/DeckManager.
-        // ReplaceOneOfType — so it no longer has that downside at all;
-        // rarity left at Common regardless, since bumping it back up wasn't
-        // part of the request. Description shortened (on explicit request,
-        // grouping this with DuplicatePiece and RandomPiece below: "pas
-        // besoin de la description complete... Idem pour duplicate piece ou
-        // remove piece") — the longer original wording said the same thing
-        // the picker it opens already shows.
         public static readonly UpgradeDefinition ReplacePiece = new UpgradeDefinition(
             UpgradeId.ReplacePiece, UpgradePool.Bank, "Replace a piece",
             "Choose 1 piece to replace with a duplicate of another.", true, UpgradeRarity.Common);
@@ -65,92 +47,53 @@ namespace Contigu.Core
             "Choose a piece type and color; recolor one copy.", true, UpgradeRarity.Uncommon);
 
         /// <summary>
-        /// A gamble (spec extension, explicit request: "j'aimerais qu'on
-        /// rajoute random modifier dans la liste de possibilité d'apparaitre.
-        /// 3 lueurs de base pareil, c'est un gamble") — Bank pool so it
-        /// automatically shares the same base price as every other Bank
-        /// upgrade (EconomyConstants.BankUpgradeShopBasePrice) with no
-        /// special-casing needed, and no sub-choice (applies immediately on
-        /// purchase, like Joker — see RunManager.BuyUpgradeSlot/
-        /// GrantRandomModifier) since there's nothing for the player to pick:
-        /// the whole point is not knowing which modifier they'll get.
-        /// Rarity bumped Uncommon -> Common, then back to Uncommon (on
-        /// explicit report, the second time: "le type random modifier
-        /// arrive un peu trop souvent comme upgrade") — now in its own
-        /// Modifier pool alongside Modifier Upgrade (explicit request:
-        /// "L'upgrade 'upgrade modifier' devrait être dans le type random
-        /// modifier"; see UpgradeCatalog.ModifierPool), which also dropped
-        /// the special +12 draft-weight override this upgrade used to get
-        /// (see UpgradeSystem.GetWeight) — it no longer needs a thumb on
-        /// the scale to be found once it isn't buried among 7 other Bank
-        /// items, so it now shares a plain 50/50 split with Modifier
-        /// Upgrade purely from both being Uncommon.
+        /// A gamble with no sub-choice (applies immediately on purchase, like
+        /// Joker — see RunManager.BuyUpgradeSlot/GrantRandomModifier): grants
+        /// a random modifier with no way to know which in advance.
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Modifier, "Random Modifier",
             "Grants one random modifier you don't already have.", false, UpgradeRarity.Uncommon);
 
-        // ---- Fourth batch (Bank pool, on explicit request) ----
-
         /// <summary>
-        /// Spec extension, explicit request: "j'aimerais rajouter un type
-        /// d'upgrade dans le shop: random piece. Propose 5 choix de pièces
-        /// et le joueur en sélectionne une. Chaque pièce a un pourcentage
-        /// de chance d'être upgradé avec une tuile spéciale". Bank pool
-        /// (adds to the deck, like Joker/Duplicate) but WITH a sub-choice —
-        /// unlike every other Bank sub-choice (Retirer/Dupliquer/Recolorer),
-        /// which picks a TYPE already in the deck (see UpgradeSystem.
-        /// GetCandidateTypesFor), this one's candidates are freshly rolled
-        /// pieces that don't exist in the deck yet, each independently
-        /// possibly pre-enchanted with a Grid-pool tile trait (see
-        /// EconomyConstants.RandomPieceTraitChancePercent,
+        /// Bank pool (adds to the deck, like Joker/Duplicate) but with a
+        /// sub-choice — unlike every other Bank sub-choice (Retirer/
+        /// Dupliquer/Recolorer), which picks a type already in the deck (see
+        /// UpgradeSystem.GetCandidateTypesFor), this one's candidates are
+        /// freshly rolled pieces that don't exist in the deck yet, each
+        /// independently possibly pre-enchanted with a Grid-pool tile trait
+        /// (see EconomyConstants.RandomPieceTraitChancePercent,
         /// UpgradeSystem.GetCandidatePiecesFor) — so it gets its own
         /// RunManager.PendingUpgradePieceCandidates/ResolveUpgradePieceChoice
-        /// pair and Presentation.PieceChoiceView instead of reusing
-        /// DraftView (which only knows how to show plain (Shape, Color)
-        /// types, never a trait preview). Description shortened (explicit
-        /// request: "pas besoin de la description complete 'Choose 1 of 5
-        /// random pieces to add to your deck; each may already carry a
-        /// special tile'. Juste garder 'choose 1 piece to add to your
-        /// deck'") — ReplacePiece/DuplicatePiece's descriptions above were
-        /// trimmed the same way, same reasoning (see their own comment).
+        /// pair and Presentation.PieceChoiceView instead of reusing DraftView
+        /// (which only knows how to show plain (Shape, Color) types, never
+        /// a trait preview).
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
             "Choose 1 piece to add to your deck.", true, UpgradeRarity.Common);
 
         /// <summary>
-        /// Spec extension, explicit request: "J'aimerais rajouter un type
-        /// d'upgrade dans le shop: Modifier upgrade, ce serait pour
-        /// upgrader un modifier que le joueur possède." After clarifying
-        /// what "upgrade" should concretely do (a generic level system
-        /// that amplifies whatever the chosen modifier already does — see
-        /// ModifierLevelUtility — rather than swapping to a named next
-        /// tier, which only a handful of modifiers even have), landed on a
-        /// third Bank sub-choice shape distinct from both existing ones:
-        /// unlike Retirer/Dupliquer/Recolorer (pick a TYPE from the deck)
-        /// and Random Piece (pick from freshly-rolled candidates), this
-        /// picks a SLOT the player already owns — RunManager.ActiveModifiers
-        /// itself is the full candidate list (every owned modifier is
-        /// eligible), so there's no Pending*Candidates list to populate at
-        /// all, just RunManager.ResolveModifierUpgradeChoice(slotIndex)
+        /// A level system that amplifies whatever the chosen modifier
+        /// already does (see ModifierLevelUtility), rather than swapping to
+        /// a named next tier. A third Bank sub-choice shape distinct from
+        /// the others: unlike Retirer/Dupliquer/Recolorer (pick a type from
+        /// the deck) and Random Piece (pick from freshly-rolled candidates),
+        /// this picks a slot the player already owns — RunManager.ActiveModifiers
+        /// itself is the full candidate list, so there's no Pending*Candidates
+        /// list to populate, just RunManager.ResolveModifierUpgradeChoice(slotIndex)
         /// once Presentation.ModifierUpgradeChoiceView shows the picker.
         /// Refused outright (see RunManager.BuyUpgradeSlot) if the player
-        /// owns no modifiers yet — same "don't sell an upgrade with
-        /// nothing to apply to" precedent as Random Modifier respecting
-        /// the modifier cap.
+        /// owns no modifiers yet.
         /// </summary>
         public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
             UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Modifier Upgrade",
             "Choose one of your active modifiers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
-        // Descriptions below all follow the same short "S.."
-        // pattern, describing the trait itself rather than how many pieces
-        // get it — that count is a shop mechanic (see
+        // Descriptions below describe the trait itself rather than how many
+        // pieces get it — that count is a shop mechanic (see
         // EconomyConstants.ShopTileChoiceCount, picked by the player in
-        // TileChoiceView), not a property of the upgrade, so it doesn't
-        // belong baked into the text (on explicit request — it used to say
-        // "3 pieces get S..").
+        // TileChoiceView), not a property of the upgrade.
         public static readonly UpgradeDefinition GoldenCells = new UpgradeDefinition(
             UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
             "Scores +18 flat when placed.", false, UpgradeRarity.Common);
@@ -179,8 +122,6 @@ namespace Contigu.Core
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
             "Stays golden for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
 
-        // ---- Second batch (7 more tile upgrades, on explicit request) ----
-
         public static readonly UpgradeDefinition CatalystTile = new UpgradeDefinition(
             UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Tile",
             "Scores extra for every pre-existing cell merged into its group.", false, UpgradeRarity.Common);
@@ -205,8 +146,6 @@ namespace Contigu.Core
             UpgradeId.VoidTile, UpgradePool.Grid, "Void Tile",
             "Clears one random filled tile elsewhere on the grid (+10 for the tile broken).", false, UpgradeRarity.Rare);
 
-        // ---- Third batch (2 more tile upgrades, on explicit request) ----
-
         public static readonly UpgradeDefinition BastionTile = new UpgradeDefinition(
             UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Tile",
             "Won't be removed when line a line is cleared.", false, UpgradeRarity.Uncommon);
@@ -216,13 +155,11 @@ namespace Contigu.Core
             "Destroys itself and its 8 surrounding tiles (+6 per tile destroyed).", false, UpgradeRarity.Rare);
 
         /// <summary>
-        /// Fifth batch (on explicit request — a corrected redo: "les
-        /// modifiers mastery que tu as créé devaient être des upgrades, pas
-        /// des modifiers"). No sub-choice — like Joker/Random Modifier, it
-        /// applies immediately on purchase: a carousel spins through all 8
-        /// shapes (grayed out, color irrelevant) and lands on one at random
-        /// (see RunManager.GrantShapeMastery/LastShapeMasteryGranted,
-        /// ShapeCarouselView), leveling up EVERY piece of that exact shape
+        /// No sub-choice — like Joker/Random Modifier, it applies
+        /// immediately on purchase: a carousel spins through all 8 shapes
+        /// (grayed out, color irrelevant) and lands on one at random (see
+        /// RunManager.GrantShapeMastery/LastShapeMasteryGranted,
+        /// ShapeCarouselView), leveling up every piece of that exact shape
         /// in the deck. Level N gives +(N-1) flat points per placement of
         /// that shape (level 2 = +1, level 3 = +2, ...) — buying it again,
         /// whether it lands on the same shape or a different one, keeps
@@ -232,7 +169,7 @@ namespace Contigu.Core
             UpgradeId.PieceMastery, UpgradePool.Mastery, "Piece Mastery",
             "Levels up one random piece shape — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
 
-        /// <summary>Sixth batch (on explicit request: "Il faudrait faire la même chose avec les couleurs") — Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
+        /// <summary>Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
             UpgradeId.ColorMastery, UpgradePool.Mastery, "Color Mastery",
             "Levels up one random piece color — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
@@ -251,13 +188,13 @@ namespace Contigu.Core
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomPiece
         };
 
-        /// <summary>Split out of BankPool into its own pool (explicit request: "séparer les mastery upgrades des pieces upgrades pour qu'elles soient leur propre type") — previously these two were just two more entries among BankPool's 9, sharing its "Piece Upgrade" label; now they get their own "Mastery Upgrade" label (see UpgradeVisualDefaults.GetPoolLabel) and their own independent shop-roll odds (see RunManager.RollUpgradeSlot/EconomyConstants.MasteryUpgradePoolChancePercent).</summary>
+        /// <summary>Its own pool, with its own "Mastery Upgrade" label (see UpgradeVisualDefaults.GetPoolLabel) and independent shop-roll odds (see RunManager.RollUpgradeSlot/EconomyConstants.MasteryUpgradePoolChancePercent).</summary>
         public static readonly UpgradeDefinition[] MasteryPool =
         {
             PieceMastery, ColorMastery
         };
 
-        /// <summary>Split out of BankPool right after Mastery was (explicit request: "L'upgrade 'upgrade modifier' devrait être dans le type random modifier" — plus a frequency complaint: "le type random modifier arrive un peu trop souvent comme upgrade") — same pattern as MasteryPool: its own "Modifier Upgrade" label and its own (deliberately modest) shop-roll odds, see EconomyConstants.ModifierUpgradePoolChancePercent.</summary>
+        /// <summary>Same pattern as MasteryPool: its own "Modifier Upgrade" label and its own shop-roll odds, see EconomyConstants.ModifierUpgradePoolChancePercent.</summary>
         public static readonly UpgradeDefinition[] ModifierPool =
         {
             RandomModifier, ModifierUpgrade

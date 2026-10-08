@@ -7,15 +7,12 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Overlay shown once a shop upgrade purchase reveals the Joker
-    /// upgrade — the only Bank-pool upgrade with no sub-choice AND no
-    /// dedicated reveal of its own (Random Modifier, the other one, uses
-    /// ModifierCarouselView's spin instead — see GameBootstrap.
-    /// OnUpgradeBuyClicked). Joker is already applied by the time this
-    /// shows; this is purely so the player can see (via UpgradeCardFactory,
-    /// plus a preview of the actual piece it just added — explicit
-    /// request, the text alone didn't show which piece it actually was)
-    /// what they just got instead of nothing at all, same as the
-    /// sub-choice/tile-choice reveals get.
+    /// upgrade: the only Bank-pool upgrade with no sub-choice and no
+    /// dedicated reveal of its own (Random Modifier uses
+    /// ModifierCarouselView's spin instead; see GameBootstrap.OnUpgradeBuyClicked).
+    /// Joker is already applied by the time this shows; it displays
+    /// UpgradeCardFactory's card plus a preview of the actual piece it
+    /// added.
     /// </summary>
     public sealed class UpgradeRevealView : MonoBehaviour
     {
@@ -23,10 +20,7 @@ namespace Contigu.Presentation
         private const float PreviewSize = 96f;
         private const float OkHeight = 44f;
         private const float BlockSpacing = 24f;
-        // The canvas is always exactly this tall in its own local units
-        // regardless of actual window size (CanvasScaler matches on height —
-        // see GameBootstrap.BuildCanvas), so centering math done in this
-        // space holds for any resolution.
+        // Canvas is always this tall in local units regardless of window size (CanvasScaler matches on height; see GameBootstrap.BuildCanvas), so centering math here holds at any resolution.
         private const float CanvasHeight = 800f;
 
         /// <summary>Fires once the player dismisses the reveal.</summary>
@@ -54,14 +48,7 @@ namespace Contigu.Presentation
             _titleRect.pivot = new Vector2(0.5f, 1f);
             _titleRect.sizeDelta = new Vector2(600f, TitleHeight);
 
-            // pivot (0.5, 1) here matters, not just cosmetically — it's what
-            // UpgradeCardFactory.Build's own returned container anchors
-            // itself against (also (0.5, 1)), so this container's pivot has
-            // to match or the card ends up offset by half of whatever
-            // arbitrary default size an un-sized RectTransform gets (this
-            // used to be pivot (0.5, 0.5), which is exactly what silently
-            // broke once UpgradeCardFactory started setting its own
-            // anchor/pivot instead of leaving it to the caller).
+            // Pivot (0.5, 1) must match UpgradeCardFactory.Build's returned container's own pivot, or the card ends up offset by half its default size.
             _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
             _cardContainer.anchorMin = new Vector2(0.5f, 1f);
             _cardContainer.anchorMax = new Vector2(0.5f, 1f);
@@ -87,13 +74,11 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// <paramref name="pieceShape"/>/<paramref name="pieceColor"/> is the
-        /// specific piece the upgrade actually added (Joker — see
-        /// RunManager.LastJokerShapeAdded), previewed below the card so the
-        /// player sees exactly what they got, not just its name.
-        /// <paramref name="trait"/> is Joker's own combat trait (see
-        /// RunManager.LastJokerCombatKindAdded) — passed straight through to
-        /// ShapePreviewFactory, which badges every cell of the preview for a
-        /// Joker-exclusive kind, same as the piece will show in hand.
+        /// specific piece Joker added (see RunManager.LastJokerShapeAdded),
+        /// previewed below the card. <paramref name="trait"/> is Joker's
+        /// combat trait (see RunManager.LastJokerCombatKindAdded), passed
+        /// through to ShapePreviewFactory, which badges every cell of the
+        /// preview for a Joker-exclusive kind.
         /// </summary>
         public void Show(UpgradeDefinition def, ShapeId pieceShape, PieceColor pieceColor, PieceTrait? trait = null)
         {
@@ -119,10 +104,7 @@ namespace Contigu.Presentation
             }
             float previewHeight = buildPreview();
 
-            // Same measured-block-centered-in-the-overlay approach as
-            // TileChoiceView.LayoutBlock — the card's height varies with the
-            // description's length, so title/card/preview/OK are stacked
-            // and centered using that real height rather than fixed offsets.
+            // Card height varies with description length, so title/card/preview/OK are stacked and centered using the measured height rather than fixed offsets.
             float cardHeight = card.sizeDelta.y;
             float totalHeight = TitleHeight + BlockSpacing + cardHeight + BlockSpacing + previewHeight + BlockSpacing + OkHeight;
             float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
