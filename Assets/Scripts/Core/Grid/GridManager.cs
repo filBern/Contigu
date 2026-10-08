@@ -789,19 +789,6 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>IReadOnlyList doesn't expose Contains itself (unlike List/HashSet) — the tiny manual scan every ActiveModifiers lookup in this file needs instead.</summary>
-        private static bool ContainsModifier(IReadOnlyList<ModifierId> list, ModifierId id)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i] == id)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         /// <summary>
         /// "Specialist" (per-piece-SIZE-TIER, curation pass — was per-exact-
         /// shape, 10 separate modifiers, before "que me propose tu pour
