@@ -567,6 +567,7 @@ namespace Contigu.Core
             public PieceColor OwnColor;
             public PieceColor JokerResolvedColor;
             public int ActiveModifierCount;
+            public IReadOnlyList<ModifierId> ActiveModifiers;
             public int Multiplier = 1;
             public int Lueur;
             public int AdditiveMult;
@@ -615,10 +616,10 @@ namespace Contigu.Core
                 { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Emmitouflee, ctx => ApplyEmmitouflee(ctx.GroupCells, ctx.Events) },
                 { ModifierId.Jardinier, ctx => ApplyJardinier(ctx.GroupCells, ctx.Events) },
-                { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionLime, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Coral, ModifierId.EclatCoral, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Teal, ModifierId.EclatTeal, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Violet, ModifierId.EclatViolet, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionLime, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Lime, ModifierId.EclatLime, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatPetitSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatMoyenSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatGrandSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -648,6 +649,16 @@ namespace Contigu.Core
                 { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Polyvalence, ctx => { ctx.AdditiveMult += ApplyPolyvalence(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
+                // Renfort Joker/Arsenal: not scored here at all — Renfort
+                // Joker scales ENEMY DAMAGE, not the player's own score
+                // (see RunManager.ApplyJokerCombatOrDefaultDamage), and
+                // Arsenal needs to scan the deck (GridManager has no
+                // DeckManager reference), resolved post-hoc in RunManager.
+                // ApplyDeckStateModifierBonuses alongside CartesEnchantees/
+                // Multitude/Experience.
+                { ModifierId.RenfortJoker, ctx => 0 },
+                { ModifierId.Arsenal, ctx => 0 },
                 // Joker: no score of its own — purely a passive rule change
                 // resolved before the loop starts (see JokerResolvedColor)
                 // for Devotion/Éclat to read.
@@ -693,7 +704,8 @@ namespace Contigu.Core
                 PreviousPlacedColor = previousPlacedColor,
                 OwnColor = ownColor,
                 JokerResolvedColor = jokerResolvedColor,
-                ActiveModifierCount = activeModifiers.Count
+                ActiveModifierCount = activeModifiers.Count,
+                ActiveModifiers = activeModifiers
             };
 
             int total = 0;
@@ -739,6 +751,55 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionBonus));
             return ScoringConstants.DevotionBonus;
+        }
+
+        /// <summary>
+        /// Devotion/Éclat pairing bonus (synergy pass, axis 1 — explicit
+        /// request: "synergies entre modifiers eux-mêmes"): extra flat
+        /// +Mult (see ScoringConstants.DevotionEclatPairBonus) when BOTH
+        /// this color's Devotion AND Éclat modifiers are held, checked
+        /// only from the Devotion side (see BuildPreClearEffects) so the
+        /// two modifiers' lambdas never both add it — Éclat's own entry is
+        /// untouched and still fires its usual per-cell +pts bonus
+        /// independently. Returns 0 (no-op) when the color doesn't match,
+        /// or the matching Éclat modifier isn't also held.
+        /// </summary>
+        private static int ApplyDevotionEclatPairBonus(PieceColor targetColor, ModifierId eclatId, IReadOnlyList<ModifierId> activeModifiers, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            if (ownColor != targetColor || !ContainsModifier(activeModifiers, eclatId))
+            {
+                return 0;
+            }
+
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionEclatPairBonus));
+            return ScoringConstants.DevotionEclatPairBonus;
+        }
+
+        /// <summary>Polyvalence (synergy pass, axis 1): +N Mult (see ScoringConstants.PolyvalenceMultPerCategory), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — rewards holding a spread of modifier families instead of stacking only one.</summary>
+        private static int ApplyPolyvalence(IReadOnlyList<ModifierId> activeModifiers, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var categoriesSeen = new HashSet<ModifierCategory>();
+            for (int i = 0; i < activeModifiers.Count; i++)
+            {
+                categoriesSeen.Add(ModifierCatalog.Get(activeModifiers[i]).Category);
+            }
+
+            int bonus = categoriesSeen.Count * ScoringConstants.PolyvalenceMultPerCategory;
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], bonus));
+            return bonus;
+        }
+
+        /// <summary>IReadOnlyList doesn't expose Contains itself (unlike List/HashSet) — the tiny manual scan every ActiveModifiers lookup in this file needs instead.</summary>
+        private static bool ContainsModifier(IReadOnlyList<ModifierId> list, ModifierId id)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == id)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

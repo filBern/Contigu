@@ -447,6 +447,24 @@ namespace Contigu.Core
             ModifierId.Impair, ModifierCategory.Roguelike, "Odd",
             "x2 Mult when the scored group has an odd number of cells.");
 
+        // ---- Thirteenth batch: synergy pass (on explicit request — see
+        // ModifierId's own doc comment on this batch) — the Devotion/Éclat
+        // same-color pairing bonus (axis 1) needed no new definition here,
+        // just a rule change inside Devotion's own effect (see
+        // GridManager.ApplyDevotionEclatPairBonus).
+
+        public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
+            ModifierId.Polyvalence, ModifierCategory.Roguelike, "Polyvalence",
+            "+1 Mult per distinct modifier category you hold at least one of.");
+
+        public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
+            ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Combat Boost",
+            "+25% damage on placements that trigger a Joker combat trait (Bombe/Range/Éclat/Précision/Sangsue). No effect otherwise.");
+
+        public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
+            ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
+            "+1 Mult per distinct Joker combat trait kind currently in your deck.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -464,7 +482,8 @@ namespace Contigu.Core
             Experience,
             FormatPetitSpecialiste, FormatMoyenSpecialiste, FormatGrandSpecialiste,
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
-            Pair, Impair
+            Pair, Impair,
+            Polyvalence, RenfortJoker, Arsenal
         };
 
         public static ModifierDefinition Get(ModifierId id)

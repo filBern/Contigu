@@ -1220,6 +1220,51 @@ namespace Contigu.Tests
             Assert.AreEqual(hp1AfterFirst - expectedShare, e1.CurrentHp);
         }
 
+        [Test]
+        public void RenfortJoker_Boosts25PercentDamage_OnlyOnJokerCombatTraitPlacements()
+        {
+            // Explicit request: synergy between Joker combat traits and
+            // the rest of the shop ("je veux qu'on regarde plus de
+            // synergies" -> "1, 2 et 4" -> "Je veux juste le 1 et le 2
+            // finalement").
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            run.DebugGrantModifier(ModifierId.RenfortJoker);
+            var enemy = run.CurrentEncounter[0];
+            int hpBefore = enemy.CurrentHp;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.DomH, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Range);
+            var outcome = run.PlacePiece(slot, 0, 0);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int totalScore = outcome.Placement.TotalScore;
+            int expectedDamage = Mathf.RoundToInt(totalScore * (1f + ScoringConstants.RenfortJokerDamageBonusPercent / 100f));
+            Assert.Greater(expectedDamage, totalScore, "Need the boost to actually be observable");
+            Assert.AreEqual(hpBefore - expectedDamage, enemy.CurrentHp);
+        }
+
+        [Test]
+        public void RenfortJoker_DoesNotBoost_OrdinaryFrontHitDamage()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            run.DebugGrantModifier(ModifierId.RenfortJoker);
+            var enemy = run.CurrentEncounter[0];
+            int hpBefore = enemy.CurrentHp;
+
+            int slot = ChurnUntilHandMatches(run, t => t.Color != PieceColor.Joker && !t.Trait.HasValue);
+            var token = run.Deck.Hand[slot].Value;
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[slot]);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            Assert.AreEqual(hpBefore - outcome.Placement.TotalScore, enemy.CurrentHp,
+                "RenfortJoker should never boost an ordinary (non-Joker-combat) placement's damage");
+        }
+
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
         private static Vector2Int? FindRowCompletingAnchor(GridManager grid)
         {

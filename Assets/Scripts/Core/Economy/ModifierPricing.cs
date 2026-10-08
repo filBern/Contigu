@@ -154,6 +154,11 @@ namespace Contigu.Core
                 case ModifierId.Pair: return 5; // x2, fires on ~half of placements
                 case ModifierId.Impair: return 5; // x2, fires on ~half of placements
 
+                // ---- Thirteenth batch: synergy pass ----
+                case ModifierId.Polyvalence: return 8; // scales with modifier category spread, up to +6 Mult at a full build
+                case ModifierId.RenfortJoker: return 7; // strong but does nothing without Joker combat pieces already owned
+                case ModifierId.Arsenal: return 8; // scales with distinct Joker combat kinds in deck, up to +5 Mult
+
                 default:
                     return -1;
             }

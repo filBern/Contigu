@@ -1041,6 +1041,79 @@ namespace Contigu.Tests
             }
         }
 
+        // ---- Thirteenth batch: synergy pass (on explicit request —
+        // "Je veux qu'on regarde plus de synergies" -> "1, 2 et 4" ->
+        // "Je veux juste le 1 et le 2 finalement") ----
+
+        [Test]
+        public void DevotionEclatPair_AddsAnExtraKicker_WhenBothTheMatchingColorModifiersAreHeld()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatCoral };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.DevotionBonus + ScoringConstants.DevotionEclatPairBonus, result.AdditiveMultBonus,
+                "Holding both Devotion and Éclat for the same color should add the pairing kicker on top of Devotion's own bonus");
+            Assert.AreEqual(square.Cells.Count * ScoringConstants.EclatBonusPerCell, result.ModifierBonus,
+                "Éclat's own +pts bonus should fire independently, completely unaffected by the pairing kicker");
+        }
+
+        [Test]
+        public void DevotionEclatPair_DoesNotFire_WhenOnlyDevotionIsHeld()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus, "No Éclat held, so no pairing kicker");
+        }
+
+        [Test]
+        public void DevotionEclatPair_DoesNotFire_ForADifferentColorsPair()
+        {
+            var grid = new GridManager();
+            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
+            // Coral Devotion + a DIFFERENT color's Éclat — not a real pair.
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatTeal };
+
+            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus, "Mismatched colors shouldn't count as a pair");
+        }
+
+        [Test]
+        public void Polyvalence_GivesMultEqualToDistinctModifierCategoriesHeld()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Polyvalence itself (Roguelike) + Forteresse (Voisinage) +
+            // Chaine (Connexions) = 3 distinct categories, even though
+            // that's only 3 modifiers total.
+            var modifiers = new List<ModifierId> { ModifierId.Polyvalence, ModifierId.Forteresse, ModifierId.Chaine };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(3 * ScoringConstants.PolyvalenceMultPerCategory, result.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void Polyvalence_DoesNotDoubleCount_SeveralModifiersFromTheSameCategory()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Polyvalence (Roguelike) + Forteresse + Prisonnier (both
+            // Voisinage) = still only 2 distinct categories.
+            var modifiers = new List<ModifierId> { ModifierId.Polyvalence, ModifierId.Forteresse, ModifierId.Prisonnier };
+
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
+
+            Assert.AreEqual(2 * ScoringConstants.PolyvalenceMultPerCategory, result.AdditiveMultBonus);
+        }
+
         // ---- Format Specialist — curation pass, on explicit request:
         // "que me propose tu pour faire passer le jeu à un state
         // supérieur" -> "attaquons celui la". 10 per-SHAPE Specialist

@@ -109,7 +109,11 @@ namespace Contigu.Data
             { ModifierId.FormatGrandGlow, "G3" },
             // Twelfth batch: group-size parity
             { ModifierId.Pair, "PI" },
-            { ModifierId.Impair, "IM" }
+            { ModifierId.Impair, "IM" },
+            // Thirteenth batch: synergy pass
+            { ModifierId.Polyvalence, "PV" },
+            { ModifierId.RenfortJoker, "RJ" },
+            { ModifierId.Arsenal, "AS" }
         };
 
         // One accent per category, reusing the same v1 8-color palette as

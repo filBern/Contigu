@@ -3110,6 +3110,38 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Arsenal_GivesMultEqualToDistinctJokerCombatKindsInDeck()
+        {
+            // Explicit request: synergy between Joker combat traits and
+            // the rest of the shop ("je veux qu'on regarde plus de
+            // synergies" -> "1, 2 et 4" -> "Je veux juste le 1 et le 2
+            // finalement").
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+            GiveActiveModifier(run, ModifierId.Arsenal);
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0))); // duplicate kind, shouldn't double-count
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(2 * ScoringConstants.ArsenalMultPerDistinctCombatKind, outcome.Placement.AdditiveMultBonus,
+                "2 distinct kinds (Bombe, Range) in deck — the duplicate Bombe token shouldn't count twice");
+        }
+
+        [Test]
+        public void Arsenal_GivesZeroMult_WhenNoCombatTraitIsInTheDeckYet()
+        {
+            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+            GiveActiveModifier(run, ModifierId.Arsenal);
+
+            var outcome = run.PlacePiece(0, 0, 0);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(0, outcome.Placement.AdditiveMultBonus, "No Joker combat pieces anywhere in the deck yet, so no bonus");
+        }
+
+        [Test]
         public void Multitude_StacksWhenHeldTwice_ViaCopieur()
         {
             var run = new RunManager(new SystemRandomProvider(1));

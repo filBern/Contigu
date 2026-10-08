@@ -340,6 +340,10 @@ namespace Contigu.Core
                     return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Experience:
                     return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * levelFactor) + " Mult";
+                case ModifierId.Arsenal:
+                    return "Currently +" + Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * levelFactor) + " Mult";
+                case ModifierId.Polyvalence:
+                    return "Currently +" + Mathf.RoundToInt(CountDistinctModifierCategoriesHeld() * ScoringConstants.PolyvalenceMultPerCategory * levelFactor) + " Mult";
                 default:
                     return null;
             }
@@ -1298,7 +1302,7 @@ namespace Contigu.Core
         /// </summary>
         private void ApplyDeckStateModifierBonuses(PlacementResult placement)
         {
-            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude) && !_activeModifiers.Contains(ModifierId.Experience))
+            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude) && !_activeModifiers.Contains(ModifierId.Experience) && !_activeModifiers.Contains(ModifierId.Arsenal))
             {
                 return;
             }
@@ -1350,6 +1354,21 @@ namespace Contigu.Core
                     multEvent.PreciseAmount = trueMult;
                     events.Add(multEvent);
                 }
+                else if (_activeModifiers[i] == ModifierId.Arsenal)
+                {
+                    // Whole-number count (at most 5 — PieceTrait.
+                    // JokerCombatKinds.Length), so this joins the regular
+                    // AdditiveMultBonus pool like Solidarite/MultUn, not
+                    // the fractional ProgressiveAdditiveMult pool
+                    // CartesEnchantees/Experience use for their much wider,
+                    // genuinely-needs-a-float ranges.
+                    int bonus = Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * GetModifierLevelFactor(i));
+                    placement.AdditiveMultBonus += bonus;
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], bonus);
+                    multEvent.TriggeringModifier = ModifierId.Arsenal;
+                    multEvent.TriggeringModifierIndex = i;
+                    events.Add(multEvent);
+                }
             }
             placement.ScoreEvents = events;
         }
@@ -1367,6 +1386,32 @@ namespace Contigu.Core
                 }
             }
             return count;
+        }
+
+        /// <summary>Arsenal's own driver (synergy pass, axis 2 — explicit request: "synergies combat Joker ↔ reste du deck"): how many DISTINCT Joker-exclusive combat trait kinds (see PieceTrait.JokerCombatKinds) are currently anywhere in the deck — two tokens sharing the same kind (e.g. two Bombe Jokers) count once, same spirit as CountUpgradedDeckCards but keyed on kind instead of "has any trait at all".</summary>
+        private int CountDistinctCombatKindsInDeck()
+        {
+            var kindsSeen = new HashSet<PieceTraitKind>();
+            var deck = Deck.Deck;
+            for (int i = 0; i < deck.Count; i++)
+            {
+                if (deck[i].Trait.HasValue && PieceTrait.IsJokerCombatKind(deck[i].Trait.Value.Kind))
+                {
+                    kindsSeen.Add(deck[i].Trait.Value.Kind);
+                }
+            }
+            return kindsSeen.Count;
+        }
+
+        /// <summary>Polyvalence's own tooltip driver — same distinct-category count as GridManager.ApplyPolyvalence, duplicated here (rather than exposed cross-class) purely so this read-only "currently" display doesn't need a whole placement to compute, the same reason every other case in GetProgressiveModifierStateText reads live state directly instead of waiting for the next score event.</summary>
+        private int CountDistinctModifierCategoriesHeld()
+        {
+            var categoriesSeen = new HashSet<ModifierCategory>();
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                categoriesSeen.Add(ModifierCatalog.Get(_activeModifiers[i]).Category);
+            }
+            return categoriesSeen.Count;
         }
 
         /// <summary>
@@ -1950,9 +1995,19 @@ namespace Contigu.Core
                 return;
             }
 
+            // Renfort Joker (synergy pass, axis 2 — explicit request:
+            // "synergies combat Joker ↔ reste du deck"): only reachable
+            // once a combat kind was actually found above, by design — an
+            // ordinary front-hit placement (the branch just above) is
+            // never boosted, so this modifier does nothing without Joker
+            // combat pieces to amplify.
+            int boostedDamage = _activeModifiers.Contains(ModifierId.RenfortJoker)
+                ? Mathf.RoundToInt(damage * (1f + ScoringConstants.RenfortJokerDamageBonusPercent / 100f))
+                : damage;
+
             for (int i = 0; i < kindsFound.Count; i++)
             {
-                ApplyJokerCombatDamage(kindsFound[i], damage);
+                ApplyJokerCombatDamage(kindsFound[i], boostedDamage);
             }
         }
 

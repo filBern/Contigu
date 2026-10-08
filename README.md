@@ -7796,3 +7796,41 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   simple `Heal` — un heal qui arrive alors que Leech est déjà à PV
   max augmente son plafond (`CurrentMaxHp`) au lieu d'être gâché.
   Nouveau test `Leech_HealingWhileAlreadyFull_GrowsItsMaxHp`.
+- **3 modifiers de synergie** : suite à une discussion sur le fait
+  que la boutique "paraît peu professionnelle et peu variée d'une
+  partie à l'autre" et que les Jokers "amènent de la nouveauté" —
+  3 pistes proposées (synergies entre modifiers, synergies
+  combat Joker ↔ deck, thèmes de run) ont mené à la demande
+  explicite "Je veux juste le 1 et le 2 finalement, pour le 4 on
+  peut le garder pour des challenges différents" (les thèmes de run
+  restent une idée pour plus tard, pour un mode Marathon/Chaos dédié
+  par exemple).
+  - **Paire Devotion/Éclat** (axe 1) : tenir le Devotion ET l'Éclat
+    d'une même couleur ajoute un petit bonus +Mult supplémentaire
+    (`ScoringConstants.DevotionEclatPairBonus`) en plus du bonus de
+    Devotion, vérifié uniquement côté Devotion
+    (`GridManager.ApplyDevotionEclatPairBonus`) pour ne jamais être
+    compté deux fois — Éclat continue de scorer ses propres points
+    indépendamment. Aucun nouveau modifier, juste une règle entre 2
+    modifiers déjà existants.
+  - **Polyvalence** (axe 1, nouveau modifier) : +1 Mult par
+    catégorie de modifier DISTINCTE possédée (`ModifierCategory` —
+    Couleurs/Voisinage/Connexions/Destruction/Roguelike/Formes),
+    jusqu'à +6 — récompense la diversité du build plutôt que
+    d'empiler toujours la même famille.
+  - **Renfort Joker** (axe 2, nouveau modifier) : +25% de dégâts sur
+    tout placement qui déclenche un trait de combat Joker (Bombe/
+    Range/Éclat/Précision/Sangsue) — n'a AUCUN effet sur un
+    placement ordinaire, pour forcer un vrai "build around" avec les
+    Jokers plutôt qu'un bonus gratuit. Branché dans
+    `RunManager.ApplyJokerCombatOrDefaultDamage`, juste après la
+    détection du type de combat (donc profite aussi du retrigger
+    ci-dessus).
+  - **Arsenal** (axe 2, nouveau modifier) : +1 Mult par type de
+    combat Joker DISTINCT actuellement dans le deck (jusqu'à +5,
+    `RunManager.CountDistinctCombatKindsInDeck`) — récompense
+    collectionner plusieurs types de Jokers plutôt que toujours le
+    même.
+  - Tests ajoutés dans `GridManagerModifierTests.cs` (paire Devotion/
+    Éclat, Polyvalence), `RunManagerTests.cs` (Arsenal) et
+    `EnemyEncounterTests.cs` (Renfort Joker).

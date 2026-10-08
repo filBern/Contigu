@@ -153,6 +153,19 @@ namespace Contigu.Core
         // being even or odd, same xN-multiplier shape as Architecte/Îlot
         // (a one-shot boolean condition, not a per-cell scaling bonus).
         Pair,
-        Impair
+        Impair,
+
+        // ---- Thirteenth batch: synergy pass (on explicit request — "Je
+        // veux qu'on regarde plus de synergies" -> "1, 2 et 4" -> "Je veux
+        // juste le 1 et le 2 finalement") — modifiers that reward owning
+        // OTHER specific things (a matching Devotion/Éclat pair, a spread
+        // of modifier categories, a spread of Joker combat trait kinds)
+        // instead of each one scoring in isolation off its own fixed
+        // condition. Polyvalence/Arsenal are new standalone modifiers;
+        // the Devotion/Éclat pairing bonus (axis 1) needed no new
+        // ModifierId at all — see GridManager.ApplyDevotionEclatPairBonus.
+        Polyvalence,
+        RenfortJoker,
+        Arsenal
     }
 }

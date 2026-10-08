@@ -332,5 +332,29 @@ namespace Contigu.Core
 
         /// <summary>Impair: xN multiplier (see GridManager.ApplyPariteImpaire) when the placement's scored group has an ODD total cell count — Pair's exact mirror.</summary>
         public const int ImpairMultiplier = 2;
+
+        // ---- Thirteenth batch: synergy pass (on explicit request — see
+        // ModifierId's own doc comment on this batch) ----
+
+        /// <summary>Devotion/Éclat pairing bonus (axis 1, "synergies entre modifiers eux-mêmes"): extra flat +Mult (additive, see PlacementResult.AdditiveMultBonus) when BOTH a color's Devotion and Éclat modifier are held, on top of Devotion's own bonus — see GridManager.ApplyDevotionEclatPairBonus, checked only from the Devotion side so the pair is never double-counted.</summary>
+        public const int DevotionEclatPairBonus = 2;
+
+        /// <summary>Polyvalence (axis 1): +N Mult (additive), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — see GridManager.ApplyPolyvalence. Capped at 6 in practice (ModifierCategory's own value count).</summary>
+        public const int PolyvalenceMultPerCategory = 1;
+
+        /// <summary>
+        /// Renfort Joker (axis 2, "synergies combat Joker ↔ reste du
+        /// deck"): percentage damage bonus applied ONLY to a placement
+        /// whose scored group carries at least one Joker-exclusive combat
+        /// trait (see RunManager.ApplyJokerCombatOrDefaultDamage) — an
+        /// ordinary front-hit placement with no combat trait in its group
+        /// is completely unaffected, by design: this modifier does nothing
+        /// without Joker combat pieces to amplify, same "build around it"
+        /// identity as the Joker combat traits themselves.
+        /// </summary>
+        public const int RenfortJokerDamageBonusPercent = 25;
+
+        /// <summary>Arsenal (axis 2): +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 5 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
+        public const int ArsenalMultPerDistinctCombatKind = 1;
     }
 }
