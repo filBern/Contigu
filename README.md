@@ -7967,3 +7967,16 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `FadeOutEnemySlot` réinitialise l'échelle/l'overlay et arrête la
   coroutine en cours, pour ne jamais laisser une icône bloquée
   rapetissée/rougie après un changement de round ou une mort.
+
+- **Border bizarre autour des ennemies corrigée** (demande explicite :
+  « On dirait qu'il y a a une border autour des ennemies »). `AddThickOutline`
+  était posé directement sur l'`Image` du sprite — le composant `Outline`
+  d'Unity duplique la forme alpha du Graphic qu'il décore, donc sur un
+  sprite pixel art (silhouette de personnage, pas un carré plein) ça
+  dessinait un contour épais qui épouse les contours du personnage au lieu
+  d'un simple cadre carré. `BuildEnemyBand` sépare maintenant chaque case
+  en un panneau `EnemyIconBackground` opaque de taille fixe (44x44, qui
+  porte l'outline) et le sprite lui-même en enfant, étiré en plein sur ce
+  fond sans son propre outline — le cadre redevient un carré net, et le
+  pulse/hurt (scale sur `icon.rectTransform`) anime seulement l'art à
+  l'intérieur du cadre fixe.

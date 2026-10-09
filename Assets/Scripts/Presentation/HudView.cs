@@ -166,14 +166,21 @@ namespace Contigu.Presentation
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
                 slotLayoutElement.preferredHeight = slotHeight;
 
-                var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, Color.white);
+                // Outline lives on this static-sized background panel, not on the sprite Image itself —
+                // Unity's Outline duplicates the Graphic's own alpha shape, and a pixel-art sprite's shape is
+                // its character silhouette, not a clean square, so outlining the sprite directly drew a thick
+                // border hugging the art instead of a frame around the icon slot.
+                var iconBackground = UIFactory.CreatePanel(slot, "EnemyIconBackground" + i, UITheme.PanelLight);
+                iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.anchoredPosition = new Vector2(0f, -EnemyIconTopPadding);
+                iconBackground.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
+                UIFactory.AddThickOutline(iconBackground, UITheme.Border);
+
+                var icon = UIFactory.CreatePanel(iconBackground.transform, "EnemyIcon" + i, Color.white);
                 icon.preserveAspect = true;
-                icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                icon.rectTransform.pivot = new Vector2(0.5f, 1f);
-                icon.rectTransform.anchoredPosition = new Vector2(0f, -EnemyIconTopPadding);
-                icon.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
-                UIFactory.AddThickOutline(icon, UITheme.Border);
+                UIFactory.StretchFull(icon.rectTransform);
 
                 // Hover tooltip with this enemy's On-Shuffle effect — Init'd fresh each SetEncounter call below.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
