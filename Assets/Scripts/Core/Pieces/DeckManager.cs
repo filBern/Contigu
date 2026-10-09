@@ -121,10 +121,15 @@ namespace Contigu.Core
         /// <summary>
         /// "Thief" enemy mechanic: empties one random currently-occupied hand
         /// slot, returning its token to the bottom of the draw pile rather
-        /// than destroying it. No-op (returns false) if every slot is empty.
-        /// Called from RunManager.DrawFreshHand after the fresh hand is dealt.
+        /// than destroying it. No-op (returns false, out params default) if
+        /// every slot is empty. Called from RunManager.DrawFreshHand after
+        /// the fresh hand is dealt. The stolen slot's index/token/rotation
+        /// are handed back so Presentation can animate the actual piece
+        /// (RunManager.ThiefStolenHandIndex/ThiefStolenToken/
+        /// ThiefStolenRotation) flying off, even though by the time
+        /// Presentation sees the result the slot is already empty.
         /// </summary>
-        public bool StealRandomHandTile(IRandomProvider rng)
+        public bool StealRandomHandTile(IRandomProvider rng, out int stolenIndex, out PieceToken stolenToken, out PieceRotation stolenRotation)
         {
             var occupied = new List<int>();
             for (int i = 0; i < HandSize; i++)
@@ -136,9 +141,15 @@ namespace Contigu.Core
             }
             if (occupied.Count == 0)
             {
+                stolenIndex = -1;
+                stolenToken = default;
+                stolenRotation = default;
                 return false;
             }
             int idx = occupied[rng.Next(occupied.Count)];
+            stolenIndex = idx;
+            stolenToken = _hand[idx].Value;
+            stolenRotation = _handRotations[idx];
             _drawPile.Insert(0, _hand[idx].Value);
             _hand[idx] = null;
             return true;

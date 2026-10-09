@@ -8082,3 +8082,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `Transform` de l'icône (pas une case de grille, donc pas
     réutilisable tel quel) en rouge (`UITheme.Danger`), sur la même
     durée (0.3s) que le fondu pour que les deux se terminent ensemble.
+
+- **Animation de la pièce volée par Thief** (demande explicite : « Le boss
+  qui te vole une piece, j'aimerais une animation qui amene la piece vers
+  le boss ou du moins une animation sur la piece qui l'indique »). Le vol
+  de Thief se résout dans `RunManager.DrawFreshHand`, APRÈS que
+  `Deck.DrawNewHand()` ait déjà distribué la nouvelle main — la pièce
+  volée est donc une des pièces fraîchement tirées, jamais vue par le
+  joueur avant le vol, et par le moment où la Présentation affiche la
+  main, la case est déjà vide. Impossible d'animer « la vraie pièce qui
+  s'envole de la main » puisqu'il n'y a plus rien dans la main à ce
+  moment — il fallait capturer la pièce au moment même du vol.
+  - `DeckManager.StealRandomHandTile` gagne 3 paramètres `out` (index,
+    `PieceToken`, `PieceRotation` de la case volée) en plus de son
+    `bool` existant.
+  - `RunManager` expose `ThiefStolenHandIndex`/`ThiefStolenToken`/
+    `ThiefStolenRotation` (même convention que `ThiefStoleOnLastShuffle`
+    déjà existant), peuplés dans `ResolveThiefShuffleEffect`.
+  - `HandView.GetSlotPreviewTransform(index)` expose le `RectTransform`
+    fixe d'une case de main (stable même vide, grâce au refactor "cases
+    de main à position fixe" — voir tâche #40 du README) pour servir
+    d'ancre de départ même après que la case ait déjà été vidée.
+  - `FeedbackLayer.SpawnFlyingPiece(fromWorldPosition, toAnchor, shape,
+    color)` — nouveau sibling de `SpawnFlyingPopup` (même courbe de vol
+    accélérée + fondu sur les derniers 30%), mais anime un vrai aperçu
+    de pièce (`ShapePreviewFactory.Build`, sans trait/tooltip — un pur
+    visuel non interactif) au lieu d'un texte.
+  - `GameBootstrap.PlayThiefStealEffect` anime maintenant cette pièce
+    fantôme de la case de main (déjà vide) vers l'icône de Thief, en
+    plus du popup "Stole a piece!" et du pulse déjà en place.

@@ -1588,6 +1588,15 @@ namespace Contigu.Core
         /// </summary>
         public bool ThiefStoleOnLastShuffle { get; private set; }
 
+        /// <summary>The hand slot Thief just emptied, alongside <see cref="ThiefStoleOnLastShuffle"/> — null unless it's true. The slot itself is already empty by the time Presentation reads this (DeckManager.StealRandomHandTile runs before Presentation ever sees the fresh hand), so this and <see cref="ThiefStolenToken"/>/<see cref="ThiefStolenRotation"/> are how Presentation still knows what to animate flying away from it.</summary>
+        public int? ThiefStolenHandIndex { get; private set; }
+
+        /// <summary>The actual piece Thief stole, for Presentation to render as a flying ghost — see <see cref="ThiefStolenHandIndex"/>.</summary>
+        public PieceToken? ThiefStolenToken { get; private set; }
+
+        /// <summary>The stolen piece's rotation as it was shown in the hand, so its flying ghost matches what the player actually saw.</summary>
+        public PieceRotation? ThiefStolenRotation { get; private set; }
+
         /// <summary>Every lock/poison cell released by an enemy dying during the current PlacePiece call (see CleanUpDefeatedEnemy) — cleared at the start of each PlacePiece, read back into that call's own PlacementOutcome.DeathReleasedCells at the end.</summary>
         private readonly List<Vector2Int> _deathReleasedCellsThisPlacement = new List<Vector2Int>();
 
@@ -2190,14 +2199,23 @@ namespace Contigu.Core
         private bool ResolveThiefShuffleEffect()
         {
             bool stole = false;
+            ThiefStolenHandIndex = null;
+            ThiefStolenToken = null;
+            ThiefStolenRotation = null;
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
                 if (!enemy.IsDead && enemy.Definition.Id == EnemyId.Thief)
                 {
-                    if (Deck.StealRandomHandTile(_rng))
+                    // Several alive Thieves in the same encounter would each steal a piece, but only the
+                    // last one's is kept here to animate — same simplification ThiefStoleOnLastShuffle's own
+                    // plain bool already makes for "how many" (none here either).
+                    if (Deck.StealRandomHandTile(_rng, out var stolenIndex, out var stolenToken, out var stolenRotation))
                     {
                         stole = true;
+                        ThiefStolenHandIndex = stolenIndex;
+                        ThiefStolenToken = stolenToken;
+                        ThiefStolenRotation = stolenRotation;
                     }
                 }
             }

@@ -1,4 +1,5 @@
 using System.Collections;
+using Contigu.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -72,6 +73,61 @@ namespace Contigu.Presentation
             popup.rectTransform.position = fromWorldPosition;
             popup.rectTransform.sizeDelta = new Vector2(120f, 36f);
             StartCoroutine(AnimateFlyingPopup(popup, toAnchor));
+        }
+
+        /// <summary>
+        /// Thief's steal: spawns a non-interactive preview of the stolen piece at <paramref name="fromWorldPosition"/>
+        /// (its hand slot — already empty by the time this plays, see GameBootstrap.PlayThiefStealEffect) that
+        /// flies toward <paramref name="toAnchor"/> (Thief's own icon) and fades out on arrival, same flight
+        /// curve as <see cref="SpawnFlyingPopup"/>. Uses ShapePreviewFactory.Build with no trait/tooltip — the
+        /// ghost is purely visual, never clickable or hoverable.
+        /// </summary>
+        public void SpawnFlyingPiece(Vector3 fromWorldPosition, RectTransform toAnchor, PieceShape shape, PieceColor color)
+        {
+            if (toAnchor == null)
+            {
+                return;
+            }
+
+            _root.SetAsLastSibling();
+
+            var container = UIFactory.CreateUIObject("FlyingPiece", _root);
+            container.position = fromWorldPosition;
+            container.sizeDelta = new Vector2(100f, 110f);
+            var canvasGroup = container.gameObject.AddComponent<CanvasGroup>();
+            ShapePreviewFactory.Build(container, shape, color, null, null, null);
+            StartCoroutine(AnimateFlyingPiece(container, canvasGroup, toAnchor));
+        }
+
+        private IEnumerator AnimateFlyingPiece(RectTransform rect, CanvasGroup canvasGroup, RectTransform toAnchor)
+        {
+            const float duration = 0.5f;
+            float t = 0f;
+            Vector3 startPos = rect.position;
+            Vector3 startScale = rect.localScale;
+
+            while (t < duration)
+            {
+                if (rect == null || toAnchor == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float eased = p * p;
+                rect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
+                rect.localScale = Vector3.Lerp(startScale, startScale * 0.4f, eased);
+
+                float fadeP = Mathf.Clamp01((p - 0.7f) / 0.3f);
+                canvasGroup.alpha = Mathf.Lerp(1f, 0f, fadeP);
+
+                yield return null;
+            }
+
+            if (rect != null)
+            {
+                Destroy(rect.gameObject);
+            }
         }
 
         private IEnumerator AnimateFlyingPopup(Text text, RectTransform toAnchor)

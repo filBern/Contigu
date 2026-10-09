@@ -1056,6 +1056,18 @@ namespace Contigu.Presentation
                         // the screen; SpawnPopup's usual float-up would run
                         // the text off the top edge.
                         _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger, floatDown: true);
+                        // The actual stolen piece, flying from its (already empty) hand slot to Thief's icon —
+                        // see RunManager.ThiefStolenHandIndex's own doc comment for why the slot is empty by now.
+                        if (_run.ThiefStolenHandIndex.HasValue && _run.ThiefStolenToken.HasValue && _run.ThiefStolenRotation.HasValue)
+                        {
+                            var slotTransform = _handView.GetSlotPreviewTransform(_run.ThiefStolenHandIndex.Value);
+                            if (slotTransform != null)
+                            {
+                                var token = _run.ThiefStolenToken.Value;
+                                var shape = PieceShapeCatalog.GetRotated(token.Shape, _run.ThiefStolenRotation.Value);
+                                _feedbackLayer.SpawnFlyingPiece(slotTransform.position, anchor, shape, token.Color);
+                            }
+                        }
                     }
                     SfxManager.Play(SfxId.PickUpPiece);
                     return;

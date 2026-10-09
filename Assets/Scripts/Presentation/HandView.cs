@@ -81,6 +81,16 @@ namespace Contigu.Presentation
             get { return _selectedIndex; }
         }
 
+        /// <summary>A hand slot's own fixed-position preview container (see Build) — unlike the piece inside it, this stays put regardless of what's currently shown there, so a caller can still anchor an effect on a slot that's since been emptied (e.g. Thief's steal — see GameBootstrap.PlayThiefStealEffect). Null if index is out of range.</summary>
+        public RectTransform GetSlotPreviewTransform(int index)
+        {
+            if (index < 0 || index >= DeckManager.HandSize)
+            {
+                return null;
+            }
+            return _previewContainers[index];
+        }
+
         public RectTransform Build(Transform parent, RunManager run, TooltipView tooltip)
         {
             _run = run;
