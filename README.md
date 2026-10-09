@@ -7911,3 +7911,9 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `CanvasScaler` (donc selon la résolution d'écran). `EnemySlot`
     reçoit maintenant la même taille explicite que son
     `LayoutElement` préférée.
+
+- **Texte de description plus lisible dans l'écran de choix de challenge**
+  (demande explicite : « Dans l'écran challenge, le texte de la description
+  des challenges est trop petit »). `ChallengeSelectView._descriptionLabel`
+  passe de 14 à 17 pt — toujours dans le même encadré de carte (252x150),
+  les descriptions les plus longues du catalogue continuent d'y tenir.
