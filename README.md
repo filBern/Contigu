@@ -7990,3 +7990,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `EnemyIconSize` passe de 44 à 54 — `EnemyIconBackground`, le sprite et
   le label HP en dessous (tous dérivés de cette constante) grandissent
   ensemble, toujours bien dans les 76 de large d'`EnemySlotWidth`.
+
+- **Bande d'ennemis agrandie** (demande explicite : « aggrandi la surface
+  d'affichage d'ennemi et les aggrandi les ennemies en conséquences »).
+  `EnemyIconSize` 54 -> 72, `EnemyIconTopPadding` 18 (était 14),
+  `EnemySlotWidth` 76 -> 100 (la rangée de 6 cases reste centrée, large
+  de 650 avec l'espacement — tient dans la largeur de canvas à 1280 de
+  référence). `EnemyBandHeight` ne dérive plus de `BarHeight` (le bandeau
+  qu'elle remplace n'a plus besoin de garder le même gabarit qu'une barre
+  de score plate) mais directement de `EnemyIconTopPadding + EnemyIconSize
+  + 26`, et la hauteur de chaque `EnemySlot` en dérive à son tour
+  (`EnemyBandHeight - 2`) plutôt que son propre calcul séparé — les deux
+  grandissent toujours ensemble. Le label HP passe de 13 à 16pt pour
+  rester proportionné au portrait agrandi. `GameBootstrap`'s status text
+  (ancré sous `HudView.EnemyBandHeight`) suit automatiquement.

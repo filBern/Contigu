@@ -32,11 +32,13 @@ namespace Contigu.Presentation
         private GameObject _scoreBarRoot;
 
         private const int MaxEnemyIcons = 6;
-        private const float EnemyIconSize = 54f;
-        private const float EnemySlotWidth = 76f;
-        private const float EnemyIconTopPadding = 14f;
-        // GameBootstrap's status text position derives from this directly (see BuildUI), so the two stay in sync.
-        public const float EnemyBandHeight = BarHeight + EnemyIconTopPadding;
+        private const float EnemyIconSize = 72f;
+        private const float EnemySlotWidth = 100f;
+        private const float EnemyIconTopPadding = 18f;
+        // No longer tied to BarHeight (the score/pieces bars it replaces) — the band needs more room than a
+        // plain bar to fit a much bigger portrait, label, and breathing room below it. GameBootstrap's status
+        // text position derives from this directly (see BuildUI), so the two stay in sync.
+        public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 26f;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
 
@@ -160,7 +162,7 @@ namespace Contigu.Presentation
                 // Unity's implicit zero-size default rect for a freshly created
                 // RectTransform — childControlHeight/Width is false on the row's
                 // HorizontalLayoutGroup, so nothing else would ever set this.
-                float slotHeight = EnemyIconTopPadding + EnemyIconSize + 20f;
+                float slotHeight = EnemyBandHeight - 2f;
                 slot.sizeDelta = new Vector2(EnemySlotWidth, slotHeight);
                 var slotLayoutElement = slot.gameObject.AddComponent<LayoutElement>();
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
@@ -189,12 +191,12 @@ namespace Contigu.Presentation
                 hurtOverlay.raycastTarget = false;
                 UIFactory.StretchFull(hurtOverlay.rectTransform);
 
-                var label = UIFactory.CreateText(slot, "Hp", "", 13, UITheme.TextPrimary);
+                var label = UIFactory.CreateText(slot, "Hp", "", 16, UITheme.TextPrimary);
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 label.rectTransform.pivot = new Vector2(0.5f, 1f);
                 label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize + 2f));
-                label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 16f);
+                label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 20f);
 
                 slot.gameObject.SetActive(false);
                 _enemySlots.Add(slot.gameObject);
