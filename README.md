@@ -7931,3 +7931,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   du simple aplat de couleur par identité précédent. `EnemyIconColor` ne
   gère plus que la teinte grise "mort" — l'identité se voit maintenant dans
   l'art du sprite plutôt que dans une teinte plaquée dessus.
+
+- **Sprites d'ennemis flous corrigés** (demande explicite : « Les enemies
+  sont en pixel art 32x32 et semblent floue »). Leur `TextureImporter`
+  utilisait `filterMode: 1` (Bilinear), qui adoucit les contours nets du
+  pixel art en l'agrandissant jusqu'à la taille d'icône de 44x44 de la
+  bande d'ennemis — même filtrage que `GoldenTile`/`LockedTile`
+  utilisaient avant d'être corrigés pour la même raison. Les 10 `.meta`
+  de `Assets/Resources/Enemies/` passent à `filterMode: 0` (Point, pas de
+  filtrage), ce qui garde chaque pixel net à l'agrandissement. Supprimé
+  au passage un `.meta` orphelin (`16-bit pixel art, chunky bloc….png.meta`,
+  sans PNG correspondant) resté du commit `UpdateBasicEnemy`.
