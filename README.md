@@ -8004,3 +8004,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   grandissent toujours ensemble. Le label HP passe de 13 à 16pt pour
   rester proportionné au portrait agrandi. `GameBootstrap`'s status text
   (ancré sous `HudView.EnemyBandHeight`) suit automatiquement.
+
+- **Transition de couleur pour l'upgrade Chameleon Tile** (demande
+  explicite : « Pour l'upgrade cameleon, j'aimerais qu'on fasse une
+  transition d'une couleur vers une autre sur la grille »). Avant ce
+  changement, `RunManager.ResolveChameleonColor` recolorait toute la
+  pièce AVANT que `GridManager.PlacePiece` ne remplisse les cases, donc
+  la grille affichait directement la couleur finale — l'effet de
+  l'upgrade (matcher la couleur d'un voisin) était invisible, la pièce
+  semblait juste avoir été jouée dans sa couleur d'origine du deck.
+  - `PlacementOutcome` gagne un `PieceColor? ChameleonOriginalColor`
+    (même convention que `BossLockedCells` : une info annexe pour la
+    Présentation). `RunManager.PlacePiece` le peuple avec la couleur
+    d'origine du token quand `ResolveChameleonColor` a effectivement
+    changé la couleur (reste `null` sinon, ex. pas de voisin rempli).
+  - `GridView.PlayChameleonColorTransition(cells, from, to)` force les
+    cases concernées à `from` (elles affichaient déjà `to`, posé par
+    `RefreshHoldingClearedCells`/`ApplyState` avant que cette coroutine
+    ne démarre — mais tout ça arrive de façon synchrone dans la même
+    frame, donc rien n'est jamais affiché à l'écran) puis anime un lerp
+    `Background.color` vers `to` sur 0.4s.
+  - `GameBootstrap.PlayPlacementSequence` joue cette transition en tout
+    premier, avant les pulses Lueur/score — comme ça le groupe se
+    pulse/score déjà dans sa couleur finale au lieu de montrer un
+    flash de l'ancienne couleur au milieu de l'animation.

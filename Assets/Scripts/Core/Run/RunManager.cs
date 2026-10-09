@@ -498,6 +498,7 @@ namespace Contigu.Core
             // (Grid.PlacePiece updates that streak for the NEXT placement to
             // read).
             PieceColor placementColor = token.Color;
+            PieceColor? chameleonOriginalColor = null;
             int sparkStreakBeforePlacement = 0;
             if (token.Trait.HasValue)
             {
@@ -514,6 +515,9 @@ namespace Contigu.Core
                         // spot that still has both handIndex and the resolved color in
                         // scope together).
                         Deck.RecolorHandToken(handIndex, placementColor);
+                        // Fed into the returned PlacementOutcome below so Presentation can animate
+                        // the switch instead of letting it snap straight to the resolved color.
+                        chameleonOriginalColor = token.Color;
                     }
                 }
                 else if (kind == PieceTraitKind.Spark)
@@ -601,7 +605,7 @@ namespace Contigu.Core
                 EvaluateRoundEnd();
             }
 
-            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells);
+            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor);
         }
 
         /// <summary>

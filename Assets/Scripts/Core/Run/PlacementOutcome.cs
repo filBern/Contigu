@@ -19,7 +19,10 @@ namespace Contigu.Core
         /// <summary>Any cell(s) the boss round just locked as part of this placement (see RunConfig.BossLockPiecesInterval) — empty outside a boss round, or on a tick that didn't land on this exact piece count.</summary>
         public readonly IReadOnlyList<Vector2Int> BossLockedCells;
 
-        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null)
+        /// <summary>The piece's own color before Chameleon Tile (see RunManager.ResolveChameleonColor) recolored it to match an adjacent filled neighbor, for Presentation to animate the switch rather than let it snap straight to the resolved color. Null unless this placement actually recolored (no Chameleon cell, or one that found no neighbor to match).</summary>
+        public readonly PieceColor? ChameleonOriginalColor;
+
+        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null, PieceColor? chameleonOriginalColor = null)
         {
             Placement = placement;
             StateAfter = stateAfter;
@@ -27,6 +30,7 @@ namespace Contigu.Core
             TotalScoreAfter = totalScoreAfter;
             PiecesRemainingAfter = piecesRemainingAfter;
             BossLockedCells = bossLockedCells ?? System.Array.Empty<Vector2Int>();
+            ChameleonOriginalColor = chameleonOriginalColor;
         }
     }
 }

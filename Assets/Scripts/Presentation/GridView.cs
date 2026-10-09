@@ -611,5 +611,43 @@ namespace Contigu.Presentation
                 _cells[x, y].PlayClearBurst(color);
             }
         }
+
+        private const float ChameleonTransitionDuration = 0.4f;
+
+        /// <summary>
+        /// Chameleon Tile (RunManager.ResolveChameleonColor): lerps <paramref name="cells"/>' fill together
+        /// from <paramref name="from"/> to <paramref name="to"/> instead of letting them snap straight to the
+        /// resolved color — by the time this placement's own ApplyState call ran, the cells already show
+        /// <paramref name="to"/>, so this starts by forcing them back to <paramref name="from"/> and animates
+        /// forward from there. Meant to be yielded before any score/Lueur pulse reads these cells' color.
+        /// </summary>
+        public System.Collections.IEnumerator PlayChameleonColorTransition(IReadOnlyList<Vector2Int> cells, PieceColor from, PieceColor to)
+        {
+            Color fromColor = VisualDefaults.GetColor(from);
+            Color toColor = VisualDefaults.GetColor(to);
+            float t = 0f;
+            while (t < ChameleonTransitionDuration)
+            {
+                t += Time.deltaTime;
+                Color c = Color.Lerp(fromColor, toColor, Mathf.Clamp01(t / ChameleonTransitionDuration));
+                for (int i = 0; i < cells.Count; i++)
+                {
+                    var pos = cells[i];
+                    if (GridManager.InBounds(pos.x, pos.y))
+                    {
+                        _cells[pos.x, pos.y].Background.color = c;
+                    }
+                }
+                yield return null;
+            }
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (GridManager.InBounds(pos.x, pos.y))
+                {
+                    _cells[pos.x, pos.y].Background.color = toColor;
+                }
+            }
+        }
     }
 }

@@ -1080,6 +1080,15 @@ namespace Contigu.Presentation
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
 
+            // Chameleon Tile recolored this whole piece to match a neighbor before Grid.PlacePiece ran, so by
+            // now every placed cell already shows the resolved color — play the actual color switch here,
+            // before anything below (Lueur pulses, score cascade) reads these cells' color.
+            if (outcome.ChameleonOriginalColor.HasValue && placement.PlacedCells.Count > 0)
+            {
+                var resolvedColor = _run.Grid.GetCell(placement.PlacedCells[0]).FilledColor.Value;
+                yield return _gridView.PlayChameleonColorTransition(placement.PlacedCells, outcome.ChameleonOriginalColor.Value, resolvedColor);
+            }
+
             // Whether cleared/destroyed tiles should keep showing as
             // still-filled past the score cascade, only actually emptying
             // once the enemy damage drain (and death fade-out) finishes.
