@@ -151,9 +151,16 @@ namespace Contigu.Presentation
             for (int i = 0; i < MaxEnemyIcons; i++)
             {
                 var slot = UIFactory.CreateUIObject("EnemySlot" + i, row);
+                // Explicit size (not just the LayoutElement's preferred size) so the
+                // icon/label below, anchored relative to this rect, don't depend on
+                // Unity's implicit zero-size default rect for a freshly created
+                // RectTransform — childControlHeight/Width is false on the row's
+                // HorizontalLayoutGroup, so nothing else would ever set this.
+                float slotHeight = EnemyIconTopPadding + EnemyIconSize + 20f;
+                slot.sizeDelta = new Vector2(EnemySlotWidth, slotHeight);
                 var slotLayoutElement = slot.gameObject.AddComponent<LayoutElement>();
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
-                slotLayoutElement.preferredHeight = EnemyIconTopPadding + EnemyIconSize + 20f;
+                slotLayoutElement.preferredHeight = slotHeight;
 
                 var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, UITheme.Danger);
                 icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -396,6 +403,12 @@ namespace Contigu.Presentation
                     return UITheme.Success; // green — it's the healer
                 case EnemyId.Leech:
                     return new Color(0.573f, 0.329f, 0.667f); // purple — the other healer, kept visually distinct from Reclaimer
+                case EnemyId.Basic:
+                    return new Color(0.580f, 0.631f, 0.675f); // neutral steel gray — no special effect
+                case EnemyId.ColorHater:
+                    return new Color(0.902f, 0.494f, 0.133f); // orange
+                case EnemyId.ShapeHater:
+                    return new Color(0.086f, 0.627f, 0.522f); // teal
                 default:
                     return UITheme.TextMuted;
             }

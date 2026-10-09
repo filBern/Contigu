@@ -7885,3 +7885,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   d'un quart (ex. Basic 450->338, Plague 5400->4050) — aucun
   changement de mécanique, uniquement la valeur brute de PV de
   chaque ennemi.
+- **2 correctifs sur la liste d'ennemis** : sur demande explicite
+  ("Ils disparaissent en haut de l'écran dépendamment de la
+  résolution de l'écran" + "Il semble y avoir un square gris par
+  dessus l'ennemi de gauche, peux-tu l'enlever").
+  - Le "carré gris" était `HudView.EnemyIconColor` : `Basic`,
+    `ColorHater` et `ShapeHater` n'avaient aucun `case` dédié dans
+    le switch par identité et retombaient sur `default:
+    UITheme.TextMuted` — une couleur de TEXTE translucide
+    (`#13212e` à 68 % d'opacité), jamais prévue comme teinte
+    d'icône, qui donne un carré gris plaqué sur la case cream de la
+    bande. Basic étant l'ennemi du round 1 (donc quasi toujours
+    présent, et souvent le plus à gauche), c'est lui qu'on voit
+    concerné le plus souvent. Les 3 ont maintenant leur propre
+    teinte (gris neutre opaque, orange, sarcelle).
+  - Chaque case de la bande d'ennemis (`EnemySlot`) n'avait pas de
+    `sizeDelta` explicite — son `RectTransform` gardait la taille
+    implicite (0,0) que Unity donne par défaut à un objet fraîchement
+    créé, puisque `HorizontalLayoutGroup.childControlHeight/Width`
+    est à `false` sur la rangée (rien d'autre ne fixait cette
+    taille). L'icône et le label sous l'ennemi sont ancrés par
+    rapport à ce rect — dépendre d'un rect de taille implicite plutôt
+    que d'une taille posée explicitement est le genre de chose qui
+    peut se comporter différemment selon le facteur d'échelle du
+    `CanvasScaler` (donc selon la résolution d'écran). `EnemySlot`
+    reçoit maintenant la même taille explicite que son
+    `LayoutElement` préférée.
