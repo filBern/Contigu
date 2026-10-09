@@ -90,7 +90,7 @@ namespace Contigu.Presentation
             _nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -18f);
             _nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 32f);
 
-            _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 14, UITheme.TextMuted);
+            _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 17, UITheme.TextMuted);
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
