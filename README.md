@@ -7880,3 +7880,8 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   comparant le code dépouillé de ses commentaires avant/après sur
   chaque fichier. Cet historique de décisions reste uniquement ici,
   dans le README.
+- **PV des ennemis -25 %** : sur demande explicite ("réduit de 25%
+  la vie des ennemis"). Tous les `MaxHp` d'`EnemyCatalog` réduits
+  d'un quart (ex. Basic 450->338, Plague 5400->4050) — aucun
+  changement de mécanique, uniquement la valeur brute de PV de
+  chaque ennemi.
