@@ -32,7 +32,7 @@ namespace Contigu.Presentation
         private GameObject _scoreBarRoot;
 
         private const int MaxEnemyIcons = 6;
-        private const float EnemyIconSize = 44f;
+        private const float EnemyIconSize = 54f;
         private const float EnemySlotWidth = 76f;
         private const float EnemyIconTopPadding = 14f;
         // GameBootstrap's status text position derives from this directly (see BuildUI), so the two stay in sync.
@@ -166,17 +166,15 @@ namespace Contigu.Presentation
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
                 slotLayoutElement.preferredHeight = slotHeight;
 
-                // Outline lives on this static-sized background panel, not on the sprite Image itself —
-                // Unity's Outline duplicates the Graphic's own alpha shape, and a pixel-art sprite's shape is
-                // its character silhouette, not a clean square, so outlining the sprite directly drew a thick
-                // border hugging the art instead of a frame around the icon slot.
+                // Plain background panel behind the sprite — no outline (see README for why one was tried and
+                // dropped: even moved here off the sprite itself, the player still read it as an unwanted box
+                // around each portrait).
                 var iconBackground = UIFactory.CreatePanel(slot, "EnemyIconBackground" + i, UITheme.PanelLight);
                 iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.anchoredPosition = new Vector2(0f, -EnemyIconTopPadding);
                 iconBackground.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyIconSize);
-                UIFactory.AddThickOutline(iconBackground, UITheme.Border);
 
                 var icon = UIFactory.CreatePanel(iconBackground.transform, "EnemyIcon" + i, Color.white);
                 icon.preserveAspect = true;

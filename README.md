@@ -7980,3 +7980,13 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   fond sans son propre outline — le cadre redevient un carré net, et le
   pulse/hurt (scale sur `icon.rectTransform`) anime seulement l'art à
   l'intérieur du cadre fixe.
+
+- **Contour noir retiré, icône agrandie** (demande explicite : « Retire le
+  contour noir et aggrandi un peu l'ennemi un peu »). Le cadre carré
+  n'était plus plaqué sur le sprite (voir juste au-dessus) mais restait
+  visible comme une boîte autour du portrait — toujours indésirable, donc
+  l'appel `AddThickOutline(iconBackground, ...)` est retiré complètement ;
+  `EnemyIconBackground` reste un simple panneau plein sans contour.
+  `EnemyIconSize` passe de 44 à 54 — `EnemyIconBackground`, le sprite et
+  le label HP en dessous (tous dérivés de cette constante) grandissent
+  ensemble, toujours bien dans les 76 de large d'`EnemySlotWidth`.
