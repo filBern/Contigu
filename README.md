@@ -8055,3 +8055,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `GridView.Refresh()` qui les révèle) animent — chaque case
     empoisonnée/verrouillée déjà affichée avant ce placement reste
     inchangée à l'écran du début à la fin.
+
+- **VFX d'explosion rouge quand un effet d'ennemi disparaît à sa mort**
+  (demande explicite : « Lorsqu'on supprime un effet d'un ennemi sur le
+  board parce qu'il est mort (pas a cause d'un shuffle). Ajoute un vfx
+  d'explosion rouge. Fait la même chose sur le sprite de l'ennemi
+  lorsqu'il meurt »).
+  - `RunManager` distingue maintenant une case lock/poison libérée par
+    une mort d'une libérée par un déplacement au Shuffle
+    (`ResolveLockerShuffleEffect`/`ResolvePoisonerShuffleEffect`) :
+    `CleanUpDefeatedEnemy` enregistre chaque case qu'il libère dans le
+    nouveau champ privé `_deathReleasedCellsThisPlacement` (vidé au
+    début de chaque `PlacePiece`, suivant le même motif que
+    `ThiefStoleOnLastShuffle`), exposé sur `PlacementOutcome` via
+    `DeathReleasedCells`.
+  - `GameBootstrap.PlayPlacementSequence` retire ces cases de la liste
+    qui fait l'objet du fondu normal (`shuffleReleasedCells`) et joue à
+    la place `GridView.PlayClearBurst(x, y, UITheme.Danger)` — déjà
+    utilisé ailleurs pour les cases qui se vident en ligne complétée,
+    réutilisé tel quel ici (contenu réutilisable, aucune nouvelle VFX
+    à écrire côté grille).
+  - `HudView.FadeOutEnemySlot` (le fondu de l'icône d'un ennemi mort)
+    joue maintenant `PlayDeathExplosion` en parallèle du fondu —
+    exactement le même burst radial de carrés en expansion/transparence
+    que `GridCellView.ClearBurstRoutine`, réimplémenté sur le
+    `Transform` de l'icône (pas une case de grille, donc pas
+    réutilisable tel quel) en rouge (`UITheme.Danger`), sur la même
+    durée (0.3s) que le fondu pour que les deux se terminent ensemble.

@@ -22,7 +22,10 @@ namespace Contigu.Core
         /// <summary>The piece's own color before Chameleon Tile (see RunManager.ResolveChameleonColor) recolored it to match an adjacent filled neighbor, for Presentation to animate the switch rather than let it snap straight to the resolved color. Null unless this placement actually recolored (no Chameleon cell, or one that found no neighbor to match).</summary>
         public readonly PieceColor? ChameleonOriginalColor;
 
-        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null, PieceColor? chameleonOriginalColor = null)
+        /// <summary>Every lock/poison cell released this placement because the enemy that owned it died (see RunManager.CleanUpDefeatedEnemy) — a subset of a Shuffle-move's own released cells in RunManager.ResolveLockerShuffleEffect/ResolvePoisonerShuffleEffect, which this never includes. Presentation plays a red explosion VFX for these instead of the ordinary reveal fade (see GameBootstrap). Empty when nothing died this placement.</summary>
+        public readonly IReadOnlyList<Vector2Int> DeathReleasedCells;
+
+        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null, PieceColor? chameleonOriginalColor = null, IReadOnlyList<Vector2Int> deathReleasedCells = null)
         {
             Placement = placement;
             StateAfter = stateAfter;
@@ -31,6 +34,7 @@ namespace Contigu.Core
             PiecesRemainingAfter = piecesRemainingAfter;
             BossLockedCells = bossLockedCells ?? System.Array.Empty<Vector2Int>();
             ChameleonOriginalColor = chameleonOriginalColor;
+            DeathReleasedCells = deathReleasedCells ?? System.Array.Empty<Vector2Int>();
         }
     }
 }

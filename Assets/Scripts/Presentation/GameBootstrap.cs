@@ -1457,11 +1457,34 @@ namespace Contigu.Presentation
             // auto-refilled this placement — otherwise the hand was never
             // hidden (see HandView.RefreshHoldingEmpty), so there's nothing
             // of its own to reveal, just the grid's malus.
-            var deferredReleasedCells = new List<Vector2Int>(deferredReleasedLockedCells);
-            deferredReleasedCells.AddRange(deferredReleasedPoisonedCells);
+            //
+            // A released cell whose enemy died (outcome.DeathReleasedCells) plays a red explosion burst
+            // instead of the ordinary fade — a Shuffle-moved lock/poison just relocates, but a death is a
+            // destructive event and should read as one.
+            var deathReleasedSet = new HashSet<Vector2Int>(outcome.DeathReleasedCells);
+            var shuffleReleasedCells = new List<Vector2Int>();
+            for (int i = 0; i < deferredReleasedLockedCells.Count; i++)
+            {
+                if (!deathReleasedSet.Contains(deferredReleasedLockedCells[i]))
+                {
+                    shuffleReleasedCells.Add(deferredReleasedLockedCells[i]);
+                }
+            }
+            for (int i = 0; i < deferredReleasedPoisonedCells.Count; i++)
+            {
+                if (!deathReleasedSet.Contains(deferredReleasedPoisonedCells[i]))
+                {
+                    shuffleReleasedCells.Add(deferredReleasedPoisonedCells[i]);
+                }
+            }
+            for (int i = 0; i < outcome.DeathReleasedCells.Count; i++)
+            {
+                var pos = outcome.DeathReleasedCells[i];
+                _gridView.PlayClearBurst(pos.x, pos.y, UITheme.Danger);
+            }
             if (handWasAboutToAutoRefill)
             {
-                yield return _gridView.FadeMalusForCells(deferredReleasedCells, 1f, 0f, ShuffleFadeDuration);
+                yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
 
                 _handView.SetSlotPiecesAlpha(0f);
                 _handView.Refresh();
@@ -1480,7 +1503,7 @@ namespace Contigu.Presentation
             }
             else if (hasDeferredGridChange)
             {
-                yield return _gridView.FadeMalusForCells(deferredReleasedCells, 1f, 0f, ShuffleFadeDuration);
+                yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
                 _gridView.Refresh();
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
                 yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);

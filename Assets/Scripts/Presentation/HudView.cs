@@ -388,6 +388,7 @@ namespace Contigu.Presentation
                 yield break;
             }
             ResetEnemyIconEffect(index);
+            PlayDeathExplosion(index);
             var icon = _enemyIconImages[index];
             var label = _enemyIconLabels[index];
             Color iconStart = icon.color;
@@ -512,6 +513,64 @@ namespace Contigu.Presentation
             }
             rt.localScale = Vector3.one;
             _enemyIconEffectCoroutines[index] = null;
+        }
+
+        private const int DeathExplosionParticleCount = 8;
+        private const float DeathExplosionParticleSize = 12f;
+        private const float DeathExplosionTravelDistance = 50f;
+        private const float DeathExplosionDuration = 0.3f;
+
+        /// <summary>
+        /// Red explosion burst played as an enemy's icon starts fading out dead — the same radial
+        /// fading-squares burst GridCellView.PlayClearBurst plays when a grid cell empties, reused here on
+        /// the icon's own transform since it isn't a grid cell. Self-contained fire-and-forget: it spawns its
+        /// own particle children and runs independently of FadeOutEnemySlot's alpha fade alongside it.
+        /// </summary>
+        private void PlayDeathExplosion(int index)
+        {
+            StartCoroutine(DeathExplosionRoutine(_enemyIconImages[index].transform));
+        }
+
+        private IEnumerator DeathExplosionRoutine(Transform parent)
+        {
+            var particles = new Image[DeathExplosionParticleCount];
+            var directions = new Vector2[DeathExplosionParticleCount];
+            for (int i = 0; i < DeathExplosionParticleCount; i++)
+            {
+                var particle = UIFactory.CreatePanel(parent, "DeathExplosion", UITheme.Danger);
+                particle.raycastTarget = false;
+                particle.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                particle.rectTransform.anchoredPosition = Vector2.zero;
+                particle.rectTransform.sizeDelta = new Vector2(DeathExplosionParticleSize, DeathExplosionParticleSize);
+
+                float angle = (360f / DeathExplosionParticleCount) * i + UnityEngine.Random.Range(-15f, 15f);
+                directions[i] = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                particles[i] = particle;
+            }
+
+            float t = 0f;
+            while (t < DeathExplosionDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / DeathExplosionDuration);
+                for (int i = 0; i < particles.Length; i++)
+                {
+                    var rt = particles[i].rectTransform;
+                    rt.anchoredPosition = directions[i] * DeathExplosionTravelDistance * p;
+                    float scale = Mathf.Lerp(1f, 0.2f, p);
+                    rt.localScale = new Vector3(scale, scale, 1f);
+                    var c = particles[i].color;
+                    particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
+                }
+                yield return null;
+            }
+
+            for (int i = 0; i < particles.Length; i++)
+            {
+                Destroy(particles[i].gameObject);
+            }
         }
 
         /// <summary>Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down one unused piece at a time instead of jumping straight to empty.</summary>

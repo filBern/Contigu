@@ -464,6 +464,7 @@ namespace Contigu.Core
         /// </summary>
         public PlacementOutcome PlacePiece(int handIndex, int x, int y)
         {
+            _deathReleasedCellsThisPlacement.Clear();
             if (State != RunState.InProgress)
             {
                 return new PlacementOutcome(PlacementResult.Failure("Run is not in progress"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
@@ -605,7 +606,7 @@ namespace Contigu.Core
                 EvaluateRoundEnd();
             }
 
-            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor);
+            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor, new List<Vector2Int>(_deathReleasedCellsThisPlacement));
         }
 
         /// <summary>
@@ -1587,6 +1588,9 @@ namespace Contigu.Core
         /// </summary>
         public bool ThiefStoleOnLastShuffle { get; private set; }
 
+        /// <summary>Every lock/poison cell released by an enemy dying during the current PlacePiece call (see CleanUpDefeatedEnemy) — cleared at the start of each PlacePiece, read back into that call's own PlacementOutcome.DeathReleasedCells at the end.</summary>
+        private readonly List<Vector2Int> _deathReleasedCellsThisPlacement = new List<Vector2Int>();
+
         /// <summary>
         /// A Shuffle triggered during this round - PlacePiece's own
         /// post-placement empty-hand refill, and a manual ShuffleHand -
@@ -1970,7 +1974,7 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>When an enemy dies, its active effects are cancelled/cleaned up immediately: Locker's current lock is released, and every tile Poisoner poisoned is normalized.</summary>
+        /// <summary>When an enemy dies, its active effects are cancelled/cleaned up immediately: Locker's current lock is released, and every tile Poisoner poisoned is normalized. Every cell released this way is also recorded in <see cref="_deathReleasedCellsThisPlacement"/>, so Presentation can tell a death-caused release apart from an ordinary Shuffle-move release (RunManager.ResolveLockerShuffleEffect/ResolvePoisonerShuffleEffect) and play a different reveal for it (see PlacePiece's own DeathReleasedCells on the returned PlacementOutcome).</summary>
         private void CleanUpDefeatedEnemy(EnemyInstance enemy)
         {
             if (enemy.LockedCell.HasValue)
@@ -1978,11 +1982,13 @@ namespace Contigu.Core
                 var lockedCell = Grid.GetCell(enemy.LockedCell.Value);
                 lockedCell.IsLocked = false;
                 lockedCell.IsLineClearObstacle = false;
+                _deathReleasedCellsThisPlacement.Add(enemy.LockedCell.Value);
                 enemy.LockedCell = null;
             }
             for (int i = 0; i < enemy.PoisonedCells.Count; i++)
             {
                 Grid.GetCell(enemy.PoisonedCells[i]).IsPoisoned = false;
+                _deathReleasedCellsThisPlacement.Add(enemy.PoisonedCells[i]);
             }
             enemy.ClearPoisonedCells();
         }
