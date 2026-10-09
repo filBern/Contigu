@@ -8028,3 +8028,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     premier, avant les pulses Lueur/score — comme ça le groupe se
     pulse/score déjà dans sa couleur finale au lieu de montrer un
     flash de l'ancienne couleur au milieu de l'animation.
+
+- **La propagation du poison n'efface plus toutes les tuiles empoisonnées**
+  (demande explicite : « En ce moment, lorsqu'une tuile empoisonné se
+  propage, au lieu de tout faire disparaitre puis réaparaitre les tuiles
+  empoisonné, seulement faire apparaitre la nouvelle tuile empoisonné
+  après le décompte des points »). La contamination
+  (`RunManager.ContaminateAdjacentCell`, appelée depuis
+  `ApplyPoisonScoreRule` pendant le score) réutilise déjà le mécanisme de
+  "cases différées" prévu pour les déplacements de Locker/Poisoner au
+  Shuffle (`deferredNewMalusCells`/`deferredReleasedLockedCells`/
+  `deferredReleasedPoisonedCells` dans `GameBootstrap.OnCellClicked`) —
+  mais la révélation en fin de séquence appelait `GridView.FadeMalus`,
+  qui fait un fondu global sur TOUTES les cases malus actuellement
+  affichées (`IsShowingMalus()` sur toute la grille), pas seulement
+  celles que ce placement a changées. D'où l'impression que chaque case
+  empoisonnée existante clignotait à chaque propagation.
+  - `GridView` gagne `FadeMalusForCells`/`SetMalusAlphaForCells`, les
+    équivalents ciblés de `FadeMalus`/`SetMalusAlpha` — ils ne touchent
+    que la liste de cases donnée, en parallèle, au lieu d'itérer tout le
+    plateau.
+  - `GameBootstrap.PlayPlacementSequence` (branches
+    `handWasAboutToAutoRefill` et `hasDeferredGridChange`) utilise
+    maintenant ces versions ciblées : seules les cases effectivement
+    libérées (fondu 1->0) puis les nouvelles (fondu 0->1 après le
+    `GridView.Refresh()` qui les révèle) animent — chaque case
+    empoisonnée/verrouillée déjà affichée avant ce placement reste
+    inchangée à l'écran du début à la fin.

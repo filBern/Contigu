@@ -895,7 +895,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -1073,7 +1073,8 @@ namespace Contigu.Presentation
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
-            bool hasDeferredGridChange, bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
+            bool hasDeferredGridChange, List<Vector2Int> deferredNewMalusCells, List<Vector2Int> deferredReleasedLockedCells, List<Vector2Int> deferredReleasedPoisonedCells,
+            bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
             int leechIndex, int leechHealAmount,
             List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)> secondaryDrainTargets)
         {
@@ -1441,29 +1442,33 @@ namespace Contigu.Presentation
 
             // Boss-locked cells, any Locker/Poisoner cell this placement's
             // auto-refill changed, and any lock/poison an enemy dying from
-            // this placement's damage just released were held back from
-            // view this whole time — a full refresh surfaces them now that
-            // the rest of the sequence (including any enemy death) has
-            // played out.
+            // this placement's damage (or this placement's own poison
+            // contamination — see RunManager.ContaminateAdjacentCell) just
+            // released were held back from view this whole time — revealed
+            // now that the rest of the sequence (including any enemy death)
+            // has played out.
             //
-            // Whenever anything is deferred, the reveal follows the same
-            // fade-out-malus/fade-in-malus order the manual Shuffle button
-            // uses (see PlayManualShuffleSequence). The hand's own fade-in
-            // only plays when it actually auto-refilled this placement —
-            // otherwise the hand was never hidden (see
-            // HandView.RefreshHoldingEmpty), so there's nothing of its own
-            // to reveal, just the grid's malus.
+            // Only the cells this placement actually changed fade — see
+            // GridView.FadeMalusForCells, as opposed to FadeMalus's blanket
+            // sweep of every malus cell on the board. Every other
+            // already-shown lock/poison badge stays on screen untouched the
+            // whole time instead of flickering out and back in along with
+            // it. The hand's own fade-in only plays when it actually
+            // auto-refilled this placement — otherwise the hand was never
+            // hidden (see HandView.RefreshHoldingEmpty), so there's nothing
+            // of its own to reveal, just the grid's malus.
+            var deferredReleasedCells = new List<Vector2Int>(deferredReleasedLockedCells);
+            deferredReleasedCells.AddRange(deferredReleasedPoisonedCells);
             if (handWasAboutToAutoRefill)
             {
-                yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
+                yield return _gridView.FadeMalusForCells(deferredReleasedCells, 1f, 0f, ShuffleFadeDuration);
 
                 _handView.SetSlotPiecesAlpha(0f);
                 _handView.Refresh();
                 _gridView.Refresh();
-                // Same same-frame zeroing as PlayManualShuffleSequence —
-                // ApplyState always paints malus opaque, so without this it
-                // would briefly flash at full alpha.
-                _gridView.SetMalusAlpha(0f);
+                // Same same-frame zeroing as PlayManualShuffleSequence — ApplyState always paints a newly
+                // revealed malus cell opaque, so without this it would briefly flash at full alpha.
+                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
 
                 yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
                 PulseShuffleEffectEnemies();
@@ -1471,14 +1476,14 @@ namespace Contigu.Presentation
                 {
                     PlayThiefStealEffect();
                 }
-                yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
+                yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
             }
             else if (hasDeferredGridChange)
             {
-                yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
+                yield return _gridView.FadeMalusForCells(deferredReleasedCells, 1f, 0f, ShuffleFadeDuration);
                 _gridView.Refresh();
-                _gridView.SetMalusAlpha(0f);
-                yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
+                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
+                yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
                 // Reveals the real hand for real if it was held empty (see
                 // HandView.RefreshHoldingEmpty) — a harmless no-op resync
                 // here, since handWasAboutToAutoRefill is false.

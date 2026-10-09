@@ -366,6 +366,63 @@ namespace Contigu.Presentation
             cell.SetMalusAlpha(to);
         }
 
+        /// <summary>Sets just <paramref name="cells"/>' malus alpha, leaving every other cell's untouched — the scoped sibling of <see cref="SetMalusAlpha(float)"/>, used to zero a newly revealed cell's badge right after ApplyState paints it at full alpha, before <see cref="FadeMalusForCells"/> fades it back in.</summary>
+        public void SetMalusAlphaForCells(IReadOnlyList<Vector2Int> cells, float alpha)
+        {
+            if (cells == null)
+            {
+                return;
+            }
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (GridManager.InBounds(pos.x, pos.y))
+                {
+                    _cells[pos.x, pos.y].SetMalusAlpha(alpha);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fades only <paramref name="cells"/>' malus visuals together over <paramref name="duration"/> seconds
+        /// — unlike <see cref="FadeMalus"/>'s blanket sweep (every currently-shown malus cell on the board,
+        /// one after another), this touches nothing outside the given list. Used to reveal a placement's own
+        /// deferred lock/poison changes (a new cell gained, or the contamination/Shuffle-move's own released
+        /// cell) without every pre-existing, untouched poison badge on the board flickering out and back in
+        /// along with it.
+        /// </summary>
+        public System.Collections.IEnumerator FadeMalusForCells(IReadOnlyList<Vector2Int> cells, float from, float to, float duration)
+        {
+            if (cells == null || cells.Count == 0)
+            {
+                yield break;
+            }
+            var targets = new List<GridCellView>();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (GridManager.InBounds(pos.x, pos.y))
+                {
+                    targets.Add(_cells[pos.x, pos.y]);
+                }
+            }
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float alpha = Mathf.Lerp(from, to, Mathf.Clamp01(t / duration));
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    targets[i].SetMalusAlpha(alpha);
+                }
+                yield return null;
+            }
+            for (int i = 0; i < targets.Count; i++)
+            {
+                targets[i].SetMalusAlpha(to);
+            }
+        }
+
         public void SetSelectedShape(PieceShape shape, PieceColor? color = null, PieceTrait? trait = null)
         {
             _selectedShape = shape;
