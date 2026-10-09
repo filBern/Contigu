@@ -51,8 +51,11 @@ namespace Contigu.Presentation
         /// <summary>Which EnemyInstance list <see cref="_enemySlotRevealedDead"/> was last reset for — compared by reference, never by value.</summary>
         private IReadOnlyList<EnemyInstance> _lastEncounterRefForDeathReveal;
         private readonly List<Image> _enemyIconImages = new List<Image>();
+        private readonly List<Image> _enemyIconHurtOverlays = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
         private readonly List<EnemyIconView> _enemyIconViews = new List<EnemyIconView>();
+        /// <summary>One slot's active hurt-flash or effect-pulse coroutine, if any — stopped and replaced rather than left to run alongside a newly triggered one on the same icon (see PlayEnemyHurtEffect/PlayEnemyEffectPulse).</summary>
+        private readonly Coroutine[] _enemyIconEffectCoroutines = new Coroutine[MaxEnemyIcons];
         private TooltipView _tooltip;
 
         public void Build(Transform parent, Transform lueurParent, TooltipView tooltip)
@@ -175,6 +178,12 @@ namespace Contigu.Presentation
                 // Hover tooltip with this enemy's On-Shuffle effect — Init'd fresh each SetEncounter call below.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
 
+                // Transparent red overlay used only by PlayEnemyHurtEffect's flash — starts fully invisible and
+                // never intercepts hover/click, so EnemyIconView keeps seeing pointer events through it.
+                var hurtOverlay = UIFactory.CreatePanel(icon.transform, "HurtOverlay", new Color(1f, 0f, 0f, 0f));
+                hurtOverlay.raycastTarget = false;
+                UIFactory.StretchFull(hurtOverlay.rectTransform);
+
                 var label = UIFactory.CreateText(slot, "Hp", "", 13, UITheme.TextPrimary);
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -185,6 +194,7 @@ namespace Contigu.Presentation
                 slot.gameObject.SetActive(false);
                 _enemySlots.Add(slot.gameObject);
                 _enemyIconImages.Add(icon);
+                _enemyIconHurtOverlays.Add(hurtOverlay);
                 _enemyIconLabels.Add(label);
                 _enemyIconViews.Add(iconView);
             }
@@ -278,6 +288,12 @@ namespace Contigu.Presentation
             {
                 _lastEncounterRefForDeathReveal = encounter;
                 System.Array.Clear(_enemySlotRevealedDead, 0, _enemySlotRevealedDead.Length);
+                // A slot can be mid hurt-flash/effect-pulse when a new encounter takes it over (round
+                // transition) — reset scale/overlay rather than let a stale animation finish on the wrong enemy.
+                for (int i = 0; i < _enemyIconImages.Count; i++)
+                {
+                    ResetEnemyIconEffect(i);
+                }
             }
 
             for (int i = 0; i < _enemySlots.Count; i++)
@@ -364,6 +380,7 @@ namespace Contigu.Presentation
             {
                 yield break;
             }
+            ResetEnemyIconEffect(index);
             var icon = _enemyIconImages[index];
             var label = _enemyIconLabels[index];
             Color iconStart = icon.color;
@@ -401,6 +418,93 @@ namespace Contigu.Presentation
                 _enemySpriteCache[identity] = sprite;
             }
             return sprite;
+        }
+
+        private const float HurtEffectDuration = 0.25f;
+        private const float HurtEffectShrinkScale = 0.82f;
+        private const float HurtEffectPeakFraction = 0.4f;
+        private const float HurtEffectPeakOverlayAlpha = 0.55f;
+
+        private const float EffectPulseDuration = 0.3f;
+        private const float EffectPulsePeakScale = 1.22f;
+        private const float EffectPulsePeakFraction = 0.4f;
+
+        /// <summary>Red flash + brief shrink, played when this enemy's slot takes damage. Called once per hit, not per drain frame — see GameBootstrap.DrainComboIntoDamage/DrainSecondaryEnemyHits. No-op if index is out of range or that slot isn't shown.</summary>
+        public void PlayEnemyHurtEffect(int index)
+        {
+            StartEnemyIconEffect(index, HurtEffectRoutine(index));
+        }
+
+        /// <summary>Scale-up pulse, played whenever this enemy's own effect resolves (On-Shuffle lock/poison, Thief's steal, Leech's heal). No-op if index is out of range or that slot isn't shown.</summary>
+        public void PlayEnemyEffectPulse(int index)
+        {
+            StartEnemyIconEffect(index, EffectPulseRoutine(index));
+        }
+
+        /// <summary>Shared guard + restart logic for the two effects above — only one plays per icon at a time, so a retrigger mid-animation (e.g. a fast multi-hit combo) cleanly restarts rather than stacking.</summary>
+        private void StartEnemyIconEffect(int index, IEnumerator routine)
+        {
+            if (index < 0 || index >= _enemySlots.Count || !_enemySlots[index].activeSelf)
+            {
+                return;
+            }
+            if (_enemyIconEffectCoroutines[index] != null)
+            {
+                StopCoroutine(_enemyIconEffectCoroutines[index]);
+            }
+            _enemyIconEffectCoroutines[index] = StartCoroutine(routine);
+        }
+
+        /// <summary>Snaps a slot's icon back to its resting scale and clears its hurt overlay, and stops whichever of the two effect coroutines is currently running on it, if any.</summary>
+        private void ResetEnemyIconEffect(int index)
+        {
+            if (_enemyIconEffectCoroutines[index] != null)
+            {
+                StopCoroutine(_enemyIconEffectCoroutines[index]);
+                _enemyIconEffectCoroutines[index] = null;
+            }
+            _enemyIconImages[index].rectTransform.localScale = Vector3.one;
+            _enemyIconHurtOverlays[index].color = new Color(1f, 0f, 0f, 0f);
+        }
+
+        private IEnumerator HurtEffectRoutine(int index)
+        {
+            var rt = _enemyIconImages[index].rectTransform;
+            var overlay = _enemyIconHurtOverlays[index];
+            float t = 0f;
+            while (t < HurtEffectDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / HurtEffectDuration);
+                float wave = p < HurtEffectPeakFraction
+                    ? p / HurtEffectPeakFraction
+                    : 1f - (p - HurtEffectPeakFraction) / (1f - HurtEffectPeakFraction);
+                float scale = Mathf.Lerp(1f, HurtEffectShrinkScale, wave);
+                rt.localScale = new Vector3(scale, scale, 1f);
+                overlay.color = new Color(1f, 0f, 0f, HurtEffectPeakOverlayAlpha * wave);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            overlay.color = new Color(1f, 0f, 0f, 0f);
+            _enemyIconEffectCoroutines[index] = null;
+        }
+
+        private IEnumerator EffectPulseRoutine(int index)
+        {
+            var rt = _enemyIconImages[index].rectTransform;
+            float t = 0f;
+            while (t < EffectPulseDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / EffectPulseDuration);
+                float scale = p < EffectPulsePeakFraction
+                    ? Mathf.Lerp(1f, EffectPulsePeakScale, p / EffectPulsePeakFraction)
+                    : Mathf.Lerp(EffectPulsePeakScale, 1f, (p - EffectPulsePeakFraction) / (1f - EffectPulsePeakFraction));
+                rt.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _enemyIconEffectCoroutines[index] = null;
         }
 
         /// <summary>Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down one unused piece at a time instead of jumping straight to empty.</summary>

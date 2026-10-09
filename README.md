@@ -7942,3 +7942,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   filtrage), ce qui garde chaque pixel net à l'agrandissement. Supprimé
   au passage un `.meta` orphelin (`16-bit pixel art, chunky bloc….png.meta`,
   sans PNG correspondant) resté du commit `UpdateBasicEnemy`.
+
+- **Animations hurt/pulse sur les icônes d'ennemis** (demande explicite :
+  « Fait une animation de hurt rouge et shrink lorsqu'un ennemi prend des
+  dégats ET une animation de pulse lorsque son effet est joué »).
+  `HudView` gagne deux méthodes publiques, chacune démarrant une coroutine
+  sur l'icône de la case visée (une seule à la fois par case —
+  `StartEnemyIconEffect` arrête et remplace celle déjà en cours plutôt que
+  de les empiler) :
+  - `PlayEnemyHurtEffect` : flash rouge (overlay semi-transparent posé
+    sur l'icône, jusqu'à 55 % d'opacité) + shrink (échelle 1 -> 0.82 ->
+    1) sur 0.25 s. Appelé une fois par coup, pas à chaque frame du drain
+    de dégâts, dans `GameBootstrap.DrainComboIntoDamage` (cible
+    principale) et `DrainSecondaryEnemyHits` (cibles Bombe/Éclat).
+  - `PlayEnemyEffectPulse` : même scale-pulse (1 -> 1.22 -> 1 sur 0.3 s)
+    que `GridCellView.Pulse` utilise déjà pour les cases qui scorent.
+    Déclenché dans `GameBootstrap.PulseShuffleEffectEnemies` pour chaque
+    Locker/Heavy Locker/Poisoner/Plague vivant à chaque Shuffle (manuel
+    ou auto-remplissage — leur effet On-Shuffle se joue
+    inconditionnellement sur chaque instance vivante), dans
+    `PlayThiefStealEffect` quand Thief vole réellement une pièce, et dans
+    `PlayLeechHealEffect` quand Leech se soigne sur un line clear.
+  Une case réutilisée par un nouvel encounter ou qui commence son
+  `FadeOutEnemySlot` réinitialise l'échelle/l'overlay et arrête la
+  coroutine en cours, pour ne jamais laisser une icône bloquée
+  rapetissée/rougie après un changement de round ou une mort.

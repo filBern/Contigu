@@ -658,6 +658,7 @@ namespace Contigu.Presentation
             _gridView.SetMalusAlpha(0f);
 
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
+            PulseShuffleEffectEnemies();
             PlayThiefStealEffect();
             yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
 
@@ -1047,6 +1048,7 @@ namespace Contigu.Presentation
             {
                 if (encounter[i].Definition.Id == EnemyId.Thief)
                 {
+                    _hudView.PlayEnemyEffectPulse(i);
                     var anchor = _hudView.GetEnemyIconTransform(i);
                     if (anchor != null)
                     {
@@ -1455,6 +1457,7 @@ namespace Contigu.Presentation
                 _gridView.SetMalusAlpha(0f);
 
                 yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
+                PulseShuffleEffectEnemies();
                 if (thiefStoleThisPlacement)
                 {
                     PlayThiefStealEffect();
@@ -1529,6 +1532,7 @@ namespace Contigu.Presentation
         /// <summary>floatDown: true for the same reason as PlayThiefStealEffect's popup — this anchor sits near the top of the screen, and SpawnPopup's usual float-up would run it off the edge.</summary>
         private void PlayLeechHealEffect(int leechIndex, int healAmount)
         {
+            _hudView.PlayEnemyEffectPulse(leechIndex);
             var anchor = _hudView.GetEnemyIconTransform(leechIndex);
             if (anchor != null)
             {
@@ -1554,9 +1558,33 @@ namespace Contigu.Presentation
             return -1;
         }
 
+        /// <summary>Pulses every alive Locker/HeavyLocker/Poisoner/Plague's icon — the four enemies whose On-Shuffle effect (RunManager.ResolveEnemyShuffleEffects) fires unconditionally on every alive instance each Shuffle, manual or auto-refill. Thief's own steal effect isn't unconditional (only fires if the hand has a piece left to steal), so it's pulsed separately by PlayThiefStealEffect once RunManager confirms it actually happened.</summary>
+        private void PulseShuffleEffectEnemies()
+        {
+            if (!_run.HasActiveEncounter)
+            {
+                return;
+            }
+            var encounter = _run.CurrentEncounter;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                var enemy = encounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                var id = enemy.Definition.Id;
+                if (id == EnemyId.Locker || id == EnemyId.HeavyLocker || id == EnemyId.Poisoner || id == EnemyId.Plague)
+                {
+                    _hudView.PlayEnemyEffectPulse(i);
+                }
+            }
+        }
+
         /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage.</summary>
         private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
         {
+            _hudView.PlayEnemyHurtEffect(enemyIndex);
             const float duration = 0.6f;
             float t = 0f;
             while (t < duration)
@@ -1597,6 +1625,7 @@ namespace Contigu.Presentation
             {
                 var target = targets[i];
                 bool isDead = target.HpAfter <= 0;
+                _hudView.PlayEnemyHurtEffect(target.Index);
                 _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);
                 if (isDead)
                 {
