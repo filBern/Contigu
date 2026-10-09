@@ -7917,3 +7917,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   des challenges est trop petit »). `ChallengeSelectView._descriptionLabel`
   passe de 14 à 17 pt — toujours dans le même encadré de carte (252x150),
   les descriptions les plus longues du catalogue continuent d'y tenir.
+
+- **Sprites des ennemis branchés dans la bande d'ennemis** (demande
+  explicite : « Dans le dossier Enemies dans Resources, j'ai ajouté le
+  sprite pour chaque enemy, ils sont dans le bon ordre bien que mal
+  nommé »). Les 10 PNG de `Assets/Resources/Enemies/` (nommés
+  `pixellab-...-<timestamp>.png`) ont été renommés dans l'ordre d'`EnemyId`
+  (Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech,
+  ColorHater, ShapeHater), triés par leur timestamp croissant dans le nom de
+  fichier. `HudView` charge maintenant chaque portrait via
+  `Resources.Load<Sprite>("Enemies/" + identity)` (mis en cache par
+  identité) et l'assigne à l'icône de la case dans `SetEncounter`, au lieu
+  du simple aplat de couleur par identité précédent. `EnemyIconColor` ne
+  gère plus que la teinte grise "mort" — l'identité se voit maintenant dans
+  l'art du sprite plutôt que dans une teinte plaquée dessus.

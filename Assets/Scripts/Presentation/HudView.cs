@@ -14,6 +14,7 @@ namespace Contigu.Presentation
     public sealed class HudView : MonoBehaviour
     {
         private const float BarHeight = 68f;
+        private static readonly Dictionary<EnemyId, Sprite> _enemySpriteCache = new Dictionary<EnemyId, Sprite>();
         private RectTransform _scoreFillRect;
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
@@ -162,7 +163,8 @@ namespace Contigu.Presentation
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
                 slotLayoutElement.preferredHeight = slotHeight;
 
-                var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, UITheme.Danger);
+                var icon = UIFactory.CreatePanel(slot, "EnemyIcon" + i, Color.white);
+                icon.preserveAspect = true;
                 icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 icon.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -259,8 +261,8 @@ namespace Contigu.Presentation
         /// <summary>
         /// Hides the quota bar and shows the enemy band instead, with one icon per enemy in
         /// <paramref name="encounter"/>, left-to-right in targeting order (leftmost always takes damage
-        /// first, see RunManager.ApplyDamageToEncounter). Each icon is tinted by identity
-        /// (<see cref="EnemyIconColor"/>) with a current/max HP label below it. A slot whose death has
+        /// first, see RunManager.ApplyDamageToEncounter). Each icon shows that identity's sprite
+        /// (<see cref="EnemyIconSprite"/>) with a current/max HP label below it. A slot whose death has
         /// already been revealed (see <see cref="_enemySlotRevealedDead"/>) is hidden outright rather than
         /// dimmed, so HorizontalLayoutGroup re-centers the remaining icons. Caps at <see cref="MaxEnemyIcons"/>.
         /// </summary>
@@ -292,6 +294,7 @@ namespace Contigu.Presentation
                 // and re-applying the dead-gray tint here would erase whatever FadeOutEnemySlot is fading to.
                 if (!enemy.IsDead)
                 {
+                    _enemyIconImages[i].sprite = EnemyIconSprite(enemy.Definition.Id);
                     _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
                     _enemyIconLabels[i].color = UITheme.TextPrimary;
                 }
@@ -379,39 +382,25 @@ namespace Contigu.Presentation
             _enemySlots[index].SetActive(false);
         }
 
-        /// <summary>Flat per-identity tint for an enemy's icon. A defeated one dims to near-transparent gray regardless of identity. Takes <paramref name="isDead"/> explicitly so SetEnemyHpDisplay's animated calls can report death on their own schedule, independent of the model's already-updated state.</summary>
+        /// <summary>Alive enemies show their sprite art untinted; a defeated one dims to near-transparent gray regardless of identity. Takes <paramref name="isDead"/> explicitly so SetEnemyHpDisplay's animated calls can report death on their own schedule, independent of the model's already-updated state.</summary>
         private static Color EnemyIconColor(EnemyId identity, bool isDead)
         {
             if (isDead)
             {
                 return new Color(0.5f, 0.5f, 0.5f, 0.35f);
             }
-            switch (identity)
+            return Color.white;
+        }
+
+        /// <summary>Loads each enemy's portrait from Assets/Resources/Enemies/&lt;EnemyId&gt;.png, cached after the first lookup per identity.</summary>
+        private static Sprite EnemyIconSprite(EnemyId identity)
+        {
+            if (!_enemySpriteCache.TryGetValue(identity, out var sprite))
             {
-                case EnemyId.Locker:
-                    return UITheme.LightBlue;
-                case EnemyId.Poisoner:
-                    return UITheme.Danger;
-                // HeavyLocker/Plague are Locker's/Poisoner's Boss-tier escalations: same family hue, darker and more saturated.
-                case EnemyId.HeavyLocker:
-                    return new Color(0.173f, 0.384f, 0.573f); // darker/more saturated LightBlue
-                case EnemyId.Plague:
-                    return new Color(0.671f, 0.169f, 0.235f); // darker/more saturated Danger
-                case EnemyId.Thief:
-                    return UITheme.ButtonSelected; // gold — stealing
-                case EnemyId.Reclaimer:
-                    return UITheme.Success; // green — it's the healer
-                case EnemyId.Leech:
-                    return new Color(0.573f, 0.329f, 0.667f); // purple — the other healer, kept visually distinct from Reclaimer
-                case EnemyId.Basic:
-                    return new Color(0.580f, 0.631f, 0.675f); // neutral steel gray — no special effect
-                case EnemyId.ColorHater:
-                    return new Color(0.902f, 0.494f, 0.133f); // orange
-                case EnemyId.ShapeHater:
-                    return new Color(0.086f, 0.627f, 0.522f); // teal
-                default:
-                    return UITheme.TextMuted;
+                sprite = Resources.Load<Sprite>("Enemies/" + identity);
+                _enemySpriteCache[identity] = sprite;
             }
+            return sprite;
         }
 
         /// <summary>Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down one unused piece at a time instead of jumping straight to empty.</summary>
