@@ -128,6 +128,12 @@ namespace Contigu.Presentation
             _totalText.text = total.ToString();
         }
 
+        /// <summary>Anchor for the total readout — GameBootstrap flies a "-X" popup from here to the damaged enemy's icon as the drain starts, showing the actual damage amount rather than letting the HP bar just quietly tick down.</summary>
+        public RectTransform TotalTransform
+        {
+            get { return _totalText.rectTransform; }
+        }
+
         private static string FormatMult(float mult)
         {
             float rounded = Mathf.Round(mult);

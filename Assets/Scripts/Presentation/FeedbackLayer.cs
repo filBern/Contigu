@@ -202,5 +202,49 @@ namespace Contigu.Presentation
                 Destroy(container.gameObject);
             }
         }
+
+        private const float ImpactLineDuration = 0.25f;
+        private const float ImpactLineThickness = 6f;
+
+        /// <summary>
+        /// Brief fading streak drawn straight from <paramref name="fromWorldPosition"/> to
+        /// <paramref name="toWorldPosition"/> — used when a Joker combat trait retargets damage away from
+        /// the default front enemy (Range/Précision), so the player can actually see where the hit went
+        /// instead of having to notice which HP bar moved. Not used for Bombe/Éclat's spread, which already
+        /// reads as "everyone" without needing a directional cue.
+        /// </summary>
+        public void SpawnImpactLine(Vector3 fromWorldPosition, Vector3 toWorldPosition, Color color)
+        {
+            _root.SetAsLastSibling();
+
+            var line = UIFactory.CreatePanel(_root, "ImpactLine", color);
+            line.raycastTarget = false;
+            var rt = line.rectTransform;
+            Vector3 delta = toWorldPosition - fromWorldPosition;
+            float distance = delta.magnitude;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(distance, ImpactLineThickness);
+            rt.position = fromWorldPosition + delta * 0.5f;
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+            rt.rotation = Quaternion.Euler(0f, 0f, angle);
+            StartCoroutine(ImpactLineRoutine(line));
+        }
+
+        private IEnumerator ImpactLineRoutine(Image line)
+        {
+            float t = 0f;
+            Color start = line.color;
+            while (t < ImpactLineDuration)
+            {
+                t += Time.deltaTime;
+                float alpha = 1f - Mathf.Clamp01(t / ImpactLineDuration);
+                line.color = new Color(start.r, start.g, start.b, start.a * alpha);
+                yield return null;
+            }
+            if (line != null)
+            {
+                Destroy(line.gameObject);
+            }
+        }
     }
 }

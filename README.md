@@ -8215,3 +8215,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     leur propre `localScale` (ex. le pulse du bouton Shuffle dans
     `HandView`) et un hover global se battrait avec eux pour la même
     valeur.
+
+- **3 ajouts de juice sur les combos et les dégâts** (demande
+  explicite : « Encore 3 autres idées, peut être plus sur les combos
+  et les dégâts sur un ou plusieurs ennemis » → trois pistes
+  proposées (popup "-X" qui vole du combo vers la cible, ligne
+  d'impact sur un retarget Range/Précision, popup "-X" par ennemi sur
+  une frappe Bombe/Éclat) → « Oui fait les 3 »).
+  - **Popup "-X" du combo vers la cible** : avant ce changement,
+    `DrainComboIntoDamage` faisait juste baisser la vie par un lerp
+    silencieux — le montant réel encaissé n'était jamais affiché.
+    `ComboView` expose maintenant `TotalTransform` (ancre du readout
+    de total) et `GameBootstrap.DrainComboIntoDamage` calcule
+    `hpBefore - hpAfter` et l'envoie via le `FeedbackLayer.
+    SpawnFlyingPopup` déjà existant, du total de combo vers l'icône
+    de l'ennemi, dès le début du drain.
+  - **Ligne d'impact sur un retarget** : `FeedbackLayer.
+    SpawnImpactLine(from, to, color)` — un trait fin qui s'étire
+    entre deux points du monde et s'efface en 0.25s (rotation calculée
+    via `Mathf.Atan2`), nouveau primitif de dessin dans le projet (rien
+    de comparable n'existait). `GameBootstrap.FindDamagedEnemyIndices`
+    expose maintenant le `PieceTraitKind` de ciblage via un paramètre
+    `out`, remonté jusqu'à `DrainComboIntoDamage` (`isRetargetHit`,
+    vrai pour Range/Précision seulement — Bombe/Éclat touchent déjà
+    tout le monde, une seule ligne ne représenterait pas bien leur
+    étalement). La ligne part du centre de la grille vers l'icône de
+    l'ennemi réellement touché.
+  - **Popup "-X" par ennemi sur Bombe/Éclat** :
+    `DrainSecondaryEnemyHits` calcule `HpBefore - HpAfter` pour
+    chaque cible et affiche un `SpawnPopup` (pas un vol — plusieurs
+    ennemis se partagent le même coup, donc pas de source commune
+    évidente d'où faire voler un seul popup) localement sur chacune,
+    en plus du flash rouge déjà existant.

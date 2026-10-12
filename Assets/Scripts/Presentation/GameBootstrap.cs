@@ -716,7 +716,11 @@ namespace Contigu.Presentation
             // index 0 gets the smooth drain below; any further index is a
             // Bombe/Éclat candidate snapped to its final value by
             // DrainSecondaryEnemyHits.
-            var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex, x, y);
+            var damagedEnemyIndices = FindDamagedEnemyIndices(handIndex, x, y, out var damageCombatKind);
+            // Range/Précision pick a different enemy than the usual front one — a visual cue (see
+            // FeedbackLayer.SpawnImpactLine) makes that redirection actually readable instead of the player
+            // having to notice which HP bar moved. Bombe/Éclat's spread already reads as "everyone" without one.
+            bool isRetargetHit = damageCombatKind == PieceTraitKind.Range || damageCombatKind == PieceTraitKind.Precision;
             var enemyHpBeforeList = new List<int>(damagedEnemyIndices.Count);
             var enemyIdList = new List<EnemyId>(damagedEnemyIndices.Count);
             for (int i = 0; i < damagedEnemyIndices.Count; i++)
@@ -905,7 +909,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit, hasDeferredGridChange, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -973,9 +977,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Every enemy index this placement's damage could plausibly touch, read before PlacePiece so OnCellClicked can hold each one's HP display at its pre-placement value. Index 0 is the primary target, the one DrainComboIntoDamage smoothly lerps; further indices are Bombe/Éclat candidates for DrainSecondaryEnemyHits.</summary>
-        private List<int> FindDamagedEnemyIndices(int handIndex, int anchorX, int anchorY)
+        private List<int> FindDamagedEnemyIndices(int handIndex, int anchorX, int anchorY, out PieceTraitKind? combatKind)
         {
             var result = new List<int>();
+            combatKind = null;
             if (!_run.HasActiveEncounter)
             {
                 return result;
@@ -990,6 +995,7 @@ namespace Contigu.Presentation
                 var previewGroup = _run.Grid.PreviewGroup(shape, token.Color, anchorX, anchorY);
                 kind = FindPriorityCombatKind(previewGroup);
             }
+            combatKind = kind;
 
             if (kind == PieceTraitKind.Range)
             {
@@ -1094,7 +1100,7 @@ namespace Contigu.Presentation
         /// run state — so nothing interrupts the player mid-readout.
         /// </summary>
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
-            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
+            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp, bool isRetargetHit,
             bool hasDeferredGridChange, List<Vector2Int> deferredNewMalusCells, List<Vector2Int> deferredReleasedLockedCells, List<Vector2Int> deferredReleasedPoisonedCells,
             bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
             int leechIndex, int leechHealAmount,
@@ -1450,7 +1456,7 @@ namespace Contigu.Presentation
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
                 yield return new WaitForSeconds(1f);
-                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
+                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
                 // Bombe/Éclat's further targets snap straight to their final
                 // value right after the primary target's smooth drain
                 // finishes, rather than a second parallel lerp.
@@ -1644,10 +1650,26 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage.</summary>
-        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
+        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
+        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
         {
             _hudView.PlayEnemyHurtEffect(enemyIndex);
+            var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
+            int damage = hpBefore - hpAfter;
+            if (enemyAnchor != null && damage > 0)
+            {
+                // The actual damage amount, flown from the combo readout that's about to drain into it — the
+                // HP bar alone only shows the end state, never what was actually taken off.
+                _feedbackLayer.SpawnFlyingPopup(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger);
+                if (isRetargetHit)
+                {
+                    var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
+                    if (originAnchor != null)
+                    {
+                        _feedbackLayer.SpawnImpactLine(originAnchor.position, enemyAnchor.position, UITheme.Danger);
+                    }
+                }
+            }
             const float duration = 0.6f;
             float t = 0f;
             while (t < duration)
@@ -1693,6 +1715,21 @@ namespace Contigu.Presentation
                 var target = targets[i];
                 bool isDead = target.HpAfter <= 0;
                 _hudView.PlayEnemyHurtEffect(target.Index);
+                int damage = target.HpBefore - target.HpAfter;
+                if (damage > 0)
+                {
+                    // Each Bombe/Éclat target gets its own "-X" on its own icon (no flight — unlike the
+                    // primary target above, there's no single combo readout that reads as "theirs" to fly
+                    // from when several enemies take a share of the same hit at once).
+                    var anchor = _hudView.GetEnemyIconTransform(target.Index);
+                    if (anchor != null)
+                    {
+                        // floatDown: true — the enemy band sits near the top of the screen; SpawnPopup's
+                        // usual float-up would run the text off the top edge (same reasoning as
+                        // PlayThiefStealEffect/PlayLeechHealEffect's own popups).
+                        _feedbackLayer.SpawnPopup(anchor, "-" + damage, UITheme.Danger, floatDown: true);
+                    }
+                }
                 _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);
                 if (isDead)
                 {
