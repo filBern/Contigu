@@ -53,6 +53,9 @@ namespace Contigu.Presentation
         // DefaultFlyingPopupFontSize.
         private const int SubtractionPopupFontSize = 44;
         private const int SubtractionFlyingPopupFontSize = 40;
+        // Pause between the combo total finishing its catch-up and DrainComboIntoDamage starting, so the
+        // player gets a beat to read the final number before it starts draining into enemy damage.
+        private const float PostComboReadDelaySeconds = 0.5f;
 
         private RunManager _run;
         private IMetaStatsStore _metaStatsStore;
@@ -1453,14 +1456,14 @@ namespace Contigu.Presentation
                 _hudView.SetScores(displayedRoundScore, _run.CurrentQuota);
             }
 
-            // Only once the combo total is finished, wait 1s so the player
-            // can read the final number, then drain it down to 0 while
-            // transferring it into the targeted enemy's HP. Skipped for a
-            // non-positive total (a placement scored entirely through
+            // Only once the combo total is finished, wait a beat so the
+            // player can read the final number, then drain it down to 0
+            // while transferring it into the targeted enemy's HP. Skipped
+            // for a non-positive total (a placement scored entirely through
             // poison nets a heal, not damage — nothing positive to drain).
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(PostComboReadDelaySeconds);
                 yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
                 // Bombe/Éclat's further targets snap straight to their final
                 // value right after the primary target's smooth drain

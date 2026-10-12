@@ -8379,3 +8379,12 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - `DrainSecondaryEnemyHits` (Bombe/Éclat) n'a pas besoin de ce
     changement : son "-X" apparaît déjà instantanément sur l'ennemi (pas
     de vol), donc `SetEnemyHpDisplay` s'y produisait déjà au même instant.
+
+- **Délai avant l'envoi des dégâts réduit de moitié** (demande explicite :
+  « Il y a un délai d'une seconde entre la fin du calcule de point et
+  d'envoyer les dégats a l'ennemi, réduit le de moitié »). C'est la pause
+  qui laisse le joueur lire le total du combo une fois figé, juste avant
+  que `DrainComboIntoDamage` ne commence à le transférer en dégâts.
+  - La constante `PostComboReadDelaySeconds` (nouvelle, remplace le
+    littéral `1f` passé à `WaitForSeconds` juste avant l'appel à
+    `DrainComboIntoDamage`/`DrainSecondaryEnemyHits`) passe de 1s à 0.5s.
