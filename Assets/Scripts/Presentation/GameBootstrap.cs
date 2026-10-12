@@ -1655,7 +1655,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
+        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. That countdown only starts once the flying damage orb has actually landed and its "-X" is shown (see FeedbackLayer.SpawnFlyingDamageOrb's onArrival), not while it's still mid-flight. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
         private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
         {
             var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
@@ -1664,9 +1664,14 @@ namespace Contigu.Presentation
             {
                 // A small plain circle (no text) flies from the combo readout toward the enemy — the actual
                 // "-X" amount only appears once it lands (see FeedbackLayer.SpawnFlyingDamageOrb), rather than
-                // flying across the screen as text itself. The icon's own hurt shrink (onArrival) plays in
-                // lockstep with that reveal instead of at throw time, so it reads as "the hit landing".
-                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () => _hudView.PlayEnemyHurtEffect(enemyIndex));
+                // flying across the screen as text itself. The icon's own hurt shrink plays in lockstep with
+                // that reveal instead of at throw time, so it reads as "the hit landing".
+                bool damageShown = false;
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () =>
+                {
+                    _hudView.PlayEnemyHurtEffect(enemyIndex);
+                    damageShown = true;
+                });
                 if (isRetargetHit)
                 {
                     var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
@@ -1674,6 +1679,13 @@ namespace Contigu.Presentation
                     {
                         _feedbackLayer.SpawnImpactLine(originAnchor.position, enemyAnchor.position, UITheme.Danger);
                     }
+                }
+                // The HP bar (and combo total) only start draining once the orb has actually landed and the
+                // damage number is shown — draining them earlier, while the orb is still mid-flight, would
+                // move the HP bar before the player has seen what hit it.
+                while (!damageShown)
+                {
+                    yield return null;
                 }
             }
             const float duration = 0.6f;

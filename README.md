@@ -8362,3 +8362,20 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `DrainSecondaryEnemyHits` (Bombe/Éclat, pas de vol) déplace le même
     appel juste à côté de son propre popup "-X", dans le `if (damage >
     0)`, pour la même raison.
+
+- **La barre de vie ne descend qu'une fois les dégâts affichés** (demande
+  explicite : « Commence a réduite les HP des ennemis seulement lorsque
+  les dégats de l'ennemi sont affiché visuellement »). Avant ce
+  changement, la barre de vie et le total du combo commençaient déjà à
+  descendre pendant que le cercle volant était encore en vol
+  (`GameBootstrap.DrainComboIntoDamage`), avant même que le "-X" soit
+  visible sur l'ennemi.
+  - `DrainComboIntoDamage` attend désormais un drapeau `damageShown`
+    (mis à `true` dans le même callback `onArrival` que
+    `PlayEnemyHurtEffect`, voir plus haut) avant de démarrer la boucle
+    qui fait descendre `_comboView.SetTotal`/`_hudView.SetEnemyHpDisplay`
+    — tant que le cercle est encore en vol, la barre de vie et le combo
+    restent figés à leur valeur d'avant le coup.
+  - `DrainSecondaryEnemyHits` (Bombe/Éclat) n'a pas besoin de ce
+    changement : son "-X" apparaît déjà instantanément sur l'ennemi (pas
+    de vol), donc `SetEnemyHpDisplay` s'y produisait déjà au même instant.
