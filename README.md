@@ -8179,3 +8179,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     contrainte de timing que le pop d'achat — rien à animer AVANT la
     destruction des anciennes), lisible comme les cartes qui
     "basculent" en place plutôt qu'un simple refresh instantané.
+
+- **3 ajouts de juice au menu principal** (demande explicite : « Le
+  menu principale est plutôt fade. Que me conseil tu? » → trois
+  pistes proposées (cascade d'entrée sur les tuiles du titre, cycle de
+  couleur ambiant, hover plus marqué sur les boutons) → « Oui fait les
+  3 »).
+  - **Cascade d'entrée sur le titre** : `TitleTileView.PlayEntrance`
+    — chaque tuile de "CONTIGU" démarre invisible/réduite à 0, puis
+    pop avec le même overshoot-puis-stabilise que `Pulse`, décalée
+    par `MainMenuView` selon sa colonne (`TitleCascadeDelayPerColumn`
+    = 0.015s/colonne, ~41 colonnes au total) pour lire comme une vague
+    gauche-à-droite plutôt que toutes les tuiles qui apparaissent
+    d'un coup. Piège découvert en implémentant : `MainMenuView.Build`
+    appelle `_root.gameObject.SetActive(false)` juste après avoir
+    construit les tuiles — une coroutine Unity démarrée sur un
+    GameObject qui devient inactif est arrêtée net, pas mise en pause,
+    donc jouer l'entrée pendant `BuildTitle` les aurait toutes tuées
+    avant le premier frame. Les tuiles + délais sont donc stockés
+    (`_titleTiles`) et l'entrée est déclenchée depuis `Show()` à la
+    place, une fois la hiérarchie réellement active.
+  - **Cycle de couleur ambiant** : une fois son entrée terminée,
+    chaque tuile démarre `AmbientRecolorLoop` — un recolor+pulse
+    identique au survol, à un intervalle aléatoire (3 à 8s,
+    désynchronisé par tuile donc jamais perçu comme une boucle) tant
+    que le menu reste affiché, pour que l'écran ne soit jamais
+    complètement figé même sans interaction.
+  - **Hover plus marqué sur les boutons** : nouveau composant
+    `MainMenuButtonHover` (scale 1 -> 1.06 sur
+    `OnPointerEnter`/`OnPointerExit`), ajouté aux 3 boutons du menu
+    seulement — pas globalement dans
+    `UIFactory.FinishButton`/`ButtonPunchEffect` (déjà partagé par
+    tous les boutons du jeu pour la teinte au survol et le punch au
+    clic), puisque certains boutons ailleurs pilotent déjà en continu
+    leur propre `localScale` (ex. le pulse du bouton Shuffle dans
+    `HandView`) et un hover global se battrait avec eux pour la même
+    valeur.

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,11 @@ namespace Contigu.Presentation
         private const float TileGap = 2f;
         // Each filled glyph cell in TitleTileFont's 5x7 dot-matrix grid renders as a Thickness x Thickness cluster of same-size tiles.
         private const int Thickness = 1;
+        // Left-to-right cascade for the title's entrance (see TitleTileView.PlayEntrance) — keyed off each
+        // tile's own column so it reads as one wave sweeping across "CONTIGU" regardless of row, rather than
+        // every tile of a letter popping in together. ~41 columns across the whole title at 0.015s each
+        // keeps the full cascade plus each tile's own pop-in under ~0.9s total.
+        private const float TitleCascadeDelayPerColumn = 0.015f;
 
         /// <summary>Fired once the player clicks through to actually start playing.</summary>
         public event Action PlayClicked;
@@ -33,6 +39,11 @@ namespace Contigu.Presentation
         public event Action ExitClicked;
 
         private RectTransform _root;
+        // Entrance (see TitleTileView.PlayEntrance) can't play during Build(): the whole menu is still
+        // SetActive(false) at the very end of that same call, which kills any coroutine already started on
+        // a now-inactive GameObject rather than pausing it — so every tile's own PlayEntrance is deferred to
+        // here and fired from Show() instead, once the hierarchy is actually active again.
+        private readonly List<(TitleTileView View, float Delay)> _titleTiles = new List<(TitleTileView, float)>();
 
         public RectTransform Build(Transform parent)
         {
@@ -53,6 +64,7 @@ namespace Contigu.Presentation
             playRect.anchoredPosition = new Vector2(0f, -60f);
             playRect.sizeDelta = new Vector2(220f, 56f);
             playButton.onClick.AddListener(OnPlayClicked);
+            playButton.gameObject.AddComponent<MainMenuButtonHover>();
 
             var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.ChooseButtonBackground, 22);
             var settingsRect = settingsButton.GetComponent<RectTransform>();
@@ -62,6 +74,7 @@ namespace Contigu.Presentation
             settingsRect.anchoredPosition = new Vector2(0f, -136f);
             settingsRect.sizeDelta = new Vector2(220f, 56f);
             settingsButton.onClick.AddListener(OnSettingsClicked);
+            settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
 
             var exitButton = UIFactory.CreateButton(_root, "Exit", "Exit", UISprites.CancelButtonBackground, 22);
             var exitRect = exitButton.GetComponent<RectTransform>();
@@ -71,6 +84,7 @@ namespace Contigu.Presentation
             exitRect.anchoredPosition = new Vector2(0f, -212f);
             exitRect.sizeDelta = new Vector2(220f, 56f);
             exitButton.onClick.AddListener(OnExitClicked);
+            exitButton.gameObject.AddComponent<MainMenuButtonHover>();
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -122,6 +136,7 @@ namespace Contigu.Presentation
 
                                 var tileView = tileImage.gameObject.AddComponent<TitleTileView>();
                                 tileView.Init(tileImage, TitleTileView.RandomColor());
+                                _titleTiles.Add((tileView, globalCol * TitleCascadeDelayPerColumn));
                             }
                         }
                     }
@@ -135,6 +150,10 @@ namespace Contigu.Presentation
         public void Show()
         {
             _root.gameObject.SetActive(true);
+            for (int i = 0; i < _titleTiles.Count; i++)
+            {
+                _titleTiles[i].View.PlayEntrance(_titleTiles[i].Delay);
+            }
         }
 
         public void Hide()
