@@ -8388,3 +8388,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - La constante `PostComboReadDelaySeconds` (nouvelle, remplace le
     littéral `1f` passé à `WaitForSeconds` juste avant l'appel à
     `DrainComboIntoDamage`/`DrainSecondaryEnemyHits`) passe de 1s à 0.5s.
+
+- **Cercle volant avant qu'un effet d'ennemi n'apparaisse sur la grille**
+  (demande explicite : « Lorsqu'un ennemi a un effet sur la grille. Fait
+  une animation de cercle qui part de l'ennemi vers la tuile affecté,
+  c'est seulement après que le d'animation pour faire apparaitre l'effet
+  qu'il est lancé, pas avant »). S'applique au verrou de Locker/
+  HeavyLocker et au poison de Poisoner/Plague — les deux effets de grille
+  qu'un ennemi peut poser sur une case précise.
+  - `FeedbackLayer.SpawnFlyingEffectCircle` (nouveau) vole un petit
+    cercle plein — même courbe d'accélération que
+    `SpawnFlyingDamageOrb`, sans texte — depuis une position de départ
+    vers une case, puis invoque un callback `onArrival` une fois arrivé
+    (ou immédiatement si l'ancre est nulle).
+  - `GameBootstrap.PlayEnemyGridEffectCircles` (nouveau) parcourt
+    `_run.CurrentEncounter`, trouve pour chaque ennemi vivant possédant
+    `LockedCell`/`PoisonedCells` celles qui figurent dans la liste de
+    cases à révéler, fait voler un cercle de son icône vers chaque case
+    concernée (bleu clair `UITheme.LightBlue` pour un verrou, rouge
+    `UITheme.Danger` pour du poison), et attend que tous les cercles
+    soient arrivés avant de rendre la main à l'appelant.
+  - Les trois endroits qui révèlent un nouvel effet de grille attendent
+    désormais `PlayEnemyGridEffectCircles` juste avant leur
+    `FadeMalus(ForCells)` de révélation : `PlayManualShuffleSequence`
+    (sur toutes les cases actuellement verrouillées/empoisonnées, puisque
+    chaque Shuffle manuel réattribue l'effet de chaque ennemi même sur la
+    même case) et les deux branches de `PlayPlacementSequence`
+    (`handWasAboutToAutoRefill` et `hasDeferredGridChange`, scopées à
+    `deferredNewMalusCells`). Une case verrouillée par un boss (sans
+    ennemi propriétaire) n'a simplement pas de cercle et apparaît en même
+    temps que les autres une fois celles-ci arrivées.

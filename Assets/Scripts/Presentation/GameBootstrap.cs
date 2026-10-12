@@ -675,6 +675,14 @@ namespace Contigu.Presentation
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
             PulseShuffleEffectEnemies();
             PlayThiefStealEffect();
+            // Every currently locked/poisoned cell just got (re-)placed by this very Shuffle (Locker/
+            // Poisoner's On-Shuffle effect always re-picks, even onto the same cell — see
+            // RunManager.ResolveEnemyShuffleEffects) — so each one gets its own circle flying in from its
+            // owning enemy's icon before the badge is allowed to actually appear.
+            SnapshotEnemyEffectCells(out var lockedCellsNow, out var poisonedCellsNow);
+            var affectedCellsNow = new List<Vector2Int>(lockedCellsNow);
+            affectedCellsNow.AddRange(poisonedCellsNow);
+            yield return PlayEnemyGridEffectCircles(affectedCellsNow);
             yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
 
             RefreshShuffleButton();
@@ -951,6 +959,70 @@ namespace Contigu.Presentation
                     lockedCells.Add(enemy.LockedCell.Value);
                 }
                 poisonedCells.AddRange(enemy.PoisonedCells);
+            }
+        }
+
+        // Lock's circle reads as a cool, inert obstacle; poison's reuses the same red as its own badge
+        // (UITheme.Danger) — same two colors used for every other lock/poison visual in the game.
+        private static readonly Color EnemyGridEffectLockColor = UITheme.LightBlue;
+
+        /// <summary>
+        /// Flies a small circle from each alive Locker/HeavyLocker/Poisoner/Plague that currently owns a
+        /// cell in <paramref name="cells"/> to that cell, and waits for every circle to land before
+        /// returning — so the caller's own FadeMalus(ForCells) reveal only starts once the effect has
+        /// visibly traveled there, never before. A cell in <paramref name="cells"/> with no owning enemy
+        /// (e.g. a boss-locked one — see RunManager.ApplyBossLockTick) gets no circle and isn't waited on;
+        /// it simply appears along with the others once the real circles finish. No-op if there's no active
+        /// encounter or no cell in the list is currently owned by a living effect-enemy.
+        /// </summary>
+        private System.Collections.IEnumerator PlayEnemyGridEffectCircles(IReadOnlyList<Vector2Int> cells)
+        {
+            if (!_run.HasActiveEncounter || cells.Count == 0)
+            {
+                yield break;
+            }
+            var cellSet = new HashSet<Vector2Int>(cells);
+            var encounter = _run.CurrentEncounter;
+            int pending = 0;
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                var enemy = encounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                var iconAnchor = _hudView.GetEnemyIconTransform(i);
+                if (iconAnchor == null)
+                {
+                    continue;
+                }
+                if (enemy.LockedCell.HasValue && cellSet.Contains(enemy.LockedCell.Value))
+                {
+                    var cellAnchor = _gridView.GetCellTransform(enemy.LockedCell.Value.x, enemy.LockedCell.Value.y);
+                    if (cellAnchor != null)
+                    {
+                        pending++;
+                        _feedbackLayer.SpawnFlyingEffectCircle(iconAnchor.position, cellAnchor, EnemyGridEffectLockColor, () => pending--);
+                    }
+                }
+                for (int j = 0; j < enemy.PoisonedCells.Count; j++)
+                {
+                    var pos = enemy.PoisonedCells[j];
+                    if (!cellSet.Contains(pos))
+                    {
+                        continue;
+                    }
+                    var cellAnchor = _gridView.GetCellTransform(pos.x, pos.y);
+                    if (cellAnchor != null)
+                    {
+                        pending++;
+                        _feedbackLayer.SpawnFlyingEffectCircle(iconAnchor.position, cellAnchor, UITheme.Danger, () => pending--);
+                    }
+                }
+            }
+            while (pending > 0)
+            {
+                yield return null;
             }
         }
 
@@ -1539,6 +1611,10 @@ namespace Contigu.Presentation
                 {
                     PlayThiefStealEffect();
                 }
+                // Same circle-then-reveal as PlayManualShuffleSequence, scoped to just the cells this
+                // placement's auto-refill actually changed (deferredNewMalusCells), not every malus cell on
+                // the board.
+                yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
                 yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
             }
             else if (hasDeferredGridChange)
@@ -1546,6 +1622,7 @@ namespace Contigu.Presentation
                 yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
                 _gridView.Refresh();
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
+                yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
                 yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
                 // Reveals the real hand for real if it was held empty (see
                 // HandView.RefreshHoldingEmpty) — a harmless no-op resync

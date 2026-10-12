@@ -247,6 +247,60 @@ namespace Contigu.Presentation
             yield return StartCoroutine(AnimateDamageReveal(arrivalPosition, damageText, color, fontSize));
         }
 
+        /// <summary>
+        /// A small plain circle (no text), flying from <paramref name="fromWorldPosition"/> to
+        /// <paramref name="toAnchor"/> on the same ease-in curve as <see cref="SpawnFlyingDamageOrb"/> — used
+        /// for an enemy's grid effect (Locker's lock, Poisoner's poison) landing on a cell. <paramref
+        /// name="onArrival"/> fires once it lands (or immediately if <paramref name="toAnchor"/> is null),
+        /// so the caller can gate the actual effect's reveal on the cell behind it rather than showing it
+        /// before the circle even arrives.
+        /// </summary>
+        public void SpawnFlyingEffectCircle(Vector3 fromWorldPosition, RectTransform toAnchor, Color color, System.Action onArrival)
+        {
+            if (toAnchor == null)
+            {
+                onArrival?.Invoke();
+                return;
+            }
+
+            _root.SetAsLastSibling();
+
+            var orbRect = UIFactory.CreateUIObject("EffectCircle", _root);
+            var orbImage = orbRect.gameObject.AddComponent<Image>();
+            orbImage.sprite = UISprites.CountBadge;
+            orbImage.color = color;
+            orbRect.sizeDelta = new Vector2(DamageOrbSize, DamageOrbSize);
+            orbRect.position = fromWorldPosition;
+
+            StartCoroutine(AnimateFlyingEffectCircle(orbRect, toAnchor, onArrival));
+        }
+
+        private IEnumerator AnimateFlyingEffectCircle(RectTransform orbRect, RectTransform toAnchor, System.Action onArrival)
+        {
+            float t = 0f;
+            Vector3 startPos = orbRect.position;
+
+            while (t < DamageOrbFlightDuration)
+            {
+                if (orbRect == null || toAnchor == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / DamageOrbFlightDuration);
+                float eased = p * p;
+                orbRect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
+                yield return null;
+            }
+
+            if (orbRect != null)
+            {
+                Destroy(orbRect.gameObject);
+            }
+
+            onArrival?.Invoke();
+        }
+
         private IEnumerator AnimateDamageReveal(Vector3 worldPosition, string text, Color color, int fontSize)
         {
             var container = UIFactory.CreateUIObject("DamageReveal", _root);
