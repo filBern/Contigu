@@ -23,8 +23,18 @@ namespace Contigu.Presentation
             return root;
         }
 
-        /// <summary><paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for popups anchored near the top of the screen, which would otherwise run off-screen.</summary>
-        public void SpawnPopup(RectTransform anchor, string text, Color color, bool floatDown = false)
+        public const int DefaultPopupFontSize = 22;
+        public const int DefaultFlyingPopupFontSize = 20;
+
+        /// <summary>
+        /// <paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for
+        /// popups anchored near the top of the screen, which would otherwise run off-screen.
+        /// <paramref name="fontSize"/> defaults to <see cref="DefaultPopupFontSize"/>; callers pass a larger
+        /// value for red subtraction text (poison-flipped score, enemy damage), which needs to read clearly
+        /// at a glance and was getting lost at the same size as every other popup. The backdrop/container
+        /// scale with it so a bigger font never clips.
+        /// </summary>
+        public void SpawnPopup(RectTransform anchor, string text, Color color, bool floatDown = false, int fontSize = DefaultPopupFontSize)
         {
             if (anchor == null)
             {
@@ -34,13 +44,14 @@ namespace Contigu.Presentation
             // Always render above everything else on screen, so a popup anchored behind an opaque panel still shows.
             _root.SetAsLastSibling();
 
+            float scale = (float)fontSize / DefaultPopupFontSize;
             var container = UIFactory.CreateUIObject("PopupContainer", _root);
             // Small random horizontal jitter so several popups landing on the
             // same cell (e.g. two group-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
             container.position = anchor.position + new Vector3(jitterX, 0f, 0f);
-            container.sizeDelta = new Vector2(160f, 40f);
+            container.sizeDelta = new Vector2(160f, 40f) * scale;
 
             // Plain square backdrop — the 45°-rotated "diamond" shape is reserved for HudView/ShopView's Lueur icon.
             var backdrop = UIFactory.CreatePanel(container, "Backdrop", UITheme.Panel);
@@ -48,19 +59,24 @@ namespace Contigu.Presentation
             backdrop.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             backdrop.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             backdrop.rectTransform.anchoredPosition = Vector2.zero;
-            backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f);
+            backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f) * scale;
             var backdropColor = backdrop.color;
             backdropColor.a = ScoreBackdropOpacity;
             backdrop.color = backdropColor;
 
-            var popup = UIFactory.CreateText(container, "Popup", text, 22, color);
+            var popup = UIFactory.CreateText(container, "Popup", text, fontSize, color);
             UIFactory.StretchFull(popup.rectTransform);
 
             StartCoroutine(AnimatePopup(container, backdrop, popup, floatDown));
         }
 
-        /// <summary>Spawns a popup at <paramref name="fromWorldPosition"/> that flies toward <paramref name="toAnchor"/> and fades out on arrival, unlike <see cref="SpawnPopup"/>'s float-up-in-place.</summary>
-        public void SpawnFlyingPopup(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color)
+        /// <summary>
+        /// Spawns a popup at <paramref name="fromWorldPosition"/> that flies toward <paramref name="toAnchor"/>
+        /// and fades out on arrival, unlike <see cref="SpawnPopup"/>'s float-up-in-place.
+        /// <paramref name="fontSize"/> defaults to <see cref="DefaultFlyingPopupFontSize"/> — see SpawnPopup's
+        /// own doc comment for why callers size red subtraction text up.
+        /// </summary>
+        public void SpawnFlyingPopup(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color, int fontSize = DefaultFlyingPopupFontSize)
         {
             if (toAnchor == null)
             {
@@ -69,9 +85,10 @@ namespace Contigu.Presentation
 
             _root.SetAsLastSibling();
 
-            var popup = UIFactory.CreateText(_root, "FlyingPopup", text, 20, color);
+            float scale = (float)fontSize / DefaultFlyingPopupFontSize;
+            var popup = UIFactory.CreateText(_root, "FlyingPopup", text, fontSize, color);
             popup.rectTransform.position = fromWorldPosition;
-            popup.rectTransform.sizeDelta = new Vector2(120f, 36f);
+            popup.rectTransform.sizeDelta = new Vector2(120f, 36f) * scale;
             StartCoroutine(AnimateFlyingPopup(popup, toAnchor));
         }
 

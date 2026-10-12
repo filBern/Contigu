@@ -48,6 +48,11 @@ namespace Contigu.Presentation
         private const float ComboShakeMagnitude = 10f;
         private const float BossKillShakeDuration = 0.35f;
         private const float BossKillShakeMagnitude = 16f;
+        // Red subtraction text (poison-flipped score, enemy damage) was getting lost at the same size as
+        // every other popup — these are exactly double FeedbackLayer's own DefaultPopupFontSize/
+        // DefaultFlyingPopupFontSize.
+        private const int SubtractionPopupFontSize = 44;
+        private const int SubtractionFlyingPopupFontSize = 40;
 
         private RunManager _run;
         private IMetaStatsStore _metaStatsStore;
@@ -1282,7 +1287,7 @@ namespace Contigu.Presentation
                     : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
                     : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
                     : UITheme.TextPrimary;
-                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 SfxManager.PlayComboTick();
 
                 displayedRoundScore += displayAmount;
@@ -1320,7 +1325,7 @@ namespace Contigu.Presentation
                 int amount = clearedCellAmounts.TryGetValue(pos, out int signed) ? signed : ScoringConstants.LineClearBonusPerCell;
                 bool negative = amount < 0;
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
-                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.Success);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.Success, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 _gridView.PulseCell(pos.x, pos.y);
                 SfxManager.Play(SfxId.LineClear);
 
@@ -1660,7 +1665,7 @@ namespace Contigu.Presentation
             {
                 // The actual damage amount, flown from the combo readout that's about to drain into it — the
                 // HP bar alone only shows the end state, never what was actually taken off.
-                _feedbackLayer.SpawnFlyingPopup(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger);
+                _feedbackLayer.SpawnFlyingPopup(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize);
                 if (isRetargetHit)
                 {
                     var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
@@ -1727,7 +1732,7 @@ namespace Contigu.Presentation
                         // floatDown: true — the enemy band sits near the top of the screen; SpawnPopup's
                         // usual float-up would run the text off the top edge (same reasoning as
                         // PlayThiefStealEffect/PlayLeechHealEffect's own popups).
-                        _feedbackLayer.SpawnPopup(anchor, "-" + damage, UITheme.Danger, floatDown: true);
+                        _feedbackLayer.SpawnPopup(anchor, "-" + damage, UITheme.Danger, floatDown: true, fontSize: SubtractionPopupFontSize);
                     }
                 }
                 _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);

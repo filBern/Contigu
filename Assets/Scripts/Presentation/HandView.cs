@@ -41,6 +41,13 @@ namespace Contigu.Presentation
         private const float UnplayableShakeDuration = 0.3f;
         private const float UnplayableShakeMagnitude = 8f;
         private const float UnplayableShakeCycles = 4f;
+        // Light scale-up pulse on the piece preview itself (not the whole slot) when it's picked up, whether
+        // by a plain click-select or the start of a drag (BeginSlotDrag always routes through SelectSlot) —
+        // smaller peak than GridCellView.Pulse's 1.18 since this should read as a light acknowledgement, not
+        // a scoring-style pop.
+        private const float SelectPulseDuration = 0.22f;
+        private const float SelectPulsePeakScale = 1.1f;
+        private const float SelectPulsePeakFraction = 0.4f;
 
         public event Action<int> SlotSelected;
 
@@ -66,6 +73,7 @@ namespace Contigu.Presentation
         private Text _shuffleCountLabel;
         private Coroutine _shufflePulseCoroutine;
         private Coroutine[] _shakeCoroutines;
+        private Coroutine[] _selectPulseCoroutines;
         private bool _shuffleAllowed = true;
         private int _selectedIndex = -1;
         private bool _interactable = true;
@@ -124,6 +132,7 @@ namespace Contigu.Presentation
             _slotLevelLabels = new Text[DeckManager.HandSize];
             _slotLockLabels = new Text[DeckManager.HandSize];
             _shakeCoroutines = new Coroutine[DeckManager.HandSize];
+            _selectPulseCoroutines = new Coroutine[DeckManager.HandSize];
 
             for (int i = 0; i < DeckManager.HandSize; i++)
             {
@@ -383,10 +392,39 @@ namespace Contigu.Presentation
             _selectedIndex = idx;
             UpdateSelectionVisuals();
             ShowCursorGhost(idx);
+            PulseSelectedPiece(idx);
             if (SlotSelected != null)
             {
                 SlotSelected(idx);
             }
+        }
+
+        /// <summary>Light scale-up pulse on just the piece preview, played whenever its slot is picked up (see SelectSlot's own doc comment).</summary>
+        private void PulseSelectedPiece(int index)
+        {
+            if (_selectPulseCoroutines[index] != null)
+            {
+                StopCoroutine(_selectPulseCoroutines[index]);
+            }
+            _selectPulseCoroutines[index] = StartCoroutine(SelectPulseRoutine(index));
+        }
+
+        private IEnumerator SelectPulseRoutine(int index)
+        {
+            var rt = _previewContainers[index];
+            float t = 0f;
+            while (t < SelectPulseDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / SelectPulseDuration);
+                float scale = p < SelectPulsePeakFraction
+                    ? Mathf.Lerp(1f, SelectPulsePeakScale, p / SelectPulsePeakFraction)
+                    : Mathf.Lerp(SelectPulsePeakScale, 1f, (p - SelectPulsePeakFraction) / (1f - SelectPulsePeakFraction));
+                rt.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _selectPulseCoroutines[index] = null;
         }
 
         /// <summary>Short, decaying side-to-side shake on a slot's own background.</summary>

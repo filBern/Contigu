@@ -8247,3 +8247,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     ennemis se partagent le même coup, donc pas de source commune
     évidente d'où faire voler un seul popup) localement sur chacune,
     en plus du flash rouge déjà existant.
+
+- **Texte rouge de soustraction agrandi + pulse à la sélection d'une
+  pièce** (deux demandes explicites : « Le texte rouge de
+  soustraction devrait être 2x plus gros, il n'est pas assez visible »
+  et « Lorsqu'un slot est sélectionné (hold ou drag) on fait un léger
+  pulse sur la pièce dans le slot »).
+  - `FeedbackLayer.SpawnPopup`/`SpawnFlyingPopup` gagnent un paramètre
+    `fontSize` optionnel (défaut inchangé : 22/20 — maintenant exposés
+    en `public const DefaultPopupFontSize`/`DefaultFlyingPopupFontSize`
+    pour que les appelants puissent s'y référer sans dupliquer le
+    nombre magique), avec le backdrop/conteneur mis à l'échelle en
+    proportion pour qu'un texte plus gros ne soit jamais rogné.
+    `GameBootstrap` passe maintenant le double (`SubtractionPopupFontSize`
+    = 44, `SubtractionFlyingPopupFontSize` = 40) sur les 4 popups qui
+    affichent une vraie soustraction en rouge : le score par case
+    empoisonnée (les deux boucles, popup normal et popup de ligne
+    complétée), le "-X" de dégâts qui vole du combo vers la cible, et
+    le "-X" par ennemi sur Bombe/Éclat.
+  - `HandView.SelectSlot` (point de passage commun au clic simple ET
+    au début d'un drag — `BeginSlotDrag` l'appelle aussi) joue
+    maintenant `PulseSelectedPiece` : un scale-up léger (1 -> 1.1 -> 1
+    sur 0.22s, pic plus bas que le 1.18 habituel de
+    `GridCellView.Pulse` pour rester discret) sur `_previewContainers[idx]`
+    seul — le visuel de la pièce, pas tout le chrome de la case
+    (fond, label de niveau) — donc sans toucher
+    `UpdateSelectionVisuals`'s propre teinte de fond déjà existante.
