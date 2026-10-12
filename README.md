@@ -8326,3 +8326,15 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     1.3 -> 1 sur les 20% premiers du temps d'affichage) suivi d'un
     plateau stable puis d'un pulse out symétrique (1 -> 1.3 -> 0 sur les
     20% derniers) plutôt qu'un simple fondu.
+
+- **Retrait du clignotement automatique des tuiles du titre** (demande
+  explicite : « Enleve le clignotement automatique des tuiles dans le
+  main menu, garde seulement les clignotement manuelle par le joueur »).
+  - `TitleTileView` perd entièrement `AmbientRecolorLoop` ainsi que les
+    constantes `AmbientMinInterval`/`AmbientMaxInterval` et le champ
+    `_ambientCoroutine` qui le pilotaient — `EntranceRoutine` ne le
+    relance plus une fois l'entrée en jeu terminée.
+  - `OnPointerEnter` (survol du joueur) reste le seul déclencheur de
+    `RecolorAndPulse`/`PulseRoutine` : chaque tuile ne recolore et ne
+    pulse plus que lorsqu'elle est effectivement survolée, plus jamais
+    de son propre chef.

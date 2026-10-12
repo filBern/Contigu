@@ -23,8 +23,6 @@ namespace Contigu.Presentation
         // Alpha reaches 1 well before scale settles (see EntranceDuration) so the tile reads as "arrived"
         // early in its own pop rather than still fading in during the overshoot.
         private const float EntranceFadeFraction = 0.3f;
-        private const float AmbientMinInterval = 1.5f;
-        private const float AmbientMaxInterval = 4f;
 
         private static readonly PieceColor[] Colors =
         {
@@ -35,7 +33,6 @@ namespace Contigu.Presentation
         private PieceColor _color;
         private Coroutine _pulseCoroutine;
         private Coroutine _entranceCoroutine;
-        private Coroutine _ambientCoroutine;
 
         public void Init(Image image, PieceColor initialColor)
         {
@@ -75,16 +72,10 @@ namespace Contigu.Presentation
         public void PlayEntrance(float delay)
         {
             // Defensive stop-and-restart (same pattern as Pulse's own _pulseCoroutine), in case Show() ever
-            // runs more than once on the same tile — without this, a second call would stack a second
-            // AmbientRecolorLoop on top of the first rather than replacing it.
+            // runs more than once on the same tile.
             if (_entranceCoroutine != null)
             {
                 StopCoroutine(_entranceCoroutine);
-            }
-            if (_ambientCoroutine != null)
-            {
-                StopCoroutine(_ambientCoroutine);
-                _ambientCoroutine = null;
             }
             var rt = (RectTransform)transform;
             rt.localScale = Vector3.zero;
@@ -117,20 +108,6 @@ namespace Contigu.Presentation
             var finalColor = _image.color;
             _image.color = new Color(finalColor.r, finalColor.g, finalColor.b, 1f);
             _entranceCoroutine = null;
-            // Idle ambient life, starting only once the entrance has fully played — a slow, randomly-timed
-            // recolor+pulse (same visual as a hover) so the title never sits completely still even with no
-            // pointer activity, without it reading as a loop (each tile's own random interval desyncs it
-            // from its neighbors).
-            _ambientCoroutine = StartCoroutine(AmbientRecolorLoop());
-        }
-
-        private IEnumerator AmbientRecolorLoop()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(Random.Range(AmbientMinInterval, AmbientMaxInterval));
-                RecolorAndPulse();
-            }
         }
 
         private IEnumerator PulseRoutine()
