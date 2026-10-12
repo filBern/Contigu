@@ -8418,3 +8418,22 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `deferredNewMalusCells`). Une case verrouillée par un boss (sans
     ennemi propriétaire) n'a simplement pas de cercle et apparaît en même
     temps que les autres une fois celles-ci arrivées.
+
+- **Rééquilibrage des HP d'ennemis** (demande explicite : « Réduit le
+  basic a 250 points et le poisoner a 750 points, adapt les autres en
+  fonction, j'arrive rarement a passer la 2e round »).
+  - `EnemyCatalog.Basic`/`Poisoner` passent de 338/1575 à 250/750 comme
+    demandé. Les deux valeurs servent d'ancres à une interpolation
+    linéaire (`newHp = a·oldHp + b` résolu sur ces deux points, a ≈
+    0.404, b ≈ 113.4) appliquée à tous les autres ennemis, puis
+    arrondie au 25 le plus proche : `Locker` 900→475, `HeavyLocker`
+    2700→1200, `Plague` 4050→1750, `Thief` 2250→1025, `Reclaimer`
+    2475→1125, `Leech` 1350→650, `ColorHater`/`ShapeHater` 2250→1025
+    chacun.
+  - Cette interpolation préserve exactement l'ordre relatif d'origine
+    entre tous les ennemis (`Basic < Locker < Leech < Poisoner <
+    Thief = ColorHater = ShapeHater < Reclaimer < HeavyLocker <
+    Plague`), tout en coupant plus fort les ennemis déjà les plus
+    costauds (Plague tombe à 43% de son HP d'origine, contre 74% pour
+    Basic) — cohérent avec la plainte initiale : les rounds qui suivent
+    le round 1 (Basic) sont ceux qui bloquaient le plus.
