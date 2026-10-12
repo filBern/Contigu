@@ -8462,3 +8462,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     a atterri) qu'un vrai `Refresh()` bascule enfin ces cases sur leur
     apparence réelle de verrou/poison (toujours à alpha 0), juste avant
     le fondu d'apparition (`FadeMalus(ForCells)`).
+
+- **Même bug, repéré par le joueur lors d'un line clear** (deux messages
+  successifs : « Lorsqu'une tuile empoisonné se répend. La 2e tuile
+  apparait avant même que l'animation de cercle commence » puis « Idem
+  pour les tuiles locked. Le problème survient surtout lors de line
+  break »). Un deuxième endroit, raté par le correctif précédent, avait
+  le même défaut : `PlayTileClearBursts` vide visuellement chaque case
+  d'une ligne/colonne qui se complète via `GridView.ClearCellVisual`, qui
+  rendait sans suppression l'état réel du modèle. Or la cible de la
+  contamination du poison (`RunManager.ContaminateAdjacentCell` pioche un
+  voisin orthogonal, souvent dans la même ligne/colonne) ou un verrou qui
+  vient d'atterrir sur une case par ailleurs effacée ce tour-ci se
+  trouvent très souvent être une de ces cases mêmes — leur badge
+  apparaissait donc instantanément dès le burst de clear, bien avant que
+  `PlayEnemyGridEffectCircles` n'ait même commencé à voler, plus loin
+  dans la séquence.
+  - `GridView.ClearCellVisual`/`RefreshCell` gagnent un paramètre
+    `suppressMalus` (répercuté jusqu'à `GridCellView.ApplyState`, déjà
+    utilisé ailleurs pour ce même effet).
+  - `GameBootstrap.PlayTileClearBursts` reçoit maintenant
+    `deferredNewMalusCells` (qui contient aussi bien les nouveaux
+    verrous que les nouveaux poisons, boss-locks compris) et passe
+    `suppressMalus: true` pour toute case effacée qui s'y trouve — elle
+    reste vide/plate le temps du burst, comme toute case juste clear,
+    au lieu de révéler son futur verrou/poison en avance.

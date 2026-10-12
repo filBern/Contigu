@@ -302,17 +302,23 @@ namespace Contigu.Presentation
             return set;
         }
 
-        /// <summary>Re-renders one cell from the grid's actual current state — used to visually empty a single cell of a line as it clears.</summary>
-        public void ClearCellVisual(int x, int y)
+        /// <summary>
+        /// Re-renders one cell from the grid's actual current state — used to visually empty a single cell
+        /// of a line as it clears. <paramref name="suppressMalus"/> keeps a lock/poison this same placement
+        /// just added (e.g. a poison-contamination target that happens to sit in the line being cleared)
+        /// hidden — shown as a plain cleared cell instead — until GameBootstrap's own circle-then-reveal
+        /// (PlayEnemyGridEffectCircles) is ready to show it for real.
+        /// </summary>
+        public void ClearCellVisual(int x, int y, bool suppressMalus = false)
         {
-            RefreshCell(x, y);
+            RefreshCell(x, y, suppressMalus);
         }
 
-        private void RefreshCell(int x, int y)
+        private void RefreshCell(int x, int y, bool suppressMalus = false)
         {
             if (GridManager.InBounds(x, y))
             {
-                _cells[x, y].ApplyState(_grid.GetCell(x, y));
+                _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: suppressMalus);
             }
         }
 
