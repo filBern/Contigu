@@ -8338,3 +8338,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `RecolorAndPulse`/`PulseRoutine` : chaque tuile ne recolore et ne
     pulse plus que lorsqu'elle est effectivement survolée, plus jamais
     de son propre chef.
+
+- **Retrait du carré rouge sur l'ennemi touché + shrink synchronisé avec
+  l'affichage des dégâts** (demande explicite : « Retire le carré rouge
+  sur l'ennemi qui prend des dégats. D'ailleurs le petit shrink qu'on
+  lui fait devrait être seulement au moment ou on affiche les dégats
+  qu'il prend »).
+  - `HudView` supprime entièrement le `HurtOverlay` (le panneau rouge
+    transparent posé sur chaque icône d'ennemi) : plus de champ
+    `_enemyIconHurtOverlays`, plus de construction dans `BuildEnemyBand`,
+    plus de manipulation d'alpha dans `HurtEffectRoutine`/
+    `ResetEnemyIconEffect`, et la constante `HurtEffectPeakOverlayAlpha`
+    disparaît avec. Seul le léger shrink (`HurtEffectShrinkScale`)
+    subsiste.
+  - `FeedbackLayer.SpawnFlyingDamageOrb` gagne un callback optionnel
+    `onArrival`, invoqué au moment précis où le cercle volant atteint
+    l'ennemi (juste avant que `AnimateDamageReveal` fasse apparaître le
+    "-X") plutôt qu'au lancer.
+  - `GameBootstrap.DrainComboIntoDamage` ne joue plus
+    `HudView.PlayEnemyHurtEffect` immédiatement : il la passe en
+    `onArrival` du cercle volant, donc le shrink de l'icône ne se
+    déclenche plus qu'au moment exact où les dégâts s'affichent.
+    `DrainSecondaryEnemyHits` (Bombe/Éclat, pas de vol) déplace le même
+    appel juste à côté de son propre popup "-X", dans le `if (damage >
+    0)`, pour la même raison.

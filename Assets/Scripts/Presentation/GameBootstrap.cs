@@ -1658,15 +1658,15 @@ namespace Contigu.Presentation
         /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
         private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
         {
-            _hudView.PlayEnemyHurtEffect(enemyIndex);
             var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
             int damage = hpBefore - hpAfter;
             if (enemyAnchor != null && damage > 0)
             {
                 // A small plain circle (no text) flies from the combo readout toward the enemy — the actual
                 // "-X" amount only appears once it lands (see FeedbackLayer.SpawnFlyingDamageOrb), rather than
-                // flying across the screen as text itself.
-                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize);
+                // flying across the screen as text itself. The icon's own hurt shrink (onArrival) plays in
+                // lockstep with that reveal instead of at throw time, so it reads as "the hit landing".
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () => _hudView.PlayEnemyHurtEffect(enemyIndex));
                 if (isRetargetHit)
                 {
                     var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
@@ -1720,13 +1720,14 @@ namespace Contigu.Presentation
             {
                 var target = targets[i];
                 bool isDead = target.HpAfter <= 0;
-                _hudView.PlayEnemyHurtEffect(target.Index);
                 int damage = target.HpBefore - target.HpAfter;
                 if (damage > 0)
                 {
                     // Each Bombe/Éclat target gets its own "-X" on its own icon (no flight — unlike the
                     // primary target above, there's no single combo readout that reads as "theirs" to fly
-                    // from when several enemies take a share of the same hit at once).
+                    // from when several enemies take a share of the same hit at once). The icon's own hurt
+                    // shrink plays right alongside it, same as the primary target's onArrival-synced one.
+                    _hudView.PlayEnemyHurtEffect(target.Index);
                     var anchor = _hudView.GetEnemyIconTransform(target.Index);
                     if (anchor != null)
                     {

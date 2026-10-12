@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Contigu.Core;
 using UnityEngine;
@@ -196,9 +197,11 @@ namespace Contigu.Presentation
         /// from <paramref name="fromWorldPosition"/> to <paramref name="toAnchor"/>, and only once it actually
         /// lands does <paramref name="damageText"/> appear — at the enemy's own position, pulsing in then back
         /// out over <see cref="DamageRevealDuration"/> — so the number reads as something that just hit the
-        /// enemy rather than something flying past it mid-air.
+        /// enemy rather than something flying past it mid-air. <paramref name="onArrival"/> fires at that same
+        /// moment (right before the reveal starts), so a caller's own hit-react effect (e.g. HudView's icon
+        /// shrink) can be synced to it instead of playing at throw time.
         /// </summary>
-        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize)
+        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, Action onArrival = null)
         {
             if (toAnchor == null)
             {
@@ -214,10 +217,10 @@ namespace Contigu.Presentation
             orbRect.sizeDelta = new Vector2(DamageOrbSize, DamageOrbSize);
             orbRect.position = fromWorldPosition;
 
-            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize));
+            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival));
         }
 
-        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize)
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, Action onArrival)
         {
             float t = 0f;
             Vector3 startPos = orbRect.position;
@@ -241,6 +244,7 @@ namespace Contigu.Presentation
                 Destroy(orbRect.gameObject);
             }
 
+            onArrival?.Invoke();
             yield return StartCoroutine(AnimateDamageReveal(arrivalPosition, damageText, color, fontSize));
         }
 
