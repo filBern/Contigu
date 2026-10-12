@@ -289,6 +289,26 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Re-renders every cell from the grid's actual current state, except <paramref name="stillSuppressedCells"/>
+        /// — those keep rendering with their lock/poison hidden (<c>suppressMalus</c>). Used mid-reveal, when
+        /// one enemy's new lock/poison has already been shown but another's hasn't yet (see
+        /// GameBootstrap.PlayEnemyEffectsSequentially, which reveals one enemy's cells at a time instead of
+        /// the whole group at once).
+        /// </summary>
+        public void RefreshSuppressingCells(IReadOnlyList<Vector2Int> stillSuppressedCells)
+        {
+            var suppressed = ToSet(stillSuppressedCells);
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    var pos = new Vector2Int(x, y);
+                    _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: suppressed.Contains(pos));
+                }
+            }
+        }
+
         private static HashSet<Vector2Int> ToSet(IReadOnlyList<Vector2Int> positions)
         {
             var set = new HashSet<Vector2Int>();
@@ -307,7 +327,7 @@ namespace Contigu.Presentation
         /// of a line as it clears. <paramref name="suppressMalus"/> keeps a lock/poison this same placement
         /// just added (e.g. a poison-contamination target that happens to sit in the line being cleared)
         /// hidden — shown as a plain cleared cell instead — until GameBootstrap's own circle-then-reveal
-        /// (PlayEnemyGridEffectCircles) is ready to show it for real.
+        /// (PlayEnemyEffectsSequentially) is ready to show it for real.
         /// </summary>
         public void ClearCellVisual(int x, int y, bool suppressMalus = false)
         {

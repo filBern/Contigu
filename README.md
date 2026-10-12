@@ -8487,3 +8487,33 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `suppressMalus: true` pour toute case effacée qui s'y trouve — elle
     reste vide/plate le temps du burst, comme toute case juste clear,
     au lieu de révéler son futur verrou/poison en avance.
+
+- **Effets des ennemis joués un à la fois** (demande explicite : «
+  J'aimerais qu'on fasse les effets des ennemis un a la fois, ils se
+  passe trop de chose en simultané »). Avant ce changement, `PulseShuffleEffectEnemies`
+  pulsait l'icône de TOUS les ennemis à effet de grille (Locker/
+  HeavyLocker/Poisoner/Plague) d'un coup, puis `PlayEnemyGridEffectCircles`
+  faisait voler TOUS leurs cercles en parallèle et révélait toutes leurs
+  cases ensemble en une seule fois — plusieurs ennemis actifs en même
+  temps donnaient donc une bouillie visuelle.
+  - `GridView.RefreshSuppressingCells(stillSuppressedCells)` (nouveau) :
+    identique à un `Refresh()` complet, sauf que les cases de la liste
+    donnée restent suppressées (`suppressMalus`) pendant que le reste du
+    plateau se redessine normalement — permet de révéler les cases d'UN
+    seul ennemi pendant que celles d'un autre, pas encore traité,
+    restent cachées.
+  - `GameBootstrap.PlayEnemyEffectsSequentially` (remplace
+    `PulseShuffleEffectEnemies` + `PlayEnemyGridEffectCircles`) : pour
+    chaque ennemi vivant (dans l'ordre de la rencontre) qui possède au
+    moins une case dans la liste donnée, pulse son icône, fait voler
+    son/ses cercle(s), attend l'atterrissage, puis révèle et fait
+    fondre en apparence SEULEMENT ses propres cases
+    (`RefreshSuppressingCells` + `SetMalusAlphaForCells` +
+    `FadeMalusForCells`), avant de passer à l'ennemi suivant après une
+    courte pause (`SequentialEnemyEffectGapSeconds` = 0.15s). Une case
+    sans ennemi propriétaire (verrou de boss) est révélée en groupe à la
+    toute fin, faute d'icône d'où faire partir un cercle.
+  - Les trois endroits concernés (`PlayManualShuffleSequence` et les
+    deux branches de `PlayPlacementSequence`) appellent désormais cette
+    unique méthode séquentielle à la place de l'ancien duo
+    pulse-tout-puis-vole-tout.

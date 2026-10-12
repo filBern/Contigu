@@ -685,14 +685,10 @@ namespace Contigu.Presentation
             _gridView.SetMalusAlpha(0f);
 
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
-            PulseShuffleEffectEnemies();
             PlayThiefStealEffect();
-            yield return PlayEnemyGridEffectCircles(affectedCellsNow);
-            // Only now, with every circle landed, does the suppressed cell actually switch to its real
-            // locked/poisoned look (still at alpha 0 until the fade below).
-            _gridView.Refresh();
-            _gridView.SetMalusAlpha(0f);
-            yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
+            // Reveals each affected enemy's own cell(s) one enemy at a time — icon pulse, circle, reveal —
+            // instead of every enemy firing in parallel (see PlayEnemyEffectsSequentially).
+            yield return PlayEnemyEffectsSequentially(affectedCellsNow);
 
             RefreshShuffleButton();
             SetStatusText(IdleStatusMessage);
@@ -975,63 +971,99 @@ namespace Contigu.Presentation
         // (UITheme.Danger) — same two colors used for every other lock/poison visual in the game.
         private static readonly Color EnemyGridEffectLockColor = UITheme.LightBlue;
 
+        // Pause between one enemy's effect finishing (circle landed, its cells faded in) and the next
+        // enemy's icon pulsing — so a Shuffle with several effect-enemies active reads as a legible
+        // one-after-another sequence instead of everything firing at once.
+        private const float SequentialEnemyEffectGapSeconds = 0.15f;
+
         /// <summary>
-        /// Flies a small circle from each alive Locker/HeavyLocker/Poisoner/Plague that currently owns a
-        /// cell in <paramref name="cells"/> to that cell, and waits for every circle to land before
-        /// returning — so the caller's own FadeMalus(ForCells) reveal only starts once the effect has
-        /// visibly traveled there, never before. A cell in <paramref name="cells"/> with no owning enemy
-        /// (e.g. a boss-locked one — see RunManager.ApplyBossLockTick) gets no circle and isn't waited on;
-        /// it simply appears along with the others once the real circles finish. No-op if there's no active
-        /// encounter or no cell in the list is currently owned by a living effect-enemy.
+        /// Reveals each alive Locker/HeavyLocker/Poisoner/Plague's new lock/poison one enemy at a time,
+        /// instead of every enemy's icon pulsing and flying a circle all at once: for each enemy (in
+        /// encounter order) that currently owns a cell in <paramref name="cells"/>, pulses its icon, flies a
+        /// circle to each of its own cells in that list, waits for them to land, then reveals just those
+        /// cells (switches them off suppressMalus and fades them in) before moving on to the next enemy.
+        /// <paramref name="cells"/> must already be suppressed (see GridView.RefreshHoldingClearedCells) when
+        /// this starts. A cell with no owning living enemy (e.g. a boss-locked one — see
+        /// RunManager.ApplyBossLockTick) has no icon to pulse or circle to fly, so it's revealed in one
+        /// group at the very end instead. No-op if <paramref name="cells"/> is empty.
         /// </summary>
-        private System.Collections.IEnumerator PlayEnemyGridEffectCircles(IReadOnlyList<Vector2Int> cells)
+        private System.Collections.IEnumerator PlayEnemyEffectsSequentially(IReadOnlyList<Vector2Int> cells)
         {
-            if (!_run.HasActiveEncounter || cells.Count == 0)
+            if (cells.Count == 0)
             {
                 yield break;
             }
-            var cellSet = new HashSet<Vector2Int>(cells);
-            var encounter = _run.CurrentEncounter;
-            int pending = 0;
-            for (int i = 0; i < encounter.Count; i++)
+            var remaining = new HashSet<Vector2Int>(cells);
+            if (_run.HasActiveEncounter)
             {
-                var enemy = encounter[i];
-                if (enemy.IsDead)
+                var encounter = _run.CurrentEncounter;
+                for (int i = 0; i < encounter.Count; i++)
                 {
-                    continue;
-                }
-                var iconAnchor = _hudView.GetEnemyIconTransform(i);
-                if (iconAnchor == null)
-                {
-                    continue;
-                }
-                if (enemy.LockedCell.HasValue && cellSet.Contains(enemy.LockedCell.Value))
-                {
-                    var cellAnchor = _gridView.GetCellTransform(enemy.LockedCell.Value.x, enemy.LockedCell.Value.y);
-                    if (cellAnchor != null)
-                    {
-                        pending++;
-                        _feedbackLayer.SpawnFlyingEffectCircle(iconAnchor.position, cellAnchor, EnemyGridEffectLockColor, () => pending--);
-                    }
-                }
-                for (int j = 0; j < enemy.PoisonedCells.Count; j++)
-                {
-                    var pos = enemy.PoisonedCells[j];
-                    if (!cellSet.Contains(pos))
+                    var enemy = encounter[i];
+                    if (enemy.IsDead)
                     {
                         continue;
                     }
-                    var cellAnchor = _gridView.GetCellTransform(pos.x, pos.y);
-                    if (cellAnchor != null)
+                    var ownCells = new List<Vector2Int>();
+                    var ownColors = new List<Color>();
+                    if (enemy.LockedCell.HasValue && remaining.Contains(enemy.LockedCell.Value))
                     {
-                        pending++;
-                        _feedbackLayer.SpawnFlyingEffectCircle(iconAnchor.position, cellAnchor, UITheme.Danger, () => pending--);
+                        ownCells.Add(enemy.LockedCell.Value);
+                        ownColors.Add(EnemyGridEffectLockColor);
                     }
+                    for (int j = 0; j < enemy.PoisonedCells.Count; j++)
+                    {
+                        var pos = enemy.PoisonedCells[j];
+                        if (remaining.Contains(pos))
+                        {
+                            ownCells.Add(pos);
+                            ownColors.Add(UITheme.Danger);
+                        }
+                    }
+                    if (ownCells.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var iconAnchor = _hudView.GetEnemyIconTransform(i);
+                    _hudView.PlayEnemyEffectPulse(i);
+
+                    int pending = 0;
+                    for (int c = 0; c < ownCells.Count; c++)
+                    {
+                        if (iconAnchor == null)
+                        {
+                            continue;
+                        }
+                        var cellAnchor = _gridView.GetCellTransform(ownCells[c].x, ownCells[c].y);
+                        if (cellAnchor == null)
+                        {
+                            continue;
+                        }
+                        pending++;
+                        _feedbackLayer.SpawnFlyingEffectCircle(iconAnchor.position, cellAnchor, ownColors[c], () => pending--);
+                    }
+                    while (pending > 0)
+                    {
+                        yield return null;
+                    }
+
+                    remaining.ExceptWith(ownCells);
+                    _gridView.RefreshSuppressingCells(new List<Vector2Int>(remaining));
+                    _gridView.SetMalusAlphaForCells(ownCells, 0f);
+                    yield return _gridView.FadeMalusForCells(ownCells, 0f, 1f, ShuffleFadeDuration);
+                    yield return new WaitForSeconds(SequentialEnemyEffectGapSeconds);
                 }
             }
-            while (pending > 0)
+
+            // Whatever's left has no owning enemy to pulse/fly a circle from (e.g. a boss-locked cell) —
+            // reveal it together, right after the last enemy's own turn.
+            if (remaining.Count > 0)
             {
-                yield return null;
+                var leftoverCells = new List<Vector2Int>(remaining);
+                _gridView.RefreshSuppressingCells(new List<Vector2Int>());
+                _gridView.SetMalusAlphaForCells(leftoverCells, 0f);
+                yield return _gridView.FadeMalusForCells(leftoverCells, 0f, 1f, ShuffleFadeDuration);
             }
         }
 
@@ -1619,27 +1651,18 @@ namespace Contigu.Presentation
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
 
                 yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
-                PulseShuffleEffectEnemies();
                 if (thiefStoleThisPlacement)
                 {
                     PlayThiefStealEffect();
                 }
-                yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
-                // Only now, with every circle landed, does the suppressed cell actually switch to its real
-                // locked/poisoned look (still at alpha 0 until the fade below).
-                _gridView.Refresh();
-                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
-                yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
+                yield return PlayEnemyEffectsSequentially(deferredNewMalusCells);
             }
             else if (hasDeferredGridChange)
             {
                 yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
                 _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), deferredNewMalusCells);
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
-                yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
-                _gridView.Refresh();
-                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
-                yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
+                yield return PlayEnemyEffectsSequentially(deferredNewMalusCells);
                 // Reveals the real hand for real if it was held empty (see
                 // HandView.RefreshHoldingEmpty) — a harmless no-op resync
                 // here, since handWasAboutToAutoRefill is false.
@@ -1676,7 +1699,7 @@ namespace Contigu.Presentation
             // which can easily sit in the very line/group just cleared. ClearCellVisual's own ApplyState
             // always reflects the TRUE current model state, so without suppressing it here, that neighbor's
             // brand-new poison badge would appear the instant its burst plays — well before
-            // PlayEnemyGridEffectCircles (further down this same sequence) has even started its circle.
+            // PlayEnemyEffectsSequentially (further down this same sequence) has even started its circle.
             var suppressedCells = new HashSet<Vector2Int>(deferredNewMalusCells);
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
@@ -1735,28 +1758,6 @@ namespace Contigu.Presentation
             return -1;
         }
 
-        /// <summary>Pulses every alive Locker/HeavyLocker/Poisoner/Plague's icon — the four enemies whose On-Shuffle effect (RunManager.ResolveEnemyShuffleEffects) fires unconditionally on every alive instance each Shuffle, manual or auto-refill. Thief's own steal effect isn't unconditional (only fires if the hand has a piece left to steal), so it's pulsed separately by PlayThiefStealEffect once RunManager confirms it actually happened.</summary>
-        private void PulseShuffleEffectEnemies()
-        {
-            if (!_run.HasActiveEncounter)
-            {
-                return;
-            }
-            var encounter = _run.CurrentEncounter;
-            for (int i = 0; i < encounter.Count; i++)
-            {
-                var enemy = encounter[i];
-                if (enemy.IsDead)
-                {
-                    continue;
-                }
-                var id = enemy.Definition.Id;
-                if (id == EnemyId.Locker || id == EnemyId.HeavyLocker || id == EnemyId.Poisoner || id == EnemyId.Plague)
-                {
-                    _hudView.PlayEnemyEffectPulse(i);
-                }
-            }
-        }
 
         /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. That countdown only starts once the flying damage orb has actually landed and its "-X" is shown (see FeedbackLayer.SpawnFlyingDamageOrb's onArrival), not while it's still mid-flight. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
         private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
