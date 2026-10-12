@@ -72,6 +72,11 @@ namespace Contigu.Presentation
         private const float RerollFlipDuration = 0.25f;
         private const float RerollFlipOvershootScale = 1.15f;
         private const float RerollFlipOvershootFraction = 0.6f;
+        // Shrink-and-fade played on a just-bought Blister card before the row is rebuilt without it — the
+        // rebuild itself (see BuildBlisterCards skipping Purchased slots) is what recenters the remaining
+        // cards, since HorizontalLayoutGroup + the row's ContentSizeFitter re-pack and re-center around
+        // whatever children exist once the bought card's GameObject is gone.
+        private const float BlisterRemoveDuration = 0.25f;
 
         private TooltipView _tooltip;
         private RectTransform _root;
@@ -281,6 +286,13 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
+                // A purchased slot no longer gets a card at all — see PlayBlisterRemoval, which plays its
+                // shrink/fade-out animation on the old card before this rebuild runs — so the row packs
+                // down to just the remaining ones instead of keeping a disabled "Sold" card forever.
+                if (run.ShopBlisterSlots[i] != null && run.ShopBlisterSlots[i].Purchased)
+                {
+                    continue;
+                }
                 float descHeight = BuildBlisterCard(run, i, out var cardRect, out var descRect);
                 cardRects.Add(cardRect);
                 descRects.Add(descRect);
@@ -592,6 +604,45 @@ namespace Contigu.Presentation
             {
                 _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
             }
+        }
+
+        /// <summary>
+        /// Shrinks and fades out a just-bought Blister card in place, then calls <paramref name="onComplete"/>
+        /// (the caller's own post-purchase Refresh/follow-up dispatch) once it's done — so the player sees the
+        /// bought card actually leave instead of just flipping to a disabled "Sold" state, and the row only
+        /// recenters (via BuildBlisterCards skipping Purchased slots) once that departure has played out.
+        /// Falls back to calling onComplete immediately if the card can't be found (e.g. already gone).
+        /// </summary>
+        public void PlayBlisterRemoval(int index, Action onComplete)
+        {
+            var cardTransform = _blisterCardsContainer.Find("BlisterSlot_" + index) as RectTransform;
+            if (cardTransform == null)
+            {
+                onComplete();
+                return;
+            }
+            StartCoroutine(BlisterRemoveRoutine(cardTransform, onComplete));
+        }
+
+        private System.Collections.IEnumerator BlisterRemoveRoutine(RectTransform cardRect, Action onComplete)
+        {
+            var canvasGroup = cardRect.gameObject.AddComponent<CanvasGroup>();
+            Vector3 startScale = cardRect.localScale;
+            float t = 0f;
+            while (t < BlisterRemoveDuration)
+            {
+                if (cardRect == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / BlisterRemoveDuration);
+                float scale = Mathf.Lerp(1f, 0f, p);
+                cardRect.localScale = startScale * scale;
+                canvasGroup.alpha = 1f - p;
+                yield return null;
+            }
+            onComplete();
         }
 
         /// <summary>Quick vertical flip-reveal on the Casino row, played after a reroll's new cards are already built (Refresh() runs synchronously right after RerollShop(), so there's no window to animate the old ones away) — scales from flat to a slight overshoot to settled, reading as the new cards flipping into place.</summary>

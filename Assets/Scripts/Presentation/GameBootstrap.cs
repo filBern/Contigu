@@ -1868,15 +1868,21 @@ namespace Contigu.Presentation
             }
             _shopView.PlayPurchasePop();
 
-            if (isUpgrade)
+            // Lets the bought card shrink/fade away in place before the row rebuilds without it (see
+            // ShopView.PlayBlisterRemoval) — the follow-up dispatch (reveal overlay or plain refresh) only
+            // runs once that's done, so it never pops in mid-animation.
+            _shopView.PlayBlisterRemoval(index, () =>
             {
-                HandleUpgradePurchaseResult(revealedUpgrade);
-            }
-            else
-            {
-                RefreshAll();
-                _shopView.Refresh(_run);
-            }
+                if (isUpgrade)
+                {
+                    HandleUpgradePurchaseResult(revealedUpgrade);
+                }
+                else
+                {
+                    RefreshAll();
+                    _shopView.Refresh(_run);
+                }
+            });
         }
 
         private void OnUpgradeBuyRequested(int index)

@@ -8273,3 +8273,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     seul — le visuel de la pièce, pas tout le chrome de la case
     (fond, label de niveau) — donc sans toucher
     `UpdateSelectionVisuals`'s propre teinte de fond déjà existante.
+
+- **Retrait animé des blisters achetés dans le shop** (demande explicite :
+  « Dans le shop, lorsqu'un blister est acheté, au lieu de le laisser
+  visible, fait une animation pour le retirer visuellement du shop, puis
+  recentre les blister restants »). Auparavant une carte Blister achetée
+  restait affichée indéfiniment avec un bouton "Sold" désactivé.
+  - `ShopView.PlayBlisterRemoval(index, onComplete)` retrouve la carte
+    `"BlisterSlot_" + index` déjà présente dans `_blisterCardsContainer`
+    et joue `BlisterRemoveRoutine` : un rétrécissement + fondu (0.25s,
+    via un `CanvasGroup` ajouté à la volée) de cette carte précise, avant
+    d'appeler `onComplete`.
+  - `ShopView.BuildBlisterCards` ignore désormais tout slot
+    `Purchased` lors de la reconstruction de la rangée — la carte
+    n'est donc plus jamais recréée une fois achetée, et comme la
+    rangée reste centrée (pivot 0.5, `ContentSizeFitter`), les cartes
+    restantes se recentrent automatiquement dès que la ligne se
+    reconstruit sans elle.
+  - `GameBootstrap.OnBlisterBuyRequested` appelle maintenant
+    `PlayBlisterRemoval` juste après l'achat, et ne déclenche la suite
+    (révélation d'upgrade ou simple `Refresh`) que dans son callback —
+    donc jamais pendant que l'animation de retrait est encore en cours.
