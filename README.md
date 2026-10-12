@@ -8294,3 +8294,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `PlayBlisterRemoval` juste après l'achat, et ne déclenche la suite
     (révélation d'upgrade ou simple `Refresh`) que dans son callback —
     donc jamais pendant que l'animation de retrait est encore en cours.
+
+- **Pulse du titre du main menu deux fois plus fréquent** (demande
+  explicite : « Dans le main menu, divize par deux le temps entre les
+  pulse du titre dans le main menu »).
+  - `TitleTileView.AmbientRecolorLoop` attend un délai aléatoire entre
+    `AmbientMinInterval`/`AmbientMaxInterval` avant de rejouer
+    `RecolorAndPulse` (recoloration + `PulseRoutine`) sur chaque tuile du
+    titre "CONTIGU" — ces deux constantes passent de 3s/8s à 1.5s/4s,
+    divisant par deux l'intervalle moyen entre deux pulses sans toucher à
+    la durée du pulse lui-même (`PulseDuration`) ni à l'entrée en jeu
+    initiale (`EntranceDuration`).

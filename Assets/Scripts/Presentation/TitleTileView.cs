@@ -23,8 +23,8 @@ namespace Contigu.Presentation
         // Alpha reaches 1 well before scale settles (see EntranceDuration) so the tile reads as "arrived"
         // early in its own pop rather than still fading in during the overshoot.
         private const float EntranceFadeFraction = 0.3f;
-        private const float AmbientMinInterval = 3f;
-        private const float AmbientMaxInterval = 8f;
+        private const float AmbientMinInterval = 1.5f;
+        private const float AmbientMaxInterval = 4f;
 
         private static readonly PieceColor[] Colors =
         {
