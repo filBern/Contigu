@@ -664,25 +664,34 @@ namespace Contigu.Presentation
             // (RunManager.DrawFreshHand/ResolveEnemyShuffleEffects), which
             // can move Locker's lock or add a Poisoner tile — a grid effect,
             // so it needs its own refresh or the badge never appears on
-            // screen even though the model already updated.
-            _gridView.Refresh();
-            // Zeroed in the same frame as Refresh() above, before anything
+            // screen even though the model already updated. Every currently
+            // locked/poisoned cell just got (re-)placed by this very Shuffle
+            // (the effect always re-picks, even onto the same cell), so
+            // each one gets its own circle flying in from its owning
+            // enemy's icon before the cell is allowed to actually switch to
+            // its locked/poisoned look — this refresh suppresses just those
+            // cells (they keep showing whatever they looked like before the
+            // Shuffle) so the tile doesn't go instantly bare/grey the
+            // moment the model updates, well before the circle arrives.
+            SnapshotEnemyEffectCells(out var lockedCellsNow, out var poisonedCellsNow);
+            var affectedCellsNow = new List<Vector2Int>(lockedCellsNow);
+            affectedCellsNow.AddRange(poisonedCellsNow);
+            _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), affectedCellsNow);
+            // Zeroed in the same frame as the refresh above, before anything
             // yields — ApplyState always paints malus opaque, so without
             // this it would flash at full alpha before FadeMalus resets it
-            // to 0.
+            // to 0. A no-op for the suppressed cells above, which aren't
+            // flagged as showing malus yet.
             _gridView.SetMalusAlpha(0f);
 
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
             PulseShuffleEffectEnemies();
             PlayThiefStealEffect();
-            // Every currently locked/poisoned cell just got (re-)placed by this very Shuffle (Locker/
-            // Poisoner's On-Shuffle effect always re-picks, even onto the same cell — see
-            // RunManager.ResolveEnemyShuffleEffects) — so each one gets its own circle flying in from its
-            // owning enemy's icon before the badge is allowed to actually appear.
-            SnapshotEnemyEffectCells(out var lockedCellsNow, out var poisonedCellsNow);
-            var affectedCellsNow = new List<Vector2Int>(lockedCellsNow);
-            affectedCellsNow.AddRange(poisonedCellsNow);
             yield return PlayEnemyGridEffectCircles(affectedCellsNow);
+            // Only now, with every circle landed, does the suppressed cell actually switch to its real
+            // locked/poisoned look (still at alpha 0 until the fade below).
+            _gridView.Refresh();
+            _gridView.SetMalusAlpha(0f);
             yield return _gridView.FadeMalus(0f, 1f, ShuffleFadeDuration);
 
             RefreshShuffleButton();
@@ -1600,7 +1609,11 @@ namespace Contigu.Presentation
 
                 _handView.SetSlotPiecesAlpha(0f);
                 _handView.Refresh();
-                _gridView.Refresh();
+                // Same suppress-then-reveal as PlayManualShuffleSequence, scoped to just the cells this
+                // placement's auto-refill actually changed (deferredNewMalusCells) — they keep showing their
+                // previous look here instead of switching to their locked/poisoned one, so the tile doesn't
+                // go bare/grey before its circle (below) actually lands.
+                _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), deferredNewMalusCells);
                 // Same same-frame zeroing as PlayManualShuffleSequence — ApplyState always paints a newly
                 // revealed malus cell opaque, so without this it would briefly flash at full alpha.
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
@@ -1611,18 +1624,21 @@ namespace Contigu.Presentation
                 {
                     PlayThiefStealEffect();
                 }
-                // Same circle-then-reveal as PlayManualShuffleSequence, scoped to just the cells this
-                // placement's auto-refill actually changed (deferredNewMalusCells), not every malus cell on
-                // the board.
                 yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
+                // Only now, with every circle landed, does the suppressed cell actually switch to its real
+                // locked/poisoned look (still at alpha 0 until the fade below).
+                _gridView.Refresh();
+                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
                 yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
             }
             else if (hasDeferredGridChange)
             {
                 yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
-                _gridView.Refresh();
+                _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), deferredNewMalusCells);
                 _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
                 yield return PlayEnemyGridEffectCircles(deferredNewMalusCells);
+                _gridView.Refresh();
+                _gridView.SetMalusAlphaForCells(deferredNewMalusCells, 0f);
                 yield return _gridView.FadeMalusForCells(deferredNewMalusCells, 0f, 1f, ShuffleFadeDuration);
                 // Reveals the real hand for real if it was held empty (see
                 // HandView.RefreshHoldingEmpty) — a harmless no-op resync

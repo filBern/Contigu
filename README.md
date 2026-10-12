@@ -8437,3 +8437,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     costauds (Plague tombe à 43% de son HP d'origine, contre 74% pour
     Basic) — cohérent avec la plainte initiale : les rounds qui suivent
     le round 1 (Basic) sont ceux qui bloquaient le plus.
+
+- **La tuile ne passe plus "grise" avant que le cercle n'atteigne la
+  case** (demande explicite : « Je voudrais que la tuile impacté par un
+  effet ne soit pas greyed out pendant l'animation du cercle qui se
+  dirige de l'ennemi vers sa tuile impacté »). Bug introduit par le
+  cercle volant lui-même : dès que le modèle (verrou/poison) était à
+  jour, un `GridView.Refresh()` tout court basculait déjà la case
+  touchée sur son apparence d'obstacle verrouillé (juste à alpha 0, donc
+  invisible — mais son ancien remplissage coloré avait déjà disparu),
+  bien avant que le cercle ait fini de voler vers elle ; résultat : la
+  case semblait vide/grise pendant tout le vol au lieu de garder son
+  ancienne apparence.
+  - Les trois endroits concernés (`PlayManualShuffleSequence` et les
+    deux branches de `PlayPlacementSequence`) appellent désormais
+    `GridView.RefreshHoldingClearedCells(..., suppressedCells)` (déjà
+    utilisé ailleurs pour "tenir" l'apparence d'une case) au lieu d'un
+    `Refresh()` nu, pour les cases concernées par le futur
+    verrou/poison — elles gardent leur apparence précédente pendant que
+    tout le reste du plateau se resynchronise normalement.
+  - Ce n'est qu'une fois `PlayEnemyGridEffectCircles` terminé (le cercle
+    a atterri) qu'un vrai `Refresh()` bascule enfin ces cases sur leur
+    apparence réelle de verrou/poison (toujours à alpha 0), juste avant
+    le fondu d'apparition (`FadeMalus(ForCells)`).
