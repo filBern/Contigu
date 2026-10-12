@@ -8305,3 +8305,24 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     divisant par deux l'intervalle moyen entre deux pulses sans toucher à
     la durée du pulse lui-même (`PulseDuration`) ni à l'entrée en jeu
     initiale (`EntranceDuration`).
+
+- **Dégât ennemi : cercle volant sans texte, dégâts révélés à l'arrivée**
+  (demande explicite : « Le texte de dégat rouge, j'aimerais qu'on le
+  change seulement pour un petit cercle rouge sans texte et ce n'est que
+  lorsque le cercle atteint l'ennemi qu'on affiche les dégats sur
+  l'ennemi pour 1 seconde. Ajoute un pulse in and out »). S'applique au
+  seul popup qui volait réellement d'un point à un autre (combo → ennemi
+  via `DrainComboIntoDamage`) — le "-X" de Bombe/Éclat sur chaque ennemi
+  (`DrainSecondaryEnemyHits`) apparaît déjà directement sur sa cible sans
+  survol, donc hors sujet ici.
+  - `FeedbackLayer.SpawnFlyingDamageOrb` remplace l'appel à
+    `SpawnFlyingPopup` sur ce site : un petit cercle plein (sprite
+    `UISprites.CountBadge`, 20px, teinté `UITheme.Danger`) vole du combo
+    vers l'icône de l'ennemi (même courbe d'accélération que
+    `AnimateFlyingPopup`) sans aucun texte.
+  - À l'arrivée, le cercle est détruit et `AnimateDamageReveal` fait
+    apparaître le texte "-X" à la position de l'ennemi pendant
+    `DamageRevealDuration` = 1 seconde, avec un pulse in (scale 0 ->
+    1.3 -> 1 sur les 20% premiers du temps d'affichage) suivi d'un
+    plateau stable puis d'un pulse out symétrique (1 -> 1.3 -> 0 sur les
+    20% derniers) plutôt qu'un simple fondu.

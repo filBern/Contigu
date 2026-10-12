@@ -1663,9 +1663,10 @@ namespace Contigu.Presentation
             int damage = hpBefore - hpAfter;
             if (enemyAnchor != null && damage > 0)
             {
-                // The actual damage amount, flown from the combo readout that's about to drain into it — the
-                // HP bar alone only shows the end state, never what was actually taken off.
-                _feedbackLayer.SpawnFlyingPopup(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize);
+                // A small plain circle (no text) flies from the combo readout toward the enemy — the actual
+                // "-X" amount only appears once it lands (see FeedbackLayer.SpawnFlyingDamageOrb), rather than
+                // flying across the screen as text itself.
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize);
                 if (isRetargetHit)
                 {
                     var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);

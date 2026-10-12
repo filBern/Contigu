@@ -183,6 +183,111 @@ namespace Contigu.Presentation
             }
         }
 
+        private const float DamageOrbSize = 20f;
+        private const float DamageOrbFlightDuration = 0.5f;
+        private const float DamageRevealDuration = 1f;
+        // Each of the pulse-in (start) and pulse-out (end) ramps takes this fraction of DamageRevealDuration;
+        // the middle stretch holds at rest scale so the number stays fully readable.
+        private const float DamageRevealPulseFraction = 0.2f;
+        private const float DamageRevealPulsePeakScale = 1.3f;
+
+        /// <summary>
+        /// Replaces a flying "-X" text popup for enemy damage: a small plain circle (no text at all) flies
+        /// from <paramref name="fromWorldPosition"/> to <paramref name="toAnchor"/>, and only once it actually
+        /// lands does <paramref name="damageText"/> appear — at the enemy's own position, pulsing in then back
+        /// out over <see cref="DamageRevealDuration"/> — so the number reads as something that just hit the
+        /// enemy rather than something flying past it mid-air.
+        /// </summary>
+        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize)
+        {
+            if (toAnchor == null)
+            {
+                return;
+            }
+
+            _root.SetAsLastSibling();
+
+            var orbRect = UIFactory.CreateUIObject("DamageOrb", _root);
+            var orbImage = orbRect.gameObject.AddComponent<Image>();
+            orbImage.sprite = UISprites.CountBadge;
+            orbImage.color = color;
+            orbRect.sizeDelta = new Vector2(DamageOrbSize, DamageOrbSize);
+            orbRect.position = fromWorldPosition;
+
+            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize));
+        }
+
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize)
+        {
+            float t = 0f;
+            Vector3 startPos = orbRect.position;
+
+            while (t < DamageOrbFlightDuration)
+            {
+                if (orbRect == null || toAnchor == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / DamageOrbFlightDuration);
+                float eased = p * p;
+                orbRect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
+                yield return null;
+            }
+
+            Vector3 arrivalPosition = toAnchor != null ? toAnchor.position : startPos;
+            if (orbRect != null)
+            {
+                Destroy(orbRect.gameObject);
+            }
+
+            yield return StartCoroutine(AnimateDamageReveal(arrivalPosition, damageText, color, fontSize));
+        }
+
+        private IEnumerator AnimateDamageReveal(Vector3 worldPosition, string text, Color color, int fontSize)
+        {
+            var container = UIFactory.CreateUIObject("DamageReveal", _root);
+            container.position = worldPosition;
+            container.sizeDelta = new Vector2(160f, 50f);
+            container.localScale = Vector3.zero;
+
+            var label = UIFactory.CreateText(container, "DamageText", text, fontSize, color);
+            UIFactory.StretchFull(label.rectTransform);
+
+            float t = 0f;
+            while (t < DamageRevealDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / DamageRevealDuration);
+                float scale;
+                if (p < DamageRevealPulseFraction)
+                {
+                    float inP = p / DamageRevealPulseFraction;
+                    scale = inP < 0.5f
+                        ? Mathf.Lerp(0f, DamageRevealPulsePeakScale, inP / 0.5f)
+                        : Mathf.Lerp(DamageRevealPulsePeakScale, 1f, (inP - 0.5f) / 0.5f);
+                }
+                else if (p > 1f - DamageRevealPulseFraction)
+                {
+                    float outP = (p - (1f - DamageRevealPulseFraction)) / DamageRevealPulseFraction;
+                    scale = outP < 0.5f
+                        ? Mathf.Lerp(1f, DamageRevealPulsePeakScale, outP / 0.5f)
+                        : Mathf.Lerp(DamageRevealPulsePeakScale, 0f, (outP - 0.5f) / 0.5f);
+                }
+                else
+                {
+                    scale = 1f;
+                }
+                container.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+
+            if (container != null)
+            {
+                Destroy(container.gameObject);
+            }
+        }
+
         private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text, bool floatDown)
         {
             const float duration = 1.3f;
