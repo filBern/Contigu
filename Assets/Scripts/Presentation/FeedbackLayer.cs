@@ -185,6 +185,10 @@ namespace Contigu.Presentation
 
         private const float DamageOrbSize = 20f;
         private const float DamageOrbFlightDuration = 0.5f;
+        // Faster than the damage orb's own flight — this one now plays once per enemy in a sequential
+        // chain (see GameBootstrap.PlayEnemyEffectsSequentially), so a slow flight here multiplies into a
+        // noticeably sluggish whole sequence when several enemies are active at once.
+        private const float EnemyEffectCircleFlightDuration = 0.3f;
         private const float DamageRevealDuration = 1f;
         // Each of the pulse-in (start) and pulse-out (end) ramps takes this fraction of DamageRevealDuration;
         // the middle stretch holds at rest scale so the number stays fully readable.
@@ -280,14 +284,14 @@ namespace Contigu.Presentation
             float t = 0f;
             Vector3 startPos = orbRect.position;
 
-            while (t < DamageOrbFlightDuration)
+            while (t < EnemyEffectCircleFlightDuration)
             {
                 if (orbRect == null || toAnchor == null)
                 {
                     break;
                 }
                 t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / DamageOrbFlightDuration);
+                float p = Mathf.Clamp01(t / EnemyEffectCircleFlightDuration);
                 float eased = p * p;
                 orbRect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
                 yield return null;

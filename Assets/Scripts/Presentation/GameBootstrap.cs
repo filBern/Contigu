@@ -974,7 +974,7 @@ namespace Contigu.Presentation
         // Pause between one enemy's effect finishing (circle landed, its cells faded in) and the next
         // enemy's icon pulsing — so a Shuffle with several effect-enemies active reads as a legible
         // one-after-another sequence instead of everything firing at once.
-        private const float SequentialEnemyEffectGapSeconds = 0.15f;
+        private const float SequentialEnemyEffectGapSeconds = 0.06f;
 
         /// <summary>
         /// Reveals each alive Locker/HeavyLocker/Poisoner/Plague's new lock/poison one enemy at a time,

@@ -8517,3 +8517,14 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     deux branches de `PlayPlacementSequence`) appellent désormais cette
     unique méthode séquentielle à la place de l'ancien duo
     pulse-tout-puis-vole-tout.
+
+- **Animation séquentielle des ennemis accélérée** (demande explicite :
+  « L'animation successive des effets des ennemis doivent être plus
+  vite »).
+  - `FeedbackLayer` gagne une constante `EnemyEffectCircleFlightDuration`
+    (0.3s) séparée de `DamageOrbFlightDuration` (0.5s, inchangée pour le
+    cercle de dégâts) — le cercle d'effet de grille vole maintenant plus
+    vite spécifiquement, puisqu'il se rejoue une fois par ennemi dans la
+    chaîne séquentielle.
+  - `GameBootstrap.SequentialEnemyEffectGapSeconds` (la pause entre deux
+    ennemis) passe de 0.15s à 0.06s.
