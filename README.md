@@ -8422,21 +8422,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
 - **Rééquilibrage des HP d'ennemis** (demande explicite : « Réduit le
   basic a 250 points et le poisoner a 750 points, adapt les autres en
   fonction, j'arrive rarement a passer la 2e round »).
-  - `EnemyCatalog.Basic`/`Poisoner` passent de 338/1575 à 250/750 comme
-    demandé. Les deux valeurs servent d'ancres à une interpolation
-    linéaire (`newHp = a·oldHp + b` résolu sur ces deux points, a ≈
-    0.404, b ≈ 113.4) appliquée à tous les autres ennemis, puis
-    arrondie au 25 le plus proche : `Locker` 900→475, `HeavyLocker`
-    2700→1200, `Plague` 4050→1750, `Thief` 2250→1025, `Reclaimer`
-    2475→1125, `Leech` 1350→650, `ColorHater`/`ShapeHater` 2250→1025
-    chacun.
-  - Cette interpolation préserve exactement l'ordre relatif d'origine
-    entre tous les ennemis (`Basic < Locker < Leech < Poisoner <
-    Thief = ColorHater = ShapeHater < Reclaimer < HeavyLocker <
-    Plague`), tout en coupant plus fort les ennemis déjà les plus
-    costauds (Plague tombe à 43% de son HP d'origine, contre 74% pour
-    Basic) — cohérent avec la plainte initiale : les rounds qui suivent
-    le round 1 (Basic) sont ceux qui bloquaient le plus.
+  - `EnemyCatalog.Basic`/`Poisoner` passent d'abord de 338/1575 à
+    250/750, avec les autres ennemis adaptés par interpolation linéaire
+    entre ces deux ancres. Correction immédiate du joueur (« Je me suis
+    trompé, je voulais parler du locker qui soit 750, pas le poisoner ») :
+    les deux ancres deviennent `Basic` 250 et `Locker` 750 (recalculées
+    depuis les valeurs d'origine 338/900, pas depuis la première passe),
+    avec `Poisoner` traité comme "les autres" cette fois.
+  - Nouvelle interpolation (`newHp = a·oldHp + b`, a ≈ 0.890, b ≈
+    -50.77) appliquée à tous les ennemis sauf Basic/Locker, arrondie au
+    25 le plus proche : `Poisoner` 1575→1350, `HeavyLocker` 2700→2350,
+    `Plague` 4050→3550, `Thief` 2250→1950, `Reclaimer` 2475→2150,
+    `Leech` 1350→1150, `ColorHater`/`ShapeHater` 2250→1950 chacun.
+  - Cette interpolation préserve toujours exactement l'ordre relatif
+    d'origine entre tous les ennemis (`Basic < Locker < Leech <
+    Poisoner < Thief = ColorHater = ShapeHater < Reclaimer <
+    HeavyLocker < Plague`), en coupant plus fort les ennemis déjà les
+    plus costauds.
 
 - **La tuile ne passe plus "grise" avant que le cercle n'atteigne la
   case** (demande explicite : « Je voudrais que la tuile impacté par un
