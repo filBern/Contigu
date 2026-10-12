@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using Contigu.Core;
 using UnityEngine;
@@ -201,7 +200,7 @@ namespace Contigu.Presentation
         /// moment (right before the reveal starts), so a caller's own hit-react effect (e.g. HudView's icon
         /// shrink) can be synced to it instead of playing at throw time.
         /// </summary>
-        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, Action onArrival = null)
+        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, System.Action onArrival = null)
         {
             if (toAnchor == null)
             {
@@ -220,7 +219,7 @@ namespace Contigu.Presentation
             StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival));
         }
 
-        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, Action onArrival)
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival)
         {
             float t = 0f;
             Vector3 startPos = orbRect.position;
