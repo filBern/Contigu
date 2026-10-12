@@ -56,6 +56,22 @@ namespace Contigu.Presentation
         // technique as GameBootstrap's PulseStatusText.
         private const float LueurPulseAmplitude = 0.06f;
         private const float LueurPulseSpeed = 1.1f;
+        // Quick overshoot pop on a successful purchase, played in place of the ambient pulse above (which
+        // is paused for its duration, see PlayPurchasePop) rather than fighting it for localScale.
+        private const float PurchasePopDuration = 0.3f;
+        private const float PurchasePopPeakScale = 1.4f;
+        private const float PurchasePopPeakFraction = 0.35f;
+        // Same decaying side-to-side shake HandView.ShakeSlot plays for an unplayable piece, reused here for
+        // a card clicked without enough Lueur to afford it.
+        private const float CantAffordShakeDuration = 0.3f;
+        private const float CantAffordShakeMagnitude = 8f;
+        private const float CantAffordShakeCycles = 4f;
+        // A quick vertical flip-reveal on the Casino row once a reroll's new cards are already built —
+        // Refresh() runs synchronously right after RerollShop(), so there's no window to animate the OLD
+        // cards away; this instead gives the NEW ones a "flipping into place" entrance.
+        private const float RerollFlipDuration = 0.25f;
+        private const float RerollFlipOvershootScale = 1.15f;
+        private const float RerollFlipOvershootFraction = 0.6f;
 
         private TooltipView _tooltip;
         private RectTransform _root;
@@ -317,7 +333,8 @@ namespace Contigu.Presentation
             bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             string blockedLabel = "Full (" + EconomyConstants.MaxActiveModifiers + ")";
             BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
-                !slot.Purchased && !blocked && run.PendingUpgrade == null && run.Lueur >= price,
+                !slot.Purchased && !blocked && run.PendingUpgrade == null,
+                run.Lueur >= price,
                 () => OnBlisterBuyClicked(index));
 
             return descHeight;
@@ -420,7 +437,8 @@ namespace Contigu.Presentation
             bool blocked = atModifierCap || hasNoModifiersToUpgrade;
             string blockedLabel = atModifierCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : "None owned";
             BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
-                !slot.Purchased && !blocked && run.PendingUpgrade == null && run.Lueur >= price,
+                !slot.Purchased && !blocked && run.PendingUpgrade == null,
+                run.Lueur >= price,
                 () => OnUpgradeBuyClicked(index));
         }
 
@@ -456,8 +474,16 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Shows the gold-diamond Lueur icon + price, matching every other place this currency appears; "Sold" is plain text once purchased.</summary>
-        private static void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool interactable, Action onClick)
+        /// <summary>
+        /// Shows the gold-diamond Lueur icon + price, matching every other place this currency appears;
+        /// "Sold" is plain text once purchased. <paramref name="canInteract"/> covers every reason the slot
+        /// itself can't be bought at all (already sold, modifier cap full, no modifiers to upgrade, a
+        /// pending upgrade choice blocking every purchase) — the button stays enabled whenever that's true
+        /// even if <paramref name="affordable"/> (enough Lueur) is false, so clicking it still does
+        /// something: it shakes the card instead of silently doing nothing, which a plain disabled button
+        /// never could.
+        /// </summary>
+        private void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool canInteract, bool affordable, Action onClick)
         {
             var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);
             var buyRect = buyBtn.GetComponent<RectTransform>();
@@ -466,8 +492,17 @@ namespace Contigu.Presentation
             buyRect.pivot = new Vector2(0.5f, 0f);
             buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
             buyRect.sizeDelta = new Vector2(CardWidth - 24f, BuyButtonHeight);
-            buyBtn.interactable = !purchased && interactable;
-            buyBtn.onClick.AddListener(() => onClick());
+            buyBtn.interactable = !purchased && canInteract;
+            var cardRect = (RectTransform)parent;
+            buyBtn.onClick.AddListener(() =>
+            {
+                if (!affordable)
+                {
+                    StartCoroutine(ShakeCard(cardRect));
+                    return;
+                }
+                onClick();
+            });
 
             if (purchased)
             {
@@ -499,8 +534,87 @@ namespace Contigu.Presentation
             priceIconLayout.preferredWidth = 16f;
             priceIconLayout.preferredHeight = 16f;
 
-            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, UITheme.TextPrimary);
+            // Red instead of the default tint when the slot is otherwise buyable but the player just can't
+            // afford it yet — the button stays clickable (see the onClick lambda above), so this is the
+            // visual cue that used to come from Unity's own disabled-button graying.
+            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, affordable ? UITheme.TextPrimary : UITheme.Danger);
             priceText.raycastTarget = false;
+            if (!affordable)
+            {
+                priceIcon.color = UITheme.Danger;
+            }
+        }
+
+        /// <summary>Short, decaying side-to-side shake on a card clicked without enough Lueur to afford it — same technique as HandView.ShakeSlot.</summary>
+        private System.Collections.IEnumerator ShakeCard(RectTransform rect)
+        {
+            Vector2 originalPos = rect.anchoredPosition;
+            float t = 0f;
+            while (t < CantAffordShakeDuration)
+            {
+                t += Time.deltaTime;
+                float progress = Mathf.Clamp01(t / CantAffordShakeDuration);
+                float damping = 1f - progress;
+                float offsetX = Mathf.Sin(progress * CantAffordShakeCycles * Mathf.PI * 2f) * CantAffordShakeMagnitude * damping;
+                rect.anchoredPosition = originalPos + new Vector2(offsetX, 0f);
+                yield return null;
+            }
+            rect.anchoredPosition = originalPos;
+        }
+
+        /// <summary>Quick overshoot scale pop on the Lueur readout, played on a successful purchase — pauses the ambient PulseLueurLabel wobble for its duration (both drive the same localScale) and resumes it afterward.</summary>
+        public void PlayPurchasePop()
+        {
+            StartCoroutine(PurchasePopRoutine());
+        }
+
+        private System.Collections.IEnumerator PurchasePopRoutine()
+        {
+            bool wasPulsing = _lueurPulseCoroutine != null;
+            if (wasPulsing)
+            {
+                StopCoroutine(_lueurPulseCoroutine);
+                _lueurPulseCoroutine = null;
+            }
+            float t = 0f;
+            while (t < PurchasePopDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / PurchasePopDuration);
+                float scale = p < PurchasePopPeakFraction
+                    ? Mathf.Lerp(1f, PurchasePopPeakScale, p / PurchasePopPeakFraction)
+                    : Mathf.Lerp(PurchasePopPeakScale, 1f, (p - PurchasePopPeakFraction) / (1f - PurchasePopPeakFraction));
+                _lueurContainer.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            _lueurContainer.localScale = Vector3.one;
+            if (wasPulsing)
+            {
+                _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
+            }
+        }
+
+        /// <summary>Quick vertical flip-reveal on the Casino row, played after a reroll's new cards are already built (Refresh() runs synchronously right after RerollShop(), so there's no window to animate the old ones away) — scales from flat to a slight overshoot to settled, reading as the new cards flipping into place.</summary>
+        public void PlayRerollFlip()
+        {
+            StartCoroutine(RerollFlipRoutine());
+        }
+
+        private System.Collections.IEnumerator RerollFlipRoutine()
+        {
+            var rt = _upgradeCardsContainer;
+            float t = 0f;
+            while (t < RerollFlipDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / RerollFlipDuration);
+                float scaleY = p < RerollFlipOvershootFraction
+                    ? Mathf.Lerp(0f, RerollFlipOvershootScale, p / RerollFlipOvershootFraction)
+                    : Mathf.Lerp(RerollFlipOvershootScale, 1f, (p - RerollFlipOvershootFraction) / (1f - RerollFlipOvershootFraction));
+                rt.localScale = new Vector3(1f, scaleY, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
         }
     }
 }

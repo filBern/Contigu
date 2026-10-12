@@ -8145,3 +8145,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `HandView.SetShufflePulsing`) dès que le ratio restant tombe à
     20% du budget du round ou moins — le joueur n'a plus à calculer
     lui-même s'il approche de la défaite par manque de pièces.
+
+- **3 ajouts de juice dans le shop** (demande explicite : « As-tu
+  d'autres idées? Ça peut aussi être dans le shop » → « Fait les 3 »,
+  en réponse à trois pistes proposées : shake "pas assez de Lueur" sur
+  une carte, pop d'achat, flip sur le Reroll).
+  - **Shake "pas assez de Lueur"** : avant ce changement, un bouton
+    d'achat trop cher était simplement désactivé par Unity
+    (`Button.interactable = false`) — le cliquer ne faisait
+    strictement rien, aucun signal que l'achat a été refusé plutôt
+    qu'ignoré. `ShopView.BuildBuyButton` sépare maintenant
+    `canInteract` (vendu/plein/pending — les raisons qui bloquent
+    vraiment l'achat, bouton grisé comme avant) de `affordable`
+    (assez de Lueur) : le bouton reste cliquable tant que
+    `canInteract` est vrai même si `affordable` est faux, et son
+    `onClick` fait `ShakeCard` (même technique que
+    `HandView.ShakeSlot`) au lieu d'appeler `onClick()`. Le prix et
+    son icône diamant passent en rouge (`UITheme.Danger`) comme
+    repère visuel, puisque le bouton n'est plus grisé pour cette
+    raison précise.
+  - **Pop d'achat** : `ShopView.PlayPurchasePop` — un scale-up
+    overshoot (1 -> 1.4 -> 1) sur le readout de Lueur, qui met en
+    pause le wobble ambiant `PulseLueurLabel` (les deux animent le
+    même `localScale`) puis le reprend. Joué juste après un achat
+    réussi (`OnBlisterBuyRequested`/`OnUpgradeBuyRequested`), puisque
+    `ShopView.Refresh` détruit et reconstruit les cartes de façon
+    synchrone juste après — impossible d'animer la carte achetée
+    elle-même avant sa destruction, donc le pop vise plutôt le
+    readout de Lueur qui, lui, survit au Refresh.
+  - **Flip sur le Reroll** : `ShopView.PlayRerollFlip` — scale Y du
+    conteneur Casino de 0 à un léger overshoot puis 1, jouée après
+    `Refresh()` sur les NOUVELLES cartes déjà construites (même
+    contrainte de timing que le pop d'achat — rien à animer AVANT la
+    destruction des anciennes), lisible comme les cartes qui
+    "basculent" en place plutôt qu'un simple refresh instantané.

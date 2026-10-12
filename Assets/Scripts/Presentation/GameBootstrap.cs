@@ -1824,6 +1824,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            _shopView.PlayPurchasePop();
 
             if (isUpgrade)
             {
@@ -1852,6 +1853,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            _shopView.PlayPurchasePop();
             HandleUpgradePurchaseResult(revealedUpgrade);
         }
 
@@ -1948,6 +1950,7 @@ namespace Contigu.Presentation
         {
             _run.RerollShop();
             _shopView.Refresh(_run);
+            _shopView.PlayRerollFlip();
             _hudView.Refresh(_run);
         }
 
