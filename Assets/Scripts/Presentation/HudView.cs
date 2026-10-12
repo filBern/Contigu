@@ -19,6 +19,10 @@ namespace Contigu.Presentation
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
         private Text _piecesLabel;
+        private Coroutine _lowPiecesPulseCoroutine;
+        private const float LowPiecesWarningRatio = 0.2f;
+        private const float LowPiecesPulseAmplitude = 0.1f;
+        private const float LowPiecesPulseSpeed = 4f;
         private RectTransform _lueurContainer;
         private Text _lueurLabel;
         // Defaults match round 1 so the first SetScores call (before Refresh's own SetRound runs) never shows a stale 0/0.
@@ -573,11 +577,43 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down one unused piece at a time instead of jumping straight to empty.</summary>
+        /// <summary>
+        /// Updates just the pieces bar, used by GameBootstrap.PlayRoundEndLueurBonusSequence to count it down
+        /// one unused piece at a time instead of jumping straight to empty. Once the remaining fraction drops
+        /// to <see cref="LowPiecesWarningRatio"/> or below, the bar tints to UITheme.Danger and its label gets
+        /// a slow breathing pulse (same technique as HandView.SetShufflePulsing) — a clear "you're running
+        /// out" cue the player doesn't have to do the ratio math on themselves.
+        /// </summary>
         public void SetPieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;
-            SetRatio(_piecesFillRect, budget > 0 ? (float)piecesRemaining / budget : 0f);
+            float ratio = budget > 0 ? (float)piecesRemaining / budget : 0f;
+            SetRatio(_piecesFillRect, ratio);
+            bool isLow = budget > 0 && ratio <= LowPiecesWarningRatio;
+            _piecesFillRect.GetComponent<Image>().color = isLow ? UITheme.Danger : UITheme.Success;
+            if (isLow)
+            {
+                if (_lowPiecesPulseCoroutine == null)
+                {
+                    _lowPiecesPulseCoroutine = StartCoroutine(PulseLowPiecesLabel());
+                }
+            }
+            else if (_lowPiecesPulseCoroutine != null)
+            {
+                StopCoroutine(_lowPiecesPulseCoroutine);
+                _lowPiecesPulseCoroutine = null;
+                _piecesLabel.transform.localScale = Vector3.one;
+            }
+        }
+
+        private IEnumerator PulseLowPiecesLabel()
+        {
+            while (true)
+            {
+                float scale = 1f + LowPiecesPulseAmplitude * Mathf.Sin(Time.time * LowPiecesPulseSpeed);
+                _piecesLabel.transform.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
         }
     }
 }

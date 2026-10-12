@@ -660,6 +660,19 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Plays a squash-and-stretch landing pop on each of <paramref name="cells"/> — used the instant a piece is placed, so it reads as having actual weight instead of just appearing. Juice only; never called for a cell that doesn't exist.</summary>
+        public void PlayLandingSquash(IReadOnlyList<Vector2Int> cells)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (GridManager.InBounds(pos.x, pos.y))
+                {
+                    _cells[pos.x, pos.y].PlayLandingSquash();
+                }
+            }
+        }
+
         /// <summary>Plays a small radial burst on one cell, in <paramref name="color"/> — used right as it empties, whether from completing a line/column or from a trait effect destroying it (see GridCellView.PlayClearBurst).</summary>
         public void PlayClearBurst(int x, int y, Color color)
         {
@@ -705,6 +718,42 @@ namespace Contigu.Presentation
                     _cells[pos.x, pos.y].Background.color = toColor;
                 }
             }
+        }
+
+        private Coroutine _shakeCoroutine;
+
+        /// <summary>
+        /// Short, decaying 2D shake on the whole grid's own container — for a big moment (a big Combo, a
+        /// boss kill) rather than per-cell, unlike every other juice effect above. Scoped to the grid alone,
+        /// not the whole screen, so the HUD/hand stay readable and clickable throughout. Retriggering while
+        /// already shaking restarts from this call's own magnitude/duration rather than stacking offsets.
+        /// </summary>
+        public void PlayShake(float duration, float magnitude)
+        {
+            if (_shakeCoroutine != null)
+            {
+                StopCoroutine(_shakeCoroutine);
+            }
+            _shakeCoroutine = StartCoroutine(ShakeRoutine(duration, magnitude));
+        }
+
+        private System.Collections.IEnumerator ShakeRoutine(float duration, float magnitude)
+        {
+            Vector2 originalPos = _container.anchoredPosition;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float progress = Mathf.Clamp01(t / duration);
+                float damping = 1f - progress;
+                // Random.insideUnitCircle rather than a sine wave (see HandView.ShakeSlot) — a 2D rattle
+                // reads as an impact better than a clean side-to-side slot shake does.
+                Vector2 offset = UnityEngine.Random.insideUnitCircle * magnitude * damping;
+                _container.anchoredPosition = originalPos + offset;
+                yield return null;
+            }
+            _container.anchoredPosition = originalPos;
+            _shakeCoroutine = null;
         }
     }
 }

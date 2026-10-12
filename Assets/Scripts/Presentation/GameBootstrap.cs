@@ -41,6 +41,13 @@ namespace Contigu.Presentation
         private const int DefaultStatusFontSize = 19;
         private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
+        // Juice: a big Combo (at least two stacked Combo modifiers) or a Boss-tier kill shakes the grid —
+        // see the "COMBO xN" callout below and DrainComboIntoDamage/DrainSecondaryEnemyHits.
+        private const int BigComboShakeThreshold = 4;
+        private const float ComboShakeDuration = 0.25f;
+        private const float ComboShakeMagnitude = 10f;
+        private const float BossKillShakeDuration = 0.35f;
+        private const float BossKillShakeMagnitude = 16f;
 
         private RunManager _run;
         private IMetaStatsStore _metaStatsStore;
@@ -852,6 +859,9 @@ namespace Contigu.Presentation
             // held back from this redraw, revealed only once
             // PlayPlacementSequence's end-of-sequence reveal runs.
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
+            // Juice: a brief squash-and-stretch pop on the piece's own cells, played the instant they
+            // actually render above — gives the placement a sense of weight instead of just appearing.
+            _gridView.PlayLandingSquash(outcome.Placement.PlacedCells);
             // Same hold for the hand when auto-refill already dealt the
             // next hand — PlayPlacementSequence reveals it once the
             // sequence finishes (see HandView.RefreshHoldingEmpty).
@@ -1417,6 +1427,10 @@ namespace Contigu.Presentation
             {
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
                 _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.Success);
+                if (placement.ComboMultiplier >= BigComboShakeThreshold)
+                {
+                    _gridView.PlayShake(ComboShakeDuration, ComboShakeMagnitude);
+                }
             }
 
             // Force-sync to the authoritative total — guards against float
@@ -1654,6 +1668,10 @@ namespace Contigu.Presentation
 
             if (isDead)
             {
+                if (EnemyCatalog.Get(identity).Role == EnemyRole.Boss)
+                {
+                    _gridView.PlayShake(BossKillShakeDuration, BossKillShakeMagnitude);
+                }
                 // Pause gives the player a beat to register the kill (and
                 // the dead-gray tint just applied) before the icon fades.
                 yield return new WaitForSeconds(0.25f);
@@ -1678,6 +1696,10 @@ namespace Contigu.Presentation
                 _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);
                 if (isDead)
                 {
+                    if (EnemyCatalog.Get(target.Identity).Role == EnemyRole.Boss)
+                    {
+                        _gridView.PlayShake(BossKillShakeDuration, BossKillShakeMagnitude);
+                    }
                     yield return new WaitForSeconds(0.25f);
                     yield return _hudView.FadeOutEnemySlot(target.Index, 0.3f);
                 }

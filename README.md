@@ -8111,3 +8111,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - `GameBootstrap.PlayThiefStealEffect` anime maintenant cette pièce
     fantôme de la case de main (déjà vide) vers l'icône de Thief, en
     plus du popup "Stole a piece!" et du pulse déjà en place.
+
+- **3 ajouts de juice/lisibilité** (demande explicite : « Quel feed-back
+  visuel peut on ajouter pour du juice ou pour mieux comprendre le
+  gameplay? » → « Les 3 sont intéressants », en réponse à trois pistes
+  proposées : squash-and-stretch à l'atterrissage d'une pièce, screen
+  shake sur un gros combo/kill de boss, alerte visuelle pièces
+  restantes basses).
+  - **Squash-and-stretch à l'atterrissage** : `GridCellView` gagne
+    `PlayLandingSquash` (aplatit en largeur à l'impact, léger
+    overshoot dans l'autre sens, puis se stabilise — contrairement au
+    scale-up uniforme de `Pulse`). Les deux partagent maintenant un
+    seul champ `_scaleCoroutine` (renommé depuis `_pulseCoroutine`)
+    puisqu'ils animent tous les deux `localScale` sur la même case —
+    démarrer l'un arrête l'autre au lieu de se battre image par image.
+    `GridView.PlayLandingSquash(cells)` l'applique à
+    `outcome.Placement.PlacedCells`, appelé dans `OnCellClicked` juste
+    après `RefreshHoldingClearedCells`, la même frame où la pièce
+    devient visible.
+  - **Screen shake sur gros moment** : `GridView.PlayShake(duration,
+    magnitude)` fait trembler uniquement le conteneur de la grille
+    (`_container.anchoredPosition`, un `Random.insideUnitCircle`
+    amorti plutôt qu'un sinus — un rattle 2D lit mieux comme un impact
+    que le shake 1D déjà utilisé par `HandView.ShakeSlot`), jamais le
+    HUD/la main entière pour qu'ils restent cliquables. Déclenché dans
+    `GameBootstrap` : à côté du callout "COMBO xN" existant quand
+    `ComboMultiplier >= 4` (au moins deux modificateurs Combo
+    empilés), et dans `DrainComboIntoDamage`/`DrainSecondaryEnemyHits`
+    quand l'ennemi qui vient de mourir a `Role == EnemyRole.Boss`.
+  - **Alerte pièces restantes basses** : `HudView.SetPieces` teinte la
+    barre de pièces en `UITheme.Danger` (au lieu de `Success`) et fait
+    respirer son label (même technique que
+    `HandView.SetShufflePulsing`) dès que le ratio restant tombe à
+    20% du budget du round ou moins — le joueur n'a plus à calculer
+    lui-même s'il approche de la défaite par manque de pièces.

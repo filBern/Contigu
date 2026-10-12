@@ -13,6 +13,15 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
         private const float PulsePeakFraction = 0.4f;
+        private const float LandingSquashDuration = 0.22f;
+        // Flattened wide on impact (low Y, high X), then a slight overshoot the other way before settling —
+        // classic squash-and-stretch, distinct from Pulse's uniform scale-up.
+        private const float LandingSquashImpactScaleX = 1.25f;
+        private const float LandingSquashImpactScaleY = 0.75f;
+        private const float LandingSquashOvershootScaleX = 0.95f;
+        private const float LandingSquashOvershootScaleY = 1.08f;
+        private const float LandingSquashImpactFraction = 0.35f;
+        private const float LandingSquashOvershootFraction = 0.7f;
         private const float ClearBurstDuration = 0.32f;
         private const int ClearBurstParticleCount = 6;
         private const float ClearBurstParticleSize = 10f;
@@ -37,7 +46,9 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
 
         private GridView _owner;
-        private Coroutine _pulseCoroutine;
+        // Shared by Pulse and PlayLandingSquash — both animate this cell's own localScale, so only one may
+        // run at a time; starting either stops whichever of the two was already running.
+        private Coroutine _scaleCoroutine;
 
         // Which of this cell's visuals, if any, are currently an enemy-placed malus — set each time ApplyState
         // renders, read by SetMalusAlpha so GridView.FadeMalus can fade exactly those and nothing else.
@@ -278,11 +289,11 @@ namespace Contigu.Presentation
         /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points, or when it's previewed as part of the prospective group while hovering a valid placement (see GridView.OnCellHoverEnter).</summary>
         public void Pulse()
         {
-            if (_pulseCoroutine != null)
+            if (_scaleCoroutine != null)
             {
-                StopCoroutine(_pulseCoroutine);
+                StopCoroutine(_scaleCoroutine);
             }
-            _pulseCoroutine = StartCoroutine(PulseRoutine());
+            _scaleCoroutine = StartCoroutine(PulseRoutine());
         }
 
         private IEnumerator PulseRoutine()
@@ -300,7 +311,57 @@ namespace Contigu.Presentation
                 yield return null;
             }
             rt.localScale = Vector3.one;
-            _pulseCoroutine = null;
+            _scaleCoroutine = null;
+        }
+
+        /// <summary>
+        /// Squash-and-stretch landing pop, played the instant a piece is placed here — flattens wide on
+        /// impact, overshoots the other way, then settles, unlike Pulse's uniform scale-up (used for scoring
+        /// instead). Shares <see cref="_scaleCoroutine"/> with Pulse, so a cell that both lands a piece AND
+        /// scores in the same placement just lets whichever started last win rather than fighting over scale.
+        /// </summary>
+        public void PlayLandingSquash()
+        {
+            if (_scaleCoroutine != null)
+            {
+                StopCoroutine(_scaleCoroutine);
+            }
+            _scaleCoroutine = StartCoroutine(LandingSquashRoutine());
+        }
+
+        private IEnumerator LandingSquashRoutine()
+        {
+            var rt = (RectTransform)transform;
+            float t = 0f;
+            while (t < LandingSquashDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / LandingSquashDuration);
+                float scaleX;
+                float scaleY;
+                if (p < LandingSquashImpactFraction)
+                {
+                    float sub = p / LandingSquashImpactFraction;
+                    scaleX = Mathf.Lerp(1f, LandingSquashImpactScaleX, sub);
+                    scaleY = Mathf.Lerp(1f, LandingSquashImpactScaleY, sub);
+                }
+                else if (p < LandingSquashOvershootFraction)
+                {
+                    float sub = (p - LandingSquashImpactFraction) / (LandingSquashOvershootFraction - LandingSquashImpactFraction);
+                    scaleX = Mathf.Lerp(LandingSquashImpactScaleX, LandingSquashOvershootScaleX, sub);
+                    scaleY = Mathf.Lerp(LandingSquashImpactScaleY, LandingSquashOvershootScaleY, sub);
+                }
+                else
+                {
+                    float sub = (p - LandingSquashOvershootFraction) / (1f - LandingSquashOvershootFraction);
+                    scaleX = Mathf.Lerp(LandingSquashOvershootScaleX, 1f, sub);
+                    scaleY = Mathf.Lerp(LandingSquashOvershootScaleY, 1f, sub);
+                }
+                rt.localScale = new Vector3(scaleX, scaleY, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _scaleCoroutine = null;
         }
 
         /// <summary>
