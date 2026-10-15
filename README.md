@@ -8564,3 +8564,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     boutons plus grands, tout en restant largement dans les ±400 unités
     verticales du Canvas (résolution de référence 1280×800, mise à
     l'échelle sur la hauteur).
+
+- **Animation de transition en tuiles entre le menu et la partie**
+  (demande explicite : « J'aimerais une animation de transition entre le
+  menu et le jeu. Quelque chose avec les tuiles »). Avant ce changement,
+  "Play" appelait `SceneManager.LoadScene` directement — une coupure
+  sèche vers la scène de jeu.
+  - `MainMenuTransitionView` (nouveau) construit une grille de tuiles
+    carrées pleine largeur/hauteur (même sprite `VisualDefaults.TileSprite`
+    que les tuiles du titre, mosaïque pseudo-aléatoire des 4 couleurs du
+    jeu) par-dessus tout le reste, chacune démarrant à l'échelle 0. La
+    grille est construite au clic sur Play (pas à l'`Awake` de la scène)
+    pour que la taille réelle du Canvas — variable selon l'aspect-ratio
+    de l'écran, puisque le `CanvasScaler` ne cale que sur la hauteur —
+    soit déjà stabilisée.
+  - Chaque tuile reçoit un délai proportionnel à sa distance au coin
+    supérieur gauche (balayage diagonal sur `SweepDuration` = 0.45s),
+    puis joue le même pop-in en overshoot que `TitleTileView.PlayEntrance`
+    (0 → 1.25 → 1 sur `PopDuration` = 0.22s). Une fois l'écran entièrement
+    couvert, une courte pause (`HoldDuration` = 0.15s) laisse le temps
+    au joueur de percevoir l'écran plein avant le changement de scène.
+  - `MainMenuBootstrap.OnPlayClicked` appelle désormais
+    `MainMenuTransitionView.PlayCoverSweep(canvasRect, onCovered)` et ne
+    déclenche `SceneManager.LoadScene` que dans son callback `onCovered`
+    — un drapeau `_isTransitioning` empêche un double-clic de relancer
+    une deuxième balayage en parallèle.

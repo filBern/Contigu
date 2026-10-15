@@ -17,20 +17,26 @@ namespace Contigu.Presentation
         private MainMenuView _mainMenuView;
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
+        private MainMenuTransitionView _transitionView;
+        private RectTransform _canvasRect;
+        // Guards against a double-click re-triggering (and stacking) the cover sweep while it's already playing.
+        private bool _isTransitioning;
 
         private void Awake()
         {
             EnsureEventSystem();
-            var canvasRect = BuildCanvas();
+            _canvasRect = BuildCanvas();
 
             _mainMenuView = gameObject.AddComponent<MainMenuView>();
-            _mainMenuView.Build(canvasRect);
+            _mainMenuView.Build(_canvasRect);
 
             // Its own SettingsView instance — safe to build a second one alongside GameBootstrap's, since
             // Settings carries no state beyond its static PlayerPrefs-backed classes. Built after MainMenuView
             // so it renders as a later sibling, on top of the menu's buttons rather than underneath them.
             _settingsView = gameObject.AddComponent<SettingsView>();
-            _settingsView.Build(canvasRect);
+            _settingsView.Build(_canvasRect);
+
+            _transitionView = gameObject.AddComponent<MainMenuTransitionView>();
 
             _mainMenuView.PlayClicked += OnPlayClicked;
             _mainMenuView.SettingsClicked += _settingsView.Toggle;
@@ -38,9 +44,15 @@ namespace Contigu.Presentation
             _mainMenuView.Show();
         }
 
+        /// <summary>Covers the screen with a diagonal sweep of colored tiles (see MainMenuTransitionView) before actually swapping scenes, instead of cutting straight to gameplay.</summary>
         private void OnPlayClicked()
         {
-            SceneManager.LoadScene(GameplaySceneName);
+            if (_isTransitioning)
+            {
+                return;
+            }
+            _isTransitioning = true;
+            _transitionView.PlayCoverSweep(_canvasRect, () => SceneManager.LoadScene(GameplaySceneName));
         }
 
         private static void OnExitClicked()
