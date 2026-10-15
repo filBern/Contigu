@@ -8616,7 +8616,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     supérieur droit. Chaque tuile rejoue la même courbe overshoot que
     l'apparition, mais inversée (1 → 1.25 → 0 au lieu de 0 → 1.25 → 1).
   - `GameBootstrap.Awake` vérifie `MainMenuTransitionView.PendingReveal`
-    une fois toute sa propre UI construite et prête (tout à la fin,
-    juste après `_challengeSelectView.Show`) ; si une mosaïque a
-    survécu depuis le menu, il appelle `PlayUncoverSweep`, qui détruit
-    l'objet une fois la dernière tuile disparue.
+    une fois toute sa propre UI construite et prête (tout à la fin de
+    `Awake`) ; si une mosaïque a survécu depuis le menu, il appelle
+    `PlayUncoverSweep`, qui détruit l'objet une fois la dernière tuile
+    disparue.
+
+- **Le carousel des challenges attend la fin de l'animation** (demande
+  explicite : « Attend la fin de cette animation avant d'afficher le
+  carousel des challenges »). Avant ce changement,
+  `_challengeSelectView.Show(_metaStats)` se déclenchait immédiatement
+  dans `Awake`, avant même `PlayUncoverSweep` — son entrée animée se
+  jouait donc déjà terminée, cachée sous les tuiles, et le joueur ne
+  voyait plus qu'un carousel figé une fois l'écran découvert.
+  - `GameBootstrap.Awake` : quand `PendingReveal` n'est pas nul,
+    `_challengeSelectView.Show(_metaStats)` passe désormais en callback
+    de complétion de `PlayUncoverSweep` au lieu d'être appelé
+    directement — le carousel n'apparaît donc qu'une fois la dernière
+    tuile disparue, et sa propre animation d'entrée se joue pour de bon,
+    visible par le joueur. Quand `PendingReveal` est nul (scène ouverte
+    autrement, par ex. directement dans l'éditeur), `Show` reste appelé
+    immédiatement comme avant.
