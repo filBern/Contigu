@@ -8693,3 +8693,32 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `EnemyInstance` n'existe encore pour un round pas encore construit.
     La box entière se cache quand `UpcomingEncounterIds` est vide
     (dernier round du run, ou round de quota sans encounter).
+
+- **Alignement de la box "Prochain combat", tooltips d'ennemis, et bannière
+  "Next round"** (demande explicite : « La box avec les ennemis dans le
+  shop devrait être aligné horizontalement avec le centre des lueurs.
+  Aussi il devrait y avoir un tooltip pour chaque ennemi pour expliquer
+  ce qu'ils font, leur nom et leur HP. Ajoute un rectangle rouge en haut
+  de la box de la même largeur avec écrit Next round. »).
+  - `_lueurContainer` (le nombre de Lueur) passe d'un pivot `(1, 0.5)`
+    (bord droit fixe, le centre du contenu dérivait donc selon le
+    nombre de chiffres affichés) à un pivot `(0.5, 0.5)` centré sur une
+    nouvelle constante `UpcomingBoxCenterX` (-225) — son centre reste
+    désormais fixe peu importe la largeur du texte. `_upcomingEncounterBox`
+    reprend ce même `UpcomingBoxCenterX` comme `anchoredPosition.x` (avec
+    pivot `(0.5, 1)`), alignant ainsi son centre horizontal exactement
+    sur celui du nombre de Lueur au-dessus.
+  - Chaque icône d'ennemi de la box (`BuildUpcomingEncounterPreview`)
+    reçoit maintenant un composant `EnemyIconView` — le même composant
+    qui gère déjà le tooltip au survol dans `HudView.BuildEnemyBand` —
+    initialisé avec le nom et la description de l'ennemi
+    (`EnemyCatalog.Get`) suivis de son PV de base (`def.MaxHp`), puisqu'à
+    ce stade aucun `EnemyInstance` n'existe encore pour calculer un PV
+    courant différent du plein PV déjà affiché sous l'icône.
+  - Un nouveau bandeau rouge (`UITheme.Danger`) `NextRoundBanner` est
+    ajouté tout en haut de la box, étiré sur toute sa largeur
+    (`anchorMin/anchorMax` horizontal `0`→`1`) avec le texte "Next
+    round", à la place de l'ancien titre texte simple "Prochain
+    combat" — la hauteur de la box (`UpcomingBannerHeight` = 26)
+    remplace l'ancienne `UpcomingTitleHeight`, et la rangée d'icônes
+    est repoussée d'autant plus bas pour ne pas chevaucher le bandeau.

@@ -62,10 +62,12 @@ namespace Contigu.Presentation
         private const float PurchasePopPeakScale = 1.4f;
         private const float PurchasePopPeakFraction = 0.35f;
         // "Prochain combat" preview box under the (now-raised) Lueur readout — same icon+HP styling as
-        // HudView's enemy band, just scaled down to fit this corner.
+        // HudView's enemy band, just scaled down to fit this corner. Horizontally centered on the same X
+        // as the (also re-centered, see _lueurContainer's pivot) Lueur readout above it.
+        private const float UpcomingBoxCenterX = -225f;
         private const float UpcomingBoxWidth = 260f;
-        private const float UpcomingBoxTopPadding = 12f;
-        private const float UpcomingTitleHeight = 22f;
+        private const float UpcomingBannerHeight = 26f;
+        private const float UpcomingBoxTopPadding = 10f;
         private const float UpcomingIconSize = 44f;
         private const float UpcomingSlotWidth = 60f;
         private const float UpcomingHpLabelHeight = 18f;
@@ -120,11 +122,14 @@ namespace Contigu.Presentation
             // with HudView's own readout. Larger here than in the HUD, with
             // a slow pulse (see PulseLueurLabel) since this is the one
             // screen where the player actually spends it.
+            // Pivot centered (rather than right-edge) so its horizontal center stays fixed at
+            // UpcomingBoxCenterX regardless of how many digits the Lueur count grows to — the box below
+            // lines its own center up with this same X (see BuildUpcomingEncounterPreview's parent box).
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
             _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
             _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
-            _lueurContainer.pivot = new Vector2(1f, 0.5f);
-            _lueurContainer.anchoredPosition = new Vector2(-160f, 120f);
+            _lueurContainer.pivot = new Vector2(0.5f, 0.5f);
+            _lueurContainer.anchoredPosition = new Vector2(UpcomingBoxCenterX, 120f);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 14f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -151,23 +156,28 @@ namespace Contigu.Presentation
             _upcomingEncounterBox = upcomingBox.rectTransform;
             _upcomingEncounterBox.anchorMin = new Vector2(1f, 0.5f);
             _upcomingEncounterBox.anchorMax = new Vector2(1f, 0.5f);
-            _upcomingEncounterBox.pivot = new Vector2(1f, 1f);
-            _upcomingEncounterBox.anchoredPosition = new Vector2(-30f, 60f);
-            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, UpcomingBoxTopPadding + UpcomingTitleHeight
+            _upcomingEncounterBox.pivot = new Vector2(0.5f, 1f);
+            _upcomingEncounterBox.anchoredPosition = new Vector2(UpcomingBoxCenterX, 60f);
+            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, UpcomingBannerHeight + UpcomingBoxTopPadding
                 + UpcomingIconSize + UpcomingHpLabelHeight + UpcomingBoxBottomPadding);
 
-            var upcomingTitle = UIFactory.CreateText(_upcomingEncounterBox, "Title", "Prochain combat", 15, UITheme.TextMutedOnBackground);
-            upcomingTitle.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            upcomingTitle.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            upcomingTitle.rectTransform.pivot = new Vector2(0.5f, 1f);
-            upcomingTitle.rectTransform.anchoredPosition = new Vector2(0f, -UpcomingBoxTopPadding);
-            upcomingTitle.rectTransform.sizeDelta = new Vector2(UpcomingBoxWidth - 16f, UpcomingTitleHeight);
+            // Red "Next round" banner flush against the box's top edge, same width as the box.
+            var upcomingBanner = UIFactory.CreatePanel(_upcomingEncounterBox, "NextRoundBanner", UITheme.Danger);
+            upcomingBanner.rectTransform.anchorMin = new Vector2(0f, 1f);
+            upcomingBanner.rectTransform.anchorMax = new Vector2(1f, 1f);
+            upcomingBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
+            upcomingBanner.rectTransform.anchoredPosition = Vector2.zero;
+            upcomingBanner.rectTransform.sizeDelta = new Vector2(0f, UpcomingBannerHeight);
+
+            var upcomingBannerLabel = UIFactory.CreateText(upcomingBanner.transform, "BannerLabel", "Next round", 15, UITheme.TextOnBackground);
+            upcomingBannerLabel.alignment = TextAnchor.MiddleCenter;
+            UIFactory.StretchFull(upcomingBannerLabel.rectTransform);
 
             _upcomingEncounterRow = UIFactory.CreateUIObject("UpcomingEncounterRow", _upcomingEncounterBox);
             _upcomingEncounterRow.anchorMin = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.anchorMax = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.pivot = new Vector2(0.5f, 1f);
-            _upcomingEncounterRow.anchoredPosition = new Vector2(0f, -(UpcomingBoxTopPadding + UpcomingTitleHeight));
+            _upcomingEncounterRow.anchoredPosition = new Vector2(0f, -(UpcomingBannerHeight + UpcomingBoxTopPadding));
             var upcomingLayout = _upcomingEncounterRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             upcomingLayout.spacing = 6f;
             upcomingLayout.childAlignment = TextAnchor.UpperCenter;
@@ -346,12 +356,18 @@ namespace Contigu.Presentation
                 iconBackground.rectTransform.anchoredPosition = Vector2.zero;
                 iconBackground.rectTransform.sizeDelta = new Vector2(UpcomingIconSize, UpcomingIconSize);
 
+                var def = EnemyCatalog.Get(upcoming[i]);
                 var icon = UIFactory.CreatePanel(iconBackground.transform, "Sprite" + i, Color.white);
                 icon.preserveAspect = true;
                 UIFactory.StretchFull(icon.rectTransform);
                 icon.sprite = HudView.EnemyIconSprite(upcoming[i]);
 
-                int maxHp = EnemyCatalog.Get(upcoming[i]).MaxHp;
+                // Same hover-tooltip component as HudView's own enemy band (see EnemyIconView), just fed
+                // the base MaxHp here since no EnemyInstance exists yet for a round that isn't built.
+                var iconView = icon.gameObject.AddComponent<EnemyIconView>();
+                iconView.Init(_tooltip, def.Name, def.Description + "\n\nPV : " + def.MaxHp + "/" + def.MaxHp);
+
+                int maxHp = def.MaxHp;
                 var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, 13, UITheme.TextOnBackground);
                 label.alignment = TextAnchor.MiddleCenter;
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
