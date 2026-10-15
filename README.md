@@ -8816,3 +8816,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     est ajouté sur la box pour que les rounds à beaucoup d'ennemis
     (jusqu'à 6) soient simplement rognés au lieu de déborder sous la
     box.
+
+- **Remonte le compteur de Lueur au-dessus de la box** (demande
+  explicite : « Il ne reste plus qu'a monter le compteur de lueur en
+  haut de la box »). Maintenant que la box est centrée verticalement à
+  une hauteur fixe (voir ci-dessus), son bord supérieur se trouve à
+  `UpcomingBoxTopY` (la moitié de sa hauteur) au-dessus du centre de
+  l'écran — l'ancien `anchoredPosition.y` fixe de `120` pour
+  `_lueurContainer` pouvait donc se retrouver sous ce bord et chevaucher
+  la box selon sa hauteur. `_lueurContainer.anchoredPosition.y` passe à
+  `UpcomingBoxTopY + LueurAboveBoxClearance` (une marge de 70 pour la
+  propre hauteur dynamique du readout Lueur, voir
+  `ContentSizeFitter`/`HorizontalLayoutGroup`, plus un espace visible) —
+  le nombre de Lueur reste donc toujours clairement au-dessus de la
+  box, peu importe sa hauteur fixe.

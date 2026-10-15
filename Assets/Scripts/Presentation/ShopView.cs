@@ -68,6 +68,12 @@ namespace Contigu.Presentation
         private const float UpcomingBoxCenterX = -225f;
         private const float UpcomingBoxWidth = ModifierPanelView.PanelWidth;
         private const float UpcomingBoxHeight = ModifierPanelView.PanelHeight;
+        // The box is vertically centered on screen (anchoredPosition.y = 0, see Build) at a fixed height,
+        // so its top edge sits exactly half its height above that center line.
+        private const float UpcomingBoxTopY = UpcomingBoxHeight / 2f;
+        // Clearance above the box's top edge for the Lueur readout's own (dynamic, ContentSizeFitter-driven)
+        // height plus a visible gap, so it reads as sitting above the box rather than overlapping it.
+        private const float LueurAboveBoxClearance = 70f;
         private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
         private const int UpcomingBannerFontSize = 28;
         private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
@@ -129,11 +135,14 @@ namespace Contigu.Presentation
             // Pivot centered (rather than right-edge) so its horizontal center stays fixed at
             // UpcomingBoxCenterX regardless of how many digits the Lueur count grows to — the box below
             // lines its own center up with this same X (see BuildUpcomingEncounterPreview's parent box).
+            // Y sits clear above the box's own (now fixed, centered) top edge, see UpcomingBoxTopY/
+            // LueurAboveBoxClearance, instead of the old fixed 120 which the box's current position/height
+            // could end up overlapping.
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", _root);
             _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
             _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
             _lueurContainer.pivot = new Vector2(0.5f, 0.5f);
-            _lueurContainer.anchoredPosition = new Vector2(UpcomingBoxCenterX, 120f);
+            _lueurContainer.anchoredPosition = new Vector2(UpcomingBoxCenterX, UpcomingBoxTopY + LueurAboveBoxClearance);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 14f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
