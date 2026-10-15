@@ -29,7 +29,8 @@ namespace Contigu.Presentation
         internal const float HeaderRowGap = 12f;
         private const float BottomPadding = 16f;
         private const int DisplayRows = 2; // 2 columns x 2 rows = 4 modifiers (EconomyConstants.MaxActiveModifiers)
-        private const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
+        // internal so ShopView's "Next round" box can match this panel's exact height too (see PanelWidth).
+        internal const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
         private const float PulseDuration = 0.5f;
         private const float PulsePeakScale = 1.1f;
         private const float PulsePeakFraction = 0.3f;

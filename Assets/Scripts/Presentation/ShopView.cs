@@ -67,6 +67,7 @@ namespace Contigu.Presentation
         // rather than a wide band like HudView's enemy row.
         private const float UpcomingBoxCenterX = -225f;
         private const float UpcomingBoxWidth = ModifierPanelView.PanelWidth;
+        private const float UpcomingBoxHeight = ModifierPanelView.PanelHeight;
         private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
         private const int UpcomingBannerFontSize = 28;
         private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
@@ -75,7 +76,6 @@ namespace Contigu.Presentation
         private const float UpcomingRowGap = ModifierCardFactory.Gap;
         private const int UpcomingHpFontSize = 12;
         private const float UpcomingHpLabelHeight = 18f;
-        private const float UpcomingBoxBottomPadding = 16f;
         // Same decaying side-to-side shake HandView.ShakeSlot plays for an unplayable piece, reused here for
         // a card clicked without enough Lueur to afford it.
         private const float CantAffordShakeDuration = 0.3f;
@@ -158,19 +158,19 @@ namespace Contigu.Presentation
             var upcomingBox = UIFactory.CreatePanel(_root, "UpcomingEncounterBox", UITheme.PanelLight);
             UIFactory.AddThickOutline(upcomingBox, UITheme.Border);
             _upcomingEncounterBox = upcomingBox.rectTransform;
-            // Anchored top-right (not mid-right) so anchoredPosition.y is measured from the screen's top
-            // edge, the same reference frame _blisterCardsContainer uses for ModifierCardsTopY below — with
-            // the old mid-right anchor, the same Y value put this box far lower than the Blister row instead
-            // of starting at the same height, which is what was actually wrong about its position.
-            _upcomingEncounterBox.anchorMin = new Vector2(1f, 1f);
-            _upcomingEncounterBox.anchorMax = new Vector2(1f, 1f);
-            _upcomingEncounterBox.pivot = new Vector2(0.5f, 1f);
-            // Same top Y as the Blister card row (ModifierCardsTopY) — "même hauteur" as the modifier box.
-            // Width/height here are placeholders; BuildUpcomingEncounterPreview resizes the box every
-            // Refresh to fit however many enemies the next round has (see its own doc comment).
-            _upcomingEncounterBox.anchoredPosition = new Vector2(UpcomingBoxCenterX, ModifierCardsTopY);
-            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, UpcomingBannerHeight + UpcomingBoxTopPadding
-                + UpcomingIconSize + UpcomingHpLabelHeight + UpcomingBoxBottomPadding);
+            // Same anchor/pivot/position recipe as ModifierPanelView.Build (anchor+pivot both (0.5,0.5),
+            // vertically centered at y=0) — matching its exact recipe, not just eyeballing a Y offset, is
+            // what actually makes the two boxes' top AND bottom edges line up, since they also share the
+            // same fixed height (PanelHeight) below rather than one growing with its own content.
+            _upcomingEncounterBox.anchorMin = new Vector2(1f, 0.5f);
+            _upcomingEncounterBox.anchorMax = new Vector2(1f, 0.5f);
+            _upcomingEncounterBox.pivot = new Vector2(0.5f, 0.5f);
+            _upcomingEncounterBox.anchoredPosition = new Vector2(UpcomingBoxCenterX, 0f);
+            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, UpcomingBoxHeight);
+            // Clips any overflow instead of letting it spill below the box — the box's height is fixed
+            // (matching ModifierPanelView, which is itself sized for a fixed slot count) while the next
+            // round's enemy count isn't capped, so a very populated round can run past the available space.
+            _upcomingEncounterBox.gameObject.AddComponent<RectMask2D>();
 
             // Red "Next round" banner flush against the box's top edge, same width as the box.
             var upcomingBanner = UIFactory.CreatePanel(_upcomingEncounterBox, "NextRoundBanner", UITheme.Danger);
@@ -343,8 +343,9 @@ namespace Contigu.Presentation
         /// Shows EnemyCatalog's base MaxHp rather than any live EnemyInstance's HP, since the round hasn't
         /// been built yet (no EnemyInstance exists for it) while the shop is open. Hides the whole box when
         /// the next round has no authored encounter (plain quota round) or doesn't exist (last round of the
-        /// run). Resizes the box's own height to fit however many enemies this round has, same width/top Y
-        /// as a Blister modifier card (see ModifierCardFactory and ModifierCardsTopY) always kept fixed.
+        /// run). The box itself stays a fixed size (UpcomingBoxWidth x UpcomingBoxHeight, matching
+        /// ModifierPanelView exactly) regardless of enemy count — a round with more enemies than fit just
+        /// clips at the box's edge (see the RectMask2D added in Build) rather than growing the box.
         /// </summary>
         private void BuildUpcomingEncounterPreview(RunManager run)
         {
@@ -354,12 +355,6 @@ namespace Contigu.Presentation
             {
                 return;
             }
-
-            float slotHeight = UpcomingIconSize + UpcomingHpLabelHeight;
-            float boxHeight = UpcomingBannerHeight + UpcomingBoxTopPadding
-                + upcoming.Count * slotHeight + (upcoming.Count - 1) * UpcomingRowGap
-                + UpcomingBoxBottomPadding;
-            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, boxHeight);
 
             ClearChildren(_upcomingEncounterRow);
             for (int i = 0; i < upcoming.Count; i++)

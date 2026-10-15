@@ -8789,3 +8789,30 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     dimensions que le panneau "MODIFIERS" à gauche de l'écran, au lieu
     de copier la taille d'une carte Blister comme dans le commit
     précédent.
+
+- **La box "Next round" toujours pas à la bonne hauteur : fixe sa
+  taille et son centrage sur ceux du panneau MODIFIERS** (demande
+  explicite : « Toujours pas a la bonne hauteur », avec capture
+  d'écran annotée montrant le haut et le bas du panneau MODIFIERS
+  reliés par des lignes rouges jusqu'à la box, qui ne les atteignait
+  ni en haut ni en bas).
+  - Le commit précédent gardait un ancrage haut-droite
+    (`anchorMin/anchorMax = (1,1)`) avec une hauteur recalculée à
+    chaque `Refresh` selon le nombre d'ennemis — ça ne pouvait pas
+    donner le même haut ET le même bas que `ModifierPanelView`, qui
+    est centré verticalement (`anchorMin/anchorMax = (0.5,0.5)`,
+    `pivot = (0.5,0.5)`, `anchoredPosition = (horizontalCenterX, 0)`)
+    avec une hauteur fixe (`PanelHeight`). `_upcomingEncounterBox`
+    reprend maintenant exactement cette même recette — ancre et pivot
+    `(0.5,0.5)` à droite plutôt qu'en haut, `anchoredPosition.y = 0`,
+    et une largeur/hauteur fixes (`UpcomingBoxWidth`/`UpcomingBoxHeight`
+    = `ModifierPanelView.PanelWidth`/`PanelHeight`, ce dernier passé en
+    `internal`) — les deux boxes partagent donc le même centre vertical
+    et la même hauteur, donc le même haut et le même bas.
+  - `BuildUpcomingEncounterPreview` ne redimensionne plus la box à
+    chaque `Refresh` (elle garde maintenant une taille fixe, comme
+    `ModifierPanelView` qui réserve toujours la place pour son nombre
+    maximal de slots même avec 0 modifiers actifs) ; un `RectMask2D`
+    est ajouté sur la box pour que les rounds à beaucoup d'ennemis
+    (jusqu'à 6) soient simplement rognés au lieu de déborder sous la
+    box.
