@@ -62,20 +62,20 @@ namespace Contigu.Presentation
         private const float PurchasePopPeakScale = 1.4f;
         private const float PurchasePopPeakFraction = 0.35f;
         // "Prochain combat" preview box under the (now-raised) Lueur readout — sized and positioned to match
-        // a Blister modifier card (see ModifierCardFactory: same width, same badge size, same name/desc
-        // font sizes, same top Y as the Blister row), one enemy stacked per row instead of side-by-side
-        // since the width is now a single card's rather than a wide band like HudView's enemy row.
+        // the left-side ModifierPanelView exactly (same width, header height, header-to-content gap, badge
+        // size), one enemy stacked per row instead of side-by-side since the width is a single panel's
+        // rather than a wide band like HudView's enemy row.
         private const float UpcomingBoxCenterX = -225f;
-        private const float UpcomingBoxWidth = CardWidth;
-        private const float UpcomingBannerHeight = ModifierCardFactory.NameHeight;
-        private const int UpcomingBannerFontSize = 16;
-        private const float UpcomingBoxTopPadding = ModifierCardFactory.TopPadding;
+        private const float UpcomingBoxWidth = ModifierPanelView.PanelWidth;
+        private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
+        private const int UpcomingBannerFontSize = 28;
+        private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
         private const float UpcomingIconSize = ModifierCardFactory.BadgeSize;
-        private const float UpcomingSlotWidth = CardWidth - 16f;
+        private const float UpcomingSlotWidth = UpcomingBoxWidth - 16f;
         private const float UpcomingRowGap = ModifierCardFactory.Gap;
         private const int UpcomingHpFontSize = 12;
         private const float UpcomingHpLabelHeight = 18f;
-        private const float UpcomingBoxBottomPadding = 12f;
+        private const float UpcomingBoxBottomPadding = 16f;
         // Same decaying side-to-side shake HandView.ShakeSlot plays for an unplayable piece, reused here for
         // a card clicked without enough Lueur to afford it.
         private const float CantAffordShakeDuration = 0.3f;
@@ -158,8 +158,12 @@ namespace Contigu.Presentation
             var upcomingBox = UIFactory.CreatePanel(_root, "UpcomingEncounterBox", UITheme.PanelLight);
             UIFactory.AddThickOutline(upcomingBox, UITheme.Border);
             _upcomingEncounterBox = upcomingBox.rectTransform;
-            _upcomingEncounterBox.anchorMin = new Vector2(1f, 0.5f);
-            _upcomingEncounterBox.anchorMax = new Vector2(1f, 0.5f);
+            // Anchored top-right (not mid-right) so anchoredPosition.y is measured from the screen's top
+            // edge, the same reference frame _blisterCardsContainer uses for ModifierCardsTopY below — with
+            // the old mid-right anchor, the same Y value put this box far lower than the Blister row instead
+            // of starting at the same height, which is what was actually wrong about its position.
+            _upcomingEncounterBox.anchorMin = new Vector2(1f, 1f);
+            _upcomingEncounterBox.anchorMax = new Vector2(1f, 1f);
             _upcomingEncounterBox.pivot = new Vector2(0.5f, 1f);
             // Same top Y as the Blister card row (ModifierCardsTopY) — "même hauteur" as the modifier box.
             // Width/height here are placeholders; BuildUpcomingEncounterPreview resizes the box every

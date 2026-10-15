@@ -8764,3 +8764,28 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   est désormais `!neighbor.IsFilled && !neighbor.IsLocked` au lieu de
   `!neighbor.IsFilled` seul — un voisin verrouillé compte maintenant
   comme "entourant" lui aussi, pour Encerclement comme pour Boucher.
+
+- **Box "Next round" du shop : corrige son mauvais positionnement et
+  l'aligne sur la taille du panneau MODIFIERS** (demande explicite :
+  « La box next round est vraiment mal centré et pas la même grosseur
+  que MODIFIERS » — avec capture d'écran montrant la box tout en bas à
+  droite, loin sous les cartes Blister).
+  - Bug trouvé dans le commit précédent : `_upcomingEncounterBox`
+    utilisait un ancrage `(1, 0.5)` (milieu-droite) alors que
+    `_blisterCardsContainer`, dont on voulait pourtant copier le
+    `anchoredPosition.y` (`ModifierCardsTopY`), utilise un ancrage
+    `(0.5, 1)` (haut). Le même nombre `-124` n'a pas le même sens dans
+    ces deux systèmes de référence (décalage depuis le milieu de
+    l'écran vs. depuis le haut) — d'où la box qui se retrouvait bien
+    plus bas que prévu, écrasée contre le bas de l'écran. L'ancrage
+    passe à `(1, 1)` (haut-droite), le même système de référence que
+    la rangée Blister, donc `ModifierCardsTopY` aligne maintenant
+    vraiment les deux à la même hauteur.
+  - `ModifierPanelView.PanelWidth`/`HeaderHeight`/`HeaderRowGap`
+    passent de `private` à `internal` pour que `ShopView` puisse les
+    référencer directement plutôt que dupliquer ses propres valeurs :
+    `UpcomingBoxWidth` (230), `UpcomingBannerHeight` (58) et
+    `UpcomingBoxTopPadding` (12) sont désormais exactement les mêmes
+    dimensions que le panneau "MODIFIERS" à gauche de l'écran, au lieu
+    de copier la taille d'une carte Blister comme dans le commit
+    précédent.

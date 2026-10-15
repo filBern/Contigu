@@ -18,13 +18,15 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class ModifierPanelView : MonoBehaviour
     {
-        private const float PanelWidth = 230f;
+        // internal (not private) so ShopView's own "Next round" preview box can match this panel's exact
+        // size instead of carrying its own separate magic numbers — see ShopView.UpcomingBoxWidth etc.
+        internal const float PanelWidth = 230f;
         private const float BadgeSize = 90f;
         private const float BadgeSpacing = 10f;
-        private const float HeaderHeight = 58f;
+        internal const float HeaderHeight = 58f;
         // Gap between the header band and the first badge row, so their thick
         // outlines don't sit flush against each other.
-        private const float HeaderRowGap = 12f;
+        internal const float HeaderRowGap = 12f;
         private const float BottomPadding = 16f;
         private const int DisplayRows = 2; // 2 columns x 2 rows = 4 modifiers (EconomyConstants.MaxActiveModifiers)
         private const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
