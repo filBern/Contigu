@@ -8589,3 +8589,34 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     déclenche `SceneManager.LoadScene` que dans son callback `onCovered`
     — un drapeau `_isTransitioning` empêche un double-clic de relancer
     une deuxième balayage en parallèle.
+
+- **L'animation continue à l'arrivée dans la partie, en balayant vers le
+  coin supérieur droit** (demande explicite : « Il faudrait faire
+  l'animation inverse comme pour continuer l'animation vers en haut a
+  droite lorsque la scene du jeu apparait »). Auparavant la mosaïque qui
+  couvrait l'écran disparaissait avec le changement de scène (détruite
+  avec tout le reste de la scène du main menu) — le joueur retombait
+  directement sur le plateau déjà affiché, sans aucune transition de
+  sortie.
+  - `MainMenuTransitionView` est reconstruit pour vivre sur son propre
+    `Canvas` autonome (`sortingOrder` = 1000, au-dessus de tout), pas en
+    enfant du canvas d'une des deux scènes — un enfant du canvas de la
+    scène du menu serait détruit avec elle au moment du
+    `SceneManager.LoadScene`. `PlayCoverSweep` devient une méthode
+    statique qui crée cet objet lui-même ; une fois l'écran couvert, il
+    s'auto-marque `DontDestroyOnLoad` et s'enregistre dans
+    `MainMenuTransitionView.PendingReveal` avant d'appeler le callback
+    qui charge la scène de jeu.
+  - Chaque tuile reçoit maintenant un second délai, `UncoverDelay` : une
+    projection de sa position sur la diagonale "vers le coin supérieur
+    droit" (col - row), normalisée entre le coin inférieur gauche (délai
+    minimal, disparaît en premier) et le coin supérieur droit (délai
+    maximal, disparaît en dernier) — plutôt qu'un simple rembobinage du
+    balayage d'entrée, la masse de tuiles semble se retirer vers le coin
+    supérieur droit. Chaque tuile rejoue la même courbe overshoot que
+    l'apparition, mais inversée (1 → 1.25 → 0 au lieu de 0 → 1.25 → 1).
+  - `GameBootstrap.Awake` vérifie `MainMenuTransitionView.PendingReveal`
+    une fois toute sa propre UI construite et prête (tout à la fin,
+    juste après `_challengeSelectView.Show`) ; si une mosaïque a
+    survécu depuis le menu, il appelle `PlayUncoverSweep`, qui détruit
+    l'objet une fois la dernière tuile disparue.

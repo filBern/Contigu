@@ -17,7 +17,6 @@ namespace Contigu.Presentation
         private MainMenuView _mainMenuView;
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
-        private MainMenuTransitionView _transitionView;
         private RectTransform _canvasRect;
         // Guards against a double-click re-triggering (and stacking) the cover sweep while it's already playing.
         private bool _isTransitioning;
@@ -36,15 +35,13 @@ namespace Contigu.Presentation
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(_canvasRect);
 
-            _transitionView = gameObject.AddComponent<MainMenuTransitionView>();
-
             _mainMenuView.PlayClicked += OnPlayClicked;
             _mainMenuView.SettingsClicked += _settingsView.Toggle;
             _mainMenuView.ExitClicked += OnExitClicked;
             _mainMenuView.Show();
         }
 
-        /// <summary>Covers the screen with a diagonal sweep of colored tiles (see MainMenuTransitionView) before actually swapping scenes, instead of cutting straight to gameplay.</summary>
+        /// <summary>Covers the screen with a diagonal sweep of colored tiles (see MainMenuTransitionView) before actually swapping scenes, instead of cutting straight to gameplay. The sweep survives the scene load (DontDestroyOnLoad) and continues on the other side — see GameBootstrap.Awake's own MainMenuTransitionView.PendingReveal check.</summary>
         private void OnPlayClicked()
         {
             if (_isTransitioning)
@@ -52,7 +49,7 @@ namespace Contigu.Presentation
                 return;
             }
             _isTransitioning = true;
-            _transitionView.PlayCoverSweep(_canvasRect, () => SceneManager.LoadScene(GameplaySceneName));
+            MainMenuTransitionView.PlayCoverSweep(_canvasRect, () => SceneManager.LoadScene(GameplaySceneName));
         }
 
         private static void OnExitClicked()

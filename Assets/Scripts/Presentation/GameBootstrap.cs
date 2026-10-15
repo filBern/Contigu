@@ -117,6 +117,17 @@ namespace Contigu.Presentation
             // picked. TutorialView's first-launch auto-show (see
             // OnChallengeChosen) fires right after.
             _challengeSelectView.Show(_metaStats);
+
+            // The main menu's own tile sweep survived the scene load (DontDestroyOnLoad) covering the whole
+            // screen — now that this scene's UI is actually built and ready underneath it, continue the same
+            // animation by sweeping the tiles away instead of leaving the screen covered. Null when this
+            // scene was entered any other way (e.g. opened directly in the editor), so nothing plays then.
+            if (MainMenuTransitionView.PendingReveal != null)
+            {
+                var reveal = MainMenuTransitionView.PendingReveal;
+                MainMenuTransitionView.PendingReveal = null;
+                reveal.PlayUncoverSweep(null);
+            }
         }
 
         /// <summary>Scales every AudioSource in the scene (see AudioListener.volume) by VolumeSettings.MasterVolume — real, immediate effect even with zero clips loaded yet, unlike Music/SFX which have no bus of their own to attenuate without an AudioMixer.</summary>
