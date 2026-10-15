@@ -8830,3 +8830,27 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   `ContentSizeFitter`/`HorizontalLayoutGroup`, plus un espace visible) —
   le nombre de Lueur reste donc toujours clairement au-dessus de la
   box, peu importe sa hauteur fixe.
+
+- **Fait rentrer tous les ennemis dans la box, même pour les rounds à
+  plus de 2** (demande explicite : « Assure toi de faire rentrer tous
+  les ennemis dans la box, il en manque quand il y en a plus de 2 »).
+  Depuis que la box a une hauteur fixe (voir ci-dessus), un
+  `RectMask2D` rognait silencieusement tout ennemi qui dépassait —
+  correct pour 1-2 ennemis (toujours à taille pleine), mais les rounds
+  à 3+ ennemis (voir `EncounterCatalog`, jusqu'à 6 au round 15)
+  perdaient les derniers de la liste.
+  - `BuildUpcomingEncounterPreview` calcule maintenant la hauteur de
+    contenu réellement disponible dans la box (`UpcomingBoxHeight`
+    moins le bandeau, le padding du haut et du bas) et en déduit un
+    facteur d'échelle `scale` à partir du nombre d'ennemis réel de la
+    prochaine round — `scale = 1` (taille pleine, comportement inchangé)
+    tant que tous les ennemis tiennent déjà à `UpcomingIconSize`
+    (90px) ; en dessous, l'icône, le texte HP et sa police rétrécissent
+    tous ensemble, proportionnellement, jusqu'à un plancher
+    (`UpcomingMinIconSize` = 24px pour l'icône, police min 8, hauteur
+    de label min 10) pour rester lisibles même au round 15.
+  - `ModifierPanelView.BottomPadding` passe à `internal` (même
+    traitement que `PanelWidth`/`HeaderHeight`/`HeaderRowGap`/
+    `PanelHeight` plus tôt) pour que ce calcul de hauteur disponible
+    utilise la vraie valeur du panneau MODIFIERS plutôt qu'un nombre
+    dupliqué.

@@ -77,11 +77,20 @@ namespace Contigu.Presentation
         private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
         private const int UpcomingBannerFontSize = 28;
         private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
+        private const float UpcomingBoxBottomPadding = ModifierPanelView.BottomPadding;
+        // Icon size, HP label height/font and row gap below are each this round's full-size default — a
+        // round with few enough enemies to fit the box at full size uses these as-is (count<=2 always did,
+        // and still does). BuildUpcomingEncounterPreview scales all three down together, proportionally,
+        // only when the actual enemy count for this round wouldn't otherwise fit the box's fixed content
+        // height, so every enemy the next round has is always shown — none clipped by the box's RectMask2D.
         private const float UpcomingIconSize = ModifierCardFactory.BadgeSize;
         private const float UpcomingSlotWidth = UpcomingBoxWidth - 16f;
         private const float UpcomingRowGap = ModifierCardFactory.Gap;
         private const int UpcomingHpFontSize = 12;
         private const float UpcomingHpLabelHeight = 18f;
+        // Never shrink the icon below this, however many enemies a round has — past this point the
+        // portrait and its tooltip hotspot would stop being usable.
+        private const float UpcomingMinIconSize = 24f;
         // Same decaying side-to-side shake HandView.ShakeSlot plays for an unplayable piece, reused here for
         // a card clicked without enough Lueur to afford it.
         private const float CantAffordShakeDuration = 0.3f;
@@ -353,8 +362,9 @@ namespace Contigu.Presentation
         /// been built yet (no EnemyInstance exists for it) while the shop is open. Hides the whole box when
         /// the next round has no authored encounter (plain quota round) or doesn't exist (last round of the
         /// run). The box itself stays a fixed size (UpcomingBoxWidth x UpcomingBoxHeight, matching
-        /// ModifierPanelView exactly) regardless of enemy count — a round with more enemies than fit just
-        /// clips at the box's edge (see the RectMask2D added in Build) rather than growing the box.
+        /// ModifierPanelView exactly) — rather than clip a round with more enemies than fit at full size
+        /// (encounters go up to 6, see EncounterCatalog), every row is scaled down together just enough that
+        /// the whole list still fits the box's fixed content height, down to UpcomingMinIconSize.
         /// </summary>
         private void BuildUpcomingEncounterPreview(RunManager run)
         {
@@ -365,21 +375,30 @@ namespace Contigu.Presentation
                 return;
             }
 
+            int count = upcoming.Count;
+            float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding;
+            float defaultSlotHeight = UpcomingIconSize + UpcomingHpLabelHeight;
+            float maxSlotHeight = (availableHeight - (count - 1) * UpcomingRowGap) / count;
+            float scale = Mathf.Clamp01(maxSlotHeight / defaultSlotHeight);
+            float iconSize = Mathf.Max(UpcomingMinIconSize, UpcomingIconSize * scale);
+            float hpLabelHeight = Mathf.Max(10f, UpcomingHpLabelHeight * scale);
+            int hpFontSize = Mathf.Max(8, Mathf.RoundToInt(UpcomingHpFontSize * scale));
+
             ClearChildren(_upcomingEncounterRow);
             for (int i = 0; i < upcoming.Count; i++)
             {
                 var slot = UIFactory.CreateUIObject("UpcomingSlot" + i, _upcomingEncounterRow);
-                slot.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingIconSize + UpcomingHpLabelHeight);
+                slot.sizeDelta = new Vector2(UpcomingSlotWidth, iconSize + hpLabelHeight);
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
                 slotLayout.preferredWidth = UpcomingSlotWidth;
-                slotLayout.preferredHeight = UpcomingIconSize + UpcomingHpLabelHeight;
+                slotLayout.preferredHeight = iconSize + hpLabelHeight;
 
                 var iconBackground = UIFactory.CreatePanel(slot, "Icon" + i, UITheme.Panel);
                 iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
                 iconBackground.rectTransform.anchoredPosition = Vector2.zero;
-                iconBackground.rectTransform.sizeDelta = new Vector2(UpcomingIconSize, UpcomingIconSize);
+                iconBackground.rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
 
                 var def = EnemyCatalog.Get(upcoming[i]);
                 var icon = UIFactory.CreatePanel(iconBackground.transform, "Sprite" + i, Color.white);
@@ -393,13 +412,13 @@ namespace Contigu.Presentation
                 iconView.Init(_tooltip, def.Name, def.Description + "\n\nPV : " + def.MaxHp + "/" + def.MaxHp);
 
                 int maxHp = def.MaxHp;
-                var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, UpcomingHpFontSize, UITheme.TextOnBackground);
+                var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, hpFontSize, UITheme.TextOnBackground);
                 label.alignment = TextAnchor.MiddleCenter;
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 label.rectTransform.pivot = new Vector2(0.5f, 1f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, -(UpcomingIconSize + 2f));
-                label.rectTransform.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingHpLabelHeight);
+                label.rectTransform.anchoredPosition = new Vector2(0f, -(iconSize + 2f));
+                label.rectTransform.sizeDelta = new Vector2(UpcomingSlotWidth, hpLabelHeight);
             }
         }
 

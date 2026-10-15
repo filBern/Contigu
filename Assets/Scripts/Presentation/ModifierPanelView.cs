@@ -27,7 +27,7 @@ namespace Contigu.Presentation
         // Gap between the header band and the first badge row, so their thick
         // outlines don't sit flush against each other.
         internal const float HeaderRowGap = 12f;
-        private const float BottomPadding = 16f;
+        internal const float BottomPadding = 16f;
         private const int DisplayRows = 2; // 2 columns x 2 rows = 4 modifiers (EconomyConstants.MaxActiveModifiers)
         // internal so ShopView's "Next round" box can match this panel's exact height too (see PanelWidth).
         internal const float PanelHeight = HeaderHeight + HeaderRowGap + DisplayRows * BadgeSize + (DisplayRows - 1) * BadgeSpacing + BottomPadding;
