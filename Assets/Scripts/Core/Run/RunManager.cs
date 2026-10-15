@@ -353,6 +353,27 @@ namespace Contigu.Core
             get { return CurrentRoundIndex + 1; }
         }
 
+        /// <summary>
+        /// Which enemies the round after this one will contain, read straight from EncounterCatalog (no RNG
+        /// involved — Color/Shape Hater's own random pick happens at BuildEncounter time, not here) so the
+        /// shop can preview them before the player leaves. CurrentRoundIndex only advances in AdvanceRound
+        /// (see LeaveShop), so while the shop is open it still names the round that just ended, one behind
+        /// the round being previewed. Empty if that round has no authored encounter (a plain quota round) or
+        /// doesn't exist (last round of the run).
+        /// </summary>
+        public IReadOnlyList<EnemyId> UpcomingEncounterIds
+        {
+            get
+            {
+                int nextRoundIndex = CurrentRoundIndex + 1;
+                if (nextRoundIndex >= _challenge.RoundCount)
+                {
+                    return System.Array.Empty<EnemyId>();
+                }
+                return EncounterCatalog.GetEncounter(_challenge.Id, nextRoundIndex);
+            }
+        }
+
         /// <summary>This round's score target. Still read for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition.</summary>
         public int CurrentQuota
         {

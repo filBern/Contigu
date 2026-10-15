@@ -25,6 +25,9 @@ namespace Contigu.Presentation
         private const float LowPiecesPulseSpeed = 4f;
         private RectTransform _lueurContainer;
         private Text _lueurLabel;
+        // Always-visible top-left "Round X/Y" readout — unlike the score bar's own round label, this one
+        // keeps showing during an encounter (when _isEncounterMode hides the score bar entirely).
+        private Text _roundChipLabel;
         // Defaults match round 1 so the first SetScores call (before Refresh's own SetRound runs) never shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
@@ -39,12 +42,19 @@ namespace Contigu.Presentation
         private const float EnemyIconSize = 72f;
         private const float EnemySlotWidth = 100f;
         private const float EnemyIconTopPadding = 18f;
+        // Small HP bar sitting in the existing top-padding gap above each icon (4 top margin + 8 bar height
+        // + 6 gap before the icon = 18, the same EnemyIconTopPadding as before this bar existed), so neither
+        // EnemyIconTopPadding nor EnemyBandHeight need to change to make room for it.
+        private const float EnemyHpBarTopMargin = 4f;
+        private const float EnemyHpBarHeight = 8f;
         // No longer tied to BarHeight (the score/pieces bars it replaces) — the band needs more room than a
         // plain bar to fit a much bigger portrait, label, and breathing room below it. GameBootstrap's status
         // text position derives from this directly (see BuildUI), so the two stay in sync.
         public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 26f;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
+        private readonly List<Image> _enemyHpBarBackgrounds = new List<Image>();
+        private readonly List<RectTransform> _enemyHpBarFills = new List<RectTransform>();
 
         /// <summary>
         /// True once a slot's death has actually been revealed (icon tinted dead-gray by
@@ -70,6 +80,11 @@ namespace Contigu.Presentation
             _scoreBarRoot = _scoreFillRect.parent.gameObject;
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
             BuildEnemyBand(parent);
+            // Built after the score bar/enemy band so it renders as a later sibling, on top of either —
+            // both of them occupy the full top edge and hide/show depending on HasActiveEncounter (see
+            // Refresh), so without its own always-visible readout the round number disappears entirely
+            // during an encounter (the score bar, the only other place it showed, gets hidden then).
+            BuildRoundChip(parent);
 
             // Lueur is a whole-run currency (see RunManager.Lueur), shown as a rotated-square "diamond" icon
             // plus number in a horizontal layout group that sizes to its contents.
@@ -127,6 +142,25 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
+        /// Small always-visible chip in the top-left corner showing "Round X/Y" — unlike the score bar's own
+        /// round label (folded into SetScores), this one keeps showing during an encounter, when SetScores is
+        /// a no-op and the score bar itself is hidden behind the enemy band.
+        /// </summary>
+        private void BuildRoundChip(Transform parent)
+        {
+            var chip = UIFactory.CreatePanel(parent, "RoundChip", UITheme.PanelLight);
+            UIFactory.AddThickOutline(chip, UITheme.Border);
+            chip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            chip.rectTransform.anchorMax = new Vector2(0f, 1f);
+            chip.rectTransform.pivot = new Vector2(0f, 1f);
+            chip.rectTransform.anchoredPosition = new Vector2(16f, -16f);
+            chip.rectTransform.sizeDelta = new Vector2(150f, 40f);
+
+            _roundChipLabel = UIFactory.CreateText(chip.transform, "RoundChipLabel", "Round " + _roundNumber + "/" + _roundCount, 24, UITheme.TextPrimary);
+            UIFactory.StretchFull(_roundChipLabel.rectTransform);
+        }
+
+        /// <summary>
         /// A light band flush against the top edge holding a row of small square portraits, one per enemy
         /// slot up to <see cref="MaxEnemyIcons"/>, left-to-right in targeting order (leftmost always takes
         /// damage first, see RunManager.ApplyDamageToEncounter), each with an HP readout below its icon.
@@ -171,6 +205,23 @@ namespace Contigu.Presentation
                 slotLayoutElement.preferredWidth = EnemySlotWidth;
                 slotLayoutElement.preferredHeight = slotHeight;
 
+                // Small HP bar directly above the portrait — same flat track+fill construction as
+                // HudView's own score/pieces bars (see BuildBar), just scaled down to fit this slot.
+                var hpBarBackground = UIFactory.CreatePanel(slot, "EnemyHpBarBg" + i, UITheme.PanelLight);
+                UIFactory.AddThickOutline(hpBarBackground, UITheme.Border, 1.5f);
+                hpBarBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                hpBarBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                hpBarBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
+                hpBarBackground.rectTransform.anchoredPosition = new Vector2(0f, -EnemyHpBarTopMargin);
+                hpBarBackground.rectTransform.sizeDelta = new Vector2(EnemyIconSize, EnemyHpBarHeight);
+
+                var hpBarFill = UIFactory.CreatePanel(hpBarBackground.transform, "EnemyHpBarFill" + i, UITheme.Danger);
+                var hpBarFillRect = hpBarFill.rectTransform;
+                hpBarFillRect.anchorMin = new Vector2(0f, 0f);
+                hpBarFillRect.anchorMax = new Vector2(1f, 1f);
+                hpBarFillRect.offsetMin = Vector2.zero;
+                hpBarFillRect.offsetMax = Vector2.zero;
+
                 // Plain background panel behind the sprite — no outline (see README for why one was tried and
                 // dropped: even moved here off the sprite itself, the player still read it as an unwanted box
                 // around each portrait).
@@ -200,6 +251,8 @@ namespace Contigu.Presentation
                 _enemyIconImages.Add(icon);
                 _enemyIconLabels.Add(label);
                 _enemyIconViews.Add(iconView);
+                _enemyHpBarBackgrounds.Add(hpBarBackground);
+                _enemyHpBarFills.Add(hpBarFillRect);
             }
             _enemyBandRoot.SetActive(false);
         }
@@ -250,6 +303,10 @@ namespace Contigu.Presentation
         {
             _roundNumber = roundNumber;
             _roundCount = roundCount;
+            if (_roundChipLabel != null)
+            {
+                _roundChipLabel.text = "Round " + _roundNumber + "/" + _roundCount;
+            }
         }
 
         /// <summary>Updates just the Lueur label, letting the presentation layer animate it up progressively instead of jumping straight to the final value.</summary>
@@ -319,6 +376,7 @@ namespace Contigu.Presentation
                 }
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
+                SetRatio(_enemyHpBarFills[i], enemy.CurrentMaxHp > 0 ? (float)enemy.CurrentHp / enemy.CurrentMaxHp : 0f);
                 _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy));
             }
         }
@@ -353,6 +411,7 @@ namespace Contigu.Presentation
             }
             _enemyIconLabels[index].text = hp + "/" + maxHp;
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
+            SetRatio(_enemyHpBarFills[index], maxHp > 0 ? (float)hp / maxHp : 0f);
             if (isDead)
             {
                 // The exact moment this kill is first visually revealed — see _enemySlotRevealedDead's own doc comment.
@@ -387,8 +446,12 @@ namespace Contigu.Presentation
             PlayDeathExplosion(index);
             var icon = _enemyIconImages[index];
             var label = _enemyIconLabels[index];
+            var hpBarBg = _enemyHpBarBackgrounds[index];
+            var hpBarFill = _enemyHpBarFills[index].GetComponent<Image>();
             Color iconStart = icon.color;
             Color labelStart = label.color;
+            Color hpBarBgStart = hpBarBg.color;
+            Color hpBarFillStart = hpBarFill.color;
             float t = 0f;
             while (t < duration)
             {
@@ -396,10 +459,14 @@ namespace Contigu.Presentation
                 float alpha = 1f - Mathf.Clamp01(t / duration);
                 icon.color = new Color(iconStart.r, iconStart.g, iconStart.b, iconStart.a * alpha);
                 label.color = new Color(labelStart.r, labelStart.g, labelStart.b, labelStart.a * alpha);
+                hpBarBg.color = new Color(hpBarBgStart.r, hpBarBgStart.g, hpBarBgStart.b, hpBarBgStart.a * alpha);
+                hpBarFill.color = new Color(hpBarFillStart.r, hpBarFillStart.g, hpBarFillStart.b, hpBarFillStart.a * alpha);
                 yield return null;
             }
             icon.color = new Color(iconStart.r, iconStart.g, iconStart.b, 0f);
             label.color = new Color(labelStart.r, labelStart.g, labelStart.b, 0f);
+            hpBarBg.color = new Color(hpBarBgStart.r, hpBarBgStart.g, hpBarBgStart.b, 0f);
+            hpBarFill.color = new Color(hpBarFillStart.r, hpBarFillStart.g, hpBarFillStart.b, 0f);
             _enemySlots[index].SetActive(false);
         }
 
@@ -413,8 +480,8 @@ namespace Contigu.Presentation
             return Color.white;
         }
 
-        /// <summary>Loads each enemy's portrait from Assets/Resources/Enemies/&lt;EnemyId&gt;.png, cached after the first lookup per identity.</summary>
-        private static Sprite EnemyIconSprite(EnemyId identity)
+        /// <summary>Loads each enemy's portrait from Assets/Resources/Enemies/&lt;EnemyId&gt;.png, cached after the first lookup per identity. Internal (not private) so ShopView can reuse the same cache/lookup for its upcoming-encounter preview instead of duplicating it.</summary>
+        internal static Sprite EnemyIconSprite(EnemyId identity)
         {
             if (!_enemySpriteCache.TryGetValue(identity, out var sprite))
             {

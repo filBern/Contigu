@@ -8636,3 +8636,60 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     visible par le joueur. Quand `PendingReveal` est nul (scène ouverte
     autrement, par ex. directement dans l'éditeur), `Show` reste appelé
     immédiatement comme avant.
+
+- **Progress bar d'ennemis, indicateur de round, et aperçu du prochain
+  combat dans le shop** (demande explicite : « Ajoute une petite
+  progress bar au dessus des sprite d'ennemis / Ajoute en haut a gauche
+  du jeu quel round sur combien le joueur est rendu / Dans le shop,
+  monte un peu le nombre de lueur que le joueur possède et en dessous
+  dans une box met la liste des ennemis que le joueur affrontera a la
+  prochaine round comme dans l'écran de jeu avec hp et sprite »).
+  - `HudView.BuildEnemyBand` construit maintenant, au-dessus de chaque
+    portrait d'ennemi, une petite barre de vie plate (fond
+    `EnemyHpBarBg` + remplissage `EnemyHpBarFill`, même construction
+    track+fill que les barres de score/pièces via `BuildBar`) dans le
+    padding déjà existant au-dessus de l'icône — `EnemyIconTopPadding`
+    (18) n'a donc pas besoin de changer, il se décompose simplement en
+    `EnemyHpBarTopMargin` (4) + `EnemyHpBarHeight` (8) + 6 d'espace
+    avant l'icône. `SetEncounter` et `SetEnemyHpDisplay` appellent
+    `SetRatio` sur son `RectTransform` de remplissage en plus de mettre
+    à jour le texte HP, et `FadeOutEnemySlot` fait maintenant disparaître
+    son fond et son remplissage en fondu en même temps que l'icône et le
+    label, au lieu de laisser la barre de vie visible après la mort de
+    l'ennemi.
+  - Un nouveau chip "Round X/Y" toujours visible est ajouté en haut à
+    gauche de l'écran via `HudView.BuildRoundChip`, construit après
+    `BuildEnemyBand` (donc rendu par-dessus la barre de score ou la
+    bande d'ennemis, peu importe laquelle est active). Avant ce
+    changement, le numéro de round n'était affiché que dans le label de
+    la barre de score elle-même, qui disparaît entièrement pendant un
+    combat (`_isEncounterMode` cache alors toute la barre) — le joueur
+    perdait donc totalement de vue où il en était dans le run pendant
+    les combats. `SetRound` met maintenant aussi à jour le texte de ce
+    chip, en plus des champs `_roundNumber`/`_roundCount` déjà
+    consommés par `SetScores`.
+  - `RunManager` gagne une nouvelle propriété en lecture seule,
+    `UpcomingEncounterIds`, qui lit directement
+    `EncounterCatalog.GetEncounter(_challenge.Id, CurrentRoundIndex + 1)`
+    — un appel pur, sans RNG (le tirage aléatoire propre à Color/Shape
+    Hater n'intervient que plus tard, dans `BuildEncounter`), donc sans
+    risque de perturber le flux de hasard du run en le lisant par
+    avance pendant que le shop est ouvert. Elle renvoie une liste vide
+    si le round suivant n'a pas d'encounter authored (round de quota
+    classique) ou n'existe pas (dernier round du run) : `CurrentRoundIndex`
+    ne s'incrémente que dans `LeaveShop`/`AdvanceRound`, donc pendant que
+    le shop est ouvert il nomme encore le round qui vient de se
+    terminer, un cran derrière celui qu'on prévisualise ici.
+  - Dans `ShopView`, le conteneur `_lueurContainer` (le nombre de Lueur
+    en haut à droite) est remonté (`anchoredPosition.y` de `0` à `120`)
+    pour laisser la place, juste en dessous, à une nouvelle box
+    `UpcomingEncounterBox` ("Prochain combat") : une rangée d'icônes
+    d'ennemis construite dans `BuildUpcomingEncounterPreview`, appelée
+    depuis `Refresh`, à partir de `run.UpcomingEncounterIds`. Chaque
+    icône réutilise le même sprite que la bande d'ennemis de
+    `HudView` (`HudView.EnemyIconSprite`, rendue `internal` plutôt que
+    `private` pour ce partage) et affiche `maxHp + "/" + maxHp` via
+    `EnemyCatalog.Get(id).MaxHp` plutôt qu'un HP courant — aucun
+    `EnemyInstance` n'existe encore pour un round pas encore construit.
+    La box entière se cache quand `UpcomingEncounterIds` est vide
+    (dernier round du run, ou round de quota sans encounter).

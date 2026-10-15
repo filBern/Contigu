@@ -61,6 +61,15 @@ namespace Contigu.Presentation
         private const float PurchasePopDuration = 0.3f;
         private const float PurchasePopPeakScale = 1.4f;
         private const float PurchasePopPeakFraction = 0.35f;
+        // "Prochain combat" preview box under the (now-raised) Lueur readout — same icon+HP styling as
+        // HudView's enemy band, just scaled down to fit this corner.
+        private const float UpcomingBoxWidth = 260f;
+        private const float UpcomingBoxTopPadding = 12f;
+        private const float UpcomingTitleHeight = 22f;
+        private const float UpcomingIconSize = 44f;
+        private const float UpcomingSlotWidth = 60f;
+        private const float UpcomingHpLabelHeight = 18f;
+        private const float UpcomingBoxBottomPadding = 12f;
         // Same decaying side-to-side shake HandView.ShakeSlot plays for an unplayable piece, reused here for
         // a card clicked without enough Lueur to afford it.
         private const float CantAffordShakeDuration = 0.3f;
@@ -83,6 +92,8 @@ namespace Contigu.Presentation
         private Text _lueurLabel;
         private RectTransform _lueurContainer;
         private Coroutine _lueurPulseCoroutine;
+        private RectTransform _upcomingEncounterBox;
+        private RectTransform _upcomingEncounterRow;
         private RectTransform _blisterCardsContainer;
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
@@ -113,7 +124,7 @@ namespace Contigu.Presentation
             _lueurContainer.anchorMin = new Vector2(1f, 0.5f);
             _lueurContainer.anchorMax = new Vector2(1f, 0.5f);
             _lueurContainer.pivot = new Vector2(1f, 0.5f);
-            _lueurContainer.anchoredPosition = new Vector2(-160f, 0f);
+            _lueurContainer.anchoredPosition = new Vector2(-160f, 120f);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 14f;
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -131,6 +142,40 @@ namespace Contigu.Presentation
             lueurIconLayout.preferredHeight = 58f;
 
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "Lueur", "", 84, VisualDefaults.GoldenColor);
+
+            // "Prochain combat" preview — sits right under the (now-raised) Lueur readout, same corner.
+            // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty
+            // until the shop is actually open (it only ever reads the catalog, no RNG, see RunManager).
+            var upcomingBox = UIFactory.CreatePanel(_root, "UpcomingEncounterBox", UITheme.PanelLight);
+            UIFactory.AddThickOutline(upcomingBox, UITheme.Border);
+            _upcomingEncounterBox = upcomingBox.rectTransform;
+            _upcomingEncounterBox.anchorMin = new Vector2(1f, 0.5f);
+            _upcomingEncounterBox.anchorMax = new Vector2(1f, 0.5f);
+            _upcomingEncounterBox.pivot = new Vector2(1f, 1f);
+            _upcomingEncounterBox.anchoredPosition = new Vector2(-30f, 60f);
+            _upcomingEncounterBox.sizeDelta = new Vector2(UpcomingBoxWidth, UpcomingBoxTopPadding + UpcomingTitleHeight
+                + UpcomingIconSize + UpcomingHpLabelHeight + UpcomingBoxBottomPadding);
+
+            var upcomingTitle = UIFactory.CreateText(_upcomingEncounterBox, "Title", "Prochain combat", 15, UITheme.TextMutedOnBackground);
+            upcomingTitle.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            upcomingTitle.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            upcomingTitle.rectTransform.pivot = new Vector2(0.5f, 1f);
+            upcomingTitle.rectTransform.anchoredPosition = new Vector2(0f, -UpcomingBoxTopPadding);
+            upcomingTitle.rectTransform.sizeDelta = new Vector2(UpcomingBoxWidth - 16f, UpcomingTitleHeight);
+
+            _upcomingEncounterRow = UIFactory.CreateUIObject("UpcomingEncounterRow", _upcomingEncounterBox);
+            _upcomingEncounterRow.anchorMin = new Vector2(0.5f, 1f);
+            _upcomingEncounterRow.anchorMax = new Vector2(0.5f, 1f);
+            _upcomingEncounterRow.pivot = new Vector2(0.5f, 1f);
+            _upcomingEncounterRow.anchoredPosition = new Vector2(0f, -(UpcomingBoxTopPadding + UpcomingTitleHeight));
+            var upcomingLayout = _upcomingEncounterRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            upcomingLayout.spacing = 6f;
+            upcomingLayout.childAlignment = TextAnchor.UpperCenter;
+            upcomingLayout.childControlWidth = false;
+            upcomingLayout.childControlHeight = false;
+            var upcomingFitter = _upcomingEncounterRow.gameObject.AddComponent<ContentSizeFitter>();
+            upcomingFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            upcomingFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -241,6 +286,7 @@ namespace Contigu.Presentation
         public void Refresh(RunManager run)
         {
             _lueurLabel.text = run.Lueur.ToString();
+            BuildUpcomingEncounterPreview(run);
 
             float modifierCardHeight = BuildBlisterCards(run);
             float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
@@ -264,6 +310,55 @@ namespace Contigu.Presentation
             for (int i = container.childCount - 1; i >= 0; i--)
             {
                 Destroy(container.GetChild(i).gameObject);
+            }
+        }
+
+        /// <summary>
+        /// Rebuilds the "Prochain combat" row from run.UpcomingEncounterIds — one mini icon + full-HP label
+        /// per enemy the next round will contain, same sprite lookup as HudView's own enemy band (see
+        /// HudView.EnemyIconSprite). Shows EnemyCatalog's base MaxHp rather than any live EnemyInstance's
+        /// HP, since the round hasn't been built yet (no EnemyInstance exists for it) while the shop is open.
+        /// Hides the whole box when the next round has no authored encounter (plain quota round) or doesn't
+        /// exist (last round of the run).
+        /// </summary>
+        private void BuildUpcomingEncounterPreview(RunManager run)
+        {
+            var upcoming = run.UpcomingEncounterIds;
+            _upcomingEncounterBox.gameObject.SetActive(upcoming.Count > 0);
+            if (upcoming.Count == 0)
+            {
+                return;
+            }
+
+            ClearChildren(_upcomingEncounterRow);
+            for (int i = 0; i < upcoming.Count; i++)
+            {
+                var slot = UIFactory.CreateUIObject("UpcomingSlot" + i, _upcomingEncounterRow);
+                slot.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingIconSize + UpcomingHpLabelHeight);
+                var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
+                slotLayout.preferredWidth = UpcomingSlotWidth;
+                slotLayout.preferredHeight = UpcomingIconSize + UpcomingHpLabelHeight;
+
+                var iconBackground = UIFactory.CreatePanel(slot, "Icon" + i, UITheme.Panel);
+                iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
+                iconBackground.rectTransform.anchoredPosition = Vector2.zero;
+                iconBackground.rectTransform.sizeDelta = new Vector2(UpcomingIconSize, UpcomingIconSize);
+
+                var icon = UIFactory.CreatePanel(iconBackground.transform, "Sprite" + i, Color.white);
+                icon.preserveAspect = true;
+                UIFactory.StretchFull(icon.rectTransform);
+                icon.sprite = HudView.EnemyIconSprite(upcoming[i]);
+
+                int maxHp = EnemyCatalog.Get(upcoming[i]).MaxHp;
+                var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, 13, UITheme.TextOnBackground);
+                label.alignment = TextAnchor.MiddleCenter;
+                label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                label.rectTransform.pivot = new Vector2(0.5f, 1f);
+                label.rectTransform.anchoredPosition = new Vector2(0f, -(UpcomingIconSize + 2f));
+                label.rectTransform.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingHpLabelHeight);
             }
         }
 
