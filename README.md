@@ -8722,3 +8722,31 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     combat" — la hauteur de la box (`UpcomingBannerHeight` = 26)
     remplace l'ancienne `UpcomingTitleHeight`, et la rangée d'icônes
     est repoussée d'autant plus bas pour ne pas chevaucher le bandeau.
+
+- **Box "Prochain combat" de la même taille que la box des modifiers,
+  et à la même hauteur** (demande explicite : « La box et le texte des
+  ennemis dans le shop devrait être de la même grosseur que la boite
+  des modifiers. Aussi a la même hauteur »).
+  - `UpcomingBoxWidth`, `UpcomingIconSize`, `UpcomingBannerHeight` et
+    `UpcomingBoxTopPadding` référencent désormais directement
+    `CardWidth`/`ModifierCardFactory.BadgeSize`/`ModifierCardFactory.
+    NameHeight`/`ModifierCardFactory.TopPadding` plutôt que leurs
+    propres valeurs arbitraires (260/44/26/12) — la box et l'icône de
+    chaque ennemi ont donc exactement la même largeur et la même taille
+    que celles d'une carte Blister (modifier). Le texte HP de chaque
+    ennemi passe à `UpcomingHpFontSize` (12), le même corps que la
+    description d'une carte modifier (`ModifierCardFactory.
+    DescFontSize`), et le texte du bandeau "Next round" passe à 16,
+    le même corps que le nom d'un modifier.
+  - Puisque la largeur de la box correspond maintenant à une seule
+    carte (190, bien plus étroite que l'ancienne largeur de 260 pensée
+    pour plusieurs icônes côte à côte), `_upcomingEncounterRow` passe
+    d'un `HorizontalLayoutGroup` à un `VerticalLayoutGroup` : chaque
+    ennemi occupe sa propre rangée (icône + HP) au lieu de s'aligner
+    côte à côte, et `BuildUpcomingEncounterPreview` calcule la hauteur
+    totale de la box à chaque `Refresh` à partir du nombre d'ennemis du
+    prochain round, plutôt qu'une hauteur fixe pour un seul.
+  - `_upcomingEncounterBox.anchoredPosition.y` passe de `60` à
+    `ModifierCardsTopY` (la même constante que `_blisterCardsContainer`
+    utilise déjà pour son propre haut) : la box d'ennemis et la rangée
+    de cartes Blister démarrent donc exactement à la même hauteur.
