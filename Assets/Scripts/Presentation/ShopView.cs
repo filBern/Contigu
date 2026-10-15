@@ -115,6 +115,7 @@ namespace Contigu.Presentation
         private Coroutine _lueurPulseCoroutine;
         private RectTransform _upcomingEncounterBox;
         private RectTransform _upcomingEncounterRow;
+        private GridLayoutGroup _upcomingEncounterGrid;
         private RectTransform _blisterCardsContainer;
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
@@ -202,21 +203,19 @@ namespace Contigu.Presentation
             upcomingBannerLabel.alignment = TextAnchor.MiddleCenter;
             UIFactory.StretchFull(upcomingBannerLabel.rectTransform);
 
-            // One enemy stacked per row (not side-by-side, see the box's own width comment above) — each
-            // row is exactly UpcomingSlotWidth wide, so the vertical layout never needs to grow horizontally.
+            // One enemy per cell, one column while count<=2 (reads as a plain vertical stack), two columns
+            // side by side beyond that (see BuildUpcomingEncounterPreview, which sets constraintCount/
+            // cellSize/spacing each Refresh based on the next round's actual enemy count) — same
+            // GridLayoutGroup technique as ModifierPanelView's own badge grid.
             _upcomingEncounterRow = UIFactory.CreateUIObject("UpcomingEncounterRow", _upcomingEncounterBox);
             _upcomingEncounterRow.anchorMin = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.anchorMax = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.pivot = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.anchoredPosition = new Vector2(0f, -(UpcomingBannerHeight + UpcomingBoxTopPadding));
-            var upcomingLayout = _upcomingEncounterRow.gameObject.AddComponent<VerticalLayoutGroup>();
-            upcomingLayout.spacing = UpcomingRowGap;
-            upcomingLayout.childAlignment = TextAnchor.UpperCenter;
-            upcomingLayout.childControlWidth = false;
-            upcomingLayout.childControlHeight = false;
-            var upcomingFitter = _upcomingEncounterRow.gameObject.AddComponent<ContentSizeFitter>();
-            upcomingFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            upcomingFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            _upcomingEncounterRow.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding);
+            _upcomingEncounterGrid = _upcomingEncounterRow.gameObject.AddComponent<GridLayoutGroup>();
+            _upcomingEncounterGrid.childAlignment = TextAnchor.UpperCenter;
+            _upcomingEncounterGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -355,16 +354,17 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Rebuilds the "Prochain combat" rows from run.UpcomingEncounterIds — one mini icon + full-HP label
-        /// per enemy the next round will contain, stacked vertically (one enemy per row, see the box's own
-        /// width/sizing comment), same sprite lookup as HudView's own enemy band (see HudView.EnemyIconSprite).
-        /// Shows EnemyCatalog's base MaxHp rather than any live EnemyInstance's HP, since the round hasn't
-        /// been built yet (no EnemyInstance exists for it) while the shop is open. Hides the whole box when
-        /// the next round has no authored encounter (plain quota round) or doesn't exist (last round of the
-        /// run). The box itself stays a fixed size (UpcomingBoxWidth x UpcomingBoxHeight, matching
-        /// ModifierPanelView exactly) — rather than clip a round with more enemies than fit at full size
-        /// (encounters go up to 6, see EncounterCatalog), every row is scaled down together just enough that
-        /// the whole list still fits the box's fixed content height, down to UpcomingMinIconSize.
+        /// Rebuilds the "Prochain combat" grid from run.UpcomingEncounterIds — one mini icon + full-HP label
+        /// per enemy the next round will contain, same sprite lookup as HudView's own enemy band (see
+        /// HudView.EnemyIconSprite). One column (reads as a plain vertical stack) while count&lt;=2, two
+        /// columns side by side beyond that so a busier round spreads horizontally instead of just shrinking
+        /// vertically forever. Shows EnemyCatalog's base MaxHp rather than any live EnemyInstance's HP, since
+        /// the round hasn't been built yet (no EnemyInstance exists for it) while the shop is open. Hides the
+        /// whole box when the next round has no authored encounter (plain quota round) or doesn't exist
+        /// (last round of the run). The box itself stays a fixed size (UpcomingBoxWidth x UpcomingBoxHeight,
+        /// matching ModifierPanelView exactly) — rather than clip a round with more enemies than fit at full
+        /// size (encounters go up to 6, see EncounterCatalog), each cell scales down together just enough
+        /// that the whole grid still fits the box's fixed content height, down to UpcomingMinIconSize.
         /// </summary>
         private void BuildUpcomingEncounterPreview(RunManager run)
         {
@@ -376,22 +376,25 @@ namespace Contigu.Presentation
             }
 
             int count = upcoming.Count;
+            int columns = count > 2 ? 2 : 1;
+            int rows = (count + columns - 1) / columns;
             float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding;
             float defaultSlotHeight = UpcomingIconSize + UpcomingHpLabelHeight;
-            float maxSlotHeight = (availableHeight - (count - 1) * UpcomingRowGap) / count;
+            float maxSlotHeight = (availableHeight - (rows - 1) * UpcomingRowGap) / rows;
             float scale = Mathf.Clamp01(maxSlotHeight / defaultSlotHeight);
             float iconSize = Mathf.Max(UpcomingMinIconSize, UpcomingIconSize * scale);
             float hpLabelHeight = Mathf.Max(10f, UpcomingHpLabelHeight * scale);
             int hpFontSize = Mathf.Max(8, Mathf.RoundToInt(UpcomingHpFontSize * scale));
+            float cellWidth = (UpcomingSlotWidth - (columns - 1) * UpcomingRowGap) / columns;
+
+            _upcomingEncounterGrid.constraintCount = columns;
+            _upcomingEncounterGrid.cellSize = new Vector2(cellWidth, iconSize + hpLabelHeight);
+            _upcomingEncounterGrid.spacing = new Vector2(UpcomingRowGap, UpcomingRowGap);
 
             ClearChildren(_upcomingEncounterRow);
             for (int i = 0; i < upcoming.Count; i++)
             {
                 var slot = UIFactory.CreateUIObject("UpcomingSlot" + i, _upcomingEncounterRow);
-                slot.sizeDelta = new Vector2(UpcomingSlotWidth, iconSize + hpLabelHeight);
-                var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
-                slotLayout.preferredWidth = UpcomingSlotWidth;
-                slotLayout.preferredHeight = iconSize + hpLabelHeight;
 
                 var iconBackground = UIFactory.CreatePanel(slot, "Icon" + i, UITheme.Panel);
                 iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -418,7 +421,7 @@ namespace Contigu.Presentation
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 label.rectTransform.pivot = new Vector2(0.5f, 1f);
                 label.rectTransform.anchoredPosition = new Vector2(0f, -(iconSize + 2f));
-                label.rectTransform.sizeDelta = new Vector2(UpcomingSlotWidth, hpLabelHeight);
+                label.rectTransform.sizeDelta = new Vector2(cellWidth, hpLabelHeight);
             }
         }
 

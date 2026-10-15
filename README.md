@@ -8854,3 +8854,23 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `PanelHeight` plus tôt) pour que ce calcul de hauteur disponible
     utilise la vraie valeur du panneau MODIFIERS plutôt qu'un nombre
     dupliqué.
+
+- **Groupe les ennemis par deux horizontalement au-delà de 2** (demande
+  explicite : « Lorsqu'il y en a plus de 2, met les ennemi par groupe de
+  deux horizontalement »). `_upcomingEncounterRow` passait d'un
+  `VerticalLayoutGroup` (une colonne, les ennemis s'empilaient
+  verticalement et rétrécissaient de plus en plus avec le nombre) à un
+  `GridLayoutGroup` — même technique que la grille de badges de
+  `ModifierPanelView`.
+  - `BuildUpcomingEncounterPreview` choisit `columns = 1` tant que
+    `count <= 2` (comportement inchangé, toujours en pile verticale) et
+    `columns = 2` au-delà — le nombre de `rows` nécessaires baisse donc
+    de moitié par rapport à l'ancien calcul par `count`, ce qui laisse
+    beaucoup plus de hauteur disponible par rangée et donc des icônes
+    bien plus grandes pour un même nombre d'ennemis (round à 4 ennemis :
+    2 rangées de 2 au lieu de 4 rangées de 1).
+  - `GridLayoutGroup.constraintCount`/`cellSize`/`spacing` sont
+    recalculés à chaque `Refresh` à partir de ce nombre de colonnes et
+    de la largeur de cellule qui en découle (`cellWidth`), au lieu des
+    anciens `LayoutElement`/`ContentSizeFitter` par slot du
+    `VerticalLayoutGroup`.
