@@ -1076,7 +1076,7 @@ namespace Contigu.Core
             stack.Push(pos);
         }
 
-        /// <summary>Encirclement: bonus per group cell whose 8 surrounding tiles are all filled OR off the edge of the grid — a softer sibling of Fortress, which never credits an edge/corner cell (out of bounds always fails its check).</summary>
+        /// <summary>Encirclement: bonus per group cell whose 8 surrounding tiles are all filled, locked, OR off the edge of the grid — a softer sibling of Fortress, which never credits an edge/corner cell (out of bounds always fails its check).</summary>
         private int ApplyEncerclement(List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int total = 0;
@@ -1109,7 +1109,11 @@ namespace Contigu.Core
                     {
                         continue; // off the grid counts as "filled" for Encerclement
                     }
-                    if (!_cells[nx, ny].IsFilled)
+                    var neighbor = _cells[nx, ny];
+                    // A locked-but-empty cell is still a genuine obstacle (see Cell.IsLocked's own doc
+                    // comment) — it blocks a line from completing there just like a filled tile would, so
+                    // it should surround a cell just as well for Encerclement's purposes.
+                    if (!neighbor.IsFilled && !neighbor.IsLocked)
                     {
                         return false;
                     }

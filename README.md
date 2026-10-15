@@ -8750,3 +8750,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `ModifierCardsTopY` (la même constante que `_blisterCardsContainer`
     utilise déjà pour son propre haut) : la box d'ennemis et la rangée
     de cartes Blister démarrent donc exactement à la même hauteur.
+
+- **Encerclement compte aussi les cellules locked** (demande explicite :
+  « Encirclement devrait aussi prendre en compte les locked cells »).
+  `GridManager.AreAllNeighborsFilledOrOffGrid` (le test partagé par
+  Encerclement et Boucher/Sealer) ne considérait un voisin comme
+  "entourant" que s'il était rempli (`IsFilled`) ou hors grille — une
+  cellule verrouillée mais vide (`IsLocked`, posée par exemple par
+  Locker ou Heavy Locker) comptait donc comme une case manquante et
+  empêchait le bonus de se déclencher, alors qu'elle bloque déjà une
+  ligne/colonne de se compléter exactement comme une case remplie (voir
+  le commentaire de `Cell.IsLocked`). La condition qui échoue le check
+  est désormais `!neighbor.IsFilled && !neighbor.IsLocked` au lieu de
+  `!neighbor.IsFilled` seul — un voisin verrouillé compte maintenant
+  comme "entourant" lui aussi, pour Encerclement comme pour Boucher.
