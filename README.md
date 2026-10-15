@@ -8528,3 +8528,25 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     chaîne séquentielle.
   - `GameBootstrap.SequentialEnemyEffectGapSeconds` (la pause entre deux
     ennemis) passe de 0.15s à 0.06s.
+
+- **Boutons du main menu recolorés avec les couleurs du jeu** (suite à
+  une question exploratoire : « Je trouve le menu très fade au niveau
+  des couleur a comparé au jeu. Que peut-on faire pour le rendre plus
+  attrayant? », puis confirmé : « J'aime toutes les idées en fait »).
+  - `MainMenuView.Build` teinte désormais le bouton Play avec
+    `VisualDefaults.GetColor(PieceColor.Lime)` (vert) et Settings avec
+    `PieceColor.Teal` (bleu) — deux des mêmes couleurs que le titre
+    "CONTIGU" lui-même cycle (voir `TitleTileView.Colors`) — au lieu du
+    bleu pâle générique des autres boutons "Choose" du jeu. Exit garde
+    son rouge/rose danger habituel : ce n'est pas une couleur de pièce,
+    c'est le bouton dont le rôle est de se lire comme "quitter", donc il
+    reste volontairement distinct de Play/Settings plutôt que de
+    rejoindre leur palette.
+  - Les trois boutons gagnent aussi un contour épais "bande dessinée"
+    (`UIFactory.AddThickOutline`, déjà utilisé partout ailleurs pour les
+    cartes/badges mais volontairement absent des boutons en général —
+    voir le commentaire de `UIFactory.FinishButton`) pour plus de
+    présence visuelle.
+  - Le fond animé partagé (`AnimatedBackgroundView`) n'a pas été touché
+    puisqu'il est réutilisé sur tous les écrans du jeu, pas seulement le
+    main menu.

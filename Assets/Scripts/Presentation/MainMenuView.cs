@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
@@ -56,6 +57,14 @@ namespace Contigu.Presentation
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
             titleContainer.anchoredPosition = new Vector2(0f, 130f);
 
+            // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
+            // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"
+            // button in the game uses — on a screen with nothing else going on but the title, that generic
+            // tint read as flat next to it. Exit keeps the usual danger-red pill: it's not a game color,
+            // it's the one button whose job is to read as "leaving", so it stays visually distinct from
+            // Play/Settings rather than joining their palette. A thick comic outline (see
+            // UIFactory.AddThickOutline, used everywhere else for cards/badges but deliberately skipped by
+            // buttons in general — FinishButton's own doc comment) gives all three a bit more presence too.
             var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.ChooseButtonBackground, 22);
             var playRect = playButton.GetComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -63,6 +72,9 @@ namespace Contigu.Presentation
             playRect.pivot = new Vector2(0.5f, 0.5f);
             playRect.anchoredPosition = new Vector2(0f, -60f);
             playRect.sizeDelta = new Vector2(220f, 56f);
+            var playImage = playButton.GetComponent<Image>();
+            playImage.color = VisualDefaults.GetColor(PieceColor.Lime);
+            UIFactory.AddThickOutline(playImage, UITheme.Border);
             playButton.onClick.AddListener(OnPlayClicked);
             playButton.gameObject.AddComponent<MainMenuButtonHover>();
 
@@ -73,6 +85,9 @@ namespace Contigu.Presentation
             settingsRect.pivot = new Vector2(0.5f, 0.5f);
             settingsRect.anchoredPosition = new Vector2(0f, -136f);
             settingsRect.sizeDelta = new Vector2(220f, 56f);
+            var settingsImage = settingsButton.GetComponent<Image>();
+            settingsImage.color = VisualDefaults.GetColor(PieceColor.Teal);
+            UIFactory.AddThickOutline(settingsImage, UITheme.Border);
             settingsButton.onClick.AddListener(OnSettingsClicked);
             settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
 
@@ -83,6 +98,7 @@ namespace Contigu.Presentation
             exitRect.pivot = new Vector2(0.5f, 0.5f);
             exitRect.anchoredPosition = new Vector2(0f, -212f);
             exitRect.sizeDelta = new Vector2(220f, 56f);
+            UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
             exitButton.gameObject.AddComponent<MainMenuButtonHover>();
 
