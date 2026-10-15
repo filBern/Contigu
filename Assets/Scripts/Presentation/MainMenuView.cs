@@ -55,7 +55,7 @@ namespace Contigu.Presentation
             titleContainer.anchorMin = new Vector2(0.5f, 0.5f);
             titleContainer.anchorMax = new Vector2(0.5f, 0.5f);
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
-            titleContainer.anchoredPosition = new Vector2(0f, 130f);
+            titleContainer.anchoredPosition = new Vector2(0f, 190f);
 
             // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
             // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"
@@ -65,39 +65,39 @@ namespace Contigu.Presentation
             // Play/Settings rather than joining their palette. A thick comic outline (see
             // UIFactory.AddThickOutline, used everywhere else for cards/badges but deliberately skipped by
             // buttons in general — FinishButton's own doc comment) gives all three a bit more presence too.
-            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.ChooseButtonBackground, 22);
+            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.ChooseButtonBackground, 33);
             var playRect = playButton.GetComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
             playRect.pivot = new Vector2(0.5f, 0.5f);
-            playRect.anchoredPosition = new Vector2(0f, -60f);
-            playRect.sizeDelta = new Vector2(220f, 56f);
+            playRect.anchoredPosition = new Vector2(0f, -6f);
+            playRect.sizeDelta = new Vector2(330f, 84f);
             var playImage = playButton.GetComponent<Image>();
             playImage.color = VisualDefaults.GetColor(PieceColor.Lime);
             UIFactory.AddThickOutline(playImage, UITheme.Border);
             playButton.onClick.AddListener(OnPlayClicked);
             playButton.gameObject.AddComponent<MainMenuButtonHover>();
 
-            var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.ChooseButtonBackground, 22);
+            var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.ChooseButtonBackground, 33);
             var settingsRect = settingsButton.GetComponent<RectTransform>();
             settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
             settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
             settingsRect.pivot = new Vector2(0.5f, 0.5f);
-            settingsRect.anchoredPosition = new Vector2(0f, -136f);
-            settingsRect.sizeDelta = new Vector2(220f, 56f);
+            settingsRect.anchoredPosition = new Vector2(0f, -110f);
+            settingsRect.sizeDelta = new Vector2(330f, 84f);
             var settingsImage = settingsButton.GetComponent<Image>();
             settingsImage.color = VisualDefaults.GetColor(PieceColor.Teal);
             UIFactory.AddThickOutline(settingsImage, UITheme.Border);
             settingsButton.onClick.AddListener(OnSettingsClicked);
             settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
 
-            var exitButton = UIFactory.CreateButton(_root, "Exit", "Exit", UISprites.CancelButtonBackground, 22);
+            var exitButton = UIFactory.CreateButton(_root, "Exit", "Exit", UISprites.CancelButtonBackground, 33);
             var exitRect = exitButton.GetComponent<RectTransform>();
             exitRect.anchorMin = new Vector2(0.5f, 0.5f);
             exitRect.anchorMax = new Vector2(0.5f, 0.5f);
             exitRect.pivot = new Vector2(0.5f, 0.5f);
-            exitRect.anchoredPosition = new Vector2(0f, -212f);
-            exitRect.sizeDelta = new Vector2(220f, 56f);
+            exitRect.anchoredPosition = new Vector2(0f, -214f);
+            exitRect.sizeDelta = new Vector2(330f, 84f);
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
             exitButton.gameObject.AddComponent<MainMenuButtonHover>();

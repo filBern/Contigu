@@ -8550,3 +8550,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   - Le fond animé partagé (`AnimatedBackgroundView`) n'a pas été touché
     puisqu'il est réutilisé sur tous les écrans du jeu, pas seulement le
     main menu.
+
+- **Titre remonté + boutons agrandis de 50%** (demande explicite : «
+  Monte le titre plus haut ET grossis les boutons d'au moins 50%. Adapte
+  leur position en fonction »).
+  - `MainMenuView.Build` : le titre "CONTIGU" remonte de Y=130 à Y=190.
+  - Les trois boutons Play/Settings/Exit passent de 220×56 à 330×84
+    (exactement ×1.5) et leur `fontSize` de 22 à 33 (même ratio) pour
+    rester proportionnés.
+  - Les positions Y sont recalculées en conséquence : Play -60→-6,
+    Settings -136→-110, Exit -212→-214 — l'écart visuel entre les bords
+    des boutons (20px) et avec le bas du titre reste cohérent malgré les
+    boutons plus grands, tout en restant largement dans les ±400 unités
+    verticales du Canvas (résolution de référence 1280×800, mise à
+    l'échelle sur la hauteur).
