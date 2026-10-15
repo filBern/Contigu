@@ -20,11 +20,17 @@ namespace Contigu.Presentation
         private const float CardY = -20f;
         private const float ArrowButtonSize = 56f;
         private const float ArrowGap = 20f;
+        // Entrance fade — Show() can now fire slightly before the main menu's uncover sweep has fully
+        // cleared the screen (see GameBootstrap.Awake), so this view needs its own visible transition
+        // in rather than just snapping to fully opaque underneath still-vanishing tiles.
+        private const float FadeInDuration = 0.3f;
 
         /// <summary>Fired once a challenge is actually ready to play — after any auto-unlock spend already happened and was persisted by the caller.</summary>
         public event Action<ChallengeDefinition> ChallengeChosen;
 
         private RectTransform _root;
+        private CanvasGroup _canvasGroup;
+        private Coroutine _fadeCoroutine;
         private Text _starsLabel;
         private MetaStats _metaStats;
         private int _currentIndex;
@@ -42,6 +48,7 @@ namespace Contigu.Presentation
             var overlay = UIFactory.CreatePanel(parent, "ChallengeSelectOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            _canvasGroup = overlay.gameObject.AddComponent<CanvasGroup>();
 
             var header = UIFactory.CreateText(_root, "Header", "CHOOSE YOUR CHALLENGE", 30, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -149,6 +156,25 @@ namespace Contigu.Presentation
             _metaStats = metaStats;
             ShowChallengeAt(0);
             _root.gameObject.SetActive(true);
+            if (_fadeCoroutine != null)
+            {
+                StopCoroutine(_fadeCoroutine);
+            }
+            _canvasGroup.alpha = 0f;
+            _fadeCoroutine = StartCoroutine(FadeInRoutine());
+        }
+
+        private System.Collections.IEnumerator FadeInRoutine()
+        {
+            float t = 0f;
+            while (t < FadeInDuration)
+            {
+                t += Time.deltaTime;
+                _canvasGroup.alpha = Mathf.Clamp01(t / FadeInDuration);
+                yield return null;
+            }
+            _canvasGroup.alpha = 1f;
+            _fadeCoroutine = null;
         }
 
         public void Hide()

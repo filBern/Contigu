@@ -30,6 +30,12 @@ namespace Contigu.Presentation
         // Pause once every tile is fully opaque, so the covered screen reads clearly before the scene swap.
         private const float HoldDuration = 0.15f;
         private const int SortingOrder = 1000;
+        // How much before the uncover sweep's very last tile vanishes that PlayUncoverSweep's
+        // onNearlyRevealed callback fires — by then only a few straggler tiles near the top-right corner
+        // (see UncoverDelay) are still finishing, so whatever that callback shows (the challenge carousel,
+        // see GameBootstrap.Awake) can start its own entrance a beat earlier instead of waiting for every
+        // last tile to be fully gone.
+        private const float EarlyRevealOffset = 0.18f;
 
         private static readonly PieceColor[] Colors =
         {
@@ -136,24 +142,33 @@ namespace Contigu.Presentation
         /// <summary>
         /// Continues the cover animation in reverse, sweeping the tiles away toward the top-right corner
         /// (see UncoverDelay) instead of simply rewinding the cover, then destroys this whole GameObject
-        /// (including its standalone Canvas) once every tile is gone.
+        /// (including its standalone Canvas) once every tile is gone. <paramref name="onNearlyRevealed"/>
+        /// fires a beat earlier, EarlyRevealOffset before the very last tile vanishes, so whatever it shows
+        /// doesn't wait for every last straggler tile to clear first — see EarlyRevealOffset's own comment.
         /// </summary>
-        public void PlayUncoverSweep(Action onRevealed)
+        public void PlayUncoverSweep(Action onNearlyRevealed, Action onRevealed)
         {
             StartCoroutine(SweepRoutine(forward: false, () =>
             {
                 onRevealed?.Invoke();
                 Destroy(gameObject);
-            }));
+            }, onNearlyDone: onNearlyRevealed));
         }
 
-        private IEnumerator SweepRoutine(bool forward, Action onDone)
+        private IEnumerator SweepRoutine(bool forward, Action onDone, Action onNearlyDone = null)
         {
             float elapsed = 0f;
             float totalDuration = SweepDuration + PopDuration;
+            float earlyThreshold = totalDuration - EarlyRevealOffset;
+            bool firedEarly = false;
             while (elapsed < totalDuration)
             {
                 elapsed += Time.deltaTime;
+                if (!firedEarly && onNearlyDone != null && elapsed >= earlyThreshold)
+                {
+                    firedEarly = true;
+                    onNearlyDone();
+                }
                 for (int i = 0; i < _tiles.Length; i++)
                 {
                     float delay = forward ? _tiles[i].CoverDelay : _tiles[i].UncoverDelay;

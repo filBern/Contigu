@@ -8874,3 +8874,26 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     de la largeur de cellule qui en découle (`cellWidth`), au lieu des
     anciens `LayoutElement`/`ContentSizeFitter` par slot du
     `VerticalLayoutGroup`.
+
+- **Le carousel de challenges apparaît un peu plus tôt et en fondu**
+  (demande explicite : « L'écran de challenge devrait s'afficher
+  légèment plus tôt et en fade in »).
+  - `MainMenuTransitionView.PlayUncoverSweep` prend maintenant deux
+    callbacks : `onNearlyRevealed`, qui se déclenche désormais
+    `EarlyRevealOffset` (0.18s) avant que la toute dernière tuile du
+    balayage ne disparaisse (au lieu d'attendre la fin complète), et
+    `onRevealed`, toujours appelé à la toute fin juste avant
+    `Destroy(gameObject)`. `GameBootstrap.Awake` passe désormais
+    `_challengeSelectView.Show` à `onNearlyRevealed` plutôt qu'à l'ancien
+    callback unique — le carousel démarre donc sa propre entrée pendant
+    que les toutes dernières tuiles (celles près du coin supérieur
+    droit, voir `UncoverDelay`) finissent de se retirer, plutôt
+    qu'après coup.
+  - `ChallengeSelectView` gagne un `CanvasGroup` sur son overlay
+    racine : `Show` met son alpha à 0 puis lance `FadeInRoutine`
+    (nouvelle coroutine, `FadeInDuration` = 0.3s) qui le ramène
+    linéairement à 1, au lieu d'apparaître instantanément via
+    `SetActive(true)` seul — nécessaire maintenant que `Show` peut se
+    déclencher pendant que l'écran n'est pas encore tout à fait
+    découvert, pour que l'écran ne "saute" pas brutalement par-dessus
+    les dernières tuiles qui disparaissent encore.

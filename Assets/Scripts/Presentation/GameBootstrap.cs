@@ -122,14 +122,15 @@ namespace Contigu.Presentation
             // animation by sweeping the tiles away instead of leaving the screen covered. PendingReveal is
             // null when this scene was entered any other way (e.g. opened directly in the editor), so the
             // carousel just shows immediately then, same as before this sweep existed. When it isn't null,
-            // ChallengeSelectView.Show is deferred to the sweep's own completion instead of starting right
-            // away underneath the covering tiles — otherwise its own entrance animation would already be
-            // over by the time the tiles clear, wasting it.
+            // ChallengeSelectView.Show is deferred to PlayUncoverSweep's onNearlyRevealed callback — a beat
+            // before the very last tile vanishes (see EarlyRevealOffset) rather than its full completion —
+            // so the carousel's own fade-in (see ChallengeSelectView.Show) overlaps the tail of the sweep
+            // instead of only starting once the screen is already fully clear.
             if (MainMenuTransitionView.PendingReveal != null)
             {
                 var reveal = MainMenuTransitionView.PendingReveal;
                 MainMenuTransitionView.PendingReveal = null;
-                reveal.PlayUncoverSweep(() => _challengeSelectView.Show(_metaStats));
+                reveal.PlayUncoverSweep(onNearlyRevealed: () => _challengeSelectView.Show(_metaStats), onRevealed: null);
             }
             else
             {
