@@ -1156,6 +1156,48 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void QuatriemeEmplacement_GrowsTheHandByOneSlotImmediately_AndThePieceIsPlayable()
+        {
+            // Playtest request, cited textually: "Ce serait cool un modifier qui rajoute une un 4e slot".
+            var run = new RunManager(new SystemRandomProvider(1));
+            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count);
+
+            run.DebugGrantModifier(ModifierId.QuatriemeEmplacement);
+
+            Assert.AreEqual(DeckManager.HandSize + 1, run.Deck.Hand.Count,
+                "The new slot should appear right away, not wait for the next DrawNewHand");
+            Assert.IsFalse(run.Deck.Hand[DeckManager.HandSize].HasValue, "The new slot starts empty");
+
+            // Force a piece into the new slot via a fresh draw, then confirm it's actually placeable.
+            while (!run.Deck.Hand[DeckManager.HandSize].HasValue)
+            {
+                run.Deck.PlayFromHand(0);
+            }
+            var token = run.Deck.Hand[DeckManager.HandSize].Value;
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[DeckManager.HandSize]);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+
+            var outcome = run.PlacePiece(DeckManager.HandSize, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+        }
+
+        [Test]
+        public void QuatriemeEmplacement_Sold_ShrinksTheHandBackAndReturnsItsTokenToTheDeck()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugGrantModifier(ModifierId.QuatriemeEmplacement);
+            Assert.AreEqual(DeckManager.HandSize + 1, run.Deck.Hand.Count);
+            int deckCountBefore = run.Deck.DeckCount;
+
+            bool sold = run.SellModifier(0, out _);
+
+            Assert.IsTrue(sold);
+            Assert.AreEqual(DeckManager.HandSize, run.Deck.Hand.Count, "Should shrink back to the base hand size");
+            Assert.AreEqual(deckCountBefore, run.Deck.DeckCount, "The dropped slot's token (if any) should return to the draw pile, not be lost");
+        }
+
+        [Test]
         public void SellModifier_RemovesItAndRefundsBasePriceMinusOne()
         {
             // Spec extension, explicit request: "Le joueur devrait pouvoir

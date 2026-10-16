@@ -412,6 +412,11 @@ namespace Contigu.Core
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
             "Converts 15% of the damage from any Joker combat trait into bonus Lueur. Stacks with Sangsue.");
 
+        /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
+        public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(
+            ModifierId.QuatriemeEmplacement, ModifierCategory.Roguelike, "Fourth Slot",
+            "Adds a 4th hand slot.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -431,7 +436,7 @@ namespace Contigu.Core
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
             Pair, Impair,
             Polyvalence, RenfortJoker, Arsenal,
-            CollectionChromatique, Cadence, Echo, Siphon
+            CollectionChromatique, Cadence, Echo, Siphon, QuatriemeEmplacement
         };
 
         public static ModifierDefinition Get(ModifierId id)

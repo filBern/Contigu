@@ -11,14 +11,15 @@ namespace Contigu.Core
     {
         public const int MinDeckSize = 10;
         public const int HandSize = 3;
+        /// <summary>Ceiling for <see cref="SetEffectiveHandSize"/> — one extra slot beyond the base HandSize, granted by ModifierId.QuatriemeEmplacement (see RunManager.ApplyFourthHandSlotModifierState).</summary>
+        public const int MaxHandSize = HandSize + 1;
 
         private readonly List<PieceToken> _deck = new List<PieceToken>();
         private readonly List<PieceToken> _drawPile = new List<PieceToken>();
-        // Fixed-size — always exactly HandSize entries, a null meaning that
-        // slot is currently empty. Playing a piece never shifts the other
-        // slots (needed so Slot Loyalty modifiers can track which slot a
-        // piece came from) — a slot only refills once the WHOLE hand is
-        // empty (see PlayFromHand/DrawNewHand).
+        // Always exactly HandSize entries UNLESS ModifierId.QuatriemeEmplacement has grown it by one
+        // (see SetEffectiveHandSize) — a null entry means that slot is currently empty. Playing a piece
+        // never shifts the other slots (needed so Slot Loyalty modifiers can track which slot a piece came
+        // from) — a slot only refills once the WHOLE hand is empty (see PlayFromHand/DrawNewHand).
         private readonly List<PieceToken?> _hand = new List<PieceToken?>();
         private readonly List<PieceRotation> _handRotations = new List<PieceRotation>();
         private readonly IRandomProvider _rng;
@@ -28,7 +29,7 @@ namespace Contigu.Core
             get { return _deck; }
         }
 
-        /// <summary>The current hand, one entry per fixed slot (always <see cref="HandSize"/> long) — null means that slot is empty, played but not yet refilled.</summary>
+        /// <summary>The current hand, one entry per slot (<see cref="HandSize"/> long, or <see cref="HandSize"/> + 1 once SetEffectiveHandSize has grown it) — null means that slot is empty, played but not yet refilled.</summary>
         public IReadOnlyList<PieceToken?> Hand
         {
             get { return _hand; }
@@ -85,22 +86,23 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Draws a fresh hand of 3 from the draw pile (without replacement),
-        /// reshuffling from the current deck state first if needed. Each slot
-        /// also gets a fresh random <see cref="PieceRotation"/>.
+        /// Draws a fresh hand from the draw pile (without replacement), reshuffling from the current deck
+        /// state first if needed — HandSize entries, or one more once SetEffectiveHandSize has grown it.
+        /// Each slot also gets a fresh random <see cref="PieceRotation"/>.
         /// </summary>
         public void DrawNewHand()
         {
+            int handSize = _hand.Count > 0 ? _hand.Count : HandSize;
             _hand.Clear();
             _handRotations.Clear();
-            for (int i = 0; i < HandSize; i++)
+            for (int i = 0; i < handSize; i++)
             {
                 EnsureDrawPileHasEnough(1);
                 if (_drawPile.Count == 0)
                 {
                     // Deck is empty (should not happen given MinDeckSize > 0):
                     // leave this and every remaining slot empty rather than
-                    // shrinking the hand below HandSize entries.
+                    // shrinking the hand below its current slot count.
                     _hand.Add(null);
                     _handRotations.Add(RandomRotation());
                     continue;
@@ -110,6 +112,34 @@ namespace Contigu.Core
                 _drawPile.RemoveAt(lastIndex);
                 _hand.Add(token);
                 _handRotations.Add(RandomRotation());
+            }
+        }
+
+        /// <summary>
+        /// Grows or shrinks the hand by exactly one slot (see ModifierId.QuatriemeEmplacement, granted/sold
+        /// through RunManager.ApplyFourthHandSlotModifierState) — clamped to [HandSize, MaxHandSize].
+        /// Growing adds one empty slot at the end immediately, without waiting for the next DrawNewHand, so
+        /// the player doesn't have to empty their hand first to benefit. Shrinking returns any token
+        /// sitting in the dropped slot to the bottom of the draw pile rather than losing it outright — the
+        /// same "give it back" convention StealRandomHandTile already uses for Thief.
+        /// </summary>
+        public void SetEffectiveHandSize(int size)
+        {
+            size = size < HandSize ? HandSize : (size > MaxHandSize ? MaxHandSize : size);
+            while (_hand.Count < size)
+            {
+                _hand.Add(null);
+                _handRotations.Add(RandomRotation());
+            }
+            while (_hand.Count > size)
+            {
+                int lastIndex = _hand.Count - 1;
+                if (_hand[lastIndex].HasValue)
+                {
+                    _drawPile.Insert(0, _hand[lastIndex].Value);
+                }
+                _hand.RemoveAt(lastIndex);
+                _handRotations.RemoveAt(lastIndex);
             }
         }
 
@@ -132,7 +162,7 @@ namespace Contigu.Core
         public bool StealRandomHandTile(IRandomProvider rng, out int stolenIndex, out PieceToken stolenToken, out PieceRotation stolenRotation)
         {
             var occupied = new List<int>();
-            for (int i = 0; i < HandSize; i++)
+            for (int i = 0; i < _hand.Count; i++)
             {
                 if (_hand[i].HasValue)
                 {

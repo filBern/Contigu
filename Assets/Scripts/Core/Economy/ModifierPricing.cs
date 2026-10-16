@@ -140,6 +140,8 @@ namespace Contigu.Core
                 case ModifierId.Echo: return 9; // doubles whatever sits to its left — build-order dependent, potentially huge
                 case ModifierId.Siphon: return 6; // smaller fraction than Sangsue, but fires alongside every combat kind
 
+                case ModifierId.QuatriemeEmplacement: return 9; // permanent extra hand slot — more flexibility on every single placement for the rest of the run
+
                 default:
                     return -1;
             }

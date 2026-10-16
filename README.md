@@ -8962,3 +8962,46 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     de badge (vert, `#5f9f5f`) pour `PieceTraitKind.Venom`, et un
     nouveau test (`VenomTile_DealsExtraDamageEqualToTenPercentOfTargetsMaxHp_OnTopOfOrdinaryScoreDamage`)
     couvre le mécanisme dans `EnemyEncounterTests`.
+
+- **Nouveau modifier : un 4e emplacement de main** (retour de playtest,
+  cité textuellement : « Ce serait cool un modifier qui rajoute une un
+  4e slot »).
+  - `DeckManager.HandSize` (3) reste la taille de base inchangée pour
+    tout le monde ; un nouveau `DeckManager.MaxHandSize` (4) borne une
+    nouvelle méthode `SetEffectiveHandSize`, qui fait grandir ou
+    rétrécir `_hand`/`_handRotations` d'exactement un emplacement. La
+    quasi-totalité du reste de `DeckManager` (`IsHandFullyEmpty`,
+    `PlayFromHand`, `StealRandomHandTile`, etc.) itérait déjà sur
+    `_hand.Count` plutôt que sur la constante `HandSize`, donc une
+    seule vraie boucle (`DrawNewHand`) avait besoin d'être corrigée
+    pour redistribuer dans tous les emplacements actifs, pas
+    seulement les 3 premiers.
+  - Nouveau `ModifierId.QuatriemeEmplacement` ("Fourth Slot", prix 9,
+    le plus cher avec Mult +4/Écho — un effet structurel permanent).
+    Contrairement à tout autre modifier, qui ne fait QUE lire l'état
+    au moment du score, celui-ci agit directement sur `DeckManager` :
+    `RunManager.AddActiveModifier`/`RemoveActiveModifierAt` (les deux
+    seuls points d'entrée qui gèrent `_activeModifiers`, d'après leurs
+    propres commentaires) appellent `Deck.SetEffectiveHandSize` dès
+    que ce modifier est gagné ou vendu — le nouvel emplacement
+    apparaît immédiatement, sans attendre la prochaine main. À la
+    vente, s'il reste occupé, son jeton retourne au fond de la pioche
+    plutôt que d'être perdu (même convention que le vol de Thief). Les
+    quelques vérifications de borne `handIndex >= DeckManager.HandSize`
+    codées en dur (`RunManager.PlacePiece`, le verrou de boss,
+    `GameBootstrap`) passent à `Deck.Hand.Count`, la taille effective
+    réelle, pour ne pas rejeter à tort une pose depuis le 4e
+    emplacement.
+  - `HandView` construit maintenant toujours `DeckManager.MaxHandSize`
+    emplacements (même approche que la bande d'ennemis de `HudView` :
+    construire le maximum, masquer le reste) ; une nouvelle
+    `UpdateHandSizeLayout`, appelée à chaque `Refresh`/
+    `RefreshHoldingEmpty`, active/désactive chaque emplacement selon
+    `Deck.Hand.Count` et redimensionne la boîte de main et sa rangée
+    en conséquence — un no-op pour tout joueur qui n'achète jamais ce
+    modifier, donc aucun changement visuel pour le cas par défaut.
+  - Deux nouveaux tests dans `RunManagerTests`
+    (`QuatriemeEmplacement_GrowsTheHandByOneSlotImmediately_AndThePieceIsPlayable`/
+    `QuatriemeEmplacement_Sold_ShrinksTheHandBackAndReturnsItsTokenToTheDeck`)
+    couvrent le gain immédiat, la jouabilité réelle du 4e emplacement,
+    et la récupération du jeton à la vente.

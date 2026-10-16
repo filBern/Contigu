@@ -136,6 +136,9 @@ namespace Contigu.Core
         Echo,
 
         /// <summary>Sangsue's own Lueur siphon, generalized to fire alongside ANY Joker combat trait kind, not just Sangsue itself (see RunManager.ApplyJokerCombatOrDefaultDamage) — stacks independently if Sangsue is also held and also fires.</summary>
-        Siphon
+        Siphon,
+
+        /// <summary>Grows the hand by one extra slot (see DeckManager.SetEffectiveHandSize/MaxHandSize), applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt rather than scored on placement like every other modifier.</summary>
+        QuatriemeEmplacement
     }
 }

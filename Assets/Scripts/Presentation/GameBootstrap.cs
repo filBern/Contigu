@@ -736,7 +736,7 @@ namespace Contigu.Presentation
             }
 
             int handIndex = _handView.SelectedIndex;
-            if (handIndex < 0 || handIndex >= DeckManager.HandSize || !_run.Deck.Hand[handIndex].HasValue)
+            if (handIndex < 0 || handIndex >= _run.Deck.Hand.Count || !_run.Deck.Hand[handIndex].HasValue)
             {
                 SetStatusText("Select a piece from your hand first.");
                 return;
@@ -955,7 +955,7 @@ namespace Contigu.Presentation
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
         private bool IsHandAboutToAutoRefill(int handIndex)
         {
-            for (int i = 0; i < DeckManager.HandSize; i++)
+            for (int i = 0; i < _run.Deck.Hand.Count; i++)
             {
                 if (i != handIndex && _run.Deck.Hand[i].HasValue)
                 {

@@ -84,6 +84,12 @@ namespace Contigu.Presentation
         private CanvasGroup _dragGhostCanvasGroup;
         private RectTransform _dragGhostPreview;
 
+        // Built once for DeckManager.MaxHandSize slots (same "build the max, show/hide the rest" pattern as
+        // HudView's enemy band) so ModifierId.QuatriemeEmplacement can reveal the 4th slot instantly without
+        // rebuilding the hand box — see UpdateHandSizeLayout, called from Refresh.
+        private Image _handContainer;
+        private RectTransform _slotsRow;
+
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -92,7 +98,7 @@ namespace Contigu.Presentation
         /// <summary>A hand slot's own fixed-position preview container (see Build) — unlike the piece inside it, this stays put regardless of what's currently shown there, so a caller can still anchor an effect on a slot that's since been emptied (e.g. Thief's steal — see GameBootstrap.PlayThiefStealEffect). Null if index is out of range.</summary>
         public RectTransform GetSlotPreviewTransform(int index)
         {
-            if (index < 0 || index >= DeckManager.HandSize)
+            if (index < 0 || index >= DeckManager.MaxHandSize)
             {
                 return null;
             }
@@ -106,35 +112,37 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
             _dragLayerParent = parent;
 
-            float slotsWidth = DeckManager.HandSize * SlotWidth + (DeckManager.HandSize - 1) * SlotSpacing;
+            // Box starts sized for the base HandSize, same as before this slot was introduced — only the
+            // hand's effective size (which starts at HandSize, see DeckManager) ever grows it (see
+            // UpdateHandSizeLayout, called at the end of this method and from every Refresh after).
             var containerImage = UIFactory.CreatePanel(parent, "HandContainer", Color.white);
             containerImage.sprite = UISprites.SlotGroupBackground;
             containerImage.type = Image.Type.Simple;
             containerImage.raycastTarget = false;
             var container = containerImage.rectTransform;
-            container.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, SlotHeight + HandBoxPadding * 2f);
+            _handContainer = containerImage;
 
             var slotsRow = UIFactory.CreateUIObject("SlotsRow", container);
             slotsRow.anchorMin = new Vector2(0.5f, 0.5f);
             slotsRow.anchorMax = new Vector2(0.5f, 0.5f);
             slotsRow.pivot = new Vector2(0.5f, 0.5f);
-            slotsRow.sizeDelta = new Vector2(slotsWidth, SlotHeight);
             var layout = slotsRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = SlotSpacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
+            _slotsRow = slotsRow;
 
-            _slotBackgrounds = new Image[DeckManager.HandSize];
-            _slotButtons = new Button[DeckManager.HandSize];
-            _previewContainers = new RectTransform[DeckManager.HandSize];
-            _previewCanvasGroups = new CanvasGroup[DeckManager.HandSize];
-            _slotLevelLabels = new Text[DeckManager.HandSize];
-            _slotLockLabels = new Text[DeckManager.HandSize];
-            _shakeCoroutines = new Coroutine[DeckManager.HandSize];
-            _selectPulseCoroutines = new Coroutine[DeckManager.HandSize];
+            _slotBackgrounds = new Image[DeckManager.MaxHandSize];
+            _slotButtons = new Button[DeckManager.MaxHandSize];
+            _previewContainers = new RectTransform[DeckManager.MaxHandSize];
+            _previewCanvasGroups = new CanvasGroup[DeckManager.MaxHandSize];
+            _slotLevelLabels = new Text[DeckManager.MaxHandSize];
+            _slotLockLabels = new Text[DeckManager.MaxHandSize];
+            _shakeCoroutines = new Coroutine[DeckManager.MaxHandSize];
+            _selectPulseCoroutines = new Coroutine[DeckManager.MaxHandSize];
 
-            for (int i = 0; i < DeckManager.HandSize; i++)
+            for (int i = 0; i < DeckManager.MaxHandSize; i++)
             {
                 int idx = i;
                 var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.CardBackground);
@@ -554,7 +562,8 @@ namespace Contigu.Presentation
 
         public void Refresh()
         {
-            for (int i = 0; i < DeckManager.HandSize; i++)
+            UpdateHandSizeLayout();
+            for (int i = 0; i < _deck.Hand.Count; i++)
             {
                 var preview = _previewContainers[i];
                 for (int c = preview.childCount - 1; c >= 0; c--)
@@ -579,10 +588,31 @@ namespace Contigu.Presentation
             UpdateSelectionVisuals();
         }
 
+        /// <summary>
+        /// Shows/hides each slot's GameObject to match the hand's current effective size (see
+        /// DeckManager.SetEffectiveHandSize) and resizes the hand box/slots row to fit exactly that many —
+        /// HorizontalLayoutGroup/ContentSizeFitter would recenter around however many children are active on
+        /// their own, but the box's own outer background (_handContainer, a plain Image, not a layout
+        /// element) needs its size driven explicitly. A no-op resync at the base HandSize for every player
+        /// who never buys QuatriemeEmplacement.
+        /// </summary>
+        private void UpdateHandSizeLayout()
+        {
+            int activeCount = _deck.Hand.Count;
+            for (int i = 0; i < _slotBackgrounds.Length; i++)
+            {
+                _slotBackgrounds[i].gameObject.SetActive(i < activeCount);
+            }
+            float slotsWidth = activeCount * SlotWidth + (activeCount - 1) * SlotSpacing;
+            _slotsRow.sizeDelta = new Vector2(slotsWidth, SlotHeight);
+            _handContainer.rectTransform.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, SlotHeight + HandBoxPadding * 2f);
+        }
+
         /// <summary>Same as <see cref="Refresh"/>, except every slot is shown empty regardless of the live model, to hold the new hand hidden until the current placement's feedback finishes. Call <see cref="Refresh"/> afterward to reveal it.</summary>
         public void RefreshHoldingEmpty()
         {
-            for (int i = 0; i < DeckManager.HandSize; i++)
+            UpdateHandSizeLayout();
+            for (int i = 0; i < _deck.Hand.Count; i++)
             {
                 var preview = _previewContainers[i];
                 for (int c = preview.childCount - 1; c >= 0; c--)

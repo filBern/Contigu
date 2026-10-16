@@ -43,18 +43,27 @@ namespace Contigu.Core
             return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index));
         }
 
-        /// <summary>The only place that adds a slot to <see cref="_activeModifiers"/> - keeps a fresh slot's level in sync.</summary>
+        /// <summary>The only place that adds a slot to <see cref="_activeModifiers"/> - keeps a fresh slot's level in sync. Also grows the hand by one slot the moment QuatriemeEmplacement is gained (see DeckManager.SetEffectiveHandSize), rather than waiting for the next DrawNewHand.</summary>
         private void AddActiveModifier(ModifierId id)
         {
             _activeModifiers.Add(id);
             _modifierLevels.Add(1);
+            if (id == ModifierId.QuatriemeEmplacement)
+            {
+                Deck.SetEffectiveHandSize(DeckManager.MaxHandSize);
+            }
         }
 
-        /// <summary>The only place that removes a slot from <see cref="_activeModifiers"/> - keeps its level entry in sync.</summary>
+        /// <summary>The only place that removes a slot from <see cref="_activeModifiers"/> - keeps its level entry in sync. Shrinks the hand back by one slot once the LAST copy of QuatriemeEmplacement is gone (Copieur can duplicate a modifier id, so a second copy could still be held).</summary>
         private void RemoveActiveModifierAt(int index)
         {
+            var id = _activeModifiers[index];
             _activeModifiers.RemoveAt(index);
             _modifierLevels.RemoveAt(index);
+            if (id == ModifierId.QuatriemeEmplacement && !_activeModifiers.Contains(ModifierId.QuatriemeEmplacement))
+            {
+                Deck.SetEffectiveHandSize(DeckManager.HandSize);
+            }
         }
 
         /// <summary>
@@ -468,7 +477,7 @@ namespace Contigu.Core
             CurrentBossEffect = (BossEffect)(1 + _rng.Next(3));
             if (CurrentBossEffect == BossEffect.LockedHandSlot)
             {
-                BossLockedHandSlotIndex = _rng.Next(DeckManager.HandSize);
+                BossLockedHandSlotIndex = _rng.Next(Deck.Hand.Count);
             }
             else if (CurrentBossEffect == BossEffect.CursedColor)
             {
@@ -491,7 +500,7 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Run is not in progress"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            if (handIndex < 0 || handIndex >= DeckManager.HandSize || !Deck.Hand[handIndex].HasValue)
+            if (handIndex < 0 || handIndex >= Deck.Hand.Count || !Deck.Hand[handIndex].HasValue)
             {
                 return new PlacementOutcome(PlacementResult.Failure("Invalid hand index"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
