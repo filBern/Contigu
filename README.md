@@ -8897,3 +8897,36 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     déclencher pendant que l'écran n'est pas encore tout à fait
     découvert, pour que l'écran ne "saute" pas brutalement par-dessus
     les dernières tuiles qui disparaissent encore.
+
+- **Corrige un soft-lock possible quand la dernière pièce de la main est
+  jouée** (retour de playtest, cité textuellement : « Le jeu a brisé
+  deux fois ou le joueur a posé la dernière tuile de sa main rien ne
+  s'est passé, pas de décompte de point, pas de shuffle. Mais j'ai pas
+  de contexte »).
+  - Cause trouvée par audit (pas de repro exact fourni) :
+    `GameBootstrap.PlayPlacementSequence` est une longue coroutine
+    (450+ lignes) qui enchaîne de nombreuses phases d'animation
+    (cascade de score, dégâts, line clears, reveal de la nouvelle
+    main...). Avant ce correctif, si une étape quelconque levait une
+    exception en cours de route — un cas limite non prévu — le reste
+    de la coroutine ne s'exécutait jamais : `_isPlayingPlacementSequence`
+    restait bloqué à `true` pour toujours (bloquant silencieusement
+    tout nouveau clic, voir `OnCellClicked`'s garde en haut), et si la
+    pièce jouée était la dernière de la main (`handWasAboutToAutoRefill`),
+    l'alpha de la main (mise à 0 pour préparer le fade-in du prochain
+    tirage) restait aussi bloqué à 0 pour toujours — main invisible,
+    aucun score affiché au-delà de ce qui s'était déjà joué avant le
+    crash, aucune main suivante révélée. Exactement les symptômes
+    décrits : "rien ne s'est passé, pas de décompte de point, pas de
+    shuffle".
+  - Le corps entier de `PlayPlacementSequence` est maintenant enveloppé
+    dans un `try`/`finally` (le contenu interne n'est pas ré-indenté,
+    pour garder le diff de ce correctif revue-able plutôt que de
+    toucher ~450 lignes d'une séquence déjà longue) : le `finally`
+    remet systématiquement l'alpha de la main à 1, rappelle
+    `_handView.Refresh()`, relâche `_isPlayingPlacementSequence`,
+    réactive les boutons/`HandView`/`ModifierPanelView`, et appelle
+    `HandleStateTransition` — que la séquence se soit terminée
+    normalement ou qu'une étape ait levé une exception en cours de
+    route. Le pire cas possible devient donc une animation tronquée au
+    lieu d'un jeu complètement figé.

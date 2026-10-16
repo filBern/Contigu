@@ -1246,6 +1246,16 @@ namespace Contigu.Presentation
             int leechIndex, int leechHealAmount,
             List<(int Index, EnemyId Identity, int HpBefore, int HpAfter, int MaxHp)> secondaryDrainTargets)
         {
+            // Wrapped in try/finally (deliberately not reindented below, to keep this fix to a reviewable
+            // diff rather than touching ~450 lines of an already-long sequence): this sequence spans many
+            // animation phases, indices and transforms, so one bad edge case throwing partway through used
+            // to leave _isPlayingPlacementSequence stuck true and the hand's own fade-out alpha stuck at 0
+            // forever — a permanent soft-lock (reported by playtesters as "placed the last piece of the
+            // hand, nothing happened: no score countdown, no shuffle"). The finally below guarantees
+            // input/hand visibility/state transition still happen even if a step above throws, instead of
+            // only on a fully clean run.
+            try
+            {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
 
@@ -1695,11 +1705,20 @@ namespace Contigu.Presentation
                 _handView.Refresh();
             }
 
-            _isPlayingPlacementSequence = false;
-            _handView.SetInteractable(true);
-            RefreshShuffleButton();
-            _modifierPanelView.SetInteractable(true);
-            HandleStateTransition(outcome.StateAfter);
+            }
+            finally
+            {
+                // SetSlotPiecesAlpha(1f) covers the case where this threw mid-fade (see the comment at the
+                // top of this method) — Refresh() alone doesn't touch a CanvasGroup's alpha, so without this
+                // the hand could stay invisible even once its contents are correctly rebuilt below.
+                _handView.SetSlotPiecesAlpha(1f);
+                _handView.Refresh();
+                _isPlayingPlacementSequence = false;
+                _handView.SetInteractable(true);
+                RefreshShuffleButton();
+                _modifierPanelView.SetInteractable(true);
+                HandleStateTransition(outcome.StateAfter);
+            }
         }
 
         /// <summary>
