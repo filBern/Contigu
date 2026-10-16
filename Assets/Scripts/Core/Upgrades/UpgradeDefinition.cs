@@ -31,19 +31,19 @@ namespace Contigu.Core
     public static class UpgradeCatalog
     {
         public static readonly UpgradeDefinition ReplacePiece = new UpgradeDefinition(
-            UpgradeId.ReplacePiece, UpgradePool.Bank, "Replace a piece",
+            UpgradeId.ReplacePiece, UpgradePool.Bank, "Transmute a Seed",
             "Choose 1 piece to replace with a duplicate of another.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
-            UpgradeId.DuplicatePiece, UpgradePool.Bank, "Duplicate a piece",
+            UpgradeId.DuplicatePiece, UpgradePool.Bank, "Propagate a Cutting",
             "Choose 1 piece to duplicate in your deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
-            UpgradeId.JokerPiece, UpgradePool.Bank, "Joker piece",
+            UpgradeId.JokerPiece, UpgradePool.Bank, "Wild Seed",
             "Adds a joker piece (random shape) to the deck.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition RecolorPiece = new UpgradeDefinition(
-            UpgradeId.RecolorPiece, UpgradePool.Bank, "Recolor a piece",
+            UpgradeId.RecolorPiece, UpgradePool.Bank, "Rebloom a Seed",
             "Choose a piece type and color; recolor one copy.", true, UpgradeRarity.Uncommon);
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace Contigu.Core
         /// a random modifier with no way to know which in advance.
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
-            UpgradeId.RandomModifier, UpgradePool.Modifier, "Random Modifier",
+            UpgradeId.RandomModifier, UpgradePool.Modifier, "Alchemical Boon",
             "Grants one random modifier you don't already have.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Contigu.Core
         /// a trait preview).
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
-            UpgradeId.RandomPiece, UpgradePool.Bank, "Random Piece",
+            UpgradeId.RandomPiece, UpgradePool.Bank, "Fresh Sprout",
             "Choose 1 piece to add to your deck.", true, UpgradeRarity.Common);
 
         /// <summary>

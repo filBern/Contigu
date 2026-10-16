@@ -582,7 +582,7 @@ namespace Contigu.Presentation
             // named outright instead of showing the generic pool label.
             bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
             // GetPoolLabel already ends in "Upgrade", so it isn't appended again here.
-            string cardLabel = isRandomModifier ? "Random modifier" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
+            string cardLabel = isRandomModifier ? "Alchemical Boon" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
             var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);

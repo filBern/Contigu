@@ -151,20 +151,20 @@ namespace Contigu.Core
             "x2 Mult per cleared line that's a single color, stacking.");
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
-            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Red Devotion",
-            "+3 Mult on Red pieces.");
+            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Ember Devotion",
+            "+3 Mult on Ember pieces.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
-            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Blue Devotion",
-            "+3 Mult on Blue pieces.");
+            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Frost Devotion",
+            "+3 Mult on Frost pieces.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
-            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Yellow Devotion",
-            "+3 Mult on Yellow pieces.");
+            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Gold Devotion",
+            "+3 Mult on Gold pieces.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
-            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Green Devotion",
-            "+3 Mult on Green pieces.");
+            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Moss Devotion",
+            "+3 Mult on Moss pieces.");
 
         // The 3 slot modifiers can't be evaluated by GridManager — it doesn't
         // know which hand slot a piece came from, only RunManager's
@@ -192,20 +192,20 @@ namespace Contigu.Core
             "+18 pts if the piece isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
-            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Red Glow",
-            "+6 pts per group cell on Red pieces.");
+            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Ember Glow",
+            "+6 pts per group cell on Ember pieces.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
-            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Blue Glow",
-            "+6 pts per group cell on Blue pieces.");
+            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Frost Glow",
+            "+6 pts per group cell on Frost pieces.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
-            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Yellow Glow",
-            "+6 pts per group cell on Yellow pieces.");
+            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Gold Glow",
+            "+6 pts per group cell on Gold pieces.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
-            ModifierId.EclatLime, ModifierCategory.Couleurs, "Green Glow",
-            "+6 pts per group cell on Green pieces.");
+            ModifierId.EclatLime, ModifierCategory.Couleurs, "Moss Glow",
+            "+6 pts per group cell on Moss pieces.");
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",

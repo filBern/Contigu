@@ -37,10 +37,10 @@ namespace Contigu.Data
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
         {
-            { PieceColor.Coral, "Red" },
-            { PieceColor.Teal, "Blue" },
-            { PieceColor.Violet, "Yellow" },
-            { PieceColor.Lime, "Green" },
+            { PieceColor.Coral, "Ember" },
+            { PieceColor.Teal, "Frost" },
+            { PieceColor.Violet, "Gold" },
+            { PieceColor.Lime, "Moss" },
             { PieceColor.Joker, "Joker" }
         };
 

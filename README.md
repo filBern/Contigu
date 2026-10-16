@@ -9205,3 +9205,43 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
     `EnemyCatalog.Basic` sont utilisés dans les tests), et que
     `HudView.HaterDescription` construit déjà sa propre phrase pour
     Color Hater/Shape Hater indépendamment du texte du catalogue.
+
+- **Renommer les couleurs et les upgrades pour qu'ils soient plus
+  représentatifs** (demande citée textuellement : « Let's rename color
+  into something more representative. Color can be changed as long as
+  they are different from each another. Do the upgrades as well »).
+  - **Couleurs affichées** : `VisualDefaults.ColorNames` passe de
+    Red/Blue/Yellow/Green à **Ember/Frost/Gold/Moss** — toujours 4
+    couleurs bien distinctes les unes des autres, et les 4 teintes
+    réelles (`ColorMap`, inchangées) restent cohérentes avec leur
+    nouveau nom (Ember = rougeâtre, Frost = bleuté, Gold = jaune, Moss
+    = verdâtre). L'enum `PieceColor` sous-jacent (`Coral`/`Teal`/
+    `Violet`/`Lime`) reste INCHANGÉ (décision déjà documentée dans
+    `VisualDefaults` : le renommer ferait boule de neige à travers
+    ~100 ids de modificateurs comme `DevotionCoral`/`EclatTeal`), seul
+    le nom AFFICHÉ au joueur change — `HudView.HaterDescription`
+    (Color Hater) lit déjà `GetColorName` dynamiquement, donc aucun
+    changement nécessaire là.
+  - **Modificateurs de couleur** : les 8 modificateurs Devotion/Glow
+    (`DevotionCoral`/`Teal`/`Violet`/`Lime`, `EclatCoral`/`Teal`/
+    `Violet`/`Lime`) ont leur `Name`/`Description` mis à jour pour
+    suivre : "Red Devotion" → "Ember Devotion", "Blue Glow" → "Frost
+    Glow", etc. (8 entrées, mécanique inchangée).
+  - **Upgrades** : les noms génériques/instructionnels du pool Bank
+    sont renommés pour coller à l'identité alchimiste-jardin (mécanique
+    et `Description` inchangées) : "Replace a piece" → **Transmute a
+    Seed**, "Duplicate a piece" → **Propagate a Cutting**, "Joker
+    piece" → **Wild Seed**, "Recolor a piece" → **Rebloom a Seed**,
+    "Random Piece" → **Fresh Sprout**, "Random Modifier" →
+    **Alchemical Boon** (y compris le label spécial de la mystery box
+    dans `ShopView`, mis à jour en même temps pour rester cohérent
+    avec le nom révélé). Les noms déjà évocateurs du pool Grid/Mastery
+    (Catalyst Tile, Seeder, Kamikaze Tile, Bastion Tile, ...) collent
+    déjà bien au thème et n'ont pas été touchés, de même que "Modifier
+    Upgrade" dont le nom coïncide intentionnellement avec le label de
+    son pool (`UpgradeVisualDefaults.GetPoolLabel`) — le renommer
+    aurait cassé cette coïncidence voulue.
+  - Vérifié qu'aucun test n'est couplé au texte de `Name`/`Description`
+    des upgrades ou des modificateurs (seuls les identifiants C# comme
+    `UpgradeCatalog.TintedCells` ou `ModifierId.DevotionCoral` sont
+    utilisés dans les tests).
