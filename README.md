@@ -9245,3 +9245,37 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
     des upgrades ou des modificateurs (seuls les identifiants C# comme
     `UpgradeCatalog.TintedCells` ou `ModifierId.DevotionCoral` sont
     utilisés dans les tests).
+
+- **Continue la transition : suite du renommage dans les
+  modificateurs** (demande citée textuellement : « Continue la
+  transition »).
+  - **Bug corrigé en passant** : `Complementaire` décrivait encore ses
+    paires de couleurs avec les anciens noms affichés (« Red/Yellow or
+    Blue/Green ») après le renommage des couleurs ci-dessus — texte
+    devenu incohérent avec `VisualDefaults.ColorNames`. Corrigé en
+    « Ember/Gold or Frost/Moss » (les paires réelles dans
+    `GridManager.ComplementaryPairs` restent (Coral,Violet) et
+    (Teal,Lime), donc toujours exactes). Recherche exhaustive
+    (`grep` sur tous les `.cs` hors tests) confirmant qu'aucune autre
+    description codée en dur ne référençait encore Red/Blue/Yellow/
+    Green.
+  - **11 modificateurs génériques/numériques renommés** pour coller
+    au thème, mécanique et `Description` inchangées : la famille
+    "Format" devient un vocabulaire de croissance cohérent — "Small
+    Format" → **Seedling**, "Large Format" → **Overgrowth**,
+    "Off-Size" → **Mutant Growth**, et pareil pour leurs variantes
+    Specialist/Glow (Formes pool) : "Small/Medium/Large Format
+    Specialist" → **Seedling/Sapling/Overgrowth Specialist**,
+    "Small/Medium/Large Format Glow" → **Seedling/Sapling/Overgrowth
+    Glow**. "Even"/"Odd" (Pair/Impair) → **Waxing**/**Waning** (phases
+    de lune, thème alchimiste).
+  - Le reste des ~70 modificateurs (Prism, Chain, Fortress, Architect,
+    Gardener, Rainbow, Mason, Wildcard, Echo, Siphon, etc.) collait
+    déjà bien à l'identité ou est un libellé purement utilitaire dont
+    la clarté prime sur le thème (Mult +1/+2/+4) — laissés inchangés
+    pour ne pas introduire de régression de lisibilité sans bénéfice
+    réel.
+  - Mêmes vérifications que d'habitude : balance parenthèses/accolades
+    OK sur `ModifierDefinition.cs`, aucun test couplé au texte
+    `Name`/`Description` (seuls les identifiants C# comme
+    `ModifierId.GrandFormat` sont utilisés dans les tests).

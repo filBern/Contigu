@@ -79,7 +79,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
-            "x2 Mult if a complementary pair is touched (Red/Yellow or Blue/Green).");
+            "x2 Mult if a complementary pair is touched (Ember/Gold or Frost/Moss).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
@@ -184,11 +184,11 @@ namespace Contigu.Core
             "+3 Mult when played from hand slot 3.");
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
-            ModifierId.GrandFormat, ModifierCategory.Roguelike, "Large Format",
+            ModifierId.GrandFormat, ModifierCategory.Roguelike, "Overgrowth",
             "+12 pts per cell for pieces with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
-            ModifierId.HorsNorme, ModifierCategory.Roguelike, "Off-Size",
+            ModifierId.HorsNorme, ModifierCategory.Roguelike, "Mutant Growth",
             "+18 pts if the piece isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
@@ -228,7 +228,7 @@ namespace Contigu.Core
             "x3 Mult when this AND the last placement both cleared a line.");
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
-            ModifierId.PetitFormat, ModifierCategory.Roguelike, "Small Format",
+            ModifierId.PetitFormat, ModifierCategory.Roguelike, "Seedling",
             "+8 pts per cell for pieces with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
@@ -350,35 +350,35 @@ namespace Contigu.Core
         // Per-size-tier pairs; values from ScoringConstants.FormeSpecialistMultiplier/FormeGlowBonusPerCell.
 
         public static readonly ModifierDefinition FormatPetitSpecialiste = new ModifierDefinition(
-            ModifierId.FormatPetitSpecialiste, ModifierCategory.Formes, "Small Format Specialist",
+            ModifierId.FormatPetitSpecialiste, ModifierCategory.Formes, "Seedling Specialist",
             "x2 Mult on pieces with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenSpecialiste = new ModifierDefinition(
-            ModifierId.FormatMoyenSpecialiste, ModifierCategory.Formes, "Medium Format Specialist",
+            ModifierId.FormatMoyenSpecialiste, ModifierCategory.Formes, "Sapling Specialist",
             "x2 Mult on 3-cell pieces (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandSpecialiste = new ModifierDefinition(
-            ModifierId.FormatGrandSpecialiste, ModifierCategory.Formes, "Large Format Specialist",
+            ModifierId.FormatGrandSpecialiste, ModifierCategory.Formes, "Overgrowth Specialist",
             "x2 Mult on 4-cell pieces (Square or any Tetromino).");
 
         public static readonly ModifierDefinition FormatPetitGlow = new ModifierDefinition(
-            ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Small Format Glow",
+            ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Seedling Glow",
             "+6 pts per group cell on pieces with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenGlow = new ModifierDefinition(
-            ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Medium Format Glow",
+            ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Sapling Glow",
             "+6 pts per group cell on 3-cell pieces (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandGlow = new ModifierDefinition(
-            ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Large Format Glow",
+            ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Overgrowth Glow",
             "+6 pts per group cell on 4-cell pieces (Square or any Tetromino).");
 
         public static readonly ModifierDefinition Pair = new ModifierDefinition(
-            ModifierId.Pair, ModifierCategory.Roguelike, "Even",
+            ModifierId.Pair, ModifierCategory.Roguelike, "Waxing",
             "x2 Mult when the scored group has an even number of cells.");
 
         public static readonly ModifierDefinition Impair = new ModifierDefinition(
-            ModifierId.Impair, ModifierCategory.Roguelike, "Odd",
+            ModifierId.Impair, ModifierCategory.Roguelike, "Waning",
             "x2 Mult when the scored group has an odd number of cells.");
 
         // The Devotion/Éclat same-color pairing bonus needs no definition
