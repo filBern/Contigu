@@ -1877,18 +1877,27 @@ namespace Contigu.Presentation
                 int damage = target.HpBefore - target.HpAfter;
                 if (damage > 0)
                 {
-                    // Each Bombe/Éclat target gets its own "-X" on its own icon (no flight — unlike the
-                    // primary target above, there's no single combo readout that reads as "theirs" to fly
-                    // from when several enemies take a share of the same hit at once). The icon's own hurt
-                    // shrink plays right alongside it, same as the primary target's onArrival-synced one.
-                    _hudView.PlayEnemyHurtEffect(target.Index);
                     var anchor = _hudView.GetEnemyIconTransform(target.Index);
                     if (anchor != null)
                     {
-                        // floatDown: true — the enemy band sits near the top of the screen; SpawnPopup's
-                        // usual float-up would run the text off the top edge (same reasoning as
-                        // PlayThiefStealEffect/PlayLeechHealEffect's own popups).
-                        _feedbackLayer.SpawnPopup(anchor, "-" + damage, UITheme.Danger, floatDown: true, fontSize: SubtractionPopupFontSize);
+                        // Playtest bug report: Bombe's further targets used to get a plain instant "-X"
+                        // popup with no flight. Now each gets its own circle flown from the combo readout,
+                        // same visual as the primary target's own DrainComboIntoDamage — one at a time
+                        // (sequential, like PlayEnemyEffectsSequentially elsewhere) so a Bombe hitting many
+                        // enemies at once still reads clearly instead of several circles landing together.
+                        bool damageShown = false;
+                        _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () =>
+                        {
+                            _hudView.PlayEnemyHurtEffect(target.Index);
+                            damageShown = true;
+                        });
+                        // Death is only ever checked/applied below once THIS target's own circle has
+                        // actually landed — explicit playtest request: verify each hit enemy for death
+                        // right after it's actually hit, not before or all at once.
+                        while (!damageShown)
+                        {
+                            yield return null;
+                        }
                     }
                 }
                 _hudView.SetEnemyHpDisplay(target.Index, target.HpAfter, target.MaxHp, target.Identity, isDead);

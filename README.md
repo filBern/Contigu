@@ -9137,3 +9137,29 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     (GridManagerTests).
 
 Ceci couvre l'intégralité des retours de playtest de cette liste.
+
+- **Bombe : vérifie bien la mort de chaque ennemi touché, et anime
+  maintenant un cercle depuis la boîte de combo vers chacun** (bug
+  report, cité textuellement : « Avec les jokers bombes, il faut
+  vérifier chaque ennemi touché s'il est mort après qu'il soit touché.
+  D'ailleurs il faut faire l'animation de cercle de la boite de combo
+  vers chacun des ennemi touché »). Audit du Core : `RunManager.
+  ApplyBombeDamage`/`ApplyEclatDamage` vérifiaient déjà correctement
+  `enemy.ApplyDamage(...)` et appelaient `CleanUpDefeatedEnemy` pour
+  CHAQUE ennemi touché individuellement — le vrai manque était côté
+  présentation.
+  - `GameBootstrap.DrainSecondaryEnemyHits` (les cibles 2+ de
+    Bombe/Éclat, au-delà de la cible principale déjà gérée par
+    `DrainComboIntoDamage`) affichait jusqu'ici un simple popup "-X"
+    instantané, sans vol ("no flight" — unlike the primary target").
+    Chaque cible secondaire touchée reçoit maintenant son propre
+    cercle volant depuis `_comboView.TotalTransform.position`
+    (`FeedbackLayer.SpawnFlyingDamageOrb`, même visuel que la cible
+    principale), un par un dans l'ordre (comme
+    `PlayEnemyEffectsSequentially` ailleurs dans le code, pour que
+    plusieurs ennemis touchés à la fois restent lisibles).
+  - La vérification de mort (`isDead`) et le fade-out ne se
+    déclenchent plus qu'une fois le cercle de CET ennemi précisément
+    arrivé (`onArrival`), et non plus avant ou tous en même temps —
+    exactement la demande explicite de vérifier chaque ennemi après
+    qu'il soit touché.
