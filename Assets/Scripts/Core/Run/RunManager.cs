@@ -1807,6 +1807,12 @@ namespace Contigu.Core
                     var shapes = (ShapeId[])System.Enum.GetValues(typeof(ShapeId));
                     instance.HatedShape = shapes[_rng.Next(shapes.Length)];
                 }
+                else if (ids[i] == EnemyId.Reclaimer)
+                {
+                    // Playtest request: a boss that can't be one-shot by a single huge combo —
+                    // see EnemyInstance.HasShield's own doc comment.
+                    instance.HasShield = true;
+                }
                 instances.Add(instance);
             }
             return instances;
@@ -2284,6 +2290,8 @@ namespace Contigu.Core
         /// whether any alive Thief actually stole something (see
         /// ThiefStoleOnLastShuffle).
         /// </summary>
+        private const int ThiefEnragedStealCount = 2;
+
         private bool ResolveThiefShuffleEffect()
         {
             bool stole = false;
@@ -2295,15 +2303,23 @@ namespace Contigu.Core
                 var enemy = _currentEncounter[i];
                 if (!enemy.IsDead && enemy.Definition.Id == EnemyId.Thief)
                 {
-                    // Several alive Thieves in the same encounter would each steal a piece, but only the
-                    // last one's is kept here to animate — same simplification ThiefStoleOnLastShuffle's own
-                    // plain bool already makes for "how many" (none here either).
-                    if (Deck.StealRandomHandTile(_rng, out var stolenIndex, out var stolenToken, out var stolenRotation))
+                    // Soulslike-style stage change, playtest request: "Boss avec plusieurs stages ...
+                    // qui force le joueur a jouer différemment" — below half HP, Thief steals twice per
+                    // Shuffle instead of once, forcing the player to stop relying on holding pieces
+                    // in hand as it nears death.
+                    int stealCount = enemy.CurrentHp * 2 <= enemy.CurrentMaxHp ? ThiefEnragedStealCount : 1;
+                    // Several alive Thieves (or ThiefEnragedStealCount>1 steals from the same one) would
+                    // each steal a piece, but only the last one's is kept here to animate — same
+                    // simplification ThiefStoleOnLastShuffle's own plain bool already makes for "how many".
+                    for (int s = 0; s < stealCount; s++)
                     {
-                        stole = true;
-                        ThiefStolenHandIndex = stolenIndex;
-                        ThiefStolenToken = stolenToken;
-                        ThiefStolenRotation = stolenRotation;
+                        if (Deck.StealRandomHandTile(_rng, out var stolenIndex, out var stolenToken, out var stolenRotation))
+                        {
+                            stole = true;
+                            ThiefStolenHandIndex = stolenIndex;
+                            ThiefStolenToken = stolenToken;
+                            ThiefStolenRotation = stolenRotation;
+                        }
                     }
                 }
             }

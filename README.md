@@ -9055,3 +9055,37 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
   utilisés entre-temps — déjà le comportement correct, aucun changement
   de code nécessaire pour cette partie. `RunManager.
   PlagueFreezeCellCount` passe de 2 à 3.
+
+- **Reclaimer ne peut plus être one-shot : bouclier sur son premier
+  coup** (retour de playtest, cité textuellement : « Boss qui ne prend
+  pas de dégât avant... ou tant que ... n'est pas vrai. C'est une
+  bonne idée pour ne pas pouvoir one shot »). Appliqué à Reclaimer, un
+  boss déjà existant.
+  - Nouveau `EnemyInstance.HasShield`, mis à `true` uniquement pour
+    Reclaimer dans `RunManager.BuildEncounter` (donc seulement pour un
+    vrai round, pas via `DebugSetEncounter`, pour ne pas perturber les
+    tests existants qui construisent Reclaimer directement). `EnemyInstance.
+    ApplyDamage` absorbe entièrement le premier coup qui lui ferait
+    perdre des PV (`damage > 0`, donc jamais un soin), quelle que soit
+    sa taille, puis se consomme — chaque coup suivant retire des PV
+    normalement.
+  - Nouveau test `Reclaimer_ShieldAbsorbsTheFirstHitOutright_ThenBehavesNormally`
+    dans `EnemyEncounterTests`, atteint via une vraie progression de
+    round (`AdvanceToRound`) puisque le bouclier n'est accordé que
+    dans `BuildEncounter`.
+
+- **Thief a un 2e stage façon Soulslike sous 50% PV : vole 2 pièces au
+  lieu d'une** (retour de playtest, cité textuellement : « Boss avec
+  plusieurs stages comme dans un RPG Soulslike qui force le joueur a
+  jouer différemment »). Appliqué à Thief, un boss déjà existant.
+  - `RunManager.ResolveThiefShuffleEffect` calcule maintenant
+    `stealCount` (1, ou `ThiefEnragedStealCount` = 2 si
+    `CurrentHp * 2 <= CurrentMaxHp`) et appelle `Deck.
+    StealRandomHandTile` ce nombre de fois au lieu d'une seule — même
+    simplification déjà acceptée pour plusieurs Thief vivants à la
+    fois : seul le dernier vol est gardé pour l'animation de
+    présentation.
+  - Nouveau test `Thief_EnragesBelowHalfHp_StealsTwoPerShuffleInstead_OfOne`
+    dans `EnemyEncounterTests` — endommage Thief à exactement la
+    moitié de ses PV avant un Shuffle et vérifie que 2 des 3
+    emplacements de main se vident au lieu d'un seul.

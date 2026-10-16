@@ -906,6 +906,52 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Reclaimer_ShieldAbsorbsTheFirstHitOutright_ThenBehavesNormally()
+        {
+            // Playtest request, cited textually: "Boss qui ne prend pas de dégât avant... ou tant
+            // que ... n'est pas vrai. C'est une bonne idée pour ne pas pouvoir one shot" — only
+            // granted via RunManager.BuildEncounter (a real round), not DebugSetEncounter, so this
+            // uses natural round progression to reach Reclaimer's own round.
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 4); // round 5 (index 4): Basic, Poisoner, Reclaimer
+            var reclaimer = run.CurrentEncounter[2];
+            Assert.AreEqual(EnemyId.Reclaimer, reclaimer.Definition.Id);
+            int maxHp = reclaimer.CurrentMaxHp;
+
+            bool diedFromFirstHit = reclaimer.ApplyDamage(maxHp * 10);
+            Assert.IsFalse(diedFromFirstHit, "The shield should absorb even a massive opening hit outright");
+            Assert.AreEqual(maxHp, reclaimer.CurrentHp, "No HP should be lost to the shielded hit");
+
+            reclaimer.ApplyDamage(50);
+            Assert.AreEqual(maxHp - 50, reclaimer.CurrentHp, "The shield is consumed — the next hit should land normally");
+        }
+
+        [Test]
+        public void Thief_EnragesBelowHalfHp_StealsTwoPerShuffleInstead_OfOne()
+        {
+            // Playtest request, cited textually: "Boss avec plusieurs stages comme dans un RPG
+            // Soulslike qui force le joueur a jouer différemment".
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
+            var thief = run.CurrentEncounter[2];
+            Assert.AreEqual(EnemyId.Thief, thief.Definition.Id);
+            thief.ApplyDamage(thief.CurrentMaxHp / 2);
+            Assert.LessOrEqual(thief.CurrentHp * 2, thief.CurrentMaxHp, "Needs to actually be at/below half HP for the enraged stage");
+
+            Assert.IsTrue(run.ShuffleHand());
+
+            int occupiedAfter = 0;
+            for (int i = 0; i < DeckManager.HandSize; i++)
+            {
+                if (run.Deck.Hand[i].HasValue)
+                {
+                    occupiedAfter++;
+                }
+            }
+            Assert.AreEqual(DeckManager.HandSize - 2, occupiedAfter, "An enraged Thief should empty 2 of the 3 freshly-dealt hand slots");
+        }
+
+        [Test]
         public void Reclaimer_HealsByTheExactMagnitude_OfAnyNegativePoisonScoreEvent()
         {
             // Redesign, explicit request: "Chaque points négatifs triggered

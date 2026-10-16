@@ -40,6 +40,15 @@ namespace Contigu.Core
         /// <summary>Shape Hater only: Color Hater's exact mirror, the one piece shape it was randomly assigned on spawn (see RunManager.BuildEncounter). Null for every other EnemyId.</summary>
         public ShapeId? HatedShape;
 
+        /// <summary>
+        /// Reclaimer only (set in RunManager.BuildEncounter), playtest request: "Boss qui ne prend pas de
+        /// dégât avant... ou tant que ... n'est pas vrai ... pour ne pas pouvoir one shot". Absorbs the
+        /// first otherwise-damaging hit this instance would take for free — see <see cref="ApplyDamage"/> —
+        /// then clears itself, regardless of how large that first hit would have been. Never true for any
+        /// other EnemyId.
+        /// </summary>
+        public bool HasShield;
+
         private readonly List<Vector2Int> _poisonedCells = new List<Vector2Int>();
 
         /// <summary>Poisoner/Plague: every cell THIS instance has poisoned so far, including any extra cell "contamination" spread onto a neighbor in between Shuffles (see RunManager.ContaminateAdjacentCell) — unlike Locker's single roaming lock, poison accumulates until this instance's next Shuffle releases the whole list at once, or until it dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>
@@ -126,6 +135,13 @@ namespace Contigu.Core
         {
             if (IsDead)
             {
+                return false;
+            }
+            if (HasShield && damage > 0)
+            {
+                // Absorbs this one hit outright, however large — a heal (negative damage, see this
+                // method's own doc comment) never consumes it.
+                HasShield = false;
                 return false;
             }
             CurrentHp = Mathf.Clamp(CurrentHp - damage, 0, CurrentMaxHp);
