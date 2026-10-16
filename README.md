@@ -9041,3 +9041,17 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `Plague_FrozenCell_OnlyClearsWhenItsOwnLineCompletes`) couvrent le
     gel au début du round et la suppression exclusivement via un line
     clear.
+
+- **Ajustements Frozen tile : confirmation qu'un Shuffle ne les affecte
+  pas, et 3 cases gelées au lieu de 2** (demande explicite : « Juste
+  pour m'assurer, la frozen tile n'est pas reset après un shuffle, et
+  l'ennemi devrait en freeze 3 au départ »). Vérifié par lecture de
+  code : `RunManager.ShuffleHand`/`ResolveEnemyShuffleEffects` ne
+  touchent jamais `Cell.IsFrozen`/`IsLocked` — pour Plague, le Shuffle
+  ne fait que reroller ses 5 cases empoisonnées
+  (`ResolvePoisonerShuffleEffect`), un mécanisme entièrement séparé ;
+  les cases gelées au début du round restent donc gelées jusqu'à ce
+  que leur ligne se complète, peu importe le nombre de Shuffle
+  utilisés entre-temps — déjà le comportement correct, aucun changement
+  de code nécessaire pour cette partie. `RunManager.
+  PlagueFreezeCellCount` passe de 2 à 3.

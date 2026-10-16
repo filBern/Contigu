@@ -764,7 +764,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Plague_FreezesTwoCellsAtRoundStart_LockedAndFrozenTogether()
+        public void Plague_FreezesThreeCellsAtRoundStart_LockedAndFrozenTogether()
         {
             // Playtest request, cited textually: "Boss qui en début de round, ajoute une ou plusieurs
             // Frozen tile que la seule manière de retirer c'est en line break. Sinon aucune pièce peut
@@ -783,7 +783,7 @@ namespace Contigu.Tests
                     Assert.IsTrue(cell.IsLocked, "A frozen cell is also locked, blocking placement onto it");
                 }
             }
-            Assert.AreEqual(2, frozenCount);
+            Assert.AreEqual(3, frozenCount);
         }
 
         [Test]

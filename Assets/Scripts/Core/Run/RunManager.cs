@@ -669,7 +669,7 @@ namespace Contigu.Core
         /// fresh encounter is built, so the frozen cells are already in place before the player's first
         /// placement of the round.
         /// </summary>
-        private const int PlagueFreezeCellCount = 2;
+        private const int PlagueFreezeCellCount = 3;
 
         private void ApplyPlagueRoundStartFreeze()
         {
