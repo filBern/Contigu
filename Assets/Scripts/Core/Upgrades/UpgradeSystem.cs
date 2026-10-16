@@ -155,13 +155,24 @@ namespace Contigu.Core
                 PieceTrait? trait = null;
                 if (_rng.Next(100) < EconomyConstants.RandomPieceTraitChancePercent)
                 {
-                    var rolledGridUpgrade = RollFromPool(UpgradePool.Grid);
-                    var kind = TraitKindFor(rolledGridUpgrade.Id).Value; // every Grid-pool entry maps to one
-                    int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
-                    int localIndex = _rng.Next(cellCount);
-                    trait = kind == PieceTraitKind.Tinted
-                        ? new PieceTrait(kind, localIndex, color)
-                        : new PieceTrait(kind, localIndex);
+                    // A small number of Grid-pool entries (currently just PermanentBonusSquare) have no
+                    // corresponding PieceTraitKind at all — a board-position upgrade, not a piece
+                    // enchantment — so re-roll rather than crash on a null trait kind. Bounded to stay
+                    // safe even in a hypothetical pool made up mostly of such entries.
+                    PieceTraitKind? kind = null;
+                    for (int attempt = 0; attempt < 10 && !kind.HasValue; attempt++)
+                    {
+                        var rolledGridUpgrade = RollFromPool(UpgradePool.Grid);
+                        kind = TraitKindFor(rolledGridUpgrade.Id);
+                    }
+                    if (kind.HasValue)
+                    {
+                        int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
+                        int localIndex = _rng.Next(cellCount);
+                        trait = kind.Value == PieceTraitKind.Tinted
+                            ? new PieceTrait(kind.Value, localIndex, color)
+                            : new PieceTrait(kind.Value, localIndex);
+                    }
                 }
 
                 candidates[i] = new PieceToken(shape, color, trait);

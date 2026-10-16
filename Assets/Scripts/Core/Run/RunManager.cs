@@ -683,6 +683,12 @@ namespace Contigu.Core
             }
         }
 
+        /// <summary>See UpgradeDefinition.PermanentBonusSquare's own doc comment — picks one random board position via GridManager.MarkRandomPermanentBonusSquare. No candidate index/surfaced result needed: unlike a Bank-pool "no sub-choice" upgrade (Joker, Piece/Color Mastery), there's nothing for the reveal UI to show beyond the upgrade's own name.</summary>
+        private void ApplyPermanentBonusSquare()
+        {
+            Grid.MarkRandomPermanentBonusSquare(_rng);
+        }
+
         /// <summary>Removes point events tied to the cursed color while preserving play legality, clears, Lueur, and non-point multiplier effects.</summary>
         private void ApplyCursedColorScoreRule(PlacementResult placement, PieceColor cursedColor)
         {
@@ -2798,6 +2804,14 @@ namespace Contigu.Core
         /// </summary>
         private bool ApplyPurchasedUpgrade(UpgradeDefinition upgrade)
         {
+            // Special-cased ahead of the generic Grid-pool routing below: unlike every other Grid-pool
+            // upgrade, this one has no deck tile to choose — see UpgradeDefinition.PermanentBonusSquare's
+            // own doc comment.
+            if (upgrade.Id == UpgradeId.PermanentBonusSquare)
+            {
+                ApplyPermanentBonusSquare();
+                return true;
+            }
             if (upgrade.Pool == UpgradePool.Grid)
             {
                 PendingUpgrade = upgrade;

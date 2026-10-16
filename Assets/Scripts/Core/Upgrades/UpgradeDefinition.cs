@@ -167,6 +167,18 @@ namespace Contigu.Core
             "Poisons the front enemy for 10% of its max HP when placed, no scoring required.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
+        /// Playtest request, cited textually: "Permanent debuff or buff on tile comme au scrabble. Grid
+        /// upgrade rare" — unlike every other Grid-pool entry, this doesn't enchant a deck PIECE (no
+        /// PieceTraitKind maps to it, see UpgradeSystem.TraitKindFor), it instantly marks one random board
+        /// POSITION on purchase (see RunManager.ApplyPermanentBonusSquare), so it's special-cased in
+        /// RunManager.ApplyPurchasedUpgrade to apply immediately instead of routing through the ordinary
+        /// deck-tile-choice flow every other Grid-pool upgrade uses.
+        /// </summary>
+        public static readonly UpgradeDefinition PermanentBonusSquare = new UpgradeDefinition(
+            UpgradeId.PermanentBonusSquare, UpgradePool.Grid, "Permanent Bonus Square",
+            "Marks one random empty board square to always double score through it, for the rest of the run.", false, UpgradeRarity.Rare);
+
+        /// <summary>
         /// No sub-choice — like Joker/Random Modifier, it applies
         /// immediately on purchase: a carousel spins through all 8 shapes
         /// (grayed out, color irrelevant) and lands on one at random (see
@@ -192,7 +204,7 @@ namespace Contigu.Core
             GoldenCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile, VenomTile, PieceMastery, ColorMastery
+            BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare, PieceMastery, ColorMastery
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -217,7 +229,7 @@ namespace Contigu.Core
             GoldenCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile, VenomTile
+            BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare
         };
     }
 }

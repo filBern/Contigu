@@ -78,6 +78,20 @@ namespace Contigu.Core
         public bool IsMultiplierZone;
 
         /// <summary>
+        /// "Permanent Bonus Square" (playtest request, cited textually: "Permanent debuff or buff on tile
+        /// comme au scrabble. Grid upgrade rare"), granted instantly on purchase (see RunManager.
+        /// ApplyPermanentBonusSquare) to one random board position — unlike every other per-cell scoring
+        /// flag above, this one is a property of the GRID POSITION itself, not of whatever piece happens to
+        /// be filling it: it survives <see cref="ClearFill"/> and even <see cref="ResetForNewRound"/>,
+        /// applying to every placement scored through this square for the rest of the run, Scrabble-board-
+        /// square style. Counts exactly like <see cref="IsMultiplierZone"/> in GridManager.
+        /// ComputeGroupMultiplier/ComputeLineClearMultiplier (stacking with it if a placement's own
+        /// Multiplier Zone/Beacon trait also lands here), and shares its visual badge even while this cell
+        /// is empty (see GridCellView.ApplyState).
+        /// </summary>
+        public bool IsPermanentMultiplier;
+
+        /// <summary>
         /// Flat bonus from a "Piece Mastery" purchase, stamped once at
         /// placement time from whatever level the piece's exact shape had
         /// then (RunManager.PlacePiece, before GridManager.PlacePiece runs)

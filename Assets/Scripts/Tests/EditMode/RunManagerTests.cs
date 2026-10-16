@@ -930,6 +930,32 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BuyUpgradeSlot_PermanentBonusSquare_AppliesImmediately_MarkingOneBoardCellForever()
+        {
+            // Playtest request, cited textually: "Permanent debuff or buff on tile comme au scrabble.
+            // Grid upgrade rare" — unlike every other Grid-pool upgrade, there's no deck tile to pick:
+            // it marks one random board POSITION on purchase instead.
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.PermanentBonusSquare, 500);
+            Assert.IsNotNull(run, "Should find a Permanent Bonus Square upgrade slot within 500 seeds");
+            run.DebugGrantLueur(1000000);
+
+            bool bought = run.BuyUpgradeSlot(slot);
+
+            Assert.IsTrue(bought);
+            Assert.IsNull(run.PendingUpgrade, "No deck tile to choose — it should apply immediately");
+
+            int markedCount = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (run.Grid.GetCell(pos).IsPermanentMultiplier)
+                {
+                    markedCount++;
+                }
+            }
+            Assert.AreEqual(1, markedCount);
+        }
+
+        [Test]
         public void BuyUpgradeSlot_RandomModifier_Fails_WhenAlreadyAtTheModifierCap()
         {
             // Balance fix, explicit report: "si le joueur a un random

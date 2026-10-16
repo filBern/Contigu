@@ -9089,3 +9089,51 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     dans `EnemyEncounterTests` — endommage Thief à exactement la
     moitié de ses PV avant un Shuffle et vérifie que 2 des 3
     emplacements de main se vident au lieu d'un seul.
+
+- **Nouvelle tile upgrade grid rare : "Permanent Bonus Square", une
+  case du plateau boostée pour toujours, comme au Scrabble** (dernier
+  retour de playtest de la liste, cité textuellement : « Permanent
+  debuff or buff on tile comme au scrabble. Grid upgrade rare »).
+  Contrairement à toutes les autres tile upgrades existantes
+  (`GoldenCells`, `VenomTile`, etc.), qui enchantent une PIÈCE du deck
+  (et sont donc choisies parmi des pièces candidates à l'achat), celle-
+  ci est une propriété de la POSITION sur le plateau elle-même —
+  aucun `PieceTraitKind` ne lui correspond.
+  - Nouveau `Cell.IsPermanentMultiplier` : contrairement à
+    `IsMultiplierZone` (remis à `false` par `ClearFill`/
+    `ResetForNewRound`), ce flag n'est JAMAIS réinitialisé — il
+    s'applique à toute pièce qui finit par marquer des points à
+    travers cette case, pour le reste du run entier, qu'elle soit
+    vidée, reremplie, ou qu'un nouveau round commence entre-temps.
+    `GridManager.ComputeGroupMultiplier`/`ComputeLineClearMultiplier`
+    le comptent exactement comme `IsMultiplierZone` (x2, cumulable
+    avec lui si une pièce y stacke aussi un Multiplier Zone/Beacon
+    temporaire).
+  - Comme `RunManager.ApplyPurchasedUpgrade` route AUTOMATIQUEMENT tout
+    achat du pool Grid vers le choix habituel "quelle pièce du deck
+    enchanter", ce nouvel upgrade est spécifiquement court-circuité
+    AVANT cette règle générique et s'applique instantanément à l'achat
+    (nouveau `RunManager.ApplyPermanentBonusSquare`/`GridManager.
+    MarkRandomPermanentBonusSquare`, qui choisit une case vide/
+    déverrouillée au hasard).
+  - Corrige un vrai risque de crash découvert en marge : `UpgradeSystem.
+    GetCandidatePiecesFor` (utilisé par "Random Piece") appelait
+    `TraitKindFor(id).Value` sur un `Nullable<PieceTraitKind>` en
+    supposant que "chaque entrée du pool Grid a un trait correspondant"
+    — plus vrai depuis ce nouvel upgrade. Redirigé vers une re-tentative
+    bornée (jusqu'à 10 essais) qui re-tire dans le pool Grid plutôt que
+    de planter sur un trait `null`.
+  - `GridCellView` affiche le même badge que `IsMultiplierZone`, même
+    sur une case VIDE (contrairement à tous les autres badges de cette
+    méthode) — c'est une propriété de la case elle-même, pas de la
+    pièce qui l'occupe actuellement. Aucune nouvelle ressource visuelle
+    nécessaire.
+  - Trois nouveaux tests couvrent le mécanisme :
+    `BuyUpgradeSlot_PermanentBonusSquare_AppliesImmediately_MarkingOneBoardCellForever`
+    (RunManagerTests),
+    `PlacePiece_GroupContainingPermanentMultiplier_SetsGroupMultiplierToTwo`
+    et
+    `PermanentMultiplier_SurvivesClearFillAndResetForNewRound_UnlikeMultiplierZone`
+    (GridManagerTests).
+
+Ceci couvre l'intégralité des retours de playtest de cette liste.

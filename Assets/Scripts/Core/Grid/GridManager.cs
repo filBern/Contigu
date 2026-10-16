@@ -2574,7 +2574,7 @@ namespace Contigu.Core
                 {
                     multiplier *= ScoringConstants.TintedMatchMultiplier;
                 }
-                if (cell.IsMultiplierZone)
+                if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
                 {
                     multiplier *= ScoringConstants.MultiplierZoneMultiplier;
                 }
@@ -2591,7 +2591,7 @@ namespace Contigu.Core
             for (int i = 0; i < groupCells.Count; i++)
             {
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
-                if (cell.IsMultiplierZone)
+                if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
                 {
                     multiplier *= ScoringConstants.MultiplierZoneMultiplier;
                 }
@@ -2860,6 +2860,31 @@ namespace Contigu.Core
                 cell.IsLocked = true;
                 cell.IsFrozen = true;
             }
+            return chosen;
+        }
+
+        /// <summary>
+        /// "Permanent Bonus Square" (see Cell.IsPermanentMultiplier/UpgradeDefinition.PermanentBonusSquare):
+        /// marks one random currently-empty, unlocked cell that doesn't already carry this flag. Returns
+        /// null (a no-op) only in the essentially impossible case the whole board already qualifies.
+        /// </summary>
+        public Vector2Int? MarkRandomPermanentBonusSquare(IRandomProvider rng)
+        {
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (!cell.IsLocked && !cell.IsFilled && !cell.IsPermanentMultiplier)
+                {
+                    candidates.Add(pos);
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+            var chosen = candidates[rng.Next(candidates.Count)];
+            GetCell(chosen).IsPermanentMultiplier = true;
             return chosen;
         }
 

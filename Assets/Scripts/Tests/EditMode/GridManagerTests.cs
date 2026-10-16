@@ -529,6 +529,42 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_GroupContainingPermanentMultiplier_SetsGroupMultiplierToTwo()
+        {
+            // Playtest request, cited textually: "Permanent debuff or buff on tile comme au scrabble.
+            // Grid upgrade rare" — scores exactly like IsMultiplierZone, see
+            // PlacePiece_GroupContainingMultiplierZone_SetsGroupMultiplierToTwo above.
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Lime, 0, 0);
+            grid.GetCell(1, 0).IsPermanentMultiplier = true;
+
+            var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
+
+            Assert.AreEqual(ExpectedGroupBonus(2), result.GroupBonus);
+            Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier, result.GroupMultiplier);
+            Assert.AreEqual(ExpectedGroupBonus(2) * ScoringConstants.MultiplierZoneMultiplier, result.TotalScore);
+        }
+
+        [Test]
+        public void PermanentMultiplier_SurvivesClearFillAndResetForNewRound_UnlikeMultiplierZone()
+        {
+            var grid = new GridManager();
+            var cell = grid.GetCell(3, 3);
+            cell.IsFilled = true;
+            cell.FilledColor = PieceColor.Coral;
+            cell.IsMultiplierZone = true;
+            cell.IsPermanentMultiplier = true;
+
+            cell.ClearFill();
+            Assert.IsFalse(cell.IsMultiplierZone, "An ordinary per-placement multiplier zone is wiped by ClearFill");
+            Assert.IsTrue(cell.IsPermanentMultiplier, "A Permanent Bonus Square must survive its own tile being cleared");
+
+            grid.ResetForNewRound();
+            Assert.IsTrue(grid.GetCell(3, 3).IsPermanentMultiplier, "...and survive a brand-new round, for the whole rest of the run");
+        }
+
+        [Test]
         public void PlacePiece_GroupWithTintedAndMultiplierZone_QuadruplesTheGroupMultiplier()
         {
             var grid = new GridManager();

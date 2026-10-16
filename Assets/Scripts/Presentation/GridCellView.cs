@@ -154,9 +154,12 @@ namespace Contigu.Presentation
                 }
             }
 
-            bool showSpecial = cell.IsTinted || cell.IsMultiplierZone;
+            // IsPermanentMultiplier reuses the same badge as IsMultiplierZone — shown here even while the
+            // cell is empty, unlike every other badge in this method, since it's a property of the board
+            // POSITION itself rather than whatever piece currently fills it (see Cell.IsPermanentMultiplier).
+            bool showSpecial = cell.IsTinted || cell.IsMultiplierZone || cell.IsPermanentMultiplier;
             _badgeSpecial.gameObject.SetActive(showSpecial);
-            if (cell.IsMultiplierZone)
+            if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
             {
                 // Multiplier wins the badge slot visually when a cell stacks both
                 // modifiers; both bonuses still apply to scoring regardless.
