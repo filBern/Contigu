@@ -19,15 +19,16 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class MainMenuView : MonoBehaviour
     {
-        private const string Title = "CONTIGU";
+        private const string Title = "LASTBLOOM";
         private const float TileSize = 28f;
         private const float TileGap = 2f;
         // Each filled glyph cell in TitleTileFont's 5x7 dot-matrix grid renders as a Thickness x Thickness cluster of same-size tiles.
         private const int Thickness = 1;
         // Left-to-right cascade for the title's entrance (see TitleTileView.PlayEntrance) — keyed off each
-        // tile's own column so it reads as one wave sweeping across "CONTIGU" regardless of row, rather than
-        // every tile of a letter popping in together. ~41 columns across the whole title at 0.015s each
-        // keeps the full cascade plus each tile's own pop-in under ~0.9s total.
+        // tile's own column so it reads as one wave sweeping across the title regardless of row, rather than
+        // every tile of a letter popping in together. The column count (and so the total cascade time) scales
+        // with Title's length automatically via BuildTitle, so this delay-per-column stays easy to reason about
+        // without having to re-derive a fixed total each time the title text changes.
         private const float TitleCascadeDelayPerColumn = 0.015f;
 
         /// <summary>Fired once the player clicks through to actually start playing.</summary>
@@ -56,6 +57,16 @@ namespace Contigu.Presentation
             titleContainer.anchorMax = new Vector2(0.5f, 0.5f);
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
             titleContainer.anchoredPosition = new Vector2(0f, 190f);
+
+            // Short tagline under the title, setting up the game's premise (an alchemist tending the
+            // last blooming garden at the edge of a dying world) before the player ever sees a board.
+            var subtitle = UIFactory.CreateText(_root, "Subtitle", "The last garden still blooms, at the edge of ruin.", 18, UITheme.TextMutedOnBackground);
+            var subtitleRect = subtitle.GetComponent<RectTransform>();
+            subtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
+            subtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            subtitleRect.pivot = new Vector2(0.5f, 0.5f);
+            subtitleRect.anchoredPosition = new Vector2(0f, 58f);
+            subtitleRect.sizeDelta = new Vector2(480f, 30f);
 
             // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
             // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"

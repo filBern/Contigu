@@ -9163,3 +9163,45 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
     arrivé (`onArrival`), et non plus avant ou tous en même temps —
     exactement la demande explicite de vérifier chaque ennemi après
     qu'il soit touché.
+
+- **Identité et lore : le chemin de l'alchimiste qui cultive son
+  jardin au bord de la ruine** (demande citée textuellement :
+  « J'aimerais maintenant donner une identité au jeu et potentiellement
+  un petit lore. As-tu des idées? », puis « Oublie l'aspect des lueur
+  dans tes idées, on pourra très bien le renommer plus tard. Laisse
+  aller ta créativité », puis « Je trouve le chemin de l'alchimiste qui
+  fait son jardin au bord de la ruine vraiment bien! Qu'est-ce qu'il
+  faudrait pour faire ce pivot? », puis l'autorisation explicite
+  « Start with title, intro, and enemy flavor », avec le titre choisi
+  parmi les options proposées : « LASTBLOOM »). Première tranche du
+  pivot — le reste (renommage des ~70 modificateurs/~20 améliorations,
+  des couleurs de pièces) n'a pas été demandé et n'a pas été touché.
+  - **Titre** : `TitleTileFont` est une police procédurale de glyphes
+    5×7 en pointillés (`'#'`/`'.'`), pas une image — `MainMenuView`
+    épelle le titre avec les mêmes tuiles carrées colorées que le
+    gameplay. Ça veut dire qu'un nouveau titre ne nécessite aucune
+    nouvelle ressource d'art, seulement de nouvelles données de
+    glyphe : 5 lettres manquantes (L, A, S, B, M) ont été ajoutées au
+    dictionnaire `Glyphs` dans le même style que les 7 lettres
+    existantes (C, O, N, T, I, G, U). `MainMenuView.Title` passe de
+    `"CONTIGU"` à `"LASTBLOOM"` — le calcul du délai de cascade par
+    colonne (`TitleCascadeDelayPerColumn`) dépend déjà dynamiquement de
+    la longueur du titre via `BuildTitle`, donc seul le commentaire
+    obsolète mentionnant "CONTIGU" et un compte de colonnes figé a été
+    mis à jour.
+  - **Intro** : un court sous-titre a été ajouté sous le titre dans
+    `MainMenuView.Build` (« The last garden still blooms, at the edge
+    of ruin. »), posant la prémisse avant même que le joueur ne voie
+    une grille.
+  - **Flavor des ennemis** : les 10 `EnemyDefinition` de
+    `EnemyCatalog` ont un nouveau `Name`/`Description` dans le thème
+    jardin-en-décomposition, sans toucher `Id`, `Role` ni `MaxHp` (le
+    mécanisme reste identique) : Basic → Withered Stalk, Locker →
+    Bramble, Poisoner → Blightspore, HeavyLocker → Deadroot, Plague →
+    Rotbloom, Thief → Crow, Reclaimer → Creeping Vine, Leech → Root
+    Leech, ColorHater → Invasive Bloom, ShapeHater → Invasive Weed.
+    Vérifié qu'aucun test n'est couplé à l'ancien texte de `Name`/
+    `Description` (seuls `MaxHp` et les références statiques comme
+    `EnemyCatalog.Basic` sont utilisés dans les tests), et que
+    `HudView.HaterDescription` construit déjà sa propre phrase pour
+    Color Hater/Shape Hater indépendamment du texte du catalogue.

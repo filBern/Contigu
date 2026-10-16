@@ -4,8 +4,8 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Simple 5-wide x 7-tall dot-matrix glyphs for the letters spelling
-    /// "CONTIGU", letting MainMenuView spell the game's name out of the same
-    /// colored square tiles gameplay itself is built from. Only the 7
+    /// "LASTBLOOM", letting MainMenuView spell the game's name out of the
+    /// same colored square tiles gameplay itself is built from. Only the
     /// distinct letters the title actually needs are defined; add more
     /// entries here if a future screen needs other letters.
     /// </summary>
@@ -86,6 +86,56 @@ namespace Contigu.Presentation
                 "#...#",
                 "#...#",
                 ".###.",
+            },
+            ['L'] = new[]
+            {
+                "#....",
+                "#....",
+                "#....",
+                "#....",
+                "#....",
+                "#....",
+                "#####",
+            },
+            ['A'] = new[]
+            {
+                ".###.",
+                "#...#",
+                "#...#",
+                "#####",
+                "#...#",
+                "#...#",
+                "#...#",
+            },
+            ['S'] = new[]
+            {
+                ".####",
+                "#....",
+                "#....",
+                ".###.",
+                "....#",
+                "....#",
+                "####.",
+            },
+            ['B'] = new[]
+            {
+                "####.",
+                "#...#",
+                "#...#",
+                "####.",
+                "#...#",
+                "#...#",
+                "####.",
+            },
+            ['M'] = new[]
+            {
+                "#...#",
+                "##.##",
+                "#.#.#",
+                "#...#",
+                "#...#",
+                "#...#",
+                "#...#",
             },
         };
 
