@@ -70,15 +70,15 @@ namespace Contigu.Core
             "x2 Mult when a 2x2 block is placed.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
-            ModifierId.Collectionneur, ModifierCategory.Roguelike, "Collector",
+            ModifierId.Collectionneur, ModifierCategory.Roguelike, "Hoarder",
             "+12 pts per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
-            ModifierId.Tricolore, ModifierCategory.Couleurs, "Tricolor",
+            ModifierId.Tricolore, ModifierCategory.Couleurs, "Triad Bloom",
             "x2 Mult if 2 other colors are touched.");
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
-            ModifierId.Complementaire, ModifierCategory.Couleurs, "Complementary",
+            ModifierId.Complementaire, ModifierCategory.Couleurs, "Companion Bloom",
             "x2 Mult if a complementary pair is touched (Ember/Gold or Frost/Moss).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
@@ -103,15 +103,15 @@ namespace Contigu.Core
 
         // Requires 4 filled cardinal neighbors showing all 4 base colors at once.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
-            ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Color Wheel",
+            ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Alchemist's Wheel",
             "+52 pts per group cell surrounded by all 4 colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
-            ModifierId.Monochrome, ModifierCategory.Roguelike, "Monochrome",
+            ModifierId.Monochrome, ModifierCategory.Roguelike, "Ashbound",
             "+5 pts per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
-            ModifierId.Contraste, ModifierCategory.Couleurs, "Contrast",
+            ModifierId.Contraste, ModifierCategory.Couleurs, "Dissonant Bloom",
             "+9 pts per placed cell next to a different color.");
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
@@ -147,7 +147,7 @@ namespace Contigu.Core
             "x2 Mult per cleared line with no isolated single-color cell, stacking.");
 
         public static readonly ModifierDefinition MonochromeLigne = new ModifierDefinition(
-            ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Monochrome Line",
+            ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Ashbound Line",
             "x2 Mult per cleared line that's a single color, stacking.");
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
@@ -220,7 +220,7 @@ namespace Contigu.Core
             "x2 Mult when the group is only this piece (2+ cells) — nothing merged in.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
-            ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Open Space",
+            ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Fallow Ground",
             "x2 Mult when the board ends up 25% filled or less.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
@@ -232,7 +232,7 @@ namespace Contigu.Core
             "+8 pts per cell for pieces with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
-            ModifierId.Fraicheur, ModifierCategory.Couleurs, "Freshness",
+            ModifierId.Fraicheur, ModifierCategory.Couleurs, "New Growth",
             "x2 Mult when this color is new to the board.");
 
         public static readonly ModifierDefinition Pont = new ModifierDefinition(
@@ -248,7 +248,7 @@ namespace Contigu.Core
             "+15 pts per pre-existing tile this placement newly encircles.");
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
-            ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Big Family",
+            ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Thriving Colony",
             "x2 Mult when this color forms only one connected group on the board.");
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
@@ -256,7 +256,7 @@ namespace Contigu.Core
             "xn Mult for n consecutive same-shape placements (x2 on the 2nd, x3 on the 3rd...); resets on a different shape.");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
-            ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Color Switch",
+            ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Changeling Bloom",
             "+2 Mult when this piece's color differs from the last one played.");
 
         public static readonly ModifierDefinition Combo = new ModifierDefinition(
@@ -268,11 +268,11 @@ namespace Contigu.Core
             "+8 pts per cell if every cell of the piece touches a filled tile.");
 
         public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
-            ModifierId.Surpopulation, ModifierCategory.Voisinage, "Overcrowding",
+            ModifierId.Surpopulation, ModifierCategory.Voisinage, "Thicket",
             "+12 pts per cell if every cell of the piece touches 2+ filled tiles.");
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
-            ModifierId.Minimaliste, ModifierCategory.Voisinage, "Minimalist",
+            ModifierId.Minimaliste, ModifierCategory.Voisinage, "Lone Bloom",
             "x2 Mult when the piece touches exactly 1 filled tile, total.");
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
@@ -280,7 +280,7 @@ namespace Contigu.Core
             "Joker tiles count as whichever color scores best with your Devotion/Glow modifiers.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
-            ModifierId.Densite, ModifierCategory.Roguelike, "Density",
+            ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
             "+n Mult, n = filled cells on the board ÷ 10 — scales with how full the board is.");
 
         // Lueur-earning modifiers, each using the same trigger condition as
@@ -300,7 +300,7 @@ namespace Contigu.Core
             "+4 ◆ per cleared line that's a single color, stacking.");
 
         public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
-            ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Collector",
+            ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Hoarder",
             "+2 ◆ per distinct color in cleared cells.");
 
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
@@ -328,11 +328,11 @@ namespace Contigu.Core
             "Instantly copies whatever modifier you bought right before it. Does nothing on your first purchase.");
 
         public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
-            ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Risky Mult",
+            ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Volatile Brew",
             "+5 Mult, but 1-in-5 chance to lose it at the end of every round.");
 
         public static readonly ModifierDefinition CartesEnchantees = new ModifierDefinition(
-            ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Cards",
+            ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Seeds",
             "+0.1 Mult per upgraded card in your deck, starting from a baseline of 1.");
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
@@ -344,7 +344,7 @@ namespace Contigu.Core
             "+2 pts per piece currently in your deck.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
-            ModifierId.Experience, ModifierCategory.Roguelike, "Experience",
+            ModifierId.Experience, ModifierCategory.Roguelike, "Seasoned Growth",
             "+0.1 Mult per upgraded piece you've PLAYED this run, starting from a baseline of 1.");
 
         // Per-size-tier pairs; values from ScoringConstants.FormeSpecialistMultiplier/FormeGlowBonusPerCell.
@@ -385,11 +385,11 @@ namespace Contigu.Core
         // here — see GridManager.ApplyDevotionEclatPairBonus.
 
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
-            ModifierId.Polyvalence, ModifierCategory.Roguelike, "Polyvalence",
+            ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
             "+1 Mult per distinct modifier category you hold at least one of.");
 
         public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
-            ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Combat Boost",
+            ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
             "+25% damage on placements that trigger a Joker combat trait (Bombe/Range/Éclat/Précision/Sangsue). No effect otherwise.");
 
         public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
@@ -397,7 +397,7 @@ namespace Contigu.Core
             "+1 Mult per distinct Joker combat trait kind currently in your deck.");
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
-            ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Color Collection",
+            ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
             "+2 Mult per color for which you hold BOTH its Devotion and Éclat modifier.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(

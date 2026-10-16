@@ -9279,3 +9279,37 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
     OK sur `ModifierDefinition.cs`, aucun test couplé au texte
     `Name`/`Description` (seuls les identifiants C# comme
     `ModifierId.GrandFormat` sont utilisés dans les tests).
+
+- **« Fait les modifiers »** : finit le passage de thème sur le reste
+  du catalogue (demande citée textuellement). 21 modificateurs
+  supplémentaires renommés, mécanique et `Description` inchangées
+  partout (sauf correction de bug notée plus bas) :
+  - Collector → **Hoarder** (et son variant Lueur, "Glowing Collector"
+    → **Glowing Hoarder**, pour garder la racine commune), Tricolor →
+    **Triad Bloom**, Complementary → **Companion Bloom**, Color Wheel
+    → **Alchemist's Wheel**, Monochrome → **Ashbound** (et "Monochrome
+    Line" → **Ashbound Line**, même logique de racine partagée),
+    Contrast → **Dissonant Bloom**, Open Space → **Fallow Ground**,
+    Freshness → **New Growth**, Big Family → **Thriving Colony**,
+    Color Switch → **Changeling Bloom**, Overcrowding → **Thicket**,
+    Minimalist → **Lone Bloom**, Density → **Root Density**, Risky
+    Mult → **Volatile Brew**, Enchanted Cards → **Enchanted Seeds**,
+    Experience → **Seasoned Growth**, Combat Boost → **Battle Tonic**,
+    Color Collection → **Chromatic Hoard**.
+  - **Bug trouvé en passant** : `Polyvalence` était resté en français
+    non traduit dans son propre champ `Name` (un oubli antérieur au
+    pivot — tous les autres modificateurs ont un `Name` anglais même
+    quand leur identifiant C# est français). Corrigé en **Hardy
+    Growth**, cohérent avec le reste du thème.
+  - Laissés inchangés : les noms déjà parfaitement à leur place
+    (Fortress, Gardener, Cocooned, Rainbow, Sealer, Dwindling, Echo,
+    Siphon, Mimic, Palindrome, Gradient, ...), les paires partageant
+    une racine avec leur variant Lueur quand la renommer aurait cassé
+    le lien visuel (Alternation/Glowing Alternation, Repetition/Golden
+    Repetition), les libellés purement numériques/fonctionnels où la
+    clarté prime (Mult +1/+2/+4, Slot 1/2/3 Loyalty, Fourth Slot), et
+    Combo — terme déjà utilisé ailleurs dans le jeu pour le combo
+    meter du HUD, donc volontairement pas retouché ici.
+  - Vérifié : balance parenthèses/accolades OK, aucun test couplé au
+    texte `Name` des 21 modificateurs renommés (recherche `grep`
+    dédiée sur `Assets/Scripts/Tests`, aucun résultat).
