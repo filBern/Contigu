@@ -9005,3 +9005,39 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     `QuatriemeEmplacement_Sold_ShrinksTheHandBackAndReturnsItsTokenToTheDeck`)
     couvrent le gain immédiat, la jouabilité réelle du 4e emplacement,
     et la récupération du jeton à la vente.
+
+- **Plague gèle des cases au début de chaque round, retirables
+  uniquement en complétant leur ligne** (retour de playtest, cité
+  textuellement : « Boss qui en début de round, ajoute une ou
+  plusieurs Frozen tile que la seule manière de retirer c'est en line
+  break. Sinon aucune pièce peut être ajouté dessus »). Appliqué à
+  Plague, un boss déjà existant, plutôt qu'à un nouvel ennemi sans
+  sprite (et pas à HeavyLocker : ses propres tests sur son verrou
+  mobile vérifient un nombre exact de cellules verrouillées que ce
+  mécanisme aurait cassé).
+  - Nouveau `Cell.IsFrozen`, toujours accompagné de `IsLocked = true`
+    (bloque la pose dessus, réutilise la vérification `CanPlace`
+    existante) mais SANS `IsLineClearObstacle` — contrairement au
+    verrou mobile de Locker, qui empêche sa ligne de se compléter,
+    une case Frozen est déjà ignorée par le calcul `IsRowComplete`/
+    `IsColumnComplete` existant (`cell.IsLocked && !cell.
+    IsLineClearObstacle` → sautée), donc sa ligne PEUT se compléter
+    autour d'elle.
+  - `GridManager.CollectLineCell` gagne une 3e branche : contrairement
+    à une case Bastion (qui se préserve) ou à un verrou
+    ProgressiveCellLock classique (qui reste bloqué pour toujours),
+    une case Frozen est réellement effacée ET déverrouillée dès que sa
+    ligne se complète — son seul et unique moyen de retrait.
+  - Nouveau `GridManager.FreezeRandomCells`, même structure que
+    `LockRandomCells` existant. `RunManager.ApplyPlagueRoundStartFreeze`
+    (appelé depuis `StartRound`, juste après la construction de
+    l'encounter) gèle 2 cases vides à chaque round où Plague est en
+    vie — avant même la première pose du joueur. Aucun ajout visuel
+    nécessaire : `GridCellView.ApplyState` rend déjà toute case
+    `IsLocked` avec le même badge générique, donc une case Frozen
+    s'affiche automatiquement comme verrouillée.
+  - Deux nouveaux tests dans `EnemyEncounterTests`
+    (`Plague_FreezesTwoCellsAtRoundStart_LockedAndFrozenTogether`/
+    `Plague_FrozenCell_OnlyClearsWhenItsOwnLineCompletes`) couvrent le
+    gel au début du round et la suppression exclusivement via un line
+    clear.

@@ -764,6 +764,78 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Plague_FreezesTwoCellsAtRoundStart_LockedAndFrozenTogether()
+        {
+            // Playtest request, cited textually: "Boss qui en début de round, ajoute une ou plusieurs
+            // Frozen tile que la seule manière de retirer c'est en line break. Sinon aucune pièce peut
+            // être ajouté dessus". Not HeavyLocker — its own roaming-lock tests assert an exact
+            // CountLockedCells invariant this would break (see ApplyPlagueRoundStartFreeze's own comment).
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 8); // round 9 (index 8): Basic, Locker, Plague
+
+            int frozenCount = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var cell = run.Grid.GetCell(pos);
+                if (cell.IsFrozen)
+                {
+                    frozenCount++;
+                    Assert.IsTrue(cell.IsLocked, "A frozen cell is also locked, blocking placement onto it");
+                }
+            }
+            Assert.AreEqual(2, frozenCount);
+        }
+
+        [Test]
+        public void Plague_FrozenCell_OnlyClearsWhenItsOwnLineCompletes()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            AdvanceToRound(run, 8); // round 9 (index 8): Basic, Locker, Plague
+
+            Vector2Int frozenPos = default;
+            bool found = false;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (run.Grid.GetCell(pos).IsFrozen)
+                {
+                    frozenPos = pos;
+                    found = true;
+                    break;
+                }
+            }
+            Assert.IsTrue(found, "Plague should have frozen at least one cell this round");
+
+            // Fill every other cell in the frozen cell's own row directly, so only the frozen cell
+            // itself stands between that row and completing.
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (x == frozenPos.x)
+                {
+                    continue;
+                }
+                var cell = run.Grid.GetCell(x, frozenPos.y);
+                cell.IsFilled = true;
+                cell.FilledColor = PieceColor.Coral;
+            }
+
+            // Any legal placement elsewhere re-triggers GridManager's full-board line-clear sweep —
+            // it can't land inside the frozen row itself, since every other cell there is now filled
+            // and the frozen one is locked.
+            int slot = ChurnUntilHandMatches(run, t => !t.Trait.HasValue);
+            var token = run.Deck.Hand[slot].Value;
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[slot]);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            var frozenCellAfter = run.Grid.GetCell(frozenPos);
+            Assert.IsFalse(frozenCellAfter.IsLocked, "Completing its row should be the frozen cell's only removal path");
+            Assert.IsFalse(frozenCellAfter.IsFrozen);
+        }
+
+        [Test]
         public void Plague_PoisonsFiveFilledCellsPerShuffle_RoamsAsABlock_AndNormalizesThemAllOnDeath()
         {
             var run = new RunManager(new SystemRandomProvider(1));

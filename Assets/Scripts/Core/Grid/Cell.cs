@@ -45,6 +45,17 @@ namespace Contigu.Core
         public bool IsLineClearObstacle;
 
         /// <summary>
+        /// "Frozen" — HeavyLocker's own round-start freeze (see RunManager.ApplyHeavyLockerRoundStartFreeze/
+        /// GridManager.FreezeRandomCells): true only alongside IsLocked, for a cell that — unlike Locker's
+        /// own roaming IsLineClearObstacle lock — is deliberately removable, and ONLY removable, by actually
+        /// completing its row or column (GridManager.CollectLineCell clears and unlocks it the moment that
+        /// happens, instead of leaving it locked forever like Bastion or the old ProgressiveCellLock). Shares
+        /// the same generic "locked obstacle" visual as any other IsLocked cell (see
+        /// GridCellView.ApplyState) — no dedicated rendering of its own.
+        /// </summary>
+        public bool IsFrozen;
+
+        /// <summary>
         /// "Poisoner" enemy mechanic: any point event scored on this cell
         /// counts negative instead of positive while this is true (see
         /// RunManager.ApplyPoisonScoreRule). Can be set on any cell, filled
@@ -140,6 +151,7 @@ namespace Contigu.Core
             FilledShapeId = null;
             IsLocked = false;
             IsLineClearObstacle = false;
+            IsFrozen = false;
             IsPoisoned = false;
             IsGolden = false;
             IsTinted = false;

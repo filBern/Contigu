@@ -2728,6 +2728,16 @@ namespace Contigu.Core
             {
                 bastionBonus.Add(pos);
             }
+            else if (cell.IsFrozen)
+            {
+                // Unlike every other locked cell this line's completion skips over (Bastion preserves
+                // itself, an ordinary ProgressiveCellLock/Locker obstacle just stays put), a Frozen cell is
+                // meant to actually go away the moment its line completes — its one and only removal path
+                // (see Cell.IsFrozen's own doc comment).
+                cell.IsLocked = false;
+                cell.IsFrozen = false;
+                cellsToClear.Add(pos);
+            }
         }
 
         /// <summary>Ordered colors along a row (index = y) or column (index = x), skipping locked cells entirely — called before any clearing happens this call, so every relevant cell here is still filled.</summary>
@@ -2819,6 +2829,36 @@ namespace Contigu.Core
             for (int i = 0; i < chosen.Count; i++)
             {
                 GetCell(chosen[i]).IsLocked = true;
+            }
+            return chosen;
+        }
+
+        /// <summary>
+        /// "Frozen" cells (see Cell.IsFrozen) — HeavyLocker's round-start effect. Picks up to <paramref
+        /// name="count"/> random still-empty, unlocked cells and locks them WITHOUT IsLineClearObstacle, so
+        /// — unlike LockRandomCells's own boss-round lock — the row/column they sit in can still complete
+        /// around them; CollectLineCell then actually clears and unlocks a Frozen cell the moment that
+        /// happens, its only removal path. No fallback onto already-modified cells (unlike LockRandomCells):
+        /// a brand-new round's board is empty enough that this should essentially never run short.
+        /// </summary>
+        public IReadOnlyList<Vector2Int> FreezeRandomCells(int count, IRandomProvider rng)
+        {
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (!cell.IsLocked && !cell.IsFilled)
+                {
+                    candidates.Add(pos);
+                }
+            }
+
+            var chosen = PickN(candidates, count, rng);
+            for (int i = 0; i < chosen.Count; i++)
+            {
+                var cell = GetCell(chosen[i]);
+                cell.IsLocked = true;
+                cell.IsFrozen = true;
             }
             return chosen;
         }

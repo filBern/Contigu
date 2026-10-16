@@ -433,6 +433,7 @@ namespace Contigu.Core
                 CurrentBossEffect = BossEffect.None;
                 BossLockedHandSlotIndex = null;
                 BossCursedColor = null;
+                ApplyPlagueRoundStartFreeze();
             }
             else
             {
@@ -656,6 +657,30 @@ namespace Contigu.Core
             }
             Lueur += lockOutcome.LueurEarned;
             return lockOutcome.LockedCells;
+        }
+
+        /// <summary>
+        /// Playtest request, cited textually: "Boss qui en début de round, ajoute une ou plusieurs Frozen
+        /// tile que la seule manière de retirer c'est en line break. Sinon aucune pièce peut être ajouté
+        /// dessus" — applied to Plague (an existing boss, rather than a brand-new enemy with no art; not
+        /// HeavyLocker, whose own roaming-lock tests assert an exact CountLockedCells invariant this would
+        /// break) once per round it's alive and part of the encounter, freezing PlagueFreezeCellCount empty
+        /// cells (see GridManager.FreezeRandomCells/Cell.IsFrozen). Called from StartRound, right after the
+        /// fresh encounter is built, so the frozen cells are already in place before the player's first
+        /// placement of the round.
+        /// </summary>
+        private const int PlagueFreezeCellCount = 2;
+
+        private void ApplyPlagueRoundStartFreeze()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                if (_currentEncounter[i].Definition.Id == EnemyId.Plague && !_currentEncounter[i].IsDead)
+                {
+                    Grid.FreezeRandomCells(PlagueFreezeCellCount, _rng);
+                    return;
+                }
+            }
         }
 
         /// <summary>Removes point events tied to the cursed color while preserving play legality, clears, Lueur, and non-point multiplier effects.</summary>
