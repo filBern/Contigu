@@ -24,6 +24,7 @@ namespace Contigu.Data
         private static readonly Color ChameleonBadgeColor = new Color(0.643f, 0.922f, 0.800f); // #a4ebcc
         private static readonly Color BastionBadgeColor = new Color(0.380f, 0.263f, 0.388f); // #614363
         private static readonly Color KamikazeBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f (same family as Detonator/destruction)
+        private static readonly Color VenomBadgeColor = new Color(0.373f, 0.624f, 0.373f); // #5f9f5f
 
         // Joker-exclusive combat traits all share Joker's own color
         // (VisualDefaults.ColorMap[PieceColor.Joker]); the hover tooltip
@@ -49,6 +50,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Void: return "Void Tile";
                 case PieceTraitKind.Bastion: return "Bastion Tile";
                 case PieceTraitKind.Kamikaze: return "Kamikaze Tile";
+                case PieceTraitKind.Venom: return "Venom Tile";
                 case PieceTraitKind.Bombe: return "Bombe";
                 case PieceTraitKind.Range: return "Range";
                 case PieceTraitKind.Eclat: return "Éclat";
@@ -93,6 +95,8 @@ namespace Contigu.Data
                     return "Locks in place instead of clearing, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
                     return "Destroys itself and its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
+                case PieceTraitKind.Venom:
+                    return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed — fires even if this placement scores nothing.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -128,6 +132,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Void: return UpgradeRarity.Rare;
                 case PieceTraitKind.Bastion: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Kamikaze: return UpgradeRarity.Rare;
+                case PieceTraitKind.Venom: return UpgradeRarity.Uncommon;
                 default: return UpgradeRarity.Common;
             }
         }
@@ -162,6 +167,8 @@ namespace Contigu.Data
                     return BastionBadgeColor;
                 case PieceTraitKind.Kamikaze:
                     return KamikazeBadgeColor;
+                case PieceTraitKind.Venom:
+                    return VenomBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:
                 case PieceTraitKind.Eclat:

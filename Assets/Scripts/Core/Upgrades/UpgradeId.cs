@@ -52,6 +52,7 @@ namespace Contigu.Core
 
         BastionTile,
         KamikazeTile,
+        VenomTile,
 
         PieceMastery,
 

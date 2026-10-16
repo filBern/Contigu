@@ -48,6 +48,9 @@ namespace Contigu.Core
         /// <summary>"Kamikaze Tile" — when placed, destroys itself and its 8 surrounding tiles (including this same placement's own other cells), scoring a flat bonus per tile actually destroyed.</summary>
         Kamikaze,
 
+        /// <summary>"Venom Tile" — when placed (regardless of whether it scores), poisons the front alive enemy for ScoringConstants.VenomDamagePercentOfMaxHp% of ITS OWN current max HP as direct damage — unlike the ordinary score-driven hit, this doesn't depend on this placement's score at all.</summary>
+        Venom,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active

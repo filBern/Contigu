@@ -8930,3 +8930,35 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
     normalement ou qu'une étape ait levé une exception en cours de
     route. Le pire cas possible devient donc une animation tronquée au
     lieu d'un jeu complètement figé.
+
+- **Retrait de l'upgrade Tinted Cells du pool, et ajout de Venom Tile**
+  (retours de playtest, cités textuellement : « Tinted vs multiplyier
+  tile, c'est pas clair. Retire les upgrades tinted » et « Une tile
+  upgrade qui empoisonne l'ennemi (qui fait 10% de dégat de max hp »).
+  - `TintedCells` est retiré de `UpgradeDefinition.All` et `GridPool` —
+    elle ne peut donc plus être tirée au shop ni en draft. Sa
+    définition (et le `PieceTraitKind.Tinted`/`Cell.IsTinted` sous-
+    jacent) reste en place plutôt que d'être arrachée entièrement du
+    moteur, puisqu'elle est toujours référencée directement par son nom
+    dans `UpgradeSystemTests`/`GridManagerTests` ; un commentaire sur sa
+    définition explique pourquoi elle est retirée (confusion avec
+    Multiplier Zone, qui double aussi le score mais sur tout le
+    placement plutôt que juste le groupe).
+  - Nouvelle tile upgrade `VenomTile` ("Venom Tile", pool Grid,
+    rareté Uncommon) : un nouveau `PieceTraitKind.Venom`, mappé comme
+    toutes les autres tile upgrades via `UpgradeSystem.TraitKindFor`
+    (aucun branchement spécial requis ailleurs — `GetCandidateTilesFor`/
+    `ApplyToChosenTiles` fonctionnent déjà génériquement pour n'importe
+    quel trait). Quand la tuile enchantée est posée, `RunManager.
+    ApplyVenomEffect` inflige à l'ennemi en première position un dégât
+    direct égal à `ScoringConstants.VenomDamagePercentOfMaxHp` (10%) de
+    son PROPRE PV max actuel — indépendant du score de ce placement
+    (contrairement à `ApplyDamageToEncounter`, qui prend un dégât déjà
+    calculé, ce nouveau calcul doit d'abord identifier la cible pour
+    lire son `CurrentMaxHp`). Comme ce n'est pas un trait Joker exclusif
+    (voir `PieceTrait.IsJokerCombatKind`), ce dégât s'ajoute à celui
+    d'un coup de score ordinaire plutôt que de le remplacer.
+  - `PieceTraitVisualDefaults` gagne un nom/description/rareté/couleur
+    de badge (vert, `#5f9f5f`) pour `PieceTraitKind.Venom`, et un
+    nouveau test (`VenomTile_DealsExtraDamageEqualToTenPercentOfTargetsMaxHp_OnTopOfOrdinaryScoreDamage`)
+    couvre le mécanisme dans `EnemyEncounterTests`.

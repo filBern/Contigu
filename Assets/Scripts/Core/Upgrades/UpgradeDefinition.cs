@@ -98,6 +98,14 @@ namespace Contigu.Core
             UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
             "Scores +18 flat when placed.", false, UpgradeRarity.Common);
 
+        /// <summary>
+        /// Retired from the shop/draft pools (see All/GridPool below) — playtesting found it read as nearly
+        /// identical to MultiplierZone ("Tinted vs multiplier tile, c'est pas clair"), both being a flat
+        /// "doubles score" tile that differed only in exactly which score counted. The definition itself
+        /// (and PieceTraitKind.Tinted/Cell.IsTinted it maps to, see UpgradeSystem.TraitKindFor) stays in
+        /// place rather than being torn out, since it's still exercised directly by name in
+        /// UpgradeSystemTests/GridManagerTests.
+        /// </summary>
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
             "Doubles group and golden score (not line-clear), tinted to the piece's color.", false, UpgradeRarity.Uncommon);
@@ -154,6 +162,10 @@ namespace Contigu.Core
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
             "Destroys itself and its 8 surrounding tiles (+6 per tile destroyed).", false, UpgradeRarity.Rare);
 
+        public static readonly UpgradeDefinition VenomTile = new UpgradeDefinition(
+            UpgradeId.VenomTile, UpgradePool.Grid, "Venom Tile",
+            "Poisons the front enemy for 10% of its max HP when placed, no scoring required.", false, UpgradeRarity.Uncommon);
+
         /// <summary>
         /// No sub-choice — like Joker/Random Modifier, it applies
         /// immediately on purchase: a carousel spins through all 8 shapes
@@ -177,10 +189,10 @@ namespace Contigu.Core
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
-            GoldenCells, TintedCells, MultiplierZone,
+            GoldenCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile, PieceMastery, ColorMastery
+            BastionTile, KamikazeTile, VenomTile, PieceMastery, ColorMastery
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -202,10 +214,10 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] GridPool =
         {
-            GoldenCells, TintedCells, MultiplierZone,
+            GoldenCells, MultiplierZone,
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
-            BastionTile, KamikazeTile
+            BastionTile, KamikazeTile, VenomTile
         };
     }
 }

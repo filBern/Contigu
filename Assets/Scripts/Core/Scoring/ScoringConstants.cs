@@ -182,6 +182,9 @@ namespace Contigu.Core
         /// <summary>Void Tile: bonus for the one already-filled cell elsewhere on the grid it destroys. A no-op (no bonus) when nothing else on the grid is eligible to be destroyed.</summary>
         public const int VoidBonusPerDestroyedCell = 10;
 
+        /// <summary>Venom Tile: percentage of the front alive enemy's OWN current max HP dealt as direct bonus damage when placed, no encounter required to score but a no-op if none is active.</summary>
+        public const float VenomDamagePercentOfMaxHp = 10f;
+
         // ---- More modifier bonuses (see ModifierCatalog) ----
 
         /// <summary>Bridge (Pont): xN multiplier PER pre-existing group bridged together by this placement beyond the first (bridging 2 groups applies once, 3 groups twice, stacking multiplicatively).</summary>

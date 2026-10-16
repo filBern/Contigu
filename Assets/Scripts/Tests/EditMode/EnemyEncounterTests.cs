@@ -1266,6 +1266,31 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void VenomTile_DealsExtraDamageEqualToTenPercentOfTargetsMaxHp_OnTopOfOrdinaryScoreDamage()
+        {
+            // Explicit playtest request: "Une tile upgrade qui empoisonne l'ennemi (qui fait 10% de
+            // dégat de max hp" — an ordinary (non-Joker-combat) tile trait, so it stacks additively on
+            // top of the usual score-driven front-hit damage rather than replacing it.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            var enemy = run.CurrentEncounter[0];
+            int hpBefore = enemy.CurrentHp;
+            int maxHpBefore = enemy.CurrentMaxHp;
+
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Venom, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Venom);
+            var anchor = FindAnyValidAnchor(run.Grid, PieceShapeCatalog.Get(ShapeId.Single));
+            Assert.IsTrue(anchor.HasValue);
+            var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
+            Assert.IsTrue(outcome.Placement.Success);
+
+            int expectedVenomDamage = Mathf.RoundToInt(maxHpBefore * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f));
+            int expectedTotalDamage = outcome.Placement.TotalScore + expectedVenomDamage;
+            Assert.Greater(expectedVenomDamage, 0, "Need a large enough max HP for the poison tick to actually be observable");
+            Assert.AreEqual(hpBefore - expectedTotalDamage, enemy.CurrentHp);
+        }
+
+        [Test]
         public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur_NotJustSangsue()
         {
             // Explicit request: generalize Sangsue's siphon to every combat

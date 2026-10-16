@@ -278,6 +278,7 @@ namespace Contigu.Core
                 case UpgradeId.VoidTile: return PieceTraitKind.Void;
                 case UpgradeId.BastionTile: return PieceTraitKind.Bastion;
                 case UpgradeId.KamikazeTile: return PieceTraitKind.Kamikaze;
+                case UpgradeId.VenomTile: return PieceTraitKind.Venom;
                 default: return null; // Bank pool — no trait
             }
         }

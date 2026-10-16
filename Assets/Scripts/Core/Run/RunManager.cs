@@ -923,6 +923,7 @@ namespace Contigu.Core
                 case PieceTraitKind.Void:
                 case PieceTraitKind.Bastion:
                 case PieceTraitKind.Kamikaze:
+                case PieceTraitKind.Venom:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -1093,6 +1094,9 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Kamikaze:
                     ApplyKamikazeEffect(traitCellPos, placement);
+                    break;
+                case PieceTraitKind.Venom:
+                    ApplyVenomEffect();
                     break;
             }
         }
@@ -1486,6 +1490,35 @@ namespace Contigu.Core
             if (destroyed > 0)
             {
                 AddTraitBonus(placement, traitCellPos, destroyed * ScoringConstants.KamikazeBonusPerDestroyedCell);
+            }
+        }
+
+        /// <summary>
+        /// "Venom Tile": deals the front alive enemy direct damage equal to ScoringConstants.
+        /// VenomDamagePercentOfMaxHp% of its OWN current max HP, independent of whether this
+        /// placement scored anything — a no-op outside an active encounter. Unlike
+        /// ApplyDamageToEncounter's flat damage parameter, the amount here is computed per-target
+        /// since it depends on the target's own CurrentMaxHp, so it can't reuse that helper directly.
+        /// </summary>
+        private void ApplyVenomEffect()
+        {
+            if (!HasActiveEncounter)
+            {
+                return;
+            }
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                int damage = Mathf.RoundToInt(enemy.CurrentMaxHp * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f));
+                if (enemy.ApplyDamage(damage))
+                {
+                    CleanUpDefeatedEnemy(enemy);
+                }
+                break;
             }
         }
 
