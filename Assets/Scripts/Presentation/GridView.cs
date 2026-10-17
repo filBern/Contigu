@@ -509,7 +509,7 @@ namespace Contigu.Presentation
                     // Only the one cell matching the selected piece's own
                     // enchanted local index previews the trait badge.
                     bool isTraitCell = _selectedTrait.HasValue && _selectedTrait.Value.LocalCellIndex == i;
-                    _cells[cx, cy].SetHoverTint(overlay, valid, isTraitCell ? _selectedTrait : null);
+                    _cells[cx, cy].SetHoverTint(overlay, valid, isTraitCell ? _selectedTrait : null, _selectedColor);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                     footprint.Add(new Vector2Int(cx, cy));
                 }

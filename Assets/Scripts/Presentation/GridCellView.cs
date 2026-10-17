@@ -264,9 +264,17 @@ namespace Contigu.Presentation
         /// shows once placed, on the cell that would carry the piece's enchantment. ClearHover's follow-up
         /// ApplyState call resets everything once the hover ends.
         /// </summary>
-        public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null)
+        public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null, PieceColor? ghostColor = null)
         {
-            if (overlay.HasValue)
+            if (isValid && ghostColor.HasValue)
+            {
+                // A see-through copy of the piece's own tile instead of a green wash: green over the brown soil
+                // read as muddy olive, whereas the real tile art is unmistakable (and shows the color being placed).
+                Background.sprite = VisualDefaults.GetTileSprite(ghostColor.Value);
+                var tint = VisualDefaults.GetTileTint(ghostColor.Value);
+                Background.color = new Color(tint.r, tint.g, tint.b, 0.8f);
+            }
+            else if (overlay.HasValue)
             {
                 Background.color = Color.Lerp(Background.color, overlay.Value, 0.6f);
             }
