@@ -19,17 +19,17 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class HandView : MonoBehaviour
     {
-        private const float DragGhostWidth = 120f;
-        private const float DragGhostHeight = 128f;
-        private const float DragGhostPreviewWidth = 112f;
-        private const float DragGhostPreviewHeight = 112f;
+        private const float DragGhostWidth = 150f;
+        private const float DragGhostHeight = 150f;
+        private const float DragGhostPreviewWidth = 142f;
+        private const float DragGhostPreviewHeight = 142f;
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 12f;
-        // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 112px preview box.
-        private const float PreviewTileSize = 37f;
-        private const float SlotWidth = 120f;
-        private const float SlotHeight = 128f;
-        private const float SlotSpacing = 16f;
+        // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
+        private const float PreviewTileSize = 46f;
+        private const float SlotWidth = 150f;
+        private const float SlotHeight = 150f;
+        private const float SlotSpacing = 14f;
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
         // The ghost hides fully over a valid spot since the grid's own
@@ -166,7 +166,7 @@ namespace Contigu.Presentation
                 previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
                 previewContainer.pivot = new Vector2(0.5f, 0.5f);
                 previewContainer.anchoredPosition = new Vector2(0f, -4f);
-                previewContainer.sizeDelta = new Vector2(112f, 112f);
+                previewContainer.sizeDelta = new Vector2(142f, 142f);
                 // Wraps just the piece's preview, not the slot's background/level/lock chrome, so a shuffle can fade the piece alone (see FadeSlotPieces).
                 var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
 
