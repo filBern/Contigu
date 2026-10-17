@@ -276,3 +276,42 @@ if __name__ == '__main__':
     for k, (m, pool) in U.items():
         open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
     print(len(F), 'fertilizers,', len(U), 'upgrades')
+
+# ---------------------------------------------------------------- mystery plates for the shop's Casino cards
+# Same silhouettes as the real items (sign = upgrade, sack = fertilizer) but the label is a dark night plate holding only the
+# dark outline of the pool's motif and a golden "?": the player sees the CATEGORY, never the exact item.
+SIL_DEFS = ('<defs><filter id="sil" x="-10%" y="-10%" width="120%" height="120%"><feColorMatrix type="matrix" '
+            'values="0 0 0 0 0.36  0 0 0 0 0.31  0 0 0 0 0.58  0 0 0 1 0"/></filter></defs>')
+MYSTERY_BG = '#2a2342'
+def _qmark(cx, cy):
+    stars = star(cx - 46, cy - 30, 9, 0.4) if False else ''
+    return ('<text x="%g" y="%g" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="74" text-anchor="middle" '
+            'fill="#ffd966" stroke="%s" stroke-width="7" paint-order="stroke" stroke-linejoin="round">?</text>') % (cx, cy + 26, O)
+def _sparkles(cx, cy):
+    s = ''
+    for dx, dy, r in ((-52, -34, 8), (50, -22, 6), (-40, 40, 5), (52, 44, 7)):
+        s += star(cx + dx, cy + dy, r, '#fff1b0', 0.4, 4, 2.5)
+    return s
+
+def mystery_sign(motif_svg, poolcol):
+    svg = sign(motif_svg, poolcol)
+    svg = svg.replace('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n' + SIL_DEFS + '\n', 1)
+    svg = svg.replace('<rect x="48" y="52" width="160" height="108" rx="14" fill="%s"' % CREAM, '<rect x="48" y="52" width="160" height="108" rx="14" fill="%s"' % MYSTERY_BG, 1)
+    svg = svg.replace('<g transform="translate(73 56.5) scale(1.1)">', '<g filter="url(#sil)" transform="translate(73 56.5) scale(1.1)">', 1)
+    return svg.replace('</svg>', _sparkles(128, 106) + _qmark(128, 100) + '</svg>')
+
+def mystery_sack(motif_svg, catcol):
+    svg = sack(motif_svg, catcol, None, None)
+    svg = svg.replace('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n' + SIL_DEFS + '\n', 1)
+    svg = svg.replace('<rect x="64" y="104" width="128" height="110" rx="16" fill="%s"' % CREAM, '<rect x="64" y="104" width="128" height="110" rx="16" fill="%s"' % MYSTERY_BG, 1)
+    svg = svg.replace('<g transform="translate(75.5 111.5) scale(1.05)">', '<g filter="url(#sil)" transform="translate(75.5 111.5) scale(1.05)">', 1)
+    return svg.replace('</svg>', _sparkles(128, 159) + _qmark(128, 153) + '</svg>')
+
+if __name__ == '__main__':
+    os.makedirs('mystery', exist_ok=True)
+    open('mystery/Bank.svg', 'w').write(mystery_sign(seed(50, 46, 2.4), POOL['Bank']))
+    open('mystery/Grid.svg', 'w').write(mystery_sign(tile(20, 14, 60, '#e0d6bf'), POOL['Grid']))
+    open('mystery/Mastery.svg', 'w').write(mystery_sign(M['u_seedmastery'](), POOL['Mastery']))
+    open('mystery/Modifier.svg', 'w').write(mystery_sign(M['u_fertup'](), POOL['Modifier']))
+    open('mystery/Boon.svg', 'w').write(mystery_sack(flask(50, 46, '#b469e0'), '#e8863a'))
+    print('mystery: 5')

@@ -630,19 +630,37 @@ namespace Contigu.Presentation
             bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
             // GetPoolLabel already ends in "Upgrade", so it isn't appended again here.
             string cardLabel = isRandomModifier ? "Alchemical Boon" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
+            // The category's name on top, then its mystery illustration (the real item's silhouette kind, hidden behind a "?"):
+            // a sign for an upgrade pool, a sack for the Alchemical Boon.
             var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
             poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             poolLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.anchoredPosition = new Vector2(0f, -50f);
-            poolLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 60f);
+            poolLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
+            poolLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 30f);
 
-            var mysteryHint = UIFactory.CreateText(card.transform, "Hint", "?", 40, UITheme.TextMuted);
-            mysteryHint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            mysteryHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            mysteryHint.rectTransform.pivot = new Vector2(0.5f, 1f);
-            mysteryHint.rectTransform.anchoredPosition = new Vector2(0f, -14f);
-            mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
+            var mysteryArt = Resources.Load<Sprite>("Icons/Mystery/" + (isRandomModifier ? "Boon" : slot.Pool.ToString()));
+            if (mysteryArt != null)
+            {
+                var art = UIFactory.CreatePanel(card.transform, "MysteryArt", Color.white);
+                art.sprite = mysteryArt;
+                art.preserveAspect = true;
+                art.raycastTarget = false;
+                art.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                art.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                art.rectTransform.pivot = new Vector2(0.5f, 1f);
+                art.rectTransform.anchoredPosition = new Vector2(0f, -44f);
+                art.rectTransform.sizeDelta = new Vector2(98f, 98f);
+            }
+            else
+            {
+                var mysteryHint = UIFactory.CreateText(card.transform, "Hint", "?", 40, UITheme.TextMuted);
+                mysteryHint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                mysteryHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                mysteryHint.rectTransform.pivot = new Vector2(0.5f, 1f);
+                mysteryHint.rectTransform.anchoredPosition = new Vector2(0f, -70f);
+                mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
+            }
 
             int price = run.GetUpgradeSlotPrice(index);
             // Random Modifier is the one upgrade that respects the modifier
