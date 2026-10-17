@@ -14,22 +14,68 @@
 
   <!-- Terracotta garden-bed edge: thin clay border -->
   <rect x="6" y="6" width="244" height="244" rx="28" fill="url(#clay)" stroke="#13212e" stroke-width="6"/>
-  <!-- Clay edging stones: short dark joints around the band -->
-  <g stroke="#7a2424" stroke-width="3" stroke-linecap="round" opacity="0.8">
-    <path d="M70 14v14M128 14v14M186 14v14"/>
-    <path d="M70 228v14M128 228v14M186 228v14"/>
-    <path d="M14 70h14M14 128h14M14 186h14"/>
-    <path d="M228 70h14M228 128h14M228 186h14"/>
+  <!-- Tilled furrows running along the border band -->
+  <g stroke="#8a2a2a" stroke-width="2.6" stroke-linecap="round" opacity="0.75">
+    <path d="M40 15H216M40 25H216"/>
+    <path d="M40 231H216M40 241H216"/>
+    <path d="M15 40V216M25 40V216"/>
+    <path d="M231 40V216M241 40V216"/>
   </g>
   <!-- Soft highlight on the top and left edges -->
-  <path d="M30 12h196" stroke="#f08a76" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
-  <path d="M12 30v196" stroke="#f08a76" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  <path d="M34 11h188" stroke="#f08a76" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Seedlings planted in the furrows -->
+  <g stroke="#13212e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <g id="sprout">
+      <path d="M0 0v-6" fill="none"/>
+      <path d="M0 -5c-8 -1 -10 -8 -9 -11c6 0 10 4 9 11z" fill="#6fb04f"/>
+      <path d="M0 -5c8 -1 10 -8 9 -11c-6 0 -10 4 -9 11z" fill="#4f9440"/>
+    </g>
+  </g>
+  <g stroke="#13212e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <use href="#sprout" transform="translate(80 17) rotate(180) scale(0.75)"/>
+    <use href="#sprout" transform="translate(128 17) rotate(180) scale(0.75)"/>
+    <use href="#sprout" transform="translate(176 17) rotate(180) scale(0.75)"/>
+    <use href="#sprout" transform="translate(80 239) scale(0.75)"/>
+    <use href="#sprout" transform="translate(128 239) scale(0.75)"/>
+    <use href="#sprout" transform="translate(176 239) scale(0.75)"/>
+    <use href="#sprout" transform="translate(17 80) rotate(90) scale(0.75)"/>
+    <use href="#sprout" transform="translate(17 128) rotate(90) scale(0.75)"/>
+    <use href="#sprout" transform="translate(17 176) rotate(90) scale(0.75)"/>
+    <use href="#sprout" transform="translate(239 80) rotate(-90) scale(0.75)"/>
+    <use href="#sprout" transform="translate(239 128) rotate(-90) scale(0.75)"/>
+    <use href="#sprout" transform="translate(239 176) rotate(-90) scale(0.75)"/>
+  </g>
+
+  <!-- Wooden garden stakes at the four corners -->
+  <g fill="#c58a4a" stroke="#13212e" stroke-width="3" stroke-linejoin="round">
+    <rect x="12" y="12" width="26" height="26" rx="6"/>
+    <rect x="218" y="12" width="26" height="26" rx="6"/>
+    <rect x="12" y="218" width="26" height="26" rx="6"/>
+    <rect x="218" y="218" width="26" height="26" rx="6"/>
+  </g>
+  <g stroke="#7a4a22" stroke-width="2" stroke-linecap="round" opacity="0.8">
+    <path d="M19 20h12M19 26h12M19 32h8"/>
+    <path d="M225 20h12M225 26h12M225 32h8"/>
+    <path d="M19 226h12M19 232h12M19 238h8"/>
+    <path d="M225 226h12M225 232h12M225 238h8"/>
+  </g>
 
   <!-- Cream inset -->
   <rect x="32" y="32" width="192" height="192" rx="14" fill="#fff7e8" stroke="#13212e" stroke-width="5"/>
 
   <!-- Poppy -->
   <g clip-path="url(#inset)">
+    <!-- Poppy leaves peeking from the inset corners -->
+    <g fill="#5a9e45" stroke="#13212e" stroke-width="3" stroke-linejoin="round">
+      <path d="M40 40c30 2 44 16 46 46c-30 -2 -44 -16 -46 -46z" transform="translate(0 0)"/>
+      <path d="M216 40c-30 2 -44 16 -46 46c30 -2 44 -16 46 -46z"/>
+      <path d="M40 216c30 -2 44 -16 46 -46c-30 2 -44 16 -46 46z"/>
+      <path d="M216 216c-30 -2 -44 -16 -46 -46c30 2 44 16 46 46z"/>
+    </g>
+    <g stroke="#2f5a28" stroke-width="2" stroke-linecap="round" fill="none">
+      <path d="M44 44L76 76M212 44L180 76M44 212L76 180M212 212L180 180"/>
+    </g>
     <g stroke="#7a1f22" stroke-width="3" stroke-linejoin="round" fill="url(#petal)">
       <ellipse cx="128" cy="86" rx="46" ry="42" transform="rotate(-8 128 128)"/>
       <ellipse cx="170" cy="128" rx="42" ry="46" transform="rotate(8 128 128)"/>
