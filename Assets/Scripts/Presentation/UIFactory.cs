@@ -92,6 +92,16 @@ namespace Contigu.Presentation
             return FinishButton(img, label, fontSize);
         }
 
+        /// <summary>Switches off the garden plants on a button (the shop keeps its buttons plain). Call right after creating it.</summary>
+        public static void DisablePlants(Button button)
+        {
+            var vines = button.GetComponent<ButtonVines>();
+            if (vines != null)
+            {
+                vines.Variety = 0;
+            }
+        }
+
         // Handed out in turn so neighbouring buttons wear different plants (see ButtonVines).
         private static int _nextVineVariety;
 

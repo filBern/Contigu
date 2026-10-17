@@ -246,6 +246,7 @@ namespace Contigu.Presentation
             _upgradeCardsContainer = BuildCardRow("UpgradeCards", 0f);
 
             _rerollButton = UIFactory.CreateButton(_root, "Reroll", "", UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(_rerollButton);
             _rerollLabel = _rerollButton.GetComponentInChildren<Text>();
             var rerollRect = _rerollButton.GetComponent<RectTransform>();
             rerollRect.anchorMin = new Vector2(0.5f, 0f);
@@ -256,6 +257,7 @@ namespace Contigu.Presentation
             _rerollButton.onClick.AddListener(OnRerollClicked);
 
             _leaveButton = UIFactory.CreateButton(_root, "Leave", "Next round", UISprites.ChooseButtonBackground, 16);
+            UIFactory.DisablePlants(_leaveButton);
             var leaveRect = _leaveButton.GetComponent<RectTransform>();
             leaveRect.anchorMin = new Vector2(0.5f, 0f);
             leaveRect.anchorMax = new Vector2(0.5f, 0f);
@@ -692,6 +694,7 @@ namespace Contigu.Presentation
         private void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool canInteract, bool affordable, Action onClick)
         {
             var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);
+            UIFactory.DisablePlants(buyBtn);
             var buyRect = buyBtn.GetComponent<RectTransform>();
             buyRect.anchorMin = new Vector2(0.5f, 0f);
             buyRect.anchorMax = new Vector2(0.5f, 0f);

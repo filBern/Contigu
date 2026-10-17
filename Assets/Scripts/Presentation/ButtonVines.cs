@@ -39,6 +39,11 @@ namespace Contigu.Presentation
 
         private void Start()
         {
+            if (Variety <= 0)
+            {
+                enabled = false; // plants switched off for this button (see UIFactory.DisablePlants)
+                return;
+            }
             _rect = (RectTransform)transform;
             var tallSprite = Resources.Load<Sprite>("UI/Plants/V" + Variety + "A");
             var smallSprite = Resources.Load<Sprite>("UI/Plants/V" + Variety + "B");

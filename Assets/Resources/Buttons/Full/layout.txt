@@ -6,6 +6,6 @@ OK 56 56 8
 Gotit 56 56 8
 Close 56 56 8
 NewRun 56 56 8
-Nextround 56 56 8
+Nextround 56 8 8
 Showseedbag 56 8 8
 Showrules 56 8 8
