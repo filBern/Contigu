@@ -47,6 +47,13 @@ def frame(p, emblem, leaves=True, sprouts=True, extra_border=""):
   </g>''' % dict(soil=p.get('soil', '#6b4528'), soil_d=p.get('soil_d', '#53331b'), soil_l=p.get('soil_l', '#8a6038')))
     out.append('  <g clip-path="url(#inset)">')
     if leaves:
+        lc = p.get('leaf_colors') or [p.get('leaf', '#5a9e45')] * 4
+        out.append('''    <g stroke="#13212e" stroke-width="3" stroke-linejoin="round">
+      <path d="M40 40c30 2 44 16 46 46c-30 -2 -44 -16 -46 -46z" fill="%s"/><path d="M216 40c-30 2 -44 16 -46 46c30 -2 44 -16 46 -46z" fill="%s"/>
+      <path d="M40 216c30 -2 44 -16 46 -46c-30 2 -44 16 -46 46z" fill="%s"/><path d="M216 216c-30 -2 -44 -16 -46 -46c30 2 44 16 46 46z" fill="%s"/>
+    </g>''' % tuple(lc))
+        out.append('''    <g stroke="%(vein)s" stroke-width="2" stroke-linecap="round" fill="none"><path d="M44 44L76 76M212 44L180 76M44 212L76 180M212 212L180 180"/></g>''' % dict(vein=p.get('vein', '#2f5a28')))
+    if False:
         out.append('''    <g fill="%(leaf)s" stroke="#13212e" stroke-width="3" stroke-linejoin="round">
       <path d="M40 40c30 2 44 16 46 46c-30 -2 -44 -16 -46 -46z"/><path d="M216 40c-30 2 -44 16 -46 46c30 -2 44 -16 46 -46z"/>
       <path d="M40 216c30 -2 44 -16 46 -46c-30 2 -44 16 -46 46z"/><path d="M216 216c-30 -2 -44 -16 -46 -46c30 2 44 16 46 46z"/>
@@ -145,11 +152,18 @@ joker_emblem = '''    <g stroke-linecap="round" stroke-linejoin="round">
 fireflies = ''.join('<circle cx="%d" cy="%d" r="2.6" fill="#ffd966" stroke="#13212e" stroke-width="1"/>' % xy for xy in
                     [(56, 20), (104, 20), (152, 20), (200, 20), (56, 236), (104, 236), (152, 236), (200, 236), (20, 56), (20, 104), (20, 152), (20, 200), (236, 56), (236, 104), (236, 152), (236, 200)])
 
+# ---------------- Joker: the wildcard — a four-petal flower in the four bloom colors, echoed by four colored corner leaves ----------------
+JOKER_COLORS = ['#c8403f', '#4f7fd0', '#e8a82e', '#5a9e45']  # Poppy, Bluebell, Sunflower, Fern
+joker4_emblem = ('    <g>\n      %s\n'
+                 '      <circle cx="128" cy="128" r="17" fill="#fff7e8" stroke="#13212e" stroke-width="3.5"/>\n'
+                 '      <path d="M128 114 L131.5 124.5 L142 128 L131.5 131.5 L128 142 L124.5 131.5 L114 128 L124.5 124.5 Z" fill="#8c63b0" stroke="#13212e" stroke-width="1.5"/>\n'
+                 '    </g>') % ''.join(petals(1, 128, 128, 14, 78, 27, c, '#13212e', 3.5, ph) for c, ph in zip(JOKER_COLORS, (-45, 45, 135, 225)))
+
 tiles = {
     'Frost': (dict(b_top='#6f9ae6', b_bot='#2f56a6', furrow='#2a4a8a', hi='#c4d9fb', s1='#6fb04f', s2='#4f9440', defs=frost_defs, leaf='#5a9e45'), frost_emblem, True, True, ''),
     'Gold': (dict(b_top='#f5c95c', b_bot='#b87a14', furrow='#a8700f', hi='#ffe9a6', s1='#6fb04f', s2='#4f9440', defs=gold_defs, wood='#8f5b2b', grain='#5a3414', leaf='#5a9e45'), gold_emblem, True, True, ''),
     'Moss': (dict(b_top='#82c564', b_bot='#3a7a2e', furrow='#2c5a25', hi='#bfe8a2', s1='#d6e87a', s2='#b5d45a', leaf='#3f7a35', vein='#1f4a1c'), moss_emblem, True, True, ''),
-    'Joker': (dict(b_top='#ad88d0', b_bot='#5e3d85', furrow='#4a2f66', hi='#e0cdf5', s1='#6fb04f', s2='#4f9440', defs=lav_defs, leaf='#5a9e45'), joker_emblem, True, True, '<g>%s</g>' % fireflies),
+    'Joker': (dict(b_top='#ad88d0', b_bot='#5e3d85', furrow='#4a2f66', hi='#e0cdf5', s1='#6fb04f', s2='#4f9440', defs=lav_defs, leaf='#5a9e45', leaf_colors=[JOKER_COLORS[0], JOKER_COLORS[1], JOKER_COLORS[3], JOKER_COLORS[2]]), joker4_emblem, True, True, '<g>%s</g>' % fireflies),
 }
 empty_p = dict(b_top='#9a9080', b_bot='#6f6558', furrow='#5a5044', hi='#cfc6b6', s1='#8a8a5a', s2='#6f7a4a', soil='#4a3220', soil_d='#392414', soil_l='#6a4a2c')
 pebbles = '<g fill="#8a8072" stroke="#13212e" stroke-width="2"><ellipse cx="92" cy="110" rx="9" ry="6"/><ellipse cx="170" cy="152" rx="8" ry="5.5"/><ellipse cx="120" cy="186" rx="6" ry="4"/></g><g stroke="#2f241a" stroke-width="3" stroke-linecap="round" opacity="0.7"><path d="M44 128H212M44 228H212"/></g>'

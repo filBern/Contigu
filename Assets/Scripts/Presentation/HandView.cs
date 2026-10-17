@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -40,9 +41,12 @@ namespace Contigu.Presentation
         private const float ShufflePulseAmplitude = 0.08f;
         private const float ShufflePulseSpeed = 1.5f;
         // Short, decaying side-to-side shake on a slot the player can't pick up (see SelectSlot).
-        private const float UnplayableShakeDuration = 0.3f;
-        private const float UnplayableShakeMagnitude = 8f;
-        private const float UnplayableShakeCycles = 4f;
+        private const float UnplayableShakeDuration = 0.45f;
+        private const float UnplayableShakeMagnitude = 15f;
+        private const float UnplayableShakeCycles = 5f;
+        // When the whole hand is stuck, the Shuffle button pulses much harder than its usual gentle breathing.
+        private const float StuckPulseAmplitude = 0.22f;
+        private const float StuckPulseSpeed = 5.5f;
         // Light scale-up pulse on the piece preview itself (not the whole slot) when it's picked up, whether
         // by a plain click-select or the start of a drag (BeginSlotDrag always routes through SelectSlot) —
         // smaller peak than GridCellView.Pulse's 1.18 since this should read as a light acknowledgement, not
@@ -74,6 +78,9 @@ namespace Contigu.Presentation
         private Button _shuffleButton;
         private Text _shuffleCountLabel;
         private Coroutine _shufflePulseCoroutine;
+        private Coroutine _stuckPulseCoroutine;
+        private bool _handStuck;
+        private Image _stuckGlow;
         private Coroutine[] _shakeCoroutines;
         private Coroutine[] _selectPulseCoroutines;
         private bool _shuffleAllowed = true;
@@ -242,6 +249,11 @@ namespace Contigu.Presentation
         /// <summary>Starts/stops a slow breathing scale pulse on the Shuffle button.</summary>
         public void SetShufflePulsing(bool pulsing)
         {
+            // While the whole hand is stuck the strong pulse owns the button.
+            if (_handStuck)
+            {
+                return;
+            }
             if (pulsing)
             {
                 if (_shufflePulseCoroutine == null)
@@ -255,6 +267,102 @@ namespace Contigu.Presentation
                 StopCoroutine(_shufflePulseCoroutine);
                 _shufflePulseCoroutine = null;
                 _shuffleButton.transform.localScale = Vector3.one;
+            }
+        }
+
+        /// <summary>
+        /// True when no piece in the hand fits anywhere on the grid (and a Shuffle is still available): the Shuffle button pulses
+        /// hard with a red halo and every slot breathes red — before the player even tries to pick a piece. Recomputed on every
+        /// <see cref="Refresh"/>.
+        /// </summary>
+        private void UpdateStuckState()
+        {
+            bool stuck = false;
+            if (_run.State == RunState.InProgress && _run.ShufflesRemaining > 0)
+            {
+                var shapes = new List<PieceShape>();
+                for (int i = 0; i < _deck.Hand.Count; i++)
+                {
+                    if (_deck.Hand[i].HasValue && !IsBossLockedSlot(i))
+                    {
+                        shapes.Add(PieceShapeCatalog.GetRotated(_deck.Hand[i].Value.Shape, _deck.HandRotations[i]));
+                    }
+                }
+                stuck = shapes.Count > 0 && !_run.Grid.HasAnyValidPlacement(shapes);
+            }
+            SetHandStuck(stuck);
+        }
+
+        private void SetHandStuck(bool stuck)
+        {
+            if (stuck == _handStuck)
+            {
+                return;
+            }
+            _handStuck = stuck;
+            if (stuck)
+            {
+                // Hand over from the gentle breathing pulse to the strong one.
+                if (_shufflePulseCoroutine != null)
+                {
+                    StopCoroutine(_shufflePulseCoroutine);
+                    _shufflePulseCoroutine = null;
+                }
+                _stuckPulseCoroutine = StartCoroutine(StuckPulseRoutine());
+                return;
+            }
+            if (_stuckPulseCoroutine != null)
+            {
+                StopCoroutine(_stuckPulseCoroutine);
+                _stuckPulseCoroutine = null;
+            }
+            _shuffleButton.transform.localScale = Vector3.one;
+            if (_stuckGlow != null)
+            {
+                _stuckGlow.gameObject.SetActive(false);
+            }
+            UpdateSelectionVisuals();
+        }
+
+        private void EnsureStuckGlow()
+        {
+            if (_stuckGlow != null)
+            {
+                return;
+            }
+            var buttonRect = _shuffleButton.GetComponent<RectTransform>();
+            var glow = UIFactory.CreatePanel(buttonRect.parent, "StuckGlow", new Color(1f, 0.3f, 0.25f, 0f));
+            glow.sprite = UISprites.CountBadge;
+            glow.raycastTarget = false;
+            var rt = glow.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(ShuffleButtonWidth * 1.4f, ShuffleButtonWidth * 1.4f);
+            // The button hangs from its top-right corner, so its center is half its size in from there.
+            rt.anchoredPosition = buttonRect.anchoredPosition + new Vector2(-buttonRect.sizeDelta.x * 0.5f, -buttonRect.sizeDelta.y * 0.5f);
+            rt.SetSiblingIndex(buttonRect.GetSiblingIndex());
+            _stuckGlow = glow;
+        }
+
+        private IEnumerator StuckPulseRoutine()
+        {
+            EnsureStuckGlow();
+            _stuckGlow.gameObject.SetActive(true);
+            while (true)
+            {
+                float wave = 0.5f + 0.5f * Mathf.Sin(Time.time * StuckPulseSpeed);
+                float scale = 1f + StuckPulseAmplitude * wave;
+                _shuffleButton.transform.localScale = new Vector3(scale, scale, 1f);
+                _stuckGlow.rectTransform.localScale = Vector3.one * (1f + 0.6f * wave);
+                _stuckGlow.color = new Color(1f, 0.3f, 0.25f, 0.55f * (1f - wave) + 0.15f);
+                for (int i = 0; i < _slotBackgrounds.Length; i++)
+                {
+                    if (_deck.Hand[i].HasValue && _slotBackgrounds[i].gameObject.activeSelf && _interactable)
+                    {
+                        _slotBackgrounds[i].color = Color.Lerp(UITheme.Panel, new Color(1f, 0.62f, 0.58f), 0.55f * wave);
+                    }
+                }
+                yield return null;
             }
         }
 
@@ -393,6 +501,7 @@ namespace Contigu.Presentation
                     StopCoroutine(_shakeCoroutines[idx]);
                 }
                 _shakeCoroutines[idx] = StartCoroutine(ShakeSlot(idx));
+                SfxManager.Play(SfxId.InvalidDrop);
                 if (SlotUnplayable != null)
                 {
                     SlotUnplayable(idx);
@@ -451,10 +560,16 @@ namespace Contigu.Presentation
                 float damping = 1f - progress;
                 float offsetX = Mathf.Sin(progress * UnplayableShakeCycles * Mathf.PI * 2f) * UnplayableShakeMagnitude * damping;
                 rect.anchoredPosition = originalPos + new Vector2(offsetX, 0f);
+                // Red flash that fades as the shake dies down.
+                _slotBackgrounds[index].color = Color.Lerp(UITheme.Panel, new Color(1f, 0.45f, 0.4f), 0.8f * damping);
                 yield return null;
             }
             rect.anchoredPosition = originalPos;
             _shakeCoroutines[index] = null;
+            if (!_handStuck)
+            {
+                UpdateSelectionVisuals();
+            }
         }
 
         private bool IsBossLockedSlot(int index)
@@ -589,6 +704,7 @@ namespace Contigu.Presentation
             }
             UpdateSlotInteractability();
             UpdateSelectionVisuals();
+            UpdateStuckState();
         }
 
         /// <summary>

@@ -44,9 +44,9 @@
     <g fill="#8a6038" opacity="0.8"><circle cx="58" cy="108" r="2.5"/><circle cx="196" cy="84" r="2.5"/><circle cx="70" cy="206" r="3"/><circle cx="190" cy="150" r="2.5"/><circle cx="48" cy="150" r="2"/><circle cx="208" cy="206" r="2.5"/></g>
   </g>
   <g clip-path="url(#inset)">
-    <g fill="#5a9e45" stroke="#13212e" stroke-width="3" stroke-linejoin="round">
-      <path d="M40 40c30 2 44 16 46 46c-30 -2 -44 -16 -46 -46z"/><path d="M216 40c-30 2 -44 16 -46 46c30 -2 44 -16 46 -46z"/>
-      <path d="M40 216c30 -2 44 -16 46 -46c-30 2 -44 16 -46 46z"/><path d="M216 216c-30 -2 -44 -16 -46 -46c30 2 44 16 46 46z"/>
+    <g stroke="#13212e" stroke-width="3" stroke-linejoin="round">
+      <path d="M40 40c30 2 44 16 46 46c-30 -2 -44 -16 -46 -46z" fill="#5a9e45"/><path d="M216 40c-30 2 -44 16 -46 46c30 -2 44 -16 46 -46z" fill="#5a9e45"/>
+      <path d="M40 216c30 -2 44 -16 46 -46c-30 2 -44 16 -46 46z" fill="#5a9e45"/><path d="M216 216c-30 -2 -44 -16 -46 -46c30 2 44 16 46 46z" fill="#5a9e45"/>
     </g>
     <g stroke="#2f5a28" stroke-width="2" stroke-linecap="round" fill="none"><path d="M44 44L76 76M212 44L180 76M44 212L76 180M212 212L180 180"/></g>
     <g>
