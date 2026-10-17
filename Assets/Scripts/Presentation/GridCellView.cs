@@ -128,7 +128,8 @@ namespace Contigu.Presentation
             else
             {
                 Background.sprite = VisualDefaults.EmptyTileSprite;
-                Background.color = VisualDefaults.EmptyTileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
+                // Dimmed so a planted (colored) tile pops out of the empty plots around it.
+                Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.

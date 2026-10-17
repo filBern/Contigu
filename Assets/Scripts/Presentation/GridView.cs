@@ -38,7 +38,7 @@ namespace Contigu.Presentation
 
             var container = UIFactory.CreateUIObject("GridContainer", parent);
             _container = container;
-            float spacing = 6f;
+            float spacing = 2f;
             _cellStride = cellSize + spacing;
             float total = GridManager.Size * cellSize + (GridManager.Size - 1) * spacing;
             container.sizeDelta = new Vector2(total, total);
