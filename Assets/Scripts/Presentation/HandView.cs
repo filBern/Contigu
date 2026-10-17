@@ -20,15 +20,15 @@ namespace Contigu.Presentation
     public sealed class HandView : MonoBehaviour
     {
         private const float DragGhostWidth = 120f;
-        private const float DragGhostHeight = 140f;
-        private const float DragGhostPreviewWidth = 100f;
-        private const float DragGhostPreviewHeight = 110f;
+        private const float DragGhostHeight = 128f;
+        private const float DragGhostPreviewWidth = 112f;
+        private const float DragGhostPreviewHeight = 112f;
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 12f;
-        // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 100px preview box.
-        private const float PreviewTileSize = 33f;
+        // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 112px preview box.
+        private const float PreviewTileSize = 37f;
         private const float SlotWidth = 120f;
-        private const float SlotHeight = 140f;
+        private const float SlotHeight = 128f;
         private const float SlotSpacing = 16f;
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
@@ -161,13 +161,12 @@ namespace Contigu.Presentation
                 var dragHandler = slot.gameObject.AddComponent<HandSlotDragHandler>();
                 dragHandler.Init(this, idx);
 
-                // Leave room at the bottom for the piece's combined mastery level.
                 var previewContainer = UIFactory.CreateUIObject("Preview", slot.transform);
                 previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
                 previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
                 previewContainer.pivot = new Vector2(0.5f, 0.5f);
-                previewContainer.anchoredPosition = new Vector2(0f, 10f);
-                previewContainer.sizeDelta = new Vector2(100f, 110f);
+                previewContainer.anchoredPosition = new Vector2(0f, -4f);
+                previewContainer.sizeDelta = new Vector2(112f, 112f);
                 // Wraps just the piece's preview, not the slot's background/level/lock chrome, so a shuffle can fade the piece alone (see FadeSlotPieces).
                 var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
 
@@ -178,6 +177,8 @@ namespace Contigu.Presentation
                 levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
                 levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 3f);
                 levelLabel.rectTransform.sizeDelta = new Vector2(0f, SlotLevelLabelHeight);
+                // No level readout in the slot any more — the preview takes the room instead.
+                levelLabel.gameObject.SetActive(false);
 
                 var lockLabel = UIFactory.CreateText(slot.transform, "BossLock", "", 11, UITheme.Danger);
                 lockLabel.raycastTarget = false;

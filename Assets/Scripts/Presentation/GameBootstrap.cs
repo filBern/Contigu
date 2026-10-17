@@ -37,7 +37,8 @@ namespace Contigu.Presentation
         // per element — HandView.FadeSlotPieces/GridView.FadeMalus fade one
         // slot/cell at a time, not the whole group at once.
         private const float ShuffleFadeDuration = 0.12f;
-        private const string IdleStatusMessage = "Select or drag a seed onto the grid.";
+        // Empty on purpose: no idle prompt text any more (the status line only shows real events/errors).
+        private const string IdleStatusMessage = "";
         private const int DefaultStatusFontSize = 19;
         private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
@@ -303,7 +304,7 @@ namespace Contigu.Presentation
         {
             _statusText.text = text;
             _statusText.fontSize = emphasize ? EmphasizedStatusFontSize : DefaultStatusFontSize;
-            if (text == IdleStatusMessage)
+            if (text == IdleStatusMessage && IdleStatusMessage.Length > 0)
             {
                 StartStatusPulse();
             }
@@ -419,7 +420,6 @@ namespace Contigu.Presentation
             // taller than the plain score bar) with a 12px gap.
             _statusText.rectTransform.anchoredPosition = new Vector2(0f, -(HudView.EnemyBandHeight + 12f));
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
-            StartStatusPulse();
 
             // Slightly above screen center to make room for the horizontal
             // hand row below while keeping a clear gap below the status text.
@@ -428,7 +428,7 @@ namespace Contigu.Presentation
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = new Vector2(0f, 55f);
+            gridRect.anchoredPosition = new Vector2(0f, 63f);
 
             // Center each side panel in the gap between the grid edge and
             // the screen edge. Computed from Screen.width/height (matching
