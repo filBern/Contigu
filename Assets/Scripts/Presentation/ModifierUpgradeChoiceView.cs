@@ -61,7 +61,7 @@ namespace Contigu.Presentation
             // Vertical position set in Show(), as part of the whole block's
             // layout — see LayoutBlock.
 
-            _title = UIFactory.CreateText(_root, "Title", "Choose a graft to upgrade", 22, UITheme.TextOnBackground);
+            _title = UIFactory.CreateText(_root, "Title", "Choose a fertilizer to upgrade", 22, UITheme.TextOnBackground);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);

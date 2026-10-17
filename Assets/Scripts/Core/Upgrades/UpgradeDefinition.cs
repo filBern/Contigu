@@ -53,7 +53,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Modifier, "Alchemical Boon",
-            "Grants one random graft you don't already have.", false, UpgradeRarity.Uncommon);
+            "Grants one random fertilizer you don't already have.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
         /// Bank pool (adds to the deck, like Joker/Duplicate) but with a
@@ -87,8 +87,8 @@ namespace Contigu.Core
         /// owns no modifiers yet.
         /// </summary>
         public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
-            UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Graft Upgrade",
-            "Choose one of your active grafts to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
+            UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Fertilizer Upgrade",
+            "Choose one of your active fertilizers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
         // Descriptions below describe the trait itself rather than how many
         // pieces get it — that count is a shop mechanic (see

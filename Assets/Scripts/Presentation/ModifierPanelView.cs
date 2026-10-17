@@ -141,7 +141,7 @@ namespace Contigu.Presentation
             headerBand.rectTransform.anchoredPosition = Vector2.zero;
             headerBand.rectTransform.sizeDelta = new Vector2(0f, HeaderHeight);
 
-            var header = UIFactory.CreateText(headerBand.transform, "Header", "Grafts", 30, UITheme.TextPrimary, TextAnchor.MiddleCenter);
+            var header = UIFactory.CreateText(headerBand.transform, "Header", "Fertilizers", 30, UITheme.TextPrimary, TextAnchor.MiddleCenter);
             UIFactory.StretchFull(header.rectTransform);
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);

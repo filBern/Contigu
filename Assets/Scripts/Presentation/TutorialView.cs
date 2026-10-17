@@ -77,7 +77,7 @@ namespace Contigu.Presentation
                 ("GOAL", "Clear each round — reach its score quota or defeat its enemies before you run out of seeds. Clear all 15 rounds to win the run."),
                 ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st sprout 1 pt, 2nd sprout 2 pts, 3rd sprout 3 pts, and so on."),
                 ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per sprout. Harvesting a line containing several distinct colors also earns Lueur (+2 Lueur per distinct color in it)."),
-                ("LUEUR AND THE SHOP", "Between rounds, spend Lueur in the shop on grafts and upgrades. Grafts apply to every placement, in the order you arrange them (drag or tap two to swap) — some add flat bonuses, some multiply."),
+                ("LUEUR AND THE SHOP", "Between rounds, spend Lueur in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) — some add flat bonuses, some multiply."),
                 ("BOSS ROUNDS", "Every 4 rounds, a random boss rule applies: the grid locks 1 cell every 5 seeds, one hand slot is locked, or one color scores no points. In Chaos, grid locks happen every round."),
                 ("DEFEAT", "If none of your 3 hand seeds can be placed anywhere on the grid before reaching the quota, the run ends there.")
             };

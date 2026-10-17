@@ -277,7 +277,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
-            "Joker sprouts count as whichever color scores best with your Devotion/Glow grafts.");
+            "Joker sprouts count as whichever color scores best with your Devotion/Glow fertilizers.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
@@ -321,11 +321,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solidarite = new ModifierDefinition(
             ModifierId.Solidarite, ModifierCategory.Roguelike, "Solidarity",
-            "+1 Mult per 2 grafts held, this one included.");
+            "+1 Mult per 2 fertilizers held, this one included.");
 
         public static readonly ModifierDefinition Copieur = new ModifierDefinition(
             ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
-            "Instantly copies whatever graft you bought right before it. Does nothing on your first purchase.");
+            "Instantly copies whatever fertilizer you bought right before it. Does nothing on your first purchase.");
 
         public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
             ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Volatile Brew",
@@ -386,7 +386,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
             ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
-            "+1 Mult per distinct graft category you hold at least one of.");
+            "+1 Mult per distinct fertilizer category you hold at least one of.");
 
         public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
             ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
@@ -398,7 +398,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
-            "+2 Mult per color for which you hold BOTH its Devotion and Éclat graft.");
+            "+2 Mult per color for which you hold BOTH its Devotion and Éclat fertilizer.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(
             ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
@@ -406,7 +406,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Echo = new ModifierDefinition(
             ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
-            "Replays whatever graft sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
+            "Replays whatever fertilizer sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
