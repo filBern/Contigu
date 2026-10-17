@@ -734,6 +734,12 @@ namespace Contigu.Presentation
             {
                 if (!affordable)
                 {
+                    // Not enough Pollen: the button itself flashes red and shakes, on top of the card shake.
+                    var feedback = buyBtn.GetComponent<ButtonFeedback>();
+                    if (feedback != null)
+                    {
+                        feedback.Deny();
+                    }
                     StartCoroutine(ShakeCard(cardRect));
                     return;
                 }
@@ -789,7 +795,11 @@ namespace Contigu.Presentation
             priceText.raycastTarget = false;
             if (!affordable)
             {
-                priceIcon.color = VisualDefaults.PollenSprite != null ? new Color(1f, 0.55f, 0.5f, 1f) : UITheme.Danger;
+                // The Pollen icon keeps its own colors; only the diamond fallback goes red.
+                if (VisualDefaults.PollenSprite == null)
+                {
+                    priceIcon.color = UITheme.Danger;
+                }
             }
         }
 

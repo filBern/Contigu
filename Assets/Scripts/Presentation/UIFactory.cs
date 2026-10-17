@@ -87,9 +87,18 @@ namespace Contigu.Presentation
             {
                 var artButton = FinishButton(img, "", fontSize, decorate: false);
                 artButton.gameObject.AddComponent<ButtonArt>().Init(artSprite);
+                artButton.gameObject.AddComponent<ButtonFeedback>().BuildGlow();
                 return artButton;
             }
-            return FinishButton(img, label, fontSize);
+            // Garden-bodied buttons (Resources/Buttons/Garden/Btn*) whose label changes at runtime (price, "Sold", "Reroll (n)",
+            // "Unlock & Play") get the title's lettering look instead: cream letters with a dark outline, plus hover/click feedback.
+            bool gardenBody = bgSprite != null && bgSprite.name.StartsWith("Btn");
+            var button = FinishButton(img, label, fontSize, lettered: gardenBody);
+            if (gardenBody)
+            {
+                button.gameObject.AddComponent<ButtonFeedback>().BuildGlow();
+            }
+            return button;
         }
 
         /// <summary>Switches off the garden plants on a button (the shop keeps its buttons plain). Call right after creating it.</summary>

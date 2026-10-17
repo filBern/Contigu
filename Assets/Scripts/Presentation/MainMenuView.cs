@@ -89,6 +89,7 @@ namespace Contigu.Presentation
             UIFactory.AddThickOutline(playImage, UITheme.Border);
             playButton.onClick.AddListener(OnPlayClicked);
             playButton.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(playButton);
 
             var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 33);
             var settingsRect = settingsButton.GetComponent<RectTransform>();
@@ -102,6 +103,7 @@ namespace Contigu.Presentation
             UIFactory.AddThickOutline(settingsImage, UITheme.Border);
             settingsButton.onClick.AddListener(OnSettingsClicked);
             settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(settingsButton);
 
             var exitButton = UIFactory.CreateButton(_root, "Exit", "Exit", UISprites.CancelButtonBackground, 33);
             var exitRect = exitButton.GetComponent<RectTransform>();
@@ -113,6 +115,7 @@ namespace Contigu.Presentation
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
             exitButton.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(exitButton);
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -218,6 +221,16 @@ namespace Contigu.Presentation
             }
 
             return container;
+        }
+
+        /// <summary>The menu buttons already scale on hover (MainMenuButtonHover); keep ButtonFeedback's glow, punch and deny but not its own hover scale.</summary>
+        private static void DisableFeedbackScale(Button button)
+        {
+            var feedback = button.GetComponent<ButtonFeedback>();
+            if (feedback != null)
+            {
+                feedback.ScaleOnHover = false;
+            }
         }
 
         public void Show()
