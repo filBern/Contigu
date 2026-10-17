@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+"""Generates the enemy portrait SVGs (same flat vector garden style as Design/Tiles). Output: <EnemyId>.svg next to this script."""
+import math
+
+O = '#13212e'  # shared dark outline
+
+def svg(body):
+    return '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="plate" cx="50%%" cy="40%%" r="70%%"><stop offset="0" stop-color="#5a3f27"/><stop offset="1" stop-color="#2a1c12"/></radialGradient>
+    <clipPath id="clip"><rect x="8" y="8" width="240" height="240" rx="44"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="url(#plate)" stroke="%s" stroke-width="6"/>
+  <g clip-path="url(#clip)" stroke-linejoin="round" stroke-linecap="round">
+%s
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="%s" stroke-width="6"/>
+</svg>
+''' % (O, body, O)
+
+def eye(cx, cy, r=9, color='#ffffff', pupil='#13212e', look=(0, 0), angry=0):
+    s = '<circle cx="%g" cy="%g" r="%g" fill="%s" stroke="%s" stroke-width="3"/>' % (cx, cy, r, color, O)
+    s += '<circle cx="%g" cy="%g" r="%g" fill="%s"/>' % (cx + look[0], cy + look[1], r * 0.5, pupil)
+    if angry:
+        s += '<path d="M%g %g L%g %g" stroke="%s" stroke-width="5"/>' % (cx - r - 3, cy - r * 0.9 - angry * 3, cx + r + 3, cy - r * 0.9 + angry * 6, O)
+    return s
+
+def thorns(n, cx, cy, r, length, width, fill, rot0=0):
+    out = []
+    for i in range(n):
+        a = rot0 + 360.0 * i / n
+        out.append('<path d="M%g %g L%g %g L%g %g Z" transform="rotate(%g %g %g)"/>' % (cx - width, cy - r, cx, cy - r - length, cx + width, cy - r, a, cx, cy))
+    return '<g fill="%s" stroke="%s" stroke-width="3">%s</g>' % (fill, O, ''.join(out))
+
+def outlined(d, fill, w=7, ow=5):
+    return '<path d="%s" fill="none" stroke="%s" stroke-width="%g"/><path d="%s" fill="none" stroke="%s" stroke-width="%g"/>' % (d, O, w + ow * 2, d, fill, w)
+
+def petal_ring(n, cx, cy, r_in, r_out, w, fills, stroke, sw=3, rot0=0):
+    out = []
+    for i in range(n):
+        a = rot0 + 360.0 * i / n
+        out.append('<path d="M%g %g C %g %g, %g %g, %g %g C %g %g, %g %g, %g %g Z" transform="rotate(%g %g %g)" fill="%s" stroke="%s" stroke-width="%g"/>' % (
+            cx, cy - r_in, cx - w, cy - r_in - (r_out - r_in) * 0.45, cx - w * 0.6, cy - r_out + 8, cx, cy - r_out,
+            cx + w * 0.6, cy - r_out + 8, cx + w, cy - r_in - (r_out - r_in) * 0.45, cx, cy - r_in, a, cx, cy, fills[i % len(fills)], stroke, sw))
+    return ''.join(out)
+
+E = {}
+
+# Withered Stalk: a drooping, dying wheat stalk
+grains = ''
+for i, (x, y) in enumerate([(152, 100), (163, 112), (172, 126), (178, 142), (180, 158)]):
+    for side in (-1, 1):
+        grains += '<ellipse cx="%g" cy="%g" rx="6" ry="11" transform="rotate(%g %g %g)" fill="#cdb27a" stroke="%s" stroke-width="3"/>' % (x + side * 8, y, side * 25 + 20, x + side * 8, y, O)
+E['Basic'] = ('<g transform="translate(-26 -22) scale(1.2)">' + outlined('M118 216 C116 170 124 130 148 94', '#a89060', 9) +
+              '<path d="M122 184 C92 172 70 192 62 218 C92 210 112 204 122 184Z" fill="#8a7a4a" stroke="%s" stroke-width="4"/>' % O +
+              '<path d="M126 160 C160 158 182 176 190 204 C162 196 142 186 126 160Z" fill="#7a6c40" stroke="%s" stroke-width="4"/>' % O +
+              '<path d="M148 94 C170 96 184 120 182 164" fill="none" stroke="%s" stroke-width="12"/><path d="M148 94 C170 96 184 120 182 164" fill="none" stroke="#a89060" stroke-width="5"/>' % O +
+              grains + '</g>')
+
+# Bramble: a knot of thorny vines with glowing eyes
+ring = 'M56 128 C56 70 200 70 200 128 C200 186 56 186 56 128Z'
+cross = 'M70 80 C110 120 150 140 190 180 M190 80 C150 120 110 140 70 180'
+E['Locker'] = (thorns(10, 128, 128, 68, 22, 8, '#2c3a1f') + outlined(ring, '#4d6a35', 15, 4) + outlined(cross, '#5a7c3c', 12, 4) +
+               '<circle cx="128" cy="128" r="30" fill="#1b2412" stroke="%s" stroke-width="4"/>' % O +
+               '<ellipse cx="116" cy="126" rx="8" ry="11" fill="#ffd84d" transform="rotate(-12 116 126)"/><ellipse cx="140" cy="126" rx="8" ry="11" fill="#ffd84d" transform="rotate(12 140 126)"/>' +
+               '<ellipse cx="116" cy="128" rx="2.5" ry="7" fill="#13212e"/><ellipse cx="140" cy="128" rx="2.5" ry="7" fill="#13212e"/>')
+
+# Blightspore: a toxic mushroom with drifting spores
+spores = ''.join('<circle cx="%g" cy="%g" r="%g" fill="#b8e04a" stroke="%s" stroke-width="2"/>' % (x, y, r, O) for x, y, r in
+                 [(54, 70, 6), (84, 48, 4), (200, 60, 7), (176, 40, 4), (214, 108, 5), (44, 112, 4), (200, 200, 5), (52, 196, 5)])
+E['Poisoner'] = (spores +
+                 '<path d="M104 130 C98 170 96 196 92 214 L164 214 C160 196 158 170 152 130Z" fill="#d8d2a0" stroke="%s" stroke-width="5"/>' % O +
+                 '<path d="M44 134 C40 66 216 66 212 134 C190 144 66 144 44 134Z" fill="#7d5aa6" stroke="%s" stroke-width="5"/>' % O +
+                 '<g fill="#b8e04a" stroke="%s" stroke-width="3"><circle cx="88" cy="106" r="11"/><circle cx="132" cy="90" r="9"/><circle cx="170" cy="112" r="12"/><circle cx="112" cy="122" r="6"/></g>' % O +
+                 '<path d="M60 130 C100 140 156 140 196 130" fill="none" stroke="#4a2f66" stroke-width="4"/>' +
+                 eye(114, 168, 8, '#fff7e8', look=(1, 1), angry=1) + eye(142, 168, 8, '#fff7e8', look=(-1, 1), angry=-1))
+
+# Deadroot: a gnarled dead stump with red eyes and thorns
+E['HeavyLocker'] = ('<g fill="#2c2218" stroke="%s" stroke-width="3"><path d="M84 96 L58 84 L82 120Z"/><path d="M172 96 L198 84 L174 120Z"/><path d="M80 150 L52 148 L80 176Z"/><path d="M176 150 L204 148 L176 176Z"/></g>' % O +
+                    '<path d="M86 64 C76 120 84 168 56 218 L96 214 C102 190 112 176 128 176 C144 176 154 190 160 214 L200 218 C172 168 180 120 170 64 C150 52 106 52 86 64Z" fill="#4a3424" stroke="%s" stroke-width="5"/>' % O +
+                    '<g fill="none" stroke="#2c2018" stroke-width="4" opacity="0.8"><path d="M104 80 C98 120 104 150 96 190"/><path d="M150 76 C158 110 152 140 160 176"/><path d="M128 72 C126 110 130 130 128 160"/></g>' +
+                    '<path d="M98 110 L120 122 L100 130Z" fill="#ff5a4a" stroke="%s" stroke-width="3"/><path d="M158 110 L136 122 L156 130Z" fill="#ff5a4a" stroke="%s" stroke-width="3"/>' % (O, O) +
+                    '<path d="M104 152 C116 160 140 160 152 152" fill="none" stroke="%s" stroke-width="5"/>' % O)
+
+# Rotbloom: a rotting flower with one sickly eye
+E['Plague'] = (petal_ring(9, 128, 128, 14, 100, 22, ['#8f5575', '#7a4a66', '#9a6a52'], '#3a1f2e', 3.5, 8) +
+               '<g fill="#9ac24a" stroke="%s" stroke-width="2.5"><circle cx="70" cy="86" r="7"/><circle cx="190" cy="72" r="6"/><circle cx="196" cy="168" r="8"/><circle cx="62" cy="170" r="6"/><circle cx="128" cy="38" r="5"/></g>' % O +
+               '<path d="M110 178 C108 196 112 206 112 220 M146 180 C148 198 144 208 146 222" stroke="#9ac24a" stroke-width="7" fill="none"/>' +
+               '<circle cx="128" cy="128" r="36" fill="#3b2a2a" stroke="%s" stroke-width="4"/>' % O +
+               '<circle cx="128" cy="128" r="22" fill="#e8e0a0" stroke="%s" stroke-width="3"/><ellipse cx="128" cy="128" rx="6" ry="15" fill="#7a9a2a" stroke="%s" stroke-width="2"/>' % (O, O))
+
+# Crow: a black crow's head
+E['Thief'] = ('<path d="M66 150 C52 204 96 230 150 220 C182 200 182 164 176 142Z" fill="#2a2f3a" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M92 76 C84 56 104 46 120 56 C128 44 150 50 148 66" fill="#2a2f3a" stroke="%s" stroke-width="5"/>' % O +
+              '<circle cx="118" cy="116" r="60" fill="#2a2f3a" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M168 100 L232 126 L168 146Z" fill="#e8a82e" stroke="%s" stroke-width="5"/><path d="M168 123 L228 126" stroke="%s" stroke-width="3"/>' % (O, O) +
+              '<path d="M72 96 C80 70 110 62 136 70" fill="none" stroke="#5a6478" stroke-width="5" opacity="0.7"/>' +
+              '<path d="M84 170 C100 186 126 190 150 180 M80 192 C100 206 124 208 144 200" fill="none" stroke="#4a5568" stroke-width="4"/>' +
+              eye(138, 104, 11, '#fff7e8', look=(3, 1), angry=1))
+
+# Creeping Vine: a hungry spiral vine with one eye
+pts = []
+for k in range(121):
+    t = k / 120.0
+    th = t * 2.9 * math.pi
+    r = 10 + 66 * t
+    pts.append((128 + r * math.cos(th - math.pi / 2), 116 + r * math.sin(th - math.pi / 2)))
+ex, ey = pts[-1]
+vd = 'M%.1f %.1f ' % pts[0] + ' '.join('L%.1f %.1f' % p for p in pts[1:]) + ' Q %.1f %.1f %.1f %.1f' % (ex, ey + 40, 112, 226)
+tendrils = ''.join('<path d="M%.1f %.1f q%g %g %g %g" fill="none" stroke="%s" stroke-width="4"/>' % (pts[k][0], pts[k][1], dx, dy, dx * 1.6, dy * 0.2, O) for k, dx, dy in [(70, 14, -12), (92, -14, -14), (108, 16, 6)])
+E['Reclaimer'] = (outlined(vd, '#4a7a3a', 17, 4) + tendrils +
+                  '<path d="M%.1f %.1f c14 -4 26 6 24 20 c-14 4 -26 -6 -24 -20z" fill="#6fb04f" stroke="%s" stroke-width="3"/>' % (ex - 6, ey - 4, O) +
+                  '<circle cx="128" cy="116" r="15" fill="#c8403f" stroke="%s" stroke-width="4"/>' % O + eye(128, 116, 8, '#ffe08a', look=(0, 1)))
+
+# Root Leech: a fat root worm with a round toothed mouth
+body = 'M62 196 C40 150 96 150 112 118 C128 86 150 112 170 94'
+rings = ''.join('<path d="M%g %g l%g %g" stroke="#7a4a22" stroke-width="4"/>' % (x, y, dx, dy) for x, y, dx, dy in
+                [(76, 170, 20, -10), (94, 152, 22, 4), (112, 134, 18, 12), (126, 116, 12, 18), (146, 108, 14, -14)])
+teeth = ''.join('<path d="M%g %g l3 9 l3 -9z" fill="#fff7e8" transform="rotate(%g 186 92)" stroke="%s" stroke-width="1.5"/>' % (183, 70, a, O) for a in range(0, 360, 40))
+E['Leech'] = (outlined(body, '#b57a46', 40, 5) + rings +
+              '<circle cx="186" cy="92" r="30" fill="#8a3a32" stroke="%s" stroke-width="5"/>' % O + teeth +
+              '<circle cx="186" cy="92" r="14" fill="#3a1414" stroke="%s" stroke-width="3"/>' % O +
+              eye(160, 62, 7, look=(2, 1), angry=1) + eye(196, 56, 7, look=(1, 1), angry=-1) +
+              '<ellipse cx="96" cy="150" rx="26" ry="8" fill="#d99a62" opacity="0.5" transform="rotate(-30 96 150)"/>')
+
+# Invasive Bloom: an angry flower with a petal of every color
+E['ColorHater'] = (petal_ring(8, 128, 128, 16, 104, 26, ['#c8403f', '#4f7fd0', '#e8a82e', '#5a9e45'], O, 4, 0) +
+                   '<circle cx="128" cy="128" r="40" fill="#3b2a2a" stroke="%s" stroke-width="4"/>' % O +
+                   eye(114, 120, 10, '#fff7e8', look=(1, 2), angry=1) + eye(142, 120, 10, '#fff7e8', look=(-1, 2), angry=-1) +
+                   '<path d="M108 148 C118 140 138 140 148 148" fill="none" stroke="#fff7e8" stroke-width="5"/>')
+
+# Invasive Weed: angular blades around a square angry bulb
+blades = ''.join('<path d="M%g %g L%g %g L%g %g Z" transform="rotate(%g 128 150)"/>' % (112, 140, 128, 30, 144, 140, a) for a in (-70, -38, 0, 38, 70))
+E['ShapeHater'] = ('<g fill="#3f7a35" stroke="%s" stroke-width="4">%s</g>' % (O, blades) +
+                   '<rect x="76" y="110" width="104" height="104" rx="18" fill="#6fb04f" stroke="%s" stroke-width="5"/>' % O +
+                   '<path d="M92 128 L120 142 L92 152Z M164 128 L136 142 L164 152Z" fill="#fff7e8" stroke="%s" stroke-width="3"/>' % O +
+                   '<circle cx="104" cy="143" r="3.5" fill="%s"/><circle cx="152" cy="143" r="3.5" fill="%s"/>' % (O, O) +
+                   '<path d="M98 186 L112 176 L128 186 L144 176 L158 186" fill="none" stroke="%s" stroke-width="5"/>' % O)
+
+for name, body in E.items():
+    open('%s.svg' % name, 'w').write(svg(body))
+    print('wrote', name)

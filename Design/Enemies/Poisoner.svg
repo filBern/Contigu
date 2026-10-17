@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="plate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5a3f27"/><stop offset="1" stop-color="#2a1c12"/></radialGradient>
+    <clipPath id="clip"><rect x="8" y="8" width="240" height="240" rx="44"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="url(#plate)" stroke="#13212e" stroke-width="6"/>
+  <g clip-path="url(#clip)" stroke-linejoin="round" stroke-linecap="round">
+<circle cx="54" cy="70" r="6" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="84" cy="48" r="4" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="200" cy="60" r="7" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="176" cy="40" r="4" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="214" cy="108" r="5" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="44" cy="112" r="4" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="200" cy="200" r="5" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><circle cx="52" cy="196" r="5" fill="#b8e04a" stroke="#13212e" stroke-width="2"/><path d="M104 130 C98 170 96 196 92 214 L164 214 C160 196 158 170 152 130Z" fill="#d8d2a0" stroke="#13212e" stroke-width="5"/><path d="M44 134 C40 66 216 66 212 134 C190 144 66 144 44 134Z" fill="#7d5aa6" stroke="#13212e" stroke-width="5"/><g fill="#b8e04a" stroke="#13212e" stroke-width="3"><circle cx="88" cy="106" r="11"/><circle cx="132" cy="90" r="9"/><circle cx="170" cy="112" r="12"/><circle cx="112" cy="122" r="6"/></g><path d="M60 130 C100 140 156 140 196 130" fill="none" stroke="#4a2f66" stroke-width="4"/><circle cx="114" cy="168" r="8" fill="#fff7e8" stroke="#13212e" stroke-width="3"/><circle cx="115" cy="169" r="4" fill="#13212e"/><path d="M103 157.8 L125 166.8" stroke="#13212e" stroke-width="5"/><circle cx="142" cy="168" r="8" fill="#fff7e8" stroke="#13212e" stroke-width="3"/><circle cx="141" cy="169" r="4" fill="#13212e"/><path d="M131 163.8 L153 154.8" stroke="#13212e" stroke-width="5"/>
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="#13212e" stroke-width="6"/>
+</svg>
