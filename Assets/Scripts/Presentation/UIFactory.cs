@@ -92,7 +92,8 @@ namespace Contigu.Presentation
             var btn = img.gameObject.AddComponent<Button>();
             // Garden touch: little plants around every button big enough to carry them (see ButtonVines).
             var vines = img.gameObject.AddComponent<ButtonVines>();
-            vines.Variety = 1 + (_nextVineVariety++ % ButtonVines.VarietyCount);
+            vines.Variety = 1 + (_nextVineVariety % ButtonVines.VarietyCount);
+            vines.Seed = ++_nextVineVariety;
             // Selectable normally self-assigns this via Reset(), which Unity
             // only calls for components added through the Inspector; every
             // button here is built via AddComponent, so this must be set
