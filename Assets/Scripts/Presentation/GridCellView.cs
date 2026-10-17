@@ -117,8 +117,8 @@ namespace Contigu.Presentation
             {
                 // Shared card art tinted to the pure piece color — a golden cell's background is never
                 // tinted itself, its golden status is conveyed by the badge/effect label instead.
-                Background.sprite = VisualDefaults.TileSprite;
-                Background.color = VisualDefaults.GetColor(filledColor.Value);
+                Background.sprite = VisualDefaults.GetTileSprite(filledColor.Value);
+                Background.color = VisualDefaults.GetTileTint(filledColor.Value);
             }
             else if (cell.IsGolden)
             {
@@ -127,8 +127,8 @@ namespace Contigu.Presentation
             }
             else
             {
-                Background.sprite = VisualDefaults.TileSprite;
-                Background.color = VisualDefaults.TileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
+                Background.sprite = VisualDefaults.EmptyTileSprite;
+                Background.color = VisualDefaults.EmptyTileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.

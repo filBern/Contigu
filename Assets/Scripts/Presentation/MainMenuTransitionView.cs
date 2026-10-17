@@ -116,7 +116,9 @@ namespace Contigu.Presentation
                     rt.localScale = Vector3.zero;
                     // Pseudo-random, deterministic color mosaic — no two orthogonal neighbors share a color
                     // often enough to read as a real pattern rather than a flat wash.
-                    tileImage.color = VisualDefaults.GetColor(Colors[(row * 7 + col * 13) % Colors.Length]);
+                    var tileColor = Colors[(row * 7 + col * 13) % Colors.Length];
+                    tileImage.sprite = VisualDefaults.GetTileSprite(tileColor);
+                    tileImage.color = VisualDefaults.GetTileTint(tileColor);
 
                     float cornerDistance = Mathf.Sqrt(col * col + row * row);
                     float projection = col - row;

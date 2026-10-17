@@ -53,7 +53,6 @@ namespace Contigu.Presentation
             float cell = fixedCellSize.HasValue
                 ? fixedCellSize.Value
                 : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
-            var fillColor = VisualDefaults.GetColor(color);
 
             bool badgeEveryCell = trait.HasValue && PieceTrait.IsJokerCombatKind(trait.Value.Kind);
             Vector2Int? traitPos = trait.HasValue && !badgeEveryCell ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
@@ -73,8 +72,8 @@ namespace Contigu.Presentation
                     }
 
                     // Same card art/tint as a filled grid cell (see GridCellView.ApplyState).
-                    var img = UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.TileSprite);
-                    img.color = fillColor;
+                    var img = UIFactory.CreateSlicedImage(container, "c" + x + "_" + y, VisualDefaults.GetTileSprite(color));
+                    img.color = VisualDefaults.GetTileTint(color);
                     img.rectTransform.sizeDelta = new Vector2(cell - 2f, cell - 2f);
                     img.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);

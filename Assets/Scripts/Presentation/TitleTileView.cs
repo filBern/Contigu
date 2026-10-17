@@ -38,12 +38,18 @@ namespace Contigu.Presentation
         {
             _image = image;
             _color = initialColor;
-            _image.color = VisualDefaults.GetColor(_color);
+            ApplyColor();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
             RecolorAndPulse();
+        }
+
+        private void ApplyColor()
+        {
+            _image.sprite = VisualDefaults.GetTileSprite(_color);
+            _image.color = VisualDefaults.GetTileTint(_color);
         }
 
         private void RecolorAndPulse()
@@ -54,7 +60,7 @@ namespace Contigu.Presentation
                 next = RandomColor();
             } while (next == _color);
             _color = next;
-            _image.color = VisualDefaults.GetColor(_color);
+            ApplyColor();
 
             if (_pulseCoroutine != null)
             {

@@ -72,6 +72,30 @@ namespace Contigu.Data
         /// </summary>
         public static readonly Sprite TileSprite = Resources.Load<Sprite>("Colorful_UI/colorful/sprites/gameUI/card_bg_3");
 
+        // Hand-painted per-color tile art (Resources/Tiles): a garden-themed frame and flower for each color, plus an unplanted plot for an empty cell. Any missing file falls back to the shared TileSprite tinted with the piece color, as before.
+        private static readonly Dictionary<PieceColor, Sprite> TileSprites = new Dictionary<PieceColor, Sprite>
+        {
+            { PieceColor.Coral, Resources.Load<Sprite>("Tiles/Ember") },
+            { PieceColor.Teal, Resources.Load<Sprite>("Tiles/Frost") },
+            { PieceColor.Violet, Resources.Load<Sprite>("Tiles/Gold") },
+            { PieceColor.Lime, Resources.Load<Sprite>("Tiles/Moss") },
+            { PieceColor.Joker, Resources.Load<Sprite>("Tiles/Joker") }
+        };
+
+        public static readonly Sprite EmptyTileSprite = Resources.Load<Sprite>("Tiles/Empty") ?? TileSprite;
+
+        /// <summary>The filled-cell sprite for <paramref name="color"/> — its own painted tile, or the shared TileSprite when that art is missing (pair with <see cref="GetTileTint"/>).</summary>
+        public static Sprite GetTileSprite(PieceColor color)
+        {
+            return TileSprites.TryGetValue(color, out var s) && s != null ? s : TileSprite;
+        }
+
+        /// <summary>White for a color with its own painted tile (the art already carries the color); the plain piece color for the tinted TileSprite fallback.</summary>
+        public static Color GetTileTint(PieceColor color)
+        {
+            return TileSprites.TryGetValue(color, out var s) && s != null ? Color.white : GetColor(color);
+        }
+
         public static Color GetColor(PieceColor color)
         {
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
