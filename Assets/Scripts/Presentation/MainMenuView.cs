@@ -20,7 +20,8 @@ namespace Contigu.Presentation
     public sealed class MainMenuView : MonoBehaviour
     {
         private const string Title = "LASTBLOOM";
-        private const float TileSize = 28f;
+        // Sized so the 9-letter title (53 tile columns) fits within the 1280-wide reference resolution with margin.
+        private const float TileSize = 18f;
         private const float TileGap = 2f;
         // Each filled glyph cell in TitleTileFont's 5x7 dot-matrix grid renders as a Thickness x Thickness cluster of same-size tiles.
         private const int Thickness = 1;
@@ -56,7 +57,7 @@ namespace Contigu.Presentation
             titleContainer.anchorMin = new Vector2(0.5f, 0.5f);
             titleContainer.anchorMax = new Vector2(0.5f, 0.5f);
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
-            titleContainer.anchoredPosition = new Vector2(0f, 190f);
+            titleContainer.anchoredPosition = new Vector2(0f, 170f);
 
             // Short tagline under the title, setting up the game's premise (an alchemist tending the
             // last blooming garden at the edge of a dying world) before the player ever sees a board.
