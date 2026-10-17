@@ -302,16 +302,11 @@ namespace Contigu.Presentation
         /// <summary>Starts/stops the idle-prompt pulse depending on whether <paramref name="text"/> is the default idle message; other callers leave it off. <paramref name="emphasize"/> bumps the font size to <see cref="EmphasizedStatusFontSize"/>.</summary>
         private void SetStatusText(string text, bool emphasize = false)
         {
+            // The grey status line above the grid (round/enemy hints, drag prompt, warnings) is gone to give the grid the room.
+            // Callers still go through here, so the text is kept in the (hidden) label for debugging.
             _statusText.text = text;
             _statusText.fontSize = emphasize ? EmphasizedStatusFontSize : DefaultStatusFontSize;
-            if (text == IdleStatusMessage && IdleStatusMessage.Length > 0)
-            {
-                StartStatusPulse();
-            }
-            else
-            {
-                StopStatusPulse();
-            }
+            StopStatusPulse();
         }
 
         private void StartStatusPulse()
@@ -420,6 +415,7 @@ namespace Contigu.Presentation
             // taller than the plain score bar) with a 12px gap.
             _statusText.rectTransform.anchoredPosition = new Vector2(0f, -(HudView.EnemyBandHeight + 12f));
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
+            _statusText.gameObject.SetActive(false);
 
             // Slightly above screen center to make room for the horizontal
             // hand row below while keeping a clear gap below the status text.
@@ -428,7 +424,7 @@ namespace Contigu.Presentation
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = new Vector2(0f, 63f);
+            gridRect.anchoredPosition = new Vector2(0f, 79f);
 
             // Center each side panel in the gap between the grid edge and
             // the screen edge. Computed from Screen.width/height (matching

@@ -24,7 +24,7 @@ namespace Contigu.Data
         /// cursor ghost, draft/deck rows) never render larger than the piece will
         /// appear once placed on the grid.
         /// </summary>
-        public const float GridCellSize = 58f;
+        public const float GridCellSize = 62f;
 
         private static readonly Dictionary<PieceColor, Color> ColorMap = new Dictionary<PieceColor, Color>
         {
