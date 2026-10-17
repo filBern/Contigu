@@ -56,6 +56,8 @@ namespace Contigu.Presentation
         private string _infoName;
         private string _infoDescription;
         private bool _isShowingLockedObstacle;
+        /// <summary>Locked/frozen look drawn over the empty-cell Background, so fading the malus out reveals an empty cell instead of nothing.</summary>
+        private Image _lockedOverlay;
         private bool _isShowingPoisonBadge;
 
         public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
@@ -75,6 +77,18 @@ namespace Contigu.Presentation
             _colorblindShape = colorblindShape;
             _lineClearOverlay = lineClearOverlay;
             _tooltip = tooltip;
+            var overlayGo = new GameObject("LockedOverlay", typeof(RectTransform));
+            overlayGo.transform.SetParent(background.transform, false);
+            overlayGo.transform.SetSiblingIndex(0);
+            var overlayRect = (RectTransform)overlayGo.transform;
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+            _lockedOverlay = overlayGo.AddComponent<Image>();
+            _lockedOverlay.type = Image.Type.Sliced;
+            _lockedOverlay.raycastTarget = false;
+            _lockedOverlay.gameObject.SetActive(false);
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
         }
 
@@ -103,23 +117,15 @@ namespace Contigu.Presentation
             bool renderAsLockedObstacle = (cell.IsLocked || forceShowLocked) && !cell.IsBastion && !fillColorOverride.HasValue && !suppressMalus;
             _isShowingLockedObstacle = renderAsLockedObstacle;
 
+            _lockedOverlay.gameObject.SetActive(renderAsLockedObstacle);
             if (renderAsLockedObstacle)
             {
-                if (cell.IsFrozen && VisualDefaults.FrozenTileSprite != null)
-                {
-                    Background.sprite = VisualDefaults.FrozenTileSprite;
-                    Background.color = Color.white;
-                }
-                else if (VisualDefaults.LockedTileSprite != null)
-                {
-                    Background.sprite = VisualDefaults.LockedTileSprite;
-                    Background.color = Color.white;
-                }
-                else
-                {
-                    Background.sprite = null;
-                    Background.color = VisualDefaults.LockedColor;
-                }
+                Sprite lockedSprite = cell.IsFrozen && VisualDefaults.FrozenTileSprite != null ? VisualDefaults.FrozenTileSprite : VisualDefaults.LockedTileSprite;
+                _lockedOverlay.sprite = lockedSprite;
+                _lockedOverlay.color = lockedSprite != null ? Color.white : VisualDefaults.LockedColor;
+                // The empty cell underneath is what remains once the lock fades out.
+                Background.sprite = VisualDefaults.EmptyTileSprite;
+                Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
             }
             else if (isFilled)
             {
@@ -264,8 +270,8 @@ namespace Contigu.Presentation
         {
             if (_isShowingLockedObstacle)
             {
-                var c = Background.color;
-                Background.color = new Color(c.r, c.g, c.b, alpha);
+                var c = _lockedOverlay.color;
+                _lockedOverlay.color = new Color(c.r, c.g, c.b, alpha);
             }
             if (_isShowingPoisonBadge)
             {
