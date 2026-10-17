@@ -102,7 +102,12 @@ namespace Contigu.Presentation
 
             if (renderAsLockedObstacle)
             {
-                if (VisualDefaults.LockedTileSprite != null)
+                if (cell.IsFrozen && VisualDefaults.FrozenTileSprite != null)
+                {
+                    Background.sprite = VisualDefaults.FrozenTileSprite;
+                    Background.color = Color.white;
+                }
+                else if (VisualDefaults.LockedTileSprite != null)
                 {
                     Background.sprite = VisualDefaults.LockedTileSprite;
                     Background.color = Color.white;

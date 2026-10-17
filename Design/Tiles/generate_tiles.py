@@ -240,3 +240,27 @@ golden_emblem = '    ' + star(128, 128, 38) + star(76, 84, 18, '#ffe08a') + star
 golden_p = dict(b_top='#a8863e', b_bot='#5a4220', furrow='#4a3418', hi='#ffe9a6', wood='#f1c40f', grain='#8a6a10', soil='#7a5a1a', soil_d='#5e440f', soil_l='#ffe08a')
 open('Golden.svg', 'w').write(frame(golden_p, golden_emblem, leaves=False, sprouts=False))
 print('wrote Golden')
+
+# ---------------- Frozen: an empty plot sealed under ice (Plague/Rotbloom's round-start freeze; only a harvest of its line frees it) ----------------
+def snowflake(cx, cy, r):
+    arms = []
+    for k in range(6):
+        a = math.radians(60 * k - 90)
+        ex, ey = cx + r * math.cos(a), cy + r * math.sin(a)
+        arms.append('M%g %g L%g %g' % (cx, cy, ex, ey))
+        for t, bl in ((0.55, 0.32), (0.8, 0.22)):
+            bx, by = cx + r * t * math.cos(a), cy + r * t * math.sin(a)
+            for s in (-1, 1):
+                ba = a + s * math.radians(50)
+                arms.append('M%g %g L%g %g' % (bx, by, bx + r * bl * math.cos(ba), by + r * bl * math.sin(ba)))
+    d = ' '.join(arms)
+    return ('<path d="%s" fill="none" stroke="#13212e" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>'
+            '<path d="%s" fill="none" stroke="#f4fbff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>') % (d, d)
+frozen_emblem = ('    <g opacity="0.9">'
+                 '<path d="M52 70 L84 102 L74 118 L104 146 M204 82 L170 108 L182 126 L158 150 M96 204 L112 176 L140 186 L150 214" fill="none" stroke="#13212e" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>'
+                 '<path d="M52 70 L84 102 L74 118 L104 146 M204 82 L170 108 L182 126 L158 150 M96 204 L112 176 L140 186 L150 214" fill="none" stroke="#e8f6ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+                 '</g>\n    ' + snowflake(128, 128, 56) + '\n    '
+                 '<g fill="#ffffff" stroke="#13212e" stroke-width="2"><path d="M66 52 l5 9 9 5 -9 5 -5 9 -5 -9 -9 -5 9 -5z"/><path d="M196 190 l4 7 7 4 -7 4 -4 7 -4 -7 -7 -4 7 -4z"/><path d="M204 62 l3 5 5 3 -5 3 -3 5 -3 -5 -5 -3 5 -3z"/></g>')
+frozen_p = dict(b_top='#d7eefb', b_bot='#6fa6cf', furrow='#4a7fa8', hi='#ffffff', wood='#bcdcf0', grain='#6a9fc2', soil='#8cc6e6', soil_d='#6aa8cf', soil_l='#f1faff')
+open('Frozen.svg', 'w').write(frame(frozen_p, frozen_emblem, leaves=False, sprouts=False))
+print('wrote Frozen')
