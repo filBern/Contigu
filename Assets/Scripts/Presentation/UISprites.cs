@@ -74,25 +74,25 @@ namespace Contigu.Presentation
         /// <summary>Shared rounded-pill track behind SettingsView's volume sliders (HudView builds its own flat-panel progress bars instead — see HudView.BuildBar).</summary>
         public static Sprite BarTrack
         {
-            get { return _barTrack != null ? _barTrack : (_barTrack = Resources.Load<Sprite>(SliderPath + "progress_bar (1)")); }
+            get { return _barTrack != null ? _barTrack : (_barTrack = Resources.Load<Sprite>("UI/Garden/BarTrack")); }
         }
 
         /// <summary>Fill for SettingsView's Master volume slider.</summary>
         public static Sprite ScoreBarFill
         {
-            get { return _scoreBarFill != null ? _scoreBarFill : (_scoreBarFill = Resources.Load<Sprite>(SliderPath + "blueBarFill")); }
+            get { return _scoreBarFill != null ? _scoreBarFill : (_scoreBarFill = Resources.Load<Sprite>("UI/Garden/FillGold")); }
         }
 
         /// <summary>Fill for SettingsView's Music volume slider.</summary>
         public static Sprite PiecesBarFill
         {
-            get { return _piecesBarFill != null ? _piecesBarFill : (_piecesBarFill = Resources.Load<Sprite>(SliderPath + "purpleBarFill")); }
+            get { return _piecesBarFill != null ? _piecesBarFill : (_piecesBarFill = Resources.Load<Sprite>("UI/Garden/FillBlue")); }
         }
 
         /// <summary>The "card_bg_3" card art — background of each hand slot (HandView) and, tinted darker, of the shop's modifier/upgrade cards (ShopView).</summary>
         public static Sprite CardBackground
         {
-            get { return _cardBackground != null ? _cardBackground : (_cardBackground = Resources.Load<Sprite>(GameUIPath + "card_bg_3")); }
+            get { return _cardBackground != null ? _cardBackground : (_cardBackground = Resources.Load<Sprite>("UI/Garden/Card")); }
         }
 
         /// <summary>
@@ -115,19 +115,19 @@ namespace Contigu.Presentation
         /// <summary>Small filled circle used as a corner badge showing a remaining-count number (HandView's Shuffle button).</summary>
         public static Sprite CountBadge
         {
-            get { return _countBadge != null ? _countBadge : (_countBadge = Resources.Load<Sprite>(SliderPath + "Ellipse 19")); }
+            get { return _countBadge != null ? _countBadge : (_countBadge = Resources.Load<Sprite>("UI/Garden/CountBadge")); }
         }
 
         /// <summary>Fill for the SFX volume slider — a third color distinct from ScoreBarFill (Master)/PiecesBarFill (Music).</summary>
         public static Sprite SfxBarFill
         {
-            get { return _sfxBarFill != null ? _sfxBarFill : (_sfxBarFill = Resources.Load<Sprite>(SliderPath + "greenBarFill")); }
+            get { return _sfxBarFill != null ? _sfxBarFill : (_sfxBarFill = Resources.Load<Sprite>("UI/Garden/FillGreen")); }
         }
 
         /// <summary>Round knob for every UnityEngine.UI.Slider in SettingsView — same "Ellipse" family used for HandView's Shuffle count badge.</summary>
         public static Sprite SliderHandle
         {
-            get { return _sliderHandle != null ? _sliderHandle : (_sliderHandle = Resources.Load<Sprite>(SliderPath + "Ellipse 20")); }
+            get { return _sliderHandle != null ? _sliderHandle : (_sliderHandle = Resources.Load<Sprite>("UI/Garden/SliderHandle")); }
         }
     }
 }
