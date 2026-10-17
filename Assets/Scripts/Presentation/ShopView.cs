@@ -23,7 +23,10 @@ namespace Contigu.Presentation
         // fit their name/description, see BuildBlisterCards.
         private const float CardHeight = 200f;
         private const float BadgeSize = 90f;
-        private const float BuyButtonHeight = 36f;
+        private const float BuyButtonHeight = 46f;
+        private const float BuyButtonWidth = 112f;
+        // Blister cards show a bigger icon now that their description lives in a hover tooltip.
+        private const float BlisterIconSize = 112f;
         private const float BuyButtonBottomMargin = 12f;
 
         // Blister card layout, shared by both a Modifier-kind slot (name/
@@ -452,7 +455,7 @@ namespace Contigu.Presentation
 
             var cardRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
             var descRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
-            float maxDescHeight = ModifierDescMinHeight;
+            float maxDescHeight = 0f;
 
             for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
@@ -473,7 +476,7 @@ namespace Contigu.Presentation
             }
 
             float cardHeight = ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap
-                + BadgeSize + ModifierCardGap + maxDescHeight + ModifierCardGap
+                + BlisterIconSize + ModifierCardGap + maxDescHeight + ModifierCardGap
                 + BuyButtonHeight + BuyButtonBottomMargin;
 
             for (int i = 0; i < cardRects.Count; i++)
@@ -511,6 +514,20 @@ namespace Contigu.Presentation
                 ? BuildBlisterModifierCardContents(card.transform, slot.ModifierId, out descRect)
                 : BuildBlisterUpgradeCardContents(card.transform, slot.HiddenUpgrade, out descRect);
 
+            // Name + effect on hover, since the card itself no longer spells the description out.
+            var hover = card.gameObject.AddComponent<HoverTooltip>();
+            if (slot.Kind == ShopSlotKind.Modifier)
+            {
+                var modifierDef = ModifierCatalog.Get(slot.ModifierId);
+                hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14));
+            }
+            else
+            {
+                var upgradeDef = slot.HiddenUpgrade;
+                hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
+                    UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool), UpgradeVisualDefaults.GetRarityColor(upgradeDef.Rarity));
+            }
+
             int price = run.GetBlisterSlotPrice(index);
             bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             string blockedLabel = "Full (" + EconomyConstants.MaxActiveModifiers + ")";
@@ -526,7 +543,7 @@ namespace Contigu.Presentation
         private float BuildBlisterModifierCardContents(Transform cardTransform, ModifierId modifierId, out RectTransform descRect)
         {
             var def = ModifierCatalog.Get(modifierId);
-            return ModifierCardFactory.BuildContents(cardTransform, def, _tooltip, CardWidth, out descRect);
+            return ModifierCardFactory.BuildContents(cardTransform, def, _tooltip, CardWidth, out descRect, badgeSize: BlisterIconSize, withDescription: false);
         }
 
         /// <summary>
@@ -558,7 +575,7 @@ namespace Contigu.Presentation
                 sign.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 sign.rectTransform.pivot = new Vector2(0.5f, 1f);
                 sign.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
-                sign.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
+                sign.rectTransform.sizeDelta = new Vector2(BlisterIconSize, BlisterIconSize);
                 var gem = UIFactory.CreatePanel(sign.transform, "RarityGem", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
                 gem.raycastTarget = false;
                 gem.rectTransform.anchorMin = new Vector2(1f, 0f);
@@ -585,17 +602,9 @@ namespace Contigu.Presentation
                 UIFactory.StretchFull(swatchLabel.rectTransform);
             }
 
-            float descWidth = CardWidth - 16f;
-            var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, 12), 12, UITheme.TextPrimary);
-            descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            descLabel.rectTransform.anchoredPosition = new Vector2(0f, swatchY - (BadgeSize + ModifierCardGap));
-            descLabel.rectTransform.sizeDelta = new Vector2(descWidth, 0f);
-            descRect = descLabel.rectTransform;
-
-            var settings = descLabel.GetGenerationSettings(new Vector2(descWidth, 0f));
-            return descLabel.cachedTextGenerator.GetPreferredHeight(descLabel.text, settings);
+            // No description row: it moved into the card's hover tooltip (see BuildBlisterCard).
+            descRect = null;
+            return 0f;
         }
 
         private void BuildUpgradeCard(RunManager run, int index)
@@ -700,7 +709,7 @@ namespace Contigu.Presentation
             buyRect.anchorMax = new Vector2(0.5f, 0f);
             buyRect.pivot = new Vector2(0.5f, 0f);
             buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
-            buyRect.sizeDelta = new Vector2(CardWidth - 24f, BuyButtonHeight);
+            buyRect.sizeDelta = new Vector2(BuyButtonWidth, BuyButtonHeight);
             buyBtn.interactable = !purchased && canInteract;
             var cardRect = (RectTransform)parent;
             buyBtn.onClick.AddListener(() =>

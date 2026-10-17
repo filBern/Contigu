@@ -22,7 +22,7 @@ namespace Contigu.Presentation
 
         /// <summary>Adds the name label, bare badge, and description text onto <paramref name="cardTransform"/> at <paramref name="width"/>, and returns the description's natural (unclamped) preferred height, so a caller placing several cards in a row can sync them to a shared max height. <paramref name="badgeSize"/>/<paramref name="nameHeight"/>/<paramref name="nameFontSize"/>/<paramref name="descFontSize"/> default to the shop's own card sizing.</summary>
         public static float BuildContents(Transform cardTransform, ModifierDefinition def, TooltipView tooltip, float width, out RectTransform descRect,
-            float badgeSize = BadgeSize, float nameHeight = NameHeight, int nameFontSize = NameFontSize, int descFontSize = DescFontSize)
+            float badgeSize = BadgeSize, float nameHeight = NameHeight, int nameFontSize = NameFontSize, int descFontSize = DescFontSize, bool withDescription = true)
         {
             var nameLabel = UIFactory.CreateText(cardTransform, "Name", def.Name, nameFontSize, UITheme.TextPrimary);
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -37,6 +37,13 @@ namespace Contigu.Presentation
             badge.rectTransform.pivot = new Vector2(0.5f, 1f);
             float badgeY = -(TopPadding + nameHeight + Gap);
             badge.rectTransform.anchoredPosition = new Vector2(0f, badgeY);
+
+            if (!withDescription)
+            {
+                // Name + icon only (the shop's Blister cards show the description in a hover tooltip instead).
+                descRect = null;
+                return 0f;
+            }
 
             float descWidth = width - 16f;
             var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, descFontSize), descFontSize, UITheme.TextPrimary);
