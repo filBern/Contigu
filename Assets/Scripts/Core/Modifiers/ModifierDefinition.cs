@@ -289,23 +289,23 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 ◆ per harvested line with all 4 colors, stacking.");
+            "+6 Pollen per harvested line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
             ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
-            "+4 ◆ per harvested line alternating between 2 colors, stacking (a joker breaks it).");
+            "+4 Pollen per harvested line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
             ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
-            "+4 ◆ per harvested line that's a single color, stacking.");
+            "+4 Pollen per harvested line that's a single color, stacking.");
 
         public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
             ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Hoarder",
-            "+2 ◆ per distinct color in harvested cells.");
+            "+2 Pollen per distinct color in harvested cells.");
 
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
-            "+5 ◆ when this seed matches the last one's shape.");
+            "+5 Pollen when this seed matches the last one's shape.");
 
         public static readonly ModifierDefinition MultUn = new ModifierDefinition(
             ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
@@ -410,7 +410,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
-            "Converts 15% of the damage from any Joker combat trait into bonus Pollen. Stacks with Sangsue.");
+            "Converts 15% of the damage from any Joker combat trait into bonus Pollen. Stacks with Sap Drain.");
 
         /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
         public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(

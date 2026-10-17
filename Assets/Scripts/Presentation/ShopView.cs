@@ -738,10 +738,22 @@ namespace Contigu.Presentation
             var priceIcon = UIFactory.CreatePanel(priceContainer, "PriceIcon", VisualDefaults.GoldenColor);
             priceIcon.raycastTarget = false;
             priceIcon.rectTransform.sizeDelta = new Vector2(10f, 10f);
-            priceIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            float priceIconSize = 16f;
+            if (VisualDefaults.PollenSprite != null)
+            {
+                // The Pollen icon (same as the counter), not the old gold diamond.
+                priceIcon.sprite = VisualDefaults.PollenSprite;
+                priceIcon.color = Color.white;
+                priceIcon.preserveAspect = true;
+                priceIconSize = 26f;
+            }
+            else
+            {
+                priceIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            }
             var priceIconLayout = priceIcon.gameObject.AddComponent<LayoutElement>();
-            priceIconLayout.preferredWidth = 16f;
-            priceIconLayout.preferredHeight = 16f;
+            priceIconLayout.preferredWidth = priceIconSize;
+            priceIconLayout.preferredHeight = priceIconSize;
 
             // Red instead of the default tint when the slot is otherwise buyable but the player just can't
             // afford it yet — the button stays clickable (see the onClick lambda above), so this is the
@@ -750,7 +762,7 @@ namespace Contigu.Presentation
             priceText.raycastTarget = false;
             if (!affordable)
             {
-                priceIcon.color = UITheme.Danger;
+                priceIcon.color = VisualDefaults.PollenSprite != null ? new Color(1f, 0.55f, 0.5f, 1f) : UITheme.Danger;
             }
         }
 
