@@ -25,6 +25,8 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewHeight = 110f;
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 12f;
+        // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 100px preview box.
+        private const float PreviewTileSize = 33f;
         private const float SlotWidth = 120f;
         private const float SlotHeight = 140f;
         private const float SlotSpacing = 16f;
@@ -344,7 +346,7 @@ namespace Contigu.Presentation
             {
                 Destroy(_dragGhostPreview.GetChild(c).gameObject);
             }
-            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null);
+            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null, PreviewTileSize);
 
             _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
             _dragGhost.gameObject.SetActive(true);
@@ -628,7 +630,7 @@ namespace Contigu.Presentation
         private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation, GameObject clickForwardTarget)
         {
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget);
+            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget, PreviewTileSize);
         }
     }
 }
