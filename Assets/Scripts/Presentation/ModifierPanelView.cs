@@ -123,8 +123,8 @@ namespace Contigu.Presentation
             _usageCountProvider = usageCountProvider;
             _progressiveStateProvider = progressiveStateProvider;
             _levelProvider = levelProvider;
-            var panel = UIFactory.CreatePanel(parent, "ModifierPanel", UITheme.Panel);
-            UIFactory.AddThickOutline(panel, UITheme.Border);
+            // Garden parchment card (its own dark outline, so no extra outline component).
+            var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.CardBackground);
             _root = panel.rectTransform;
             // Static size, centered vertically and horizontally in the gap
             // between the grid and screen edge; never resizes at runtime.
@@ -134,15 +134,23 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, PanelHeight);
             _root.anchoredPosition = new Vector2(horizontalCenterX, 0f);
 
-            var headerBand = UIFactory.CreatePanel(_root, "HeaderBand", UITheme.ButtonSelected);
+            var headerBand = UIFactory.CreateSlicedImage(_root, "HeaderBand", UISprites.Garden("Gold"));
             headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
             headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);
             headerBand.rectTransform.pivot = new Vector2(0.5f, 1f);
-            headerBand.rectTransform.anchoredPosition = Vector2.zero;
-            headerBand.rectTransform.sizeDelta = new Vector2(0f, HeaderHeight);
+            headerBand.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            headerBand.rectTransform.sizeDelta = new Vector2(-20f, HeaderHeight - 8f);
 
             var header = UIFactory.CreateText(headerBand.transform, "Header", "Fertilizers", 30, UITheme.TextPrimary, TextAnchor.MiddleCenter);
             UIFactory.StretchFull(header.rectTransform);
+
+            _emptyHint = UIFactory.CreateText(_root, "EmptyHint", "No fertilizer yet.\nBuy a sack in the Blister.", 16, new Color(0.075f, 0.13f, 0.18f, 0.65f), TextAnchor.UpperCenter);
+            _emptyHint.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _emptyHint.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _emptyHint.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _emptyHint.rectTransform.anchoredPosition = new Vector2(0f, -(HeaderHeight + 24f));
+            _emptyHint.rectTransform.sizeDelta = new Vector2(-24f, 60f);
+            _emptyHint.raycastTarget = false;
 
             _rowsContainer = UIFactory.CreateUIObject("Rows", _root);
             _rowsContainer.anchorMin = new Vector2(0.5f, 1f);
@@ -160,8 +168,14 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        private Text _emptyHint;
+
         public void Refresh(IReadOnlyList<ModifierId> activeModifiers)
         {
+            if (_emptyHint != null)
+            {
+                _emptyHint.gameObject.SetActive(activeModifiers.Count == 0);
+            }
             // Snapshotted before the rebuild below so add/remove feedback can
             // diff against what was on screen a moment ago; a plain reorder
             // (swap/drag) must not read as anything added or removed.

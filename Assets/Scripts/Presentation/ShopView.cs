@@ -186,8 +186,7 @@ namespace Contigu.Presentation
             // "Prochain combat" preview — sits right under the (now-raised) Lueur readout, same corner.
             // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty
             // until the shop is actually open (it only ever reads the catalog, no RNG, see RunManager).
-            var upcomingBox = UIFactory.CreatePanel(_root, "UpcomingEncounterBox", UITheme.PanelLight);
-            UIFactory.AddThickOutline(upcomingBox, UITheme.Border);
+            var upcomingBox = UIFactory.CreateSlicedImage(_root, "UpcomingEncounterBox", UISprites.CardBackground);
             _upcomingEncounterBox = upcomingBox.rectTransform;
             // Same anchor/pivot/position recipe as ModifierPanelView.Build (anchor+pivot both (0.5,0.5),
             // vertically centered at y=0) — matching its exact recipe, not just eyeballing a Y offset, is
@@ -204,12 +203,12 @@ namespace Contigu.Presentation
             _upcomingEncounterBox.gameObject.AddComponent<RectMask2D>();
 
             // Red "Next round" banner flush against the box's top edge, same width as the box.
-            var upcomingBanner = UIFactory.CreatePanel(_upcomingEncounterBox, "NextRoundBanner", UITheme.Danger);
+            var upcomingBanner = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "NextRoundBanner", UISprites.Garden("Red"));
             upcomingBanner.rectTransform.anchorMin = new Vector2(0f, 1f);
             upcomingBanner.rectTransform.anchorMax = new Vector2(1f, 1f);
             upcomingBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            upcomingBanner.rectTransform.anchoredPosition = Vector2.zero;
-            upcomingBanner.rectTransform.sizeDelta = new Vector2(0f, UpcomingBannerHeight);
+            upcomingBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
+            upcomingBanner.rectTransform.sizeDelta = new Vector2(-20f, UpcomingBannerHeight - 8f);
 
             var upcomingBannerLabel = UIFactory.CreateText(upcomingBanner.transform, "BannerLabel", "Next round", UpcomingBannerFontSize, UITheme.TextOnBackground);
             upcomingBannerLabel.alignment = TextAnchor.MiddleCenter;
