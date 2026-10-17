@@ -17,12 +17,14 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
         private string _name;
         private string _description;
+        private string _lore;
 
-        public void Init(TooltipView tooltip, string name, string description)
+        public void Init(TooltipView tooltip, string name, string description, string lore = null)
         {
             _tooltip = tooltip;
             _name = name;
             _description = description;
+            _lore = lore;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -31,7 +33,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            _tooltip.Show(_name, _description, (RectTransform)transform);
+            _tooltip.Show(_name, _description, (RectTransform)transform, lore: _lore);
         }
 
         public void OnPointerExit(PointerEventData eventData)

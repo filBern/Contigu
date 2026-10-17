@@ -35,22 +35,22 @@ namespace Contigu.Data
         {
             switch (kind)
             {
-                case PieceTraitKind.Golden: return "Golden Tile";
-                case PieceTraitKind.Tinted: return "Tinted Tile";
-                case PieceTraitKind.Multiplier: return "Multiplier Tile";
-                case PieceTraitKind.Blast: return "Blast Tile";
+                case PieceTraitKind.Golden: return "Golden Sprout";
+                case PieceTraitKind.Tinted: return "Tinted Sprout";
+                case PieceTraitKind.Multiplier: return "Multiplier Sprout";
+                case PieceTraitKind.Blast: return "Blast Sprout";
                 case PieceTraitKind.Beacon: return "Multiplier Beacon";
-                case PieceTraitKind.Mirror: return "Mirror Tile";
+                case PieceTraitKind.Mirror: return "Mirror Sprout";
                 case PieceTraitKind.Seeder: return "Seeder";
-                case PieceTraitKind.Catalyst: return "Catalyst Tile";
-                case PieceTraitKind.Twin: return "Twin Tile";
-                case PieceTraitKind.Detonator: return "Detonator Tile";
-                case PieceTraitKind.Chameleon: return "Chameleon Tile";
-                case PieceTraitKind.Spark: return "Spark Tile";
-                case PieceTraitKind.Void: return "Void Tile";
-                case PieceTraitKind.Bastion: return "Bastion Tile";
-                case PieceTraitKind.Kamikaze: return "Kamikaze Tile";
-                case PieceTraitKind.Venom: return "Venom Tile";
+                case PieceTraitKind.Catalyst: return "Catalyst Sprout";
+                case PieceTraitKind.Twin: return "Twin Sprout";
+                case PieceTraitKind.Detonator: return "Detonator Sprout";
+                case PieceTraitKind.Chameleon: return "Chameleon Sprout";
+                case PieceTraitKind.Spark: return "Spark Sprout";
+                case PieceTraitKind.Void: return "Void Sprout";
+                case PieceTraitKind.Bastion: return "Bastion Sprout";
+                case PieceTraitKind.Kamikaze: return "Kamikaze Sprout";
+                case PieceTraitKind.Venom: return "Venom Sprout";
                 case PieceTraitKind.Bombe: return "Bombe";
                 case PieceTraitKind.Range: return "Range";
                 case PieceTraitKind.Eclat: return "Éclat";
@@ -67,34 +67,34 @@ namespace Contigu.Data
                 case PieceTraitKind.Golden:
                     return "Scores a flat golden bonus when placed.";
                 case PieceTraitKind.Tinted:
-                    return "Doubles this placement's group and golden bonus (not line-clear) — tinted to "
+                    return "Doubles this placement's group and golden bonus (not harvest) — tinted to "
                         + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + ", so it always fires.";
                 case PieceTraitKind.Multiplier:
-                    return "Doubles the placement's ENTIRE score (group, golden, and line-clear) — broader than Tinted Tile, which skips line-clear.";
+                    return "Doubles the placement's ENTIRE score (group, golden, and harvest) — broader than Tinted Sprout, which skips harvest.";
                 case PieceTraitKind.Blast:
-                    return "This tile and its 4 orthogonal neighbors score golden if they land in the same scored group.";
+                    return "This sprout and its 4 orthogonal neighbors score golden if they land in the same scored group.";
                 case PieceTraitKind.Beacon:
-                    return "Every filled tile in this tile's row and column becomes a multiplier for this placement.";
+                    return "Every filled sprout in this sprout's row and column becomes a multiplier for this placement.";
                 case PieceTraitKind.Mirror:
-                    return "Copies this tile's group bonus onto one random other tile in the scored group.";
+                    return "Copies this sprout's group bonus onto one random other sprout in the scored group.";
                 case PieceTraitKind.Seeder:
                     return "Turns golden for the rest of the round, rescoring every time its group is scored again.";
                 case PieceTraitKind.Catalyst:
                     return "Scores extra per pre-existing cell merged into its group — the bigger the merge, the bigger the bonus.";
                 case PieceTraitKind.Twin:
-                    return "Copies this tile's group bonus onto EVERY other tile in the group, not just one like Mirror Tile.";
+                    return "Copies this sprout's group bonus onto EVERY other sprout in the group, not just one like Mirror Sprout.";
                 case PieceTraitKind.Detonator:
-                    return "Doubles this placement's whole line-clear bonus, if it clears at least one row or column.";
+                    return "Doubles this placement's whole harvest bonus, if it harvests at least one row or column.";
                 case PieceTraitKind.Chameleon:
-                    return "If this tile has a filled neighbor, the WHOLE piece recolors to match it before scoring, merging into that group.";
+                    return "If this sprout has a filled neighbor, the WHOLE seed recolors to match it before scoring, merging into that group.";
                 case PieceTraitKind.Spark:
-                    return "Scores more the longer since the last row/column clear this round — resets once a clear happens.";
+                    return "Scores more the longer since the last harvest this round — resets once a harvest happens.";
                 case PieceTraitKind.Void:
-                    return "Also clears one random filled tile elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the tile broken.";
+                    return "Also uproots one random filled sprout elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the sprout broken.";
                 case PieceTraitKind.Bastion:
-                    return "Locks in place instead of clearing, but keeps scoring every line it completes for the rest of the round.";
+                    return "Locks in place instead of being harvested, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
-                    return "Destroys itself and its 8 surrounding tiles (including this piece's own other tiles), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per tile destroyed.";
+                    return "Destroys itself and its 8 surrounding sprouts (including this seed's own other sprouts), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per sprout destroyed.";
                 case PieceTraitKind.Venom:
                     return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed — fires even if this placement scores nothing.";
                 case PieceTraitKind.Bombe:

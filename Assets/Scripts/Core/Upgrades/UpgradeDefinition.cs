@@ -32,19 +32,19 @@ namespace Contigu.Core
     {
         public static readonly UpgradeDefinition ReplacePiece = new UpgradeDefinition(
             UpgradeId.ReplacePiece, UpgradePool.Bank, "Transmute a Seed",
-            "Choose 1 piece to replace with a duplicate of another.", true, UpgradeRarity.Common);
+            "Choose 1 seed to replace with a duplicate of another.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Propagate a Cutting",
-            "Choose 1 piece to duplicate in your deck.", true, UpgradeRarity.Common);
+            "Choose 1 seed to duplicate in your deck.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
             UpgradeId.JokerPiece, UpgradePool.Bank, "Wild Seed",
-            "Adds a joker piece (random shape) to the deck.", false, UpgradeRarity.Common);
+            "Adds a joker seed (random shape) to the deck.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition RecolorPiece = new UpgradeDefinition(
             UpgradeId.RecolorPiece, UpgradePool.Bank, "Rebloom a Seed",
-            "Choose a piece type and color; recolor one copy.", true, UpgradeRarity.Uncommon);
+            "Choose a seed type and color; recolor one copy.", true, UpgradeRarity.Uncommon);
 
         /// <summary>
         /// A gamble with no sub-choice (applies immediately on purchase, like
@@ -53,7 +53,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomModifier = new UpgradeDefinition(
             UpgradeId.RandomModifier, UpgradePool.Modifier, "Alchemical Boon",
-            "Grants one random modifier you don't already have.", false, UpgradeRarity.Uncommon);
+            "Grants one random graft you don't already have.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
         /// Bank pool (adds to the deck, like Joker/Duplicate) but with a
@@ -71,7 +71,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Fresh Sprout",
-            "Choose 1 piece to add to your deck.", true, UpgradeRarity.Common);
+            "Choose 1 seed to add to your deck.", true, UpgradeRarity.Common);
 
         /// <summary>
         /// A level system that amplifies whatever the chosen modifier
@@ -87,8 +87,8 @@ namespace Contigu.Core
         /// owns no modifiers yet.
         /// </summary>
         public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
-            UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Modifier Upgrade",
-            "Choose one of your active modifiers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
+            UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Graft Upgrade",
+            "Choose one of your active grafts to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
         // Descriptions below describe the trait itself rather than how many
         // pieces get it — that count is a shop mechanic (see
@@ -108,14 +108,14 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition TintedCells = new UpgradeDefinition(
             UpgradeId.TintedCells, UpgradePool.Grid, "Tinted Cells",
-            "Doubles group and golden score (not line-clear), tinted to the piece's color.", false, UpgradeRarity.Uncommon);
+            "Doubles group and golden score (not harvest), tinted to the seed's color.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition MultiplierZone = new UpgradeDefinition(
             UpgradeId.MultiplierZone, UpgradePool.Grid, "Multiplier Zone",
-            "Doubles the whole placement's score, line-clear included.", false, UpgradeRarity.Rare);
+            "Doubles the whole placement's score, harvest included.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
-            UpgradeId.BlastTile, UpgradePool.Grid, "Blast Tile",
+            UpgradeId.BlastTile, UpgradePool.Grid, "Blast Sprout",
             "Makes itself and its 4 neighbors score golden if same color.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
@@ -123,47 +123,47 @@ namespace Contigu.Core
             "Turns its whole row/column into multipliers for that placement.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
-            UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Tile",
-            "Copies its group bonus onto one random other tile in the group.", false, UpgradeRarity.Uncommon);
+            UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Sprout",
+            "Copies its group bonus onto one random other sprout in the group.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition Seeder = new UpgradeDefinition(
             UpgradeId.Seeder, UpgradePool.Grid, "Seeder",
             "Stays golden for the rest of the round instead of scoring once.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition CatalystTile = new UpgradeDefinition(
-            UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Tile",
+            UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Sprout",
             "Scores extra for every pre-existing cell merged into its group.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
-            UpgradeId.TwinTile, UpgradePool.Grid, "Twin Tile",
-            "Copies its group bonus onto EVERY other tile in the group.", false, UpgradeRarity.Rare);
+            UpgradeId.TwinTile, UpgradePool.Grid, "Twin Sprout",
+            "Copies its group bonus onto EVERY other sprout in the group.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition DetonatorTile = new UpgradeDefinition(
-            UpgradeId.DetonatorTile, UpgradePool.Grid, "Detonator Tile",
-            "Doubles the line-clear bonus if it clears a row or column.", false, UpgradeRarity.Uncommon);
+            UpgradeId.DetonatorTile, UpgradePool.Grid, "Detonator Sprout",
+            "Doubles the harvest bonus if it harvests a row or column.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition ChameleonTile = new UpgradeDefinition(
-            UpgradeId.ChameleonTile, UpgradePool.Grid, "Chameleon Tile",
-            "Recolors the WHOLE piece to match a filled neighbor when placed.", false, UpgradeRarity.Common);
+            UpgradeId.ChameleonTile, UpgradePool.Grid, "Chameleon Sprout",
+            "Recolors the WHOLE seed to match a filled neighbor when placed.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition SparkTile = new UpgradeDefinition(
-            UpgradeId.SparkTile, UpgradePool.Grid, "Spark Tile",
-            "Scores more the longer since the last line clear this round.", false, UpgradeRarity.Common);
+            UpgradeId.SparkTile, UpgradePool.Grid, "Spark Sprout",
+            "Scores more the longer since the last harvest this round.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition VoidTile = new UpgradeDefinition(
-            UpgradeId.VoidTile, UpgradePool.Grid, "Void Tile",
-            "Clears one random filled tile elsewhere on the grid (+10 for the tile broken).", false, UpgradeRarity.Rare);
+            UpgradeId.VoidTile, UpgradePool.Grid, "Void Sprout",
+            "Uproots one random filled sprout elsewhere on the grid (+10 for the sprout broken).", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition BastionTile = new UpgradeDefinition(
-            UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Tile",
-            "Won't be removed when line a line is cleared.", false, UpgradeRarity.Uncommon);
+            UpgradeId.BastionTile, UpgradePool.Grid, "Bastion Sprout",
+            "Won't be removed when a line is harvested.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
-            UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Tile",
-            "Destroys itself and its 8 surrounding tiles (+6 per tile destroyed).", false, UpgradeRarity.Rare);
+            UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Sprout",
+            "Destroys itself and its 8 surrounding sprouts (+6 per sprout destroyed).", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition VenomTile = new UpgradeDefinition(
-            UpgradeId.VenomTile, UpgradePool.Grid, "Venom Tile",
+            UpgradeId.VenomTile, UpgradePool.Grid, "Venom Sprout",
             "Poisons the front enemy for 10% of its max HP when placed, no scoring required.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
@@ -190,13 +190,13 @@ namespace Contigu.Core
         /// leveling up, no cap.
         /// </summary>
         public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
-            UpgradeId.PieceMastery, UpgradePool.Mastery, "Piece Mastery",
-            "Levels up one random piece shape — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
+            UpgradeId.PieceMastery, UpgradePool.Mastery, "Seed Mastery",
+            "Levels up one random seed shape — its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
 
         /// <summary>Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
             UpgradeId.ColorMastery, UpgradePool.Mastery, "Color Mastery",
-            "Levels up one random piece color — its tiles score +1 pts per level.", false, UpgradeRarity.Common);
+            "Levels up one random seed color — its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition[] All =
         {

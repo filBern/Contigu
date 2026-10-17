@@ -56,7 +56,7 @@ namespace Contigu.Presentation
             _cardContainer.pivot = new Vector2(0.5f, 1f);
             // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
 
-            _title = UIFactory.CreateText(_root, "Title", "Choose a piece", 22, UITheme.TextOnBackground);
+            _title = UIFactory.CreateText(_root, "Title", "Choose a seed", 22, UITheme.TextOnBackground);
             _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _title.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -100,7 +100,7 @@ namespace Contigu.Presentation
             }
             var card = UpgradeCardFactory.Build(_cardContainer, def);
 
-            _title.text = "Choose 1 piece to add";
+            _title.text = "Choose 1 seed to add";
 
             for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
             {

@@ -12,7 +12,7 @@ namespace Contigu.Presentation
     public sealed class PoisonBadgeView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         private const string TooltipName = "Poisoned";
-        private const string TooltipDescription = "Any points this tile scores count negative instead of positive, and spreads to a random adjacent tile when that happens — until the next Shuffle, or until whichever enemy cursed it is defeated.";
+        private const string TooltipDescription = "Any points this plot scores count negative instead of positive, and spreads to a random adjacent plot when that happens — until the next Shuffle, or until whichever enemy cursed it is defeated.";
 
         private TooltipView _tooltip;
         private GameObject _clickForwardTarget;

@@ -262,7 +262,7 @@ namespace Contigu.Presentation
             levelText.rectTransform.anchoredPosition = new Vector2(0f, -(16f + CardGlyphBoxSize + 8f + 26f));
 
             string descText = level > 1
-                ? "+" + (level - 1) + " pts every time you place a " + VisualDefaults.GetColorName(color) + " piece."
+                ? "+" + (level - 1) + " pts every time you place a " + VisualDefaults.GetColorName(color) + " seed."
                 : "Not leveled up yet.";
             var desc = UIFactory.CreateText(cardImage.transform, "Desc", descText, 13, UITheme.TextPrimary);
             desc.rectTransform.anchorMin = new Vector2(0.5f, 1f);

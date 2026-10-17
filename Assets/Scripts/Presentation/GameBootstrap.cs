@@ -37,7 +37,7 @@ namespace Contigu.Presentation
         // per element — HandView.FadeSlotPieces/GridView.FadeMalus fade one
         // slot/cell at a time, not the whole group at once.
         private const float ShuffleFadeDuration = 0.12f;
-        private const string IdleStatusMessage = "Select or drag a piece onto the grid.";
+        private const string IdleStatusMessage = "Select or drag a seed onto the grid.";
         private const int DefaultStatusFontSize = 19;
         private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
@@ -251,7 +251,7 @@ namespace Contigu.Presentation
                 return;
             }
             _shopView.Refresh(_run);
-            SetStatusText("F7: upgrade slot 1 is now Random Modifier — buy it for real.");
+            SetStatusText("F7: upgrade slot 1 is now Random Graft — buy it for real.");
         }
 
         /// <summary>Editor-only debug shortcut (F8): triggers the Random Modifier grant+reveal directly, bypassing the shop's roll odds. Works any time, unlike a real purchase.</summary>
@@ -265,7 +265,7 @@ namespace Contigu.Presentation
             }
             if (granted.HasValue)
             {
-                _modifierCarouselView.Show(granted.Value, "Random modifier");
+                _modifierCarouselView.Show(granted.Value, "Random graft");
             }
         }
 
@@ -614,14 +614,14 @@ namespace Contigu.Presentation
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Trait);
             _handView.SetShufflePulsing(false);
-            SetStatusText("Drag onto the grid, or click a tile, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
+            SetStatusText("Drag onto the grid, or click a sprout, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
         }
 
         /// <summary>HandView refused to pick up this slot's piece because it has no valid placement anywhere (the slot itself already played its shake, see HandView.ShakeSlot). Shows an emphasized status message and pulses Shuffle.</summary>
         private void OnHandSlotUnplayable(int handIndex)
         {
             _handView.SetShufflePulsing(true);
-            SetStatusText("This piece can't be placed anywhere — try shuffling your hand.", emphasize: true);
+            SetStatusText("This seed can't be placed anywhere — try shuffling your hand.", emphasize: true);
         }
 
         /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>
@@ -738,7 +738,7 @@ namespace Contigu.Presentation
             int handIndex = _handView.SelectedIndex;
             if (handIndex < 0 || handIndex >= _run.Deck.Hand.Count || !_run.Deck.Hand[handIndex].HasValue)
             {
-                SetStatusText("Select a piece from your hand first.");
+                SetStatusText("Select a seed from your hand first.");
                 return;
             }
 
@@ -1211,7 +1211,7 @@ namespace Contigu.Presentation
                         // floatDown: true — this anchor sits near the top of
                         // the screen; SpawnPopup's usual float-up would run
                         // the text off the top edge.
-                        _feedbackLayer.SpawnPopup(anchor, "Stole a piece!", UITheme.Danger, floatDown: true);
+                        _feedbackLayer.SpawnPopup(anchor, "Stole a seed!", UITheme.Danger, floatDown: true);
                         // The actual stolen piece, flying from its (already empty) hand slot to Thief's icon —
                         // see RunManager.ThiefStolenHandIndex's own doc comment for why the slot is empty by now.
                         if (_run.ThiefStolenHandIndex.HasValue && _run.ThiefStolenToken.HasValue && _run.ThiefStolenRotation.HasValue)
@@ -2109,7 +2109,7 @@ namespace Contigu.Presentation
                 }
                 else if (_run.LastRandomModifierGranted.HasValue)
                 {
-                    _modifierCarouselView.Show(_run.LastRandomModifierGranted.Value, "Random modifier");
+                    _modifierCarouselView.Show(_run.LastRandomModifierGranted.Value, "Random graft");
                 }
                 return;
             }
@@ -2192,23 +2192,23 @@ namespace Contigu.Presentation
             switch (_run.CurrentBossEffect)
             {
                 case BossEffect.ProgressiveCellLock:
-                    status = "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " pieces, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock.";
+                    status = "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock.";
                     break;
                 case BossEffect.LockedHandSlot:
                     status = "Boss round: hand slot " + (_run.BossLockedHandSlotIndex.Value + 1) + " is locked for this round.";
                     break;
                 case BossEffect.CursedColor:
-                    status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " pieces score 0 points this round.";
+                    status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " seeds score 0 points this round.";
                     break;
                 default:
                     status = _run.Challenge.BossActiveEveryRound
-                        ? "Chaos: every " + _run.Challenge.BossLockPiecesInterval + " pieces, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
-                        : "New round: select a piece, then click the grid.";
+                        ? "Chaos: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
+                        : "New round: select a seed, then click the grid.";
                     break;
             }
             if (_run.Challenge.BossActiveEveryRound && _run.CurrentBossEffect != BossEffect.None && _run.CurrentBossEffect != BossEffect.ProgressiveCellLock)
             {
-                status += " Chaos also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " pieces.";
+                status += " Chaos also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " seeds.";
             }
             return status;
         }

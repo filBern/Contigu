@@ -138,7 +138,7 @@ namespace Contigu.Presentation
         private void RebuildRows()
         {
             ClearChildren(_listContainer);
-            _countLabel.text = _deck.DeckCount + " pieces";
+            _countLabel.text = _deck.DeckCount + " seeds";
 
             var composition = _deck.GetDeckComposition();
             var sections = new List<(PieceColor Color, List<(ShapeId Shape, int Count)> Types)>();

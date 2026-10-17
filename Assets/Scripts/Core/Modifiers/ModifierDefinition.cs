@@ -71,7 +71,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Hoarder",
-            "+12 pts per distinct color in cleared cells.");
+            "+12 pts per distinct color in harvested cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Triad Bloom",
@@ -83,7 +83,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
-            "x2 Mult if the piece lands as a lone single cell.");
+            "x2 Mult if the seed lands as a lone single cell.");
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
@@ -99,7 +99,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Demolisseur = new ModifierDefinition(
             ModifierId.Demolisseur, ModifierCategory.Destruction, "Demolisher",
-            "x2 Mult per row/column cleared at once, stacking (2+ only).");
+            "x2 Mult per row/column harvested at once, stacking (2+ only).");
 
         // Requires 4 filled cardinal neighbors showing all 4 base colors at once.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
@@ -124,47 +124,47 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
             ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
-            "+9 pts per group cell next to an upgraded tile.");
+            "+9 pts per group cell next to an upgraded sprout.");
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
-            "x2 Mult per cleared line with all 4 colors, stacking.");
+            "x2 Mult per harvested line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition Alternance = new ModifierDefinition(
             ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
-            "x2 Mult per cleared line alternating between 2 colors, stacking (a joker breaks it).");
+            "x2 Mult per harvested line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition Palindrome = new ModifierDefinition(
             ModifierId.Palindrome, ModifierCategory.Connexions, "Palindrome",
-            "x2 Mult per cleared line whose colors read the same both ways, stacking.");
+            "x2 Mult per harvested line whose colors read the same both ways, stacking.");
 
         public static readonly ModifierDefinition Gradient = new ModifierDefinition(
             ModifierId.Gradient, ModifierCategory.Connexions, "Gradient",
-            "PERMANENT: +1 Mult (never resets) per cleared line with no two adjacent same-color cells.");
+            "PERMANENT: +1 Mult (never resets) per harvested line with no two adjacent same-color cells.");
 
         public static readonly ModifierDefinition Bloc = new ModifierDefinition(
             ModifierId.Bloc, ModifierCategory.Connexions, "Block",
-            "x2 Mult per cleared line with no isolated single-color cell, stacking.");
+            "x2 Mult per harvested line with no isolated single-color cell, stacking.");
 
         public static readonly ModifierDefinition MonochromeLigne = new ModifierDefinition(
             ModifierId.MonochromeLigne, ModifierCategory.Couleurs, "Ashbound Line",
-            "x2 Mult per cleared line that's a single color, stacking.");
+            "x2 Mult per harvested line that's a single color, stacking.");
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
             ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Ember Devotion",
-            "+3 Mult on Ember pieces.");
+            "+3 Mult on Ember seeds.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
             ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Frost Devotion",
-            "+3 Mult on Frost pieces.");
+            "+3 Mult on Frost seeds.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
             ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Gold Devotion",
-            "+3 Mult on Gold pieces.");
+            "+3 Mult on Gold seeds.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
             ModifierId.DevotionLime, ModifierCategory.Couleurs, "Moss Devotion",
-            "+3 Mult on Moss pieces.");
+            "+3 Mult on Moss seeds.");
 
         // The 3 slot modifiers can't be evaluated by GridManager — it doesn't
         // know which hand slot a piece came from, only RunManager's
@@ -185,27 +185,27 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Overgrowth",
-            "+12 pts per cell for pieces with 3+ cells.");
+            "+12 pts per cell for seeds with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
             ModifierId.HorsNorme, ModifierCategory.Roguelike, "Mutant Growth",
-            "+18 pts if the piece isn't exactly 3 cells.");
+            "+18 pts if the seed isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Ember Glow",
-            "+6 pts per group cell on Ember pieces.");
+            "+6 pts per group cell on Ember seeds.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
             ModifierId.EclatTeal, ModifierCategory.Couleurs, "Frost Glow",
-            "+6 pts per group cell on Frost pieces.");
+            "+6 pts per group cell on Frost seeds.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
             ModifierId.EclatViolet, ModifierCategory.Couleurs, "Gold Glow",
-            "+6 pts per group cell on Gold pieces.");
+            "+6 pts per group cell on Gold seeds.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Moss Glow",
-            "+6 pts per group cell on Moss pieces.");
+            "+6 pts per group cell on Moss seeds.");
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
@@ -217,7 +217,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
-            "x2 Mult when the group is only this piece (2+ cells) — nothing merged in.");
+            "x2 Mult when the group is only this seed (2+ cells) — nothing merged in.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Fallow Ground",
@@ -225,11 +225,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
             ModifierId.Rafale, ModifierCategory.Destruction, "Burst",
-            "x3 Mult when this AND the last placement both cleared a line.");
+            "x3 Mult when this AND the last placement both harvested a line.");
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
             ModifierId.PetitFormat, ModifierCategory.Roguelike, "Seedling",
-            "+8 pts per cell for pieces with 2 or fewer cells.");
+            "+8 pts per cell for seeds with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "New Growth",
@@ -245,7 +245,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Boucher = new ModifierDefinition(
             ModifierId.Boucher, ModifierCategory.Voisinage, "Sealer",
-            "+15 pts per pre-existing tile this placement newly encircles.");
+            "+15 pts per pre-existing sprout this placement newly encircles.");
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
             ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Thriving Colony",
@@ -257,27 +257,27 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
             ModifierId.AlternancePieces, ModifierCategory.Couleurs, "Changeling Bloom",
-            "+2 Mult when this piece's color differs from the last one played.");
+            "+2 Mult when this seed's color differs from the last one played.");
 
         public static readonly ModifierDefinition Combo = new ModifierDefinition(
             ModifierId.Combo, ModifierCategory.Destruction, "Combo",
-            "x2 the whole score if the last placement cleared a line.");
+            "x2 the whole score if the last placement harvested a line.");
 
         public static readonly ModifierDefinition Precision = new ModifierDefinition(
             ModifierId.Precision, ModifierCategory.Voisinage, "Precision",
-            "+8 pts per cell if every cell of the piece touches a filled tile.");
+            "+8 pts per cell if every cell of the seed touches a filled sprout.");
 
         public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
             ModifierId.Surpopulation, ModifierCategory.Voisinage, "Thicket",
-            "+12 pts per cell if every cell of the piece touches 2+ filled tiles.");
+            "+12 pts per cell if every cell of the seed touches 2+ filled sprouts.");
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
             ModifierId.Minimaliste, ModifierCategory.Voisinage, "Lone Bloom",
-            "x2 Mult when the piece touches exactly 1 filled tile, total.");
+            "x2 Mult when the seed touches exactly 1 filled sprout, total.");
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
-            "Joker tiles count as whichever color scores best with your Devotion/Glow modifiers.");
+            "Joker sprouts count as whichever color scores best with your Devotion/Glow grafts.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
@@ -289,23 +289,23 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 ◆ per cleared line with all 4 colors, stacking.");
+            "+6 ◆ per harvested line with all 4 colors, stacking.");
 
         public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
             ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
-            "+4 ◆ per cleared line alternating between 2 colors, stacking (a joker breaks it).");
+            "+4 ◆ per harvested line alternating between 2 colors, stacking (a joker breaks it).");
 
         public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
             ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
-            "+4 ◆ per cleared line that's a single color, stacking.");
+            "+4 ◆ per harvested line that's a single color, stacking.");
 
         public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
             ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Hoarder",
-            "+2 ◆ per distinct color in cleared cells.");
+            "+2 ◆ per distinct color in harvested cells.");
 
         public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
             ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
-            "+5 ◆ when this piece matches the last one's shape.");
+            "+5 ◆ when this seed matches the last one's shape.");
 
         public static readonly ModifierDefinition MultUn = new ModifierDefinition(
             ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
@@ -321,11 +321,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solidarite = new ModifierDefinition(
             ModifierId.Solidarite, ModifierCategory.Roguelike, "Solidarity",
-            "+1 Mult per 2 modifiers held, this one included.");
+            "+1 Mult per 2 grafts held, this one included.");
 
         public static readonly ModifierDefinition Copieur = new ModifierDefinition(
             ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
-            "Instantly copies whatever modifier you bought right before it. Does nothing on your first purchase.");
+            "Instantly copies whatever graft you bought right before it. Does nothing on your first purchase.");
 
         public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
             ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Volatile Brew",
@@ -341,37 +341,37 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
-            "+2 pts per piece currently in your deck.");
+            "+2 pts per seed currently in your deck.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
             ModifierId.Experience, ModifierCategory.Roguelike, "Seasoned Growth",
-            "+0.1 Mult per upgraded piece you've PLAYED this run, starting from a baseline of 1.");
+            "+0.1 Mult per upgraded seed you've PLAYED this run, starting from a baseline of 1.");
 
         // Per-size-tier pairs; values from ScoringConstants.FormeSpecialistMultiplier/FormeGlowBonusPerCell.
 
         public static readonly ModifierDefinition FormatPetitSpecialiste = new ModifierDefinition(
             ModifierId.FormatPetitSpecialiste, ModifierCategory.Formes, "Seedling Specialist",
-            "x2 Mult on pieces with 2 or fewer cells (Single, Domino).");
+            "x2 Mult on seeds with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenSpecialiste = new ModifierDefinition(
             ModifierId.FormatMoyenSpecialiste, ModifierCategory.Formes, "Sapling Specialist",
-            "x2 Mult on 3-cell pieces (any Tromino).");
+            "x2 Mult on 3-cell seeds (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandSpecialiste = new ModifierDefinition(
             ModifierId.FormatGrandSpecialiste, ModifierCategory.Formes, "Overgrowth Specialist",
-            "x2 Mult on 4-cell pieces (Square or any Tetromino).");
+            "x2 Mult on 4-cell seeds (Square or any Tetromino).");
 
         public static readonly ModifierDefinition FormatPetitGlow = new ModifierDefinition(
             ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Seedling Glow",
-            "+6 pts per group cell on pieces with 2 or fewer cells (Single, Domino).");
+            "+6 pts per group cell on seeds with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenGlow = new ModifierDefinition(
             ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Sapling Glow",
-            "+6 pts per group cell on 3-cell pieces (any Tromino).");
+            "+6 pts per group cell on 3-cell seeds (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandGlow = new ModifierDefinition(
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Overgrowth Glow",
-            "+6 pts per group cell on 4-cell pieces (Square or any Tetromino).");
+            "+6 pts per group cell on 4-cell seeds (Square or any Tetromino).");
 
         public static readonly ModifierDefinition Pair = new ModifierDefinition(
             ModifierId.Pair, ModifierCategory.Roguelike, "Waxing",
@@ -386,7 +386,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
             ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
-            "+1 Mult per distinct modifier category you hold at least one of.");
+            "+1 Mult per distinct graft category you hold at least one of.");
 
         public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
             ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
@@ -398,7 +398,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
-            "+2 Mult per color for which you hold BOTH its Devotion and Éclat modifier.");
+            "+2 Mult per color for which you hold BOTH its Devotion and Éclat graft.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(
             ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
@@ -406,7 +406,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Echo = new ModifierDefinition(
             ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
-            "Replays whatever modifier sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
+            "Replays whatever graft sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",

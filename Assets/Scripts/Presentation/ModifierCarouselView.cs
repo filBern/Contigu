@@ -68,7 +68,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var title = UIFactory.CreateText(_root, "Title", "Starting modifier", 22, UITheme.TextOnBackground);
+            var title = UIFactory.CreateText(_root, "Title", "Starting graft", 22, UITheme.TextOnBackground);
             _titleText = title;
             _titleRect = title.rectTransform;
             _titleRect.anchorMin = new Vector2(0.5f, 1f);

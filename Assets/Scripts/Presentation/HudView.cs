@@ -377,7 +377,7 @@ namespace Contigu.Presentation
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 SetRatio(_enemyHpBarFills[i], enemy.CurrentMaxHp > 0 ? (float)enemy.CurrentHp / enemy.CurrentMaxHp : 0f);
-                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy));
+                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy), enemy.Definition.Lore);
             }
         }
 
@@ -386,11 +386,11 @@ namespace Contigu.Presentation
         {
             if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
             {
-                return "Hates " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + ". Every point scored through a " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + " tile is cancelled for the rest of the round.";
+                return "Hates " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + ". Every point scored through a " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + " plot is cancelled for the rest of the round.";
             }
             if (enemy.Definition.Id == EnemyId.ShapeHater && enemy.HatedShape.HasValue)
             {
-                return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape. Every point scored through a tile originally placed by a " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " is cancelled for the rest of the round.";
+                return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape. Every point scored through a plot originally placed by a " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " is cancelled for the rest of the round.";
             }
             return enemy.Definition.Description;
         }

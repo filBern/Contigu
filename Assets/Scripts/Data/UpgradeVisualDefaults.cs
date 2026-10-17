@@ -41,10 +41,10 @@ namespace Contigu.Data
         {
             switch (pool)
             {
-                case UpgradePool.Bank: return "Piece Upgrade";
-                case UpgradePool.Grid: return "Tile Upgrade";
+                case UpgradePool.Bank: return "Seed Upgrade";
+                case UpgradePool.Grid: return "Sprout Upgrade";
                 case UpgradePool.Mastery: return "Mastery Upgrade";
-                case UpgradePool.Modifier: return "Modifier Upgrade";
+                case UpgradePool.Modifier: return "Graft Upgrade";
                 default: return pool.ToString();
             }
         }

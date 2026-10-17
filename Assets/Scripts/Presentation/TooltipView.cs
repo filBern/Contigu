@@ -31,6 +31,10 @@ namespace Contigu.Presentation
         private Text _subtitleLabel;
         private Text _descLabel;
         private Text _sellValueLabel;
+        // Optional third section (enemy story line): a thin divider plus an italic muted sentence under the description.
+        private Image _loreDivider;
+        private Text _loreLabel;
+        private const float LoreGap = 8f;
 
         public RectTransform Build(Transform parent)
         {
@@ -94,6 +98,22 @@ namespace Contigu.Presentation
             // preferredHeight, before that call gets to set it itself.
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
 
+            _loreDivider = UIFactory.CreatePanel(_panel, "LoreDivider", UITheme.Border);
+            _loreDivider.raycastTarget = false;
+            _loreDivider.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _loreDivider.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _loreDivider.rectTransform.pivot = new Vector2(0f, 1f);
+            _loreDivider.gameObject.SetActive(false);
+
+            _loreLabel = UIFactory.CreateText(_panel, "Lore", "", 13, UITheme.TextMuted, TextAnchor.UpperLeft);
+            _loreLabel.fontStyle = FontStyle.Italic;
+            _loreLabel.raycastTarget = false;
+            _loreLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _loreLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _loreLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            _loreLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
+            _loreLabel.gameObject.SetActive(false);
+
             _root.gameObject.SetActive(false);
             return _root;
         }
@@ -106,7 +126,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null)
         {
             _nameLabel.text = name;
 
@@ -135,7 +155,22 @@ namespace Contigu.Presentation
             // since UIFactory.CreateText sets horizontalOverflow = Wrap.
             float descHeight = _descLabel.preferredHeight;
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, descHeight);
-            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight);
+            float loreBlockHeight = 0f;
+            bool hasLore = !string.IsNullOrEmpty(lore);
+            _loreDivider.gameObject.SetActive(hasLore);
+            _loreLabel.gameObject.SetActive(hasLore);
+            if (hasLore)
+            {
+                _loreLabel.text = lore;
+                float loreHeight = _loreLabel.preferredHeight;
+                float dividerY = -Padding - usedHeight - descHeight - LoreGap;
+                _loreDivider.rectTransform.anchoredPosition = new Vector2(Padding, dividerY);
+                _loreDivider.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 1f);
+                _loreLabel.rectTransform.anchoredPosition = new Vector2(Padding, dividerY - LoreGap);
+                _loreLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, loreHeight);
+                loreBlockHeight = LoreGap * 2f + 1f + loreHeight;
+            }
+            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight + loreBlockHeight);
 
             _root.gameObject.SetActive(true);
             // Always render above whatever else is on screen, including

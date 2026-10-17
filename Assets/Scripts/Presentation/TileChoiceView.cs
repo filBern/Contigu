@@ -119,7 +119,7 @@ namespace Contigu.Presentation
             }
             var card = UpgradeCardFactory.Build(_cardContainer, def);
 
-            _title.text = "Select " + _requiredCount + " pieces";
+            _title.text = "Select " + _requiredCount + " seeds";
 
             for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
             {

@@ -11,5 +11,8 @@ namespace Contigu.Core
 
         /// <summary>Plain-English summary of this enemy's On-Shuffle effect — shown by Presentation.EnemyIconView's hover tooltip.</summary>
         public string Description;
+
+        /// <summary>One-sentence story flavor — the third section of Presentation.EnemyIconView's hover tooltip, after the name and Description.</summary>
+        public string Lore;
     }
 }

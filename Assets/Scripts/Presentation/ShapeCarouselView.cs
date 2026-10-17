@@ -54,7 +54,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var title = UIFactory.CreateText(_root, "Title", "Piece Mastery", 22, UITheme.TextOnBackground);
+            var title = UIFactory.CreateText(_root, "Title", "Seed Mastery", 22, UITheme.TextOnBackground);
             _titleText = title;
             _titleRect = title.rectTransform;
             _titleRect.anchorMin = new Vector2(0.5f, 1f);
@@ -135,7 +135,7 @@ namespace Contigu.Presentation
         /// <summary><paramref name="granted"/> is RunManager.LastShapeMasteryGranted — already leveled up by the time this shows; the spin is purely presentational suspense. <paramref name="newLevel"/> is that shape's level AFTER the purchase (RunManager.GetShapeMasteryLevel), so the card can show the real resulting bonus.</summary>
         public void Show(ShapeId granted, int newLevel)
         {
-            _titleText.text = "Piece Mastery";
+            _titleText.text = "Seed Mastery";
 
             if (_spinCoroutine != null)
             {

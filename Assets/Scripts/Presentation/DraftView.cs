@@ -127,7 +127,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private void ShowTypeChoice(UpgradeDefinition def, string titleText = "Choose a piece type")
+        private void ShowTypeChoice(UpgradeDefinition def, string titleText = "Choose a seed type")
         {
             ClearChildren();
             _selectedTypeIndex = -1;
@@ -281,7 +281,7 @@ namespace Contigu.Presentation
             _replaceRemoveColor = removeColor;
             _isReplaceStepTwo = true;
             _typeCandidates = _run.Upgrades.GetReplacementCandidateTypesFor(_deck, removeShape, removeColor);
-            ShowTypeChoice(UpgradeCatalog.ReplacePiece, "Choose a piece to duplicate instead");
+            ShowTypeChoice(UpgradeCatalog.ReplacePiece, "Choose a seed to duplicate instead");
         }
 
         private void SetTypeCellsInteractable(bool interactable)
