@@ -29,7 +29,7 @@ namespace Contigu.Data
         // Joker-exclusive combat traits all share Joker's own color
         // (VisualDefaults.ColorMap[PieceColor.Joker]); the hover tooltip
         // is what distinguishes them from each other.
-        private static readonly Color JokerCombatBadgeColor = new Color(0.608f, 0.349f, 0.714f); // #9b59b6
+        private static readonly Color JokerCombatBadgeColor = new Color(0.549f, 0.388f, 0.690f); // #8c63b0
 
         public static string GetName(PieceTraitKind kind)
         {

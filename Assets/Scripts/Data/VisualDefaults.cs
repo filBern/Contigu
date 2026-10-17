@@ -28,11 +28,11 @@ namespace Contigu.Data
 
         private static readonly Dictionary<PieceColor, Color> ColorMap = new Dictionary<PieceColor, Color>
         {
-            { PieceColor.Coral, new Color(0.906f, 0.298f, 0.235f) }, // #e74c3c (Red)
-            { PieceColor.Teal, new Color(0.204f, 0.596f, 0.859f) }, // #3498db (Blue)
-            { PieceColor.Violet, new Color(0.945f, 0.769f, 0.059f) }, // #f1c40f (Yellow)
-            { PieceColor.Lime, new Color(0.180f, 0.800f, 0.443f) }, // #2ecc71 (Green)
-            { PieceColor.Joker, new Color(0.608f, 0.349f, 0.714f) } // #9b59b6 (vivid purple)
+            { PieceColor.Coral, new Color(0.784f, 0.251f, 0.247f) }, // #c8403f (Poppy)
+            { PieceColor.Teal, new Color(0.310f, 0.498f, 0.816f) }, // #4f7fd0 (Bluebell)
+            { PieceColor.Violet, new Color(0.910f, 0.659f, 0.180f) }, // #e8a82e (Sunflower)
+            { PieceColor.Lime, new Color(0.353f, 0.620f, 0.271f) }, // #5a9e45 (Fern)
+            { PieceColor.Joker, new Color(0.549f, 0.388f, 0.690f) } // #8c63b0 (Lavender)
         };
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
