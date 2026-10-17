@@ -333,7 +333,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CartesEnchantees = new ModifierDefinition(
             ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Seeds",
-            "+0.1 Mult per upgraded card in your deck, starting from a baseline of 1.");
+            "+0.1 Mult per upgraded seed in your seed bag, starting from a baseline of 1.");
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
@@ -341,7 +341,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
-            "+2 pts per seed currently in your deck.");
+            "+2 pts per seed currently in your seed bag.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
             ModifierId.Experience, ModifierCategory.Roguelike, "Seasoned Growth",
@@ -394,7 +394,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
             ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
-            "+1 Mult per distinct Joker combat trait kind currently in your deck.");
+            "+1 Mult per distinct Joker combat trait kind currently in your seed bag.");
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
