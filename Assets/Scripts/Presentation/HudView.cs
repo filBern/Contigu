@@ -379,7 +379,7 @@ namespace Contigu.Presentation
                 // and re-applying the dead-gray tint here would erase whatever FadeOutEnemySlot is fading to.
                 if (!enemy.IsDead)
                 {
-                    _enemyIconImages[i].sprite = EnemyIconSprite(enemy.Definition.Id);
+                    _enemyIconImages[i].sprite = IsEnraged(enemy) ? EnemyEnragedSprite(enemy.Definition.Id) : EnemyIconSprite(enemy.Definition.Id);
                     _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
                     _enemyIconLabels[i].color = UITheme.TextPrimary;
                     // FadeOutEnemySlot leaves a dead enemy's HP bar fully transparent; a later round reusing the slot must restore it
@@ -390,7 +390,7 @@ namespace Contigu.Presentation
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 SetRatio(_enemyHpBarFills[i], enemy.CurrentMaxHp > 0 ? (float)enemy.CurrentHp / enemy.CurrentMaxHp : 0f);
-                _enemyIconViews[i].Init(_tooltip, enemy.Definition.Name, HaterDescription(enemy), enemy.Definition.Lore);
+                _enemyIconViews[i].Init(_tooltip, IsEnraged(enemy) ? enemy.Definition.Name + " (ENRAGED)" : enemy.Definition.Name, HaterDescription(enemy), IsEnraged(enemy) ? "Wounded, it stops being shy. Its feathers bristle and its eyes burn red." : enemy.Definition.Lore);
             }
         }
 
@@ -405,9 +405,9 @@ namespace Contigu.Presentation
             {
                 return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape.\nPoints scored on plots planted by that shape are cancelled for the whole round.";
             }
-            if (enemy.Definition.Id == EnemyId.Thief && enemy.CurrentHp * 2 <= enemy.CurrentMaxHp)
+            if (IsEnraged(enemy))
             {
-                return enemy.Definition.Description + "\nENRAGED right now: it takes 2 seeds per Shuffle.";
+                return "ENRAGED (below half HP): each Shuffle it takes 2 random seeds from your hand instead of 1.\nStolen seeds come back after a later Shuffle.";
             }
             return enemy.Definition.Description;
         }
@@ -495,6 +495,23 @@ namespace Contigu.Presentation
                 return new Color(0.5f, 0.5f, 0.5f, 0.35f);
             }
             return Color.white;
+        }
+
+        /// <summary>True for enemies with a low-HP stage change. Only the Crow (Thief) has one: below half HP it steals 2 seeds per Shuffle (mirrors RunManager.ResolveThiefShuffleEffect). Has its own portrait, Enemies/&lt;EnemyId&gt;Enraged.png.</summary>
+        private static bool IsEnraged(EnemyInstance enemy)
+        {
+            return enemy.Definition.Id == EnemyId.Thief && enemy.CurrentHp * 2 <= enemy.CurrentMaxHp;
+        }
+
+        private static Sprite EnemyEnragedSprite(EnemyId identity)
+        {
+            var key = (EnemyId)(-1 - (int)identity);
+            if (!_enemySpriteCache.TryGetValue(key, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Enemies/" + identity + "Enraged") ?? EnemyIconSprite(identity);
+                _enemySpriteCache[key] = sprite;
+            }
+            return sprite;
         }
 
         /// <summary>Loads each enemy's portrait from Assets/Resources/Enemies/&lt;EnemyId&gt;.png, cached after the first lookup per identity. Internal (not private) so ShopView can reuse the same cache/lookup for its upcoming-encounter preview instead of duplicating it.</summary>

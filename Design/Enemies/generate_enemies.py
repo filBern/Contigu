@@ -98,6 +98,19 @@ E['Thief'] = ('<path d="M66 150 C52 204 96 230 150 220 C182 200 182 164 176 142Z
               '<path d="M84 170 C100 186 126 190 150 180 M80 192 C100 206 124 208 144 200" fill="none" stroke="#4a5568" stroke-width="4"/>' +
               eye(138, 104, 11, '#fff7e8', look=(3, 1), angry=1))
 
+# Enraged Crow (below half HP): ruffled spiky feathers, open beak, glowing red eyes, red-tinted ground
+E['ThiefEnraged'] = ('<rect x="0" y="0" width="256" height="256" fill="#8a1f1f" opacity="0.38"/>' +
+              '<path d="M60 150 L44 168 L66 172 L52 196 L84 196 L80 218 L112 214 L130 230 L150 218 C182 200 182 164 176 142Z" fill="#1d212b" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M84 80 L70 40 L98 60 L108 30 L124 58 L146 38 L148 72Z" fill="#1d212b" stroke="%s" stroke-width="5"/>' % O +
+              '<circle cx="118" cy="116" r="60" fill="#1d212b" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M60 112 L38 104 L58 124Z M66 140 L42 144 L68 156Z" fill="#1d212b" stroke="%s" stroke-width="4"/>' % O +
+              '<path d="M166 92 L238 112 L170 124Z" fill="#e8a82e" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M170 132 L232 146 L166 152Z" fill="#d9902a" stroke="%s" stroke-width="5"/>' % O +
+              '<path d="M72 96 C80 70 110 62 136 70" fill="none" stroke="#6b4a5a" stroke-width="5" opacity="0.7"/>' +
+              '<circle cx="138" cy="104" r="20" fill="#ff3b30" opacity="0.35"/>' +
+              eye(138, 104, 11, '#ff5a4a', pupil='#13212e', look=(3, 1), angry=2) +
+              '<path d="M40 60 L52 76 M30 90 L48 96" stroke="#ff5a4a" stroke-width="4" opacity="0.8"/>')
+
 # Creeping Vine: a hungry spiral vine with one eye
 pts = []
 for k in range(121):
