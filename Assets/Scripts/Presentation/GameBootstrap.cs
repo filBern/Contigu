@@ -1607,7 +1607,7 @@ namespace Contigu.Presentation
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
                 yield return new WaitForSeconds(PostComboReadDelaySeconds);
-                yield return DrainComboIntoDamage(placement.TotalScore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
+                yield return DrainComboIntoDamage(placement.TotalScore, placement.Chips, placement.Mult, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
                 // Bombe/Éclat's further targets snap straight to their final
                 // value right after the primary target's smooth drain
                 // finishes, rather than a second parallel lerp.
@@ -1799,7 +1799,7 @@ namespace Contigu.Presentation
 
 
         /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. That countdown only starts once the flying damage orb has actually landed and its "-X" is shown (see FeedbackLayer.SpawnFlyingDamageOrb's onArrival), not while it's still mid-flight. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
-        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
+        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int startChips, float startMult, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
         {
             var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
             int damage = hpBefore - hpAfter;
@@ -1838,6 +1838,8 @@ namespace Contigu.Presentation
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
                 _comboView.SetTotal(Mathf.RoundToInt(Mathf.Lerp(startTotal, 0f, p)));
+                // The chips and mult pills fall in the same stride: chips to 0, mult to 1.
+                _comboView.SetPills(Mathf.RoundToInt(Mathf.Lerp(startChips, 0f, p)), Mathf.Lerp(startMult, 1f, p));
                 // isDead stays false for every in-between frame, even if the
                 // lerp passes through 0 on its way — the icon only turns
                 // "dead" on the last frame below, once HP truly lands on
@@ -1846,6 +1848,7 @@ namespace Contigu.Presentation
                 yield return null;
             }
             _comboView.SetTotal(0);
+            _comboView.SetPills(0, 1f);
             bool isDead = hpAfter <= 0;
             _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp, identity, isDead);
 

@@ -128,6 +128,13 @@ namespace Contigu.Presentation
             _totalText.text = total.ToString();
         }
 
+        /// <summary>Overrides just the two pills (chips and mult), leaving the total readout alone; used with <see cref="SetTotal"/> by the drain animation so chips fall to 0 and mult to 1 in step with the total.</summary>
+        public void SetPills(int chips, float mult)
+        {
+            _chipsText.text = chips.ToString();
+            _multText.text = FormatMult(mult);
+        }
+
         /// <summary>Anchor for the total readout — GameBootstrap flies a "-X" popup from here to the damaged enemy's icon as the drain starts, showing the actual damage amount rather than letting the HP bar just quietly tick down.</summary>
         public RectTransform TotalTransform
         {
