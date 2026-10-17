@@ -7,5 +7,5 @@ Gotit 208.627 120 56 8 56
 Close 200.899 120 56 8 56
 NewRun 237.994 120 56 8 56
 Nextround 293.12 120 56 8 56
-Showseedbag 220 120 56 8 56
-Showrules 220 120 56 8 56
+Showseedbag 220 72 8 8 56
+Showrules 220 72 8 8 56
