@@ -386,11 +386,11 @@ namespace Contigu.Presentation
         {
             if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
             {
-                return "Hates " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + ". Every point scored through a " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + " plot is cancelled for the rest of the round.";
+                return "Hates " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + ".\nPoints scored on " + VisualDefaults.GetColorName(enemy.HatedColor.Value) + " plots are cancelled for the whole round.";
             }
             if (enemy.Definition.Id == EnemyId.ShapeHater && enemy.HatedShape.HasValue)
             {
-                return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape. Every point scored through a plot originally placed by a " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " is cancelled for the rest of the round.";
+                return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape.\nPoints scored on plots planted by that shape are cancelled for the whole round.";
             }
             return enemy.Definition.Description;
         }
