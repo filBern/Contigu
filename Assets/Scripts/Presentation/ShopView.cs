@@ -412,7 +412,8 @@ namespace Contigu.Presentation
                 // Same hover-tooltip component as HudView's own enemy band (see EnemyIconView), just fed
                 // the base MaxHp here since no EnemyInstance exists yet for a round that isn't built.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
-                iconView.Init(_tooltip, def.Name, def.Description + "\n\nPV : " + def.MaxHp + "/" + def.MaxHp);
+                // Same three sections as HudView's tooltip (name, effect, story line); HP already shows in the label under the icon.
+                iconView.Init(_tooltip, def.Name, def.Description, def.Lore);
 
                 int maxHp = def.MaxHp;
                 var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, hpFontSize, UITheme.TextOnBackground);
