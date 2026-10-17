@@ -28,6 +28,8 @@ namespace Contigu.Presentation
         private const float HandBoxPadding = 12f;
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 46f;
+        /// <summary>Largest side a slot preview may span: the slot minus its border and a little breathing room.</summary>
+        private const float SlotPreviewBudget = 108f;
         private const float SlotWidth = 150f;
         private const float SlotHeight = 150f;
         private const float SlotSpacing = 14f;
@@ -719,7 +721,14 @@ namespace Contigu.Presentation
         private void BuildShapePreview(RectTransform container, PieceToken token, PieceRotation rotation, GameObject clickForwardTarget)
         {
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget, PreviewTileSize);
+            // Shrinks tiles for tall/wide shapes so they stay inside the slot's border instead of overlapping it.
+            int maxExtent = 1;
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                maxExtent = Mathf.Max(maxExtent, shape.Cells[i].x + 1, shape.Cells[i].y + 1);
+            }
+            float cellSize = Mathf.Min(PreviewTileSize, SlotPreviewBudget / maxExtent);
+            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget, cellSize);
         }
     }
 }
