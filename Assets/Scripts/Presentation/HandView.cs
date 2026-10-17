@@ -80,7 +80,6 @@ namespace Contigu.Presentation
         private Coroutine _shufflePulseCoroutine;
         private Coroutine _stuckPulseCoroutine;
         private bool _handStuck;
-        private Image _stuckGlow;
         private Coroutine[] _shakeCoroutines;
         private Coroutine[] _selectPulseCoroutines;
         private bool _shuffleAllowed = true;
@@ -272,7 +271,7 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// True when no piece in the hand fits anywhere on the grid (and a Shuffle is still available): the Shuffle button pulses
-        /// hard with a red halo and every slot breathes red — before the player even tries to pick a piece. Recomputed on every
+        /// hard and every slot breathes red — before the player even tries to pick a piece. Recomputed on every
         /// <see cref="Refresh"/>.
         /// </summary>
         private void UpdateStuckState()
@@ -317,44 +316,16 @@ namespace Contigu.Presentation
                 _stuckPulseCoroutine = null;
             }
             _shuffleButton.transform.localScale = Vector3.one;
-            if (_stuckGlow != null)
-            {
-                _stuckGlow.gameObject.SetActive(false);
-            }
             UpdateSelectionVisuals();
-        }
-
-        private void EnsureStuckGlow()
-        {
-            if (_stuckGlow != null)
-            {
-                return;
-            }
-            var buttonRect = _shuffleButton.GetComponent<RectTransform>();
-            var glow = UIFactory.CreatePanel(buttonRect.parent, "StuckGlow", new Color(1f, 0.3f, 0.25f, 0f));
-            glow.sprite = UISprites.CountBadge;
-            glow.raycastTarget = false;
-            var rt = glow.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(ShuffleButtonWidth * 1.4f, ShuffleButtonWidth * 1.4f);
-            // The button hangs from its top-right corner, so its center is half its size in from there.
-            rt.anchoredPosition = buttonRect.anchoredPosition + new Vector2(-buttonRect.sizeDelta.x * 0.5f, -buttonRect.sizeDelta.y * 0.5f);
-            rt.SetSiblingIndex(buttonRect.GetSiblingIndex());
-            _stuckGlow = glow;
         }
 
         private IEnumerator StuckPulseRoutine()
         {
-            EnsureStuckGlow();
-            _stuckGlow.gameObject.SetActive(true);
             while (true)
             {
                 float wave = 0.5f + 0.5f * Mathf.Sin(Time.time * StuckPulseSpeed);
                 float scale = 1f + StuckPulseAmplitude * wave;
                 _shuffleButton.transform.localScale = new Vector3(scale, scale, 1f);
-                _stuckGlow.rectTransform.localScale = Vector3.one * (1f + 0.6f * wave);
-                _stuckGlow.color = new Color(1f, 0.3f, 0.25f, 0.55f * (1f - wave) + 0.15f);
                 // The hand can be smaller than the slot array (effective hand size), so bound by the hand.
                 for (int i = 0; i < _deck.Hand.Count && i < _slotBackgrounds.Length; i++)
                 {
