@@ -227,7 +227,7 @@ namespace Contigu.Presentation
 
             if (badgeAnchor != null)
             {
-                _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + refundedLueur, VisualDefaults.GoldenColor);
+                _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + refundedLueur, VisualDefaults.GoldenColor);
             }
             _modifierPanelView.Refresh(_run.ActiveModifiers);
             _hudView.SetLueur(_run.Lueur);
@@ -1302,7 +1302,7 @@ namespace Contigu.Presentation
                 if (cellsWithTransform > 0)
                 {
                     Vector3 center = centerSum / cellsWithTransform;
-                    _feedbackLayer.SpawnFlyingPopup(center, _hudView.LueurLabelTransform, "+" + group.Amount, VisualDefaults.GoldenColor);
+                    _feedbackLayer.SpawnPollenFlight(center, _hudView.LueurLabelTransform, "+" + group.Amount, VisualDefaults.GoldenColor);
                 }
                 SfxManager.Play(SfxId.LueurGain);
 
@@ -1379,7 +1379,7 @@ namespace Contigu.Presentation
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnFlyingPopup(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
+                        _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
                     SfxManager.Play(SfxId.LueurGain);
@@ -1990,7 +1990,7 @@ namespace Contigu.Presentation
                 displayedPieces--;
                 displayedLueur++;
                 _hudView.SetPieces(displayedPieces, _run.CurrentBudget);
-                _feedbackLayer.SpawnFlyingPopup(fromAnchor.position, _hudView.LueurLabelTransform, "+1", VisualDefaults.GoldenColor);
+                _feedbackLayer.SpawnPollenFlight(fromAnchor.position, _hudView.LueurLabelTransform, "+1", VisualDefaults.GoldenColor);
                 _hudView.SetLueur(displayedLueur);
                 SfxManager.Play(SfxId.LueurGain);
                 yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);

@@ -102,7 +102,16 @@ namespace Contigu.Presentation
 
             var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
             lueurIcon.rectTransform.sizeDelta = new Vector2(35f, 35f);
-            lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            if (VisualDefaults.PollenSprite != null)
+            {
+                lueurIcon.sprite = VisualDefaults.PollenSprite;
+                lueurIcon.color = Color.white;
+                lueurIcon.preserveAspect = true;
+            }
+            else
+            {
+                lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            }
             // Plain Image has no ILayoutElement, so without this the HorizontalLayoutGroup gives it zero width.
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
             lueurIconLayout.preferredWidth = 54f;

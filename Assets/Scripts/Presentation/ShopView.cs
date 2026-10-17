@@ -164,7 +164,16 @@ namespace Contigu.Presentation
 
             var lueurIcon = UIFactory.CreatePanel(_lueurContainer, "LueurIcon", VisualDefaults.GoldenColor);
             lueurIcon.rectTransform.sizeDelta = new Vector2(40f, 40f);
-            lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            if (VisualDefaults.PollenSprite != null)
+            {
+                lueurIcon.sprite = VisualDefaults.PollenSprite;
+                lueurIcon.color = Color.white;
+                lueurIcon.preserveAspect = true;
+            }
+            else
+            {
+                lueurIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            }
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
             lueurIconLayout.preferredWidth = 58f;
             lueurIconLayout.preferredHeight = 58f;

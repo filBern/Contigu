@@ -56,6 +56,9 @@ namespace Contigu.Data
             { ShapeId.STetro, "S-Tetromino" }
         };
 
+        /// <summary>The Pollen currency icon (a cluster of golden grains); null falls back to the old golden diamond.</summary>
+        public static readonly Sprite PollenSprite = Resources.Load<Sprite>("Icons/Pollen");
+
         public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
         public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
 

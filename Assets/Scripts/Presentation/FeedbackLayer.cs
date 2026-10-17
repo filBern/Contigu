@@ -1,5 +1,6 @@
 using System.Collections;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -90,6 +91,92 @@ namespace Contigu.Presentation
             popup.rectTransform.position = fromWorldPosition;
             popup.rectTransform.sizeDelta = new Vector2(120f, 36f) * scale;
             StartCoroutine(AnimateFlyingPopup(popup, toAnchor));
+        }
+
+        /// <summary>
+        /// A Pollen gain: the usual <see cref="SpawnFlyingPopup"/> plus a small swarm of pollen grains that
+        /// puff outward from <paramref name="fromWorldPosition"/> and then get pulled into the Pollen counter
+        /// at <paramref name="toAnchor"/>.
+        /// </summary>
+        public void SpawnPollenFlight(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color, int grains = 7)
+        {
+            if (toAnchor == null)
+            {
+                return;
+            }
+
+            SpawnFlyingPopup(fromWorldPosition, toAnchor, text, color);
+            for (int i = 0; i < grains; i++)
+            {
+                var grain = UIFactory.CreatePanel(_root, "PollenGrain", Color.white);
+                grain.raycastTarget = false;
+                grain.sprite = VisualDefaults.PollenSprite != null ? VisualDefaults.PollenSprite : BackgroundShapeFactory.GetShape(BackgroundSprite.Glow);
+                if (VisualDefaults.PollenSprite == null)
+                {
+                    grain.color = VisualDefaults.GoldenColor;
+                }
+                grain.preserveAspect = true;
+                float size = Random.Range(14f, 24f);
+                grain.rectTransform.sizeDelta = new Vector2(size, size);
+                grain.rectTransform.position = fromWorldPosition;
+                StartCoroutine(AnimatePollenGrain(grain, toAnchor, Random.Range(0f, 0.15f)));
+            }
+        }
+
+        private IEnumerator AnimatePollenGrain(Image grain, RectTransform toAnchor, float delay)
+        {
+            var rect = grain.rectTransform;
+            rect.localScale = Vector3.zero;
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            // Burst: drift outward in a random direction (slightly upward), easing out; then get pulled to the counter, easing in.
+            const float burstDuration = 0.28f;
+            const float flightDuration = 0.5f;
+            Vector3 start = rect.position;
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            Vector3 burstTarget = start + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle) + 0.4f, 0f) * Random.Range(28f, 70f);
+            float t = 0f;
+            while (t < burstDuration)
+            {
+                if (rect == null)
+                {
+                    yield break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / burstDuration);
+                float eased = 1f - (1f - p) * (1f - p);
+                rect.position = Vector3.Lerp(start, burstTarget, eased);
+                rect.localScale = Vector3.one * Mathf.Lerp(0f, 1.15f, eased);
+                rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 12f) * 12f);
+                yield return null;
+            }
+
+            t = 0f;
+            Vector3 flightStart = rect != null ? rect.position : burstTarget;
+            while (t < flightDuration)
+            {
+                if (rect == null || toAnchor == null)
+                {
+                    break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / flightDuration);
+                float eased = p * p;
+                rect.position = Vector3.Lerp(flightStart, toAnchor.position, eased);
+                rect.localScale = Vector3.one * Mathf.Lerp(1.15f, 0.5f, eased);
+                var c = grain.color;
+                c.a = 1f - Mathf.Clamp01((p - 0.75f) / 0.25f);
+                grain.color = c;
+                yield return null;
+            }
+
+            if (grain != null)
+            {
+                Destroy(grain.gameObject);
+            }
         }
 
         /// <summary>
