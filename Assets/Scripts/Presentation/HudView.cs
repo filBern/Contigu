@@ -405,6 +405,10 @@ namespace Contigu.Presentation
             {
                 return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape.\nPoints scored on plots planted by that shape are cancelled for the whole round.";
             }
+            if (enemy.Definition.Id == EnemyId.Thief && enemy.CurrentHp * 2 <= enemy.CurrentMaxHp)
+            {
+                return enemy.Definition.Description + "\nENRAGED right now: it takes 2 seeds per Shuffle.";
+            }
             return enemy.Definition.Description;
         }
 
