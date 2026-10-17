@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="petal" cx="50%" cy="50%" r="60%">
+      <stop offset="0" stop-color="#b22a2d"/>
+      <stop offset="0.55" stop-color="#d9433f"/>
+      <stop offset="1" stop-color="#ee6a58"/>
+    </radialGradient>
+    <linearGradient id="clay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d95a4e"/>
+      <stop offset="1" stop-color="#a73232"/>
+    </linearGradient>
+    <clipPath id="inset"><rect x="34" y="34" width="188" height="188" rx="12"/></clipPath>
+  </defs>
+
+  <!-- Terracotta garden-bed edge: thin clay border -->
+  <rect x="6" y="6" width="244" height="244" rx="28" fill="url(#clay)" stroke="#13212e" stroke-width="6"/>
+  <!-- Clay edging stones: short dark joints around the band -->
+  <g stroke="#7a2424" stroke-width="3" stroke-linecap="round" opacity="0.8">
+    <path d="M70 14v14M128 14v14M186 14v14"/>
+    <path d="M70 228v14M128 228v14M186 228v14"/>
+    <path d="M14 70h14M14 128h14M14 186h14"/>
+    <path d="M228 70h14M228 128h14M228 186h14"/>
+  </g>
+  <!-- Soft highlight on the top and left edges -->
+  <path d="M30 12h196" stroke="#f08a76" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  <path d="M12 30v196" stroke="#f08a76" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Cream inset -->
+  <rect x="32" y="32" width="192" height="192" rx="14" fill="#fff7e8" stroke="#13212e" stroke-width="5"/>
+
+  <!-- Poppy -->
+  <g clip-path="url(#inset)">
+    <g stroke="#7a1f22" stroke-width="3" stroke-linejoin="round" fill="url(#petal)">
+      <ellipse cx="128" cy="86" rx="46" ry="42" transform="rotate(-8 128 128)"/>
+      <ellipse cx="170" cy="128" rx="42" ry="46" transform="rotate(8 128 128)"/>
+      <ellipse cx="128" cy="170" rx="46" ry="42" transform="rotate(-6 128 128)"/>
+      <ellipse cx="86" cy="128" rx="42" ry="46" transform="rotate(10 128 128)"/>
+    </g>
+    <!-- Petal veins -->
+    <g stroke="#9c2227" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7">
+      <path d="M128 70q-6 10 0 22M114 74q-8 8-6 18M142 74q8 8 6 18"/>
+      <path d="M186 128q-10-6-22 0M182 114q-8-8-18-6M182 142q-8 8-18 6"/>
+      <path d="M128 186q6-10 0-22M114 182q-8-8-6-18M142 182q8-8 6-18"/>
+      <path d="M70 128q10 6 22 0M74 114q8 8 18 6M74 142q8-8 18-6"/>
+    </g>
+    <!-- Petal highlights -->
+    <g fill="#ffffff" opacity="0.35">
+      <ellipse cx="110" cy="66" rx="12" ry="6" transform="rotate(-25 110 66)"/>
+      <ellipse cx="190" cy="108" rx="6" ry="12" transform="rotate(-20 190 108)"/>
+      <ellipse cx="146" cy="190" rx="12" ry="6" transform="rotate(-20 146 190)"/>
+      <ellipse cx="66" cy="148" rx="6" ry="12" transform="rotate(-15 66 148)"/>
+    </g>
+    <!-- Dark blotches at the petal bases -->
+    <g fill="#2a1418" opacity="0.85">
+      <ellipse cx="128" cy="104" rx="14" ry="10"/>
+      <ellipse cx="152" cy="128" rx="10" ry="14"/>
+      <ellipse cx="128" cy="152" rx="14" ry="10"/>
+      <ellipse cx="104" cy="128" rx="10" ry="14"/>
+    </g>
+    <!-- Center: seed pod and stamens -->
+    <g fill="#2a1418">
+      <circle cx="128" cy="128" r="14"/>
+      <circle cx="128" cy="104" r="2.6"/><circle cx="145" cy="111" r="2.6"/><circle cx="152" cy="128" r="2.6"/>
+      <circle cx="145" cy="145" r="2.6"/><circle cx="128" cy="152" r="2.6"/><circle cx="111" cy="145" r="2.6"/>
+      <circle cx="104" cy="128" r="2.6"/><circle cx="111" cy="111" r="2.6"/>
+    </g>
+    <circle cx="128" cy="128" r="14" fill="none" stroke="#6b3a30" stroke-width="2"/>
+    <circle cx="123" cy="123" r="4" fill="#8a6a5a" opacity="0.7"/>
+  </g>
+</svg>
