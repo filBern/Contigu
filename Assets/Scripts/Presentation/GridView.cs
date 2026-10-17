@@ -253,7 +253,8 @@ namespace Contigu.Presentation
         /// render as still locked/poisoned (forceShowLocked/forceShowPoisoned) even though the underlying
         /// state already released, until the same final reveal.
         /// A cell that is both deferred and in <paramref name="heldCells"/> always gets the held-filled
-        /// treatment, so its clear animation stays in step with its neighbors.
+        /// treatment, so its clear animation stays in step with its neighbors — but with its new lock/poison
+        /// still hidden, so it doesn't appear before the line actually breaks.
         /// </summary>
         public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredNewMalusCells = null, IReadOnlyList<Vector2Int> deferredReleasedLockedCells = null, IReadOnlyList<Vector2Int> deferredReleasedPoisonedCells = null)
         {
@@ -277,7 +278,9 @@ namespace Contigu.Presentation
                     // The held-fill override always wins over a deferred skip, even for a cell in both sets.
                     if (overrideColor.TryGetValue(pos, out var color))
                     {
-                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos]);
+                        // A cell both held (its line is still on screen) and newly poisoned/locked by this placement's
+                        // shuffle keeps its fill but not its new malus — the badge would otherwise show before the line breaks.
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos], suppressMalus: deferredNew.Contains(pos));
                     }
                     else if (releasedLocked.Contains(pos) || releasedPoisoned.Contains(pos))
                     {
