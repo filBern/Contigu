@@ -53,11 +53,11 @@ namespace Contigu.Presentation
             _root = UIFactory.CreateUIObject("MainMenuOverlay", parent);
             UIFactory.StretchFull(_root);
 
-            var titleContainer = BuildTitle(_root);
+            var titleContainer = BuildLogo(_root) ?? BuildTitle(_root);
             titleContainer.anchorMin = new Vector2(0.5f, 0.5f);
             titleContainer.anchorMax = new Vector2(0.5f, 0.5f);
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
-            titleContainer.anchoredPosition = new Vector2(0f, 170f);
+            titleContainer.anchoredPosition = new Vector2(0f, _logoRect != null ? 195f : 170f);
 
             // Short tagline under the title, setting up the game's premise (an alchemist tending the
             // last blooming garden at the edge of a dying world) before the player ever sees a board.
@@ -116,6 +116,51 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        private RectTransform _logoRect;
+        private Image _logoImage;
+
+        // The vector LASTBLOOM logo (Resources/Title/LastBloom.png, 1080x300). Shown at this width instead of the dot-matrix tile title when the art exists.
+        private const float LogoWidth = 820f;
+        private const float LogoAspect = 300f / 1080f;
+        private const float LogoEntranceDuration = 0.55f;
+
+        /// <summary>Builds the logo image, or returns null (so the caller falls back to the tile title) if its art is missing.</summary>
+        private RectTransform BuildLogo(Transform parent)
+        {
+            var sprite = Resources.Load<Sprite>("Title/LastBloom");
+            if (sprite == null)
+            {
+                return null;
+            }
+            var logo = UIFactory.CreatePanel(parent, "Logo", Color.white);
+            logo.sprite = sprite;
+            logo.preserveAspect = true;
+            logo.raycastTarget = false;
+            logo.rectTransform.sizeDelta = new Vector2(LogoWidth, LogoWidth * LogoAspect);
+            _logoImage = logo;
+            _logoRect = logo.rectTransform;
+            return _logoRect;
+        }
+
+        /// <summary>Pop-in like the old tile title's cascade: fades in while scaling up past 1 and settling.</summary>
+        private System.Collections.IEnumerator PlayLogoEntrance()
+        {
+            float t = 0f;
+            _logoRect.localScale = Vector3.one * 0.6f;
+            _logoImage.color = new Color(1f, 1f, 1f, 0f);
+            while (t < LogoEntranceDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / LogoEntranceDuration);
+                float scale = p < 0.65f ? Mathf.Lerp(0.6f, 1.08f, p / 0.65f) : Mathf.Lerp(1.08f, 1f, (p - 0.65f) / 0.35f);
+                _logoRect.localScale = new Vector3(scale, scale, 1f);
+                _logoImage.color = new Color(1f, 1f, 1f, Mathf.Clamp01(p / 0.4f));
+                yield return null;
+            }
+            _logoRect.localScale = Vector3.one;
+            _logoImage.color = Color.white;
         }
 
         /// <summary>Lays out a Thickness x Thickness cluster of tiles per filled glyph cell, letter by letter with a 1-column gap between letters, centered on <paramref name="parent"/>. Each tile starts at its own random color and recolors independently on hover (see TitleTileView).</summary>
@@ -178,6 +223,10 @@ namespace Contigu.Presentation
         public void Show()
         {
             _root.gameObject.SetActive(true);
+            if (_logoRect != null)
+            {
+                StartCoroutine(PlayLogoEntrance());
+            }
             for (int i = 0; i < _titleTiles.Count; i++)
             {
                 _titleTiles[i].View.PlayEntrance(_titleTiles[i].Delay);
