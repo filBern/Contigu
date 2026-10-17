@@ -108,7 +108,7 @@ namespace Contigu.Presentation
             var badgeTraitOrigin = UIFactory.CreatePanel(cellGo, "BadgeTraitOrigin", Color.cyan);
             UIFactory.SetAnchor(badgeTraitOrigin.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f));
             badgeTraitOrigin.rectTransform.pivot = new Vector2(1f, 1f);
-            badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(20f, 20f);
             badgeTraitOrigin.rectTransform.anchoredPosition = new Vector2(-3f, -3f);
             var badgeTraitOriginOutline = badgeTraitOrigin.gameObject.AddComponent<Outline>();
             badgeTraitOriginOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
@@ -129,7 +129,13 @@ namespace Contigu.Presentation
             var badgePoison = UIFactory.CreatePanel(cellGo, "BadgePoison", UITheme.Danger);
             UIFactory.SetAnchor(badgePoison.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f));
             badgePoison.rectTransform.pivot = new Vector2(0f, 0f);
-            badgePoison.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgePoison.rectTransform.sizeDelta = new Vector2(20f, 20f);
+            var poisonSprite = PieceTraitVisualDefaults.GetPoisonSprite();
+            if (poisonSprite != null)
+            {
+                badgePoison.sprite = poisonSprite;
+                badgePoison.color = Color.white;
+            }
             badgePoison.rectTransform.anchoredPosition = new Vector2(3f, 3f);
             var badgePoisonOutline = badgePoison.gameObject.AddComponent<Outline>();
             badgePoisonOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);

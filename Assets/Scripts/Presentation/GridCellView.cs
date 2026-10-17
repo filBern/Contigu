@@ -190,7 +190,7 @@ namespace Contigu.Presentation
             _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
             if (showTraitOrigin)
             {
-                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(originTrait.Value);
+                ApplyTraitBadgeArt(originTrait.Value);
                 _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
             }
 
@@ -264,6 +264,14 @@ namespace Contigu.Presentation
         /// shows once placed, on the cell that would carry the piece's enchantment. ClearHover's follow-up
         /// ApplyState call resets everything once the hover ends.
         /// </summary>
+        /// <summary>Shows the trait's own icon on the origin badge, or the old flat trait color when that art is missing.</summary>
+        private void ApplyTraitBadgeArt(PieceTrait trait)
+        {
+            var sprite = PieceTraitVisualDefaults.GetBadgeSprite(trait.Kind);
+            _badgeTraitOrigin.sprite = sprite;
+            _badgeTraitOrigin.color = sprite != null ? Color.white : PieceTraitVisualDefaults.GetBadgeColor(trait);
+        }
+
         public void SetHoverTint(Color? overlay, bool isValid, PieceTrait? previewTrait = null, PieceColor? ghostColor = null)
         {
             if (isValid && ghostColor.HasValue)
@@ -285,7 +293,7 @@ namespace Contigu.Presentation
             {
                 var trait = previewTrait.Value;
                 _badgeTraitOrigin.gameObject.SetActive(true);
-                _badgeTraitOrigin.color = PieceTraitVisualDefaults.GetBadgeColor(trait);
+                ApplyTraitBadgeArt(trait);
             }
         }
 

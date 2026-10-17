@@ -137,6 +137,30 @@ namespace Contigu.Data
             }
         }
 
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> BadgeSprites = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        private static Sprite LoadBadge(string name)
+        {
+            if (!BadgeSprites.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Traits/" + name);
+                BadgeSprites[name] = sprite;
+            }
+            return sprite;
+        }
+
+        /// <summary>The trait's own tiny icon (Resources/Icons/Traits/&lt;Kind&gt;.png) — a bold glyph on a colored chip, readable at ~20px. Null if missing (callers then fall back to the flat badge color).</summary>
+        public static Sprite GetBadgeSprite(PieceTraitKind kind)
+        {
+            return LoadBadge(kind.ToString());
+        }
+
+        /// <summary>The poison marker shown on a blighted plot (a toothy green skull); null if the art is missing.</summary>
+        public static Sprite GetPoisonSprite()
+        {
+            return LoadBadge("Poison");
+        }
+
         public static Color GetBadgeColor(PieceTrait trait)
         {
             switch (trait.Kind)
