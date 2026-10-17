@@ -118,7 +118,7 @@ namespace Contigu.Presentation
             var badgeSpecial = UIFactory.CreatePanel(cellGo, "BadgeSpecial", Color.magenta);
             UIFactory.SetAnchor(badgeSpecial.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f));
             badgeSpecial.rectTransform.pivot = new Vector2(1f, 0f);
-            badgeSpecial.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            badgeSpecial.rectTransform.sizeDelta = new Vector2(20f, 20f);
             badgeSpecial.rectTransform.anchoredPosition = new Vector2(-3f, 3f);
             var badgeSpecialOutline = badgeSpecial.gameObject.AddComponent<Outline>();
             badgeSpecialOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);

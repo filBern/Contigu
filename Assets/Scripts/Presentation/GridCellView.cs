@@ -171,10 +171,14 @@ namespace Contigu.Presentation
             {
                 // Multiplier wins the badge slot visually when a cell stacks both
                 // modifiers; both bonuses still apply to scoring regardless.
-                _badgeSpecial.color = VisualDefaults.MultiplierOutline;
+                // The "x2" chip (same icon as the Multiplier trait) — a bare blue square told the player nothing.
+                var multiplierIcon = PieceTraitVisualDefaults.GetBadgeSprite(PieceTraitKind.Multiplier);
+                _badgeSpecial.sprite = multiplierIcon;
+                _badgeSpecial.color = multiplierIcon != null ? Color.white : VisualDefaults.MultiplierOutline;
             }
             else if (cell.IsTinted)
             {
+                _badgeSpecial.sprite = null;
                 _badgeSpecial.color = VisualDefaults.GetColor(cell.TintedColor);
             }
 
