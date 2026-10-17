@@ -21,6 +21,7 @@ namespace Contigu.Presentation
         private const float NameHeight = 42f;
         private const float RarityHeight = 30f;
         private const float LineSpacing = 6f;
+        private const float IconSize = 120f;
 
         /// <summary><paramref name="showRarity"/> defaults to true; UpgradeRevealView's Random Modifier reveal passes false to drop the rarity/pool line since it already shows the granted modifier as a full card right below.</summary>
         public static RectTransform Build(Transform parent, UpgradeDefinition def, bool showRarity = true)
@@ -30,11 +31,28 @@ namespace Contigu.Presentation
             container.anchorMax = new Vector2(0.5f, 1f);
             container.pivot = new Vector2(0.5f, 1f);
 
+            // The upgrade's wooden-sign icon on top (a tall signpost, instantly different from a fertilizer's sack).
+            float iconBlock = 0f;
+            var signIcon = UpgradeVisualDefaults.GetIcon(def.Id);
+            if (signIcon != null)
+            {
+                var icon = UIFactory.CreatePanel(container, "Icon", Color.white);
+                icon.sprite = signIcon;
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                icon.rectTransform.pivot = new Vector2(0.5f, 1f);
+                icon.rectTransform.anchoredPosition = Vector2.zero;
+                icon.rectTransform.sizeDelta = new Vector2(IconSize, IconSize);
+                iconBlock = IconSize + LineSpacing;
+            }
+
             // No FontStyle.Bold: the Digitalt font has no true bold face, so Unity's legacy Text synthesizes one by double-drawing a shifted copy, which reads as blurry. Size alone carries the emphasis.
             var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 33, Color.white);
-            PositionRow(nameLabel, 0f, NameHeight);
+            PositionRow(nameLabel, -iconBlock, NameHeight);
 
-            float descY = -(NameHeight + LineSpacing);
+            float descY = -(iconBlock + NameHeight + LineSpacing);
             if (showRarity)
             {
                 var rarityLabel = UIFactory.CreateText(container, "Rarity",

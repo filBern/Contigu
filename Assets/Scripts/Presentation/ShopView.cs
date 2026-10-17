@@ -544,18 +544,44 @@ namespace Contigu.Presentation
             nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, ModifierNameHeight);
 
             float swatchY = -(ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap);
-            var swatch = UIFactory.CreatePanel(cardTransform, "PoolSwatch", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
-            swatch.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            swatch.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            swatch.rectTransform.pivot = new Vector2(0.5f, 1f);
-            swatch.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
-            swatch.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
-            UIFactory.AddThickOutline(swatch, UITheme.Border);
+            var signIcon = UpgradeVisualDefaults.GetIcon(def.Id);
+            if (signIcon != null)
+            {
+                // The upgrade's own garden-sign icon (a tall signpost, unlike a fertilizer's round sack); rarity rides on a small gem in its corner.
+                var sign = UIFactory.CreatePanel(cardTransform, "UpgradeSign", Color.white);
+                sign.sprite = signIcon;
+                sign.preserveAspect = true;
+                sign.raycastTarget = false;
+                sign.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                sign.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                sign.rectTransform.pivot = new Vector2(0.5f, 1f);
+                sign.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
+                sign.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
+                var gem = UIFactory.CreatePanel(sign.transform, "RarityGem", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+                gem.raycastTarget = false;
+                gem.rectTransform.anchorMin = new Vector2(1f, 0f);
+                gem.rectTransform.anchorMax = new Vector2(1f, 0f);
+                gem.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                gem.rectTransform.anchoredPosition = new Vector2(-10f, 22f);
+                gem.rectTransform.sizeDelta = new Vector2(16f, 16f);
+                gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                UIFactory.AddThickOutline(gem, UITheme.Border);
+            }
+            else
+            {
+                var swatch = UIFactory.CreatePanel(cardTransform, "PoolSwatch", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+                swatch.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                swatch.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                swatch.rectTransform.pivot = new Vector2(0.5f, 1f);
+                swatch.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
+                swatch.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
+                UIFactory.AddThickOutline(swatch, UITheme.Border);
 
-            var swatchLabel = UIFactory.CreateText(swatch.transform, "PoolLabel", UpgradeVisualDefaults.GetPoolLabel(def.Pool), 13, UITheme.TextPrimary);
-            swatchLabel.alignment = TextAnchor.MiddleCenter;
-            swatchLabel.raycastTarget = false;
-            UIFactory.StretchFull(swatchLabel.rectTransform);
+                var swatchLabel = UIFactory.CreateText(swatch.transform, "PoolLabel", UpgradeVisualDefaults.GetPoolLabel(def.Pool), 13, UITheme.TextPrimary);
+                swatchLabel.alignment = TextAnchor.MiddleCenter;
+                swatchLabel.raycastTarget = false;
+                UIFactory.StretchFull(swatchLabel.rectTransform);
+            }
 
             float descWidth = CardWidth - 16f;
             var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, 12), 12, UITheme.TextPrimary);

@@ -168,7 +168,29 @@ namespace Contigu.Data
         /// <summary>Real icon art for a modifier, or null when none exists yet — takes priority over every placeholder treatment below (Forme* specialist shape, Éclat/Devotion color tile, plain abbreviation) in <see cref="Presentation.ModifierBadgeFactory"/>.</summary>
         public static Sprite GetIcon(ModifierId id)
         {
+            var sack = GetSackIcon(id);
+            if (sack != null)
+            {
+                return sack;
+            }
             return Icons.TryGetValue(id, out var sprite) ? sprite : null;
+        }
+
+        private static readonly Dictionary<ModifierId, Sprite> SackIcons = new Dictionary<ModifierId, Sprite>();
+
+        /// <summary>
+        /// The fertilizer's own burlap-sack icon (Resources/Icons/Fertilizers/&lt;ModifierId&gt;.png) — a sack silhouette
+        /// that already carries its own background and effect pill, so it replaces the category-colored chip.
+        /// Null if the art is missing.
+        /// </summary>
+        public static Sprite GetSackIcon(ModifierId id)
+        {
+            if (!SackIcons.TryGetValue(id, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Fertilizers/" + id);
+                SackIcons[id] = sprite;
+            }
+            return sprite;
         }
     }
 }

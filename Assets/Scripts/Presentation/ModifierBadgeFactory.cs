@@ -27,9 +27,11 @@ namespace Contigu.Presentation
         /// </summary>
         public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
         {
-            var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
+            // A fertilizer with its own sack art carries its own background, so the category-colored chip is dropped.
+            bool hasSack = ModifierVisualDefaults.GetSackIcon(def.Id) != null;
+            var badge = UIFactory.CreatePanel(parent, "Badge_" + def.Id, showBackground && !hasSack ? ModifierVisualDefaults.GetCategoryColor(def.Category) : Color.clear);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
-            if (showBackground)
+            if (showBackground && !hasSack)
             {
                 var badgeOutline = badge.gameObject.AddComponent<Outline>();
                 badgeOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
@@ -45,7 +47,9 @@ namespace Contigu.Presentation
                 iconImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 iconImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 iconImage.rectTransform.anchoredPosition = Vector2.zero;
-                iconImage.rectTransform.sizeDelta = new Vector2(size * 0.8f, size * 0.8f);
+                iconImage.rectTransform.sizeDelta = hasSack ? new Vector2(size, size) : new Vector2(size * 0.8f, size * 0.8f);
+                iconImage.preserveAspect = true;
+                iconImage.raycastTarget = false;
                 iconImage.sprite = icon;
             }
             else if (colorTileColor.HasValue)

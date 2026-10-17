@@ -14,6 +14,19 @@ namespace Contigu.Data
         private static readonly Color UncommonColor = new Color(0.396f, 0.682f, 0.839f); // #65aed6
         private static readonly Color RareColor = new Color(0.941f, 0.702f, 0.553f); // #f0b38d
 
+        private static readonly System.Collections.Generic.Dictionary<UpgradeId, Sprite> SignIcons = new System.Collections.Generic.Dictionary<UpgradeId, Sprite>();
+
+        /// <summary>The upgrade's wooden garden-sign icon (Resources/Icons/Upgrades/&lt;UpgradeId&gt;.png) — a tall signpost silhouette, instantly different from a fertilizer's round sack. Null if missing.</summary>
+        public static Sprite GetIcon(UpgradeId id)
+        {
+            if (!SignIcons.TryGetValue(id, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Upgrades/" + id);
+                SignIcons[id] = sprite;
+            }
+            return sprite;
+        }
+
         public static string GetRarityLabel(UpgradeRarity rarity)
         {
             switch (rarity)
