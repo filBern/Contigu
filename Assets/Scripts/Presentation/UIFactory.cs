@@ -105,10 +105,10 @@ namespace Contigu.Presentation
         // Handed out in turn so neighbouring buttons wear different plants (see ButtonVines).
         private static int _nextVineVariety;
 
-        private static Button FinishButton(Image img, string label, int fontSize, bool decorate = true, bool lettered = false)
+        private static Button FinishButton(Image img, string label, int fontSize, bool decorate = false, bool lettered = false)
         {
             var btn = img.gameObject.AddComponent<Button>();
-            // Garden touch: little plants around every button big enough to carry them (see ButtonVines).
+            // Plants around buttons (see ButtonVines) are off by default: only the main menu keeps them (its three buttons carry their own plants in their illustrations).
             if (decorate)
             {
                 var vines = img.gameObject.AddComponent<ButtonVines>();

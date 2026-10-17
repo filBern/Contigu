@@ -87,7 +87,7 @@ SPEC = {
  'Showseedbag': ('Show seed bag', 'Wood', 10, 180), 'Showrules': ('Show rules', 'Wood', 1, 180),
 }
 HEIGHT = {'Play': 84, 'Settings': 84, 'Exit': 84}
-NO_PLANTS = {'Showseedbag', 'Showrules', 'Nextround'}  # utility buttons and the shop's button stay plain
+NO_PLANTS = {'Confirm', 'OK', 'Gotit', 'Close', 'NewRun', 'Nextround', 'Showseedbag', 'Showrules'}  # plants only on the main menu buttons (Play, Settings, Exit)
 PLANT_CAP = {'Play': 52, 'Settings': 52, 'Exit': 52}  # menu buttons are stacked close together: keep their plants short
 
 if __name__ == '__main__':
