@@ -25,8 +25,19 @@ noms de code et le reste de ce document gardent l'ancien vocabulaire.
 | Common / Uncommon / Rare | Wild / Cultivated / Heirloom |
 | Bombe / Range / Éclat / Précision / Sangsue | Spore Burst / Long Reach / Overflow / Pruning / Sap Drain |
 
-Les visuels vectoriels (tuiles, ennemis) et leurs générateurs sont dans
-`Design/` ; les PNG utilisés par le jeu sont dans `Assets/Resources/`.
+Les visuels vectoriels et leurs générateurs sont dans `Design/` ; les PNG
+utilisés par le jeu sont dans `Assets/Resources/` :
+
+| Dossier `Design/` | Contenu | Destination dans `Assets/Resources/` |
+|---|---|---|
+| `Tiles/` | tuiles de couleur, vide, dorée, verrouillée (+ `generate_tiles.py`) | `Tiles/`, `Icons/LockedTile.png` |
+| `Enemies/` | portraits des 10 ennemis (+ `generate_enemies.py`) | `Enemies/` |
+| `Icons/` | fertilizers (sacs), upgrades (panneaux), traits de tuile, Pollen | `Icons/Fertilizers`, `Upgrades`, `Traits`, `Pollen.png` |
+| `Title/` | logo LASTBLOOM | `Title/` |
+| `Buttons/` | corps de boutons, boutons complets (texte + plantes), 10 variétés de plantes | `Buttons/Garden`, `Buttons/Full`, `UI/Plants` |
+
+Les générateurs sont des scripts Python (rendu PNG via Chromium + ImageMagick) ;
+les SVG et PNG déjà produits sont versionnés, Python n'est pas nécessaire pour jouer.
 
 ## Ouvrir le projet
 

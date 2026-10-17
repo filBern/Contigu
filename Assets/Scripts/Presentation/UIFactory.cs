@@ -95,7 +95,7 @@ namespace Contigu.Presentation
         // Handed out in turn so neighbouring buttons wear different plants (see ButtonVines).
         private static int _nextVineVariety;
 
-        private static Button FinishButton(Image img, string label, int fontSize, bool decorate = true)
+        private static Button FinishButton(Image img, string label, int fontSize, bool decorate = true, bool lettered = false)
         {
             var btn = img.gameObject.AddComponent<Button>();
             // Garden touch: little plants around every button big enough to carry them (see ButtonVines).
@@ -137,8 +137,14 @@ namespace Contigu.Presentation
             // 50% bigger than whatever size the caller asked for — every
             // button goes through this one spot, so scaling here covers all
             // of them at once and stays proportional across call sites.
-            var text = CreateText(img.transform, "Label", label, Mathf.RoundToInt(fontSize * 1.5f), UITheme.TextPrimary);
+            var text = CreateText(img.transform, "Label", label, Mathf.RoundToInt(fontSize * 1.5f), lettered ? UITheme.TextOnBackground : UITheme.TextPrimary);
             StretchFull(text.rectTransform);
+            if (lettered)
+            {
+                var outline = text.gameObject.AddComponent<Outline>();
+                outline.effectColor = UITheme.Border;
+                outline.effectDistance = new Vector2(2f, -2f);
+            }
             return btn;
         }
 
