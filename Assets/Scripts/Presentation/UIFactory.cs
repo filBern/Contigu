@@ -87,6 +87,8 @@ namespace Contigu.Presentation
         private static Button FinishButton(Image img, string label, int fontSize)
         {
             var btn = img.gameObject.AddComponent<Button>();
+            // Garden touch: little plants around every button big enough to carry them (see ButtonVines).
+            img.gameObject.AddComponent<ButtonVines>();
             // Selectable normally self-assigns this via Reset(), which Unity
             // only calls for components added through the Inspector; every
             // button here is built via AddComponent, so this must be set
