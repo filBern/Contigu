@@ -18,9 +18,9 @@ namespace Contigu.Data
         {
             switch (rarity)
             {
-                case UpgradeRarity.Common: return "Common";
-                case UpgradeRarity.Uncommon: return "Uncommon";
-                case UpgradeRarity.Rare: return "Rare";
+                case UpgradeRarity.Common: return "Wild";
+                case UpgradeRarity.Uncommon: return "Cultivated";
+                case UpgradeRarity.Rare: return "Heirloom";
                 default: return rarity.ToString();
             }
         }

@@ -51,11 +51,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion: return "Bastion Sprout";
                 case PieceTraitKind.Kamikaze: return "Kamikaze Sprout";
                 case PieceTraitKind.Venom: return "Venom Sprout";
-                case PieceTraitKind.Bombe: return "Bombe";
-                case PieceTraitKind.Range: return "Range";
-                case PieceTraitKind.Eclat: return "Éclat";
-                case PieceTraitKind.Precision: return "Précision";
-                case PieceTraitKind.Sangsue: return "Sangsue";
+                case PieceTraitKind.Bombe: return "Spore Burst";
+                case PieceTraitKind.Range: return "Long Reach";
+                case PieceTraitKind.Eclat: return "Overflow";
+                case PieceTraitKind.Precision: return "Pruning";
+                case PieceTraitKind.Sangsue: return "Sap Drain";
                 default: return kind.ToString();
             }
         }
@@ -106,7 +106,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Precision:
                     return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one — a finishing blow.";
                 case PieceTraitKind.Sangsue:
-                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Lueur.";
+                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Pollen.";
                 default:
                     return string.Empty;
             }

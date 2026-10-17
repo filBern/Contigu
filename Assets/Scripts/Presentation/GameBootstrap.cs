@@ -238,7 +238,7 @@ namespace Contigu.Presentation
                 // reflect that.
                 _shopView.Refresh(_run);
             }
-            SetStatusText("Sold " + ModifierCatalog.Get(id).Name + " for " + refundedLueur + " Lueur.");
+            SetStatusText("Sold " + ModifierCatalog.Get(id).Name + " for " + refundedLueur + " Pollen.");
         }
 
 #if UNITY_EDITOR
@@ -2202,13 +2202,13 @@ namespace Contigu.Presentation
                     break;
                 default:
                     status = _run.Challenge.BossActiveEveryRound
-                        ? "Chaos: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
+                        ? "Wildgrowth: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
                         : "New round: select a seed, then click the grid.";
                     break;
             }
             if (_run.Challenge.BossActiveEveryRound && _run.CurrentBossEffect != BossEffect.None && _run.CurrentBossEffect != BossEffect.ProgressiveCellLock)
             {
-                status += " Chaos also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " seeds.";
+                status += " Wildgrowth also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " seeds.";
             }
             return status;
         }

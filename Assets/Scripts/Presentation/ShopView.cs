@@ -131,7 +131,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "The Lueur Shop", 26, UITheme.TextOnBackground);
+            var header = UIFactory.CreateText(_root, "Header", "The Pollen Shop", 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -169,7 +169,7 @@ namespace Contigu.Presentation
             lueurIconLayout.preferredWidth = 58f;
             lueurIconLayout.preferredHeight = 58f;
 
-            _lueurLabel = UIFactory.CreateText(_lueurContainer, "Lueur", "", 84, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "Pollen", "", 84, VisualDefaults.GoldenColor);
 
             // "Prochain combat" preview — sits right under the (now-raised) Lueur readout, same corner.
             // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty

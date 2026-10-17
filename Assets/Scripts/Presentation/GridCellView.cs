@@ -122,8 +122,10 @@ namespace Contigu.Presentation
             }
             else if (cell.IsGolden)
             {
-                Background.sprite = null;
-                Background.color = Color.Lerp(VisualDefaults.EmptyCellColor, VisualDefaults.GoldenColor, 0.55f);
+                Background.sprite = VisualDefaults.GoldenCellSprite;
+                Background.color = VisualDefaults.GoldenCellSprite != null
+                    ? Color.white
+                    : Color.Lerp(VisualDefaults.EmptyCellColor, VisualDefaults.GoldenColor, 0.55f);
             }
             else
             {

@@ -215,3 +215,14 @@ svg = frame(locked_p, '', leaves=False, sprouts=False)
 svg = svg.replace('  </g>\n</svg>\n', '  </g>\n' + vine_svg + '</svg>\n') if False else svg.rsplit('  <g clip-path="url(#inset)">', 1)[0] + vine_svg + '</svg>\n'
 open('Locked.svg', 'w').write(svg)
 print('wrote Locked')
+
+# ---------------- Golden: an empty plot of golden soil (a golden cell before anything is planted on it) ----------------
+def star(cx, cy, r, fill='#fff1b0'):
+    k = r * 0.28
+    return '<path d="M%g %g L%g %g L%g %g L%g %g L%g %g L%g %g L%g %g L%g %g Z" fill="%s" stroke="#13212e" stroke-width="2.2" stroke-linejoin="round"/>' % (
+        cx, cy - r, cx + k, cy - k, cx + r, cy, cx + k, cy + k, cx, cy + r, cx - k, cy + k, cx - r, cy, cx - k, cy - k, fill)
+golden_emblem = '    ' + star(128, 128, 38) + star(76, 84, 18, '#ffe08a') + star(184, 90, 14, '#ffe08a') + star(186, 174, 20, '#ffe08a') + star(78, 176, 13, '#fff1b0') + \
+    '<g fill="#ffe08a" opacity="0.9"><circle cx="120" cy="64" r="3"/><circle cx="150" cy="190" r="3"/><circle cx="62" cy="128" r="2.5"/><circle cx="198" cy="130" r="2.5"/></g>'
+golden_p = dict(b_top='#a8863e', b_bot='#5a4220', furrow='#4a3418', hi='#ffe9a6', wood='#f1c40f', grain='#8a6a10', soil='#7a5a1a', soil_d='#5e440f', soil_l='#ffe08a')
+open('Golden.svg', 'w').write(frame(golden_p, golden_emblem, leaves=False, sprouts=False))
+print('wrote Golden')

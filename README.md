@@ -7,6 +7,27 @@ couleur, deck de pièces persistant, et structure de run roguelike-deckbuilder
 spécification complète dans la description du projet pour le détail des
 règles.
 
+## Vocabulaire du jeu (thème jardin)
+
+Le jeu s'appelle **LASTBLOOM**. Les noms affichés ont été rebaptisés ; les
+noms de code et le reste de ce document gardent l'ancien vocabulaire.
+
+| Dans le code / ce document | Affiché dans le jeu |
+|---|---|
+| pièce (`Piece`) | Seed (graine) |
+| tuile / case remplie (`Tile`) | Sprout (pousse) ; Plot (parcelle) pour une case de la grille |
+| deck | Seed Bag |
+| line clear | Harvest (récolte) |
+| modificateur (`Modifier`) | Fertilizer |
+| Lueur | Pollen |
+| Coral / Teal / Violet / Lime | Poppy / Bluebell / Sunflower / Fern |
+| Classic / Marathon / Chaos | Spring / Winter / Wildgrowth |
+| Common / Uncommon / Rare | Wild / Cultivated / Heirloom |
+| Bombe / Range / Éclat / Précision / Sangsue | Spore Burst / Long Reach / Overflow / Pruning / Sap Drain |
+
+Les visuels vectoriels (tuiles, ennemis) et leurs générateurs sont dans
+`Design/` ; les PNG utilisés par le jeu sont dans `Assets/Resources/`.
+
 ## Ouvrir le projet
 
 1. Unity Hub → Add → sélectionner ce dossier (`Contigu/`).

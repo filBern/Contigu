@@ -79,7 +79,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Companion Bloom",
-            "x2 Mult if a complementary pair is touched (Ember/Gold or Frost/Moss).");
+            "x2 Mult if a complementary pair is touched (Poppy/Sunflower or Bluebell/Fern).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
@@ -151,20 +151,20 @@ namespace Contigu.Core
             "x2 Mult per harvested line that's a single color, stacking.");
 
         public static readonly ModifierDefinition DevotionCoral = new ModifierDefinition(
-            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Ember Devotion",
-            "+3 Mult on Ember seeds.");
+            ModifierId.DevotionCoral, ModifierCategory.Couleurs, "Poppy Devotion",
+            "+3 Mult on Poppy seeds.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
-            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Frost Devotion",
-            "+3 Mult on Frost seeds.");
+            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Bluebell Devotion",
+            "+3 Mult on Bluebell seeds.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
-            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Gold Devotion",
-            "+3 Mult on Gold seeds.");
+            ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Sunflower Devotion",
+            "+3 Mult on Sunflower seeds.");
 
         public static readonly ModifierDefinition DevotionLime = new ModifierDefinition(
-            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Moss Devotion",
-            "+3 Mult on Moss seeds.");
+            ModifierId.DevotionLime, ModifierCategory.Couleurs, "Fern Devotion",
+            "+3 Mult on Fern seeds.");
 
         // The 3 slot modifiers can't be evaluated by GridManager — it doesn't
         // know which hand slot a piece came from, only RunManager's
@@ -192,20 +192,20 @@ namespace Contigu.Core
             "+18 pts if the seed isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
-            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Ember Glow",
-            "+6 pts per group cell on Ember seeds.");
+            ModifierId.EclatCoral, ModifierCategory.Couleurs, "Poppy Glow",
+            "+6 pts per group cell on Poppy seeds.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
-            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Frost Glow",
-            "+6 pts per group cell on Frost seeds.");
+            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Bluebell Glow",
+            "+6 pts per group cell on Bluebell seeds.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
-            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Gold Glow",
-            "+6 pts per group cell on Gold seeds.");
+            ModifierId.EclatViolet, ModifierCategory.Couleurs, "Sunflower Glow",
+            "+6 pts per group cell on Sunflower seeds.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
-            ModifierId.EclatLime, ModifierCategory.Couleurs, "Moss Glow",
-            "+6 pts per group cell on Moss seeds.");
+            ModifierId.EclatLime, ModifierCategory.Couleurs, "Fern Glow",
+            "+6 pts per group cell on Fern seeds.");
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
@@ -390,7 +390,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
             ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
-            "+25% damage on placements that trigger a Joker combat trait (Bombe/Range/Éclat/Précision/Sangsue). No effect otherwise.");
+            "+25% damage on placements that trigger a Joker combat trait (Spore Burst/Long Reach/Overflow/Pruning/Sap Drain). No effect otherwise.");
 
         public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
             ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
@@ -398,7 +398,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
-            "+2 Mult per color for which you hold BOTH its Devotion and Éclat fertilizer.");
+            "+2 Mult per color for which you hold BOTH its Devotion and Glow fertilizer.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(
             ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
@@ -410,7 +410,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
-            "Converts 15% of the damage from any Joker combat trait into bonus Lueur. Stacks with Sangsue.");
+            "Converts 15% of the damage from any Joker combat trait into bonus Pollen. Stacks with Sangsue.");
 
         /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
         public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(

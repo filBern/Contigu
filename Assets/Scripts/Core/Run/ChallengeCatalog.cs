@@ -11,7 +11,7 @@ namespace Contigu.Core
         public static readonly ChallengeDefinition Classic = new ChallengeDefinition
         {
             Id = ChallengeId.Classic,
-            Name = "Classic",
+            Name = "Spring",
             Description = "15 rounds, each its own enemy encounter.",
             UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
@@ -26,7 +26,7 @@ namespace Contigu.Core
         public static readonly ChallengeDefinition Marathon = new ChallengeDefinition
         {
             Id = ChallengeId.Marathon,
-            Name = "Marathon",
+            Name = "Winter",
             Description = "A smaller starting seed bag and tighter seed budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
@@ -41,7 +41,7 @@ namespace Contigu.Core
         public static readonly ChallengeDefinition Chaos = new ChallengeDefinition
         {
             Id = ChallengeId.Chaos,
-            Name = "Chaos",
+            Name = "Wildgrowth",
             Description = "The board's cell-lock is active from round 1 at a gentler pace. Every four rounds, an additional random boss rule appears.",
             UnlockCost = 10,
             RoundCount = RunConfig.RoundCount,

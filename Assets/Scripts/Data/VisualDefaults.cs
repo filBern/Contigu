@@ -37,10 +37,10 @@ namespace Contigu.Data
 
         private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
         {
-            { PieceColor.Coral, "Ember" },
-            { PieceColor.Teal, "Frost" },
-            { PieceColor.Violet, "Gold" },
-            { PieceColor.Lime, "Moss" },
+            { PieceColor.Coral, "Poppy" },
+            { PieceColor.Teal, "Bluebell" },
+            { PieceColor.Violet, "Sunflower" },
+            { PieceColor.Lime, "Fern" },
             { PieceColor.Joker, "Joker" }
         };
 
@@ -81,6 +81,9 @@ namespace Contigu.Data
             { PieceColor.Lime, Resources.Load<Sprite>("Tiles/Moss") },
             { PieceColor.Joker, Resources.Load<Sprite>("Tiles/Joker") }
         };
+
+        /// <summary>An empty golden cell (see Cell.IsGolden) — golden soil with sparkles; null falls back to the old tinted flat color.</summary>
+        public static readonly Sprite GoldenCellSprite = Resources.Load<Sprite>("Tiles/Golden");
 
         public static readonly Sprite EmptyTileSprite = Resources.Load<Sprite>("Tiles/Empty") ?? TileSprite;
 
