@@ -23,6 +23,18 @@ namespace Contigu.Presentation
         private static Sprite _comboBackground;
         private static Sprite _slotGroupBackground;
         private static Sprite _shuffleIcon;
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> _garden = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>Garden-style button body (Resources/Buttons/Garden/Btn&lt;name&gt;.png: Green, Red, Blue, Gold, Wood), or null if missing — same chunky outline/glossy look as the title.</summary>
+        public static Sprite Garden(string name)
+        {
+            if (!_garden.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>(ButtonsPath + "Garden/Btn" + name);
+                _garden[name] = sprite;
+            }
+            return sprite;
+        }
 
         /// <summary>Background image for the Show deck and Show rules buttons.</summary>
         public static Sprite HandUtilityButtonBackground
@@ -31,7 +43,7 @@ namespace Contigu.Presentation
             {
                 if (_handUtilityButtonBackground == null)
                 {
-                    _handUtilityButtonBackground = Resources.Load<Sprite>(ButtonsPath + "160x48");
+                    _handUtilityButtonBackground = Garden("Wood") ?? Resources.Load<Sprite>(ButtonsPath + "160x48");
                     if (_handUtilityButtonBackground != null)
                     {
                         _handUtilityButtonBackground.texture.filterMode = FilterMode.Bilinear;
@@ -91,13 +103,13 @@ namespace Contigu.Presentation
         /// </summary>
         public static Sprite ChooseButtonBackground
         {
-            get { return _chooseButtonBackground != null ? _chooseButtonBackground : (_chooseButtonBackground = Resources.Load<Sprite>(IconsPath + "pill_button_blue")); }
+            get { return _chooseButtonBackground != null ? _chooseButtonBackground : (_chooseButtonBackground = Garden("Green") ?? Resources.Load<Sprite>(IconsPath + "pill_button_blue")); }
         }
 
         /// <summary>Background for a "Cancel"/negative-action button — same flat-pill sprite family as <see cref="ChooseButtonBackground"/>, the Danger-red variant.</summary>
         public static Sprite CancelButtonBackground
         {
-            get { return _cancelButtonBackground != null ? _cancelButtonBackground : (_cancelButtonBackground = Resources.Load<Sprite>(IconsPath + "pill_button_danger")); }
+            get { return _cancelButtonBackground != null ? _cancelButtonBackground : (_cancelButtonBackground = Garden("Red") ?? Resources.Load<Sprite>(IconsPath + "pill_button_danger")); }
         }
 
         /// <summary>Small filled circle used as a corner badge showing a remaining-count number (HandView's Shuffle button).</summary>

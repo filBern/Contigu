@@ -77,7 +77,7 @@ namespace Contigu.Presentation
             // Play/Settings rather than joining their palette. A thick comic outline (see
             // UIFactory.AddThickOutline, used everywhere else for cards/badges but deliberately skipped by
             // buttons in general — FinishButton's own doc comment) gives all three a bit more presence too.
-            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.ChooseButtonBackground, 33);
+            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 33);
             var playRect = playButton.GetComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -85,12 +85,12 @@ namespace Contigu.Presentation
             playRect.anchoredPosition = new Vector2(0f, -6f);
             playRect.sizeDelta = new Vector2(330f, 84f);
             var playImage = playButton.GetComponent<Image>();
-            playImage.color = VisualDefaults.GetColor(PieceColor.Lime);
+            playImage.color = UISprites.Garden("Gold") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Lime);
             UIFactory.AddThickOutline(playImage, UITheme.Border);
             playButton.onClick.AddListener(OnPlayClicked);
             playButton.gameObject.AddComponent<MainMenuButtonHover>();
 
-            var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.ChooseButtonBackground, 33);
+            var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 33);
             var settingsRect = settingsButton.GetComponent<RectTransform>();
             settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
             settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -98,7 +98,7 @@ namespace Contigu.Presentation
             settingsRect.anchoredPosition = new Vector2(0f, -110f);
             settingsRect.sizeDelta = new Vector2(330f, 84f);
             var settingsImage = settingsButton.GetComponent<Image>();
-            settingsImage.color = VisualDefaults.GetColor(PieceColor.Teal);
+            settingsImage.color = UISprites.Garden("Blue") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Teal);
             UIFactory.AddThickOutline(settingsImage, UITheme.Border);
             settingsButton.onClick.AddListener(OnSettingsClicked);
             settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
