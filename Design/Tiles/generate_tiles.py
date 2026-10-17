@@ -158,3 +158,60 @@ tiles['Empty'] = (empty_p, '    ' + pebbles, False, False, '')
 for name, (p, emb, leaves, sprouts, extra) in tiles.items():
     open('%s.svg' % name, 'w').write(frame(p, emb, leaves, sprouts, extra))
     print('wrote', name)
+
+# ---------------- Locked: a plot choked by thorny bramble (see the Bramble/Deadroot enemies) ----------------
+def vine(p0, p1, amp, waves, phase, thorn_every=18, thorn_len=14, seed=0):
+    n = 90
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    length = math.hypot(dx, dy)
+    ux, uy = dx / length, dy / length
+    nx, ny = -uy, ux
+    pts = []
+    for k in range(n + 1):
+        t = k / n
+        off = amp * math.sin(t * waves * 2 * math.pi + phase)
+        pts.append((p0[0] + dx * t + nx * off, p0[1] + dy * t + ny * off))
+    d = 'M%.1f %.1f ' % pts[0] + ' '.join('L%.1f %.1f' % p for p in pts[1:])
+    thorns = []
+    step = max(1, int(n * thorn_every / length))
+    for k in range(step, n, step):
+        x, y = pts[k]
+        px, py = pts[k - 1]
+        tx, ty = x - px, y - py
+        tl = math.hypot(tx, ty) or 1
+        tx, ty = tx / tl, ty / tl
+        side = 1 if (k // step + seed) % 2 == 0 else -1
+        bx, by = -ty * side, tx * side
+        tip = (x + bx * thorn_len + tx * 3, y + by * thorn_len + ty * 3)
+        a = (x - tx * 4.5, y - ty * 4.5)
+        b = (x + tx * 4.5, y + ty * 4.5)
+        thorns.append('<path d="M%.1f %.1f L%.1f %.1f L%.1f %.1f Z"/>' % (a[0], a[1], tip[0], tip[1], b[0], b[1]))
+    return d, ''.join(thorns)
+
+vines = [
+    vine((8, 40), (248, 216), 11, 3.2, 0.3, seed=0),
+    vine((248, 44), (8, 212), 11, 3.0, 1.9, seed=1),
+    vine((8, 132), (248, 124), 9, 2.6, 4.0, seed=0),
+]
+locked_defs = '<clipPath id="tile"><rect x="6" y="6" width="244" height="244" rx="28"/></clipPath>'
+vine_svg = '  <g clip-path="url(#tile)">\n'
+for d, th in vines:
+    vine_svg += '    <path d="%s" fill="none" stroke="#13212e" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>\n' % d
+for d, th in vines:
+    vine_svg += '    <g fill="#2c3a1f" stroke="#13212e" stroke-width="2" stroke-linejoin="round">%s</g>\n' % th
+    vine_svg += '    <path d="%s" fill="none" stroke="#4d6a35" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>\n' % d
+    vine_svg += '    <path d="%s" fill="none" stroke="#6f8f4c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" transform="translate(-1.5 -1.5)"/>\n' % d
+vine_svg += '''    <g fill="#8a6a3a" stroke="#13212e" stroke-width="2.2" stroke-linejoin="round">
+      <path d="M96 84c10 -8 22 -6 26 4c-10 8 -22 6 -26 -4z"/>
+      <path d="M170 168c10 -8 22 -6 26 4c-10 8 -22 6 -26 -4z"/>
+      <path d="M60 176c8 -10 20 -10 26 -2c-8 10 -20 10 -26 2z"/>
+      <path d="M176 76c8 -10 20 -10 26 -2c-8 10 -20 10 -26 2z"/>
+    </g>
+  </g>
+'''
+locked_p = dict(b_top='#7a6650', b_bot='#443626', furrow='#33281c', hi='#b09a7c', s1='#8a8a5a', s2='#6f7a4a',
+                wood='#6a5238', grain='#3a2a18', soil='#2e2118', soil_d='#221810', soil_l='#4a3626', defs=locked_defs)
+svg = frame(locked_p, '', leaves=False, sprouts=False)
+svg = svg.replace('  </g>\n</svg>\n', '  </g>\n' + vine_svg + '</svg>\n') if False else svg.rsplit('  <g clip-path="url(#inset)">', 1)[0] + vine_svg + '</svg>\n'
+open('Locked.svg', 'w').write(svg)
+print('wrote Locked')
