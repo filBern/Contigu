@@ -30,6 +30,12 @@ namespace Contigu.Presentation
         private RectTransform _container;
         private float _cellStride;
 
+        /// <summary>True while a hand piece is selected/being dragged — cell info tooltips stay out of the way then.</summary>
+        public bool HasSelectedShape
+        {
+            get { return _selectedShape != null; }
+        }
+
         public RectTransform Build(Transform parent, GridManager grid, float cellSize, TooltipView tooltip)
         {
             _grid = grid;

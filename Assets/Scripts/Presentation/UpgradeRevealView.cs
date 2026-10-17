@@ -1,5 +1,6 @@
 using System;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -87,6 +88,51 @@ namespace Contigu.Presentation
                 _previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
                 ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, trait, _tooltip, null);
                 return PreviewSize;
+            });
+        }
+
+        /// <summary>
+        /// Reveal for "Permanent Bonus Square" (no piece or fertilizer to show): the card plus a small map of the board with the
+        /// freshly marked square enlarged, so the purchase visibly does something and the player knows where the x2 landed.
+        /// </summary>
+        public void ShowBoard(UpgradeDefinition def, Vector2Int marked)
+        {
+            ShowInternal(def, () =>
+            {
+                const float cell = 14f;
+                const float gap = 1.5f;
+                int n = GridManager.Size;
+                float total = n * cell + (n - 1) * gap;
+                _previewContainer.sizeDelta = new Vector2(total, total);
+                for (int y = 0; y < n; y++)
+                {
+                    for (int x = 0; x < n; x++)
+                    {
+                        var img = UIFactory.CreatePanel(_previewContainer, "c_" + x + "_" + y, Color.white);
+                        img.raycastTarget = false;
+                        img.sprite = VisualDefaults.EmptyTileSprite;
+                        img.color = img.sprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : new Color(0.25f, 0.2f, 0.15f, 1f);
+                        var rt = img.rectTransform;
+                        rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+                        rt.pivot = new Vector2(0f, 1f);
+                        rt.sizeDelta = new Vector2(cell, cell);
+                        rt.anchoredPosition = new Vector2(x * (cell + gap), -(n - 1 - y) * (cell + gap));
+                    }
+                }
+                // The marked square, drawn bigger on top so it can't be missed.
+                var marker = UIFactory.CreatePanel(_previewContainer, "Marked", Color.white);
+                marker.raycastTarget = false;
+                marker.sprite = VisualDefaults.BonusTileSprite != null ? VisualDefaults.BonusTileSprite : VisualDefaults.EmptyTileSprite;
+                if (marker.sprite == null)
+                {
+                    marker.color = VisualDefaults.GoldenColor;
+                }
+                var mrt = marker.rectTransform;
+                mrt.anchorMin = mrt.anchorMax = new Vector2(0f, 1f);
+                mrt.pivot = new Vector2(0.5f, 0.5f);
+                mrt.sizeDelta = new Vector2(cell * 2.4f, cell * 2.4f);
+                mrt.anchoredPosition = new Vector2(marked.x * (cell + gap) + cell * 0.5f, -(n - 1 - marked.y) * (cell + gap) - cell * 0.5f);
+                return total;
             });
         }
 

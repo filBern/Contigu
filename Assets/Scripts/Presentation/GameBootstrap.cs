@@ -2101,6 +2101,14 @@ namespace Contigu.Presentation
                 {
                     _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker, new PieceTrait(_run.LastJokerCombatKindAdded, 0));
                 }
+                else if (revealedUpgrade.Id == UpgradeId.PermanentBonusSquare)
+                {
+                    // Applies instantly with nothing else to show — so say what happened and where.
+                    if (_run.LastPermanentBonusPosition.HasValue)
+                    {
+                        _upgradeRevealView.ShowBoard(revealedUpgrade, _run.LastPermanentBonusPosition.Value);
+                    }
+                }
                 else if (revealedUpgrade.Id == UpgradeId.PieceMastery && _run.LastShapeMasteryGranted.HasValue)
                 {
                     var grantedShape = _run.LastShapeMasteryGranted.Value;

@@ -190,6 +190,9 @@ namespace Contigu.Core
         /// <summary>Candidate freshly-rolled pieces (trait included) for <see cref="PendingUpgrade"/>'s sub-choice - only populated for "Random Piece"; empty otherwise, since these tokens don't exist in the deck yet.</summary>
         public IReadOnlyList<PieceToken> PendingUpgradePieceCandidates { get; private set; }
 
+        /// <summary>Where the most recent Permanent Bonus Square landed — read once by the presentation layer to show the player which square was marked. Null before any such purchase.</summary>
+        public Vector2Int? LastPermanentBonusPosition { get; private set; }
+
         /// <summary>Piece/Color Mastery's two offered levelings while <see cref="PendingUpgrade"/> is one of them (empty otherwise) — the player picks one (see <see cref="ResolveMasteryChoice"/>) instead of getting a random result.</summary>
         public IReadOnlyList<MasteryOption> PendingMasteryOptions { get; private set; } = System.Array.Empty<MasteryOption>();
 
@@ -689,7 +692,7 @@ namespace Contigu.Core
         /// <summary>See UpgradeDefinition.PermanentBonusSquare's own doc comment — picks one random board position via GridManager.MarkRandomPermanentBonusSquare. No candidate index/surfaced result needed: unlike a Bank-pool "no sub-choice" upgrade (Joker, Piece/Color Mastery), there's nothing for the reveal UI to show beyond the upgrade's own name.</summary>
         private void ApplyPermanentBonusSquare()
         {
-            Grid.MarkRandomPermanentBonusSquare(_rng);
+            LastPermanentBonusPosition = Grid.MarkRandomPermanentBonusSquare(_rng);
         }
 
         /// <summary>Removes point events tied to the cursed color while preserving play legality, clears, Lueur, and non-point multiplier effects.</summary>

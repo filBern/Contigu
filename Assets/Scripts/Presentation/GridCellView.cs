@@ -52,6 +52,9 @@ namespace Contigu.Presentation
 
         // Which of this cell's visuals, if any, are currently an enemy-placed malus — set each time ApplyState
         // renders, read by SetMalusAlpha so GridView.FadeMalus can fade exactly those and nothing else.
+        // What this cell's special flags mean, shown on hover (null when it has none).
+        private string _infoName;
+        private string _infoDescription;
         private bool _isShowingLockedObstacle;
         private bool _isShowingPoisonBadge;
 
@@ -125,6 +128,12 @@ namespace Contigu.Presentation
                 Background.sprite = VisualDefaults.GetTileSprite(filledColor.Value);
                 Background.color = VisualDefaults.GetTileTint(filledColor.Value);
             }
+            else if ((cell.IsPermanentMultiplier || cell.IsMultiplierZone) && VisualDefaults.BonusTileSprite != null)
+            {
+                // An empty plot that doubles what scores through it: its own big "x2" tile (a filled cell shows the x2 chip instead).
+                Background.sprite = VisualDefaults.BonusTileSprite;
+                Background.color = Color.white;
+            }
             else if (cell.IsGolden)
             {
                 Background.sprite = VisualDefaults.GoldenCellSprite;
@@ -165,7 +174,30 @@ namespace Contigu.Presentation
             // IsPermanentMultiplier reuses the same badge as IsMultiplierZone — shown here even while the
             // cell is empty, unlike every other badge in this method, since it's a property of the board
             // POSITION itself rather than whatever piece currently fills it (see Cell.IsPermanentMultiplier).
-            bool showSpecial = cell.IsTinted || cell.IsMultiplierZone || cell.IsPermanentMultiplier;
+            bool bonusTileShown = !isFilled && !renderAsLockedObstacle && (cell.IsPermanentMultiplier || cell.IsMultiplierZone) && VisualDefaults.BonusTileSprite != null;
+            bool showSpecial = (cell.IsTinted || cell.IsMultiplierZone || cell.IsPermanentMultiplier) && !bonusTileShown;
+            _infoName = null;
+            _infoDescription = null;
+            if (cell.IsPermanentMultiplier)
+            {
+                _infoName = "Permanent Bonus Square";
+                _infoDescription = "Doubles the whole score of any seed planted on this square, for the rest of the run.";
+            }
+            else if (cell.IsMultiplierZone)
+            {
+                _infoName = "Multiplier Zone";
+                _infoDescription = "Doubles the whole placement's score — harvest included — when a seed is planted here.";
+            }
+            else if (cell.IsGolden)
+            {
+                _infoName = "Golden plot";
+                _infoDescription = "+" + ScoringConstants.GoldenCellBonus + " points when a seed is planted here.";
+            }
+            else if (cell.IsTinted)
+            {
+                _infoName = "Tinted plot";
+                _infoDescription = "Doubles the group and golden score of a seed planted here (not harvest).";
+            }
             _badgeSpecial.gameObject.SetActive(showSpecial);
             if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
             {
@@ -453,11 +485,20 @@ namespace Contigu.Presentation
         public void OnPointerEnter(PointerEventData eventData)
         {
             if (_owner != null) _owner.OnCellHoverEnter(X, Y);
+            // Explains a special plot (bonus square, golden, tinted, multiplier zone); stays quiet while a seed is being placed.
+            if (_tooltip != null && _infoName != null && (_owner == null || !_owner.HasSelectedShape))
+            {
+                _tooltip.Show(_infoName, DescriptionTextFormatter.Colorize(_infoDescription, 14), (RectTransform)transform);
+            }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
             if (_owner != null) _owner.OnCellHoverExit(X, Y);
+            if (_tooltip != null && _infoName != null)
+            {
+                _tooltip.Hide();
+            }
         }
 
         public void OnPointerClick(PointerEventData eventData)

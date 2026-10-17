@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="clay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3ee"/><stop offset="1" stop-color="#2f6fa6"/></linearGradient>
+    
+    <clipPath id="inset"><rect x="34" y="34" width="188" height="188" rx="12"/></clipPath>
+  </defs>
+  <rect x="6" y="6" width="244" height="244" rx="28" fill="url(#clay)" stroke="#13212e" stroke-width="6"/>
+  <g stroke="#265b8a" stroke-width="2.6" stroke-linecap="round" opacity="0.75">
+    <path d="M40 15H216M40 25H216"/><path d="M40 231H216M40 241H216"/>
+    <path d="M15 40V216M25 40V216"/><path d="M231 40V216M241 40V216"/>
+  </g>
+  <path d="M34 11h188" stroke="#d6ecff" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+
+  <g fill="#e8a82e" stroke="#13212e" stroke-width="3" stroke-linejoin="round">
+    <rect x="12" y="12" width="26" height="26" rx="6"/><rect x="218" y="12" width="26" height="26" rx="6"/>
+    <rect x="12" y="218" width="26" height="26" rx="6"/><rect x="218" y="218" width="26" height="26" rx="6"/>
+  </g>
+  <g stroke="#8a5a10" stroke-width="2" stroke-linecap="round" opacity="0.8">
+    <path d="M19 20h12M19 26h12M19 32h8"/><path d="M225 20h12M225 26h12M225 32h8"/>
+    <path d="M19 226h12M19 232h12M19 238h8"/><path d="M225 226h12M225 232h12M225 238h8"/>
+  </g>
+  <rect x="32" y="32" width="192" height="192" rx="14" fill="#1f3d5e" stroke="#13212e" stroke-width="5"/>
+  <g clip-path="url(#inset)">
+    <g stroke="#16304c" stroke-width="3" stroke-linecap="round" opacity="0.8"><path d="M40 62H216M40 96H216M40 160H216M40 194H216"/></g>
+    <g fill="#6fb0e8" opacity="0.8"><circle cx="58" cy="108" r="2.5"/><circle cx="196" cy="84" r="2.5"/><circle cx="70" cy="206" r="3"/><circle cx="190" cy="150" r="2.5"/><circle cx="48" cy="150" r="2"/><circle cx="208" cy="206" r="2.5"/></g>
+  </g>
+  <g clip-path="url(#inset)">
+    <g><path d="M128.0 50.0 L148.3 79.0 L183.2 72.8 L177.0 107.7 L206.0 128.0 L177.0 148.3 L183.2 183.2 L148.3 177.0 L128.0 206.0 L107.7 177.0 L72.8 183.2 L79.0 148.3 L50.0 128.0 L79.0 107.7 L72.8 72.8 L107.7 79.0 Z" fill="#2c5f93" stroke="#13212e" stroke-width="4" stroke-linejoin="round"/><text x="128" y="158" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="86" text-anchor="middle" fill="#ffd966" stroke="#13212e" stroke-width="9" paint-order="stroke" stroke-linejoin="round">×2</text></g><g fill="#ffffff" stroke="#13212e" stroke-width="2"><path d="M62 56 l5 9 9 5 -9 5 -5 9 -5 -9 -9 -5 9 -5z"/><path d="M198 196 l4 7 7 4 -7 4 -4 7 -4 -7 -7 -4 7 -4z"/></g>
+  </g>
+</svg>

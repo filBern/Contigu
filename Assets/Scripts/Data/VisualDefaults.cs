@@ -91,6 +91,9 @@ namespace Contigu.Data
         /// <summary>A plot frozen by Rotbloom (see Cell.IsFrozen) — sealed under ice until its row or column is harvested; null falls back to the generic locked look.</summary>
         public static readonly Sprite FrozenTileSprite = Resources.Load<Sprite>("Tiles/Frozen");
 
+        /// <summary>An empty plot that doubles whatever scores through it (Permanent Bonus Square / Multiplier Zone): a blue plot with a big x2.</summary>
+        public static readonly Sprite BonusTileSprite = Resources.Load<Sprite>("Tiles/Bonus");
+
         public static readonly Sprite EmptyTileSprite = Resources.Load<Sprite>("Tiles/Empty") ?? TileSprite;
 
         /// <summary>The filled-cell sprite for <paramref name="color"/> — its own painted tile, or the shared TileSprite when that art is missing (pair with <see cref="GetTileTint"/>).</summary>

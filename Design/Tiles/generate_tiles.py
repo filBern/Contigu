@@ -264,3 +264,18 @@ frozen_emblem = ('    <g opacity="0.9">'
 frozen_p = dict(b_top='#d7eefb', b_bot='#6fa6cf', furrow='#4a7fa8', hi='#ffffff', wood='#bcdcf0', grain='#6a9fc2', soil='#8cc6e6', soil_d='#6aa8cf', soil_l='#f1faff')
 open('Frozen.svg', 'w').write(frame(frozen_p, frozen_emblem, leaves=False, sprouts=False))
 print('wrote Frozen')
+
+# ---------------- Bonus: an empty plot that doubles whatever scores through it (Permanent Bonus Square / Multiplier Zone) ----------------
+def burst8(cx, cy, r):
+    pts = []
+    for i in range(16):
+        a = math.pi * i / 8 - math.pi / 2
+        rr = r if i % 2 == 0 else r * 0.68
+        pts.append('%.1f %.1f' % (cx + rr * math.cos(a), cy + rr * math.sin(a)))
+    return '<path d="M%s Z" fill="#2c5f93" stroke="#13212e" stroke-width="4" stroke-linejoin="round"/>' % ' L'.join(pts)
+bonus_emblem = ('    <g>' + burst8(128, 128, 78) +
+                '<text x="128" y="158" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="86" text-anchor="middle" fill="#ffd966" stroke="#13212e" stroke-width="9" paint-order="stroke" stroke-linejoin="round">×2</text>'
+                '</g>' + '<g fill="#ffffff" stroke="#13212e" stroke-width="2"><path d="M62 56 l5 9 9 5 -9 5 -5 9 -5 -9 -9 -5 9 -5z"/><path d="M198 196 l4 7 7 4 -7 4 -4 7 -4 -7 -7 -4 7 -4z"/></g>')
+bonus_p = dict(b_top='#8fc3ee', b_bot='#2f6fa6', furrow='#265b8a', hi='#d6ecff', wood='#e8a82e', grain='#8a5a10', soil='#1f3d5e', soil_d='#16304c', soil_l='#6fb0e8')
+open('Bonus.svg', 'w').write(frame(bonus_p, bonus_emblem, leaves=False, sprouts=False))
+print('wrote Bonus')
