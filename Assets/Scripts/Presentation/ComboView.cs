@@ -88,7 +88,7 @@ namespace Contigu.Presentation
             _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 38, Color.white);
             UIFactory.StretchFull(_chipsText.rectTransform);
 
-            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 32, UITheme.Panel);
+            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 32, UITheme.TextPrimary);
             var xLayout = xLabel.gameObject.AddComponent<LayoutElement>();
             xLayout.preferredWidth = XLabelWidth;
             xLayout.preferredHeight = PillHeight;

@@ -190,6 +190,9 @@ namespace Contigu.Core
         /// <summary>Candidate freshly-rolled pieces (trait included) for <see cref="PendingUpgrade"/>'s sub-choice - only populated for "Random Piece"; empty otherwise, since these tokens don't exist in the deck yet.</summary>
         public IReadOnlyList<PieceToken> PendingUpgradePieceCandidates { get; private set; }
 
+        /// <summary>Piece/Color Mastery's two offered levelings while <see cref="PendingUpgrade"/> is one of them (empty otherwise) — the player picks one (see <see cref="ResolveMasteryChoice"/>) instead of getting a random result.</summary>
+        public IReadOnlyList<MasteryOption> PendingMasteryOptions { get; private set; } = System.Array.Empty<MasteryOption>();
+
         /// <summary>The shape most recently rolled by a Joker purchase - read once by the presentation layer right after the purchase. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
@@ -2484,6 +2487,7 @@ namespace Contigu.Core
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
+            PendingMasteryOptions = System.Array.Empty<MasteryOption>();
             for (int i = 0; i < _blisterSlots.Length; i++)
             {
                 _blisterSlots[i] = RollBlisterSlot();
@@ -2841,6 +2845,15 @@ namespace Contigu.Core
                 return true;
             }
 
+            // Piece/Color Mastery offer TWO random levelings and let the player pick one, rather than a
+            // fully random result (see ResolveMasteryChoice).
+            if (upgrade.Id == UpgradeId.PieceMastery || upgrade.Id == UpgradeId.ColorMastery)
+            {
+                PendingUpgrade = upgrade;
+                PendingMasteryOptions = RollMasteryOptions(upgrade.Id == UpgradeId.PieceMastery);
+                return true;
+            }
+
             if (upgrade.RequiresSubChoice)
             {
                 PendingUpgrade = upgrade;
@@ -2998,6 +3011,61 @@ namespace Contigu.Core
             int gain = 1 + _rng.Next(EconomyConstants.MasteryUpgradeMaxLevelGain);
             _colorMasteryLevels[picked] = GetColorMasteryLevel(picked) + gain;
             return picked;
+        }
+
+        /// <summary>Two distinct random shapes (or base colors), each with its own rolled level gain, for Piece/Color Mastery's choice.</summary>
+        private List<MasteryOption> RollMasteryOptions(bool shapes)
+        {
+            var options = new List<MasteryOption>();
+            if (shapes)
+            {
+                var all = new List<ShapeId>((ShapeId[])System.Enum.GetValues(typeof(ShapeId)));
+                for (int i = 0; i < 2 && all.Count > 0; i++)
+                {
+                    int pick = _rng.Next(all.Count);
+                    options.Add(new MasteryOption { Shape = all[pick], Gain = 1 + _rng.Next(EconomyConstants.MasteryUpgradeMaxLevelGain) });
+                    all.RemoveAt(pick);
+                }
+            }
+            else
+            {
+                var all = new List<PieceColor>(PieceColorUtility.BaseColors);
+                for (int i = 0; i < 2 && all.Count > 0; i++)
+                {
+                    int pick = _rng.Next(all.Count);
+                    options.Add(new MasteryOption { Color = all[pick], Gain = 1 + _rng.Next(EconomyConstants.MasteryUpgradeMaxLevelGain) });
+                    all.RemoveAt(pick);
+                }
+            }
+            return options;
+        }
+
+        /// <summary>Resolves Piece/Color Mastery's pending choice: levels up the chosen option's shape/color by its offered gain and surfaces it through <see cref="LastShapeMasteryGranted"/>/<see cref="LastColorMasteryGranted"/>. No-op (false) if nothing is pending or the index is out of range.</summary>
+        public bool ResolveMasteryChoice(int optionIndex)
+        {
+            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.PieceMastery && PendingUpgrade.Id != UpgradeId.ColorMastery))
+            {
+                return false;
+            }
+            if (optionIndex < 0 || optionIndex >= PendingMasteryOptions.Count)
+            {
+                return false;
+            }
+
+            var option = PendingMasteryOptions[optionIndex];
+            if (option.Shape.HasValue)
+            {
+                _shapeMasteryLevels[option.Shape.Value] = GetShapeMasteryLevel(option.Shape.Value) + option.Gain;
+                LastShapeMasteryGranted = option.Shape;
+            }
+            else if (option.Color.HasValue)
+            {
+                _colorMasteryLevels[option.Color.Value] = GetColorMasteryLevel(option.Color.Value) + option.Gain;
+                LastColorMasteryGranted = option.Color;
+            }
+            PendingUpgrade = null;
+            PendingMasteryOptions = System.Array.Empty<MasteryOption>();
+            return true;
         }
 
         /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color, or for Replace which SECOND piece type to duplicate in its place). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>

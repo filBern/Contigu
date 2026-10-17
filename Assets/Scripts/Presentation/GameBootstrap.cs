@@ -70,6 +70,7 @@ namespace Contigu.Presentation
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
         private PieceChoiceView _pieceChoiceView;
+        private MasteryChoiceView _masteryChoiceView;
         private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
@@ -489,6 +490,9 @@ namespace Contigu.Presentation
             _pieceChoiceView = gameObject.AddComponent<PieceChoiceView>();
             _pieceChoiceView.Build(mainRoot, _tooltipView);
 
+            _masteryChoiceView = gameObject.AddComponent<MasteryChoiceView>();
+            _masteryChoiceView.Build(mainRoot);
+
             _modifierUpgradeChoiceView = gameObject.AddComponent<ModifierUpgradeChoiceView>();
             _modifierUpgradeChoiceView.Build(mainRoot, _tooltipView);
 
@@ -554,6 +558,7 @@ namespace Contigu.Presentation
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
+            _masteryChoiceView.OptionChosen += OnMasteryOptionChosen;
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
@@ -2117,6 +2122,10 @@ namespace Contigu.Presentation
             {
                 _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending, _run);
             }
+            else if (pending.Id == UpgradeId.PieceMastery || pending.Id == UpgradeId.ColorMastery)
+            {
+                _masteryChoiceView.Show(_run.PendingMasteryOptions, _run);
+            }
             else if (pending.Id == UpgradeId.ModifierUpgrade)
             {
                 _modifierUpgradeChoiceView.Show(_run.ActiveModifiers, index => _run.GetModifierLevel(index), pending);
@@ -2144,6 +2153,13 @@ namespace Contigu.Presentation
         private void OnPieceChoiceConfirmed(int candidateIndex)
         {
             _run.ResolveUpgradePieceChoice(candidateIndex);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnMasteryOptionChosen(int optionIndex)
+        {
+            _run.ResolveMasteryChoice(optionIndex);
             RefreshAll();
             _shopView.Refresh(_run);
         }

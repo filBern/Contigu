@@ -984,12 +984,8 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void BuyUpgradeSlot_PieceMastery_AppliesImmediately_AndLevelsUpTheGrantedShape()
+        public void BuyUpgradeSlot_PieceMastery_OffersTwoDistinctShapes_AndResolvingLevelsUpTheChosenOne()
         {
-            // Corrected redo of an earlier attempt that wrongly built this
-            // as a persistent Modifier instead of an Upgrade (explicit
-            // report: "les modifiers mastery que tu as créé devaient être
-            // des upgrades, pas des modifiers").
             var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.PieceMastery, 500);
             Assert.IsNotNull(run, "Should find a Piece Mastery upgrade slot within 500 seeds");
             run.DebugGrantLueur(1000000);
@@ -997,16 +993,20 @@ namespace Contigu.Tests
             bool bought = run.BuyUpgradeSlot(slot);
 
             Assert.IsTrue(bought);
-            Assert.IsNull(run.PendingUpgrade, "Piece Mastery has no sub-choice, so it should apply immediately");
-            Assert.IsTrue(run.LastShapeMasteryGranted.HasValue);
-            // Redesign, explicit request: "Pour les upgrades mastery
-            // j'aimerais qu'on donne aléatoirement 1, 2 ou 3 niveau" — a
-            // shape never leveled up before (level 1) should now land
-            // somewhere in [2, 1 + MasteryUpgradeMaxLevelGain], not always
-            // exactly 2.
-            int level = run.GetShapeMasteryLevel(run.LastShapeMasteryGranted.Value);
-            Assert.GreaterOrEqual(level, 2);
-            Assert.LessOrEqual(level, 1 + EconomyConstants.MasteryUpgradeMaxLevelGain);
+            Assert.IsNotNull(run.PendingUpgrade, "Piece Mastery now waits for the player's pick between two options");
+            Assert.AreEqual(2, run.PendingMasteryOptions.Count);
+            Assert.IsTrue(run.PendingMasteryOptions[0].Shape.HasValue && run.PendingMasteryOptions[1].Shape.HasValue);
+            Assert.AreNotEqual(run.PendingMasteryOptions[0].Shape.Value, run.PendingMasteryOptions[1].Shape.Value, "The two options are different shapes");
+
+            var chosen = run.PendingMasteryOptions[1];
+            Assert.IsTrue(run.ResolveMasteryChoice(1));
+
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(chosen.Shape, run.LastShapeMasteryGranted);
+            Assert.AreEqual(1 + chosen.Gain, run.GetShapeMasteryLevel(chosen.Shape.Value));
+            Assert.GreaterOrEqual(chosen.Gain, 1);
+            Assert.LessOrEqual(chosen.Gain, EconomyConstants.MasteryUpgradeMaxLevelGain);
+            Assert.IsFalse(run.ResolveMasteryChoice(0), "Nothing is pending any more");
         }
 
         [Test]
@@ -1095,7 +1095,7 @@ namespace Contigu.Tests
         // Same test shape as the Piece Mastery block above. ----
 
         [Test]
-        public void BuyUpgradeSlot_ColorMastery_AppliesImmediately_AndLevelsUpTheGrantedColor()
+        public void BuyUpgradeSlot_ColorMastery_OffersTwoDistinctColors_AndResolvingLevelsUpTheChosenOne()
         {
             var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.ColorMastery, 500);
             Assert.IsNotNull(run, "Should find a Color Mastery upgrade slot within 500 seeds");
@@ -1104,12 +1104,17 @@ namespace Contigu.Tests
             bool bought = run.BuyUpgradeSlot(slot);
 
             Assert.IsTrue(bought);
-            Assert.IsNull(run.PendingUpgrade, "Color Mastery has no sub-choice, so it should apply immediately");
-            Assert.IsTrue(run.LastColorMasteryGranted.HasValue);
-            // Same redesign as Piece Mastery — see its own test above.
-            int level = run.GetColorMasteryLevel(run.LastColorMasteryGranted.Value);
-            Assert.GreaterOrEqual(level, 2);
-            Assert.LessOrEqual(level, 1 + EconomyConstants.MasteryUpgradeMaxLevelGain);
+            Assert.IsNotNull(run.PendingUpgrade);
+            Assert.AreEqual(2, run.PendingMasteryOptions.Count);
+            Assert.IsTrue(run.PendingMasteryOptions[0].Color.HasValue && run.PendingMasteryOptions[1].Color.HasValue);
+            Assert.AreNotEqual(run.PendingMasteryOptions[0].Color.Value, run.PendingMasteryOptions[1].Color.Value);
+
+            var chosen = run.PendingMasteryOptions[0];
+            Assert.IsTrue(run.ResolveMasteryChoice(0));
+
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(chosen.Color, run.LastColorMasteryGranted);
+            Assert.AreEqual(1 + chosen.Gain, run.GetColorMasteryLevel(chosen.Color.Value));
         }
 
         [Test]
