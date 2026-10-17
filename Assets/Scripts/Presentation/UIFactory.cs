@@ -80,20 +80,31 @@ namespace Contigu.Presentation
         /// <summary>Same as the Color overload, but skinned with a "Colorful UI" pack sprite (see UISprites) instead of a flat fill.</summary>
         public static Button CreateButton(Transform parent, string name, string label, Sprite bgSprite, int fontSize = 16)
         {
+            // A button with a complete illustration (body + title-style lettering + plants) drops its own label and plants.
+            var artSprite = ButtonArt.Find(label);
             var img = CreateSlicedImage(parent, name, bgSprite);
+            if (artSprite != null)
+            {
+                var artButton = FinishButton(img, "", fontSize, decorate: false);
+                artButton.gameObject.AddComponent<ButtonArt>().Init(artSprite);
+                return artButton;
+            }
             return FinishButton(img, label, fontSize);
         }
 
         // Handed out in turn so neighbouring buttons wear different plants (see ButtonVines).
         private static int _nextVineVariety;
 
-        private static Button FinishButton(Image img, string label, int fontSize)
+        private static Button FinishButton(Image img, string label, int fontSize, bool decorate = true)
         {
             var btn = img.gameObject.AddComponent<Button>();
             // Garden touch: little plants around every button big enough to carry them (see ButtonVines).
-            var vines = img.gameObject.AddComponent<ButtonVines>();
-            vines.Variety = 1 + (_nextVineVariety % ButtonVines.VarietyCount);
-            vines.Seed = ++_nextVineVariety;
+            if (decorate)
+            {
+                var vines = img.gameObject.AddComponent<ButtonVines>();
+                vines.Variety = 1 + (_nextVineVariety % ButtonVines.VarietyCount);
+                vines.Seed = ++_nextVineVariety;
+            }
             // Selectable normally self-assigns this via Reset(), which Unity
             // only calls for components added through the Inspector; every
             // button here is built via AddComponent, so this must be set

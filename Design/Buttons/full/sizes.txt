@@ -1,0 +1,11 @@
+Play 370 176 84 8
+Settings 370 176 84 8
+Exit 370 176 84 8
+Confirm 235.933 120 56 8
+OK 147.318 120 56 8
+Gotit 208.627 120 56 8
+Close 200.899 120 56 8
+NewRun 237.994 120 56 8
+Nextround 293.12 120 56 8
+Showseedbag 220 120 56 8
+Showrules 220 120 56 8
