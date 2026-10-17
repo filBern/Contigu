@@ -382,6 +382,10 @@ namespace Contigu.Presentation
                     _enemyIconImages[i].sprite = EnemyIconSprite(enemy.Definition.Id);
                     _enemyIconImages[i].color = EnemyIconColor(enemy.Definition.Id, false);
                     _enemyIconLabels[i].color = UITheme.TextPrimary;
+                    // FadeOutEnemySlot leaves a dead enemy's HP bar fully transparent; a later round reusing the slot must restore it
+                    // (otherwise the bar stayed invisible for every slot that had held an earlier enemy).
+                    _enemyHpBarBackgrounds[i].color = UITheme.PanelLight;
+                    _enemyHpBarFills[i].GetComponent<Image>().color = UITheme.Danger;
                 }
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
