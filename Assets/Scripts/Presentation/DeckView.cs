@@ -61,7 +61,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Your Deck", 26, UITheme.TextOnBackground);
+            var header = UIFactory.CreateText(_root, "Header", "Your Seed Bag", 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);

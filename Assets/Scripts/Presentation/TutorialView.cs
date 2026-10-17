@@ -88,7 +88,7 @@ namespace Contigu.Presentation
                 string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\nTab: view your deck · C: colorblind mode · H: show this screen again · Esc: settings";
+            text += "\n\nTab: view your seed bag · C: colorblind mode · H: show this screen again · Esc: settings";
             return text;
         }
     }

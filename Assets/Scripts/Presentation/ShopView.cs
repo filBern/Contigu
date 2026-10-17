@@ -257,7 +257,7 @@ namespace Contigu.Presentation
 
             // Tab opens the deck view from the shop too, since the shop is
             // its own separate overlay (same hint HudView shows).
-            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view seed deck", 14, UITheme.TextMutedOnBackground);
+            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view your seed bag", 14, UITheme.TextMutedOnBackground);
             var deckHintRect = deckHint.rectTransform;
             deckHintRect.anchorMin = new Vector2(0f, 0f);
             deckHintRect.anchorMax = new Vector2(0f, 0f);

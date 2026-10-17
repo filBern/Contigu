@@ -27,7 +27,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Marathon,
             Name = "Marathon",
-            Description = "A smaller starting deck and tighter seed budgets. A random boss rule appears every four rounds.",
+            Description = "A smaller starting seed bag and tighter seed budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
             Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200, 17500, 32000, 58000, 105000, 190000, 340000, 600000 },

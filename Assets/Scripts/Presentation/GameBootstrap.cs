@@ -567,7 +567,7 @@ namespace Contigu.Presentation
         /// <summary>Quick access to the deck and rules, anchored below the combo card so their position follows its content-driven height.</summary>
         private void BuildComboUtilityButtons(Transform comboParent)
         {
-            var deckButton = UIFactory.CreateButton(comboParent, "ShowDeckButton", "Show deck", UISprites.HandUtilityButtonBackground, 12);
+            var deckButton = UIFactory.CreateButton(comboParent, "ShowDeckButton", "Show seed bag", UISprites.HandUtilityButtonBackground, 12);
             var deckLabel = deckButton.GetComponentInChildren<Text>();
             deckLabel.color = Color.black;
             deckLabel.fontSize = 25;

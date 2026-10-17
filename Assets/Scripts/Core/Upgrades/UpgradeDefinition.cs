@@ -36,11 +36,11 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition DuplicatePiece = new UpgradeDefinition(
             UpgradeId.DuplicatePiece, UpgradePool.Bank, "Propagate a Cutting",
-            "Choose 1 seed to duplicate in your deck.", true, UpgradeRarity.Common);
+            "Choose 1 seed to duplicate in your seed bag.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition JokerPiece = new UpgradeDefinition(
             UpgradeId.JokerPiece, UpgradePool.Bank, "Wild Seed",
-            "Adds a joker seed (random shape) to the deck.", false, UpgradeRarity.Common);
+            "Adds a joker seed (random shape) to the seed bag.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition RecolorPiece = new UpgradeDefinition(
             UpgradeId.RecolorPiece, UpgradePool.Bank, "Rebloom a Seed",
@@ -71,7 +71,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Fresh Sprout",
-            "Choose 1 seed to add to your deck.", true, UpgradeRarity.Common);
+            "Choose 1 seed to add to your seed bag.", true, UpgradeRarity.Common);
 
         /// <summary>
         /// A level system that amplifies whatever the chosen modifier
