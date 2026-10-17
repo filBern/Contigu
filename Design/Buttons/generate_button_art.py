@@ -45,7 +45,7 @@ def plant(n, which, x, y, size, rot=0):
     body = P.V[n][0 if which == 'A' else 1]
     return '<g transform="translate(%g %g) rotate(%g) scale(%g) translate(-32 -62)"><g stroke-linejoin="round" stroke-linecap="round">%s</g></g>' % (x, y, rot, size / 64.0, body)
 
-def button(label, color, variety, w=None, h=56, text_w_fixed=None):
+def button(label, color, variety, w=None, h=56, plant_cap=None):
     cap_h = h * 0.46
     _, tw = lettering(label, cap_h, 0, 0)
     if w is not None and tw > w - h * 0.9:
@@ -54,7 +54,9 @@ def button(label, color, variety, w=None, h=56, text_w_fixed=None):
         _, tw = lettering(label, cap_h, 0, 0)
     if w is None:
         w = tw + h * 1.3
-    mt = max(48, h * 1.0)
+    tall_size = plant_cap if plant_cap else min(88, h * 1.3)
+    small_size = tall_size * 0.72 if plant_cap else min(66, h * 0.95)
+    mt = tall_size * 0.95 + 6 if plant_cap else max(48, h * 1.0)
     mb, mx = 8, 20
     W, H = w + 2 * mx, h + mt + mb
     top, mid, bot = PALETTE[color] if color != 'Wood' else ('#d9a766', '#c58a4a', '#8f5b2b')
@@ -63,8 +65,8 @@ def button(label, color, variety, w=None, h=56, text_w_fixed=None):
     r = h / 2 if color != 'Wood' else min(14, h / 3)
     # plants behind the body's top edge
     base = mt
-    s.append(plant(variety, 'A', mx + w * 0.17, base + 4, min(88, h * 1.3)))
-    s.append(plant(variety, 'B', mx + w * 0.82, base + 4, min(66, h * 0.95)))
+    s.append(plant(variety, 'A', mx + w * 0.17, base + 4, tall_size))
+    s.append(plant(variety, 'B', mx + w * 0.82, base + 4, small_size))
     s.append('<rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="url(#g)" stroke="%s" stroke-width="%g"/>' % (mx + 2.5, mt + 2.5, w - 5, h - 5, r, O, 5))
     s.append('<path d="M%g %g H%g" stroke="#fff" stroke-width="%g" stroke-linecap="round" opacity="0.5"/>' % (mx + r + 4, mt + h * 0.2, mx + w - r - 4, max(3, h * 0.07)))
     if color == 'Wood':
@@ -82,13 +84,14 @@ SPEC = {
  'Showseedbag': ('Show seed bag', 'Wood', 10, 180), 'Showrules': ('Show rules', 'Wood', 1, 180),
 }
 HEIGHT = {'Play': 84, 'Settings': 84, 'Exit': 84}
+PLANT_CAP = {'Play': 52, 'Settings': 52, 'Exit': 52}  # menu buttons are stacked close together: keep their plants short
 
 if __name__ == '__main__':
     os.makedirs('full', exist_ok=True)
     info = []
     for name, (label, color, variety, fixed_w) in SPEC.items():
-        svg, W, H, mt, mb = button(label, color, variety, fixed_w, HEIGHT.get(name, 56))
+        svg, W, H, mt, mb = button(label, color, variety, fixed_w, HEIGHT.get(name, 56), PLANT_CAP.get(name))
         open('full/%s.svg' % name, 'w').write(svg)
-        info.append('%s %g %g %g %g' % (name, W, H, mt, mb))
+        info.append('%s %g %g %g %g %g' % (name, W, H, mt, mb, HEIGHT.get(name, 56)))
     open('full/sizes.txt', 'w').write('\n'.join(info) + '\n')
     print('\n'.join(info))

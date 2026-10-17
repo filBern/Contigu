@@ -82,7 +82,7 @@ namespace Contigu.Presentation
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
             playRect.pivot = new Vector2(0.5f, 0.5f);
-            playRect.anchoredPosition = new Vector2(0f, -6f);
+            playRect.anchoredPosition = new Vector2(0f, -46f);
             playRect.sizeDelta = new Vector2(330f, 84f);
             var playImage = playButton.GetComponent<Image>();
             playImage.color = UISprites.Garden("Gold") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Lime);
@@ -95,7 +95,7 @@ namespace Contigu.Presentation
             settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
             settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
             settingsRect.pivot = new Vector2(0.5f, 0.5f);
-            settingsRect.anchoredPosition = new Vector2(0f, -110f);
+            settingsRect.anchoredPosition = new Vector2(0f, -176f);
             settingsRect.sizeDelta = new Vector2(330f, 84f);
             var settingsImage = settingsButton.GetComponent<Image>();
             settingsImage.color = UISprites.Garden("Blue") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Teal);
@@ -108,7 +108,7 @@ namespace Contigu.Presentation
             exitRect.anchorMin = new Vector2(0.5f, 0.5f);
             exitRect.anchorMax = new Vector2(0.5f, 0.5f);
             exitRect.pivot = new Vector2(0.5f, 0.5f);
-            exitRect.anchoredPosition = new Vector2(0f, -214f);
+            exitRect.anchoredPosition = new Vector2(0f, -306f);
             exitRect.sizeDelta = new Vector2(330f, 84f);
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);

@@ -11,10 +11,10 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class ButtonArt : MonoBehaviour
     {
-        // The art is authored 2x (PNG pixels = 2 x game pixels). Its canvas is: top margin = body height, bottom margin = 8,
-        // so body height h = (canvasHeight - 8) / 2 (see the generator).
-        private const float AuthoredScale = 2f;
-        private const float BottomMargin = 8f;
+        // The art is authored 4x (PNG pixels = 4 x game pixels, so it stays sharp on high-DPI screens). Per-button body height and
+        // top/bottom margins come from Resources/Buttons/Full/layout.txt, written by the generator ("Name bodyH topMargin bottomMargin").
+        private const float AuthoredScale = 4f;
+        private static System.Collections.Generic.Dictionary<string, Vector3> _layouts;
 
         private Sprite _sprite;
         private RectTransform _art;
@@ -63,16 +63,42 @@ namespace Contigu.Presentation
             }
         }
 
+        private static Vector3 LayoutFor(string name, float canvasH)
+        {
+            if (_layouts == null)
+            {
+                _layouts = new System.Collections.Generic.Dictionary<string, Vector3>();
+                var file = Resources.Load<TextAsset>("Buttons/Full/layout");
+                if (file != null)
+                {
+                    foreach (var line in file.text.Split('\n'))
+                    {
+                        var parts = line.Trim().Split(' ');
+                        if (parts.Length == 4
+                            && float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var h)
+                            && float.TryParse(parts[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var mt)
+                            && float.TryParse(parts[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var mb))
+                        {
+                            _layouts[parts[0]] = new Vector3(h, mt, mb);
+                        }
+                    }
+                }
+            }
+            // Fallback if the entry is missing: body as tall as the top margin, 8 below.
+            return _layouts.TryGetValue(name, out var l) ? l : new Vector3((canvasH - 8f) * 0.5f, (canvasH - 8f) * 0.5f, 8f);
+        }
+
         private void Layout()
         {
             var r = ((RectTransform)transform).rect;
             float canvasW = _sprite.rect.width / AuthoredScale;
             float canvasH = _sprite.rect.height / AuthoredScale;
-            float bodyH = (canvasH - BottomMargin) * 0.5f;
+            var l = LayoutFor(_sprite.name, canvasH);
+            float bodyH = l.x, top = l.y, bottom = l.z;
             float f = bodyH > 0f ? r.height / bodyH : 1f;
             _art.sizeDelta = new Vector2(canvasW * f, canvasH * f);
-            // The body sits (bodyH * 1.5) below the canvas top, the canvas center is (canvasH / 2) below it: shift the art up by the difference.
-            _art.anchoredPosition = new Vector2(0f, (bodyH * 0.5f - BottomMargin * 0.5f) * f);
+            // The body's center sits (top + bodyH/2) below the canvas top; the canvas center is canvasH/2 below it: shift the art by the difference.
+            _art.anchoredPosition = new Vector2(0f, (top + bodyH * 0.5f - canvasH * 0.5f) * f);
         }
     }
 }
