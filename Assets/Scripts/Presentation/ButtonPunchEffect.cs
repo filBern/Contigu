@@ -24,6 +24,13 @@ namespace Contigu.Presentation
         public void Punch()
         {
             SfxManager.Play(SfxId.ButtonClick);
+            // Garden buttons own their scale (hover x press x punch) in ButtonFeedback.
+            var feedback = GetComponent<ButtonFeedback>();
+            if (feedback != null)
+            {
+                feedback.Punch();
+                return;
+            }
             if (_routine != null)
             {
                 StopCoroutine(_routine);
