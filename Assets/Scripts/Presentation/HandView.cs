@@ -355,7 +355,8 @@ namespace Contigu.Presentation
                 _shuffleButton.transform.localScale = new Vector3(scale, scale, 1f);
                 _stuckGlow.rectTransform.localScale = Vector3.one * (1f + 0.6f * wave);
                 _stuckGlow.color = new Color(1f, 0.3f, 0.25f, 0.55f * (1f - wave) + 0.15f);
-                for (int i = 0; i < _slotBackgrounds.Length; i++)
+                // The hand can be smaller than the slot array (effective hand size), so bound by the hand.
+                for (int i = 0; i < _deck.Hand.Count && i < _slotBackgrounds.Length; i++)
                 {
                     if (_deck.Hand[i].HasValue && _slotBackgrounds[i].gameObject.activeSelf && _interactable)
                     {
