@@ -1691,6 +1691,12 @@ namespace Contigu.Core
         /// <summary>The hand slot Thief just emptied, alongside <see cref="ThiefStoleOnLastShuffle"/> — null unless it's true. The slot itself is already empty by the time Presentation reads this (DeckManager.StealRandomHandTile runs before Presentation ever sees the fresh hand), so this and <see cref="ThiefStolenToken"/>/<see cref="ThiefStolenRotation"/> are how Presentation still knows what to animate flying away from it.</summary>
         public int? ThiefStolenHandIndex { get; private set; }
 
+        /// <summary>Every piece stolen by the most recent Shuffle, in order (an enraged Thief takes two) — Presentation animates each one flying off. Empty unless <see cref="ThiefStoleOnLastShuffle"/>.</summary>
+        public IReadOnlyList<(int Index, PieceToken Token, PieceRotation Rotation)> ThiefStolenPieces { get; private set; } = new List<(int, PieceToken, PieceRotation)>();
+
+        /// <summary>True when the Thief that stole this Shuffle was below half HP (so it took two seeds instead of one) — Presentation announces it so the double steal doesn't read as a bug.</summary>
+        public bool ThiefEnragedOnLastShuffle { get; private set; }
+
         /// <summary>The actual piece Thief stole, for Presentation to render as a flying ghost — see <see cref="ThiefStolenHandIndex"/>.</summary>
         public PieceToken? ThiefStolenToken { get; private set; }
 
@@ -2307,6 +2313,9 @@ namespace Contigu.Core
         private bool ResolveThiefShuffleEffect()
         {
             bool stole = false;
+            var stolenList = new List<(int, PieceToken, PieceRotation)>();
+            ThiefStolenPieces = stolenList;
+            ThiefEnragedOnLastShuffle = false;
             ThiefStolenHandIndex = null;
             ThiefStolenToken = null;
             ThiefStolenRotation = null;
@@ -2320,6 +2329,10 @@ namespace Contigu.Core
                     // Shuffle instead of once, forcing the player to stop relying on holding pieces
                     // in hand as it nears death.
                     int stealCount = enemy.CurrentHp * 2 <= enemy.CurrentMaxHp ? ThiefEnragedStealCount : 1;
+                    if (stealCount > 1)
+                    {
+                        ThiefEnragedOnLastShuffle = true;
+                    }
                     // Several alive Thieves (or ThiefEnragedStealCount>1 steals from the same one) would
                     // each steal a piece, but only the last one's is kept here to animate — same
                     // simplification ThiefStoleOnLastShuffle's own plain bool already makes for "how many".
@@ -2328,6 +2341,7 @@ namespace Contigu.Core
                         if (Deck.StealRandomHandTile(_rng, out var stolenIndex, out var stolenToken, out var stolenRotation))
                         {
                             stole = true;
+                            stolenList.Add((stolenIndex, stolenToken, stolenRotation));
                             ThiefStolenHandIndex = stolenIndex;
                             ThiefStolenToken = stolenToken;
                             ThiefStolenRotation = stolenRotation;

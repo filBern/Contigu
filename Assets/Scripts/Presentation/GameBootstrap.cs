@@ -1205,30 +1205,55 @@ namespace Contigu.Presentation
             {
                 if (encounter[i].Definition.Id == EnemyId.Thief)
                 {
-                    _hudView.PlayEnemyEffectPulse(i);
-                    var anchor = _hudView.GetEnemyIconTransform(i);
-                    if (anchor != null)
-                    {
-                        // floatDown: true — this anchor sits near the top of
-                        // the screen; SpawnPopup's usual float-up would run
-                        // the text off the top edge.
-                        _feedbackLayer.SpawnPopup(anchor, "Stole a seed!", UITheme.Danger, floatDown: true);
-                        // The actual stolen piece, flying from its (already empty) hand slot to Thief's icon —
-                        // see RunManager.ThiefStolenHandIndex's own doc comment for why the slot is empty by now.
-                        if (_run.ThiefStolenHandIndex.HasValue && _run.ThiefStolenToken.HasValue && _run.ThiefStolenRotation.HasValue)
-                        {
-                            var slotTransform = _handView.GetSlotPreviewTransform(_run.ThiefStolenHandIndex.Value);
-                            if (slotTransform != null)
-                            {
-                                var token = _run.ThiefStolenToken.Value;
-                                var shape = PieceShapeCatalog.GetRotated(token.Shape, _run.ThiefStolenRotation.Value);
-                                _feedbackLayer.SpawnFlyingPiece(slotTransform.position, anchor, shape, token.Color);
-                            }
-                        }
-                    }
-                    SfxManager.Play(SfxId.PickUpPiece);
+                    StartCoroutine(PlayThiefStealRoutine(i));
                     return;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Each stolen seed flies from its (already empty) hand slot to the Crow's icon, one after the other, instead of
+        /// only the last one animating. An enraged Crow (below half HP, two seeds per Shuffle) also announces itself with
+        /// a big "ENRAGED!" callout and a stronger pulse, so the double steal reads as intended rather than a bug.
+        /// </summary>
+        private System.Collections.IEnumerator PlayThiefStealRoutine(int thiefIndex)
+        {
+            var anchor = _hudView.GetEnemyIconTransform(thiefIndex);
+            var stolen = new List<(int Index, PieceToken Token, PieceRotation Rotation)>(_run.ThiefStolenPieces);
+            bool enraged = _run.ThiefEnragedOnLastShuffle;
+
+            _hudView.PlayEnemyEffectPulse(thiefIndex);
+            if (anchor != null && enraged)
+            {
+                // floatDown: this anchor sits near the top of the screen; SpawnPopup's usual float-up would run the text off the edge.
+                _feedbackLayer.SpawnPopup(anchor, "ENRAGED!", UITheme.Danger, fontSize: 40, floatDown: true);
+                SfxManager.Play(SfxId.InvalidDrop);
+                yield return new WaitForSeconds(0.35f);
+            }
+
+            for (int k = 0; k < stolen.Count; k++)
+            {
+                _hudView.PlayEnemyEffectPulse(thiefIndex);
+                if (anchor != null)
+                {
+                    var slotTransform = _handView.GetSlotPreviewTransform(stolen[k].Index);
+                    if (slotTransform != null)
+                    {
+                        var shape = PieceShapeCatalog.GetRotated(stolen[k].Token.Shape, stolen[k].Rotation);
+                        _feedbackLayer.SpawnFlyingPiece(slotTransform.position, anchor, shape, stolen[k].Token.Color);
+                    }
+                }
+                SfxManager.Play(SfxId.PickUpPiece);
+                if (k < stolen.Count - 1)
+                {
+                    yield return new WaitForSeconds(0.3f);
+                }
+            }
+
+            if (anchor != null)
+            {
+                string text = stolen.Count > 1 ? "Stole " + stolen.Count + " seeds!" : "Stole a seed!";
+                _feedbackLayer.SpawnPopup(anchor, text, UITheme.Danger, floatDown: true);
             }
         }
 
