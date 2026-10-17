@@ -62,7 +62,17 @@
   </g>
 
   <!-- Cream inset -->
-  <rect x="32" y="32" width="192" height="192" rx="14" fill="#fff7e8" stroke="#13212e" stroke-width="5"/>
+  <rect x="32" y="32" width="192" height="192" rx="14" fill="#6b4528" stroke="#13212e" stroke-width="5"/>
+  <!-- Tilled soil: faint furrows and a few specks -->
+  <g clip-path="url(#inset)">
+    <g stroke="#53331b" stroke-width="3" stroke-linecap="round" opacity="0.8">
+      <path d="M40 62H216M40 96H216M40 160H216M40 194H216"/>
+    </g>
+    <g fill="#8a6038" opacity="0.8">
+      <circle cx="58" cy="108" r="2.5"/><circle cx="196" cy="84" r="2.5"/><circle cx="70" cy="206" r="3"/>
+      <circle cx="190" cy="150" r="2.5"/><circle cx="48" cy="150" r="2"/><circle cx="208" cy="206" r="2.5"/>
+    </g>
+  </g>
 
   <!-- Poppy -->
   <g clip-path="url(#inset)">
