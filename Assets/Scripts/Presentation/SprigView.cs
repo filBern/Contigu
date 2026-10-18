@@ -88,9 +88,13 @@ namespace Contigu.Presentation
 
             text = UIFactory.CreateText(bubble.transform, "Text", "", fontSize, UITheme.TextPrimary, TextAnchor.MiddleLeft);
             text.raycastTarget = false;
-            // The pack's Digitalt font draws "!" like a capital I; Sprig's speech uses the plain built-in font instead.
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontStyle = FontStyle.Bold;
+            // The pack's Digitalt font draws "!" like a capital I; Sprig's speech is hand-lettered instead (Resources/Font/PatrickHand-Regular).
+            var speechFont = Resources.Load<Font>("Font/PatrickHand-Regular");
+            text.font = speechFont != null ? speechFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (speechFont != null)
+            {
+                text.fontSize = Mathf.RoundToInt(fontSize * 1.15f);
+            }
             UIFactory.StretchFull(text.rectTransform);
             text.rectTransform.offsetMin = new Vector2(22f, 14f);
             text.rectTransform.offsetMax = new Vector2(-18f, -14f);
