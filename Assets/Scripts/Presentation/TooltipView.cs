@@ -35,6 +35,10 @@ namespace Contigu.Presentation
         private Image _loreDivider;
         private Text _loreLabel;
         private const float LoreGap = 8f;
+        // Optional last section (enemy HP): a divider plus a right-aligned line at the bottom-right of the panel.
+        private Image _footerDivider;
+        private Text _footerLabel;
+        private const float FooterHeight = 20f;
 
         public RectTransform Build(Transform parent)
         {
@@ -114,6 +118,20 @@ namespace Contigu.Presentation
             _loreLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
             _loreLabel.gameObject.SetActive(false);
 
+            _footerDivider = UIFactory.CreatePanel(_panel, "FooterDivider", UITheme.Border);
+            _footerDivider.raycastTarget = false;
+            _footerDivider.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _footerDivider.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _footerDivider.rectTransform.pivot = new Vector2(0f, 1f);
+            _footerDivider.gameObject.SetActive(false);
+
+            _footerLabel = UIFactory.CreateText(_panel, "Footer", "", 14, UITheme.TextPrimary, TextAnchor.MiddleRight);
+            _footerLabel.raycastTarget = false;
+            _footerLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _footerLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _footerLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            _footerLabel.gameObject.SetActive(false);
+
             _root.gameObject.SetActive(false);
             return _root;
         }
@@ -126,7 +144,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null)
         {
             _nameLabel.text = name;
 
@@ -170,7 +188,21 @@ namespace Contigu.Presentation
                 _loreLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, loreHeight);
                 loreBlockHeight = LoreGap * 2f + 1f + loreHeight;
             }
-            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight + loreBlockHeight);
+            float footerBlockHeight = 0f;
+            bool hasFooter = !string.IsNullOrEmpty(footer);
+            _footerDivider.gameObject.SetActive(hasFooter);
+            _footerLabel.gameObject.SetActive(hasFooter);
+            if (hasFooter)
+            {
+                _footerLabel.text = footer;
+                float footerDividerY = -Padding - usedHeight - descHeight - loreBlockHeight - LoreGap;
+                _footerDivider.rectTransform.anchoredPosition = new Vector2(Padding, footerDividerY);
+                _footerDivider.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 1f);
+                _footerLabel.rectTransform.anchoredPosition = new Vector2(Padding, footerDividerY - LoreGap + 2f);
+                _footerLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, FooterHeight);
+                footerBlockHeight = LoreGap * 2f + 1f + FooterHeight - 4f;
+            }
+            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight + loreBlockHeight + footerBlockHeight);
 
             _root.gameObject.SetActive(true);
             // Always render above whatever else is on screen, including
