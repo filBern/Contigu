@@ -27,8 +27,7 @@ def spikes(n, r_out, r_in, off=0):
 violet = ('<path d="%s" fill="#e8721e" %s/>' % (spikes(10, 62, 36, math.pi / 10), st) +
           '<path d="%s" fill="#ffd54a" %s/>' % (spikes(10, 54, 30), st.replace('6"', '4"', 1)) +
           '<circle cx="64" cy="64" r="26" fill="#5a3416" %s/>' % st +
-          '<path d="M46 54 L60 62 L46 66Z M82 54 L68 62 L82 66Z" fill="#ff3b30" stroke="%s" stroke-width="2.5" stroke-linejoin="round"/>' % O +
-          '<path d="M52 78 L56 72 L60 78 L64 72 L68 78 L72 72 L76 78" fill="none" stroke="#ffd54a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>')
+          '<circle cx="64" cy="64" r="9" fill="#ffb347" stroke="%s" stroke-width="3"/>' % O)
 
 # Lime / Fern: thorny leaf dart
 lime = ('<path d="M8 64 C30 30 80 28 120 64 C80 100 30 98 8 64Z" fill="#5a9e45" %s/>' % st +
