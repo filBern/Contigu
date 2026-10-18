@@ -43,6 +43,7 @@ namespace Contigu.Presentation
         private Image _guidePortrait;
         private Text _guideText;
         private Text _guideHint;
+        private RectTransform _speakerRoot;
         private RectTransform _ring;
         private Image[] _ringBars;
         private bool _guideClicked;
@@ -120,13 +121,14 @@ namespace Contigu.Presentation
             }
 
             _guidePortrait = BuildSpeaker(_guideRoot, "Speaker", GuidePortraitSize, BubbleWidthGuide, 20, out _guideText, out var speakerRoot);
-            speakerRoot.anchoredPosition = new Vector2(40f, 150f);
+            speakerRoot.anchoredPosition = new Vector2(40f, 40f);
+            _speakerRoot = speakerRoot;
 
-            _guideHint = UIFactory.CreateText(_guideRoot, "Hint", "Click to continue", 15, UITheme.TextMutedOnBackground, TextAnchor.MiddleLeft);
+            _guideHint = UIFactory.CreateText(speakerRoot, "Hint", "Click to continue", 15, UITheme.TextMutedOnBackground, TextAnchor.MiddleLeft);
             _guideHint.raycastTarget = false;
             _guideHint.rectTransform.anchorMin = _guideHint.rectTransform.anchorMax = new Vector2(0f, 0f);
             _guideHint.rectTransform.pivot = new Vector2(0f, 0f);
-            _guideHint.rectTransform.anchoredPosition = new Vector2(40f + GuidePortraitSize + 30f, 150f - 10f);
+            _guideHint.rectTransform.anchoredPosition = new Vector2(GuidePortraitSize + 12f, 14f);
             _guideHint.rectTransform.sizeDelta = new Vector2(300f, 24f);
 
             _guideRoot.gameObject.SetActive(false);
@@ -206,6 +208,7 @@ namespace Contigu.Presentation
                     continue;
                 }
                 _ring.gameObject.SetActive(haveTarget);
+                PlaceSpeakerAwayFromRing(haveTarget);
                 _guidePortrait.sprite = Portrait(step.Mood);
                 _guideHint.text = i == steps.Count - 1 ? "Click to start" : "Click to continue";
                 _guideClicked = false;
@@ -293,6 +296,49 @@ namespace Contigu.Presentation
             Place(_ringBars[2], -w / 2f + th / 2f, 0f, th, h);
             Place(_ringBars[3], w / 2f - th / 2f, 0f, th, h);
             return true;
+        }
+
+        /// <summary>Moves Sprig + his bubble to whichever screen corner (or left-middle) doesn't cover the framed element.</summary>
+        private void PlaceSpeakerAwayFromRing(bool haveTarget)
+        {
+            Rect screen = _guideRoot.rect;
+            Vector2 size = _speakerRoot.sizeDelta;
+            const float margin = 24f;
+            Vector2[] candidates =
+            {
+                new Vector2(margin, margin),
+                new Vector2(margin, screen.height - size.y - margin),
+                new Vector2(screen.width - size.x - margin, margin),
+                new Vector2(screen.width - size.x - margin, screen.height - size.y - margin),
+                new Vector2(margin, (screen.height - size.y) / 2f),
+            };
+            Vector2 chosen = candidates[0];
+            if (haveTarget)
+            {
+                var corners = new Vector3[4];
+                _ring.GetWorldCorners(corners);
+                Vector2 a = (Vector2)_guideRoot.InverseTransformPoint(corners[0]) - screen.min;
+                Vector2 b = (Vector2)_guideRoot.InverseTransformPoint(corners[2]) - screen.min;
+                var target = Rect.MinMaxRect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
+                float bestOverlap = float.MaxValue;
+                for (int i = 0; i < candidates.Length; i++)
+                {
+                    var box = new Rect(candidates[i], size);
+                    float ox = Mathf.Max(0f, Mathf.Min(box.xMax, target.xMax) - Mathf.Max(box.xMin, target.xMin));
+                    float oy = Mathf.Max(0f, Mathf.Min(box.yMax, target.yMax) - Mathf.Max(box.yMin, target.yMin));
+                    float overlap = ox * oy;
+                    if (overlap < bestOverlap)
+                    {
+                        bestOverlap = overlap;
+                        chosen = candidates[i];
+                        if (overlap <= 0f)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            _speakerRoot.anchoredPosition = chosen;
         }
 
         private static void Place(Image bar, float x, float y, float w, float h)
