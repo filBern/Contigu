@@ -1939,7 +1939,8 @@ namespace Contigu.Tests
             Assert.AreEqual(ScoringConstants.ComboMultiplierFactor, second.ComboMultiplier);
             int baseSubtotal = (second.GroupBonus + second.GoldenBonus) * second.GroupMultiplier
                 + second.LineClearScore * second.LineClearMultiplier + second.ModifierBonus + second.TraitBonus;
-            Assert.AreEqual(baseSubtotal * ScoringConstants.ComboMultiplierFactor, second.TotalScore);
+            // Clearing row 1 also empties the grid, so the sweep Mult stacks on top of Combo.
+            Assert.AreEqual(baseSubtotal * ScoringConstants.ComboMultiplierFactor * ScoringConstants.GridClearMultiplier, second.TotalScore);
         }
 
         [Test]

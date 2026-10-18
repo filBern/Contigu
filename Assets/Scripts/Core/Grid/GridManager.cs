@@ -330,7 +330,7 @@ namespace Contigu.Core
             // Bastion cells (Cell.IsBastion) earn the same per-cell bonus as
             // an actually-cleared cell without being in ClearedCells — they're
             // never emptied (see CollectLineCell/BastionBonusCells).
-            result.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
+            result.LineClearScore = SumLineAmounts(clearInfo);
             // Lueur is a separate currency from score, driven by color
             // diversity per cleared line (see PlacementResult.LueurEarned/LueurGroups).
             var lueurGroups = ComputeLueurGroups(clearInfo.ClearedLines);
@@ -341,11 +341,19 @@ namespace Contigu.Core
 
             for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
+                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], clearInfo.LineAmounts[clearInfo.ClearedCells[i]]));
             }
             for (int i = 0; i < clearInfo.BastionBonusCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], ScoringConstants.LineClearBonusPerCell));
+                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], clearInfo.LineAmounts[clearInfo.BastionBonusCells[i]]));
+            }
+            // Clearing the whole grid with this one placement doubles the placement's Mult, applied last (see PlacementResult.Mult's ordered fold).
+            if (clearInfo.GridEmptied)
+            {
+                var sweepEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.GridClearMultiplier);
+                sweepEvent.TriggeringModifierIndex = int.MaxValue;
+                events.Add(sweepEvent);
+                modifierMultiplier *= ScoringConstants.GridClearMultiplier;
             }
 
             // Rafale: did the immediately previous placement this round also
@@ -2645,7 +2653,13 @@ namespace Contigu.Core
             /// </summary>
             public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId?> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells)
+            /// <summary>Line-clear points per cell (cleared AND Bastion cells): each cell scores <see cref="ScoringConstants.LineClearBonusPerCell"/> times the 1-based order of the first completed line containing it (1st line 3/cell, 2nd 6/cell, 3rd 9/cell...), so breaking several lines in one placement snowballs.</summary>
+            public readonly IReadOnlyDictionary<Vector2Int, int> LineAmounts;
+
+            /// <summary>True when this placement's line clear left no filled cell on the whole grid.</summary>
+            public readonly bool GridEmptied;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId?> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells, IReadOnlyDictionary<Vector2Int, int> lineAmounts, bool gridEmptied)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
@@ -2654,10 +2668,22 @@ namespace Contigu.Core
                 ClearedLineCount = clearedLineCount;
                 ClearedLines = clearedLines;
                 BastionBonusCells = bastionBonusCells;
+                LineAmounts = lineAmounts;
+                GridEmptied = gridEmptied;
             }
         }
 
         /// <summary>A row/column is complete if every non-locked cell in it is filled. A row/column with zero non-locked cells is degenerate and never counts as complete.</summary>
+        private static int SumLineAmounts(ClearInfo clearInfo)
+        {
+            int total = 0;
+            foreach (var pair in clearInfo.LineAmounts)
+            {
+                total += pair.Value;
+            }
+            return total;
+        }
+
         private ClearInfo CheckAndClearLines()
         {
             var cellsToClear = new HashSet<Vector2Int>();
@@ -2691,6 +2717,21 @@ namespace Contigu.Core
                 }
             }
 
+            // Escalating per-cell value by line order (rows first, then columns); a cell shared by two lines keeps the first line's value.
+            var lineAmounts = new Dictionary<Vector2Int, int>();
+            for (int k = 0; k < clearedLines.Count; k++)
+            {
+                var line = clearedLines[k];
+                for (int i = 0; i < Size; i++)
+                {
+                    var pos = line.IsRow ? new Vector2Int(i, line.Index) : new Vector2Int(line.Index, i);
+                    if ((cellsToClear.Contains(pos) || bastionBonus.Contains(pos)) && !lineAmounts.ContainsKey(pos))
+                    {
+                        lineAmounts[pos] = ScoringConstants.LineClearBonusPerCell * (k + 1);
+                    }
+                }
+            }
+
             var cleared = new List<Vector2Int>(cellsToClear.Count);
             var clearedColors = new List<PieceColor>(cellsToClear.Count);
             var clearedShapes = new List<ShapeId?>(cellsToClear.Count);
@@ -2705,7 +2746,20 @@ namespace Contigu.Core
                 cleared.Add(pos);
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedShapes, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus));
+            bool gridEmptied = cleared.Count > 0;
+            for (int x = 0; x < Size && gridEmptied; x++)
+            {
+                for (int y = 0; y < Size; y++)
+                {
+                    if (_cells[x, y].IsFilled)
+                    {
+                        gridEmptied = false;
+                        break;
+                    }
+                }
+            }
+
+            return new ClearInfo(cleared, clearedColors, clearedShapes, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus), lineAmounts, gridEmptied);
         }
 
         /// <summary>
@@ -2924,7 +2978,7 @@ namespace Contigu.Core
             var clearInfo = CheckAndClearLines();
             outcome.ClearedCells = clearInfo.ClearedCells;
             outcome.ClearedCellColors = clearInfo.ClearedCellColors;
-            outcome.LineClearScore = (clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count) * ScoringConstants.LineClearBonusPerCell;
+            outcome.LineClearScore = SumLineAmounts(clearInfo);
             outcome.LueurEarned = SumLueur(ComputeLueurGroups(clearInfo.ClearedLines));
 
             if (clearInfo.ClearedCells.Count > 0)
@@ -2938,11 +2992,11 @@ namespace Contigu.Core
             var events = new List<ScoreEvent>(clearInfo.ClearedCells.Count + clearInfo.BastionBonusCells.Count);
             for (int i = 0; i < clearInfo.ClearedCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], ScoringConstants.LineClearBonusPerCell));
+                events.Add(new ScoreEvent(ScoreEventType.LineClear, clearInfo.ClearedCells[i], clearInfo.LineAmounts[clearInfo.ClearedCells[i]]));
             }
             for (int i = 0; i < clearInfo.BastionBonusCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], ScoringConstants.LineClearBonusPerCell));
+                events.Add(new ScoreEvent(ScoreEventType.Bastion, clearInfo.BastionBonusCells[i], clearInfo.LineAmounts[clearInfo.BastionBonusCells[i]]));
             }
             outcome.ScoreEvents = events;
 

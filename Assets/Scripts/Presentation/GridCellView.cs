@@ -25,6 +25,8 @@ namespace Contigu.Presentation
         private const float ClearBurstDuration = 0.32f;
         private const int ClearBurstParticleCount = 6;
         private const float ClearBurstParticleSize = 10f;
+        private const int ClearBurstPetalCount = 9;
+        private const float ClearBurstPetalSize = 26f;
         private const float ClearBurstTravelDistance = 42f;
 
         public int X { get; private set; }
@@ -439,28 +441,40 @@ namespace Contigu.Presentation
         /// spawns its own particle children rather than animating this cell's transform, so it plays
         /// independently of any concurrent Pulse.
         /// </summary>
-        public void PlayClearBurst(Color color)
+        public void PlayClearBurst(Color color, PieceColor? petalColor = null)
         {
-            StartCoroutine(ClearBurstRoutine(color));
+            StartCoroutine(ClearBurstRoutine(color, petalColor));
         }
 
-        private IEnumerator ClearBurstRoutine(Color color)
+        private IEnumerator ClearBurstRoutine(Color color, PieceColor? petalColor)
         {
-            var particles = new Image[ClearBurstParticleCount];
-            var directions = new Vector2[ClearBurstParticleCount];
-            for (int i = 0; i < ClearBurstParticleCount; i++)
+            // A harvested tile bursts into petals of its own color (Icons/Petals); anything else keeps the plain squares.
+            Sprite petal = petalColor.HasValue ? VisualDefaults.GetPetalSprite(petalColor.Value) : null;
+            int count = petal != null ? ClearBurstPetalCount : ClearBurstParticleCount;
+            float size = petal != null ? ClearBurstPetalSize : ClearBurstParticleSize;
+            var particles = new Image[count];
+            var directions = new Vector2[count];
+            var spins = new float[count];
+            for (int i = 0; i < count; i++)
             {
-                var particle = UIFactory.CreatePanel(transform, "ClearBurst", color);
+                var particle = UIFactory.CreatePanel(transform, "ClearBurst", petal != null ? Color.white : color);
                 particle.raycastTarget = false;
+                if (petal != null)
+                {
+                    particle.sprite = petal;
+                    particle.preserveAspect = true;
+                    particle.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                    spins[i] = Random.Range(-260f, 260f);
+                }
                 particle.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                 particle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 particle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 particle.rectTransform.anchoredPosition = Vector2.zero;
-                particle.rectTransform.sizeDelta = new Vector2(ClearBurstParticleSize, ClearBurstParticleSize);
+                particle.rectTransform.sizeDelta = new Vector2(size, size);
 
                 // Evenly spread around the circle, with a little jitter so a
                 // burst never looks like a perfectly mechanical rosette.
-                float angle = (360f / ClearBurstParticleCount) * i + Random.Range(-15f, 15f);
+                float angle = (360f / count) * i + Random.Range(-15f, 15f);
                 directions[i] = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
                 particles[i] = particle;
             }
@@ -476,6 +490,10 @@ namespace Contigu.Presentation
                     rt.anchoredPosition = directions[i] * ClearBurstTravelDistance * p;
                     float scale = Mathf.Lerp(1f, 0.2f, p);
                     rt.localScale = new Vector3(scale, scale, 1f);
+                    if (petal != null)
+                    {
+                        rt.localRotation *= Quaternion.Euler(0f, 0f, spins[i] * Time.deltaTime);
+                    }
                     var c = particles[i].color;
                     particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
                 }

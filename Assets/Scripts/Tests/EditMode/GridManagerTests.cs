@@ -618,7 +618,8 @@ namespace Contigu.Tests
             Assert.AreEqual(expectedLineClearScore, finalResult.LineClearScore);
             Assert.AreEqual(ScoringConstants.TintedMatchMultiplier, finalResult.GroupMultiplier);
             Assert.AreEqual(1, finalResult.LineClearMultiplier, "Tinted alone should leave LineClearMultiplier at 1 — no multiplier-zone cell is involved");
-            Assert.AreEqual((expectedGroupBonus + expectedGoldenBonus) * ScoringConstants.TintedMatchMultiplier + expectedLineClearScore, finalResult.TotalScore);
+            // The row was the only filled line, so clearing it empties the whole grid: Mult x GridClearMultiplier.
+            Assert.AreEqual(((expectedGroupBonus + expectedGoldenBonus) * ScoringConstants.TintedMatchMultiplier + expectedLineClearScore) * ScoringConstants.GridClearMultiplier, finalResult.TotalScore);
         }
 
         [Test]
@@ -649,7 +650,7 @@ namespace Contigu.Tests
             Assert.AreEqual(expectedGroupBonus, finalResult.GroupBonus);
             Assert.AreEqual(expectedGoldenBonus, finalResult.GoldenBonus);
             Assert.AreEqual(expectedLineClearScore, finalResult.LineClearScore);
-            Assert.AreEqual((expectedGroupBonus + expectedGoldenBonus + expectedLineClearScore) * 2, finalResult.TotalScore);
+            Assert.AreEqual((expectedGroupBonus + expectedGoldenBonus + expectedLineClearScore) * 2 * ScoringConstants.GridClearMultiplier, finalResult.TotalScore);
         }
 
         [Test]
@@ -1280,6 +1281,42 @@ namespace Contigu.Tests
             {
                 CollectionAssert.Contains(preview, new Vector2Int(0, y));
             }
+        }
+
+        [Test]
+        public void PlacePiece_ClearingTwoLinesAtOnce_ScoresEscalatingPerCellValue()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            // Rows 0 and 1 filled except columns 0-1; a 2x2 square then completes both rows at once.
+            for (int x = 2; x < GridManager.Size; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+                grid.PlacePiece(single, PieceColor.Teal, x, 1);
+            }
+            var result = grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Sq2), PieceColor.Lime, 0, 0);
+
+            Assert.AreEqual(2, result.ClearedLineCount);
+            // Row 0 (1st line): 8 cells at 3; row 1 (2nd line): 8 cells at 6.
+            Assert.AreEqual(GridManager.Size * ScoringConstants.LineClearBonusPerCell + GridManager.Size * ScoringConstants.LineClearBonusPerCell * 2, result.LineClearScore);
+        }
+
+        [Test]
+        public void PlacePiece_LineClearThatDoesNotEmptyTheGrid_HasNoSweepMultiplier()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            grid.PlacePiece(single, PieceColor.Teal, 4, 4); // stays on the board
+            for (int x = 0; x < GridManager.Size - 1; x++)
+            {
+                grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var result = grid.PlacePiece(single, PieceColor.Coral, GridManager.Size - 1, 0);
+
+            Assert.Greater(result.ClearedLineCount, 0);
+            Assert.AreEqual(1f, result.Mult);
         }
     }
 }

@@ -715,11 +715,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Plays a small radial burst on one cell, in <paramref name="color"/> — used right as it empties, whether from completing a line/column or from a trait effect destroying it (see GridCellView.PlayClearBurst).</summary>
-        public void PlayClearBurst(int x, int y, Color color)
+        public void PlayClearBurst(int x, int y, Color color, PieceColor? petalColor = null)
         {
             if (GridManager.InBounds(x, y))
             {
-                _cells[x, y].PlayClearBurst(color);
+                _cells[x, y].PlayClearBurst(color, petalColor);
             }
         }
 

@@ -113,6 +113,19 @@ namespace Contigu.Data
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
         }
 
+        private static readonly Dictionary<PieceColor, Sprite> PetalSprites = new Dictionary<PieceColor, Sprite>();
+
+        /// <summary>The petal drawn for the harvest burst of <paramref name="color"/> (Resources/Icons/Petals/&lt;PieceColor&gt;.png, pointing up), or null if missing.</summary>
+        public static Sprite GetPetalSprite(PieceColor color)
+        {
+            if (!PetalSprites.TryGetValue(color, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Petals/" + color);
+                PetalSprites[color] = sprite;
+            }
+            return sprite;
+        }
+
         private static readonly Dictionary<PieceColor, Sprite> AttackSprites = new Dictionary<PieceColor, Sprite>();
 
         /// <summary>The projectile art flown at an enemy when a piece of <paramref name="color"/> scores (Resources/Icons/Attacks/&lt;PieceColor&gt;.png, pointing right), or null if missing.</summary>

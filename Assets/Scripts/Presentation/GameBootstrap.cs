@@ -1641,6 +1641,11 @@ namespace Contigu.Presentation
                     _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.Danger);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                 }
+                else if (scoreEvent.Type == ScoreEventType.ModifierMultiplier)
+                {
+                    // Not from a modifier: the whole grid was just cleared (see GridManager's GridClearMultiplier).
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2), "CLEAN SWEEP x" + FormatMultAmount(amount), UITheme.Success, fontSize: 40);
+                }
                 SfxManager.PlayComboTick();
 
                 float subtotalSoFar = displayedRoundScore - roundScoreBefore;
@@ -1825,7 +1830,7 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.LineClear);
                 // Tinted to the color the cell had right before clearing,
                 // via RefreshHoldingClearedCells's held color.
-                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]));
+                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
                 _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos));
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
@@ -1836,7 +1841,7 @@ namespace Contigu.Presentation
             {
                 var pos = placement.DestroyedCells[i];
                 var color = placement.DestroyedCellColors[i];
-                _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary);
+                _gridView.PlayClearBurst(pos.x, pos.y, color.HasValue ? VisualDefaults.GetColor(color.Value) : UITheme.TextPrimary, color);
                 _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos));
                 SfxManager.Play(SfxId.LineClear);
                 yield return new WaitForSeconds(MinStaggerSeconds);
