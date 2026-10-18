@@ -55,7 +55,7 @@ namespace Contigu.Presentation
             });
 
             // Sprig's closing comment, bottom-left.
-            _sprigPortrait = SprigView.BuildSpeaker(_root, "Sprig", 200f, 420f, 20, out _sprigText, out var sprigRoot);
+            _sprigPortrait = SprigView.BuildSpeaker(_root, "Sprig", 200f, 340f, 20, out _sprigText, out var sprigRoot);
             sprigRoot.anchoredPosition = new Vector2(40f, 40f);
 
             _root.gameObject.SetActive(false);
