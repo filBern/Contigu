@@ -166,8 +166,11 @@ namespace Contigu.Presentation
                 _fillTile.sprite = VisualDefaults.FillTileSprite;
             }
 
-            _badgeGolden.gameObject.SetActive(cell.IsGolden);
-            if (cell.IsGolden)
+            // A Seeder cell is golden too, but its own trait badge already says so — one marker, not three.
+            bool seederCell = originTrait.HasValue && originTrait.Value.Kind == PieceTraitKind.Seeder;
+            bool showGoldenBadge = cell.IsGolden && !seederCell;
+            _badgeGolden.gameObject.SetActive(showGoldenBadge);
+            if (showGoldenBadge)
             {
                 if (VisualDefaults.GoldenTileSprite != null)
                 {
@@ -245,7 +248,7 @@ namespace Contigu.Presentation
                 _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
             }
 
-            string effectText = BuildEffectLabel(cell);
+            string effectText = BuildEffectLabel(cell, seederCell);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
 
@@ -285,8 +288,9 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
-        private static string BuildEffectLabel(Cell cell)
+        private static string BuildEffectLabel(Cell cell, bool hideGolden)
         {
+            bool isGolden = isGolden && !hideGolden;
             string multiplierPart = null;
             if (cell.IsTinted && cell.IsMultiplierZone)
             {
@@ -297,11 +301,11 @@ namespace Contigu.Presentation
                 multiplierPart = "x2";
             }
 
-            if (cell.IsGolden && multiplierPart != null)
+            if (isGolden && multiplierPart != null)
             {
                 return "+" + ScoringConstants.GoldenCellBonus + " " + multiplierPart;
             }
-            if (cell.IsGolden)
+            if (isGolden)
             {
                 return "+" + ScoringConstants.GoldenCellBonus;
             }
