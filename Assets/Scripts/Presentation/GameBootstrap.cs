@@ -613,7 +613,7 @@ namespace Contigu.Presentation
             deckButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             deckButton.onClick.AddListener(() => _deckView.Show());
 
-            var rulesButton = UIFactory.CreateButton(comboParent, "ShowRulesButton", "Show rules", UISprites.HandUtilityButtonBackground, 12);
+            var rulesButton = UIFactory.CreateButton(comboParent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
             var rulesLabel = rulesButton.GetComponentInChildren<Text>();
             rulesLabel.color = Color.black;
             rulesLabel.fontSize = 25;
