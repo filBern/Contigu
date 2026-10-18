@@ -1299,23 +1299,36 @@ namespace Contigu.Presentation
         /// </summary>
         /// <summary>Projectile art for the color of the piece just placed, for the flying damage orbs of this placement's hits (null falls back to the plain circle).</summary>
         private Sprite _currentAttackSprite;
+        private Sprite _currentPetalSprite;
 
-        private Sprite ResolveAttackSprite(PlacementResult placement)
+        private Sprite ResolveAttackSprite(PlacementResult placement, out Sprite petalSprite)
         {
+            petalSprite = null;
             if (placement.PlacedCells.Count == 0)
             {
                 return null;
             }
             var pos = placement.PlacedCells[0];
+            PieceColor? color = null;
             for (int i = 0; i < placement.ClearedCells.Count && i < placement.ClearedCellColors.Count; i++)
             {
                 if (placement.ClearedCells[i] == pos)
                 {
-                    return VisualDefaults.GetAttackSprite(placement.ClearedCellColors[i]);
+                    color = placement.ClearedCellColors[i];
+                    break;
                 }
             }
-            var cell = _run.Grid.GetCell(pos);
-            return cell.FilledColor.HasValue ? VisualDefaults.GetAttackSprite(cell.FilledColor.Value) : null;
+            if (!color.HasValue)
+            {
+                color = _run.Grid.GetCell(pos).FilledColor;
+            }
+            if (!color.HasValue)
+            {
+                return null;
+            }
+            // The floating particles reuse the harvest petal art (Icons/Petals), the projectile keeps the attack art.
+            petalSprite = VisualDefaults.GetPetalSprite(color.Value);
+            return VisualDefaults.GetAttackSprite(color.Value);
         }
 
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
@@ -1337,7 +1350,7 @@ namespace Contigu.Presentation
             {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
-            _currentAttackSprite = ResolveAttackSprite(placement);
+            _currentAttackSprite = ResolveAttackSprite(placement, out _currentPetalSprite);
 
             // Chameleon Tile recolored this whole piece to match a neighbor before Grid.PlacePiece ran, so by
             // now every placed cell already shows the resolved color — play the actual color switch here,
@@ -1898,7 +1911,7 @@ namespace Contigu.Presentation
                 // flying across the screen as text itself. The icon's own hurt shrink plays in lockstep with
                 // that reveal instead of at throw time, so it reads as "the hit landing".
                 bool damageShown = false;
-                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, onArrival: () =>
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, petalSprite: _currentPetalSprite, onArrival: () =>
                 {
                     _hudView.PlayEnemyHurtEffect(enemyIndex);
                     damageShown = true;
@@ -1978,7 +1991,7 @@ namespace Contigu.Presentation
                         // (sequential, like PlayEnemyEffectsSequentially elsewhere) so a Bombe hitting many
                         // enemies at once still reads clearly instead of several circles landing together.
                         bool damageShown = false;
-                        _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, onArrival: () =>
+                        _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, petalSprite: _currentPetalSprite, onArrival: () =>
                         {
                             _hudView.PlayEnemyHurtEffect(target.Index);
                             damageShown = true;

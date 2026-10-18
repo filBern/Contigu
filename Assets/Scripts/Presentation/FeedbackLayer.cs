@@ -462,7 +462,7 @@ namespace Contigu.Presentation
         /// moment (right before the reveal starts), so a caller's own hit-react effect (e.g. HudView's icon
         /// shrink) can be synced to it instead of playing at throw time.
         /// </summary>
-        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, System.Action onArrival = null, Sprite attackSprite = null)
+        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, System.Action onArrival = null, Sprite attackSprite = null, Sprite petalSprite = null)
         {
             if (toAnchor == null)
             {
@@ -481,10 +481,10 @@ namespace Contigu.Presentation
             orbRect.sizeDelta = attackSprite != null ? new Vector2(AttackSpriteSize, AttackSpriteSize) : new Vector2(DamageOrbSize, DamageOrbSize);
             orbRect.position = fromWorldPosition;
 
-            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival, attackSprite));
+            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival, attackSprite, petalSprite));
         }
 
-        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival, Sprite attackSprite = null)
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival, Sprite attackSprite = null, Sprite petalSprite = null)
         {
             float t = 0f;
             float shedTimer = 0f;
@@ -510,7 +510,7 @@ namespace Contigu.Presentation
                     if (shedTimer >= 0.05f)
                     {
                         shedTimer = 0f;
-                        SpawnFloatingPetals(orbRect.position, attackSprite, 1, 14f, 22f, 0.55f, 18f);
+                        SpawnFloatingPetals(orbRect.position, petalSprite ?? attackSprite, 1, 14f, 22f, 0.8f, 18f);
                     }
                 }
                 yield return null;
@@ -524,7 +524,7 @@ namespace Contigu.Presentation
 
             if (attackSprite != null)
             {
-                SpawnFloatingPetals(arrivalPosition, attackSprite, 10, 22f, 34f, 0.9f, 150f);
+                SpawnFloatingPetals(arrivalPosition, petalSprite ?? attackSprite, 10, 22f, 34f, 1.1f, 150f);
             }
             onArrival?.Invoke();
             yield return StartCoroutine(AnimateDamageReveal(arrivalPosition, damageText, color, fontSize));
