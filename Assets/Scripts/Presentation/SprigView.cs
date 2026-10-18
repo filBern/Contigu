@@ -73,6 +73,7 @@ namespace Contigu.Presentation
             portrait.raycastTarget = false;
             portrait.preserveAspect = true;
             portrait.sprite = Portrait(SprigMood.Happy);
+            portrait.gameObject.AddComponent<SprigFloat>();
             portrait.rectTransform.anchorMin = portrait.rectTransform.anchorMax = new Vector2(0f, 0f);
             portrait.rectTransform.pivot = new Vector2(0f, 0f);
             portrait.rectTransform.anchoredPosition = Vector2.zero;
