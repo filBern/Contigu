@@ -18,6 +18,11 @@ namespace Contigu.Presentation
         {
             _rect = (RectTransform)transform;
             _phase = Random.value * Mathf.PI * 2f;
+            // The root canvas is pixelPerfect, which snaps this image to whole pixels every frame — a slow sub-pixel bob then
+            // moves in visible steps. A nested canvas that opts out keeps the motion smooth.
+            var canvas = gameObject.AddComponent<Canvas>();
+            canvas.overridePixelPerfect = true;
+            canvas.pixelPerfect = false;
         }
 
         private void OnEnable()
