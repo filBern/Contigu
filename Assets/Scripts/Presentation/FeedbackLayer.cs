@@ -240,6 +240,59 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// A puff of <paramref name="count"/> small copies of <paramref name="sprite"/> (the per-color damage art) that
+        /// spread outward with a little drag, spin, and fade — floating, with no gravity. Each lives <paramref name="life"/>
+        /// seconds; <paramref name="speed"/> is the average outward speed in pixels per second.
+        /// </summary>
+        public void SpawnFloatingPetals(Vector3 worldPosition, Sprite sprite, int count, float minSize, float maxSize, float life, float speed)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+            _root.SetAsLastSibling();
+            for (int i = 0; i < count; i++)
+            {
+                var img = UIFactory.CreatePanel(_root, "FloatingPetal", Color.white);
+                img.raycastTarget = false;
+                img.sprite = sprite;
+                img.preserveAspect = true;
+                float size = Random.Range(minSize, maxSize);
+                img.rectTransform.sizeDelta = new Vector2(size, size);
+                img.rectTransform.position = worldPosition;
+                img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                float angle = Random.Range(0f, Mathf.PI * 2f);
+                Vector3 velocity = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * speed * Random.Range(0.5f, 1.2f);
+                StartCoroutine(AnimateFloatingPetal(img, velocity, Random.Range(-220f, 220f), life * Random.Range(0.8f, 1.2f)));
+            }
+        }
+
+        private IEnumerator AnimateFloatingPetal(Image img, Vector3 velocity, float spin, float life)
+        {
+            float t = 0f;
+            while (t < life)
+            {
+                if (img == null)
+                {
+                    yield break;
+                }
+                float dt = Time.deltaTime;
+                t += dt;
+                float p = Mathf.Clamp01(t / life);
+                velocity *= 1f - 2.2f * dt; // drag only: petals drift to a stop instead of falling
+                img.rectTransform.position += velocity * dt;
+                img.rectTransform.localRotation *= Quaternion.Euler(0f, 0f, spin * dt);
+                img.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, 0.5f, p);
+                img.color = new Color(1f, 1f, 1f, 1f - p * p);
+                yield return null;
+            }
+            if (img != null)
+            {
+                Destroy(img.gameObject);
+            }
+        }
+
         private IEnumerator AnimatePollenGrain(Image grain, RectTransform toAnchor, float delay)
         {
             var rect = grain.rectTransform;
@@ -428,12 +481,13 @@ namespace Contigu.Presentation
             orbRect.sizeDelta = attackSprite != null ? new Vector2(AttackSpriteSize, AttackSpriteSize) : new Vector2(DamageOrbSize, DamageOrbSize);
             orbRect.position = fromWorldPosition;
 
-            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival, attackSprite != null));
+            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival, attackSprite));
         }
 
-        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival, bool faceTarget = false)
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival, Sprite attackSprite = null)
         {
             float t = 0f;
+            float shedTimer = 0f;
             Vector3 startPos = orbRect.position;
 
             while (t < DamageOrbFlightDuration)
@@ -446,11 +500,18 @@ namespace Contigu.Presentation
                 float p = Mathf.Clamp01(t / DamageOrbFlightDuration);
                 float eased = p * p;
                 orbRect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
-                if (faceTarget)
+                if (attackSprite != null)
                 {
                     Vector3 dir = toAnchor.position - startPos;
                     float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
                     orbRect.rotation = Quaternion.Euler(0f, 0f, angle);
+                    // Sheds small copies of the projectile as it flies.
+                    shedTimer += Time.deltaTime;
+                    if (shedTimer >= 0.05f)
+                    {
+                        shedTimer = 0f;
+                        SpawnFloatingPetals(orbRect.position, attackSprite, 1, 14f, 22f, 0.55f, 18f);
+                    }
                 }
                 yield return null;
             }
@@ -461,6 +522,10 @@ namespace Contigu.Presentation
                 Destroy(orbRect.gameObject);
             }
 
+            if (attackSprite != null)
+            {
+                SpawnFloatingPetals(arrivalPosition, attackSprite, 10, 22f, 34f, 0.9f, 150f);
+            }
             onArrival?.Invoke();
             yield return StartCoroutine(AnimateDamageReveal(arrivalPosition, damageText, color, fontSize));
         }
