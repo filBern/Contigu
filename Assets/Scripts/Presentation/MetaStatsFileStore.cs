@@ -42,6 +42,15 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Deletes the saved stats file (the next Load returns fresh all-zero stats).</summary>
+        public void Delete()
+        {
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
+        }
+
         public void Save(MetaStats stats)
         {
             string json = JsonUtility.ToJson(stats);

@@ -28,6 +28,13 @@ namespace Contigu.Presentation
         public static float MusicVolume { get; private set; } = PlayerPrefs.GetFloat(MusicVolumeKey, DefaultVolume);
         public static float SfxVolume { get; private set; } = PlayerPrefs.GetFloat(SfxVolumeKey, DefaultVolume);
 
+        /// <summary>Back to full volume without persisting (see ColorblindMode.ResetToDefault).</summary>
+        public static void ResetToDefaults()
+        {
+            MasterVolume = MusicVolume = SfxVolume = DefaultVolume;
+            Changed?.Invoke();
+        }
+
         public static void SetMasterVolume(float value)
         {
             MasterVolume = Mathf.Clamp01(value);

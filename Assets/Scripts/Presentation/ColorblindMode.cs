@@ -18,6 +18,12 @@ namespace Contigu.Presentation
 
         public static bool IsEnabled { get; private set; } = PlayerPrefs.GetInt(PrefsKey, 0) != 0;
 
+        /// <summary>Back to the default (off) without persisting — used by SettingsView's Reset data after PlayerPrefs.DeleteAll, since this static survives a scene reload.</summary>
+        public static void ResetToDefault()
+        {
+            IsEnabled = false;
+        }
+
         public static void Toggle()
         {
             IsEnabled = !IsEnabled;

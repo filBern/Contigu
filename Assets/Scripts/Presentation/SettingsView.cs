@@ -50,8 +50,42 @@ namespace Contigu.Presentation
             closeRect.sizeDelta = new Vector2(220f, 52f);
             closeBtn.onClick.AddListener(Hide);
 
+            BuildResetButton(_root);
+
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>Two-click "Reset data": wipes saved stats and every preference (tutorial seen, volume, colorblind), then reloads the scene so the next launch behaves like a first one.</summary>
+        private static void BuildResetButton(Transform parent)
+        {
+            var resetBtn = UIFactory.CreateButton(parent, "ResetData", "Reset data", UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(resetBtn);
+            var rect = resetBtn.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 100f);
+            rect.sizeDelta = new Vector2(220f, 46f);
+            var label = resetBtn.GetComponentInChildren<Text>();
+            bool armed = false;
+            float armedAt = 0f;
+            resetBtn.onClick.AddListener(() =>
+            {
+                if (!armed || Time.unscaledTime - armedAt > 4f)
+                {
+                    armed = true;
+                    armedAt = Time.unscaledTime;
+                    label.text = "Sure? Click again";
+                    return;
+                }
+                new MetaStatsFileStore().Delete();
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.Save();
+                ColorblindMode.ResetToDefault();
+                VolumeSettings.ResetToDefaults();
+                UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+            });
         }
 
         /// <summary>One label + slider + live "NN%" readout, all in the same 3-column grid every row shares (see LabelColumnX/ControlColumnX/ValueColumnX) so the 3 volume rows and the checkbox row line up.</summary>
