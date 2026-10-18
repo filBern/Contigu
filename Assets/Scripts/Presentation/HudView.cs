@@ -435,6 +435,11 @@ namespace Contigu.Presentation
             }
             _enemyIconLabels[index].text = hp + "/" + maxHp;
             _enemyIconImages[index].color = EnemyIconColor(identity, isDead);
+            // The portrait follows the HP being shown, not the model's already-updated HP, so the Crow only turns enraged once the bar visibly crosses 50%.
+            if (identity == EnemyId.Thief && !isDead)
+            {
+                _enemyIconImages[index].sprite = hp * 2 <= maxHp ? EnemyEnragedSprite(identity) : EnemyIconSprite(identity);
+            }
             SetRatio(_enemyHpBarFills[index], maxHp > 0 ? (float)hp / maxHp : 0f);
             if (isDead)
             {
