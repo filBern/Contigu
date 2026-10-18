@@ -1265,6 +1265,27 @@ namespace Contigu.Presentation
         /// column clearing one cell at a time, and only then advances the
         /// run state — so nothing interrupts the player mid-readout.
         /// </summary>
+        /// <summary>Projectile art for the color of the piece just placed, for the flying damage orbs of this placement's hits (null falls back to the plain circle).</summary>
+        private Sprite _currentAttackSprite;
+
+        private Sprite ResolveAttackSprite(PlacementResult placement)
+        {
+            if (placement.PlacedCells.Count == 0)
+            {
+                return null;
+            }
+            var pos = placement.PlacedCells[0];
+            for (int i = 0; i < placement.ClearedCells.Count && i < placement.ClearedCellColors.Count; i++)
+            {
+                if (placement.ClearedCells[i] == pos)
+                {
+                    return VisualDefaults.GetAttackSprite(placement.ClearedCellColors[i]);
+                }
+            }
+            var cell = _run.Grid.GetCell(pos);
+            return cell.FilledColor.HasValue ? VisualDefaults.GetAttackSprite(cell.FilledColor.Value) : null;
+        }
+
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
             int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp, bool isRetargetHit,
             bool hasDeferredGridChange, List<Vector2Int> deferredNewMalusCells, List<Vector2Int> deferredReleasedLockedCells, List<Vector2Int> deferredReleasedPoisonedCells,
@@ -1284,6 +1305,7 @@ namespace Contigu.Presentation
             {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
+            _currentAttackSprite = ResolveAttackSprite(placement);
 
             // Chameleon Tile recolored this whole piece to match a neighbor before Grid.PlacePiece ran, so by
             // now every placed cell already shows the resolved color — play the actual color switch here,
@@ -1835,7 +1857,7 @@ namespace Contigu.Presentation
                 // flying across the screen as text itself. The icon's own hurt shrink plays in lockstep with
                 // that reveal instead of at throw time, so it reads as "the hit landing".
                 bool damageShown = false;
-                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () =>
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, onArrival: () =>
                 {
                     _hudView.PlayEnemyHurtEffect(enemyIndex);
                     damageShown = true;
@@ -1915,7 +1937,7 @@ namespace Contigu.Presentation
                         // (sequential, like PlayEnemyEffectsSequentially elsewhere) so a Bombe hitting many
                         // enemies at once still reads clearly instead of several circles landing together.
                         bool damageShown = false;
-                        _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, onArrival: () =>
+                        _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, onArrival: () =>
                         {
                             _hudView.PlayEnemyHurtEffect(target.Index);
                             damageShown = true;

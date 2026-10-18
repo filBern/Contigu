@@ -271,6 +271,7 @@ namespace Contigu.Presentation
         }
 
         private const float DamageOrbSize = 20f;
+        private const float AttackSpriteSize = 52f;
         private const float DamageOrbFlightDuration = 0.5f;
         // Faster than the damage orb's own flight — this one now plays once per enemy in a sequential
         // chain (see GameBootstrap.PlayEnemyEffectsSequentially), so a slow flight here multiplies into a
@@ -291,7 +292,7 @@ namespace Contigu.Presentation
         /// moment (right before the reveal starts), so a caller's own hit-react effect (e.g. HudView's icon
         /// shrink) can be synced to it instead of playing at throw time.
         /// </summary>
-        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, System.Action onArrival = null)
+        public void SpawnFlyingDamageOrb(Vector3 fromWorldPosition, RectTransform toAnchor, string damageText, Color color, int fontSize = DefaultFlyingPopupFontSize, System.Action onArrival = null, Sprite attackSprite = null)
         {
             if (toAnchor == null)
             {
@@ -302,15 +303,18 @@ namespace Contigu.Presentation
 
             var orbRect = UIFactory.CreateUIObject("DamageOrb", _root);
             var orbImage = orbRect.gameObject.AddComponent<Image>();
-            orbImage.sprite = UISprites.CountBadge;
-            orbImage.color = color;
-            orbRect.sizeDelta = new Vector2(DamageOrbSize, DamageOrbSize);
+            orbImage.raycastTarget = false;
+            // A per-color attack sprite (see VisualDefaults.GetAttackSprite) replaces the plain circle; it points right and is turned toward the target in flight.
+            orbImage.sprite = attackSprite != null ? attackSprite : UISprites.CountBadge;
+            orbImage.color = attackSprite != null ? Color.white : color;
+            orbImage.preserveAspect = true;
+            orbRect.sizeDelta = attackSprite != null ? new Vector2(AttackSpriteSize, AttackSpriteSize) : new Vector2(DamageOrbSize, DamageOrbSize);
             orbRect.position = fromWorldPosition;
 
-            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival));
+            StartCoroutine(AnimateDamageOrb(orbRect, toAnchor, damageText, color, fontSize, onArrival, attackSprite != null));
         }
 
-        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival)
+        private IEnumerator AnimateDamageOrb(RectTransform orbRect, RectTransform toAnchor, string damageText, Color color, int fontSize, System.Action onArrival, bool faceTarget = false)
         {
             float t = 0f;
             Vector3 startPos = orbRect.position;
@@ -325,6 +329,12 @@ namespace Contigu.Presentation
                 float p = Mathf.Clamp01(t / DamageOrbFlightDuration);
                 float eased = p * p;
                 orbRect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
+                if (faceTarget)
+                {
+                    Vector3 dir = toAnchor.position - startPos;
+                    float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                    orbRect.rotation = Quaternion.Euler(0f, 0f, angle);
+                }
                 yield return null;
             }
 

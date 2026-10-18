@@ -113,6 +113,19 @@ namespace Contigu.Data
             return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
         }
 
+        private static readonly Dictionary<PieceColor, Sprite> AttackSprites = new Dictionary<PieceColor, Sprite>();
+
+        /// <summary>The projectile art flown at an enemy when a piece of <paramref name="color"/> scores (Resources/Icons/Attacks/&lt;PieceColor&gt;.png, pointing right), or null if missing.</summary>
+        public static Sprite GetAttackSprite(PieceColor color)
+        {
+            if (!AttackSprites.TryGetValue(color, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Attacks/" + color);
+                AttackSprites[color] = sprite;
+            }
+            return sprite;
+        }
+
         public static string GetColorName(PieceColor color)
         {
             return ColorNames.TryGetValue(color, out var n) ? n : color.ToString();
