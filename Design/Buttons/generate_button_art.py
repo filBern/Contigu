@@ -84,10 +84,10 @@ SPEC = {
  'Play': ('Play', 'Gold', 1, 330), 'Settings': ('Settings', 'Blue', 2, 330), 'Exit': ('Exit', 'Red', 6, 330),
  'Confirm': ('Confirm', 'Green', 3, None), 'OK': ('OK', 'Green', 4, None), 'Gotit': ('Got it', 'Green', 5, None),
  'Close': ('Close', 'Green', 7, None), 'NewRun': ('New Run', 'Green', 8, None), 'Nextround': ('Next round', 'Green', 9, None),
- 'Showseedbag': ('Show seed bag', 'Wood', 10, 180), 'Showrules': ('Show rules', 'Wood', 1, 180),
+ 'Seedbag': ('Seed bag', 'Wood', 10, 180), 'Showrules': ('Show rules', 'Wood', 1, 180),
 }
 HEIGHT = {'Play': 84, 'Settings': 84, 'Exit': 84}
-NO_PLANTS = {'Confirm', 'OK', 'Gotit', 'Close', 'NewRun', 'Nextround', 'Showseedbag', 'Showrules'}  # plants only on the main menu buttons (Play, Settings, Exit)
+NO_PLANTS = {'Confirm', 'OK', 'Gotit', 'Close', 'NewRun', 'Nextround', 'Seedbag', 'Showrules'}  # plants only on the main menu buttons (Play, Settings, Exit)
 PLANT_CAP = {'Play': 52, 'Settings': 52, 'Exit': 52}  # menu buttons are stacked close together: keep their plants short
 
 if __name__ == '__main__':
