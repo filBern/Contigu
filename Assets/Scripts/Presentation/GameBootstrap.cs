@@ -81,6 +81,7 @@ namespace Contigu.Presentation
         private DeckView _deckView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
+        private SprigView _sprigView;
         private ChallengeSelectView _challengeSelectView;
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
@@ -541,6 +542,37 @@ namespace Contigu.Presentation
 
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(mainRoot);
+
+            _sprigView = gameObject.AddComponent<SprigView>();
+            _sprigView.Build(mainRoot);
+        }
+
+        /// <summary>The short first-run guide Sprig gives in speech bubbles (frames the hand, grid and first enemy). Press H any time for the full rules.</summary>
+        private List<SprigGuideStep> BuildSprigGuide()
+        {
+            return new List<SprigGuideStep>
+            {
+                new SprigGuideStep { Mood = SprigMood.Cheer, Text = "Hi, I'm Sprig, your head gardener! Let me show you around. It only takes a moment." },
+                new SprigGuideStep
+                {
+                    Text = "These are your seeds. Drag one onto the grid, or click it and then click a plot.",
+                    Targets = () => new[] { _handView.GetSlotPreviewTransform(0), _handView.GetSlotPreviewTransform(Mathf.Max(0, _run.Deck.Hand.Count - 1)) }
+                },
+                new SprigGuideStep
+                {
+                    Mood = SprigMood.Neutral,
+                    Text = "Seeds of the same color that touch score together. Fill a whole row or column to harvest it for bonus points and Pollen!",
+                    Targets = () => new[] { _gridView.GetCellTransform(0, 0), _gridView.GetCellTransform(GridManager.Size - 1, GridManager.Size - 1) }
+                },
+                new SprigGuideStep
+                {
+                    Mood = SprigMood.Neutral,
+                    Text = "Pests guard each round. Your score becomes damage on the leftmost one. Hover a pest to read its tricks!",
+                    Targets = () => new[] { _hudView.GetEnemyIconTransform(0) }
+                },
+                new SprigGuideStep { Text = "Stuck? Shuffle swaps your hand. Between rounds, spend Pollen on fertilizers and upgrades. Press H for the full rules." },
+                new SprigGuideStep { Mood = SprigMood.Cheer, Text = "Now go make it bloom. Happy planting!" },
+            };
         }
 
         private void WireEvents()
@@ -2329,8 +2361,24 @@ namespace Contigu.Presentation
             {
                 PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
                 PlayerPrefs.Save();
-                _tutorialView.Show();
+                StartCoroutine(RunSprigGuideAfterDelay());
             }
+            else
+            {
+                StartCoroutine(SprigRunStartComment());
+            }
+        }
+
+        private System.Collections.IEnumerator RunSprigGuideAfterDelay()
+        {
+            yield return new WaitForSeconds(1f);
+            _sprigView.RunGuide(BuildSprigGuide());
+        }
+
+        private System.Collections.IEnumerator SprigRunStartComment()
+        {
+            yield return new WaitForSeconds(1.2f);
+            _sprigView.Say(SprigView.RunStartLine(), SprigMood.Happy, 5f);
         }
 
         private void OnModifierCarouselDismissed()

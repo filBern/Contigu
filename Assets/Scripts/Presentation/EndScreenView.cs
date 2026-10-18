@@ -14,6 +14,8 @@ namespace Contigu.Presentation
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
         private RectTransform _restartButtonRect;
+        private UnityEngine.UI.Image _sprigPortrait;
+        private UnityEngine.UI.Text _sprigText;
 
         public RectTransform Build(Transform parent)
         {
@@ -52,8 +54,19 @@ namespace Contigu.Presentation
                 if (RestartRequested != null) RestartRequested();
             });
 
+            // Sprig's closing comment, bottom-left.
+            _sprigPortrait = SprigView.BuildSpeaker(_root, "Sprig", 200f, 420f, 20, out _sprigText, out var sprigRoot);
+            sprigRoot.anchoredPosition = new Vector2(40f, 40f);
+
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        private void SprigComment(bool victory, bool isNewBestScore)
+        {
+            string line = SprigView.EndLine(victory, isNewBestScore, out var mood);
+            _sprigPortrait.sprite = SprigView.Portrait(mood);
+            _sprigText.text = line;
         }
 
         public void ShowVictory(int totalScore, MetaStats metaStats, bool isNewBestScore)
@@ -62,6 +75,7 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Success;
             _subtitleText.text = "Run complete — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
+            SprigComment(true, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
             _root.gameObject.SetActive(true);
         }
@@ -72,6 +86,7 @@ namespace Contigu.Presentation
             _titleText.color = UITheme.Danger;
             _subtitleText.text = "Quota not reached — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
+            SprigComment(false, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
             _root.gameObject.SetActive(true);
         }
