@@ -27,12 +27,15 @@ namespace Contigu.Presentation
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 12f;
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
-        private const float PreviewTileSize = 46f;
+        private const float PreviewTileSize = 56f;
+        private const float GhostTileSize = 46f;
+        private static readonly Color SlotDividerColor = new Color(0.075f, 0.13f, 0.18f, 0.35f);
+        private static readonly Color SlotClear = new Color(1f, 1f, 1f, 0f);
         /// <summary>Largest side a slot preview may span: the slot minus its border and a little breathing room.</summary>
-        private const float SlotPreviewBudget = 108f;
+        private const float SlotPreviewBudget = 140f;
         private const float SlotWidth = 150f;
         private const float SlotHeight = 150f;
-        private const float SlotSpacing = 14f;
+        private const float SlotSpacing = 22f;
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
         // The ghost hides fully over a valid spot since the grid's own
@@ -99,6 +102,7 @@ namespace Contigu.Presentation
         // rebuilding the hand box — see UpdateHandSizeLayout, called from Refresh.
         private Image _handContainer;
         private RectTransform _slotsRow;
+        private RectTransform[] _slotDividers;
 
         public int SelectedIndex
         {
@@ -156,7 +160,8 @@ namespace Contigu.Presentation
             {
                 int idx = i;
                 var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.CardBackground);
-                UIFactory.AddThickOutline(slot, UITheme.Border);
+                // No card art: the slot is an invisible hit area that only tints for selection/feedback (see UpdateSelectionVisuals).
+                slot.color = SlotClear;
                 slot.rectTransform.sizeDelta = new Vector2(SlotWidth, SlotHeight);
                 // Plain Image/Button has no ILayoutElement; the row's HorizontalLayoutGroup needs explicit preferred dimensions.
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
@@ -173,8 +178,8 @@ namespace Contigu.Presentation
                 previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
                 previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
                 previewContainer.pivot = new Vector2(0.5f, 0.5f);
-                previewContainer.anchoredPosition = new Vector2(0f, -4f);
-                previewContainer.sizeDelta = new Vector2(142f, 142f);
+                previewContainer.anchoredPosition = Vector2.zero;
+                previewContainer.sizeDelta = new Vector2(146f, 146f);
                 // Wraps just the piece's preview, not the slot's background/level/lock chrome, so a shuffle can fade the piece alone (see FadeSlotPieces).
                 var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
 
@@ -201,6 +206,19 @@ namespace Contigu.Presentation
                 _previewCanvasGroups[i] = previewCanvasGroup;
                 _slotLevelLabels[i] = levelLabel;
                 _slotLockLabels[i] = lockLabel;
+            }
+
+            // Thin vertical separators between slots, positioned in UpdateHandSizeLayout.
+            _slotDividers = new RectTransform[DeckManager.MaxHandSize - 1];
+            for (int i = 0; i < _slotDividers.Length; i++)
+            {
+                var divider = UIFactory.CreatePanel(slotsRow, "Divider" + i, SlotDividerColor);
+                divider.raycastTarget = false;
+                divider.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                var dr = divider.rectTransform;
+                dr.anchorMin = dr.anchorMax = dr.pivot = new Vector2(0.5f, 0.5f);
+                dr.sizeDelta = new Vector2(3f, SlotHeight * 0.62f);
+                _slotDividers[i] = dr;
             }
 
             BuildShuffleButton(container);
@@ -333,7 +351,7 @@ namespace Contigu.Presentation
                 {
                     if (_deck.Hand[i].HasValue && _slotBackgrounds[i].gameObject.activeSelf && _interactable)
                     {
-                        _slotBackgrounds[i].color = Color.Lerp(UITheme.Panel, new Color(1f, 0.62f, 0.58f), 0.55f * wave);
+                        _slotBackgrounds[i].color = new Color(1f, 0.62f, 0.58f, 0.3f * wave);
                     }
                 }
                 yield return null;
@@ -429,7 +447,7 @@ namespace Contigu.Presentation
             {
                 Destroy(_dragGhostPreview.GetChild(c).gameObject);
             }
-            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null, PreviewTileSize);
+            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null, GhostTileSize);
 
             _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
             _dragGhost.gameObject.SetActive(true);
@@ -535,7 +553,7 @@ namespace Contigu.Presentation
                 float offsetX = Mathf.Sin(progress * UnplayableShakeCycles * Mathf.PI * 2f) * UnplayableShakeMagnitude * damping;
                 rect.anchoredPosition = originalPos + new Vector2(offsetX, 0f);
                 // Red flash that fades as the shake dies down.
-                _slotBackgrounds[index].color = Color.Lerp(UITheme.Panel, new Color(1f, 0.45f, 0.4f), 0.8f * damping);
+                _slotBackgrounds[index].color = new Color(1f, 0.45f, 0.4f, 0.45f * damping);
                 yield return null;
             }
             rect.anchoredPosition = originalPos;
@@ -609,11 +627,10 @@ namespace Contigu.Presentation
             for (int i = 0; i < _slotBackgrounds.Length; i++)
             {
                 bool selected = i == _selectedIndex;
-                var baseColor = selected ? Color.Lerp(UITheme.Panel, Color.white, 0.25f) : UITheme.Panel;
                 bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
-                _slotBackgrounds[i].color = !_interactable
-                    ? Color.Lerp(baseColor, UITheme.Background, 0.7f)
-                    : lockedByBoss ? Color.Lerp(baseColor, UITheme.Background, 0.55f) : baseColor;
+                _slotBackgrounds[i].color = lockedByBoss ? new Color(0.8f, 0.2f, 0.2f, 0.16f)
+                    : selected && _interactable ? new Color(1f, 1f, 1f, 0.35f)
+                    : SlotClear;
                 if (_slotLockLabels != null)
                 {
                     _slotLockLabels[i].text = lockedByBoss ? "LOCKED" : string.Empty;
@@ -698,6 +715,14 @@ namespace Contigu.Presentation
             }
             float slotsWidth = activeCount * SlotWidth + (activeCount - 1) * SlotSpacing;
             _slotsRow.sizeDelta = new Vector2(slotsWidth, SlotHeight);
+            if (_slotDividers != null)
+            {
+                for (int i = 0; i < _slotDividers.Length; i++)
+                {
+                    _slotDividers[i].gameObject.SetActive(i < activeCount - 1);
+                    _slotDividers[i].anchoredPosition = new Vector2(-slotsWidth / 2f + (i + 1) * SlotWidth + (i + 0.5f) * SlotSpacing, 0f);
+                }
+            }
             _handContainer.rectTransform.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, SlotHeight + HandBoxPadding * 2f);
         }
 
