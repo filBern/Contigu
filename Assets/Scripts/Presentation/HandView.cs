@@ -428,8 +428,56 @@ namespace Contigu.Presentation
         {
         }
 
+        private int _hoverIndex = -1;
+        private const float HoverScale = 1.1f;
+        private const float HoverScaleSpeed = 14f;
+
+        /// <summary>Pointer entered/left a slot; the hovered piece grows slightly and the slot gets a faint highlight (see UpdateSelectionVisuals).</summary>
+        public void SetSlotHover(int index, bool hovering)
+        {
+            if (hovering)
+            {
+                _hoverIndex = index;
+            }
+            else if (_hoverIndex == index)
+            {
+                _hoverIndex = -1;
+            }
+            if (_slotBackgrounds != null && _deck != null)
+            {
+                UpdateSelectionVisuals();
+            }
+        }
+
+        private bool IsHoverActive(int index)
+        {
+            return index == _hoverIndex && _interactable && _deck != null && index < _deck.Hand.Count
+                && _deck.Hand[index].HasValue && !IsBossLockedSlot(index);
+        }
+
+        private void UpdateHoverScale()
+        {
+            if (_previewContainers == null)
+            {
+                return;
+            }
+            for (int i = 0; i < _previewContainers.Length; i++)
+            {
+                float target = IsHoverActive(i) && i != _selectedIndex ? HoverScale : 1f;
+                var rt = _previewContainers[i];
+                float current = rt.localScale.x;
+                if (Mathf.Abs(current - target) < 0.001f)
+                {
+                    continue;
+                }
+                float next = Mathf.MoveTowards(current, target, HoverScaleSpeed * (HoverScale - 1f) * Time.unscaledDeltaTime);
+                rt.localScale = new Vector3(next, next, 1f);
+            }
+        }
+
         private void Update()
         {
+            UpdateHoverScale();
             if (_selectedIndex < 0)
             {
                 return;
@@ -630,6 +678,7 @@ namespace Contigu.Presentation
                 bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
                 _slotBackgrounds[i].color = lockedByBoss ? new Color(0.8f, 0.2f, 0.2f, 0.16f)
                     : selected && _interactable ? new Color(1f, 1f, 1f, 0.35f)
+                    : IsHoverActive(i) ? new Color(1f, 1f, 1f, 0.14f)
                     : SlotClear;
                 if (_slotLockLabels != null)
                 {

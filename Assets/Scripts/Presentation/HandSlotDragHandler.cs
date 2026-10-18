@@ -12,7 +12,7 @@ namespace Contigu.Presentation
     /// EventSystem only fires OnBeginDrag once the pointer moves past its
     /// drag threshold, so a quick tap still resolves as a plain click.
     /// </summary>
-    public sealed class HandSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public sealed class HandSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
     {
         private HandView _owner;
         private int _index;
@@ -21,6 +21,16 @@ namespace Contigu.Presentation
         {
             _owner = owner;
             _index = index;
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _owner.SetSlotHover(_index, true);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _owner.SetSlotHover(_index, false);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
