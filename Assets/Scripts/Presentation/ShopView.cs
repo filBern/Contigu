@@ -89,8 +89,6 @@ namespace Contigu.Presentation
         private const float UpcomingIconSize = ModifierCardFactory.BadgeSize;
         private const float UpcomingSlotWidth = UpcomingBoxWidth - 16f;
         private const float UpcomingRowGap = ModifierCardFactory.Gap;
-        private const int UpcomingHpFontSize = 12;
-        private const float UpcomingHpLabelHeight = 18f;
         // Never shrink the icon below this, however many enemies a round has — past this point the
         // portrait and its tooltip hotspot would stop being usable.
         private const float UpcomingMinIconSize = 24f;
@@ -417,19 +415,15 @@ namespace Contigu.Presentation
             }
 
             int count = upcoming.Count;
-            int columns = count > 2 ? 2 : 1;
+            int columns = 2;
             int rows = (count + columns - 1) / columns;
             float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding;
-            float defaultSlotHeight = UpcomingIconSize + UpcomingHpLabelHeight;
             float maxSlotHeight = (availableHeight - (rows - 1) * UpcomingRowGap) / rows;
-            float scale = Mathf.Clamp01(maxSlotHeight / defaultSlotHeight);
-            float iconSize = Mathf.Max(UpcomingMinIconSize, UpcomingIconSize * scale);
-            float hpLabelHeight = Mathf.Max(10f, UpcomingHpLabelHeight * scale);
-            int hpFontSize = Mathf.Max(8, Mathf.RoundToInt(UpcomingHpFontSize * scale));
-            float cellWidth = (UpcomingSlotWidth - (columns - 1) * UpcomingRowGap) / columns;
+            float maxSlotWidth = (UpcomingSlotWidth - (columns - 1) * UpcomingRowGap) / columns;
+            float iconSize = Mathf.Max(UpcomingMinIconSize, Mathf.Min(UpcomingIconSize, maxSlotHeight, maxSlotWidth));
 
             _upcomingEncounterGrid.constraintCount = columns;
-            _upcomingEncounterGrid.cellSize = new Vector2(cellWidth, iconSize + hpLabelHeight);
+            _upcomingEncounterGrid.cellSize = new Vector2(iconSize, iconSize);
             _upcomingEncounterGrid.spacing = new Vector2(UpcomingRowGap, UpcomingRowGap);
 
             ClearChildren(_upcomingEncounterRow);
@@ -437,15 +431,8 @@ namespace Contigu.Presentation
             {
                 var slot = UIFactory.CreateUIObject("UpcomingSlot" + i, _upcomingEncounterRow);
 
-                var iconBackground = UIFactory.CreatePanel(slot, "Icon" + i, UITheme.Panel);
-                iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                iconBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                iconBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
-                iconBackground.rectTransform.anchoredPosition = Vector2.zero;
-                iconBackground.rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
-
                 var def = EnemyCatalog.Get(upcoming[i]);
-                var icon = UIFactory.CreatePanel(iconBackground.transform, "Sprite" + i, Color.white);
+                var icon = UIFactory.CreatePanel(slot, "Sprite" + i, Color.white);
                 icon.preserveAspect = true;
                 UIFactory.StretchFull(icon.rectTransform);
                 icon.sprite = HudView.EnemyIconSprite(upcoming[i]);
@@ -453,17 +440,8 @@ namespace Contigu.Presentation
                 // Same hover-tooltip component as HudView's own enemy band (see EnemyIconView), just fed
                 // the base MaxHp here since no EnemyInstance exists yet for a round that isn't built.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
-                // Same three sections as HudView's tooltip (name, effect, story line); HP already shows in the label under the icon.
-                iconView.Init(_tooltip, def.Name, def.Description, def.Lore);
-
-                int maxHp = def.MaxHp;
-                var label = UIFactory.CreateText(slot, "Hp" + i, maxHp + "/" + maxHp, hpFontSize, UITheme.TextOnBackground);
-                label.alignment = TextAnchor.MiddleCenter;
-                label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                label.rectTransform.pivot = new Vector2(0.5f, 1f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, -(iconSize + 2f));
-                label.rectTransform.sizeDelta = new Vector2(cellWidth, hpLabelHeight);
+                // Same three sections as HudView's tooltip (name, effect, story line), with the HP up front in the effect text.
+                iconView.Init(_tooltip, def.Name, "HP " + def.MaxHp + "\n" + def.Description, def.Lore);
             }
         }
 
