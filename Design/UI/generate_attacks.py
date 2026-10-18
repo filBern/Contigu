@@ -15,12 +15,21 @@ coral = ('<path d="M10 64 C28 46 36 52 44 30 C58 40 66 36 74 22 C100 34 118 52 1
 teal = ('<path d="M8 64 L40 40 L76 50 L120 64 L76 78 L40 88Z" fill="#7cc7e8" %s/>' % st +
         '<path d="M40 40 L58 64 L40 88 M58 64 L120 64" fill="none" stroke="#e6f6ff" stroke-width="4" stroke-linecap="round"/>' +
         '<path d="M76 50 L88 64 L76 78" fill="none" stroke="#3b8cc2" stroke-width="4" stroke-linecap="round"/>')
-# Violet / Sunflower: spinning golden sun with seed core
-petals = ''
-for a in range(0, 360, 30):
-    petals += '<ellipse cx="64" cy="22" rx="10" ry="18" fill="#ffd54a" %s transform="rotate(%d 64 64)"/>' % (st.replace('6"','4"',1), a)
-violet = (petals + '<circle cx="64" cy="64" r="24" fill="#7a4a22" %s/>' % st +
-          '<circle cx="56" cy="58" r="4" fill="#c9893c"/><circle cx="70" cy="62" r="4" fill="#c9893c"/><circle cx="62" cy="72" r="4" fill="#c9893c"/>')
+# Violet / Sunflower: spiked solar saw-blade with an angry seed core
+import math
+def spikes(n, r_out, r_in, off=0):
+    pts = []
+    for i in range(n * 2):
+        r = r_out if i % 2 == 0 else r_in
+        a = math.pi * i / n + off
+        pts.append('%.1f %.1f' % (64 + r * math.cos(a), 64 + r * math.sin(a)))
+    return 'M' + ' L'.join(pts) + 'Z'
+violet = ('<path d="%s" fill="#e8721e" %s/>' % (spikes(10, 62, 36, math.pi / 10), st) +
+          '<path d="%s" fill="#ffd54a" %s/>' % (spikes(10, 54, 30), st.replace('6"', '4"', 1)) +
+          '<circle cx="64" cy="64" r="26" fill="#5a3416" %s/>' % st +
+          '<path d="M46 54 L60 62 L46 66Z M82 54 L68 62 L82 66Z" fill="#ff3b30" stroke="%s" stroke-width="2.5" stroke-linejoin="round"/>' % O +
+          '<path d="M52 78 L56 72 L60 78 L64 72 L68 78 L72 72 L76 78" fill="none" stroke="#ffd54a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>')
+
 # Lime / Fern: thorny leaf dart
 lime = ('<path d="M8 64 C30 30 80 28 120 64 C80 100 30 98 8 64Z" fill="#5a9e45" %s/>' % st +
         '<path d="M14 64 L112 64" stroke="#d9f2b0" stroke-width="5" stroke-linecap="round"/>' +
