@@ -268,7 +268,10 @@ namespace Contigu.Core
         public const int FormatGrandMinCells = 4;
 
         /// <summary>"Sangsue" (Joker-exclusive combat trait, see PieceTrait.JokerCombatKinds) — fraction of the damage it deals to its target that also converts into bonus Lueur (floored), see RunManager.ApplySangsueDamage.</summary>
-        public const float SangsueLueurFraction = 0.25f;
+        public const float SangsueLueurFraction = 0.08f;
+
+        /// <summary>Hard cap on the Pollen a single Sap Drain / Siphon trigger can grant, so a huge score can't flood the economy.</summary>
+        public const int SiphonLueurCapPerTrigger = 10;
 
         /// <summary>Pair: xN multiplier (see GridManager.ApplyParitePaire) when the placement's scored group has an EVEN total cell count.</summary>
         public const int PairMultiplier = 2;
@@ -295,6 +298,6 @@ namespace Contigu.Core
         public const int CadenceMultiplier = 2;
 
         /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — Sangsue's own fraction generalized to fire alongside every combat kind, not just Sangsue. Set lower than Sangsue's own (0.25f) since it fires on strictly more placements.</summary>
-        public const float SiphonLueurFraction = 0.15f;
+        public const float SiphonLueurFraction = 0.04f;
     }
 }

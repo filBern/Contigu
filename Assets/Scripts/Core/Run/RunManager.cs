@@ -1916,7 +1916,7 @@ namespace Contigu.Core
             // held and Sangsue is among the kinds found.
             if (boostedDamage > 0 && _activeModifiers.Contains(ModifierId.Siphon))
             {
-                Lueur += Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction);
+                Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction));
             }
         }
 
@@ -2070,7 +2070,7 @@ namespace Contigu.Core
             ApplyDamageToEncounter(damage);
             if (damage > 0)
             {
-                Lueur += Mathf.FloorToInt(damage * ScoringConstants.SangsueLueurFraction);
+                Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(damage * ScoringConstants.SangsueLueurFraction));
             }
         }
 

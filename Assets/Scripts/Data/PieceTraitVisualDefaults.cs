@@ -106,7 +106,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Precision:
                     return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one — a finishing blow.";
                 case PieceTraitKind.Sangsue:
-                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Pollen.";
+                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Pollen (max " + ScoringConstants.SiphonLueurCapPerTrigger + ").";
                 default:
                     return string.Empty;
             }
