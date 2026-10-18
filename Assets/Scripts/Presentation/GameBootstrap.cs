@@ -1127,6 +1127,10 @@ namespace Contigu.Presentation
             for (int i = 0; i < groupCells.Count; i++)
             {
                 var pos = groupCells[i];
+                if (!GridManager.InBounds(pos.x, pos.y))
+                {
+                    continue;
+                }
                 var origin = _run.Grid.GetCell(pos.x, pos.y).OriginTrait;
                 if (!origin.HasValue || !PieceTrait.IsJokerCombatKind(origin.Value.Kind))
                 {

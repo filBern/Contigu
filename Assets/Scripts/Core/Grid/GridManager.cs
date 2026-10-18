@@ -2739,7 +2739,7 @@ namespace Contigu.Core
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
-                clearedColors.Add(cell.FilledColor.Value); // capture before clearing
+                clearedColors.Add(cell.FilledColor ?? default(PieceColor)); // capture before clearing — a Frozen cell going away has no fill, keep the lists parallel
                 clearedShapes.Add(cell.FilledShapeId); // capture before clearing — nullable, see ClearedCellShapes' own doc comment
                 clearedTraits.Add(cell.OriginTrait); // capture before clearing
                 cell.ClearFill();
