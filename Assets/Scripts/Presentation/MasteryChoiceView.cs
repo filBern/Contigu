@@ -15,7 +15,7 @@ namespace Contigu.Presentation
     public sealed class MasteryChoiceView : MonoBehaviour
     {
         private const float CardWidth = 220f;
-        private const float CardHeight = 270f;
+        private const float CardHeight = 310f;
         private const float GlyphBoxSize = 110f;
         private const float CardSpacing = 36f;
 
