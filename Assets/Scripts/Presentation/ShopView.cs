@@ -311,19 +311,26 @@ namespace Contigu.Presentation
             }
             _lueurContainer = container;
             _lueurLabel = label;
-            _sharedLueurCanvas = container.gameObject.AddComponent<Canvas>();
-            _sharedLueurCanvas.overridePixelPerfect = false;
-            _sharedLueurCanvas.overrideSorting = false;
-            _sharedLueurCanvas.sortingOrder = 30;
+            _lueurOriginalIndex = container.GetSiblingIndex();
         }
 
-        private Canvas _sharedLueurCanvas;
+        private int _lueurOriginalIndex;
 
+        // Sibling order instead of a nested Canvas override, so the tooltip and the draft overlays (siblings later in the list) still draw above the counter.
         private void SetSharedLueurRaised(bool raised)
         {
-            if (_sharedLueurCanvas != null)
+            if (_lueurContainer == null || _lueurContainer.parent != _root.parent)
             {
-                _sharedLueurCanvas.overrideSorting = raised;
+                return;
+            }
+            if (raised)
+            {
+                int shopIndex = _root.GetSiblingIndex();
+                _lueurContainer.SetSiblingIndex(_lueurContainer.GetSiblingIndex() < shopIndex ? shopIndex : shopIndex + 1);
+            }
+            else
+            {
+                _lueurContainer.SetSiblingIndex(_lueurOriginalIndex);
             }
         }
 
