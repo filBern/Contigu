@@ -37,6 +37,16 @@ namespace Contigu.Presentation
         // last tile to be fully gone.
         private const float EarlyRevealOffset = 0.18f;
 
+        // Edge-to-edge tiles with square corners (Resources/Tiles/Sweep, see Design/Tiles/generate_sweep_tiles.py) so neighbours leave no gaps;
+        // the extra pixel of overlap hides sub-pixel seams.
+        private const float TileOverlap = 1f;
+
+        private static Sprite GetSweepSprite(PieceColor color)
+        {
+            string name = color == PieceColor.Coral ? "Ember" : color == PieceColor.Teal ? "Frost" : color == PieceColor.Violet ? "Gold" : "Moss";
+            return Resources.Load<Sprite>("Tiles/Sweep/" + name);
+        }
+
         private static readonly PieceColor[] Colors =
         {
             PieceColor.Coral, PieceColor.Teal, PieceColor.Violet, PieceColor.Lime
@@ -107,18 +117,20 @@ namespace Contigu.Presentation
                 for (int col = 0; col < cols; col++)
                 {
                     var tileImage = UIFactory.CreateSlicedImage(transform, "SweepTile_" + row + "_" + col, VisualDefaults.TileSprite);
+                    tileImage.type = Image.Type.Simple;
                     var rt = tileImage.rectTransform;
                     rt.anchorMin = new Vector2(0.5f, 0.5f);
                     rt.anchorMax = new Vector2(0.5f, 0.5f);
                     rt.pivot = new Vector2(0.5f, 0.5f);
-                    rt.sizeDelta = new Vector2(TileSize, TileSize);
+                    rt.sizeDelta = new Vector2(TileSize + TileOverlap, TileSize + TileOverlap);
                     rt.anchoredPosition = new Vector2(startX + col * TileSize, startY - row * TileSize);
                     rt.localScale = Vector3.zero;
                     // Pseudo-random, deterministic color mosaic — no two orthogonal neighbors share a color
                     // often enough to read as a real pattern rather than a flat wash.
                     var tileColor = Colors[(row * 7 + col * 13) % Colors.Length];
-                    tileImage.sprite = VisualDefaults.GetTileSprite(tileColor);
-                    tileImage.color = VisualDefaults.GetTileTint(tileColor);
+                    var sweepSprite = GetSweepSprite(tileColor);
+                    tileImage.sprite = sweepSprite != null ? sweepSprite : VisualDefaults.GetTileSprite(tileColor);
+                    tileImage.color = sweepSprite != null ? Color.white : VisualDefaults.GetTileTint(tileColor);
 
                     float cornerDistance = Mathf.Sqrt(col * col + row * row);
                     float projection = col - row;
@@ -150,11 +162,14 @@ namespace Contigu.Presentation
         /// </summary>
         public void PlayUncoverSweep(Action onNearlyRevealed, Action onRevealed)
         {
+            // The screen is completely tiled at this point: show what's underneath (the challenge screen) now,
+            // so it is already in place as the tiles retreat.
+            onNearlyRevealed?.Invoke();
             StartCoroutine(SweepRoutine(forward: false, () =>
             {
                 onRevealed?.Invoke();
                 Destroy(gameObject);
-            }, onNearlyDone: onNearlyRevealed));
+            }));
         }
 
         private IEnumerator SweepRoutine(bool forward, Action onDone, Action onNearlyDone = null)
