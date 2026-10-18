@@ -25,6 +25,50 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private Text _title;
         private RectTransform _cardsRow;
+        // Panels (fertilizers, next-round enemies) that stay readable above the dimmed overlay while a choice is open.
+        private RectTransform[] _keepVisible = new RectTransform[0];
+        private Transform[] _keepVisibleParents = new Transform[0];
+        private int[] _keepVisibleIndices = new int[0];
+
+        /// <summary>Registers panels to lift above the overlay while it is open. They must share the overlay's full-screen coordinate frame.</summary>
+        public void SetKeepVisible(params RectTransform[] panels)
+        {
+            _keepVisible = panels;
+            _keepVisibleParents = new Transform[panels.Length];
+            _keepVisibleIndices = new int[panels.Length];
+        }
+
+        private void LiftPanels()
+        {
+            for (int i = 0; i < _keepVisible.Length; i++)
+            {
+                var panel = _keepVisible[i];
+                if (panel == null || !panel.gameObject.activeInHierarchy)
+                {
+                    _keepVisibleParents[i] = null;
+                    continue;
+                }
+                _keepVisibleParents[i] = panel.parent;
+                _keepVisibleIndices[i] = panel.GetSiblingIndex();
+                panel.SetParent(_root.parent, false);
+                panel.SetAsLastSibling();
+            }
+        }
+
+        private void RestorePanels()
+        {
+            // Reverse order so earlier siblings' indices stay valid.
+            for (int i = _keepVisible.Length - 1; i >= 0; i--)
+            {
+                if (_keepVisibleParents[i] == null || _keepVisible[i] == null)
+                {
+                    continue;
+                }
+                _keepVisible[i].SetParent(_keepVisibleParents[i], false);
+                _keepVisible[i].SetSiblingIndex(_keepVisibleIndices[i]);
+                _keepVisibleParents[i] = null;
+            }
+        }
 
         public RectTransform Build(Transform parent)
         {
@@ -69,6 +113,7 @@ namespace Contigu.Presentation
 
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
+            LiftPanels();
         }
 
         private void BuildCard(int index, MasteryOption option, RunManager run, float x)
@@ -128,6 +173,7 @@ namespace Contigu.Presentation
 
         private void Choose(int index)
         {
+            RestorePanels();
             _root.gameObject.SetActive(false);
             if (OptionChosen != null)
             {

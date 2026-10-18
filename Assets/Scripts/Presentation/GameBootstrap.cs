@@ -514,7 +514,8 @@ namespace Contigu.Presentation
             // Lambda, not a method group, so a restart's new RunManager is
             // picked up automatically — _run is reassigned on restart but
             // this view is only Refreshed, never rebuilt.
-            _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
+            var modifierPanelRect = _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
+            _masteryChoiceView.SetKeepVisible(modifierPanelRect, _shopView.UpcomingBox);
             // Modifier order determines scoring order (see
             // PlacementResult.Mult); same lambda-captures-_run reasoning as
             // above.

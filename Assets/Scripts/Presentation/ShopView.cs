@@ -334,6 +334,12 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>The "Next round" enemy preview box (see MasteryChoiceView.SetKeepVisible).</summary>
+        public RectTransform UpcomingBox
+        {
+            get { return _upcomingEncounterBox; }
+        }
+
         public void Show(RunManager run)
         {
             _root.gameObject.SetActive(true);
