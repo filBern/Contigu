@@ -481,6 +481,7 @@ namespace Contigu.Presentation
             // it once a purchase needs a follow-up.
             _shopView = gameObject.AddComponent<ShopView>();
             _shopView.Build(mainRoot, _tooltipView);
+            _shopView.UseSharedLueur(_hudView.LueurLabelTransform, _hudView.LueurLabel);
 
             _draftView = gameObject.AddComponent<DraftView>();
             _draftView.Build(mainRoot, _run.Deck, _tooltipView);

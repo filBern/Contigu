@@ -275,6 +275,12 @@ namespace Contigu.Presentation
             fillRect.anchorMax = max;
         }
 
+        /// <summary>The Pollen count text, shared with the shop so there is only ever one counter (see ShopView.UseSharedLueur).</summary>
+        public Text LueurLabel
+        {
+            get { return _lueurLabel; }
+        }
+
         /// <summary>Anchor for the Lueur readout — the presentation layer flies each Lueur group's popup toward this point (see GameBootstrap.PlayPlacementSequence).</summary>
         public RectTransform LueurLabelTransform
         {

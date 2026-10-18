@@ -304,9 +304,35 @@ namespace Contigu.Presentation
             return container;
         }
 
+        /// <summary>Replaces the shop's own Pollen readout with the HUD's, so a single counter (in the HUD's spot) serves both. While the shop is open it is lifted above the shop overlay.</summary>
+        public void UseSharedLueur(RectTransform container, Text label)
+        {
+            if (_lueurContainer != null)
+            {
+                Destroy(_lueurContainer.gameObject);
+            }
+            _lueurContainer = container;
+            _lueurLabel = label;
+            _sharedLueurCanvas = container.gameObject.AddComponent<Canvas>();
+            _sharedLueurCanvas.overridePixelPerfect = false;
+            _sharedLueurCanvas.overrideSorting = false;
+            _sharedLueurCanvas.sortingOrder = 30;
+        }
+
+        private Canvas _sharedLueurCanvas;
+
+        private void SetSharedLueurRaised(bool raised)
+        {
+            if (_sharedLueurCanvas != null)
+            {
+                _sharedLueurCanvas.overrideSorting = raised;
+            }
+        }
+
         public void Show(RunManager run)
         {
             _root.gameObject.SetActive(true);
+            SetSharedLueurRaised(true);
             Refresh(run);
             if (_lueurPulseCoroutine == null)
             {
@@ -317,6 +343,7 @@ namespace Contigu.Presentation
         public void Hide()
         {
             _root.gameObject.SetActive(false);
+            SetSharedLueurRaised(false);
             if (_lueurPulseCoroutine != null)
             {
                 StopCoroutine(_lueurPulseCoroutine);
