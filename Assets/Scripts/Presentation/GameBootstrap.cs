@@ -1721,6 +1721,24 @@ namespace Contigu.Presentation
                 yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
 
+            // Sap Drain / Siphon convert the damage just dealt into Pollen inside RunManager without any score
+            // event, so the counter only caught up on the next refresh. Fold the remainder in right here, as
+            // part of this same count — a round-ending bonus is excluded, the shop sequence animates that one.
+            int expectedLueur = _run.Lueur - (_run.State == RunState.AwaitingShop ? _run.LastRoundEndLueurBonus : 0);
+            int siphoned = expectedLueur - displayedLueur;
+            if (siphoned > 0)
+            {
+                var siphonAnchor = damagedEnemyIndex >= 0 ? _hudView.GetEnemyIconTransform(damagedEnemyIndex) : null;
+                if (siphonAnchor != null)
+                {
+                    _feedbackLayer.SpawnPollenFlight(siphonAnchor.position, _hudView.LueurLabelTransform, "+" + siphoned, VisualDefaults.GoldenColor);
+                }
+                SfxManager.Play(SfxId.LueurGain);
+                displayedLueur = expectedLueur;
+                _hudView.SetLueur(displayedLueur);
+                yield return new WaitForSeconds(MinStaggerSeconds);
+            }
+
             // Only now — after the enemy has finished draining (and fading
             // out, if lethal) — do the cleared/destroyed cells actually
             // visually empty. Their points already counted during the
