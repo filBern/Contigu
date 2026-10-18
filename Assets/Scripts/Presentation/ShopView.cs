@@ -524,7 +524,7 @@ namespace Contigu.Presentation
             {
                 var upgradeDef = slot.HiddenUpgrade;
                 hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
-                    UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool), UpgradeVisualDefaults.GetRarityColor(upgradeDef.Rarity));
+                    "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
             }
 
             int price = run.GetBlisterSlotPrice(index);
