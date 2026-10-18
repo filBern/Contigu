@@ -290,7 +290,7 @@ namespace Contigu.Presentation
         /// <summary>Spells out a modifier cell's effect as text (golden's fixed bonus, tinted/multiplier's factor) instead of relying on badge color alone.</summary>
         private static string BuildEffectLabel(Cell cell, bool hideGolden)
         {
-            bool isGolden = isGolden && !hideGolden;
+            bool isGolden = cell.IsGolden && !hideGolden;
             string multiplierPart = null;
             if (cell.IsTinted && cell.IsMultiplierZone)
             {
