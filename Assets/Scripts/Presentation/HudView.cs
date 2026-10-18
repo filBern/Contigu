@@ -119,6 +119,7 @@ namespace Contigu.Presentation
 
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
+            _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
         }
 
         /// <summary>Builds a flat track rectangle plus a solid-color fill rectangle, rather than a sprite-based slider, so the bar fully follows UITheme colors.</summary>

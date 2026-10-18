@@ -182,6 +182,7 @@ namespace Contigu.Presentation
             lueurIconLayout.preferredHeight = 58f;
 
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "Pollen", "", 84, VisualDefaults.GoldenColor);
+            _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
 
             // "Prochain combat" preview — sits right under the (now-raised) Lueur readout, same corner.
             // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty
