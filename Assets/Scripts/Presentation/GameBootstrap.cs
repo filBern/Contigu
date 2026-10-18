@@ -1368,6 +1368,7 @@ namespace Contigu.Presentation
                 var group = placement.LueurGroups[i];
                 Vector3 centerSum = Vector3.zero;
                 int cellsWithTransform = 0;
+                var cellPositions = new List<Vector3>();
                 for (int c = 0; c < group.Cells.Count; c++)
                 {
                     var cell = group.Cells[c];
@@ -1377,8 +1378,11 @@ namespace Contigu.Presentation
                     {
                         centerSum += cellRect.position;
                         cellsWithTransform++;
+                        cellPositions.Add(cellRect.position);
                     }
                 }
+                // Pollen motes sweep from every harvested cell to the counter, trailing golden specks.
+                _feedbackLayer.SpawnPollenStream(cellPositions, _hudView.LueurLabelTransform);
                 if (cellsWithTransform > 0)
                 {
                     Vector3 center = centerSum / cellsWithTransform;

@@ -123,6 +123,123 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Pollinating the garden: from every cell in <paramref name="sources"/> (a harvested group), a few
+        /// glowing pollen motes sweep along curved paths toward the Pollen counter at <paramref name="toAnchor"/>,
+        /// each leaving a fading trail of golden specks behind it. Purely visual.
+        /// </summary>
+        public void SpawnPollenStream(System.Collections.Generic.IReadOnlyList<Vector3> sources, RectTransform toAnchor, int motesPerSource = 2)
+        {
+            if (toAnchor == null || sources == null)
+            {
+                return;
+            }
+            _root.SetAsLastSibling();
+            var glow = BackgroundShapeFactory.GetShape(BackgroundSprite.Glow);
+            for (int i = 0; i < sources.Count; i++)
+            {
+                for (int m = 0; m < motesPerSource; m++)
+                {
+                    StartCoroutine(AnimatePollenMote(sources[i], toAnchor, glow, Random.Range(0f, 0.35f)));
+                }
+            }
+        }
+
+        private IEnumerator AnimatePollenMote(Vector3 start, RectTransform toAnchor, Sprite glow, float delay)
+        {
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+            if (toAnchor == null)
+            {
+                yield break;
+            }
+
+            var mote = UIFactory.CreatePanel(_root, "PollenMote", new Color(1f, 0.9f, 0.45f, 1f));
+            mote.raycastTarget = false;
+            mote.sprite = glow;
+            mote.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            mote.rectTransform.position = start;
+
+            const float duration = 0.95f;
+            const float trailInterval = 0.025f;
+            const float trailLife = 0.5f;
+            var trail = new System.Collections.Generic.List<Image>();
+            var trailAge = new System.Collections.Generic.List<float>();
+
+            // Quadratic bezier whose control point is pushed sideways and up, so the motes arc and swirl rather than travel in a straight line.
+            Vector3 end = toAnchor.position;
+            Vector3 dir = end - start;
+            Vector3 side = new Vector3(-dir.y, dir.x, 0f).normalized * Random.Range(-1f, 1f) * Mathf.Max(60f, dir.magnitude * 0.35f);
+            Vector3 control = (start + end) * 0.5f + side + Vector3.up * Random.Range(30f, 110f);
+            float wobbleSeed = Random.Range(0f, 6.28f);
+
+            float t = 0f;
+            float sinceTrail = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                sinceTrail += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float e = p * p * (3f - 2f * p); // smoothstep
+                if (toAnchor != null)
+                {
+                    end = toAnchor.position;
+                }
+                Vector3 pos = (1f - e) * (1f - e) * start + 2f * (1f - e) * e * control + e * e * end;
+                pos += new Vector3(Mathf.Sin(wobbleSeed + t * 14f), Mathf.Cos(wobbleSeed + t * 11f), 0f) * 4f * (1f - p);
+                mote.rectTransform.position = pos;
+                float twinkle = 0.8f + 0.2f * Mathf.Sin(t * 30f);
+                mote.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, 0.55f, p) * twinkle;
+                mote.color = new Color(1f, 0.9f, 0.45f, p < 0.85f ? 1f : 1f - (p - 0.85f) / 0.15f);
+
+                while (sinceTrail >= trailInterval)
+                {
+                    sinceTrail -= trailInterval;
+                    var dot = UIFactory.CreatePanel(_root, "PollenTrail", new Color(1f, 0.82f, 0.3f, 0.7f));
+                    dot.raycastTarget = false;
+                    dot.sprite = glow;
+                    float s = Random.Range(8f, 14f);
+                    dot.rectTransform.sizeDelta = new Vector2(s, s);
+                    dot.rectTransform.position = pos + new Vector3(Random.Range(-5f, 5f), Random.Range(-5f, 5f), 0f);
+                    dot.rectTransform.SetSiblingIndex(mote.rectTransform.GetSiblingIndex());
+                    trail.Add(dot);
+                    trailAge.Add(0f);
+                }
+                UpdateTrail(trail, trailAge, trailLife);
+                yield return null;
+            }
+
+            Destroy(mote.gameObject);
+            while (trail.Count > 0)
+            {
+                UpdateTrail(trail, trailAge, trailLife);
+                yield return null;
+            }
+        }
+
+        private static void UpdateTrail(System.Collections.Generic.List<Image> trail, System.Collections.Generic.List<float> ages, float life)
+        {
+            for (int i = trail.Count - 1; i >= 0; i--)
+            {
+                ages[i] += Time.deltaTime;
+                float p = ages[i] / life;
+                if (trail[i] == null || p >= 1f)
+                {
+                    if (trail[i] != null)
+                    {
+                        Destroy(trail[i].gameObject);
+                    }
+                    trail.RemoveAt(i);
+                    ages.RemoveAt(i);
+                    continue;
+                }
+                trail[i].color = new Color(1f, 0.82f, 0.3f, 0.7f * (1f - p));
+                trail[i].rectTransform.localScale = Vector3.one * (1f - 0.6f * p);
+            }
+        }
+
         private IEnumerator AnimatePollenGrain(Image grain, RectTransform toAnchor, float delay)
         {
             var rect = grain.rectTransform;
