@@ -518,7 +518,7 @@ namespace Contigu.Presentation
             if (slot.Kind == ShopSlotKind.Modifier)
             {
                 var modifierDef = ModifierCatalog.Get(slot.ModifierId);
-                hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14));
+                hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14), "Fertilizer", new Color(0.56f, 0.82f, 0.42f));
             }
             else
             {
