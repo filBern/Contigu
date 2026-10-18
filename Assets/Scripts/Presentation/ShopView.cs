@@ -726,7 +726,9 @@ namespace Contigu.Presentation
             buyRect.anchorMax = new Vector2(0.5f, 0f);
             buyRect.pivot = new Vector2(0.5f, 0f);
             buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
-            buyRect.sizeDelta = new Vector2(BuyButtonWidth, BuyButtonHeight);
+            // A text label ("None owned", "Full (n)") needs more room than a price number.
+            bool isTextLabel = !purchased && !int.TryParse(priceLabel, out _);
+            buyRect.sizeDelta = new Vector2(isTextLabel ? CardWidth - 24f : BuyButtonWidth, BuyButtonHeight);
             buyBtn.interactable = !purchased && canInteract;
             var cardRect = (RectTransform)parent;
             buyBtn.onClick.AddListener(() =>
