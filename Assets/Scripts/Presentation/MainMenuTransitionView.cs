@@ -21,7 +21,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class MainMenuTransitionView : MonoBehaviour
     {
-        private const float TileSize = 48f;
+        private const float TileSize = 96f;
         private const float PopDuration = 0.22f;
         private const float PopPeakScale = 1.25f;
         private const float PopPeakFraction = 0.55f;
