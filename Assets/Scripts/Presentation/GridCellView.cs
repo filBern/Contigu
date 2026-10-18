@@ -27,6 +27,8 @@ namespace Contigu.Presentation
         private const float ClearBurstParticleSize = 10f;
         private const int ClearBurstPetalCount = 9;
         private const float ClearBurstPetalSize = 26f;
+        private const float PetalBurstDuration = 1.0f;
+        private const float PetalGravity = 520f;
         private const float ClearBurstTravelDistance = 42f;
 
         public int X { get; private set; }
@@ -465,6 +467,10 @@ namespace Contigu.Presentation
                     particle.preserveAspect = true;
                     particle.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
                     spins[i] = Random.Range(-260f, 260f);
+                    // Falling petals leave their own cell, so they get their own sorting layer to stay visible over the cells below.
+                    var sorting = particle.gameObject.AddComponent<Canvas>();
+                    sorting.overrideSorting = true;
+                    sorting.sortingOrder = 30;
                 }
                 particle.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                 particle.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -479,25 +485,60 @@ namespace Contigu.Presentation
                 particles[i] = particle;
             }
 
-            float t = 0f;
-            while (t < ClearBurstDuration)
+            if (petal != null)
             {
-                t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / ClearBurstDuration);
-                for (int i = 0; i < particles.Length; i++)
+                // Petals launch outward and up, then fall under gravity while spinning, fading out only near the end.
+                var velocities = new Vector2[count];
+                var positions = new Vector2[count];
+                for (int i = 0; i < count; i++)
                 {
-                    var rt = particles[i].rectTransform;
-                    rt.anchoredPosition = directions[i] * ClearBurstTravelDistance * p;
-                    float scale = Mathf.Lerp(1f, 0.2f, p);
-                    rt.localScale = new Vector3(scale, scale, 1f);
-                    if (petal != null)
-                    {
-                        rt.localRotation *= Quaternion.Euler(0f, 0f, spins[i] * Time.deltaTime);
-                    }
-                    var c = particles[i].color;
-                    particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
+                    velocities[i] = directions[i] * Random.Range(110f, 210f) + Vector2.up * Random.Range(60f, 140f);
                 }
-                yield return null;
+                float elapsed = 0f;
+                while (elapsed < PetalBurstDuration)
+                {
+                    float dt = Time.deltaTime;
+                    elapsed += dt;
+                    float p = Mathf.Clamp01(elapsed / PetalBurstDuration);
+                    float alpha = p < 0.55f ? 1f : 1f - (p - 0.55f) / 0.45f;
+                    for (int i = 0; i < count; i++)
+                    {
+                        velocities[i].y -= PetalGravity * dt;
+                        velocities[i].x *= 1f - 1.2f * dt; // light air drag so they drift rather than shoot off
+                        positions[i] += velocities[i] * dt;
+                        var rt = particles[i].rectTransform;
+                        rt.anchoredPosition = positions[i];
+                        rt.localRotation *= Quaternion.Euler(0f, 0f, spins[i] * dt);
+                        float scale = Mathf.Lerp(1f, 0.6f, p);
+                        rt.localScale = new Vector3(scale, scale, 1f);
+                        particles[i].color = new Color(1f, 1f, 1f, alpha);
+                    }
+                    yield return null;
+                }
+            }
+            else
+            {
+                float t = 0f;
+                while (t < ClearBurstDuration)
+                {
+                    t += Time.deltaTime;
+                    float p = Mathf.Clamp01(t / ClearBurstDuration);
+                    for (int i = 0; i < particles.Length; i++)
+                    {
+                        var rt = particles[i].rectTransform;
+                        rt.anchoredPosition = directions[i] * ClearBurstTravelDistance * p;
+                        float scale = Mathf.Lerp(1f, 0.2f, p);
+                        rt.localScale = new Vector3(scale, scale, 1f);
+                        if (petal != null)
+                        {
+                            rt.localRotation *= Quaternion.Euler(0f, 0f, spins[i] * Time.deltaTime);
+                        }
+                        var c = particles[i].color;
+                        particles[i].color = new Color(c.r, c.g, c.b, 1f - p);
+                    }
+                    yield return null;
+                }
+
             }
 
             for (int i = 0; i < particles.Length; i++)
