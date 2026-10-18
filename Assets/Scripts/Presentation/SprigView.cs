@@ -37,6 +37,7 @@ namespace Contigu.Presentation
         private Image _toastPortrait;
         private Text _toastText;
         private Coroutine _toastRoutine;
+        private CanvasGroup _toastGroup;
 
         private RectTransform _guideRoot;
         private Image _guidePortrait;
@@ -97,6 +98,7 @@ namespace Contigu.Presentation
             // Toast: small, never blocks clicks.
             _toastPortrait = BuildSpeaker(parent, "SprigToast", ToastPortraitSize, BubbleWidthToast, 16, out _toastText, out _toastRoot);
             _toastRoot.anchoredPosition = new Vector2(12f, 8f);
+            _toastGroup = _toastRoot.gameObject.AddComponent<CanvasGroup>();
             _toastRoot.gameObject.SetActive(false);
 
             // Guide: dimmed full-screen click catcher + frame + big Sprig.
@@ -150,7 +152,7 @@ namespace Contigu.Presentation
             _toastText.text = line;
             _toastRoot.SetAsLastSibling();
             _toastRoot.gameObject.SetActive(true);
-            var group = _toastRoot.gameObject.GetComponent<CanvasGroup>() ?? _toastRoot.gameObject.AddComponent<CanvasGroup>();
+            var group = _toastGroup;
             group.blocksRaycasts = false;
             group.interactable = false;
             float t = 0f;
