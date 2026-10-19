@@ -194,6 +194,10 @@ namespace Contigu.Presentation
             RefreshAll();
             SetStatusText(GetCurrentRoundStatus());
             _roundBannerView.Play(_run);
+            if (_run.CurrentWeather != WeatherId.Clear)
+            {
+                _hudView.PulseWeather();
+            }
         }
     }
 }

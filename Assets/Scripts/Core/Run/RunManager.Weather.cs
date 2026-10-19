@@ -86,6 +86,7 @@ namespace Contigu.Core
                     if (color == CurrentWeatherColor)
                     {
                         Lueur += ScoringConstants.RainPollenPerSeed;
+                        WeatherBonusTriggerCount++;
                     }
                     break;
                 case WeatherId.Sunshine:
@@ -96,13 +97,21 @@ namespace Contigu.Core
                         var events = new List<ScoreEvent>(placement.ScoreEvents);
                         events.Add(new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus));
                         placement.ScoreEvents = events;
+                        WeatherBonusTriggerCount++;
                     }
                     break;
                 case WeatherId.Dew:
-                    Lueur += placement.ClearedLineCount * ScoringConstants.DewPollenPerLine;
+                    if (placement.ClearedLineCount > 0)
+                    {
+                        Lueur += placement.ClearedLineCount * ScoringConstants.DewPollenPerLine;
+                        WeatherBonusTriggerCount++;
+                    }
                     break;
             }
         }
+
+        /// <summary>Counts every time a placement weather bonus (Rain, Sunshine, Dew) paid out — Presentation compares it before/after a placement to pulse the weather icon.</summary>
+        public int WeatherBonusTriggerCount { get; private set; }
 
         /// <summary>The tile the Heatwave scorched on the most recent manual Shuffle (null otherwise) — Presentation plays the burn before refreshing the grid.</summary>
         public (Vector2Int Pos, PieceColor Color, PieceTrait? Trait)? LastBurnedTile { get; private set; }

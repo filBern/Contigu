@@ -175,6 +175,10 @@ namespace Contigu.Presentation
             _challengeSelectView.Hide();
             StartNewRun(challenge);
             _roundBannerView.Play(_run);
+            if (_run.CurrentWeather != WeatherId.Clear)
+            {
+                _hudView.PulseWeather();
+            }
 
             if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
             {

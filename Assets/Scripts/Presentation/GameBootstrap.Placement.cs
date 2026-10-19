@@ -79,7 +79,12 @@ namespace Contigu.Presentation
             bool targetWasShielded = damagedEnemyIndex >= 0 && _run.CurrentEncounter[damagedEnemyIndex].HasShield;
 
             string blightBefore = BlightSignature();
+            int weatherBonusesBefore = _run.WeatherBonusTriggerCount;
             var outcome = _run.PlacePiece(handIndex, x, y);
+            if (_run.WeatherBonusTriggerCount != weatherBonusesBefore)
+            {
+                _hudView.PulseWeather();
+            }
             if (!outcome.Placement.Success)
             {
                 SfxManager.Play(SfxId.InvalidDrop);
@@ -825,6 +830,7 @@ namespace Contigu.Presentation
             if (outcome.WeatherMovedTiles.Count > 0)
             {
                 SfxManager.Play(SfxId.Shuffle);
+                _hudView.PulseWeather();
                 ShakeScreen(1, 5);
                 yield return _gridView.PlayTileFlights(outcome.WeatherMovedTiles, 0.65f);
             }

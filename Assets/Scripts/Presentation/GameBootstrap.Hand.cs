@@ -140,6 +140,7 @@ namespace Contigu.Presentation
                     new List<Vector2Int> { burned.Value.Pos }, new List<PieceColor> { burned.Value.Color }, new List<PieceTrait?> { burned.Value.Trait }, affectedCellsNow);
                 _gridView.SetMalusAlpha(0f);
                 ShakeScreen(1, 8);
+                _hudView.PulseWeather();
                 _gridView.PlayBurn(burned.Value.Pos.x, burned.Value.Pos.y);
                 yield return new WaitForSeconds(0.95f);
                 _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), affectedCellsNow);

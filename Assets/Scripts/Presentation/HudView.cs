@@ -200,6 +200,41 @@ namespace Contigu.Presentation
             _weatherChipTooltip = weatherChip.gameObject.AddComponent<HoverTooltip>();
         }
 
+        private Coroutine _weatherPulseCoroutine;
+
+        /// <summary>Pulse + shake of the weather icon, played whenever the weather's effect triggers.</summary>
+        public void PulseWeather()
+        {
+            if (_weatherChipIcon == null || !_weatherChipIcon.gameObject.activeInHierarchy)
+            {
+                return;
+            }
+            if (_weatherPulseCoroutine != null)
+            {
+                StopCoroutine(_weatherPulseCoroutine);
+            }
+            _weatherPulseCoroutine = StartCoroutine(WeatherPulseRoutine());
+        }
+
+        private System.Collections.IEnumerator WeatherPulseRoutine()
+        {
+            const float duration = 0.6f;
+            var rt = (RectTransform)_weatherChipIcon.transform.parent;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float scale = 1f + 0.45f * Mathf.Sin(Mathf.Min(1f, p * 1.6f) * Mathf.PI);
+                rt.localScale = new Vector3(scale, scale, 1f);
+                rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * 42f) * 14f * (1f - p));
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
+            _weatherPulseCoroutine = null;
+        }
+
         /// <summary>Shows this round's weather in the chip next to the round number.</summary>
         public void SetWeather(WeatherId weather, PieceColor? color = null)
         {
