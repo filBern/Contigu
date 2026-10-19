@@ -412,6 +412,10 @@ namespace Contigu.Presentation
             {
                 return "Hates the " + VisualDefaults.GetShapeName(enemy.HatedShape.Value) + " shape.\nPoints scored on plots planted by that shape are cancelled for the whole round.";
             }
+            if (enemy.Definition.Id == EnemyId.Reclaimer && !enemy.HasShield)
+            {
+                return "The shield is gone.\nHeals by the amount of points lost on blighted plots.\nAt full HP, it gains max HP instead.";
+            }
             if (IsEnraged(enemy))
             {
                 return "ENRAGED (below half HP): each Shuffle it takes 2 random seeds from your hand instead of 1.\nStolen seeds come back after a later Shuffle.";
