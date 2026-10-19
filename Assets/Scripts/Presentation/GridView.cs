@@ -286,7 +286,7 @@ namespace Contigu.Presentation
                     {
                         // A cell both held (its line is still on screen) and newly poisoned/locked by this placement's
                         // shuffle keeps its fill but not its new malus — the badge would otherwise show before the line breaks.
-                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos], suppressMalus: deferredNew.Contains(pos));
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), color, overrideTrait[pos], suppressMalus: deferredNew.Contains(pos), forceShowLocked: releasedLocked.Contains(pos), forceShowPoisoned: releasedPoisoned.Contains(pos));
                     }
                     else if (releasedLocked.Contains(pos) || releasedPoisoned.Contains(pos))
                     {
@@ -344,16 +344,17 @@ namespace Contigu.Presentation
         /// hidden — shown as a plain cleared cell instead — until GameBootstrap's own circle-then-reveal
         /// (PlayEnemyEffectsSequentially) is ready to show it for real.
         /// </summary>
-        public void ClearCellVisual(int x, int y, bool suppressMalus = false)
+        /// <summary>Empties a cleared cell's visual. <paramref name="keepLocked"/>/<paramref name="keepPoisoned"/> keep a lock/poison badge the model already released (e.g. by the auto-refill's shuffle) on screen until the end-of-sequence reveal.</summary>
+        public void ClearCellVisual(int x, int y, bool suppressMalus = false, bool keepLocked = false, bool keepPoisoned = false)
         {
-            RefreshCell(x, y, suppressMalus);
+            RefreshCell(x, y, suppressMalus, keepLocked, keepPoisoned);
         }
 
-        private void RefreshCell(int x, int y, bool suppressMalus = false)
+        private void RefreshCell(int x, int y, bool suppressMalus = false, bool keepLocked = false, bool keepPoisoned = false)
         {
             if (GridManager.InBounds(x, y))
             {
-                _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: suppressMalus);
+                _cells[x, y].ApplyState(_grid.GetCell(x, y), suppressMalus: suppressMalus, forceShowLocked: keepLocked, forceShowPoisoned: keepPoisoned);
             }
         }
 

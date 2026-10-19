@@ -1589,7 +1589,7 @@ namespace Contigu.Presentation
 
             if (!deferTileClear)
             {
-                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount, deferredNewMalusCells);
+                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
             }
 
             // GroupMultiplier (Tinted+Multiplier-Zone cells) and
@@ -1745,7 +1745,7 @@ namespace Contigu.Presentation
             // score cascade above.
             if (deferTileClear)
             {
-                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount, deferredNewMalusCells);
+                yield return PlayTileClearBursts(placement, leechIndex, leechHealAmount, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
             }
 
             // Boss-locked cells, any Locker/Poisoner cell this placement's
@@ -1856,7 +1856,7 @@ namespace Contigu.Presentation
         /// damage drain (see deferTileClear), so it's also the single spot
         /// where Leech's heal popup is shown.
         /// </summary>
-        private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement, int leechIndex, int leechHealAmount, IReadOnlyList<Vector2Int> deferredNewMalusCells)
+        private System.Collections.IEnumerator PlayTileClearBursts(PlacementResult placement, int leechIndex, int leechHealAmount, IReadOnlyList<Vector2Int> deferredNewMalusCells, IReadOnlyList<Vector2Int> releasedLockedCells = null, IReadOnlyList<Vector2Int> releasedPoisonedCells = null)
         {
             // A cleared cell can itself be this same placement's own poison contamination target (see
             // RunManager.ContaminateAdjacentCell) — contamination always spreads to an orthogonal neighbor,
@@ -1865,6 +1865,9 @@ namespace Contigu.Presentation
             // brand-new poison badge would appear the instant its burst plays — well before
             // PlayEnemyEffectsSequentially (further down this same sequence) has even started its circle.
             var suppressedCells = new HashSet<Vector2Int>(deferredNewMalusCells);
+            // A lock/poison the model already released (shuffle on auto-refill) keeps its badge until the end-of-sequence reveal.
+            var keepLocked = releasedLockedCells != null ? new HashSet<Vector2Int>(releasedLockedCells) : new HashSet<Vector2Int>();
+            var keepPoisoned = releasedPoisonedCells != null ? new HashSet<Vector2Int>(releasedPoisonedCells) : new HashSet<Vector2Int>();
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
@@ -1872,7 +1875,7 @@ namespace Contigu.Presentation
                 // Tinted to the color the cell had right before clearing,
                 // via RefreshHoldingClearedCells's held color.
                 _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
-                _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos));
+                _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos), keepLocked.Contains(pos), keepPoisoned.Contains(pos));
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
             // Void Tile / Kamikaze Tile destructions — same burst as a line
