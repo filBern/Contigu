@@ -188,7 +188,7 @@ F = {
  'FormatPetitGlow': ('sh2g', 'p', '+6', 'Formes'), 'FormatMoyenGlow': ('sh3g', 'p', '+6', 'Formes'), 'FormatGrandGlow': ('sh4g', 'p', '+6', 'Formes'),
  'Pair': ('waxing', 'm', '×2', 'Roguelike'), 'Impair': ('waning', 'm', '×2', 'Roguelike'), 'Polyvalence': ('cactus', 'm', '+1', 'Roguelike'),
  'RenfortJoker': ('tonic', 'd', '+25%', 'Roguelike'), 'Arsenal': ('quiver', 'm', '+1', 'Roguelike'), 'CollectionChromatique': ('hoardjar', 'm', '+2', 'Couleurs'),
- 'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'Siphon': ('siphon', 'l', '15%', 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
+ 'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'Siphon': ('siphon', 'l', '4%', 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
 }
 for k in ('scythe', 'wheel', 'ashbound', 'dissonant', 'momentum', 'cocoon', 'trowel', 'rainbow', 'alternation'):
     pass
