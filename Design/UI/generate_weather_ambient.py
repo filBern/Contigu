@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""Weather icons (Assets/Resources/Icons/Weather/<WeatherId>.png, 128px) and ambient garden sprites (Assets/Resources/Ambient/<Name>.png, 96px).
+Run from this folder: python3 generate_weather_ambient.py"""
+import math, os, subprocess
+O = '#13212e'
+CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
+RES = '../../Assets/Resources'
+
+def svg(body, size=256):
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="%d" height="%d">%s</svg>' % (size, size, body)
+
+def badge(top, bottom, glyph):
+    return svg('<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs>'
+               '<rect x="10" y="10" width="236" height="236" rx="52" fill="url(#b)" stroke="%s" stroke-width="10"/>%s' % (top, bottom, O, glyph))
+
+def cloud(cx, cy, s, fill='#f4f8ff'):
+    return ('<g transform="translate(%g %g) scale(%g)" stroke="%s" stroke-width="%g" stroke-linejoin="round" fill="%s">'
+            '<path d="M-70 24 C-98 24 -98 -18 -62 -18 C-62 -52 -12 -62 6 -34 C28 -56 78 -38 66 -2 C98 -2 98 24 66 24 Z"/></g>') % (cx, cy, s, O, 8 / s, fill)
+
+def sun_rays(cx, cy, r1, r2, n, w):
+    out = ''
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        out += '<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="%g" stroke-linecap="round"/>' % (cx + r1 * math.cos(a), cy + r1 * math.sin(a), cx + r2 * math.cos(a), cy + r2 * math.sin(a), O, w + 10)
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        out += '<path d="M%.1f %.1f L%.1f %.1f" stroke="#ffd45a" stroke-width="%g" stroke-linecap="round"/>' % (cx + r1 * math.cos(a), cy + r1 * math.sin(a), cx + r2 * math.cos(a), cy + r2 * math.sin(a), w)
+    return out
+
+def sun(cx, cy, r):
+    return sun_rays(cx, cy, r + 14, r + 44, 8, 12) + '<circle cx="%g" cy="%g" r="%g" fill="#ffc83a" stroke="%s" stroke-width="8"/><circle cx="%g" cy="%g" r="%g" fill="#ffe58a" opacity="0.8"/>' % (cx, cy, r, O, cx - r * 0.3, cy - r * 0.3, r * 0.35)
+
+def drop(cx, cy, s, fill='#6cc7f0'):
+    return '<path transform="translate(%g %g) scale(%g)" d="M0 -22 C14 -4 18 6 18 12 C18 24 9 30 0 30 C-9 30 -18 24 -18 12 C-18 6 -14 -4 0 -22 Z" fill="%s" stroke="%s" stroke-width="%g"/>' % (cx, cy, s, fill, O, 6 / s)
+
+def snowflake(cx, cy, r, col='#ffffff'):
+    out = ''
+    for i in range(6):
+        a = math.pi / 3 * i
+        x, y = cx + r * math.cos(a), cy + r * math.sin(a)
+        out += '<path d="M%g %g L%.1f %.1f" stroke="%s" stroke-width="%g" stroke-linecap="round"/>' % (cx, cy, x, y, O, 18)
+        mx, my = cx + r * 0.62 * math.cos(a), cy + r * 0.62 * math.sin(a)
+        for side in (-1, 1):
+            bx, by = mx + 0.34 * r * math.cos(a + side * 0.9), my + 0.34 * r * math.sin(a + side * 0.9)
+            out += '<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="%g" stroke-linecap="round"/>' % (mx, my, bx, by, O, 16)
+    for i in range(6):
+        a = math.pi / 3 * i
+        x, y = cx + r * math.cos(a), cy + r * math.sin(a)
+        out += '<path d="M%g %g L%.1f %.1f" stroke="%s" stroke-width="%g" stroke-linecap="round"/>' % (cx, cy, x, y, col, 8)
+        mx, my = cx + r * 0.62 * math.cos(a), cy + r * 0.62 * math.sin(a)
+        for side in (-1, 1):
+            bx, by = mx + 0.34 * r * math.cos(a + side * 0.9), my + 0.34 * r * math.sin(a + side * 0.9)
+            out += '<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="%g" stroke-linecap="round"/>' % (mx, my, bx, by, col, 6)
+    return out
+
+weather = {
+    'Clear': badge('#9fd8f5', '#5fa8dc', cloud(128, 140, 1.0) + '<circle cx="172" cy="84" r="24" fill="#ffd45a" stroke="%s" stroke-width="7"/>' % O),
+    'Rain': badge('#8aa6c4', '#4a6486', cloud(128, 104, 1.1, '#dfe7f2') + drop(88, 188, 0.9) + drop(128, 206, 0.9) + drop(168, 188, 0.9)),
+    'Sunshine': badge('#ffe08a', '#f2a93a', sun(128, 128, 46)),
+    'Wind': badge('#b7e3d0', '#5fae94',
+                  '<g fill="none" stroke-linecap="round"><path d="M44 100 C100 100 150 84 170 66 C190 48 214 70 194 90" stroke="%s" stroke-width="24"/><path d="M44 100 C100 100 150 84 170 66 C190 48 214 70 194 90" stroke="#ffffff" stroke-width="10"/>'
+                  '<path d="M44 150 C110 150 170 136 190 156 C206 172 188 196 168 184" stroke="%s" stroke-width="24"/><path d="M44 150 C110 150 170 136 190 156 C206 172 188 196 168 184" stroke="#ffffff" stroke-width="10"/></g>'
+                  '<path d="M62 196 C84 168 116 176 118 204 C92 214 70 210 62 196 Z" fill="#6fb04f" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % (O, O, O)),
+    'Frost': badge('#cfeaff', '#7fb4e8', snowflake(128, 128, 78)),
+}
+
+def butterfly():
+    return svg('<g stroke="%s" stroke-width="7" stroke-linejoin="round">'
+               '<path d="M128 130 C70 40 20 70 38 126 C48 156 98 160 128 138 Z" fill="#f08a3c"/>'
+               '<path d="M128 130 C186 40 236 70 218 126 C208 156 158 160 128 138 Z" fill="#f08a3c"/>'
+               '<path d="M128 138 C84 150 56 190 76 214 C98 232 122 196 128 160 Z" fill="#ffc86a"/>'
+               '<path d="M128 138 C172 150 200 190 180 214 C158 232 134 196 128 160 Z" fill="#ffc86a"/>'
+               '<ellipse cx="128" cy="144" rx="9" ry="50" fill="#3a2a22"/></g>'
+               '<path d="M122 96 C110 70 100 62 92 60 M134 96 C146 70 156 62 164 60" stroke="%s" stroke-width="6" fill="none" stroke-linecap="round"/>'
+               '<circle cx="70" cy="104" r="12" fill="#fff3d0"/><circle cx="186" cy="104" r="12" fill="#fff3d0"/>' % (O, O), 96)
+
+def bee():
+    return svg('<ellipse cx="108" cy="80" rx="42" ry="30" fill="#e8f4ff" stroke="%s" stroke-width="6" opacity="0.9"/>'
+               '<ellipse cx="160" cy="76" rx="40" ry="28" fill="#e8f4ff" stroke="%s" stroke-width="6" opacity="0.9"/>'
+               '<g stroke="%s" stroke-width="7"><ellipse cx="128" cy="140" rx="64" ry="46" fill="#ffc83a"/>'
+               '<path d="M104 98 C96 124 96 156 106 182 M142 96 C150 124 150 156 140 184" fill="none" stroke-width="14"/></g>'
+               '<circle cx="186" cy="132" r="22" fill="#ffc83a" stroke="%s" stroke-width="7"/><circle cx="194" cy="126" r="5" fill="%s"/>'
+               '<path d="M64 148 L38 156" stroke="%s" stroke-width="8" stroke-linecap="round"/>' % (O, O, O, O, O, O), 96)
+
+def leaf():
+    return svg('<path d="M40 216 C28 120 110 44 220 40 C216 150 160 224 40 216 Z" fill="#6fb04f" stroke="%s" stroke-width="9" stroke-linejoin="round"/>'
+               '<path d="M40 216 C96 156 150 106 206 58" fill="none" stroke="#3f7a35" stroke-width="9" stroke-linecap="round"/>' % O, 96)
+
+def raindrop():
+    return svg('<path d="M128 24 C170 92 190 124 190 156 C190 198 162 226 128 226 C94 226 66 198 66 156 C66 124 86 92 128 24 Z" fill="#6cc7f0" stroke="%s" stroke-width="10"/>'
+               '<ellipse cx="108" cy="156" rx="12" ry="26" fill="#ffffff" opacity="0.7" transform="rotate(14 108 156)"/>' % O, 96)
+
+def sparkle():
+    return svg('<path d="M128 14 L152 104 L242 128 L152 152 L128 242 L104 152 L14 128 L104 104 Z" fill="#ffffff" stroke="%s" stroke-width="9" stroke-linejoin="round"/>' % O, 96)
+
+def sunmote():
+    return svg('<circle cx="128" cy="128" r="70" fill="#ffe58a" stroke="%s" stroke-width="10"/><circle cx="106" cy="106" r="22" fill="#fffbe0"/>' % O, 96)
+
+ambient = {'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
+
+def render(name, content, out_path, px):
+    html = '/tmp/_amb_%s.html' % name
+    open(html, 'w').write('<html><body style="margin:0;background:transparent">%s</body></html>' % content.replace('width="256" height="256"', 'width="%d" height="%d"' % (px, px), 1).replace('width="96" height="96"', 'width="%d" height="%d"' % (px, px), 1))
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000', '--screenshot=' + out_path,
+                    '--window-size=%d,%d' % (px, px + 300), 'file://' + html], check=True, capture_output=True)
+    subprocess.run(['convert', out_path, '-crop', '%dx%d+0+0' % (px, px), '+repage', out_path], check=True)
+
+for name, content in weather.items():
+    render('w_' + name, content, '%s/Icons/Weather/%s.png' % (RES, name), 128)
+for name, content in ambient.items():
+    render('a_' + name, content, '%s/Ambient/%s.png' % (RES, name), 96)
+print('weather', len(weather), 'ambient', len(ambient))
