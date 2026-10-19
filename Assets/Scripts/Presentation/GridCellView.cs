@@ -360,6 +360,8 @@ namespace Contigu.Presentation
             if (_scaleCoroutine != null)
             {
                 StopCoroutine(_scaleCoroutine);
+                // A bloom interrupted mid-way would otherwise leave its tilt behind (a crooked tile).
+                ((RectTransform)transform).localRotation = Quaternion.identity;
             }
             _scaleCoroutine = StartCoroutine(PulseRoutine());
         }
