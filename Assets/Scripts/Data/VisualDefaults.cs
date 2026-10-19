@@ -85,6 +85,33 @@ namespace Contigu.Data
             { PieceColor.Joker, Resources.Load<Sprite>("Tiles/Joker") }
         };
 
+        // Each colored tile split into bare frame + soil (Base) and the flower alone (Emblem), for the landing bloom (Design/Tiles/split_tiles_for_bloom.py).
+        private static Sprite LoadBloom(string tile, string part)
+        {
+            return Resources.Load<Sprite>("Tiles/Bloom/" + tile + "_" + part);
+        }
+
+        private static readonly Dictionary<PieceColor, string> BloomTileNames = new Dictionary<PieceColor, string>
+        {
+            { PieceColor.Coral, "Ember" },
+            { PieceColor.Teal, "Frost" },
+            { PieceColor.Violet, "Gold" },
+            { PieceColor.Lime, "Moss" },
+            { PieceColor.Joker, "Joker" }
+        };
+
+        /// <summary>The filled tile without its flower (null when the color has no split art).</summary>
+        public static Sprite GetBloomBaseSprite(PieceColor color)
+        {
+            return BloomTileNames.TryGetValue(color, out var n) ? LoadBloom(n, "Base") : null;
+        }
+
+        /// <summary>Just the flower of the filled tile, unclipped (null when the color has no split art).</summary>
+        public static Sprite GetBloomEmblemSprite(PieceColor color)
+        {
+            return BloomTileNames.TryGetValue(color, out var n) ? LoadBloom(n, "Emblem") : null;
+        }
+
         /// <summary>An empty golden cell (see Cell.IsGolden) — golden soil with sparkles; null falls back to the old tinted flat color.</summary>
         public static readonly Sprite GoldenCellSprite = Resources.Load<Sprite>("Tiles/Golden");
 

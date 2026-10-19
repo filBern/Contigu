@@ -87,40 +87,52 @@ namespace Contigu.Presentation
             _lockedOverlay.gameObject.SetActive(false);
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
 
-            // The filled tile art, drawn over the Background only while a piece blooms in (see LandingSquashRoutine).
-            var bloomGo = new GameObject("BloomTile", typeof(RectTransform));
-            bloomGo.transform.SetParent(background.transform, false);
-            bloomGo.transform.SetSiblingIndex(1);
-            var bloomRect = (RectTransform)bloomGo.transform;
-            bloomRect.anchorMin = Vector2.zero;
-            bloomRect.anchorMax = Vector2.one;
-            bloomRect.offsetMin = Vector2.zero;
-            bloomRect.offsetMax = Vector2.zero;
-            _bloomTile = bloomGo.AddComponent<Image>();
-            _bloomTile.type = Image.Type.Sliced;
-            _bloomTile.raycastTarget = false;
-            _bloomTile.gameObject.SetActive(false);
+            // The flower alone, popped on top of the Background (which shows the bare frame + soil) while a piece blooms in; the mask keeps petals inside the soil.
+            var maskGo = new GameObject("BloomMask", typeof(RectTransform));
+            maskGo.transform.SetParent(background.transform, false);
+            maskGo.transform.SetSiblingIndex(1);
+            var maskRect = (RectTransform)maskGo.transform;
+            maskRect.anchorMin = Vector2.zero;
+            maskRect.anchorMax = Vector2.one;
+            maskRect.offsetMin = Vector2.zero;
+            maskRect.offsetMax = Vector2.zero;
+            _bloomMask = maskGo.AddComponent<RectMask2D>();
+            var emblemGo = new GameObject("BloomEmblem", typeof(RectTransform));
+            emblemGo.transform.SetParent(maskGo.transform, false);
+            var emblemRect = (RectTransform)emblemGo.transform;
+            emblemRect.anchorMin = Vector2.zero;
+            emblemRect.anchorMax = Vector2.one;
+            emblemRect.offsetMin = Vector2.zero;
+            emblemRect.offsetMax = Vector2.zero;
+            _bloomEmblem = emblemGo.AddComponent<Image>();
+            _bloomEmblem.raycastTarget = false;
+            maskGo.SetActive(false);
         }
 
-        private void OnDisable()
-        {
-            EndBloom();
-        }
+        // The soil inset of the tile art (32 of 256 px on each side) — what the flower is clipped to.
+        private const float SoilInsetFraction = 32f / 256f;
 
-        private Image _bloomTile;
+        private RectMask2D _bloomMask;
+        private Image _bloomEmblem;
         private bool _blooming;
+        private PieceColor? _filledColor;
 
-        // While blooming, the Background keeps showing the empty plot (the frame at full size) and the filled art lives on _bloomTile.
-        private void SwapFilledArtToBloomTile()
+        // While blooming, the Background shows the bare frame + soil at full size and the flower lives on _bloomEmblem.
+        private void ApplyBloomArt()
         {
-            if (!_blooming || _isShowingLockedObstacle || _bloomTile == null || Background.sprite == VisualDefaults.EmptyTileSprite)
+            var baseSprite = _filledColor.HasValue ? VisualDefaults.GetBloomBaseSprite(_filledColor.Value) : null;
+            var emblemSprite = _filledColor.HasValue ? VisualDefaults.GetBloomEmblemSprite(_filledColor.Value) : null;
+            if (baseSprite == null || emblemSprite == null)
             {
+                EndBloom();
                 return;
             }
-            _bloomTile.sprite = Background.sprite;
-            _bloomTile.color = Background.color;
-            Background.sprite = VisualDefaults.EmptyTileSprite;
-            Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
+            Background.sprite = baseSprite;
+            Background.color = Color.white;
+            _bloomEmblem.sprite = emblemSprite;
+            float inset = ((RectTransform)transform).rect.width * SoilInsetFraction;
+            _bloomMask.padding = new Vector4(inset, inset, inset, inset);
+            _bloomMask.gameObject.SetActive(true);
         }
 
         private void EndBloom()
@@ -130,17 +142,22 @@ namespace Contigu.Presentation
                 return;
             }
             _blooming = false;
-            if (_bloomTile != null)
+            if (_bloomMask != null)
             {
-                if (!_isShowingLockedObstacle && _bloomTile.sprite != null)
-                {
-                    Background.sprite = _bloomTile.sprite;
-                    Background.color = _bloomTile.color;
-                }
-                _bloomTile.rectTransform.localScale = Vector3.one;
-                _bloomTile.rectTransform.localRotation = Quaternion.identity;
-                _bloomTile.gameObject.SetActive(false);
+                _bloomEmblem.rectTransform.localScale = Vector3.one;
+                _bloomEmblem.rectTransform.localRotation = Quaternion.identity;
+                _bloomMask.gameObject.SetActive(false);
             }
+            if (_filledColor.HasValue && !_isShowingLockedObstacle)
+            {
+                Background.sprite = VisualDefaults.GetTileSprite(_filledColor.Value);
+                Background.color = VisualDefaults.GetTileTint(_filledColor.Value);
+            }
+        }
+
+        private void OnDisable()
+        {
+            EndBloom();
         }
 
         /// <summary>
@@ -205,16 +222,10 @@ namespace Contigu.Presentation
                 Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
             }
 
+            _filledColor = isFilled && !renderAsLockedObstacle ? filledColor : null;
             if (_blooming)
             {
-                if (isFilled && !renderAsLockedObstacle)
-                {
-                    SwapFilledArtToBloomTile();
-                }
-                else
-                {
-                    EndBloom();
-                }
+                ApplyBloomArt();
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.
@@ -479,13 +490,17 @@ namespace Contigu.Presentation
 
         private IEnumerator LandingSquashRoutine(float delay)
         {
-            var rt = (RectTransform)transform;
-            rt.localScale = Vector3.one;
+            ((RectTransform)transform).localScale = Vector3.one;
             _blooming = true;
-            _bloomTile.gameObject.SetActive(true);
-            var tileRt = _bloomTile.rectTransform;
+            ApplyBloomArt();
+            if (!_blooming)
+            {
+                // No split art for this color: skip the animation rather than popping the whole tile.
+                _scaleCoroutine = null;
+                yield break;
+            }
+            var tileRt = _bloomEmblem.rectTransform;
             tileRt.localScale = Vector3.zero;
-            SwapFilledArtToBloomTile();
             float wait = 0f;
             while (wait < delay)
             {
