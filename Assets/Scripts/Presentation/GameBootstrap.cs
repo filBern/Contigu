@@ -87,6 +87,8 @@ namespace Contigu.Presentation
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private AmbientLifeView _ambientLifeView;
+        private RectTransform _mainRoot;
+        private Coroutine _screenShakeCoroutine;
         private RoundBannerView _roundBannerView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
@@ -395,6 +397,7 @@ namespace Contigu.Presentation
         {
             var mainRoot = UIFactory.CreateUIObject("MainRoot", canvas);
             UIFactory.StretchFull(mainRoot);
+            _mainRoot = mainRoot;
 
             _comboView = gameObject.AddComponent<ComboView>();
             var comboRect = _comboView.Build(mainRoot);

@@ -235,6 +235,34 @@ namespace Contigu.Presentation
             Time.timeScale = 1f;
         }
 
+        /// <summary>Camera shake: the whole interface jolts for a moment (stronger for a bigger share of the enemy's HP), restarting cleanly if another hit lands meanwhile.</summary>
+        private void ShakeScreen(int damage, int enemyMaxHp)
+        {
+            float share = enemyMaxHp > 0 ? Mathf.Clamp01(damage * 3f / enemyMaxHp) : 0f;
+            float magnitude = Mathf.Lerp(3.5f, 10f, share);
+            float duration = Mathf.Lerp(0.16f, 0.3f, share);
+            if (_screenShakeCoroutine != null)
+            {
+                StopCoroutine(_screenShakeCoroutine);
+                _mainRoot.anchoredPosition = Vector2.zero;
+            }
+            _screenShakeCoroutine = StartCoroutine(ScreenShakeRoutine(duration, magnitude));
+        }
+
+        private System.Collections.IEnumerator ScreenShakeRoutine(float duration, float magnitude)
+        {
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float damping = 1f - Mathf.Clamp01(t / duration);
+                _mainRoot.anchoredPosition = Random.insideUnitCircle * magnitude * damping;
+                yield return null;
+            }
+            _mainRoot.anchoredPosition = Vector2.zero;
+            _screenShakeCoroutine = null;
+        }
+
         private int _pendingShieldBreakIndex = -1;
 
         private void BreakPendingShield()
@@ -879,6 +907,7 @@ namespace Contigu.Presentation
                 _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, petalSprite: _currentPetalSprite, onArrival: () =>
                 {
                     _hudView.PlayEnemyHurtEffect(enemyIndex);
+                    ShakeScreen(damage, maxHp);
                     damageShown = true;
                 });
                 if (isRetargetHit)
@@ -960,6 +989,7 @@ namespace Contigu.Presentation
                         _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, anchor, "-" + damage, UITheme.Danger, fontSize: SubtractionFlyingPopupFontSize, attackSprite: _currentAttackSprite, petalSprite: _currentPetalSprite, onArrival: () =>
                         {
                             _hudView.PlayEnemyHurtEffect(target.Index);
+                            ShakeScreen(damage, target.MaxHp);
                             damageShown = true;
                         });
                         // Death is only ever checked/applied below once THIS target's own circle has
