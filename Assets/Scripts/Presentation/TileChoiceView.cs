@@ -14,8 +14,6 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float CellSize = PieceBox.CellSize;
-        private const float PreviewSize = PieceBox.PreviewSize;
         private const float LevelLabelHeight = 18f;
         private const float BadgeFadeDuration = 0.35f;
         private const float TitleHeight = 40f;
@@ -127,6 +125,7 @@ namespace Contigu.Presentation
             {
                 Destroy(_previewsContainer.GetChild(i).gameObject);
             }
+            PieceBox.Configure(_candidates.Count);
             for (int i = 0; i < _candidates.Count; i++)
             {
                 BuildPreviewCell(_candidates[i]);
@@ -170,7 +169,7 @@ namespace Contigu.Presentation
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             // Nudged up to leave room at the bottom for the level label below.
             previewContainer.anchoredPosition = new Vector2(0f, LevelLabelHeight * 0.5f);
-            previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
+            previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);

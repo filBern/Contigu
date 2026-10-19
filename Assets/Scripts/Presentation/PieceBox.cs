@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
@@ -6,18 +7,34 @@ namespace Contigu.Presentation
     /// <summary>
     /// Shared look for the seed pickers (PieceChoiceView, TileChoiceView, DraftView's type grid): every candidate sits in
     /// one big parchment box (like the hand's slots), large previews, no per-cell backgrounds, thin dividers between
-    /// cells, selection shown as a soft tint behind the chosen cell.
+    /// cells, a soft tint on hover and on the chosen cell. The box shrinks its cells with the candidate count so it always
+    /// fits between the side panels (fertilizers / next round) that stay visible next to it.
     /// </summary>
     public static class PieceBox
     {
-        public const float CellSize = 150f;
-        public const float PreviewSize = 118f;
-        public const float BoxPadding = 18f;
-        public const float BoxHeight = CellSize + BoxPadding * 2f;
+        private const float MaxCellSize = 150f;
+        private const float MinCellSize = 84f;
+        private const float BoxPadding = 18f;
+        private const float DividerWidth = 2f;
+        // Width left between the fertilizer and next-round panels, in canvas units.
+        private const float AvailableWidth = 620f;
+
+        public static float CellSize { get; private set; } = MaxCellSize;
+        public static float PreviewSize { get { return CellSize * 0.8f; } }
+        public static float BoxHeight { get { return CellSize + BoxPadding * 2f; } }
 
         public static readonly Color Idle = new Color(1f, 1f, 1f, 0f);
+        public static readonly Color Hover = new Color(0.35f, 0.65f, 0.30f, 0.16f);
         public static readonly Color Selected = new Color(0.35f, 0.65f, 0.30f, 0.38f);
         private static readonly Color DividerColor = new Color(0.45f, 0.33f, 0.2f, 0.45f);
+
+        /// <summary>Sizes the cells for <paramref name="count"/> candidates; call before building the cells and measuring the block.</summary>
+        public static void Configure(int count)
+        {
+            int n = Mathf.Max(1, count);
+            float usable = AvailableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
+            CellSize = Mathf.Clamp(usable / n, MinCellSize, MaxCellSize);
+        }
 
         /// <summary>Turns an (already laid out) horizontal container into the big parchment box.</summary>
         public static void Setup(RectTransform container)
@@ -32,7 +49,7 @@ namespace Contigu.Presentation
             layout.childAlignment = TextAnchor.MiddleCenter;
         }
 
-        /// <summary>A transparent, clickable cell; a divider is added first when the box already holds a cell.</summary>
+        /// <summary>A transparent, clickable cell with hover feedback; a divider is added first when the box already holds a cell.</summary>
         public static Image CreateCell(RectTransform container, string name)
         {
             if (container.childCount > 0)
@@ -40,7 +57,7 @@ namespace Contigu.Presentation
                 var divider = UIFactory.CreatePanel(container, "Divider", DividerColor);
                 divider.raycastTarget = false;
                 var dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
-                dividerLayout.preferredWidth = 2f;
+                dividerLayout.preferredWidth = DividerWidth;
                 dividerLayout.preferredHeight = CellSize * 0.7f;
             }
             var cell = UIFactory.CreatePanel(container, name, Idle);
@@ -48,7 +65,59 @@ namespace Contigu.Presentation
             var cellLayout = cell.gameObject.AddComponent<LayoutElement>();
             cellLayout.preferredWidth = CellSize;
             cellLayout.preferredHeight = CellSize;
+            cell.gameObject.AddComponent<PieceBoxCellHover>();
             return cell;
+        }
+    }
+
+    /// <summary>Hover feedback for a PieceBox cell: a faint tint (only while the cell is not selected) and a slight grow of its preview.</summary>
+    public sealed class PieceBoxCellHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        private const float HoverScale = 1.08f;
+        private Image _cell;
+        private bool _hovered;
+
+        private void Awake()
+        {
+            _cell = GetComponent<Image>();
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _hovered = true;
+            if (_cell != null && _cell.color == PieceBox.Idle)
+            {
+                _cell.color = PieceBox.Hover;
+            }
+            SetPreviewScale(HoverScale);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _hovered = false;
+            if (_cell != null && _cell.color == PieceBox.Hover)
+            {
+                _cell.color = PieceBox.Idle;
+            }
+            SetPreviewScale(1f);
+        }
+
+        private void OnDisable()
+        {
+            if (_hovered)
+            {
+                _hovered = false;
+                SetPreviewScale(1f);
+            }
+        }
+
+        private void SetPreviewScale(float scale)
+        {
+            var preview = transform.Find("Preview");
+            if (preview != null)
+            {
+                preview.localScale = new Vector3(scale, scale, 1f);
+            }
         }
     }
 }

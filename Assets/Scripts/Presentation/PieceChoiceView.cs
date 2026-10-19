@@ -15,8 +15,6 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class PieceChoiceView : MonoBehaviour
     {
-        private const float CellSize = PieceBox.CellSize;
-        private const float PreviewSize = PieceBox.PreviewSize;
         private const float LevelLabelHeight = 20f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
@@ -93,6 +91,7 @@ namespace Contigu.Presentation
         {
             _candidates.Clear();
             _candidates.AddRange(candidates);
+            PieceBox.Configure(_candidates.Count);
             _selectedIndex = -1;
             _cellBackgroundByIndex.Clear();
 
@@ -150,7 +149,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             previewContainer.anchoredPosition = new Vector2(0f, 13f);
-            previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
+            previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
 
             // The trait (if any) was already rolled for this candidate, so it's shown outright.
             var token = _candidates[index];

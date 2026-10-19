@@ -21,8 +21,6 @@ namespace Contigu.Presentation
     public sealed class DraftView : MonoBehaviour
     {
         // PreviewCellSize matches PieceChoiceView's CellSize to leave room for the level label under each preview (see BuildTypePreviewCell); PreviewSize matches TileChoiceView's glyph size.
-        private const float PreviewCellSize = PieceBox.CellSize;
-        private const float PreviewSize = PieceBox.PreviewSize;
         private const float LevelLabelHeight = 20f;
         private const float ConfirmHeight = 46f;
         private const float TitleHeight = 40f;
@@ -85,6 +83,7 @@ namespace Contigu.Presentation
         public void ShowForPendingUpgrade(UpgradeDefinition def, IReadOnlyList<(ShapeId Shape, PieceColor Color)> candidateTypes, RunManager run)
         {
             _typeCandidates = candidateTypes;
+            PieceBox.Configure(_typeCandidates.Count);
             _run = run;
             _isReplaceStepTwo = false;
             _root.gameObject.SetActive(true);
@@ -191,7 +190,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             previewContainer.anchoredPosition = new Vector2(0f, 13f);
-            previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
+            previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
             _typePreviewContainerByIndex[index] = previewContainer;
 
             var trait = FindRepresentativeTrait(shape, color);
@@ -279,6 +278,7 @@ namespace Contigu.Presentation
             _replaceRemoveColor = removeColor;
             _isReplaceStepTwo = true;
             _typeCandidates = _run.Upgrades.GetReplacementCandidateTypesFor(_deck, removeShape, removeColor);
+            PieceBox.Configure(_typeCandidates.Count);
             ShowTypeChoice(UpgradeCatalog.ReplacePiece, "Choose a seed to duplicate instead");
         }
 
