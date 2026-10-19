@@ -544,10 +544,10 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Bramble re-locks a plot and Blightmoth re-blights a fertilizer every few seeds, on top of their Shuffle trigger.</summary>
+        /// <summary>Bramble locks a second plot every few seeds, on top of its Shuffle trigger.</summary>
         public static bool HasTimedTrick(EnemyId id)
         {
-            return id == EnemyId.Locker || id == EnemyId.Blightmoth;
+            return id == EnemyId.Locker;
         }
 
         /// <summary>Fires the timed tricks of every alive enemy that has one (the Shuffle trigger is separate, see ResolveEnemyShuffleEffects).</summary>
@@ -563,10 +563,6 @@ namespace Contigu.Core
                 if (enemy.Definition.Id == EnemyId.Locker)
                 {
                     ResolveLockerTickEffect(enemy);
-                }
-                else if (enemy.Definition.Id == EnemyId.Blightmoth)
-                {
-                    ResolveBlightmothShuffleEffect();
                 }
             }
         }

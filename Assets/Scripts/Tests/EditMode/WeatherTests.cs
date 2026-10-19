@@ -254,7 +254,7 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(2));
             Assert.AreEqual(ScoringConstants.EnemyTickInterval, run.PlacementsUntilEnemyTick);
             Assert.IsTrue(RunManager.HasTimedTrick(EnemyId.Locker));
-            Assert.IsTrue(RunManager.HasTimedTrick(EnemyId.Blightmoth));
+            Assert.IsFalse(RunManager.HasTimedTrick(EnemyId.Blightmoth));
             Assert.IsFalse(RunManager.HasTimedTrick(EnemyId.Basic));
         }
     }
