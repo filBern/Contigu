@@ -39,7 +39,8 @@ namespace Contigu.Core
         /// <summary>Same Poisoner-before-Reclaimer pairing as Round5, escalated with a second Poisoner, doubling the poison pressure ahead of Reclaimer.</summary>
         private static readonly EnemyId[] Round6 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Poisoner, EnemyId.Reclaimer };
 
-        private static readonly EnemyId[] Round7 = { EnemyId.Basic, EnemyId.Locker, EnemyId.Thief, EnemyId.Leech };
+        /// <summary>Blightmoth's debut: by now the player owns a few fertilizers, so having one blighted each Shuffle is felt right away.</summary>
+        private static readonly EnemyId[] Round7 = { EnemyId.Basic, EnemyId.Blightmoth, EnemyId.Thief, EnemyId.Leech };
 
         /// <summary>A full 5-enemy gauntlet reusing every Creator/Boss introduced so far behind the leading Basic — the midpoint of the run; Act 2 (Round9-15 below) picks back up from here.</summary>
         private static readonly EnemyId[] Round8 = { EnemyId.Basic, EnemyId.HeavyLocker, EnemyId.Poisoner, EnemyId.Thief, EnemyId.Leech };

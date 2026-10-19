@@ -68,12 +68,11 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Poisoner, round6[2]);
             Assert.AreEqual(EnemyId.Reclaimer, round6[3]);
 
-            // Locker moved ahead of Thief/Leech (explicit request: "round
-            // 7, met le locket devant le thief").
+            // Blightmoth debuts here, ahead of Thief/Leech (it replaces the Locker the round used to open with).
             var round7 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 6);
             Assert.AreEqual(4, round7.Count);
             Assert.AreEqual(EnemyId.Basic, round7[0]);
-            Assert.AreEqual(EnemyId.Locker, round7[1]);
+            Assert.AreEqual(EnemyId.Blightmoth, round7[1]);
             Assert.AreEqual(EnemyId.Thief, round7[2]);
             Assert.AreEqual(EnemyId.Leech, round7[3]);
 
