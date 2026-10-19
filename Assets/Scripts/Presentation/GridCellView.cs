@@ -14,6 +14,8 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
         private const float PulsePeakFraction = 0.4f;
+        private const float PulseShakeDegrees = 5f;
+        private const float PulseShakeWobbles = 2.5f;
         private const float ClearBurstDuration = 0.32f;
         private const int ClearBurstParticleCount = 6;
         private const float ClearBurstParticleSize = 10f;
@@ -355,17 +357,17 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Brief scale-up-then-back-down pulse, played when this cell scores points, or when it's previewed as part of the prospective group while hovering a valid placement (see GridView.OnCellHoverEnter).</summary>
-        public void Pulse()
+        public void Pulse(bool shake = false)
         {
             if (_scaleCoroutine != null)
             {
                 StopCoroutine(_scaleCoroutine);
                 ((RectTransform)transform).localRotation = Quaternion.identity;
             }
-            _scaleCoroutine = StartCoroutine(PulseRoutine());
+            _scaleCoroutine = StartCoroutine(PulseRoutine(shake));
         }
 
-        private IEnumerator PulseRoutine()
+        private IEnumerator PulseRoutine(bool shake)
         {
             var rt = (RectTransform)transform;
             float t = 0f;
@@ -377,9 +379,15 @@ namespace Contigu.Presentation
                     ? Mathf.Lerp(1f, PulsePeakScale, p / PulsePeakFraction)
                     : Mathf.Lerp(PulsePeakScale, 1f, (p - PulsePeakFraction) / (1f - PulsePeakFraction));
                 rt.localScale = new Vector3(scale, scale, 1f);
+                if (shake)
+                {
+                    // A quick wobble that dies out with the pulse.
+                    rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * PulseShakeWobbles * Mathf.PI * 2f) * PulseShakeDegrees * (1f - p));
+                }
                 yield return null;
             }
             rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
             _scaleCoroutine = null;
         }
 

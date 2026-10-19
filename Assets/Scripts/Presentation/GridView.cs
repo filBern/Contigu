@@ -704,7 +704,7 @@ namespace Contigu.Presentation
         {
             if (GridManager.InBounds(x, y))
             {
-                _cells[x, y].Pulse();
+                _cells[x, y].Pulse(true);
             }
         }
 
