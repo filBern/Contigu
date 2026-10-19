@@ -16,3 +16,14 @@ The simulator reports win rate, the round runs end in (with that round's roster)
 the per-round clear rate and which fertilizers correlate with deeper runs. The bot is intentionally simple (greedy placement,
 buys fertilizers first, no fertilizer ordering, no reading of enemy abilities): treat the numbers as a *relative* signal between
 balance changes, not as how a good player would fare.
+
+## Whole-project diagnostics (refactor safety net)
+
+`Tools/Headless/Diag` compiles Core + Data + Presentation with Roslyn against the `UnityEngine.Modules` package (uGUI types are
+unresolved, which is expected) and prints the multiset of compiler errors, method bodies included. Run it on the commit before and
+after a refactor of Presentation code that cannot be opened in Unity: the two outputs must list the same errors (only the counts of
+"namespace UnityEngine.UI does not exist" move when `using` lines are added). It cannot check uGUI member usage.
+
+```
+cd Tools/Headless/Diag && dotnet run -c Release -- <repoRoot> ~/.nuget/packages/unityengine.modules/2021.3.33/lib/net45 UNITY_EDITOR
+```

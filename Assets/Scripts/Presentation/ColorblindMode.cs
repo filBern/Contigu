@@ -16,9 +16,9 @@ namespace Contigu.Presentation
         /// <summary>Fired whenever <see cref="Toggle"/> changes the setting, so subscribed views can refresh immediately.</summary>
         public static event Action Changed;
 
-        public static bool IsEnabled { get; private set; } = PlayerPrefs.GetInt(PrefsKey, 0) != 0;
+        public static bool IsEnabled { get; private set; } = GamePrefs.GetInt(PrefsKey, 0) != 0;
 
-        /// <summary>Back to the default (off) without persisting — used by SettingsView's Reset data after PlayerPrefs.DeleteAll, since this static survives a scene reload.</summary>
+        /// <summary>Back to the default (off) without persisting — used by SettingsView's Reset data after GamePrefs.DeleteAll, since this static survives a scene reload.</summary>
         public static void ResetToDefault()
         {
             IsEnabled = false;
@@ -27,8 +27,8 @@ namespace Contigu.Presentation
         public static void Toggle()
         {
             IsEnabled = !IsEnabled;
-            PlayerPrefs.SetInt(PrefsKey, IsEnabled ? 1 : 0);
-            PlayerPrefs.Save();
+            GamePrefs.SetInt(PrefsKey, IsEnabled ? 1 : 0);
+            GamePrefs.Save();
             Changed?.Invoke();
         }
     }

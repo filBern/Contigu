@@ -127,44 +127,11 @@ namespace Contigu.Presentation
             // GAINED stays hidden; RELEASED looks locked/poisoned until the
             // reveal (see RefreshHoldingClearedCells).
             SnapshotEnemyEffectCells(out var lockedCellsAfter, out var poisonedCellsAfter);
-            var lockedBeforeSet = new HashSet<Vector2Int>(lockedCellsBefore);
-            var lockedAfterSet = new HashSet<Vector2Int>(lockedCellsAfter);
-            var poisonedBeforeSet = new HashSet<Vector2Int>(poisonedCellsBefore);
-            var poisonedAfterSet = new HashSet<Vector2Int>(poisonedCellsAfter);
-
-            var deferredNewMalusCells = new List<Vector2Int>(outcome.BossLockedCells);
-            foreach (var pos in lockedAfterSet)
-            {
-                if (!lockedBeforeSet.Contains(pos))
-                {
-                    deferredNewMalusCells.Add(pos);
-                }
-            }
-            foreach (var pos in poisonedAfterSet)
-            {
-                if (!poisonedBeforeSet.Contains(pos))
-                {
-                    deferredNewMalusCells.Add(pos);
-                }
-            }
-
-            var deferredReleasedLockedCells = new List<Vector2Int>();
-            foreach (var pos in lockedBeforeSet)
-            {
-                if (!lockedAfterSet.Contains(pos))
-                {
-                    deferredReleasedLockedCells.Add(pos);
-                }
-            }
-            var deferredReleasedPoisonedCells = new List<Vector2Int>();
-            foreach (var pos in poisonedBeforeSet)
-            {
-                if (!poisonedAfterSet.Contains(pos))
-                {
-                    deferredReleasedPoisonedCells.Add(pos);
-                }
-            }
-            bool hasDeferredGridChange = deferredNewMalusCells.Count > 0 || deferredReleasedLockedCells.Count > 0 || deferredReleasedPoisonedCells.Count > 0;
+            var effectDiff = EnemyEffectCellDiff.Compute(lockedCellsBefore, poisonedCellsBefore, lockedCellsAfter, poisonedCellsAfter, outcome.BossLockedCells);
+            var deferredNewMalusCells = effectDiff.NewMalusCells;
+            var deferredReleasedLockedCells = effectDiff.ReleasedLockedCells;
+            var deferredReleasedPoisonedCells = effectDiff.ReleasedPoisonedCells;
+            bool hasDeferredGridChange = effectDiff.HasChange;
 
             _handView.SetShufflePulsing(false);
             // ClearSelectionStateOnly, not SetSelectedShape(null) — the

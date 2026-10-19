@@ -80,8 +80,8 @@ namespace Contigu.Presentation
                     return;
                 }
                 new MetaStatsFileStore().Delete();
-                PlayerPrefs.DeleteAll();
-                PlayerPrefs.Save();
+                GamePrefs.DeleteAll();
+                GamePrefs.Save();
                 ColorblindMode.ResetToDefault();
                 VolumeSettings.ResetToDefaults();
                 UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);

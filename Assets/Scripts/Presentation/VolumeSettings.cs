@@ -24,9 +24,9 @@ namespace Contigu.Presentation
 
         public static event Action Changed;
 
-        public static float MasterVolume { get; private set; } = PlayerPrefs.GetFloat(MasterVolumeKey, DefaultVolume);
-        public static float MusicVolume { get; private set; } = PlayerPrefs.GetFloat(MusicVolumeKey, DefaultVolume);
-        public static float SfxVolume { get; private set; } = PlayerPrefs.GetFloat(SfxVolumeKey, DefaultVolume);
+        public static float MasterVolume { get; private set; } = GamePrefs.GetFloat(MasterVolumeKey, DefaultVolume);
+        public static float MusicVolume { get; private set; } = GamePrefs.GetFloat(MusicVolumeKey, DefaultVolume);
+        public static float SfxVolume { get; private set; } = GamePrefs.GetFloat(SfxVolumeKey, DefaultVolume);
 
         /// <summary>Back to full volume without persisting (see ColorblindMode.ResetToDefault).</summary>
         public static void ResetToDefaults()
@@ -38,24 +38,24 @@ namespace Contigu.Presentation
         public static void SetMasterVolume(float value)
         {
             MasterVolume = Mathf.Clamp01(value);
-            PlayerPrefs.SetFloat(MasterVolumeKey, MasterVolume);
-            PlayerPrefs.Save();
+            GamePrefs.SetFloat(MasterVolumeKey, MasterVolume);
+            GamePrefs.Save();
             Changed?.Invoke();
         }
 
         public static void SetMusicVolume(float value)
         {
             MusicVolume = Mathf.Clamp01(value);
-            PlayerPrefs.SetFloat(MusicVolumeKey, MusicVolume);
-            PlayerPrefs.Save();
+            GamePrefs.SetFloat(MusicVolumeKey, MusicVolume);
+            GamePrefs.Save();
             Changed?.Invoke();
         }
 
         public static void SetSfxVolume(float value)
         {
             SfxVolume = Mathf.Clamp01(value);
-            PlayerPrefs.SetFloat(SfxVolumeKey, SfxVolume);
-            PlayerPrefs.Save();
+            GamePrefs.SetFloat(SfxVolumeKey, SfxVolume);
+            GamePrefs.Save();
             Changed?.Invoke();
         }
     }

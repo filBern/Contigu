@@ -175,10 +175,8 @@ namespace Contigu.Presentation
             _challengeSelectView.Hide();
             StartNewRun(challenge);
 
-            if (PlayerPrefs.GetInt(TutorialSeenPrefsKey, 0) == 0)
+            if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
             {
-                PlayerPrefs.SetInt(TutorialSeenPrefsKey, 1);
-                PlayerPrefs.Save();
                 StartCoroutine(RunSprigGuideAfterDelay());
             }
             else

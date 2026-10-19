@@ -59,9 +59,8 @@ namespace Contigu.Presentation
             }
             var remaining = new HashSet<Vector2Int>(cells);
             // First time a pest's trick actually lands on the board: Sprig points out that the garden is the battlefield.
-            if (PlayerPrefs.GetInt(BoardEffectTipPrefsKey, 0) == 0)
+            if (GamePrefs.ConsumeFirstTime(BoardEffectTipPrefsKey))
             {
-                PlayerPrefs.SetInt(BoardEffectTipPrefsKey, 1);
                 _sprigView.Say("See that? The pests fight right on your garden! Locked and blighted plots change how you plant. Work around them!", SprigMood.Sad, 7f);
             }
             if (_run.HasActiveEncounter)
