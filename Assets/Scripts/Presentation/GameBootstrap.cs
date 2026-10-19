@@ -1867,6 +1867,11 @@ namespace Contigu.Presentation
                 // the hand could stay invisible even once its contents are correctly rebuilt below.
                 _handView.SetSlotPiecesAlpha(1f);
                 _handView.Refresh();
+                // A Chameleon recolor must never leave the placed cells on a stale tint.
+                if (outcome.ChameleonOriginalColor.HasValue)
+                {
+                    _gridView.RefreshCells(outcome.Placement.PlacedCells);
+                }
                 _isPlayingPlacementSequence = false;
                 _handView.SetInteractable(true);
                 RefreshShuffleButton();

@@ -735,30 +735,58 @@ namespace Contigu.Presentation
         /// </summary>
         public System.Collections.IEnumerator PlayChameleonColorTransition(IReadOnlyList<Vector2Int> cells, PieceColor from, PieceColor to)
         {
-            Color fromColor = VisualDefaults.GetColor(from);
-            Color toColor = VisualDefaults.GetColor(to);
+            // The cells already show the resolved color's painted tile. Lay the OLD color's tile over each one and fade it out,
+            // so the switch is a clean crossfade between the two painted tiles (tinting the art with the raw color made it muddy).
+            var fromSprite = VisualDefaults.GetTileSprite(from);
+            Color fromTint = VisualDefaults.GetTileTint(from);
+            var overlays = new List<Image>();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i];
+                if (!GridManager.InBounds(pos.x, pos.y))
+                {
+                    continue;
+                }
+                var background = _cells[pos.x, pos.y].Background;
+                var overlay = UIFactory.CreatePanel(background.transform, "ChameleonFrom", fromTint);
+                overlay.raycastTarget = false;
+                overlay.sprite = fromSprite;
+                overlay.type = background.type;
+                UIFactory.StretchFull(overlay.rectTransform);
+                overlays.Add(overlay);
+            }
+
             float t = 0f;
             while (t < ChameleonTransitionDuration)
             {
                 t += Time.deltaTime;
-                Color c = Color.Lerp(fromColor, toColor, Mathf.Clamp01(t / ChameleonTransitionDuration));
-                for (int i = 0; i < cells.Count; i++)
+                float alpha = 1f - Mathf.Clamp01(t / ChameleonTransitionDuration);
+                for (int i = 0; i < overlays.Count; i++)
                 {
-                    var pos = cells[i];
-                    if (GridManager.InBounds(pos.x, pos.y))
+                    if (overlays[i] != null)
                     {
-                        _cells[pos.x, pos.y].Background.color = c;
+                        overlays[i].color = new Color(fromTint.r, fromTint.g, fromTint.b, fromTint.a * alpha);
                     }
                 }
                 yield return null;
             }
+            for (int i = 0; i < overlays.Count; i++)
+            {
+                if (overlays[i] != null)
+                {
+                    Destroy(overlays[i].gameObject);
+                }
+            }
+            // Re-render the true state so no tint/sprite from the crossfade (or an earlier hover preview) can linger.
+            RefreshCells(cells);
+        }
+
+        /// <summary>Re-renders just these cells from the grid's actual current state.</summary>
+        public void RefreshCells(IReadOnlyList<Vector2Int> cells)
+        {
             for (int i = 0; i < cells.Count; i++)
             {
-                var pos = cells[i];
-                if (GridManager.InBounds(pos.x, pos.y))
-                {
-                    _cells[pos.x, pos.y].Background.color = toColor;
-                }
+                RefreshCell(cells[i].x, cells[i].y);
             }
         }
 
