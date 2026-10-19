@@ -1670,6 +1670,7 @@ namespace Contigu.Core
             }
         }
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: instantly completes the current round as if its
         /// quota had just been reached. No-op if the run isn't InProgress.
@@ -1695,7 +1696,9 @@ namespace Contigu.Core
             EvaluateRoundEnd();
             return State;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: kills every enemy in <see cref="CurrentEncounter"/> outright (same cleanup as a real kill - see CleanUpDefeatedEnemy).</summary>
         private void DebugDefeatAllEnemies()
         {
@@ -1712,7 +1715,9 @@ namespace Contigu.Core
                 CleanUpDefeatedEnemy(enemy);
             }
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: adds <paramref name="modifierId"/> straight to
         /// the player's active set, bypassing the shop entirely. Used by
@@ -1730,7 +1735,9 @@ namespace Contigu.Core
             AddActiveModifier(modifierId);
             return true;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: replaces the current encounter outright with brand-new instances of exactly these ids, bypassing EncounterCatalog.</summary>
         public void DebugSetEncounter(params EnemyId[] ids)
         {
@@ -1741,24 +1748,31 @@ namespace Contigu.Core
             }
             _currentEncounter = instances;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: adds Lueur directly, bypassing gameplay.</summary>
         public void DebugGrantLueur(int amount)
         {
             Lueur += amount;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: pins Lueur to an exact value, bypassing gameplay - lets EditMode tests establish a known baseline before asserting purchase/reroll outcomes.</summary>
         public void DebugSetLueur(int amount)
         {
             Lueur = amount;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: pins ShufflesRemaining to an exact value, bypassing gameplay - avoids re-dealing the hand via ShuffleHand for a deliberately set-up deterministic scenario.</summary>
         public void DebugSetShufflesRemaining(int amount)
         {
             ShufflesRemaining = amount;
         }
+#endif
 
         /// <summary>
         /// Spends one shuffle charge to re-roll all 3 hand slots at once.
@@ -3027,6 +3041,7 @@ namespace Contigu.Core
             return true;
         }
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: exercises the exact same effect + reveal-
         /// surfacing (LastRandomModifierGranted) that buying the "Random
@@ -3039,21 +3054,27 @@ namespace Contigu.Core
             LastRandomModifierGranted = GrantRandomModifier();
             return LastRandomModifierGranted;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: exercises "Piece Mastery"'s exact grant (GrantShapeMastery), bypassing the shop entirely.</summary>
         public ShapeId DebugTriggerShapeMasteryGrant()
         {
             LastShapeMasteryGranted = GrantShapeMastery();
             return LastShapeMasteryGranted.Value;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: exercises "Color Mastery"'s exact grant (GrantColorMastery), bypassing the shop entirely.</summary>
         public PieceColor DebugTriggerColorMasteryGrant()
         {
             LastColorMasteryGranted = GrantColorMastery();
             return LastColorMasteryGranted.Value;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: overwrites upgrade slot <paramref
         /// name="index"/> (default 0) to be "Random Modifier" outright,
@@ -3072,7 +3093,9 @@ namespace Contigu.Core
             _upgradeSlots[index] = ShopSlot.ForUpgrade(UpgradeCatalog.RandomModifier);
             return true;
         }
+#endif
 
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: overwrites Blister slot <paramref
         /// name="index"/> (default 0) to hold <paramref
@@ -3091,6 +3114,7 @@ namespace Contigu.Core
             _blisterSlots[index] = ShopSlot.ForModifier(modifierId);
             return true;
         }
+#endif
 
         /// <summary>
         /// "Random Modifier" upgrade's actual effect - grants one uniformly
