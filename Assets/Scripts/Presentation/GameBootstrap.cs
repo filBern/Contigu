@@ -826,6 +826,7 @@ namespace Contigu.Presentation
             // sequence finishes.
             bool handWasAboutToAutoRefill = IsHandAboutToAutoRefill(handIndex);
             SnapshotEnemyEffectCells(out var lockedCellsBefore, out var poisonedCellsBefore);
+            bool targetWasShielded = damagedEnemyIndex >= 0 && _run.CurrentEncounter[damagedEnemyIndex].HasShield;
 
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
@@ -840,6 +841,13 @@ namespace Contigu.Presentation
             // placement — otherwise ThiefStoleOnLastShuffle still holds a
             // stale value from an earlier, unrelated Shuffle.
             bool thiefStoleThisPlacement = handWasAboutToAutoRefill && _run.ThiefStoleOnLastShuffle;
+
+            // A spent shield stays drawn until the damage drain reaches it, then shatters (see BreakPendingShield).
+            _pendingShieldBreakIndex = targetWasShielded && !_run.CurrentEncounter[damagedEnemyIndex].HasShield ? damagedEnemyIndex : -1;
+            if (_pendingShieldBreakIndex >= 0)
+            {
+                _hudView.HoldShield(_pendingShieldBreakIndex);
+            }
 
             int leechHealAmount = leechIndex >= 0 ? _run.CurrentEncounter[leechIndex].CurrentHp - leechHpBeforeHeal : 0;
 
@@ -989,6 +997,17 @@ namespace Contigu.Presentation
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
+        private int _pendingShieldBreakIndex = -1;
+
+        private void BreakPendingShield()
+        {
+            if (_pendingShieldBreakIndex >= 0)
+            {
+                _hudView.BreakShield(_pendingShieldBreakIndex);
+                _pendingShieldBreakIndex = -1;
+            }
+        }
+
         private bool IsHandAboutToAutoRefill(int handIndex)
         {
             for (int i = 0; i < _run.Deck.Hand.Count; i++)
@@ -1716,6 +1735,7 @@ namespace Contigu.Presentation
             {
                 yield return new WaitForSeconds(PostComboReadDelaySeconds);
                 yield return DrainComboIntoDamage(placement.TotalScore, placement.Chips, placement.Mult, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
+                BreakPendingShield();
                 // Bombe/Éclat's further targets snap straight to their final
                 // value right after the primary target's smooth drain
                 // finishes, rather than a second parallel lerp.
@@ -1739,6 +1759,8 @@ namespace Contigu.Presentation
                 _hudView.SetLueur(displayedLueur);
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
+
+            BreakPendingShield();
 
             // Only now — after the enemy has finished draining (and fading
             // out, if lethal) — do the cleared/destroyed cells actually

@@ -69,6 +69,10 @@ namespace Contigu.Presentation
         private readonly List<Image> _enemyIconImages = new List<Image>();
         private readonly List<Text> _enemyIconLabels = new List<Text>();
         private readonly List<EnemyIconView> _enemyIconViews = new List<EnemyIconView>();
+        // Shield overlay per enemy slot (Reclaimer's first-hit shield, see EnemyInstance.HasShield); _shieldHeld keeps it on screen
+        // after the model already spent it, until the presentation layer breaks it (BreakShield).
+        private readonly List<Image> _enemyShieldImages = new List<Image>();
+        private readonly List<bool> _shieldHeld = new List<bool>();
         /// <summary>One slot's active hurt-flash or effect-pulse coroutine, if any — stopped and replaced rather than left to run alongside a newly triggered one on the same icon (see PlayEnemyHurtEffect/PlayEnemyEffectPulse).</summary>
         private readonly Coroutine[] _enemyIconEffectCoroutines = new Coroutine[MaxEnemyIcons];
         private TooltipView _tooltip;
@@ -249,6 +253,17 @@ namespace Contigu.Presentation
                 // Hover tooltip with this enemy's On-Shuffle effect — Init'd fresh each SetEncounter call below.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
 
+                var shieldImage = UIFactory.CreatePanel(iconBackground.transform, "EnemyShield" + i, Color.white);
+                shieldImage.raycastTarget = false;
+                shieldImage.preserveAspect = true;
+                shieldImage.sprite = Resources.Load<Sprite>("Icons/Shield");
+                UIFactory.StretchFull(shieldImage.rectTransform);
+                shieldImage.rectTransform.offsetMin = new Vector2(-6f, -6f);
+                shieldImage.rectTransform.offsetMax = new Vector2(6f, 6f);
+                shieldImage.gameObject.SetActive(false);
+                _enemyShieldImages.Add(shieldImage);
+                _shieldHeld.Add(false);
+
                 var label = UIFactory.CreateText(slot, "Hp", "", 16, UITheme.TextPrimary);
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -364,6 +379,10 @@ namespace Contigu.Presentation
             {
                 _lastEncounterRefForDeathReveal = encounter;
                 System.Array.Clear(_enemySlotRevealedDead, 0, _enemySlotRevealedDead.Length);
+                for (int h = 0; h < _shieldHeld.Count; h++)
+                {
+                    _shieldHeld[h] = false;
+                }
                 // A slot can be mid hurt-flash/effect-pulse when a new encounter takes it over (round
                 // transition) — reset scale/overlay rather than let a stale animation finish on the wrong enemy.
                 for (int i = 0; i < _enemyIconImages.Count; i++)
@@ -382,6 +401,9 @@ namespace Contigu.Presentation
                 }
 
                 var enemy = encounter[i];
+                _enemyShieldImages[i].gameObject.SetActive(!enemy.IsDead && (enemy.HasShield || _shieldHeld[i]) && _enemyShieldImages[i].sprite != null);
+                _enemyShieldImages[i].color = Color.white;
+                _enemyShieldImages[i].rectTransform.localScale = Vector3.one;
                 // Deliberately skips color/alpha for an already-dead enemy: this runs after every placement,
                 // and re-applying the dead-gray tint here would erase whatever FadeOutEnemySlot is fading to.
                 if (!enemy.IsDead)
@@ -450,6 +472,86 @@ namespace Contigu.Presentation
                 // The exact moment this kill is first visually revealed — see _enemySlotRevealedDead's own doc comment.
                 _enemySlotRevealedDead[index] = true;
             }
+        }
+
+        /// <summary>Keeps this slot's shield drawn although the model already spent it, until <see cref="BreakShield"/> plays.</summary>
+        public void HoldShield(int index)
+        {
+            if (index >= 0 && index < _shieldHeld.Count)
+            {
+                _shieldHeld[index] = true;
+            }
+        }
+
+        /// <summary>Shatters this slot's shield: the overlay flashes and fades while shards fly outward.</summary>
+        public void BreakShield(int index)
+        {
+            if (index < 0 || index >= _shieldHeld.Count)
+            {
+                return;
+            }
+            _shieldHeld[index] = false;
+            var shield = _enemyShieldImages[index];
+            if (shield.sprite == null || !shield.gameObject.activeInHierarchy)
+            {
+                shield.gameObject.SetActive(false);
+                return;
+            }
+            StartCoroutine(BreakShieldRoutine(shield));
+        }
+
+        private System.Collections.IEnumerator BreakShieldRoutine(Image shield)
+        {
+            const float duration = 0.55f;
+            const int shardCount = 6;
+            var shardSprite = Resources.Load<Sprite>("Icons/ShieldShard");
+            var shards = new RectTransform[shardCount];
+            var shardImages = new Image[shardCount];
+            var velocities = new Vector2[shardCount];
+            var spins = new float[shardCount];
+            for (int i = 0; i < shardCount; i++)
+            {
+                var img = UIFactory.CreatePanel(shield.transform.parent, "ShieldShard" + i, Color.white);
+                img.raycastTarget = false;
+                img.sprite = shardSprite;
+                img.preserveAspect = true;
+                var rt = img.rectTransform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(EnemyIconSize * 0.34f, EnemyIconSize * 0.34f);
+                rt.anchoredPosition = Vector2.zero;
+                float angle = (360f / shardCount * i + Random.Range(-15f, 15f)) * Mathf.Deg2Rad;
+                velocities[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * Random.Range(110f, 170f);
+                spins[i] = Random.Range(-360f, 360f);
+                shards[i] = rt;
+                shardImages[i] = img;
+                img.gameObject.SetActive(shardSprite != null);
+            }
+
+            SfxManager.Play(SfxId.InvalidDrop);
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float scale = 1f + 0.35f * p;
+                shield.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                shield.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - p * 2.2f));
+                for (int i = 0; i < shardCount; i++)
+                {
+                    shards[i].anchoredPosition = velocities[i] * p + new Vector2(0f, -90f * p * p);
+                    shards[i].localRotation = Quaternion.Euler(0f, 0f, spins[i] * p);
+                    shardImages[i].color = new Color(1f, 1f, 1f, 1f - p * p);
+                }
+                yield return null;
+            }
+            for (int i = 0; i < shardCount; i++)
+            {
+                Destroy(shards[i].gameObject);
+            }
+            shield.gameObject.SetActive(false);
+            shield.color = Color.white;
+            shield.rectTransform.localScale = Vector3.one;
         }
 
         /// <summary>Anchor for a feedback popup on a given enemy slot's icon — used for Thief's steal effect. Null if out of range or that slot isn't shown.</summary>
