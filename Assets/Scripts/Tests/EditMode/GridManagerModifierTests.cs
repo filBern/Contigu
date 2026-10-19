@@ -13,6 +13,12 @@ namespace Contigu.Tests
             return cellCount * (cellCount + 1) / 2 * ScoringConstants.GroupBonusPerCell;
         }
 
+        /// <summary>Parks one unrelated seed far from the action so a test that harvests a lone line does not also empty the whole grid (which would apply the x2 clean-sweep Mult on top of what the test measures).</summary>
+        private static void PlaceSweepGuard(GridManager grid)
+        {
+            grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Violet, GridManager.Size - 1, GridManager.Size - 1);
+        }
+
         [Test]
         public void PlacePiece_NoActiveModifiers_LeavesModifierBonusAtZero()
         {
@@ -457,6 +463,7 @@ namespace Contigu.Tests
         public void Demolisseur_FiresWhenTwoLinesClearSimultaneously()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Demolisseur };
 
@@ -483,6 +490,7 @@ namespace Contigu.Tests
         public void Demolisseur_DoesNotFire_WhenOnlyOneLineClears()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Demolisseur };
 
@@ -723,6 +731,7 @@ namespace Contigu.Tests
         public void ArcEnCiel_FiresWhenAClearedLineContainsAllFourBaseColors()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.ArcEnCiel };
 
@@ -741,6 +750,7 @@ namespace Contigu.Tests
         public void ArcEnCiel_DoesNotFire_WhenClearedLineHasOnlyThreeDistinctColors()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.ArcEnCiel };
 
@@ -757,6 +767,7 @@ namespace Contigu.Tests
         public void Alternance_FiresWhenClearedLineStrictlyAlternatesBetweenTwoColors()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Alternance };
 
@@ -779,6 +790,7 @@ namespace Contigu.Tests
         public void Alternance_DoesNotFire_WhenTwoAdjacentCellsShareAColor()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Alternance };
 
@@ -801,6 +813,7 @@ namespace Contigu.Tests
         public void Palindrome_FiresWhenClearedLineReadsTheSameForwardsAndBackwards()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Palindrome };
 
@@ -823,6 +836,7 @@ namespace Contigu.Tests
         public void Palindrome_DoesNotFire_WhenSequenceIsNotSymmetric()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Palindrome };
 
@@ -839,6 +853,7 @@ namespace Contigu.Tests
         public void Gradient_FiresWhenNoTwoAdjacentCellsInClearedLineShareAColor()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Gradient };
 
@@ -864,6 +879,7 @@ namespace Contigu.Tests
         public void Gradient_DoesNotFire_WhenTwoAdjacentCellsShareAColor()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Gradient };
 
@@ -920,6 +936,7 @@ namespace Contigu.Tests
         public void Bloc_FiresWhenTheClearedLineIsMadeOnlyOfContiguousRunsOfAtLeastTwo()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Bloc };
 
@@ -942,6 +959,7 @@ namespace Contigu.Tests
         public void Bloc_DoesNotFire_WhenAnIsolatedSingleCellBreaksTheRuns()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Bloc };
 
@@ -964,6 +982,7 @@ namespace Contigu.Tests
         public void MonochromeLigne_FiresWhenTheEntireClearedLineIsOneColor()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.MonochromeLigne };
 
@@ -980,6 +999,7 @@ namespace Contigu.Tests
         public void MonochromeLigne_DoesNotFire_WhenTheLineHasTwoDifferentColors()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.MonochromeLigne };
 
@@ -1553,6 +1573,7 @@ namespace Contigu.Tests
         public void Rafale_FiresWhenThisPlacementAndTheImmediatelyPreviousOneBothClearALine()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
 
             for (int x = 0; x < GridManager.Size - 1; x++)
@@ -1823,6 +1844,7 @@ namespace Contigu.Tests
         public void GradientCurrentMultiplier_TracksTheAppliedModifierMultiplier()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.Gradient };
 
@@ -2088,6 +2110,7 @@ namespace Contigu.Tests
         public void ArcEnCielLueur_EarnsLueurWhenAClearedLineContainsAllFourBaseColors()
         {
             var grid = new GridManager();
+            PlaceSweepGuard(grid);
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var modifiers = new List<ModifierId> { ModifierId.ArcEnCielLueur };
 

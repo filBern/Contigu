@@ -1200,10 +1200,11 @@ namespace Contigu.Tests
             Assert.IsFalse(run.Deck.Hand[DeckManager.HandSize].HasValue, "The new slot starts empty");
 
             // Force a piece into the new slot via a fresh draw, then confirm it's actually placeable.
-            while (!run.Deck.Hand[DeckManager.HandSize].HasValue)
+            for (int i = 0; i < DeckManager.HandSize; i++)
             {
-                run.Deck.PlayFromHand(0);
+                run.Deck.PlayFromHand(i);
             }
+            Assert.IsTrue(run.Deck.Hand[DeckManager.HandSize].HasValue, "Emptying the hand refills it, including the new slot");
             var token = run.Deck.Hand[DeckManager.HandSize].Value;
             var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[DeckManager.HandSize]);
             var anchor = FindAnyValidAnchor(run.Grid, shape);

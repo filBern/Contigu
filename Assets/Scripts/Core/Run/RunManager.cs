@@ -1706,6 +1706,8 @@ namespace Contigu.Core
                 {
                     continue;
                 }
+                // A shielded enemy (Reclaimer) would absorb this whole hit; a debug kill must really kill it.
+                enemy.HasShield = false;
                 enemy.ApplyDamage(enemy.CurrentMaxHp);
                 CleanUpDefeatedEnemy(enemy);
             }

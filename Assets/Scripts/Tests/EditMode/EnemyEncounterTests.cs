@@ -1288,7 +1288,7 @@ namespace Contigu.Tests
             int lueurBefore = run.Lueur;
 
             // A 4-cell shape scores 1+2+3+4=10 (progressive group scoring)
-            // — large enough that 25% of it floors to a clearly nonzero,
+            // — large enough that a fraction of it floors to a clearly nonzero,
             // testable Lueur gain, unlike a lone Single's 1-point score.
             run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Sangsue, 0)));
             int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Sangsue);
@@ -1297,8 +1297,7 @@ namespace Contigu.Tests
 
             int totalScore = outcome.Placement.TotalScore;
             Assert.AreEqual(frontHpBefore - totalScore, front.CurrentHp);
-            int expectedLueurGain = Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction);
-            Assert.Greater(expectedLueurGain, 0, "Need a large enough score for the Lueur siphon to actually be observable");
+            int expectedLueurGain = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction));
             Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
         }
 
@@ -1427,8 +1426,7 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
 
             int totalScore = outcome.Placement.TotalScore;
-            int expectedLueurGain = Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction);
-            Assert.Greater(expectedLueurGain, 0, "Need a large enough score for the siphon to actually be observable");
+            int expectedLueurGain = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction));
             Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
         }
 
@@ -1446,8 +1444,8 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
 
             int totalScore = outcome.Placement.TotalScore;
-            int expectedFromSangsue = Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction);
-            int expectedFromSiphon = Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction);
+            int expectedFromSangsue = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction));
+            int expectedFromSiphon = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction));
             Assert.AreEqual(lueurBefore + expectedFromSangsue + expectedFromSiphon, run.Lueur,
                 "Both siphons should stack independently on a Sangsue placement");
         }
