@@ -1594,6 +1594,7 @@ namespace Contigu.Tests
         /// <summary>Drives a fresh run straight to the start of <paramref name="targetRoundIndex"/> via DebugForceRoundComplete, without needing to actually clear each round's real win condition.</summary>
         private static void AdvanceToRound(RunManager run, int targetRoundIndex)
         {
+            run.DebugDisableWeather();
             while (run.CurrentRoundIndex < targetRoundIndex)
             {
                 run.DebugForceRoundComplete();

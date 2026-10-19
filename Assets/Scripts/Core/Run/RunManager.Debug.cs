@@ -7,6 +7,14 @@ namespace Contigu.Core
     public sealed partial class RunManager
     {
 #if UNITY_EDITOR || CONTIGU_DEBUG
+        /// <summary>Debug-only helper: makes every round clear-skied, so a test's exact expectations (frozen/locked cell counts, shuffle bank) do not depend on the rolled weather. Call before advancing rounds.</summary>
+        public void DebugDisableWeather()
+        {
+            _weatherByRound = new WeatherId[_challenge.RoundCount];
+        }
+
+#endif
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>
         /// Debug-only helper: instantly completes the current round as if its
         /// quota had just been reached. No-op if the run isn't InProgress.

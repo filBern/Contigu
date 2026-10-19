@@ -506,6 +506,61 @@ namespace Contigu.Core
             }
         }
 
+        private const int EnemyTickInterval = ScoringConstants.EnemyTickInterval;
+
+        /// <summary>Seeds still to place before the next timed enemy trick (counts down 6..1, then the trick fires and it restarts); shown by the HUD.</summary>
+        public int PlacementsUntilEnemyTick
+        {
+            get
+            {
+                int played = CurrentBudget - PiecesRemainingThisRound;
+                return EnemyTickInterval - (played % EnemyTickInterval);
+            }
+        }
+
+        /// <summary>True when an alive enemy in this round has a timed trick (so the HUD shows its countdown).</summary>
+        public bool HasTimedEnemyTricks
+        {
+            get
+            {
+                for (int i = 0; i < _currentEncounter.Count; i++)
+                {
+                    if (!_currentEncounter[i].IsDead && HasTimedTrick(_currentEncounter[i].Definition.Id))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        /// <summary>Bramble re-locks a plot and Blightmoth re-blights a fertilizer every few seeds, on top of their Shuffle trigger.</summary>
+        public static bool HasTimedTrick(EnemyId id)
+        {
+            return id == EnemyId.Locker || id == EnemyId.Blightmoth;
+        }
+
+        /// <summary>Fires the timed tricks of every alive enemy that has one (the Shuffle trigger is separate, see ResolveEnemyShuffleEffects).</summary>
+        private void ResolveEnemyTickEffects()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                if (enemy.Definition.Id == EnemyId.Locker)
+                {
+                    ResolveLockerShuffleEffect(enemy);
+                }
+                else if (enemy.Definition.Id == EnemyId.Blightmoth)
+                {
+                    ResolveBlightmothShuffleEffect();
+                }
+            }
+        }
+
         /// <summary>
         /// Locker locks 1 grid cell per Shuffle; the previous lock is
         /// released at the next Shuffle and a new cell is selected. Uses the

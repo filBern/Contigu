@@ -7,7 +7,7 @@ namespace Contigu.Core
         public static readonly EnemyDefinition Basic = new EnemyDefinition { Id = EnemyId.Basic, Name = "Withered Stalk", Role = EnemyRole.Baseline, MaxHp = 250, Description = "No effect. Just absorbs damage.", Lore = "The last of the old harvest, still standing out of habit." };
 
         /// <summary>See RunManager.ResolveLockerShuffleEffect.</summary>
-        public static readonly EnemyDefinition Locker = new EnemyDefinition { Id = EnemyId.Locker, Name = "Bramble", Role = EnemyRole.Creator, MaxHp = 600, Description = "Each Shuffle: locks 1 random plot (unplayable). The previous lock is removed first, so only 1 plot is locked at a time.", Lore = "It remembers every gardener who tried to cut it back." };
+        public static readonly EnemyDefinition Locker = new EnemyDefinition { Id = EnemyId.Locker, Name = "Bramble", Role = EnemyRole.Creator, MaxHp = 600, Description = "Each Shuffle, and every 6 seeds you plant: locks 1 random plot (unplayable). The previous lock is removed first, so only 1 plot is locked at a time.", Lore = "It remembers every gardener who tried to cut it back." };
 
         /// <summary>See RunManager.ResolvePoisonerShuffleEffect. Can target any cell, filled or empty, and spreads via "contamination" when triggered (see RunManager.ContaminateAdjacentCell).</summary>
         public static readonly EnemyDefinition Poisoner = new EnemyDefinition { Id = EnemyId.Poisoner, Name = "Blightspore", Role = EnemyRole.Creator, MaxHp = 1350, Description = "Each Shuffle: blights 1 random plot, filled or empty.\nPoints scored on a blighted plot are negative, and the blight spreads to 1 adjacent plot when it happens.\nAll blight is removed on the next Shuffle.", Lore = "Where its spores drift, even clean soil forgets how to feed." };
@@ -34,7 +34,7 @@ namespace Contigu.Core
         public static readonly EnemyDefinition ShapeHater = new EnemyDefinition { Id = EnemyId.ShapeHater, Name = "Invasive Weed", Role = EnemyRole.Boss, MaxHp = 1950, Description = "Picks 1 random seed shape when the round starts.\nPoints scored on plots planted by that shape are cancelled for the whole round.", Lore = "It grows in straight lines and cannot forgive anything that doesn't fit." };
 
         /// <summary>See RunManager.ResolveBlightmothShuffleEffect: a blighted fertilizer scores nothing, stopping a run from leaning on a single technique.</summary>
-        public static readonly EnemyDefinition Blightmoth = new EnemyDefinition { Id = EnemyId.Blightmoth, Name = "Blightmoth", Role = EnemyRole.Boss, MaxHp = 800, Description = "Each Shuffle: blights 1 random fertilizer.\nA blighted fertilizer has no effect.\nThe blight is removed on the next Shuffle, or when it dies.", Lore = "It only ever eats what you have come to rely on." };
+        public static readonly EnemyDefinition Blightmoth = new EnemyDefinition { Id = EnemyId.Blightmoth, Name = "Blightmoth", Role = EnemyRole.Boss, MaxHp = 800, Description = "Each Shuffle, and every 6 seeds you plant: blights 1 random fertilizer.\nA blighted fertilizer has no effect.\nThe blight moves on at its next trick, or ends when it dies.", Lore = "It only ever eats what you have come to rely on." };
 
         private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater, Blightmoth };
 

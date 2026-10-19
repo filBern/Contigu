@@ -515,6 +515,7 @@ namespace Contigu.Core
             ShufflesRemaining = RunConfig.StartingShuffleCount;
             CurrentRoundIndex = 0;
             StartRound();
+            RollWeatherForRun();
         }
 
         private void StartRound()
@@ -522,6 +523,7 @@ namespace Contigu.Core
             Grid.ResetForNewRound();
             _blightedModifiers.Clear();
             _currentEncounter = BuildEncounter(CurrentRoundIndex);
+            ApplyWeatherRoundStart();
             if (HasActiveEncounter)
             {
                 // The two systems never run at once - see HasActiveEncounter's own
@@ -668,6 +670,7 @@ namespace Contigu.Core
             }
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
+            ApplyWeatherPlacementBonus(placement, placementColor);
             if (BossCursedColor.HasValue)
             {
                 ApplyCursedColorScoreRule(placement, BossCursedColor.Value);
@@ -720,6 +723,12 @@ namespace Contigu.Core
                 {
                     bossLockedCells = ApplyBossLockTick();
                 }
+            }
+
+            // Tricks that also fire on a timer (Bramble, Blightmoth), counted in seeds placed this round.
+            if (HasActiveEncounter && PlacementsUntilEnemyTick == EnemyTickInterval)
+            {
+                ResolveEnemyTickEffects();
             }
 
             EvaluateRoundEnd();

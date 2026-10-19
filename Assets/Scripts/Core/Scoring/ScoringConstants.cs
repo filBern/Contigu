@@ -267,6 +267,18 @@ namespace Contigu.Core
         public const int FormatMoyenCells = 3;
         public const int FormatGrandMinCells = 4;
 
+        /// <summary>Weather: Pollen granted for planting an Iris (Teal) seed in the rain.</summary>
+        public const int RainPollenPerIrisSeed = 3;
+
+        /// <summary>Weather: points per cell of a Sunflower (Violet) seed planted in the sunshine.</summary>
+        public const int SunshinePointsPerSunflowerCell = 4;
+
+        /// <summary>Weather: empty plots frozen at the start of a frosty round.</summary>
+        public const int FrostFrozenPlots = 2;
+
+        /// <summary>Enemy tricks that also fire on a timer: every this many seeds placed in a round (see RunManager.ResolveEnemyTickEffects).</summary>
+        public const int EnemyTickInterval = 6;
+
         /// <summary>"Sangsue" (Joker-exclusive combat trait, see PieceTrait.JokerCombatKinds) — fraction of the damage it deals to its target that also converts into bonus Lueur (floored), see RunManager.ApplySangsueDamage.</summary>
         public const float SangsueLueurFraction = 0.08f;
 
