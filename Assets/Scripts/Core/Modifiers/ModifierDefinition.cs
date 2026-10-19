@@ -79,7 +79,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Complementaire = new ModifierDefinition(
             ModifierId.Complementaire, ModifierCategory.Couleurs, "Companion Bloom",
-            "x2 Mult if a complementary pair is touched (Poppy/Sunflower or Bluebell/Fern).");
+            "x2 Mult if a complementary pair is touched (Poppy/Sunflower or Iris/Fern).");
 
         public static readonly ModifierDefinition Ilot = new ModifierDefinition(
             ModifierId.Ilot, ModifierCategory.Voisinage, "Islet",
@@ -155,8 +155,8 @@ namespace Contigu.Core
             "+3 Mult on Poppy seeds.");
 
         public static readonly ModifierDefinition DevotionTeal = new ModifierDefinition(
-            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Bluebell Devotion",
-            "+3 Mult on Bluebell seeds.");
+            ModifierId.DevotionTeal, ModifierCategory.Couleurs, "Iris Devotion",
+            "+3 Mult on Iris seeds.");
 
         public static readonly ModifierDefinition DevotionViolet = new ModifierDefinition(
             ModifierId.DevotionViolet, ModifierCategory.Couleurs, "Sunflower Devotion",
@@ -196,8 +196,8 @@ namespace Contigu.Core
             "+6 pts per group cell on Poppy seeds.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
-            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Bluebell Glow",
-            "+6 pts per group cell on Bluebell seeds.");
+            ModifierId.EclatTeal, ModifierCategory.Couleurs, "Iris Glow",
+            "+6 pts per group cell on Iris seeds.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
             ModifierId.EclatViolet, ModifierCategory.Couleurs, "Sunflower Glow",

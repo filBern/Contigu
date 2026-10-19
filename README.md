@@ -20,7 +20,7 @@ noms de code et le reste de ce document gardent l'ancien vocabulaire.
 | line clear | Harvest (récolte) |
 | modificateur (`Modifier`) | Fertilizer |
 | Lueur | Pollen |
-| Coral / Teal / Violet / Lime | Poppy / Bluebell / Sunflower / Fern |
+| Coral / Teal / Violet / Lime | Poppy / Iris / Sunflower / Fern |
 | Classic / Marathon / Chaos | Spring / Winter / Wildgrowth |
 | Common / Uncommon / Rare | Wild / Cultivated / Heirloom |
 | Bombe / Range / Éclat / Précision / Sangsue | Spore Burst / Long Reach / Overflow / Pruning / Sap Drain |

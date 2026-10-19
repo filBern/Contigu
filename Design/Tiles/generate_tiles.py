@@ -32,9 +32,17 @@ tiles['Ember'] = tile('#d9433f', '#a73232', SOIL,
     ''.join('<circle cx="%g" cy="%g" r="40" fill="#d9433f" stroke="#7a1f22" stroke-width="5"/>' % (128 + 26 * dx, 128 + 26 * dy) for dx, dy in ((-1, -1), (1, -1), (-1, 1), (1, 1))) +
     '<circle cx="128" cy="128" r="24" fill="#2a1418" stroke="%s" stroke-width="4"/>' % O)
 
-# Cornflower
+# Iris: three upright petals and three drooping falls, a fleur-de-lis silhouette unlike the round flowers
+iris_up = '<path d="M128 150 C100 112 106 62 128 40 C150 62 156 112 128 150 Z" fill="#5b86e0" stroke="#1d3470" stroke-width="6"/>'
+iris_side = ''.join('<path d="M128 150 C%d 138 %d 92 %d 78 C%d 100 %d 128 128 150 Z" fill="#6f9ae6" stroke="#1d3470" stroke-width="6"/>' % (x1, x2, x3, x4, x5)
+                    for x1, x2, x3, x4, x5 in ((96, 70, 62, 100, 112), (160, 186, 194, 156, 144)))
+iris_fall = ''.join('<path d="M128 150 C%d 150 %d 190 %d 206 C%d 196 %d 176 128 150 Z" fill="#3d68c4" stroke="#1d3470" stroke-width="6"/>' % (x1, x2, x3, x4, x5)
+                    for x1, x2, x3, x4, x5 in ((92, 56, 62, 90, 108), (164, 200, 194, 166, 148)))
 tiles['Frost'] = tile('#6f9ae6', '#2f56a6', SOIL,
-    petals(10, 84, 22, '#5b86e0', '#1d3470', 5) + '<circle cx="128" cy="128" r="18" fill="#2a2f6e" stroke="%s" stroke-width="4"/>' % O)
+    iris_fall + iris_side + iris_up +
+    '<path d="M128 152 C124 170 126 186 128 204" fill="none" stroke="#ffd45a" stroke-width="9" stroke-linecap="round"/>' +
+    '<path d="M128 56 C126 92 126 120 128 146" fill="none" stroke="#a9c4ff" stroke-width="5" opacity="0.8"/>' +
+    '<circle cx="128" cy="152" r="9" fill="#ffd45a" stroke="%s" stroke-width="3"/>' % O)
 
 # Sunflower
 tiles['Gold'] = tile('#f5c95c', '#b87a14', SOIL,
