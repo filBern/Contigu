@@ -82,7 +82,12 @@ namespace Contigu.Presentation
             yield return _handView.FadeSlotPieces(1f, 0f, ShuffleFadeDuration);
             yield return _gridView.FadeMalus(1f, 0f, ShuffleFadeDuration);
 
+            string blightBefore = BlightSignature();
             bool shuffled = _run.ShuffleHand();
+            if (shuffled)
+            {
+                PlayBlightmothActIfBlightChanged(blightBefore);
+            }
             if (!shuffled)
             {
                 // Shouldn't happen (checked before this coroutine even

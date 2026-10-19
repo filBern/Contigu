@@ -152,3 +152,13 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `ColorHater` | Invasive Bloom | Boss | 1950 |
 | `ShapeHater` | Invasive Weed | Boss | 1950 |
 | `Blightmoth` | Blightmoth | Boss | 1750 |
+
+## Météo
+
+| Code | Affiché | Effet |
+|---|---|---|
+| `Clear` | Clear skies | aucun |
+| `Rain` | Rain | +3 Pollen par graine Iris |
+| `Sunshine` | Sunshine | +4 pts par case de graine Tournesol |
+| `Wind` | Wind | un Shuffle gratuit au début du round |
+| `Frost` | Frost | 2 cases gelées au début du round |

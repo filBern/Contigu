@@ -174,6 +174,7 @@ namespace Contigu.Presentation
 
             _challengeSelectView.Hide();
             StartNewRun(challenge);
+            _roundBannerView.Play(_run);
 
             if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
             {
@@ -187,13 +188,13 @@ namespace Contigu.Presentation
 
         private System.Collections.IEnumerator RunSprigGuideAfterDelay()
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(2.1f);
             _sprigView.RunGuide(BuildSprigGuide());
         }
 
         private System.Collections.IEnumerator SprigRunStartComment()
         {
-            yield return new WaitForSeconds(1.2f);
+            yield return new WaitForSeconds(2.2f);
             _sprigView.Say(SprigView.RunStartLine(), SprigMood.Happy, 5f);
         }
 
@@ -233,6 +234,30 @@ namespace Contigu.Presentation
             {
                 _modifierPanelView.Refresh(_run.ActiveModifiers);
             }
+            UpdateAmbientLife();
+        }
+
+        /// <summary>Feeds the ambient garden: this round's weather, and how much of the round is won (more butterflies the closer to victory).</summary>
+        private void UpdateAmbientLife()
+        {
+            _ambientLifeView.SetWeather(_run.CurrentWeather);
+            float progress;
+            if (_run.HasActiveEncounter)
+            {
+                int hp = 0;
+                int max = 0;
+                foreach (var enemy in _run.CurrentEncounter)
+                {
+                    hp += Mathf.Max(0, enemy.CurrentHp);
+                    max += enemy.CurrentMaxHp;
+                }
+                progress = max > 0 ? 1f - (float)hp / max : 0f;
+            }
+            else
+            {
+                progress = _run.CurrentQuota > 0 ? (float)_run.RoundScore / _run.CurrentQuota : 0f;
+            }
+            _ambientLifeView.SetProgress(progress);
         }
     }
 }

@@ -86,6 +86,8 @@ namespace Contigu.Presentation
         private ChallengeSelectView _challengeSelectView;
         private SettingsView _settingsView;
         private AnimatedBackgroundView _animatedBackgroundView;
+        private AmbientLifeView _ambientLifeView;
+        private RoundBannerView _roundBannerView;
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
@@ -382,6 +384,9 @@ namespace Contigu.Presentation
             // after this) — see AnimatedBackgroundView's own doc comment.
             _animatedBackgroundView = gameObject.AddComponent<AnimatedBackgroundView>();
             _animatedBackgroundView.Build(canvasGo.transform);
+            // Butterflies, leaves and the weather's particles, behind everything built in BuildUI.
+            _ambientLifeView = gameObject.AddComponent<AmbientLifeView>();
+            _ambientLifeView.Build(canvasGo.transform);
 
             return canvasGo.GetComponent<RectTransform>();
         }
@@ -554,6 +559,9 @@ namespace Contigu.Presentation
 
             _sprigView = gameObject.AddComponent<SprigView>();
             _sprigView.Build(mainRoot);
+
+            _roundBannerView = gameObject.AddComponent<RoundBannerView>();
+            _roundBannerView.Build(mainRoot);
         }
 
         /// <summary>The short first-run guide Sprig gives in speech bubbles (frames the hand, grid and first enemy). Press H any time for the full rules.</summary>

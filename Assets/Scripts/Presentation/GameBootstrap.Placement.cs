@@ -78,6 +78,7 @@ namespace Contigu.Presentation
             SnapshotEnemyEffectCells(out var lockedCellsBefore, out var poisonedCellsBefore);
             bool targetWasShielded = damagedEnemyIndex >= 0 && _run.CurrentEncounter[damagedEnemyIndex].HasShield;
 
+            string blightBefore = BlightSignature();
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (!outcome.Placement.Success)
             {
@@ -86,6 +87,7 @@ namespace Contigu.Presentation
                 return;
             }
             SfxManager.Play(SfxId.ValidDrop);
+            PlayBlightmothActIfBlightChanged(blightBefore);
 
             // Only valid right after a call that ran DrawFreshHand this
             // placement — otherwise ThiefStoleOnLastShuffle still holds a

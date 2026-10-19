@@ -29,6 +29,12 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 - Blightmoth : debut moved from round 11 to round 7 (replaces the Bramble there), 1750 → 800 PV so round 7 stays near its neighbours (64 % for the bot).
 - Sap Drain : 25 % → 8 % des dégâts en Pollen, Siphon : 15 % → 4 %, plafond de 10 Pollen par déclenchement.
 
+## Météo et ennemis à minuterie
+
+- **Météo** (`Core/Run/WeatherCatalog.cs`, constantes dans `ScoringConstants`) : tirée une fois par run, le round 1 est toujours dégagé et deux rounds de suite n'ont jamais la même météo. Pluie : +3 Pollen par graine Iris ; Soleil : +4 pts par case de graine Tournesol ; Vent : un Shuffle gratuit ; Gel : 2 cases gelées. La météo du round suivant est annoncée dans la boutique (boîte « Next round », avec tooltip) et la météo courante est dans la puce à côté du numéro de round.
+- **Ennemis à minuterie** : Bramble et Blightmoth agissent aussi toutes les 6 graines posées (`ScoringConstants.EnemyTickInterval`), en plus du Shuffle. Le compte à rebours est affiché sur leur portrait.
+- Les tests qui comptent des cases verrouillées/gelées appellent `DebugDisableWeather()` pour ne pas dépendre de la météo tirée.
+
 ## Connu mais pas traité
 
 - Les rounds 3 à 6 restent les plus durs pour le bot (58–75 % de réussite) ; le round 3 est maintenant le premier mur.

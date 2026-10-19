@@ -31,6 +31,31 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Which fertilizer slots are blighted right now, as a string: compare before/after a placement or Shuffle to know Blightmoth just struck.</summary>
+        private string BlightSignature()
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < _run.ActiveModifiers.Count; i++)
+            {
+                sb.Append(_run.IsModifierBlighted(i) ? '1' : '0');
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>If the blight moved since <paramref name="before"/>, the Blightmoth's portrait reacts (and the fertilizer panel is already redrawn by RefreshAll).</summary>
+        private void PlayBlightmothActIfBlightChanged(string before)
+        {
+            if (before == BlightSignature())
+            {
+                return;
+            }
+            int index = FindAliveEnemyIndex(EnemyId.Blightmoth);
+            if (index >= 0)
+            {
+                _hudView.PlayEnemyAct(index);
+            }
+        }
+
         // Lock's circle reads as a cool, inert obstacle; poison's reuses the same red as its own badge
         // (UITheme.Danger) — same two colors used for every other lock/poison visual in the game.
         private static readonly Color EnemyGridEffectLockColor = UITheme.LightBlue;
@@ -96,6 +121,7 @@ namespace Contigu.Presentation
 
                     var iconAnchor = _hudView.GetEnemyIconTransform(i);
                     _hudView.PlayEnemyEffectPulse(i);
+                    _hudView.PlayEnemyAct(i);
 
                     int pending = 0;
                     for (int c = 0; c < ownCells.Count; c++)
@@ -148,6 +174,7 @@ namespace Contigu.Presentation
             {
                 if (encounter[i].Definition.Id == EnemyId.Thief)
                 {
+                    _hudView.PlayEnemyAct(i);
                     StartCoroutine(PlayThiefStealRoutine(i));
                     return;
                 }

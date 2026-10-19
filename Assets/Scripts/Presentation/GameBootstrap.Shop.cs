@@ -193,6 +193,7 @@ namespace Contigu.Presentation
             _shopView.Hide();
             RefreshAll();
             SetStatusText(GetCurrentRoundStatus());
+            _roundBannerView.Play(_run);
         }
     }
 }
