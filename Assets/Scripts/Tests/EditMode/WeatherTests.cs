@@ -97,6 +97,26 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void GoldenHourPlots_TurnGoldenAgainWhenTheirTileIsHarvested()
+        {
+            var grid = new GridManager();
+            var chosen = grid.MakeRandomCellsGolden(2, new SystemRandomProvider(4));
+            var plot = grid.GetCell(chosen[0]);
+            plot.IsFilled = true;
+            plot.FilledColor = PieceColor.Coral;
+            plot.ClearFill();
+            Assert.IsTrue(plot.IsGolden, "the plot is golden again once emptied");
+
+            var ordinary = new Cell { IsGolden = true, IsFilled = true, FilledColor = PieceColor.Coral };
+            ordinary.ClearFill();
+            Assert.IsFalse(ordinary.IsGolden, "a tile's own golden stamp still goes with the tile");
+
+            plot.ResetForNewRound();
+            Assert.IsFalse(plot.IsGolden);
+            Assert.IsFalse(plot.IsWeatherGolden, "the effect ends with the round");
+        }
+
+        [Test]
         public void PollenShower_StartsTheRoundWithPollen()
         {
             var run = RunInWeather(WeatherId.PollenShower);

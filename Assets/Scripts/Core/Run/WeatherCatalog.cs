@@ -72,7 +72,7 @@ namespace Contigu.Core
                 case WeatherId.Wind: return "A gust blows in a free Shuffle at the start of the round.";
                 case WeatherId.Frost: return ScoringConstants.FrostFrozenPlots + " empty plots start frozen (harvest their row or column to break the ice).";
                 case WeatherId.Dew: return "+" + ScoringConstants.DewPollenPerLine + " Pollen for every line you clear.";
-                case WeatherId.GoldenHour: return ScoringConstants.GoldenHourPlots + " empty plots turn golden at the start of the round.";
+                case WeatherId.GoldenHour: return ScoringConstants.GoldenHourPlots + " empty plots turn golden for the round, and golden again each time their tile is harvested.";
                 case WeatherId.PollenShower: return "Start the round with +" + ScoringConstants.PollenShowerPollen + " Pollen.";
                 case WeatherId.Heatwave: return "Each Shuffle you spend scorches one planted tile (it burns away, no points).";
                 case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds you plant, the storm blows " + ScoringConstants.HurricaneTilesMoved + " planted tiles to other plots.";

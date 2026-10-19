@@ -261,7 +261,7 @@ namespace Contigu.Core
         {
             for (int i = 0; i < cells.Count; i++)
             {
-                cells[i].IsGolden = false;
+                cells[i].IsGolden = cells[i].IsWeatherGolden;
                 cells[i].IsTinted = false;
                 cells[i].IsMultiplierZone = false;
             }

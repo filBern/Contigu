@@ -72,6 +72,12 @@ namespace Contigu.Core
 
         public bool IsGolden;
 
+        /// <summary>
+        /// Golden Hour weather: this plot is golden as a property of the PLOT, not of whatever fills it — unlike a Seeder's golden stamp
+        /// (which <see cref="ClearFill"/> wipes), it turns golden again each time its tile is harvested, until the round ends.
+        /// </summary>
+        public bool IsWeatherGolden;
+
         public bool IsTinted;
         public PieceColor TintedColor;
 
@@ -149,7 +155,7 @@ namespace Contigu.Core
             IsFilled = false;
             FilledColor = null;
             FilledShapeId = null;
-            IsGolden = false;
+            IsGolden = IsWeatherGolden;
             IsTinted = false;
             IsMultiplierZone = false;
             IsBastion = false;
@@ -168,6 +174,7 @@ namespace Contigu.Core
             IsFrozen = false;
             IsPoisoned = false;
             IsGolden = false;
+            IsWeatherGolden = false;
             IsTinted = false;
             IsMultiplierZone = false;
             IsBastion = false;

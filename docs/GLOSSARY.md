@@ -163,7 +163,7 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Wind` | Wind | peu commune (2) | un Shuffle gratuit au début du round |
 | `Frost` | Frost | peu commune (2) | 2 cases gelées au début du round |
 | `Dew` | Morning Dew | peu commune (2) | +2 Pollen par ligne complétée |
-| `GoldenHour` | Golden Hour | rare (1) | 2 cases vides deviennent dorées au début du round |
+| `GoldenHour` | Golden Hour | rare (1) | 2 cases vides deviennent dorées pour le round, et le redeviennent à chaque récolte de leur tuile |
 | `PollenShower` | Pollen Shower | rare (1) | +10 Pollen au début du round |
 | `Heatwave` | Heatwave | peu commune (2) | négative : chaque Shuffle manuel brûle une tuile plantée (sans points) |
 | `Hurricane` | Hurricane | rare (1) | négative : toutes les 4 graines posées, 2 tuiles plantées sont soufflées vers d'autres cases vides |

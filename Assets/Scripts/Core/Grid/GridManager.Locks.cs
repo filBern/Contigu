@@ -87,7 +87,8 @@ namespace Contigu.Core
                 dst.IsFilled = src.IsFilled;
                 dst.FilledColor = src.FilledColor;
                 dst.FilledShapeId = src.FilledShapeId;
-                dst.IsGolden = src.IsGolden;
+                // A weather-golden plot stays golden where it is; only a tile's own golden stamp travels.
+                dst.IsGolden = dst.IsWeatherGolden || (src.IsGolden && !src.IsWeatherGolden);
                 dst.IsTinted = src.IsTinted;
                 dst.TintedColor = src.TintedColor;
                 dst.IsMultiplierZone = src.IsMultiplierZone;
@@ -130,6 +131,7 @@ namespace Contigu.Core
             for (int i = 0; i < chosen.Count; i++)
             {
                 GetCell(chosen[i]).IsGolden = true;
+                GetCell(chosen[i]).IsWeatherGolden = true;
             }
             return chosen;
         }
