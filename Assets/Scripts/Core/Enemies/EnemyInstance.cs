@@ -34,6 +34,9 @@ namespace Contigu.Core
         /// <summary>Locker only: the cell it currently has locked, or null before its first Shuffle tick or once it's dead (see RunManager.ResolveLockerShuffleEffect/CleanUpDefeatedEnemy).</summary>
         public Vector2Int? LockedCell;
 
+        /// <summary>Locker (Bramble) only: its second lock, thrown by the every-N-seeds trick — it lives alongside <see cref="LockedCell"/> (the Shuffle lock) instead of replacing it, and is itself replaced the next time that trick fires.</summary>
+        public Vector2Int? ExtraLockedCell;
+
         /// <summary>Color Hater only: the one base color it was randomly assigned on spawn (see RunManager.BuildEncounter), never changes for the rest of this instance's life. Null for every other EnemyId.</summary>
         public PieceColor? HatedColor;
 

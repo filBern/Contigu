@@ -458,6 +458,14 @@ namespace Contigu.Core
                 _deathReleasedCellsThisPlacement.Add(enemy.LockedCell.Value);
                 enemy.LockedCell = null;
             }
+            if (enemy.ExtraLockedCell.HasValue)
+            {
+                var extraCell = Grid.GetCell(enemy.ExtraLockedCell.Value);
+                extraCell.IsLocked = false;
+                extraCell.IsLineClearObstacle = false;
+                _deathReleasedCellsThisPlacement.Add(enemy.ExtraLockedCell.Value);
+                enemy.ExtraLockedCell = null;
+            }
             for (int i = 0; i < enemy.PoisonedCells.Count; i++)
             {
                 Grid.GetCell(enemy.PoisonedCells[i]).IsPoisoned = false;
@@ -554,7 +562,7 @@ namespace Contigu.Core
                 }
                 if (enemy.Definition.Id == EnemyId.Locker)
                 {
-                    ResolveLockerShuffleEffect(enemy);
+                    ResolveLockerTickEffect(enemy);
                 }
                 else if (enemy.Definition.Id == EnemyId.Blightmoth)
                 {
@@ -591,6 +599,25 @@ namespace Contigu.Core
             if (locked.Count > 0)
             {
                 locker.LockedCell = locked[0];
+                Grid.GetCell(locked[0]).IsLineClearObstacle = true;
+            }
+        }
+
+        /// <summary>Locker's timed trick (every few seeds planted): a SECOND lock that sits next to the Shuffle lock rather than replacing it; only the previous timed lock is released first.</summary>
+        private void ResolveLockerTickEffect(EnemyInstance locker)
+        {
+            if (locker.ExtraLockedCell.HasValue)
+            {
+                var previousCell = Grid.GetCell(locker.ExtraLockedCell.Value);
+                previousCell.IsLocked = false;
+                previousCell.IsLineClearObstacle = false;
+                locker.ExtraLockedCell = null;
+            }
+
+            var locked = Grid.LockRandomCells(1, _rng);
+            if (locked.Count > 0)
+            {
+                locker.ExtraLockedCell = locked[0];
                 Grid.GetCell(locked[0]).IsLineClearObstacle = true;
             }
         }

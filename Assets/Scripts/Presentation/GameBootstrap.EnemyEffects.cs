@@ -27,6 +27,10 @@ namespace Contigu.Presentation
                 {
                     lockedCells.Add(enemy.LockedCell.Value);
                 }
+                if (enemy.ExtraLockedCell.HasValue)
+                {
+                    lockedCells.Add(enemy.ExtraLockedCell.Value);
+                }
                 poisonedCells.AddRange(enemy.PoisonedCells);
             }
         }
@@ -103,6 +107,11 @@ namespace Contigu.Presentation
                     if (enemy.LockedCell.HasValue && remaining.Contains(enemy.LockedCell.Value))
                     {
                         ownCells.Add(enemy.LockedCell.Value);
+                        ownColors.Add(EnemyGridEffectLockColor);
+                    }
+                    if (enemy.ExtraLockedCell.HasValue && remaining.Contains(enemy.ExtraLockedCell.Value))
+                    {
+                        ownCells.Add(enemy.ExtraLockedCell.Value);
                         ownColors.Add(EnemyGridEffectLockColor);
                     }
                     for (int j = 0; j < enemy.PoisonedCells.Count; j++)

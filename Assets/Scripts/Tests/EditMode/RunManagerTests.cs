@@ -2392,6 +2392,28 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Bramble_EveryNthSeedAddsASecondLock_AlongsideTheShuffleLock()
+        {
+            var run = new RunManager(new SystemRandomProvider(11));
+            run.DebugDisableWeather();
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Locker);
+            run.ShuffleHand();
+            var locker = run.CurrentEncounter[1];
+            Assert.IsTrue(locker.LockedCell.HasValue, "the Shuffle lock");
+            Assert.IsFalse(locker.ExtraLockedCell.HasValue, "no timed lock before the first timed trick");
+
+            for (int i = 0; i < ScoringConstants.EnemyTickInterval && run.State == RunState.InProgress; i++)
+            {
+                PlaceFirstAvailableHandPiece(run);
+            }
+            Assert.IsTrue(locker.ExtraLockedCell.HasValue, "the timed lock lands on a second plot");
+            Assert.IsTrue(locker.LockedCell.HasValue, "the Shuffle lock is still there");
+            Assert.AreNotEqual(locker.LockedCell.Value, locker.ExtraLockedCell.Value);
+            Assert.IsTrue(run.Grid.GetCell(locker.LockedCell.Value).IsLocked);
+            Assert.IsTrue(run.Grid.GetCell(locker.ExtraLockedCell.Value).IsLocked);
+        }
+
+        [Test]
         public void PlacePiece_SparkTrait_DoesNotFire_OnTheFirstPlacementOfTheRound()
         {
             var run = new RunManager(new SystemRandomProvider(1));
