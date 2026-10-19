@@ -1187,6 +1187,38 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Blightmoth_BlightsOneFertilizerPerShuffle_ItScoresNothing_AndPolyvalenceDoesNotCrash()
+        {
+            var run = new RunManager(new SystemRandomProvider(3));
+            run.DebugSetEncounter(EnemyId.Blightmoth);
+            run.DebugGrantModifier(ModifierId.Polyvalence);
+            run.DebugGrantModifier(ModifierId.Forteresse);
+
+            Assert.IsTrue(run.ShuffleHand());
+
+            int blighted = 0;
+            for (int i = 0; i < run.ActiveModifiers.Count; i++)
+            {
+                if (run.IsModifierBlighted(i))
+                {
+                    blighted++;
+                }
+            }
+            Assert.AreEqual(1, blighted, "Exactly one fertilizer is blighted after a Shuffle");
+
+            var slot = 0;
+            while (!run.Deck.Hand[slot].HasValue)
+            {
+                slot++;
+            }
+            var token = run.Deck.Hand[slot].Value;
+            var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[slot]);
+            var anchor = FindAnyValidAnchor(run.Grid, shape);
+            Assert.IsTrue(anchor.HasValue);
+            Assert.DoesNotThrow(() => run.PlacePiece(slot, anchor.Value.x, anchor.Value.y));
+        }
+
+        [Test]
         public void QuatriemeEmplacement_GrowsTheHandByOneSlotImmediately_AndThePieceIsPlayable()
         {
             // Playtest request, cited textually: "Ce serait cool un modifier qui rajoute une un 4e slot".

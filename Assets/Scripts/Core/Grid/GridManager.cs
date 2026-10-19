@@ -657,7 +657,12 @@ namespace Contigu.Core
             var categoriesSeen = new HashSet<ModifierCategory>();
             for (int i = 0; i < activeModifiers.Count; i++)
             {
-                categoriesSeen.Add(ModifierCatalog.Get(activeModifiers[i]).Category);
+                // A blighted slot arrives as the effect-less ModifierId.Blighted placeholder (not in the catalog): it counts for nothing.
+                var definition = ModifierCatalog.Get(activeModifiers[i]);
+                if (definition != null)
+                {
+                    categoriesSeen.Add(definition.Category);
+                }
             }
 
             int bonus = categoriesSeen.Count * ScoringConstants.PolyvalenceMultPerCategory;
