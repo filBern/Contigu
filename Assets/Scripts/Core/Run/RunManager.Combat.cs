@@ -163,9 +163,10 @@ namespace Contigu.Core
             }
 
             var instances = new List<EnemyInstance>(ids.Count);
+            float hpScale = EncounterCatalog.GetHpScale(roundIndex);
             for (int i = 0; i < ids.Count; i++)
             {
-                var instance = new EnemyInstance(EnemyCatalog.Get(ids[i]));
+                var instance = new EnemyInstance(EnemyCatalog.Get(ids[i]), hpScale);
                 if (ids[i] == EnemyId.ColorHater)
                 {
                     var colors = PieceColorUtility.BaseColors;

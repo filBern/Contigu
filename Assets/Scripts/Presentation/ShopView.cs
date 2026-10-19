@@ -551,7 +551,7 @@ namespace Contigu.Presentation
                 // the base MaxHp here since no EnemyInstance exists yet for a round that isn't built.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();
                 // Same three sections as HudView's tooltip (name, effect, story line), with the HP as a footer at the bottom-right.
-                iconView.Init(_tooltip, def.Name, def.Description, def.Lore, "HP " + def.MaxHp);
+                iconView.Init(_tooltip, def.Name, def.Description, def.Lore, "HP " + EncounterCatalog.ScaleHp(def.MaxHp, EncounterCatalog.GetHpScale(run.CurrentRoundIndex + 1)));
             }
         }
 

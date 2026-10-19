@@ -72,6 +72,27 @@ namespace Contigu.Core
         /// <summary>The run's true finale — every mechanic introduced since Round8's own gauntlet (HeavyLocker's lock, both new Haters, Thief, Leech) together behind the leading Basic, the biggest roster of the whole run.</summary>
         private static readonly EnemyId[] Round15 = { EnemyId.Basic, EnemyId.HeavyLocker, EnemyId.ColorHater, EnemyId.ShapeHater, EnemyId.Thief, EnemyId.Leech };
 
+        /// <summary>
+        /// HP multiplier of every enemy in a Classic round: 1 through the first act, then compounding by
+        /// <see cref="ScoringConstants.EnemyHpGrowthPerRound"/> each round of Act 2 — the player's fertilizers multiply each other,
+        /// so a flat roster HP made the last rounds trivial. Marathon/Chaos have no encounters, so it never applies there.
+        /// </summary>
+        public static float GetHpScale(int roundIndex)
+        {
+            int actTwoRounds = roundIndex - (ScoringConstants.EnemyHpGrowthFirstRoundIndex - 1);
+            return actTwoRounds <= 0 ? 1f : (float)System.Math.Pow(ScoringConstants.EnemyHpGrowthPerRound, actTwoRounds);
+        }
+
+        /// <summary>Scales an HP value, rounded to a clean multiple of 50 (never below the base HP).</summary>
+        public static int ScaleHp(int baseHp, float scale)
+        {
+            if (scale <= 1f)
+            {
+                return baseHp;
+            }
+            return System.Math.Max(baseHp, (int)System.Math.Round(baseHp * scale / 50.0) * 50);
+        }
+
         public static IReadOnlyList<EnemyId> GetEncounter(ChallengeId challenge, int roundIndex)
         {
             if (challenge != ChallengeId.Classic)

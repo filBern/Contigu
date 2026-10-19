@@ -1602,5 +1602,24 @@ namespace Contigu.Tests
                 run.LeaveShop();
             }
         }
+
+        [Test]
+        public void EnemyHp_IsFlatInActOne_AndCompoundsEachRoundOfActTwo()
+        {
+            for (int round = 0; round < ScoringConstants.EnemyHpGrowthFirstRoundIndex; round++)
+            {
+                Assert.AreEqual(1f, EncounterCatalog.GetHpScale(round), 1e-4f, "round " + (round + 1));
+            }
+            float previous = 1f;
+            for (int round = ScoringConstants.EnemyHpGrowthFirstRoundIndex; round < RunConfig.RoundCount; round++)
+            {
+                float scale = EncounterCatalog.GetHpScale(round);
+                Assert.AreEqual(previous * ScoringConstants.EnemyHpGrowthPerRound, scale, 1e-3f * scale);
+                previous = scale;
+            }
+            Assert.AreEqual(250, EncounterCatalog.ScaleHp(250, 1f));
+            Assert.AreEqual(0, EncounterCatalog.ScaleHp(250, 2.2f) % 50, "clean multiples of 50");
+            Assert.Greater(EncounterCatalog.ScaleHp(250, 2.2f), 250);
+        }
     }
 }

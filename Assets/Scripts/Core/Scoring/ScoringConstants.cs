@@ -273,6 +273,12 @@ namespace Contigu.Core
         /// <summary>Weather: points per cell of a seed of the round's sunshine color.</summary>
         public const int SunshinePointsPerCell = 4;
 
+        /// <summary>Enemy HP compounds by this factor for each round from <see cref="EnemyHpGrowthFirstRoundIndex"/> on (see EncounterCatalog.GetHpScale).</summary>
+        public const float EnemyHpGrowthPerRound = 1.12f;
+
+        /// <summary>Zero-based index of the first round whose enemies get the HP growth (8 = round 9, the start of Act 2).</summary>
+        public const int EnemyHpGrowthFirstRoundIndex = 8;
+
         /// <summary>Weather: Pollen granted per line cleared on a dewy round.</summary>
         public const int DewPollenPerLine = 2;
 

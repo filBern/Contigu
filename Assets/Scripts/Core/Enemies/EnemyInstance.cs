@@ -57,10 +57,10 @@ namespace Contigu.Core
             get { return _poisonedCells; }
         }
 
-        public EnemyInstance(EnemyDefinition definition)
+        public EnemyInstance(EnemyDefinition definition, float hpScale = 1f)
         {
             Definition = definition;
-            CurrentMaxHp = definition.MaxHp;
+            CurrentMaxHp = EncounterCatalog.ScaleHp(definition.MaxHp, hpScale);
             CurrentHp = CurrentMaxHp;
         }
 
