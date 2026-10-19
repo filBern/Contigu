@@ -56,8 +56,8 @@ namespace Contigu.Core
         /// <summary>Color Hater's debut, paired with Thief — losing a hand piece on top of a whole color scoring nothing.</summary>
         private static readonly EnemyId[] Round10 = { EnemyId.Basic, EnemyId.ColorHater, EnemyId.Thief };
 
-        /// <summary>Shape Hater's debut, Color Hater's own mirror, paired with Leech instead — a healing sponge behind the shape penalty.</summary>
-        private static readonly EnemyId[] Round11 = { EnemyId.Basic, EnemyId.ShapeHater, EnemyId.Leech };
+        /// <summary>Blightmoth's debut (it blights a fertilizer each Shuffle) ahead of Shape Hater's debut, Color Hater's own mirror, with Leech as a healing sponge behind.</summary>
+        private static readonly EnemyId[] Round11 = { EnemyId.Basic, EnemyId.Blightmoth, EnemyId.ShapeHater, EnemyId.Leech };
 
         /// <summary>Doubles down on poison pressure — Poisoner AND Plague, both still ahead of Reclaimer (same convention as Round5/6: the poison source must land the player's damage before Reclaimer, so it keeps growing quietly off whatever poison-scoring slips through).</summary>
         private static readonly EnemyId[] Round12 = { EnemyId.Basic, EnemyId.Poisoner, EnemyId.Plague, EnemyId.Reclaimer };

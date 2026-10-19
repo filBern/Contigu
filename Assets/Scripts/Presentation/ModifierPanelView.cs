@@ -63,6 +63,9 @@ namespace Contigu.Presentation
         private System.Func<int, int> _levelProvider;
         private bool _interactable = true;
 
+        /// <summary>Whether the modifier at a slot index is currently blighted (set by GameBootstrap); blighted badges are greyed with a blight mark and say so in their tooltip.</summary>
+        public System.Func<int, bool> BlightProvider;
+
         // Tap-to-swap: the first-tapped badge's row, armed and waiting for
         // a second tap on a different badge to swap with — -1 when nothing
         // is armed. Drag-to-move: the row currently being dragged, -1 when
@@ -249,6 +252,12 @@ namespace Contigu.Presentation
                 System.Func<ModifierId, string> rowLevelState = level > 1
                     ? (System.Func<ModifierId, string>)(rowId => "Level " + level + " — x" + ModifierLevelUtility.LevelToFactor(level).ToString(System.Globalization.CultureInfo.InvariantCulture) + " effect")
                     : null;
+                bool blighted = BlightProvider != null && BlightProvider(i);
+                if (blighted)
+                {
+                    var baseLevelState = rowLevelState;
+                    rowLevelState = rowId => "BLIGHTED: no effect until the next Shuffle." + (baseLevelState != null ? "\n" + baseLevelState(rowId) : string.Empty);
+                }
                 var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState, showSellValue: true);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
@@ -257,6 +266,22 @@ namespace Contigu.Presentation
                 if (newIsAdded[i])
                 {
                     StartCoroutine(PlayAddedBadge(badge.rectTransform));
+                }
+
+                if (blighted)
+                {
+                    var veil = UIFactory.CreatePanel(badge.transform, "BlightVeil", new Color(0.12f, 0.22f, 0.08f, 0.62f));
+                    veil.raycastTarget = false;
+                    UIFactory.StretchFull(veil.rectTransform);
+                    var mark = UIFactory.CreatePanel(badge.transform, "BlightMark", Color.white);
+                    mark.raycastTarget = false;
+                    mark.preserveAspect = true;
+                    mark.sprite = PieceTraitVisualDefaults.GetPoisonSprite();
+                    mark.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                    mark.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                    mark.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    mark.rectTransform.sizeDelta = new Vector2(BadgeSize * 0.6f, BadgeSize * 0.6f);
+                    mark.gameObject.SetActive(mark.sprite != null);
                 }
 
                 // Visual position number: scoring order follows this exact

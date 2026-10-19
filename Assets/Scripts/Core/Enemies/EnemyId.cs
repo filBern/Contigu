@@ -18,6 +18,8 @@ namespace Contigu.Core
         Reclaimer,
         Leech,
         ColorHater,
-        ShapeHater
+        ShapeHater,
+        /// <summary>Blights one of the player's modifiers each Shuffle (see RunManager.ResolveBlightmothShuffleEffect).</summary>
+        Blightmoth
     }
 }

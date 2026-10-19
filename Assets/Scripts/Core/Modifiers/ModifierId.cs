@@ -132,13 +132,16 @@ namespace Contigu.Core
         /// <summary>Ties the group-parity pair (Pair/Impair) to the Format* size tiers — xN Mult when THIS placement satisfies a held parity condition AND a held Format tier condition at once (see GridManager.ApplyCadence).</summary>
         Cadence,
 
-        /// <summary>Replays whatever modifier sits immediately to its own left in the player's held order, for this placement only — "as if holding a second copy of it" (see GridManager.ApplyEcho). Never chains into another Écho.</summary>
+        /// <summary>Replays whatever modifier sits immediately before it in the player's held order, for this placement only — "as if holding a second copy of it" (see GridManager.ApplyEcho). Never chains into another Écho.</summary>
         Echo,
 
         /// <summary>Sangsue's own Lueur siphon, generalized to fire alongside ANY Joker combat trait kind, not just Sangsue itself (see RunManager.ApplyJokerCombatOrDefaultDamage) — stacks independently if Sangsue is also held and also fires.</summary>
         Siphon,
 
         /// <summary>Grows the hand by one extra slot (see DeckManager.SetEffectiveHandSize/MaxHandSize), applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt rather than scored on placement like every other modifier.</summary>
-        QuatriemeEmplacement
+        QuatriemeEmplacement,
+
+        /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
+        Blighted
     }
 }

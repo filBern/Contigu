@@ -515,6 +515,7 @@ namespace Contigu.Presentation
             // picked up automatically — _run is reassigned on restart but
             // this view is only Refreshed, never rebuilt.
             var modifierPanelRect = _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
+            _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
             _masteryChoiceView.SetKeepVisible(modifierPanelRect, _shopView.UpcomingBox);
             // Modifier order determines scoring order (see
             // PlacementResult.Mult); same lambda-captures-_run reasoning as

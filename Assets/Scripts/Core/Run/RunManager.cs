@@ -19,6 +19,68 @@ namespace Contigu.Core
 
         private readonly List<ModifierId> _activeModifiers = new List<ModifierId>();
 
+        // Slots currently blighted by an alive Blightmoth (see ResolveBlightmothShuffleEffect): they stay in _activeModifiers but score nothing.
+        private readonly HashSet<int> _blightedModifiers = new HashSet<int>();
+
+        /// <summary>True when the modifier at <paramref name="index"/> is blighted and therefore has no effect.</summary>
+        public bool IsModifierBlighted(int index)
+        {
+            return _blightedModifiers.Contains(index);
+        }
+
+        /// <summary>_activeModifiers with every blighted slot replaced by the effect-less ModifierId.Blighted placeholder, so slot order and indices stay intact for scoring.</summary>
+        private IReadOnlyList<ModifierId> EffectiveModifiers()
+        {
+            if (_blightedModifiers.Count == 0)
+            {
+                return _activeModifiers;
+            }
+            var copy = new List<ModifierId>(_activeModifiers);
+            foreach (int index in _blightedModifiers)
+            {
+                if (index >= 0 && index < copy.Count)
+                {
+                    copy[index] = ModifierId.Blighted;
+                }
+            }
+            return copy;
+        }
+
+        /// <summary>True when <paramref name="id"/> is held in at least one slot that is not blighted.</summary>
+        private bool HasEffectiveModifier(ModifierId id)
+        {
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                if (_activeModifiers[i] == id && !_blightedModifiers.Contains(i))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void RemapBlightAfterRemove(int removedIndex)
+        {
+            if (_blightedModifiers.Count == 0)
+            {
+                return;
+            }
+            var remapped = new List<int>();
+            foreach (int index in _blightedModifiers)
+            {
+                if (index == removedIndex)
+                {
+                    continue;
+                }
+                remapped.Add(index > removedIndex ? index - 1 : index);
+            }
+            _blightedModifiers.Clear();
+            for (int i = 0; i < remapped.Count; i++)
+            {
+                _blightedModifiers.Add(remapped[i]);
+            }
+        }
+
         // Parallel to _activeModifiers (same index == same slot). Every
         // mutation of _activeModifiers (add/remove/swap/move) must mirror the
         // same operation here - see AddActiveModifier/RemoveActiveModifierAt,
@@ -60,6 +122,7 @@ namespace Contigu.Core
             var id = _activeModifiers[index];
             _activeModifiers.RemoveAt(index);
             _modifierLevels.RemoveAt(index);
+            RemapBlightAfterRemove(index);
             if (id == ModifierId.QuatriemeEmplacement && !_activeModifiers.Contains(ModifierId.QuatriemeEmplacement))
             {
                 Deck.SetEffectiveHandSize(DeckManager.HandSize);
@@ -86,6 +149,12 @@ namespace Contigu.Core
             var tempLevel = _modifierLevels[indexA];
             _modifierLevels[indexA] = _modifierLevels[indexB];
             _modifierLevels[indexB] = tempLevel;
+
+            // The blight travels with the modifier too.
+            bool blightA = _blightedModifiers.Remove(indexA);
+            bool blightB = _blightedModifiers.Remove(indexB);
+            if (blightA) { _blightedModifiers.Add(indexB); }
+            if (blightB) { _blightedModifiers.Add(indexA); }
         }
 
         /// <summary>
@@ -108,6 +177,26 @@ namespace Contigu.Core
             var movedLevel = _modifierLevels[fromIndex];
             _modifierLevels.RemoveAt(fromIndex);
             _modifierLevels.Insert(toIndex, movedLevel);
+
+            if (_blightedModifiers.Count > 0)
+            {
+                bool movedWasBlighted = _blightedModifiers.Contains(fromIndex);
+                RemapBlightAfterRemove(fromIndex);
+                var shifted = new List<int>();
+                foreach (int index in _blightedModifiers)
+                {
+                    shifted.Add(index >= toIndex ? index + 1 : index);
+                }
+                _blightedModifiers.Clear();
+                for (int i = 0; i < shifted.Count; i++)
+                {
+                    _blightedModifiers.Add(shifted[i]);
+                }
+                if (movedWasBlighted)
+                {
+                    _blightedModifiers.Add(toIndex);
+                }
+            }
         }
 
         /// <summary>
@@ -431,6 +520,7 @@ namespace Contigu.Core
         private void StartRound()
         {
             Grid.ResetForNewRound();
+            _blightedModifiers.Clear();
             _currentEncounter = BuildEncounter(CurrentRoundIndex);
             if (HasActiveEncounter)
             {
@@ -570,7 +660,7 @@ namespace Contigu.Core
             // Chameleon/Spark reads above: a poisoned cell this placement clears
             // would read back "not poisoned" once Cell.ClearFill resets the flag.
             var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
-            var placement = Grid.PlacePiece(shape, placementColor, x, y, _activeModifiers, _modifierLevels);
+            var placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
             if (token.Trait.HasValue)
             {
@@ -1190,7 +1280,7 @@ namespace Contigu.Core
             }
 
             var slotModifier = HandSlotModifiers[handIndex];
-            if (!slotModifier.HasValue || !_activeModifiers.Contains(slotModifier.Value))
+            if (!slotModifier.HasValue || !HasEffectiveModifier(slotModifier.Value))
             {
                 return;
             }
@@ -1199,7 +1289,15 @@ namespace Contigu.Core
             // PlacementResult.Mult's ordered left-to-right fold places this
             // correctly relative to every other Mult modifier - plus this slot's
             // own level factor (see ModifierLevelUtility).
-            int slotIndex = _activeModifiers.IndexOf(slotModifier.Value);
+            int slotIndex = -1;
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                if (_activeModifiers[i] == slotModifier.Value && !_blightedModifiers.Contains(i))
+                {
+                    slotIndex = i;
+                    break;
+                }
+            }
             int bonus = Mathf.RoundToInt(ScoringConstants.SlotLoyaltyBonus * GetModifierLevelFactor(slotIndex));
             placement.AdditiveMultBonus += bonus;
             var events = new List<ScoreEvent>(placement.ScoreEvents);
@@ -1222,7 +1320,7 @@ namespace Contigu.Core
         /// </summary>
         private void ApplyDeckStateModifierBonuses(PlacementResult placement)
         {
-            if (!_activeModifiers.Contains(ModifierId.CartesEnchantees) && !_activeModifiers.Contains(ModifierId.Multitude) && !_activeModifiers.Contains(ModifierId.Experience) && !_activeModifiers.Contains(ModifierId.Arsenal))
+            if (!HasEffectiveModifier(ModifierId.CartesEnchantees) && !HasEffectiveModifier(ModifierId.Multitude) && !HasEffectiveModifier(ModifierId.Experience) && !HasEffectiveModifier(ModifierId.Arsenal))
             {
                 return;
             }
@@ -1230,6 +1328,10 @@ namespace Contigu.Core
             var events = new List<ScoreEvent>(placement.ScoreEvents);
             for (int i = 0; i < _activeModifiers.Count; i++)
             {
+                if (_blightedModifiers.Contains(i))
+                {
+                    continue;
+                }
                 if (_activeModifiers[i] == ModifierId.CartesEnchantees)
                 {
                     int upgradedCount = CountUpgradedDeckCards();
@@ -1900,7 +2002,7 @@ namespace Contigu.Core
             // Renfort Joker: only reachable once a combat kind was actually
             // found above, by design - an ordinary front-hit placement is never
             // boosted.
-            int boostedDamage = _activeModifiers.Contains(ModifierId.RenfortJoker)
+            int boostedDamage = HasEffectiveModifier(ModifierId.RenfortJoker)
                 ? Mathf.RoundToInt(damage * (1f + ScoringConstants.RenfortJokerDamageBonusPercent / 100f))
                 : damage;
 
@@ -1914,7 +2016,7 @@ namespace Contigu.Core
             // same boosted damage total, regardless of how many enemies it
             // actually reached. Stacks independently with Sangsue if both are
             // held and Sangsue is among the kinds found.
-            if (boostedDamage > 0 && _activeModifiers.Contains(ModifierId.Siphon))
+            if (boostedDamage > 0 && HasEffectiveModifier(ModifierId.Siphon))
             {
                 Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction));
             }
@@ -2112,6 +2214,10 @@ namespace Contigu.Core
                 _deathReleasedCellsThisPlacement.Add(enemy.PoisonedCells[i]);
             }
             enemy.ClearPoisonedCells();
+            if (enemy.Definition.Id == EnemyId.Blightmoth)
+            {
+                _blightedModifiers.Clear();
+            }
         }
 
         /// <summary>
@@ -2144,6 +2250,10 @@ namespace Contigu.Core
                 else if (enemy.Definition.Id == EnemyId.Plague)
                 {
                     ResolvePoisonerShuffleEffect(enemy, 5);
+                }
+                else if (enemy.Definition.Id == EnemyId.Blightmoth)
+                {
+                    ResolveBlightmothShuffleEffect();
                 }
             }
         }
@@ -2190,6 +2300,17 @@ namespace Contigu.Core
         /// an empty one simply sits as a trap for whatever piece lands there
         /// later.
         /// </summary>
+        private void ResolveBlightmothShuffleEffect()
+        {
+            // The previous blight is lifted first, so only the freshly picked slot is blighted at a time.
+            _blightedModifiers.Clear();
+            if (_activeModifiers.Count == 0)
+            {
+                return;
+            }
+            _blightedModifiers.Add(_rng.Next(_activeModifiers.Count));
+        }
+
         private void ResolvePoisonerShuffleEffect(EnemyInstance poisoner, int count)
         {
             for (int i = 0; i < poisoner.PoisonedCells.Count; i++)

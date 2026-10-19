@@ -105,10 +105,11 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Thief, round10[2]);
 
             var round11 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 10);
-            Assert.AreEqual(3, round11.Count);
+            Assert.AreEqual(4, round11.Count);
             Assert.AreEqual(EnemyId.Basic, round11[0]);
-            Assert.AreEqual(EnemyId.ShapeHater, round11[1]);
-            Assert.AreEqual(EnemyId.Leech, round11[2]);
+            Assert.AreEqual(EnemyId.Blightmoth, round11[1]);
+            Assert.AreEqual(EnemyId.ShapeHater, round11[2]);
+            Assert.AreEqual(EnemyId.Leech, round11[3]);
 
             var round12 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 11);
             Assert.AreEqual(4, round12.Count);

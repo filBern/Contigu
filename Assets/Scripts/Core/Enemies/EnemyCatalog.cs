@@ -33,7 +33,10 @@ namespace Contigu.Core
         /// <summary>Color Hater's exact mirror, keyed by which piece-shape originally filled each cell (see Cell.FilledShapeId) instead of its color (see RunManager.ApplyShapeHaterScoreRule).</summary>
         public static readonly EnemyDefinition ShapeHater = new EnemyDefinition { Id = EnemyId.ShapeHater, Name = "Invasive Weed", Role = EnemyRole.Boss, MaxHp = 1950, Description = "Picks 1 random seed shape when the round starts.\nPoints scored on plots planted by that shape are cancelled for the whole round.", Lore = "It grows in straight lines and cannot forgive anything that doesn't fit." };
 
-        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater };
+        /// <summary>See RunManager.ResolveBlightmothShuffleEffect: a blighted fertilizer scores nothing, stopping a run from leaning on a single technique.</summary>
+        public static readonly EnemyDefinition Blightmoth = new EnemyDefinition { Id = EnemyId.Blightmoth, Name = "Blightmoth", Role = EnemyRole.Boss, MaxHp = 1750, Description = "Each Shuffle: blights 1 random fertilizer.\nA blighted fertilizer has no effect.\nThe blight is removed on the next Shuffle, or when it dies.", Lore = "It only ever eats what you have come to rely on." };
+
+        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater, Blightmoth };
 
         public static EnemyDefinition Get(EnemyId id)
         {

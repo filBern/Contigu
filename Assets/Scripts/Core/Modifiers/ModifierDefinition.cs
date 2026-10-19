@@ -406,7 +406,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Echo = new ModifierDefinition(
             ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
-            "Replays whatever fertilizer sits immediately to its left in your order, as if you held a second copy of it. No effect if that neighbor is also Echo.");
+            "Replays the fertilizer right before it in your order, as if you held a second copy of it. No effect if that fertilizer is also Echo.");
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",

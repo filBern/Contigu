@@ -150,6 +150,17 @@ E['ShapeHater'] = ('<g fill="#3f7a35" stroke="%s" stroke-width="4">%s</g>' % (O,
                    '<circle cx="104" cy="143" r="3.5" fill="%s"/><circle cx="152" cy="143" r="3.5" fill="%s"/>' % (O, O) +
                    '<path d="M98 186 L112 176 L128 186 L144 176 L158 186" fill="none" stroke="%s" stroke-width="5"/>' % O)
 
+# Blightmoth: a pale moth with blotched, rotting wings and a feathery antennae pair
+wing_l = 'M118 120 C70 60 24 80 30 140 C34 182 82 190 120 156Z'
+wing_r = 'M138 120 C186 60 232 80 226 140 C222 182 174 190 136 156Z'
+E['Blightmoth'] = ('<g fill="#cfd8a8" stroke="%s" stroke-width="5"><path d="%s"/><path d="%s"/></g>' % (O, wing_l, wing_r) +
+                   '<g fill="#6b8a2a" opacity="0.85"><circle cx="64" cy="120" r="14"/><circle cx="84" cy="150" r="9"/><circle cx="192" cy="120" r="14"/><circle cx="172" cy="150" r="9"/></g>' +
+                   '<g fill="none" stroke="%s" stroke-width="5"><path d="M114 90 C100 60 84 52 72 56"/><path d="M142 90 C156 60 172 52 184 56"/></g>' % O +
+                   '<ellipse cx="128" cy="150" rx="26" ry="52" fill="#8a7a58" stroke="%s" stroke-width="5"/>' % O +
+                   '<path d="M106 150 H150 M108 170 H148 M112 190 H144" stroke="#5a4a30" stroke-width="5"/>' +
+                   '<circle cx="128" cy="100" r="24" fill="#a89870" stroke="%s" stroke-width="5"/>' % O +
+                   eye(118, 98, 8, '#e8f070', look=(1, 1), angry=1) + eye(138, 98, 8, '#e8f070', look=(-1, 1), angry=-1))
+
 for name, body in E.items():
     open('%s.svg' % name, 'w').write(svg(body))
     print('wrote', name)
