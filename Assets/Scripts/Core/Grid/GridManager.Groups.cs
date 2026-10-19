@@ -331,6 +331,11 @@ namespace Contigu.Core
             for (int i = 0; i < groupCells.Count; i++)
             {
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
+                if (cell.IsPoisoned)
+                {
+                    // A blighted plot's own bonuses (tinted, multiplier zone, permanent bonus square) are switched off.
+                    continue;
+                }
                 if (cell.IsTinted && cell.FilledColor.HasValue && cell.FilledColor.Value == cell.TintedColor)
                 {
                     multiplier *= ScoringConstants.TintedMatchMultiplier;
@@ -352,7 +357,7 @@ namespace Contigu.Core
             for (int i = 0; i < groupCells.Count; i++)
             {
                 var cell = _cells[groupCells[i].x, groupCells[i].y];
-                if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
+                if (!cell.IsPoisoned && (cell.IsMultiplierZone || cell.IsPermanentMultiplier))
                 {
                     multiplier *= ScoringConstants.MultiplierZoneMultiplier;
                 }

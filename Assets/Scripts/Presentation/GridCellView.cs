@@ -217,6 +217,10 @@ namespace Contigu.Presentation
                 _infoName = "Tinted plot";
                 _infoDescription = "Doubles the group and golden score of a seed planted here (not harvest).";
             }
+            if (cell.IsPoisoned && (cell.IsPermanentMultiplier || cell.IsMultiplierZone || cell.IsTinted))
+            {
+                _infoDescription += "\nBlighted: this bonus is switched off while the blight lasts.";
+            }
             _badgeSpecial.gameObject.SetActive(showSpecial);
             if (cell.IsMultiplierZone || cell.IsPermanentMultiplier)
             {

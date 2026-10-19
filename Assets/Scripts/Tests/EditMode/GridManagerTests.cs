@@ -547,6 +547,21 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_BlightedPermanentMultiplier_DoesNotDouble()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            grid.PlacePiece(single, PieceColor.Lime, 0, 0);
+            grid.GetCell(1, 0).IsPermanentMultiplier = true;
+            grid.GetCell(1, 0).IsPoisoned = true;
+
+            var result = grid.PlacePiece(single, PieceColor.Lime, 1, 0);
+
+            Assert.AreEqual(1, result.GroupMultiplier, "blight switches the square's x2 off");
+            Assert.AreEqual(1, result.LineClearMultiplier);
+        }
+
+        [Test]
         public void PermanentMultiplier_SurvivesClearFillAndResetForNewRound_UnlikeMultiplierZone()
         {
             var grid = new GridManager();
