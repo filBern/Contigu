@@ -86,6 +86,61 @@ namespace Contigu.Presentation
             _lockedOverlay.raycastTarget = false;
             _lockedOverlay.gameObject.SetActive(false);
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
+
+            // The filled tile art, drawn over the Background only while a piece blooms in (see LandingSquashRoutine).
+            var bloomGo = new GameObject("BloomTile", typeof(RectTransform));
+            bloomGo.transform.SetParent(background.transform, false);
+            bloomGo.transform.SetSiblingIndex(1);
+            var bloomRect = (RectTransform)bloomGo.transform;
+            bloomRect.anchorMin = Vector2.zero;
+            bloomRect.anchorMax = Vector2.one;
+            bloomRect.offsetMin = Vector2.zero;
+            bloomRect.offsetMax = Vector2.zero;
+            _bloomTile = bloomGo.AddComponent<Image>();
+            _bloomTile.type = Image.Type.Sliced;
+            _bloomTile.raycastTarget = false;
+            _bloomTile.gameObject.SetActive(false);
+        }
+
+        private void OnDisable()
+        {
+            EndBloom();
+        }
+
+        private Image _bloomTile;
+        private bool _blooming;
+
+        // While blooming, the Background keeps showing the empty plot (the frame at full size) and the filled art lives on _bloomTile.
+        private void SwapFilledArtToBloomTile()
+        {
+            if (!_blooming || _isShowingLockedObstacle || _bloomTile == null || Background.sprite == VisualDefaults.EmptyTileSprite)
+            {
+                return;
+            }
+            _bloomTile.sprite = Background.sprite;
+            _bloomTile.color = Background.color;
+            Background.sprite = VisualDefaults.EmptyTileSprite;
+            Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
+        }
+
+        private void EndBloom()
+        {
+            if (!_blooming)
+            {
+                return;
+            }
+            _blooming = false;
+            if (_bloomTile != null)
+            {
+                if (!_isShowingLockedObstacle && _bloomTile.sprite != null)
+                {
+                    Background.sprite = _bloomTile.sprite;
+                    Background.color = _bloomTile.color;
+                }
+                _bloomTile.rectTransform.localScale = Vector3.one;
+                _bloomTile.rectTransform.localRotation = Quaternion.identity;
+                _bloomTile.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -148,6 +203,18 @@ namespace Contigu.Presentation
                 Background.sprite = VisualDefaults.EmptyTileSprite;
                 // Dimmed so a planted (colored) tile pops out of the empty plots around it.
                 Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
+            }
+
+            if (_blooming)
+            {
+                if (isFilled && !renderAsLockedObstacle)
+                {
+                    SwapFilledArtToBloomTile();
+                }
+                else
+                {
+                    EndBloom();
+                }
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.
@@ -363,6 +430,7 @@ namespace Contigu.Presentation
                 StopCoroutine(_scaleCoroutine);
                 // A bloom interrupted mid-way would otherwise leave its tilt behind (a crooked tile).
                 ((RectTransform)transform).localRotation = Quaternion.identity;
+                EndBloom();
             }
             _scaleCoroutine = StartCoroutine(PulseRoutine());
         }
@@ -396,6 +464,8 @@ namespace Contigu.Presentation
             if (_scaleCoroutine != null)
             {
                 StopCoroutine(_scaleCoroutine);
+                ((RectTransform)transform).localScale = Vector3.one;
+                EndBloom();
             }
             _scaleCoroutine = StartCoroutine(LandingSquashRoutine(delay));
         }
@@ -410,7 +480,12 @@ namespace Contigu.Presentation
         private IEnumerator LandingSquashRoutine(float delay)
         {
             var rt = (RectTransform)transform;
-            rt.localScale = Vector3.zero;
+            rt.localScale = Vector3.one;
+            _blooming = true;
+            _bloomTile.gameObject.SetActive(true);
+            var tileRt = _bloomTile.rectTransform;
+            tileRt.localScale = Vector3.zero;
+            SwapFilledArtToBloomTile();
             float wait = 0f;
             while (wait < delay)
             {
@@ -435,12 +510,11 @@ namespace Contigu.Presentation
                 {
                     scale = Mathf.Lerp(BloomUndershoot, 1f, (p - 0.8f) / 0.2f);
                 }
-                rt.localScale = new Vector3(scale, scale, 1f);
-                rt.localRotation = Quaternion.Euler(0f, 0f, BloomStartTilt * (1f - Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, p / 0.8f))));
+                tileRt.localScale = new Vector3(scale, scale, 1f);
+                tileRt.localRotation = Quaternion.Euler(0f, 0f, BloomStartTilt * (1f - Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, p / 0.8f))));
                 yield return null;
             }
-            rt.localScale = Vector3.one;
-            rt.localRotation = Quaternion.identity;
+            EndBloom();
             _scaleCoroutine = null;
         }
 
