@@ -294,6 +294,12 @@ namespace Contigu.Presentation
         /// hard and every slot breathes red — before the player even tries to pick a piece. Recomputed on every
         /// <see cref="Refresh"/>.
         /// </summary>
+        /// <summary>True when no piece in the hand has any valid placement (and a Shuffle is available) — the only time Shuffle should pulse.</summary>
+        public bool IsHandStuck
+        {
+            get { return _handStuck; }
+        }
+
         private void UpdateStuckState()
         {
             bool stuck = false;

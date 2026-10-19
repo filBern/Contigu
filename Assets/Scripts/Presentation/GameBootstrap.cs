@@ -661,8 +661,16 @@ namespace Contigu.Presentation
         /// <summary>HandView refused to pick up this slot's piece because it has no valid placement anywhere (the slot itself already played its shake, see HandView.ShakeSlot). Shows an emphasized status message and pulses Shuffle.</summary>
         private void OnHandSlotUnplayable(int handIndex)
         {
-            _handView.SetShufflePulsing(true);
-            SetStatusText("This seed can't be placed anywhere — try shuffling your hand.", emphasize: true);
+            // Only hint at Shuffle when nothing in the hand can be played; another piece may still have a spot.
+            if (_handView.IsHandStuck)
+            {
+                _handView.SetShufflePulsing(true);
+                SetStatusText("This seed can't be placed anywhere — try shuffling your hand.", emphasize: true);
+            }
+            else
+            {
+                SetStatusText("This seed can't be placed anywhere — try another one.", emphasize: true);
+            }
         }
 
         /// <summary>Re-clicking the already-selected hand slot deselects it (see HandView.OnSlotClicked) — clears the grid's hover preview the same way a successful placement already does.</summary>
