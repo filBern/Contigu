@@ -1,4 +1,5 @@
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -56,9 +57,10 @@ namespace Contigu.Presentation
             // keep changing (every placement that scores, or for the
             // progressive line every placement at all) for as long as this
             // same badge instance stays on screen.
+            string categoryLabel = ModifierVisualDefaults.GetCategoryLabel(_def.Category);
             string subtitle = _usageCountProvider != null
-                ? "Used " + _usageCountProvider(_def.Id) + "x this run"
-                : null;
+                ? categoryLabel + " · Used " + _usageCountProvider(_def.Id) + "x this run"
+                : categoryLabel;
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
             // Progressive/incremental modifiers get an extra line showing
             // their current effective state, appended to the description

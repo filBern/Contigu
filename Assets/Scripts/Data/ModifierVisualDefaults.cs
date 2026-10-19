@@ -119,6 +119,21 @@ namespace Contigu.Data
             { ModifierCategory.Formes, new Color(0.380f, 0.263f, 0.388f) } // #614363
         };
 
+        /// <summary>The player-facing name of a fertilizer's group (shown in its tooltip).</summary>
+        public static string GetCategoryLabel(ModifierCategory category)
+        {
+            switch (category)
+            {
+                case ModifierCategory.Couleurs: return "Colors";
+                case ModifierCategory.Voisinage: return "Neighbors";
+                case ModifierCategory.Connexions: return "Connections";
+                case ModifierCategory.Destruction: return "Destruction";
+                case ModifierCategory.Roguelike: return "Run";
+                case ModifierCategory.Formes: return "Shapes";
+                default: return category.ToString();
+            }
+        }
+
         public static string GetAbbreviation(ModifierId id)
         {
             return Abbreviations.TryGetValue(id, out var s) ? s : "?";
