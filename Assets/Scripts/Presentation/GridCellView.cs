@@ -13,15 +13,6 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.28f;
         private const float PulsePeakScale = 1.18f;
         private const float PulsePeakFraction = 0.4f;
-        private const float LandingSquashDuration = 0.22f;
-        // Flattened wide on impact (low Y, high X), then a slight overshoot the other way before settling —
-        // classic squash-and-stretch, distinct from Pulse's uniform scale-up.
-        private const float LandingSquashImpactScaleX = 1.25f;
-        private const float LandingSquashImpactScaleY = 0.75f;
-        private const float LandingSquashOvershootScaleX = 0.95f;
-        private const float LandingSquashOvershootScaleY = 1.08f;
-        private const float LandingSquashImpactFraction = 0.35f;
-        private const float LandingSquashOvershootFraction = 0.7f;
         private const float ClearBurstDuration = 0.32f;
         private const int ClearBurstParticleCount = 6;
         private const float ClearBurstParticleSize = 10f;
@@ -397,47 +388,56 @@ namespace Contigu.Presentation
         /// instead). Shares <see cref="_scaleCoroutine"/> with Pulse, so a cell that both lands a piece AND
         /// scores in the same placement just lets whichever started last win rather than fighting over scale.
         /// </summary>
-        public void PlayLandingSquash()
+        public void PlayLandingSquash(float delay = 0f)
         {
             if (_scaleCoroutine != null)
             {
                 StopCoroutine(_scaleCoroutine);
             }
-            _scaleCoroutine = StartCoroutine(LandingSquashRoutine());
+            _scaleCoroutine = StartCoroutine(LandingSquashRoutine(delay));
         }
 
-        private IEnumerator LandingSquashRoutine()
+        // The tile blooms open: a bud that swells past full size, settles a touch under, then rests; it also unwinds a small tilt
+        // like petals opening. Several cells of one piece start a few frames apart (see GridView.PlayLandingSquash).
+        private const float BloomDuration = 0.36f;
+        private const float BloomOvershoot = 1.2f;
+        private const float BloomUndershoot = 0.95f;
+        private const float BloomStartTilt = -16f;
+
+        private IEnumerator LandingSquashRoutine(float delay)
         {
             var rt = (RectTransform)transform;
+            rt.localScale = Vector3.zero;
+            float wait = 0f;
+            while (wait < delay)
+            {
+                wait += Time.deltaTime;
+                yield return null;
+            }
             float t = 0f;
-            while (t < LandingSquashDuration)
+            while (t < BloomDuration)
             {
                 t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / LandingSquashDuration);
-                float scaleX;
-                float scaleY;
-                if (p < LandingSquashImpactFraction)
+                float p = Mathf.Clamp01(t / BloomDuration);
+                float scale;
+                if (p < 0.55f)
                 {
-                    float sub = p / LandingSquashImpactFraction;
-                    scaleX = Mathf.Lerp(1f, LandingSquashImpactScaleX, sub);
-                    scaleY = Mathf.Lerp(1f, LandingSquashImpactScaleY, sub);
+                    scale = Mathf.Lerp(0.25f, BloomOvershoot, Mathf.SmoothStep(0f, 1f, p / 0.55f));
                 }
-                else if (p < LandingSquashOvershootFraction)
+                else if (p < 0.8f)
                 {
-                    float sub = (p - LandingSquashImpactFraction) / (LandingSquashOvershootFraction - LandingSquashImpactFraction);
-                    scaleX = Mathf.Lerp(LandingSquashImpactScaleX, LandingSquashOvershootScaleX, sub);
-                    scaleY = Mathf.Lerp(LandingSquashImpactScaleY, LandingSquashOvershootScaleY, sub);
+                    scale = Mathf.Lerp(BloomOvershoot, BloomUndershoot, (p - 0.55f) / 0.25f);
                 }
                 else
                 {
-                    float sub = (p - LandingSquashOvershootFraction) / (1f - LandingSquashOvershootFraction);
-                    scaleX = Mathf.Lerp(LandingSquashOvershootScaleX, 1f, sub);
-                    scaleY = Mathf.Lerp(LandingSquashOvershootScaleY, 1f, sub);
+                    scale = Mathf.Lerp(BloomUndershoot, 1f, (p - 0.8f) / 0.2f);
                 }
-                rt.localScale = new Vector3(scaleX, scaleY, 1f);
+                rt.localScale = new Vector3(scale, scale, 1f);
+                rt.localRotation = Quaternion.Euler(0f, 0f, BloomStartTilt * (1f - Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, p / 0.8f))));
                 yield return null;
             }
             rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
             _scaleCoroutine = null;
         }
 

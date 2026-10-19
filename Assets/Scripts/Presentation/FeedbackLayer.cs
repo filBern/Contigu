@@ -24,6 +24,70 @@ namespace Contigu.Presentation
             return root;
         }
 
+        // Soft glow around the screen edge that swells with a scoring chain (see PulseEdgeGlow).
+        private Image _edgeGlow;
+        private float _edgeGlowLevel;
+        private const float EdgeGlowMaxAlpha = 0.55f;
+        private const float EdgeGlowDecayPerSecond = 1.7f;
+
+        private static Sprite _vignetteSprite;
+
+        /// <summary>A white-ish ring that is transparent in the middle and opaque at the borders, generated once.</summary>
+        private static Sprite VignetteSprite()
+        {
+            if (_vignetteSprite == null)
+            {
+                const int size = 128;
+                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.wrapMode = TextureWrapMode.Clamp;
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        float dx = (x + 0.5f) / size * 2f - 1f;
+                        float dy = (y + 0.5f) / size * 2f - 1f;
+                        float d = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+                        float a = Mathf.Clamp01((d - 0.6f) / 0.4f);
+                        a *= a;
+                        texture.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                    }
+                }
+                texture.Apply();
+                _vignetteSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            }
+            return _vignetteSprite;
+        }
+
+        /// <summary>Raises the edge glow to at least <paramref name="strength"/> (0-1); it fades on its own. Longer chains call it with larger values.</summary>
+        public void PulseEdgeGlow(float strength, Color color)
+        {
+            if (_root == null)
+            {
+                return;
+            }
+            if (_edgeGlow == null)
+            {
+                _edgeGlow = UIFactory.CreatePanel(_root, "EdgeGlow", Color.white);
+                _edgeGlow.raycastTarget = false;
+                _edgeGlow.sprite = VignetteSprite();
+                UIFactory.StretchFull(_edgeGlow.rectTransform);
+                _edgeGlow.transform.SetAsFirstSibling();
+            }
+            _edgeGlow.color = new Color(color.r, color.g, color.b, _edgeGlow.color.a);
+            _edgeGlowLevel = Mathf.Max(_edgeGlowLevel, Mathf.Clamp01(strength));
+        }
+
+        private void Update()
+        {
+            if (_edgeGlow == null)
+            {
+                return;
+            }
+            _edgeGlowLevel = Mathf.Max(0f, _edgeGlowLevel - EdgeGlowDecayPerSecond * Time.deltaTime);
+            var c = _edgeGlow.color;
+            _edgeGlow.color = new Color(c.r, c.g, c.b, _edgeGlowLevel * EdgeGlowMaxAlpha);
+        }
+
         public const int DefaultPopupFontSize = 22;
         public const int DefaultFlyingPopupFontSize = 20;
 

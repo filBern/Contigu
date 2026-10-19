@@ -710,7 +710,8 @@ namespace Contigu.Presentation
                 var pos = cells[i];
                 if (GridManager.InBounds(pos.x, pos.y))
                 {
-                    _cells[pos.x, pos.y].PlayLandingSquash();
+                    // Cells of one piece bloom a beat apart, in placement order.
+                    _cells[pos.x, pos.y].PlayLandingSquash(i * 0.05f);
                 }
             }
         }

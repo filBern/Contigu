@@ -214,6 +214,36 @@ namespace Contigu.Presentation
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
+        private int _comboGlowStep;
+
+        /// <summary>One more link in this placement's scoring chain: the screen edge glows a little brighter each time (gold, turning warmer as it builds).</summary>
+        private void ComboGlow()
+        {
+            _comboGlowStep++;
+            float strength = Mathf.Min(1f, 0.12f + 0.06f * _comboGlowStep);
+            var color = Color.Lerp(new Color(1f, 0.85f, 0.35f), new Color(1f, 0.45f, 0.25f), Mathf.Clamp01(_comboGlowStep / 14f));
+            _feedbackLayer.PulseEdgeGlow(strength, color);
+        }
+
+        /// <summary>A brief near-freeze on a killing blow, restored by the finally block (and OnDisable) so time can never stay slowed.</summary>
+        private System.Collections.IEnumerator PlayHitStop(float realSeconds)
+        {
+            try
+            {
+                Time.timeScale = 0.06f;
+                yield return new WaitForSecondsRealtime(realSeconds);
+            }
+            finally
+            {
+                Time.timeScale = 1f;
+            }
+        }
+
+        private void OnDisable()
+        {
+            Time.timeScale = 1f;
+        }
+
         private int _pendingShieldBreakIndex = -1;
 
         private void BreakPendingShield()
@@ -265,6 +295,7 @@ namespace Contigu.Presentation
             {
             var placement = outcome.Placement;
             SfxManager.ResetComboPitch();
+            _comboGlowStep = 0;
             _currentAttackSprite = ResolveAttackSprite(placement, out _currentPetalSprite);
 
             // Chameleon Tile recolored this whole piece to match a neighbor before Grid.PlacePiece ran, so by
@@ -446,6 +477,7 @@ namespace Contigu.Presentation
                     : UITheme.TextPrimary;
                 _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 SfxManager.PlayComboTick();
+                ComboGlow();
 
                 displayedRoundScore += displayAmount;
                 chipsTotal += displayAmount;
@@ -485,6 +517,7 @@ namespace Contigu.Presentation
                 _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.Success, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 _gridView.PulseCell(pos.x, pos.y);
                 SfxManager.Play(SfxId.LineClear);
+                ComboGlow();
 
                 displayedRoundScore += amount;
                 chipsTotal += amount;
@@ -517,6 +550,7 @@ namespace Contigu.Presentation
                 // it's the more informative single label even when the two differ.
                 _feedbackLayer.SpawnPopup(centerAnchor, "x" + Mathf.Max(placement.GroupMultiplier, placement.LineClearMultiplier), UITheme.ButtonSelected);
                 SfxManager.PlayComboTick();
+                ComboGlow();
 
                 // Lands on the CHIPS side of the Balatro-style split (see
                 // PlacementResult.Chips), not the red mult pill — baked
@@ -579,6 +613,7 @@ namespace Contigu.Presentation
                     _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2), "CLEAN SWEEP x" + FormatMultAmount(amount), UITheme.Success, fontSize: 40);
                 }
                 SfxManager.PlayComboTick();
+                ComboGlow();
 
                 float subtotalSoFar = displayedRoundScore - roundScoreBefore;
                 int extra = Mathf.RoundToInt(subtotalSoFar * (multTotal / multBefore - 1f));
@@ -903,8 +938,10 @@ namespace Contigu.Presentation
                 {
                     _gridView.PlayShake(BossKillShakeDuration, BossKillShakeMagnitude);
                 }
-                // Pause gives the player a beat to register the kill (and
-                // the dead-gray tint just applied) before the icon fades.
+                // A beat of near-freeze (longer for a boss), then the pause that lets the player register the kill
+                // (and the dead-gray tint just applied) before the icon fades.
+                _feedbackLayer.PulseEdgeGlow(1f, new Color(1f, 0.5f, 0.3f));
+                yield return PlayHitStop(EnemyCatalog.Get(identity).Role == EnemyRole.Boss ? 0.2f : 0.11f);
                 yield return new WaitForSeconds(0.25f);
                 yield return _hudView.FadeOutEnemySlot(enemyIndex, 0.3f);
             }
