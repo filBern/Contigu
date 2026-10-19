@@ -708,20 +708,6 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Plays a squash-and-stretch landing pop on each of <paramref name="cells"/> — used the instant a piece is placed, so it reads as having actual weight instead of just appearing. Juice only; never called for a cell that doesn't exist.</summary>
-        public void PlayLandingSquash(IReadOnlyList<Vector2Int> cells)
-        {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                var pos = cells[i];
-                if (GridManager.InBounds(pos.x, pos.y))
-                {
-                    // Cells of one piece bloom a beat apart, in placement order.
-                    _cells[pos.x, pos.y].PlayLandingSquash(i * 0.6f);
-                }
-            }
-        }
-
         /// <summary>The ice of a frozen plot breaking free: a flash and a spray of ice shards (see GridCellView.PlayIceShatter).</summary>
         public void PlayIceShatter(int x, int y)
         {

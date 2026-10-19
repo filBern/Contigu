@@ -42,8 +42,7 @@ namespace Contigu.Presentation
         private TooltipView _tooltip;
 
         private GridView _owner;
-        // Shared by Pulse and PlayLandingSquash — both animate this cell's own localScale, so only one may
-        // run at a time; starting either stops whichever of the two was already running.
+        // Pulse animates this cell's own localScale; starting a new one stops the previous.
         private Coroutine _scaleCoroutine;
 
         // Which of this cell's visuals, if any, are currently an enemy-placed malus — set each time ApplyState
@@ -86,78 +85,6 @@ namespace Contigu.Presentation
             _lockedOverlay.raycastTarget = false;
             _lockedOverlay.gameObject.SetActive(false);
             _traitOriginBadgeView = badgeTraitOrigin.gameObject.AddComponent<TraitBadgeView>();
-
-            // The flower alone, popped on top of the Background (which shows the bare frame + soil) while a piece blooms in; the mask keeps petals inside the soil.
-            var maskGo = new GameObject("BloomMask", typeof(RectTransform));
-            maskGo.transform.SetParent(background.transform, false);
-            maskGo.transform.SetSiblingIndex(1);
-            var maskRect = (RectTransform)maskGo.transform;
-            maskRect.anchorMin = Vector2.zero;
-            maskRect.anchorMax = Vector2.one;
-            maskRect.offsetMin = Vector2.zero;
-            maskRect.offsetMax = Vector2.zero;
-            _bloomMask = maskGo.AddComponent<RectMask2D>();
-            var emblemGo = new GameObject("BloomEmblem", typeof(RectTransform));
-            emblemGo.transform.SetParent(maskGo.transform, false);
-            var emblemRect = (RectTransform)emblemGo.transform;
-            emblemRect.anchorMin = Vector2.zero;
-            emblemRect.anchorMax = Vector2.one;
-            emblemRect.offsetMin = Vector2.zero;
-            emblemRect.offsetMax = Vector2.zero;
-            _bloomEmblem = emblemGo.AddComponent<Image>();
-            _bloomEmblem.raycastTarget = false;
-            maskGo.SetActive(false);
-        }
-
-        // The soil inset of the tile art (32 of 256 px on each side) — what the flower is clipped to.
-        private const float SoilInsetFraction = 32f / 256f;
-
-        private RectMask2D _bloomMask;
-        private Image _bloomEmblem;
-        private bool _blooming;
-        private PieceColor? _filledColor;
-
-        // While blooming, the Background shows the bare frame + soil at full size and the flower lives on _bloomEmblem.
-        private void ApplyBloomArt()
-        {
-            var baseSprite = _filledColor.HasValue ? VisualDefaults.GetBloomBaseSprite(_filledColor.Value) : null;
-            var emblemSprite = _filledColor.HasValue ? VisualDefaults.GetBloomEmblemSprite(_filledColor.Value) : null;
-            if (baseSprite == null || emblemSprite == null)
-            {
-                EndBloom();
-                return;
-            }
-            Background.sprite = baseSprite;
-            Background.color = Color.white;
-            _bloomEmblem.sprite = emblemSprite;
-            float inset = ((RectTransform)transform).rect.width * SoilInsetFraction;
-            _bloomMask.padding = new Vector4(inset, inset, inset, inset);
-            _bloomMask.gameObject.SetActive(true);
-        }
-
-        private void EndBloom()
-        {
-            if (!_blooming)
-            {
-                return;
-            }
-            _blooming = false;
-            if (_bloomMask != null)
-            {
-                _bloomEmblem.rectTransform.localScale = Vector3.one;
-                _bloomEmblem.rectTransform.localRotation = Quaternion.identity;
-                _bloomMask.gameObject.SetActive(false);
-            }
-            if (_filledColor.HasValue && !_isShowingLockedObstacle)
-            {
-                Background.sprite = VisualDefaults.GetTileSprite(_filledColor.Value);
-                Background.color = VisualDefaults.GetTileTint(_filledColor.Value);
-            }
-        }
-
-        private void OnDisable()
-        {
-            EndBloom();
         }
 
         /// <summary>
@@ -220,12 +147,6 @@ namespace Contigu.Presentation
                 Background.sprite = VisualDefaults.EmptyTileSprite;
                 // Dimmed so a planted (colored) tile pops out of the empty plots around it.
                 Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
-            }
-
-            _filledColor = isFilled && !renderAsLockedObstacle ? filledColor : null;
-            if (_blooming)
-            {
-                ApplyBloomArt();
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.
@@ -439,9 +360,7 @@ namespace Contigu.Presentation
             if (_scaleCoroutine != null)
             {
                 StopCoroutine(_scaleCoroutine);
-                // A bloom interrupted mid-way would otherwise leave its tilt behind (a crooked tile).
                 ((RectTransform)transform).localRotation = Quaternion.identity;
-                EndBloom();
             }
             _scaleCoroutine = StartCoroutine(PulseRoutine());
         }
@@ -461,75 +380,6 @@ namespace Contigu.Presentation
                 yield return null;
             }
             rt.localScale = Vector3.one;
-            _scaleCoroutine = null;
-        }
-
-        /// <summary>
-        /// Squash-and-stretch landing pop, played the instant a piece is placed here — flattens wide on
-        /// impact, overshoots the other way, then settles, unlike Pulse's uniform scale-up (used for scoring
-        /// instead). Shares <see cref="_scaleCoroutine"/> with Pulse, so a cell that both lands a piece AND
-        /// scores in the same placement just lets whichever started last win rather than fighting over scale.
-        /// </summary>
-        public void PlayLandingSquash(float delay = 0f)
-        {
-            if (_scaleCoroutine != null)
-            {
-                StopCoroutine(_scaleCoroutine);
-                ((RectTransform)transform).localScale = Vector3.one;
-                EndBloom();
-            }
-            _scaleCoroutine = StartCoroutine(LandingSquashRoutine(delay));
-        }
-
-        // The tile blooms open: a bud that swells past full size, settles a touch under, then rests; it also unwinds a small tilt
-        // like petals opening. Several cells of one piece start a few frames apart (see GridView.PlayLandingSquash).
-        private const float BloomDuration = 0.6f;
-        private const float BloomOvershoot = 1.2f;
-        private const float BloomUndershoot = 0.95f;
-        private const float BloomStartTilt = -16f;
-
-        private IEnumerator LandingSquashRoutine(float delay)
-        {
-            ((RectTransform)transform).localScale = Vector3.one;
-            _blooming = true;
-            ApplyBloomArt();
-            if (!_blooming)
-            {
-                // No split art for this color: skip the animation rather than popping the whole tile.
-                _scaleCoroutine = null;
-                yield break;
-            }
-            var tileRt = _bloomEmblem.rectTransform;
-            tileRt.localScale = Vector3.zero;
-            float wait = 0f;
-            while (wait < delay)
-            {
-                wait += Time.deltaTime;
-                yield return null;
-            }
-            float t = 0f;
-            while (t < BloomDuration)
-            {
-                t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / BloomDuration);
-                float scale;
-                if (p < 0.55f)
-                {
-                    scale = Mathf.Lerp(0.25f, BloomOvershoot, Mathf.SmoothStep(0f, 1f, p / 0.55f));
-                }
-                else if (p < 0.8f)
-                {
-                    scale = Mathf.Lerp(BloomOvershoot, BloomUndershoot, (p - 0.55f) / 0.25f);
-                }
-                else
-                {
-                    scale = Mathf.Lerp(BloomUndershoot, 1f, (p - 0.8f) / 0.2f);
-                }
-                tileRt.localScale = new Vector3(scale, scale, 1f);
-                tileRt.localRotation = Quaternion.Euler(0f, 0f, BloomStartTilt * (1f - Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, p / 0.8f))));
-                yield return null;
-            }
-            EndBloom();
             _scaleCoroutine = null;
         }
 

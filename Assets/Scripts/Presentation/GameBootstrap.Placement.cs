@@ -179,9 +179,6 @@ namespace Contigu.Presentation
             // held back from this redraw, revealed only once
             // PlayPlacementSequence's end-of-sequence reveal runs.
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
-            // Juice: a brief squash-and-stretch pop on the piece's own cells, played the instant they
-            // actually render above — gives the placement a sense of weight instead of just appearing.
-            _gridView.PlayLandingSquash(outcome.Placement.PlacedCells);
             // Same hold for the hand when auto-refill already dealt the
             // next hand — PlayPlacementSequence reveals it once the
             // sequence finishes (see HandView.RefreshHoldingEmpty).
