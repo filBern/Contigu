@@ -171,7 +171,10 @@ namespace Contigu.Presentation
 
             // A Seeder cell is golden too, but its own trait badge already says so — one marker, not three.
             bool seederCell = originTrait.HasValue && originTrait.Value.Kind == PieceTraitKind.Seeder;
-            bool showGoldenBadge = cell.IsGolden && !seederCell;
+            // An empty golden plot already IS its golden art: no extra badge or "+15" on top of it (the tooltip still says what it does).
+            bool goldenArtShown = !renderAsLockedObstacle && !isFilled && cell.IsGolden && VisualDefaults.GoldenCellSprite != null
+                && !((cell.IsPermanentMultiplier || cell.IsMultiplierZone) && VisualDefaults.BonusTileSprite != null);
+            bool showGoldenBadge = cell.IsGolden && !seederCell && !goldenArtShown;
             _badgeGolden.gameObject.SetActive(showGoldenBadge);
             if (showGoldenBadge)
             {
@@ -251,7 +254,7 @@ namespace Contigu.Presentation
                 _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
             }
 
-            string effectText = BuildEffectLabel(cell, seederCell);
+            string effectText = BuildEffectLabel(cell, seederCell || goldenArtShown);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
 
