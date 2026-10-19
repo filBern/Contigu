@@ -520,8 +520,8 @@ namespace Contigu.Presentation
             {
                 _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(nextWeather.Value);
                 _weatherIcon.enabled = _weatherIcon.sprite != null;
-                _weatherLabel.text = WeatherCatalog.GetName(nextWeather.Value);
-                _weatherTooltip.Init(_tooltip, WeatherCatalog.GetName(nextWeather.Value), WeatherCatalog.GetDescription(nextWeather.Value), "Next round's weather", UITheme.TextMuted);
+                _weatherLabel.text = VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor);
+                _weatherTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor), VisualDefaults.GetWeatherDescription(nextWeather.Value, run.NextWeatherColor), "Next round's weather · " + WeatherCatalog.GetRarityLabel(nextWeather.Value), UITheme.TextMuted);
             }
 
             int count = upcoming.Count;

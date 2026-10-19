@@ -74,12 +74,15 @@ namespace Contigu.Presentation
             _critters.Clear();
 
             for (int i = 0; i < _butterflyTarget; i++) { Spawn(Kind.Butterfly); }
-            if (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine) { Spawn(Kind.Bee); }
+            if (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine || _weather == WeatherId.GoldenHour) { Spawn(Kind.Bee); }
             int leaves = _weather == WeatherId.Wind ? 10 : 3;
             for (int i = 0; i < leaves; i++) { Spawn(Kind.Leaf); }
             if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(Kind.Rain); } }
             if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(Kind.Sparkle); } }
             if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(Kind.SunMote); } }
+            if (_weather == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(Kind.Sparkle); } }
+            if (_weather == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(Kind.SunMote); } }
+            if (_weather == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(Kind.SunMote); } Spawn(Kind.Bee); Spawn(Kind.Bee); }
         }
 
         private void SyncButterflies()

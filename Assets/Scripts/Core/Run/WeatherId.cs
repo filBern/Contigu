@@ -7,6 +7,9 @@ namespace Contigu.Core
         Rain,
         Sunshine,
         Wind,
-        Frost
+        Frost,
+        Dew,
+        GoldenHour,
+        PollenShower
     }
 }

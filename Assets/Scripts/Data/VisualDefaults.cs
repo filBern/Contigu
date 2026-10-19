@@ -126,6 +126,17 @@ namespace Contigu.Data
             return sprite;
         }
 
+        /// <summary>A weather's display name, with its seed color's name for Rain/Sunshine.</summary>
+        public static string GetWeatherName(WeatherId id, PieceColor? color)
+        {
+            return WeatherCatalog.GetName(id, color.HasValue ? GetColorName(color.Value) : null);
+        }
+
+        public static string GetWeatherDescription(WeatherId id, PieceColor? color)
+        {
+            return WeatherCatalog.GetDescription(id, color.HasValue ? GetColorName(color.Value) : null);
+        }
+
         private static readonly Dictionary<WeatherId, Sprite> WeatherSprites = new Dictionary<WeatherId, Sprite>();
 
         /// <summary>The icon of a round's weather (Resources/Icons/Weather/&lt;WeatherId&gt;.png), or null if missing.</summary>

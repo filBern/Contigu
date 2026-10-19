@@ -81,7 +81,7 @@ namespace Contigu.Presentation
             bool boss = bosses.Count > 0 || run.IsBossRound;
             var weather = run.CurrentWeather;
             _title.text = "ROUND " + run.CurrentRoundNumber + (boss ? " - BOSS" : "");
-            _subtitle.text = (boss && bosses.Count > 0 ? string.Join(" + ", bosses) + "  ·  " : "") + WeatherCatalog.GetName(weather);
+            _subtitle.text = (boss && bosses.Count > 0 ? string.Join(" + ", bosses) + "  ·  " : "") + VisualDefaults.GetWeatherName(weather, run.CurrentWeatherColor);
             _band.color = boss ? new Color(0.95f, 0.62f, 0.55f, 1f) : UITheme.PanelLight;
             _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(weather);
             _weatherIcon.enabled = _weatherIcon.sprite != null;

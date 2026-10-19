@@ -3085,6 +3085,8 @@ namespace Contigu.Tests
             // On explicit request: "Dwilding modifier devrait être détruit
             // lorsqu'il est rendu a 0" — see RunManager.RemoveDepletedEpuisement.
             var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+            // GiveActiveModifier plays through round 1, so keep the next round free of frozen plots that would refuse these placements.
+            run.DebugDisableWeather();
             GiveActiveModifier(run, ModifierId.Epuisement);
 
             var single = PieceShapeCatalog.Get(ShapeId.Single);

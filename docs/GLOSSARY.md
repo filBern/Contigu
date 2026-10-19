@@ -155,10 +155,13 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 
 ## Météo
 
-| Code | Affiché | Effet |
-|---|---|---|
-| `Clear` | Clear skies | aucun |
-| `Rain` | Rain | +3 Pollen par graine Iris |
-| `Sunshine` | Sunshine | +4 pts par case de graine Tournesol |
-| `Wind` | Wind | un Shuffle gratuit au début du round |
-| `Frost` | Frost | 2 cases gelées au début du round |
+| Code | Affiché | Rareté (poids) | Effet |
+|---|---|---|---|
+| `Clear` | Clear skies | commune (3) | aucun |
+| `Rain` | Rain (couleur) | commune (3) | +3 Pollen par graine de la couleur tirée pour le round |
+| `Sunshine` | Sunshine (couleur) | commune (3) | +4 pts par case de graine de la couleur tirée pour le round |
+| `Wind` | Wind | peu commune (2) | un Shuffle gratuit au début du round |
+| `Frost` | Frost | peu commune (2) | 2 cases gelées au début du round |
+| `Dew` | Morning Dew | peu commune (2) | +2 Pollen par ligne complétée |
+| `GoldenHour` | Golden Hour | rare (1) | 2 cases vides deviennent dorées au début du round |
+| `PollenShower` | Pollen Shower | rare (1) | +10 Pollen au début du round |

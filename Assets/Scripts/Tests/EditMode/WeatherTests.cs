@@ -47,6 +47,62 @@ namespace Contigu.Tests
             }
         }
 
+        [Test]
+        public void ColorWeathers_NameTheirColor_AndOthersHaveNone()
+        {
+            StringAssert.Contains("Poppy", WeatherCatalog.GetName(WeatherId.Rain, "Poppy"));
+            StringAssert.Contains("Poppy", WeatherCatalog.GetDescription(WeatherId.Sunshine, "Poppy"));
+            Assert.AreEqual(WeatherCatalog.GetName(WeatherId.Wind), WeatherCatalog.GetName(WeatherId.Wind, "Poppy"));
+
+            var rainy = RunInWeather(WeatherId.Rain);
+            Assert.IsTrue(rainy.CurrentWeatherColor.HasValue);
+            Assert.AreNotEqual(PieceColor.Joker, rainy.CurrentWeatherColor.Value);
+            Assert.IsFalse(RunInWeather(WeatherId.Frost).CurrentWeatherColor.HasValue);
+        }
+
+        [Test]
+        public void RareWeathers_ComeUpLessOftenThanCommonOnes()
+        {
+            var counts = new Dictionary<WeatherId, int>();
+            for (int seed = 1; seed <= 300; seed++)
+            {
+                foreach (var w in WeatherCatalog.RollForRun(new SystemRandomProvider(seed), 15))
+                {
+                    int n;
+                    counts.TryGetValue(w, out n);
+                    counts[w] = n + 1;
+                }
+            }
+            Assert.Greater(counts[WeatherId.Rain], counts[WeatherId.PollenShower] * 2, "common vs rare");
+            Assert.Greater(counts[WeatherId.PollenShower], 0, "rare weathers still happen");
+            Assert.AreEqual(WeatherCatalog.GetWeight(WeatherId.GoldenHour), 1);
+        }
+
+        [Test]
+        public void GoldenHour_TurnsEmptyPlotsGolden()
+        {
+            var run = RunInWeather(WeatherId.GoldenHour);
+            int golden = 0;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                for (int y = 0; y < GridManager.Size; y++)
+                {
+                    if (run.Grid.GetCell(x, y).IsGolden)
+                    {
+                        golden++;
+                    }
+                }
+            }
+            Assert.GreaterOrEqual(golden, ScoringConstants.GoldenHourPlots);
+        }
+
+        [Test]
+        public void PollenShower_StartsTheRoundWithPollen()
+        {
+            var run = RunInWeather(WeatherId.PollenShower);
+            Assert.GreaterOrEqual(run.Lueur, ScoringConstants.PollenShowerPollen);
+        }
+
         private static RunManager RunInWeather(WeatherId weather)
         {
             for (int seed = 1; seed < 400; seed++)

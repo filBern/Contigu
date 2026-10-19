@@ -31,7 +31,7 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 
 ## Météo et ennemis à minuterie
 
-- **Météo** (`Core/Run/WeatherCatalog.cs`, constantes dans `ScoringConstants`) : tirée une fois par run, le round 1 est toujours dégagé et deux rounds de suite n'ont jamais la même météo. Pluie : +3 Pollen par graine Iris ; Soleil : +4 pts par case de graine Tournesol ; Vent : un Shuffle gratuit ; Gel : 2 cases gelées. La météo du round suivant est annoncée dans la boutique (boîte « Next round », avec tooltip) et la météo courante est dans la puce à côté du numéro de round.
+- **Météo** (`Core/Run/WeatherCatalog.cs`, constantes dans `ScoringConstants`) : tirée une fois par run, le round 1 est toujours dégagé et deux rounds de suite n'ont jamais la même météo. Chaque météo a un poids de tirage (commune 3, peu commune 2, rare 1, voir `GetWeight`). Pluie/Soleil visent une couleur de graine tirée au hasard pour chaque round (dans le même tirage que la météo, donc sans décaler le hasard du reste du run) : Pluie +3 Pollen par graine de cette couleur, Soleil +4 pts par case ; Vent : un Shuffle gratuit ; Gel : 2 cases gelées ; Rosée : +2 Pollen par ligne ; Heure dorée : 2 cases dorées ; Averse de pollen : +10 Pollen. La météo du round suivant est annoncée dans la boutique (boîte « Next round », avec tooltip) et la météo courante est dans la puce à côté du numéro de round.
 - **Ennemis à minuterie** : Bramble et Blightmoth agissent aussi toutes les 6 graines posées (`ScoringConstants.EnemyTickInterval`), en plus du Shuffle. Le compte à rebours est affiché sur leur portrait.
 - Les tests qui comptent des cases verrouillées/gelées appellent `DebugDisableWeather()` pour ne pas dépendre de la météo tirée.
 

@@ -42,6 +42,26 @@ namespace Contigu.Core
             return chosen;
         }
 
+        /// <summary>Turns up to <paramref name="count"/> random empty, unlocked, non-golden plots golden (Golden Hour weather). Returns the chosen positions.</summary>
+        public IReadOnlyList<Vector2Int> MakeRandomCellsGolden(int count, IRandomProvider rng)
+        {
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (!cell.IsLocked && !cell.IsFilled && !cell.IsGolden)
+                {
+                    candidates.Add(pos);
+                }
+            }
+            var chosen = PickN(candidates, count, rng);
+            for (int i = 0; i < chosen.Count; i++)
+            {
+                GetCell(chosen[i]).IsGolden = true;
+            }
+            return chosen;
+        }
+
         /// <summary>
         /// "Frozen" cells (see Cell.IsFrozen) — HeavyLocker's round-start effect. Picks up to <paramref
         /// name="count"/> random still-empty, unlocked cells and locks them WITHOUT IsLineClearObstacle, so

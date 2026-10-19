@@ -267,11 +267,20 @@ namespace Contigu.Core
         public const int FormatMoyenCells = 3;
         public const int FormatGrandMinCells = 4;
 
-        /// <summary>Weather: Pollen granted for planting an Iris (Teal) seed in the rain.</summary>
-        public const int RainPollenPerIrisSeed = 3;
+        /// <summary>Weather: Pollen granted for planting a seed of the round's rain color.</summary>
+        public const int RainPollenPerSeed = 3;
 
-        /// <summary>Weather: points per cell of a Sunflower (Violet) seed planted in the sunshine.</summary>
-        public const int SunshinePointsPerSunflowerCell = 4;
+        /// <summary>Weather: points per cell of a seed of the round's sunshine color.</summary>
+        public const int SunshinePointsPerCell = 4;
+
+        /// <summary>Weather: Pollen granted per line cleared on a dewy round.</summary>
+        public const int DewPollenPerLine = 2;
+
+        /// <summary>Weather: empty plots turned golden at the start of a Golden Hour round.</summary>
+        public const int GoldenHourPlots = 2;
+
+        /// <summary>Weather: Pollen granted at the start of a Pollen Shower round.</summary>
+        public const int PollenShowerPollen = 10;
 
         /// <summary>Weather: empty plots frozen at the start of a frosty round.</summary>
         public const int FrostFrozenPlots = 2;

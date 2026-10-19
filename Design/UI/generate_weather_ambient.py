@@ -62,6 +62,23 @@ weather = {
                   '<path d="M44 150 C110 150 170 136 190 156 C206 172 188 196 168 184" stroke="%s" stroke-width="24"/><path d="M44 150 C110 150 170 136 190 156 C206 172 188 196 168 184" stroke="#ffffff" stroke-width="10"/></g>'
                   '<path d="M62 196 C84 168 116 176 118 204 C92 214 70 210 62 196 Z" fill="#6fb04f" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % (O, O, O)),
     'Frost': badge('#cfeaff', '#7fb4e8', snowflake(128, 128, 78)),
+    # Morning Dew: a leaf holding one big dewdrop and two small ones.
+    'Dew': badge('#d6f1df', '#6fbf8f',
+                 '<path d="M40 190 C60 90 150 56 216 70 C214 150 150 206 40 190 Z" fill="#6fb04f" stroke="%s" stroke-width="8" stroke-linejoin="round"/>'
+                 '<path d="M52 184 C100 140 150 108 200 82" stroke="%s" stroke-width="6" stroke-linecap="round" fill="none"/>' % (O, O)
+                 + drop(122, 142, 1.5) + drop(184, 118, 0.8) + drop(84, 176, 0.7)),
+    # Golden Hour: a low sun on the horizon with long golden rays.
+    'GoldenHour': badge('#ffd98a', '#e8892e',
+                        ''.join('<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="%d" stroke-linecap="round"/>' % (128 + r1 * math.cos(a), 160 - r1 * math.sin(a), 128 + r2 * math.cos(a), 160 - r2 * math.sin(a), c, w) for a in [math.pi * k / 6 for k in range(0, 7)] for r1, r2, c, w in ((78, 112, O, 22), (78, 112, '#fff0b0', 12)))
+                        + '<path d="M58 160 A70 70 0 0 1 198 160 Z" fill="#ffc83a" stroke="%s" stroke-width="8" stroke-linejoin="round"/>' % O
+                        + '<rect x="24" y="160" width="208" height="56" rx="10" fill="#7a4a24" stroke="%s" stroke-width="8"/>' % O),
+    # Pollen Shower: a flower scattering golden pollen grains.
+    'PollenShower': badge('#fff3b8', '#f2c14a',
+                          ''.join('<circle cx="%d" cy="%d" r="%d" fill="#ffd23a" stroke="%s" stroke-width="5"/>' % (x, y, r, O)
+                                  for x, y, r in ((70, 74, 12), (128, 56, 15), (186, 80, 12), (96, 118, 10), (160, 124, 11), (52, 134, 9), (206, 138, 9)))
+                          + '<g stroke="%s" stroke-width="7" stroke-linejoin="round">' % O
+                          + ''.join('<circle cx="%d" cy="%d" r="24" fill="#e8584f"/>' % (128 + dx, 186 + dy) for dx, dy in ((-22, 0), (22, 0), (0, -20), (0, 20)))
+                          + '<circle cx="128" cy="186" r="14" fill="#5a2a1c"/></g>'),
 }
 
 def butterfly():
