@@ -113,6 +113,9 @@ namespace Contigu.Core
         /// <summary>Each cleared cell's color right before it was cleared, parallel to <see cref="ClearedCells"/> — lets the presentation layer keep showing a completed line as filled until it's ready to clear it visually.</summary>
         public IReadOnlyList<PieceColor> ClearedCellColors = System.Array.Empty<PieceColor>();
 
+        /// <summary>Parallel to <see cref="ClearedCells"/>: true where the cleared plot was a Frozen empty one (the ice breaking), which has no piece color — presentation shows ice, not a tile, and shatters it.</summary>
+        public IReadOnlyList<bool> ClearedCellFrozen = System.Array.Empty<bool>();
+
         /// <summary>Each cleared cell's <see cref="Cell.FilledShapeId"/> right before it was cleared, parallel to <see cref="ClearedCells"/> — Color Hater's own sibling (see RunManager.ApplyShapeHaterScoreRule) needs this the same way <see cref="ClearedCellColors"/> feeds ApplyCursedColorScoreRule. Nullable, unlike ClearedCellColors — a cell filled directly rather than through GridManager.PlacePiece never had a shape stamped on it at all.</summary>
         public IReadOnlyList<ShapeId?> ClearedCellShapes = System.Array.Empty<ShapeId?>();
 

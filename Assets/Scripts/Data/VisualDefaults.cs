@@ -139,6 +139,19 @@ namespace Contigu.Data
             return sprite;
         }
 
+        private static readonly Dictionary<string, Sprite> IconSprites = new Dictionary<string, Sprite>();
+
+        /// <summary>A loose icon (Resources/Icons/&lt;name&gt;.png, e.g. IceShard, IceFlash), cached; null if missing.</summary>
+        public static Sprite GetIconSprite(string name)
+        {
+            if (!IconSprites.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/" + name);
+                IconSprites[name] = sprite;
+            }
+            return sprite;
+        }
+
         private static readonly Dictionary<string, Sprite> AmbientSprites = new Dictionary<string, Sprite>();
 
         /// <summary>A small ambient garden sprite (Resources/Ambient/&lt;name&gt;.png: Butterfly, Bee, Leaf, Raindrop, Sparkle, SunMote), or null if missing.</summary>

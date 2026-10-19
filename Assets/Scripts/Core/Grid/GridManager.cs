@@ -323,6 +323,7 @@ namespace Contigu.Core
             var clearInfo = CheckAndClearLines();
             result.ClearedCells = clearInfo.ClearedCells;
             result.ClearedCellColors = clearInfo.ClearedCellColors;
+            result.ClearedCellFrozen = clearInfo.ClearedCellFrozen;
             result.ClearedCellShapes = clearInfo.ClearedCellShapes;
             result.ClearedCellTraits = clearInfo.ClearedCellTraits;
             result.LineClearCellCount = clearInfo.ClearedCells.Count;

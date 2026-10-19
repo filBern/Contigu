@@ -412,7 +412,10 @@ namespace Contigu.Core
             /// <summary>True when this placement's line clear left no filled cell on the whole grid.</summary>
             public readonly bool GridEmptied;
 
-            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId?> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells, IReadOnlyDictionary<Vector2Int, int> lineAmounts, bool gridEmptied)
+            /// <summary>Parallel to <see cref="ClearedCells"/>: true for a Frozen empty plot that the line just broke free (its <see cref="ClearedCellColors"/> entry is a meaningless default, never a real color).</summary>
+            public readonly IReadOnlyList<bool> ClearedCellFrozen;
+
+            public ClearInfo(IReadOnlyList<Vector2Int> clearedCells, IReadOnlyList<PieceColor> clearedCellColors, IReadOnlyList<ShapeId?> clearedCellShapes, IReadOnlyList<PieceTrait?> clearedCellTraits, int clearedLineCount, IReadOnlyList<ClearedLine> clearedLines, IReadOnlyList<Vector2Int> bastionBonusCells, IReadOnlyDictionary<Vector2Int, int> lineAmounts, bool gridEmptied, IReadOnlyList<bool> clearedCellFrozen)
             {
                 ClearedCells = clearedCells;
                 ClearedCellColors = clearedCellColors;
@@ -423,6 +426,7 @@ namespace Contigu.Core
                 BastionBonusCells = bastionBonusCells;
                 LineAmounts = lineAmounts;
                 GridEmptied = gridEmptied;
+                ClearedCellFrozen = clearedCellFrozen;
             }
         }
     }

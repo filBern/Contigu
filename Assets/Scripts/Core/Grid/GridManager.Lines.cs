@@ -21,6 +21,7 @@ namespace Contigu.Core
         {
             var cellsToClear = new HashSet<Vector2Int>();
             var bastionBonus = new HashSet<Vector2Int>();
+            var frozenCleared = new HashSet<Vector2Int>();
             int clearedLineCount = 0;
             var clearedLines = new List<ClearedLine>();
 
@@ -32,7 +33,7 @@ namespace Contigu.Core
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: true, index: y), isRow: true, index: y));
                     for (int x = 0; x < Size; x++)
                     {
-                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus);
+                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus, frozenCleared);
                     }
                 }
             }
@@ -45,7 +46,7 @@ namespace Contigu.Core
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: false, index: x), isRow: false, index: x));
                     for (int y = 0; y < Size; y++)
                     {
-                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus);
+                        CollectLineCell(new Vector2Int(x, y), cellsToClear, bastionBonus, frozenCleared);
                     }
                 }
             }
@@ -69,12 +70,14 @@ namespace Contigu.Core
             var clearedColors = new List<PieceColor>(cellsToClear.Count);
             var clearedShapes = new List<ShapeId?>(cellsToClear.Count);
             var clearedTraits = new List<PieceTrait?>(cellsToClear.Count);
+            var clearedFrozen = new List<bool>(cellsToClear.Count);
             foreach (var pos in cellsToClear)
             {
                 var cell = _cells[pos.x, pos.y];
                 clearedColors.Add(cell.FilledColor ?? default(PieceColor)); // capture before clearing — a Frozen cell going away has no fill, keep the lists parallel
                 clearedShapes.Add(cell.FilledShapeId); // capture before clearing — nullable, see ClearedCellShapes' own doc comment
                 clearedTraits.Add(cell.OriginTrait); // capture before clearing
+                clearedFrozen.Add(frozenCleared.Contains(pos));
                 cell.ClearFill();
                 cleared.Add(pos);
             }
@@ -92,7 +95,7 @@ namespace Contigu.Core
                 }
             }
 
-            return new ClearInfo(cleared, clearedColors, clearedShapes, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus), lineAmounts, gridEmptied);
+            return new ClearInfo(cleared, clearedColors, clearedShapes, clearedTraits, clearedLineCount, clearedLines, new List<Vector2Int>(bastionBonus), lineAmounts, gridEmptied, clearedFrozen);
         }
 
         /// <summary>
@@ -104,7 +107,7 @@ namespace Contigu.Core
         /// completed row and column in the same placement is only ever
         /// credited once.
         /// </summary>
-        private void CollectLineCell(Vector2Int pos, HashSet<Vector2Int> cellsToClear, HashSet<Vector2Int> bastionBonus)
+        private void CollectLineCell(Vector2Int pos, HashSet<Vector2Int> cellsToClear, HashSet<Vector2Int> bastionBonus, HashSet<Vector2Int> frozenCleared)
         {
             var cell = _cells[pos.x, pos.y];
             if (!cell.IsLocked)
@@ -123,6 +126,7 @@ namespace Contigu.Core
                 // (see Cell.IsFrozen's own doc comment).
                 cell.IsLocked = false;
                 cell.IsFrozen = false;
+                frozenCleared.Add(pos);
                 cellsToClear.Add(pos);
             }
         }

@@ -1318,5 +1318,35 @@ namespace Contigu.Tests
             Assert.Greater(result.ClearedLineCount, 0);
             Assert.AreEqual(1f, result.Mult);
         }
+
+        [Test]
+        public void LineClear_BreaksAFrozenPlotFree_ReportsItAsFrozen_AndItsDistinctColorStatsIgnoreIt()
+        {
+            var grid = new GridManager();
+            var frozen = grid.GetCell(0, 0);
+            frozen.IsLocked = true;
+            frozen.IsFrozen = true;
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            PlacementResult last = null;
+            for (int x = 1; x < GridManager.Size; x++)
+            {
+                last = grid.PlacePiece(single, PieceColor.Teal, x, 0, new List<ModifierId> { ModifierId.Collectionneur });
+            }
+
+            int index = -1;
+            for (int i = 0; i < last.ClearedCells.Count; i++)
+            {
+                if (last.ClearedCells[i] == new Vector2Int(0, 0))
+                {
+                    index = i;
+                }
+            }
+            Assert.GreaterOrEqual(index, 0, "the frozen plot is cleared with its row");
+            Assert.IsTrue(last.ClearedCellFrozen[index], "and reported as a frozen one, not as a colored tile");
+            Assert.IsFalse(grid.GetCell(0, 0).IsFrozen);
+            Assert.IsFalse(grid.GetCell(0, 0).IsLocked);
+            // Collectionneur counts distinct colors among cleared cells: one Teal row = 1 color, the frozen plot adds none.
+            Assert.AreEqual(ScoringConstants.CollectionneurBonusPerColor, last.ModifierBonus);
+        }
     }
 }

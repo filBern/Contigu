@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -99,7 +100,7 @@ namespace Contigu.Presentation
         /// locked/poisoned even though the underlying state already released, until the real reveal, and keep
         /// the cell flagged for GridView.FadeMalus to fade out along with the rest.
         /// </summary>
-        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false, bool forceShowLocked = false, bool forceShowPoisoned = false)
+        public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false, bool forceShowLocked = false, bool forceShowPoisoned = false, bool forceShowFrozen = false)
         {
             bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
@@ -115,7 +116,7 @@ namespace Contigu.Presentation
             _lockedOverlay.gameObject.SetActive(renderAsLockedObstacle);
             if (renderAsLockedObstacle)
             {
-                Sprite lockedSprite = cell.IsFrozen && VisualDefaults.FrozenTileSprite != null ? VisualDefaults.FrozenTileSprite : VisualDefaults.LockedTileSprite;
+                Sprite lockedSprite = (cell.IsFrozen || forceShowFrozen) && VisualDefaults.FrozenTileSprite != null ? VisualDefaults.FrozenTileSprite : VisualDefaults.LockedTileSprite;
                 _lockedOverlay.sprite = lockedSprite;
                 _lockedOverlay.color = lockedSprite != null ? Color.white : VisualDefaults.LockedColor;
                 // The empty cell underneath is what remains once the lock fades out.
@@ -441,6 +442,85 @@ namespace Contigu.Presentation
             rt.localScale = Vector3.one;
             rt.localRotation = Quaternion.identity;
             _scaleCoroutine = null;
+        }
+
+        private const int IceShardCount = 9;
+        private const float IceShatterDuration = 0.7f;
+        private const float IceGravity = 640f;
+
+        /// <summary>A frozen plot breaking: a bright flash and a spray of ice shards that fall with gravity (drawn above neighbouring cells).</summary>
+        public void PlayIceShatter()
+        {
+            StartCoroutine(IceShatterRoutine());
+        }
+
+        private IEnumerator IceShatterRoutine()
+        {
+            var shardSprite = VisualDefaults.GetIconSprite("IceShard");
+            var flashSprite = VisualDefaults.GetIconSprite("IceFlash");
+            var parts = new List<Image>();
+            var velocities = new List<Vector2>();
+            var spins = new List<float>();
+            var sorting = new GameObject("IceShatter", typeof(RectTransform));
+            sorting.transform.SetParent(transform, false);
+            var host = (RectTransform)sorting.transform;
+            host.anchorMin = host.anchorMax = new Vector2(0.5f, 0.5f);
+            host.sizeDelta = Vector2.zero;
+            var canvas = sorting.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 31;
+
+            Image flash = null;
+            if (flashSprite != null)
+            {
+                flash = UIFactory.CreatePanel(host, "IceFlash", Color.white);
+                flash.raycastTarget = false;
+                flash.sprite = flashSprite;
+                flash.rectTransform.sizeDelta = new Vector2(120f, 120f);
+            }
+            if (shardSprite != null)
+            {
+                for (int i = 0; i < IceShardCount; i++)
+                {
+                    var shard = UIFactory.CreatePanel(host, "IceShard", Color.white);
+                    shard.raycastTarget = false;
+                    shard.sprite = shardSprite;
+                    shard.preserveAspect = true;
+                    float size = Random.Range(18f, 34f);
+                    shard.rectTransform.sizeDelta = new Vector2(size, size);
+                    shard.rectTransform.anchoredPosition = new Vector2(Random.Range(-14f, 14f), Random.Range(-14f, 14f));
+                    shard.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                    float angle = (360f / IceShardCount * i + Random.Range(-18f, 18f)) * Mathf.Deg2Rad;
+                    velocities.Add(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle) + 0.6f) * Random.Range(120f, 230f));
+                    spins.Add(Random.Range(-420f, 420f));
+                    parts.Add(shard);
+                }
+            }
+
+            float t = 0f;
+            while (t < IceShatterDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / IceShatterDuration);
+                if (flash != null)
+                {
+                    float f = Mathf.Clamp01(1f - p * 3.2f);
+                    flash.color = new Color(1f, 1f, 1f, f);
+                    float s = 0.7f + p * 1.1f;
+                    flash.rectTransform.localScale = new Vector3(s, s, 1f);
+                }
+                for (int i = 0; i < parts.Count; i++)
+                {
+                    var v = velocities[i];
+                    v.y -= IceGravity * Time.deltaTime;
+                    velocities[i] = v;
+                    parts[i].rectTransform.anchoredPosition += v * Time.deltaTime;
+                    parts[i].rectTransform.Rotate(0f, 0f, spins[i] * Time.deltaTime);
+                    parts[i].color = new Color(1f, 1f, 1f, 1f - p * p);
+                }
+                yield return null;
+            }
+            Destroy(sorting);
         }
 
         /// <summary>

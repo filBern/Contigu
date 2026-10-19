@@ -268,7 +268,15 @@ namespace Contigu.Core
             var distinctColors = new HashSet<PieceColor>();
             for (int i = 0; i < clearInfo.ClearedCellColors.Count; i++)
             {
-                distinctColors.Add(clearInfo.ClearedCellColors[i]);
+                // A broken-free frozen plot had no piece, so it has no color to count.
+                if (!clearInfo.ClearedCellFrozen[i])
+                {
+                    distinctColors.Add(clearInfo.ClearedCellColors[i]);
+                }
+            }
+            if (distinctColors.Count == 0)
+            {
+                return 0;
             }
 
             int bonus = distinctColors.Count * ScoringConstants.CollectionneurBonusPerColor;
@@ -287,7 +295,15 @@ namespace Contigu.Core
             var distinctColors = new HashSet<PieceColor>();
             for (int i = 0; i < clearInfo.ClearedCellColors.Count; i++)
             {
-                distinctColors.Add(clearInfo.ClearedCellColors[i]);
+                // A broken-free frozen plot had no piece, so it has no color to count.
+                if (!clearInfo.ClearedCellFrozen[i])
+                {
+                    distinctColors.Add(clearInfo.ClearedCellColors[i]);
+                }
+            }
+            if (distinctColors.Count == 0)
+            {
+                return 0;
             }
 
             int lueur = distinctColors.Count * EconomyConstants.CollectionneurLueurPerColor;

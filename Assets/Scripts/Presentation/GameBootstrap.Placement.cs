@@ -148,9 +148,22 @@ namespace Contigu.Presentation
             // destruction, visually filled instead of instantly vanishing
             // while its score plays out — the destroy burst needs a
             // still-filled tile to play against.
-            var heldCells = new List<Vector2Int>(outcome.Placement.ClearedCells);
-            var heldColors = new List<PieceColor>(outcome.Placement.ClearedCellColors);
-            var heldTraits = new List<PieceTrait?>(outcome.Placement.ClearedCellTraits);
+            // A frozen plot broken free by the line has no tile to hold: it keeps showing its ice until it shatters.
+            var heldCells = new List<Vector2Int>();
+            var heldColors = new List<PieceColor>();
+            var heldTraits = new List<PieceTrait?>();
+            var heldFrozenCells = new List<Vector2Int>();
+            for (int i = 0; i < outcome.Placement.ClearedCells.Count; i++)
+            {
+                if (IsClearedCellFrozen(outcome.Placement, i))
+                {
+                    heldFrozenCells.Add(outcome.Placement.ClearedCells[i]);
+                    continue;
+                }
+                heldCells.Add(outcome.Placement.ClearedCells[i]);
+                heldColors.Add(outcome.Placement.ClearedCellColors[i]);
+                heldTraits.Add(outcome.Placement.ClearedCellTraits[i]);
+            }
             for (int i = 0; i < outcome.Placement.DestroyedCells.Count; i++)
             {
                 var destroyedColor = outcome.Placement.DestroyedCellColors[i];
@@ -165,7 +178,7 @@ namespace Contigu.Presentation
             // placement's auto-refill (or an enemy death) just changed are
             // held back from this redraw, revealed only once
             // PlayPlacementSequence's end-of-sequence reveal runs.
-            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells);
+            _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
             // Juice: a brief squash-and-stretch pop on the piece's own cells, played the instant they
             // actually render above — gives the placement a sense of weight instead of just appearing.
             _gridView.PlayLandingSquash(outcome.Placement.PlacedCells);
@@ -261,6 +274,11 @@ namespace Contigu.Presentation
             }
             _mainRoot.anchoredPosition = Vector2.zero;
             _screenShakeCoroutine = null;
+        }
+
+        private static bool IsClearedCellFrozen(PlacementResult placement, int index)
+        {
+            return index < placement.ClearedCellFrozen.Count && placement.ClearedCellFrozen[index];
         }
 
         private int _pendingShieldBreakIndex = -1;
@@ -840,7 +858,14 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.LineClear);
                 // Tinted to the color the cell had right before clearing,
                 // via RefreshHoldingClearedCells's held color.
-                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
+                if (IsClearedCellFrozen(placement, i))
+                {
+                    _gridView.PlayIceShatter(pos.x, pos.y);
+                }
+                else
+                {
+                    _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
+                }
                 _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos), keepLocked.Contains(pos), keepPoisoned.Contains(pos));
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }

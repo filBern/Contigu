@@ -262,7 +262,7 @@ namespace Contigu.Presentation
         /// treatment, so its clear animation stays in step with its neighbors — but with its new lock/poison
         /// still hidden, so it doesn't appear before the line actually breaks.
         /// </summary>
-        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredNewMalusCells = null, IReadOnlyList<Vector2Int> deferredReleasedLockedCells = null, IReadOnlyList<Vector2Int> deferredReleasedPoisonedCells = null)
+        public void RefreshHoldingClearedCells(IReadOnlyList<Vector2Int> heldCells, IReadOnlyList<PieceColor> heldColors, IReadOnlyList<PieceTrait?> heldTraits, IReadOnlyList<Vector2Int> deferredNewMalusCells = null, IReadOnlyList<Vector2Int> deferredReleasedLockedCells = null, IReadOnlyList<Vector2Int> deferredReleasedPoisonedCells = null, IReadOnlyList<Vector2Int> heldFrozenCells = null)
         {
             var overrideColor = new Dictionary<Vector2Int, PieceColor>();
             var overrideTrait = new Dictionary<Vector2Int, PieceTrait?>();
@@ -275,14 +275,20 @@ namespace Contigu.Presentation
             var deferredNew = ToSet(deferredNewMalusCells);
             var releasedLocked = ToSet(deferredReleasedLockedCells);
             var releasedPoisoned = ToSet(deferredReleasedPoisonedCells);
+            var heldFrozen = ToSet(heldFrozenCells);
 
             for (int x = 0; x < GridManager.Size; x++)
             {
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var pos = new Vector2Int(x, y);
+                    // A frozen plot whose row just completed keeps its ice until it shatters (see GridCellView.PlayIceShatter).
+                    if (heldFrozen.Contains(pos))
+                    {
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), forceShowLocked: true, forceShowFrozen: true);
+                    }
                     // The held-fill override always wins over a deferred skip, even for a cell in both sets.
-                    if (overrideColor.TryGetValue(pos, out var color))
+                    else if (overrideColor.TryGetValue(pos, out var color))
                     {
                         // A cell both held (its line is still on screen) and newly poisoned/locked by this placement's
                         // shuffle keeps its fill but not its new malus — the badge would otherwise show before the line breaks.
@@ -713,6 +719,15 @@ namespace Contigu.Presentation
                     // Cells of one piece bloom a beat apart, in placement order.
                     _cells[pos.x, pos.y].PlayLandingSquash(i * 0.05f);
                 }
+            }
+        }
+
+        /// <summary>The ice of a frozen plot breaking free: a flash and a spray of ice shards (see GridCellView.PlayIceShatter).</summary>
+        public void PlayIceShatter(int x, int y)
+        {
+            if (GridManager.InBounds(x, y))
+            {
+                _cells[x, y].PlayIceShatter();
             }
         }
 
