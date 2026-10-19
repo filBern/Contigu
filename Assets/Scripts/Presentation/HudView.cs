@@ -81,6 +81,7 @@ namespace Contigu.Presentation
         private readonly List<GameObject> _enemyTickBadges = new List<GameObject>();
         private readonly List<Text> _enemyTickLabels = new List<Text>();
         private readonly float[] _enemyActPunch = new float[MaxEnemyIcons];
+        private readonly float[] _enemyHurtShake = new float[MaxEnemyIcons];
         private int _enemyTickCountdown = 6;
         private readonly List<bool> _shieldHeld = new List<bool>();
         /// <summary>One slot's active hurt-flash or effect-pulse coroutine, if any — stopped and replaced rather than left to run alongside a newly triggered one on the same icon (see PlayEnemyHurtEffect/PlayEnemyEffectPulse).</summary>
@@ -583,6 +584,14 @@ namespace Contigu.Presentation
                     shake = Mathf.Sin(punch * 40f) * 4f * punch;
                     _enemyActPunch[i] = Mathf.Max(0f, punch - Time.deltaTime * 2.5f);
                 }
+                float hurt = _enemyHurtShake[i];
+                if (hurt > 0f)
+                {
+                    // A quick left-right jolt that dies out, on top of the hurt flash/shrink.
+                    shake += Mathf.Sin(hurt * 50f) * 6f * hurt;
+                    rot += Mathf.Sin(hurt * 38f) * 5f * hurt;
+                    _enemyHurtShake[i] = Mathf.Max(0f, hurt - Time.deltaTime * 3f);
+                }
                 var rt = _enemyIconBackgrounds[i];
                 rt.localRotation = Quaternion.Euler(0f, 0f, rot);
                 rt.localScale = new Vector3(scale, scale, 1f);
@@ -770,6 +779,10 @@ namespace Contigu.Presentation
         /// <summary>Brief shrink, played when this enemy's slot takes damage. Called right as the damage amount itself is revealed on the icon — not at the start of the hit's travel — see GameBootstrap.DrainComboIntoDamage's SpawnFlyingDamageOrb onArrival callback/DrainSecondaryEnemyHits. No-op if index is out of range or that slot isn't shown.</summary>
         public void PlayEnemyHurtEffect(int index)
         {
+            if (index >= 0 && index < _enemyHurtShake.Length)
+            {
+                _enemyHurtShake[index] = 1f;
+            }
             StartEnemyIconEffect(index, HurtEffectRoutine(index));
         }
 
