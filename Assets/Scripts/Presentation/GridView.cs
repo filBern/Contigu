@@ -718,6 +718,18 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Keeps (or stops keeping) frozen plots drawn as ice though the model already broke them, through every refresh, until their shatter at the end of the placement sequence.</summary>
+        public void SetFrozenHold(IReadOnlyList<Vector2Int> cells, bool hold)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (GridManager.InBounds(cells[i].x, cells[i].y))
+                {
+                    _cells[cells[i].x, cells[i].y].HoldFrozen = hold;
+                }
+            }
+        }
+
         /// <summary>Draws cells as empty plots (keeping their frame in the grid) so a flying tile can arrive there later; <see cref="RefreshCells"/> restores their real state.</summary>
         public void ShowCellsAsEmpty(IReadOnlyList<Vector2Int> cells)
         {

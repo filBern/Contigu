@@ -197,6 +197,7 @@ namespace Contigu.Presentation
                 heldColors.Add(move.Color);
                 heldTraits.Add(null);
             }
+            _gridView.SetFrozenHold(heldFrozenCells, true);
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
             _gridView.ShowCellsAsEmpty(weatherHiddenCells);
             // Same hold for the hand when auto-refill already dealt the
@@ -291,6 +292,19 @@ namespace Contigu.Presentation
             }
             _mainRoot.anchoredPosition = Vector2.zero;
             _screenShakeCoroutine = null;
+        }
+
+        private static List<Vector2Int> FrozenClearedCells(PlacementResult placement)
+        {
+            var cells = new List<Vector2Int>();
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                if (IsClearedCellFrozen(placement, i))
+                {
+                    cells.Add(placement.ClearedCells[i]);
+                }
+            }
+            return cells;
         }
 
         private static bool IsClearedCellFrozen(PlacementResult placement, int index)
@@ -827,6 +841,8 @@ namespace Contigu.Presentation
                 _handView.Refresh();
             }
 
+            yield return PlayFrozenShatters(placement);
+
             if (outcome.WeatherMovedTiles.Count > 0)
             {
                 SfxManager.Play(SfxId.Shuffle);
@@ -838,6 +854,13 @@ namespace Contigu.Presentation
             }
             finally
             {
+                // Whatever happened above, no ice may stay held (a normal run already released it in PlayFrozenShatters).
+                var frozenToRelease = FrozenClearedCells(outcome.Placement);
+                if (frozenToRelease.Count > 0)
+                {
+                    _gridView.SetFrozenHold(frozenToRelease, false);
+                    _gridView.RefreshCells(frozenToRelease);
+                }
                 // Hurricane: whatever happened above, no destination plot may stay drawn empty.
                 var weatherDestCells = new List<Vector2Int>();
                 for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
@@ -891,17 +914,15 @@ namespace Contigu.Presentation
             for (int i = 0; i < placement.ClearedCells.Count; i++)
             {
                 var pos = placement.ClearedCells[i];
+                if (IsClearedCellFrozen(placement, i))
+                {
+                    // Frozen plots keep their ice until the very end of the sequence (see PlayFrozenShatters).
+                    continue;
+                }
                 SfxManager.Play(SfxId.LineClear);
                 // Tinted to the color the cell had right before clearing,
                 // via RefreshHoldingClearedCells's held color.
-                if (IsClearedCellFrozen(placement, i))
-                {
-                    _gridView.PlayIceShatter(pos.x, pos.y);
-                }
-                else
-                {
-                    _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
-                }
+                _gridView.PlayClearBurst(pos.x, pos.y, VisualDefaults.GetColor(placement.ClearedCellColors[i]), placement.ClearedCellColors[i]);
                 _gridView.ClearCellVisual(pos.x, pos.y, suppressedCells.Contains(pos), keepLocked.Contains(pos), keepPoisoned.Contains(pos));
                 yield return new WaitForSeconds(MinStaggerSeconds);
             }
@@ -920,6 +941,24 @@ namespace Contigu.Presentation
             if (leechHealAmount > 0)
             {
                 PlayLeechHealEffect(leechIndex, leechHealAmount);
+            }
+        }
+
+        /// <summary>The ice of frozen plots this placement's lines broke: held on screen through the whole count and enemy reveals, then shattered here, last.</summary>
+        private System.Collections.IEnumerator PlayFrozenShatters(PlacementResult placement)
+        {
+            var frozen = FrozenClearedCells(placement);
+            if (frozen.Count == 0)
+            {
+                yield break;
+            }
+            _gridView.SetFrozenHold(frozen, false);
+            for (int i = 0; i < frozen.Count; i++)
+            {
+                SfxManager.Play(SfxId.LineClear);
+                _gridView.PlayIceShatter(frozen[i].x, frozen[i].y);
+                _gridView.ClearCellVisual(frozen[i].x, frozen[i].y);
+                yield return new WaitForSeconds(MinStaggerSeconds);
             }
         }
 

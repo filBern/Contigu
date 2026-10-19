@@ -25,6 +25,9 @@ namespace Contigu.Presentation
         private const float PetalGravity = 520f;
         private const float ClearBurstTravelDistance = 42f;
 
+        /// <summary>While true, this cell keeps drawing its ice whatever the model says (see GridView.SetFrozenHold).</summary>
+        public bool HoldFrozen;
+
         public int X { get; private set; }
         public int Y { get; private set; }
 
@@ -103,6 +106,13 @@ namespace Contigu.Presentation
         /// </summary>
         public void ApplyState(Cell cell, PieceColor? fillColorOverride = null, PieceTrait? originTraitOverride = null, bool suppressMalus = false, bool forceShowLocked = false, bool forceShowPoisoned = false, bool forceShowFrozen = false)
         {
+            if (HoldFrozen)
+            {
+                // Ice the model already melted stays on screen until the placement sequence shatters it.
+                forceShowLocked = true;
+                forceShowFrozen = true;
+                suppressMalus = false;
+            }
             bool isFilled = fillColorOverride.HasValue || (cell.IsFilled && cell.FilledColor.HasValue);
             PieceColor? filledColor = fillColorOverride ?? cell.FilledColor;
             PieceTrait? originTrait = fillColorOverride.HasValue ? originTraitOverride : cell.OriginTrait;
