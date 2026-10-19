@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - name: Fertilizer icon tags match their descriptions
+        run: python3 Tools/check_icon_tags.py
       - name: EditMode tests (headless)
         run: dotnet test Tools/Headless/Tests/Contigu.Tests.Headless.csproj --blame-hang-timeout 60s
       - name: Simulator smoke run (500 runs, fails on any exception)

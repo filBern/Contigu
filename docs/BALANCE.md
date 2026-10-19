@@ -33,3 +33,9 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 
 - Les rounds 3 à 6 restent les plus durs pour le bot (58–75 % de réussite) ; le round 3 est maintenant le premier mur.
 - `RunConfig.Quotas` n'est plus la condition de victoire de Classic (restée pour l'affichage et Marathon/Chaos).
+
+## Après un changement de valeur
+
+L'étiquette dans le coin d'une icône de fertilizer est écrite dans `Design/Icons/generate_icons.py`. `python3 Tools/check_icon_tags.py`
+(lancé aussi par le CI headless) échoue si une étiquette n'est plus dans la description du fertilizer ; corriger alors la table du générateur,
+relancer `generate_icons.py` et re-rendre le PNG dans `Assets/Resources/Icons/Fertilizers/`.
