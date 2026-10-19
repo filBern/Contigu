@@ -49,9 +49,19 @@ namespace Contigu.Presentation
         /// <summary>If the blight moved since <paramref name="before"/>, the Blightmoth's portrait reacts (and the fertilizer panel is already redrawn by RefreshAll).</summary>
         private void PlayBlightmothActIfBlightChanged(string before)
         {
-            if (before == BlightSignature())
+            string after = BlightSignature();
+            if (before == after)
             {
                 return;
+            }
+            // Redraw the fertilizer panel so the blight veil/mark appears (or clears) right when it happens.
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+            for (int i = 0; i < after.Length && i < _run.ActiveModifiers.Count; i++)
+            {
+                if (after[i] == '1' && (i >= before.Length || before[i] != '1'))
+                {
+                    _modifierPanelView.Pulse(_run.ActiveModifiers[i]);
+                }
             }
             int index = FindAliveEnemyIndex(EnemyId.Blightmoth);
             if (index >= 0)
