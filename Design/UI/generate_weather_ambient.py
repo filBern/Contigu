@@ -79,6 +79,20 @@ weather = {
                           + '<g stroke="%s" stroke-width="7" stroke-linejoin="round">' % O
                           + ''.join('<circle cx="%d" cy="%d" r="24" fill="#e8584f"/>' % (128 + dx, 186 + dy) for dx, dy in ((-22, 0), (22, 0), (0, -20), (0, 20)))
                           + '<circle cx="128" cy="186" r="14" fill="#5a2a1c"/></g>'),
+    # Heatwave: a blazing sun over a shimmering heat haze.
+    'Heatwave': badge('#ffb27a', '#d9482b',
+                      sun(128, 106, 40)
+                      + ''.join('<path d="M40 %d C70 %d 100 %d 128 %d S186 %d 216 %d" stroke="%s" stroke-width="16" stroke-linecap="round" fill="none"/>' % (y, y - 14, y + 14, y, y - 14, y, O)
+                                for y in (190, 220))
+                      + ''.join('<path d="M40 %d C70 %d 100 %d 128 %d S186 %d 216 %d" stroke="#fff3d0" stroke-width="7" stroke-linecap="round" fill="none"/>' % (y, y - 14, y + 14, y, y - 14, y)
+                                for y in (190, 220))),
+    # Hurricane: a dark swirling storm spiral with lightning.
+    'Hurricane': badge('#8a96b4', '#3b4568',
+                       '<path d="M128 128 m0 0 C128 100 160 100 160 128 C160 168 104 172 96 128 C88 84 150 64 180 100 C212 140 176 204 124 200 C60 196 40 124 70 84" '
+                       'stroke="%s" stroke-width="26" stroke-linecap="round" fill="none"/>' % O
+                       + '<path d="M128 128 C128 100 160 100 160 128 C160 168 104 172 96 128 C88 84 150 64 180 100 C212 140 176 204 124 200 C60 196 40 124 70 84" '
+                       'stroke="#e8eefc" stroke-width="12" stroke-linecap="round" fill="none"/>'
+                       '<path d="M196 150 L176 188 L194 188 L178 226 L222 176 L202 176 L216 150 Z" fill="#ffd23a" stroke="%s" stroke-width="6" stroke-linejoin="round"/>' % O),
 }
 
 def butterfly():
@@ -113,7 +127,11 @@ def sparkle():
 def sunmote():
     return svg('<circle cx="128" cy="128" r="70" fill="#ffe58a" stroke="%s" stroke-width="10"/><circle cx="106" cy="106" r="22" fill="#fffbe0"/>' % O, 96)
 
-ambient = {'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
+def flame():
+    return svg('<path d="M128 14 C150 62 214 96 206 166 C200 220 160 246 128 246 C90 246 52 222 50 168 C48 126 76 112 90 78 C104 116 120 96 128 14 Z" fill="#ff7a1a" stroke="%s" stroke-width="12" stroke-linejoin="round"/>'
+               '<path d="M128 96 C142 130 176 150 170 188 C166 218 148 232 128 232 C106 232 88 218 88 190 C88 160 116 150 128 96 Z" fill="#ffd23a"/>' % O, 96)
+
+ambient = {'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
 
 def render(name, content, out_path, px):
     html = '/tmp/_amb_%s.html' % name

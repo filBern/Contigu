@@ -391,6 +391,95 @@ namespace Contigu.Presentation
             _scaleCoroutine = null;
         }
 
+        private const float BurnDuration = 0.9f;
+
+        /// <summary>A planted tile scorched by the Heatwave: it chars dark while flames flicker up from it (the caller refreshes the cell to empty afterwards).</summary>
+        public void PlayBurn()
+        {
+            StartCoroutine(BurnRoutine());
+        }
+
+        private IEnumerator BurnRoutine()
+        {
+            var flameSprite = VisualDefaults.GetAmbientSprite("Flame");
+            var host = CreateSortingHost("Burn", 31);
+            var flames = new List<Image>();
+            var offsets = new List<float>();
+            if (flameSprite != null)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    var flame = UIFactory.CreatePanel(host, "Flame", Color.white);
+                    flame.raycastTarget = false;
+                    flame.sprite = flameSprite;
+                    flame.preserveAspect = true;
+                    flame.rectTransform.sizeDelta = new Vector2(34f, 34f);
+                    flame.rectTransform.anchoredPosition = new Vector2(-20f + i * 13f, -14f);
+                    flames.Add(flame);
+                    offsets.Add(Random.Range(0f, 6f));
+                }
+            }
+            Color startColor = Background.color;
+            float t = 0f;
+            while (t < BurnDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / BurnDuration);
+                float char01 = Mathf.Clamp01(p * 1.6f);
+                Background.color = Color.Lerp(startColor, new Color(0.12f, 0.08f, 0.07f, 1f), char01);
+                for (int i = 0; i < flames.Count; i++)
+                {
+                    float flicker = 1f + 0.25f * Mathf.Sin(t * 22f + offsets[i]);
+                    flames[i].rectTransform.localScale = new Vector3(flicker, flicker * (1f + 0.5f * p), 1f);
+                    var pos = flames[i].rectTransform.anchoredPosition;
+                    pos.y = -14f + p * 26f + Mathf.Sin(t * 14f + offsets[i]) * 2f;
+                    flames[i].rectTransform.anchoredPosition = pos;
+                    flames[i].color = new Color(1f, 1f, 1f, p < 0.7f ? 1f : (1f - p) / 0.3f);
+                }
+                yield return null;
+            }
+            Destroy(host.gameObject);
+        }
+
+        private RectTransform CreateSortingHost(string name, int order)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+            var host = (RectTransform)go.transform;
+            host.anchorMin = host.anchorMax = new Vector2(0.5f, 0.5f);
+            host.sizeDelta = Vector2.zero;
+            var canvas = go.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = order;
+            return host;
+        }
+
+        /// <summary>A copy of this cell's tile flying (in an arc, spinning) to <paramref name="target"/> — the Hurricane carrying a tile away.</summary>
+        public IEnumerator FlyTileTo(GridCellView target, PieceColor color, float duration)
+        {
+            var host = CreateSortingHost("TileFlight", 32);
+            var ghost = UIFactory.CreatePanel(host, "Ghost", VisualDefaults.GetTileTint(color));
+            ghost.raycastTarget = false;
+            ghost.sprite = VisualDefaults.GetTileSprite(color);
+            ghost.type = Image.Type.Sliced;
+            ghost.rectTransform.sizeDelta = ((RectTransform)transform).rect.size;
+            Vector3 from = transform.position;
+            Vector3 to = target.transform.position;
+            float arc = ((RectTransform)transform).rect.height * 1.4f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / duration));
+                host.position = Vector3.Lerp(from, to, p) + new Vector3(0f, Mathf.Sin(p * Mathf.PI) * arc, 0f);
+                host.localRotation = Quaternion.Euler(0f, 0f, p * 540f);
+                float scale = 1f + 0.18f * Mathf.Sin(p * Mathf.PI);
+                host.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            Destroy(host.gameObject);
+        }
+
         private const int IceShardCount = 9;
         private const float IceShatterDuration = 0.7f;
         private const float IceGravity = 640f;

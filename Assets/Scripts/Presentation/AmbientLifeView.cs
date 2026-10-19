@@ -75,11 +75,13 @@ namespace Contigu.Presentation
 
             for (int i = 0; i < _butterflyTarget; i++) { Spawn(Kind.Butterfly); }
             if (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine || _weather == WeatherId.GoldenHour) { Spawn(Kind.Bee); }
-            int leaves = _weather == WeatherId.Wind ? 10 : 3;
+            int leaves = _weather == WeatherId.Hurricane ? 16 : _weather == WeatherId.Wind ? 10 : 3;
             for (int i = 0; i < leaves; i++) { Spawn(Kind.Leaf); }
             if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(Kind.Rain); } }
             if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(Kind.Sparkle); } }
             if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(Kind.SunMote); } }
+            if (_weather == WeatherId.Hurricane) { for (int i = 0; i < 40; i++) { Spawn(Kind.Rain); } }
+            if (_weather == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(Kind.SunMote); } }
             if (_weather == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(Kind.Sparkle); } }
             if (_weather == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(Kind.SunMote); } }
             if (_weather == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(Kind.SunMote); } Spawn(Kind.Bee); Spawn(Kind.Bee); }
@@ -148,7 +150,7 @@ namespace Contigu.Presentation
                     break;
                 case Kind.Leaf:
                     c.Size = Random.Range(22f, 34f);
-                    c.Velocity = _weather == WeatherId.Wind ? new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f)) : new Vector2(Random.Range(-14f, 14f), Random.Range(-44f, -26f));
+                    c.Velocity = _weather == WeatherId.Wind || _weather == WeatherId.Hurricane ? new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f)) : new Vector2(Random.Range(-14f, 14f), Random.Range(-44f, -26f));
                     break;
                 case Kind.Rain:
                     c.Size = Random.Range(12f, 20f);

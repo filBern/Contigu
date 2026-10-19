@@ -12,6 +12,7 @@ namespace Contigu.Core
         }
 
         /// <summary>Relative draw weight: 3 = common, 2 = uncommon, 1 = rare.</summary>
+        // Harsh weathers (Heatwave, Hurricane) are a deliberate part of the mix, not just bonuses.
         public static int GetWeight(WeatherId id)
         {
             switch (id)
@@ -23,10 +24,17 @@ namespace Contigu.Core
                 case WeatherId.Wind:
                 case WeatherId.Frost:
                 case WeatherId.Dew:
+                case WeatherId.Heatwave:
                     return 2;
                 default:
                     return 1;
             }
+        }
+
+        /// <summary>Weathers that hurt rather than help (shown with a warning tone).</summary>
+        public static bool IsHarsh(WeatherId id)
+        {
+            return id == WeatherId.Heatwave || id == WeatherId.Hurricane || id == WeatherId.Frost;
         }
 
         public static string GetRarityLabel(WeatherId id)
@@ -48,6 +56,8 @@ namespace Contigu.Core
                 case WeatherId.Dew: return "Morning Dew";
                 case WeatherId.GoldenHour: return "Golden Hour";
                 case WeatherId.PollenShower: return "Pollen Shower";
+                case WeatherId.Heatwave: return "Heatwave";
+                case WeatherId.Hurricane: return "Hurricane";
                 default: return "Clear skies";
             }
         }
@@ -64,6 +74,8 @@ namespace Contigu.Core
                 case WeatherId.Dew: return "+" + ScoringConstants.DewPollenPerLine + " Pollen for every line you clear.";
                 case WeatherId.GoldenHour: return ScoringConstants.GoldenHourPlots + " empty plots turn golden at the start of the round.";
                 case WeatherId.PollenShower: return "Start the round with +" + ScoringConstants.PollenShowerPollen + " Pollen.";
+                case WeatherId.Heatwave: return "Each Shuffle you spend scorches one planted tile (it burns away, no points).";
+                case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds you plant, the storm blows " + ScoringConstants.HurricaneTilesMoved + " planted tiles to other plots.";
                 default: return "Calm skies. No effect.";
             }
         }

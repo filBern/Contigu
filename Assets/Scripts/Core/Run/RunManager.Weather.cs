@@ -103,5 +103,24 @@ namespace Contigu.Core
                     break;
             }
         }
+
+        /// <summary>The tile the Heatwave scorched on the most recent manual Shuffle (null otherwise) — Presentation plays the burn before refreshing the grid.</summary>
+        public (Vector2Int Pos, PieceColor Color, PieceTrait? Trait)? LastBurnedTile { get; private set; }
+
+        private void ApplyHeatwaveShuffleBurn()
+        {
+            LastBurnedTile = CurrentWeather == WeatherId.Heatwave ? Grid.BurnRandomTile(_rng) : null;
+        }
+
+        /// <summary>Hurricane: every few seeds placed, blows some tiles elsewhere. Returns the moves (empty when none) for the placement's outcome.</summary>
+        private IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> ApplyHurricaneTick()
+        {
+            int played = CurrentBudget - PiecesRemainingThisRound;
+            if (CurrentWeather != WeatherId.Hurricane || played <= 0 || played % ScoringConstants.HurricaneInterval != 0)
+            {
+                return System.Array.Empty<(Vector2Int, Vector2Int, PieceColor)>();
+            }
+            return Grid.BlowTiles(ScoringConstants.HurricaneTilesMoved, _rng);
+        }
     }
 }

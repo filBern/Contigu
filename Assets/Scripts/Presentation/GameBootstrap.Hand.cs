@@ -132,6 +132,20 @@ namespace Contigu.Presentation
             // flagged as showing malus yet.
             _gridView.SetMalusAlpha(0f);
 
+            // Heatwave: the tile this Shuffle scorched stays on screen (held) until its flames have played.
+            var burned = _run.LastBurnedTile;
+            if (burned.HasValue)
+            {
+                _gridView.RefreshHoldingClearedCells(
+                    new List<Vector2Int> { burned.Value.Pos }, new List<PieceColor> { burned.Value.Color }, new List<PieceTrait?> { burned.Value.Trait }, affectedCellsNow);
+                _gridView.SetMalusAlpha(0f);
+                ShakeScreen(1, 8);
+                _gridView.PlayBurn(burned.Value.Pos.x, burned.Value.Pos.y);
+                yield return new WaitForSeconds(0.95f);
+                _gridView.RefreshHoldingClearedCells(new List<Vector2Int>(), new List<PieceColor>(), new List<PieceTrait?>(), affectedCellsNow);
+                _gridView.SetMalusAlpha(0f);
+            }
+
             yield return _handView.FadeSlotPieces(0f, 1f, ShuffleFadeDuration);
             PlayThiefStealEffect();
             // Reveals each affected enemy's own cell(s) one enemy at a time — icon pulse, circle, reveal —

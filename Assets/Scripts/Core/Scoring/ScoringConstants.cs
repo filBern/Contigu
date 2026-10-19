@@ -279,6 +279,12 @@ namespace Contigu.Core
         /// <summary>Weather: empty plots turned golden at the start of a Golden Hour round.</summary>
         public const int GoldenHourPlots = 2;
 
+        /// <summary>Weather: a hurricane round blows this many planted tiles to other plots...</summary>
+        public const int HurricaneTilesMoved = 2;
+
+        /// <summary>...every this many seeds placed in the round.</summary>
+        public const int HurricaneInterval = 4;
+
         /// <summary>Weather: Pollen granted at the start of a Pollen Shower round.</summary>
         public const int PollenShowerPollen = 10;
 

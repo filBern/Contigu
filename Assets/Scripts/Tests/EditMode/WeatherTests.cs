@@ -103,6 +103,82 @@ namespace Contigu.Tests
             Assert.GreaterOrEqual(run.Lueur, ScoringConstants.PollenShowerPollen);
         }
 
+        private static GridManager GridWithTiles(params Vector2Int[] cells)
+        {
+            var grid = new GridManager();
+            foreach (var c in cells)
+            {
+                var cell = grid.GetCell(c);
+                cell.IsFilled = true;
+                cell.FilledColor = PieceColor.Violet;
+                cell.FilledShapeId = ShapeId.Single;
+                cell.IsGolden = true;
+            }
+            return grid;
+        }
+
+        [Test]
+        public void Heatwave_BurnsOneUnlockedTile_AndSkipsLockedOnes()
+        {
+            var grid = GridWithTiles(new Vector2Int(1, 1), new Vector2Int(2, 2));
+            grid.GetCell(2, 2).IsLocked = true;
+            var burned = grid.BurnRandomTile(new SystemRandomProvider(3));
+            Assert.IsTrue(burned.HasValue);
+            Assert.AreEqual(new Vector2Int(1, 1), burned.Value.Pos);
+            Assert.AreEqual(PieceColor.Violet, burned.Value.Color);
+            Assert.IsFalse(grid.GetCell(1, 1).IsFilled);
+            Assert.IsFalse(grid.GetCell(1, 1).IsGolden);
+            Assert.IsTrue(grid.GetCell(2, 2).IsFilled);
+            Assert.IsNull(new GridManager().BurnRandomTile(new SystemRandomProvider(3)), "nothing to burn on an empty grid");
+        }
+
+        [Test]
+        public void Hurricane_MovesTilesWithTheirWholeFillState_ToEmptyPlots()
+        {
+            var grid = GridWithTiles(new Vector2Int(0, 0), new Vector2Int(GridManager.Size - 1, GridManager.Size - 1), new Vector2Int(3, 3));
+            var moves = grid.BlowTiles(2, new SystemRandomProvider(5));
+            Assert.AreEqual(2, moves.Count);
+            foreach (var move in moves)
+            {
+                Assert.IsFalse(grid.GetCell(move.From).IsFilled, "the source is emptied");
+                var dst = grid.GetCell(move.To);
+                Assert.IsTrue(dst.IsFilled);
+                Assert.AreEqual(PieceColor.Violet, dst.FilledColor);
+                Assert.AreEqual(ShapeId.Single, dst.FilledShapeId);
+                Assert.IsTrue(dst.IsGolden, "flags travel with the tile");
+                Assert.AreEqual(PieceColor.Violet, move.Color);
+            }
+            int filled = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (grid.GetCell(pos).IsFilled)
+                {
+                    filled++;
+                }
+            }
+            Assert.AreEqual(3, filled, "no tile is created or lost");
+        }
+
+        [Test]
+        public void Hurricane_NeverBlowsALockedTile_NorOntoFrozenOrLockedPlots()
+        {
+            var grid = GridWithTiles(new Vector2Int(0, 0));
+            grid.GetCell(0, 0).IsLocked = true;
+            Assert.AreEqual(0, grid.BlowTiles(2, new SystemRandomProvider(1)).Count);
+
+            var grid2 = GridWithTiles(new Vector2Int(0, 0));
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var c = grid2.GetCell(pos);
+                if (!c.IsFilled)
+                {
+                    c.IsFrozen = true;
+                    c.IsLocked = true;
+                }
+            }
+            Assert.AreEqual(0, grid2.BlowTiles(2, new SystemRandomProvider(1)).Count, "no free destination");
+        }
+
         private static RunManager RunInWeather(WeatherId weather)
         {
             for (int seed = 1; seed < 400; seed++)

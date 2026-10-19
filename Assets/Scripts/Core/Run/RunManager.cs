@@ -731,6 +731,8 @@ namespace Contigu.Core
                 ResolveEnemyTickEffects();
             }
 
+            var weatherMovedTiles = ApplyHurricaneTick();
+
             EvaluateRoundEnd();
 
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
@@ -742,7 +744,7 @@ namespace Contigu.Core
                 EvaluateRoundEnd();
             }
 
-            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor, new List<Vector2Int>(_deathReleasedCellsThisPlacement));
+            return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor, new List<Vector2Int>(_deathReleasedCellsThisPlacement), weatherMovedTiles);
         }
     }
 }

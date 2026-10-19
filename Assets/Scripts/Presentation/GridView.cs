@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
@@ -706,6 +707,61 @@ namespace Contigu.Presentation
             {
                 _cells[x, y].Pulse(true);
             }
+        }
+
+        /// <summary>The Heatwave scorching one planted tile (see GridCellView.PlayBurn).</summary>
+        public void PlayBurn(int x, int y)
+        {
+            if (GridManager.InBounds(x, y))
+            {
+                _cells[x, y].PlayBurn();
+            }
+        }
+
+        /// <summary>Makes cells vanish (scale 0) so a flying tile can arrive there later; undo with <see cref="ShowCells"/>.</summary>
+        public void HideCells(IReadOnlyList<Vector2Int> cells)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (GridManager.InBounds(cells[i].x, cells[i].y))
+                {
+                    _cells[cells[i].x, cells[i].y].transform.localScale = Vector3.zero;
+                }
+            }
+        }
+
+        public void ShowCells(IReadOnlyList<Vector2Int> cells)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (GridManager.InBounds(cells[i].x, cells[i].y))
+                {
+                    _cells[cells[i].x, cells[i].y].transform.localScale = Vector3.one;
+                }
+            }
+        }
+
+        /// <summary>Hurricane: every blown tile lifts off its (held) source and flies to its new plot, which reappears when it lands. The sources are redrawn empty as the tiles lift off.</summary>
+        public IEnumerator PlayTileFlights(IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> moves, float duration)
+        {
+            for (int i = 0; i < moves.Count; i++)
+            {
+                var move = moves[i];
+                RefreshCell(move.From.x, move.From.y);
+                StartCoroutineOn(_cells[move.From.x, move.From.y], _cells[move.From.x, move.From.y].FlyTileTo(_cells[move.To.x, move.To.y], move.Color, duration));
+            }
+            yield return new WaitForSeconds(duration);
+            for (int i = 0; i < moves.Count; i++)
+            {
+                var dest = _cells[moves[i].To.x, moves[i].To.y];
+                dest.transform.localScale = Vector3.one;
+                dest.Pulse(true);
+            }
+        }
+
+        private static void StartCoroutineOn(MonoBehaviour host, IEnumerator routine)
+        {
+            host.StartCoroutine(routine);
         }
 
         /// <summary>The ice of a frozen plot breaking free: a flash and a spray of ice shards (see GridCellView.PlayIceShatter).</summary>

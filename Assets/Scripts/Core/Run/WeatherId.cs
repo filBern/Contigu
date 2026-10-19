@@ -10,6 +10,8 @@ namespace Contigu.Core
         Frost,
         Dew,
         GoldenHour,
-        PollenShower
+        PollenShower,
+        Heatwave,
+        Hurricane
     }
 }

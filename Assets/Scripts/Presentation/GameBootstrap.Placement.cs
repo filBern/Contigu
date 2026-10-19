@@ -178,7 +178,22 @@ namespace Contigu.Presentation
             // placement's auto-refill (or an enemy death) just changed are
             // held back from this redraw, revealed only once
             // PlayPlacementSequence's end-of-sequence reveal runs.
+            // Hurricane: the blown tiles keep showing at their old plots (held) and are hidden at their new ones until
+            // the end of the sequence, when they actually fly across (see PlayWeatherTileFlights).
+            var weatherHiddenCells = new List<Vector2Int>();
+            for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
+            {
+                var move = outcome.WeatherMovedTiles[i];
+                if (!heldCells.Contains(move.To))
+                {
+                    weatherHiddenCells.Add(move.To);
+                }
+                heldCells.Add(move.From);
+                heldColors.Add(move.Color);
+                heldTraits.Add(null);
+            }
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
+            _gridView.HideCells(weatherHiddenCells);
             // Same hold for the hand when auto-refill already dealt the
             // next hand — PlayPlacementSequence reveals it once the
             // sequence finishes (see HandView.RefreshHoldingEmpty).
@@ -807,9 +822,28 @@ namespace Contigu.Presentation
                 _handView.Refresh();
             }
 
+            if (outcome.WeatherMovedTiles.Count > 0)
+            {
+                SfxManager.Play(SfxId.Shuffle);
+                ShakeScreen(1, 5);
+                yield return _gridView.PlayTileFlights(outcome.WeatherMovedTiles, 0.65f);
+            }
+
             }
             finally
             {
+                // Hurricane: whatever happened above, no destination plot may stay hidden.
+                var weatherDestCells = new List<Vector2Int>();
+                for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
+                {
+                    weatherDestCells.Add(outcome.WeatherMovedTiles[i].To);
+                    weatherDestCells.Add(outcome.WeatherMovedTiles[i].From);
+                }
+                if (weatherDestCells.Count > 0)
+                {
+                    _gridView.ShowCells(weatherDestCells);
+                    _gridView.RefreshCells(weatherDestCells);
+                }
                 // SetSlotPiecesAlpha(1f) covers the case where this threw mid-fade (see the comment at the
                 // top of this method) — Refresh() alone doesn't touch a CanvasGroup's alpha, so without this
                 // the hand could stay invisible even once its contents are correctly rebuilt below.

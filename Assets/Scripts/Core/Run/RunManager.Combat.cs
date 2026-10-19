@@ -21,6 +21,7 @@ namespace Contigu.Core
                 return false;
             }
             ShufflesRemaining--;
+            ApplyHeatwaveShuffleBurn();
             DrawFreshHand();
             EvaluateRoundEnd();
             return true;

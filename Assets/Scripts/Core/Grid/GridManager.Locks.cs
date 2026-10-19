@@ -42,6 +42,78 @@ namespace Contigu.Core
             return chosen;
         }
 
+        /// <summary>Heatwave: scorches one random planted, unlocked tile away (no score). Returns where it was, its color and trait, or null when nothing could burn.</summary>
+        public (Vector2Int Pos, PieceColor Color, PieceTrait? Trait)? BurnRandomTile(IRandomProvider rng)
+        {
+            var candidates = MovableFilledCells();
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+            var pos = candidates[rng.Next(candidates.Count)];
+            var cell = GetCell(pos);
+            var burned = (pos, cell.FilledColor ?? default(PieceColor), cell.OriginTrait);
+            cell.ClearFill();
+            return burned;
+        }
+
+        /// <summary>
+        /// Hurricane: blows up to <paramref name="count"/> random planted, unlocked tiles onto other empty, unlocked, unfrozen plots, carrying their whole
+        /// fill state (color, shape, golden/tinted/multiplier flags, trait, mastery stamps). Hazards tied to a position (blight, locks) stay put.
+        /// </summary>
+        public List<(Vector2Int From, Vector2Int To, PieceColor Color)> BlowTiles(int count, IRandomProvider rng)
+        {
+            var moves = new List<(Vector2Int, Vector2Int, PieceColor)>();
+            var sources = MovableFilledCells();
+            var destinations = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (!cell.IsFilled && !cell.IsLocked && !cell.IsFrozen)
+                {
+                    destinations.Add(pos);
+                }
+            }
+            for (int n = 0; n < count && sources.Count > 0 && destinations.Count > 0; n++)
+            {
+                int si = rng.Next(sources.Count);
+                int di = rng.Next(destinations.Count);
+                var from = sources[si];
+                var to = destinations[di];
+                sources.RemoveAt(si);
+                destinations.RemoveAt(di);
+                var src = GetCell(from);
+                var dst = GetCell(to);
+                dst.IsFilled = src.IsFilled;
+                dst.FilledColor = src.FilledColor;
+                dst.FilledShapeId = src.FilledShapeId;
+                dst.IsGolden = src.IsGolden;
+                dst.IsTinted = src.IsTinted;
+                dst.TintedColor = src.TintedColor;
+                dst.IsMultiplierZone = src.IsMultiplierZone;
+                dst.OriginTrait = src.OriginTrait;
+                dst.ShapeMasteryBonus = src.ShapeMasteryBonus;
+                dst.ColorMasteryBonus = src.ColorMasteryBonus;
+                moves.Add((from, to, dst.FilledColor ?? default(PieceColor)));
+                src.ClearFill();
+            }
+            return moves;
+        }
+
+        private List<Vector2Int> MovableFilledCells()
+        {
+            var cells = new List<Vector2Int>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = GetCell(pos);
+                if (cell.IsFilled && cell.FilledColor.HasValue && !cell.IsLocked && !cell.IsBastion)
+                {
+                    cells.Add(pos);
+                }
+            }
+            return cells;
+        }
+
         /// <summary>Turns up to <paramref name="count"/> random empty, unlocked, non-golden plots golden (Golden Hour weather). Returns the chosen positions.</summary>
         public IReadOnlyList<Vector2Int> MakeRandomCellsGolden(int count, IRandomProvider rng)
         {

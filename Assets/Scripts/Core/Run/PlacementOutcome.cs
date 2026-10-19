@@ -25,7 +25,10 @@ namespace Contigu.Core
         /// <summary>Every lock/poison cell released this placement because the enemy that owned it died (see RunManager.CleanUpDefeatedEnemy) — a subset of a Shuffle-move's own released cells in RunManager.ResolveLockerShuffleEffect/ResolvePoisonerShuffleEffect, which this never includes. Presentation plays a red explosion VFX for these instead of the ordinary reveal fade (see GameBootstrap). Empty when nothing died this placement.</summary>
         public readonly IReadOnlyList<Vector2Int> DeathReleasedCells;
 
-        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null, PieceColor? chameleonOriginalColor = null, IReadOnlyList<Vector2Int> deathReleasedCells = null)
+        /// <summary>Tiles the Hurricane weather blew to other plots right after this placement (empty otherwise) — the grid already holds their new positions; Presentation animates the flight.</summary>
+        public readonly IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> WeatherMovedTiles;
+
+        public PlacementOutcome(PlacementResult placement, RunState stateAfter, int roundScoreAfter, int totalScoreAfter, int piecesRemainingAfter, IReadOnlyList<Vector2Int> bossLockedCells = null, PieceColor? chameleonOriginalColor = null, IReadOnlyList<Vector2Int> deathReleasedCells = null, IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> weatherMovedTiles = null)
         {
             Placement = placement;
             StateAfter = stateAfter;
@@ -35,6 +38,7 @@ namespace Contigu.Core
             BossLockedCells = bossLockedCells ?? System.Array.Empty<Vector2Int>();
             ChameleonOriginalColor = chameleonOriginalColor;
             DeathReleasedCells = deathReleasedCells ?? System.Array.Empty<Vector2Int>();
+            WeatherMovedTiles = weatherMovedTiles ?? System.Array.Empty<(Vector2Int, Vector2Int, PieceColor)>();
         }
     }
 }
