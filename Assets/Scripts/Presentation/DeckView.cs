@@ -57,7 +57,7 @@ namespace Contigu.Presentation
             _deck = run.Deck;
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", new Color(0f, 0f, 0f, 0.82f));
+            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", UITheme.Background);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
@@ -121,6 +121,9 @@ namespace Contigu.Presentation
         {
             SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(true);
+            // Full-screen and opaque: nothing else (lifted shop panels included) may show through or above it.
+            _root.SetAsLastSibling();
+            OverlayLift.SetPanelsHidden(true);
             RebuildRows();
         }
 
@@ -128,6 +131,7 @@ namespace Contigu.Presentation
         {
             SfxManager.Play(SfxId.Overlay);
             _root.gameObject.SetActive(false);
+            OverlayLift.SetPanelsHidden(false);
         }
 
         private static readonly PieceColor[] ColorSectionOrder =

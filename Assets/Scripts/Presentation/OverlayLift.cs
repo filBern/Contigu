@@ -13,6 +13,30 @@ namespace Contigu.Presentation
         /// <summary>Panels to keep readable above any overlay; set once by GameBootstrap after the views are built.</summary>
         public static readonly List<RectTransform> Panels = new List<RectTransform>();
 
+        /// <summary>Hides (or shows again) every registered panel, lifted or not — used by full-screen overlays such as the seed bag that must show nothing else.</summary>
+        public static void SetPanelsHidden(bool hidden)
+        {
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                var panel = Panels[i];
+                if (panel == null)
+                {
+                    continue;
+                }
+                var group = panel.GetComponent<CanvasGroup>();
+                if (group == null)
+                {
+                    if (!hidden)
+                    {
+                        continue;
+                    }
+                    group = panel.gameObject.AddComponent<CanvasGroup>();
+                }
+                group.alpha = hidden ? 0f : 1f;
+                group.blocksRaycasts = !hidden;
+            }
+        }
+
         private readonly List<RectTransform> _lifted = new List<RectTransform>();
         private readonly List<Transform> _parents = new List<Transform>();
         private readonly List<int> _indices = new List<int>();
