@@ -28,6 +28,8 @@ namespace Contigu.Presentation
         // Always-visible top-left "Round X/Y" readout — unlike the score bar's own round label, this one
         // keeps showing during an encounter (when _isEncounterMode hides the score bar entirely).
         private Text _roundChipLabel;
+        private Image _weatherChipIcon;
+        private HoverTooltip _weatherChipTooltip;
         // Defaults match round 1 so the first SetScores call (before Refresh's own SetRound runs) never shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
@@ -72,6 +74,14 @@ namespace Contigu.Presentation
         // Shield overlay per enemy slot (Reclaimer's first-hit shield, see EnemyInstance.HasShield); _shieldHeld keeps it on screen
         // after the model already spent it, until the presentation layer breaks it (BreakShield).
         private readonly List<Image> _enemyShieldImages = new List<Image>();
+        // Per-slot idle animation / countdown (see Update, PlayEnemyAct).
+        private readonly List<RectTransform> _enemyIconBackgrounds = new List<RectTransform>();
+        private readonly List<Vector2> _enemyIconBasePositions = new List<Vector2>();
+        private readonly List<EnemyId?> _slotEnemyIds = new List<EnemyId?>();
+        private readonly List<GameObject> _enemyTickBadges = new List<GameObject>();
+        private readonly List<Text> _enemyTickLabels = new List<Text>();
+        private readonly float[] _enemyActPunch = new float[MaxEnemyIcons];
+        private int _enemyTickCountdown = 6;
         private readonly List<bool> _shieldHeld = new List<bool>();
         /// <summary>One slot's active hurt-flash or effect-pulse coroutine, if any — stopped and replaced rather than left to run alongside a newly triggered one on the same icon (see PlayEnemyHurtEffect/PlayEnemyEffectPulse).</summary>
         private readonly Coroutine[] _enemyIconEffectCoroutines = new Coroutine[MaxEnemyIcons];
@@ -172,6 +182,33 @@ namespace Contigu.Presentation
 
             _roundChipLabel = UIFactory.CreateText(chip.transform, "RoundChipLabel", "Round " + _roundNumber + "/" + _roundCount, 24, UITheme.TextPrimary);
             UIFactory.StretchFull(_roundChipLabel.rectTransform);
+
+            // This round's weather, right of the round chip; hover for what it does.
+            var weatherChip = UIFactory.CreatePanel(parent, "WeatherChip", UITheme.PanelLight);
+            UIFactory.AddThickOutline(weatherChip, UITheme.Border);
+            weatherChip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            weatherChip.rectTransform.anchorMax = new Vector2(0f, 1f);
+            weatherChip.rectTransform.pivot = new Vector2(0f, 1f);
+            weatherChip.rectTransform.anchoredPosition = new Vector2(174f, -16f);
+            weatherChip.rectTransform.sizeDelta = new Vector2(40f, 40f);
+            _weatherChipIcon = UIFactory.CreatePanel(weatherChip.transform, "WeatherIcon", Color.white);
+            _weatherChipIcon.preserveAspect = true;
+            UIFactory.StretchFull(_weatherChipIcon.rectTransform);
+            _weatherChipIcon.rectTransform.offsetMin = new Vector2(3f, 3f);
+            _weatherChipIcon.rectTransform.offsetMax = new Vector2(-3f, -3f);
+            _weatherChipTooltip = weatherChip.gameObject.AddComponent<HoverTooltip>();
+        }
+
+        /// <summary>Shows this round's weather in the chip next to the round number.</summary>
+        public void SetWeather(WeatherId weather)
+        {
+            if (_weatherChipIcon == null)
+            {
+                return;
+            }
+            _weatherChipIcon.sprite = VisualDefaults.GetWeatherSprite(weather);
+            _weatherChipIcon.enabled = _weatherChipIcon.sprite != null;
+            _weatherChipTooltip.Init(_tooltip, WeatherCatalog.GetName(weather), WeatherCatalog.GetDescription(weather), "Weather this round", UITheme.TextMuted);
         }
 
         /// <summary>
@@ -263,6 +300,25 @@ namespace Contigu.Presentation
                 shieldImage.gameObject.SetActive(false);
                 _enemyShieldImages.Add(shieldImage);
                 _shieldHeld.Add(false);
+                _enemyIconBackgrounds.Add(iconBackground.rectTransform);
+                _enemyIconBasePositions.Add(iconBackground.rectTransform.anchoredPosition);
+                _slotEnemyIds.Add(null);
+
+                // Countdown to a timed enemy trick (Bramble, Blightmoth), top-right corner of the portrait.
+                var tickBadge = UIFactory.CreatePanel(iconBackground.transform, "EnemyTickBadge" + i, UITheme.Danger);
+                tickBadge.raycastTarget = false;
+                UIFactory.AddThickOutline(tickBadge, UITheme.Border, 1.5f);
+                tickBadge.rectTransform.anchorMin = new Vector2(1f, 1f);
+                tickBadge.rectTransform.anchorMax = new Vector2(1f, 1f);
+                tickBadge.rectTransform.pivot = new Vector2(1f, 1f);
+                tickBadge.rectTransform.anchoredPosition = new Vector2(2f, 2f);
+                tickBadge.rectTransform.sizeDelta = new Vector2(22f, 22f);
+                var tickLabel = UIFactory.CreateText(tickBadge.transform, "TickLabel", "", 15, UITheme.TextPrimary);
+                tickLabel.raycastTarget = false;
+                UIFactory.StretchFull(tickLabel.rectTransform);
+                tickBadge.gameObject.SetActive(false);
+                _enemyTickBadges.Add(tickBadge.gameObject);
+                _enemyTickLabels.Add(tickLabel);
 
                 var label = UIFactory.CreateText(slot, "Hp", "", 16, UITheme.TextPrimary);
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -311,6 +367,8 @@ namespace Contigu.Presentation
         public void Refresh(RunManager run)
         {
             SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount);
+            SetWeather(run.CurrentWeather);
+            _enemyTickCountdown = run.PlacementsUntilEnemyTick;
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             if (run.HasActiveEncounter)
             {
@@ -401,6 +459,13 @@ namespace Contigu.Presentation
                 }
 
                 var enemy = encounter[i];
+                _slotEnemyIds[i] = enemy.Definition.Id;
+                bool hasTimedTrick = !enemy.IsDead && RunManager.HasTimedTrick(enemy.Definition.Id);
+                _enemyTickBadges[i].SetActive(hasTimedTrick);
+                if (hasTimedTrick)
+                {
+                    _enemyTickLabels[i].text = _enemyTickCountdown.ToString();
+                }
                 _enemyShieldImages[i].gameObject.SetActive(!enemy.IsDead && (enemy.HasShield || _shieldHeld[i]) && _enemyShieldImages[i].sprite != null);
                 _enemyShieldImages[i].color = Color.white;
                 _enemyShieldImages[i].rectTransform.localScale = Vector3.one;
@@ -419,7 +484,7 @@ namespace Contigu.Presentation
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 SetRatio(_enemyHpBarFills[i], enemy.CurrentMaxHp > 0 ? (float)enemy.CurrentHp / enemy.CurrentMaxHp : 0f);
-                _enemyIconViews[i].Init(_tooltip, IsEnraged(enemy) ? enemy.Definition.Name + " (ENRAGED)" : enemy.Definition.Name, HaterDescription(enemy), IsEnraged(enemy) ? "Wounded, it stops being shy. Its feathers bristle and its eyes burn red." : enemy.Definition.Lore);
+                _enemyIconViews[i].Init(_tooltip, IsEnraged(enemy) ? enemy.Definition.Name + " (ENRAGED)" : enemy.Definition.Name, HaterDescription(enemy) + (hasTimedTrick ? "\nNext timed trick in " + _enemyTickCountdown + (_enemyTickCountdown == 1 ? " seed." : " seeds.") : ""), IsEnraged(enemy) ? "Wounded, it stops being shy. Its feathers bristle and its eyes burn red." : enemy.Definition.Lore);
             }
         }
 
@@ -471,6 +536,57 @@ namespace Contigu.Presentation
             {
                 // The exact moment this kill is first visually revealed — see _enemySlotRevealedDead's own doc comment.
                 _enemySlotRevealedDead[index] = true;
+            }
+        }
+
+        /// <summary>A short punch on an enemy's portrait the moment its trick lands on the board (see GameBootstrap.PlayEnemyEffectsSequentially).</summary>
+        public void PlayEnemyAct(int index)
+        {
+            if (index >= 0 && index < _enemyActPunch.Length)
+            {
+                _enemyActPunch[index] = 1f;
+            }
+        }
+
+        private void Update()
+        {
+            float now = Time.time;
+            for (int i = 0; i < _enemyIconBackgrounds.Count; i++)
+            {
+                if (!_enemySlots[i].activeInHierarchy || !_slotEnemyIds[i].HasValue)
+                {
+                    continue;
+                }
+                float t = now + i * 1.37f;
+                float rot = 0f;
+                float bob = 0f;
+                float scale = 1f;
+                switch (_slotEnemyIds[i].Value)
+                {
+                    case EnemyId.Basic: rot = Mathf.Sin(t * 1.2f) * 2f; break;
+                    case EnemyId.Locker: scale = 1f + Mathf.Sin(t * 2f) * 0.03f; break;
+                    case EnemyId.Poisoner: bob = Mathf.Sin(t * 1.8f) * 2.5f; rot = Mathf.Sin(t * 0.9f) * 1.5f; break;
+                    case EnemyId.HeavyLocker: bob = Mathf.Sin(t * 0.7f) * 1.5f; scale = 1f + Mathf.Sin(t * 1.4f) * 0.015f; break;
+                    case EnemyId.Plague: scale = 1f + Mathf.Sin(t * 1.5f) * 0.04f; rot = Mathf.Sin(t * 0.6f) * 2f; break;
+                    case EnemyId.Thief: rot = Mathf.Sin(t * 3f) * 3f; bob = Mathf.Abs(Mathf.Sin(t * 3f)) * 1.5f; break;
+                    case EnemyId.Reclaimer: rot = Mathf.Sin(t * 0.9f) * 3f; break;
+                    case EnemyId.Leech: rot = Mathf.Sin(t * 5f) * 4f; break;
+                    case EnemyId.ColorHater: rot = Mathf.Sin(t * 0.8f) * 5f; break;
+                    case EnemyId.ShapeHater: rot = Mathf.Sin(t * 0.8f) * 3f; scale = 1f + Mathf.Sin(t * 1.6f) * 0.02f; break;
+                    case EnemyId.Blightmoth: rot = Mathf.Sin(t * 7f) * 3f; bob = Mathf.Sin(t * 4f) * 2.5f; break;
+                }
+                float punch = _enemyActPunch[i];
+                float shake = 0f;
+                if (punch > 0f)
+                {
+                    scale *= 1f + 0.3f * Mathf.Sin(punch * Mathf.PI);
+                    shake = Mathf.Sin(punch * 40f) * 4f * punch;
+                    _enemyActPunch[i] = Mathf.Max(0f, punch - Time.deltaTime * 2.5f);
+                }
+                var rt = _enemyIconBackgrounds[i];
+                rt.localRotation = Quaternion.Euler(0f, 0f, rot);
+                rt.localScale = new Vector3(scale, scale, 1f);
+                rt.anchoredPosition = _enemyIconBasePositions[i] + new Vector2(shake, bob);
             }
         }
 

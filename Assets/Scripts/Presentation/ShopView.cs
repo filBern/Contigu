@@ -116,6 +116,11 @@ namespace Contigu.Presentation
         private Coroutine _lueurPulseCoroutine;
         private RectTransform _upcomingEncounterBox;
         private RectTransform _upcomingEncounterRow;
+        private RectTransform _weatherRow;
+        private Image _weatherIcon;
+        private Text _weatherLabel;
+        private HoverTooltip _weatherTooltip;
+        private const float WeatherRowHeight = 44f;
         private GridLayoutGroup _upcomingEncounterGrid;
         private RectTransform _blisterCardsContainer;
         private Text _upgradeSectionLabel;
@@ -222,10 +227,34 @@ namespace Contigu.Presentation
             _upcomingEncounterRow.anchorMax = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.pivot = new Vector2(0.5f, 1f);
             _upcomingEncounterRow.anchoredPosition = new Vector2(0f, -(UpcomingBannerHeight + UpcomingBoxTopPadding));
-            _upcomingEncounterRow.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding);
+            _upcomingEncounterRow.sizeDelta = new Vector2(UpcomingSlotWidth, UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding - WeatherRowHeight - 6f);
             _upcomingEncounterGrid = _upcomingEncounterRow.gameObject.AddComponent<GridLayoutGroup>();
             _upcomingEncounterGrid.childAlignment = TextAnchor.UpperCenter;
             _upcomingEncounterGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+
+            // Next round's weather, at the bottom of the box; hover for what it does.
+            _weatherRow = UIFactory.CreateUIObject("WeatherRow", _upcomingEncounterBox);
+            _weatherRow.anchorMin = new Vector2(0.5f, 0f);
+            _weatherRow.anchorMax = new Vector2(0.5f, 0f);
+            _weatherRow.pivot = new Vector2(0.5f, 0f);
+            _weatherRow.anchoredPosition = new Vector2(0f, UpcomingBoxBottomPadding);
+            _weatherRow.sizeDelta = new Vector2(UpcomingSlotWidth, WeatherRowHeight);
+            var weatherHit = _weatherRow.gameObject.AddComponent<Image>();
+            weatherHit.color = new Color(0f, 0f, 0f, 0.07f);
+            _weatherTooltip = _weatherRow.gameObject.AddComponent<HoverTooltip>();
+            _weatherIcon = UIFactory.CreatePanel(_weatherRow, "WeatherIcon", Color.white);
+            _weatherIcon.raycastTarget = false;
+            _weatherIcon.preserveAspect = true;
+            _weatherIcon.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            _weatherIcon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            _weatherIcon.rectTransform.pivot = new Vector2(0f, 0.5f);
+            _weatherIcon.rectTransform.anchoredPosition = new Vector2(8f, 0f);
+            _weatherIcon.rectTransform.sizeDelta = new Vector2(36f, 36f);
+            _weatherLabel = UIFactory.CreateText(_weatherRow, "WeatherLabel", "", 16, UITheme.TextPrimary, TextAnchor.MiddleLeft);
+            _weatherLabel.raycastTarget = false;
+            UIFactory.StretchFull(_weatherLabel.rectTransform);
+            _weatherLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
+            _weatherLabel.rectTransform.offsetMax = new Vector2(-6f, 0f);
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -353,9 +382,59 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(true);
             SetSharedLueurRaised(true);
             Refresh(run);
+            StartCoroutine(PlayCardsEntrance());
             if (_lueurPulseCoroutine == null)
             {
                 _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
+            }
+        }
+
+        private const float EntranceStagger = 0.07f;
+        private const float EntranceDuration = 0.32f;
+
+        /// <summary>The shop "opens": every card pops in from small with a little overshoot, one after the other, Blister first then the Casino.</summary>
+        private System.Collections.IEnumerator PlayCardsEntrance()
+        {
+            var cards = new List<RectTransform>();
+            foreach (var container in new[] { _blisterCardsContainer, _upgradeCardsContainer })
+            {
+                if (container == null)
+                {
+                    continue;
+                }
+                for (int i = 0; i < container.childCount; i++)
+                {
+                    cards.Add((RectTransform)container.GetChild(i));
+                }
+            }
+            for (int i = 0; i < cards.Count; i++)
+            {
+                cards[i].localScale = Vector3.zero;
+            }
+            float elapsed = 0f;
+            float total = EntranceDuration + EntranceStagger * cards.Count;
+            while (elapsed < total)
+            {
+                elapsed += Time.deltaTime;
+                for (int i = 0; i < cards.Count; i++)
+                {
+                    if (cards[i] == null)
+                    {
+                        continue;
+                    }
+                    float p = Mathf.Clamp01((elapsed - i * EntranceStagger) / EntranceDuration);
+                    // 0 -> 1.12 -> 1: quick pop with overshoot.
+                    float s = p < 0.65f ? Mathf.Lerp(0f, 1.12f, p / 0.65f) : Mathf.Lerp(1.12f, 1f, (p - 0.65f) / 0.35f);
+                    cards[i].localScale = new Vector3(s, s, 1f);
+                }
+                yield return null;
+            }
+            for (int i = 0; i < cards.Count; i++)
+            {
+                if (cards[i] != null)
+                {
+                    cards[i].localScale = Vector3.one;
+                }
             }
         }
 
@@ -435,10 +514,20 @@ namespace Contigu.Presentation
                 return;
             }
 
+            var nextWeather = run.NextWeather;
+            _weatherRow.gameObject.SetActive(nextWeather.HasValue);
+            if (nextWeather.HasValue)
+            {
+                _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(nextWeather.Value);
+                _weatherIcon.enabled = _weatherIcon.sprite != null;
+                _weatherLabel.text = WeatherCatalog.GetName(nextWeather.Value);
+                _weatherTooltip.Init(_tooltip, WeatherCatalog.GetName(nextWeather.Value), WeatherCatalog.GetDescription(nextWeather.Value), "Next round's weather", UITheme.TextMuted);
+            }
+
             int count = upcoming.Count;
             int columns = 2;
             int rows = (count + columns - 1) / columns;
-            float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding;
+            float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding - WeatherRowHeight - 6f;
             float maxSlotHeight = (availableHeight - (rows - 1) * UpcomingRowGap) / rows;
             float maxSlotWidth = (UpcomingSlotWidth - (columns - 1) * UpcomingRowGap) / columns;
             float iconSize = Mathf.Max(UpcomingMinIconSize, Mathf.Min(UpcomingIconSize, maxSlotHeight, maxSlotWidth));

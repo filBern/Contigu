@@ -126,6 +126,32 @@ namespace Contigu.Data
             return sprite;
         }
 
+        private static readonly Dictionary<WeatherId, Sprite> WeatherSprites = new Dictionary<WeatherId, Sprite>();
+
+        /// <summary>The icon of a round's weather (Resources/Icons/Weather/&lt;WeatherId&gt;.png), or null if missing.</summary>
+        public static Sprite GetWeatherSprite(WeatherId id)
+        {
+            if (!WeatherSprites.TryGetValue(id, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Weather/" + id);
+                WeatherSprites[id] = sprite;
+            }
+            return sprite;
+        }
+
+        private static readonly Dictionary<string, Sprite> AmbientSprites = new Dictionary<string, Sprite>();
+
+        /// <summary>A small ambient garden sprite (Resources/Ambient/&lt;name&gt;.png: Butterfly, Bee, Leaf, Raindrop, Sparkle, SunMote), or null if missing.</summary>
+        public static Sprite GetAmbientSprite(string name)
+        {
+            if (!AmbientSprites.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Ambient/" + name);
+                AmbientSprites[name] = sprite;
+            }
+            return sprite;
+        }
+
         private static readonly Dictionary<PieceColor, Sprite> AttackSprites = new Dictionary<PieceColor, Sprite>();
 
         /// <summary>The projectile art flown at an enemy when a piece of <paramref name="color"/> scores (Resources/Icons/Attacks/&lt;PieceColor&gt;.png, pointing right), or null if missing.</summary>
