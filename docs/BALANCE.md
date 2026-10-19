@@ -1,0 +1,34 @@
+# Équilibrage : où sont les chiffres, comment les mesurer
+
+## Où vivent les chiffres
+
+| Quoi | Fichier |
+|---|---|
+| Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs` |
+| Ennemis par round | `Core/Enemies/EncounterCatalog.cs` |
+| PV, rôle et texte de chaque ennemi | `Core/Enemies/EnemyCatalog.cs` |
+| Constantes de score (ligne récoltée 3/6/9, ×2 grille vidée, fractions Sap Drain/Siphon et plafond, bonus dorés…) | `Core/Scoring/ScoringConstants.cs` |
+| Prix des fertilizers | `Core/Economy/ModifierPricing.cs` ; économie générale dans `Core/Economy/EconomyConstants.cs` |
+| Effet de chaque fertilizer | `Core/Grid/GridManager.cs` (tables `BuildPreClearEffects` / post-clear) et `Core/Modifiers/ModifierDefinition.cs` (texte) |
+
+## Mesurer avant de toucher
+
+```
+cd Tools/Headless/RunSim
+dotnet run -- --runs 2000 --policy greedy
+```
+
+Lire : taux de réussite par round (« Cleared-round rate »), round où les runs finissent, cause des défaites, fertilizers
+corrélés avec les runs profondes. Le bot est volontairement simple : ses chiffres servent à **comparer avant/après**, pas à
+estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour comparer deux versions.
+
+## Historique des réglages
+
+- Round 2 : 24 → 28 graines, Bramble 750 → 600 PV (réussite du bot 58 % → 87 %).
+- Round 8 : 22 → 28 graines, Deadroot 2350 → 2000 PV (27 % → 54 %).
+- Sap Drain : 25 % → 8 % des dégâts en Pollen, Siphon : 15 % → 4 %, plafond de 10 Pollen par déclenchement.
+
+## Connu mais pas traité
+
+- Les rounds 3 à 6 restent les plus durs pour le bot (58–75 % de réussite) ; le round 3 est maintenant le premier mur.
+- `RunConfig.Quotas` n'est plus la condition de victoire de Classic (restée pour l'affichage et Marathon/Chaos).

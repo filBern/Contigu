@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|both] [--csv path]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|both] [--csv path] [--fail-on-error]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -19,18 +19,21 @@ namespace Contigu.RunSim
             int seed = 1;
             string policyArg = "both";
             string csvPath = null;
+            bool failOnError = false;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--runs" && i + 1 < args.Length) { runs = int.Parse(args[++i]); }
                 else if (args[i] == "--seed" && i + 1 < args.Length) { seed = int.Parse(args[++i]); }
                 else if (args[i] == "--policy" && i + 1 < args.Length) { policyArg = args[++i]; }
                 else if (args[i] == "--csv" && i + 1 < args.Length) { csvPath = args[++i]; }
+                else if (args[i] == "--fail-on-error") { failOnError = true; }
             }
 
             var policies = new List<BotPolicy>();
             if (policyArg == "random" || policyArg == "both") { policies.Add(BotPolicy.Random); }
             if (policyArg == "greedy" || policyArg == "both") { policies.Add(BotPolicy.Greedy); }
 
+            int errorCount = 0;
             var csv = new StringBuilder("policy,seed,victory,rounds_cleared,total_score,placements,shuffles,pollen_spent,pollen_earned,stuck,death_enemies,modifiers\n");
             foreach (var policy in policies)
             {
@@ -51,6 +54,7 @@ namespace Contigu.RunSim
                         Console.Error.WriteLine("seed " + runSeed + " (" + policy + "): " + e);
                     }
                     results.Add(res);
+                    if (res.Stuck) { errorCount++; }
                     csv.AppendLine(string.Join(",", policy, runSeed, res.Victory ? 1 : 0, res.RoundsCleared, res.TotalScore, res.PlacementsMade, res.ShufflesUsed,
                         res.PollenSpent, res.PollenEarnedEstimate, res.Stuck ? res.StuckReason.Replace(',', ';') : "", string.Join("|", res.DeathEncounter), string.Join("|", res.FinalModifiers)));
                 }
@@ -62,7 +66,7 @@ namespace Contigu.RunSim
                 System.IO.File.WriteAllText(csvPath, csv.ToString());
                 Console.WriteLine("\nCSV written to " + csvPath);
             }
-            return 0;
+            return failOnError && errorCount > 0 ? 1 : 0;
         }
 
         private static void Report(BotPolicy policy, List<RunResult> results, TimeSpan elapsed)

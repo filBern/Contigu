@@ -1,0 +1,26 @@
+name: Headless CI
+
+# Fast feedback on every push (any branch) and PR, no Unity licence needed: builds Core as a plain .NET library
+# (Tools/Headless), runs the EditMode NUnit suite against it, then smoke-plays full runs with the simulator bot so a
+# crash in the rules (like an exception on a rarely-seen fertilizer/enemy combo) fails the build.
+# The Unity workflow (unity-ci.yml) still compiles Presentation; this one covers the rules in seconds.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Core tests + simulator smoke run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: EditMode tests (headless)
+        run: dotnet test Tools/Headless/Tests/Contigu.Tests.Headless.csproj --blame-hang-timeout 60s
+      - name: Simulator smoke run (500 runs, fails on any exception)
+        run: dotnet run --project Tools/Headless/RunSim/Contigu.RunSim.csproj -c Release -- --runs 500 --fail-on-error
