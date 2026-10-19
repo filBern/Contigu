@@ -16,8 +16,15 @@ namespace Contigu.Presentation
         private const float MinCellSize = 84f;
         private const float BoxPadding = 18f;
         private const float DividerWidth = 2f;
-        // Width left between the fertilizer and next-round panels, in canvas units.
-        private const float AvailableWidth = 620f;
+        private const float SideGap = 20f;
+        // Width left between the fertilizer and next-round panels, in canvas units (see SetSidePanelCenterX).
+        private static float _availableWidth = 620f;
+
+        /// <summary>The two side panels sit at +/-<paramref name="sidePanelCenterX"/>, each <paramref name="panelWidth"/> wide; the box may use what is left between them.</summary>
+        public static void SetSidePanelCenterX(float sidePanelCenterX, float panelWidth)
+        {
+            _availableWidth = Mathf.Max(300f, 2f * sidePanelCenterX - panelWidth - 2f * SideGap);
+        }
 
         public static float CellSize { get; private set; } = MaxCellSize;
         public static float PreviewSize { get { return CellSize * 0.8f; } }
@@ -32,7 +39,7 @@ namespace Contigu.Presentation
         public static void Configure(int count)
         {
             int n = Mathf.Max(1, count);
-            float usable = AvailableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
+            float usable = _availableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
             CellSize = Mathf.Clamp(usable / n, MinCellSize, MaxCellSize);
         }
 

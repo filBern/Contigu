@@ -334,6 +334,14 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Mirrors the fertilizer panel: puts the "Next round" box at +<paramref name="sidePanelCenterX"/> from the screen center (the fertilizers sit at -that), so both side panels are equally far from the middle.</summary>
+        public void SetSidePanelCenterX(float sidePanelCenterX)
+        {
+            _upcomingEncounterBox.anchorMin = new Vector2(0.5f, 0.5f);
+            _upcomingEncounterBox.anchorMax = new Vector2(0.5f, 0.5f);
+            _upcomingEncounterBox.anchoredPosition = new Vector2(sidePanelCenterX, 0f);
+        }
+
         /// <summary>The "Next round" enemy preview box (see OverlayLift).</summary>
         public RectTransform UpcomingBox
         {
