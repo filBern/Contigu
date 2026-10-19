@@ -52,6 +52,7 @@ namespace Contigu.Presentation
 
             var overlay = UIFactory.CreatePanel(parent, "ModifierUpgradeChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
+            overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
 
             _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);

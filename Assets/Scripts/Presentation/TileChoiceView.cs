@@ -14,8 +14,8 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float CellSize = 98f;
-        private const float PreviewSize = 81f;
+        private const float CellSize = PieceBox.CellSize;
+        private const float PreviewSize = PieceBox.PreviewSize;
         private const float LevelLabelHeight = 18f;
         private const float BadgeFadeDuration = 0.35f;
         private const float TitleHeight = 40f;
@@ -55,6 +55,7 @@ namespace Contigu.Presentation
 
             var overlay = UIFactory.CreatePanel(parent, "TileChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
+            overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
 
             _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
@@ -82,6 +83,7 @@ namespace Contigu.Presentation
             var fitter = _previewsContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            PieceBox.Setup(_previewsContainer);
 
             _confirmButton = UIFactory.CreateButton(_root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
             _confirmRect = _confirmButton.GetComponent<RectTransform>();
@@ -139,7 +141,7 @@ namespace Contigu.Presentation
         /// <summary>Stacks card/title/previews/Confirm as one block and centers it vertically in the overlay. Every height here is either measured (the card) or a fixed constant, never guessed.</summary>
         private void LayoutBlock(float cardHeight)
         {
-            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + CellSize + BlockSpacing + ConfirmHeight;
+            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + PieceBox.BoxHeight + BlockSpacing + ConfirmHeight;
             float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
 
             _cardContainer.anchoredPosition = new Vector2(0f, topY);
@@ -149,18 +151,14 @@ namespace Contigu.Presentation
             y -= TitleHeight + BlockSpacing;
 
             _previewsContainer.anchoredPosition = new Vector2(0f, y);
-            y -= CellSize + BlockSpacing;
+            y -= PieceBox.BoxHeight + BlockSpacing;
 
             _confirmRect.anchoredPosition = new Vector2(0f, y);
         }
 
         private void BuildPreviewCell(int deckIndex)
         {
-            var cell = UIFactory.CreatePanel(_previewsContainer, "Tile_" + deckIndex, UITheme.ButtonIdle);
-            cell.rectTransform.sizeDelta = new Vector2(CellSize, CellSize);
-            var cellLayout = cell.gameObject.AddComponent<LayoutElement>();
-            cellLayout.preferredWidth = CellSize;
-            cellLayout.preferredHeight = CellSize;
+            var cell = PieceBox.CreateCell(_previewsContainer, "Tile_" + deckIndex);
             _cellBackgroundByIndex[deckIndex] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
@@ -248,7 +246,7 @@ namespace Contigu.Presentation
             }
 
             bool nowSelected = _selected.Contains(deckIndex);
-            _cellBackgroundByIndex[deckIndex].color = nowSelected ? UITheme.ButtonSelected : UITheme.ButtonIdle;
+            _cellBackgroundByIndex[deckIndex].color = nowSelected ? PieceBox.Selected : PieceBox.Idle;
             if (nowSelected != wasSelected)
             {
                 RebuildPreview(deckIndex, showTrait: nowSelected, animate: nowSelected);

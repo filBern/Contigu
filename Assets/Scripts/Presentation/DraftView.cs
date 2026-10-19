@@ -21,8 +21,8 @@ namespace Contigu.Presentation
     public sealed class DraftView : MonoBehaviour
     {
         // PreviewCellSize matches PieceChoiceView's CellSize to leave room for the level label under each preview (see BuildTypePreviewCell); PreviewSize matches TileChoiceView's glyph size.
-        private const float PreviewCellSize = 112f;
-        private const float PreviewSize = 81f;
+        private const float PreviewCellSize = PieceBox.CellSize;
+        private const float PreviewSize = PieceBox.PreviewSize;
         private const float LevelLabelHeight = 20f;
         private const float ConfirmHeight = 46f;
         private const float TitleHeight = 40f;
@@ -61,6 +61,7 @@ namespace Contigu.Presentation
 
             var overlay = UIFactory.CreatePanel(parent, "SubChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
+            overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
             _root.gameObject.SetActive(false);
             return _root;
@@ -101,7 +102,7 @@ namespace Contigu.Presentation
             const float gapBelowCard = 24f;
             // Card height varies with description length, so everything below it is placed relative to the measured height rather than a fixed offset. The whole block is vertically centered on screen.
             float cardHeight = _cardInstance.sizeDelta.y;
-            float totalHeight = cardHeight + gapBelowCard + TitleHeight + PreviewCellSize + BlockSpacing + ConfirmHeight;
+            float totalHeight = cardHeight + gapBelowCard + TitleHeight + PieceBox.BoxHeight + BlockSpacing + ConfirmHeight;
             float cardTopY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
             _cardInstance.anchoredPosition = new Vector2(0f, cardTopY);
             _bodyTopY = cardTopY - cardHeight - gapBelowCard;
@@ -154,6 +155,7 @@ namespace Contigu.Presentation
             var fitter = _typePreviewsContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            PieceBox.Setup(_typePreviewsContainer);
 
             for (int i = 0; i < _typeCandidates.Count; i++)
             {
@@ -166,7 +168,7 @@ namespace Contigu.Presentation
             confirmRect.anchorMin = new Vector2(0.5f, 1f);
             confirmRect.anchorMax = new Vector2(0.5f, 1f);
             confirmRect.pivot = new Vector2(0.5f, 1f);
-            confirmRect.anchoredPosition = new Vector2(0f, _bodyTopY - TitleHeight - PreviewCellSize - BlockSpacing);
+            confirmRect.anchoredPosition = new Vector2(0f, _bodyTopY - TitleHeight - PieceBox.BoxHeight - BlockSpacing);
             confirmRect.sizeDelta = new Vector2(200f, ConfirmHeight);
             confirmButton.interactable = false;
             confirmButton.onClick.AddListener(() => OnTypeConfirmClicked(def));
@@ -178,11 +180,7 @@ namespace Contigu.Presentation
             var shape = _typeCandidates[index].Shape;
             var color = _typeCandidates[index].Color;
 
-            var cell = UIFactory.CreatePanel(_typePreviewsContainer, "Type_" + index, UITheme.ButtonIdle);
-            cell.rectTransform.sizeDelta = new Vector2(PreviewCellSize, PreviewCellSize);
-            var cellLayout = cell.gameObject.AddComponent<LayoutElement>();
-            cellLayout.preferredWidth = PreviewCellSize;
-            cellLayout.preferredHeight = PreviewCellSize;
+            var cell = PieceBox.CreateCell(_typePreviewsContainer, "Type_" + index);
             _typeCellByIndex[index] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
@@ -228,7 +226,7 @@ namespace Contigu.Presentation
             _selectedTypeIndex = _selectedTypeIndex == index ? -1 : index;
             foreach (var kvp in _typeCellByIndex)
             {
-                kvp.Value.color = kvp.Key == _selectedTypeIndex ? UITheme.ButtonSelected : UITheme.ButtonIdle;
+                kvp.Value.color = kvp.Key == _selectedTypeIndex ? PieceBox.Selected : PieceBox.Idle;
             }
             _typeConfirmButton.interactable = _selectedTypeIndex >= 0;
         }
@@ -320,43 +318,59 @@ namespace Contigu.Presentation
             onComplete();
         }
 
-        /// <summary>Dupliquer: fades a new copy of the chosen piece in next to it, then resolves. Purely visual: DeckManager.DuplicateOfType adds the real copy once <see cref="SubChoiceConfirmed"/> fires.</summary>
+        /// <summary>Dupliquer: shows the copy being added without touching the layout (a sixth cell used to widen the row and overlap the fertilizer panel): the chosen preview punches up and a "+1" badge pops in on its cell, then resolves. Purely visual: DeckManager.DuplicateOfType adds the real copy once <see cref="SubChoiceConfirmed"/> fires.</summary>
         private IEnumerator FadeInDuplicateThenFinalize(ShapeId shape, PieceColor color, UpgradeSubChoice sub)
         {
-            var trait = FindRepresentativeTrait(shape, color);
-            var clone = UIFactory.CreatePanel(_typePreviewsContainer, "Duplicate", UITheme.ButtonIdle);
-            clone.rectTransform.sizeDelta = new Vector2(PreviewCellSize, PreviewCellSize);
-            var cloneLayout = clone.gameObject.AddComponent<LayoutElement>();
-            cloneLayout.preferredWidth = PreviewCellSize;
-            cloneLayout.preferredHeight = PreviewCellSize;
+            RectTransform cell = null;
+            RectTransform preview = null;
+            if (_typeCellByIndex.TryGetValue(_selectedTypeIndex, out var cellImage) && cellImage != null)
+            {
+                cell = cellImage.rectTransform;
+                _typePreviewContainerByIndex.TryGetValue(_selectedTypeIndex, out preview);
+            }
 
-            var previewContainer = UIFactory.CreateUIObject("Preview", clone.transform);
-            previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            // Same +13 offset as BuildTypePreviewCell's cells so the glyph lines up with its row-mates.
-            previewContainer.anchoredPosition = new Vector2(0f, 13f);
-            previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
-            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, clone.gameObject);
+            Text badge = null;
+            if (cell != null)
+            {
+                var badgeBg = UIFactory.CreatePanel(cell, "DuplicateBadge", UITheme.Success);
+                badgeBg.raycastTarget = false;
+                var bgRect = badgeBg.rectTransform;
+                bgRect.anchorMin = bgRect.anchorMax = new Vector2(1f, 1f);
+                bgRect.pivot = new Vector2(0.5f, 0.5f);
+                bgRect.anchoredPosition = new Vector2(-20f, -20f);
+                bgRect.sizeDelta = new Vector2(44f, 30f);
+                badge = UIFactory.CreateText(badgeBg.transform, "Plus", "+1", 20, UITheme.TextPrimary);
+                badge.raycastTarget = false;
+                UIFactory.StretchFull(badge.rectTransform);
+                bgRect.localScale = Vector3.zero;
+            }
 
-            var canvasGroup = clone.gameObject.AddComponent<CanvasGroup>();
-            canvasGroup.alpha = 0f;
             float elapsed = 0f;
             while (elapsed < FadeDuration)
             {
-                if (clone == null)
+                if (cell == null)
                 {
-                    yield break;
+                    break;
                 }
                 elapsed += Time.deltaTime;
-                canvasGroup.alpha = Mathf.Clamp01(elapsed / FadeDuration);
+                float p = Mathf.Clamp01(elapsed / FadeDuration);
+                // Overshoot pop: 0 -> 1.25 -> 1.
+                float pop = p < 0.6f ? Mathf.Lerp(0f, 1.25f, p / 0.6f) : Mathf.Lerp(1.25f, 1f, (p - 0.6f) / 0.4f);
+                if (badge != null)
+                {
+                    badge.transform.parent.localScale = new Vector3(pop, pop, 1f);
+                }
+                if (preview != null)
+                {
+                    float punch = 1f + 0.15f * Mathf.Sin(p * Mathf.PI);
+                    preview.localScale = new Vector3(punch, punch, 1f);
+                }
                 yield return null;
             }
-            if (clone == null)
+            if (preview != null)
             {
-                yield break;
+                preview.localScale = Vector3.one;
             }
-            canvasGroup.alpha = 1f;
             yield return new WaitForSeconds(PostFadeHold);
             FinalizeChoice(sub);
         }

@@ -516,7 +516,10 @@ namespace Contigu.Presentation
             // this view is only Refreshed, never rebuilt.
             var modifierPanelRect = _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
-            _masteryChoiceView.SetKeepVisible(modifierPanelRect, _shopView.UpcomingBox);
+            OverlayLift.Panels.Clear();
+            OverlayLift.Panels.Add(modifierPanelRect);
+            OverlayLift.Panels.Add(_shopView.UpcomingBox);
+            OverlayLift.Panels.Add(_hudView.LueurLabelTransform);
             // Modifier order determines scoring order (see
             // PlacementResult.Mult); same lambda-captures-_run reasoning as
             // above.
