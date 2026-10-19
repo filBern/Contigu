@@ -144,7 +144,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false)
         {
             _nameLabel.text = name;
 
@@ -208,7 +208,7 @@ namespace Contigu.Presentation
             // Always render above whatever else is on screen, including
             // overlays (draft/removal cards) built after this tooltip.
             _root.SetAsLastSibling();
-            PositionNear(anchor);
+            PositionNear(anchor, placeAbove);
         }
 
         public void Hide()
@@ -216,7 +216,7 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        private void PositionNear(RectTransform anchor)
+        private void PositionNear(RectTransform anchor, bool placeAbove = false)
         {
             // Screen Space - Overlay canvas, so camera is null for both calls.
             var screenPoint = RectTransformUtility.WorldToScreenPoint(null, anchor.position);
@@ -232,6 +232,17 @@ namespace Contigu.Presentation
             // room to its right.
             float anchorHalfW = anchor.rect.width * 0.5f;
             float anchorHalfH = anchor.rect.height * 0.5f;
+
+            if (placeAbove)
+            {
+                // Centered over the anchor, sitting on its top edge; below it instead when there is no room above.
+                float centeredX = Mathf.Clamp(localPoint.x - Width * 0.5f, -halfW, halfW - Width);
+                float aboveTop = localPoint.y + anchorHalfH + ShowMargin + panelHeight;
+                float topY = aboveTop <= halfH ? aboveTop : localPoint.y - anchorHalfH - ShowMargin;
+                topY = Mathf.Clamp(topY, -halfH + panelHeight, halfH);
+                _panel.anchoredPosition = new Vector2(centeredX, topY);
+                return;
+            }
 
             float rightX = localPoint.x + anchorHalfW + ShowMargin;
             float leftX = localPoint.x - anchorHalfW - ShowMargin - Width;

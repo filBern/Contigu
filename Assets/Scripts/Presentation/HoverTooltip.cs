@@ -26,7 +26,7 @@ namespace Contigu.Presentation
         {
             if (_tooltip != null)
             {
-                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor);
+                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, placeAbove: true);
             }
         }
 
