@@ -483,7 +483,7 @@ namespace Contigu.Presentation
 
         // The tile blooms open: a bud that swells past full size, settles a touch under, then rests; it also unwinds a small tilt
         // like petals opening. Several cells of one piece start a few frames apart (see GridView.PlayLandingSquash).
-        private const float BloomDuration = 0.36f;
+        private const float BloomDuration = 0.6f;
         private const float BloomOvershoot = 1.2f;
         private const float BloomUndershoot = 0.95f;
         private const float BloomStartTilt = -16f;
