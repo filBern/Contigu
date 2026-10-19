@@ -42,6 +42,7 @@ namespace Contigu.Presentation
         private const int DefaultStatusFontSize = 19;
         private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
+        private const string BoardEffectTipPrefsKey = "SprigBoardEffectTip";
         // Juice: a big Combo (at least two stacked Combo modifiers) or a Boss-tier kill shakes the grid —
         // see the "COMBO xN" callout below and DrainComboIntoDamage/DrainSecondaryEnemyHits.
         private const int BigComboShakeThreshold = 4;
@@ -578,6 +579,12 @@ namespace Contigu.Presentation
                     Text = "Pests guard each round. Your score becomes damage on the leftmost one. Hover a pest to read its tricks!",
                     Targets = () => new[] { _hudView.GetEnemyIconTransform(0) }
                 },
+                new SprigGuideStep
+                {
+                    Mood = SprigMood.Sad,
+                    Text = "Careful: pests fight on your garden itself! They lock plots, blight tiles so they score negative, and steal seeds. Plan your planting around them.",
+                    Targets = () => new[] { _gridView.GetCellTransform(0, 0), _gridView.GetCellTransform(GridManager.Size - 1, GridManager.Size - 1) }
+                },
                 new SprigGuideStep { Text = "Stuck? Shuffle swaps your hand. Between rounds, spend Pollen on fertilizers and upgrades. Press H for the full rules." },
                 new SprigGuideStep { Mood = SprigMood.Cheer, Text = "Now go make it bloom. Happy planting!" },
             };
@@ -1081,6 +1088,12 @@ namespace Contigu.Presentation
                 yield break;
             }
             var remaining = new HashSet<Vector2Int>(cells);
+            // First time a pest's trick actually lands on the board: Sprig points out that the garden is the battlefield.
+            if (PlayerPrefs.GetInt(BoardEffectTipPrefsKey, 0) == 0)
+            {
+                PlayerPrefs.SetInt(BoardEffectTipPrefsKey, 1);
+                _sprigView.Say("See that? The pests fight right on your garden! Locked and blighted plots change how you plant. Work around them!", SprigMood.Sad, 7f);
+            }
             if (_run.HasActiveEncounter)
             {
                 var encounter = _run.CurrentEncounter;

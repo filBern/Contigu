@@ -69,7 +69,7 @@ namespace Contigu.Presentation
         // Larger than the body text's own size (see Build). A <size=> tag is a true rescale, unlike <b>, which Unity synthesizes by redrawing the glyph and can read as blurry.
         private const int HeaderFontSize = 24;
 
-        /// <summary>Six short sections covering everything a new player needs before their first placement. Headers are kept out of DescriptionTextFormatter.Colorize entirely (only each section's body line goes through it) — otherwise a header like "LUEUR AND THE SHOP" would have its own leading &lt;size=&gt; tag glued onto "LUEUR", which stops the keyword match from firing on the very word it's supposed to recognize.</summary>
+        /// <summary>Seven short sections covering everything a new player needs before their first placement. Headers are kept out of DescriptionTextFormatter.Colorize entirely (only each section's body line goes through it) — otherwise a header like "LUEUR AND THE SHOP" would have its own leading &lt;size=&gt; tag glued onto "LUEUR", which stops the keyword match from firing on the very word it's supposed to recognize.</summary>
         private static string BuildRulesText()
         {
             (string Header, string Body)[] sections =
@@ -78,6 +78,7 @@ namespace Contigu.Presentation
                 ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st sprout 1 pt, 2nd sprout 2 pts, 3rd sprout 3 pts, and so on."),
                 ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per sprout for the first line, +6 per sprout for a second line harvested by the same move, +9 for a third, and so on. Emptying the whole grid with one move doubles your Mult. Harvesting a line containing several distinct colors also earns Pollen (+2 Pollen per distinct color in it)."),
                 ("POLLEN AND THE SHOP", "Between rounds, spend Pollen in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) — some add flat bonuses, some multiply."),
+                ("PESTS FIGHT ON YOUR GARDEN", "Your score is damage against the pests, but they strike back on the board itself: they lock plots, blight tiles (points scored there turn negative and the blight spreads), steal seeds from your hand, even blight a fertilizer so it does nothing. Read each pest's tooltip and plan around it."),
                 ("BOSS ROUNDS", "Every 4 rounds, a random boss rule applies: the grid locks 1 cell every 5 seeds, one hand slot is locked, or one color scores no points. In Wildgrowth, grid locks happen every round."),
                 ("DEFEAT", "If none of your 3 hand seeds can be placed anywhere on the grid before reaching the quota, the run ends there.")
             };
