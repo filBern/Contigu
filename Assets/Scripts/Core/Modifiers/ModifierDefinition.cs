@@ -47,7 +47,7 @@ namespace Contigu.Core
     {
         public static readonly ModifierDefinition Prisme = new ModifierDefinition(
             ModifierId.Prisme, ModifierCategory.Couleurs, "Prism",
-            "x3 Mult if 3 different colors are touched other than the one placed.");
+            "x3 Mult if the seed you plant touches all 3 other colors (side by side with any of its cells). A Joker counts as any one color.");
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
