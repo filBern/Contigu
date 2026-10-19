@@ -183,7 +183,7 @@ namespace Contigu.Presentation
             // placement's auto-refill (or an enemy death) just changed are
             // held back from this redraw, revealed only once
             // PlayPlacementSequence's end-of-sequence reveal runs.
-            // Hurricane: the blown tiles keep showing at their old plots (held) and are hidden at their new ones until
+            // Hurricane: the blown tiles keep showing at their old plots (held) and are drawn as empty plots at their new ones until
             // the end of the sequence, when they actually fly across (see PlayWeatherTileFlights).
             var weatherHiddenCells = new List<Vector2Int>();
             for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
@@ -198,7 +198,7 @@ namespace Contigu.Presentation
                 heldTraits.Add(null);
             }
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
-            _gridView.HideCells(weatherHiddenCells);
+            _gridView.ShowCellsAsEmpty(weatherHiddenCells);
             // Same hold for the hand when auto-refill already dealt the
             // next hand — PlayPlacementSequence reveals it once the
             // sequence finishes (see HandView.RefreshHoldingEmpty).
@@ -838,7 +838,7 @@ namespace Contigu.Presentation
             }
             finally
             {
-                // Hurricane: whatever happened above, no destination plot may stay hidden.
+                // Hurricane: whatever happened above, no destination plot may stay drawn empty.
                 var weatherDestCells = new List<Vector2Int>();
                 for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
                 {
@@ -847,7 +847,6 @@ namespace Contigu.Presentation
                 }
                 if (weatherDestCells.Count > 0)
                 {
-                    _gridView.ShowCells(weatherDestCells);
                     _gridView.RefreshCells(weatherDestCells);
                 }
                 // SetSlotPiecesAlpha(1f) covers the case where this threw mid-fade (see the comment at the

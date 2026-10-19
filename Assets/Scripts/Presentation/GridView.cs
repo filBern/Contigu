@@ -718,26 +718,18 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Makes cells vanish (scale 0) so a flying tile can arrive there later; undo with <see cref="ShowCells"/>.</summary>
-        public void HideCells(IReadOnlyList<Vector2Int> cells)
+        /// <summary>Draws cells as empty plots (keeping their frame in the grid) so a flying tile can arrive there later; <see cref="RefreshCells"/> restores their real state.</summary>
+        public void ShowCellsAsEmpty(IReadOnlyList<Vector2Int> cells)
         {
             for (int i = 0; i < cells.Count; i++)
             {
-                if (GridManager.InBounds(cells[i].x, cells[i].y))
+                if (!GridManager.InBounds(cells[i].x, cells[i].y))
                 {
-                    _cells[cells[i].x, cells[i].y].transform.localScale = Vector3.zero;
+                    continue;
                 }
-            }
-        }
-
-        public void ShowCells(IReadOnlyList<Vector2Int> cells)
-        {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                if (GridManager.InBounds(cells[i].x, cells[i].y))
-                {
-                    _cells[cells[i].x, cells[i].y].transform.localScale = Vector3.one;
-                }
+                var real = _grid.GetCell(cells[i].x, cells[i].y);
+                var empty = new Cell { IsPermanentMultiplier = real.IsPermanentMultiplier };
+                _cells[cells[i].x, cells[i].y].ApplyState(empty);
             }
         }
 
@@ -753,9 +745,8 @@ namespace Contigu.Presentation
             yield return new WaitForSeconds(duration);
             for (int i = 0; i < moves.Count; i++)
             {
-                var dest = _cells[moves[i].To.x, moves[i].To.y];
-                dest.transform.localScale = Vector3.one;
-                dest.Pulse(true);
+                RefreshCell(moves[i].To.x, moves[i].To.y);
+                _cells[moves[i].To.x, moves[i].To.y].Pulse(true);
             }
         }
 
