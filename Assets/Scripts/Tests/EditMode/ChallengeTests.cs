@@ -287,17 +287,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Endless_WorksForAQuotaChallengeToo_WithGrowingQuotas()
+        public void Endless_WorksForAQuotaOnlyRuleToo_WithGrowingQuotas()
         {
-            var run = RunAtVictory(ChallengeCatalog.Marathon);
+            var run = RunAtVictory(TestChallenges.QuotaOnlyMarathon);
             Assert.IsTrue(run.ContinueEndless());
             Assert.IsTrue(run.LeaveShop());
             Assert.AreEqual(16, run.CurrentRoundNumber);
-            Assert.IsFalse(run.HasActiveEncounter, "Winter has no authored enemies");
-            Assert.Greater(run.CurrentQuota, ChallengeCatalog.Marathon.QuotaFor(14));
-            Assert.AreEqual(ChallengeCatalog.Marathon.BudgetFor(14), run.CurrentBudget);
-            Assert.Greater(ChallengeCatalog.Marathon.QuotaFor(40), ChallengeCatalog.Marathon.QuotaFor(20));
-            Assert.LessOrEqual(ChallengeCatalog.Marathon.QuotaFor(500), 2000000000);
+            Assert.IsFalse(run.HasActiveEncounter, "a quota-only challenge has no authored enemies");
+            Assert.Greater(run.CurrentQuota, TestChallenges.QuotaOnlyMarathon.QuotaFor(14));
+            Assert.AreEqual(TestChallenges.QuotaOnlyMarathon.BudgetFor(14), run.CurrentBudget);
+            Assert.Greater(TestChallenges.QuotaOnlyMarathon.QuotaFor(40), TestChallenges.QuotaOnlyMarathon.QuotaFor(20));
+            Assert.LessOrEqual(TestChallenges.QuotaOnlyMarathon.QuotaFor(500), 2000000000);
         }
 
         [Test]

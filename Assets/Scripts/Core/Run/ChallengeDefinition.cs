@@ -43,7 +43,7 @@ namespace Contigu.Core
         public int BossLockPiecesInterval;
         public int BossLockCellsPerInterval;
 
-        /// <summary>False for Marathon (quota rounds with no authored enemies); every other challenge fights EncounterCatalog's enemies.</summary>
+        /// <summary>Whether the rounds are fought against EncounterCatalog's enemies (true for every real challenge); false only for quota-only rules some tests build with <see cref="Clone"/>.</summary>
         public bool UsesEncounters = true;
 
         /// <summary>Side of the square grid (Greenhouse plays on a smaller one).</summary>
@@ -91,6 +91,12 @@ namespace Contigu.Core
         public int BudgetFor(int roundIndex)
         {
             return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)] + PieceBudgetBonus;
+        }
+
+        /// <summary>A shallow copy (arrays shared) — lets a test tweak one rule of a catalog challenge without touching the catalog.</summary>
+        public ChallengeDefinition Clone()
+        {
+            return (ChallengeDefinition)MemberwiseClone();
         }
 
         public int BossRoundIndex

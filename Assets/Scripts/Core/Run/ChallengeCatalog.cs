@@ -23,21 +23,20 @@ namespace Contigu.Core
             EnemyHpMultiplier = 0.72f
         };
 
-        /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round, quotas trimmed ~15% to compensate — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
+        /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
         public static readonly ChallengeDefinition Marathon = new ChallengeDefinition
         {
             Id = ChallengeId.Marathon,
-            UsesEncounters = false,
             Name = "Winter",
-            Description = "A smaller starting seed bag and tighter seed budgets. A random boss rule appears every four rounds.",
+            Description = "A smaller starting seed bag and tighter seed budgets. Same 15 enemy rounds as Spring, with far less room for error.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
-            Quotas = new[] { 250, 425, 725, 1225, 2000, 2800, 3800, 5000, 6800, 9000, 12000, 16000, 21500, 29000, 39000 },
+            Quotas = RunConfig.Quotas,
             PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
-            QuotaMultiplier = 0.8f,
-            PieceBudgetBonus = 10
+            PieceBudgetBonus = 10,
+            EnemyHpMultiplier = 0.9f
         };
 
         /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>

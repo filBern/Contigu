@@ -111,7 +111,12 @@ namespace Contigu.Core
 
         public static IReadOnlyList<EnemyId> GetEncounter(ChallengeId challenge, int roundIndex)
         {
-            if (!ChallengeCatalog.Get(challenge).UsesEncounters)
+            return GetEncounter(ChallengeCatalog.Get(challenge), roundIndex);
+        }
+
+        public static IReadOnlyList<EnemyId> GetEncounter(ChallengeDefinition challenge, int roundIndex)
+        {
+            if (!challenge.UsesEncounters)
             {
                 return System.Array.Empty<EnemyId>();
             }

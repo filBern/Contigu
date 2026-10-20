@@ -59,15 +59,16 @@ relancer `generate_icons.py` et re-rendre le PNG dans `Assets/Resources/Icons/Fe
 
 ### Passe d'équilibrage « ≥ 5 % de victoires » (bot glouton, 3 000 runs, graine 4001)
 
-Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultiplier`, `PieceBudgetBonus` (graines en plus à chaque round) et, pour Winter, `QuotaMultiplier` avec sa propre courbe de quotas (plus douce que l'ancienne : le bot n'atteignait pas les derniers paliers).
+Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultiplier`, `PieceBudgetBonus` (graines en plus à chaque round) et `QuotaMultiplier` (inutilisé : tous les challenges combattent des ennemis).
 
 | Challenge | PV ennemis | Graines en plus | Autre | Victoires du bot |
 |---|---|---|---|---|
 | Spring | ×0,72 | +6 | | 7,6 % |
-| Winter | | +10 | quotas ×0,8 sur la nouvelle courbe | 6,1 % |
+| Winter | ×0,9 | +10 | sac réduit (13 graines), budgets serrés | 6,5 % |
 | Summer | ×0,72 | +6 | météo ×1,5 | 7,0 % |
 | Autumn | ×0,3 | +12 | fane après 4 rounds, +10 Pollen, un fertilizer aléatoire repousse | ≈ 8 % |
 | Orchard | ×1,4 | +6 | 2 couleurs | 6,4 % |
 | Greenhouse | ×0,5 | +10 | grille 5×5 | 6,1 % |
 
 Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
+- Tous les challenges affrontent les mêmes 15 rounds d'ennemis (`ChallengeDefinition.UsesEncounters`, vrai partout). Winter (ex-Marathon, rounds à quota sans ennemis) a été converti ; les tests qui ont besoin d'un round sans ennemi utilisent `TestChallenges.QuotaOnlyMarathon`.

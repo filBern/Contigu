@@ -596,7 +596,7 @@ namespace Contigu.Core
                 {
                     return System.Array.Empty<EnemyId>();
                 }
-                return EncounterCatalog.GetEncounter(_challenge.Id, nextRoundIndex);
+                return EncounterCatalog.GetEncounter(_challenge, nextRoundIndex);
             }
         }
 

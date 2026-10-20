@@ -182,7 +182,7 @@ namespace Contigu.Core
 
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)
         {
-            var ids = EncounterCatalog.GetEncounter(_challenge.Id, roundIndex);
+            var ids = EncounterCatalog.GetEncounter(_challenge, roundIndex);
             if (ids.Count == 0)
             {
                 return System.Array.Empty<EnemyInstance>();

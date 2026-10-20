@@ -147,8 +147,9 @@ namespace Contigu.Tests
             Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 15));
             Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 14), EncounterCatalog.GetEncounter(ChallengeId.Classic, 21));
             Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 22));
-            // Marathon plays quota rounds with no authored enemies.
-            Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0).Count);
+            // Winter fights the same enemies as Spring; only a quota-only rule (tests) has none.
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 0), EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0));
+            Assert.AreEqual(0, EncounterCatalog.GetEncounter(TestChallenges.QuotaOnlyMarathon, 0).Count);
         }
 
         [Test]
@@ -182,12 +183,18 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Marathon_NeverGetsAnEncounter_AndKeepsTheOldQuotaRules()
+        public void EveryChallenge_FightsEnemiesFromRoundOne_AndAQuotaOnlyRuleDoesNot()
         {
-            var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
+            foreach (var challenge in ChallengeCatalog.All)
+            {
+                var run = new RunManager(new SystemRandomProvider(1), challenge);
+                Assert.IsTrue(run.HasActiveEncounter, challenge.Name);
+                Assert.AreEqual(EnemyId.Basic, run.CurrentEncounter[0].Definition.Id, challenge.Name);
+            }
 
-            Assert.IsFalse(run.HasActiveEncounter);
-            Assert.AreEqual(0, run.CurrentEncounter.Count);
+            var quotaOnly = new RunManager(new SystemRandomProvider(1), TestChallenges.QuotaOnlyMarathon);
+            Assert.IsFalse(quotaOnly.HasActiveEncounter);
+            Assert.AreEqual(0, quotaOnly.CurrentEncounter.Count);
         }
 
         [Test]
