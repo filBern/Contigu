@@ -38,7 +38,7 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 ## Connu mais pas traité
 
 - Les rounds 3 à 6 restent les plus durs pour le bot (58–75 % de réussite) ; le round 3 est maintenant le premier mur.
-- `RunConfig.Quotas` n'est plus la condition de victoire de Classic (restée pour l'affichage et Marathon/Chaos).
+- `RunConfig.Quotas` n'est plus la condition de victoire de Classic (restée pour l affichage et Marathon).
 
 ## Après un changement de valeur
 

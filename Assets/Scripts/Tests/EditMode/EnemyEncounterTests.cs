@@ -148,7 +148,6 @@ namespace Contigu.Tests
             // old quota system for now.
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Classic, 15).Count);
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0).Count);
-            Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Chaos, 0).Count);
         }
 
         [Test]

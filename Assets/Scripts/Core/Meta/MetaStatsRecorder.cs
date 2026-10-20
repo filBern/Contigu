@@ -9,7 +9,7 @@ namespace Contigu.Core
     /// </summary>
     public static class MetaStatsRecorder
     {
-        /// <summary>+1 Star per round actually cleared, on top of a flat bonus for a true victory — Stars are what unlocks Marathon/Chaos (see ChallengeCatalog/TryUnlockChallenge below), earned by playing rather than bought.</summary>
+        /// <summary>+1 Star per round actually cleared, on top of a flat bonus for a true victory — Stars are what unlocks the other challenges (see ChallengeCatalog/TryUnlockChallenge below), earned by playing rather than bought.</summary>
         private const int VictoryBonusStars = 2;
 
         /// <summary>
@@ -38,8 +38,7 @@ namespace Contigu.Core
                 BestScore = System.Math.Max(current.BestScore, finalScore),
                 BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached),
                 Stars = current.Stars + starsEarned,
-                MarathonUnlocked = current.MarathonUnlocked,
-                ChaosUnlocked = current.ChaosUnlocked
+                MarathonUnlocked = current.MarathonUnlocked
             };
         }
 
@@ -67,17 +66,13 @@ namespace Contigu.Core
                 BestScore = current.BestScore,
                 BestRoundReached = current.BestRoundReached,
                 Stars = current.Stars - challenge.UnlockCost,
-                MarathonUnlocked = current.MarathonUnlocked,
-                ChaosUnlocked = current.ChaosUnlocked
+                MarathonUnlocked = current.MarathonUnlocked
             };
 
             switch (challenge.Id)
             {
                 case ChallengeId.Marathon:
                     updated.MarathonUnlocked = true;
-                    break;
-                case ChallengeId.Chaos:
-                    updated.ChaosUnlocked = true;
                     break;
             }
 

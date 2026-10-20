@@ -107,13 +107,12 @@ namespace Contigu.Tests
         [Test]
         public void RecordRunOutcome_PreservesStarsAndUnlockedChallenges()
         {
-            var current = new MetaStats { Stars = 12, MarathonUnlocked = true, ChaosUnlocked = false };
+            var current = new MetaStats { Stars = 12, MarathonUnlocked = true };
 
             var updated = MetaStatsRecorder.RecordRunOutcome(current, finalScore: 100, roundReached: 2, victory: false);
 
             Assert.AreEqual(12 + 1, updated.Stars);
             Assert.IsTrue(updated.MarathonUnlocked, "Recording a run must never forget an already-unlocked challenge.");
-            Assert.IsFalse(updated.ChaosUnlocked);
         }
 
         [Test]
@@ -154,9 +153,9 @@ namespace Contigu.Tests
         [Test]
         public void TryUnlockChallenge_AlreadyUnlocked_SucceedsWithoutSpendingAgain()
         {
-            var current = new MetaStats { Stars = 3, ChaosUnlocked = true };
+            var current = new MetaStats { Stars = 3, MarathonUnlocked = true };
 
-            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Chaos);
+            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(current, ChallengeCatalog.Marathon);
 
             Assert.IsTrue(success);
             Assert.AreEqual(3, updated.Stars, "Already-unlocked challenges must never be charged for again.");

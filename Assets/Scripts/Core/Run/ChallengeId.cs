@@ -8,7 +8,6 @@ namespace Contigu.Core
     public enum ChallengeId
     {
         Classic,
-        Marathon,
-        Chaos
+        Marathon
     }
 }

@@ -4,7 +4,7 @@ namespace Contigu.Core
 {
     /// <summary>
     /// Which enemies (in Shuffle-resolution/targeting order) show up in a
-    /// given round's encounter. Marathon/Chaos return an empty list for
+    /// given round's encounter. Marathon returns an empty list for
     /// every round, which RunManager reads as "no encounter" and falls back
     /// to the original quota-based round-end rule (see
     /// RunManager.HasActiveEncounter).
@@ -75,7 +75,7 @@ namespace Contigu.Core
         /// <summary>
         /// HP multiplier of every enemy in a Classic round: 1 through the first act, then compounding by
         /// <see cref="ScoringConstants.EnemyHpGrowthPerRound"/> each round of Act 2 — the player's fertilizers multiply each other,
-        /// so a flat roster HP made the last rounds trivial. Marathon/Chaos have no encounters, so it never applies there.
+        /// so a flat roster HP made the last rounds trivial. Marathon has no encounters, so it never applies there.
         /// </summary>
         public static float GetHpScale(int roundIndex)
         {

@@ -44,8 +44,8 @@ namespace Contigu.Core
         /// rounds, so <see cref="RunManager.HasActiveEncounter"/> is true
         /// throughout and <see cref="RunManager.EvaluateRoundEnd"/> checks
         /// "every enemy dead" instead of "quota reached" — but Marathon/
-        /// Chaos (no authored encounters) still race these numbers
-        /// directly, and Classic/Chaos still read them for display/
+        /// Marathon (no authored encounters) still race these numbers
+        /// directly, and Classic still reads them for display/
         /// DebugForceRoundComplete.
         /// </summary>
         public static readonly int[] Quotas =

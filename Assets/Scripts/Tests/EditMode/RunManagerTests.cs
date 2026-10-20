@@ -2590,7 +2590,7 @@ namespace Contigu.Tests
             // qu'on est rendu en 6x6"), and BossLockPiecesInterval widened
             // 3 -> 5 on a further explicit report that it was STILL too
             // hard ("Le boss est beaucoup trop difficile") — now matching
-            // Chaos' own pace (see ChallengeCatalog.Chaos).
+            // the same pace.
             // Marathon rather than the default Classic: Classic's own round
             // 4 is now one of this vertical slice's encounter rounds (see
             // EncounterCatalog), which suppresses the BossEffect roll this
@@ -2620,30 +2620,6 @@ namespace Contigu.Tests
 
             PlaceFirstAvailableHandPiece(run);
             Assert.AreEqual(RunConfig.BossLockCellsPerInterval, CountLockedCells(run.Grid));
-        }
-
-        [Test]
-        public void PlacePiece_ChaosChallenge_LocksCellsFromRoundOne_AtItsOwnGentlerPace()
-        {
-            // Chaos (see ChallengeCatalog.Chaos): the boss cell-lock is
-            // active every round instead of only the last one — at the
-            // SAME per-tick pace as Classic's own finale now uses (1 cell
-            // every 5 pieces, since both were eased together), so this
-            // differs from RunConfig's boss numbers only in principle, not
-            // in actual value; kept as its own literal in ChallengeCatalog
-            // rather than reusing RunConfig's constants directly.
-            var run = new RunManager(new SystemRandomProvider(5), ChallengeCatalog.Chaos);
-            Assert.IsTrue(run.IsBossRound, "Chaos' boss should already be active on round 1");
-            Assert.AreEqual(0, CountLockedCells(run.Grid));
-
-            for (int i = 0; i < 4; i++)
-            {
-                PlaceFirstAvailableHandPiece(run);
-            }
-            Assert.AreEqual(0, CountLockedCells(run.Grid), "No lock tick yet after only 4 of Chaos' 5-piece interval");
-
-            PlaceFirstAvailableHandPiece(run);
-            Assert.AreEqual(ChallengeCatalog.Chaos.BossLockCellsPerInterval, CountLockedCells(run.Grid));
         }
 
         [Test]

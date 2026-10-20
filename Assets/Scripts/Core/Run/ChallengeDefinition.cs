@@ -30,9 +30,6 @@ namespace Contigu.Core
         public int[] Quotas;
         public int[] PieceBudgets;
 
-        /// <summary>True for Chaos: the progressive grid cell-lock ticks every round in addition to the scheduled random boss effects.</summary>
-        public bool BossActiveEveryRound;
-
         public int BossLockPiecesInterval;
         public int BossLockCellsPerInterval;
 

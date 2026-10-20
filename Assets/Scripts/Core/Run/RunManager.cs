@@ -489,10 +489,10 @@ namespace Contigu.Core
             get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
         }
 
-        /// <summary>Classic/Marathon: rounds 4 and 8. Chaos keeps its cell-lock active every round (see ChallengeDefinition.BossActiveEveryRound).</summary>
+        /// <summary>Rounds 4 and 8 (every RunConfig.BossRoundInterval).</summary>
         public bool IsBossRound
         {
-            get { return _challenge.BossActiveEveryRound || (CurrentRoundIndex + 1) % RunConfig.BossRoundInterval == 0; }
+            get { return (CurrentRoundIndex + 1) % RunConfig.BossRoundInterval == 0; }
         }
 
         public bool IsHandSlotLocked(int handIndex)
@@ -715,7 +715,7 @@ namespace Contigu.Core
             PiecesRemainingThisRound--;
 
             IReadOnlyList<Vector2Int> bossLockedCells = System.Array.Empty<Vector2Int>();
-            bool cellLockActive = _challenge.BossActiveEveryRound || CurrentBossEffect == BossEffect.ProgressiveCellLock;
+            bool cellLockActive = CurrentBossEffect == BossEffect.ProgressiveCellLock;
             if (cellLockActive)
             {
                 int piecesPlayedThisRound = CurrentBudget - PiecesRemainingThisRound;

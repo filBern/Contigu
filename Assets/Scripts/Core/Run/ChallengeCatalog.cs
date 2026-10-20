@@ -1,8 +1,8 @@
 namespace Contigu.Core
 {
     /// <summary>
-    /// The 3 selectable challenges. Classic is always available;
-    /// Marathon/Chaos need Stars (see MetaStats.Stars/IsUnlocked,
+    /// The selectable challenges. Classic is always available;
+    /// the others need Stars (see MetaStats.Stars/IsUnlocked,
     /// MetaStatsRecorder.TryUnlockChallenge).
     /// </summary>
     public static class ChallengeCatalog
@@ -17,7 +17,6 @@ namespace Contigu.Core
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
-            BossActiveEveryRound = false,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
         };
@@ -32,27 +31,11 @@ namespace Contigu.Core
             RoundCount = RunConfig.RoundCount,
             Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200, 17500, 32000, 58000, 105000, 190000, 340000, 600000 },
             PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
-            BossActiveEveryRound = false,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
         };
 
-        /// <summary>Same quotas/budgets/starting deck as Classic. Chaos adds its gradual cell-lock every round on top of the random scheduled boss effect at rounds 4 and 8.</summary>
-        public static readonly ChallengeDefinition Chaos = new ChallengeDefinition
-        {
-            Id = ChallengeId.Chaos,
-            Name = "Wildgrowth",
-            Description = "The board's cell-lock is active from round 1 at a gentler pace. Every four rounds, an additional random boss rule appears.",
-            UnlockCost = 10,
-            RoundCount = RunConfig.RoundCount,
-            Quotas = RunConfig.Quotas,
-            PieceBudgets = RunConfig.PieceBudgets,
-            BossActiveEveryRound = true,
-            BossLockPiecesInterval = 5,
-            BossLockCellsPerInterval = 1
-        };
-
-        public static readonly ChallengeDefinition[] All = { Classic, Marathon, Chaos };
+        public static readonly ChallengeDefinition[] All = { Classic, Marathon };
 
         public static ChallengeDefinition Get(ChallengeId id)
         {

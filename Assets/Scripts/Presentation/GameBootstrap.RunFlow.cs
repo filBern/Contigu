@@ -121,14 +121,8 @@ namespace Contigu.Presentation
                     status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " seeds score 0 points this round.";
                     break;
                 default:
-                    status = _run.Challenge.BossActiveEveryRound
-                        ? "Wildgrowth: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock."
-                        : "New round: select a seed, then click the grid.";
+                    status = "New round: select a seed, then click the grid.";
                     break;
-            }
-            if (_run.Challenge.BossActiveEveryRound && _run.CurrentBossEffect != BossEffect.None && _run.CurrentBossEffect != BossEffect.ProgressiveCellLock)
-            {
-                status += " Wildgrowth also locks a cell every " + _run.Challenge.BossLockPiecesInterval + " seeds.";
             }
             return status;
         }
