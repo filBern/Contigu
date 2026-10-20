@@ -11,7 +11,25 @@ namespace Contigu.Core
     /// </summary>
     public sealed partial class GridManager
     {
-        public const int Size = 6;
+        /// <summary>The usual side of the plot (Greenhouse plays on a smaller one — see <see cref="Size"/>).</summary>
+        public const int DefaultSize = 6;
+
+        /// <summary>
+        /// Side of the square plot for the run in progress. Static because it is a property of the whole run (set by RunManager's
+        /// constructor from the challenge) read everywhere a coordinate is bounds-checked; every RunManager resets it, and tests
+        /// that build a bare GridManager get <see cref="DefaultSize"/> unless a challenge test changed it (see ResetSize).
+        /// </summary>
+        public static int Size { get; private set; } = DefaultSize;
+
+        public static void SetSize(int size)
+        {
+            Size = size;
+        }
+
+        public static void ResetSize()
+        {
+            Size = DefaultSize;
+        }
 
         private readonly Cell[,] _cells;
 

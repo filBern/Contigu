@@ -31,11 +31,12 @@ namespace Contigu.Core
         };
 
         /// <summary>
-        /// One copy of every (shape, color) combination — 8 x 4 = 32
+        /// <paramref name="copies"/> copies (1 normally; Orchard doubles them
+        /// to keep the bag at 32) of every (shape, color) combination — 8 x 4 = 32
         /// tokens. Full, uniform coverage: no shape/color combination is
         /// ever absent from the starting deck.
         /// </summary>
-        public static List<PieceToken> Build()
+        public static List<PieceToken> Build(int copies = 1)
         {
             var tokens = new List<PieceToken>();
             var baseColors = PieceColorUtility.BaseColors;
@@ -43,7 +44,10 @@ namespace Contigu.Core
             {
                 for (int c = 0; c < baseColors.Count; c++)
                 {
-                    tokens.Add(new PieceToken(ShapeOrder[s], baseColors[c]));
+                    for (int k = 0; k < copies; k++)
+                    {
+                        tokens.Add(new PieceToken(ShapeOrder[s], baseColors[c]));
+                    }
                 }
             }
             return tokens;

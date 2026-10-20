@@ -31,15 +31,28 @@ namespace Contigu.Core
             int roundsCleared = victory ? roundReached : roundReached - 1;
             int starsEarned = roundsCleared + (victory ? VictoryBonusStars : 0);
 
-            return new MetaStats
-            {
-                TotalRunsPlayed = current.TotalRunsPlayed + 1,
-                TotalVictories = current.TotalVictories + (victory ? 1 : 0),
-                BestScore = System.Math.Max(current.BestScore, finalScore),
-                BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached),
-                Stars = current.Stars + starsEarned,
-                MarathonUnlocked = current.MarathonUnlocked
-            };
+            var updated = current.Copy();
+            updated.TotalRunsPlayed = current.TotalRunsPlayed + 1;
+            updated.TotalVictories = current.TotalVictories + (victory ? 1 : 0);
+            updated.BestScore = System.Math.Max(current.BestScore, finalScore);
+            updated.BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached);
+            updated.Stars = current.Stars + starsEarned;
+            return updated;
+        }
+
+        /// <summary>
+        /// Endless: a run that already counted as a victory (see <see cref="RecordRunOutcome"/>) kept going past the final round and has now
+        /// ended in round <paramref name="roundReached"/>. Adds one Star per extra round cleared and refreshes the best score and round, but
+        /// never counts the run (or its victory) a second time.
+        /// </summary>
+        public static MetaStats RecordEndlessEnd(MetaStats current, int finalScore, int roundReached)
+        {
+            int extraRoundsCleared = System.Math.Max(0, roundReached - 1 - RunConfig.RoundCount);
+            var updated = current.Copy();
+            updated.BestScore = System.Math.Max(current.BestScore, finalScore);
+            updated.BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached);
+            updated.Stars = current.Stars + extraRoundsCleared;
+            return updated;
         }
 
         /// <summary>
@@ -59,20 +72,25 @@ namespace Contigu.Core
                 return (current, false);
             }
 
-            var updated = new MetaStats
-            {
-                TotalRunsPlayed = current.TotalRunsPlayed,
-                TotalVictories = current.TotalVictories,
-                BestScore = current.BestScore,
-                BestRoundReached = current.BestRoundReached,
-                Stars = current.Stars - challenge.UnlockCost,
-                MarathonUnlocked = current.MarathonUnlocked
-            };
+            var updated = current.Copy();
+            updated.Stars = current.Stars - challenge.UnlockCost;
 
             switch (challenge.Id)
             {
                 case ChallengeId.Marathon:
                     updated.MarathonUnlocked = true;
+                    break;
+                case ChallengeId.Summer:
+                    updated.SummerUnlocked = true;
+                    break;
+                case ChallengeId.Autumn:
+                    updated.AutumnUnlocked = true;
+                    break;
+                case ChallengeId.Orchard:
+                    updated.OrchardUnlocked = true;
+                    break;
+                case ChallengeId.Greenhouse:
+                    updated.GreenhouseUnlocked = true;
                     break;
             }
 

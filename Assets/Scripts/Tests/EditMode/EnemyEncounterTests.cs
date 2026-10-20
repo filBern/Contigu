@@ -143,10 +143,11 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Thief, round15[4]);
             Assert.AreEqual(EnemyId.Leech, round15[5]);
 
-            // Round 16+ (there is no round 16 in Classic's 15-round run)
-            // and every non-Classic challenge are deliberately left on the
-            // old quota system for now.
-            Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Classic, 15).Count);
+            // Round 16+ is Endless: Act 2's rosters come around again (rounds 9-15, then 9 ...), only sturdier.
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 15));
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 14), EncounterCatalog.GetEncounter(ChallengeId.Classic, 21));
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 22));
+            // Marathon plays quota rounds with no authored enemies.
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0).Count);
         }
 

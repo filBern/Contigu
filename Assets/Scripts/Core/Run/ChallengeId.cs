@@ -8,6 +8,10 @@ namespace Contigu.Core
     public enum ChallengeId
     {
         Classic,
-        Marathon
+        Marathon,
+        Summer,
+        Autumn,
+        Orchard,
+        Greenhouse
     }
 }

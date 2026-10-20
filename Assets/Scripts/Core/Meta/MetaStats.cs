@@ -20,6 +20,16 @@ namespace Contigu.Core
         /// <summary>Cross-run currency (see MetaStatsRecorder.RecordRunOutcome for how a run earns it, TryUnlockChallenge for how it's spent). A dedicated field per non-Classic challenge rather than a generic collection — JsonUtility doesn't serialize a HashSet/Dictionary cleanly.</summary>
         public int Stars;
         public bool MarathonUnlocked;
+        public bool SummerUnlocked;
+        public bool AutumnUnlocked;
+        public bool OrchardUnlocked;
+        public bool GreenhouseUnlocked;
+
+        /// <summary>A field-by-field copy, so a pure update never forgets a field it didn't touch.</summary>
+        public MetaStats Copy()
+        {
+            return (MetaStats)MemberwiseClone();
+        }
 
         /// <summary>Classic is always available; every other challenge needs its own unlock flag.</summary>
         public bool IsUnlocked(ChallengeId id)
@@ -30,6 +40,14 @@ namespace Contigu.Core
                     return true;
                 case ChallengeId.Marathon:
                     return MarathonUnlocked;
+                case ChallengeId.Summer:
+                    return SummerUnlocked;
+                case ChallengeId.Autumn:
+                    return AutumnUnlocked;
+                case ChallengeId.Orchard:
+                    return OrchardUnlocked;
+                case ChallengeId.Greenhouse:
+                    return GreenhouseUnlocked;
                 default:
                     return false;
             }

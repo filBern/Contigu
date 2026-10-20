@@ -79,8 +79,15 @@ namespace Contigu.Core
         /// </summary>
         public static float GetHpScale(int roundIndex)
         {
-            int actTwoRounds = roundIndex - (ScoringConstants.EnemyHpGrowthFirstRoundIndex - 1);
-            return actTwoRounds <= 0 ? 1f : (float)System.Math.Pow(ScoringConstants.EnemyHpGrowthPerRound, actTwoRounds);
+            int actTwoRounds = System.Math.Min(roundIndex, RunConfig.RoundCount - 1) - (ScoringConstants.EnemyHpGrowthFirstRoundIndex - 1);
+            double scale = actTwoRounds <= 0 ? 1.0 : System.Math.Pow(ScoringConstants.EnemyHpGrowthPerRound, actTwoRounds);
+            int endlessRounds = roundIndex - (RunConfig.RoundCount - 1);
+            if (endlessRounds > 0)
+            {
+                // Past the final round (Endless) the growth steepens, so a run always ends somewhere.
+                scale *= System.Math.Pow(ScoringConstants.EnemyHpGrowthPerRoundEndless, endlessRounds);
+            }
+            return (float)System.Math.Min(scale, 1e7);
         }
 
         /// <summary>Scales an HP value, rounded to a clean multiple of 50 (never below the base HP).</summary>
@@ -90,16 +97,33 @@ namespace Contigu.Core
             {
                 return baseHp;
             }
-            return System.Math.Max(baseHp, (int)System.Math.Round(baseHp * scale / 50.0) * 50);
+            double scaled = System.Math.Round(baseHp * (double)scale / 50.0) * 50.0;
+            return (int)System.Math.Min(System.Math.Max(baseHp, scaled), 2000000000.0);
+        }
+
+        /// <summary>Endless rounds replay Act 2's rosters in order (rounds 9-15, then 9 again...), so every lap meets the same enemies — only far sturdier.</summary>
+        private static IReadOnlyList<EnemyId> EndlessEncounter(int roundIndex)
+        {
+            int actTwoStart = ScoringConstants.EnemyHpGrowthFirstRoundIndex;
+            int lap = RunConfig.RoundCount - actTwoStart;
+            return GetAuthored(actTwoStart + (roundIndex - actTwoStart) % lap);
         }
 
         public static IReadOnlyList<EnemyId> GetEncounter(ChallengeId challenge, int roundIndex)
         {
-            if (challenge != ChallengeId.Classic)
+            if (!ChallengeCatalog.Get(challenge).UsesEncounters)
             {
                 return System.Array.Empty<EnemyId>();
             }
+            if (roundIndex >= RunConfig.RoundCount)
+            {
+                return EndlessEncounter(roundIndex);
+            }
+            return GetAuthored(roundIndex);
+        }
 
+        private static IReadOnlyList<EnemyId> GetAuthored(int roundIndex)
+        {
             switch (roundIndex)
             {
                 case 0: return Round1;

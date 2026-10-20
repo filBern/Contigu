@@ -276,6 +276,9 @@ namespace Contigu.Core
         /// <summary>Enemy HP compounds by this factor for each round from <see cref="EnemyHpGrowthFirstRoundIndex"/> on (see EncounterCatalog.GetHpScale).</summary>
         public const float EnemyHpGrowthPerRound = 1.12f;
 
+        /// <summary>Endless rounds (past the final one): enemy HP compounds by this factor per round on top of Act 2's growth.</summary>
+        public const float EnemyHpGrowthPerRoundEndless = 1.2f;
+
         /// <summary>Zero-based index of the first round whose enemies get the HP growth (8 = round 9, the start of Act 2).</summary>
         public const int EnemyHpGrowthFirstRoundIndex = 8;
 

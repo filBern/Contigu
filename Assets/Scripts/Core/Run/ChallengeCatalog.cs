@@ -25,6 +25,7 @@ namespace Contigu.Core
         public static readonly ChallengeDefinition Marathon = new ChallengeDefinition
         {
             Id = ChallengeId.Marathon,
+            UsesEncounters = false,
             Name = "Winter",
             Description = "A smaller starting seed bag and tighter seed budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
@@ -35,7 +36,70 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
         };
 
-        public static readonly ChallengeDefinition[] All = { Classic, Marathon };
+        /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>
+        public static readonly ChallengeDefinition Summer = new ChallengeDefinition
+        {
+            Id = ChallengeId.Summer,
+            Name = "Summer",
+            Description = "Every round brings real weather — never calm skies — and it hits 1.5x harder. Plan around the forecast.",
+            UnlockCost = 8,
+            RoundCount = RunConfig.RoundCount,
+            Quotas = RunConfig.Quotas,
+            PieceBudgets = RunConfig.PieceBudgets,
+            BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            WeatherProfile = WeatherProfile.Extreme,
+            WeatherIntensity = 1.5f
+        };
+
+        /// <summary>Fertilizers wither away after 3 rounds; the shop pays more Pollen to compensate, so builds are rebuilt on the fly.</summary>
+        public static readonly ChallengeDefinition Autumn = new ChallengeDefinition
+        {
+            Id = ChallengeId.Autumn,
+            Name = "Autumn",
+            Description = "Fertilizers wither away after 3 rounds, but every round pays extra Pollen. Keep your garden growing.",
+            UnlockCost = 12,
+            RoundCount = RunConfig.RoundCount,
+            Quotas = RunConfig.Quotas,
+            PieceBudgets = RunConfig.PieceBudgets,
+            BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            FertilizerLifespanRounds = 3,
+            RoundEndPollenBonus = 8
+        };
+
+        /// <summary>Only 2 of the 4 seed colors exist this run (drawn at the start): big groups come easily, so the enemies are sturdier.</summary>
+        public static readonly ChallengeDefinition Orchard = new ChallengeDefinition
+        {
+            Id = ChallengeId.Orchard,
+            Name = "Orchard",
+            Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier.",
+            UnlockCost = 15,
+            RoundCount = RunConfig.RoundCount,
+            Quotas = RunConfig.Quotas,
+            PieceBudgets = RunConfig.PieceBudgets,
+            BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            ActiveColorCount = 2,
+            EnemyHpMultiplier = 1.3f
+        };
+
+        /// <summary>A snug 5x5 plot: lines are short and frequent, but there is no room to spare.</summary>
+        public static readonly ChallengeDefinition Greenhouse = new ChallengeDefinition
+        {
+            Id = ChallengeId.Greenhouse,
+            Name = "Greenhouse",
+            Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare.",
+            UnlockCost = 18,
+            RoundCount = RunConfig.RoundCount,
+            Quotas = RunConfig.Quotas,
+            PieceBudgets = RunConfig.PieceBudgets,
+            BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            GridSize = 5
+        };
+
+        public static readonly ChallengeDefinition[] All = { Classic, Marathon, Summer, Autumn, Orchard, Greenhouse };
 
         public static ChallengeDefinition Get(ChallengeId id)
         {

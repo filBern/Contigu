@@ -10,7 +10,7 @@ namespace Contigu.Core
         /// <summary>Debug-only helper: makes every round clear-skied, so a test's exact expectations (frozen/locked cell counts, shuffle bank) do not depend on the rolled weather. Call before advancing rounds.</summary>
         public void DebugDisableWeather()
         {
-            _weatherByRound = new WeatherId[_challenge.RoundCount];
+            _weatherDisabled = true;
         }
 
 #endif

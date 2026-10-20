@@ -452,6 +452,40 @@ namespace Contigu.Core
         /// <summary>The base color that scores no points this boss round, or null for other boss effects.</summary>
         public PieceColor? BossCursedColor { get; private set; }
 
+        /// <summary>True once the player kept going past the challenge's final round (see <see cref="ContinueEndless"/>): rounds keep coming, ever harder, until the run is lost.</summary>
+        public bool IsEndless { get; private set; }
+
+        /// <summary>Whether a round follows the current one — always in Endless, otherwise until the challenge's final round.</summary>
+        public bool HasNextRound
+        {
+            get { return IsEndless || CurrentRoundIndex + 1 < _challenge.RoundCount; }
+        }
+
+        /// <summary>
+        /// Sets the process-wide rules this challenge changes before anything is built from them: the plot's side (Greenhouse) and the seed
+        /// colors that exist (Orchard keeps a random 2 of the 4). Colors are drawn only when the challenge trims them, so every other
+        /// challenge consumes exactly the randomness it always did.
+        /// </summary>
+        private void ConfigureChallengeWorld()
+        {
+            GridManager.SetSize(_challenge.GridSize);
+            if (_challenge.ActiveColorCount >= PieceColorUtility.AllBaseColors.Count)
+            {
+                PieceColorUtility.ResetBaseColors();
+                return;
+            }
+            var pool = new List<PieceColor>(PieceColorUtility.AllBaseColors);
+            var chosen = new List<PieceColor>();
+            while (chosen.Count < _challenge.ActiveColorCount)
+            {
+                int pick = _rng.Next(pool.Count);
+                chosen.Add(pool[pick]);
+                pool.RemoveAt(pick);
+            }
+            chosen.Sort();
+            PieceColorUtility.SetActiveBaseColors(chosen);
+        }
+
         public int CurrentRoundNumber
         {
             get { return CurrentRoundIndex + 1; }
@@ -470,7 +504,7 @@ namespace Contigu.Core
             get
             {
                 int nextRoundIndex = CurrentRoundIndex + 1;
-                if (nextRoundIndex >= _challenge.RoundCount)
+                if (!HasNextRound)
                 {
                     return System.Array.Empty<EnemyId>();
                 }
@@ -481,12 +515,12 @@ namespace Contigu.Core
         /// <summary>This round's score target. Still read for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition.</summary>
         public int CurrentQuota
         {
-            get { return _challenge.Quotas[CurrentRoundIndex]; }
+            get { return _challenge.QuotaFor(CurrentRoundIndex); }
         }
 
         public int CurrentBudget
         {
-            get { return _challenge.PieceBudgets[CurrentRoundIndex]; }
+            get { return _challenge.BudgetFor(CurrentRoundIndex); }
         }
 
         /// <summary>Rounds 4 and 8 (every RunConfig.BossRoundInterval).</summary>
@@ -505,8 +539,11 @@ namespace Contigu.Core
         {
             _rng = rng;
             _challenge = challenge ?? ChallengeCatalog.Classic;
+            ConfigureChallengeWorld();
             Grid = new GridManager();
-            var startingDeck = _challenge.Id == ChallengeId.Marathon ? InitialDeckFactory.BuildMarathon() : InitialDeckFactory.Build();
+            var startingDeck = _challenge.Id == ChallengeId.Marathon
+                ? InitialDeckFactory.BuildMarathon()
+                : InitialDeckFactory.Build(4 / PieceColorUtility.BaseColors.Count);
             Deck = new DeckManager(startingDeck, rng);
             Upgrades = new UpgradeSystem(rng);
             PendingUpgradeTileCandidates = System.Array.Empty<int>();

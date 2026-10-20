@@ -11,6 +11,36 @@ namespace Contigu.Core
             return id == WeatherId.Rain || id == WeatherId.Sunshine;
         }
 
+        /// <summary>Relative draw weight under a challenge's weather profile (Extreme: never calm, harsh and dramatic weather favored).</summary>
+        public static int GetWeight(WeatherId id, WeatherProfile profile)
+        {
+            if (profile != WeatherProfile.Extreme)
+            {
+                return GetWeight(id);
+            }
+            switch (id)
+            {
+                case WeatherId.Clear: return 0;
+                case WeatherId.Rain:
+                case WeatherId.Sunshine:
+                case WeatherId.Frost:
+                case WeatherId.Heatwave: return 3;
+                case WeatherId.Wind:
+                case WeatherId.Hurricane: return 2;
+                default: return 1;
+            }
+        }
+
+        /// <summary>A weather amount scaled by a challenge's intensity (never below 1 for a positive base).</summary>
+        public static int Scale(int amount, float intensity)
+        {
+            if (amount <= 0 || System.Math.Abs(intensity - 1f) < 1e-4f)
+            {
+                return amount;
+            }
+            return System.Math.Max(1, (int)System.Math.Round(amount * (double)intensity, System.MidpointRounding.AwayFromZero));
+        }
+
         /// <summary>Relative draw weight: 3 = common, 2 = uncommon, 1 = rare.</summary>
         // Harsh weathers (Heatwave, Hurricane) are a deliberate part of the mix, not just bonuses.
         public static int GetWeight(WeatherId id)
@@ -62,27 +92,27 @@ namespace Contigu.Core
             }
         }
 
-        public static string GetDescription(WeatherId id, string colorName = null)
+        public static string GetDescription(WeatherId id, string colorName = null, float intensity = 1f)
         {
             string color = string.IsNullOrEmpty(colorName) ? "of the weather's color" : colorName;
             switch (id)
             {
-                case WeatherId.Rain: return "+" + ScoringConstants.RainPollenPerSeed + " Pollen each time you plant a " + color + " seed.";
-                case WeatherId.Sunshine: return "+" + ScoringConstants.SunshinePointsPerCell + " pts per cell of every " + color + " seed you plant.";
+                case WeatherId.Rain: return "+" + Scale(ScoringConstants.RainPollenPerSeed, intensity) + " Pollen each time you plant a " + color + " seed.";
+                case WeatherId.Sunshine: return "+" + Scale(ScoringConstants.SunshinePointsPerCell, intensity) + " pts per cell of every " + color + " seed you plant.";
                 case WeatherId.Wind: return "A gust blows in a free Shuffle at the start of the round.";
-                case WeatherId.Frost: return ScoringConstants.FrostFrozenPlots + " empty plots start frozen (harvest their row or column to break the ice).";
-                case WeatherId.Dew: return "+" + ScoringConstants.DewPollenPerLine + " Pollen for every line you clear.";
-                case WeatherId.GoldenHour: return ScoringConstants.GoldenHourPlots + " empty plots turn golden for the round, and golden again each time their tile is harvested.";
-                case WeatherId.PollenShower: return "Start the round with +" + ScoringConstants.PollenShowerPollen + " Pollen.";
+                case WeatherId.Frost: return Scale(ScoringConstants.FrostFrozenPlots, intensity) + " empty plots start frozen (harvest their row or column to break the ice).";
+                case WeatherId.Dew: return "+" + Scale(ScoringConstants.DewPollenPerLine, intensity) + " Pollen for every line you clear.";
+                case WeatherId.GoldenHour: return Scale(ScoringConstants.GoldenHourPlots, intensity) + " empty plots turn golden for the round, and golden again each time their tile is harvested.";
+                case WeatherId.PollenShower: return "Start the round with +" + Scale(ScoringConstants.PollenShowerPollen, intensity) + " Pollen.";
                 case WeatherId.Heatwave: return "Each Shuffle you spend scorches one planted tile (it burns away, no points).";
-                case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds you plant, the storm blows " + ScoringConstants.HurricaneTilesMoved + " planted tiles to other plots.";
+                case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds you plant, the storm blows " + Scale(ScoringConstants.HurricaneTilesMoved, intensity) + " planted tiles to other plots.";
                 default: return "Calm skies. No effect.";
             }
         }
 
         /// <summary>
         /// One weather per round. Round 1 is always clear (the warm-up); later rounds draw from every kind by rarity weight
-        /// (see <see cref="GetWeight"/>), never repeating the previous round's weather so the run keeps changing.
+        /// (see <see cref="GetWeight(WeatherId)"/>), never repeating the previous round's weather so the run keeps changing.
         /// </summary>
         public static WeatherId[] RollForRun(IRandomProvider rng, int roundCount)
         {
@@ -90,41 +120,48 @@ namespace Contigu.Core
             return RollForRun(rng, roundCount, out colors);
         }
 
-        /// <summary>
-        /// Same roll, also yielding each round's seed color for Rain/Sunshine (Coral, Teal, Violet or Lime — never Joker). The color comes out
-        /// of the same single draw per round as the weather itself, so adding it consumed no extra randomness.
-        /// </summary>
-        public static WeatherId[] RollForRun(IRandomProvider rng, int roundCount, out PieceColor[] colors)
+        public static WeatherId[] RollForRun(IRandomProvider rng, int roundCount, out PieceColor[] colors, WeatherProfile profile = WeatherProfile.Normal)
         {
             var result = new WeatherId[roundCount];
             colors = new PieceColor[roundCount];
-            var kinds = (WeatherId[])System.Enum.GetValues(typeof(WeatherId));
             for (int i = 1; i < roundCount; i++)
             {
-                var candidates = new List<WeatherId>();
-                int total = 0;
-                for (int k = 0; k < kinds.Length; k++)
-                {
-                    if (kinds[k] != result[i - 1])
-                    {
-                        candidates.Add(kinds[k]);
-                        total += GetWeight(kinds[k]);
-                    }
-                }
-                int draw = rng.Next(total * 4);
-                colors[i] = (PieceColor)(draw % 4);
-                int roll = draw / 4;
-                for (int c = 0; c < candidates.Count; c++)
-                {
-                    roll -= GetWeight(candidates[c]);
-                    if (roll < 0)
-                    {
-                        result[i] = candidates[c];
-                        break;
-                    }
-                }
+                result[i] = RollNext(rng, result[i - 1], profile, out colors[i]);
             }
             return result;
+        }
+
+        /// <summary>
+        /// One round's weather after <paramref name="previous"/> (never the same twice running), also yielding its seed color for Rain/Sunshine
+        /// (Coral, Teal, Violet or Lime — never Joker). The color comes out of the same single draw as the weather itself, so it consumes no
+        /// extra randomness.
+        /// </summary>
+        public static WeatherId RollNext(IRandomProvider rng, WeatherId previous, WeatherProfile profile, out PieceColor color)
+        {
+            var kinds = (WeatherId[])System.Enum.GetValues(typeof(WeatherId));
+            var candidates = new List<WeatherId>();
+            int total = 0;
+            for (int k = 0; k < kinds.Length; k++)
+            {
+                int weight = GetWeight(kinds[k], profile);
+                if (kinds[k] != previous && weight > 0)
+                {
+                    candidates.Add(kinds[k]);
+                    total += weight;
+                }
+            }
+            int draw = rng.Next(total * 4);
+            color = (PieceColor)(draw % 4);
+            int roll = draw / 4;
+            for (int c = 0; c < candidates.Count; c++)
+            {
+                roll -= GetWeight(candidates[c], profile);
+                if (roll < 0)
+                {
+                    return candidates[c];
+                }
+            }
+            return candidates[candidates.Count - 1];
         }
     }
 }

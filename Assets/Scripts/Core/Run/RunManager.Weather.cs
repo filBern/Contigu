@@ -6,8 +6,10 @@ namespace Contigu.Core
     /// <summary>Round weather: a per-round effect rolled at the start of the run, announced one round ahead in the shop.</summary>
     public sealed partial class RunManager
     {
-        private WeatherId[] _weatherByRound;
-        private PieceColor[] _weatherColorByRound;
+        // Rolled lazily: the first RoundCount entries at the start of the run, the rest only once Endless asks for them.
+        private readonly List<WeatherId> _weatherByRound = new List<WeatherId>();
+        private readonly List<PieceColor> _weatherColorByRound = new List<PieceColor>();
+        private bool _weatherDisabled;
 
         /// <summary>This round's weather (always Clear on round 1).</summary>
         public WeatherId CurrentWeather
@@ -18,7 +20,7 @@ namespace Contigu.Core
         /// <summary>The next round's weather, or null on the last round.</summary>
         public WeatherId? NextWeather
         {
-            get { return CurrentRoundIndex + 1 < _challenge.RoundCount ? WeatherOf(CurrentRoundIndex + 1) : (WeatherId?)null; }
+            get { return HasNextRound ? WeatherOf(CurrentRoundIndex + 1) : (WeatherId?)null; }
         }
 
         /// <summary>The seed color this round's Rain/Sunshine applies to, or null for any other weather.</summary>
@@ -30,12 +32,23 @@ namespace Contigu.Core
         /// <summary>The next round's weather color (null when it has none, or on the last round).</summary>
         public PieceColor? NextWeatherColor
         {
-            get { return CurrentRoundIndex + 1 < _challenge.RoundCount ? WeatherColorOf(CurrentRoundIndex + 1) : null; }
+            get { return HasNextRound ? WeatherColorOf(CurrentRoundIndex + 1) : null; }
+        }
+
+        /// <summary>How hard this challenge's weather hits (Summer: more).</summary>
+        public float WeatherIntensity
+        {
+            get { return _challenge.WeatherIntensity; }
+        }
+
+        private int ScaledWeather(int amount)
+        {
+            return WeatherCatalog.Scale(amount, _challenge.WeatherIntensity);
         }
 
         private PieceColor? WeatherColorOf(int roundIndex)
         {
-            if (_weatherColorByRound == null || roundIndex < 0 || roundIndex >= _weatherColorByRound.Length || !WeatherCatalog.UsesColor(WeatherOf(roundIndex)))
+            if (!WeatherCatalog.UsesColor(WeatherOf(roundIndex)))
             {
                 return null;
             }
@@ -44,9 +57,17 @@ namespace Contigu.Core
 
         private WeatherId WeatherOf(int roundIndex)
         {
-            if (_weatherByRound == null || roundIndex < 0 || roundIndex >= _weatherByRound.Length)
+            if (_weatherDisabled || roundIndex < 0 || _weatherByRound.Count == 0)
             {
                 return WeatherId.Clear;
+            }
+            // Endless: keep rolling as far as the run goes, each round never repeating the one before.
+            while (_weatherByRound.Count <= roundIndex)
+            {
+                PieceColor color;
+                var next = WeatherCatalog.RollNext(_rng, _weatherByRound[_weatherByRound.Count - 1], _challenge.WeatherProfile, out color);
+                _weatherByRound.Add(next);
+                _weatherColorByRound.Add(color);
             }
             return _weatherByRound[roundIndex];
         }
@@ -54,7 +75,12 @@ namespace Contigu.Core
         /// <summary>Called once, right after the first round started, so the roll never shifts the deck/hand draws that came before it.</summary>
         private void RollWeatherForRun()
         {
-            _weatherByRound = WeatherCatalog.RollForRun(_rng, _challenge.RoundCount, out _weatherColorByRound);
+            PieceColor[] colors;
+            var weathers = WeatherCatalog.RollForRun(_rng, _challenge.RoundCount, out colors, _challenge.WeatherProfile);
+            _weatherByRound.Clear();
+            _weatherByRound.AddRange(weathers);
+            _weatherColorByRound.Clear();
+            _weatherColorByRound.AddRange(colors);
         }
 
         /// <summary>Round-start part of the weather (Wind: a free Shuffle; Frost: frozen plots; Golden Hour: golden plots; Pollen Shower: Pollen). Round 1 is always clear.</summary>
@@ -66,13 +92,13 @@ namespace Contigu.Core
                     ShufflesRemaining++;
                     break;
                 case WeatherId.Frost:
-                    Grid.FreezeRandomCells(ScoringConstants.FrostFrozenPlots, _rng);
+                    Grid.FreezeRandomCells(ScaledWeather(ScoringConstants.FrostFrozenPlots), _rng);
                     break;
                 case WeatherId.GoldenHour:
-                    Grid.MakeRandomCellsGolden(ScoringConstants.GoldenHourPlots, _rng);
+                    Grid.MakeRandomCellsGolden(ScaledWeather(ScoringConstants.GoldenHourPlots), _rng);
                     break;
                 case WeatherId.PollenShower:
-                    Lueur += ScoringConstants.PollenShowerPollen;
+                    Lueur += ScaledWeather(ScoringConstants.PollenShowerPollen);
                     break;
             }
         }
@@ -85,14 +111,14 @@ namespace Contigu.Core
                 case WeatherId.Rain:
                     if (color == CurrentWeatherColor)
                     {
-                        Lueur += ScoringConstants.RainPollenPerSeed;
+                        Lueur += ScaledWeather(ScoringConstants.RainPollenPerSeed);
                         WeatherBonusTriggerCount++;
                     }
                     break;
                 case WeatherId.Sunshine:
                     if (color == CurrentWeatherColor && placement.PlacedCells.Count > 0)
                     {
-                        int bonus = placement.PlacedCells.Count * ScoringConstants.SunshinePointsPerCell;
+                        int bonus = placement.PlacedCells.Count * ScaledWeather(ScoringConstants.SunshinePointsPerCell);
                         placement.ModifierBonus += bonus;
                         var events = new List<ScoreEvent>(placement.ScoreEvents);
                         events.Add(new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus));
@@ -103,7 +129,7 @@ namespace Contigu.Core
                 case WeatherId.Dew:
                     if (placement.ClearedLineCount > 0)
                     {
-                        Lueur += placement.ClearedLineCount * ScoringConstants.DewPollenPerLine;
+                        Lueur += placement.ClearedLineCount * ScaledWeather(ScoringConstants.DewPollenPerLine);
                         WeatherBonusTriggerCount++;
                     }
                     break;
@@ -129,7 +155,7 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<(Vector2Int, Vector2Int, PieceColor)>();
             }
-            return Grid.BlowTiles(ScoringConstants.HurricaneTilesMoved, _rng);
+            return Grid.BlowTiles(ScaledWeather(ScoringConstants.HurricaneTilesMoved), _rng);
         }
     }
 }

@@ -131,13 +131,29 @@ namespace Contigu.Core
             ApplyMultCinqRisqueLossChance();
             // Only ever true once (the challenge's own final CurrentRoundIndex,
             // RoundCount - 1, can't recur).
-            if (CurrentRoundIndex == _challenge.RoundCount - 1)
+            if (!IsEndless && CurrentRoundIndex == _challenge.RoundCount - 1)
             {
                 State = RunState.RunVictory;
                 return;
             }
             State = RunState.AwaitingShop;
             OpenShop();
+        }
+
+        /// <summary>
+        /// After a victory: keeps the run going into Endless. The shop opens as after any cleared round and the rounds that follow keep coming,
+        /// their enemies' HP compounding with no ceiling, until a round is lost. No-op unless the run is in <see cref="RunState.RunVictory"/>.
+        /// </summary>
+        public bool ContinueEndless()
+        {
+            if (State != RunState.RunVictory)
+            {
+                return false;
+            }
+            IsEndless = true;
+            State = RunState.AwaitingShop;
+            OpenShop();
+            return true;
         }
 
         /// <summary>True once every enemy in <see cref="CurrentEncounter"/> is dead - vacuously true for an empty encounter.</summary>
@@ -154,6 +170,12 @@ namespace Contigu.Core
         }
 
         /// <summary>Builds this round's enemies fresh from EncounterCatalog's authored EnemyIds - a brand-new EnemyInstance per id.</summary>
+        /// <summary>The HP multiplier of every enemy in a round: the round's own growth (Act 2, Endless) times this challenge's own multiplier.</summary>
+        public float EnemyHpScaleFor(int roundIndex)
+        {
+            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier;
+        }
+
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)
         {
             var ids = EncounterCatalog.GetEncounter(_challenge.Id, roundIndex);
@@ -163,7 +185,7 @@ namespace Contigu.Core
             }
 
             var instances = new List<EnemyInstance>(ids.Count);
-            float hpScale = EncounterCatalog.GetHpScale(roundIndex);
+            float hpScale = EnemyHpScaleFor(roundIndex);
             for (int i = 0; i < ids.Count; i++)
             {
                 var instance = new EnemyInstance(EnemyCatalog.Get(ids[i]), hpScale);
