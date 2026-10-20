@@ -109,26 +109,62 @@ namespace Contigu.Core
         /// <summary>The fertilizers that withered away at the end of the round just cleared (Autumn), in the order they were held — Presentation plays their farewell once the shop opens. Empty otherwise.</summary>
         public IReadOnlyList<ModifierId> LastWitheredModifiers { get; private set; } = new List<ModifierId>();
 
-        /// <summary>Autumn: every held fertilizer grows a round older when a round is cleared; any that reached the lifespan withers away now.</summary>
+        /// <summary>What sprouted in place of each fertilizer in <see cref="LastWitheredModifiers"/> (same order, same slots).</summary>
+        public IReadOnlyList<ModifierId> LastSproutedModifiers { get; private set; } = new List<ModifierId>();
+
+        /// <summary>
+        /// Autumn: every held fertilizer grows a round older when a round is cleared; any that reached the lifespan withers away now, and a
+        /// random fertilizer you don't hold yet sprouts in its slot (the garden renews rather than emptying).
+        /// </summary>
         private void AgeAndWitherModifiers()
         {
             var withered = new List<ModifierId>();
+            var sprouted = new List<ModifierId>();
             if (_challenge.FertilizerLifespanRounds > 0)
             {
                 for (int i = 0; i < _modifierAges.Count; i++)
                 {
                     _modifierAges[i]++;
                 }
-                for (int i = _activeModifiers.Count - 1; i >= 0; i--)
+                for (int i = 0; i < _activeModifiers.Count; i++)
                 {
-                    if (_modifierAges[i] >= _challenge.FertilizerLifespanRounds)
+                    if (_modifierAges[i] < _challenge.FertilizerLifespanRounds)
                     {
-                        withered.Insert(0, _activeModifiers[i]);
-                        RemoveActiveModifierAt(i);
+                        continue;
+                    }
+                    withered.Add(_activeModifiers[i]);
+                    RemoveActiveModifierAt(i);
+                    var replacement = RollSproutedModifier();
+                    if (replacement.HasValue)
+                    {
+                        AddActiveModifier(replacement.Value);
+                        MoveModifier(_activeModifiers.Count - 1, i);
+                        sprouted.Add(replacement.Value);
+                    }
+                    else
+                    {
+                        // Nothing left to sprout: the slot simply closes up, so the next one slides into index i.
+                        i--;
                     }
                 }
             }
             LastWitheredModifiers = withered;
+            LastSproutedModifiers = sprouted;
+        }
+
+        /// <summary>A random usable fertilizer the player doesn't hold (null if there is none).</summary>
+        private ModifierId? RollSproutedModifier()
+        {
+            var candidates = new List<ModifierId>();
+            for (int i = 0; i < ModifierCatalog.All.Length; i++)
+            {
+                var id = ModifierCatalog.All[i].Id;
+                if (!_activeModifiers.Contains(id) && IsModifierUsableThisRun(id))
+                {
+                    candidates.Add(id);
+                }
+            }
+            return candidates.Count == 0 ? (ModifierId?)null : candidates[_rng.Next(candidates.Count)];
         }
 
         /// <summary>Modifiers currently held by the player, persisting for the whole run. Capped at <see cref="EconomyConstants.MaxActiveModifiers"/>.</summary>

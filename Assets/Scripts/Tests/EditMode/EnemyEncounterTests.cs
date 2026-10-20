@@ -159,7 +159,7 @@ namespace Contigu.Tests
             Assert.IsTrue(run.HasActiveEncounter);
             Assert.AreEqual(1, run.CurrentEncounter.Count);
             Assert.AreEqual(EnemyId.Basic, run.CurrentEncounter[0].Definition.Id);
-            Assert.AreEqual(run.CurrentEncounter[0].Definition.MaxHp, run.CurrentEncounter[0].CurrentHp);
+            Assert.AreEqual(EncounterCatalog.ScaleHp(run.CurrentEncounter[0].Definition.MaxHp, run.EnemyHpScaleFor(0)), run.CurrentEncounter[0].CurrentHp);
             Assert.AreEqual(BossEffect.None, run.CurrentBossEffect);
         }
 
@@ -748,7 +748,7 @@ namespace Contigu.Tests
             AdvanceToRound(run, 7); // round 8 (index 7): Basic, Heavy Locker, Poisoner, Thief, Leech
             var heavyLocker = run.CurrentEncounter[1];
             Assert.AreEqual(EnemyId.HeavyLocker, heavyLocker.Definition.Id);
-            Assert.AreEqual(EnemyCatalog.HeavyLocker.MaxHp, heavyLocker.CurrentHp);
+            Assert.AreEqual(EncounterCatalog.ScaleHp(EnemyCatalog.HeavyLocker.MaxHp, run.EnemyHpScaleFor(7)), heavyLocker.CurrentHp, "the challenge's own HP scaling applies");
             Assert.IsNull(heavyLocker.LockedCell);
 
             Assert.IsTrue(run.ShuffleHand());

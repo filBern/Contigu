@@ -99,6 +99,11 @@ namespace Contigu.Tests
             run.DebugForceRoundComplete();
             CollectionAssert.DoesNotContain(run.ActiveModifiers, ModifierId.MultDeux, "withered at the end of its last round");
             CollectionAssert.AreEqual(new[] { ModifierId.MultDeux }, run.LastWitheredModifiers);
+            Assert.AreEqual(1, run.LastSproutedModifiers.Count, "a new fertilizer sprouts in its place");
+            Assert.AreEqual(1, run.ActiveModifiers.Count);
+            Assert.AreEqual(run.LastSproutedModifiers[0], run.ActiveModifiers[0]);
+            Assert.AreNotEqual(ModifierId.MultDeux, run.ActiveModifiers[0]);
+            Assert.AreEqual(0, run.GetModifierAge(0), "the sprout starts young");
         }
 
         [Test]
@@ -289,8 +294,8 @@ namespace Contigu.Tests
             Assert.IsTrue(run.LeaveShop());
             Assert.AreEqual(16, run.CurrentRoundNumber);
             Assert.IsFalse(run.HasActiveEncounter, "Winter has no authored enemies");
-            Assert.Greater(run.CurrentQuota, ChallengeCatalog.Marathon.Quotas[14]);
-            Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[14], run.CurrentBudget);
+            Assert.Greater(run.CurrentQuota, ChallengeCatalog.Marathon.QuotaFor(14));
+            Assert.AreEqual(ChallengeCatalog.Marathon.BudgetFor(14), run.CurrentBudget);
             Assert.Greater(ChallengeCatalog.Marathon.QuotaFor(40), ChallengeCatalog.Marathon.QuotaFor(20));
             Assert.LessOrEqual(ChallengeCatalog.Marathon.QuotaFor(500), 2000000000);
         }

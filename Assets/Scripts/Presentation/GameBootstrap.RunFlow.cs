@@ -29,7 +29,12 @@ namespace Contigu.Presentation
                         {
                             names.Add(ModifierCatalog.Get(_run.LastWitheredModifiers[i]).Name);
                         }
-                        SetStatusText("Withered away: " + string.Join(", ", names) + ".");
+                        var sprouts = new List<string>();
+                        for (int i = 0; i < _run.LastSproutedModifiers.Count; i++)
+                        {
+                            sprouts.Add(ModifierCatalog.Get(_run.LastSproutedModifiers[i]).Name);
+                        }
+                        SetStatusText("Withered away: " + string.Join(", ", names) + (sprouts.Count > 0 ? ". Sprouted: " + string.Join(", ", sprouts) + "." : "."));
                     }
                     if (_run.LastRoundEndLueurBonus > 0)
                     {

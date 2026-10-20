@@ -20,7 +20,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.8f
+            EnemyHpMultiplier = 0.72f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round, quotas trimmed ~15% to compensate — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
@@ -32,10 +32,12 @@ namespace Contigu.Core
             Description = "A smaller starting seed bag and tighter seed budgets. A random boss rule appears every four rounds.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
-            Quotas = new[] { 250, 425, 725, 1225, 2075, 3525, 6000, 10200, 17500, 32000, 58000, 105000, 190000, 340000, 600000 },
+            Quotas = new[] { 250, 425, 725, 1225, 2000, 2800, 3800, 5000, 6800, 9000, 12000, 16000, 21500, 29000, 39000 },
             PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
-            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            QuotaMultiplier = 0.8f,
+            PieceBudgetBonus = 10
         };
 
         /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>
@@ -53,15 +55,15 @@ namespace Contigu.Core
             WeatherProfile = WeatherProfile.Extreme,
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.8f
+            EnemyHpMultiplier = 0.72f
         };
 
-        /// <summary>Fertilizers wither away after 4 rounds; the shop pays more Pollen to compensate, so builds are rebuilt on the fly.</summary>
+        /// <summary>Fertilizers wither away after 4 rounds and a random new one sprouts in each slot; the shop pays more Pollen and the enemies are far gentler, so builds are rebuilt on the fly.</summary>
         public static readonly ChallengeDefinition Autumn = new ChallengeDefinition
         {
             Id = ChallengeId.Autumn,
             Name = "Autumn",
-            Description = "Fertilizers wither away after 4 rounds, but every round pays extra Pollen. Keep your garden growing.",
+            Description = "Fertilizers wither after 4 rounds — a random new one sprouts in their place — and every round pays extra Pollen. Enemies are gentler.",
             UnlockCost = 12,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -70,8 +72,8 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.7f,
-            PieceBudgetBonus = 6
+            EnemyHpMultiplier = 0.3f,
+            PieceBudgetBonus = 12
         };
 
         /// <summary>Only 2 of the 4 seed colors exist this run (drawn at the start): big groups come easily, so the enemies are sturdier.</summary>
@@ -104,8 +106,8 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.75f,
-            PieceBudgetBonus = 6
+            EnemyHpMultiplier = 0.5f,
+            PieceBudgetBonus = 10
         };
 
         public static readonly ChallengeDefinition[] All = { Classic, Marathon, Summer, Autumn, Orchard, Greenhouse };

@@ -28,9 +28,9 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
 
             Assert.AreEqual(1, run.CurrentRoundNumber);
-            Assert.AreEqual(RunConfig.Quotas[0], run.CurrentQuota);
-            Assert.AreEqual(RunConfig.PieceBudgets[0], run.CurrentBudget);
-            Assert.AreEqual(RunConfig.PieceBudgets[0], run.PiecesRemainingThisRound);
+            Assert.AreEqual(ChallengeCatalog.Classic.QuotaFor(0), run.CurrentQuota);
+            Assert.AreEqual(ChallengeCatalog.Classic.BudgetFor(0), run.CurrentBudget);
+            Assert.AreEqual(ChallengeCatalog.Classic.BudgetFor(0), run.PiecesRemainingThisRound);
             Assert.AreEqual(0, run.RoundScore);
             Assert.AreEqual(0, run.TotalScore);
             Assert.IsFalse(run.IsBossRound);
@@ -180,7 +180,7 @@ namespace Contigu.Tests
             Assert.AreEqual(ModifierId.Prisme, run.ActiveModifiers[0]);
             Assert.AreEqual(2, run.CurrentRoundNumber);
             Assert.AreEqual(0, run.RoundScore);
-            Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[1], run.PiecesRemainingThisRound);
+            Assert.AreEqual(ChallengeCatalog.Marathon.BudgetFor(1), run.PiecesRemainingThisRound);
             Assert.AreEqual(RunState.InProgress, run.State);
         }
 
@@ -2729,8 +2729,8 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1), ChallengeCatalog.Marathon);
 
             Assert.AreEqual(13, run.Deck.DeckCount, "Marathon's starting deck should be the smaller 13-token one, not the standard 32.");
-            Assert.AreEqual(ChallengeCatalog.Marathon.Quotas[0], run.CurrentQuota);
-            Assert.AreEqual(ChallengeCatalog.Marathon.PieceBudgets[0], run.CurrentBudget);
+            Assert.AreEqual(ChallengeCatalog.Marathon.QuotaFor(0), run.CurrentQuota);
+            Assert.AreEqual(ChallengeCatalog.Marathon.BudgetFor(0), run.CurrentBudget);
         }
 
         /// <summary>Drives a fresh run straight to the start of <paramref name="targetRoundIndex"/> via DebugForceRoundComplete, without needing to actually reach each round's real quota — the upgrade/modifier picked each round don't matter for these tests, only reaching the round does.</summary>
