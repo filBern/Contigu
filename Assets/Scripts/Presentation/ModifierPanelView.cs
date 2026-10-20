@@ -66,6 +66,9 @@ namespace Contigu.Presentation
         /// <summary>Whether the modifier at a slot index is currently blighted (set by GameBootstrap); blighted badges are greyed with a blight mark and say so in their tooltip.</summary>
         public System.Func<int, bool> BlightProvider;
 
+        /// <summary>Rounds the fertilizer at a slot has left before it withers (Autumn); 0 or null means it never withers.</summary>
+        public System.Func<int, int> RoundsLeftProvider;
+
         // Tap-to-swap: the first-tapped badge's row, armed and waiting for
         // a second tap on a different badge to swap with — -1 when nothing
         // is armed. Drag-to-move: the row currently being dragged, -1 when
@@ -258,6 +261,13 @@ namespace Contigu.Presentation
                     var baseLevelState = rowLevelState;
                     rowLevelState = rowId => "BLIGHTED: no effect until the next Shuffle." + (baseLevelState != null ? "\n" + baseLevelState(rowId) : string.Empty);
                 }
+                int roundsLeft = RoundsLeftProvider != null ? RoundsLeftProvider(i) : 0;
+                if (roundsLeft > 0)
+                {
+                    var baseWitherState = rowLevelState;
+                    string witherLine = "Withers away in " + roundsLeft + (roundsLeft == 1 ? " round (this one)." : " rounds.");
+                    rowLevelState = rowId => witherLine + (baseWitherState != null ? "\n" + baseWitherState(rowId) : string.Empty);
+                }
                 var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState, showSellValue: true);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
@@ -282,6 +292,21 @@ namespace Contigu.Presentation
                     mark.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                     mark.rectTransform.sizeDelta = new Vector2(BadgeSize * 0.6f, BadgeSize * 0.6f);
                     mark.gameObject.SetActive(mark.sprite != null);
+                }
+
+                if (roundsLeft > 0)
+                {
+                    // Autumn's countdown pill, bottom-left: how many cleared rounds this fertilizer still has.
+                    var pill = UIFactory.CreatePanel(badge.transform, "WitherPill", roundsLeft == 1 ? UITheme.Danger : new Color(0.86f, 0.55f, 0.16f, 1f));
+                    pill.raycastTarget = false;
+                    pill.rectTransform.anchorMin = new Vector2(0f, 0f);
+                    pill.rectTransform.anchorMax = new Vector2(0f, 0f);
+                    pill.rectTransform.pivot = new Vector2(0f, 0f);
+                    pill.rectTransform.anchoredPosition = new Vector2(2f, 2f);
+                    pill.rectTransform.sizeDelta = new Vector2(24f, 24f);
+                    var pillLabel = UIFactory.CreateText(pill.transform, "WitherLeft", roundsLeft.ToString(), 18, Color.white);
+                    pillLabel.raycastTarget = false;
+                    UIFactory.StretchFull(pillLabel.rectTransform);
                 }
 
                 // Visual position number: scoring order follows this exact

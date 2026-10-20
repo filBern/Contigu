@@ -20,6 +20,17 @@ namespace Contigu.Presentation
             switch (state)
             {
                 case RunState.AwaitingShop:
+                    if (_run.LastWitheredModifiers.Count > 0)
+                    {
+                        // Autumn: the fertilizers that just withered shrink away from the panel, and the status says which.
+                        _modifierPanelView.Refresh(_run.ActiveModifiers);
+                        var names = new List<string>();
+                        for (int i = 0; i < _run.LastWitheredModifiers.Count; i++)
+                        {
+                            names.Add(ModifierCatalog.Get(_run.LastWitheredModifiers[i]).Name);
+                        }
+                        SetStatusText("Withered away: " + string.Join(", ", names) + ".");
+                    }
                     if (_run.LastRoundEndLueurBonus > 0)
                     {
                         StartCoroutine(PlayRoundEndLueurBonusSequence());
@@ -39,8 +50,19 @@ namespace Contigu.Presentation
 
                 case RunState.RunDefeat:
                 {
-                    bool isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
-                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore);
+                    bool isNewBestScore;
+                    if (_run.IsEndless)
+                    {
+                        // The win was already counted when the finale was cleared: only the extra rounds and records are new.
+                        isNewBestScore = _run.TotalScore > _metaStats.BestScore;
+                        _metaStats = MetaStatsRecorder.RecordEndlessEnd(_metaStats, _run.TotalScore, _run.CurrentRoundNumber);
+                        _metaStatsStore.Save(_metaStats);
+                    }
+                    else
+                    {
+                        isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
+                    }
+                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless);
                     break;
                 }
             }
@@ -145,6 +167,18 @@ namespace Contigu.Presentation
             }
             text.Append(". Defeat them all to clear the round.");
             return text.ToString();
+        }
+
+        /// <summary>The victory screen's "Keep Growing": the run goes on past the final round (see RunManager.ContinueEndless), starting with the shop.</summary>
+        private void OnEndlessRequested()
+        {
+            if (!_run.ContinueEndless())
+            {
+                return;
+            }
+            _endScreenView.Hide();
+            RefreshAll();
+            HandleStateTransition(_run.State);
         }
 
         /// <summary>"New Run" goes back through the challenge picker rather than immediately restarting the same challenge — see OnChallengeChosen for what starts the next run once one is picked.</summary>

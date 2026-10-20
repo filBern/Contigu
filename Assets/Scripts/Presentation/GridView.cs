@@ -37,27 +37,29 @@ namespace Contigu.Presentation
             get { return _selectedShape != null; }
         }
 
+        private GridLayoutGroup _layout;
+        private int _builtSize;
+        private float _builtCellSize;
+        private float _fullFootprint;
+
+        private const float CellSpacing = 2f;
+
         public RectTransform Build(Transform parent, GridManager grid, float cellSize, TooltipView tooltip)
         {
             _grid = grid;
             _tooltip = tooltip;
-            _cells = new GridCellView[GridManager.Size, GridManager.Size];
 
             var container = UIFactory.CreateUIObject("GridContainer", parent);
             _container = container;
-            float spacing = 2f;
-            _cellStride = cellSize + spacing;
-            float total = GridManager.Size * cellSize + (GridManager.Size - 1) * spacing;
-            container.sizeDelta = new Vector2(total, total);
+            _layout = container.gameObject.AddComponent<GridLayoutGroup>();
+            _layout.spacing = new Vector2(CellSpacing, CellSpacing);
+            _layout.startCorner = GridLayoutGroup.Corner.LowerLeft;
+            _layout.startAxis = GridLayoutGroup.Axis.Horizontal;
+            _layout.childAlignment = TextAnchor.LowerLeft;
+            _layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 
-            var layout = container.gameObject.AddComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2(cellSize, cellSize);
-            layout.spacing = new Vector2(spacing, spacing);
-            layout.startCorner = GridLayoutGroup.Corner.LowerLeft;
-            layout.startAxis = GridLayoutGroup.Axis.Horizontal;
-            layout.childAlignment = TextAnchor.LowerLeft;
-            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            layout.constraintCount = GridManager.Size;
+            // The footprint the full-size plot takes: a smaller plot (Greenhouse) gets bigger cells so it fills the same space.
+            _fullFootprint = GridManager.Size * cellSize + (GridManager.Size - 1) * CellSpacing;
 
             // Invisible, full-grid-size raycast target on the container itself: a child cell's Image always wins the raycast
             // when the pointer is precisely on it, so this only catches pointer events landing in the inter-cell spacing gap.
@@ -67,18 +69,39 @@ namespace Contigu.Presentation
             var gapCatcher = container.gameObject.AddComponent<GridGapCatcher>();
             gapCatcher.Init(this);
 
-            // Instantiated bottom row (y=0) first so LowerLeft start corner
-            // produces an on-screen layout where y increases upward.
-            for (int y = 0; y < GridManager.Size; y++)
-            {
-                for (int x = 0; x < GridManager.Size; x++)
-                {
-                    CreateCell(container, x, y);
-                }
-            }
-
+            BuildCells();
             Refresh();
             return container;
+        }
+
+        /// <summary>(Re)creates every cell for the current <see cref="GridManager.Size"/>, scaling their size so the plot keeps the same footprint on screen.</summary>
+        private void BuildCells()
+        {
+            for (int i = _container.childCount - 1; i >= 0; i--)
+            {
+                var old = _container.GetChild(i);
+                old.SetParent(null, false);
+                Destroy(old.gameObject);
+            }
+            int size = GridManager.Size;
+            float cellSize = (_fullFootprint - (size - 1) * CellSpacing) / size;
+            _builtSize = size;
+            _builtCellSize = cellSize;
+            _cells = new GridCellView[size, size];
+            _cellStride = cellSize + CellSpacing;
+            _container.sizeDelta = new Vector2(_fullFootprint, _fullFootprint);
+            _layout.cellSize = new Vector2(cellSize, cellSize);
+            _layout.constraintCount = size;
+
+            // Instantiated bottom row (y=0) first so LowerLeft start corner
+            // produces an on-screen layout where y increases upward.
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    CreateCell(_container, x, y);
+                }
+            }
         }
 
         private void CreateCell(Transform parent, int x, int y)
@@ -233,6 +256,13 @@ namespace Contigu.Presentation
         {
             _grid = grid;
             _lastHoverOrigin = null;
+            if (GridManager.Size != _builtSize)
+            {
+                // A challenge with another plot size (Greenhouse): rebuild the cells at the new size. Anything that remembered old cells goes first.
+                _hoveredFootprint.Clear();
+                _lineClearPreviewCells.Clear();
+                BuildCells();
+            }
             ClearHover();
             Refresh();
         }

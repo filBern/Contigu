@@ -525,6 +525,7 @@ namespace Contigu.Presentation
             // this view is only Refreshed, never rebuilt.
             var modifierPanelRect = _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
+            _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
@@ -619,6 +620,7 @@ namespace Contigu.Presentation
             _masteryChoiceView.OptionChosen += OnMasteryOptionChosen;
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
+            _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }

@@ -236,7 +236,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Shows this round's weather in the chip next to the round number.</summary>
-        public void SetWeather(WeatherId weather, PieceColor? color = null)
+        public void SetWeather(WeatherId weather, PieceColor? color = null, float intensity = 1f)
         {
             if (_weatherChipIcon == null)
             {
@@ -244,7 +244,7 @@ namespace Contigu.Presentation
             }
             _weatherChipIcon.sprite = VisualDefaults.GetWeatherSprite(weather);
             _weatherChipIcon.enabled = _weatherChipIcon.sprite != null;
-            _weatherChipTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(weather, color), VisualDefaults.GetWeatherDescription(weather, color), "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
+            _weatherChipTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(weather, color), VisualDefaults.GetWeatherDescription(weather, color, intensity), "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
         }
 
         /// <summary>
@@ -402,8 +402,8 @@ namespace Contigu.Presentation
 
         public void Refresh(RunManager run)
         {
-            SetRound(run.CurrentRoundNumber, run.Challenge.RoundCount);
-            SetWeather(run.CurrentWeather, run.CurrentWeatherColor);
+            SetRound(run.CurrentRoundNumber, run.IsEndless ? 0 : run.Challenge.RoundCount);
+            SetWeather(run.CurrentWeather, run.CurrentWeatherColor, run.WeatherIntensity);
             _enemyTickCountdown = run.PlacementsUntilEnemyTick;
             SetPieces(run.PiecesRemainingThisRound, run.CurrentBudget);
             if (run.HasActiveEncounter)
@@ -430,7 +430,7 @@ namespace Contigu.Presentation
             _roundCount = roundCount;
             if (_roundChipLabel != null)
             {
-                _roundChipLabel.text = "Round " + _roundNumber + "/" + _roundCount;
+                _roundChipLabel.text = _roundCount > 0 ? "Round " + _roundNumber + "/" + _roundCount : "Round " + _roundNumber + " (Endless)";
             }
         }
 

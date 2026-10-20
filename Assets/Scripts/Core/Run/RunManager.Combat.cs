@@ -152,6 +152,8 @@ namespace Contigu.Core
                 return false;
             }
             IsEndless = true;
+            // The final round's end-of-round Pollen was already banked; the shop must not replay its popups.
+            LastRoundEndLueurBonus = 0;
             State = RunState.AwaitingShop;
             OpenShop();
             return true;

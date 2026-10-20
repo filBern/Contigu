@@ -132,9 +132,9 @@ namespace Contigu.Data
             return WeatherCatalog.GetName(id, color.HasValue ? GetColorName(color.Value) : null);
         }
 
-        public static string GetWeatherDescription(WeatherId id, PieceColor? color)
+        public static string GetWeatherDescription(WeatherId id, PieceColor? color, float intensity = 1f)
         {
-            return WeatherCatalog.GetDescription(id, color.HasValue ? GetColorName(color.Value) : null);
+            return WeatherCatalog.GetDescription(id, color.HasValue ? GetColorName(color.Value) : null, intensity);
         }
 
         private static readonly Dictionary<WeatherId, Sprite> WeatherSprites = new Dictionary<WeatherId, Sprite>();

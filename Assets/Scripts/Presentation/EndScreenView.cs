@@ -8,12 +8,14 @@ namespace Contigu.Presentation
     public sealed class EndScreenView : MonoBehaviour
     {
         public event Action RestartRequested;
+        public event Action EndlessRequested;
 
         private RectTransform _root;
         private UnityEngine.UI.Text _titleText;
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
         private RectTransform _restartButtonRect;
+        private RectTransform _endlessButtonRect;
         private UnityEngine.UI.Image _sprigPortrait;
         private UnityEngine.UI.Text _sprigText;
 
@@ -54,6 +56,18 @@ namespace Contigu.Presentation
                 if (RestartRequested != null) RestartRequested();
             });
 
+            // After a victory: keep playing past the final round, enemies sturdier by the round, until the garden falls.
+            var endlessBtn = UIFactory.CreateButton(_root, "Endless", "Keep Growing (Endless)", UISprites.ChooseButtonBackground, 18);
+            _endlessButtonRect = endlessBtn.GetComponent<RectTransform>();
+            _endlessButtonRect.anchorMin = new Vector2(0.5f, 0.28f);
+            _endlessButtonRect.anchorMax = new Vector2(0.5f, 0.28f);
+            _endlessButtonRect.pivot = new Vector2(0.5f, 0.5f);
+            _endlessButtonRect.sizeDelta = new Vector2(320f, 52f);
+            endlessBtn.onClick.AddListener(() =>
+            {
+                if (EndlessRequested != null) EndlessRequested();
+            });
+
             // Sprig's closing comment, bottom-left.
             _sprigPortrait = SprigView.BuildSpeaker(_root, "Sprig", 200f, 340f, 20, out _sprigText, out var sprigRoot);
             sprigRoot.anchoredPosition = new Vector2(40f, 40f);
@@ -76,15 +90,18 @@ namespace Contigu.Presentation
             _subtitleText.text = "Run complete — total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             SprigComment(true, isNewBestScore);
-            _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
+            _restartButtonRect.anchoredPosition = new Vector2(190f, 0f);
+            _endlessButtonRect.anchoredPosition = new Vector2(-120f, 0f);
+            _endlessButtonRect.gameObject.SetActive(true);
             _root.gameObject.SetActive(true);
         }
 
-        public void ShowDefeat(int roundNumber, int totalScore, MetaStats metaStats, bool isNewBestScore)
+        public void ShowDefeat(int roundNumber, int totalScore, MetaStats metaStats, bool isNewBestScore, bool endless = false)
         {
-            _titleText.text = "Defeat — Round " + roundNumber;
+            _endlessButtonRect.gameObject.SetActive(false);
+            _titleText.text = endless ? "Endless — fell in Round " + roundNumber : "Defeat — Round " + roundNumber;
             _titleText.color = UITheme.Danger;
-            _subtitleText.text = "Quota not reached — total score: " + totalScore;
+            _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " — " : "Quota not reached — ") + "total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             SprigComment(false, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
