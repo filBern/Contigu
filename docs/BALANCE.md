@@ -56,3 +56,18 @@ relancer `generate_icons.py` et re-rendre le PNG dans `Assets/Resources/Icons/Fe
 - **Greenhouse** : grille 5×5 (`GridManager.Size` est dynamique, fixé par le `RunManager`), cases agrandies pour garder la même empreinte à l'écran, ennemis ×0,9 PV.
 - **Endless** (tous les challenges) : après la victoire au round 15, « Keep Growing » enchaîne sur la boutique puis les rounds 16+. Les rosters de l'Acte 2 (rounds 9 à 15) tournent en boucle, PV ×1,2 par round en plus de la croissance de l'Acte 2 (`EnemyHpGrowthPerRoundEndless`) ; Winter (sans ennemis) voit ses quotas ×1,75 par round. La victoire est comptée une seule fois ; chaque round supplémentaire rapporte 1 Star à la fin (`RecordEndlessEnd`).
 - Simulateur : `--challenge Summer|Autumn|Orchard|Greenhouse|Winter` et `--endless`. Résultats du bot glouton (1 500 runs) : Classic 2,0 % de victoires, Summer 2,0 %, Orchard 1,7 %, Greenhouse 0,7 %, Autumn ≈ 0 % (voir plus haut).
+
+### Passe d'équilibrage « ≥ 5 % de victoires » (bot glouton, 3 000 runs, graine 4001)
+
+Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultiplier`, `PieceBudgetBonus` (graines en plus à chaque round) et, pour Winter, `QuotaMultiplier` avec sa propre courbe de quotas (plus douce que l'ancienne : le bot n'atteignait pas les derniers paliers).
+
+| Challenge | PV ennemis | Graines en plus | Autre | Victoires du bot |
+|---|---|---|---|---|
+| Spring | ×0,72 | +6 | | 7,6 % |
+| Winter | | +10 | quotas ×0,8 sur la nouvelle courbe | 6,1 % |
+| Summer | ×0,72 | +6 | météo ×1,5 | 7,0 % |
+| Autumn | ×0,3 | +12 | fane après 4 rounds, +10 Pollen, un fertilizer aléatoire repousse | ≈ 8 % |
+| Orchard | ×1,4 | +6 | 2 couleurs | 6,4 % |
+| Greenhouse | ×0,5 | +10 | grille 5×5 | 6,1 % |
+
+Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
