@@ -101,6 +101,90 @@ namespace Contigu.Core
             return moves;
         }
 
+        /// <summary>Fruitworm: turns one random planted, unlocked tile of a base color into a different one of the run's colors. Null when there is nothing to recolor.</summary>
+        public (Vector2Int Pos, PieceColor From, PieceColor To)? RecolorRandomTile(IRandomProvider rng)
+        {
+            var colors = PieceColorUtility.BaseColors;
+            if (colors.Count < 2)
+            {
+                return null;
+            }
+            var candidates = new List<Vector2Int>();
+            foreach (var pos in MovableFilledCells())
+            {
+                if (PieceColorUtility.IsActive(GetCell(pos).FilledColor.Value) && GetCell(pos).FilledColor.Value != PieceColor.Joker)
+                {
+                    candidates.Add(pos);
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+            var chosen = candidates[rng.Next(candidates.Count)];
+            var cell = GetCell(chosen);
+            var from = cell.FilledColor.Value;
+            var others = new List<PieceColor>();
+            for (int i = 0; i < colors.Count; i++)
+            {
+                if (colors[i] != from)
+                {
+                    others.Add(colors[i]);
+                }
+            }
+            var to = others[rng.Next(others.Count)];
+            cell.FilledColor = to;
+            return (chosen, from, to);
+        }
+
+        /// <summary>Whitefly: swaps the whole fill state of two random planted, unlocked tiles (preferring two of different colors). Null with fewer than two tiles.</summary>
+        public (Vector2Int A, Vector2Int B)? SwapRandomTiles(IRandomProvider rng)
+        {
+            var candidates = MovableFilledCells();
+            if (candidates.Count < 2)
+            {
+                return null;
+            }
+            var a = candidates[rng.Next(candidates.Count)];
+            var different = new List<Vector2Int>();
+            var any = new List<Vector2Int>();
+            foreach (var pos in candidates)
+            {
+                if (pos == a)
+                {
+                    continue;
+                }
+                any.Add(pos);
+                if (GetCell(pos).FilledColor != GetCell(a).FilledColor)
+                {
+                    different.Add(pos);
+                }
+            }
+            var pool = different.Count > 0 ? different : any;
+            var b = pool[rng.Next(pool.Count)];
+            var first = GetCell(a);
+            var second = GetCell(b);
+            var temp = new Cell();
+            CopyFill(first, temp);
+            CopyFill(second, first);
+            CopyFill(temp, second);
+            return (a, b);
+        }
+
+        private static void CopyFill(Cell src, Cell dst)
+        {
+            dst.IsFilled = src.IsFilled;
+            dst.FilledColor = src.FilledColor;
+            dst.FilledShapeId = src.FilledShapeId;
+            dst.IsGolden = src.IsGolden;
+            dst.IsTinted = src.IsTinted;
+            dst.TintedColor = src.TintedColor;
+            dst.IsMultiplierZone = src.IsMultiplierZone;
+            dst.OriginTrait = src.OriginTrait;
+            dst.ShapeMasteryBonus = src.ShapeMasteryBonus;
+            dst.ColorMasteryBonus = src.ColorMasteryBonus;
+        }
+
         private List<Vector2Int> MovableFilledCells()
         {
             var cells = new List<Vector2Int>();

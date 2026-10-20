@@ -28,7 +28,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Marathon,
             Name = "Winter",
-            Description = "A smaller starting seed bag and tighter seed budgets. Same 15 enemy rounds as Spring, with far less room for error.",
+            Description = "A smaller starting seed bag and tighter seed budgets. Same 15 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -36,7 +36,8 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
-            EnemyHpMultiplier = 0.8f
+            EnemyHpMultiplier = 0.8f,
+            WorldEnemy = EnemyId.Hoarfrost
         };
 
         /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>
@@ -44,7 +45,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Summer,
             Name = "Summer",
-            Description = "Every round brings real weather — never calm skies — and it hits 1.5x harder. Plan around the forecast.",
+            Description = "Every round brings real weather — never calm skies — and it hits 1.5x harder. Plan around the forecast. Home of the Locust Swarm.",
             UnlockCost = 8,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -54,7 +55,8 @@ namespace Contigu.Core
             WeatherProfile = WeatherProfile.Extreme,
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.72f
+            EnemyHpMultiplier = 0.72f,
+            WorldEnemy = EnemyId.Locust
         };
 
         /// <summary>Fertilizers wither away after 4 rounds and a random new one sprouts in each slot; the shop pays more Pollen and the enemies are far gentler, so builds are rebuilt on the fly.</summary>
@@ -62,7 +64,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Autumn,
             Name = "Autumn",
-            Description = "Fertilizers wither after 4 rounds — a random new one sprouts in their place — and every round pays extra Pollen. Enemies are gentler.",
+            Description = "Fertilizers wither after 4 rounds — a random new one sprouts in their place — and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
             UnlockCost = 12,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -71,8 +73,9 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.35f,
-            PieceBudgetBonus = 12
+            EnemyHpMultiplier = 0.36f,
+            PieceBudgetBonus = 12,
+            WorldEnemy = EnemyId.Rotgrub
         };
 
         /// <summary>Only 2 of the 4 seed colors exist this run (drawn at the start): big groups come easily, so the enemies are sturdier.</summary>
@@ -80,7 +83,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Orchard,
             Name = "Orchard",
-            Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier.",
+            Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier. Home of the Fruitworm.",
             UnlockCost = 15,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -88,8 +91,9 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             ActiveColorCount = 2,
-            EnemyHpMultiplier = 1.4f,
-            PieceBudgetBonus = 6
+            EnemyHpMultiplier = 1.2f,
+            PieceBudgetBonus = 6,
+            WorldEnemy = EnemyId.Fruitworm
         };
 
         /// <summary>A snug 5x5 plot: lines are short and frequent, but there is no room to spare.</summary>
@@ -97,7 +101,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Greenhouse,
             Name = "Greenhouse",
-            Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare.",
+            Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare. Home of the Whitefly Cloud.",
             UnlockCost = 18,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -105,8 +109,9 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.55f,
-            PieceBudgetBonus = 10
+            EnemyHpMultiplier = 0.5f,
+            PieceBudgetBonus = 10,
+            WorldEnemy = EnemyId.Whitefly
         };
 
         public static readonly ChallengeDefinition[] All = { Classic, Marathon, Summer, Autumn, Orchard, Greenhouse };

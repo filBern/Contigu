@@ -87,6 +87,7 @@ namespace Contigu.Presentation
             if (shuffled)
             {
                 PlayBlightmothActIfBlightChanged(blightBefore);
+                PlayWorldEnemyActIfAny();
             }
             if (!shuffled)
             {

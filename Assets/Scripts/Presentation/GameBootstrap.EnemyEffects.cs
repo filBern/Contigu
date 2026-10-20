@@ -47,6 +47,36 @@ namespace Contigu.Presentation
         }
 
         /// <summary>If the blight moved since <paramref name="before"/>, the Blightmoth's portrait reacts (and the fertilizer panel is already redrawn by RefreshAll).</summary>
+        /// <summary>
+        /// Plays what a challenge's resident enemy (Hoarfrost, Locust Swarm, Rotgrub, Fruitworm, Whitefly Cloud) just did on a Shuffle: its
+        /// portrait pulses, the status line says it, the Locust's bite shows on the Pollen counter and Rotgrub's on the fertilizer panel. The
+        /// grid itself is refreshed by the Shuffle flow, so frozen/recolored/swapped plots simply show up. No-op when none acted.
+        /// </summary>
+        private void PlayWorldEnemyActIfAny()
+        {
+            var acted = _run.LastWorldEnemyAct;
+            if (!acted.HasValue)
+            {
+                return;
+            }
+            int index = FindAliveEnemyIndex(acted.Value);
+            if (index >= 0)
+            {
+                _hudView.PlayEnemyAct(index);
+                _hudView.PlayEnemyEffectPulse(index);
+            }
+            SetStatusText(_run.LastWorldEnemyMessage);
+            if (acted.Value == EnemyId.Locust && _run.LastPollenEaten > 0)
+            {
+                _hudView.SetLueur(_run.Lueur);
+                _feedbackLayer.SpawnPopup(_hudView.LueurLabelTransform, "-" + _run.LastPollenEaten, UITheme.Danger);
+            }
+            else if (acted.Value == EnemyId.Rotgrub)
+            {
+                _modifierPanelView.Refresh(_run.ActiveModifiers);
+            }
+        }
+
         private void PlayBlightmothActIfBlightChanged(string before)
         {
             string after = BlightSignature();

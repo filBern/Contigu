@@ -731,6 +731,7 @@ namespace Contigu.Core
         public PlacementOutcome PlacePiece(int handIndex, int x, int y)
         {
             _deathReleasedCellsThisPlacement.Clear();
+            ResetWorldEnemyReport();
             if (State != RunState.InProgress)
             {
                 return new PlacementOutcome(PlacementResult.Failure("Run is not in progress"), State, RoundScore, TotalScore, PiecesRemainingThisRound);

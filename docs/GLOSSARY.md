@@ -160,6 +160,11 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `ColorHater` | Invasive Bloom | Boss | 1950 |
 | `ShapeHater` | Invasive Weed | Boss | 1950 |
 | `Blightmoth` | Blightmoth | Boss | 1750 |
+| `Hoarfrost` | Hoarfrost | Creator (Winter) | 1500 |
+| `Locust` | Locust Swarm | Creator (Summer) | 1400 |
+| `Rotgrub` | Rotgrub | Creator (Autumn) | 1300 |
+| `Fruitworm` | Fruitworm | Creator (Orchard) | 1400 |
+| `Whitefly` | Whitefly Cloud | Creator (Greenhouse) | 1450 |
 
 ## Météo
 

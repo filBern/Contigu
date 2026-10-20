@@ -161,6 +161,59 @@ E['Blightmoth'] = ('<g fill="#cfd8a8" stroke="%s" stroke-width="5"><path d="%s"/
                    '<circle cx="128" cy="100" r="24" fill="#a89870" stroke="%s" stroke-width="5"/>' % O +
                    eye(118, 98, 8, '#e8f070', look=(1, 1), angry=1) + eye(138, 98, 8, '#e8f070', look=(-1, 1), angry=-1))
 
+# ---- World residents (one per challenge) -------------------------------------------------------------------------
+# Hoarfrost (Winter): a six-armed ice crystal with a cold, glaring face
+arms = ''.join('<path d="M122 128 L128 34 L134 128 Z" transform="rotate(%d 128 128)"/>' % a for a in range(0, 360, 60))
+barbs = ''.join('<path d="M128 74 L112 58 M128 74 L144 58" transform="rotate(%d 128 128)" fill="none" stroke="#dff3ff" stroke-width="5"/>' % a for a in range(0, 360, 60))
+E['Hoarfrost'] = ('<g fill="#bfe6ff" stroke="%s" stroke-width="5">%s</g>' % (O, arms) + barbs +
+                  '<circle cx="128" cy="128" r="46" fill="#e6f6ff" stroke="%s" stroke-width="5"/>' % O +
+                  '<circle cx="112" cy="116" r="12" fill="#ffffff" opacity="0.7"/>' +
+                  eye(114, 126, 9, '#ffffff', pupil='#2a6aa8', look=(1, 1), angry=1) + eye(142, 126, 9, '#ffffff', pupil='#2a6aa8', look=(-1, 1), angry=-1) +
+                  '<path d="M112 152 C120 144 136 144 144 152" fill="none" stroke="%s" stroke-width="5"/>' % O)
+
+# Locust Swarm (Summer): a big green locust in profile, powerful hind leg, mandibles and veined wings
+E['Locust'] = ('<path d="M60 150 C30 120 36 70 96 56 C140 46 196 70 218 112 C196 100 150 90 112 110 Z" fill="#cfd98a" stroke="%s" stroke-width="5"/>' % O +
+               '<path d="M96 70 L150 62 M100 86 L170 80 M108 100 L186 98" fill="none" stroke="#8a9a3a" stroke-width="4"/>' +
+               '<path d="M62 150 C70 120 120 110 176 130 C200 140 214 156 220 176 L196 176 C186 160 160 150 120 156 C100 160 80 168 62 150 Z" fill="#7fae3a" stroke="%s" stroke-width="5"/>' % O +
+               '<path d="M150 134 L186 196 L220 196 L224 210 L170 210 L132 150 Z" fill="#5f8a2a" stroke="%s" stroke-width="5"/>' % O +
+               '<path d="M80 160 L72 204 M104 162 L100 206" fill="none" stroke="%s" stroke-width="7"/>' % O +
+               '<ellipse cx="56" cy="148" rx="28" ry="24" fill="#8fc24a" stroke="%s" stroke-width="5"/>' % O +
+               '<path d="M42 128 C20 100 8 92 8 74 M54 124 C48 92 52 78 60 62" fill="none" stroke="%s" stroke-width="5"/>' % O +
+               eye(50, 142, 9, '#ffe14a', look=(-2, 1), angry=1) +
+               '<path d="M30 162 L40 176 L52 164 M44 168 L52 182" fill="none" stroke="%s" stroke-width="5"/>' % O)
+
+# Rotgrub (Autumn): a fat pale grub curled on a rotting autumn leaf
+E['Rotgrub'] = ('<path d="M20 190 C20 120 90 60 200 70 C220 130 170 200 80 214 C50 218 28 206 20 190 Z" fill="#c9722a" stroke="%s" stroke-width="5"/>' % O +
+                '<path d="M30 190 C70 150 120 110 196 78 M70 200 C100 160 140 130 196 108" fill="none" stroke="#8a4a1a" stroke-width="4"/>' +
+                '<path d="M56 150 C56 108 112 92 150 114 C190 136 186 188 140 196 C96 204 56 190 56 150 Z" fill="#f1e2b6" stroke="%s" stroke-width="5"/>' % O +
+                '<path d="M80 168 C100 176 124 178 150 168 M76 148 C100 156 130 156 160 146 M92 128 C112 134 136 134 156 126" fill="none" stroke="#c9b27a" stroke-width="5"/>' +
+                '<circle cx="82" cy="128" r="32" fill="#8a5a2b" stroke="%s" stroke-width="5"/>' % O +
+                eye(72, 122, 8, '#fff7e8', look=(-1, 1), angry=1) + eye(94, 122, 8, '#fff7e8', look=(-1, 1), angry=-1) +
+                '<path d="M62 148 L56 160 L70 154 M96 148 L102 160 L88 154" fill="#fff7e8" stroke="%s" stroke-width="3"/>' % O)
+
+# Fruitworm (Orchard): a red apple with a worm poking out of a bite-hole
+E['Fruitworm'] = ('<path d="M128 70 C90 40 30 64 34 130 C38 190 90 230 128 214 C166 230 218 190 222 130 C226 64 166 40 128 70 Z" fill="#c8403f" stroke="%s" stroke-width="6"/>' % O +
+                  '<path d="M64 100 C70 84 86 76 100 78" fill="none" stroke="#ff9a8a" stroke-width="8" opacity="0.7"/>' +
+                  '<path d="M128 70 C128 50 134 36 148 28" fill="none" stroke="#5a3a1e" stroke-width="8"/>' +
+                  '<path d="M146 34 C166 18 192 24 196 40 C176 52 156 48 146 34 Z" fill="#6fb04f" stroke="%s" stroke-width="4"/>' % O +
+                  '<ellipse cx="136" cy="152" rx="36" ry="30" fill="#3a1a14" stroke="%s" stroke-width="5"/>' % O +
+                  '<path d="M104 160 C100 120 128 96 150 108 C170 118 164 140 150 138 C140 136 142 126 134 128 C124 130 124 160 128 168 Z" fill="#f1a8c0" stroke="%s" stroke-width="5"/>' % O +
+                  '<path d="M112 134 H128 M116 148 H128" stroke="#c97a96" stroke-width="4"/>' +
+                  '<circle cx="146" cy="110" r="22" fill="#f6bcd0" stroke="%s" stroke-width="5"/>' % O +
+                  eye(138, 106, 7, '#ffffff', look=(1, 1), angry=1) + eye(156, 106, 7, '#ffffff', look=(-1, 1), angry=-1) +
+                  '<path d="M138 120 C144 126 152 126 158 120" fill="none" stroke="%s" stroke-width="4"/>' % O)
+
+# Whitefly Cloud (Greenhouse): a pale fly with veined wings and a few tiny ones swirling around it
+def fly(cx, cy, k, rot=0):
+    return ('<g transform="translate(%g %g) rotate(%g) scale(%g)">' % (cx, cy, rot, k) +
+            '<ellipse cx="-22" cy="-14" rx="26" ry="14" transform="rotate(-25 -22 -14)" fill="#ffffff" stroke="%s" stroke-width="%g" opacity="0.95"/>' % (O, 4 / k) +
+            '<ellipse cx="22" cy="-14" rx="26" ry="14" transform="rotate(25 22 -14)" fill="#ffffff" stroke="%s" stroke-width="%g" opacity="0.95"/>' % (O, 4 / k) +
+            '<ellipse cx="0" cy="8" rx="13" ry="22" fill="#f4eed2" stroke="%s" stroke-width="%g"/>' % (O, 4 / k) +
+            '<circle cx="0" cy="-16" r="11" fill="#e8dfb8" stroke="%s" stroke-width="%g"/>' % (O, 4 / k) +
+            '<circle cx="-4" cy="-18" r="3.4" fill="#c8403f"/><circle cx="4" cy="-18" r="3.4" fill="#c8403f"/></g>')
+E['Whitefly'] = ('<path d="M26 150 C10 110 50 74 90 84 C110 40 190 40 206 90 C246 90 250 150 214 164 C206 200 150 214 126 196 C96 216 40 200 26 150 Z" fill="#dfe9f0" stroke="%s" stroke-width="5" opacity="0.9"/>' % O +
+                 fly(128, 128, 2.1) + fly(52, 76, 0.7, -20) + fly(206, 70, 0.6, 18) + fly(44, 190, 0.6, 10) + fly(210, 190, 0.7, -12))
+
 for name, body in E.items():
     open('%s.svg' % name, 'w').write(svg(body))
     print('wrote', name)

@@ -36,7 +36,22 @@ namespace Contigu.Core
         /// <summary>See RunManager.ResolveBlightmothShuffleEffect: a blighted fertilizer scores nothing, stopping a run from leaning on a single technique.</summary>
         public static readonly EnemyDefinition Blightmoth = new EnemyDefinition { Id = EnemyId.Blightmoth, Name = "Blightmoth", Role = EnemyRole.Boss, MaxHp = 800, Description = "Each Shuffle: blights 1 random fertilizer.\nA blighted fertilizer has no effect.\nThe blight moves on at its next trick, or ends when it dies.", Lore = "It only ever eats what you have come to rely on." };
 
-        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater, Blightmoth };
+        /// <summary>Winter's resident: see RunManager.ResolveHoarfrostShuffleEffect.</summary>
+        public static readonly EnemyDefinition Hoarfrost = new EnemyDefinition { Id = EnemyId.Hoarfrost, Name = "Hoarfrost", Role = EnemyRole.Creator, MaxHp = 1500, Description = "Each Shuffle: freezes 1 random empty plot (it can't be planted until its row or column is harvested).\nAt most 3 plots stay frozen by it: the oldest thaws first, and all thaw when it dies.", Lore = "It settles on the garden the first night the ground hardens, and does not leave until it is chased off." };
+
+        /// <summary>Summer's resident: see RunManager.ResolveLocustShuffleEffect.</summary>
+        public static readonly EnemyDefinition Locust = new EnemyDefinition { Id = EnemyId.Locust, Name = "Locust Swarm", Role = EnemyRole.Creator, MaxHp = 1400, Description = "Each Shuffle: devours 3 of your Pollen (whatever you have, up to 3).", Lore = "A cloud of hunger that arrives with the first heatwave and takes whatever shines." };
+
+        /// <summary>Autumn's resident: see RunManager.ResolveRotgrubShuffleEffect.</summary>
+        public static readonly EnemyDefinition Rotgrub = new EnemyDefinition { Id = EnemyId.Rotgrub, Name = "Rotgrub", Role = EnemyRole.Creator, MaxHp = 1300, Description = "Each Shuffle: gnaws 1 round off the life of the fertilizer closest to withering.", Lore = "It thrives in fallen leaves, and hurries along what the season was already taking." };
+
+        /// <summary>Orchard's resident: see RunManager.ResolveFruitwormShuffleEffect.</summary>
+        public static readonly EnemyDefinition Fruitworm = new EnemyDefinition { Id = EnemyId.Fruitworm, Name = "Fruitworm", Role = EnemyRole.Creator, MaxHp = 1400, Description = "Each Shuffle: turns 1 random planted tile into the other seed color.", Lore = "It tunnels through the sweetest fruit and leaves it tasting of the wrong tree." };
+
+        /// <summary>Greenhouse's resident: see RunManager.ResolveWhiteflyShuffleEffect.</summary>
+        public static readonly EnemyDefinition Whitefly = new EnemyDefinition { Id = EnemyId.Whitefly, Name = "Whitefly Cloud", Role = EnemyRole.Creator, MaxHp = 1450, Description = "Each Shuffle: swaps the places of 2 random planted tiles.", Lore = "Trapped under the glass with nowhere to go, it stirs the whole plot into a flurry." };
+
+        private static readonly EnemyDefinition[] All = { Basic, Locker, Poisoner, HeavyLocker, Plague, Thief, Reclaimer, Leech, ColorHater, ShapeHater, Blightmoth, Hoarfrost, Locust, Rotgrub, Fruitworm, Whitefly };
 
         public static EnemyDefinition Get(EnemyId id)
         {

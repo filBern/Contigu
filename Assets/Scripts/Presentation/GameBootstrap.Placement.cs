@@ -93,6 +93,7 @@ namespace Contigu.Presentation
             }
             SfxManager.Play(SfxId.ValidDrop);
             PlayBlightmothActIfBlightChanged(blightBefore);
+            PlayWorldEnemyActIfAny();
 
             // Only valid right after a call that ran DrawFreshHand this
             // placement — otherwise ThiefStoleOnLastShuffle still holds a

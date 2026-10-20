@@ -21,6 +21,7 @@ namespace Contigu.Core
                 return false;
             }
             ShufflesRemaining--;
+            ResetWorldEnemyReport();
             ApplyHeatwaveShuffleBurn();
             DrawFreshHand();
             EvaluateRoundEnd();
@@ -498,6 +499,10 @@ namespace Contigu.Core
                 _deathReleasedCellsThisPlacement.Add(enemy.PoisonedCells[i]);
             }
             enemy.ClearPoisonedCells();
+            if (enemy.Definition.Id == EnemyId.Hoarfrost)
+            {
+                ThawHoarfrostCells(enemy);
+            }
             if (enemy.Definition.Id == EnemyId.Blightmoth)
             {
                 _blightedModifiers.Clear();
@@ -516,6 +521,7 @@ namespace Contigu.Core
         /// </summary>
         private void ResolveEnemyShuffleEffects()
         {
+            ResetWorldEnemyReport();
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
@@ -538,6 +544,26 @@ namespace Contigu.Core
                 else if (enemy.Definition.Id == EnemyId.Blightmoth)
                 {
                     ResolveBlightmothShuffleEffect();
+                }
+                else if (enemy.Definition.Id == EnemyId.Hoarfrost)
+                {
+                    ResolveHoarfrostShuffleEffect(enemy);
+                }
+                else if (enemy.Definition.Id == EnemyId.Locust)
+                {
+                    ResolveLocustShuffleEffect();
+                }
+                else if (enemy.Definition.Id == EnemyId.Rotgrub)
+                {
+                    ResolveRotgrubShuffleEffect();
+                }
+                else if (enemy.Definition.Id == EnemyId.Fruitworm)
+                {
+                    ResolveFruitwormShuffleEffect();
+                }
+                else if (enemy.Definition.Id == EnemyId.Whitefly)
+                {
+                    ResolveWhiteflyShuffleEffect();
                 }
             }
         }

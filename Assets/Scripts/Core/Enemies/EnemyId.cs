@@ -20,6 +20,22 @@ namespace Contigu.Core
         ColorHater,
         ShapeHater,
         /// <summary>Blights one of the player's modifiers each Shuffle (see RunManager.ResolveBlightmothShuffleEffect).</summary>
-        Blightmoth
+        Blightmoth,
+
+        // One resident per challenge "world" (see ChallengeDefinition.WorldEnemy): each only ever shows up in its own challenge.
+        /// <summary>Winter: freezes an empty plot each Shuffle (see RunManager.ResolveHoarfrostShuffleEffect).</summary>
+        Hoarfrost,
+
+        /// <summary>Summer: devours Pollen each Shuffle.</summary>
+        Locust,
+
+        /// <summary>Autumn: gnaws a fertilizer's remaining life each Shuffle.</summary>
+        Rotgrub,
+
+        /// <summary>Orchard: turns a planted tile into the other color each Shuffle.</summary>
+        Fruitworm,
+
+        /// <summary>Greenhouse: swaps two planted tiles each Shuffle.</summary>
+        Whitefly
     }
 }

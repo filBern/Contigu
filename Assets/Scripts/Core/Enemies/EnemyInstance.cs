@@ -37,6 +37,9 @@ namespace Contigu.Core
         /// <summary>Locker (Bramble) only: its second lock, thrown by the every-N-seeds trick — it lives alongside <see cref="LockedCell"/> (the Shuffle lock) instead of replacing it, and is itself replaced the next time that trick fires.</summary>
         public Vector2Int? ExtraLockedCell;
 
+        /// <summary>Hoarfrost only: the plots it froze, oldest first (at most <see cref="ScoringConstants.HoarfrostMaxFrozenPlots"/>); they thaw when it dies.</summary>
+        public readonly List<Vector2Int> FrozenCells = new List<Vector2Int>();
+
         /// <summary>Color Hater only: the one base color it was randomly assigned on spawn (see RunManager.BuildEncounter), never changes for the rest of this instance's life. Null for every other EnemyId.</summary>
         public PieceColor? HatedColor;
 

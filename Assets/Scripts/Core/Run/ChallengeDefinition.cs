@@ -52,6 +52,9 @@ namespace Contigu.Core
         /// <summary>How many of the 4 base seed colors exist in this run (Orchard keeps only 2).</summary>
         public int ActiveColorCount = 4;
 
+        /// <summary>This challenge's own resident enemy (null for Spring): it joins every third round's roster (see EncounterCatalog.GetEncounter).</summary>
+        public EnemyId? WorldEnemy;
+
         public WeatherProfile WeatherProfile = WeatherProfile.Normal;
 
         /// <summary>Scales every weather bonus/penalty amount (Summer's weather hits harder).</summary>

@@ -610,6 +610,11 @@ namespace Contigu.Presentation
                     case EnemyId.ColorHater: rot = Mathf.Sin(t * 0.8f) * 5f; break;
                     case EnemyId.ShapeHater: rot = Mathf.Sin(t * 0.8f) * 3f; scale = 1f + Mathf.Sin(t * 1.6f) * 0.02f; break;
                     case EnemyId.Blightmoth: rot = Mathf.Sin(t * 7f) * 3f; bob = Mathf.Sin(t * 4f) * 2.5f; break;
+                    case EnemyId.Hoarfrost: rot = Mathf.Sin(t * 0.7f) * 6f; scale = 1f + Mathf.Sin(t * 2.2f) * 0.025f; break;
+                    case EnemyId.Locust: rot = Mathf.Sin(t * 6f) * 3f; bob = Mathf.Abs(Mathf.Sin(t * 3.2f)) * 3f; break;
+                    case EnemyId.Rotgrub: rot = Mathf.Sin(t * 1.4f) * 4f; scale = 1f + Mathf.Sin(t * 2.6f) * 0.035f; break;
+                    case EnemyId.Fruitworm: bob = Mathf.Sin(t * 2.4f) * 3f; rot = Mathf.Sin(t * 1.2f) * 2.5f; break;
+                    case EnemyId.Whitefly: rot = Mathf.Sin(t * 9f) * 2.5f; bob = Mathf.Sin(t * 5f) * 2f; scale = 1f + Mathf.Sin(t * 3f) * 0.02f; break;
                 }
                 float punch = _enemyActPunch[i];
                 float shake = 0f;

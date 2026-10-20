@@ -288,6 +288,18 @@ namespace Contigu.Core
         /// <summary>Weather: empty plots turned golden at the start of a Golden Hour round.</summary>
         public const int GoldenHourPlots = 2;
 
+        /// <summary>Hoarfrost: how many plots it keeps frozen at once.</summary>
+        public const int HoarfrostMaxFrozenPlots = 3;
+
+        /// <summary>Locust: Pollen devoured per Shuffle.</summary>
+        public const int LocustPollenPerShuffle = 3;
+
+        /// <summary>Every Nth round (the 3rd, 6th, ...) the challenge's resident enemy joins the roster.</summary>
+        public const int WorldEnemyRoundInterval = 3;
+
+        /// <summary>The most enemies a round can hold (the HUD's icon slots).</summary>
+        public const int MaxEnemiesPerRound = 6;
+
         /// <summary>Barometer: +Mult on any round whose weather is not Clear skies.</summary>
         public const int BarometerMultBonus = 3;
 

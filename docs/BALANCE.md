@@ -82,3 +82,17 @@ Les réglages ont été resserrés pour que la difficulté monte d'un challenge 
 - **Barometer** (5 Pollen) +3 Mult si la météo n'est pas « Clear skies » ; **Storm Chaser** (6) ×2 Mult en Frost/Heatwave/Hurricane ; **Weatherproof** (4) annule Frost (cases gelées), Heatwave (brûlure) et Hurricane (déplacement) ; **Thorns** (6) +4 Mult tant qu'un ennemi vivant a un verrou ou un blight actif ; **Pest Control** (7) +1 Mult par ennemi déjà vaincu dans la manche ; **Haste** (7) +0,1 Mult par graine restante dans la manche ; **Whirlwind** (6) +0,25 Mult par Shuffle en réserve ; **Cornerstone** (6, catégorie Voisinage) ×2 Mult si une case posée est dans un des 4 coins (suit la taille de la grille, donc Greenhouse).
 - Les valeurs initiales de Haste (0,2) et Whirlwind (0,5) faisaient gonfler le bot (≈ +35 % de victoires) : elles ont été divisées par 2. Après réglage, victoires du bot (graine 31337, 3 000 runs) : Spring 13,3 %, Winter 7,7 %, Summer 7,7 %, Orchard 6,0 %, Greenhouse 5,6 %, Autumn 6,7 %.
 - Implémentation : Cornerstone est évalué par la grille (`GridManager`), les autres par `RunManager.ApplyDeckStateModifierBonuses` (état de run : météo, ennemis, graines, Shuffles). `RunManager.IsModifierUsableThisRun` filtre toujours la boutique d'Orchard.
+
+## Un monde par challenge (ennemis résidents)
+
+Chaque challenge hors Spring a son propre ennemi (`ChallengeDefinition.WorldEnemy`), qui rejoint la composition **une manche sur trois** (manches 3, 6, 9, 12, 15… Endless inclus), juste derrière le Basic de tête ; une composition pleine (6) perd son dernier ennemi pour lui faire de la place. Tous agissent à chaque Shuffle (manuel ou refill automatique) :
+
+| Monde | Ennemi (PV de base) | Effet |
+|---|---|---|
+| Winter | Hoarfrost (1500) | gèle 1 case vide par Shuffle ; 3 cases gelées max (la plus ancienne dégèle), tout dégèle à sa mort |
+| Summer | Locust Swarm (1400) | dévore 3 Pollen par Shuffle (jamais plus que ce que tu as) |
+| Autumn | Rotgrub (1300) | vieillit d'1 manche le fertilizer le plus proche de faner |
+| Orchard | Fruitworm (1400) | change une tuile plantée en l'autre couleur |
+| Greenhouse | Whitefly Cloud (1450) | échange deux tuiles plantées |
+
+Rééquilibrage après leur arrivée (victoires du bot, graines 31337 / 4001) : Spring ≈ 13-14 %, Winter 6,1-6,8 %, Summer 6,5-7,0 %, Autumn 6,1-7,9 % (PV ×0,36), Orchard 5,9-6,6 % (PV ×1,2), Greenhouse 5,2-6,3 % (PV ×0,5).
