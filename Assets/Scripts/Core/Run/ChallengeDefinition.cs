@@ -66,24 +66,31 @@ namespace Contigu.Core
         /// <summary>Multiplies every enemy's HP (balance lever for challenges that make the player stronger or weaker).</summary>
         public float EnemyHpMultiplier = 1f;
 
+        /// <summary>Extra seeds added to every round's budget.</summary>
+        public int PieceBudgetBonus;
+
+        /// <summary>Multiplies only Act 1's enemies (rounds 1-8), on top of <see cref="EnemyHpMultiplier"/> — eases the early filter without softening the finale.</summary>
+        public float ActOneHpMultiplier = 1f;
+
+        /// <summary>Multiplies every round's score target (quota challenges: Winter).</summary>
+        public float QuotaMultiplier = 1f;
+
         /// <summary>Growth of the score target per round past the authored list (Endless on a quota challenge).</summary>
         private const double EndlessQuotaGrowth = 1.75;
 
         /// <summary>The score target of any round, authored or Endless (compounding past the last authored one).</summary>
         public int QuotaFor(int roundIndex)
         {
-            if (roundIndex < Quotas.Length)
-            {
-                return Quotas[roundIndex];
-            }
-            double value = Quotas[Quotas.Length - 1] * System.Math.Pow(EndlessQuotaGrowth, roundIndex - (Quotas.Length - 1));
-            return (int)System.Math.Min(value, 2000000000.0);
+            double value = roundIndex < Quotas.Length
+                ? Quotas[roundIndex]
+                : Quotas[Quotas.Length - 1] * System.Math.Pow(EndlessQuotaGrowth, roundIndex - (Quotas.Length - 1));
+            return (int)System.Math.Min(value * QuotaMultiplier, 2000000000.0);
         }
 
         /// <summary>The seed budget of any round — Endless rounds keep the last authored budget.</summary>
         public int BudgetFor(int roundIndex)
         {
-            return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)];
+            return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)] + PieceBudgetBonus;
         }
 
         public int BossRoundIndex

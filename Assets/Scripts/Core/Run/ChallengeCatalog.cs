@@ -18,7 +18,9 @@ namespace Contigu.Core
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
-            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval
+            BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
+            PieceBudgetBonus = 6,
+            EnemyHpMultiplier = 0.8f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round, quotas trimmed ~15% to compensate — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
@@ -49,7 +51,9 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             WeatherProfile = WeatherProfile.Extreme,
-            WeatherIntensity = 1.5f
+            WeatherIntensity = 1.5f,
+            PieceBudgetBonus = 6,
+            EnemyHpMultiplier = 0.8f
         };
 
         /// <summary>Fertilizers wither away after 4 rounds; the shop pays more Pollen to compensate, so builds are rebuilt on the fly.</summary>
@@ -66,7 +70,8 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.85f
+            EnemyHpMultiplier = 0.7f,
+            PieceBudgetBonus = 6
         };
 
         /// <summary>Only 2 of the 4 seed colors exist this run (drawn at the start): big groups come easily, so the enemies are sturdier.</summary>
@@ -82,7 +87,8 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             ActiveColorCount = 2,
-            EnemyHpMultiplier = 1.7f
+            EnemyHpMultiplier = 1.4f,
+            PieceBudgetBonus = 6
         };
 
         /// <summary>A snug 5x5 plot: lines are short and frequent, but there is no room to spare.</summary>
@@ -98,7 +104,8 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.9f
+            EnemyHpMultiplier = 0.75f,
+            PieceBudgetBonus = 6
         };
 
         public static readonly ChallengeDefinition[] All = { Classic, Marathon, Summer, Autumn, Orchard, Greenhouse };
