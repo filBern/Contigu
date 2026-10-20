@@ -294,6 +294,32 @@ namespace Contigu.Presentation
             _screenShakeCoroutine = null;
         }
 
+        /// <summary>The color the placed piece ended up with (Chameleon). Its first cell may already be empty by now — harvested by the very line this piece completed, or blown away by a Hurricane — so fall back to the harvested/blown records; null when nothing tells.</summary>
+        private PieceColor? ResolvedPlacedColor(PlacementOutcome outcome)
+        {
+            var first = outcome.Placement.PlacedCells[0];
+            var live = _run.Grid.GetCell(first).FilledColor;
+            if (live.HasValue)
+            {
+                return live;
+            }
+            for (int i = 0; i < outcome.Placement.ClearedCells.Count && i < outcome.Placement.ClearedCellColors.Count; i++)
+            {
+                if (outcome.Placement.ClearedCells[i] == first)
+                {
+                    return outcome.Placement.ClearedCellColors[i];
+                }
+            }
+            for (int i = 0; i < outcome.WeatherMovedTiles.Count; i++)
+            {
+                if (outcome.WeatherMovedTiles[i].From == first)
+                {
+                    return outcome.WeatherMovedTiles[i].Color;
+                }
+            }
+            return null;
+        }
+
         private static List<Vector2Int> FrozenClearedCells(PlacementResult placement)
         {
             var cells = new List<Vector2Int>();
@@ -370,8 +396,11 @@ namespace Contigu.Presentation
             // before anything below (Lueur pulses, score cascade) reads these cells' color.
             if (outcome.ChameleonOriginalColor.HasValue && placement.PlacedCells.Count > 0)
             {
-                var resolvedColor = _run.Grid.GetCell(placement.PlacedCells[0]).FilledColor.Value;
-                yield return _gridView.PlayChameleonColorTransition(placement.PlacedCells, outcome.ChameleonOriginalColor.Value, resolvedColor);
+                var resolvedColor = ResolvedPlacedColor(outcome);
+                if (resolvedColor.HasValue)
+                {
+                    yield return _gridView.PlayChameleonColorTransition(placement.PlacedCells, outcome.ChameleonOriginalColor.Value, resolvedColor.Value);
+                }
             }
 
             // Whether cleared/destroyed tiles should keep showing as
