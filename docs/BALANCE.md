@@ -64,7 +64,7 @@ Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultipl
 | Challenge | PV ennemis | Graines en plus | Autre | Victoires du bot |
 |---|---|---|---|---|
 | Spring | ×0,72 | +6 | | 7,6 % |
-| Winter | ×0,9 | +10 | sac réduit (13 graines), budgets serrés | 6,5 % |
+| Winter | ×0,8 | +10 | sac réduit (13 graines), budgets serrés | 6,5 % |
 | Summer | ×0,72 | +6 | météo ×1,5 | 7,0 % |
 | Autumn | ×0,3 | +12 | fane après 4 rounds, +10 Pollen, un fertilizer aléatoire repousse | ≈ 8 % |
 | Orchard | ×1,4 | +6 | 2 couleurs | 6,4 % |
@@ -72,3 +72,7 @@ Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultipl
 
 Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
 - Tous les challenges affrontent les mêmes 15 rounds d'ennemis (`ChallengeDefinition.UsesEncounters`, vrai partout). Winter (ex-Marathon, rounds à quota sans ennemis) a été converti ; les tests qui ont besoin d'un round sans ennemi utilisent `TestChallenges.QuotaOnlyMarathon`.
+
+### Courbe de difficulté entre challenges (Spring = didacticiel)
+
+Les réglages ont été resserrés pour que la difficulté monte d'un challenge à l'autre (victoires du bot glouton, 3 000 runs, graine 31337) : **Spring ≈ 12,5 %** (PV ×0,5, +6 graines), **Winter ≈ 7,4 %** (PV ×0,8), **Summer ≈ 6,8 %** (PV ×0,72), **Orchard ≈ 6,1 %** (PV ×1,4), **Greenhouse ≈ 5,9 %** (PV ×0,55, +10 graines), **Autumn ≈ 5,4 %** (PV ×0,35, +12 graines). Tous restent au-dessus de 5 %, le plus facile (Spring) fait environ le double du plus dur. Le bot reste bien plus faible qu'un humain.

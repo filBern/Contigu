@@ -12,7 +12,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Classic,
             Name = "Spring",
-            Description = "15 rounds, each its own enemy encounter.",
+            Description = "The gentle start: 15 rounds, each its own enemy encounter. The place to learn the garden.",
             UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -20,7 +20,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.72f
+            EnemyHpMultiplier = 0.5f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
@@ -36,7 +36,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
-            EnemyHpMultiplier = 0.9f
+            EnemyHpMultiplier = 0.8f
         };
 
         /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>
@@ -71,7 +71,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.3f,
+            EnemyHpMultiplier = 0.35f,
             PieceBudgetBonus = 12
         };
 
@@ -105,7 +105,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.5f,
+            EnemyHpMultiplier = 0.55f,
             PieceBudgetBonus = 10
         };
 
