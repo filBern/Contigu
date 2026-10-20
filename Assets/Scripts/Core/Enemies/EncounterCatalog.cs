@@ -90,15 +90,15 @@ namespace Contigu.Core
             return (float)System.Math.Min(scale, 1e7);
         }
 
-        /// <summary>Scales an HP value, rounded to a clean multiple of 50 (never below the base HP).</summary>
+        /// <summary>Scales an HP value, rounded to a clean multiple of 50 (never below 50).</summary>
         public static int ScaleHp(int baseHp, float scale)
         {
-            if (scale <= 1f)
+            if (System.Math.Abs(scale - 1f) < 1e-4f)
             {
                 return baseHp;
             }
             double scaled = System.Math.Round(baseHp * (double)scale / 50.0) * 50.0;
-            return (int)System.Math.Min(System.Math.Max(baseHp, scaled), 2000000000.0);
+            return (int)System.Math.Min(System.Math.Max(50.0, scaled), 2000000000.0);
         }
 
         /// <summary>Endless rounds replay Act 2's rosters in order (rounds 9-15, then 9 again...), so every lap meets the same enemies — only far sturdier.</summary>

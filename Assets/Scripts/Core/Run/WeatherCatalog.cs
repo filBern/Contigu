@@ -151,7 +151,8 @@ namespace Contigu.Core
                 }
             }
             int draw = rng.Next(total * 4);
-            color = (PieceColor)(draw % 4);
+            // Same as the plain enum order with all 4 colors; with fewer (Orchard) it can only land on a color that exists.
+            color = PieceColorUtility.BaseColors[(draw % 4) % PieceColorUtility.BaseColors.Count];
             int roll = draw / 4;
             for (int c = 0; c < candidates.Count; c++)
             {

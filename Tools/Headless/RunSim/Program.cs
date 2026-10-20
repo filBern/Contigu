@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|both] [--csv path] [--fail-on-error]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|both] [--csv path] [--fail-on-error] [--challenge name] [--endless]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -20,6 +20,8 @@ namespace Contigu.RunSim
             string policyArg = "both";
             string csvPath = null;
             bool failOnError = false;
+            bool endless = false;
+            var challenge = ChallengeCatalog.Classic;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--runs" && i + 1 < args.Length) { runs = int.Parse(args[++i]); }
@@ -27,6 +29,18 @@ namespace Contigu.RunSim
                 else if (args[i] == "--policy" && i + 1 < args.Length) { policyArg = args[++i]; }
                 else if (args[i] == "--csv" && i + 1 < args.Length) { csvPath = args[++i]; }
                 else if (args[i] == "--fail-on-error") { failOnError = true; }
+                else if (args[i] == "--endless") { endless = true; }
+                else if (args[i] == "--challenge" && i + 1 < args.Length)
+                {
+                    string wanted = args[++i];
+                    foreach (var candidate in ChallengeCatalog.All)
+                    {
+                        if (string.Equals(candidate.Name, wanted, StringComparison.OrdinalIgnoreCase) || string.Equals(candidate.Id.ToString(), wanted, StringComparison.OrdinalIgnoreCase))
+                        {
+                            challenge = candidate;
+                        }
+                    }
+                }
             }
 
             var policies = new List<BotPolicy>();
@@ -42,7 +56,7 @@ namespace Contigu.RunSim
                 for (int r = 0; r < runs; r++)
                 {
                     int runSeed = seed + r;
-                    var bot = new Bot(runSeed, policy);
+                    var bot = new Bot(runSeed, policy, challenge, endless);
                     RunResult res;
                     try
                     {
@@ -107,7 +121,7 @@ namespace Contigu.RunSim
             }
 
             Console.WriteLine("\nCleared-round rate (reached round N and cleared it):");
-            for (int round = 1; round <= RunConfig.RoundCount; round++)
+            for (int round = 1; round <= Math.Max(RunConfig.RoundCount, results.Max(r => r.RoundsCleared)); round++)
             {
                 int reached = results.Count(r => r.RoundsCleared >= round - 1 && !r.Stuck);
                 int cleared = results.Count(r => r.RoundsCleared >= round && !r.Stuck);

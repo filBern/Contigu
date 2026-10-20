@@ -326,6 +326,26 @@ namespace Contigu.Core
             return ScoringConstants.TricoloreMultiplier;
         }
 
+        /// <summary>Whether the given set of colors contains one of Companion Bloom's complementary pairs (false for a color set that can never form one).</summary>
+        public static bool HasComplementaryPair(IReadOnlyList<PieceColor> colors)
+        {
+            for (int i = 0; i < ComplementaryPairs.Length; i++)
+            {
+                bool hasFirst = false;
+                bool hasSecond = false;
+                for (int c = 0; c < colors.Count; c++)
+                {
+                    hasFirst |= colors[c] == ComplementaryPairs[i][0];
+                    hasSecond |= colors[c] == ComplementaryPairs[i][1];
+                }
+                if (hasFirst && hasSecond)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>Arbitrary complementary pairing across the 4 base colors — not derived from a color wheel, just a fixed pairing for this modifier.</summary>
         private static readonly PieceColor[][] ComplementaryPairs =
         {

@@ -87,6 +87,50 @@ namespace Contigu.Core
         // and the inline swaps in SwapModifiers/MoveModifier.
         private readonly List<int> _modifierLevels = new List<int>();
 
+        // Also parallel to _activeModifiers: how many full rounds each fertilizer has been held (Autumn withers them, see AgeAndWitherModifiers).
+        private readonly List<int> _modifierAges = new List<int>();
+
+        /// <summary>How many cleared rounds the fertilizer at <paramref name="index"/> has been held (0 for a fresh one).</summary>
+        public int GetModifierAge(int index)
+        {
+            return index >= 0 && index < _modifierAges.Count ? _modifierAges[index] : 0;
+        }
+
+        /// <summary>Rounds the fertilizer at <paramref name="index"/> has left before it withers, or 0 when this challenge's fertilizers never wither.</summary>
+        public int GetModifierRoundsLeft(int index)
+        {
+            if (_challenge.FertilizerLifespanRounds <= 0)
+            {
+                return 0;
+            }
+            return System.Math.Max(0, _challenge.FertilizerLifespanRounds - GetModifierAge(index));
+        }
+
+        /// <summary>The fertilizers that withered away at the end of the round just cleared (Autumn), in the order they were held — Presentation plays their farewell once the shop opens. Empty otherwise.</summary>
+        public IReadOnlyList<ModifierId> LastWitheredModifiers { get; private set; } = new List<ModifierId>();
+
+        /// <summary>Autumn: every held fertilizer grows a round older when a round is cleared; any that reached the lifespan withers away now.</summary>
+        private void AgeAndWitherModifiers()
+        {
+            var withered = new List<ModifierId>();
+            if (_challenge.FertilizerLifespanRounds > 0)
+            {
+                for (int i = 0; i < _modifierAges.Count; i++)
+                {
+                    _modifierAges[i]++;
+                }
+                for (int i = _activeModifiers.Count - 1; i >= 0; i--)
+                {
+                    if (_modifierAges[i] >= _challenge.FertilizerLifespanRounds)
+                    {
+                        withered.Insert(0, _activeModifiers[i]);
+                        RemoveActiveModifierAt(i);
+                    }
+                }
+            }
+            LastWitheredModifiers = withered;
+        }
+
         /// <summary>Modifiers currently held by the player, persisting for the whole run. Capped at <see cref="EconomyConstants.MaxActiveModifiers"/>.</summary>
         public IReadOnlyList<ModifierId> ActiveModifiers
         {
@@ -110,6 +154,7 @@ namespace Contigu.Core
         {
             _activeModifiers.Add(id);
             _modifierLevels.Add(1);
+            _modifierAges.Add(0);
             if (id == ModifierId.QuatriemeEmplacement)
             {
                 Deck.SetEffectiveHandSize(DeckManager.MaxHandSize);
@@ -122,6 +167,7 @@ namespace Contigu.Core
             var id = _activeModifiers[index];
             _activeModifiers.RemoveAt(index);
             _modifierLevels.RemoveAt(index);
+            _modifierAges.RemoveAt(index);
             RemapBlightAfterRemove(index);
             if (id == ModifierId.QuatriemeEmplacement && !_activeModifiers.Contains(ModifierId.QuatriemeEmplacement))
             {
@@ -149,6 +195,9 @@ namespace Contigu.Core
             var tempLevel = _modifierLevels[indexA];
             _modifierLevels[indexA] = _modifierLevels[indexB];
             _modifierLevels[indexB] = tempLevel;
+            var tempAge = _modifierAges[indexA];
+            _modifierAges[indexA] = _modifierAges[indexB];
+            _modifierAges[indexB] = tempAge;
 
             // The blight travels with the modifier too.
             bool blightA = _blightedModifiers.Remove(indexA);
@@ -177,6 +226,9 @@ namespace Contigu.Core
             var movedLevel = _modifierLevels[fromIndex];
             _modifierLevels.RemoveAt(fromIndex);
             _modifierLevels.Insert(toIndex, movedLevel);
+            var movedAge = _modifierAges[fromIndex];
+            _modifierAges.RemoveAt(fromIndex);
+            _modifierAges.Insert(toIndex, movedAge);
 
             if (_blightedModifiers.Count > 0)
             {

@@ -126,9 +126,10 @@ namespace Contigu.Core
             // Lueur itself is already final here, same "core computes the end
             // state instantly, presentation fakes the gradual reveal"
             // convention as every other scoring event in PlacePiece.
-            LastRoundEndLueurBonus = PiecesRemainingThisRound;
+            LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus;
             Lueur += LastRoundEndLueurBonus;
             ApplyMultCinqRisqueLossChance();
+            AgeAndWitherModifiers();
             // Only ever true once (the challenge's own final CurrentRoundIndex,
             // RoundCount - 1, can't recur).
             if (!IsEndless && CurrentRoundIndex == _challenge.RoundCount - 1)

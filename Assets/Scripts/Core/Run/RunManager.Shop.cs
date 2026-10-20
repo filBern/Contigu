@@ -27,6 +27,41 @@ namespace Contigu.Core
         }
 
         /// <summary>
+        /// False for a fertilizer that could never fire in this run: with only 2 seed colors (Orchard), the 4-color Prism and the exactly-3-color
+        /// Triad Bloom are impossible, a color fertilizer of a missing color has nothing to read, and Companion Bloom needs its own pair.
+        /// </summary>
+        public bool IsModifierUsableThisRun(ModifierId id)
+        {
+            var colors = PieceColorUtility.BaseColors;
+            if (colors.Count >= PieceColorUtility.AllBaseColors.Count)
+            {
+                return true;
+            }
+            switch (id)
+            {
+                case ModifierId.Prisme:
+                case ModifierId.Tricolore:
+                    return false;
+                case ModifierId.Complementaire:
+                    return GridManager.HasComplementaryPair(colors);
+                case ModifierId.DevotionCoral:
+                case ModifierId.EclatCoral:
+                    return PieceColorUtility.IsActive(PieceColor.Coral);
+                case ModifierId.DevotionTeal:
+                case ModifierId.EclatTeal:
+                    return PieceColorUtility.IsActive(PieceColor.Teal);
+                case ModifierId.DevotionViolet:
+                case ModifierId.EclatViolet:
+                    return PieceColorUtility.IsActive(PieceColor.Violet);
+                case ModifierId.DevotionLime:
+                case ModifierId.EclatLime:
+                    return PieceColorUtility.IsActive(PieceColor.Lime);
+                default:
+                    return true;
+            }
+        }
+
+        /// <summary>
         /// One "Blister" slot's roll - a single flat weighted bag holding
         /// every not-yet-held/not-already-offered-this-visit modifier
         /// (uniform weight, matching the Common upgrade-rarity weight)
@@ -45,7 +80,7 @@ namespace Contigu.Core
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
                 var candidate = ModifierCatalog.All[i];
-                if (_activeModifiers.Contains(candidate.Id) || IsModifierAlreadyOfferedInBlister(candidate.Id))
+                if (_activeModifiers.Contains(candidate.Id) || IsModifierAlreadyOfferedInBlister(candidate.Id) || !IsModifierUsableThisRun(candidate.Id))
                 {
                     continue;
                 }
@@ -76,7 +111,7 @@ namespace Contigu.Core
                 // defensive rather than throw.
                 for (int i = 0; i < ModifierCatalog.All.Length; i++)
                 {
-                    if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id))
+                    if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
                     {
                         return ShopSlot.ForModifier(ModifierCatalog.All[i].Id);
                     }
@@ -434,7 +469,7 @@ namespace Contigu.Core
             var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
-                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id))
+                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
                 {
                     available.Add(ModifierCatalog.All[i]);
                 }

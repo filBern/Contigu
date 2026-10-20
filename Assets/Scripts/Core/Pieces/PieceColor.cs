@@ -35,6 +35,23 @@ namespace Contigu.Core
             BaseColors = colors;
         }
 
+        /// <summary>Whether <paramref name="color"/> exists in the run in progress (Joker always does).</summary>
+        public static bool IsActive(PieceColor color)
+        {
+            if (color == PieceColor.Joker)
+            {
+                return true;
+            }
+            for (int i = 0; i < BaseColors.Count; i++)
+            {
+                if (BaseColors[i] == color)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static void ResetBaseColors()
         {
             BaseColors = AllBaseColors;

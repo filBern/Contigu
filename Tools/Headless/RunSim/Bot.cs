@@ -39,21 +39,33 @@ namespace Contigu.RunSim
         private readonly Random _rng;
         private readonly BotPolicy _policy;
 
-        public Bot(int seed, BotPolicy policy)
+        private readonly ChallengeDefinition _challenge;
+        private readonly bool _endless;
+
+        public Bot(int seed, BotPolicy policy, ChallengeDefinition challenge = null, bool endless = false)
         {
             _rng = new Random(seed ^ 0x5bd1e995);
             _policy = policy;
+            _challenge = challenge ?? ChallengeCatalog.Classic;
+            _endless = endless;
         }
 
         public RunResult PlayRun(int seed)
         {
-            var run = new RunManager(new SystemRandomProvider(seed));
+            var run = new RunManager(new SystemRandomProvider(seed), _challenge);
             var result = new RunResult();
             int placementsThisRound = 0;
             int guard = 0;
 
-            while (run.State != RunState.RunVictory && run.State != RunState.RunDefeat)
+            while (run.State != RunState.RunDefeat && (run.State != RunState.RunVictory || _endless))
             {
+                if (run.State == RunState.RunVictory)
+                {
+                    // Endless: bank the win, then keep playing into rounds 16+.
+                    result.Victory = true;
+                    run.ContinueEndless();
+                    continue;
+                }
                 if (++guard > 200000)
                 {
                     result.Stuck = true;
@@ -103,6 +115,10 @@ namespace Contigu.RunSim
             }
             else if (run.State == RunState.RunDefeat)
             {
+                if (_endless)
+                {
+                    result.RoundsCleared = run.CurrentRoundNumber - 1;
+                }
                 var ids = EncounterCatalog.GetEncounter(run.Challenge.Id, run.CurrentRoundIndex);
                 result.DeathEncounter.AddRange(ids);
                 result.DeathCause = run.PiecesRemainingThisRound <= 0 ? "out of seeds" : "board blocked";
