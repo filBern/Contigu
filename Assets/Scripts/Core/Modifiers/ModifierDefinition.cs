@@ -417,6 +417,38 @@ namespace Contigu.Core
             ModifierId.QuatriemeEmplacement, ModifierCategory.Roguelike, "Fourth Slot",
             "Adds a 4th hand slot.");
 
+        public static readonly ModifierDefinition Barometre = new ModifierDefinition(
+            ModifierId.Barometre, ModifierCategory.Roguelike, "Barometer",
+            "+3 Mult whenever the round's weather isn't Clear skies.");
+
+        public static readonly ModifierDefinition ChasseurTempete = new ModifierDefinition(
+            ModifierId.ChasseurTempete, ModifierCategory.Roguelike, "Storm Chaser",
+            "x2 Mult while the weather is Frost, Heatwave or Hurricane.");
+
+        public static readonly ModifierDefinition Impermeable = new ModifierDefinition(
+            ModifierId.Impermeable, ModifierCategory.Roguelike, "Weatherproof",
+            "Frost, Heatwave and Hurricane have no effect on your garden.");
+
+        public static readonly ModifierDefinition Epines = new ModifierDefinition(
+            ModifierId.Epines, ModifierCategory.Roguelike, "Thorns",
+            "+4 Mult while any enemy has a lock or blight on your plots.");
+
+        public static readonly ModifierDefinition Exterminateur = new ModifierDefinition(
+            ModifierId.Exterminateur, ModifierCategory.Roguelike, "Pest Control",
+            "+1 Mult per enemy already defeated this round.");
+
+        public static readonly ModifierDefinition Hate = new ModifierDefinition(
+            ModifierId.Hate, ModifierCategory.Roguelike, "Haste",
+            "+0.1 Mult per seed still left to play this round.");
+
+        public static readonly ModifierDefinition Tourbillon = new ModifierDefinition(
+            ModifierId.Tourbillon, ModifierCategory.Roguelike, "Whirlwind",
+            "+0.25 Mult per Shuffle you still have.");
+
+        public static readonly ModifierDefinition PierreAngulaire = new ModifierDefinition(
+            ModifierId.PierreAngulaire, ModifierCategory.Voisinage, "Cornerstone",
+            "x2 Mult when the seed puts a tile on one of the 4 corners.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -436,7 +468,8 @@ namespace Contigu.Core
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
             Pair, Impair,
             Polyvalence, RenfortJoker, Arsenal,
-            CollectionChromatique, Cadence, Echo, Siphon, QuatriemeEmplacement
+            CollectionChromatique, Cadence, Echo, Siphon, QuatriemeEmplacement,
+            Barometre, ChasseurTempete, Impermeable, Epines, Exterminateur, Hate, Tourbillon, PierreAngulaire
         };
 
         public static ModifierDefinition Get(ModifierId id)

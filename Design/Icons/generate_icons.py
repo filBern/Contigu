@@ -129,6 +129,16 @@ M['thicket'] = lambda: ''.join(circ(x, y, r, c) for x, y, r, c in ((30, 56, 22, 
 M['lonebloom'] = lambda: flower(50, 34, 36, R, 6) + line(50, 56, 50, 84, O, 6) + line(50, 56, 50, 84, LEAF2, 3) + leaf(50, 74, 22, -160, LEAF1)
 M['wildcard'] = lambda: star(50, 46, 40, P, 0.45, 5) + circ(50, 46, 10, CREAM, 3) + ''.join(circ(50 + 28 * math.cos(math.radians(a)), 46 + 28 * math.sin(math.radians(a)), 4, c, 2) for a, c in ((-90, R), (-18, B), (54, Y), (126, G), (198, '#fff')))
 M['density'] = lambda: rect(8, 16, 84, 18, '#6b4528', 3) + ''.join(path('M%d 34 C%d 50 %d 56 %d 76' % (x, x + dx, x - dx, x + dx * 2), 'none', 4) for x, dx in ((26, 8), (50, -6), (74, 8))) + sprout(50, 18, 0.7)
+
+# ---- weather / run-state fertilizers
+M['barometer'] = lambda: circ(50, 48, 34, CREAM, 4) + ''.join(line(50 + 26 * math.cos(math.radians(a)), 48 + 26 * math.sin(math.radians(a)), 50 + 31 * math.cos(math.radians(a)), 48 + 31 * math.sin(math.radians(a)), O, 3) for a in range(-180, 1, 30)) + line(50, 48, 68, 28, R, 5) + circ(50, 48, 5, O, 2) + ell(50, 66, 14, 6, '#8fd0f0', 0, 3)
+M['stormchaser'] = lambda: ell(40, 36, 22, 14, '#7d8aa3') + ell(62, 32, 20, 16, '#8f9cb5') + ell(52, 44, 30, 12, '#7d8aa3') + poly([(56, 40), (40, 62), (50, 62), (42, 84), (68, 54), (56, 54), (64, 40)], '#ffd23a')
+M['umbrella'] = lambda: path('M10 52 C10 14 90 14 90 52 C80 44 70 44 62 52 C54 44 46 44 38 52 C30 44 20 44 10 52 Z', R) + line(50, 22, 50, 74, O, 5) + path('M50 74 C50 84 38 84 38 76', 'none', 5) + ''.join(drop(x, 80, 5, '#8fd0f0') for x in (16, 84))
+M['thorns'] = lambda: path('M14 78 C30 50 40 60 52 40 C62 26 74 30 86 14', 'none', 8) + path('M14 78 C30 50 40 60 52 40 C62 26 74 30 86 14', 'none', 4).replace(O, LEAF2) + poly([(30, 62), (24, 50), (38, 56)], '#c9c2b4', 2.5) + poly([(48, 46), (50, 32), (58, 42)], '#c9c2b4', 2.5) + poly([(66, 32), (72, 20), (78, 32)], '#c9c2b4', 2.5) + circ(86, 16, 7, R, 3)
+M['ladybug'] = lambda: ell(50, 52, 28, 26, R) + line(50, 28, 50, 78, O, 3) + circ(38, 46, 5, O, 1) + circ(62, 46, 5, O, 1) + circ(40, 62, 4, O, 1) + circ(60, 62, 4, O, 1) + circ(50, 24, 10, O, 3) + line(44, 16, 38, 6, O, 3) + line(56, 16, 62, 6, O, 3)
+M['stopwatch'] = lambda: circ(50, 52, 32, CREAM, 4) + rect(44, 12, 12, 8, GREY, 2, 3) + line(50, 52, 50, 32, O, 5) + line(50, 52, 66, 60, R, 4) + circ(50, 52, 4, O, 2) + ''.join(line(2 + i * 4, 40 + i * 12, 18 + i * 2, 40 + i * 12, '#8fd0f0', 3) for i in range(3))
+M['whirl'] = lambda: path('M50 46 C50 38 60 38 60 46 C60 58 40 60 38 46 C36 30 62 24 70 44 C76 62 54 74 36 66 C18 58 16 34 30 22', 'none', 7) + path('M50 46 C50 38 60 38 60 46 C60 58 40 60 38 46 C36 30 62 24 70 44 C76 62 54 74 36 66 C18 58 16 34 30 22', 'none', 3).replace(O, '#bfe9ff')
+M['cornerstone'] = lambda: ''.join(tile(14 + (i % 3) * 25, 12 + (i // 3) * 25, 22, '#d8c9a0') for i in range(9) if i != 2) + tile(64, 12, 22, GOLD) + star(80, 20, 9, '#fff1b0', 0.4, 4, 2.5)
 M['pollen'] = lambda: pollen_grain(50, 46, 26) + pollen_grain(22, 70, 12) + pollen_grain(80, 24, 13)
 def bignum(s): return lambda: num(50, 64, s, 58) + star(80, 18, 10, '#fff1b0', 0.4, 4, 3)
 M['n1'] = bignum('+1'); M['n2'] = bignum('+2'); M['n4'] = bignum('+4')
@@ -188,6 +198,9 @@ F = {
  'FormatPetitGlow': ('sh2g', 'p', '+6', 'Formes'), 'FormatMoyenGlow': ('sh3g', 'p', '+6', 'Formes'), 'FormatGrandGlow': ('sh4g', 'p', '+6', 'Formes'),
  'Pair': ('waxing', 'm', '×2', 'Roguelike'), 'Impair': ('waning', 'm', '×2', 'Roguelike'), 'Polyvalence': ('cactus', 'm', '+1', 'Roguelike'),
  'RenfortJoker': ('tonic', 'd', '+25%', 'Roguelike'), 'Arsenal': ('quiver', 'm', '+1', 'Roguelike'), 'CollectionChromatique': ('hoardjar', 'm', '+2', 'Couleurs'),
+ 'Barometre': ('barometer', 'm', '+3', 'Roguelike'), 'ChasseurTempete': ('stormchaser', 'm', '×2', 'Roguelike'), 'Impermeable': ('umbrella', None, None, 'Roguelike'),
+ 'Epines': ('thorns', 'm', '+4', 'Roguelike'), 'Exterminateur': ('ladybug', 'm', '+1', 'Roguelike'), 'Hate': ('stopwatch', 'm', '+0.1', 'Roguelike'),
+ 'Tourbillon': ('whirl', 'm', '+0.25', 'Roguelike'), 'PierreAngulaire': ('cornerstone', 'm', '×2', 'Voisinage'),
  'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'Siphon': ('siphon', 'l', '4%', 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
 }
 for k in ('scythe', 'wheel', 'ashbound', 'dissonant', 'momentum', 'cocoon', 'trowel', 'rainbow', 'alternation'):

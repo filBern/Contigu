@@ -288,6 +288,27 @@ namespace Contigu.Core
         /// <summary>Weather: empty plots turned golden at the start of a Golden Hour round.</summary>
         public const int GoldenHourPlots = 2;
 
+        /// <summary>Barometer: +Mult on any round whose weather is not Clear skies.</summary>
+        public const int BarometerMultBonus = 3;
+
+        /// <summary>Storm Chaser: xN Mult while the weather is harsh (see WeatherCatalog.IsHarsh).</summary>
+        public const int StormChaserMultiplier = 2;
+
+        /// <summary>Thorns: +Mult while any alive enemy has a lock or blight active.</summary>
+        public const int ThornsMultBonus = 4;
+
+        /// <summary>Pest Control: +Mult per enemy already defeated this round.</summary>
+        public const int PestControlMultPerKill = 1;
+
+        /// <summary>Haste: +Mult per seed still left in this round's budget.</summary>
+        public const float HasteMultPerSeedLeft = 0.1f;
+
+        /// <summary>Whirlwind: +Mult per Shuffle still in the bank.</summary>
+        public const float WhirlwindMultPerShuffle = 0.25f;
+
+        /// <summary>Cornerstone: xN Mult when a placed cell lands on one of the grid's 4 corners.</summary>
+        public const int CornerstoneMultiplier = 2;
+
         /// <summary>Weather: a hurricane round blows this many planted tiles to other plots...</summary>
         public const int HurricaneTilesMoved = 2;
 

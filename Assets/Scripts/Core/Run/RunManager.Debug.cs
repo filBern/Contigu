@@ -13,6 +13,14 @@ namespace Contigu.Core
             _weatherDisabled = true;
         }
 
+
+        /// <summary>Debug-only helper: forces this round's weather (no effect on a round that already applied its start-of-round part).</summary>
+        public void DebugSetWeather(WeatherId weather)
+        {
+            _weatherDisabled = false;
+            WeatherOf(CurrentRoundIndex);
+            _weatherByRound[CurrentRoundIndex] = weather;
+        }
 #endif
 #if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>

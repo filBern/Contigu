@@ -76,3 +76,9 @@ Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de g
 ### Courbe de difficulté entre challenges (Spring = didacticiel)
 
 Les réglages ont été resserrés pour que la difficulté monte d'un challenge à l'autre (victoires du bot glouton, 3 000 runs, graine 31337) : **Spring ≈ 12,5 %** (PV ×0,5, +6 graines), **Winter ≈ 7,4 %** (PV ×0,8), **Summer ≈ 6,8 %** (PV ×0,72), **Orchard ≈ 6,1 %** (PV ×1,4), **Greenhouse ≈ 5,9 %** (PV ×0,55, +10 graines), **Autumn ≈ 5,4 %** (PV ×0,35, +12 graines). Tous restent au-dessus de 5 %, le plus facile (Spring) fait environ le double du plus dur. Le bot reste bien plus faible qu'un humain.
+
+## Nouveaux fertilizers (Barometer, Storm Chaser, Weatherproof, Thorns, Pest Control, Haste, Whirlwind, Cornerstone)
+
+- **Barometer** (5 Pollen) +3 Mult si la météo n'est pas « Clear skies » ; **Storm Chaser** (6) ×2 Mult en Frost/Heatwave/Hurricane ; **Weatherproof** (4) annule Frost (cases gelées), Heatwave (brûlure) et Hurricane (déplacement) ; **Thorns** (6) +4 Mult tant qu'un ennemi vivant a un verrou ou un blight actif ; **Pest Control** (7) +1 Mult par ennemi déjà vaincu dans la manche ; **Haste** (7) +0,1 Mult par graine restante dans la manche ; **Whirlwind** (6) +0,25 Mult par Shuffle en réserve ; **Cornerstone** (6, catégorie Voisinage) ×2 Mult si une case posée est dans un des 4 coins (suit la taille de la grille, donc Greenhouse).
+- Les valeurs initiales de Haste (0,2) et Whirlwind (0,5) faisaient gonfler le bot (≈ +35 % de victoires) : elles ont été divisées par 2. Après réglage, victoires du bot (graine 31337, 3 000 runs) : Spring 13,3 %, Winter 7,7 %, Summer 7,7 %, Orchard 6,0 %, Greenhouse 5,6 %, Autumn 6,7 %.
+- Implémentation : Cornerstone est évalué par la grille (`GridManager`), les autres par `RunManager.ApplyDeckStateModifierBonuses` (état de run : météo, ennemis, graines, Shuffles). `RunManager.IsModifierUsableThisRun` filtre toujours la boutique d'Orchard.

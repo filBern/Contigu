@@ -13,6 +13,7 @@ namespace Contigu.Core
         {
             return new Dictionary<ModifierId, PreClearModifierEffect>
             {
+                { ModifierId.PierreAngulaire, ctx => { ctx.Multiplier *= ApplyPierreAngulaire(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prisme, ctx => { ctx.Multiplier *= ApplyPrisme(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Chaine, ctx => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },
                 { ModifierId.MegaChaine, ctx => ApplyMegaChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },

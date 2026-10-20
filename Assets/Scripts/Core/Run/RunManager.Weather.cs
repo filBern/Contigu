@@ -92,6 +92,10 @@ namespace Contigu.Core
                     ShufflesRemaining++;
                     break;
                 case WeatherId.Frost:
+                    if (HasEffectiveModifier(ModifierId.Impermeable))
+                    {
+                        break;
+                    }
                     Grid.FreezeRandomCells(ScaledWeather(ScoringConstants.FrostFrozenPlots), _rng);
                     break;
                 case WeatherId.GoldenHour:
@@ -144,14 +148,14 @@ namespace Contigu.Core
 
         private void ApplyHeatwaveShuffleBurn()
         {
-            LastBurnedTile = CurrentWeather == WeatherId.Heatwave ? Grid.BurnRandomTile(_rng) : null;
+            LastBurnedTile = CurrentWeather == WeatherId.Heatwave && !HasEffectiveModifier(ModifierId.Impermeable) ? Grid.BurnRandomTile(_rng) : null;
         }
 
         /// <summary>Hurricane: every few seeds placed, blows some tiles elsewhere. Returns the moves (empty when none) for the placement's outcome.</summary>
         private IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> ApplyHurricaneTick()
         {
             int played = CurrentBudget - PiecesRemainingThisRound;
-            if (CurrentWeather != WeatherId.Hurricane || played <= 0 || played % ScoringConstants.HurricaneInterval != 0)
+            if (CurrentWeather != WeatherId.Hurricane || HasEffectiveModifier(ModifierId.Impermeable) || played <= 0 || played % ScoringConstants.HurricaneInterval != 0)
             {
                 return System.Array.Empty<(Vector2Int, Vector2Int, PieceColor)>();
             }

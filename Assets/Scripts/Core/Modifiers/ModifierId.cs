@@ -141,6 +141,30 @@ namespace Contigu.Core
         /// <summary>Grows the hand by one extra slot (see DeckManager.SetEffectiveHandSize/MaxHandSize), applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt rather than scored on placement like every other modifier.</summary>
         QuatriemeEmplacement,
 
+        /// <summary>+Mult whenever this round's weather isn't calm (see RunManager.ApplyDeckStateModifierBonuses).</summary>
+        Barometre,
+
+        /// <summary>xN Mult while the weather is harsh (Frost, Heatwave or Hurricane).</summary>
+        ChasseurTempete,
+
+        /// <summary>Frost, Heatwave and Hurricane have no effect on the player.</summary>
+        Impermeable,
+
+        /// <summary>+Mult while any alive enemy has a lock or blight on the garden.</summary>
+        Epines,
+
+        /// <summary>+Mult per enemy already defeated this round.</summary>
+        Exterminateur,
+
+        /// <summary>+Mult per seed still left to play this round.</summary>
+        Hate,
+
+        /// <summary>+Mult per Shuffle still in the bank.</summary>
+        Tourbillon,
+
+        /// <summary>xN Mult when the placed piece covers one of the 4 corner plots.</summary>
+        PierreAngulaire,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }

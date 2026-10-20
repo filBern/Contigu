@@ -33,6 +33,14 @@ namespace Contigu.Core
         {
             switch (id)
             {
+                case ModifierId.Barometre: return 5;
+                case ModifierId.ChasseurTempete: return 6;
+                case ModifierId.Impermeable: return 4;
+                case ModifierId.Epines: return 6;
+                case ModifierId.Exterminateur: return 7;
+                case ModifierId.Hate: return 7;
+                case ModifierId.Tourbillon: return 6;
+                case ModifierId.PierreAngulaire: return 6;
                 case ModifierId.Prisme: return 7;
                 case ModifierId.Chaine: return 5;
                 case ModifierId.MegaChaine: return 8;

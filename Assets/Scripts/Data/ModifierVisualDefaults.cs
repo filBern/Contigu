@@ -15,6 +15,14 @@ namespace Contigu.Data
     {
         private static readonly Dictionary<ModifierId, string> Abbreviations = new Dictionary<ModifierId, string>
         {
+            { ModifierId.Barometre, "BR" },
+            { ModifierId.ChasseurTempete, "SC" },
+            { ModifierId.Impermeable, "WP" },
+            { ModifierId.Epines, "TH" },
+            { ModifierId.Exterminateur, "PC" },
+            { ModifierId.Hate, "HA" },
+            { ModifierId.Tourbillon, "WW" },
+            { ModifierId.PierreAngulaire, "CS" },
             { ModifierId.Prisme, "PR" },
             { ModifierId.Chaine, "CH" },
             { ModifierId.MegaChaine, "MC" },

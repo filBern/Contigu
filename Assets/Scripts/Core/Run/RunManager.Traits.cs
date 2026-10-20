@@ -391,7 +391,9 @@ namespace Contigu.Core
         /// </summary>
         private void ApplyDeckStateModifierBonuses(PlacementResult placement)
         {
-            if (!HasEffectiveModifier(ModifierId.CartesEnchantees) && !HasEffectiveModifier(ModifierId.Multitude) && !HasEffectiveModifier(ModifierId.Experience) && !HasEffectiveModifier(ModifierId.Arsenal))
+            if (!HasEffectiveModifier(ModifierId.CartesEnchantees) && !HasEffectiveModifier(ModifierId.Multitude) && !HasEffectiveModifier(ModifierId.Experience) && !HasEffectiveModifier(ModifierId.Arsenal)
+                && !HasEffectiveModifier(ModifierId.Barometre) && !HasEffectiveModifier(ModifierId.ChasseurTempete) && !HasEffectiveModifier(ModifierId.Epines) && !HasEffectiveModifier(ModifierId.Exterminateur)
+                && !HasEffectiveModifier(ModifierId.Hate) && !HasEffectiveModifier(ModifierId.Tourbillon))
             {
                 return;
             }
@@ -441,6 +443,48 @@ namespace Contigu.Core
                     multEvent.PreciseAmount = trueMult;
                     events.Add(multEvent);
                 }
+                else if (_activeModifiers[i] == ModifierId.Barometre)
+                {
+                    if (CurrentWeather != WeatherId.Clear)
+                    {
+                        AddRunStateMultBonus(placement, events, ModifierId.Barometre, i, ScoringConstants.BarometerMultBonus * GetModifierLevelFactor(i), whole: true);
+                    }
+                }
+                else if (_activeModifiers[i] == ModifierId.ChasseurTempete)
+                {
+                    if (WeatherCatalog.IsHarsh(CurrentWeather))
+                    {
+                        int amount = Mathf.Max(1, Mathf.RoundToInt(ScoringConstants.StormChaserMultiplier * GetModifierLevelFactor(i)));
+                        placement.ModifierMultiplier *= amount;
+                        var multEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], amount);
+                        multEvent.TriggeringModifier = ModifierId.ChasseurTempete;
+                        multEvent.TriggeringModifierIndex = i;
+                        events.Add(multEvent);
+                    }
+                }
+                else if (_activeModifiers[i] == ModifierId.Epines)
+                {
+                    if (AnyEnemyHasActiveMalus())
+                    {
+                        AddRunStateMultBonus(placement, events, ModifierId.Epines, i, ScoringConstants.ThornsMultBonus * GetModifierLevelFactor(i), whole: true);
+                    }
+                }
+                else if (_activeModifiers[i] == ModifierId.Exterminateur)
+                {
+                    int kills = CountDefeatedEnemies();
+                    if (kills > 0)
+                    {
+                        AddRunStateMultBonus(placement, events, ModifierId.Exterminateur, i, kills * ScoringConstants.PestControlMultPerKill * GetModifierLevelFactor(i), whole: true);
+                    }
+                }
+                else if (_activeModifiers[i] == ModifierId.Hate)
+                {
+                    AddRunStateMultBonus(placement, events, ModifierId.Hate, i, PiecesRemainingThisRound * ScoringConstants.HasteMultPerSeedLeft * GetModifierLevelFactor(i), whole: false);
+                }
+                else if (_activeModifiers[i] == ModifierId.Tourbillon)
+                {
+                    AddRunStateMultBonus(placement, events, ModifierId.Tourbillon, i, ShufflesRemaining * ScoringConstants.WhirlwindMultPerShuffle * GetModifierLevelFactor(i), whole: false);
+                }
                 else if (_activeModifiers[i] == ModifierId.Arsenal)
                 {
                     // Whole-number count (at most 5), so this joins the regular
@@ -455,6 +499,62 @@ namespace Contigu.Core
                 }
             }
             placement.ScoreEvents = events;
+        }
+
+        /// <summary>
+        /// Adds one run-state "+Mult" contribution (see ApplyDeckStateModifierBonuses) at <paramref name="index"/>'s place in the fold: a whole number
+        /// joins AdditiveMultBonus like Solidarity, a fractional one ProgressiveAdditiveMult like Enchanted Seeds, with its exact value kept for the fold.
+        /// </summary>
+        private void AddRunStateMultBonus(PlacementResult placement, List<ScoreEvent> events, ModifierId id, int index, float amount, bool whole)
+        {
+            if (amount <= 0f)
+            {
+                return;
+            }
+            if (whole)
+            {
+                amount = Mathf.RoundToInt(amount);
+                placement.AdditiveMultBonus += (int)amount;
+            }
+            else
+            {
+                placement.ProgressiveAdditiveMult += amount;
+            }
+            var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(amount));
+            multEvent.TriggeringModifier = id;
+            multEvent.TriggeringModifierIndex = index;
+            if (!whole)
+            {
+                multEvent.PreciseAmount = amount;
+            }
+            events.Add(multEvent);
+        }
+
+        /// <summary>Whether any alive enemy currently has a lock or blight on the garden (Thorns' condition).</summary>
+        private bool AnyEnemyHasActiveMalus()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (!enemy.IsDead && (enemy.LockedCell.HasValue || enemy.ExtraLockedCell.HasValue || enemy.PoisonedCells.Count > 0))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private int CountDefeatedEnemies()
+        {
+            int count = 0;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                if (_currentEncounter[i].IsDead)
+                {
+                    count++;
+                }
+            }
+            return count;
         }
 
         /// <summary>How many tokens in the whole deck currently carry a PieceTrait - the "upgraded card" count Enchanted Cards scales with.</summary>

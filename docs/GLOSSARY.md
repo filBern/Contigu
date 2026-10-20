@@ -105,6 +105,14 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Echo` | Echo | Roguelike |
 | `Siphon` | Siphon | Roguelike |
 | `QuatriemeEmplacement` | Fourth Slot | Roguelike |
+| `Barometre` | Barometer | Roguelike |
+| `ChasseurTempete` | Storm Chaser | Roguelike |
+| `Impermeable` | Weatherproof | Roguelike |
+| `Epines` | Thorns | Roguelike |
+| `Exterminateur` | Pest Control | Roguelike |
+| `Hate` | Haste | Roguelike |
+| `Tourbillon` | Whirlwind | Roguelike |
+| `PierreAngulaire` | Cornerstone | Voisinage |
 
 ## Upgrades
 

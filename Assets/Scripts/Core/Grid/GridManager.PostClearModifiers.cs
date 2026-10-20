@@ -389,6 +389,22 @@ namespace Contigu.Core
             return ScoringConstants.IlotMultiplier;
         }
 
+        /// <summary>Pierre angulaire: xN multiplier (see ScoringConstants.CornerstoneMultiplier) when any placed cell sits on one of the grid's 4 corners. Returns 1 (no-op) otherwise.</summary>
+        private int ApplyPierreAngulaire(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int last = Size - 1;
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                var pos = placedCells[i];
+                if ((pos.x == 0 || pos.x == last) && (pos.y == 0 || pos.y == last))
+                {
+                    events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], ScoringConstants.CornerstoneMultiplier));
+                    return ScoringConstants.CornerstoneMultiplier;
+                }
+            }
+            return 1;
+        }
+
         private int ApplyCouronne(List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int total = 0;

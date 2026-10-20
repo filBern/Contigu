@@ -464,6 +464,18 @@ namespace Contigu.Core
                     return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Arsenal:
                     return "Currently +" + Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * levelFactor) + " Mult";
+                case ModifierId.Hate:
+                    return "Currently +" + FormatMultDisplay(PiecesRemainingThisRound * ScoringConstants.HasteMultPerSeedLeft * levelFactor) + " Mult";
+                case ModifierId.Tourbillon:
+                    return "Currently +" + FormatMultDisplay(ShufflesRemaining * ScoringConstants.WhirlwindMultPerShuffle * levelFactor) + " Mult";
+                case ModifierId.Exterminateur:
+                    return "Currently +" + Mathf.RoundToInt(CountDefeatedEnemies() * ScoringConstants.PestControlMultPerKill * levelFactor) + " Mult";
+                case ModifierId.Epines:
+                    return AnyEnemyHasActiveMalus() ? "Active: +" + Mathf.RoundToInt(ScoringConstants.ThornsMultBonus * levelFactor) + " Mult" : "Inactive: no enemy lock or blight right now";
+                case ModifierId.Barometre:
+                    return CurrentWeather != WeatherId.Clear ? "Active: +" + Mathf.RoundToInt(ScoringConstants.BarometerMultBonus * levelFactor) + " Mult" : "Inactive: calm skies";
+                case ModifierId.ChasseurTempete:
+                    return WeatherCatalog.IsHarsh(CurrentWeather) ? "Active: x" + ScoringConstants.StormChaserMultiplier : "Inactive: the weather isn't harsh";
                 case ModifierId.Polyvalence:
                     return "Currently +" + Mathf.RoundToInt(CountDistinctModifierCategoriesHeld() * ScoringConstants.PolyvalenceMultPerCategory * levelFactor) + " Mult";
                 default:
