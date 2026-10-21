@@ -106,11 +106,18 @@ namespace Contigu.Presentation
                 return;
             }
             _fireflyColor = ambiance.FireflyColor;
+            int visibleFireflies = Mathf.RoundToInt(_fireflies.Length * Mathf.Clamp01(ambiance.FireflyFraction));
+            for (int i = 0; i < _fireflies.Length; i++)
+            {
+                _fireflies[i].Image.enabled = i < visibleFireflies;
+            }
             var tint = Color.Lerp(UITheme.Background, ambiance.DecorTone, ambiance.DecorAmount);
             tint.a = DecorAlpha;
             for (int i = 0; i < _decor.Length; i++)
             {
-                _decor[i].Rect.GetComponent<Image>().color = tint;
+                var decorImage = _decor[i].Rect.GetComponent<Image>();
+                decorImage.color = tint;
+                decorImage.sprite = BackgroundShapeFactory.GetShape(DecorShape(ambiance.DecorStyle, Decor[i].Sprite));
             }
             var bloomColors = new[] { PieceColor.Coral, PieceColor.Violet, PieceColor.Lime, PieceColor.Teal };
             for (int i = 0; i < _falling.Length; i++)
@@ -119,7 +126,31 @@ namespace Contigu.Presentation
                     ? ambiance.FallingTints[i % ambiance.FallingTints.Length]
                     : VisualDefaults.GetColor(bloomColors[i % bloomColors.Length]);
                 color.a = FallingAlpha;
-                _falling[i].Rect.GetComponent<Image>().color = color;
+                var fallingImage = _falling[i].Rect.GetComponent<Image>();
+                fallingImage.color = color;
+                fallingImage.sprite = BackgroundShapeFactory.GetShape(FallingShape(ambiance.FallingStyle, i));
+            }
+        }
+
+        private static BackgroundSprite DecorShape(BackgroundShapeStyle style, BackgroundSprite original)
+        {
+            switch (style)
+            {
+                case BackgroundShapeStyle.Leaves: return BackgroundSprite.Leaf;
+                case BackgroundShapeStyle.Petals: return BackgroundSprite.Flower;
+                case BackgroundShapeStyle.Soft: return BackgroundSprite.Glow;
+                default: return original;
+            }
+        }
+
+        private static BackgroundSprite FallingShape(BackgroundShapeStyle style, int index)
+        {
+            switch (style)
+            {
+                case BackgroundShapeStyle.Leaves: return BackgroundSprite.Leaf;
+                case BackgroundShapeStyle.Petals: return BackgroundSprite.Petal;
+                case BackgroundShapeStyle.Soft: return BackgroundSprite.Glow;
+                default: return index % 3 == 0 ? BackgroundSprite.Leaf : BackgroundSprite.Petal;
             }
         }
 

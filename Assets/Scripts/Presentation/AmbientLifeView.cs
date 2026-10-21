@@ -96,8 +96,12 @@ namespace Contigu.Presentation
             {
                 for (int i = 0; i < _ambiance.Particles[p].Count; i++) { Spawn(_ambiance.Particles[p].Kind, _ambiance.Particles[p].Tint); }
             }
-            int leaves = _weather == WeatherId.Hurricane ? 16 : _weather == WeatherId.Wind ? 10 : 3;
-            for (int i = 0; i < leaves; i++) { Spawn(ParticleKind.Leaf); }
+            // What drifts is the world's own: leaves in the garden, snow in Winter, maple in Autumn — and none where nothing falls (the wind brings its own).
+            bool windy = _weather == WeatherId.Hurricane || _weather == WeatherId.Wind;
+            int drifting = windy ? (_weather == WeatherId.Hurricane ? 16 : 10) : _ambiance.BaseLeaves;
+            var driftKind = windy ? _ambiance.WindParticle : ParticleKind.Leaf;
+            var driftTint = driftKind == ParticleKind.Leaf ? _ambiance.LeafTint : Color.white;
+            for (int i = 0; i < drifting; i++) { Spawn(driftKind, driftTint); }
             if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(ParticleKind.Rain); } }
             if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(ParticleKind.Sparkle); } }
             if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.SunMote); } }
@@ -175,7 +179,7 @@ namespace Contigu.Presentation
                     break;
                 case ParticleKind.Leaf:
                     c.Size = Random.Range(22f, 34f);
-                    c.Velocity = _weather == WeatherId.Wind || _weather == WeatherId.Hurricane ? new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f)) : new Vector2(Random.Range(-14f, 14f), Random.Range(-44f, -26f));
+                    c.Velocity = new Vector2(Random.Range(-14f, 14f), Random.Range(-44f, -26f));
                     break;
                 case ParticleKind.Rain:
                     c.Size = Random.Range(12f, 20f);
@@ -205,6 +209,11 @@ namespace Contigu.Presentation
                     c.Size = Random.Range(14f, 24f);
                     c.Velocity = new Vector2(Random.Range(-6f, 6f), Random.Range(14f, 30f));
                     break;
+            }
+            // Whatever the wind carries is blown sideways across the screen.
+            if ((_weather == WeatherId.Wind || _weather == WeatherId.Hurricane) && (kind == ParticleKind.Leaf || kind == ParticleKind.Snow || kind == ParticleKind.Maple))
+            {
+                c.Velocity = new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f));
             }
             rt.sizeDelta = new Vector2(c.Size, c.Size);
             _critters.Add(c);
