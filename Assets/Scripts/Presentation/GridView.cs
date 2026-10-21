@@ -833,7 +833,7 @@ namespace Contigu.Presentation
         private IEnumerator CatRun(RectTransform cat, float runTime)
         {
             float half = _container.rect.width * 0.5f;
-            float y = Random.Range(-_container.rect.height * 0.25f, _container.rect.height * 0.25f);
+            float y = UnityEngine.Random.Range(-_container.rect.height * 0.25f, _container.rect.height * 0.25f);
             float t = 0f;
             while (t < runTime && cat != null)
             {
