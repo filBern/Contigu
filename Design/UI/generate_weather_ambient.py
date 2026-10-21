@@ -157,6 +157,82 @@ def maple_sprite():
     return svg('<path d="M%s Z" fill="#e0662a" stroke="%s" stroke-width="10" stroke-linejoin="round"/>' % (' L'.join('%g %g' % p for p in pts), O) +
                '<path d="M128 70 V230 M128 130 L84 100 M128 130 L172 100" stroke="#a8401a" stroke-width="6" fill="none" stroke-linecap="round"/>', 96)
 
+
+def tx(x, y, size, txt, fill='#ffffff'):
+    return '<text x="%g" y="%g" font-size="%g" font-family="DejaVu Sans,Arial" font-weight="bold" text-anchor="middle" fill="%s" stroke="%s" stroke-width="5" paint-order="stroke">%s</text>' % (x, y, size, fill, O, txt)
+
+def flake_dots(pts):
+    return ''.join('<circle cx="%d" cy="%d" r="%d" fill="#ffffff" stroke="%s" stroke-width="5"/>' % (x, y, r, O) for x, y, r in pts)
+
+def bolt(x, y, k=1.0):
+    return '<path transform="translate(%g %g) scale(%g)" d="M0 0 L-20 38 L-2 38 L-18 76 L26 26 L6 26 L20 0 Z" fill="#ffd23a" stroke="%s" stroke-width="%g" stroke-linejoin="round"/>' % (x, y, k, O, 6 / k)
+
+def glasshouse(col='#e8f7ff'):
+    return ('<path d="M34 110 L128 42 L222 110 L222 206 L34 206 Z" fill="%s" fill-opacity="0.35" stroke="%s" stroke-width="9" stroke-linejoin="round"/>'
+            '<path d="M128 42 L128 206 M34 110 L222 110 M81 76 L81 206 M175 76 L175 206" stroke="%s" stroke-width="5" fill="none"/>') % (col, O, O)
+
+def cat(x, y, k=1.0):
+    return ('<g transform="translate(%g %g) scale(%g)" stroke="%s" stroke-width="%g" stroke-linejoin="round">'
+            '<path d="M-34 -6 L-34 -40 L-18 -26 L18 -26 L34 -40 L34 -6 C34 30 -34 30 -34 -6 Z" fill="#f0a64a"/>'
+            '<circle cx="-14" cy="-6" r="5" fill="#13212e"/><circle cx="14" cy="-6" r="5" fill="#13212e"/>'
+            '<path d="M-5 6 L5 6 L0 12 Z" fill="#e8584f" stroke-width="3"/></g>') % (x, y, k, O, 6 / k)
+
+weather.update({
+    'Snowfall': badge('#b8c8de', '#6a86ae', cloud(128, 92, 1.1, '#e6edf7') + flake_dots([(80, 168, 9), (128, 190, 11), (176, 166, 9), (104, 218, 8), (156, 222, 8), (60, 206, 7), (200, 206, 7)])),
+    'Blizzard': badge('#dbe6f4', '#6b7da3',
+                      ''.join('<path d="M%d %d C%d %d %d %d %d %d" stroke="%s" stroke-width="22" stroke-linecap="round" fill="none"/>' % (x0, y, x0 + 50, y - 22, x0 + 110, y + 22, x0 + 160, y, O) for x0, y in ((36, 90), (50, 146), (28, 198)))
+                      + ''.join('<path d="M%d %d C%d %d %d %d %d %d" stroke="#ffffff" stroke-width="9" stroke-linecap="round" fill="none"/>' % (x0, y, x0 + 50, y - 22, x0 + 110, y + 22, x0 + 160, y) for x0, y in ((36, 90), (50, 146), (28, 198)))
+                      + flake_dots([(176, 60, 8), (210, 120, 7), (200, 186, 8), (70, 52, 7)])),
+    'Aurora': badge('#1c2b52', '#0c1530',
+                    '<path d="M20 190 C60 70 110 130 128 60 C150 120 190 70 236 180 L236 236 L20 236 Z" fill="#46e0a0" fill-opacity="0.55"/>'
+                    '<path d="M60 200 C80 110 120 150 140 90 C160 140 190 110 210 190 Z" fill="#8f7bff" fill-opacity="0.6"/>'
+                    '<path d="M20 214 L128 160 L236 214 Z" fill="#f4fbff" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % O
+                    + flake_dots([(54, 50, 4), (190, 40, 5), (222, 90, 4), (96, 36, 4)])),
+    'IndianSummer': badge('#ffc47a', '#c95b24',
+                          sun(128, 112, 40)
+                          + '<path transform="translate(128 206) scale(0.8)" d="M0 -40 L12 -22 L34 -26 L24 -8 L44 4 L22 10 L28 32 L8 22 L0 40 L-8 22 L-28 32 L-22 10 L-44 4 L-24 -8 L-34 -26 L-12 -22 Z" fill="#d9482b" stroke="%s" stroke-width="8" stroke-linejoin="round"/>' % O),
+    'Sprinkler': badge('#a8e0ee', '#3f8fb0',
+                       '<rect x="112" y="170" width="32" height="56" rx="8" fill="#8896a6" stroke="%s" stroke-width="8"/>' % O
+                       + '<path d="M128 170 C100 130 60 110 40 130 M128 170 C128 120 128 90 128 58 M128 170 C156 130 196 110 216 130" stroke="%s" stroke-width="20" stroke-linecap="round" fill="none"/>' % O
+                       + '<path d="M128 170 C100 130 60 110 40 130 M128 170 C128 120 128 90 128 58 M128 170 C156 130 196 110 216 130" stroke="#bfe9ff" stroke-width="8" stroke-linecap="round" fill="none"/>'
+                       + drop(40, 150, 0.8) + drop(128, 40, 0.8) + drop(216, 150, 0.8) + tx(196, 224, 40, '!', '#ffd23a')),
+    'GrowLamp': badge('#e9a8ff', '#7a3fb8',
+                      '<path d="M84 60 L172 60 L196 118 L60 118 Z" fill="#8896a6" stroke="%s" stroke-width="8" stroke-linejoin="round"/>' % O
+                      + '<path d="M70 130 L186 130 L226 226 L30 226 Z" fill="#ff6bd6" fill-opacity="0.55"/>'
+                      + '<ellipse cx="128" cy="126" rx="48" ry="12" fill="#fff3a8" stroke="%s" stroke-width="6"/>' % O
+                      + '<path d="M112 226 C112 190 128 176 128 160 C128 176 144 190 144 226 Z" fill="#6fb04f" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % O),
+    'VentFan': badge('#c4e8dc', '#5aa690',
+                     '<circle cx="128" cy="128" r="92" fill="#e8f1ee" stroke="%s" stroke-width="9"/>' % O
+                     + ''.join('<path transform="rotate(%d 128 128)" d="M128 128 C100 84 112 44 148 52 C158 80 148 108 128 128 Z" fill="#7bc4e8" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % (a, O) for a in (0, 120, 240))
+                     + '<circle cx="128" cy="128" r="14" fill="#8896a6" stroke="%s" stroke-width="7"/>' % O),
+    'Condensation': badge('#cdeaf0', '#5f9fae',
+                          glasshouse('#ffffff') + drop(70, 150, 1.0) + drop(128, 178, 1.2) + drop(180, 146, 1.0) + drop(100, 100, 0.7) + drop(160, 108, 0.7)),
+    'Thermostat': badge('#ffc2a0', '#d6452b',
+                        '<rect x="104" y="30" width="48" height="140" rx="24" fill="#ffffff" stroke="%s" stroke-width="9"/>' % O
+                        + '<circle cx="128" cy="188" r="38" fill="#e8302b" stroke="%s" stroke-width="9"/>' % O
+                        + '<rect x="120" y="66" width="16" height="122" rx="8" fill="#e8302b"/>'
+                        + ''.join('<path d="M%d %d L%d %d" stroke="%s" stroke-width="8" stroke-linecap="round"/>' % (x1, y, x2, y, O) for x1, x2, y in ((168, 190, 56), (168, 184, 84), (168, 190, 112)))
+                        + tx(206, 232, 44, '!!', '#ffd23a')),
+    'RogueCat': badge('#ffd9a0', '#d98a3c', cat(128, 130, 1.5)
+                      + '<path d="M30 220 C60 200 80 226 110 208" stroke="%s" stroke-width="10" stroke-linecap="round" fill="none"/>' % O
+                      + '<g fill="#6fb04f" stroke="%s" stroke-width="5"><path d="M196 56 C214 40 232 56 220 72 C206 76 198 68 196 56 Z"/><path d="M28 70 C44 52 62 66 52 82 C38 88 30 80 28 70 Z"/></g>'  % O),
+    'FreezerLeak': badge('#d8f2ff', '#5f9fd8',
+                         '<rect x="54" y="36" width="148" height="190" rx="14" fill="#f2f6fa" stroke="%s" stroke-width="9"/>' % O
+                         + '<path d="M54 36 L120 56 L120 206 L54 226 Z" fill="#9fc8e8" stroke="%s" stroke-width="8" stroke-linejoin="round"/>' % O
+                         + '<rect x="130" y="110" width="10" height="40" rx="5" fill="#8896a6" stroke="%s" stroke-width="4"/>' % O
+                         + snowflake(168, 160, 22) + flake_dots([(160, 70, 7), (186, 100, 6)])),
+    'Compost': badge('#d5b08a', '#7a5230',
+                     '<path d="M52 120 L204 120 L190 214 L66 214 Z" fill="#6b4226" stroke="%s" stroke-width="9" stroke-linejoin="round"/>' % O
+                     + '<rect x="46" y="106" width="164" height="24" rx="10" fill="#8a5a32" stroke="%s" stroke-width="8"/>' % O
+                     + '<path d="M100 120 C92 78 110 54 128 40 C146 54 164 78 156 120 Z" fill="#8fd05a" stroke="%s" stroke-width="7" stroke-linejoin="round"/>' % O
+                     + ''.join('<circle cx="%d" cy="%d" r="%d" fill="#ffd23a" stroke="%s" stroke-width="5"/>' % (x, y, r, O) for x, y, r in ((80, 160, 8), (128, 176, 10), (172, 156, 8), (104, 196, 7), (152, 198, 7)))),
+    'DiscoLights': badge('#5b3a8c', '#241447',
+                         '<circle cx="128" cy="112" r="56" fill="#ffd45a" stroke="%s" stroke-width="9"/>' % O
+                         + ''.join('<path d="M%d %d L%d %d" stroke="#8a6a00" stroke-width="4"/>' % (x1, y1, x2, y2) for x1, y1, x2, y2 in ((74, 96, 182, 96), (80, 130, 176, 130), (112, 58, 112, 168), (144, 58, 144, 168)))
+                         + '<path d="M128 40 L128 20" stroke="%s" stroke-width="8" stroke-linecap="round"/>' % O
+                         + ''.join('<path d="M%d %d L%d %d L%d %d Z" fill="%s" fill-opacity="0.55"/>' % (128, 112, x1, 236, x2, 236, c) for x1, x2, c in ((20, 70, '#ff6bd6'), (96, 150, '#6bf0ff'), (190, 236, '#fff36b')))),
+})
+
 ambient = {'Snowflake': snowflake_sprite(), 'Petal': petal_sprite(), 'MapleLeaf': maple_sprite(), 'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
 
 def render(name, content, out_path, px):

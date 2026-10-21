@@ -60,6 +60,47 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void EachWorldsWeatherFitsItsSeason()
+        {
+            var forbidden = new Dictionary<WeatherProfile, WeatherId[]>
+            {
+                { WeatherProfile.Winter, new[] { WeatherId.Rain, WeatherId.Heatwave, WeatherId.PollenShower, WeatherId.Dew, WeatherId.IndianSummer } },
+                { WeatherProfile.Extreme, new[] { WeatherId.Frost, WeatherId.Snowfall, WeatherId.Blizzard, WeatherId.Aurora } },
+                { WeatherProfile.Normal, new[] { WeatherId.Heatwave, WeatherId.Snowfall, WeatherId.Blizzard } },
+                { WeatherProfile.Autumn, new[] { WeatherId.Snowfall, WeatherId.Blizzard, WeatherId.PollenShower } },
+                { WeatherProfile.Orchard, new[] { WeatherId.Snowfall, WeatherId.Blizzard, WeatherId.Hurricane } },
+            };
+            foreach (var pair in forbidden)
+            {
+                for (int seed = 1; seed <= 20; seed++)
+                {
+                    foreach (var id in WeatherCatalog.RollForRun(new SystemRandomProvider(seed), 40, out _, pair.Key))
+                    {
+                        CollectionAssert.DoesNotContain(pair.Value, id, pair.Key.ToString());
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Greenhouse_HasOnlyIndoorWeather_ThatPlaysLikeItsBaseWeather()
+        {
+            var outdoor = new[] { WeatherId.Rain, WeatherId.Sunshine, WeatherId.Wind, WeatherId.Frost, WeatherId.Dew, WeatherId.Hurricane, WeatherId.Heatwave, WeatherId.GoldenHour, WeatherId.PollenShower, WeatherId.Snowfall, WeatherId.Blizzard };
+            for (int seed = 1; seed <= 20; seed++)
+            {
+                foreach (var id in WeatherCatalog.RollForRun(new SystemRandomProvider(seed), 40, out _, WeatherProfile.Greenhouse))
+                {
+                    CollectionAssert.DoesNotContain(outdoor, id);
+                }
+            }
+            Assert.AreEqual(WeatherId.Hurricane, WeatherCatalog.Mechanic(WeatherId.RogueCat));
+            Assert.AreEqual(WeatherId.Rain, WeatherCatalog.Mechanic(WeatherId.Sprinkler));
+            Assert.IsTrue(WeatherCatalog.UsesColor(WeatherId.GrowLamp));
+            Assert.AreEqual(WeatherProfile.Greenhouse, ChallengeCatalog.Greenhouse.WeatherProfile);
+            Assert.AreEqual(WeatherProfile.Winter, ChallengeCatalog.Marathon.WeatherProfile);
+        }
+
+        [Test]
         public void Summer_NeverHasCalmSkiesAfterRoundOne_AndItsWeatherHitsHarder()
         {
             var weather = WeatherCatalog.RollForRun(new SystemRandomProvider(5), 15, out var colors, WeatherProfile.Extreme);

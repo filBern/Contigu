@@ -28,6 +28,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Marathon,
             Name = "Winter",
+            WeatherProfile = WeatherProfile.Winter,
             Description = "A smaller starting seed bag and tighter seed budgets. Same 15 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
@@ -64,6 +65,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Autumn,
             Name = "Autumn",
+            WeatherProfile = WeatherProfile.Autumn,
             Description = "Fertilizers wither after 4 rounds — a random new one sprouts in their place — and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
             UnlockCost = 12,
             RoundCount = RunConfig.RoundCount,
@@ -83,6 +85,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Orchard,
             Name = "Orchard",
+            WeatherProfile = WeatherProfile.Orchard,
             Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier. Home of the Fruitworm.",
             UnlockCost = 15,
             RoundCount = RunConfig.RoundCount,
@@ -101,6 +104,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Greenhouse,
             Name = "Greenhouse",
+            WeatherProfile = WeatherProfile.Greenhouse,
             Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare. Home of the Whitefly Cloud.",
             UnlockCost = 18,
             RoundCount = RunConfig.RoundCount,

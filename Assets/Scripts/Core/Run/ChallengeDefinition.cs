@@ -12,8 +12,20 @@ namespace Contigu.Core
     /// <summary>How a challenge draws its round weather (see WeatherCatalog.RollForRun).</summary>
     public enum WeatherProfile
     {
-        /// <summary>The usual mix (rarities in WeatherCatalog.GetWeight).</summary>
+        /// <summary>Spring: mild weather, a rare late frost or storm.</summary>
         Normal,
+
+        /// <summary>Winter: frost, snow and blizzards; no rain, heat or pollen.</summary>
+        Winter,
+
+        /// <summary>Autumn: rain, wind and low golden light, the odd first frost or Indian summer.</summary>
+        Autumn,
+
+        /// <summary>Orchard: blossom showers and mild days, a risky late frost.</summary>
+        Orchard,
+
+        /// <summary>Greenhouse: indoors, so the weather is sprinklers, grow lamps and a cat.</summary>
+        Greenhouse,
 
         /// <summary>Never calm: every round after the first has real weather, weighted toward the harsh and the dramatic.</summary>
         Extreme

@@ -86,7 +86,7 @@ namespace Contigu.Core
         /// <summary>Round-start part of the weather (Wind: a free Shuffle; Frost: frozen plots; Golden Hour: golden plots; Pollen Shower: Pollen). Round 1 is always clear.</summary>
         private void ApplyWeatherRoundStart()
         {
-            switch (CurrentWeather)
+            switch (WeatherCatalog.Mechanic(CurrentWeather))
             {
                 case WeatherId.Wind:
                     ShufflesRemaining++;
@@ -110,7 +110,7 @@ namespace Contigu.Core
         /// <summary>Placement part of the weather: Rain pays Pollen for a seed of the round's color, Sunshine pays points per cell of one, Dew pays Pollen per cleared line.</summary>
         private void ApplyWeatherPlacementBonus(PlacementResult placement, PieceColor color)
         {
-            switch (CurrentWeather)
+            switch (WeatherCatalog.Mechanic(CurrentWeather))
             {
                 case WeatherId.Rain:
                     if (color == CurrentWeatherColor)
@@ -148,14 +148,14 @@ namespace Contigu.Core
 
         private void ApplyHeatwaveShuffleBurn()
         {
-            LastBurnedTile = CurrentWeather == WeatherId.Heatwave && !HasEffectiveModifier(ModifierId.Impermeable) ? Grid.BurnRandomTile(_rng) : null;
+            LastBurnedTile = WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Heatwave && !HasEffectiveModifier(ModifierId.Impermeable) ? Grid.BurnRandomTile(_rng) : null;
         }
 
         /// <summary>Hurricane: every few seeds placed, blows some tiles elsewhere. Returns the moves (empty when none) for the placement's outcome.</summary>
         private IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> ApplyHurricaneTick()
         {
             int played = CurrentBudget - PiecesRemainingThisRound;
-            if (CurrentWeather != WeatherId.Hurricane || HasEffectiveModifier(ModifierId.Impermeable) || played <= 0 || played % ScoringConstants.HurricaneInterval != 0)
+            if (WeatherCatalog.Mechanic(CurrentWeather) != WeatherId.Hurricane || HasEffectiveModifier(ModifierId.Impermeable) || played <= 0 || played % ScoringConstants.HurricaneInterval != 0)
             {
                 return System.Array.Empty<(Vector2Int, Vector2Int, PieceColor)>();
             }

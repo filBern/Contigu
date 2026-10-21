@@ -8,26 +8,123 @@ namespace Contigu.Core
         /// <summary>Rain and Sunshine apply to one seed color, rolled per round (see RunManager.CurrentWeatherColor).</summary>
         public static bool UsesColor(WeatherId id)
         {
-            return id == WeatherId.Rain || id == WeatherId.Sunshine;
+            var m = Mechanic(id);
+            return m == WeatherId.Rain || m == WeatherId.Sunshine;
         }
 
-        /// <summary>Relative draw weight under a challenge's weather profile (Extreme: never calm, harsh and dramatic weather favored).</summary>
-        public static int GetWeight(WeatherId id, WeatherProfile profile)
+        /// <summary>The base weather a themed variant plays like (a base weather is its own mechanic).</summary>
+        public static WeatherId Mechanic(WeatherId id)
         {
-            if (profile != WeatherProfile.Extreme)
-            {
-                return GetWeight(id);
-            }
             switch (id)
             {
-                case WeatherId.Clear: return 0;
-                case WeatherId.Rain:
-                case WeatherId.Sunshine:
-                case WeatherId.Frost:
-                case WeatherId.Heatwave: return 3;
-                case WeatherId.Wind:
-                case WeatherId.Hurricane: return 2;
-                default: return 1;
+                case WeatherId.Snowfall:
+                case WeatherId.Sprinkler: return WeatherId.Rain;
+                case WeatherId.GrowLamp: return WeatherId.Sunshine;
+                case WeatherId.VentFan: return WeatherId.Wind;
+                case WeatherId.Condensation: return WeatherId.Dew;
+                case WeatherId.Blizzard:
+                case WeatherId.RogueCat: return WeatherId.Hurricane;
+                case WeatherId.Aurora:
+                case WeatherId.Compost: return WeatherId.PollenShower;
+                case WeatherId.IndianSummer:
+                case WeatherId.Thermostat: return WeatherId.Heatwave;
+                case WeatherId.FreezerLeak: return WeatherId.Frost;
+                case WeatherId.DiscoLights: return WeatherId.GoldenHour;
+                default: return id;
+            }
+        }
+
+        /// <summary>
+        /// Relative draw weight under a challenge's weather profile (0 = this world never has it: no snow in Summer, no rain in Winter,
+        /// nothing outdoors in the Greenhouse). Summer (Extreme) is never calm.
+        /// </summary>
+        public static int GetWeight(WeatherId id, WeatherProfile profile)
+        {
+            switch (profile)
+            {
+                case WeatherProfile.Winter:
+                    switch (id)
+                    {
+                        case WeatherId.Frost:
+                        case WeatherId.Snowfall: return 3;
+                        case WeatherId.Clear:
+                        case WeatherId.Wind:
+                        case WeatherId.Blizzard: return 2;
+                        case WeatherId.Aurora:
+                        case WeatherId.Sunshine:
+                        case WeatherId.GoldenHour: return 1;
+                        default: return 0;
+                    }
+                case WeatherProfile.Extreme:
+                    switch (id)
+                    {
+                        case WeatherId.Rain:
+                        case WeatherId.Sunshine:
+                        case WeatherId.Heatwave: return 3;
+                        case WeatherId.Wind:
+                        case WeatherId.Hurricane: return 2;
+                        case WeatherId.Dew:
+                        case WeatherId.GoldenHour:
+                        case WeatherId.PollenShower: return 1;
+                        default: return 0;
+                    }
+                case WeatherProfile.Autumn:
+                    switch (id)
+                    {
+                        case WeatherId.Rain:
+                        case WeatherId.Wind:
+                        case WeatherId.GoldenHour: return 3;
+                        case WeatherId.Dew: return 2;
+                        case WeatherId.Clear:
+                        case WeatherId.Sunshine:
+                        case WeatherId.Frost:
+                        case WeatherId.Hurricane:
+                        case WeatherId.IndianSummer: return 1;
+                        default: return 0;
+                    }
+                case WeatherProfile.Orchard:
+                    switch (id)
+                    {
+                        case WeatherId.Rain:
+                        case WeatherId.Sunshine:
+                        case WeatherId.PollenShower: return 3;
+                        case WeatherId.Clear:
+                        case WeatherId.Wind:
+                        case WeatherId.Dew: return 2;
+                        case WeatherId.GoldenHour:
+                        case WeatherId.Frost:
+                        case WeatherId.Heatwave: return 1;
+                        default: return 0;
+                    }
+                case WeatherProfile.Greenhouse:
+                    switch (id)
+                    {
+                        case WeatherId.Sprinkler:
+                        case WeatherId.GrowLamp: return 3;
+                        case WeatherId.VentFan:
+                        case WeatherId.Condensation:
+                        case WeatherId.Thermostat:
+                        case WeatherId.RogueCat:
+                        case WeatherId.FreezerLeak: return 2;
+                        case WeatherId.Clear:
+                        case WeatherId.Compost:
+                        case WeatherId.DiscoLights: return 1;
+                        default: return 0;
+                    }
+                default:
+                    switch (id)
+                    {
+                        case WeatherId.Clear:
+                        case WeatherId.Rain:
+                        case WeatherId.Sunshine: return 3;
+                        case WeatherId.Wind:
+                        case WeatherId.Dew: return 2;
+                        case WeatherId.GoldenHour:
+                        case WeatherId.PollenShower:
+                        case WeatherId.Frost:
+                        case WeatherId.Hurricane: return 1;
+                        default: return 0;
+                    }
             }
         }
 
@@ -45,7 +142,7 @@ namespace Contigu.Core
         // Harsh weathers (Heatwave, Hurricane) are a deliberate part of the mix, not just bonuses.
         public static int GetWeight(WeatherId id)
         {
-            switch (id)
+            switch (Mechanic(id))
             {
                 case WeatherId.Clear:
                 case WeatherId.Rain:
@@ -64,7 +161,8 @@ namespace Contigu.Core
         /// <summary>Weathers that hurt rather than help (shown with a warning tone).</summary>
         public static bool IsHarsh(WeatherId id)
         {
-            return id == WeatherId.Heatwave || id == WeatherId.Hurricane || id == WeatherId.Frost;
+            var m = Mechanic(id);
+            return m == WeatherId.Heatwave || m == WeatherId.Hurricane || m == WeatherId.Frost;
         }
 
         public static string GetRarityLabel(WeatherId id)
@@ -88,12 +186,53 @@ namespace Contigu.Core
                 case WeatherId.PollenShower: return "Pollen Shower";
                 case WeatherId.Heatwave: return "Heatwave";
                 case WeatherId.Hurricane: return "Hurricane";
+                case WeatherId.Snowfall: return "Snowfall" + withColor;
+                case WeatherId.Blizzard: return "Blizzard";
+                case WeatherId.Aurora: return "Aurora";
+                case WeatherId.IndianSummer: return "Indian Summer";
+                case WeatherId.Sprinkler: return "Sprinkler Malfunction" + withColor;
+                case WeatherId.GrowLamp: return "Grow Lamp" + withColor;
+                case WeatherId.VentFan: return "Ventilation Fan";
+                case WeatherId.Condensation: return "Condensation";
+                case WeatherId.Thermostat: return "Stuck Thermostat";
+                case WeatherId.RogueCat: return "Cat in the Greenhouse";
+                case WeatherId.FreezerLeak: return "Freezer Door Ajar";
+                case WeatherId.Compost: return "Compost Delivery";
+                case WeatherId.DiscoLights: return "Disco Grow Lights";
                 default: return "Clear skies";
             }
         }
 
         public static string GetDescription(WeatherId id, string colorName = null, float intensity = 1f)
         {
+            string flavor = GetFlavor(id);
+            return flavor.Length > 0 ? flavor + " " + GetMechanicDescription(id, colorName, intensity) : GetMechanicDescription(id, colorName, intensity);
+        }
+
+        private static string GetFlavor(WeatherId id)
+        {
+            switch (id)
+            {
+                case WeatherId.Snowfall: return "Soft snow muffles the garden.";
+                case WeatherId.Blizzard: return "A howling whiteout.";
+                case WeatherId.Aurora: return "Green lights dance over the snow.";
+                case WeatherId.IndianSummer: return "A last scorching week of summer.";
+                case WeatherId.Sprinkler: return "Someone forgot to turn the sprinklers off.";
+                case WeatherId.GrowLamp: return "The grow lamps hum at full power.";
+                case WeatherId.VentFan: return "The ventilation fan whirs up.";
+                case WeatherId.Condensation: return "The glass is dripping.";
+                case WeatherId.Thermostat: return "The thermostat is stuck on maximum.";
+                case WeatherId.RogueCat: return "The cat got in again and is zooming around.";
+                case WeatherId.FreezerLeak: return "Someone left the cold room open.";
+                case WeatherId.Compost: return "A fresh load of compost is wheeled in.";
+                case WeatherId.DiscoLights: return "The grow lights start strobing gold.";
+                default: return "";
+            }
+        }
+
+        private static string GetMechanicDescription(WeatherId id, string colorName, float intensity)
+        {
+            id = Mechanic(id);
             string color = string.IsNullOrEmpty(colorName) ? "of the weather's color" : colorName;
             switch (id)
             {

@@ -90,26 +90,29 @@ namespace Contigu.Presentation
             _critters.Clear();
 
             for (int i = 0; i < _butterflyTarget; i++) { Spawn(ParticleKind.Butterfly, _ambiance.ButterflyTint); }
-            if (_ambiance.MaxButterflies > 0 && (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine || _weather == WeatherId.GoldenHour)) { Spawn(ParticleKind.Bee); }
+            if (_ambiance.MaxButterflies > 0 && (_weather == WeatherId.Clear || WeatherCatalog.Mechanic(_weather) == WeatherId.Sunshine || WeatherCatalog.Mechanic(_weather) == WeatherId.GoldenHour)) { Spawn(ParticleKind.Bee); }
             for (int i = 0; i < _ambiance.Bees; i++) { Spawn(ParticleKind.Bee); }
             for (int p = 0; p < _ambiance.Particles.Length; p++)
             {
                 for (int i = 0; i < _ambiance.Particles[p].Count; i++) { Spawn(_ambiance.Particles[p].Kind, _ambiance.Particles[p].Tint); }
             }
             // What drifts is the world's own: leaves in the garden, snow in Winter, maple in Autumn — and none where nothing falls (the wind brings its own).
-            bool windy = _weather == WeatherId.Hurricane || _weather == WeatherId.Wind;
-            int drifting = windy ? (_weather == WeatherId.Hurricane ? 16 : 10) : _ambiance.BaseLeaves;
+            var mech = WeatherCatalog.Mechanic(_weather);
+            bool windy = mech == WeatherId.Hurricane || mech == WeatherId.Wind;
+            int drifting = windy ? (mech == WeatherId.Hurricane ? 16 : 10) : _ambiance.BaseLeaves;
             var driftKind = windy ? _ambiance.WindParticle : ParticleKind.Leaf;
             var driftTint = driftKind == ParticleKind.Leaf ? _ambiance.LeafTint : Color.white;
             for (int i = 0; i < drifting; i++) { Spawn(driftKind, driftTint); }
-            if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(ParticleKind.Rain); } }
-            if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(ParticleKind.Sparkle); } }
-            if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.SunMote); } }
-            if (_weather == WeatherId.Hurricane) { for (int i = 0; i < 40; i++) { Spawn(ParticleKind.Rain); } }
-            if (_weather == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(ParticleKind.SunMote); } }
-            if (_weather == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Sparkle); } }
-            if (_weather == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(ParticleKind.SunMote); } }
-            if (_weather == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(ParticleKind.SunMote); } Spawn(ParticleKind.Bee); Spawn(ParticleKind.Bee); }
+            // Fall: rain, except snow where it snows (Snowfall, Blizzard) and drips under the Greenhouse's sprinklers.
+            var fall = _weather == WeatherId.Snowfall || _weather == WeatherId.Blizzard ? ParticleKind.Snow : _weather == WeatherId.Sprinkler ? ParticleKind.Drip : ParticleKind.Rain;
+            if (mech == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(fall); } }
+            if (mech == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(ParticleKind.Sparkle); } }
+            if (mech == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.SunMote); } }
+            if (mech == WeatherId.Hurricane) { for (int i = 0; i < 40; i++) { Spawn(fall == ParticleKind.Snow ? ParticleKind.Snow : ParticleKind.Rain); } }
+            if (mech == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(ParticleKind.SunMote); } }
+            if (mech == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Sparkle); } }
+            if (mech == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(ParticleKind.SunMote); } }
+            if (mech == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(_weather == WeatherId.Aurora ? ParticleKind.Sparkle : ParticleKind.SunMote); } if (_weather != WeatherId.Aurora) { Spawn(ParticleKind.Bee); Spawn(ParticleKind.Bee); } }
         }
 
         private void SyncButterflies()
@@ -211,7 +214,7 @@ namespace Contigu.Presentation
                     break;
             }
             // Whatever the wind carries is blown sideways across the screen.
-            if ((_weather == WeatherId.Wind || _weather == WeatherId.Hurricane) && (kind == ParticleKind.Leaf || kind == ParticleKind.Snow || kind == ParticleKind.Maple))
+            if ((WeatherCatalog.Mechanic(_weather) == WeatherId.Wind || WeatherCatalog.Mechanic(_weather) == WeatherId.Hurricane) && (kind == ParticleKind.Leaf || kind == ParticleKind.Snow || kind == ParticleKind.Maple))
             {
                 c.Velocity = new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f));
             }

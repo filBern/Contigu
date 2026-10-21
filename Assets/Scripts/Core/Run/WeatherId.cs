@@ -12,6 +12,21 @@ namespace Contigu.Core
         GoldenHour,
         PollenShower,
         Heatwave,
-        Hurricane
+        Hurricane,
+
+        // Themed variants: each plays exactly like the weather named in WeatherCatalog.Mechanic, with its own name, flavor and icon.
+        Snowfall,
+        Blizzard,
+        Aurora,
+        IndianSummer,
+        Sprinkler,
+        GrowLamp,
+        VentFan,
+        Condensation,
+        Thermostat,
+        RogueCat,
+        FreezerLeak,
+        Compost,
+        DiscoLights
     }
 }
