@@ -21,7 +21,14 @@ namespace Contigu.Presentation
         private const float ValueColumnX = 306f;
         private const float CheckboxSize = 26f;
 
+        /// <summary>The player confirmed they want to give up the current run (the run is scored as a defeat, then the challenge picker opens).</summary>
+        public event Action AbandonRunRequested;
+
+        /// <summary>The player confirmed they want to leave for the main menu (the run in progress, if any, is scored as a defeat).</summary>
+        public event Action MainMenuRequested;
+
         private RectTransform _root;
+        private readonly System.Collections.Generic.List<(Text Label, string Text)> _confirmLabels = new System.Collections.Generic.List<(Text, string)>();
 
         public RectTransform Build(Transform parent)
         {
@@ -50,10 +57,50 @@ namespace Contigu.Presentation
             closeRect.sizeDelta = new Vector2(220f, 52f);
             closeBtn.onClick.AddListener(Hide);
 
+            BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
+            BuildConfirmButton(_root, "MainMenu", "Main menu", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); });
             BuildResetButton(_root);
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>A two-click button (the first click arms it for a few seconds, the second confirms), for actions that throw progress away.</summary>
+        private void BuildConfirmButton(Transform parent, string name, string text, float y, Action onConfirmed)
+        {
+            var button = UIFactory.CreateButton(parent, name, text, UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(button);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, y);
+            rect.sizeDelta = new Vector2(220f, 46f);
+            var label = button.GetComponentInChildren<Text>();
+            _confirmLabels.Add((label, text));
+            bool armed = false;
+            float armedAt = 0f;
+            button.onClick.AddListener(() =>
+            {
+                if (!armed || Time.unscaledTime - armedAt > 4f)
+                {
+                    armed = true;
+                    armedAt = Time.unscaledTime;
+                    label.text = "Sure? Click again";
+                    return;
+                }
+                armed = false;
+                label.text = text;
+                onConfirmed();
+            });
+        }
+
+        private void ResetConfirmLabels()
+        {
+            for (int i = 0; i < _confirmLabels.Count; i++)
+            {
+                _confirmLabels[i].Label.text = _confirmLabels[i].Text;
+            }
         }
 
         /// <summary>Two-click "Reset data": wipes saved stats and every preference (tutorial seen, volume, colorblind), then reloads the scene so the next launch behaves like a first one.</summary>
@@ -192,6 +239,7 @@ namespace Contigu.Presentation
 
         public void Show()
         {
+            ResetConfirmLabels();
             _root.gameObject.SetActive(true);
         }
 
@@ -202,6 +250,7 @@ namespace Contigu.Presentation
 
         public void Toggle()
         {
+            ResetConfirmLabels();
             _root.gameObject.SetActive(!_root.gameObject.activeSelf);
         }
     }

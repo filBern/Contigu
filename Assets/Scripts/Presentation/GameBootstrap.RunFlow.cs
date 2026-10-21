@@ -48,6 +48,7 @@ namespace Contigu.Presentation
 
                 case RunState.RunVictory:
                 {
+                    _unrecordedRun = false;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
                     break;
@@ -55,6 +56,7 @@ namespace Contigu.Presentation
 
                 case RunState.RunDefeat:
                 {
+                    _unrecordedRun = false;
                     bool isNewBestScore;
                     if (_run.IsEndless)
                     {
@@ -181,6 +183,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            _unrecordedRun = true;
             _endScreenView.Hide();
             RefreshAll();
             HandleStateTransition(_run.State);
@@ -192,6 +195,51 @@ namespace Contigu.Presentation
             _endScreenView.Hide();
             _challengeSelectView.Show(_metaStats);
         }
+
+        // True from StartNewRun until the run's outcome has been recorded (a defeat/victory screen, or leaving the run early).
+        private bool _unrecordedRun;
+
+        /// <summary>Leaving a run early (abandon, or back to the main menu) counts like a defeat in the persistent stats — but only if the player actually played something, and never twice.</summary>
+        private void RecordLeftRun()
+        {
+            if (_run == null || !_unrecordedRun)
+            {
+                return;
+            }
+            _unrecordedRun = false;
+            bool untouched = !_run.IsEndless && _run.CurrentRoundIndex == 0 && _run.RoundScore == 0 && _run.PiecesRemainingThisRound == _run.CurrentBudget;
+            if (untouched || (_run.State != RunState.InProgress && _run.State != RunState.AwaitingShop))
+            {
+                return;
+            }
+            if (_run.IsEndless)
+            {
+                _metaStats = MetaStatsRecorder.RecordEndlessEnd(_metaStats, _run.TotalScore, _run.CurrentRoundNumber);
+            }
+            else
+            {
+                _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, _run.CurrentRoundNumber, victory: false);
+            }
+            _metaStatsStore.Save(_metaStats);
+        }
+
+        /// <summary>Settings → "Abandon run": the run is scored as a defeat, and the scene reloads straight onto the challenge picker (a fresh scene is the one sure way to drop whatever overlay, animation or pending choice was in flight).</summary>
+        private void OnAbandonRunRequested()
+        {
+            RecordLeftRun();
+            Time.timeScale = 1f;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>Settings → "Main menu": same scoring as abandoning, then back to the title scene.</summary>
+        private void OnMainMenuRequested()
+        {
+            RecordLeftRun();
+            Time.timeScale = 1f;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(MainMenuSceneName);
+        }
+
+        private const string MainMenuSceneName = "MainMenu";
 
         /// <summary>Dev/testing shortcut (F10 in the editor, or the picker's "Unlock all (dev)" button): every challenge becomes playable at once, persisted like any unlock.</summary>
         private void OnUnlockAllChallengesRequested()
@@ -265,6 +313,7 @@ namespace Contigu.Presentation
         {
             _isPlayingPlacementSequence = false;
             _run = new RunManager(new SystemRandomProvider(), challenge);
+            _unrecordedRun = true;
             ApplyChallengeAmbiance(challenge);
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run);

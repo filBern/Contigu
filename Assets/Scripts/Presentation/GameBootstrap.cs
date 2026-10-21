@@ -490,6 +490,7 @@ namespace Contigu.Presentation
             handRect.pivot = new Vector2(0.5f, 0.5f);
             handRect.anchoredPosition = new Vector2(0f, -230f);
             BuildComboUtilityButtons(comboRect);
+            BuildMenuButton(mainRoot);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -632,7 +633,25 @@ namespace Contigu.Presentation
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
+            _settingsView.AbandonRunRequested += OnAbandonRunRequested;
+            _settingsView.MainMenuRequested += OnMainMenuRequested;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
+        }
+
+        /// <summary>A small always-visible "Menu" button (top-left, beside the round and weather chips) that opens Settings — where a run can be abandoned or the game left for the main menu — for players who don't know the Escape key.</summary>
+        private void BuildMenuButton(Transform parent)
+        {
+            var menuButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.HandUtilityButtonBackground, 12);
+            var label = menuButton.GetComponentInChildren<Text>();
+            label.color = Color.black;
+            label.fontSize = 22;
+            var rect = menuButton.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(226f, -16f);
+            rect.sizeDelta = new Vector2(92f, 40f);
+            menuButton.onClick.AddListener(() => _settingsView.Toggle());
         }
 
         /// <summary>Quick access to the deck and rules, anchored below the combo card so their position follows its content-driven height.</summary>
