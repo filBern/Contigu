@@ -77,6 +77,32 @@ namespace Contigu.Presentation
             }
         }
 
+        // What the placement's auto-refill Shuffle did, waiting for the score count to finish before it is shown.
+        private bool _pendingShuffleActs;
+        private string _pendingBlightBefore;
+        private WorldGridChange? _pendingWorldChange;
+
+        /// <summary>The end-of-sequence reveal of the Shuffle effects that must not show before the points are counted: Blightmoth's blight, then the resident enemy (portrait, Pollen bite, and its tile crossfade).</summary>
+        private System.Collections.IEnumerator PlayDeferredShuffleActs()
+        {
+            if (!_pendingShuffleActs)
+            {
+                yield break;
+            }
+            _pendingShuffleActs = false;
+            if (_pendingBlightBefore != null)
+            {
+                PlayBlightmothActIfBlightChanged(_pendingBlightBefore);
+            }
+            PlayWorldEnemyActIfAny();
+            if (_pendingWorldChange.HasValue)
+            {
+                var change = _pendingWorldChange.Value;
+                _pendingWorldChange = null;
+                yield return _gridView.PlayWorldGridChange(change);
+            }
+        }
+
         private void PlayBlightmothActIfBlightChanged(string before)
         {
             string after = BlightSignature();

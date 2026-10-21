@@ -92,8 +92,15 @@ namespace Contigu.Presentation
                 return;
             }
             SfxManager.Play(SfxId.ValidDrop);
-            PlayBlightmothActIfBlightChanged(blightBefore);
-            PlayWorldEnemyActIfAny();
+            // Everything a Shuffle-triggered enemy just did (the auto-refill resolved it synchronously inside PlacePiece) waits for the end of the
+            // score sequence: its grid change stays drawn as it was until then (see PlayDeferredShuffleActs).
+            _pendingShuffleActs = handWasAboutToAutoRefill;
+            _pendingBlightBefore = blightBefore;
+            _pendingWorldChange = handWasAboutToAutoRefill ? _run.LastWorldGridChange : null;
+            if (_pendingWorldChange.HasValue)
+            {
+                _gridView.HoldWorldChange(_pendingWorldChange.Value);
+            }
 
             // Only valid right after a call that ran DrawFreshHand this
             // placement — otherwise ThiefStoleOnLastShuffle still holds a
@@ -871,6 +878,8 @@ namespace Contigu.Presentation
                 _handView.Refresh();
             }
 
+            yield return PlayDeferredShuffleActs();
+
             yield return PlayFrozenShatters(placement);
 
             if (outcome.WeatherMovedTiles.Count > 0)
@@ -884,6 +893,15 @@ namespace Contigu.Presentation
             }
             finally
             {
+                // A world enemy's held grid change must never stay hidden if the sequence died before revealing it.
+                if (_pendingWorldChange.HasValue)
+                {
+                    var stuck = _pendingWorldChange.Value;
+                    _pendingWorldChange = null;
+                    _gridView.ReleaseWorldHold();
+                    _gridView.RefreshCells(stuck.HasB ? new List<Vector2Int> { stuck.A, stuck.B } : new List<Vector2Int> { stuck.A });
+                }
+                _pendingShuffleActs = false;
                 // Whatever happened above, no ice may stay held (a normal run already released it in PlayFrozenShatters).
                 var frozenToRelease = FrozenClearedCells(outcome.Placement);
                 if (frozenToRelease.Count > 0)

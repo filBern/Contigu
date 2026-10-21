@@ -288,6 +288,11 @@ namespace Contigu.Presentation
         {
             var overrideColor = new Dictionary<Vector2Int, PieceColor>();
             var overrideTrait = new Dictionary<Vector2Int, PieceTrait?>();
+            foreach (var held in _worldHeldColors)
+            {
+                overrideColor[held.Key] = held.Value;
+                overrideTrait[held.Key] = null;
+            }
             for (int i = 0; i < heldCells.Count; i++)
             {
                 overrideColor[heldCells[i]] = heldColors[i];
@@ -304,8 +309,16 @@ namespace Contigu.Presentation
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var pos = new Vector2Int(x, y);
+                    if (_worldHiddenCells.Contains(pos))
+                    {
+                        _cells[x, y].ApplyState(new Cell { IsPermanentMultiplier = _grid.GetCell(x, y).IsPermanentMultiplier });
+                    }
+                    else if (_worldFrozenShown.Contains(pos))
+                    {
+                        _cells[x, y].ApplyState(_grid.GetCell(x, y), forceShowLocked: true, forceShowFrozen: true);
+                    }
                     // A frozen plot whose row just completed keeps its ice until it shatters (see GridCellView.PlayIceShatter).
-                    if (heldFrozen.Contains(pos))
+                    else if (heldFrozen.Contains(pos))
                     {
                         _cells[x, y].ApplyState(_grid.GetCell(x, y), forceShowLocked: true, forceShowFrozen: true);
                     }
@@ -868,6 +881,70 @@ namespace Contigu.Presentation
             }
         }
 
+        // A resident enemy's grid change (see RunManager.LastWorldGridChange), kept off-screen until its reveal: the old look keeps being drawn by every redraw.
+        private readonly Dictionary<Vector2Int, PieceColor> _worldHeldColors = new Dictionary<Vector2Int, PieceColor>();
+        private readonly HashSet<Vector2Int> _worldHiddenCells = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> _worldFrozenShown = new HashSet<Vector2Int>();
+
+        /// <summary>Keeps showing a world enemy's grid change as it was before it happened (call before the next redraw), until <see cref="PlayWorldGridChange"/> or <see cref="ReleaseWorldHold"/>.</summary>
+        public void HoldWorldChange(WorldGridChange change)
+        {
+            ReleaseWorldHold();
+            switch (change.Kind)
+            {
+                case WorldGridChangeKind.Freeze:
+                    _worldHiddenCells.Add(change.A);
+                    if (change.HasB)
+                    {
+                        _worldFrozenShown.Add(change.B);
+                    }
+                    break;
+                case WorldGridChangeKind.Recolor:
+                    _worldHeldColors[change.A] = change.ColorA;
+                    break;
+                case WorldGridChangeKind.Swap:
+                    _worldHeldColors[change.A] = change.ColorA;
+                    _worldHeldColors[change.B] = change.ColorB;
+                    break;
+            }
+        }
+
+        public void ReleaseWorldHold()
+        {
+            _worldHeldColors.Clear();
+            _worldHiddenCells.Clear();
+            _worldFrozenShown.Clear();
+        }
+
+        /// <summary>Reveals a held world-enemy change: ice settling on a plot, or the Chameleon-style crossfade for a recolored/swapped tile.</summary>
+        public System.Collections.IEnumerator PlayWorldGridChange(WorldGridChange change)
+        {
+            ReleaseWorldHold();
+            var cells = new List<Vector2Int> { change.A };
+            if (change.HasB)
+            {
+                cells.Add(change.B);
+            }
+            RefreshCells(cells);
+            switch (change.Kind)
+            {
+                case WorldGridChangeKind.Freeze:
+                    _cells[change.A.x, change.A.y].Pulse(true);
+                    yield return new WaitForSeconds(0.25f);
+                    break;
+                case WorldGridChangeKind.Recolor:
+                    yield return PlayTileCrossfade(new List<(Vector2Int, PieceColor)> { (change.A, change.ColorA) });
+                    break;
+                default:
+                    yield return PlayTileCrossfade(new List<(Vector2Int, PieceColor)> { (change.A, change.ColorA), (change.B, change.ColorB) });
+                    break;
+            }
+            for (int i = 0; i < cells.Count; i++)
+            {
+                _cells[cells[i].x, cells[i].y].Pulse(true);
+            }
+        }
+
         private const float ChameleonTransitionDuration = 0.4f;
 
         /// <summary>
@@ -879,25 +956,40 @@ namespace Contigu.Presentation
         /// </summary>
         public System.Collections.IEnumerator PlayChameleonColorTransition(IReadOnlyList<Vector2Int> cells, PieceColor from, PieceColor to)
         {
-            // The cells already show the resolved color's painted tile. Lay the OLD color's tile over each one and fade it out,
-            // so the switch is a clean crossfade between the two painted tiles (tinting the art with the raw color made it muddy).
-            var fromSprite = VisualDefaults.GetTileSprite(from);
-            Color fromTint = VisualDefaults.GetTileTint(from);
-            var overlays = new List<Image>();
+            var list = new List<(Vector2Int Pos, PieceColor From)>();
             for (int i = 0; i < cells.Count; i++)
             {
-                var pos = cells[i];
+                list.Add((cells[i], from));
+            }
+            return PlayTileCrossfade(list);
+        }
+
+        /// <summary>
+        /// Crossfade of each cell from its own previous color's painted tile to the one it now shows: the OLD tile is laid over the new
+        /// one and faded out, so the switch is clean instead of a muddy tint. Shared by the Chameleon, Fruitworm and Whitefly.
+        /// </summary>
+        public System.Collections.IEnumerator PlayTileCrossfade(IReadOnlyList<(Vector2Int Pos, PieceColor From)> cells)
+        {
+            var overlays = new List<Image>();
+            var tints = new List<Color>();
+            var refresh = new List<Vector2Int>();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var pos = cells[i].Pos;
                 if (!GridManager.InBounds(pos.x, pos.y))
                 {
                     continue;
                 }
+                refresh.Add(pos);
+                Color fromTint = VisualDefaults.GetTileTint(cells[i].From);
                 var background = _cells[pos.x, pos.y].Background;
                 var overlay = UIFactory.CreatePanel(background.transform, "ChameleonFrom", fromTint);
                 overlay.raycastTarget = false;
-                overlay.sprite = fromSprite;
+                overlay.sprite = VisualDefaults.GetTileSprite(cells[i].From);
                 overlay.type = background.type;
                 UIFactory.StretchFull(overlay.rectTransform);
                 overlays.Add(overlay);
+                tints.Add(fromTint);
             }
 
             float t = 0f;
@@ -909,7 +1001,7 @@ namespace Contigu.Presentation
                 {
                     if (overlays[i] != null)
                     {
-                        overlays[i].color = new Color(fromTint.r, fromTint.g, fromTint.b, fromTint.a * alpha);
+                        overlays[i].color = new Color(tints[i].r, tints[i].g, tints[i].b, tints[i].a * alpha);
                     }
                 }
                 yield return null;
@@ -922,7 +1014,7 @@ namespace Contigu.Presentation
                 }
             }
             // Re-render the true state so no tint/sprite from the crossfade (or an earlier hover preview) can linger.
-            RefreshCells(cells);
+            RefreshCells(refresh);
         }
 
         /// <summary>Re-renders just these cells from the grid's actual current state.</summary>

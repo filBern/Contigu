@@ -87,7 +87,12 @@ namespace Contigu.Presentation
             if (shuffled)
             {
                 PlayBlightmothActIfBlightChanged(blightBefore);
-                PlayWorldEnemyActIfAny();
+                // The resident enemy's grid change stays hidden until the hand is back, then plays (see below).
+                var worldChange = _run.LastWorldGridChange;
+                if (worldChange.HasValue)
+                {
+                    _gridView.HoldWorldChange(worldChange.Value);
+                }
             }
             if (!shuffled)
             {
@@ -153,6 +158,13 @@ namespace Contigu.Presentation
             // Reveals each affected enemy's own cell(s) one enemy at a time — icon pulse, circle, reveal —
             // instead of every enemy firing in parallel (see PlayEnemyEffectsSequentially).
             yield return PlayEnemyEffectsSequentially(affectedCellsNow);
+
+            PlayWorldEnemyActIfAny();
+            var pendingWorld = _run.LastWorldGridChange;
+            if (pendingWorld.HasValue)
+            {
+                yield return _gridView.PlayWorldGridChange(pendingWorld.Value);
+            }
 
             RefreshShuffleButton();
             SetStatusText(IdleStatusMessage);

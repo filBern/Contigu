@@ -3,6 +3,19 @@ using UnityEngine;
 
 namespace Contigu.Core
 {
+    public enum WorldGridChangeKind { Freeze, Recolor, Swap }
+
+    /// <summary>One resident enemy's grid change: Freeze (A frozen, B thawed if HasB), Recolor (A: ColorA to ColorB), Swap (A and B traded places; ColorA/ColorB are what each plot held BEFORE).</summary>
+    public struct WorldGridChange
+    {
+        public WorldGridChangeKind Kind;
+        public Vector2Int A;
+        public Vector2Int B;
+        public bool HasB;
+        public PieceColor ColorA;
+        public PieceColor ColorB;
+    }
+
     /// <summary>The residents of each challenge's world (see ChallengeDefinition.WorldEnemy): Hoarfrost, Locust Swarm, Rotgrub, Fruitworm and Whitefly Cloud, all acting on each Shuffle.</summary>
     public sealed partial class RunManager
     {
@@ -15,8 +28,12 @@ namespace Contigu.Core
         /// <summary>Pollen the Locust Swarm devoured on the most recent Shuffle (0 otherwise).</summary>
         public int LastPollenEaten { get; private set; }
 
+        /// <summary>What a world enemy changed on the grid on the most recent Shuffle (null when it changed nothing there), so Presentation can keep the old look on screen until the score has been counted, then play the change.</summary>
+        public WorldGridChange? LastWorldGridChange { get; private set; }
+
         private void ResetWorldEnemyReport()
         {
+            LastWorldGridChange = null;
             LastPollenEaten = 0;
             LastWorldEnemyAct = null;
             LastWorldEnemyMessage = string.Empty;
@@ -37,11 +54,14 @@ namespace Contigu.Core
                 return;
             }
             hoarfrost.FrozenCells.Add(frozen[0]);
+            Vector2Int? thawed = null;
             while (hoarfrost.FrozenCells.Count > ScoringConstants.HoarfrostMaxFrozenPlots)
             {
+                thawed = hoarfrost.FrozenCells[0];
                 ThawCell(hoarfrost.FrozenCells[0]);
                 hoarfrost.FrozenCells.RemoveAt(0);
             }
+            LastWorldGridChange = new WorldGridChange { Kind = WorldGridChangeKind.Freeze, A = frozen[0], B = thawed ?? frozen[0], HasB = thawed.HasValue };
             ReportWorldEnemy(EnemyId.Hoarfrost, "Hoarfrost freezes a plot.");
         }
 
@@ -112,6 +132,7 @@ namespace Contigu.Core
             var recolored = Grid.RecolorRandomTile(_rng);
             if (recolored.HasValue)
             {
+                LastWorldGridChange = new WorldGridChange { Kind = WorldGridChangeKind.Recolor, A = recolored.Value.Pos, ColorA = recolored.Value.From, ColorB = recolored.Value.To };
                 ReportWorldEnemy(EnemyId.Fruitworm, "The Fruitworm turns a tile into another color.");
             }
         }
@@ -122,6 +143,16 @@ namespace Contigu.Core
             var swapped = Grid.SwapRandomTiles(_rng);
             if (swapped.HasValue)
             {
+                // After the swap each plot holds the other's old color, so the old ones are read back from the opposite plot.
+                LastWorldGridChange = new WorldGridChange
+                {
+                    Kind = WorldGridChangeKind.Swap,
+                    A = swapped.Value.A,
+                    B = swapped.Value.B,
+                    HasB = true,
+                    ColorA = Grid.GetCell(swapped.Value.B).FilledColor ?? PieceColor.Coral,
+                    ColorB = Grid.GetCell(swapped.Value.A).FilledColor ?? PieceColor.Coral
+                };
                 ReportWorldEnemy(EnemyId.Whitefly, "The Whitefly Cloud swaps two tiles.");
             }
         }
