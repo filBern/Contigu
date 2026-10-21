@@ -79,11 +79,6 @@ namespace Contigu.Presentation
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
 
-                    if (ColorblindMode.IsEnabled)
-                    {
-                        BuildColorblindShape(img.transform, color, cell);
-                    }
-
                     if (badgeEveryCell || (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y)))
                     {
                         // Sized relative to the cell itself rather than a fixed 14px, since a smaller preview cell would otherwise be nearly covered by the badge.
@@ -125,19 +120,6 @@ namespace Contigu.Presentation
                 img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 img.rectTransform.anchoredPosition = new Vector2(startX + c.x * cell, startY + c.y * cell);
             }
-        }
-
-        /// <summary>Colorblind-mode shape (see ColorblindMode/ColorblindShapeFactory), centered on a filled square, on top of its tint and below the trait badge (which only ever sits in the top-right corner, so the two never actually overlap).</summary>
-        private static void BuildColorblindShape(Transform parent, PieceColor color, float cellSize)
-        {
-            float size = Mathf.Clamp(cellSize * 0.5f, 8f, 26f);
-            var shape = UIFactory.CreatePanel(parent, "ColorblindShape", Color.black);
-            shape.sprite = ColorblindShapeFactory.GetShape(color);
-            shape.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            shape.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            shape.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            shape.rectTransform.sizeDelta = new Vector2(size, size);
-            shape.rectTransform.anchoredPosition = Vector2.zero;
         }
 
         private static RectTransform BuildTraitBadge(Transform parent, PieceTrait trait, TooltipView tooltip, GameObject clickForwardTarget, float size)

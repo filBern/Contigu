@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// The one place the presentation layer reads and writes simple persisted settings (volume, colorblind mode, "seen" flags).
+    /// The one place the presentation layer reads and writes simple persisted settings (volume, "seen" flags).
     /// A thin wrapper over PlayerPrefs with a swappable backend, so every settings site goes through a single seam instead of
     /// touching PlayerPrefs directly (and so a test or a different storage can replace it).
     /// </summary>

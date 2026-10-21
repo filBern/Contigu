@@ -5,7 +5,7 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Persisted volume prefs for SettingsView. Same PlayerPrefs-backed,
-    /// load-once-at-static-init pattern as ColorblindMode. Named
+    /// load-once-at-static-init pattern. Named
     /// "VolumeSettings" rather than "AudioSettings" to avoid colliding with
     /// UnityEngine.AudioSettings.
     ///
@@ -28,7 +28,7 @@ namespace Contigu.Presentation
         public static float MusicVolume { get; private set; } = GamePrefs.GetFloat(MusicVolumeKey, DefaultVolume);
         public static float SfxVolume { get; private set; } = GamePrefs.GetFloat(SfxVolumeKey, DefaultVolume);
 
-        /// <summary>Back to full volume without persisting (see ColorblindMode.ResetToDefault).</summary>
+        /// <summary>Back to full volume without persisting.</summary>
         public static void ResetToDefaults()
         {
             MasterVolume = MusicVolume = SfxVolume = DefaultVolume;

@@ -7,8 +7,7 @@ namespace Contigu.Presentation
     /// <summary>
     /// Settings overlay, reachable any time via the Escape key. Master/Music/SFX are real
     /// UnityEngine.UI.Slider controls persisted via VolumeSettings; only Master does anything audible today
-    /// (see GameBootstrap.ApplyVolumeSettings). The colorblind checkbox is a second entry point to the same
-    /// ColorblindMode.Toggle() the C key calls — no separate state of its own.
+    /// (see GameBootstrap.ApplyVolumeSettings).
     /// </summary>
     public sealed class SettingsView : MonoBehaviour
     {
@@ -19,7 +18,6 @@ namespace Contigu.Presentation
         private const float LabelColumnX = -226f;
         private const float ControlColumnX = 80f;
         private const float ValueColumnX = 306f;
-        private const float CheckboxSize = 26f;
 
         /// <summary>The player confirmed they want to give up the current run (the run is scored as a defeat, then the challenge picker opens).</summary>
         public event Action AbandonRunRequested;
@@ -46,7 +44,6 @@ namespace Contigu.Presentation
             BuildVolumeRow(_root, -140f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
             BuildVolumeRow(_root, -230f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
             BuildVolumeRow(_root, -320f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
-            BuildColorblindRow(_root, -410f);
 
             var closeBtn = UIFactory.CreateButton(_root, "Close", "Close", UISprites.ChooseButtonBackground, 18);
             var closeRect = closeBtn.GetComponent<RectTransform>();
@@ -103,7 +100,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Two-click "Reset data": wipes saved stats and every preference (tutorial seen, volume, colorblind), then reloads the scene so the next launch behaves like a first one.</summary>
+        /// <summary>Two-click "Reset data": wipes saved stats and every preference (tutorial seen, volume), then reloads the scene so the next launch behaves like a first one.</summary>
         private static void BuildResetButton(Transform parent)
         {
             var resetBtn = UIFactory.CreateButton(parent, "ResetData", "Reset data", UISprites.CancelButtonBackground, 16);
@@ -129,7 +126,6 @@ namespace Contigu.Presentation
                 new MetaStatsFileStore().Delete();
                 GamePrefs.DeleteAll();
                 GamePrefs.Save();
-                ColorblindMode.ResetToDefault();
                 VolumeSettings.ResetToDefaults();
                 UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
             });
@@ -189,8 +185,16 @@ namespace Contigu.Presentation
             var handleArea = UIFactory.CreateUIObject("HandleArea", root);
             UIFactory.StretchFull(handleArea);
 
-            var handle = UIFactory.CreateSlicedImage(handleArea, "Handle", UISprites.SliderHandle);
-            handle.rectTransform.sizeDelta = new Vector2(28f, 28f);
+            // Plain (unsliced) square image: the Slider only drives the handle's X anchors, so Y is pinned
+            // to the middle with a fixed height — a vertically stretched anchor would distort the flower.
+            var handle = UIFactory.CreatePanel(handleArea, "Handle", Color.white);
+            handle.sprite = UISprites.SliderHandle;
+            handle.type = Image.Type.Simple;
+            handle.preserveAspect = true;
+            handle.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            handle.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            handle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            handle.rectTransform.sizeDelta = new Vector2(34f, 34f);
 
             var slider = root.gameObject.AddComponent<Slider>();
             slider.fillRect = fill.rectTransform;
@@ -202,39 +206,6 @@ namespace Contigu.Presentation
             slider.value = initialValue;
 
             return slider;
-        }
-
-        /// <summary>A small square Button standing in for a checkbox — tinted and shows an "X" label when checked, driven off ColorblindMode.IsEnabled/Toggle().</summary>
-        private static void BuildColorblindRow(Transform parent, float y)
-        {
-            var labelText = UIFactory.CreateText(parent, "ColorblindLabel", "Colorblind Mode", 18, UITheme.TextOnBackground, TextAnchor.MiddleRight);
-            labelText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            labelText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            labelText.rectTransform.pivot = new Vector2(0.5f, 1f);
-            labelText.rectTransform.anchoredPosition = new Vector2(LabelColumnX, y);
-            labelText.rectTransform.sizeDelta = new Vector2(RowLabelWidth, RowHeight + 6f);
-
-            var checkboxButton = UIFactory.CreateButton(parent, "ColorblindCheckbox", "",
-                ColorblindMode.IsEnabled ? UITheme.ButtonSelected : UITheme.PanelLight, 14);
-            var checkboxImage = checkboxButton.GetComponent<Image>();
-            var checkboxRect = checkboxButton.GetComponent<RectTransform>();
-            checkboxRect.anchorMin = new Vector2(0.5f, 1f);
-            checkboxRect.anchorMax = new Vector2(0.5f, 1f);
-            checkboxRect.pivot = new Vector2(0.5f, 1f);
-            checkboxRect.anchoredPosition = new Vector2(ControlColumnX - RowSliderWidth / 2f + CheckboxSize / 2f, y);
-            checkboxRect.sizeDelta = new Vector2(CheckboxSize, CheckboxSize);
-
-            var checkmark = UIFactory.CreateText(checkboxButton.transform, "Check", "X", 16, UITheme.TextPrimary);
-            checkmark.raycastTarget = false;
-            UIFactory.StretchFull(checkmark.rectTransform);
-            checkmark.gameObject.SetActive(ColorblindMode.IsEnabled);
-
-            checkboxButton.onClick.AddListener(() =>
-            {
-                ColorblindMode.Toggle();
-                checkboxImage.color = ColorblindMode.IsEnabled ? UITheme.ButtonSelected : UITheme.PanelLight;
-                checkmark.gameObject.SetActive(ColorblindMode.IsEnabled);
-            });
         }
 
         public void Show()

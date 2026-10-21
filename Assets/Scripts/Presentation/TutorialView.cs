@@ -5,7 +5,7 @@ namespace Contigu.Presentation
     /// <summary>
     /// Full-screen "How to Play" overlay. Shown automatically once, the
     /// first time the game is ever launched (see GameBootstrap.Awake, gated
-    /// on a PlayerPrefs flag like ColorblindMode), and reachable again any
+    /// on a PlayerPrefs flag), and reachable again any
     /// time via the H key.
     /// </summary>
     public sealed class TutorialView : MonoBehaviour
@@ -89,7 +89,7 @@ namespace Contigu.Presentation
                 string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\nTab: view your seed bag · C: colorblind mode · H: show this screen again · Esc: settings";
+            text += "\n\nTab: view your seed bag · H: show this screen again · Esc: settings";
             return text;
         }
     }

@@ -172,15 +172,6 @@ namespace Contigu.Presentation
             badgePoisonOutline.effectDistance = new Vector2(1.5f, -1.5f);
             badgePoison.gameObject.SetActive(false);
 
-            // Colorblind-mode shape (see ColorblindMode/ColorblindShapeFactory); created before InvalidMarker
-            // so a hover-invalid preview still draws on top of it.
-            var colorblindShape = UIFactory.CreatePanel(cellGo, "ColorblindShape", Color.black);
-            UIFactory.SetAnchor(colorblindShape.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            colorblindShape.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            colorblindShape.rectTransform.sizeDelta = new Vector2(26f, 26f);
-            colorblindShape.rectTransform.anchoredPosition = Vector2.zero;
-            colorblindShape.gameObject.SetActive(false);
-
             // Shown instead of the color-icon preview while hovering an invalid placement.
             var invalidMarker = UIFactory.CreatePanel(cellGo, "InvalidMarker", UITheme.Danger);
             UIFactory.SetAnchor(invalidMarker.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
@@ -202,7 +193,7 @@ namespace Contigu.Presentation
             effectLabel.gameObject.SetActive(false);
 
             var cellView = cellGo.gameObject.AddComponent<GridCellView>();
-            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgePoison, invalidMarker, effectLabel, badgeTraitOrigin, colorblindShape, lineClearOverlay, _tooltip);
+            cellView.Init(this, x, y, background, fillTile, badgeGolden, badgeSpecial, badgePoison, invalidMarker, effectLabel, badgeTraitOrigin, lineClearOverlay, _tooltip);
             _cells[x, y] = cellView;
         }
 

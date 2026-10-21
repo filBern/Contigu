@@ -112,7 +112,6 @@ namespace Contigu.Presentation
             // RefreshAll covers grid/hand/HUD/modifier panel; the shop and
             // deck-view overlay are only rebuilt if actually open, since a
             // hidden one renders correctly next time it's shown anyway.
-            ColorblindMode.Changed += OnColorblindModeChanged;
 
             // Applies the persisted Master volume immediately at launch,
             // then again any time SettingsView's slider changes it.
@@ -153,19 +152,6 @@ namespace Contigu.Presentation
             AudioListener.volume = VolumeSettings.MasterVolume;
         }
 
-        private void OnColorblindModeChanged()
-        {
-            RefreshAll();
-            if (_run.State == RunState.AwaitingShop)
-            {
-                _shopView.Refresh(_run);
-            }
-            if (_deckView.IsVisible)
-            {
-                _deckView.Show();
-            }
-        }
-
         private void Update()
         {
 #if UNITY_EDITOR
@@ -199,10 +185,6 @@ namespace Contigu.Presentation
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 _deckView.Toggle();
-            }
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                ColorblindMode.Toggle();
             }
             if (Input.GetKeyDown(KeyCode.H))
             {

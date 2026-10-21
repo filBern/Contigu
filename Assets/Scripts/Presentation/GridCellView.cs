@@ -41,7 +41,6 @@ namespace Contigu.Presentation
         private Text _effectLabel;
         private Image _badgeTraitOrigin;
         private TraitBadgeView _traitOriginBadgeView;
-        private Image _colorblindShape;
         // A GameObject, not an Image — wraps 4 border bars (see GridView.BuildLineClearBorder), toggled as one unit.
         private GameObject _lineClearOverlay;
         private TooltipView _tooltip;
@@ -60,7 +59,7 @@ namespace Contigu.Presentation
         private Image _lockedOverlay;
         private bool _isShowingPoisonBadge;
 
-        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, Image colorblindShape, GameObject lineClearOverlay, TooltipView tooltip)
+        public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, GameObject lineClearOverlay, TooltipView tooltip)
         {
             _owner = owner;
             X = x;
@@ -74,7 +73,6 @@ namespace Contigu.Presentation
             _invalidMarker = invalidMarker;
             _effectLabel = effectLabel;
             _badgeTraitOrigin = badgeTraitOrigin;
-            _colorblindShape = colorblindShape;
             _lineClearOverlay = lineClearOverlay;
             _tooltip = tooltip;
             var overlayGo = new GameObject("LockedOverlay", typeof(RectTransform));
@@ -261,13 +259,6 @@ namespace Contigu.Presentation
             string effectText = BuildEffectLabel(cell, seederCell || goldenArtShown);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
-
-            bool showColorblindShape = ColorblindMode.IsEnabled && isFilled && !renderAsLockedObstacle;
-            _colorblindShape.gameObject.SetActive(showColorblindShape);
-            if (showColorblindShape)
-            {
-                _colorblindShape.sprite = ColorblindShapeFactory.GetShape(filledColor.Value);
-            }
 
             // Hover-only decorations — never part of a cell's actual state,
             // so every real render (including the one ClearHover triggers)
