@@ -908,9 +908,12 @@ namespace Contigu.Presentation
             // Red instead of the default tint when the slot is otherwise buyable but the player just can't
             // afford it yet — the button stays clickable (see the onClick lambda above), so this is the
             // visual cue that used to come from Unity's own disabled-button graying.
-            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, affordable ? UITheme.TextPrimary : UITheme.Danger);
+            // A text label ("Full (4)", "None owned") isn't a price: it never turns red for lack of Pollen, and carries no Pollen icon.
+            bool showAffordable = affordable || isTextLabel;
+            priceIcon.gameObject.SetActive(!isTextLabel);
+            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, showAffordable ? UITheme.TextPrimary : UITheme.Danger);
             priceText.raycastTarget = false;
-            if (!affordable)
+            if (!showAffordable)
             {
                 // The Pollen icon keeps its own colors; only the diamond fallback goes red.
                 if (VisualDefaults.PollenSprite == null)
