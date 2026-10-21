@@ -13,7 +13,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class AmbientLifeView : MonoBehaviour
     {
-        public enum ParticleKind { Butterfly, Bee, Leaf, Rain, Sparkle, SunMote, Snow, Petal, Maple, Drip }
+        public enum ParticleKind { Butterfly, Bee, Leaf, Rain, Sparkle, SunMote, Snow, Petal, Maple, Drip, Cat, Flame }
 
         private sealed class Critter
         {
@@ -112,7 +112,57 @@ namespace Contigu.Presentation
             if (mech == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(ParticleKind.SunMote); } }
             if (mech == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Sparkle); } }
             if (mech == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(ParticleKind.SunMote); } }
+            SpawnVariantExtras();
             if (mech == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(_weather == WeatherId.Aurora ? ParticleKind.Sparkle : ParticleKind.SunMote); } if (_weather != WeatherId.Aurora) { Spawn(ParticleKind.Bee); Spawn(ParticleKind.Bee); } }
+        }
+
+        /// <summary>What sets a themed weather apart from the base weather it plays like.</summary>
+        private void SpawnVariantExtras()
+        {
+            switch (_weather)
+            {
+                case WeatherId.Blizzard:
+                    for (int i = 0; i < 40; i++) { Spawn(ParticleKind.Snow); }
+                    break;
+                case WeatherId.Aurora:
+                    for (int i = 0; i < 10; i++) { Spawn(ParticleKind.Sparkle, new Color(0.35f, 1f, 0.7f)); Spawn(ParticleKind.Sparkle, new Color(0.7f, 0.55f, 1f)); }
+                    break;
+                case WeatherId.IndianSummer:
+                    for (int i = 0; i < 8; i++) { Spawn(ParticleKind.Maple); }
+                    break;
+                case WeatherId.Sprinkler:
+                    for (int i = 0; i < 40; i++) { Spawn(ParticleKind.Drip, new Color(0.6f, 0.9f, 1f)); }
+                    break;
+                case WeatherId.GrowLamp:
+                    for (int i = 0; i < 18; i++) { Spawn(ParticleKind.SunMote, new Color(1f, 0.45f, 0.85f)); }
+                    break;
+                case WeatherId.VentFan:
+                    for (int i = 0; i < 10; i++) { Spawn(ParticleKind.Leaf, _ambiance.LeafTint); }
+                    break;
+                case WeatherId.Condensation:
+                    for (int i = 0; i < 18; i++) { Spawn(ParticleKind.Drip, new Color(0.85f, 0.97f, 1f)); }
+                    break;
+                case WeatherId.Thermostat:
+                    for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Flame); }
+                    break;
+                case WeatherId.RogueCat:
+                    Spawn(ParticleKind.Cat);
+                    break;
+                case WeatherId.FreezerLeak:
+                    for (int i = 0; i < 16; i++) { Spawn(ParticleKind.Snow, new Color(0.8f, 0.95f, 1f)); }
+                    break;
+                case WeatherId.Compost:
+                    for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Leaf, new Color(0.55f, 0.36f, 0.2f)); }
+                    break;
+                case WeatherId.DiscoLights:
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Spawn(ParticleKind.Sparkle, new Color(1f, 0.4f, 0.85f));
+                        Spawn(ParticleKind.Sparkle, new Color(0.4f, 0.95f, 1f));
+                        Spawn(ParticleKind.Sparkle, new Color(1f, 0.95f, 0.4f));
+                    }
+                    break;
+            }
         }
 
         private void SyncButterflies()
@@ -148,6 +198,8 @@ namespace Contigu.Presentation
                 case ParticleKind.Petal: return "Petal";
                 case ParticleKind.Maple: return "MapleLeaf";
                 case ParticleKind.Drip: return "Raindrop";
+                case ParticleKind.Cat: return "Cat";
+                case ParticleKind.Flame: return "Flame";
                 default: return "SunMote";
             }
         }
@@ -199,6 +251,14 @@ namespace Contigu.Presentation
                 case ParticleKind.Maple:
                     c.Size = Random.Range(26f, 40f);
                     c.Velocity = new Vector2(Random.Range(-18f, 18f), Random.Range(-52f, -28f));
+                    break;
+                case ParticleKind.Cat:
+                    c.Size = 64f;
+                    c.Velocity = new Vector2((Random.value < 0.5f ? -1f : 1f) * Random.Range(110f, 160f), 0f);
+                    break;
+                case ParticleKind.Flame:
+                    c.Size = Random.Range(10f, 18f);
+                    c.Velocity = new Vector2(Random.Range(-8f, 8f), Random.Range(24f, 50f));
                     break;
                 case ParticleKind.Drip:
                     c.Size = Random.Range(12f, 18f);
@@ -286,6 +346,17 @@ namespace Contigu.Presentation
                         alpha = 0.85f;
                         break;
                     case ParticleKind.Drip:
+                        alpha = 0.55f;
+                        break;
+                    case ParticleKind.Cat:
+                        // Bounding along, facing where it runs.
+                        move += new Vector2(0f, Mathf.Abs(Mathf.Sin(t * 9f)) * 150f - 75f);
+                        scaleX = c.Velocity.x < 0f ? -1f : 1f;
+                        rot = Mathf.Sin(t * 9f) * 6f;
+                        alpha = 0.95f;
+                        break;
+                    case ParticleKind.Flame:
+                        scaleX = 0.7f + 0.3f * Mathf.Sin(t * 7f);
                         alpha = 0.55f;
                         break;
                     case ParticleKind.Sparkle:

@@ -132,6 +132,19 @@ def flame():
                '<path d="M128 96 C142 130 176 150 170 188 C166 218 148 232 128 232 C106 232 88 218 88 190 C88 160 116 150 128 96 Z" fill="#ffd23a"/>' % O, 96)
 
 
+def cat_sprite():
+    # A ginger cat mid-stride, facing right.
+    return svg('<g stroke="%s" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">'
+               '<path d="M54 120 C22 110 20 60 44 52" fill="none" stroke-width="22"/><path d="M54 120 C22 110 20 60 44 52" fill="none" stroke="#f0a64a" stroke-width="10"/>'
+               '<path d="M76 176 L52 214 M112 180 L102 218" fill="none" stroke-width="22"/><path d="M76 176 L52 214 M112 180 L102 218" fill="none" stroke="#e08f35" stroke-width="10"/>'
+               '<ellipse cx="116" cy="140" rx="68" ry="40" fill="#f0a64a"/>'
+               '<path d="M150 178 L176 214 M184 160 L222 192" fill="none" stroke-width="22"/><path d="M150 178 L176 214 M184 160 L222 192" fill="none" stroke="#f0a64a" stroke-width="10"/>'
+               '<path d="M96 112 L116 118 M120 108 L140 116" stroke="#c9792a" stroke-width="7" fill="none"/>'
+               '<path d="M162 92 L168 54 L188 76 L214 76 L226 54 L232 92 C240 130 158 134 162 92 Z" fill="#f0a64a"/>'
+               '<circle cx="186" cy="98" r="6" fill="#13212e" stroke="none"/><circle cx="214" cy="98" r="6" fill="#13212e" stroke="none"/>'
+               '<path d="M196 108 L204 108 L200 114 Z" fill="#e8584f" stroke-width="4"/></g>' % O, 96)
+
+
 def snowflake_sprite():
     out = ''
     for i in range(6):
@@ -233,7 +246,7 @@ weather.update({
                          + ''.join('<path d="M%d %d L%d %d L%d %d Z" fill="%s" fill-opacity="0.55"/>' % (128, 112, x1, 236, x2, 236, c) for x1, x2, c in ((20, 70, '#ff6bd6'), (96, 150, '#6bf0ff'), (190, 236, '#fff36b')))),
 })
 
-ambient = {'Snowflake': snowflake_sprite(), 'Petal': petal_sprite(), 'MapleLeaf': maple_sprite(), 'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
+ambient = {'Snowflake': snowflake_sprite(), 'Petal': petal_sprite(), 'MapleLeaf': maple_sprite(), 'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote(), 'Cat': cat_sprite()}
 
 def render(name, content, out_path, px):
     html = '/tmp/_amb_%s.html' % name

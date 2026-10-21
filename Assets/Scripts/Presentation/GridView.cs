@@ -766,20 +766,82 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Hurricane: every blown tile lifts off its (held) source and flies to its new plot, which reappears when it lands. The sources are redrawn empty as the tiles lift off.</summary>
-        public IEnumerator PlayTileFlights(IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> moves, float duration)
+        /// <summary>
+        /// Hurricane: every blown tile lifts off its (held) source and flies to its new plot, which reappears when it lands. The sources are redrawn
+        /// empty as the tiles lift off. With <paramref name="cat"/> a ginger cat dashes across the plots instead, and each tile is flung as it passes.
+        /// </summary>
+        public IEnumerator PlayTileFlights(IReadOnlyList<(Vector2Int From, Vector2Int To, PieceColor Color)> moves, float duration, bool cat = false)
         {
+            float lead = cat ? duration * 0.7f : 0f;
+            RectTransform catRect = cat ? SpawnCat(lead + duration * 0.3f) : null;
             for (int i = 0; i < moves.Count; i++)
             {
                 var move = moves[i];
-                RefreshCell(move.From.x, move.From.y);
-                StartCoroutineOn(_cells[move.From.x, move.From.y], _cells[move.From.x, move.From.y].FlyTileTo(_cells[move.To.x, move.To.y], move.Color, duration));
+                float delay = cat ? lead * move.From.x / Mathf.Max(1, GridManager.Size - 1) : 0f;
+                StartCoroutineOn(_cells[move.From.x, move.From.y], FlyAfter(move, delay, duration));
             }
-            yield return new WaitForSeconds(duration);
+            yield return new WaitForSeconds(lead + duration);
             for (int i = 0; i < moves.Count; i++)
             {
                 RefreshCell(moves[i].To.x, moves[i].To.y);
                 _cells[moves[i].To.x, moves[i].To.y].Pulse(true);
+            }
+            if (catRect != null)
+            {
+                Destroy(catRect.gameObject);
+            }
+        }
+
+        private IEnumerator FlyAfter((Vector2Int From, Vector2Int To, PieceColor Color) move, float delay, float duration)
+        {
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+            RefreshCell(move.From.x, move.From.y);
+            yield return _cells[move.From.x, move.From.y].FlyTileTo(_cells[move.To.x, move.To.y], move.Color, duration);
+        }
+
+        /// <summary>The Greenhouse cat bounding left to right across the plots (leaves the rest of the screen to the ambient cat).</summary>
+        private RectTransform SpawnCat(float runTime)
+        {
+            var sprite = VisualDefaults.GetAmbientSprite("Cat");
+            if (sprite == null)
+            {
+                return null;
+            }
+            var host = new GameObject("WeatherCat", typeof(RectTransform), typeof(Canvas));
+            host.transform.SetParent(_container, false);
+            var canvas = host.GetComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 40;
+            var image = UIFactory.CreatePanel(host.transform, "Cat", Color.white);
+            image.raycastTarget = false;
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            var rt = (RectTransform)host.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            float size = _builtCellSize * 1.3f;
+            rt.sizeDelta = new Vector2(size, size);
+            image.rectTransform.anchorMin = Vector2.zero;
+            image.rectTransform.anchorMax = Vector2.one;
+            image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
+            StartCoroutine(CatRun(rt, runTime));
+            return rt;
+        }
+
+        private IEnumerator CatRun(RectTransform cat, float runTime)
+        {
+            float half = _container.rect.width * 0.5f;
+            float y = Random.Range(-_container.rect.height * 0.25f, _container.rect.height * 0.25f);
+            float t = 0f;
+            while (t < runTime && cat != null)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / runTime);
+                cat.anchoredPosition = new Vector2(Mathf.Lerp(-half - 40f, half + 40f, p), y + Mathf.Abs(Mathf.Sin(p * 14f)) * 26f);
+                cat.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * 14f) * 6f);
+                yield return null;
             }
         }
 

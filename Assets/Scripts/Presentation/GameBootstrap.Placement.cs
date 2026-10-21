@@ -878,7 +878,7 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.Shuffle);
                 _hudView.PulseWeather();
                 ShakeScreen(1, 5);
-                yield return _gridView.PlayTileFlights(outcome.WeatherMovedTiles, 0.65f);
+                yield return _gridView.PlayTileFlights(outcome.WeatherMovedTiles, 0.65f, _run.CurrentWeather == WeatherId.RogueCat);
             }
 
             }
