@@ -165,6 +165,126 @@ namespace Contigu.Core
         /// <summary>xN Mult when the placed piece covers one of the 4 corner plots.</summary>
         PierreAngulaire,
 
+        /// <summary>+4 pts per tile of the seed that sits on the edge of the garden.</summary>
+        Haie,
+
+        /// <summary>x2 Mult when the seed puts a tile in the middle of the garden.</summary>
+        Coeur,
+
+        /// <summary>+3 Mult when the seed is a straight vertical piece (1 wide, 2 or more tall).</summary>
+        Treillis,
+
+        /// <summary>+3 Mult when the seed is a straight horizontal piece (1 tall, 2 or more wide).</summary>
+        Sillon,
+
+        /// <summary>+12 pts when the seed is a straight piece of 3 or more tiles.</summary>
+        Haricot,
+
+        /// <summary>+4 pts for each tile of another color touching the seed.</summary>
+        Patchwork,
+
+        /// <summary>+1 Mult per 3 cells in the scored group.</summary>
+        Racines,
+
+        /// <summary>+5 Mult when every plot touching the seed is already planted (or the edge).</summary>
+        Emboite,
+
+        /// <summary>+3 Mult when the seed touches 2 or more tiles and none of them shares its color.</summary>
+        Mosaique,
+
+        /// <summary>x2 Mult while two thirds of the garden or more is planted.</summary>
+        Foule,
+
+        /// <summary>+4 Mult when every color of the run is growing in the garden.</summary>
+        Prairie,
+
+        /// <summary>+8 pts per tile of the seed touching 3 or more planted plots.</summary>
+        Guirlande,
+
+        /// <summary>+2 Pollen when the seed touches 2 or more different colors.</summary>
+        Pollinisateur,
+
+        /// <summary>+1 Pollen per 3 cells in the scored group.</summary>
+        Miel,
+
+        /// <summary>+1 Pollen every time you plant a seed.</summary>
+        Nectar,
+
+        /// <summary>+6 Mult when one seed harvests a row and a column at once.</summary>
+        MoissonCroisee,
+
+        /// <summary>+3 Mult per line harvested.</summary>
+        Faucheur,
+
+        /// <summary>x3 Mult when the seed harvests the last planted tile in the garden.</summary>
+        TableRase,
+
+        /// <summary>+2 Pollen per line harvested.</summary>
+        Dime,
+
+        /// <summary>x2 Mult when the seed harvests at least one row.</summary>
+        CultureRang,
+
+        /// <summary>x2 Mult when the seed harvests at least one column.</summary>
+        CultureColonne,
+
+        /// <summary>+3 pts per tile harvested.</summary>
+        Prime,
+
+        /// <summary>+6 Mult when the seed breaks a frozen plot free.</summary>
+        BriseGlace,
+
+        /// <summary>+0.5 Mult per round already cleared this run.</summary>
+        Saisons,
+
+        /// <summary>+3 Mult while the enemies still have more than half of their total HP.</summary>
+        Outsider,
+
+        /// <summary>+6 Mult while the enemies are down to a quarter of their total HP or less.</summary>
+        CoupFinal,
+
+        /// <summary>x3 Mult on the last seed of the round.</summary>
+        DerniereGraine,
+
+        /// <summary>x2 Mult on the first seed of the round.</summary>
+        PremiereGraine,
+
+        /// <summary>+0.1 Mult per Pollen you hold (up to +5).</summary>
+        Tirelire,
+
+        /// <summary>+0.05 Mult per seed in your bag.</summary>
+        BanqueGraines,
+
+        /// <summary>+1 Mult per enemy still alive.</summary>
+        SousBois,
+
+        /// <summary>+4 Mult while it rains (Rain, Snowfall, Sprinkler Malfunction).</summary>
+        DanseDePluie,
+
+        /// <summary>+4 Mult on Sunshine and Golden Hour days (and their indoor cousins).</summary>
+        DanseDuSoleil,
+
+        /// <summary>+4 Mult while the weather is Frost (or the Freezer Door Ajar).</summary>
+        Rustique,
+
+        /// <summary>+4 Mult in Wind and Hurricane weather (and their indoor cousins).</summary>
+        CavalierVent,
+
+        /// <summary>+6 Mult during the first 5 rounds.</summary>
+        Matinal,
+
+        /// <summary>+4 Mult from round 9 onwards.</summary>
+        Marathonien,
+
+        /// <summary>x2 Mult during boss rounds.</summary>
+        Pourfendeur,
+
+        /// <summary>+1 Pollen per Shuffle left when you clear a round.</summary>
+        Tonneau,
+
+        /// <summary>+1 Pollen per fertilizer held when you clear a round.</summary>
+        Grange,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }

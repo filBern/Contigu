@@ -449,6 +449,166 @@ namespace Contigu.Core
             ModifierId.PierreAngulaire, ModifierCategory.Voisinage, "Cornerstone",
             "x2 Mult when the seed puts a tile on one of the 4 corners.");
 
+        public static readonly ModifierDefinition Haie = new ModifierDefinition(
+            ModifierId.Haie, ModifierCategory.Voisinage, "Hedgerow",
+            "+4 pts per tile of the seed that sits on the edge of the garden.");
+
+        public static readonly ModifierDefinition Coeur = new ModifierDefinition(
+            ModifierId.Coeur, ModifierCategory.Voisinage, "Heartwood",
+            "x2 Mult when the seed puts a tile in the middle of the garden.");
+
+        public static readonly ModifierDefinition Treillis = new ModifierDefinition(
+            ModifierId.Treillis, ModifierCategory.Formes, "Trellis",
+            "+3 Mult when the seed is a straight vertical piece (1 wide, 2 or more tall).");
+
+        public static readonly ModifierDefinition Sillon = new ModifierDefinition(
+            ModifierId.Sillon, ModifierCategory.Formes, "Furrow",
+            "+3 Mult when the seed is a straight horizontal piece (1 tall, 2 or more wide).");
+
+        public static readonly ModifierDefinition Haricot = new ModifierDefinition(
+            ModifierId.Haricot, ModifierCategory.Formes, "Beanstalk",
+            "+12 pts when the seed is a straight piece of 3 or more tiles.");
+
+        public static readonly ModifierDefinition Patchwork = new ModifierDefinition(
+            ModifierId.Patchwork, ModifierCategory.Couleurs, "Patchwork",
+            "+4 pts for each tile of another color touching the seed.");
+
+        public static readonly ModifierDefinition Racines = new ModifierDefinition(
+            ModifierId.Racines, ModifierCategory.Connexions, "Taproot",
+            "+1 Mult per 3 cells in the scored group.");
+
+        public static readonly ModifierDefinition Emboite = new ModifierDefinition(
+            ModifierId.Emboite, ModifierCategory.Voisinage, "Snug Fit",
+            "+5 Mult when every plot touching the seed is already planted (or the edge).");
+
+        public static readonly ModifierDefinition Mosaique = new ModifierDefinition(
+            ModifierId.Mosaique, ModifierCategory.Couleurs, "Mosaic",
+            "+3 Mult when the seed touches 2 or more tiles and none of them shares its color.");
+
+        public static readonly ModifierDefinition Foule = new ModifierDefinition(
+            ModifierId.Foule, ModifierCategory.Voisinage, "Crowd",
+            "x2 Mult while two thirds of the garden or more is planted.");
+
+        public static readonly ModifierDefinition Prairie = new ModifierDefinition(
+            ModifierId.Prairie, ModifierCategory.Couleurs, "Wildflower Meadow",
+            "+4 Mult when every color of the run is growing in the garden.");
+
+        public static readonly ModifierDefinition Guirlande = new ModifierDefinition(
+            ModifierId.Guirlande, ModifierCategory.Voisinage, "Wreath",
+            "+8 pts per tile of the seed touching 3 or more planted plots.");
+
+        public static readonly ModifierDefinition Pollinisateur = new ModifierDefinition(
+            ModifierId.Pollinisateur, ModifierCategory.Couleurs, "Pollinator",
+            "+2 Pollen when the seed touches 2 or more different colors.");
+
+        public static readonly ModifierDefinition Miel = new ModifierDefinition(
+            ModifierId.Miel, ModifierCategory.Connexions, "Honey",
+            "+1 Pollen per 3 cells in the scored group.");
+
+        public static readonly ModifierDefinition Nectar = new ModifierDefinition(
+            ModifierId.Nectar, ModifierCategory.Roguelike, "Nectar",
+            "+1 Pollen every time you plant a seed.");
+
+        public static readonly ModifierDefinition MoissonCroisee = new ModifierDefinition(
+            ModifierId.MoissonCroisee, ModifierCategory.Destruction, "Cross Harvest",
+            "+6 Mult when one seed harvests a row and a column at once.");
+
+        public static readonly ModifierDefinition Faucheur = new ModifierDefinition(
+            ModifierId.Faucheur, ModifierCategory.Destruction, "Reaper",
+            "+3 Mult per line harvested.");
+
+        public static readonly ModifierDefinition TableRase = new ModifierDefinition(
+            ModifierId.TableRase, ModifierCategory.Destruction, "Clean Slate",
+            "x3 Mult when the seed harvests the last planted tile in the garden.");
+
+        public static readonly ModifierDefinition Dime = new ModifierDefinition(
+            ModifierId.Dime, ModifierCategory.Destruction, "Tithe",
+            "+2 Pollen per line harvested.");
+
+        public static readonly ModifierDefinition CultureRang = new ModifierDefinition(
+            ModifierId.CultureRang, ModifierCategory.Destruction, "Row Crop",
+            "x2 Mult when the seed harvests at least one row.");
+
+        public static readonly ModifierDefinition CultureColonne = new ModifierDefinition(
+            ModifierId.CultureColonne, ModifierCategory.Destruction, "Column Crop",
+            "x2 Mult when the seed harvests at least one column.");
+
+        public static readonly ModifierDefinition Prime = new ModifierDefinition(
+            ModifierId.Prime, ModifierCategory.Destruction, "Bounty",
+            "+3 pts per tile harvested.");
+
+        public static readonly ModifierDefinition BriseGlace = new ModifierDefinition(
+            ModifierId.BriseGlace, ModifierCategory.Destruction, "Frostbreaker",
+            "+6 Mult when the seed breaks a frozen plot free.");
+
+        public static readonly ModifierDefinition Saisons = new ModifierDefinition(
+            ModifierId.Saisons, ModifierCategory.Roguelike, "Seasoned",
+            "+0.5 Mult per round already cleared this run.");
+
+        public static readonly ModifierDefinition Outsider = new ModifierDefinition(
+            ModifierId.Outsider, ModifierCategory.Roguelike, "Underdog",
+            "+3 Mult while the enemies still have more than half of their total HP.");
+
+        public static readonly ModifierDefinition CoupFinal = new ModifierDefinition(
+            ModifierId.CoupFinal, ModifierCategory.Roguelike, "Finishing Blow",
+            "+6 Mult while the enemies are down to a quarter of their total HP or less.");
+
+        public static readonly ModifierDefinition DerniereGraine = new ModifierDefinition(
+            ModifierId.DerniereGraine, ModifierCategory.Roguelike, "Last Seed",
+            "x3 Mult on the last seed of the round.");
+
+        public static readonly ModifierDefinition PremiereGraine = new ModifierDefinition(
+            ModifierId.PremiereGraine, ModifierCategory.Roguelike, "First Seed",
+            "x2 Mult on the first seed of the round.");
+
+        public static readonly ModifierDefinition Tirelire = new ModifierDefinition(
+            ModifierId.Tirelire, ModifierCategory.Roguelike, "Piggy Bank",
+            "+0.1 Mult per Pollen you hold (up to +5).");
+
+        public static readonly ModifierDefinition BanqueGraines = new ModifierDefinition(
+            ModifierId.BanqueGraines, ModifierCategory.Roguelike, "Seed Bank",
+            "+0.05 Mult per seed in your bag.");
+
+        public static readonly ModifierDefinition SousBois = new ModifierDefinition(
+            ModifierId.SousBois, ModifierCategory.Roguelike, "Underbrush",
+            "+1 Mult per enemy still alive.");
+
+        public static readonly ModifierDefinition DanseDePluie = new ModifierDefinition(
+            ModifierId.DanseDePluie, ModifierCategory.Roguelike, "Rain Dancer",
+            "+4 Mult while it rains (Rain, Snowfall, Sprinkler Malfunction).");
+
+        public static readonly ModifierDefinition DanseDuSoleil = new ModifierDefinition(
+            ModifierId.DanseDuSoleil, ModifierCategory.Roguelike, "Sun Dancer",
+            "+4 Mult on Sunshine and Golden Hour days (and their indoor cousins).");
+
+        public static readonly ModifierDefinition Rustique = new ModifierDefinition(
+            ModifierId.Rustique, ModifierCategory.Roguelike, "Frost Hardy",
+            "+4 Mult while the weather is Frost (or the Freezer Door Ajar).");
+
+        public static readonly ModifierDefinition CavalierVent = new ModifierDefinition(
+            ModifierId.CavalierVent, ModifierCategory.Roguelike, "Windrider",
+            "+4 Mult in Wind and Hurricane weather (and their indoor cousins).");
+
+        public static readonly ModifierDefinition Matinal = new ModifierDefinition(
+            ModifierId.Matinal, ModifierCategory.Roguelike, "Early Bird",
+            "+6 Mult during the first 5 rounds.");
+
+        public static readonly ModifierDefinition Marathonien = new ModifierDefinition(
+            ModifierId.Marathonien, ModifierCategory.Roguelike, "Marathoner",
+            "+4 Mult from round 9 onwards.");
+
+        public static readonly ModifierDefinition Pourfendeur = new ModifierDefinition(
+            ModifierId.Pourfendeur, ModifierCategory.Roguelike, "Bossbane",
+            "x2 Mult during boss rounds.");
+
+        public static readonly ModifierDefinition Tonneau = new ModifierDefinition(
+            ModifierId.Tonneau, ModifierCategory.Roguelike, "Rain Barrel",
+            "+1 Pollen per Shuffle left when you clear a round.");
+
+        public static readonly ModifierDefinition Grange = new ModifierDefinition(
+            ModifierId.Grange, ModifierCategory.Roguelike, "Granary",
+            "+1 Pollen per fertilizer held when you clear a round.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -469,7 +629,12 @@ namespace Contigu.Core
             Pair, Impair,
             Polyvalence, RenfortJoker, Arsenal,
             CollectionChromatique, Cadence, Echo, Siphon, QuatriemeEmplacement,
-            Barometre, ChasseurTempete, Impermeable, Epines, Exterminateur, Hate, Tourbillon, PierreAngulaire
+            Barometre, ChasseurTempete, Impermeable, Epines, Exterminateur, Hate, Tourbillon, PierreAngulaire,
+            Haie, Coeur, Treillis, Sillon, Haricot, Patchwork, Racines, Emboite,
+            Mosaique, Foule, Prairie, Guirlande, Pollinisateur, Miel, Nectar, MoissonCroisee,
+            Faucheur, TableRase, Dime, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
+            Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, Tonneau, Grange
         };
 
         public static ModifierDefinition Get(ModifierId id)

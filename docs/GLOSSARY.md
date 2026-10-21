@@ -180,3 +180,43 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `PollenShower` | Pollen Shower | rare (1) | +10 Pollen au début du round |
 | `Heatwave` | Heatwave | peu commune (2) | négative : chaque Shuffle manuel brûle une tuile plantée (sans points) |
 | `Hurricane` | Hurricane | rare (1) | négative : toutes les 4 graines posées, 2 tuiles plantées sont soufflées vers d'autres cases vides |
+| `Haie` | Hedgerow | Voisinage |
+| `Coeur` | Heartwood | Voisinage |
+| `Treillis` | Trellis | Formes |
+| `Sillon` | Furrow | Formes |
+| `Haricot` | Beanstalk | Formes |
+| `Patchwork` | Patchwork | Couleurs |
+| `Racines` | Taproot | Connexions |
+| `Emboite` | Snug Fit | Voisinage |
+| `Mosaique` | Mosaic | Couleurs |
+| `Foule` | Crowd | Voisinage |
+| `Prairie` | Wildflower Meadow | Couleurs |
+| `Guirlande` | Wreath | Voisinage |
+| `Pollinisateur` | Pollinator | Couleurs |
+| `Miel` | Honey | Connexions |
+| `Nectar` | Nectar | Roguelike |
+| `MoissonCroisee` | Cross Harvest | Destruction |
+| `Faucheur` | Reaper | Destruction |
+| `TableRase` | Clean Slate | Destruction |
+| `Dime` | Tithe | Destruction |
+| `CultureRang` | Row Crop | Destruction |
+| `CultureColonne` | Column Crop | Destruction |
+| `Prime` | Bounty | Destruction |
+| `BriseGlace` | Frostbreaker | Destruction |
+| `Saisons` | Seasoned | Roguelike |
+| `Outsider` | Underdog | Roguelike |
+| `CoupFinal` | Finishing Blow | Roguelike |
+| `DerniereGraine` | Last Seed | Roguelike |
+| `PremiereGraine` | First Seed | Roguelike |
+| `Tirelire` | Piggy Bank | Roguelike |
+| `BanqueGraines` | Seed Bank | Roguelike |
+| `SousBois` | Underbrush | Roguelike |
+| `DanseDePluie` | Rain Dancer | Roguelike |
+| `DanseDuSoleil` | Sun Dancer | Roguelike |
+| `Rustique` | Frost Hardy | Roguelike |
+| `CavalierVent` | Windrider | Roguelike |
+| `Matinal` | Early Bird | Roguelike |
+| `Marathonien` | Marathoner | Roguelike |
+| `Pourfendeur` | Bossbane | Roguelike |
+| `Tonneau` | Rain Barrel | Roguelike |
+| `Grange` | Granary | Roguelike |

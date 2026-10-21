@@ -165,6 +165,49 @@ M['echo'] = lambda: sprout(30, 64, 1.0) + ''.join('<path d="M%g %g A%g %g 0 0 1 
 M['siphon'] = lambda: drop(30, 70, 20, '#7ad0e8') + path('M36 56 C44 30 56 22 74 22', 'none', 7) + path('M36 56 C44 30 56 22 74 22', 'none', 3).replace(O, '#e8c070') + pollen_grain(78, 22, 10)
 M['slot4'] = lambda: rect(22, 18, 56, 58, CREAM, 8, 4) + rect(30, 26, 40, 42, '#e0d6bf', 5, 3) + num(50, 62, '4', 40) + star(80, 20, 11, '#fff1b0', 0.4, 4, 3)
 
+
+# ---- batch of 40 fertilizers
+M['n_hedge'] = lambda: rect(8, 62, 84, 14, '#8a5a2b', 3) + ''.join(circ(18 + i * 21, 52, 13, LEAF1) + circ(24 + i * 21, 46, 6, LEAF2, 2.5) for i in range(4))
+M['n_heart'] = lambda: circ(50, 46, 36, '#c58a4a') + circ(50, 46, 26, '#d8a566', 3) + circ(50, 46, 16, '#c58a4a', 3) + circ(50, 46, 6, '#8a5a2b', 2.5)
+M['n_trellis'] = lambda: rect(30, 8, 40, 74, '#d8b574', 4) + ''.join(line(36 + i * 14, 10, 36 + i * 14, 80, '#a07a3a', 3) for i in range(3)) + ''.join(line(32, 22 + i * 18, 68, 22 + i * 18, '#a07a3a', 3) for i in range(3)) + path('M40 80 C28 60 60 56 46 36 C36 22 56 16 50 8', 'none', 5) + path('M40 80 C28 60 60 56 46 36 C36 22 56 16 50 8', 'none', 2.5).replace(O, LEAF1)
+M['n_furrow'] = lambda: ''.join(rect(8, 20 + i * 22, 84, 12, SOIL, 5, 3) + ''.join(sprout(22 + j * 24, 22 + i * 22, 0.45) for j in range(3)) for i in range(3))
+M['n_bean'] = lambda: path('M46 82 C20 62 72 52 42 34 C26 22 56 16 50 6', 'none', 8) + path('M46 82 C20 62 72 52 42 34 C26 22 56 16 50 6', 'none', 4).replace(O, LEAF2) + leaf(54, 56, 26, -20, LEAF1) + leaf(40, 38, 24, 200, LEAF1) + ell(66, 70, 6, 12, LEAF1, 20, 2.5) + ell(30, 20, 5, 10, LEAF1, -25, 2.5)
+M['n_patch'] = lambda: tile(14, 14, 36, R) + tile(50, 14, 36, B) + tile(14, 50, 36, Y) + tile(50, 50, 36, G) + path('M50 16 V84 M14 50 H86', 'none', 2.5, 'stroke-dasharray="5 4"').replace(O, CREAM)
+M['n_root'] = lambda: poly([(32, 28), (68, 28), (52, 84)], '#e8863a') + ''.join(line(38 + i * 6, 38 + i * 10, 56 - i * 4, 38 + i * 10, '#b8621d', 2.5) for i in range(4)) + leaf(46, 28, 28, -110, LEAF1) + leaf(54, 28, 28, -70, LEAF2)
+M['n_snug'] = lambda: ''.join(tile(x, y, 22, '#d8c9a0') for x, y in ((14, 34), (64, 34), (39, 9), (39, 59))) + tile(39, 34, 22, GOLD)
+M['n_mosaic'] = lambda: ''.join(tile(14 + (i % 3) * 25, 12 + (i // 3) * 25, 22, (R, B, Y, G, P)[(i * 2 + i // 3) % 5]) for i in range(9))
+M['n_crowd'] = lambda: ''.join(tile(14 + (i % 4) * 19, 10 + (i // 4) * 19, 17, (R, B, Y, G)[(i + i // 4) % 4]) for i in range(16))
+M['n_meadow'] = lambda: ''.join(line(18 + i * 21, 80, 18 + i * 21, 52, LEAF2, 4) + flower(18 + i * 21, 42, 26, c, 5) for i, c in enumerate((R, B, Y, G)))
+M['n_wreath'] = lambda: ''.join(leaf(50 + 30 * math.cos(math.radians(a)), 46 + 30 * math.sin(math.radians(a)), 24, a + 90, LEAF1 if i % 2 else LEAF2) for i, a in enumerate(range(0, 360, 40))) + circ(50, 16, 6, R, 3) + circ(34, 22, 5, Y, 3)
+M['n_bee'] = lambda: ell(36, 30, 16, 12, '#dff3ff', -30, 3) + ell(62, 28, 16, 12, '#dff3ff', 30, 3) + ell(50, 54, 24, 18, '#f6cf3a') + ''.join(line(40 + i * 10, 38, 40 + i * 10, 70, O, 5) for i in range(3)) + circ(26, 54, 9, '#f6cf3a', 3) + line(70, 66, 82, 72, O, 4)
+M['n_honey'] = lambda: path('M26 34 C20 56 24 80 50 82 C76 80 80 56 74 34 Z', '#e8a82e') + rect(24, 24, 52, 12, '#c58a4a', 4) + path('M36 46 C44 42 58 42 64 46', 'none', 3).replace(O, '#fff1b0') + drop(50, 68, 10, '#f6cf3a')
+M['n_nectar'] = lambda: flower(50, 36, 38, R, 5) + drop(50, 74, 11, '#f6cf3a') + drop(30, 70, 6, '#f6cf3a') + drop(70, 70, 6, '#f6cf3a')
+M['n_cross'] = lambda: ''.join(tile(x, y, 22, G) for x, y in ((39, 8), (39, 34), (39, 60), (14, 34), (64, 34))) + star(76, 16, 9, '#fff1b0', 0.4, 4, 2.5)
+M['n_sickle'] = lambda: path('M26 78 C10 40 40 12 78 24 C54 28 38 48 38 74 Z', '#d4d8de', 4) + line(30, 76, 22, 86, '#8a5a2b', 8) + ''.join(line(70 + i * 7, 84, 70 + i * 7, 50 - i * 4, '#e8c050', 4) + ell(70 + i * 7, 46 - i * 4, 4, 8, '#e8c050', 0, 2.5) for i in range(3))
+M['n_clean'] = lambda: rect(12, 24, 76, 52, CREAM, 8, 4) + rect(20, 32, 60, 36, '#e0d6bf', 5, 3) + star(34, 44, 10, '#fff1b0', 0.4, 4, 2.5) + star(66, 56, 12, '#fff1b0', 0.4, 4, 2.5) + star(60, 36, 7, '#fff1b0', 0.4, 4, 2)
+M['n_tithe'] = lambda: ''.join(line(32 + i * 9, 78, 24 + i * 13, 22, '#e8c050', 4) + ell(24 + i * 13, 20, 4, 9, '#e8c050', 0, 2.5) for i in range(5)) + rect(28, 52, 44, 9, '#8a5a2b', 4) + pollen_grain(78, 30, 9)
+M['n_rowcrop'] = lambda: rect(6, 56, 88, 18, SOIL, 5, 3) + ''.join(sprout(18 + i * 21, 58, 0.9) for i in range(4)) + arrow(14, 24, 84, 24, R, 5)
+M['n_colcrop'] = lambda: rect(36, 4, 28, 82, SOIL, 5, 3) + ''.join(sprout(50, 22 + i * 24, 0.7) for i in range(3)) + arrow(80, 12, 80, 78, R, 5)
+M['n_bounty'] = lambda: ''.join(ell(50, 70 - i * 12, 28, 9, GOLD, 0, 3) for i in range(3)) + circ(50, 28, 15, GOLD, 3.5) + num(50, 36, '$', 22, '#8a5a00')
+M['n_icebreak'] = lambda: poly([(18, 74), (14, 34), (40, 14), (80, 22), (88, 62), (62, 82)], '#bfe6ff') + path('M44 18 L52 40 L40 52 L56 66 L52 80', 'none', 3.5) + poly([(60, 20), (78, 6), (84, 18)], '#fff', 2.5)
+M['n_season'] = lambda: ''.join('<path d="M50 46 L%g %g A36 36 0 0 1 %g %g Z" %s/>' % (50 + 36 * math.cos(math.radians(a)), 46 + 36 * math.sin(math.radians(a)), 50 + 36 * math.cos(math.radians(a + 90)), 46 + 36 * math.sin(math.radians(a + 90)), st(c, 3)) for a, c in ((-90, '#8fd05a'), (0, '#ffd23a'), (90, '#e8863a'), (180, '#bfe6ff')))
+M['n_under'] = lambda: sprout(50, 78, 1.5) + arrow(24, 60, 24, 22, R, 5) + arrow(76, 60, 76, 22, R, 5)
+M['n_finish'] = lambda: circ(50, 46, 34, CREAM, 3.5) + circ(50, 46, 22, R, 3) + circ(50, 46, 10, CREAM, 3) + poly([(58, 6), (40, 40), (52, 40), (44, 80), (72, 36), (58, 36), (68, 6)], '#ffd23a')
+M['n_last'] = lambda: seed(50, 46, 2.2) + star(80, 18, 11, '#fff1b0', 0.4, 4, 3) + num(22, 80, '1', 30)
+M['n_first'] = lambda: seed(44, 52, 2.0) + line(70, 12, 70, 78, '#8a5a2b', 5) + poly([(70, 12), (92, 22), (70, 34)], R, 3)
+M['n_pig'] = lambda: ell(50, 52, 34, 26, '#f4a6b8') + circ(24, 52, 12, '#f08aa4', 3) + circ(21, 52, 2.5, O, 1) + circ(21, 48, 2.5, O, 1) + poly([(60, 28), (68, 14), (74, 32)], '#f08aa4', 3) + circ(60, 44, 3, O, 1) + rect(42, 30, 22, 5, O, 2, 1) + line(34, 76, 34, 86, O, 6) + line(66, 76, 66, 86, O, 6)
+M['n_bank'] = lambda: poly([(10, 34), (50, 8), (90, 34)], '#d8c9a0') + ''.join(rect(18 + i * 22, 38, 12, 34, CREAM, 2, 3) for i in range(4)) + rect(8, 72, 84, 10, '#c9c2b4', 3) + seed(50, 24, 0.7)
+M['n_brush'] = lambda: ell(50, 56, 38, 26, LEAF2) + ell(34, 42, 22, 18, LEAF1) + ell(66, 44, 22, 18, LEAF1) + circ(40, 50, 5, '#ffe58a', 2) + circ(60, 50, 5, '#ffe58a', 2) + circ(40, 50, 2, O, 1) + circ(60, 50, 2, O, 1)
+M['n_raindance'] = lambda: ell(36, 30, 20, 13, '#dfe7f2') + ell(60, 26, 22, 15, '#eef3fa') + ell(48, 38, 32, 12, '#dfe7f2') + ''.join(drop(26 + i * 16, 66 + (i % 2) * 6, 7, '#6cc7f0') for i in range(4))
+M['n_sundance'] = lambda: ''.join(line(50 + 26 * math.cos(math.radians(a)), 46 + 26 * math.sin(math.radians(a)), 50 + 40 * math.cos(math.radians(a)), 46 + 40 * math.sin(math.radians(a)), '#ffc83a', 5) for a in range(0, 360, 45)) + circ(50, 46, 20, '#ffc83a', 3.5) + circ(43, 39, 6, '#ffe58a', 1)
+M['n_frosthardy'] = lambda: ''.join(line(50, 46, 50 + 34 * math.cos(math.radians(a)), 46 + 34 * math.sin(math.radians(a)), '#7fb4e8', 5) for a in range(0, 360, 60)) + circ(50, 46, 8, '#e8f4ff', 3) + sprout(50, 80, 0.6)
+M['n_wind'] = lambda: path('M10 36 C40 36 60 22 76 30 C92 40 80 56 68 48', 'none', 7) + path('M10 58 C40 58 66 52 78 62 C88 72 74 82 66 76', 'none', 7) + leaf(60, 44, 22, -20, LEAF1)
+M['n_bird'] = lambda: path('M8 70 A42 42 0 0 1 92 70 Z', '#ffc83a', 3.5) + ell(52, 38, 18, 12, '#5b8fd0', -10) + circ(68, 30, 8, '#5b8fd0', 3) + poly([(75, 28), (86, 31), (75, 34)], '#f6a02a', 2.5) + circ(70, 28, 1.8, O, 1) + poly([(36, 40), (20, 30), (30, 46)], '#4a78b8', 3)
+M['n_flag'] = lambda: line(24, 10, 24, 84, '#8a5a2b', 6) + rect(24, 12, 54, 38, CREAM, 2, 3) + ''.join(rect(24 + (i % 3) * 18, 12 + (i // 3) * 19, 18, 19, O if (i + i // 3) % 2 == 0 else CREAM, 0, 2) for i in range(6))
+M['n_bossbane'] = lambda: poly([(20, 52), (20, 18), (36, 34), (50, 10), (64, 34), (80, 18), (80, 52)], GOLD) + rect(20, 52, 60, 10, '#c9a227', 3, 3) + line(14, 80, 86, 38, R, 8) + line(86, 80, 14, 38, R, 8)
+M['n_barrel'] = lambda: path('M22 28 C14 46 14 64 22 82 L78 82 C86 64 86 46 78 28 Z', '#a8723a') + ''.join(path('M%d %d C%d %d %d %d %d %d' % (x0, 28, x0 - 4, 50, x0 - 4, 62, x0, 82), 'none', 2.5) for x0 in (38, 50, 62)) + rect(16, 40, 68, 6, '#6b4528', 2, 2.5) + rect(16, 66, 68, 6, '#6b4528', 2, 2.5) + ell(50, 28, 28, 8, '#7fb6e0', 0, 3) + drop(50, 12, 7, '#6cc7f0')
+M['n_granary'] = lambda: poly([(18, 82), (18, 34), (50, 12), (82, 34), (82, 82)], '#c46a4a') + rect(38, 52, 24, 30, '#8a5a2b', 3, 3) + line(50, 52, 50, 82, O, 2.5) + ''.join(line(34 + i * 16, 36, 28 + i * 22, 26, '#e8c050', 3) for i in range(2)) + pollen_grain(50, 34, 8)
+
 # ---------------------------------------------------------------- fertilizer table: ModifierId -> (motif, tag kind, tag text, category)
 CAT = {'Couleurs': '#8c63b0', 'Connexions': '#2fa4a8', 'Voisinage': '#5a9e45', 'Roguelike': '#e8863a', 'Destruction': '#c8403f', 'Formes': '#4f7fd0'}
 F = {
@@ -201,6 +244,46 @@ F = {
  'Barometre': ('barometer', 'm', '+3', 'Roguelike'), 'ChasseurTempete': ('stormchaser', 'm', '×2', 'Roguelike'), 'Impermeable': ('umbrella', None, None, 'Roguelike'),
  'Epines': ('thorns', 'm', '+4', 'Roguelike'), 'Exterminateur': ('ladybug', 'm', '+1', 'Roguelike'), 'Hate': ('stopwatch', 'm', '+0.1', 'Roguelike'),
  'Tourbillon': ('whirl', 'm', '+0.25', 'Roguelike'), 'PierreAngulaire': ('cornerstone', 'm', '×2', 'Voisinage'),
+ 'Haie': ('n_hedge', 'p', '+4', 'Voisinage'),
+ 'Coeur': ('n_heart', 'm', '×2', 'Voisinage'),
+ 'Treillis': ('n_trellis', 'm', '+3', 'Formes'),
+ 'Sillon': ('n_furrow', 'm', '+3', 'Formes'),
+ 'Haricot': ('n_bean', 'p', '+12', 'Formes'),
+ 'Patchwork': ('n_patch', 'p', '+4', 'Couleurs'),
+ 'Racines': ('n_root', 'm', '+1', 'Connexions'),
+ 'Emboite': ('n_snug', 'm', '+5', 'Voisinage'),
+ 'Mosaique': ('n_mosaic', 'm', '+3', 'Couleurs'),
+ 'Foule': ('n_crowd', 'm', '×2', 'Voisinage'),
+ 'Prairie': ('n_meadow', 'm', '+4', 'Couleurs'),
+ 'Guirlande': ('n_wreath', 'p', '+8', 'Voisinage'),
+ 'Pollinisateur': ('n_bee', 'l', '+2', 'Couleurs'),
+ 'Miel': ('n_honey', 'l', '+1', 'Connexions'),
+ 'Nectar': ('n_nectar', 'l', '+1', 'Roguelike'),
+ 'MoissonCroisee': ('n_cross', 'm', '+6', 'Destruction'),
+ 'Faucheur': ('n_sickle', 'm', '+3', 'Destruction'),
+ 'TableRase': ('n_clean', 'm', '×3', 'Destruction'),
+ 'Dime': ('n_tithe', 'l', '+2', 'Destruction'),
+ 'CultureRang': ('n_rowcrop', 'm', '×2', 'Destruction'),
+ 'CultureColonne': ('n_colcrop', 'm', '×2', 'Destruction'),
+ 'Prime': ('n_bounty', 'p', '+3', 'Destruction'),
+ 'BriseGlace': ('n_icebreak', 'm', '+6', 'Destruction'),
+ 'Saisons': ('n_season', 'm', '+0.5', 'Roguelike'),
+ 'Outsider': ('n_under', 'm', '+3', 'Roguelike'),
+ 'CoupFinal': ('n_finish', 'm', '+6', 'Roguelike'),
+ 'DerniereGraine': ('n_last', 'm', '×3', 'Roguelike'),
+ 'PremiereGraine': ('n_first', 'm', '×2', 'Roguelike'),
+ 'Tirelire': ('n_pig', 'm', '+0.1', 'Roguelike'),
+ 'BanqueGraines': ('n_bank', 'm', '+0.05', 'Roguelike'),
+ 'SousBois': ('n_brush', 'm', '+1', 'Roguelike'),
+ 'DanseDePluie': ('n_raindance', 'm', '+4', 'Roguelike'),
+ 'DanseDuSoleil': ('n_sundance', 'm', '+4', 'Roguelike'),
+ 'Rustique': ('n_frosthardy', 'm', '+4', 'Roguelike'),
+ 'CavalierVent': ('n_wind', 'm', '+4', 'Roguelike'),
+ 'Matinal': ('n_bird', 'm', '+6', 'Roguelike'),
+ 'Marathonien': ('n_flag', 'm', '+4', 'Roguelike'),
+ 'Pourfendeur': ('n_bossbane', 'm', '×2', 'Roguelike'),
+ 'Tonneau': ('n_barrel', 'l', '+1', 'Roguelike'),
+ 'Grange': ('n_granary', 'l', '+1', 'Roguelike'),
  'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'Siphon': ('siphon', 'l', '4%', 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
 }
 for k in ('scythe', 'wheel', 'ashbound', 'dissonant', 'momentum', 'cocoon', 'trowel', 'rainbow', 'alternation'):

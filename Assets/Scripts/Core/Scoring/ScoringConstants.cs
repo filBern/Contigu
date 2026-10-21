@@ -368,5 +368,45 @@ namespace Contigu.Core
 
         /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — Sangsue's own fraction generalized to fire alongside every combat kind, not just Sangsue. Set lower than Sangsue's own (0.25f) since it fires on strictly more placements.</summary>
         public const float SiphonLueurFraction = 0.04f;
+
+        // ---- the 40 fertilizers added in one batch (see GridManager.NewModifiers.cs and RunManager.NewModifiers.cs) ----
+        public const int HedgerowBonusPerCell = 4;
+        public const int HeartwoodMultiplier = 2;
+        public const int TrellisMultBonus = 3;
+        public const int FurrowMultBonus = 3;
+        public const int BeanstalkMinCells = 3;
+        public const int BeanstalkBonus = 12;
+        public const int PatchworkBonusPerTile = 4;
+        public const int TaprootCellsPerMult = 3;
+        public const int SnugFitMultBonus = 5;
+        public const int MosaicMinNeighbors = 2;
+        public const int MosaicMultBonus = 3;
+        public const int CrowdMultiplier = 2;
+        public const int MeadowMultBonus = 4;
+        public const int WreathMinNeighbors = 3;
+        public const int WreathBonusPerCell = 8;
+        public const int CrossHarvestMultBonus = 6;
+        public const int ReaperMultPerLine = 3;
+        public const int CleanSlateMultiplier = 3;
+        public const int RowCropMultiplier = 2;
+        public const int ColumnCropMultiplier = 2;
+        public const int BountyBonusPerTile = 3;
+        public const int FrostbreakerMultBonus = 6;
+        public const float SeasonedMultPerRound = 0.5f;
+        public const int UnderdogMultBonus = 3;
+        public const int FinishingBlowMultBonus = 6;
+        public const float FinishingBlowHpFraction = 0.25f;
+        public const int LastSeedMultiplier = 3;
+        public const int FirstSeedMultiplier = 2;
+        public const float PiggyBankMultPerPollen = 0.1f;
+        public const float PiggyBankMaxMult = 5f;
+        public const float SeedBankMultPerSeed = 0.05f;
+        public const int UnderbrushMultPerEnemy = 1;
+        public const int WeatherDancerMultBonus = 4;
+        public const int EarlyBirdMultBonus = 6;
+        public const int EarlyBirdRounds = 5;
+        public const int MarathonerMultBonus = 4;
+        public const int MarathonerFirstRoundIndex = 8;
+        public const int BossbaneMultiplier = 2;
     }
 }

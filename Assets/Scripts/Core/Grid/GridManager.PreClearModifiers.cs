@@ -13,6 +13,21 @@ namespace Contigu.Core
         {
             return new Dictionary<ModifierId, PreClearModifierEffect>
             {
+                { ModifierId.Haie, ctx => ApplyHaie(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Coeur, ctx => { ctx.Multiplier *= ApplyCoeur(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Treillis, ctx => { ctx.AdditiveMult += ApplyDirectionalPiece(ctx.PlacedCells, true, ScoringConstants.TrellisMultBonus, ctx.Events); return 0; } },
+                { ModifierId.Sillon, ctx => { ctx.AdditiveMult += ApplyDirectionalPiece(ctx.PlacedCells, false, ScoringConstants.FurrowMultBonus, ctx.Events); return 0; } },
+                { ModifierId.Haricot, ctx => ApplyHaricot(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Patchwork, ctx => ApplyPatchwork(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Racines, ctx => { ctx.AdditiveMult += ApplyRacines(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Emboite, ctx => { ctx.AdditiveMult += ApplyEmboite(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Mosaique, ctx => { ctx.AdditiveMult += ApplyMosaique(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Foule, ctx => { ctx.Multiplier *= ApplyFoule(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Prairie, ctx => { ctx.AdditiveMult += ApplyPrairie(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Guirlande, ctx => ApplyGuirlande(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Pollinisateur, ctx => { ctx.Lueur += ApplyPollinisateur(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Miel, ctx => { ctx.Lueur += ApplyMiel(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Nectar, ctx => { ctx.Lueur += ApplyNectar(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.PierreAngulaire, ctx => { ctx.Multiplier *= ApplyPierreAngulaire(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prisme, ctx => { ctx.Multiplier *= ApplyPrisme(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Chaine, ctx => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },

@@ -32,6 +32,10 @@ namespace Contigu.Core
         /// </summary>
         public bool IsModifierUsableThisRun(ModifierId id)
         {
+            if (!IsNewModifierUsable(id))
+            {
+                return false;
+            }
             var colors = PieceColorUtility.BaseColors;
             if (colors.Count >= PieceColorUtility.AllBaseColors.Count)
             {

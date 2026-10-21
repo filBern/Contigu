@@ -393,7 +393,7 @@ namespace Contigu.Core
         {
             if (!HasEffectiveModifier(ModifierId.CartesEnchantees) && !HasEffectiveModifier(ModifierId.Multitude) && !HasEffectiveModifier(ModifierId.Experience) && !HasEffectiveModifier(ModifierId.Arsenal)
                 && !HasEffectiveModifier(ModifierId.Barometre) && !HasEffectiveModifier(ModifierId.ChasseurTempete) && !HasEffectiveModifier(ModifierId.Epines) && !HasEffectiveModifier(ModifierId.Exterminateur)
-                && !HasEffectiveModifier(ModifierId.Hate) && !HasEffectiveModifier(ModifierId.Tourbillon))
+                && !HasEffectiveModifier(ModifierId.Hate) && !HasEffectiveModifier(ModifierId.Tourbillon) && !HoldsAnyNewRunStateModifier())
             {
                 return;
             }
@@ -496,6 +496,10 @@ namespace Contigu.Core
                     multEvent.TriggeringModifier = ModifierId.Arsenal;
                     multEvent.TriggeringModifierIndex = i;
                     events.Add(multEvent);
+                }
+                else
+                {
+                    ApplyNewRunStateModifier(placement, events, i, _activeModifiers[i]);
                 }
             }
             placement.ScoreEvents = events;

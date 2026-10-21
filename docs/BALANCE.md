@@ -96,3 +96,12 @@ Chaque challenge hors Spring a son propre ennemi (`ChallengeDefinition.WorldEnem
 | Greenhouse | Whitefly Cloud (1450) | échange deux tuiles plantées |
 
 Rééquilibrage après leur arrivée (victoires du bot, graines 31337 / 4001) : Spring ≈ 13-14 %, Winter 6,1-6,8 %, Summer 6,5-7,0 %, Autumn 6,1-7,9 % (PV ×0,36), Orchard 5,9-6,6 % (PV ×1,2), Greenhouse 5,2-6,3 % (PV ×0,5).
+
+## Lot de 40 fertilizers (Hedgerow … Granary)
+
+- **Grille, avant les lignes** (`GridManager.NewModifiers.cs`) : Hedgerow, Heartwood, Trellis, Furrow, Beanstalk, Patchwork, Taproot, Snug Fit, Mosaic, Crowd, Wildflower Meadow, Wreath, plus les trois qui rapportent du Pollen (Pollinator, Honey, Nectar).
+- **Grille, après les lignes** : Cross Harvest, Reaper, Clean Slate, Tithe (Pollen), Row Crop, Column Crop, Bounty, Frostbreaker. Clean Slate se cumule avec le ×2 intégré quand la grille est vidée.
+- **État de la run** (`RunManager.NewModifiers.cs`) : Seasoned, Underdog, Finishing Blow, Last Seed, First Seed, Piggy Bank (plafonné à +5), Seed Bank, Underbrush, Rain Dancer, Sun Dancer, Frost Hardy, Windrider, Early Bird, Bossbane, Marathoner ; Rain Barrel et Granary paient du Pollen à la fin de la manche (ajoutés à `LastRoundEndLueurBonus`).
+- `IsModifierUsableThisRun` écarte ceux qui ne pourraient jamais se déclencher : Underdog, Finishing Blow et Underbrush sans ennemis, Frost Hardy dans un monde sans gel (Summer).
+- Prix 4 à 7 Pollen ; les valeurs sont dans `ScoringConstants` / `EconomyConstants` (section « 40 fertilizers »).
+

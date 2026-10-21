@@ -28,6 +28,14 @@ namespace Contigu.Core
                 { ModifierId.MonochromeLigneLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine); return 0; } },
                 { ModifierId.EspaceLibre, ctx => { ctx.Multiplier *= ApplyEspaceLibre(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Rafale, ctx => { ctx.Multiplier *= ApplyRafale(ctx.ClearedByPreviousPlacement, ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.MoissonCroisee, ctx => { ctx.AdditiveMult += ApplyMoissonCroisee(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Faucheur, ctx => { ctx.AdditiveMult += ApplyFaucheur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.TableRase, ctx => { ctx.Multiplier *= ApplyTableRase(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Dime, ctx => { ctx.Lueur += ApplyDime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.CultureRang, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, true, ScoringConstants.RowCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.CultureColonne, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, false, ScoringConstants.ColumnCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Prime, ctx => ApplyPrime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.BriseGlace, ctx => { ctx.AdditiveMult += ApplyBriseGlace(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Densite, ctx => { ctx.ProgressiveAdditiveMult += ApplyDensite(ctx.PlacedCells, ctx.Events); return 0; } }
             };
         }

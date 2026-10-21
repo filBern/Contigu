@@ -479,7 +479,7 @@ namespace Contigu.Core
                 case ModifierId.Polyvalence:
                     return "Currently +" + Mathf.RoundToInt(CountDistinctModifierCategoriesHeld() * ScoringConstants.PolyvalenceMultPerCategory * levelFactor) + " Mult";
                 default:
-                    return null;
+                    return GetNewModifierStateText(id, levelFactor);
             }
         }
 

@@ -12,6 +12,19 @@ namespace Contigu.Core
             return m == WeatherId.Rain || m == WeatherId.Sunshine;
         }
 
+        /// <summary>Whether a weather with this base mechanic can ever be rolled under a challenge's weather profile (a themed variant counts).</summary>
+        public static bool CanOccur(WeatherId mechanic, WeatherProfile profile)
+        {
+            foreach (WeatherId id in System.Enum.GetValues(typeof(WeatherId)))
+            {
+                if (Mechanic(id) == mechanic && GetWeight(id, profile) > 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>The base weather a themed variant plays like (a base weather is its own mechanic).</summary>
         public static WeatherId Mechanic(WeatherId id)
         {

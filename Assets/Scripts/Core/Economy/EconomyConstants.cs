@@ -97,6 +97,14 @@ namespace Contigu.Core
         /// <summary>Rainbow Glow (adapted from Arc-en-ciel): Lueur PER cleared row/column containing all 4 base colors, stacking.</summary>
         public const int ArcEnCielLueurPerLine = 6;
 
+        // ---- the 40 fertilizers added in one batch: the Pollen ones ----
+        public const int PollinatorLueur = 2;
+        public const int HoneyCellsPerLueur = 3;
+        public const int NectarLueurPerSeed = 1;
+        public const int TitheLueurPerLine = 2;
+        public const int RainBarrelLueurPerShuffle = 1;
+        public const int GranaryLueurPerFertilizer = 1;
+
         /// <summary>Glowing Alternation (adapted from Alternance): Lueur PER cleared row/column whose colors strictly alternate between exactly 2 colors, stacking.</summary>
         public const int AlternanceLueurPerLine = 4;
 

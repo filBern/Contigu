@@ -33,6 +33,46 @@ namespace Contigu.Core
         {
             switch (id)
             {
+                case ModifierId.Haie: return 4;
+                case ModifierId.Coeur: return 6;
+                case ModifierId.Treillis: return 5;
+                case ModifierId.Sillon: return 5;
+                case ModifierId.Haricot: return 5;
+                case ModifierId.Patchwork: return 5;
+                case ModifierId.Racines: return 6;
+                case ModifierId.Emboite: return 6;
+                case ModifierId.Mosaique: return 6;
+                case ModifierId.Foule: return 6;
+                case ModifierId.Prairie: return 7;
+                case ModifierId.Guirlande: return 5;
+                case ModifierId.Pollinisateur: return 5;
+                case ModifierId.Miel: return 5;
+                case ModifierId.Nectar: return 6;
+                case ModifierId.MoissonCroisee: return 6;
+                case ModifierId.Faucheur: return 6;
+                case ModifierId.TableRase: return 6;
+                case ModifierId.Dime: return 5;
+                case ModifierId.CultureRang: return 6;
+                case ModifierId.CultureColonne: return 6;
+                case ModifierId.Prime: return 5;
+                case ModifierId.BriseGlace: return 4;
+                case ModifierId.Saisons: return 7;
+                case ModifierId.Outsider: return 5;
+                case ModifierId.CoupFinal: return 6;
+                case ModifierId.DerniereGraine: return 6;
+                case ModifierId.PremiereGraine: return 5;
+                case ModifierId.Tirelire: return 6;
+                case ModifierId.BanqueGraines: return 6;
+                case ModifierId.SousBois: return 5;
+                case ModifierId.DanseDePluie: return 4;
+                case ModifierId.DanseDuSoleil: return 4;
+                case ModifierId.Rustique: return 4;
+                case ModifierId.CavalierVent: return 4;
+                case ModifierId.Matinal: return 5;
+                case ModifierId.Marathonien: return 6;
+                case ModifierId.Pourfendeur: return 6;
+                case ModifierId.Tonneau: return 5;
+                case ModifierId.Grange: return 5;
                 case ModifierId.Barometre: return 5;
                 case ModifierId.ChasseurTempete: return 6;
                 case ModifierId.Impermeable: return 4;
