@@ -11,6 +11,8 @@ namespace Contigu.Core
         public void DebugDisableWeather()
         {
             _weatherDisabled = true;
+            // A first round that wasn't clear already froze/gilded plots at construction.
+            Grid.ResetForNewRound();
         }
 
 

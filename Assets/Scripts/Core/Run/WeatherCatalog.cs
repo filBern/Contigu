@@ -250,8 +250,8 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// One weather per round. Round 1 is always clear (the warm-up); later rounds draw from every kind by rarity weight
-        /// (see <see cref="GetWeight(WeatherId)"/>), never repeating the previous round's weather so the run keeps changing.
+        /// One weather per round. Spring (the Normal profile) always opens on clear skies as the tutorial warm-up; every other challenge draws its first round like any other.
+        /// Rounds draw from the profile's kinds by rarity weight (see <see cref="GetWeight(WeatherId, WeatherProfile)"/>), never repeating the previous round's weather.
         /// </summary>
         public static WeatherId[] RollForRun(IRandomProvider rng, int roundCount)
         {
@@ -263,9 +263,9 @@ namespace Contigu.Core
         {
             var result = new WeatherId[roundCount];
             colors = new PieceColor[roundCount];
-            for (int i = 1; i < roundCount; i++)
+            for (int i = profile == WeatherProfile.Normal ? 1 : 0; i < roundCount; i++)
             {
-                result[i] = RollNext(rng, result[i - 1], profile, out colors[i]);
+                result[i] = RollNext(rng, i == 0 ? (WeatherId?)null : result[i - 1], profile, out colors[i]);
             }
             return result;
         }
@@ -275,7 +275,7 @@ namespace Contigu.Core
         /// (Coral, Teal, Violet or Lime — never Joker). The color comes out of the same single draw as the weather itself, so it consumes no
         /// extra randomness.
         /// </summary>
-        public static WeatherId RollNext(IRandomProvider rng, WeatherId previous, WeatherProfile profile, out PieceColor color)
+        public static WeatherId RollNext(IRandomProvider rng, WeatherId? previous, WeatherProfile profile, out PieceColor color)
         {
             var kinds = (WeatherId[])System.Enum.GetValues(typeof(WeatherId));
             var candidates = new List<WeatherId>();

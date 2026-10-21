@@ -60,6 +60,21 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void OnlySpringOpensOnClearSkies()
+        {
+            for (int seed = 1; seed <= 30; seed++)
+            {
+                Assert.AreEqual(WeatherId.Clear, WeatherCatalog.RollForRun(new SystemRandomProvider(seed), 15, out _, WeatherProfile.Normal)[0]);
+            }
+            var openers = new HashSet<WeatherId>();
+            for (int seed = 1; seed <= 60; seed++)
+            {
+                openers.Add(WeatherCatalog.RollForRun(new SystemRandomProvider(seed), 15, out _, WeatherProfile.Winter)[0]);
+            }
+            Assert.Greater(openers.Count, 2, "Winter's first round is a full random draw");
+        }
+
+        [Test]
         public void EachWorldsWeatherFitsItsSeason()
         {
             var forbidden = new Dictionary<WeatherProfile, WeatherId[]>
@@ -101,11 +116,10 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Summer_NeverHasCalmSkiesAfterRoundOne_AndItsWeatherHitsHarder()
+        public void Summer_NeverHasCalmSkies_AndItsWeatherHitsHarder()
         {
             var weather = WeatherCatalog.RollForRun(new SystemRandomProvider(5), 15, out var colors, WeatherProfile.Extreme);
-            Assert.AreEqual(WeatherId.Clear, weather[0]);
-            for (int i = 1; i < weather.Length; i++)
+            for (int i = 0; i < weather.Length; i++)
             {
                 Assert.AreNotEqual(WeatherId.Clear, weather[i], "round " + (i + 1));
             }

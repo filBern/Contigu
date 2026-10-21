@@ -653,6 +653,8 @@ namespace Contigu.Core
             CurrentRoundIndex = 0;
             StartRound();
             RollWeatherForRun();
+            // StartRound ran before the weather existed: a challenge whose first round isn't clear applies it now (a no-op under Clear).
+            ApplyWeatherRoundStart();
         }
 
         private void StartRound()

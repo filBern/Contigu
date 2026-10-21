@@ -11,7 +11,7 @@ namespace Contigu.Core
         private readonly List<PieceColor> _weatherColorByRound = new List<PieceColor>();
         private bool _weatherDisabled;
 
-        /// <summary>This round's weather (always Clear on round 1).</summary>
+        /// <summary>This round's weather (Spring always opens clear).</summary>
         public WeatherId CurrentWeather
         {
             get { return WeatherOf(CurrentRoundIndex); }
@@ -83,7 +83,7 @@ namespace Contigu.Core
             _weatherColorByRound.AddRange(colors);
         }
 
-        /// <summary>Round-start part of the weather (Wind: a free Shuffle; Frost: frozen plots; Golden Hour: golden plots; Pollen Shower: Pollen). Round 1 is always clear.</summary>
+        /// <summary>Round-start part of the weather (Wind: a free Shuffle; Frost: frozen plots; Golden Hour: golden plots; Pollen Shower: Pollen). Spring's round 1 is always clear.</summary>
         private void ApplyWeatherRoundStart()
         {
             switch (WeatherCatalog.Mechanic(CurrentWeather))
