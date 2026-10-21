@@ -317,6 +317,21 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void UnlockAllChallenges_OpensEveryChallenge_WithoutTouchingStarsOrRecords()
+        {
+            var before = new MetaStats { Stars = 3, BestScore = 777, TotalVictories = 2 };
+            var after = MetaStatsRecorder.UnlockAllChallenges(before);
+            foreach (var challenge in ChallengeCatalog.All)
+            {
+                Assert.IsTrue(after.IsUnlocked(challenge.Id), challenge.Name);
+            }
+            Assert.AreEqual(3, after.Stars);
+            Assert.AreEqual(777, after.BestScore);
+            Assert.AreEqual(2, after.TotalVictories);
+            Assert.IsFalse(before.MarathonUnlocked, "the original is left alone");
+        }
+
+        [Test]
         public void EndlessEnd_PaysOneStarPerExtraRound_WithoutCountingTheRunTwice()
         {
             var afterVictory = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 5000, RunConfig.RoundCount, victory: true);

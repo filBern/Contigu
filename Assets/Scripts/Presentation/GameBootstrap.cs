@@ -189,6 +189,10 @@ namespace Contigu.Presentation
             {
                 DebugGrantStarsShortcut();
             }
+            if (Input.GetKeyDown(KeyCode.F10))
+            {
+                OnUnlockAllChallengesRequested();
+            }
 #endif
             // Unlike the F-key shortcuts above, these bindings are always
             // available, including in real builds.
@@ -627,6 +631,7 @@ namespace Contigu.Presentation
             _endScreenView.RestartRequested += OnRestartRequested;
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
+            _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }
 

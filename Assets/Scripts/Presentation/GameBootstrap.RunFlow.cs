@@ -193,6 +193,14 @@ namespace Contigu.Presentation
             _challengeSelectView.Show(_metaStats);
         }
 
+        /// <summary>Dev/testing shortcut (F10 in the editor, or the picker's "Unlock all (dev)" button): every challenge becomes playable at once, persisted like any unlock.</summary>
+        private void OnUnlockAllChallengesRequested()
+        {
+            _metaStats = MetaStatsRecorder.UnlockAllChallenges(_metaStats);
+            _metaStatsStore.Save(_metaStats);
+            _challengeSelectView.Refresh(_metaStats);
+        }
+
         /// <summary>Spends Stars to unlock <paramref name="challenge"/> if it isn't already (a no-op charge for Classic/an already-unlocked one — see MetaStatsRecorder.TryUnlockChallenge), persists immediately, then starts the run. Re-checked here rather than trusted blindly, since this is the one thing in this flow that spends currency.</summary>
         private void OnChallengeChosen(ChallengeDefinition challenge)
         {

@@ -25,6 +25,9 @@ namespace Contigu.Presentation
         // in rather than just snapping to fully opaque underneath still-vanishing tiles.
         private const float FadeInDuration = 0.3f;
 
+        /// <summary>Dev/testing: the picker's "Unlock all" button was pressed (only built in the editor and development builds).</summary>
+        public event Action UnlockAllRequested;
+
         /// <summary>Fired once a challenge is actually ready to play — after any auto-unlock spend already happened and was persisted by the caller.</summary>
         public event Action<ChallengeDefinition> ChallengeChosen;
 
@@ -74,6 +77,17 @@ namespace Contigu.Presentation
             _pageLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _pageLabel.rectTransform.anchoredPosition = new Vector2(0f, CardY - CardHeight / 2f - 12f);
             _pageLabel.rectTransform.sizeDelta = new Vector2(200f, 24f);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || CONTIGU_DEBUG
+            var unlockAll = UIFactory.CreateButton(_root, "UnlockAll", "Unlock all (dev)", UITheme.PanelLight, 14);
+            var unlockRect = unlockAll.GetComponent<RectTransform>();
+            unlockRect.anchorMin = new Vector2(0f, 0f);
+            unlockRect.anchorMax = new Vector2(0f, 0f);
+            unlockRect.pivot = new Vector2(0f, 0f);
+            unlockRect.anchoredPosition = new Vector2(24f, 24f);
+            unlockRect.sizeDelta = new Vector2(190f, 38f);
+            unlockAll.onClick.AddListener(() => { if (UnlockAllRequested != null) UnlockAllRequested(); });
+#endif
 
             _root.gameObject.SetActive(false);
             return _root;

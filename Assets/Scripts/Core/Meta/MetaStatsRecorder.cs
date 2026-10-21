@@ -40,6 +40,18 @@ namespace Contigu.Core
             return updated;
         }
 
+        /// <summary>Every challenge unlocked, Stars untouched — the dev/testing shortcut (see GameBootstrap's F10 and the picker's "Unlock all" button).</summary>
+        public static MetaStats UnlockAllChallenges(MetaStats current)
+        {
+            var updated = current.Copy();
+            updated.MarathonUnlocked = true;
+            updated.SummerUnlocked = true;
+            updated.AutumnUnlocked = true;
+            updated.OrchardUnlocked = true;
+            updated.GreenhouseUnlocked = true;
+            return updated;
+        }
+
         /// <summary>
         /// Endless: a run that already counted as a victory (see <see cref="RecordRunOutcome"/>) kept going past the final round and has now
         /// ended in round <paramref name="roundReached"/>. Adds one Star per extra round cleared and refreshes the best score and round, but
