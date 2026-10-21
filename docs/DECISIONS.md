@@ -9272,3 +9272,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - Vérifié : balance parenthèses/accolades OK, aucun test couplé au
     texte `Name` des 21 modificateurs renommés (recherche `grep`
     dédiée sur `Assets/Scripts/Tests`, aucun résultat).
+
+## Ambiance par challenge (scenery + particules)
+
+- Chaque challenge a son monde visuel (`Presentation/ChallengeAmbiance.cs`) : un décor plein écran (`Resources/Backgrounds/<Spring|Winter|Summer|Autumn|Orchard|Greenhouse>.png`, généré par `Design/Backgrounds/generate_backgrounds.py`, tons sur tons pour ne pas gêner la lecture), la teinte des pétales/feuilles/lucioles lentes du fond partagé (`AnimatedBackgroundView.ApplyTheme`) et ses propres créatures/particules (`AmbientLifeView.SetChallenge`) : Spring nuit fleurie avec papillons, Winter neige sous une aurore, Summer crépuscule brûlant (grains de lumière, abeilles), Autumn feuilles d'érable sous la lune des moissons, Orchard pétales de pommiers, Greenhouse gouttes de condensation sous verre. La météo ajoute toujours ses particules par-dessus.
+- Le décor est appliqué au lancement d'un run (`GameBootstrap.ApplyChallengeAmbiance`) avec un fondu enchaîné ; le menu principal garde l'ambiance d'origine.

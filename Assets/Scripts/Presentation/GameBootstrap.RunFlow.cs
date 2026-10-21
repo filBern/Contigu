@@ -244,10 +244,20 @@ namespace Contigu.Presentation
             _modifierPanelView.Refresh(_run.ActiveModifiers);
         }
 
+        /// <summary>Gives the whole backdrop this challenge's own world: its scenery, the tone of the drifting shapes, and its creatures and particles.</summary>
+        private void ApplyChallengeAmbiance(ChallengeDefinition challenge)
+        {
+            var ambiance = ChallengeAmbiance.For(challenge.Id);
+            _sceneryView.Apply(ambiance);
+            _animatedBackgroundView.ApplyTheme(ambiance);
+            _ambientLifeView.SetChallenge(ambiance);
+        }
+
         private void StartNewRun(ChallengeDefinition challenge)
         {
             _isPlayingPlacementSequence = false;
             _run = new RunManager(new SystemRandomProvider(), challenge);
+            ApplyChallengeAmbiance(challenge);
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run);
             _draftView.Rebind(_run.Deck);

@@ -85,6 +85,7 @@ namespace Contigu.Presentation
         private SprigView _sprigView;
         private ChallengeSelectView _challengeSelectView;
         private SettingsView _settingsView;
+        private ChallengeSceneryView _sceneryView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private AmbientLifeView _ambientLifeView;
         private RectTransform _mainRoot;
@@ -381,6 +382,9 @@ namespace Contigu.Presentation
             var bg = UIFactory.CreatePanel(canvasGo.transform, "Background", UITheme.Background);
             UIFactory.StretchFull(bg.rectTransform);
 
+            _sceneryView = gameObject.AddComponent<ChallengeSceneryView>();
+            _sceneryView.Build(canvasGo.transform);
+
             // Sits directly above the flat fill and below everything built
             // in BuildUI below (MainRoot, added as canvasGo's next child
             // after this) — see AnimatedBackgroundView's own doc comment.
@@ -389,6 +393,7 @@ namespace Contigu.Presentation
             // Butterflies, leaves and the weather's particles, behind everything built in BuildUI.
             _ambientLifeView = gameObject.AddComponent<AmbientLifeView>();
             _ambientLifeView.Build(canvasGo.transform);
+            ApplyChallengeAmbiance(_run != null ? _run.Challenge : ChallengeCatalog.Classic);
 
             return canvasGo.GetComponent<RectTransform>();
         }

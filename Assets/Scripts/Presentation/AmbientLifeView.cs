@@ -13,11 +13,12 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class AmbientLifeView : MonoBehaviour
     {
-        private enum Kind { Butterfly, Bee, Leaf, Rain, Sparkle, SunMote }
+        public enum ParticleKind { Butterfly, Bee, Leaf, Rain, Sparkle, SunMote, Snow, Petal, Maple, Drip }
 
         private sealed class Critter
         {
-            public Kind Kind;
+            public ParticleKind Kind;
+            public Color Tint = Color.white;
             public Image Image;
             public Vector2 Position;
             public Vector2 Velocity;
@@ -42,6 +43,20 @@ namespace Contigu.Presentation
             Rebuild();
         }
 
+        private ChallengeAmbiance _ambiance = ChallengeAmbiance.For(ChallengeId.Classic);
+
+        /// <summary>Switches to a challenge's own ambiance (its creatures and particles) — the weather still adds its own on top.</summary>
+        public void SetChallenge(ChallengeAmbiance ambiance)
+        {
+            if (ambiance == _ambiance)
+            {
+                return;
+            }
+            _ambiance = ambiance;
+            _butterflyTarget = Mathf.Min(_butterflyTarget, Mathf.Max(0, ambiance.MaxButterflies));
+            Rebuild();
+        }
+
         /// <summary>Swaps the weather particles (butterflies and the bee keep wandering).</summary>
         public void SetWeather(WeatherId weather)
         {
@@ -57,7 +72,8 @@ namespace Contigu.Presentation
         public void SetProgress(float progress)
         {
             _progress = Mathf.Clamp01(progress);
-            int target = 1 + Mathf.RoundToInt(_progress * (MaxButterflies - 1));
+            int cap = Mathf.Min(MaxButterflies, _ambiance.MaxButterflies);
+            int target = cap <= 0 ? 0 : 1 + Mathf.RoundToInt(_progress * (cap - 1));
             if (target != _butterflyTarget)
             {
                 _butterflyTarget = target;
@@ -73,18 +89,23 @@ namespace Contigu.Presentation
             }
             _critters.Clear();
 
-            for (int i = 0; i < _butterflyTarget; i++) { Spawn(Kind.Butterfly); }
-            if (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine || _weather == WeatherId.GoldenHour) { Spawn(Kind.Bee); }
+            for (int i = 0; i < _butterflyTarget; i++) { Spawn(ParticleKind.Butterfly, _ambiance.ButterflyTint); }
+            if (_ambiance.MaxButterflies > 0 && (_weather == WeatherId.Clear || _weather == WeatherId.Sunshine || _weather == WeatherId.GoldenHour)) { Spawn(ParticleKind.Bee); }
+            for (int i = 0; i < _ambiance.Bees; i++) { Spawn(ParticleKind.Bee); }
+            for (int p = 0; p < _ambiance.Particles.Length; p++)
+            {
+                for (int i = 0; i < _ambiance.Particles[p].Count; i++) { Spawn(_ambiance.Particles[p].Kind, _ambiance.Particles[p].Tint); }
+            }
             int leaves = _weather == WeatherId.Hurricane ? 16 : _weather == WeatherId.Wind ? 10 : 3;
-            for (int i = 0; i < leaves; i++) { Spawn(Kind.Leaf); }
-            if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(Kind.Rain); } }
-            if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(Kind.Sparkle); } }
-            if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(Kind.SunMote); } }
-            if (_weather == WeatherId.Hurricane) { for (int i = 0; i < 40; i++) { Spawn(Kind.Rain); } }
-            if (_weather == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(Kind.SunMote); } }
-            if (_weather == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(Kind.Sparkle); } }
-            if (_weather == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(Kind.SunMote); } }
-            if (_weather == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(Kind.SunMote); } Spawn(Kind.Bee); Spawn(Kind.Bee); }
+            for (int i = 0; i < leaves; i++) { Spawn(ParticleKind.Leaf); }
+            if (_weather == WeatherId.Rain) { for (int i = 0; i < 70; i++) { Spawn(ParticleKind.Rain); } }
+            if (_weather == WeatherId.Frost) { for (int i = 0; i < 22; i++) { Spawn(ParticleKind.Sparkle); } }
+            if (_weather == WeatherId.Sunshine) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.SunMote); } }
+            if (_weather == WeatherId.Hurricane) { for (int i = 0; i < 40; i++) { Spawn(ParticleKind.Rain); } }
+            if (_weather == WeatherId.Heatwave) { for (int i = 0; i < 16; i++) { Spawn(ParticleKind.SunMote); } }
+            if (_weather == WeatherId.Dew) { for (int i = 0; i < 12; i++) { Spawn(ParticleKind.Sparkle); } }
+            if (_weather == WeatherId.GoldenHour) { for (int i = 0; i < 20; i++) { Spawn(ParticleKind.SunMote); } }
+            if (_weather == WeatherId.PollenShower) { for (int i = 0; i < 26; i++) { Spawn(ParticleKind.SunMote); } Spawn(ParticleKind.Bee); Spawn(ParticleKind.Bee); }
         }
 
         private void SyncButterflies()
@@ -92,11 +113,11 @@ namespace Contigu.Presentation
             int have = 0;
             for (int i = 0; i < _critters.Count; i++)
             {
-                if (_critters[i].Kind == Kind.Butterfly) { have++; }
+                if (_critters[i].Kind == ParticleKind.Butterfly) { have++; }
             }
             while (have < _butterflyTarget)
             {
-                Spawn(Kind.Butterfly);
+                Spawn(ParticleKind.Butterfly, _ambiance.ButterflyTint);
                 have++;
             }
         }
@@ -107,20 +128,24 @@ namespace Contigu.Presentation
             return r.width > 1f ? r : new Rect(-640f, -400f, 1280f, 800f);
         }
 
-        private static string SpriteName(Kind kind)
+        private static string SpriteName(ParticleKind kind)
         {
             switch (kind)
             {
-                case Kind.Butterfly: return "Butterfly";
-                case Kind.Bee: return "Bee";
-                case Kind.Leaf: return "Leaf";
-                case Kind.Rain: return "Raindrop";
-                case Kind.Sparkle: return "Sparkle";
+                case ParticleKind.Butterfly: return "Butterfly";
+                case ParticleKind.Bee: return "Bee";
+                case ParticleKind.Leaf: return "Leaf";
+                case ParticleKind.Rain: return "Raindrop";
+                case ParticleKind.Sparkle: return "Sparkle";
+                case ParticleKind.Snow: return "Snowflake";
+                case ParticleKind.Petal: return "Petal";
+                case ParticleKind.Maple: return "MapleLeaf";
+                case ParticleKind.Drip: return "Raindrop";
                 default: return "SunMote";
             }
         }
 
-        private void Spawn(Kind kind)
+        private void Spawn(ParticleKind kind, Color? tint = null)
         {
             var sprite = VisualDefaults.GetAmbientSprite(SpriteName(kind));
             if (sprite == null)
@@ -136,27 +161,43 @@ namespace Contigu.Presentation
             rt.pivot = new Vector2(0.5f, 0.5f);
 
             var b = Bounds();
-            var c = new Critter { Kind = kind, Image = image, Phase = Random.value * 20f };
+            var c = new Critter { Kind = kind, Image = image, Phase = Random.value * 20f, Tint = tint ?? Color.white };
             c.Position = new Vector2(Random.Range(b.xMin, b.xMax), Random.Range(b.yMin, b.yMax));
             switch (kind)
             {
-                case Kind.Butterfly:
+                case ParticleKind.Butterfly:
                     c.Size = Random.Range(34f, 48f);
                     c.Velocity = new Vector2(Random.Range(28f, 55f) * (Random.value < 0.5f ? -1f : 1f), Random.Range(-8f, 8f));
                     break;
-                case Kind.Bee:
+                case ParticleKind.Bee:
                     c.Size = 32f;
                     c.Velocity = new Vector2(Random.Range(40f, 70f), 0f);
                     break;
-                case Kind.Leaf:
+                case ParticleKind.Leaf:
                     c.Size = Random.Range(22f, 34f);
                     c.Velocity = _weather == WeatherId.Wind || _weather == WeatherId.Hurricane ? new Vector2(Random.Range(-320f, -200f), Random.Range(-70f, -20f)) : new Vector2(Random.Range(-14f, 14f), Random.Range(-44f, -26f));
                     break;
-                case Kind.Rain:
+                case ParticleKind.Rain:
                     c.Size = Random.Range(12f, 20f);
                     c.Velocity = new Vector2(Random.Range(-70f, -50f), Random.Range(-620f, -480f));
                     break;
-                case Kind.Sparkle:
+                case ParticleKind.Snow:
+                    c.Size = Random.Range(12f, 26f);
+                    c.Velocity = new Vector2(Random.Range(-14f, 14f), Random.Range(-52f, -26f));
+                    break;
+                case ParticleKind.Petal:
+                    c.Size = Random.Range(18f, 28f);
+                    c.Velocity = new Vector2(Random.Range(-22f, 22f), Random.Range(-42f, -22f));
+                    break;
+                case ParticleKind.Maple:
+                    c.Size = Random.Range(26f, 40f);
+                    c.Velocity = new Vector2(Random.Range(-18f, 18f), Random.Range(-52f, -28f));
+                    break;
+                case ParticleKind.Drip:
+                    c.Size = Random.Range(12f, 18f);
+                    c.Velocity = new Vector2(0f, Random.Range(-110f, -60f));
+                    break;
+                case ParticleKind.Sparkle:
                     c.Size = Random.Range(12f, 24f);
                     c.Velocity = new Vector2(Random.Range(-10f, 10f), Random.Range(-34f, -16f));
                     break;
@@ -188,14 +229,14 @@ namespace Contigu.Presentation
                 var move = c.Velocity;
                 switch (c.Kind)
                 {
-                    case Kind.Butterfly:
+                    case ParticleKind.Butterfly:
                         move += new Vector2(0f, Mathf.Sin(t * 1.6f) * 26f);
                         scaleX = 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(t * 9f));
                         rot = Mathf.Sin(t * 1.6f) * 12f - 90f * 0f;
                         if (c.Velocity.x < 0f) { scaleX = -scaleX; }
                         alpha = 0.85f;
                         break;
-                    case Kind.Bee:
+                    case ParticleKind.Bee:
                         c.Timer -= dt;
                         if (c.Timer <= 0f)
                         {
@@ -206,22 +247,42 @@ namespace Contigu.Presentation
                         rot = Mathf.Sin(t * 14f) * 4f;
                         alpha = 0.9f;
                         break;
-                    case Kind.Leaf:
+                    case ParticleKind.Leaf:
                         move += new Vector2(Mathf.Sin(t * 1.3f) * 24f, 0f);
                         rot = t * 70f;
                         alpha = 0.7f;
                         break;
-                    case Kind.Rain:
+                    case ParticleKind.Rain:
                         rot = Mathf.Atan2(c.Velocity.x, -c.Velocity.y) * Mathf.Rad2Deg;
                         alpha = 0.5f;
                         break;
-                    case Kind.Sparkle:
+                    case ParticleKind.Snow:
+                        move += new Vector2(Mathf.Sin(t * 0.9f) * 16f, 0f);
+                        rot = t * 25f;
+                        alpha = 0.8f;
+                        break;
+                    case ParticleKind.Petal:
+                        move += new Vector2(Mathf.Sin(t * 1.1f) * 28f, 0f);
+                        rot = Mathf.Sin(t * 1.4f) * 40f;
+                        scaleX = 0.5f + 0.5f * Mathf.Abs(Mathf.Sin(t * 1.4f));
+                        alpha = 0.75f;
+                        break;
+                    case ParticleKind.Maple:
+                        move += new Vector2(Mathf.Sin(t * 1.2f) * 32f, 0f);
+                        rot = Mathf.Sin(t * 1.0f) * 55f;
+                        scaleX = 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(t * 1.9f));
+                        alpha = 0.85f;
+                        break;
+                    case ParticleKind.Drip:
+                        alpha = 0.55f;
+                        break;
+                    case ParticleKind.Sparkle:
                         float tw = 0.5f + 0.5f * Mathf.Sin(t * 3f);
                         scaleX = 0.6f + 0.4f * tw;
                         rot = t * 25f;
                         alpha = 0.35f + 0.55f * tw;
                         break;
-                    case Kind.SunMote:
+                    case ParticleKind.SunMote:
                         alpha = 0.25f + 0.35f * (0.5f + 0.5f * Mathf.Sin(t * 1.8f));
                         break;
                 }
@@ -237,7 +298,7 @@ namespace Contigu.Presentation
                 rt.anchoredPosition = c.Position;
                 rt.localRotation = Quaternion.Euler(0f, 0f, rot);
                 rt.localScale = new Vector3(scaleX, 1f, 1f);
-                c.Image.color = new Color(1f, 1f, 1f, alpha);
+                c.Image.color = new Color(c.Tint.r, c.Tint.g, c.Tint.b, alpha);
             }
         }
     }

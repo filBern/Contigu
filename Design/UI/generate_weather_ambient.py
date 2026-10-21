@@ -131,7 +131,33 @@ def flame():
     return svg('<path d="M128 14 C150 62 214 96 206 166 C200 220 160 246 128 246 C90 246 52 222 50 168 C48 126 76 112 90 78 C104 116 120 96 128 14 Z" fill="#ff7a1a" stroke="%s" stroke-width="12" stroke-linejoin="round"/>'
                '<path d="M128 96 C142 130 176 150 170 188 C166 218 148 232 128 232 C106 232 88 218 88 190 C88 160 116 150 128 96 Z" fill="#ffd23a"/>' % O, 96)
 
-ambient = {'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
+
+def snowflake_sprite():
+    out = ''
+    for i in range(6):
+        a = math.pi / 3 * i
+        x, y = 128 + 96 * math.cos(a), 128 + 96 * math.sin(a)
+        out += '<path d="M128 128 L%.1f %.1f" stroke="%s" stroke-width="22" stroke-linecap="round"/>' % (x, y, O)
+    for i in range(6):
+        a = math.pi / 3 * i
+        x, y = 128 + 96 * math.cos(a), 128 + 96 * math.sin(a)
+        out += '<path d="M128 128 L%.1f %.1f" stroke="#f2f9ff" stroke-width="10" stroke-linecap="round"/>' % (x, y)
+        mx, my = 128 + 58 * math.cos(a), 128 + 58 * math.sin(a)
+        for side in (-1, 1):
+            bx, by = mx + 30 * math.cos(a + side * 0.9), my + 30 * math.sin(a + side * 0.9)
+            out += '<path d="M%.1f %.1f L%.1f %.1f" stroke="#f2f9ff" stroke-width="8" stroke-linecap="round"/>' % (mx, my, bx, by)
+    return svg(out + '<circle cx="128" cy="128" r="14" fill="#f2f9ff"/>', 96)
+
+def petal_sprite():
+    return svg('<path d="M128 22 C196 70 206 150 128 232 C50 150 60 70 128 22 Z" fill="#f6b8cc" stroke="%s" stroke-width="10" stroke-linejoin="round"/>'
+               '<path d="M128 40 C128 100 128 160 128 214" stroke="#e58aa8" stroke-width="6" fill="none"/>' % O, 96)
+
+def maple_sprite():
+    pts = [(128, 20), (150, 80), (206, 56), (186, 118), (236, 134), (176, 168), (190, 214), (136, 190), (128, 244), (120, 190), (66, 214), (80, 168), (20, 134), (70, 118), (50, 56), (106, 80)]
+    return svg('<path d="M%s Z" fill="#e0662a" stroke="%s" stroke-width="10" stroke-linejoin="round"/>' % (' L'.join('%g %g' % p for p in pts), O) +
+               '<path d="M128 70 V230 M128 130 L84 100 M128 130 L172 100" stroke="#a8401a" stroke-width="6" fill="none" stroke-linecap="round"/>', 96)
+
+ambient = {'Snowflake': snowflake_sprite(), 'Petal': petal_sprite(), 'MapleLeaf': maple_sprite(), 'Flame': flame(), 'Butterfly': butterfly(), 'Bee': bee(), 'Leaf': leaf(), 'Raindrop': raindrop(), 'Sparkle': sparkle(), 'SunMote': sunmote()}
 
 def render(name, content, out_path, px):
     html = '/tmp/_amb_%s.html' % name

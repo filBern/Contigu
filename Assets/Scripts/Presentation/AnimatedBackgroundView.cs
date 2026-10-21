@@ -27,7 +27,8 @@ namespace Contigu.Presentation
         private const float FallingAlpha = 0.42f;
         // How far past the visible edge (canvas units) a falling petal travels before it wraps back to the top.
         private const float WrapMargin = 60f;
-        private static readonly Color FireflyColor = new Color(1f, 0.85f, 0.4f);
+        private static readonly Color DefaultFireflyColor = new Color(1f, 0.85f, 0.4f);
+        private Color _fireflyColor = DefaultFireflyColor;
 
         private struct DecorMotion
         {
@@ -97,6 +98,31 @@ namespace Contigu.Presentation
             BuildFireflies(rng);
         }
 
+        /// <summary>Re-tones the drifting decor, falling petals/leaves and fireflies for a challenge's world (see ChallengeAmbiance); null tints keep the four bloom colors.</summary>
+        public void ApplyTheme(ChallengeAmbiance ambiance)
+        {
+            if (_decor == null)
+            {
+                return;
+            }
+            _fireflyColor = ambiance.FireflyColor;
+            var tint = Color.Lerp(UITheme.Background, ambiance.DecorTone, ambiance.DecorAmount);
+            tint.a = DecorAlpha;
+            for (int i = 0; i < _decor.Length; i++)
+            {
+                _decor[i].Rect.GetComponent<Image>().color = tint;
+            }
+            var bloomColors = new[] { PieceColor.Coral, PieceColor.Violet, PieceColor.Lime, PieceColor.Teal };
+            for (int i = 0; i < _falling.Length; i++)
+            {
+                var color = ambiance.FallingTints != null && ambiance.FallingTints.Length > 0
+                    ? ambiance.FallingTints[i % ambiance.FallingTints.Length]
+                    : VisualDefaults.GetColor(bloomColors[i % bloomColors.Length]);
+                color.a = FallingAlpha;
+                _falling[i].Rect.GetComponent<Image>().color = color;
+            }
+        }
+
         private void BuildDecor()
         {
             var moss = VisualDefaults.GetColor(PieceColor.Lime);
@@ -154,7 +180,7 @@ namespace Contigu.Presentation
             for (int i = 0; i < FireflyCount; i++)
             {
                 float size = Lerp(16f, 34f, (float)rng.NextDouble());
-                var color = FireflyColor;
+                var color = _fireflyColor;
                 color.a = 0f;
                 var rect = CreateSprite("Firefly" + i, BackgroundSprite.Glow, size, color);
                 var image = rect.GetComponent<Image>();
@@ -238,7 +264,7 @@ namespace Contigu.Presentation
                 float y = f.Center.y + Mathf.Cos(t / f.PeriodSeconds.y * Mathf.PI * 2f + f.Phase.y) * f.Amplitude.y;
                 f.Rect.anchoredPosition = new Vector2(x, y);
                 float pulse = Mathf.Sin(t / f.PulsePeriod * Mathf.PI * 2f + f.PulsePhase) * 0.5f + 0.5f;
-                var c = FireflyColor;
+                var c = _fireflyColor;
                 c.a = f.MaxAlpha * pulse * pulse;
                 f.Image.color = c;
             }
