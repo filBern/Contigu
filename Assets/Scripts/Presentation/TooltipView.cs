@@ -20,6 +20,8 @@ namespace Contigu.Presentation
         private const float AccentHeight = 3f;
         private const float ChipHeight = 26f;
         private const float ChipGap = 8f;
+        // Gap between the title band and the subtitle chip (tighter than the gap before a plain description).
+        private const float ChipTopGap = 6f;
         private const float BodyTop = 14f;
         // Extra room under the last line so the text does not sit on the card's bottom edge.
         private const float BottomPadding = 8f;
@@ -203,6 +205,7 @@ namespace Contigu.Presentation
             float contentTop = BandInset + HeaderHeight + AccentHeight + BodyTop;
             if (hasSubtitle)
             {
+                contentTop = BandInset + HeaderHeight + AccentHeight + ChipTopGap;
                 _subtitleLabel.text = subtitle;
                 // Muted text colors are near-black translucent: on the chip the accent itself reads better when it is not the muted default.
                 // Solid ink on a stronger tint of the accent: the chip text must read at a glance.
