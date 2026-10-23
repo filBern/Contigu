@@ -777,6 +777,10 @@ namespace Contigu.Presentation
                 mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
             }
 
+            // Hover: what this mystery card can turn out to be (the pool's whole content, never the exact draw).
+            var casinoHover = card.gameObject.AddComponent<HoverTooltip>();
+            casinoHover.Init(_tooltip, cardLabel, DescriptionTextFormatter.Colorize(BuildCasinoPoolDescription(slot.Pool, isRandomModifier), 14), "Casino · mystery card", UITheme.TextMuted);
+
             int price = run.GetUpgradeSlotPrice(index);
             // Random Modifier is the one upgrade that respects the modifier
             // cap; every other upgrade ignores it (see RunManager.BuyUpgradeSlot).
@@ -790,6 +794,50 @@ namespace Contigu.Presentation
                 !slot.Purchased && !blocked && run.PendingUpgrade == null,
                 run.Lueur >= price,
                 () => OnUpgradeBuyClicked(index));
+        }
+
+        /// <summary>What a Casino card of this category can contain: every upgrade of its pool, grouped by rarity for the big Sprout pool.</summary>
+        private static string BuildCasinoPoolDescription(UpgradePool pool, bool isRandomModifier)
+        {
+            switch (pool)
+            {
+                case UpgradePool.Bank:
+                    return "Changes your seed bag. One of:\n" + ListWithDescriptions(UpgradeCatalog.BankPool);
+                case UpgradePool.Mastery:
+                    return "Levels up one random seed shape or color: its tiles score +1 pt per level, for the rest of the run.";
+                case UpgradePool.Modifier:
+                    return isRandomModifier
+                        ? "Grants one random fertilizer you don't already have."
+                        : "Choose one of your fertilizers to level up: its effect gets stronger.";
+                default:
+                    var text = new System.Text.StringBuilder("Enchants a tile of a seed you choose. The enchantment is permanent: it counts again every time its tile is scored.\nOne of:");
+                    foreach (var rarity in new[] { UpgradeRarity.Common, UpgradeRarity.Uncommon, UpgradeRarity.Rare })
+                    {
+                        var names = new List<string>();
+                        foreach (var upgrade in UpgradeCatalog.GridPool)
+                        {
+                            if (upgrade.Rarity == rarity)
+                            {
+                                names.Add(upgrade.Name);
+                            }
+                        }
+                        if (names.Count > 0)
+                        {
+                            text.Append("\n").Append(UpgradeVisualDefaults.GetRarityLabel(rarity)).Append(": ").Append(string.Join(", ", names));
+                        }
+                    }
+                    return text.ToString();
+            }
+        }
+
+        private static string ListWithDescriptions(UpgradeDefinition[] upgrades)
+        {
+            var lines = new List<string>();
+            foreach (var upgrade in upgrades)
+            {
+                lines.Add(upgrade.Name + ": " + upgrade.Description);
+            }
+            return string.Join("\n", lines);
         }
 
         private void OnRerollClicked()
