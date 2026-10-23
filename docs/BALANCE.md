@@ -125,3 +125,5 @@ Victoires du planner : Spring 16,0 %, Winter 9,0 %, Summer 9,2 %, Autumn 8,6 %, 
 
 Les 9 % étaient trop généreux : `EnemyHpMultiplier` Winter 0,9 → 1,1, Summer 0,9 → 1,2, Autumn 0,47 → 0,57, Orchard 1,5 → 1,75, Greenhouse 0,62 → 0,79 (Spring reste à 0,58, le tutoriel). Victoires du planner profondeur 3 (500 à 600 parties) : Spring ≈ 16 %, Winter 5,2 %, Summer 4,8 %, Autumn 5,4 %, Orchard 5,2 %, Greenhouse 5,5 %. Le glouton, plus faible, y tombera nettement plus bas.
 
+Spring à 8-10 % : `EnemyHpMultiplier` 0,58 → 0,87 (planner profondeur 3, 1000 parties : 8,8 %). Spring reste le plus facile des six, au-dessus de la fourchette 4-6 % des autres.
+

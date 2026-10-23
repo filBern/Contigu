@@ -20,7 +20,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.58f
+            EnemyHpMultiplier = 0.87f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
