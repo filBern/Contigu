@@ -14,9 +14,11 @@ namespace Contigu.Presentation
     {
         private const float Width = 320f;
         // Dark title band across the top, with a thin accent line (the subtitle's color) under it.
-        private const float HeaderHeight = 34f;
+        private const float HeaderHeight = 36f;
+        // How far the band sits inside the card frame on the top and sides (kept small so it fills the frame).
+        private const float BandInset = 2f;
         private const float AccentHeight = 3f;
-        private const float ChipHeight = 22f;
+        private const float ChipHeight = 26f;
         private const float ChipGap = 8f;
         private const float BodyTop = 10f;
         // Only used as a placeholder before the first real Show() call sets
@@ -79,24 +81,24 @@ namespace Contigu.Presentation
             _headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
             _headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);
             _headerBand.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _headerBand.rectTransform.anchoredPosition = new Vector2(0f, -4f);
-            _headerBand.rectTransform.sizeDelta = new Vector2(-8f, HeaderHeight);
+            _headerBand.rectTransform.anchoredPosition = new Vector2(0f, -BandInset);
+            _headerBand.rectTransform.sizeDelta = new Vector2(-BandInset * 2f, HeaderHeight);
 
             _accentLine = UIFactory.CreatePanel(_panel, "AccentLine", VisualDefaults.GoldenColor);
             _accentLine.raycastTarget = false;
             _accentLine.rectTransform.anchorMin = new Vector2(0f, 1f);
             _accentLine.rectTransform.anchorMax = new Vector2(1f, 1f);
             _accentLine.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _accentLine.rectTransform.anchoredPosition = new Vector2(0f, -4f - HeaderHeight);
-            _accentLine.rectTransform.sizeDelta = new Vector2(-8f, AccentHeight);
+            _accentLine.rectTransform.anchoredPosition = new Vector2(0f, -BandInset - HeaderHeight);
+            _accentLine.rectTransform.sizeDelta = new Vector2(-BandInset * 2f, AccentHeight);
 
-            _nameLabel = UIFactory.CreateText(_panel, "Name", "", 17, UITheme.TextOnBackground, TextAnchor.MiddleLeft);
+            _nameLabel = UIFactory.CreateText(_panel, "Name", "", 19, UITheme.TextOnBackground, TextAnchor.MiddleLeft);
             _nameLabel.fontStyle = FontStyle.Bold;
             _nameLabel.raycastTarget = false;
             _nameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _nameLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding + 4f, -4f);
+            _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding + 4f, -BandInset);
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f, HeaderHeight);
 
             // Sell value: top-right corner of the panel, same row as the
@@ -108,7 +110,7 @@ namespace Contigu.Presentation
             _sellValueLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
             _sellValueLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _sellValueLabel.rectTransform.pivot = new Vector2(1f, 1f);
-            _sellValueLabel.rectTransform.anchoredPosition = new Vector2(-Padding - 4f, -4f - (HeaderHeight - 22f) * 0.5f);
+            _sellValueLabel.rectTransform.anchoredPosition = new Vector2(-Padding - 4f, -BandInset - (HeaderHeight - 22f) * 0.5f);
             _sellValueLabel.rectTransform.sizeDelta = new Vector2(SellValueWidth, 22f);
             _sellValueLabel.gameObject.SetActive(false);
 
@@ -120,7 +122,7 @@ namespace Contigu.Presentation
             _subtitleChip.rectTransform.pivot = new Vector2(0f, 1f);
             _subtitleChip.gameObject.SetActive(false);
 
-            _subtitleLabel = UIFactory.CreateText(_subtitleChip.transform, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.MiddleCenter);
+            _subtitleLabel = UIFactory.CreateText(_subtitleChip.transform, "Subtitle", "", 14, UITheme.TextMuted, TextAnchor.MiddleCenter);
             _subtitleLabel.fontStyle = FontStyle.Bold;
             _subtitleLabel.raycastTarget = false;
             UIFactory.StretchFull(_subtitleLabel.rectTransform);
@@ -198,15 +200,16 @@ namespace Contigu.Presentation
                 accent = VisualDefaults.GoldenColor;
             }
             _accentLine.color = new Color(accent.r, accent.g, accent.b, 1f);
-            float contentTop = 4f + HeaderHeight + AccentHeight + BodyTop;
+            float contentTop = BandInset + HeaderHeight + AccentHeight + BodyTop;
             if (hasSubtitle)
             {
                 _subtitleLabel.text = subtitle;
                 // Muted text colors are near-black translucent: on the chip the accent itself reads better when it is not the muted default.
+                // Solid ink on a stronger tint of the accent: the chip text must read at a glance.
                 var chipText = subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? subtitleColor.Value : UITheme.TextPrimary;
-                _subtitleLabel.color = new Color(chipText.r * 0.75f, chipText.g * 0.75f, chipText.b * 0.75f, 1f);
-                _subtitleChip.color = new Color(accent.r, accent.g, accent.b, subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? 0.28f : 0.12f);
-                float chipWidth = Mathf.Min(Width - Padding * 2f, _subtitleLabel.preferredWidth + 18f);
+                _subtitleLabel.color = new Color(chipText.r * 0.45f, chipText.g * 0.45f, chipText.b * 0.45f, 1f);
+                _subtitleChip.color = new Color(accent.r, accent.g, accent.b, subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? 0.4f : 0.22f);
+                float chipWidth = Mathf.Min(Width - Padding * 2f, _subtitleLabel.preferredWidth + 22f);
                 _subtitleChip.rectTransform.sizeDelta = new Vector2(chipWidth, ChipHeight);
                 _subtitleChip.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
                 contentTop += ChipHeight + ChipGap;
