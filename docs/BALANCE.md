@@ -121,3 +121,7 @@ Après ce changement le bot gagnait trop (Spring 16,6 %, Autumn 10,2 %, Orchard 
 Le bot de référence est maintenant `--policy planner` (PLAN_DEPTH=3, 400 à 500 parties par challenge ; `--hp X` surcharge le multiplicateur de PV pour un balayage sans recompiler). `EnemyHpMultiplier` : Spring 0,58 (inchangé), Winter 0,8 → 0,9, Summer 0,8 → 0,9, Autumn 0,41 → 0,47, Orchard 1,35 → 1,5, Greenhouse 0,54 → 0,62.
 Victoires du planner : Spring 16,0 %, Winter 9,0 %, Summer 9,2 %, Autumn 8,6 %, Orchard 9,0 %, Greenhouse 9,2 %. Le bot glouton, plus faible, tombe à Spring 13,9 %, Winter 4,8 %, Summer 6,2 %, Autumn 4,0 %, Orchard 6,5 %, Greenhouse 4,2 % : le plancher de 5 % ne vaut plus pour lui.
 
+## Cible 4 à 6 % pour le planner (hors Spring)
+
+Les 9 % étaient trop généreux : `EnemyHpMultiplier` Winter 0,9 → 1,1, Summer 0,9 → 1,2, Autumn 0,47 → 0,57, Orchard 1,5 → 1,75, Greenhouse 0,62 → 0,79 (Spring reste à 0,58, le tutoriel). Victoires du planner profondeur 3 (500 à 600 parties) : Spring ≈ 16 %, Winter 5,2 %, Summer 4,8 %, Autumn 5,4 %, Orchard 5,2 %, Greenhouse 5,5 %. Le glouton, plus faible, y tombera nettement plus bas.
+
