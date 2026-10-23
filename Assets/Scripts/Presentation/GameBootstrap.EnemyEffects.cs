@@ -85,15 +85,17 @@ namespace Contigu.Presentation
         /// <summary>The end-of-sequence reveal of the Shuffle effects that must not show before the points are counted: Blightmoth's blight, then the resident enemy (portrait, Pollen bite, and its tile crossfade).</summary>
         private System.Collections.IEnumerator PlayDeferredShuffleActs()
         {
+            // The blight can also change without any Shuffle: a Blightmoth killed by this very placement lifts it, and the fertilizer panel must follow.
+            if (_pendingBlightBefore != null)
+            {
+                PlayBlightmothActIfBlightChanged(_pendingBlightBefore);
+                _pendingBlightBefore = null;
+            }
             if (!_pendingShuffleActs)
             {
                 yield break;
             }
             _pendingShuffleActs = false;
-            if (_pendingBlightBefore != null)
-            {
-                PlayBlightmothActIfBlightChanged(_pendingBlightBefore);
-            }
             PlayWorldEnemyActIfAny();
             if (_pendingWorldChange.HasValue)
             {
