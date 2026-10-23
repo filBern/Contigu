@@ -12,14 +12,18 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class TooltipView : MonoBehaviour
     {
-        private const float Width = 300f;
+        private const float Width = 320f;
+        // Dark title band across the top, with a thin accent line (the subtitle's color) under it.
+        private const float HeaderHeight = 34f;
+        private const float AccentHeight = 3f;
+        private const float ChipHeight = 22f;
+        private const float ChipGap = 8f;
+        private const float BodyTop = 10f;
         // Only used as a placeholder before the first real Show() call sets
         // an actual (dynamic) height — see Show().
         private const float InitialHeight = 150f;
         private const float Padding = 10f;
         private const float ShowMargin = 16f;
-        private const float NameHeight = 24f;
-        private const float SubtitleHeight = 18f;
         // Reserved on the right of the Name row whenever a sell value is
         // shown (see Show()'s sellValue parameter), so a long modifier name
         // never runs under it.
@@ -29,6 +33,10 @@ namespace Contigu.Presentation
         private RectTransform _panel;
         private Text _nameLabel;
         private Text _subtitleLabel;
+        private Image _headerBand;
+        private Image _accentLine;
+        private Image _subtitleChip;
+        private Coroutine _popRoutine;
         private Text _descLabel;
         private Text _sellValueLabel;
         // Optional third section (enemy story line): a thin divider plus an italic muted sentence under the description.
@@ -45,8 +53,12 @@ namespace Contigu.Presentation
             _root = UIFactory.CreateUIObject("Tooltip", parent);
             UIFactory.StretchFull(_root);
 
-            var panelImg = UIFactory.CreatePanel(_root, "Panel", UITheme.Panel);
+            var panelImg = UIFactory.CreateSlicedImage(_root, "Panel", UISprites.CardBackground);
+            panelImg.color = UITheme.Panel;
             panelImg.raycastTarget = false;
+            var shadow = panelImg.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.38f);
+            shadow.effectDistance = new Vector2(3f, -5f);
             _panel = panelImg.rectTransform;
             // Anchored to _root's CENTER (matching the center-origin local
             // space that ScreenPointToLocalPointInRectangle returns points in
@@ -61,13 +73,31 @@ namespace Contigu.Presentation
             _panel.sizeDelta = new Vector2(Width, InitialHeight);
             UIFactory.AddThickOutline(panelImg, UITheme.Border);
 
-            _nameLabel = UIFactory.CreateText(_panel, "Name", "", 15, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            // Title band: dark strip across the top (clipped by nothing; inset so it hugs the card's rounded frame), accent line below.
+            _headerBand = UIFactory.CreatePanel(_panel, "HeaderBand", UITheme.Background);
+            _headerBand.raycastTarget = false;
+            _headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _headerBand.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _headerBand.rectTransform.anchoredPosition = new Vector2(0f, -4f);
+            _headerBand.rectTransform.sizeDelta = new Vector2(-8f, HeaderHeight);
+
+            _accentLine = UIFactory.CreatePanel(_panel, "AccentLine", VisualDefaults.GoldenColor);
+            _accentLine.raycastTarget = false;
+            _accentLine.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _accentLine.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _accentLine.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _accentLine.rectTransform.anchoredPosition = new Vector2(0f, -4f - HeaderHeight);
+            _accentLine.rectTransform.sizeDelta = new Vector2(-8f, AccentHeight);
+
+            _nameLabel = UIFactory.CreateText(_panel, "Name", "", 17, UITheme.TextOnBackground, TextAnchor.MiddleLeft);
+            _nameLabel.fontStyle = FontStyle.Bold;
             _nameLabel.raycastTarget = false;
             _nameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _nameLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding);
-            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 22f);
+            _nameLabel.rectTransform.anchoredPosition = new Vector2(Padding + 4f, -4f);
+            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f, HeaderHeight);
 
             // Sell value: top-right corner of the panel, same row as the
             // Name. Only the persistent modifier side panel passes a value
@@ -78,21 +108,25 @@ namespace Contigu.Presentation
             _sellValueLabel.rectTransform.anchorMin = new Vector2(1f, 1f);
             _sellValueLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _sellValueLabel.rectTransform.pivot = new Vector2(1f, 1f);
-            _sellValueLabel.rectTransform.anchoredPosition = new Vector2(-Padding, -Padding);
+            _sellValueLabel.rectTransform.anchoredPosition = new Vector2(-Padding - 4f, -4f - (HeaderHeight - 22f) * 0.5f);
             _sellValueLabel.rectTransform.sizeDelta = new Vector2(SellValueWidth, 22f);
             _sellValueLabel.gameObject.SetActive(false);
 
-            _subtitleLabel = UIFactory.CreateText(_panel, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
-            _subtitleLabel.fontStyle = FontStyle.Italic;
-            _subtitleLabel.raycastTarget = false;
-            _subtitleLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
-            _subtitleLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _subtitleLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _subtitleLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - NameHeight);
-            _subtitleLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, SubtitleHeight);
-            _subtitleLabel.gameObject.SetActive(false);
+            // Subtitle (rarity / category): a small pill tinted with its own color, under the title band.
+            _subtitleChip = UIFactory.CreatePanel(_panel, "SubtitleChip", new Color(0f, 0f, 0f, 0.1f));
+            _subtitleChip.raycastTarget = false;
+            _subtitleChip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _subtitleChip.rectTransform.anchorMax = new Vector2(0f, 1f);
+            _subtitleChip.rectTransform.pivot = new Vector2(0f, 1f);
+            _subtitleChip.gameObject.SetActive(false);
 
-            _descLabel = UIFactory.CreateText(_panel, "Desc", "", 14, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            _subtitleLabel = UIFactory.CreateText(_subtitleChip.transform, "Subtitle", "", 12, UITheme.TextMuted, TextAnchor.MiddleCenter);
+            _subtitleLabel.fontStyle = FontStyle.Bold;
+            _subtitleLabel.raycastTarget = false;
+            UIFactory.StretchFull(_subtitleLabel.rectTransform);
+
+            _descLabel = UIFactory.CreateText(_panel, "Desc", "", 15, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            _descLabel.lineSpacing = 1.1f;
             _descLabel.raycastTarget = false;
             _descLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _descLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -154,18 +188,32 @@ namespace Contigu.Presentation
             {
                 _sellValueLabel.text = "Sell " + sellValue.Value;
             }
-            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - (hasSellValue ? SellValueWidth : 0f), 22f);
+            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f), HeaderHeight);
 
             bool hasSubtitle = !string.IsNullOrEmpty(subtitle);
-            _subtitleLabel.gameObject.SetActive(hasSubtitle);
+            _subtitleChip.gameObject.SetActive(hasSubtitle);
+            Color accent = subtitleColor ?? VisualDefaults.GoldenColor;
+            if (hasSubtitle && !subtitleColor.HasValue)
+            {
+                accent = VisualDefaults.GoldenColor;
+            }
+            _accentLine.color = new Color(accent.r, accent.g, accent.b, 1f);
+            float contentTop = 4f + HeaderHeight + AccentHeight + BodyTop;
             if (hasSubtitle)
             {
                 _subtitleLabel.text = subtitle;
-                _subtitleLabel.color = subtitleColor ?? UITheme.TextMuted;
+                // Muted text colors are near-black translucent: on the chip the accent itself reads better when it is not the muted default.
+                var chipText = subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? subtitleColor.Value : UITheme.TextPrimary;
+                _subtitleLabel.color = new Color(chipText.r * 0.75f, chipText.g * 0.75f, chipText.b * 0.75f, 1f);
+                _subtitleChip.color = new Color(accent.r, accent.g, accent.b, subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? 0.28f : 0.12f);
+                float chipWidth = Mathf.Min(Width - Padding * 2f, _subtitleLabel.preferredWidth + 18f);
+                _subtitleChip.rectTransform.sizeDelta = new Vector2(chipWidth, ChipHeight);
+                _subtitleChip.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
+                contentTop += ChipHeight + ChipGap;
             }
 
-            float usedHeight = NameHeight + (hasSubtitle ? SubtitleHeight : 0f);
-            _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -Padding - usedHeight);
+            float usedHeight = contentTop - Padding;
+            _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
             _descLabel.text = description;
 
             // Height fits the actual description length. Text.preferredHeight
@@ -203,12 +251,33 @@ namespace Contigu.Presentation
                 footerBlockHeight = LoreGap * 2f + 1f + FooterHeight - 4f;
             }
             _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight + loreBlockHeight + footerBlockHeight);
+            if (_popRoutine != null)
+            {
+                StopCoroutine(_popRoutine);
+            }
 
             _root.gameObject.SetActive(true);
             // Always render above whatever else is on screen, including
             // overlays (draft/removal cards) built after this tooltip.
             _root.SetAsLastSibling();
             PositionNear(anchor, placeAbove);
+            _popRoutine = StartCoroutine(PopIn());
+        }
+
+        /// <summary>A quick scale-up from slightly smaller so the tooltip settles into place instead of blinking on.</summary>
+        private System.Collections.IEnumerator PopIn()
+        {
+            const float duration = 0.09f;
+            float t = 0f;
+            _panel.localScale = new Vector3(0.94f, 0.94f, 1f);
+            while (t < duration)
+            {
+                t += Time.unscaledDeltaTime;
+                float scale = Mathf.Lerp(0.94f, 1f, Mathf.Clamp01(t / duration));
+                _panel.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            _panel.localScale = Vector3.one;
         }
 
         public void Hide()
