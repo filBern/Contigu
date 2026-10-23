@@ -136,7 +136,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Hermit:
                     return "Scores +" + ScoringConstants.HermitBonus + " pts when no other tile touches it.";
                 case PieceTraitKind.Cuddly:
-                    return "Scores +" + ScoringConstants.CuddlyBonusPerNeighbor + " pts for each planted tile touching it.";
+                    return "Scores +" + ScoringConstants.CuddlyBonusPerNeighbor + " pts for each planted tile around it, diagonals and the rest of its own seed included.";
                 case PieceTraitKind.Dawn:
                     return "Scores +" + ScoringConstants.DawnBonus + " pts when planted among the first " + ScoringConstants.DawnSeeds + " seeds of the round.";
                 case PieceTraitKind.Dusk:

@@ -232,7 +232,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition CuddlyTile = new UpgradeDefinition(
             UpgradeId.CuddlyTile, UpgradePool.Grid, "Cuddly Sprout",
-            "+3 pts per planted tile touching it.", false, UpgradeRarity.Common);
+            "+3 pts per planted tile around it (diagonals and its own seed included).", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition DawnTile = new UpgradeDefinition(
             UpgradeId.DawnTile, UpgradePool.Grid, "Dawn Sprout",

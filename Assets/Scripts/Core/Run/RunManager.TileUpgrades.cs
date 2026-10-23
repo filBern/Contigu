@@ -107,7 +107,17 @@ namespace Contigu.Core
                     }
                     break;
                 case PieceTraitKind.Cuddly:
-                    bonus = OutsideNeighborColors(pos, placement).Count * ScoringConstants.CuddlyBonusPerNeighbor;
+                    // Every planted tile around it counts: the 4 diagonals too, and the other tiles of its own seed.
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        for (int dy = -1; dy <= 1; dy++)
+                        {
+                            if ((dx != 0 || dy != 0) && ColorAsPlaced(new Vector2Int(pos.x + dx, pos.y + dy), placement).HasValue)
+                            {
+                                bonus += ScoringConstants.CuddlyBonusPerNeighbor;
+                            }
+                        }
+                    }
                     break;
                 case PieceTraitKind.Dawn:
                     // PiecesRemainingThisRound still counts this very seed (it is spent right after scoring).

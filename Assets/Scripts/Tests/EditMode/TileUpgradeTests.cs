@@ -125,6 +125,15 @@ namespace Contigu.Tests
             var crowded = NewRun();
             Fill(crowded, PieceColor.Teal, (1, 2), (3, 2), (2, 1));
             Assert.AreEqual(3 * ScoringConstants.CuddlyBonusPerNeighbor, PlantAt(crowded, PieceTraitKind.Cuddly, PieceColor.Coral, 2, 2).TraitBonus);
+
+            var diagonal = NewRun();
+            Fill(diagonal, PieceColor.Teal, (1, 1), (3, 3), (2, 1));
+            Assert.AreEqual(3 * ScoringConstants.CuddlyBonusPerNeighbor, PlantAt(diagonal, PieceTraitKind.Cuddly, PieceColor.Coral, 2, 2).TraitBonus, "two diagonals and one side");
+
+            var domino = NewRun();
+            int slot = HandSlotWith(domino, new PieceToken(ShapeId.DomH, PieceColor.Coral, new PieceTrait(PieceTraitKind.Cuddly, 0)));
+            var placed = domino.PlacePiece(slot, 2, 2).Placement;
+            Assert.AreEqual(ScoringConstants.CuddlyBonusPerNeighbor, placed.TraitBonus, "the other tile of its own domino counts");
         }
 
         [Test]
