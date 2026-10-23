@@ -93,7 +93,6 @@ namespace Contigu.Presentation
             _accentLine.rectTransform.sizeDelta = new Vector2(-BandInset * 2f, AccentHeight);
 
             _nameLabel = UIFactory.CreateText(_panel, "Name", "", 19, UITheme.TextOnBackground, TextAnchor.MiddleLeft);
-            _nameLabel.fontStyle = FontStyle.Bold;
             _nameLabel.raycastTarget = false;
             _nameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _nameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -123,7 +122,6 @@ namespace Contigu.Presentation
             _subtitleChip.gameObject.SetActive(false);
 
             _subtitleLabel = UIFactory.CreateText(_subtitleChip.transform, "Subtitle", "", 14, UITheme.TextMuted, TextAnchor.MiddleCenter);
-            _subtitleLabel.fontStyle = FontStyle.Bold;
             _subtitleLabel.raycastTarget = false;
             UIFactory.StretchFull(_subtitleLabel.rectTransform);
 
@@ -209,7 +207,7 @@ namespace Contigu.Presentation
                 var chipText = subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? subtitleColor.Value : UITheme.TextPrimary;
                 _subtitleLabel.color = new Color(chipText.r * 0.45f, chipText.g * 0.45f, chipText.b * 0.45f, 1f);
                 _subtitleChip.color = new Color(accent.r, accent.g, accent.b, subtitleColor.HasValue && subtitleColor.Value != UITheme.TextMuted ? 0.4f : 0.22f);
-                float chipWidth = Mathf.Min(Width - Padding * 2f, _subtitleLabel.preferredWidth + 22f);
+                float chipWidth = Mathf.Ceil(Mathf.Min(Width - Padding * 2f, _subtitleLabel.preferredWidth + 22f));
                 _subtitleChip.rectTransform.sizeDelta = new Vector2(chipWidth, ChipHeight);
                 _subtitleChip.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
                 contentTop += ChipHeight + ChipGap;
@@ -222,7 +220,7 @@ namespace Contigu.Presentation
             // Height fits the actual description length. Text.preferredHeight
             // already reflects wrapping at the label's current fixed width,
             // since UIFactory.CreateText sets horizontalOverflow = Wrap.
-            float descHeight = _descLabel.preferredHeight;
+            float descHeight = Mathf.Ceil(_descLabel.preferredHeight);
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, descHeight);
             float loreBlockHeight = 0f;
             bool hasLore = !string.IsNullOrEmpty(lore);
@@ -253,7 +251,8 @@ namespace Contigu.Presentation
                 _footerLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, FooterHeight);
                 footerBlockHeight = LoreGap * 2f + 1f + FooterHeight - 4f;
             }
-            _panel.sizeDelta = new Vector2(Width, Padding * 2f + usedHeight + descHeight + loreBlockHeight + footerBlockHeight);
+            // Whole pixels everywhere: a fractional size or position makes the text render soft.
+            _panel.sizeDelta = new Vector2(Width, Mathf.Ceil(Padding * 2f + usedHeight + descHeight + loreBlockHeight + footerBlockHeight));
             if (_popRoutine != null)
             {
                 StopCoroutine(_popRoutine);
@@ -312,7 +311,7 @@ namespace Contigu.Presentation
                 float aboveTop = localPoint.y + anchorHalfH + ShowMargin + panelHeight;
                 float topY = aboveTop <= halfH ? aboveTop : localPoint.y - anchorHalfH - ShowMargin;
                 topY = Mathf.Clamp(topY, -halfH + panelHeight, halfH);
-                _panel.anchoredPosition = new Vector2(centeredX, topY);
+                _panel.anchoredPosition = new Vector2(Mathf.Round(centeredX), Mathf.Round(topY));
                 return;
             }
 
@@ -322,7 +321,7 @@ namespace Contigu.Presentation
             x = Mathf.Clamp(x, -halfW, halfW - Width);
 
             float y = Mathf.Clamp(localPoint.y + anchorHalfH + ShowMargin, -halfH + panelHeight, halfH);
-            _panel.anchoredPosition = new Vector2(x, y);
+            _panel.anchoredPosition = new Vector2(Mathf.Round(x), Mathf.Round(y));
         }
     }
 }
