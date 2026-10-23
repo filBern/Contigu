@@ -127,7 +127,16 @@ namespace Contigu.Core
                     }
                     break;
                 case PieceTraitKind.Dusk:
-                    if (PiecesRemainingThisRound == 1)
+                    // The last seed of the current hand: this one is still in its slot (it is spent right after scoring), every other slot is empty.
+                    int seedsInHand = 0;
+                    for (int slot = 0; slot < Deck.Hand.Count; slot++)
+                    {
+                        if (Deck.Hand[slot].HasValue)
+                        {
+                            seedsInHand++;
+                        }
+                    }
+                    if (seedsInHand == 1)
                     {
                         bonus = ScoringConstants.DuskBonus;
                     }

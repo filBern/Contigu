@@ -174,9 +174,30 @@ namespace Contigu.Tests
             Assert.AreEqual(0, PlantAt(late, PieceTraitKind.Dawn, PieceColor.Coral, 4, 4).TraitBonus, "the fourth seed is too late");
 
             var dusk = NewRun();
-            dusk.DebugSetPiecesRemaining(1);
-            Assert.AreEqual(ScoringConstants.DuskBonus, PlantAt(dusk, PieceTraitKind.Dusk, PieceColor.Coral, 2, 2).TraitBonus);
-            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Dusk, PieceColor.Coral, 2, 2).TraitBonus);
+            int duskSlot = HandSlotWith(dusk, new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Dusk, 0)));
+            Assert.AreEqual(0, dusk.PlacePiece(duskSlot, 2, 2).Placement.TraitBonus, "other seeds are still in the hand");
+            var lastInHand = NewRun();
+            int lastSlot = HandSlotWith(lastInHand, new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Dusk, 0)));
+            for (int other = 0; other < lastInHand.Deck.Hand.Count; other++)
+            {
+                if (other == lastSlot || !lastInHand.Deck.Hand[other].HasValue)
+                {
+                    continue;
+                }
+                var shape = PieceShapeCatalog.GetRotated(lastInHand.Deck.Hand[other].Value.Shape, lastInHand.Deck.HandRotations[other]);
+                var positions = new List<Vector2Int>(GridManager.AllPositions());
+                positions.Reverse();
+                foreach (var pos in positions)
+                {
+                    if (lastInHand.Grid.CanPlace(shape, pos.x, pos.y))
+                    {
+                        Assert.IsTrue(lastInHand.PlacePiece(other, pos.x, pos.y).Placement.Success);
+                        break;
+                    }
+                }
+            }
+            Assert.IsTrue(lastInHand.Deck.Hand[lastSlot].HasValue);
+            Assert.AreEqual(ScoringConstants.DuskBonus, lastInHand.PlacePiece(lastSlot, 2, 2).Placement.TraitBonus);
 
             var rich = NewRun();
             rich.DebugSetLueur(7);

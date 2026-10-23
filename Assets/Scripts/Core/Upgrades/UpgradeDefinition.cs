@@ -240,7 +240,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition DuskTile = new UpgradeDefinition(
             UpgradeId.DuskTile, UpgradePool.Grid, "Dusk Sprout",
-            "+20 pts if planted as the last seed of the round.", false, UpgradeRarity.Uncommon);
+            "+20 pts if planted as the last seed of your hand.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition MiserTile = new UpgradeDefinition(
             UpgradeId.MiserTile, UpgradePool.Grid, "Miser Sprout",

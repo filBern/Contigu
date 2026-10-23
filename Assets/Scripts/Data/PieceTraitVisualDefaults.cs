@@ -140,7 +140,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Dawn:
                     return "Scores +" + ScoringConstants.DawnBonus + " pts when planted among the first " + ScoringConstants.DawnSeeds + " seeds of the round.";
                 case PieceTraitKind.Dusk:
-                    return "Scores +" + ScoringConstants.DuskBonus + " pts when planted as the last seed of the round.";
+                    return "Scores +" + ScoringConstants.DuskBonus + " pts when planted as the last seed of your hand.";
                 case PieceTraitKind.Miser:
                     return "Scores +" + ScoringConstants.MiserBonusPerPollen + " pt per Pollen you hold (up to +" + ScoringConstants.MiserMaxBonus + ").";
                 case PieceTraitKind.Stormy:
