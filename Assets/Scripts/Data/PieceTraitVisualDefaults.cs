@@ -82,7 +82,14 @@ namespace Contigu.Data
             }
         }
 
+        /// <summary>The upgrade's effect; tile upgrades are permanent, so every non-Joker one also says it counts again each time its tile is scored.</summary>
         public static string GetDescription(PieceTrait trait)
+        {
+            string text = GetBaseDescription(trait);
+            return PieceTrait.IsJokerCombatKind(trait.Kind) || text.Length == 0 ? text : text + " Counts again every time this tile is scored.";
+        }
+
+        private static string GetBaseDescription(PieceTrait trait)
         {
             switch (trait.Kind)
             {

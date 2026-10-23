@@ -796,8 +796,13 @@ namespace Contigu.Core
                 }
             }
 
+            // Tile upgrades are permanent: every upgraded tile already on the garden counts again whenever it is scored (see ApplyPersistentTraits).
+            var persistentTraits = CollectPersistentTraits();
+            int streakBeforePlacement = Grid.PlacementsSinceLastClear;
+
             StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos, shape, x, y);
+            StampPersistentTraits(persistentTraits, shape, x, y, transientTraitCells);
             // Snapshot BEFORE Grid.PlacePiece, same reasoning as the
             // Chameleon/Spark reads above: a poisoned cell this placement clears
             // would read back "not poisoned" once Cell.ClearFill resets the flag.
@@ -808,6 +813,7 @@ namespace Contigu.Core
             {
                 ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
             }
+            ApplyPersistentTraitBonuses(persistentTraits, streakBeforePlacement, placement);
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
             ApplyWeatherPlacementBonus(placement, placementColor);

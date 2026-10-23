@@ -8,6 +8,63 @@ namespace Contigu.Core
     {
         private static readonly Vector2Int[] TileUpgradeSteps = { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
 
+        /// <summary>The tiles that do not count as "neighbors" of the tile upgrade being scored: the placed seed's own tiles for a fresh upgrade, none for an older one being counted again.</summary>
+        private IReadOnlyList<Vector2Int> _tileUpgradeOwnCells;
+
+        /// <summary>The upgraded tiles already on the garden, with their upgrade, as they stand right before a placement.</summary>
+        private List<(Vector2Int Pos, PieceTrait Trait)> CollectPersistentTraits()
+        {
+            var list = new List<(Vector2Int, PieceTrait)>();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var cell = Grid.GetCell(pos);
+                if (cell.IsFilled && cell.OriginTrait.HasValue && !PieceTrait.IsJokerCombatKind(cell.OriginTrait.Value.Kind))
+                {
+                    list.Add((pos, cell.OriginTrait.Value));
+                }
+            }
+            return list;
+        }
+
+        /// <summary>Re-stamps the golden/tinted/multiplier effects of the older upgraded tiles so GridManager's own scoring counts them again when they are part of the scored group.</summary>
+        private void StampPersistentTraits(List<(Vector2Int Pos, PieceTrait Trait)> traits, PieceShape shape, int x, int y, List<Cell> transientCells)
+        {
+            for (int i = 0; i < traits.Count; i++)
+            {
+                var kind = traits[i].Trait.Kind;
+                if (kind == PieceTraitKind.Golden || kind == PieceTraitKind.Tinted || kind == PieceTraitKind.Multiplier || kind == PieceTraitKind.Blast || kind == PieceTraitKind.Beacon)
+                {
+                    transientCells.AddRange(ApplyTokenTrait(traits[i].Trait, traits[i].Pos, shape, x, y));
+                }
+            }
+        }
+
+        /// <summary>The post-placement upgrades (Mirror, Twin, Spark, Void, Venom and every flat-point one) of the older tiles that this placement scored again.</summary>
+        private void ApplyPersistentTraitBonuses(List<(Vector2Int Pos, PieceTrait Trait)> traits, int streakBeforePlacement, PlacementResult placement)
+        {
+            if (traits.Count == 0 || placement.GroupCells.Count == 0)
+            {
+                return;
+            }
+            var scored = new HashSet<Vector2Int>(placement.GroupCells);
+            var fresh = new HashSet<Vector2Int>(placement.PlacedCells);
+            _tileUpgradeOwnCells = System.Array.Empty<Vector2Int>();
+            try
+            {
+                for (int i = 0; i < traits.Count; i++)
+                {
+                    if (scored.Contains(traits[i].Pos) && !fresh.Contains(traits[i].Pos))
+                    {
+                        ApplyPostPlacementTraitBonus(traits[i].Trait, traits[i].Pos, streakBeforePlacement, placement);
+                    }
+                }
+            }
+            finally
+            {
+                _tileUpgradeOwnCells = null;
+            }
+        }
+
         /// <summary>The color of the tile at <paramref name="pos"/> as this placement saw it — a tile its own line clear just harvested still counts.</summary>
         private PieceColor? ColorAsPlaced(Vector2Int pos, PlacementResult placement)
         {
@@ -37,7 +94,7 @@ namespace Contigu.Core
             for (int s = 0; s < TileUpgradeSteps.Length; s++)
             {
                 var n = pos + TileUpgradeSteps[s];
-                if (new List<Vector2Int>(placement.PlacedCells).Contains(n))
+                if (new List<Vector2Int>(_tileUpgradeOwnCells ?? placement.PlacedCells).Contains(n))
                 {
                     continue;
                 }

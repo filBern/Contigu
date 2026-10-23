@@ -230,6 +230,40 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void UpgradedTiles_AreCountedAgain_EveryTimeTheyScore()
+        {
+            var run = NewRun();
+            Assert.AreEqual(ScoringConstants.PipBonus, PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 2, 2).TraitBonus);
+            // Joining the same Coral group scores the new Pip AND the older one again.
+            Assert.AreEqual(2 * ScoringConstants.PipBonus, PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 3, 2).TraitBonus);
+            // A tile that is not part of the scored group does not count again.
+            Assert.AreEqual(ScoringConstants.PipBonus, PlantAt(run, PieceTraitKind.Pip, PieceColor.Teal, 5, 5).TraitBonus);
+        }
+
+        [Test]
+        public void OlderUpgradedTile_KeepsItsPositionalBonus_WhenAnotherSeedJoinsItsGroup()
+        {
+            var run = NewRun();
+            PlantAt(run, PieceTraitKind.Corner, PieceColor.Coral, 0, 0);
+            var joined = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 1, 0);
+            Assert.AreEqual(ScoringConstants.CornerBonus + ScoringConstants.PipBonus, joined.TraitBonus, "the Corner Sprout scores again from its corner");
+        }
+
+        [Test]
+        public void OlderGoldenTile_ScoresItsGoldenBonusAgain()
+        {
+            var control = NewRun();
+            Fill(control, PieceColor.Coral, (2, 2));
+            int single = PlantAt(control, PieceTraitKind.Golden, PieceColor.Coral, 3, 2).GoldenBonus;
+
+            var run = NewRun();
+            PlantAt(run, PieceTraitKind.Golden, PieceColor.Coral, 2, 2);
+            int both = PlantAt(run, PieceTraitKind.Golden, PieceColor.Coral, 3, 2).GoldenBonus;
+            Assert.Greater(single, 0);
+            Assert.Greater(both, single, "the older golden tile is golden again");
+        }
+
+        [Test]
         public void Harvester_PaysPerLineItsSeedHarvests()
         {
             var run = NewRun();
