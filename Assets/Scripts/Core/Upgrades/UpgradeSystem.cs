@@ -169,9 +169,7 @@ namespace Contigu.Core
                     {
                         int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
                         int localIndex = _rng.Next(cellCount);
-                        trait = kind.Value == PieceTraitKind.Tinted
-                            ? new PieceTrait(kind.Value, localIndex, color)
-                            : new PieceTrait(kind.Value, localIndex);
+                        trait = new PieceTrait(kind.Value, localIndex, PieceTrait.TargetColorFor(kind.Value, color));
                     }
                 }
 
@@ -290,6 +288,25 @@ namespace Contigu.Core
                 case UpgradeId.BastionTile: return PieceTraitKind.Bastion;
                 case UpgradeId.KamikazeTile: return PieceTraitKind.Kamikaze;
                 case UpgradeId.VenomTile: return PieceTraitKind.Venom;
+                case UpgradeId.PipTile: return PieceTraitKind.Pip;
+                case UpgradeId.LuckyTile: return PieceTraitKind.Lucky;
+                case UpgradeId.CompanionTile: return PieceTraitKind.Companion;
+                case UpgradeId.ColonyTile: return PieceTraitKind.Colony;
+                case UpgradeId.BorderTile: return PieceTraitKind.Border;
+                case UpgradeId.HeartTile: return PieceTraitKind.Heart;
+                case UpgradeId.CornerTile: return PieceTraitKind.Corner;
+                case UpgradeId.HermitTile: return PieceTraitKind.Hermit;
+                case UpgradeId.CuddlyTile: return PieceTraitKind.Cuddly;
+                case UpgradeId.DawnTile: return PieceTraitKind.Dawn;
+                case UpgradeId.DuskTile: return PieceTraitKind.Dusk;
+                case UpgradeId.MiserTile: return PieceTraitKind.Miser;
+                case UpgradeId.StormyTile: return PieceTraitKind.Stormy;
+                case UpgradeId.ElderTile: return PieceTraitKind.Elder;
+                case UpgradeId.HarvesterTile: return PieceTraitKind.Harvester;
+                case UpgradeId.BreezeTile: return PieceTraitKind.Breeze;
+                case UpgradeId.HarmonyTile: return PieceTraitKind.Harmony;
+                case UpgradeId.PrismTile: return PieceTraitKind.Prism;
+                case UpgradeId.GardenerTile: return PieceTraitKind.Gardener;
                 default: return null; // Bank pool — no trait
             }
         }

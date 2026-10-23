@@ -105,3 +105,9 @@ Rééquilibrage après leur arrivée (victoires du bot, graines 31337 / 4001) : 
 - `IsModifierUsableThisRun` écarte ceux qui ne pourraient jamais se déclencher : Underdog, Finishing Blow et Underbrush sans ennemis, Frost Hardy dans un monde sans gel (Summer).
 - Prix 4 à 7 Pollen ; les valeurs sont dans `ScoringConstants` / `EconomyConstants` (section « 40 fertilizers »).
 
+## Tile upgrades à points de placement (19)
+
+Nouveaux `PieceTraitKind` / `UpgradeId` du pool Grid, tous évalués après le placement par `RunManager.TileUpgrades.cs` (événement `Trait` sur la tuile enchantée) :
+Pip (+1), Lucky (0 à 20 au hasard), Companion (+8 par voisin de la couleur choisie, la couleur suivante du run), Colony (+20 si le groupe dépasse 10 cases), Border (+8 sur le bord), Heart (+12 au centre), Corner (+30 sur un coin), Hermit (+12 sans voisin), Cuddly (+3 par voisin), Dawn (+12 parmi les 3 premières graines), Dusk (+20 sur la dernière), Miser (+1 par Pollen, max 15), Stormy (+12 hors Clear skies), Elder (+2 par manche déjà gagnée), Harvester (+10 par ligne récoltée), Breeze (+3 par Shuffle restant), Harmony (+10 si tous les voisins ont sa couleur), Prism (+20 avec 3 couleurs voisines ou plus), Gardener (+3 par fertilizer). Les voisins comptent même si la ligne vient d'être récoltée.
+Les valeurs sont dans `ScoringConstants` (section « tile upgrades »). Victoires du bot après ajout : Spring 13,1 %, Greenhouse 6,7 %.
+

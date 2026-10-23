@@ -26,6 +26,9 @@ namespace Contigu.Data
         private static readonly Color KamikazeBadgeColor = new Color(0.710f, 0.427f, 0.498f); // #b56d7f (same family as Detonator/destruction)
         private static readonly Color VenomBadgeColor = new Color(0.373f, 0.624f, 0.373f); // #5f9f5f
 
+        // The flat placement-point tile upgrades share one warm badge color; the glyph on the badge tells them apart.
+        private static readonly Color PlacementPointBadgeColor = new Color(0.910f, 0.659f, 0.180f); // #e8a82e
+
         // Joker-exclusive combat traits all share Joker's own color
         // (VisualDefaults.ColorMap[PieceColor.Joker]); the hover tooltip
         // is what distinguishes them from each other.
@@ -51,6 +54,25 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion: return "Bastion Sprout";
                 case PieceTraitKind.Kamikaze: return "Kamikaze Sprout";
                 case PieceTraitKind.Venom: return "Venom Sprout";
+                case PieceTraitKind.Pip: return "Pip Sprout";
+                case PieceTraitKind.Lucky: return "Lucky Sprout";
+                case PieceTraitKind.Companion: return "Companion Sprout";
+                case PieceTraitKind.Colony: return "Colony Sprout";
+                case PieceTraitKind.Border: return "Border Sprout";
+                case PieceTraitKind.Heart: return "Heart Sprout";
+                case PieceTraitKind.Corner: return "Corner Sprout";
+                case PieceTraitKind.Hermit: return "Hermit Sprout";
+                case PieceTraitKind.Cuddly: return "Cuddly Sprout";
+                case PieceTraitKind.Dawn: return "Dawn Sprout";
+                case PieceTraitKind.Dusk: return "Dusk Sprout";
+                case PieceTraitKind.Miser: return "Miser Sprout";
+                case PieceTraitKind.Stormy: return "Stormy Sprout";
+                case PieceTraitKind.Elder: return "Elder Sprout";
+                case PieceTraitKind.Harvester: return "Harvester Sprout";
+                case PieceTraitKind.Breeze: return "Breeze Sprout";
+                case PieceTraitKind.Harmony: return "Harmony Sprout";
+                case PieceTraitKind.Prism: return "Prism Sprout";
+                case PieceTraitKind.Gardener: return "Gardener Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -97,6 +119,44 @@ namespace Contigu.Data
                     return "Destroys itself and its 8 surrounding sprouts (including this seed's own other sprouts), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per sprout destroyed.";
                 case PieceTraitKind.Venom:
                     return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed — fires even if this placement scores nothing.";
+                case PieceTraitKind.Pip:
+                    return "Scores +" + ScoringConstants.PipBonus + " pt when planted.";
+                case PieceTraitKind.Lucky:
+                    return "Scores a random bonus from 0 to " + ScoringConstants.LuckyMaxBonus + " pts when planted.";
+                case PieceTraitKind.Companion:
+                    return "Scores +" + ScoringConstants.CompanionBonusPerTile + " pts for each tile of " + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its chosen color") + " touching this sprout.";
+                case PieceTraitKind.Colony:
+                    return "Scores +" + ScoringConstants.ColonyBonus + " pts when its scored group has more than " + ScoringConstants.ColonyMinGroupExclusive + " cells.";
+                case PieceTraitKind.Border:
+                    return "Scores +" + ScoringConstants.BorderBonus + " pts when planted on the edge of the garden.";
+                case PieceTraitKind.Heart:
+                    return "Scores +" + ScoringConstants.HeartBonus + " pts when planted in the middle of the garden.";
+                case PieceTraitKind.Corner:
+                    return "Scores +" + ScoringConstants.CornerBonus + " pts when planted on a corner of the garden.";
+                case PieceTraitKind.Hermit:
+                    return "Scores +" + ScoringConstants.HermitBonus + " pts when no other tile touches it.";
+                case PieceTraitKind.Cuddly:
+                    return "Scores +" + ScoringConstants.CuddlyBonusPerNeighbor + " pts for each planted tile touching it.";
+                case PieceTraitKind.Dawn:
+                    return "Scores +" + ScoringConstants.DawnBonus + " pts when planted among the first " + ScoringConstants.DawnSeeds + " seeds of the round.";
+                case PieceTraitKind.Dusk:
+                    return "Scores +" + ScoringConstants.DuskBonus + " pts when planted as the last seed of the round.";
+                case PieceTraitKind.Miser:
+                    return "Scores +" + ScoringConstants.MiserBonusPerPollen + " pt per Pollen you hold (up to +" + ScoringConstants.MiserMaxBonus + ").";
+                case PieceTraitKind.Stormy:
+                    return "Scores +" + ScoringConstants.StormyBonus + " pts when the weather isn't Clear skies.";
+                case PieceTraitKind.Elder:
+                    return "Scores +" + ScoringConstants.ElderBonusPerRound + " pts per round already cleared this run.";
+                case PieceTraitKind.Harvester:
+                    return "Scores +" + ScoringConstants.HarvesterBonusPerLine + " pts for each line its seed harvests.";
+                case PieceTraitKind.Breeze:
+                    return "Scores +" + ScoringConstants.BreezeBonusPerShuffle + " pts per Shuffle you still have.";
+                case PieceTraitKind.Harmony:
+                    return "Scores +" + ScoringConstants.HarmonyBonus + " pts when every tile touching it shares its color.";
+                case PieceTraitKind.Prism:
+                    return "Scores +" + ScoringConstants.PrismBonus + " pts when it touches " + ScoringConstants.PrismMinColors + " or more different colors.";
+                case PieceTraitKind.Gardener:
+                    return "Scores +" + ScoringConstants.GardenerBonusPerFertilizer + " pts for each fertilizer you hold.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -133,6 +193,25 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Kamikaze: return UpgradeRarity.Rare;
                 case PieceTraitKind.Venom: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Pip: return UpgradeRarity.Common;
+                case PieceTraitKind.Lucky: return UpgradeRarity.Common;
+                case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Colony: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Border: return UpgradeRarity.Common;
+                case PieceTraitKind.Heart: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Corner: return UpgradeRarity.Rare;
+                case PieceTraitKind.Hermit: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Cuddly: return UpgradeRarity.Common;
+                case PieceTraitKind.Dawn: return UpgradeRarity.Common;
+                case PieceTraitKind.Dusk: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Miser: return UpgradeRarity.Common;
+                case PieceTraitKind.Stormy: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Elder: return UpgradeRarity.Common;
+                case PieceTraitKind.Harvester: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Breeze: return UpgradeRarity.Common;
+                case PieceTraitKind.Harmony: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Prism: return UpgradeRarity.Rare;
+                case PieceTraitKind.Gardener: return UpgradeRarity.Uncommon;
                 default: return UpgradeRarity.Common;
             }
         }
@@ -193,6 +272,27 @@ namespace Contigu.Data
                     return KamikazeBadgeColor;
                 case PieceTraitKind.Venom:
                     return VenomBadgeColor;
+                case PieceTraitKind.Companion:
+                    return trait.TintedColor.HasValue ? VisualDefaults.GetColor(trait.TintedColor.Value) : PlacementPointBadgeColor;
+                case PieceTraitKind.Pip:
+                case PieceTraitKind.Lucky:
+                case PieceTraitKind.Colony:
+                case PieceTraitKind.Border:
+                case PieceTraitKind.Heart:
+                case PieceTraitKind.Corner:
+                case PieceTraitKind.Hermit:
+                case PieceTraitKind.Cuddly:
+                case PieceTraitKind.Dawn:
+                case PieceTraitKind.Dusk:
+                case PieceTraitKind.Miser:
+                case PieceTraitKind.Stormy:
+                case PieceTraitKind.Elder:
+                case PieceTraitKind.Harvester:
+                case PieceTraitKind.Breeze:
+                case PieceTraitKind.Harmony:
+                case PieceTraitKind.Prism:
+                case PieceTraitKind.Gardener:
+                    return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:
                 case PieceTraitKind.Eclat:

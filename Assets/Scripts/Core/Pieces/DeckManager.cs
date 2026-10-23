@@ -637,9 +637,7 @@ namespace Contigu.Core
                 var token = _deck[deckIndex];
                 int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
                 int localIndex = rng.Next(cellCount);
-                var trait = kind == PieceTraitKind.Tinted
-                    ? new PieceTrait(kind, localIndex, token.Color)
-                    : new PieceTrait(kind, localIndex);
+                var trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
                 var taggedToken = token.WithTrait(trait);
                 _deck[deckIndex] = taggedToken;
                 SyncTagIntoLiveCopy(token, taggedToken);

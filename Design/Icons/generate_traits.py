@@ -42,6 +42,34 @@ T['Range'] = (P, g('<path d="M8 32 H46 M36 20 L50 32 L36 44" fill="none"/>', 'no
 T['Eclat'] = (P, g('<rect x="12" y="10" width="40" height="12" rx="4"/>', W) + g('<path d="M32 26 V48 M22 40 L32 52 L42 40" fill="none"/>', 'none', 6).replace(O, W))
 T['Precision'] = (P, g('<circle cx="32" cy="32" r="19" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="32" r="5"/>', W, 2.5) + '<path d="M32 6 V18 M32 46 V58 M6 32 H18 M46 32 H58" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
 T['Sangsue'] = (P, g('<path d="M32 8 C44 24 50 34 44 46 C40 54 24 54 20 46 C14 34 20 24 32 8Z"/>', '#c8403f') + '<path d="M26 40 C26 46 30 48 34 48" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>')
+
+# ---- placement-point tile upgrades
+def dots3(cells_fill):
+    out = ''
+    for i in range(9):
+        x, y = 14 + (i % 3) * 14, 14 + (i // 3) * 14
+        out += '<rect x="%d" y="%d" width="12" height="12" rx="3" fill="%s" stroke="%s" stroke-width="2.5"/>' % (x, y, '#ffd84d' if i in cells_fill else W, O)
+    return out
+T['Pip'] = ('#e8a82e', text('+1', 28, 42))
+T['Lucky'] = ('#5a9e45', g('<rect x="12" y="12" width="40" height="40" rx="9"/>', W) + ''.join('<circle cx="%d" cy="%d" r="4" fill="%s"/>' % (x, y, O) for x, y in ((22, 22), (42, 22), (32, 32), (22, 42), (42, 42))))
+T['Companion'] = ('#8c63b0', g('<circle cx="22" cy="32" r="13"/>', '#e8584f') + g('<circle cx="42" cy="32" r="13"/>', '#4fb0d0') + '<path d="M28 32 H36" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % W)
+T['Colony'] = ('#5a9e45', ''.join(g('<circle cx="%d" cy="%d" r="8"/>' % (x, y), W, 3) for x, y in ((32, 32), (20, 24), (44, 24), (20, 42), (44, 42), (32, 16), (32, 48))))
+T['Border'] = ('#4f7fd0', dots3({0, 1, 2, 3, 5, 6, 7, 8}))
+T['Heart'] = ('#c8403f', dots3({4}))
+T['Corner'] = ('#e8863a', dots3({0, 2, 6, 8}))
+T['Hermit'] = ('#6b4528', '<circle cx="32" cy="32" r="22" fill="none" stroke="%s" stroke-width="3.5" stroke-dasharray="5 5" stroke-linecap="round"/>' % W + g('<circle cx="32" cy="32" r="9"/>', W))
+T['Cuddly'] = ('#f08aa4', g('<path d="M32 52 C8 36 12 14 26 14 C30 14 32 18 32 20 C32 18 34 14 38 14 C52 14 56 36 32 52Z"/>', '#fff0f4'))
+T['Dawn'] = ('#ffc83a', g('<path d="M10 42 A22 22 0 0 1 54 42 Z"/>', '#fff1b0') + ''.join('<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="3.5" stroke-linecap="round"/>' % (32 + 28 * math.cos(math.radians(a)), 42 - 28 * math.sin(math.radians(a)), 32 + 36 * math.cos(math.radians(a)), 42 - 36 * math.sin(math.radians(a)), W) for a in (30, 60, 90, 120, 150)) + '<path d="M8 46 H56" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % W)
+T['Dusk'] = ('#3a2a6b', g('<path d="M40 10 A22 22 0 1 0 54 40 A17 17 0 1 1 40 10Z"/>', '#ffe58a') + g(star(48, 18, 6, 4, 0.4), W, 2))
+T['Miser'] = ('#f1c40f', g('<circle cx="32" cy="32" r="21"/>', '#ffe58a') + text('$', 30, 42, '#8a5a00'))
+T['Stormy'] = ('#6a86ae', g('<path d="M18 38 C8 38 8 24 20 24 C20 12 40 10 44 22 C56 20 58 38 46 38 Z"/>', W) + g('<path d="M34 36 L26 50 L33 50 L29 60 L42 44 L35 44 L39 36Z"/>', '#ffd23a', 2.5))
+T['Elder'] = ('#8a5a2b', g('<circle cx="32" cy="32" r="22"/>', '#d8a566') + g('<circle cx="32" cy="32" r="14"/>', '#c58a4a', 2.5) + g('<circle cx="32" cy="32" r="6"/>', '#8a5a2b', 2.5))
+T['Harvester'] = ('#c8403f', g('<path d="M14 52 C8 28 28 10 54 14 C38 18 28 30 28 50 Z"/>', '#d4d8de') + '<path d="M16 52 L10 58" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
+T['Breeze'] = ('#5fb8a8', g('<path d="M8 24 C24 24 34 14 44 20 C54 28 46 38 40 34 M8 42 C24 42 40 38 48 44 C54 50 46 58 40 54" fill="none"/>', 'none', 6).replace(O, W))
+T['Harmony'] = ('#2fa4a8', ''.join(g('<circle cx="%d" cy="32" r="9"/>' % x, W, 3) for x in (14, 32, 50)) + '<path d="M23 32 H23 M41 32 H41" stroke="%s" stroke-width="3"/>' % O)
+T['Prism'] = ('#8c63b0', g('<path d="M32 8 L54 50 H10 Z"/>', '#e6f4ff') + ''.join('<path d="M%d 34 L%d %d" stroke="%s" stroke-width="3" stroke-linecap="round"/>' % (36, 58, y, c) for y, c in ((26, '#e8584f'), (34, '#ffd23a'), (42, '#4fb0d0'))))
+T['Gardener'] = ('#4f9440', g('<path d="M16 34 H48 L44 54 H20 Z"/>', '#c58a4a') + g('<path d="M32 34 V14 M32 24 C22 22 20 14 22 10 C30 10 34 16 32 24 M32 28 C42 26 46 18 44 14 C36 14 32 20 32 28" fill="none"/>', 'none', 4).replace(O, '#6fb04f'))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

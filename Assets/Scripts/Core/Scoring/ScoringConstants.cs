@@ -408,5 +408,30 @@ namespace Contigu.Core
         public const int MarathonerMultBonus = 4;
         public const int MarathonerFirstRoundIndex = 8;
         public const int BossbaneMultiplier = 2;
+
+        // ---- tile upgrades that score flat placement points (see RunManager.TileUpgrades.cs)
+        public const int PipBonus = 1;
+        public const int LuckyMaxBonus = 20;
+        public const int CompanionBonusPerTile = 8;
+        public const int ColonyMinGroupExclusive = 10;
+        public const int ColonyBonus = 20;
+        public const int BorderBonus = 8;
+        public const int HeartBonus = 12;
+        public const int CornerBonus = 30;
+        public const int HermitBonus = 12;
+        public const int CuddlyBonusPerNeighbor = 3;
+        public const int DawnSeeds = 3;
+        public const int DawnBonus = 12;
+        public const int DuskBonus = 20;
+        public const int MiserBonusPerPollen = 1;
+        public const int MiserMaxBonus = 15;
+        public const int StormyBonus = 12;
+        public const int ElderBonusPerRound = 2;
+        public const int HarvesterBonusPerLine = 10;
+        public const int BreezeBonusPerShuffle = 3;
+        public const int HarmonyBonus = 10;
+        public const int PrismMinColors = 3;
+        public const int PrismBonus = 20;
+        public const int GardenerBonusPerFertilizer = 3;
     }
 }

@@ -344,6 +344,34 @@ M['u_bonussq'] = lambda: tile(18, 18, 64, '#e0d6bf') + num(50, 62, '★', 40, '#
 M['u_seedmastery'] = lambda: seed(50, 52, 2.0) + ''.join(star(x, 14, 8, GOLD, 0.45, 5, 2.5) for x in (30, 50, 70))
 M['u_colormastery'] = lambda: rect(10, 26, 80, 46, '#c58a4a', 14) + ''.join(circ(x, 42, 8, c, 3) for x, c in ((26, R), (42, B), (58, Y), (74, G))) + circ(50, 64, 6, CREAM, 3) + star(80, 16, 9, GOLD, 0.45, 5, 2.5)
 
+
+# ---- tile upgrades with flat placement points: the sign shows the same glyph as the trait's badge
+import generate_traits as GT
+def _trait_motif(kind):
+    col, glyph = GT.T[kind]
+    svg = GT.chip(col, glyph)
+    inner = svg[svg.index('>') + 1: svg.rindex('</svg>')]
+    return '<svg x="10" y="3" width="80" height="80" viewBox="0 0 64 64">%s</svg>' % inner
+M['u_pip'] = lambda: _trait_motif('Pip')
+M['u_lucky'] = lambda: _trait_motif('Lucky')
+M['u_companion'] = lambda: _trait_motif('Companion')
+M['u_colony'] = lambda: _trait_motif('Colony')
+M['u_border'] = lambda: _trait_motif('Border')
+M['u_heart'] = lambda: _trait_motif('Heart')
+M['u_corner'] = lambda: _trait_motif('Corner')
+M['u_hermit'] = lambda: _trait_motif('Hermit')
+M['u_cuddly'] = lambda: _trait_motif('Cuddly')
+M['u_dawn'] = lambda: _trait_motif('Dawn')
+M['u_dusk'] = lambda: _trait_motif('Dusk')
+M['u_miser'] = lambda: _trait_motif('Miser')
+M['u_stormy'] = lambda: _trait_motif('Stormy')
+M['u_elder'] = lambda: _trait_motif('Elder')
+M['u_harvester'] = lambda: _trait_motif('Harvester')
+M['u_breeze'] = lambda: _trait_motif('Breeze')
+M['u_harmony'] = lambda: _trait_motif('Harmony')
+M['u_prism'] = lambda: _trait_motif('Prism')
+M['u_gardener'] = lambda: _trait_motif('Gardener')
+
 U = {
  'ReplacePiece': ('u_replace', 'Bank'), 'DuplicatePiece': ('u_dup', 'Bank'), 'JokerPiece': ('u_joker', 'Bank'), 'RecolorPiece': ('u_recolor', 'Bank'),
  'RandomModifier': ('u_dice', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),
@@ -351,6 +379,25 @@ U = {
  'MultiplierBeacon': ('u_beacon', 'Grid'), 'MirrorTile': ('u_mirror', 'Grid'), 'Seeder': ('u_seeder', 'Grid'), 'CatalystTile': ('u_catalyst', 'Grid'),
  'TwinTile': ('u_twin', 'Grid'), 'DetonatorTile': ('u_detonator', 'Grid'), 'ChameleonTile': ('u_chameleon', 'Grid'), 'SparkTile': ('u_spark', 'Grid'),
  'VoidTile': ('u_void', 'Grid'), 'BastionTile': ('u_bastion', 'Grid'), 'KamikazeTile': ('u_kamikaze', 'Grid'), 'VenomTile': ('u_venom', 'Grid'),
+ 'PipTile': ('u_pip', 'Grid'),
+ 'LuckyTile': ('u_lucky', 'Grid'),
+ 'CompanionTile': ('u_companion', 'Grid'),
+ 'ColonyTile': ('u_colony', 'Grid'),
+ 'BorderTile': ('u_border', 'Grid'),
+ 'HeartTile': ('u_heart', 'Grid'),
+ 'CornerTile': ('u_corner', 'Grid'),
+ 'HermitTile': ('u_hermit', 'Grid'),
+ 'CuddlyTile': ('u_cuddly', 'Grid'),
+ 'DawnTile': ('u_dawn', 'Grid'),
+ 'DuskTile': ('u_dusk', 'Grid'),
+ 'MiserTile': ('u_miser', 'Grid'),
+ 'StormyTile': ('u_stormy', 'Grid'),
+ 'ElderTile': ('u_elder', 'Grid'),
+ 'HarvesterTile': ('u_harvester', 'Grid'),
+ 'BreezeTile': ('u_breeze', 'Grid'),
+ 'HarmonyTile': ('u_harmony', 'Grid'),
+ 'PrismTile': ('u_prism', 'Grid'),
+ 'GardenerTile': ('u_gardener', 'Grid'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),
 }
 

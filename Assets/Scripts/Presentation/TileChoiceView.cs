@@ -199,7 +199,7 @@ namespace Contigu.Presentation
             if (showTrait && _previewTraitKind.HasValue)
             {
                 // Tinted always tints to the token's own color; cell index 0 is a placeholder, the exact cell is decided on confirm.
-                PieceColor? tintedColor = _previewTraitKind.Value == PieceTraitKind.Tinted ? (PieceColor?)token.Color : null;
+                PieceColor? tintedColor = PieceTrait.TargetColorFor(_previewTraitKind.Value, token.Color);
                 previewTrait = new PieceTrait(_previewTraitKind.Value, 0, tintedColor);
             }
 

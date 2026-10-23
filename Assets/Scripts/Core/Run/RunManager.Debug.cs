@@ -121,6 +121,14 @@ namespace Contigu.Core
 #endif
 
 #if UNITY_EDITOR || CONTIGU_DEBUG
+        /// <summary>Debug-only helper: pins the seeds left in this round's budget.</summary>
+        public void DebugSetPiecesRemaining(int amount)
+        {
+            PiecesRemainingThisRound = amount;
+        }
+#endif
+
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: pins ShufflesRemaining to an exact value, bypassing gameplay - avoids re-dealing the hand via ShuffleHand for a deliberately set-up deterministic scenario.</summary>
         public void DebugSetShufflesRemaining(int amount)
         {

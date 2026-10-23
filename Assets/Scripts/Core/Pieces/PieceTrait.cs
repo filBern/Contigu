@@ -51,6 +51,63 @@ namespace Contigu.Core
         /// <summary>"Venom Tile" — when placed (regardless of whether it scores), poisons the front alive enemy for ScoringConstants.VenomDamagePercentOfMaxHp% of ITS OWN current max HP as direct damage — unlike the ordinary score-driven hit, this doesn't depend on this placement's score at all.</summary>
         Venom,
 
+        /// <summary>"Pip Sprout" — +1 pt when planted.</summary>
+        Pip,
+
+        /// <summary>"Lucky Sprout" — +0 to +20 pts at random when planted.</summary>
+        Lucky,
+
+        /// <summary>"Companion Sprout" — +8 pts per touching tile of another chosen color.</summary>
+        Companion,
+
+        /// <summary>"Colony Sprout" — +20 pts when its group has more than 10 cells.</summary>
+        Colony,
+
+        /// <summary>"Border Sprout" — +8 pts when planted on the garden's edge.</summary>
+        Border,
+
+        /// <summary>"Heart Sprout" — +12 pts when planted in the middle of the garden.</summary>
+        Heart,
+
+        /// <summary>"Corner Sprout" — +30 pts when planted on a corner.</summary>
+        Corner,
+
+        /// <summary>"Hermit Sprout" — +12 pts when no other tile touches it.</summary>
+        Hermit,
+
+        /// <summary>"Cuddly Sprout" — +3 pts per planted tile touching it.</summary>
+        Cuddly,
+
+        /// <summary>"Dawn Sprout" — +12 pts if planted among the first 3 seeds of the round.</summary>
+        Dawn,
+
+        /// <summary>"Dusk Sprout" — +20 pts if planted as the last seed of the round.</summary>
+        Dusk,
+
+        /// <summary>"Miser Sprout" — +1 pt per Pollen held (up to +15).</summary>
+        Miser,
+
+        /// <summary>"Stormy Sprout" — +12 pts when the weather isn't Clear.</summary>
+        Stormy,
+
+        /// <summary>"Elder Sprout" — +2 pts per round already cleared this run.</summary>
+        Elder,
+
+        /// <summary>"Harvester Sprout" — +10 pts per line harvested by its seed.</summary>
+        Harvester,
+
+        /// <summary>"Breeze Sprout" — +3 pts per Shuffle you still have.</summary>
+        Breeze,
+
+        /// <summary>"Harmony Sprout" — +10 pts when every touching tile shares its color.</summary>
+        Harmony,
+
+        /// <summary>"Prism Sprout" — +20 pts when it touches 3 or more different colors.</summary>
+        Prism,
+
+        /// <summary>"Gardener Sprout" — +3 pts per fertilizer held.</summary>
+        Gardener,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active
@@ -108,6 +165,29 @@ namespace Contigu.Core
         {
             PieceTraitKind.Bombe, PieceTraitKind.Range, PieceTraitKind.Eclat, PieceTraitKind.Precision, PieceTraitKind.Sangsue
         };
+
+        /// <summary>The color a freshly tagged trait of <paramref name="kind"/> is pinned to: Tinted keeps its token's own, Companion looks for the next color of the run after it (so a Companion Sprout always wants a different color); null for every other kind.</summary>
+        public static PieceColor? TargetColorFor(PieceTraitKind kind, PieceColor tokenColor)
+        {
+            if (kind == PieceTraitKind.Tinted)
+            {
+                return tokenColor;
+            }
+            if (kind != PieceTraitKind.Companion)
+            {
+                return null;
+            }
+            var colors = PieceColorUtility.BaseColors;
+            int own = -1;
+            for (int i = 0; i < colors.Count; i++)
+            {
+                if (colors[i] == tokenColor)
+                {
+                    own = i;
+                }
+            }
+            return colors[(own + 1) % colors.Count];
+        }
 
         public static bool IsJokerCombatKind(PieceTraitKind kind)
         {

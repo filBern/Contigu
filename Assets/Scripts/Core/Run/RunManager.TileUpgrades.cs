@@ -1,0 +1,167 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Contigu.Core
+{
+    /// <summary>The tile upgrades that score flat placement points (Pip, Lucky, Companion, Colony, Border, Heart, Corner, Hermit, Cuddly, Dawn, Dusk, Miser, Stormy, Elder, Harvester, Breeze, Harmony, Prism, Gardener).</summary>
+    public sealed partial class RunManager
+    {
+        private static readonly Vector2Int[] TileUpgradeSteps = { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+
+        /// <summary>The color of the tile at <paramref name="pos"/> as this placement saw it — a tile its own line clear just harvested still counts.</summary>
+        private PieceColor? ColorAsPlaced(Vector2Int pos, PlacementResult placement)
+        {
+            if (!GridManager.InBounds(pos.x, pos.y))
+            {
+                return null;
+            }
+            var cell = Grid.GetCell(pos);
+            if (cell.IsFilled && cell.FilledColor.HasValue)
+            {
+                return cell.FilledColor;
+            }
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                if (placement.ClearedCells[i] == pos && !placement.ClearedCellFrozen[i])
+                {
+                    return placement.ClearedCellColors[i];
+                }
+            }
+            return null;
+        }
+
+        /// <summary>The colors of the tiles touching <paramref name="pos"/> that are not part of the placed piece itself.</summary>
+        private List<PieceColor> OutsideNeighborColors(Vector2Int pos, PlacementResult placement)
+        {
+            var colors = new List<PieceColor>();
+            for (int s = 0; s < TileUpgradeSteps.Length; s++)
+            {
+                var n = pos + TileUpgradeSteps[s];
+                if (new List<Vector2Int>(placement.PlacedCells).Contains(n))
+                {
+                    continue;
+                }
+                var color = ColorAsPlaced(n, placement);
+                if (color.HasValue)
+                {
+                    colors.Add(color.Value);
+                }
+            }
+            return colors;
+        }
+
+        /// <summary>Scores the flat points of the placement-point tile upgrades (a Trait event on the enchanted cell).</summary>
+        private void ApplyTileUpgradeBonus(PieceTrait trait, Vector2Int pos, PlacementResult placement)
+        {
+            int bonus = 0;
+            int last = GridManager.Size - 1;
+            switch (trait.Kind)
+            {
+                case PieceTraitKind.Pip:
+                    bonus = ScoringConstants.PipBonus;
+                    break;
+                case PieceTraitKind.Lucky:
+                    bonus = _rng.Next(ScoringConstants.LuckyMaxBonus + 1);
+                    break;
+                case PieceTraitKind.Companion:
+                    if (trait.TintedColor.HasValue)
+                    {
+                        foreach (var color in OutsideNeighborColors(pos, placement))
+                        {
+                            if (color == trait.TintedColor.Value)
+                            {
+                                bonus += ScoringConstants.CompanionBonusPerTile;
+                            }
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Colony:
+                    GetGroupShare(placement, pos, out int groupSize, out _);
+                    if (groupSize > ScoringConstants.ColonyMinGroupExclusive)
+                    {
+                        bonus = ScoringConstants.ColonyBonus;
+                    }
+                    break;
+                case PieceTraitKind.Border:
+                    if (pos.x == 0 || pos.y == 0 || pos.x == last || pos.y == last)
+                    {
+                        bonus = ScoringConstants.BorderBonus;
+                    }
+                    break;
+                case PieceTraitKind.Heart:
+                    if (pos.x >= (GridManager.Size - 1) / 2 && pos.x <= GridManager.Size / 2 && pos.y >= (GridManager.Size - 1) / 2 && pos.y <= GridManager.Size / 2)
+                    {
+                        bonus = ScoringConstants.HeartBonus;
+                    }
+                    break;
+                case PieceTraitKind.Corner:
+                    if ((pos.x == 0 || pos.x == last) && (pos.y == 0 || pos.y == last))
+                    {
+                        bonus = ScoringConstants.CornerBonus;
+                    }
+                    break;
+                case PieceTraitKind.Hermit:
+                    if (OutsideNeighborColors(pos, placement).Count == 0)
+                    {
+                        bonus = ScoringConstants.HermitBonus;
+                    }
+                    break;
+                case PieceTraitKind.Cuddly:
+                    bonus = OutsideNeighborColors(pos, placement).Count * ScoringConstants.CuddlyBonusPerNeighbor;
+                    break;
+                case PieceTraitKind.Dawn:
+                    // PiecesRemainingThisRound still counts this very seed (it is spent right after scoring).
+                    if (CurrentBudget - PiecesRemainingThisRound + 1 <= ScoringConstants.DawnSeeds)
+                    {
+                        bonus = ScoringConstants.DawnBonus;
+                    }
+                    break;
+                case PieceTraitKind.Dusk:
+                    if (PiecesRemainingThisRound == 1)
+                    {
+                        bonus = ScoringConstants.DuskBonus;
+                    }
+                    break;
+                case PieceTraitKind.Miser:
+                    bonus = Mathf.Min(Lueur * ScoringConstants.MiserBonusPerPollen, ScoringConstants.MiserMaxBonus);
+                    break;
+                case PieceTraitKind.Stormy:
+                    if (CurrentWeather != WeatherId.Clear)
+                    {
+                        bonus = ScoringConstants.StormyBonus;
+                    }
+                    break;
+                case PieceTraitKind.Elder:
+                    bonus = CurrentRoundIndex * ScoringConstants.ElderBonusPerRound;
+                    break;
+                case PieceTraitKind.Harvester:
+                    bonus = placement.ClearedLineCount * ScoringConstants.HarvesterBonusPerLine;
+                    break;
+                case PieceTraitKind.Breeze:
+                    bonus = ShufflesRemaining * ScoringConstants.BreezeBonusPerShuffle;
+                    break;
+                case PieceTraitKind.Harmony:
+                    var neighbors = OutsideNeighborColors(pos, placement);
+                    var own = ColorAsPlaced(pos, placement);
+                    if (neighbors.Count > 0 && own.HasValue && neighbors.TrueForAll(c => c == own.Value))
+                    {
+                        bonus = ScoringConstants.HarmonyBonus;
+                    }
+                    break;
+                case PieceTraitKind.Prism:
+                    if (new HashSet<PieceColor>(OutsideNeighborColors(pos, placement)).Count >= ScoringConstants.PrismMinColors)
+                    {
+                        bonus = ScoringConstants.PrismBonus;
+                    }
+                    break;
+                case PieceTraitKind.Gardener:
+                    bonus = _activeModifiers.Count * ScoringConstants.GardenerBonusPerFertilizer;
+                    break;
+            }
+            if (bonus > 0)
+            {
+                AddTraitBonus(placement, pos, bonus);
+            }
+        }
+    }
+}

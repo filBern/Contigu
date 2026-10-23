@@ -131,6 +131,25 @@ namespace Contigu.Core
                 case PieceTraitKind.Bastion:
                 case PieceTraitKind.Kamikaze:
                 case PieceTraitKind.Venom:
+                case PieceTraitKind.Pip:
+                case PieceTraitKind.Lucky:
+                case PieceTraitKind.Companion:
+                case PieceTraitKind.Colony:
+                case PieceTraitKind.Border:
+                case PieceTraitKind.Heart:
+                case PieceTraitKind.Corner:
+                case PieceTraitKind.Hermit:
+                case PieceTraitKind.Cuddly:
+                case PieceTraitKind.Dawn:
+                case PieceTraitKind.Dusk:
+                case PieceTraitKind.Miser:
+                case PieceTraitKind.Stormy:
+                case PieceTraitKind.Elder:
+                case PieceTraitKind.Harvester:
+                case PieceTraitKind.Breeze:
+                case PieceTraitKind.Harmony:
+                case PieceTraitKind.Prism:
+                case PieceTraitKind.Gardener:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -304,6 +323,27 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Venom:
                     ApplyVenomEffect();
+                    break;
+                case PieceTraitKind.Pip:
+                case PieceTraitKind.Lucky:
+                case PieceTraitKind.Companion:
+                case PieceTraitKind.Colony:
+                case PieceTraitKind.Border:
+                case PieceTraitKind.Heart:
+                case PieceTraitKind.Corner:
+                case PieceTraitKind.Hermit:
+                case PieceTraitKind.Cuddly:
+                case PieceTraitKind.Dawn:
+                case PieceTraitKind.Dusk:
+                case PieceTraitKind.Miser:
+                case PieceTraitKind.Stormy:
+                case PieceTraitKind.Elder:
+                case PieceTraitKind.Harvester:
+                case PieceTraitKind.Breeze:
+                case PieceTraitKind.Harmony:
+                case PieceTraitKind.Prism:
+                case PieceTraitKind.Gardener:
+                    ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }
         }

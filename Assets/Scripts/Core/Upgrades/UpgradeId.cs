@@ -55,6 +55,26 @@ namespace Contigu.Core
         VenomTile,
         PermanentBonusSquare,
 
+        PipTile,
+        LuckyTile,
+        CompanionTile,
+        ColonyTile,
+        BorderTile,
+        HeartTile,
+        CornerTile,
+        HermitTile,
+        CuddlyTile,
+        DawnTile,
+        DuskTile,
+        MiserTile,
+        StormyTile,
+        ElderTile,
+        HarvesterTile,
+        BreezeTile,
+        HarmonyTile,
+        PrismTile,
+        GardenerTile,
+
         PieceMastery,
 
         ColorMastery
