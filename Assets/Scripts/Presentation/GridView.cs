@@ -743,6 +743,15 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Pulses only the upgrade badge of one tile (a tile upgrade scoring); falls back to pulsing the whole tile when it has no visible badge.</summary>
+        public void PulseTraitBadge(int x, int y)
+        {
+            if (GridManager.InBounds(x, y) && !_cells[x, y].PulseTraitBadge())
+            {
+                _cells[x, y].Pulse(true);
+            }
+        }
+
         /// <summary>The Heatwave scorching one planted tile (see GridCellView.PlayBurn).</summary>
         public void PlayBurn(int x, int y)
         {

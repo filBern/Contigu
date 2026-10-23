@@ -544,7 +544,15 @@ namespace Contigu.Presentation
                 // ScoreEvent per qualifying cell, so this naturally pulses
                 // each in turn; a flat-bonus modifier only has the one
                 // representative cell.
-                _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+                if (scoreEvent.Type == ScoreEventType.Trait)
+                {
+                    // A tile upgrade scoring: the upgrade's own badge pulses, not the whole tile.
+                    _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
+                }
+                else
+                {
+                    _gridView.PulseCell(scoreEvent.Position.x, scoreEvent.Position.y);
+                }
 
                 RectTransform anchor;
                 if (scoreEvent.Type == ScoreEventType.Modifier && scoreEvent.TriggeringModifier.HasValue)

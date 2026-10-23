@@ -375,6 +375,42 @@ namespace Contigu.Presentation
             _scaleCoroutine = StartCoroutine(PulseRoutine(shake));
         }
 
+        private Coroutine _badgePulseCoroutine;
+
+        /// <summary>Pulses just this tile's upgrade badge (when it shows one) and returns true; false when there is no visible badge, so the caller can pulse the whole tile instead.</summary>
+        public bool PulseTraitBadge()
+        {
+            if (_badgeTraitOrigin == null || !_badgeTraitOrigin.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+            if (_badgePulseCoroutine != null)
+            {
+                StopCoroutine(_badgePulseCoroutine);
+                _badgeTraitOrigin.rectTransform.localScale = Vector3.one;
+            }
+            _badgePulseCoroutine = StartCoroutine(BadgePulseRoutine());
+            return true;
+        }
+
+        private IEnumerator BadgePulseRoutine()
+        {
+            var rt = _badgeTraitOrigin.rectTransform;
+            const float duration = 0.4f;
+            const float peak = 1.9f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float scale = p < 0.35f ? Mathf.Lerp(1f, peak, p / 0.35f) : Mathf.Lerp(peak, 1f, (p - 0.35f) / 0.65f);
+                rt.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            _badgePulseCoroutine = null;
+        }
+
         private IEnumerator PulseRoutine(bool shake)
         {
             var rt = (RectTransform)transform;
