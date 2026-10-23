@@ -160,7 +160,7 @@ namespace Contigu.Core
                     // enchantment — so re-roll rather than crash on a null trait kind. Bounded to stay
                     // safe even in a hypothetical pool made up mostly of such entries.
                     PieceTraitKind? kind = null;
-                    for (int attempt = 0; attempt < 10 && !kind.HasValue; attempt++)
+                    for (int attempt = 0; attempt < 50 && !kind.HasValue; attempt++)
                     {
                         var rolledGridUpgrade = RollFromPool(UpgradePool.Grid);
                         kind = TraitKindFor(rolledGridUpgrade.Id);

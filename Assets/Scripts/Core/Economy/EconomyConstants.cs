@@ -86,7 +86,7 @@ namespace Contigu.Core
         /// candidates already carries a Grid-pool tile trait before the
         /// player even picks one. Independent per candidate.
         /// </summary>
-        public const int RandomPieceTraitChancePercent = 25;
+        public const int RandomPieceTraitChancePercent = 100;
 
         // Lueur-earning modifiers, each adapted from an existing score
         // modifier of the same shape, paying Lueur instead. Values are

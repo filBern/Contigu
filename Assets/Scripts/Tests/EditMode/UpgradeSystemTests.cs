@@ -370,34 +370,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void GetCandidatePiecesFor_OverManySeeds_GrantsTraitsAtRoughlyTheConfiguredRate()
+        public void GetCandidatePiecesFor_EveryFreshSeedCarriesAnUpgradedTile()
         {
-            // Statistical check (same style as RollFromPool's rarity-
-            // weighting test above) of EconomyConstants.
-            // RandomPieceTraitChancePercent (25) — over many independent
-            // rolls, roughly a quarter of candidates should carry a trait.
-            // Loose bounds since this is inherently random, just enough to
-            // catch the rate being wired up backwards or not at all (e.g.
-            // always/never enchanting).
-            int total = 0;
-            int withTrait = 0;
+            // Every fresh sprout candidate comes pre-enchanted with a Grid-pool tile trait.
             for (int seed = 0; seed < 200; seed++)
             {
                 var system = new UpgradeSystem(new SystemRandomProvider(seed));
-                var candidates = system.GetCandidatePiecesFor(UpgradeCatalog.RandomPiece);
-                foreach (var candidate in candidates)
+                foreach (var candidate in system.GetCandidatePiecesFor(UpgradeCatalog.RandomPiece))
                 {
-                    total++;
-                    if (candidate.Trait.HasValue)
-                    {
-                        withTrait++;
-                    }
+                    Assert.IsTrue(candidate.Trait.HasValue, "seed " + seed);
                 }
             }
-
-            float rate = withTrait / (float)total;
-            Assert.Greater(rate, 0.15f, "Roughly a quarter of candidates should carry a trait — this looks too low");
-            Assert.Less(rate, 0.35f, "Roughly a quarter of candidates should carry a trait — this looks too high");
         }
 
         [Test]

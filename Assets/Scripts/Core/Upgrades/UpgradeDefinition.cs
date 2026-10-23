@@ -71,7 +71,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition RandomPiece = new UpgradeDefinition(
             UpgradeId.RandomPiece, UpgradePool.Bank, "Fresh Sprout",
-            "Choose 1 seed to add to your seed bag.", true, UpgradeRarity.Common);
+            "Choose 1 of 5 fresh seeds, each with an upgraded tile, to add to your seed bag.", true, UpgradeRarity.Common);
 
         /// <summary>
         /// A level system that amplifies whatever the chosen modifier
