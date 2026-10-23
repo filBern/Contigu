@@ -19,6 +19,7 @@ namespace Contigu.Presentation
     {
         private const float TitleHeight = 40f;
         private const float PreviewSize = 96f;
+        private const float SeedPreviewSize = 210f;
         private const float OkHeight = 44f;
         private const float BlockSpacing = 24f;
         // Canvas is always this tall in local units regardless of window size (CanvasScaler matches on height; see GameBootstrap.BuildCanvas), so centering math here holds at any resolution.
@@ -85,9 +86,10 @@ namespace Contigu.Presentation
         {
             ShowInternal(def, () =>
             {
-                _previewContainer.sizeDelta = new Vector2(PreviewSize, PreviewSize);
-                ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, trait, _tooltip, null);
-                return PreviewSize;
+                // Big enough to read the seed (and its badge): the largest shape spans 3 cells.
+                _previewContainer.sizeDelta = new Vector2(SeedPreviewSize, SeedPreviewSize);
+                ShapePreviewFactory.Build(_previewContainer, PieceShapeCatalog.Get(pieceShape), pieceColor, trait, _tooltip, null, SeedPreviewSize / 3f);
+                return SeedPreviewSize;
             });
         }
 
