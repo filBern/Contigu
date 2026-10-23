@@ -34,7 +34,7 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Settings", 32, UITheme.TextOnBackground);
+            var header = UIFactory.CreateText(_root, "Header", "Menu", 32, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -45,7 +45,7 @@ namespace Contigu.Presentation
             BuildVolumeRow(_root, -230f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
             BuildVolumeRow(_root, -320f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
 
-            var closeBtn = UIFactory.CreateButton(_root, "Close", "Close", UISprites.ChooseButtonBackground, 18);
+            var closeBtn = UIFactory.CreateButton(_root, "Close", "Resume", UISprites.ChooseButtonBackground, 18);
             var closeRect = closeBtn.GetComponent<RectTransform>();
             closeRect.anchorMin = new Vector2(0.5f, 0f);
             closeRect.anchorMax = new Vector2(0.5f, 0f);

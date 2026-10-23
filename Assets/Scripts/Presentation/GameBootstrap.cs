@@ -623,9 +623,10 @@ namespace Contigu.Presentation
         /// <summary>A small always-visible "Menu" button (top-left, beside the round and weather chips) that opens Settings — where a run can be abandoned or the game left for the main menu — for players who don't know the Escape key.</summary>
         private void BuildMenuButton(Transform parent)
         {
-            var menuButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.HandUtilityButtonBackground, 12);
+            // The green button style with its own light label: black text on the wooden utility button was unreadable here.
+            var menuButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.ChooseButtonBackground, 12);
+            UIFactory.DisablePlants(menuButton);
             var label = menuButton.GetComponentInChildren<Text>();
-            label.color = Color.black;
             label.fontSize = 22;
             var rect = menuButton.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
