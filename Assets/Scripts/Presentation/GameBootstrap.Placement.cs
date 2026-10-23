@@ -205,6 +205,12 @@ namespace Contigu.Presentation
                 heldColors.Add(move.Color);
                 heldTraits.Add(null);
             }
+            var sownPositions = new List<Vector2Int>();
+            for (int i = 0; i < outcome.Placement.SownTiles.Count; i++)
+            {
+                sownPositions.Add(outcome.Placement.SownTiles[i].Position);
+            }
+            _gridView.HoldHiddenCells(sownPositions);
             _gridView.SetFrozenHold(heldFrozenCells, true);
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
             _gridView.ShowCellsAsEmpty(weatherHiddenCells);
@@ -532,6 +538,12 @@ namespace Contigu.Presentation
                         _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
+                    else
+                    {
+                        // A tile upgrade's Pollen (Honeycomb, Dewdrop): its badge pulses and the Pollen flies from its tile.
+                        _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
+                        _feedbackLayer.SpawnPollenFlight(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y).position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
+                    }
                     SfxManager.Play(SfxId.LueurGain);
                     displayedLueur += scoreEvent.Amount;
                     _hudView.SetLueur(displayedLueur);
@@ -719,6 +731,12 @@ namespace Contigu.Presentation
                     _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.Danger);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                 }
+                else if (scoreEvent.Type == ScoreEventType.MultBonus)
+                {
+                    // A tile upgrade's flat Mult (Keystone Sprout): its badge pulses and the popup sits on its tile.
+                    _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y), "+" + FormatMultAmount(amount), UITheme.Danger);
+                }
                 else if (scoreEvent.Type == ScoreEventType.ModifierMultiplier)
                 {
                     // Not from a modifier: the whole grid was just cleared (see GridManager's GridClearMultiplier).
@@ -890,6 +908,7 @@ namespace Contigu.Presentation
             }
 
             yield return PlayDeferredShuffleActs();
+            yield return PlayTileUpgradeWorldEffects(placement);
 
             yield return PlayFrozenShatters(placement);
 
@@ -927,6 +946,11 @@ namespace Contigu.Presentation
                     weatherDestCells.Add(outcome.WeatherMovedTiles[i].To);
                     weatherDestCells.Add(outcome.WeatherMovedTiles[i].From);
                 }
+                for (int i = 0; i < outcome.Placement.SownTiles.Count; i++)
+                {
+                    weatherDestCells.Add(outcome.Placement.SownTiles[i].Position);
+                }
+                _gridView.ReleaseWorldHold();
                 if (weatherDestCells.Count > 0)
                 {
                     _gridView.RefreshCells(weatherDestCells);
@@ -1033,6 +1057,41 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Index of the first alive enemy in CurrentEncounter matching <paramref name="id"/>, or -1 if there's no active encounter or none alive — see OnCellClicked's own Leech HP snapshot.</summary>
+        /// <summary>The board effects of tile upgrades, revealed once the score has been counted: Sower Sprout's free tiles pop in, Warden/Aegis plots flash as freed and immune.</summary>
+        private System.Collections.IEnumerator PlayTileUpgradeWorldEffects(PlacementResult placement)
+        {
+            bool any = false;
+            if (placement.SownTiles.Count > 0)
+            {
+                var sown = new List<Vector2Int>();
+                for (int i = 0; i < placement.SownTiles.Count; i++)
+                {
+                    sown.Add(placement.SownTiles[i].Position);
+                }
+                _gridView.ReleaseWorldHold();
+                _gridView.RefreshCells(sown);
+                for (int i = 0; i < sown.Count; i++)
+                {
+                    _gridView.PulseCell(sown[i].x, sown[i].y);
+                    _gridView.PlayClearBurst(sown[i].x, sown[i].y, UITheme.Success);
+                }
+                SfxManager.Play(SfxId.ValidDrop);
+                any = true;
+            }
+            for (int i = 0; i < placement.CleansedCells.Count; i++)
+            {
+                var pos = placement.CleansedCells[i];
+                _gridView.RefreshCells(new List<Vector2Int> { pos });
+                _gridView.PlayClearBurst(pos.x, pos.y, UITheme.LightBlue);
+                _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(pos.x, pos.y), "Immune", UITheme.LightBlue);
+                any = true;
+            }
+            if (any)
+            {
+                yield return new WaitForSeconds(0.35f);
+            }
+        }
+
         /// <summary>Red struck-out popups on the plots whose points a Hater boss cancelled, the boss portrait reacting, and one line saying how much was lost.</summary>
         private System.Collections.IEnumerator PlayCancelledPoints(PlacementResult placement)
         {

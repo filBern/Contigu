@@ -264,6 +264,135 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void ClusterAndCrossfire_ReadTheBoard()
+        {
+            var run = NewRun();
+            PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(ScoringConstants.ClusterBonusPerUpgrade + ScoringConstants.PipBonus, PlantAt(run, PieceTraitKind.Cluster, PieceColor.Coral, 3, 2).TraitBonus, "the older Pip counts as an upgraded tile, and scores itself again");
+
+            var cross = NewRun();
+            Fill(cross, PieceColor.Teal, (0, 2), (1, 2), (2, 1), (2, 4));
+            Assert.AreEqual(4 * ScoringConstants.CrossfireBonusPerPlot, PlantAt(cross, PieceTraitKind.Crossfire, PieceColor.Coral, 2, 2).TraitBonus);
+        }
+
+        [Test]
+        public void Even_RainbowRow_Sunseeker_Hunter_Executioner()
+        {
+            var even = NewRun();
+            Fill(even, PieceColor.Coral, (2, 2));
+            Assert.AreEqual(ScoringConstants.EvenBonus, PlantAt(even, PieceTraitKind.Even, PieceColor.Coral, 3, 2).TraitBonus, "a group of 2");
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Even, PieceColor.Coral, 2, 2).TraitBonus, "a lone tile is a group of 1");
+
+            var rainbow = NewRun();
+            Fill(rainbow, PieceColor.Teal, (1, 2));
+            Fill(rainbow, PieceColor.Violet, (2, 2));
+            Fill(rainbow, PieceColor.Lime, (3, 2));
+            Assert.AreEqual(ScoringConstants.RainbowRowBonus, PlantAt(rainbow, PieceTraitKind.RainbowRow, PieceColor.Coral, 0, 2).TraitBonus);
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.RainbowRow, PieceColor.Coral, 0, 2).TraitBonus);
+
+            var sun = NewRun();
+            sun.DebugSetWeather(WeatherId.GrowLamp);
+            Assert.AreEqual(ScoringConstants.SunseekerBonus, PlantAt(sun, PieceTraitKind.Sunseeker, PieceColor.Coral, 2, 2).TraitBonus);
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Sunseeker, PieceColor.Coral, 2, 2).TraitBonus);
+
+            var hunt = NewRun();
+            hunt.DebugSetEncounter(EnemyId.Basic, EnemyId.Locker);
+            Assert.AreEqual(2 * ScoringConstants.HunterBonusPerEnemy, PlantAt(hunt, PieceTraitKind.Hunter, PieceColor.Coral, 2, 2).TraitBonus);
+
+            var exec = NewRun();
+            exec.DebugSetEncounter(EnemyId.Basic);
+            Assert.AreEqual(0, PlantAt(exec, PieceTraitKind.Executioner, PieceColor.Coral, 2, 2).TraitBonus, "full HP");
+            var low = NewRun();
+            low.DebugSetEncounter(EnemyId.Basic);
+            low.CurrentEncounter[0].ApplyDamage(low.CurrentEncounter[0].CurrentMaxHp * 9 / 10);
+            Assert.AreEqual(ScoringConstants.ExecutionerBonus, PlantAt(low, PieceTraitKind.Executioner, PieceColor.Coral, 2, 2).TraitBonus);
+        }
+
+        [Test]
+        public void Spillover_Honeycomb_Dewdrop_Keystone_Growth_Gambler()
+        {
+            var run = NewRun();
+            Fill(run, PieceColor.Teal, (0, 0), (1, 0), (2, 0), (3, 0), (4, 0));
+            Assert.AreEqual(ScoringConstants.SpilloverBonus, PlantAt(run, PieceTraitKind.Spillover, PieceColor.Coral, GridManager.Size - 1, 0).TraitBonus, "its own tile was harvested");
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Spillover, PieceColor.Coral, 2, 2).TraitBonus);
+
+            var honey = NewRun();
+            honey.DebugSetLueur(0);
+            var honeyResult = PlantAt(honey, PieceTraitKind.Honeycomb, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(ScoringConstants.HoneycombPollen, honeyResult.ModifierLueurBonus);
+            Assert.AreEqual(ScoringConstants.HoneycombPollen, honey.Lueur);
+
+            var dew = NewRun();
+            Fill(dew, PieceColor.Teal, (0, 0), (1, 0), (2, 0), (3, 0), (4, 0));
+            Assert.AreEqual(ScoringConstants.DewdropPollenPerLine, PlantAt(dew, PieceTraitKind.Dewdrop, PieceColor.Coral, GridManager.Size - 1, 0).ModifierLueurBonus);
+
+            Assert.AreEqual(ScoringConstants.KeystoneMultBonus, PlantAt(NewRun(), PieceTraitKind.Keystone, PieceColor.Coral, 0, 0).AdditiveMultBonus);
+            Assert.AreEqual(ScoringConstants.KeystoneMultBonus, PlantAt(NewRun(), PieceTraitKind.Keystone, PieceColor.Coral, 2, 2).AdditiveMultBonus);
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Keystone, PieceColor.Coral, 1, 0).AdditiveMultBonus);
+
+            var growth = NewRun();
+            Assert.AreEqual(1, PlantAt(growth, PieceTraitKind.Growth, PieceColor.Coral, 2, 2).TraitBonus);
+            // Joining its group scores it again, one point richer, next to the new Pip.
+            Assert.AreEqual(ScoringConstants.PipBonus + 2, PlantAt(growth, PieceTraitKind.Pip, PieceColor.Coral, 3, 2).TraitBonus);
+
+            var seen = new HashSet<int>();
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                seen.Add(PlantAt(NewRun(seed), PieceTraitKind.Gambler, PieceColor.Coral, 2, 2).TraitBonus);
+            }
+            CollectionAssert.AreEquivalent(new[] { ScoringConstants.GamblerWinBonus, -ScoringConstants.GamblerLossPenalty }, seen);
+        }
+
+        [Test]
+        public void WardenAndAegis_FreeAndShieldPlots()
+        {
+            var run = NewRun();
+            foreach (var p in new[] { new Vector2Int(1, 2), new Vector2Int(3, 2), new Vector2Int(2, 1), new Vector2Int(2, 3) })
+            {
+                var cell = run.Grid.GetCell(p);
+                cell.IsLocked = true;
+                cell.IsFrozen = true;
+            }
+            run.Grid.GetCell(2, 3).IsPoisoned = true;
+            run.Grid.GetCell(0, 0).IsLocked = true;
+            var result = PlantAt(run, PieceTraitKind.Warden, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(4, result.CleansedCells.Count);
+            foreach (var p in result.CleansedCells)
+            {
+                var cell = run.Grid.GetCell(p);
+                Assert.IsFalse(cell.IsLocked || cell.IsFrozen || cell.IsPoisoned, p.ToString());
+                Assert.IsTrue(cell.IsImmune);
+            }
+            Assert.IsTrue(run.Grid.GetCell(0, 0).IsLocked, "plots that are not around it keep their lock");
+
+            // Immune plots are never picked again by the enemy effects.
+            var picked = run.Grid.FreezeRandomCells(GridManager.Size * GridManager.Size, new SystemRandomProvider(1));
+            foreach (var p in picked)
+            {
+                Assert.IsFalse(run.Grid.GetCell(p).IsImmune && (p == new Vector2Int(1, 2) || p == new Vector2Int(3, 2) || p == new Vector2Int(2, 1) || p == new Vector2Int(2, 3)), p.ToString());
+            }
+
+            var own = NewRun();
+            own.Grid.GetCell(2, 2).IsPoisoned = true;
+            var aegis = PlantAt(own, PieceTraitKind.Aegis, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(1, aegis.CleansedCells.Count);
+            Assert.IsFalse(own.Grid.GetCell(2, 2).IsPoisoned);
+            Assert.IsTrue(own.Grid.GetCell(2, 2).IsImmune);
+        }
+
+        [Test]
+        public void Sower_PlantsAFreeTileOnANeighborPlot()
+        {
+            var run = NewRun();
+            var first = PlantAt(run, PieceTraitKind.Sower, PieceColor.Teal, 2, 2);
+            Assert.AreEqual(1, first.SownTiles.Count);
+            var sown = first.SownTiles[0];
+            Assert.AreEqual(PieceColor.Teal, sown.Color);
+            Assert.IsTrue(run.Grid.GetCell(sown.Position).IsFilled);
+            Assert.AreEqual(1, Mathf.Abs(sown.Position.x - 2) + Mathf.Abs(sown.Position.y - 2), "it lands right next to its sower");
+        }
+
+        [Test]
         public void Harvester_PaysPerLineItsSeedHarvests()
         {
             var run = NewRun();

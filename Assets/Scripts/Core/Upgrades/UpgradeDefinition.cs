@@ -274,6 +274,70 @@ namespace Contigu.Core
             UpgradeId.GardenerTile, UpgradePool.Grid, "Gardener Sprout",
             "+3 pts per fertilizer held.", false, UpgradeRarity.Uncommon);
 
+        public static readonly UpgradeDefinition ClusterTile = new UpgradeDefinition(
+            UpgradeId.ClusterTile, UpgradePool.Grid, "Cluster Sprout",
+            "+6 pts per other upgraded tile in its group.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition CrossfireTile = new UpgradeDefinition(
+            UpgradeId.CrossfireTile, UpgradePool.Grid, "Crossfire Sprout",
+            "+1 pt per planted tile in its row and column.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition EvenTile = new UpgradeDefinition(
+            UpgradeId.EvenTile, UpgradePool.Grid, "Even Sprout",
+            "+12 pts when its group has an even number of cells.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition RainbowRowTile = new UpgradeDefinition(
+            UpgradeId.RainbowRowTile, UpgradePool.Grid, "Rainbow Row Sprout",
+            "+15 pts when its row holds every color of the run.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition SunseekerTile = new UpgradeDefinition(
+            UpgradeId.SunseekerTile, UpgradePool.Grid, "Sunseeker Sprout",
+            "+10 pts on Sunshine and Golden Hour days (and their indoor cousins).", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition HunterTile = new UpgradeDefinition(
+            UpgradeId.HunterTile, UpgradePool.Grid, "Hunter Sprout",
+            "+3 pts per enemy still alive.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition ExecutionerTile = new UpgradeDefinition(
+            UpgradeId.ExecutionerTile, UpgradePool.Grid, "Executioner Sprout",
+            "+30 pts when the front enemy is down to a quarter of its HP or less.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition SpilloverTile = new UpgradeDefinition(
+            UpgradeId.SpilloverTile, UpgradePool.Grid, "Spillover Sprout",
+            "+25 pts when its tile is harvested by a line.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition HoneycombTile = new UpgradeDefinition(
+            UpgradeId.HoneycombTile, UpgradePool.Grid, "Honeycomb Sprout",
+            "+1 Pollen every time it scores.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition DewdropTile = new UpgradeDefinition(
+            UpgradeId.DewdropTile, UpgradePool.Grid, "Dewdrop Sprout",
+            "+2 Pollen per line harvested by its seed.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition KeystoneTile = new UpgradeDefinition(
+            UpgradeId.KeystoneTile, UpgradePool.Grid, "Keystone Sprout",
+            "+5 Mult when it sits on a corner or in the middle.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition GrowthTile = new UpgradeDefinition(
+            UpgradeId.GrowthTile, UpgradePool.Grid, "Growth Sprout",
+            "+1 pt, then +1 more every time it scores this round.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition GamblerTile = new UpgradeDefinition(
+            UpgradeId.GamblerTile, UpgradePool.Grid, "Gambler Sprout",
+            "50%: +40 pts. 50%: -10 pts.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition WardenTile = new UpgradeDefinition(
+            UpgradeId.WardenTile, UpgradePool.Grid, "Warden Sprout",
+            "Frees the 4 plots around it from enemy effects and makes them immune for the round.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition AegisTile = new UpgradeDefinition(
+            UpgradeId.AegisTile, UpgradePool.Grid, "Aegis Sprout",
+            "Frees its own plot from enemy effects and makes it immune for the round.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition SowerTile = new UpgradeDefinition(
+            UpgradeId.SowerTile, UpgradePool.Grid, "Sower Sprout",
+            "Plants a free tile of its color on a neighboring empty plot.", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -281,7 +345,8 @@ namespace Contigu.Core
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
             BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare, PieceMastery, ColorMastery,
-            PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile
+            PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
+            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -307,7 +372,8 @@ namespace Contigu.Core
             BlastTile, MultiplierBeacon, MirrorTile, Seeder,
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
             BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare,
-            PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile
+            PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
+            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile
         };
     }
 }

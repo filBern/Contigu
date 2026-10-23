@@ -372,6 +372,23 @@ M['u_harmony'] = lambda: _trait_motif('Harmony')
 M['u_prism'] = lambda: _trait_motif('Prism')
 M['u_gardener'] = lambda: _trait_motif('Gardener')
 
+M['u_cluster'] = lambda: _trait_motif('Cluster')
+M['u_crossfire'] = lambda: _trait_motif('Crossfire')
+M['u_even'] = lambda: _trait_motif('Even')
+M['u_rainbowrow'] = lambda: _trait_motif('RainbowRow')
+M['u_sunseeker'] = lambda: _trait_motif('Sunseeker')
+M['u_hunter'] = lambda: _trait_motif('Hunter')
+M['u_executioner'] = lambda: _trait_motif('Executioner')
+M['u_spillover'] = lambda: _trait_motif('Spillover')
+M['u_honeycomb'] = lambda: _trait_motif('Honeycomb')
+M['u_dewdrop'] = lambda: _trait_motif('Dewdrop')
+M['u_keystone'] = lambda: _trait_motif('Keystone')
+M['u_growth'] = lambda: _trait_motif('Growth')
+M['u_gambler'] = lambda: _trait_motif('Gambler')
+M['u_warden'] = lambda: _trait_motif('Warden')
+M['u_aegis'] = lambda: _trait_motif('Aegis')
+M['u_sower'] = lambda: _trait_motif('Sower')
+
 U = {
  'ReplacePiece': ('u_replace', 'Bank'), 'DuplicatePiece': ('u_dup', 'Bank'), 'JokerPiece': ('u_joker', 'Bank'), 'RecolorPiece': ('u_recolor', 'Bank'),
  'RandomModifier': ('u_dice', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),
@@ -398,6 +415,22 @@ U = {
  'HarmonyTile': ('u_harmony', 'Grid'),
  'PrismTile': ('u_prism', 'Grid'),
  'GardenerTile': ('u_gardener', 'Grid'),
+ 'ClusterTile': ('u_cluster', 'Grid'),
+ 'CrossfireTile': ('u_crossfire', 'Grid'),
+ 'EvenTile': ('u_even', 'Grid'),
+ 'RainbowRowTile': ('u_rainbowrow', 'Grid'),
+ 'SunseekerTile': ('u_sunseeker', 'Grid'),
+ 'HunterTile': ('u_hunter', 'Grid'),
+ 'ExecutionerTile': ('u_executioner', 'Grid'),
+ 'SpilloverTile': ('u_spillover', 'Grid'),
+ 'HoneycombTile': ('u_honeycomb', 'Grid'),
+ 'DewdropTile': ('u_dewdrop', 'Grid'),
+ 'KeystoneTile': ('u_keystone', 'Grid'),
+ 'GrowthTile': ('u_growth', 'Grid'),
+ 'GamblerTile': ('u_gambler', 'Grid'),
+ 'WardenTile': ('u_warden', 'Grid'),
+ 'AegisTile': ('u_aegis', 'Grid'),
+ 'SowerTile': ('u_sower', 'Grid'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),
 }
 

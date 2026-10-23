@@ -13,7 +13,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled && !cell.HasAnyModifier)
+                if (!cell.IsLocked && !cell.IsFilled && !cell.HasAnyModifier && !cell.IsImmune)
                 {
                     candidates.Add(pos);
                 }
@@ -27,7 +27,7 @@ namespace Contigu.Core
                 foreach (var pos in AllPositions())
                 {
                     var cell = GetCell(pos);
-                    if (!cell.IsLocked && !cell.IsFilled && cell.HasAnyModifier)
+                    if (!cell.IsLocked && !cell.IsFilled && cell.HasAnyModifier && !cell.IsImmune)
                     {
                         candidates.Add(pos);
                     }
@@ -181,8 +181,34 @@ namespace Contigu.Core
             dst.TintedColor = src.TintedColor;
             dst.IsMultiplierZone = src.IsMultiplierZone;
             dst.OriginTrait = src.OriginTrait;
+            dst.GrowthCount = src.GrowthCount;
             dst.ShapeMasteryBonus = src.ShapeMasteryBonus;
             dst.ColorMasteryBonus = src.ColorMasteryBonus;
+        }
+
+        /// <summary>Sower Sprout: plants a free tile (no score, no counters) of <paramref name="color"/> on a random empty, unlocked plot touching <paramref name="origin"/>. Returns where it landed, or null with no free neighbor.</summary>
+        public Vector2Int? PlantFreeTileNear(Vector2Int origin, PieceColor color, IRandomProvider rng)
+        {
+            var candidates = new List<Vector2Int>();
+            var steps = new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+            for (int i = 0; i < steps.Length; i++)
+            {
+                var pos = origin + steps[i];
+                if (InBounds(pos.x, pos.y) && !GetCell(pos).IsFilled && !GetCell(pos).IsLocked)
+                {
+                    candidates.Add(pos);
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                return null;
+            }
+            var chosen = candidates[rng.Next(candidates.Count)];
+            var cell = GetCell(chosen);
+            cell.IsFilled = true;
+            cell.FilledColor = color;
+            cell.FilledShapeId = ShapeId.Single;
+            return chosen;
         }
 
         private List<Vector2Int> MovableFilledCells()
@@ -234,7 +260,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled)
+                if (!cell.IsLocked && !cell.IsFilled && !cell.IsImmune)
                 {
                     candidates.Add(pos);
                 }
@@ -289,7 +315,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled)
+                if (!cell.IsLocked && !cell.IsFilled && !cell.IsImmune)
                 {
                     candidates.Add(pos);
                 }

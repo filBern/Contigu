@@ -70,6 +70,12 @@ namespace Contigu.Core
         /// </summary>
         public bool IsPoisoned;
 
+        /// <summary>Warden / Aegis Sprout: enemy effects (locks, ice, poison, contamination) can no longer land on this plot for the rest of the round — it stays with the plot, not the tile on it.</summary>
+        public bool IsImmune;
+
+        /// <summary>Growth Sprout's counter: how many times this tile's upgrade already scored this round (it moves with the tile).</summary>
+        public int GrowthCount;
+
         public bool IsGolden;
 
         /// <summary>
@@ -160,6 +166,7 @@ namespace Contigu.Core
             IsMultiplierZone = false;
             IsBastion = false;
             OriginTrait = null;
+            GrowthCount = 0;
             ShapeMasteryBonus = 0;
             ColorMasteryBonus = 0;
         }
@@ -179,6 +186,8 @@ namespace Contigu.Core
             IsLineClearObstacle = false;
             IsFrozen = false;
             IsPoisoned = false;
+            IsImmune = false;
+            GrowthCount = 0;
             IsGolden = false;
             IsWeatherGolden = false;
             IsTinted = false;

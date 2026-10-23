@@ -131,3 +131,9 @@ Spring à 8-10 % : `EnemyHpMultiplier` 0,58 → 0,87 (planner profondeur 3, 1000
 
 Probabilité de catégorie d'une carte du Casino : Fertilizer 10 %, Mastery 40 → 25 %, Seed 40 → 25 %, Sprout 10 → 40 %. Le bot (qui choisit ses tuiles au hasard et profite donc peu des tuiles) a perdu de la force avec moins de Mastery et de Seed ; `EnemyHpMultiplier` réajustés (planner profondeur 3) : Spring 0,87 → 0,76 (8,3 %), Winter 1,1 → 0,98 (5,4 %), Summer 1,2 → 1,12 (5,7 %), Autumn 0,57 → 0,54 (4,8 %), Orchard 1,75 (5,6 %), Greenhouse 0,79 → 0,84 (5,3 %).
 
+## 16 tile upgrades de plus (Cluster … Sower)
+
+Cluster (+6 par autre tuile améliorée du groupe), Crossfire (+1 par tuile de sa ligne et colonne), Even (+12, groupe pair), Rainbow Row (+15, ligne avec toutes les couleurs), Sunseeker (+10 au soleil), Hunter (+3 par ennemi vivant), Executioner (+30 quand l'ennemi de tête est à 25 % de PV ou moins), Spillover (+25 quand sa tuile est récoltée), Honeycomb (+1 Pollen), Dewdrop (+2 Pollen par ligne), Keystone (+5 Mult dans un coin ou au centre), Growth (+1 puis +1 de plus à chaque score de la manche, max 30), Gambler (50 % +40 / 50 % −10), Warden (libère et immunise les 4 plots voisins), Aegis (idem pour son propre plot), Sower (plante une tuile gratuite voisine à chaque score, sans limite).
+Immunité (`Cell.IsImmune`) : les locks, la glace, le poison et la contamination ne retombent plus sur le plot jusqu'à la fin de la manche. Les tuiles semées n'ont ni score ni compteur.
+Le pool Grid grossit (35 → 51 upgrades) et dilue les fertilizers du Blister ; `EnemyHpMultiplier` réajustés sur le planner profondeur 3 (700 parties) : Spring 0,76 (9,4 %), Winter 1,03 (5,1 %), Summer 1,0 (5,9 %), Autumn 0,49 (4,7 %), Orchard 1,65 (4,9 %), Greenhouse 0,8 (5,0 %).
+

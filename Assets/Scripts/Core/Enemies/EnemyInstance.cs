@@ -75,6 +75,11 @@ namespace Contigu.Core
             _poisonedCells.Add(pos);
         }
 
+        public void RemovePoisonedCell(Vector2Int pos)
+        {
+            _poisonedCells.Remove(pos);
+        }
+
         public void ClearPoisonedCells()
         {
             _poisonedCells.Clear();

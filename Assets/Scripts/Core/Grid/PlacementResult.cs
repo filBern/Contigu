@@ -195,6 +195,12 @@ namespace Contigu.Core
         /// <summary>The enemy behind <see cref="CancelledPoints"/>, null when nothing was cancelled.</summary>
         public EnemyId? CancelledBy;
 
+        /// <summary>Plots a Warden / Aegis Sprout freed from enemy effects (and made immune) on this placement.</summary>
+        public IReadOnlyList<Vector2Int> CleansedCells = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Free tiles a Sower Sprout planted on this placement.</summary>
+        public IReadOnlyList<(Vector2Int Position, PieceColor Color)> SownTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
+
         /// <summary>
         /// Every additive scoring source folded together, including the
         /// per-cell <see cref="GroupMultiplier"/>/<see cref="LineClearMultiplier"/>

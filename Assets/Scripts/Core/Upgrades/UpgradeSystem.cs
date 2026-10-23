@@ -307,6 +307,22 @@ namespace Contigu.Core
                 case UpgradeId.HarmonyTile: return PieceTraitKind.Harmony;
                 case UpgradeId.PrismTile: return PieceTraitKind.Prism;
                 case UpgradeId.GardenerTile: return PieceTraitKind.Gardener;
+                case UpgradeId.ClusterTile: return PieceTraitKind.Cluster;
+                case UpgradeId.CrossfireTile: return PieceTraitKind.Crossfire;
+                case UpgradeId.EvenTile: return PieceTraitKind.Even;
+                case UpgradeId.RainbowRowTile: return PieceTraitKind.RainbowRow;
+                case UpgradeId.SunseekerTile: return PieceTraitKind.Sunseeker;
+                case UpgradeId.HunterTile: return PieceTraitKind.Hunter;
+                case UpgradeId.ExecutionerTile: return PieceTraitKind.Executioner;
+                case UpgradeId.SpilloverTile: return PieceTraitKind.Spillover;
+                case UpgradeId.HoneycombTile: return PieceTraitKind.Honeycomb;
+                case UpgradeId.DewdropTile: return PieceTraitKind.Dewdrop;
+                case UpgradeId.KeystoneTile: return PieceTraitKind.Keystone;
+                case UpgradeId.GrowthTile: return PieceTraitKind.Growth;
+                case UpgradeId.GamblerTile: return PieceTraitKind.Gambler;
+                case UpgradeId.WardenTile: return PieceTraitKind.Warden;
+                case UpgradeId.AegisTile: return PieceTraitKind.Aegis;
+                case UpgradeId.SowerTile: return PieceTraitKind.Sower;
                 default: return null; // Bank pool — no trait
             }
         }

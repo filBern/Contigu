@@ -918,6 +918,15 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Keeps these plots drawn empty until the hold is released (Sower Sprout's freshly planted tiles appear at the end of the score count).</summary>
+        public void HoldHiddenCells(IEnumerable<Vector2Int> cells)
+        {
+            foreach (var cell in cells)
+            {
+                _worldHiddenCells.Add(cell);
+            }
+        }
+
         public void ReleaseWorldHold()
         {
             _worldHeldColors.Clear();

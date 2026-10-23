@@ -73,6 +73,22 @@ namespace Contigu.Data
                 case PieceTraitKind.Harmony: return "Harmony Sprout";
                 case PieceTraitKind.Prism: return "Prism Sprout";
                 case PieceTraitKind.Gardener: return "Gardener Sprout";
+                case PieceTraitKind.Cluster: return "Cluster Sprout";
+                case PieceTraitKind.Crossfire: return "Crossfire Sprout";
+                case PieceTraitKind.Even: return "Even Sprout";
+                case PieceTraitKind.RainbowRow: return "Rainbow Row Sprout";
+                case PieceTraitKind.Sunseeker: return "Sunseeker Sprout";
+                case PieceTraitKind.Hunter: return "Hunter Sprout";
+                case PieceTraitKind.Executioner: return "Executioner Sprout";
+                case PieceTraitKind.Spillover: return "Spillover Sprout";
+                case PieceTraitKind.Honeycomb: return "Honeycomb Sprout";
+                case PieceTraitKind.Dewdrop: return "Dewdrop Sprout";
+                case PieceTraitKind.Keystone: return "Keystone Sprout";
+                case PieceTraitKind.Growth: return "Growth Sprout";
+                case PieceTraitKind.Gambler: return "Gambler Sprout";
+                case PieceTraitKind.Warden: return "Warden Sprout";
+                case PieceTraitKind.Aegis: return "Aegis Sprout";
+                case PieceTraitKind.Sower: return "Sower Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -164,6 +180,38 @@ namespace Contigu.Data
                     return "Scores +" + ScoringConstants.PrismBonus + " pts when it touches " + ScoringConstants.PrismMinColors + " or more different colors.";
                 case PieceTraitKind.Gardener:
                     return "Scores +" + ScoringConstants.GardenerBonusPerFertilizer + " pts for each fertilizer you hold.";
+                case PieceTraitKind.Cluster:
+                    return "Scores +" + ScoringConstants.ClusterBonusPerUpgrade + " pts for each other upgraded tile in its scored group.";
+                case PieceTraitKind.Crossfire:
+                    return "Scores +" + ScoringConstants.CrossfireBonusPerPlot + " pt for each planted tile in its row and column.";
+                case PieceTraitKind.Even:
+                    return "Scores +" + ScoringConstants.EvenBonus + " pts when its scored group has an even number of cells.";
+                case PieceTraitKind.RainbowRow:
+                    return "Scores +" + ScoringConstants.RainbowRowBonus + " pts when its row holds every color of the run.";
+                case PieceTraitKind.Sunseeker:
+                    return "Scores +" + ScoringConstants.SunseekerBonus + " pts on Sunshine and Golden Hour days (and their indoor cousins).";
+                case PieceTraitKind.Hunter:
+                    return "Scores +" + ScoringConstants.HunterBonusPerEnemy + " pts for each enemy still alive.";
+                case PieceTraitKind.Executioner:
+                    return "Scores +" + ScoringConstants.ExecutionerBonus + " pts when the front enemy is down to a quarter of its HP or less.";
+                case PieceTraitKind.Spillover:
+                    return "Scores +" + ScoringConstants.SpilloverBonus + " pts when its tile is harvested by a line.";
+                case PieceTraitKind.Honeycomb:
+                    return "Earns +" + ScoringConstants.HoneycombPollen + " Pollen every time it scores.";
+                case PieceTraitKind.Dewdrop:
+                    return "Earns +" + ScoringConstants.DewdropPollenPerLine + " Pollen for each line its seed harvests.";
+                case PieceTraitKind.Keystone:
+                    return "Adds +" + ScoringConstants.KeystoneMultBonus + " Mult when it sits on a corner or in the middle of the garden.";
+                case PieceTraitKind.Growth:
+                    return "Scores +1 pt, then one more each time it scores again this round (up to +" + ScoringConstants.GrowthMaxBonus + ").";
+                case PieceTraitKind.Gambler:
+                    return "A coin flip: +" + ScoringConstants.GamblerWinBonus + " pts or -" + ScoringConstants.GamblerLossPenalty + " pts.";
+                case PieceTraitKind.Warden:
+                    return "Frees the 4 plots around it from enemy effects (locks, ice, poison) and makes them immune for the round.";
+                case PieceTraitKind.Aegis:
+                    return "Frees its own plot from enemy effects (locks, ice, poison) and makes it immune for the round.";
+                case PieceTraitKind.Sower:
+                    return "Plants a free tile of its color on a neighboring empty plot.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -200,6 +248,22 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Kamikaze: return UpgradeRarity.Rare;
                 case PieceTraitKind.Venom: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Cluster: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Crossfire: return UpgradeRarity.Common;
+                case PieceTraitKind.Even: return UpgradeRarity.Common;
+                case PieceTraitKind.RainbowRow: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Sunseeker: return UpgradeRarity.Common;
+                case PieceTraitKind.Hunter: return UpgradeRarity.Common;
+                case PieceTraitKind.Executioner: return UpgradeRarity.Rare;
+                case PieceTraitKind.Spillover: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Honeycomb: return UpgradeRarity.Common;
+                case PieceTraitKind.Dewdrop: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Keystone: return UpgradeRarity.Rare;
+                case PieceTraitKind.Growth: return UpgradeRarity.Rare;
+                case PieceTraitKind.Gambler: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Warden: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Aegis: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Sower: return UpgradeRarity.Rare;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -299,6 +363,22 @@ namespace Contigu.Data
                 case PieceTraitKind.Harmony:
                 case PieceTraitKind.Prism:
                 case PieceTraitKind.Gardener:
+                case PieceTraitKind.Cluster:
+                case PieceTraitKind.Crossfire:
+                case PieceTraitKind.Even:
+                case PieceTraitKind.RainbowRow:
+                case PieceTraitKind.Sunseeker:
+                case PieceTraitKind.Hunter:
+                case PieceTraitKind.Executioner:
+                case PieceTraitKind.Spillover:
+                case PieceTraitKind.Honeycomb:
+                case PieceTraitKind.Dewdrop:
+                case PieceTraitKind.Keystone:
+                case PieceTraitKind.Growth:
+                case PieceTraitKind.Gambler:
+                case PieceTraitKind.Warden:
+                case PieceTraitKind.Aegis:
+                case PieceTraitKind.Sower:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:

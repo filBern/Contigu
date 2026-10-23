@@ -935,8 +935,8 @@ namespace Contigu.Tests
             // Playtest request, cited textually: "Permanent debuff or buff on tile comme au scrabble.
             // Grid upgrade rare" — unlike every other Grid-pool upgrade, there's no deck tile to pick:
             // it marks one random board POSITION on purchase instead.
-            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.PermanentBonusSquare, 500);
-            Assert.IsNotNull(run, "Should find a Permanent Bonus Square upgrade slot within 500 seeds");
+            var (run, slot) = FindRunWithUpgradeOffered(UpgradeId.PermanentBonusSquare, 4000);
+            Assert.IsNotNull(run, "Should find a Permanent Bonus Square upgrade slot within 4000 seeds");
             run.DebugGrantLueur(1000000);
 
             bool bought = run.BuyUpgradeSlot(slot);

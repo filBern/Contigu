@@ -150,6 +150,22 @@ namespace Contigu.Core
                 case PieceTraitKind.Harmony:
                 case PieceTraitKind.Prism:
                 case PieceTraitKind.Gardener:
+                case PieceTraitKind.Cluster:
+                case PieceTraitKind.Crossfire:
+                case PieceTraitKind.Even:
+                case PieceTraitKind.RainbowRow:
+                case PieceTraitKind.Sunseeker:
+                case PieceTraitKind.Hunter:
+                case PieceTraitKind.Executioner:
+                case PieceTraitKind.Spillover:
+                case PieceTraitKind.Honeycomb:
+                case PieceTraitKind.Dewdrop:
+                case PieceTraitKind.Keystone:
+                case PieceTraitKind.Growth:
+                case PieceTraitKind.Gambler:
+                case PieceTraitKind.Warden:
+                case PieceTraitKind.Aegis:
+                case PieceTraitKind.Sower:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -343,6 +359,22 @@ namespace Contigu.Core
                 case PieceTraitKind.Harmony:
                 case PieceTraitKind.Prism:
                 case PieceTraitKind.Gardener:
+                case PieceTraitKind.Cluster:
+                case PieceTraitKind.Crossfire:
+                case PieceTraitKind.Even:
+                case PieceTraitKind.RainbowRow:
+                case PieceTraitKind.Sunseeker:
+                case PieceTraitKind.Hunter:
+                case PieceTraitKind.Executioner:
+                case PieceTraitKind.Spillover:
+                case PieceTraitKind.Honeycomb:
+                case PieceTraitKind.Dewdrop:
+                case PieceTraitKind.Keystone:
+                case PieceTraitKind.Growth:
+                case PieceTraitKind.Gambler:
+                case PieceTraitKind.Warden:
+                case PieceTraitKind.Aegis:
+                case PieceTraitKind.Sower:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }

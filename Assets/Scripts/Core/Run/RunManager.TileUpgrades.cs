@@ -233,11 +233,210 @@ namespace Contigu.Core
                 case PieceTraitKind.Gardener:
                     bonus = _activeModifiers.Count * ScoringConstants.GardenerBonusPerFertilizer;
                     break;
+                case PieceTraitKind.Cluster:
+                    for (int g = 0; g < placement.GroupCells.Count; g++)
+                    {
+                        if (placement.GroupCells[g] != pos && TraitAsPlaced(placement.GroupCells[g], placement).HasValue)
+                        {
+                            bonus += ScoringConstants.ClusterBonusPerUpgrade;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Crossfire:
+                    for (int k = 0; k < GridManager.Size; k++)
+                    {
+                        if (k != pos.x && ColorAsPlaced(new Vector2Int(k, pos.y), placement).HasValue) { bonus += ScoringConstants.CrossfireBonusPerPlot; }
+                        if (k != pos.y && ColorAsPlaced(new Vector2Int(pos.x, k), placement).HasValue) { bonus += ScoringConstants.CrossfireBonusPerPlot; }
+                    }
+                    break;
+                case PieceTraitKind.Even:
+                    GetGroupShare(placement, pos, out int evenGroup, out _);
+                    if (evenGroup > 0 && evenGroup % 2 == 0)
+                    {
+                        bonus = ScoringConstants.EvenBonus;
+                    }
+                    break;
+                case PieceTraitKind.RainbowRow:
+                    var rowColors = new HashSet<PieceColor>();
+                    for (int k = 0; k < GridManager.Size; k++)
+                    {
+                        var rowColor = ColorAsPlaced(new Vector2Int(k, pos.y), placement);
+                        if (rowColor.HasValue)
+                        {
+                            rowColors.Add(rowColor.Value);
+                        }
+                    }
+                    bool allColors = true;
+                    foreach (var needed in PieceColorUtility.BaseColors)
+                    {
+                        allColors &= rowColors.Contains(needed);
+                    }
+                    if (allColors)
+                    {
+                        bonus = ScoringConstants.RainbowRowBonus;
+                    }
+                    break;
+                case PieceTraitKind.Sunseeker:
+                    var sky = WeatherCatalog.Mechanic(CurrentWeather);
+                    if (sky == WeatherId.Sunshine || sky == WeatherId.GoldenHour)
+                    {
+                        bonus = ScoringConstants.SunseekerBonus;
+                    }
+                    break;
+                case PieceTraitKind.Hunter:
+                    bonus = HasActiveEncounter ? CountAliveEnemies() * ScoringConstants.HunterBonusPerEnemy : 0;
+                    break;
+                case PieceTraitKind.Executioner:
+                    foreach (var enemy in _currentEncounter)
+                    {
+                        if (!enemy.IsDead)
+                        {
+                            if (enemy.CurrentHp <= enemy.CurrentMaxHp * ScoringConstants.ExecutionerHpFraction)
+                            {
+                                bonus = ScoringConstants.ExecutionerBonus;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Spillover:
+                    for (int c = 0; c < placement.ClearedCells.Count; c++)
+                    {
+                        if (placement.ClearedCells[c] == pos && !placement.ClearedCellFrozen[c])
+                        {
+                            bonus = ScoringConstants.SpilloverBonus;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Honeycomb:
+                    AddTilePollen(placement, pos, ScoringConstants.HoneycombPollen);
+                    break;
+                case PieceTraitKind.Dewdrop:
+                    AddTilePollen(placement, pos, placement.ClearedLineCount * ScoringConstants.DewdropPollenPerLine);
+                    break;
+                case PieceTraitKind.Keystone:
+                    int mid0 = (GridManager.Size - 1) / 2;
+                    int mid1 = GridManager.Size / 2;
+                    bool corner = (pos.x == 0 || pos.x == last) && (pos.y == 0 || pos.y == last);
+                    bool middle = pos.x >= mid0 && pos.x <= mid1 && pos.y >= mid0 && pos.y <= mid1;
+                    if (corner || middle)
+                    {
+                        AddTileMult(placement, pos, ScoringConstants.KeystoneMultBonus);
+                    }
+                    break;
+                case PieceTraitKind.Growth:
+                    var growthCell = Grid.GetCell(pos);
+                    bonus = 1 + Mathf.Min(growthCell.GrowthCount, ScoringConstants.GrowthMaxBonus - 1);
+                    growthCell.GrowthCount++;
+                    break;
+                case PieceTraitKind.Gambler:
+                    if (_rng.Next(2) == 0)
+                    {
+                        bonus = ScoringConstants.GamblerWinBonus;
+                    }
+                    else
+                    {
+                        AddTraitBonus(placement, pos, -ScoringConstants.GamblerLossPenalty);
+                    }
+                    break;
+                case PieceTraitKind.Warden:
+                    for (int s = 0; s < TileUpgradeSteps.Length; s++)
+                    {
+                        CleanseAndShield(pos + TileUpgradeSteps[s], placement);
+                    }
+                    break;
+                case PieceTraitKind.Aegis:
+                    CleanseAndShield(pos, placement);
+                    break;
+                case PieceTraitKind.Sower:
+                    var sownColor = ColorAsPlaced(pos, placement);
+                    var tileColor = sownColor.HasValue && sownColor.Value != PieceColor.Joker ? sownColor.Value : PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
+                    var landed = Grid.PlantFreeTileNear(pos, tileColor, _rng);
+                    if (landed.HasValue)
+                    {
+                        var sown = new List<(Vector2Int, PieceColor)>(placement.SownTiles);
+                        sown.Add((landed.Value, tileColor));
+                        placement.SownTiles = sown;
+                    }
+                    break;
             }
             if (bonus > 0)
             {
                 AddTraitBonus(placement, pos, bonus);
             }
+        }
+
+        /// <summary>The upgrade of the tile at <paramref name="pos"/> as this placement saw it (a tile harvested by this very placement still has it).</summary>
+        private PieceTrait? TraitAsPlaced(Vector2Int pos, PlacementResult placement)
+        {
+            var cell = Grid.GetCell(pos);
+            if (cell.IsFilled && cell.OriginTrait.HasValue)
+            {
+                return cell.OriginTrait;
+            }
+            for (int i = 0; i < placement.ClearedCells.Count; i++)
+            {
+                if (placement.ClearedCells[i] == pos)
+                {
+                    return placement.ClearedCellTraits[i];
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Pollen from a tile upgrade, banked with the placement's other Pollen.</summary>
+        private static void AddTilePollen(PlacementResult placement, Vector2Int pos, int pollen)
+        {
+            if (pollen <= 0)
+            {
+                return;
+            }
+            placement.ModifierLueurBonus += pollen;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, pos, pollen));
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>A flat +Mult from a tile upgrade (adds to the same pool as Solidarity-style fertilizers).</summary>
+        private static void AddTileMult(PlacementResult placement, Vector2Int pos, int mult)
+        {
+            placement.AdditiveMultBonus += mult;
+            var events = new List<ScoreEvent>(placement.ScoreEvents);
+            events.Add(new ScoreEvent(ScoreEventType.MultBonus, pos, mult));
+            placement.ScoreEvents = events;
+        }
+
+        /// <summary>Warden / Aegis: lifts every enemy effect (lock, ice, poison) from one plot, forgets it in the enemies that own it, and makes the plot immune for the round.</summary>
+        private void CleanseAndShield(Vector2Int pos, PlacementResult placement)
+        {
+            if (!GridManager.InBounds(pos.x, pos.y))
+            {
+                return;
+            }
+            var cell = Grid.GetCell(pos);
+            // A Bastion tile locks itself on purpose: that lock is not an enemy effect.
+            if (!cell.IsBastion)
+            {
+                cell.IsLocked = false;
+                cell.IsFrozen = false;
+                cell.IsLineClearObstacle = false;
+            }
+            cell.IsPoisoned = false;
+            cell.IsImmune = true;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.LockedCell == pos) { enemy.LockedCell = null; }
+                if (enemy.ExtraLockedCell == pos) { enemy.ExtraLockedCell = null; }
+                enemy.RemovePoisonedCell(pos);
+                enemy.FrozenCells.Remove(pos);
+            }
+            var cleansed = new List<Vector2Int>(placement.CleansedCells);
+            if (!cleansed.Contains(pos))
+            {
+                cleansed.Add(pos);
+            }
+            placement.CleansedCells = cleansed;
         }
     }
 }

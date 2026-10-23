@@ -433,5 +433,22 @@ namespace Contigu.Core
         public const int PrismMinColors = 3;
         public const int PrismBonus = 20;
         public const int GardenerBonusPerFertilizer = 3;
+
+        // ---- second batch of flat-point tile upgrades
+        public const int ClusterBonusPerUpgrade = 6;
+        public const int CrossfireBonusPerPlot = 1;
+        public const int EvenBonus = 12;
+        public const int RainbowRowBonus = 15;
+        public const int SunseekerBonus = 10;
+        public const int HunterBonusPerEnemy = 3;
+        public const int ExecutionerBonus = 30;
+        public const float ExecutionerHpFraction = 0.25f;
+        public const int SpilloverBonus = 25;
+        public const int HoneycombPollen = 1;
+        public const int DewdropPollenPerLine = 2;
+        public const int KeystoneMultBonus = 5;
+        public const int GrowthMaxBonus = 30;
+        public const int GamblerWinBonus = 40;
+        public const int GamblerLossPenalty = 10;
     }
 }

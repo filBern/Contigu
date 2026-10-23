@@ -70,6 +70,25 @@ T['Harmony'] = ('#2fa4a8', ''.join(g('<circle cx="%d" cy="32" r="9"/>' % x, W, 3
 T['Prism'] = ('#8c63b0', g('<path d="M32 8 L54 50 H10 Z"/>', '#e6f4ff') + ''.join('<path d="M%d 34 L%d %d" stroke="%s" stroke-width="3" stroke-linecap="round"/>' % (36, 58, y, c) for y, c in ((26, '#e8584f'), (34, '#ffd23a'), (42, '#4fb0d0'))))
 T['Gardener'] = ('#4f9440', g('<path d="M16 34 H48 L44 54 H20 Z"/>', '#c58a4a') + g('<path d="M32 34 V14 M32 24 C22 22 20 14 22 10 C30 10 34 16 32 24 M32 28 C42 26 46 18 44 14 C36 14 32 20 32 28" fill="none"/>', 'none', 4).replace(O, '#6fb04f'))
 
+
+# ---- second batch of placement-point tile upgrades
+T['Cluster'] = ('#5a9e45', ''.join(g('<rect x="%d" y="%d" width="22" height="22" rx="5"/>' % (x, y), W, 3) for x, y in ((8, 28), (34, 28), (21, 8))) + g(star(32, 38, 8, 4, 0.45), '#ffd84d', 2.5))
+T['Crossfire'] = ('#c8403f', g('<path d="M26 8 H38 V26 H56 V38 H38 V56 H26 V38 H8 V26 H26 Z"/>', W))
+T['Even'] = ('#2fa4a8', g('<circle cx="20" cy="32" r="10"/><circle cx="44" cy="32" r="10"/>', W) + '<path d="M28 28 H36 M28 36 H36" stroke="%s" stroke-width="3.5" stroke-linecap="round"/>' % W)
+T['RainbowRow'] = ('#8c63b0', ''.join(g('<rect x="%d" y="22" width="12" height="20" rx="3"/>' % x, c, 2.5) for x, c in ((6, '#e8584f'), (19, '#ffd23a'), (32, '#6fb04f'), (45, '#4fb0d0'))))
+T['Sunseeker'] = ('#ffc83a', ''.join('<path d="M%.1f %.1f L%.1f %.1f" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % (32 + 17 * math.cos(math.radians(a)), 32 + 17 * math.sin(math.radians(a)), 32 + 26 * math.cos(math.radians(a)), 32 + 26 * math.sin(math.radians(a)), W) for a in range(0, 360, 45)) + g('<circle cx="32" cy="32" r="12"/>', '#fff1b0'))
+T['Hunter'] = ('#6b4528', '<circle cx="32" cy="32" r="19" fill="none" stroke="%s" stroke-width="4"/>' % W + '<path d="M32 6 V20 M32 44 V58 M6 32 H20 M44 32 H58" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % W + g('<circle cx="32" cy="32" r="4"/>', '#e8584f', 2))
+T['Executioner'] = ('#8a2e2e', g('<path d="M30 8 L52 14 C54 26 48 36 38 40 L34 34 Z"/>', '#d4d8de') + '<path d="M24 56 L36 22" stroke="%s" stroke-width="6" stroke-linecap="round"/>' % W)
+T['Spillover'] = ('#4f7fd0', g('<path d="M14 24 H46 L42 52 H18 Z"/>', W) + g('<path d="M50 30 C56 40 52 48 48 48 C44 48 42 40 50 30Z"/>', '#4fb0d0', 2.5) + g('<path d="M32 10 C36 16 38 20 32 22 C26 22 26 16 32 10Z"/>', '#4fb0d0', 2.5))
+T['Honeycomb'] = ('#e8a82e', g('<path d="M32 8 L50 18 V38 L32 48 L14 38 V18 Z"/>', '#fff1b0') + g('<path d="M32 22 L40 27 V35 L32 40 L24 35 V27 Z"/>', '#e8a82e', 2.5))
+T['Dewdrop'] = ('#5fb8d8', g('<path d="M32 8 C46 26 50 36 44 46 C40 54 24 54 20 46 C14 36 18 26 32 8Z"/>', '#e6f6ff') + '<path d="M26 40 C26 46 30 48 34 48" fill="none" stroke="#5fb8d8" stroke-width="3" stroke-linecap="round"/>')
+T['Keystone'] = ('#c8403f', g('<path d="M10 56 V34 A22 22 0 0 1 54 34 V56 H44 V36 A12 12 0 0 0 20 36 V56 Z"/>', '#c9c2b4') + g('<path d="M26 10 H38 L42 26 H22 Z"/>', '#ffd84d', 3))
+T['Growth'] = ('#4f9440', g('<path d="M32 56 V26 M32 38 C20 36 16 26 18 20 C28 20 34 28 32 38 M32 32 C44 30 48 20 46 14 C36 14 30 22 32 32" fill="none"/>', 'none', 5).replace(O, W) + '<path d="M8 56 H56" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % W)
+T['Gambler'] = ('#9a3f6b', g('<circle cx="32" cy="32" r="21"/>', '#ffe58a') + text('?', 30, 42, '#7a3a5a'))
+T['Warden'] = ('#3a6fb0', g('<path d="M32 8 L52 15 V32 C52 45 42 52 32 56 C22 52 12 45 12 32 V15 Z"/>', '#e6f4ff') + ''.join(g('<circle cx="%d" cy="%d" r="4"/>' % (x, y), '#4f9440', 2) for x, y in ((32, 22), (22, 32), (42, 32), (32, 42))))
+T['Aegis'] = ('#2f4f8c', g('<path d="M32 8 L52 15 V32 C52 45 42 52 32 56 C22 52 12 45 12 32 V15 Z"/>', '#e6f4ff') + g('<path d="M32 20 L38 30 H26 Z M26 32 H38 L32 44 Z"/>', '#4f7fd0', 2))
+T['Sower'] = ('#6fb04f', g('<ellipse cx="22" cy="42" rx="9" ry="13" transform="rotate(25 22 42)"/>', '#d8b574') + g('<path d="M42 54 V34 M42 42 C34 40 32 32 34 28 C42 28 46 34 42 42 M42 38 C50 36 54 28 52 24 C44 24 40 30 42 38" fill="none"/>', 'none', 4).replace(O, W))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

@@ -108,6 +108,54 @@ namespace Contigu.Core
         /// <summary>"Gardener Sprout" — +3 pts per fertilizer held.</summary>
         Gardener,
 
+        /// <summary>"Cluster Sprout" — +6 pts per other upgraded tile in its group.</summary>
+        Cluster,
+
+        /// <summary>"Crossfire Sprout" — +1 pt per planted tile in its row and column.</summary>
+        Crossfire,
+
+        /// <summary>"Even Sprout" — +12 pts when its group has an even number of cells.</summary>
+        Even,
+
+        /// <summary>"Rainbow Row Sprout" — +15 pts when its row holds every color of the run.</summary>
+        RainbowRow,
+
+        /// <summary>"Sunseeker Sprout" — +10 pts on Sunshine and Golden Hour days (and their indoor cousins).</summary>
+        Sunseeker,
+
+        /// <summary>"Hunter Sprout" — +3 pts per enemy still alive.</summary>
+        Hunter,
+
+        /// <summary>"Executioner Sprout" — +30 pts when the front enemy is down to a quarter of its HP or less.</summary>
+        Executioner,
+
+        /// <summary>"Spillover Sprout" — +25 pts when its tile is harvested by a line.</summary>
+        Spillover,
+
+        /// <summary>"Honeycomb Sprout" — +1 Pollen every time it scores.</summary>
+        Honeycomb,
+
+        /// <summary>"Dewdrop Sprout" — +2 Pollen per line harvested by its seed.</summary>
+        Dewdrop,
+
+        /// <summary>"Keystone Sprout" — +5 Mult when it sits on a corner or in the middle.</summary>
+        Keystone,
+
+        /// <summary>"Growth Sprout" — +1 pt, then +1 more every time it scores this round.</summary>
+        Growth,
+
+        /// <summary>"Gambler Sprout" — 50%: +40 pts. 50%: -10 pts.</summary>
+        Gambler,
+
+        /// <summary>"Warden Sprout" — Frees the 4 plots around it from enemy effects and makes them immune for the round.</summary>
+        Warden,
+
+        /// <summary>"Aegis Sprout" — Frees its own plot from enemy effects and makes it immune for the round.</summary>
+        Aegis,
+
+        /// <summary>"Sower Sprout" — Plants a free tile of its color on a neighboring empty plot.</summary>
+        Sower,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active
