@@ -20,7 +20,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.87f
+            EnemyHpMultiplier = 0.76f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
@@ -37,7 +37,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
-            EnemyHpMultiplier = 1.1f,
+            EnemyHpMultiplier = 0.98f,
             WorldEnemy = EnemyId.Hoarfrost
         };
 
@@ -56,7 +56,7 @@ namespace Contigu.Core
             WeatherProfile = WeatherProfile.Extreme,
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 1.2f,
+            EnemyHpMultiplier = 1.12f,
             WorldEnemy = EnemyId.Locust
         };
 
@@ -75,7 +75,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.57f,
+            EnemyHpMultiplier = 0.54f,
             PieceBudgetBonus = 12,
             WorldEnemy = EnemyId.Rotgrub
         };
@@ -113,7 +113,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.79f,
+            EnemyHpMultiplier = 0.84f,
             PieceBudgetBonus = 10,
             WorldEnemy = EnemyId.Whitefly
         };

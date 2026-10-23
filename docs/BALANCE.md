@@ -127,3 +127,7 @@ Les 9 % étaient trop généreux : `EnemyHpMultiplier` Winter 0,9 → 1,1, Summe
 
 Spring à 8-10 % : `EnemyHpMultiplier` 0,58 → 0,87 (planner profondeur 3, 1000 parties : 8,8 %). Spring reste le plus facile des six, au-dessus de la fourchette 4-6 % des autres.
 
+## Casino : plus de Sprout Upgrades
+
+Probabilité de catégorie d'une carte du Casino : Fertilizer 10 %, Mastery 40 → 25 %, Seed 40 → 25 %, Sprout 10 → 40 %. Le bot (qui choisit ses tuiles au hasard et profite donc peu des tuiles) a perdu de la force avec moins de Mastery et de Seed ; `EnemyHpMultiplier` réajustés (planner profondeur 3) : Spring 0,87 → 0,76 (8,3 %), Winter 1,1 → 0,98 (5,4 %), Summer 1,2 → 1,12 (5,7 %), Autumn 0,57 → 0,54 (4,8 %), Orchard 1,75 (5,6 %), Greenhouse 0,79 → 0,84 (5,3 %).
+

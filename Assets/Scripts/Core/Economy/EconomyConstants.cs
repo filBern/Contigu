@@ -49,13 +49,13 @@ namespace Contigu.Core
         public const int ModifierUpgradePoolChancePercent = 10;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int MasteryUpgradePoolChancePercent = 40;
+        public const int MasteryUpgradePoolChancePercent = 25;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int BankUpgradePoolChancePercent = 40;
+        public const int BankUpgradePoolChancePercent = 25;
 
         /// <summary>See <see cref="ModifierUpgradePoolChancePercent"/>.</summary>
-        public const int GridUpgradePoolChancePercent = 10;
+        public const int GridUpgradePoolChancePercent = 40;
 
         /// <summary>"Piece Mastery"/"Color Mastery" (see RunManager.GrantShapeMastery/GrantColorMastery): each purchase grants a random amount of levels from 1 up to this many (inclusive).</summary>
         public const int MasteryUpgradeMaxLevelGain = 3;
