@@ -20,7 +20,9 @@ namespace Contigu.Presentation
         private const float AccentHeight = 3f;
         private const float ChipHeight = 26f;
         private const float ChipGap = 8f;
-        private const float BodyTop = 10f;
+        private const float BodyTop = 14f;
+        // Extra room under the last line so the text does not sit on the card's bottom edge.
+        private const float BottomPadding = 8f;
         // Only used as a placeholder before the first real Show() call sets
         // an actual (dynamic) height — see Show().
         private const float InitialHeight = 150f;
@@ -252,7 +254,7 @@ namespace Contigu.Presentation
                 footerBlockHeight = LoreGap * 2f + 1f + FooterHeight - 4f;
             }
             // Whole pixels everywhere: a fractional size or position makes the text render soft.
-            _panel.sizeDelta = new Vector2(Width, Mathf.Ceil(Padding * 2f + usedHeight + descHeight + loreBlockHeight + footerBlockHeight));
+            _panel.sizeDelta = new Vector2(Width, Mathf.Ceil(Padding * 2f + BottomPadding + usedHeight + descHeight + loreBlockHeight + footerBlockHeight));
             if (_popRoutine != null)
             {
                 StopCoroutine(_popRoutine);
