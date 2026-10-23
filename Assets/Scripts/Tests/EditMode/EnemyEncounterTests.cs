@@ -1142,6 +1142,9 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(handIndex, 0, 0);
             Assert.IsTrue(outcome.Placement.Success, "The hated color remains playable");
             Assert.AreEqual(0, outcome.Placement.TotalScore, "Every point scored through the hated color should be cancelled");
+            // Presentation shows what was lost.
+            Assert.AreEqual(EnemyId.ColorHater, outcome.Placement.CancelledBy);
+            Assert.Greater(outcome.Placement.CancelledPoints.Count, 0);
         }
 
         [Test]

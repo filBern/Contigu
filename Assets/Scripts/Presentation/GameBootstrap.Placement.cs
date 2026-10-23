@@ -411,6 +411,9 @@ namespace Contigu.Presentation
                 }
             }
 
+            // Invasive Bloom / Invasive Weed: show the points they cancelled, then react.
+            yield return PlayCancelledPoints(placement);
+
             // Whether cleared/destroyed tiles should keep showing as
             // still-filled past the score cascade, only actually emptying
             // once the enemy damage drain (and death fade-out) finishes.
@@ -1022,6 +1025,46 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Index of the first alive enemy in CurrentEncounter matching <paramref name="id"/>, or -1 if there's no active encounter or none alive — see OnCellClicked's own Leech HP snapshot.</summary>
+        /// <summary>Red struck-out popups on the plots whose points a Hater boss cancelled, the boss portrait reacting, and one line saying how much was lost.</summary>
+        private System.Collections.IEnumerator PlayCancelledPoints(PlacementResult placement)
+        {
+            if (placement.CancelledPoints.Count == 0 || !placement.CancelledBy.HasValue)
+            {
+                yield break;
+            }
+            int total = 0;
+            var perCell = new Dictionary<Vector2Int, int>();
+            for (int i = 0; i < placement.CancelledPoints.Count; i++)
+            {
+                var entry = placement.CancelledPoints[i];
+                total += entry.Amount;
+                perCell[entry.Position] = (perCell.TryGetValue(entry.Position, out var sum) ? sum : 0) + entry.Amount;
+            }
+            foreach (var pair in perCell)
+            {
+                if (GridManager.InBounds(pair.Key.x, pair.Key.y))
+                {
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(pair.Key.x, pair.Key.y), "X " + pair.Value, UITheme.Danger);
+                    _gridView.PlayClearBurst(pair.Key.x, pair.Key.y, UITheme.Danger);
+                }
+            }
+            int index = FindAliveEnemyIndex(placement.CancelledBy.Value);
+            if (index >= 0)
+            {
+                _hudView.PlayEnemyAct(index);
+                _hudView.PlayEnemyEffectPulse(index);
+            }
+            SfxManager.Play(SfxId.InvalidDrop);
+            SetStatusText(ModifierlessEnemyName(placement.CancelledBy.Value) + " cancels " + total + " points!");
+            yield return new WaitForSeconds(0.45f);
+        }
+
+        private static string ModifierlessEnemyName(EnemyId id)
+        {
+            var def = EnemyCatalog.Get(id);
+            return def != null ? def.Name : id.ToString();
+        }
+
         private int FindAliveEnemyIndex(EnemyId id)
         {
             if (!_run.HasActiveEncounter)

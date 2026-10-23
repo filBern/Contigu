@@ -85,6 +85,7 @@ namespace Contigu.Core
                 var scoreEvent = placement.ScoreEvents[i];
                 if (IsPointEvent(scoreEvent.Type) && IsPositionColor(scoreEvent.Position, clearedColors, cursedColor))
                 {
+                    RecordCancelledPoints(placement, scoreEvent);
                     continue;
                 }
 
@@ -102,6 +103,17 @@ namespace Contigu.Core
                 }
             }
             placement.ScoreEvents = keptEvents;
+        }
+
+        private static void RecordCancelledPoints(PlacementResult placement, ScoreEvent dropped)
+        {
+            if (dropped.Amount == 0)
+            {
+                return;
+            }
+            var list = new List<(Vector2Int, int)>(placement.CancelledPoints);
+            list.Add((dropped.Position, dropped.Amount));
+            placement.CancelledPoints = list;
         }
 
         private static bool IsPointEvent(ScoreEventType type)
@@ -155,6 +167,7 @@ namespace Contigu.Core
                 var scoreEvent = placement.ScoreEvents[i];
                 if (IsPointEvent(scoreEvent.Type) && IsPositionShape(scoreEvent.Position, clearedShapes, hatedShape))
                 {
+                    RecordCancelledPoints(placement, scoreEvent);
                     continue;
                 }
 
@@ -194,6 +207,7 @@ namespace Contigu.Core
                 {
                     continue;
                 }
+                int cancelledBefore = placement.CancelledPoints.Count;
                 if (enemy.Definition.Id == EnemyId.ColorHater && enemy.HatedColor.HasValue)
                 {
                     ApplyCursedColorScoreRule(placement, enemy.HatedColor.Value);
@@ -201,6 +215,10 @@ namespace Contigu.Core
                 else if (enemy.Definition.Id == EnemyId.ShapeHater && enemy.HatedShape.HasValue)
                 {
                     ApplyShapeHaterScoreRule(placement, enemy.HatedShape.Value);
+                }
+                if (placement.CancelledPoints.Count > cancelledBefore)
+                {
+                    placement.CancelledBy = enemy.Definition.Id;
                 }
             }
         }

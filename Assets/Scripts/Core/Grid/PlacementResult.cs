@@ -189,6 +189,12 @@ namespace Contigu.Core
         /// </summary>
         public IReadOnlyList<ScoreEvent> ScoreEvents = System.Array.Empty<ScoreEvent>();
 
+        /// <summary>Points an Invasive Bloom / Invasive Weed cancelled on this placement (position and amount of each dropped point event), so Presentation can show what was lost.</summary>
+        public IReadOnlyList<(Vector2Int Position, int Amount)> CancelledPoints = System.Array.Empty<(Vector2Int, int)>();
+
+        /// <summary>The enemy behind <see cref="CancelledPoints"/>, null when nothing was cancelled.</summary>
+        public EnemyId? CancelledBy;
+
         /// <summary>
         /// Every additive scoring source folded together, including the
         /// per-cell <see cref="GroupMultiplier"/>/<see cref="LineClearMultiplier"/>
