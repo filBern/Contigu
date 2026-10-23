@@ -21,6 +21,27 @@ namespace Contigu.Core
         /// </summary>
         public static int Size { get; private set; } = DefaultSize;
 
+        /// <summary>An independent copy of this board and its scoring counters (streaks, Gradient, Épuisement…), so a simulation can try placements on it — the real board stays untouched.</summary>
+        public GridManager CloneForSimulation()
+        {
+            var copy = new GridManager();
+            for (int x = 0; x < Size; x++)
+            {
+                for (int y = 0; y < Size; y++)
+                {
+                    copy._cells[x, y] = _cells[x, y].Clone();
+                }
+            }
+            copy._lastGroupSize = _lastGroupSize;
+            copy._placementsSinceLastClear = _placementsSinceLastClear;
+            copy._lastPlacedShapeId = _lastPlacedShapeId;
+            copy._repetitionStreak = _repetitionStreak;
+            copy._lastPlacedColor = _lastPlacedColor;
+            copy._gradientPermanentBonus = _gradientPermanentBonus;
+            copy._epuisementValue = _epuisementValue;
+            return copy;
+        }
+
         public static void SetSize(int size)
         {
             Size = size;

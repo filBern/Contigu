@@ -164,6 +164,12 @@ namespace Contigu.Core
             ColorMasteryBonus = 0;
         }
 
+        /// <summary>A field-for-field copy (every field is a value type), for simulations that try placements without touching the real board.</summary>
+        public Cell Clone()
+        {
+            return (Cell)MemberwiseClone();
+        }
+
         public void ResetForNewRound()
         {
             IsFilled = false;

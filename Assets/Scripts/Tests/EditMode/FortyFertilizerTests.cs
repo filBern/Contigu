@@ -56,6 +56,19 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void CloneForSimulation_IsIndependent_AndScoresLikeTheOriginal()
+        {
+            var grid = new GridManager();
+            Fill(grid, PieceColor.Coral, (0, 0), (1, 0), (2, 0), (4, 0));
+            var copy = grid.CloneForSimulation();
+            var mods = new List<ModifierId> { ModifierId.Chaine };
+            var viaCopy = copy.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Coral, 3, 0, mods);
+            Assert.IsFalse(grid.GetCell(3, 0).IsFilled, "the real board is untouched");
+            var real = grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Coral, 3, 0, mods);
+            Assert.AreEqual(real.TotalScore, viaCopy.TotalScore);
+        }
+
+        [Test]
         public void AllFortyAreInTheCatalog_WithAPriceAndAnAbbreviation()
         {
             var ids = new[]

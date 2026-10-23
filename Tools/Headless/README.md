@@ -8,7 +8,8 @@ cd Tools/Headless/Tests && dotnet test
 
 # Balance simulator: a bot plays full Classic runs against the real rules
 cd Tools/Headless/RunSim
-dotnet run -- --runs 1000 --policy greedy          # greedy | random | both
+dotnet run -- --runs 1000 --policy greedy          # greedy | random | planner | both
+# planner: searches every order and spot of the whole hand on copies of the real board (PLAN_DEPTH=1..3, default 3); ~0.5 s per run
 dotnet run -- --runs 500 --seed 42 --csv runs.csv  # per-run CSV for further analysis
 ```
 

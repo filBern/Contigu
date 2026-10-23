@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|both] [--csv path] [--fail-on-error] [--challenge name] [--endless]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -46,6 +46,7 @@ namespace Contigu.RunSim
             var policies = new List<BotPolicy>();
             if (policyArg == "random" || policyArg == "both") { policies.Add(BotPolicy.Random); }
             if (policyArg == "greedy" || policyArg == "both") { policies.Add(BotPolicy.Greedy); }
+            if (policyArg == "planner") { policies.Add(BotPolicy.Planner); }
 
             int errorCount = 0;
             var csv = new StringBuilder("policy,seed,victory,rounds_cleared,total_score,placements,shuffles,pollen_spent,pollen_earned,stuck,death_enemies,modifiers\n");

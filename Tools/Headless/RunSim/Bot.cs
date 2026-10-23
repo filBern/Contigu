@@ -12,7 +12,10 @@ namespace Contigu.RunSim
         Random,
 
         /// <summary>Takes the best-scoring placement (group score, completed lines, tidy edges); buys modifiers first.</summary>
-        Greedy
+        Greedy,
+
+        /// <summary>Searches every order and spot for the whole hand (see <see cref="Planner"/>) and plays the first move of the best sequence; shops like Greedy.</summary>
+        Planner
     }
 
     /// <summary>Everything one simulated run reports back.</summary>
@@ -41,6 +44,7 @@ namespace Contigu.RunSim
 
         private readonly ChallengeDefinition _challenge;
         private readonly bool _endless;
+        private readonly Planner _planner;
 
         public Bot(int seed, BotPolicy policy, ChallengeDefinition challenge = null, bool endless = false)
         {
@@ -48,6 +52,7 @@ namespace Contigu.RunSim
             _policy = policy;
             _challenge = challenge ?? ChallengeCatalog.Classic;
             _endless = endless;
+            _planner = new Planner(_rng);
         }
 
         public RunResult PlayRun(int seed)
@@ -144,6 +149,14 @@ namespace Contigu.RunSim
         private bool TryPlaceBest(RunManager run, out int lueurBefore)
         {
             lueurBefore = run.Lueur;
+            if (_policy == BotPolicy.Planner)
+            {
+                if (!_planner.Choose(run, out int plannedSlot, out int plannedX, out int plannedY))
+                {
+                    return false;
+                }
+                return run.PlacePiece(plannedSlot, plannedX, plannedY).Placement.Success;
+            }
             var deck = run.Deck;
             double bestScore = double.NegativeInfinity;
             int bestSlot = -1;
@@ -313,7 +326,7 @@ namespace Contigu.RunSim
                 }
             }
             // Greedy: modifiers (blister) first, cheapest first. Random: shuffled.
-            if (_policy == BotPolicy.Greedy)
+            if (_policy != BotPolicy.Random)
             {
                 options.Sort((a, b) =>
                 {
