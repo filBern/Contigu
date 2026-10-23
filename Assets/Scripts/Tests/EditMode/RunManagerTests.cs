@@ -563,7 +563,7 @@ namespace Contigu.Tests
             {
                 var candidate = new RunManager(new SystemRandomProvider(seed));
                 PlayRoundToAwaitingShop(candidate);
-                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid)
+                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid && candidate.ShopUpgradeSlots[0].HiddenUpgrade.Id != UpgradeId.PermanentBonusSquare)
                 {
                     run = candidate;
                 }
@@ -1363,7 +1363,7 @@ namespace Contigu.Tests
             {
                 var candidate = new RunManager(new SystemRandomProvider(seed));
                 PlayRoundToAwaitingShop(candidate);
-                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid)
+                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid && candidate.ShopUpgradeSlots[0].HiddenUpgrade.Id != UpgradeId.PermanentBonusSquare)
                 {
                     run = candidate;
                 }
