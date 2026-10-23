@@ -802,7 +802,7 @@ namespace Contigu.Presentation
             switch (pool)
             {
                 case UpgradePool.Bank:
-                    return "Changes your seed bag. One of:\n" + ListWithDescriptions(UpgradeCatalog.BankPool);
+                    return "Changes your seed bag: replace, duplicate or recolor a seed, add a Wild Seed, or pick a Fresh Sprout.";
                 case UpgradePool.Mastery:
                     return "Levels up one random seed shape or color: its tiles score +1 pt per level, for the rest of the run.";
                 case UpgradePool.Modifier:
@@ -828,16 +828,6 @@ namespace Contigu.Presentation
                     }
                     return text.ToString();
             }
-        }
-
-        private static string ListWithDescriptions(UpgradeDefinition[] upgrades)
-        {
-            var lines = new List<string>();
-            foreach (var upgrade in upgrades)
-            {
-                lines.Add(upgrade.Name + ": " + upgrade.Description);
-            }
-            return string.Join("\n", lines);
         }
 
         private void OnRerollClicked()
