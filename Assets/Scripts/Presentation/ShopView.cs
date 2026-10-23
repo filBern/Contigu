@@ -810,23 +810,7 @@ namespace Contigu.Presentation
                         ? "Grants one random fertilizer you don't already have."
                         : "Choose one of your fertilizers to level up: its effect gets stronger.";
                 default:
-                    var text = new System.Text.StringBuilder("Enchants a tile of a seed you choose. The enchantment is permanent: it counts again every time its tile is scored.\nOne of:");
-                    foreach (var rarity in new[] { UpgradeRarity.Common, UpgradeRarity.Uncommon, UpgradeRarity.Rare })
-                    {
-                        var names = new List<string>();
-                        foreach (var upgrade in UpgradeCatalog.GridPool)
-                        {
-                            if (upgrade.Rarity == rarity)
-                            {
-                                names.Add(upgrade.Name);
-                            }
-                        }
-                        if (names.Count > 0)
-                        {
-                            text.Append("\n").Append(UpgradeVisualDefaults.GetRarityLabel(rarity)).Append(": ").Append(string.Join(", ", names));
-                        }
-                    }
-                    return text.ToString();
+                    return "Enchants a tile of a seed you choose. The enchantment is permanent: it counts again every time its tile is scored.";
             }
         }
 
