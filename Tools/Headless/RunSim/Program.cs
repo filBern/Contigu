@@ -43,6 +43,16 @@ namespace Contigu.RunSim
                 }
             }
 
+            for (int i = 0; i < args.Length; i++)
+            {
+                // --hp X overrides the challenge's enemy HP multiplier (for balance sweeps without rebuilding).
+                if (args[i] == "--hp" && i + 1 < args.Length)
+                {
+                    challenge = challenge.Clone();
+                    challenge.EnemyHpMultiplier = float.Parse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+
             var policies = new List<BotPolicy>();
             if (policyArg == "random" || policyArg == "both") { policies.Add(BotPolicy.Random); }
             if (policyArg == "greedy" || policyArg == "both") { policies.Add(BotPolicy.Greedy); }

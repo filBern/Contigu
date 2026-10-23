@@ -37,7 +37,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
-            EnemyHpMultiplier = 0.8f,
+            EnemyHpMultiplier = 0.9f,
             WorldEnemy = EnemyId.Hoarfrost
         };
 
@@ -56,7 +56,7 @@ namespace Contigu.Core
             WeatherProfile = WeatherProfile.Extreme,
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 0.8f,
+            EnemyHpMultiplier = 0.9f,
             WorldEnemy = EnemyId.Locust
         };
 
@@ -75,7 +75,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 0.41f,
+            EnemyHpMultiplier = 0.47f,
             PieceBudgetBonus = 12,
             WorldEnemy = EnemyId.Rotgrub
         };
@@ -94,7 +94,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             ActiveColorCount = 2,
-            EnemyHpMultiplier = 1.35f,
+            EnemyHpMultiplier = 1.5f,
             PieceBudgetBonus = 6,
             WorldEnemy = EnemyId.Fruitworm
         };
@@ -113,7 +113,7 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 0.54f,
+            EnemyHpMultiplier = 0.62f,
             PieceBudgetBonus = 10,
             WorldEnemy = EnemyId.Whitefly
         };

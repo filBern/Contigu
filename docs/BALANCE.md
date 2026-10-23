@@ -116,3 +116,8 @@ Les valeurs sont dans `ScoringConstants` (section « tile upgrades »). Victoire
 Une tuile améliorée qui fait partie du groupe marqué par un placement est recomptée : les effets à drapeau (Golden, Tinted, Multiplier, Blast, Beacon) sont ré-estampillés avant le calcul de `GridManager`, les autres (Mirror, Twin, Spark, Void, Venom et les 19 à points fixes) sont rejoués après le placement (`RunManager.TileUpgrades.cs`, `ApplyPersistentTraitBonuses`). Les voisins d'une ancienne tuile comptent les tuiles de la nouvelle graine.
 Après ce changement le bot gagnait trop (Spring 16,6 %, Autumn 10,2 %, Orchard 10,1 %, Greenhouse 8,1 %). `EnemyHpMultiplier` relevés : Spring 0,5 → 0,58, Summer 0,72 → 0,8, Autumn 0,36 → 0,41, Orchard 1,2 → 1,35, Greenhouse 0,5 → 0,54 (Winter inchangé, 0,8). Victoires du bot : Spring 14,7 %, Winter 6,3 %, Summer 7,7 %, Autumn 6,3 %, Orchard 7,9 %, Greenhouse 5,9 %.
 
+## Recalibrage sur le planner (profondeur 3)
+
+Le bot de référence est maintenant `--policy planner` (PLAN_DEPTH=3, 400 à 500 parties par challenge ; `--hp X` surcharge le multiplicateur de PV pour un balayage sans recompiler). `EnemyHpMultiplier` : Spring 0,58 (inchangé), Winter 0,8 → 0,9, Summer 0,8 → 0,9, Autumn 0,41 → 0,47, Orchard 1,35 → 1,5, Greenhouse 0,54 → 0,62.
+Victoires du planner : Spring 16,0 %, Winter 9,0 %, Summer 9,2 %, Autumn 8,6 %, Orchard 9,0 %, Greenhouse 9,2 %. Le bot glouton, plus faible, tombe à Spring 13,9 %, Winter 4,8 %, Summer 6,2 %, Autumn 4,0 %, Orchard 6,5 %, Greenhouse 4,2 % : le plancher de 5 % ne vaut plus pour lui.
+
