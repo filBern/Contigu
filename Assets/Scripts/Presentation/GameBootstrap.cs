@@ -70,7 +70,6 @@ namespace Contigu.Presentation
         private ShopView _shopView;
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
-        private PieceChoiceView _pieceChoiceView;
         private ShelfChoiceView _shelfChoiceView;
         private Button _abandonButton;
         private Text _abandonLabel;
@@ -510,9 +509,6 @@ namespace Contigu.Presentation
             _tileChoiceView = gameObject.AddComponent<TileChoiceView>();
             _tileChoiceView.Build(mainRoot, _tooltipView);
 
-            _pieceChoiceView = gameObject.AddComponent<PieceChoiceView>();
-            _pieceChoiceView.Build(mainRoot, _tooltipView);
-
             _shelfChoiceView = gameObject.AddComponent<ShelfChoiceView>();
             _shelfChoiceView.Build(mainRoot, _tooltipView);
 
@@ -640,7 +636,6 @@ namespace Contigu.Presentation
             _shopView.LeaveRequested += OnLeaveShopRequested;
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
-            _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
             _shopView.SeedBagRequested += () => _deckView.Show();
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;

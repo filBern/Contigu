@@ -129,7 +129,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.SeedPack)
             {
-                ShowSeedPack(pending);
+                ShowSeedPack(ShelfStage.ForWorkshop(pending));
             }
             else if (pending.Id == UpgradeId.MasteryPack)
             {
@@ -145,7 +145,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.RandomPiece)
             {
-                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending, _run);
+                ShowSeedPack(ShelfStage.ForUpgrade(pending, null));
             }
             else if (pending.Id == UpgradeId.PieceMastery || pending.Id == UpgradeId.ColorMastery)
             {
@@ -233,7 +233,7 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(image.rectTransform);
         }
 
-        private void ShowSeedPack(UpgradeDefinition pack)
+        private void ShowSeedPack(ChoiceSource source)
         {
             var entries = new List<ChoiceEntry>();
             foreach (var token in _run.PendingUpgradePieceCandidates)
@@ -241,7 +241,7 @@ namespace Contigu.Presentation
                 var t = token;
                 entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Trait, _tooltipView) });
             }
-            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.pickSeed"), entries, true, OnPieceChoiceConfirmed);
+            ShowShelfChoice(source, Loc.T("choice.pickSeed"), entries, true, OnPieceChoiceConfirmed);
         }
 
         private void ShowMasteries(ChoiceSource source)
@@ -338,7 +338,6 @@ namespace Contigu.Presentation
             _run.AbandonPending();
             _shelfChoiceView.Hide();
             _tileChoiceView.Hide();
-            _pieceChoiceView.Hide();
             _modifierUpgradeChoiceView.Hide();
             _draftView.Hide();
             _shopView.SetSelectionMode(false);
