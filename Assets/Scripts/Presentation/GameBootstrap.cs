@@ -616,6 +616,7 @@ namespace Contigu.Presentation
             _masteryChoiceView.OptionChosen += OnMasteryOptionChosen;
             _packChoiceView.OptionChosen += OnPackOptionChosen;
             _packChoiceView.Skipped += OnPackSkipped;
+            _shopView.SeedBagRequested += () => _deckView.Show();
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _endScreenView.EndlessRequested += OnEndlessRequested;

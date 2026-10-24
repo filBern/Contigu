@@ -123,6 +123,9 @@ namespace Contigu.Presentation
         private const float WeatherRowHeight = 44f;
         private GridLayoutGroup _upcomingEncounterGrid;
         private RectTransform _blisterCardsContainer;
+        /// <summary>Fires when the player asks to see their seed bag from the shop.</summary>
+        public event Action SeedBagRequested;
+
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
         private Button _rerollButton;
@@ -296,16 +299,22 @@ namespace Contigu.Presentation
             leaveRect.sizeDelta = new Vector2(220f, 46f);
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
-            // Tab opens the deck view from the shop too, since the shop is
-            // its own separate overlay (same hint HudView shows).
-            var deckHint = UIFactory.CreateText(_root, "DeckHint", "Tab: view your seed bag", 14, UITheme.TextMutedOnBackground);
-            var deckHintRect = deckHint.rectTransform;
-            deckHintRect.anchorMin = new Vector2(0f, 0f);
-            deckHintRect.anchorMax = new Vector2(0f, 0f);
-            deckHintRect.pivot = new Vector2(0f, 0f);
-            deckHintRect.anchoredPosition = new Vector2(16f, 16f);
-            deckHintRect.sizeDelta = new Vector2(220f, 22f);
-            deckHint.alignment = TextAnchor.MiddleLeft;
+            // The seed bag is one click away from the shop (Tab still works too).
+            var bagButton = UIFactory.CreateButton(_root, "ShowSeedBag", "Show seed bag (Tab)", UISprites.CancelButtonBackground, 15);
+            UIFactory.DisablePlants(bagButton);
+            var bagRect = bagButton.GetComponent<RectTransform>();
+            bagRect.anchorMin = new Vector2(0f, 0f);
+            bagRect.anchorMax = new Vector2(0f, 0f);
+            bagRect.pivot = new Vector2(0f, 0f);
+            bagRect.anchoredPosition = new Vector2(16f, 40f);
+            bagRect.sizeDelta = new Vector2(220f, 46f);
+            bagButton.onClick.AddListener(() =>
+            {
+                if (SeedBagRequested != null)
+                {
+                    SeedBagRequested();
+                }
+            });
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -473,6 +482,7 @@ namespace Contigu.Presentation
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap);
 
             ClearChildren(_upgradeCardsContainer);
+            _upgradeCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = WorkshopCardSpacing;
             for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
             {
                 BuildUpgradeCard(run, i);
@@ -723,16 +733,19 @@ namespace Contigu.Presentation
         }
 
         // Workshop cards carry a short blurb under the art, so they are a bit taller than the old mystery cards.
-        private const float WorkshopCardHeight = 226f;
+        private const float WorkshopCardHeight = 238f;
+        // Four cards must fit between the two side panels (fertilizers left, next round right), so they are narrower than Blister cards.
+        private const float WorkshopCardWidth = 140f;
+        private const float WorkshopCardSpacing = 12f;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {
             var slot = run.ShopUpgradeSlots[index];
             var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
             card.color = UITheme.Panel;
-            card.rectTransform.sizeDelta = new Vector2(CardWidth, WorkshopCardHeight);
+            card.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth, WorkshopCardHeight);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = CardWidth;
+            cardLayout.preferredWidth = WorkshopCardWidth;
             cardLayout.preferredHeight = WorkshopCardHeight;
             UIFactory.AddThickOutline(card, UITheme.Border);
 
@@ -746,12 +759,12 @@ namespace Contigu.Presentation
             bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
 
             // Packs and services are fully visible: name on top, art, one line saying what you get.
-            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 20, UITheme.TextPrimary);
+            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 17, UITheme.TextPrimary);
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -10f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 28f);
+            nameLabel.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 16f, 28f);
 
             var typeLabel = UIFactory.CreateText(card.transform, "Kind", isService ? "Service" : "Pack", 12, UITheme.TextMuted);
             typeLabel.fontStyle = FontStyle.Italic;
@@ -759,7 +772,7 @@ namespace Contigu.Presentation
             typeLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             typeLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             typeLabel.rectTransform.anchoredPosition = new Vector2(0f, -36f);
-            typeLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
+            typeLabel.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 16f, 16f);
 
             var artSprite = UpgradeVisualDefaults.GetIcon(isForge ? slot.Payload.Id : def.Id);
             if (artSprite != null)
@@ -771,17 +784,18 @@ namespace Contigu.Presentation
                 art.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 art.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 art.rectTransform.pivot = new Vector2(0.5f, 1f);
-                art.rectTransform.anchoredPosition = new Vector2(0f, -54f);
-                art.rectTransform.sizeDelta = new Vector2(84f, 84f);
+                art.rectTransform.anchoredPosition = new Vector2(0f, -56f);
+                art.rectTransform.sizeDelta = new Vector2(76f, 76f);
             }
 
-            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 14, UITheme.TextPrimary);
+            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 13, UITheme.TextPrimary);
             blurb.raycastTarget = false;
             blurb.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             blurb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             blurb.rectTransform.pivot = new Vector2(0.5f, 1f);
-            blurb.rectTransform.anchoredPosition = new Vector2(0f, -142f);
-            blurb.rectTransform.sizeDelta = new Vector2(CardWidth - 20f, 36f);
+            blurb.rectTransform.anchoredPosition = new Vector2(0f, -136f);
+            blurb.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 12f, 44f);
+            blurb.verticalOverflow = VerticalWrapMode.Truncate;
 
             // Hover: the whole description (and, for the Forge, what its tile upgrade does).
             var hover = card.gameObject.AddComponent<HoverTooltip>();
@@ -796,7 +810,7 @@ namespace Contigu.Presentation
             BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
                 !slot.Purchased && !blocked && run.PendingUpgrade == null,
                 run.Lueur >= price,
-                () => OnUpgradeBuyClicked(index));
+                () => OnUpgradeBuyClicked(index), WorkshopCardWidth);
         }
 
         /// <summary>The one-line promise under a Workshop card's art.</summary>
@@ -804,12 +818,12 @@ namespace Contigu.Presentation
         {
             switch (slot.HiddenUpgrade.Id)
             {
-                case UpgradeId.SeedPack: return "Keep 1 of 3 upgraded seeds";
-                case UpgradeId.SproutPack: return "Pick 1 of 3 tile upgrades";
+                case UpgradeId.SeedPack: return "Keep 1 of 3 seeds";
+                case UpgradeId.SproutPack: return "Pick 1 of 3 sprouts";
                 case UpgradeId.FertilizerPack: return "Keep 1 of 3 fertilizers";
                 case UpgradeId.MasteryPack: return "Pick 1 of 3 masteries";
-                case UpgradeId.Compost: return "Remove 1 seed from your bag";
-                case UpgradeId.Forge: return slot.Payload != null ? slot.Payload.Name + " on a seed of your choice" : "Upgrade a seed";
+                case UpgradeId.Compost: return "Remove 1 seed";
+                case UpgradeId.Forge: return slot.Payload != null ? slot.Payload.Name + " on a seed" : "Upgrade a seed";
                 default: return slot.HiddenUpgrade.Description;
             }
         }
@@ -855,7 +869,7 @@ namespace Contigu.Presentation
         /// something: it shakes the card instead of silently doing nothing, which a plain disabled button
         /// never could.
         /// </summary>
-        private void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool canInteract, bool affordable, Action onClick)
+        private void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool canInteract, bool affordable, Action onClick, float cardWidth = CardWidth)
         {
             var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);
             UIFactory.DisablePlants(buyBtn);
@@ -866,7 +880,7 @@ namespace Contigu.Presentation
             buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
             // A text label ("None owned", "Full (n)") needs more room than a price number.
             bool isTextLabel = !purchased && !int.TryParse(priceLabel, out _);
-            buyRect.sizeDelta = new Vector2(isTextLabel ? CardWidth - 24f : BuyButtonWidth, BuyButtonHeight);
+            buyRect.sizeDelta = new Vector2(isTextLabel ? cardWidth - 24f : Mathf.Min(BuyButtonWidth, cardWidth - 24f), BuyButtonHeight);
             buyBtn.interactable = !purchased && canInteract;
             var cardRect = (RectTransform)parent;
             buyBtn.onClick.AddListener(() =>
