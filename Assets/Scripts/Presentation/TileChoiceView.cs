@@ -2,29 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
-using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Overlay shown once a shop upgrade purchase reveals a Grid-pool (piece-trait) upgrade: the player
-    /// picks which candidate deck tokens receive it. Confirm enables once exactly
+    /// Shown on the shop screen once a purchase leaves a tile upgrade to place (Forge, Sprout Pack, a Blister sprout): the player picks which
+    /// candidate deck tokens receive it, on the shop's own shelves (see <see cref="ShelfStage"/>). Confirm enables once exactly
     /// EconomyConstants.ShopTileChoiceCount are selected (or fewer, if the deck has fewer candidates).
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float SignSize = 120f;
         private const float BadgeFadeDuration = 0.35f;
-        private const float TitleHeight = 40f;
-        private const float ConfirmHeight = 46f;
-        private const float BlockSpacing = 24f;
-        // The canvas is always exactly this tall in its own local units
-        // regardless of actual window size (CanvasScaler matches on height —
-        // see GameBootstrap.BuildCanvas), so centering math done in this
-        // space holds for any resolution.
-        private const float CanvasHeight = 800f;
 
         /// <summary>Fires with the chosen deck indices once the player confirms.</summary>
         public event Action<IReadOnlyList<int>> TileChoiceConfirmed;
@@ -33,16 +23,8 @@ namespace Contigu.Presentation
         private DeckManager _deck;
         private TooltipView _tooltip;
         private RectTransform _root;
-        private RectTransform _cardContainer;
-        private Text _title;
-        private RectTransform _previewsContainer;
-        private RectTransform _previewsContainer2;
-        private RectTransform _shelf1;
-        private RectTransform _shelf2;
-        private const float ShelfHeight = 16f;
-        private const float RowGap = 6f;
-        private Button _confirmButton;
-        private RectTransform _confirmRect;
+        private ShelfStage _stage;
+        private ShelfLayout _layout;
 
         private readonly List<int> _candidates = new List<int>();
         private readonly HashSet<int> _selected = new HashSet<int>();
@@ -57,85 +39,17 @@ namespace Contigu.Presentation
         {
             _tooltip = tooltip;
 
+            // Fully transparent: the choice happens ON the shop screen (its stall backdrop stays visible, its shelves are swapped for these).
             var overlay = UIFactory.CreatePanel(parent, "TileChoiceOverlay", new Color(0f, 0f, 0f, 0f));
-            // Fully transparent: the choice happens ON the shop screen (its stall backdrop stays visible, its shelves are swapped for the seeds).
             _root = overlay.rectTransform;
             overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
 
-            _cardContainer = UIFactory.CreateUIObject("CardContainer", _root);
-            _cardContainer.anchorMin = new Vector2(0.5f, 1f);
-            _cardContainer.anchorMax = new Vector2(0.5f, 1f);
-            _cardContainer.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
-
-            _title = UIFactory.CreateText(_root, "Title", "", 22, UITheme.TextOnBackground);
-            _title.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _title.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _title.rectTransform.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
-            _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
-
-            _previewsContainer = BuildSeedRow("Previews");
-            _shelf1 = BuildShelf("Shelf1");
-            _previewsContainer2 = BuildSeedRow("Previews2");
-            _shelf2 = BuildShelf("Shelf2");
-
-            _confirmButton = UIFactory.CreateButton(_root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
-            _confirmRect = _confirmButton.GetComponent<RectTransform>();
-            _confirmRect.anchorMin = new Vector2(0.5f, 1f);
-            _confirmRect.anchorMax = new Vector2(0.5f, 1f);
-            _confirmRect.pivot = new Vector2(0.5f, 1f);
-            // Vertical position set in Show(), as part of the same measured, vertically-centered block — see LayoutBlock.
-            _confirmRect.sizeDelta = new Vector2(200f, ConfirmHeight);
-            _confirmButton.onClick.AddListener(OnConfirmClicked);
+            _stage = new ShelfStage(_root, tooltip);
+            _stage.ConfirmButton.onClick.AddListener(OnConfirmClicked);
 
             _root.gameObject.SetActive(false);
             return _root;
-        }
-
-        /// <summary>One bare row of seeds: no parchment box, just the seeds side by side, resting on a shelf below.</summary>
-        private RectTransform BuildSeedRow(string name)
-        {
-            var row = UIFactory.CreateUIObject(name, _root);
-            row.anchorMin = new Vector2(0.5f, 1f);
-            row.anchorMax = new Vector2(0.5f, 1f);
-            row.pivot = new Vector2(0.5f, 1f);
-            var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8f;
-            layout.childAlignment = TextAnchor.LowerCenter;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = row.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            return row;
-        }
-
-        /// <summary>A wooden shelf (same look as the shop's display shelves) under a row of seeds.</summary>
-        private RectTransform BuildShelf(string name)
-        {
-            var board = UIFactory.CreatePanel(_root, name, new Color(0.45f, 0.30f, 0.17f, 1f));
-            board.raycastTarget = false;
-            var rect = board.rectTransform;
-            rect.anchorMin = new Vector2(0.5f, 1f);
-            rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
-            lip.raycastTarget = false;
-            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
-            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
-            lip.rectTransform.anchoredPosition = Vector2.zero;
-            lip.rectTransform.sizeDelta = new Vector2(0f, 5f);
-            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(0f, 0f, 0f, 0.35f));
-            shadow.raycastTarget = false;
-            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
-            shadow.rectTransform.anchorMax = new Vector2(1f, 0f);
-            shadow.rectTransform.pivot = new Vector2(0.5f, 1f);
-            shadow.rectTransform.anchoredPosition = Vector2.zero;
-            shadow.rectTransform.sizeDelta = new Vector2(0f, 14f);
-            return rect;
         }
 
         /// <summary>Closes the overlay without resolving it (the purchase was abandoned).</summary>
@@ -147,6 +61,12 @@ namespace Contigu.Presentation
         public void Rebind(DeckManager deck)
         {
             _deck = deck;
+        }
+
+        /// <summary>Where the shop's shelves stand, so the seeds rest on exactly the same ones.</summary>
+        public void SetShelfLayout(ShelfLayout layout)
+        {
+            _layout = layout;
         }
 
         public void Show(RunManager run, DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def, UpgradeId? source = null)
@@ -161,97 +81,21 @@ namespace Contigu.Presentation
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
             _previewTraitKind = UpgradeSystem.TraitKindFor(def.Id);
 
-            for (int i = _cardContainer.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_cardContainer.GetChild(i).gameObject);
-            }
-            // The shop object that led here (the anvil with the upgrade's glyph, the pack's crate, or the upgrade's own sign); its name, category and description are in the hover tooltip.
-            var card = UIFactory.CreatePanel(_cardContainer, "Source", Color.white);
-            card.sprite = source == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
-                : source == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")
-                : UpgradeVisualDefaults.GetIcon(def.Id);
-            card.preserveAspect = true;
-            card.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            card.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            card.rectTransform.pivot = new Vector2(0.5f, 1f);
-            card.rectTransform.anchoredPosition = Vector2.zero;
-            card.rectTransform.sizeDelta = new Vector2(SignSize, SignSize);
-            var glyphSprite = source.HasValue ? UpgradeVisualDefaults.GetGlyph(def.Id) : null;
-            if (glyphSprite != null)
-            {
-                var glyph = UIFactory.CreatePanel(card.transform, "Glyph", Color.white);
-                glyph.sprite = glyphSprite;
-                glyph.preserveAspect = true;
-                glyph.raycastTarget = false;
-                UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, source == UpgradeId.Forge ? UpgradeVisualDefaults.GlyphSurface.Anvil : UpgradeVisualDefaults.GlyphSurface.Crate, SignSize);
-            }
-            var hover = card.gameObject.AddComponent<HoverTooltip>();
-            hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(def.Description, 14),
-                "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
-
-            _title.text = Loc.T("choice.selectSeeds", _requiredCount);
-
-            for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_previewsContainer.GetChild(i).gameObject);
-            }
-            for (int i = _previewsContainer2.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_previewsContainer2.GetChild(i).gameObject);
-            }
-            // Two rows (a second one only when needed), sized to stay between the two tablets.
-            int firstRow = (_candidates.Count + 1) / 2;
-            float middleWidth = 2f * (PieceBox.SidePanelCenterX - ModifierPanelView.PanelWidth * 0.5f) - 40f;
-            PieceBox.Configure(Mathf.Max(1, firstRow), middleWidth);
+            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount), _candidates.Count, true);
             for (int i = 0; i < _candidates.Count; i++)
             {
-                BuildPreviewCell(_candidates[i], i < firstRow ? _previewsContainer : _previewsContainer2);
+                BuildPreviewCell(_candidates[i], i);
             }
-            _previewsContainer2.gameObject.SetActive(_candidates.Count > firstRow);
-            _shelf2.gameObject.SetActive(_candidates.Count > firstRow);
-
-            LayoutBlock(SignSize);
 
             RefreshConfirmInteractable();
+            _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
         }
 
-        /// <summary>Stacks card/title/previews/Confirm as one block and centers it vertically in the overlay. Every height here is either measured (the card) or a fixed constant, never guessed.</summary>
-        private void LayoutBlock(float cardHeight)
+        private void BuildPreviewCell(int deckIndex, int position)
         {
-            float rowHeight = PieceBox.CellSize + RowGap;
-            int rows = _previewsContainer2.gameObject.activeSelf ? 2 : 1;
-            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + rows * (rowHeight + ShelfHeight + 8f) + BlockSpacing + ConfirmHeight;
-            float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
-
-            _cardContainer.anchoredPosition = new Vector2(0f, topY);
-            float y = topY - cardHeight - BlockSpacing;
-
-            _title.rectTransform.anchoredPosition = new Vector2(0f, y);
-            y -= TitleHeight + BlockSpacing;
-
-            float shelfWidth = Mathf.Max(PieceBox.CellSize * Mathf.Ceil(_candidates.Count / 2f) + 40f, 280f);
-            y = PlaceRow(_previewsContainer, _shelf1, y, rowHeight, shelfWidth);
-            if (rows == 2)
-            {
-                y = PlaceRow(_previewsContainer2, _shelf2, y, rowHeight, shelfWidth);
-            }
-            y -= BlockSpacing - 8f;
-
-            _confirmRect.anchoredPosition = new Vector2(0f, y);
-        }
-
-        private static float PlaceRow(RectTransform row, RectTransform shelf, float y, float rowHeight, float shelfWidth)
-        {
-            row.anchoredPosition = new Vector2(0f, y);
-            shelf.anchoredPosition = new Vector2(0f, y - rowHeight + 4f);
-            shelf.sizeDelta = new Vector2(shelfWidth, ShelfHeight);
-            return y - rowHeight - ShelfHeight - 8f;
-        }
-
-        private void BuildPreviewCell(int deckIndex, RectTransform row)
-        {
-            var cell = PieceBox.CreateCell(row, "Tile_" + deckIndex, PieceBox.CellSize, false);
+            float cellSize = _stage.CellSize;
+            var cell = PieceBox.CreateCell(_stage.RowFor(position), "Tile_" + deckIndex, cellSize, false);
             _cellBackgroundByIndex[deckIndex] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
@@ -262,7 +106,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             previewContainer.anchoredPosition = Vector2.zero;
-            previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
+            previewContainer.sizeDelta = new Vector2(cellSize * 0.8f, cellSize * 0.8f);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);
@@ -287,7 +131,7 @@ namespace Contigu.Presentation
             }
 
             var badge = ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, previewTrait, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject);
-            if (animate && badge != null)
+            if (animate && badge != null && !MotionSettings.Reduced)
             {
                 StartCoroutine(FadeInBadge(badge));
             }
@@ -338,7 +182,7 @@ namespace Contigu.Presentation
 
         private void RefreshConfirmInteractable()
         {
-            _confirmButton.interactable = _selected.Count == _requiredCount;
+            _stage.ConfirmButton.interactable = _selected.Count == _requiredCount;
         }
 
         private void OnConfirmClicked()

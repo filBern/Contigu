@@ -481,6 +481,12 @@ namespace Contigu.Presentation
         }
 
         /// <summary>While a seed choice is shown on the shop screen, the shelves (Blister, Workshop) and their buttons step aside; the backdrop and tablets stay.</summary>
+        /// <summary>Where the two shelves stand (relative to the screen's middle) as of the last Refresh, so a choice can rest on the very same ones.</summary>
+        public ShelfLayout GetShelfLayout()
+        {
+            return _shelfLayout;
+        }
+
         public void SetSelectionMode(bool on)
         {
             foreach (var part in new Component[] { _blisterPlaque, _blisterCardsContainer, _blisterShelf, _upgradePlaque, _upgradeCardsContainer, _workshopShelf, _rerollButton, _leaveButton })
@@ -629,6 +635,7 @@ namespace Contigu.Presentation
             float top = blockHeight * 0.5f;
             float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 12f;
             _blisterPlaque.anchoredPosition = new Vector2(0f, top + PlaqueLift);
+            _shelfLayout = new ShelfLayout { FirstShelfY = top - LabelToCardsGap - rowHeight + 6f, SecondShelfY = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap - LabelToCardsGap - rowHeight + 6f, Width = shelfWidth };
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
             _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight + 6f);
             float secondTop = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap;
@@ -900,6 +907,7 @@ namespace Contigu.Presentation
         private const float MinItemSpacing = 8f;
         private const float MaxItemSpacing = 32f;
         // Recomputed on every Refresh from the room left between the two tablets, so a narrower screen shrinks the items instead of overlapping the tablets.
+        private ShelfLayout _shelfLayout;
         private float _itemSize = MaxItemSize;
         private float _itemSpacing = MaxItemSpacing;
 

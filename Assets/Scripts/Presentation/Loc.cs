@@ -39,6 +39,11 @@ namespace Contigu.Presentation
             { "choice.abandonConfirm", "Sure? Click again (no refund)" },
             { "choice.sproutTag", "Sprout · {0}" },
             { "choice.fertilizerTag", "Fertilizer · {0}" },
+            { "choice.pickSeed", "Choose 1 seed to add" },
+            { "choice.pickMastery", "Choose a mastery" },
+            { "choice.pickCompost", "Choose 1 seed to remove" },
+            { "choice.masteryBody", "Level {0} → {1} (+{2})\n+{3} pts per sprout" },
+            { "choice.masteryTag", "Mastery" },
             { "settings.motionOff", "Reduced motion: Off" },
             { "settings.motionOn", "Reduced motion: On" },
         };

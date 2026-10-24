@@ -71,8 +71,7 @@ namespace Contigu.Presentation
         private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
         private PieceChoiceView _pieceChoiceView;
-        private MasteryChoiceView _masteryChoiceView;
-        private PackChoiceView _packChoiceView;
+        private ShelfChoiceView _shelfChoiceView;
         private Button _abandonButton;
         private Text _abandonLabel;
         private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
@@ -514,11 +513,8 @@ namespace Contigu.Presentation
             _pieceChoiceView = gameObject.AddComponent<PieceChoiceView>();
             _pieceChoiceView.Build(mainRoot, _tooltipView);
 
-            _masteryChoiceView = gameObject.AddComponent<MasteryChoiceView>();
-            _masteryChoiceView.Build(mainRoot);
-
-            _packChoiceView = gameObject.AddComponent<PackChoiceView>();
-            _packChoiceView.Build(mainRoot);
+            _shelfChoiceView = gameObject.AddComponent<ShelfChoiceView>();
+            _shelfChoiceView.Build(mainRoot, _tooltipView);
 
             _abandonButton = UIFactory.CreateButton(mainRoot, "AbandonPurchase", Loc.T("choice.abandon"), UISprites.CancelButtonBackground, 15);
             UIFactory.DisablePlants(_abandonButton);
@@ -645,9 +641,6 @@ namespace Contigu.Presentation
             _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
-            _masteryChoiceView.OptionChosen += OnMasteryOptionChosen;
-            _packChoiceView.OptionChosen += OnPackOptionChosen;
-            _packChoiceView.Skipped += OnPackSkipped;
             _shopView.SeedBagRequested += () => _deckView.Show();
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;

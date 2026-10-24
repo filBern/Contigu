@@ -121,19 +121,23 @@ namespace Contigu.Presentation
             }
             if (pending.Id == UpgradeId.SproutPack)
             {
-                ShowPackOfUpgrades();
+                ShowPackOfUpgrades(revealedUpgrade);
             }
             else if (pending.Id == UpgradeId.FertilizerPack)
             {
-                ShowPackOfModifiers();
+                ShowPackOfModifiers(revealedUpgrade);
             }
             else if (pending.Id == UpgradeId.SeedPack)
             {
-                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending, _run);
+                ShowSeedPack(pending);
             }
             else if (pending.Id == UpgradeId.MasteryPack)
             {
-                _masteryChoiceView.Show(_run.PendingMasteryOptions, _run);
+                ShowMasteries(ShelfStage.ForWorkshop(pending));
+            }
+            else if (pending.Id == UpgradeId.Compost)
+            {
+                ShowCompost(pending);
             }
             else if (pending.Pool == UpgradePool.Grid)
             {
@@ -145,7 +149,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.PieceMastery || pending.Id == UpgradeId.ColorMastery)
             {
-                _masteryChoiceView.Show(_run.PendingMasteryOptions, _run);
+                ShowMasteries(ShelfStage.ForUpgrade(pending, null));
             }
             else if (pending.Id == UpgradeId.ModifierUpgrade)
             {
@@ -161,42 +165,135 @@ namespace Contigu.Presentation
         private void ShowTileChoiceInShop(UpgradeDefinition upgrade, UpgradeId? source = null)
         {
             _shopView.SetSelectionMode(true);
+            _tileChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
             _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, upgrade, source);
         }
 
-        private void ShowPackOfUpgrades()
+        /// <summary>Gives the shelf choice the shop's own shelf positions and puts the shop's shelves away while it is shown.</summary>
+        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen)
         {
-            var options = new List<PackOption>();
-            foreach (var upgrade in _run.PendingPackUpgrades)
-            {
-                options.Add(new PackOption
-                {
-                    Name = upgrade.Name,
-                    Description = DescriptionTextFormatter.Colorize(upgrade.Description, 15),
-                    Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
-                    Icon = UpgradeVisualDefaults.GetIcon(upgrade.Id),
-                    Accent = UpgradeVisualDefaults.GetRarityColor(upgrade.Rarity)
-                });
-            }
-            _packChoiceView.Show(Loc.T("choice.sproutPack"), Loc.T("choice.sproutPackHint"), options);
+            _shopView.SetSelectionMode(true);
+            _shelfChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
+            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen);
         }
 
-        private void ShowPackOfModifiers()
+        private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip)
         {
-            var options = new List<PackOption>();
+            ShapePreviewFactory.Build(host, shape, color, trait, tooltip, host.parent.gameObject);
+        }
+
+        private void ShowPackOfUpgrades(UpgradeDefinition pack)
+        {
+            var entries = new List<ChoiceEntry>();
+            foreach (var upgrade in _run.PendingPackUpgrades)
+            {
+                var sprite = UpgradeVisualDefaults.GetGlyph(upgrade.Id);
+                entries.Add(new ChoiceEntry
+                {
+                    BuildVisual = (host, size) => BuildSpriteVisual(host, sprite),
+                    Name = upgrade.Name,
+                    Body = DescriptionTextFormatter.Colorize(upgrade.Description, 14),
+                    Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity))
+                });
+            }
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, false, OnPackOptionChosen);
+        }
+
+        private void ShowPackOfModifiers(UpgradeDefinition pack)
+        {
+            var entries = new List<ChoiceEntry>();
             foreach (var id in _run.PendingPackModifiers)
             {
                 var def = ModifierCatalog.Get(id);
-                options.Add(new PackOption
+                var captured = def;
+                entries.Add(new ChoiceEntry
                 {
+                    BuildVisual = (host, size) =>
+                    {
+                        var badge = ModifierBadgeFactory.Create(host, captured, size, _tooltipView, showBackground: false, attachTooltip: false);
+                        badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.anchoredPosition = Vector2.zero;
+                    },
                     Name = def.Name,
-                    Description = DescriptionTextFormatter.Colorize(def.Description, 15),
-                    Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category)),
-                    Icon = ModifierVisualDefaults.GetIcon(id),
-                    Accent = ModifierVisualDefaults.GetCategoryColor(def.Category)
+                    Body = DescriptionTextFormatter.Colorize(def.Description, 14),
+                    Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category))
                 });
             }
-            _packChoiceView.Show(Loc.T("choice.fertilizerPack"), Loc.T("choice.fertilizerPackHint"), options);
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.fertilizerPackHint"), entries, false, OnPackOptionChosen);
+        }
+
+        private static void BuildSpriteVisual(RectTransform host, Sprite sprite)
+        {
+            var image = UIFactory.CreatePanel(host, "Icon", Color.white);
+            image.sprite = sprite;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            UIFactory.StretchFull(image.rectTransform);
+        }
+
+        private void ShowSeedPack(UpgradeDefinition pack)
+        {
+            var entries = new List<ChoiceEntry>();
+            foreach (var token in _run.PendingUpgradePieceCandidates)
+            {
+                var t = token;
+                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Trait, _tooltipView) });
+            }
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.pickSeed"), entries, true, OnPieceChoiceConfirmed);
+        }
+
+        private void ShowMasteries(ChoiceSource source)
+        {
+            var entries = new List<ChoiceEntry>();
+            foreach (var option in _run.PendingMasteryOptions)
+            {
+                var o = option;
+                string name;
+                int levelNow;
+                if (o.Shape.HasValue)
+                {
+                    name = VisualDefaults.GetShapeName(o.Shape.Value);
+                    levelNow = _run.GetShapeMasteryLevel(o.Shape.Value);
+                }
+                else
+                {
+                    name = VisualDefaults.GetColorName(o.Color.Value);
+                    levelNow = _run.GetColorMasteryLevel(o.Color.Value);
+                }
+                entries.Add(new ChoiceEntry
+                {
+                    BuildVisual = (host, size) =>
+                    {
+                        if (o.Shape.HasValue)
+                        {
+                            ShapePreviewFactory.BuildMono(host, PieceShapeCatalog.Get(o.Shape.Value), new Color(0.55f, 0.55f, 0.55f));
+                        }
+                        else
+                        {
+                            ShapePreviewFactory.Build(host, PieceShapeCatalog.Get(ShapeId.Single), o.Color.Value, null, null, null);
+                        }
+                    },
+                    Name = name,
+                    Body = Loc.T("choice.masteryBody", levelNow, levelNow + o.Gain, o.Gain, levelNow + o.Gain - 1),
+                    Subtitle = Loc.T("choice.masteryTag")
+                });
+            }
+            ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, false, OnMasteryOptionChosen);
+        }
+
+        private void ShowCompost(UpgradeDefinition pending)
+        {
+            var types = new List<(ShapeId Shape, PieceColor Color)>(_run.PendingUpgradeTypeCandidates);
+            var entries = new List<ChoiceEntry>();
+            foreach (var type in types)
+            {
+                var t = type;
+                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, null, _tooltipView) });
+            }
+            ShowShelfChoice(ShelfStage.ForWorkshop(pending), Loc.T("choice.pickCompost"), entries, true,
+                index => OnSubChoiceConfirmed(new UpgradeSubChoice(types[index].Shape, types[index].Color)));
         }
 
         private void OnPackOptionChosen(int index)
@@ -212,13 +309,7 @@ namespace Contigu.Presentation
                 return;
             }
             _run.ResolvePackModifierChoice(index);
-            RefreshAll();
-            _shopView.Refresh(_run);
-        }
-
-        private void OnPackSkipped()
-        {
-            _run.SkipPack();
+            _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
         }
@@ -245,10 +336,9 @@ namespace Contigu.Presentation
             }
             _abandonArmedAt = -10f;
             _run.AbandonPending();
-            _packChoiceView.Hide();
+            _shelfChoiceView.Hide();
             _tileChoiceView.Hide();
             _pieceChoiceView.Hide();
-            _masteryChoiceView.Hide();
             _modifierUpgradeChoiceView.Hide();
             _draftView.Hide();
             _shopView.SetSelectionMode(false);
@@ -283,6 +373,7 @@ namespace Contigu.Presentation
         private void OnSubChoiceConfirmed(UpgradeSubChoice subChoice)
         {
             _run.ResolveUpgradeSubChoice(subChoice);
+            _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
         }
@@ -298,6 +389,7 @@ namespace Contigu.Presentation
         private void OnPieceChoiceConfirmed(int candidateIndex)
         {
             _run.ResolveUpgradePieceChoice(candidateIndex);
+            _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
         }
@@ -305,6 +397,7 @@ namespace Contigu.Presentation
         private void OnMasteryOptionChosen(int optionIndex)
         {
             _run.ResolveMasteryChoice(optionIndex);
+            _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
         }
