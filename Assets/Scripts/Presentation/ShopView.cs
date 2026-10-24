@@ -456,8 +456,21 @@ namespace Contigu.Presentation
             get { return _upcomingEncounterBox; }
         }
 
+        /// <summary>While a seed choice is shown on the shop screen, the shelves (Blister, Workshop) and their buttons step aside; the backdrop and tablets stay.</summary>
+        public void SetSelectionMode(bool on)
+        {
+            foreach (var part in new Component[] { _blisterSectionLabel, _blisterCardsContainer, _blisterShelf, _upgradeSectionLabel, _upgradeCardsContainer, _workshopShelf, _rerollButton, _leaveButton })
+            {
+                if (part != null)
+                {
+                    part.gameObject.SetActive(!on);
+                }
+            }
+        }
+
         public void Show(RunManager run)
         {
+            SetSelectionMode(false);
             _root.gameObject.SetActive(true);
             SetSharedLueurRaised(true);
             Refresh(run);

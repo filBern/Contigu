@@ -51,7 +51,8 @@ namespace Contigu.Presentation
         {
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "TileChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
+            var overlay = UIFactory.CreatePanel(parent, "TileChoiceOverlay", new Color(0f, 0f, 0f, 0f));
+            // Fully transparent: the choice happens ON the shop screen (its stall backdrop stays visible, its shelves are swapped for the seeds).
             _root = overlay.rectTransform;
             overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
