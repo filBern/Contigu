@@ -27,6 +27,30 @@ namespace Contigu.Data
             return sprite;
         }
 
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> LooseIcons = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>The motif in the middle of an upgrade's sign, without the sign (Resources/Icons/UpgradeGlyphs/&lt;UpgradeId&gt;.png). Null if missing.</summary>
+        public static Sprite GetGlyph(UpgradeId id)
+        {
+            return LoadLoose("Icons/UpgradeGlyphs/" + id);
+        }
+
+        /// <summary>A Workshop object's own picture (a crate per pack, the compost bucket, the anvil): Resources/Icons/Workshop/&lt;name&gt;.png. Null if missing.</summary>
+        public static Sprite GetWorkshopArt(string name)
+        {
+            return LoadLoose("Icons/Workshop/" + name);
+        }
+
+        private static Sprite LoadLoose(string path)
+        {
+            if (!LooseIcons.TryGetValue(path, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>(path);
+                LooseIcons[path] = sprite;
+            }
+            return sprite;
+        }
+
         public static string GetRarityLabel(UpgradeRarity rarity)
         {
             switch (rarity)

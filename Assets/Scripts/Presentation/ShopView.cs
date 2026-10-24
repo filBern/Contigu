@@ -633,270 +633,197 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Builds all Blister cards (a mix of Modifier-kind and Upgrade-kind
-        /// slots) in 2 passes so they share one uniform height despite
-        /// differing description lengths: pass 1 builds every card and
-        /// measures its description's natural wrapped height; pass 2 applies
-        /// the tallest one found to every card so the buy button always
-        /// lands at the same Y. Returns that shared card height so the
-        /// caller can place the Casino section below it without overlapping.
+        /// Builds the Blister row: bare icons standing on the shelf (no card), the price in the top-right corner, the icon itself
+        /// is the buy button. Returns the row's height so the Workshop section can be placed below it.
         /// </summary>
         private float BuildBlisterCards(RunManager run)
         {
             ClearChildren(_blisterCardsContainer);
-
-            var cardRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
-            var descRects = new List<RectTransform>(run.ShopBlisterSlots.Count);
-            float maxDescHeight = 0f;
-
             for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
-                // A purchased slot no longer gets a card at all — see PlayBlisterRemoval, which plays its
-                // shrink/fade-out animation on the old card before this rebuild runs — so the row packs
-                // down to just the remaining ones instead of keeping a disabled "Sold" card forever.
-                if (run.ShopBlisterSlots[i] != null && run.ShopBlisterSlots[i].Purchased)
+                // A purchased slot no longer gets an item at all — see PlayBlisterRemoval, which plays its shrink/fade-out
+                // on the old item before this rebuild runs — so the row packs down to the remaining ones.
+                var slot = run.ShopBlisterSlots[i];
+                if (slot == null || slot.Purchased)
                 {
                     continue;
                 }
-                float descHeight = BuildBlisterCard(run, i, out var cardRect, out var descRect);
-                cardRects.Add(cardRect);
-                descRects.Add(descRect);
-                if (descHeight > maxDescHeight)
-                {
-                    maxDescHeight = descHeight;
-                }
+                BuildBlisterItem(run, i, slot);
             }
-
-            float cardHeight = ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap
-                + BlisterIconSize + ModifierCardGap + maxDescHeight + ModifierCardGap
-                + BuyButtonHeight + BuyButtonBottomMargin;
-
-            for (int i = 0; i < cardRects.Count; i++)
-            {
-                cardRects[i].sizeDelta = new Vector2(CardWidth, cardHeight);
-                cardRects[i].GetComponent<LayoutElement>().preferredHeight = cardHeight;
-                if (descRects[i] != null)
-                {
-                    descRects[i].sizeDelta = new Vector2(descRects[i].sizeDelta.x, maxDescHeight);
-                }
-            }
-
-            return cardHeight;
+            return ShelfItemSize;
         }
 
-        /// <summary>Builds one Blister card's contents (name, bare icon or rarity swatch, description, buy button) and returns its description's natural height. <paramref name="cardRect"/>/<paramref name="descRect"/> are handed back so BuildBlisterCards can resize them once the row's shared height is known; an empty slot returns a null descRect and 0f height.</summary>
-        private float BuildBlisterCard(RunManager run, int index, out RectTransform cardRect, out RectTransform descRect)
+        private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
-            var slot = run.ShopBlisterSlots[index];
-            var card = UIFactory.CreateSlicedImage(_blisterCardsContainer, "BlisterSlot_" + index, UISprites.CardBackground);
-            card.color = UITheme.Panel;
-            cardRect = card.rectTransform;
-            cardRect.sizeDelta = new Vector2(CardWidth, 0f);
-            var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = CardWidth;
-            UIFactory.AddThickOutline(card, UITheme.Border);
+            int price = run.GetBlisterSlotPrice(index);
+            bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
+            var item = CreateShelfItem(_blisterCardsContainer, "BlisterSlot_" + index, ShelfItemSize,
+                !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnBlisterBuyClicked(index), out var artRoot);
 
-            descRect = null;
-            if (slot == null)
-            {
-                return 0f;
-            }
-
-            float descHeight = slot.Kind == ShopSlotKind.Modifier
-                ? BuildBlisterModifierCardContents(card.transform, slot.ModifierId, out descRect)
-                : BuildBlisterUpgradeCardContents(card.transform, slot.HiddenUpgrade, out descRect);
-
-            // Name + effect on hover, since the card itself no longer spells the description out.
-            var hover = card.gameObject.AddComponent<HoverTooltip>();
+            var hover = item.gameObject.AddComponent<HoverTooltip>();
             if (slot.Kind == ShopSlotKind.Modifier)
             {
                 var modifierDef = ModifierCatalog.Get(slot.ModifierId);
+                var badge = ModifierBadgeFactory.Create(artRoot, modifierDef, ShelfItemSize - 8f, _tooltip, showBackground: false, attachTooltip: false);
+                badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                badge.rectTransform.anchoredPosition = Vector2.zero;
                 hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14), "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category), UITheme.TextMuted);
             }
             else
             {
                 var upgradeDef = slot.HiddenUpgrade;
-                hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
-                    "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
-            }
-
-            int price = run.GetBlisterSlotPrice(index);
-            bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            string blockedLabel = "Full (" + EconomyConstants.MaxActiveModifiers + ")";
-            BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
-                !slot.Purchased && !blocked && run.PendingUpgrade == null,
-                run.Lueur >= price,
-                () => OnBlisterBuyClicked(index));
-
-            return descHeight;
-        }
-
-        /// <summary>A Blister modifier card's contents: name, bare icon, description. No hover tooltip, since the card already shows name/description as static text. See ModifierCardFactory for the shared visual (also used by UpgradeRevealView's Random Modifier reveal).</summary>
-        private float BuildBlisterModifierCardContents(Transform cardTransform, ModifierId modifierId, out RectTransform descRect)
-        {
-            var def = ModifierCatalog.Get(modifierId);
-            return ModifierCardFactory.BuildContents(cardTransform, def, _tooltip, CardWidth, out descRect, badgeSize: BlisterIconSize, withDescription: false);
-        }
-
-        /// <summary>
-        /// A Blister upgrade card's contents — mirrors ModifierCardFactory.
-        /// BuildContents' layout (TopPadding/NameHeight/Gap/BadgeSize) so a
-        /// row mixing modifier and upgrade cards shares one uniform height.
-        /// Shows the upgrade's real name/description plainly, with a
-        /// rarity-colored swatch naming its pool in place of a per-item icon.
-        /// </summary>
-        private float BuildBlisterUpgradeCardContents(Transform cardTransform, UpgradeDefinition def, out RectTransform descRect)
-        {
-            var nameLabel = UIFactory.CreateText(cardTransform, "Name", def.Name, 16, UITheme.TextPrimary);
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -ModifierCardTopPadding);
-            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, ModifierNameHeight);
-
-            float swatchY = -(ModifierCardTopPadding + ModifierNameHeight + ModifierCardGap);
-            var signIcon = UpgradeVisualDefaults.GetIcon(def.Id);
-            if (signIcon != null)
-            {
-                // The upgrade's own garden-sign icon (a tall signpost, unlike a fertilizer's round sack); rarity rides on a small gem in its corner.
-                var sign = UIFactory.CreatePanel(cardTransform, "UpgradeSign", Color.white);
-                sign.sprite = signIcon;
+                var sign = UIFactory.CreatePanel(artRoot, "UpgradeSign", Color.white);
+                sign.sprite = UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
-                sign.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                sign.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                sign.rectTransform.pivot = new Vector2(0.5f, 1f);
-                sign.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
-                sign.rectTransform.sizeDelta = new Vector2(BlisterIconSize, BlisterIconSize);
-                var gem = UIFactory.CreatePanel(sign.transform, "RarityGem", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+                UIFactory.StretchFull(sign.rectTransform);
+                var gem = UIFactory.CreatePanel(artRoot, "RarityGem", UpgradeVisualDefaults.GetRarityColor(upgradeDef.Rarity));
                 gem.raycastTarget = false;
                 gem.rectTransform.anchorMin = new Vector2(1f, 0f);
                 gem.rectTransform.anchorMax = new Vector2(1f, 0f);
                 gem.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                gem.rectTransform.anchoredPosition = new Vector2(-10f, 22f);
-                gem.rectTransform.sizeDelta = new Vector2(16f, 16f);
+                gem.rectTransform.anchoredPosition = new Vector2(-14f, 28f);
+                gem.rectTransform.sizeDelta = new Vector2(18f, 18f);
                 gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 UIFactory.AddThickOutline(gem, UITheme.Border);
+                hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
+                    "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
             }
-            else
-            {
-                var swatch = UIFactory.CreatePanel(cardTransform, "PoolSwatch", UpgradeVisualDefaults.GetRarityColor(def.Rarity));
-                swatch.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                swatch.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                swatch.rectTransform.pivot = new Vector2(0.5f, 1f);
-                swatch.rectTransform.anchoredPosition = new Vector2(0f, swatchY);
-                swatch.rectTransform.sizeDelta = new Vector2(BadgeSize, BadgeSize);
-                UIFactory.AddThickOutline(swatch, UITheme.Border);
-
-                var swatchLabel = UIFactory.CreateText(swatch.transform, "PoolLabel", UpgradeVisualDefaults.GetPoolLabel(def.Pool), 13, UITheme.TextPrimary);
-                swatchLabel.alignment = TextAnchor.MiddleCenter;
-                swatchLabel.raycastTarget = false;
-                UIFactory.StretchFull(swatchLabel.rectTransform);
-            }
-
-            // No description row: it moved into the card's hover tooltip (see BuildBlisterCard).
-            descRect = null;
-            return 0f;
+            BuildPriceBadge(item, blocked ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(), run.Lueur >= price || blocked, !blocked);
         }
 
-        // Workshop cards carry a short blurb under the art, so they are a bit taller than the old mystery cards.
-        private const float WorkshopCardHeight = 238f;
-        // Four cards must fit between the two side panels (fertilizers left, next round right), so they are narrower than Blister cards.
-        private const float WorkshopCardWidth = 140f;
-        // A Workshop card is a dark green crate with a golden rim and cream text, so it never reads as a (cream parchment) Blister card.
-        private static readonly Color WorkshopCardColor = new Color(0.17f, 0.33f, 0.27f);
-        private static readonly Color WorkshopOutlineColor = new Color(0.96f, 0.78f, 0.30f);
-        private static readonly Color WorkshopTextColor = new Color(1f, 0.96f, 0.84f);
+        /// <summary>
+        /// One shelf item: an invisible full-size click target (the item IS the button) holding an "art" child the caller fills, with
+        /// a hover swell. A click without enough Pollen shakes the item instead of buying.
+        /// </summary>
+        private RectTransform CreateShelfItem(RectTransform container, string name, float size, bool canInteract, bool affordable, Action onClick, out RectTransform artRoot)
+        {
+            var root = UIFactory.CreatePanel(container, name, new Color(1f, 1f, 1f, 0f));
+            root.raycastTarget = true;
+            root.rectTransform.sizeDelta = new Vector2(size, size);
+            var layout = root.gameObject.AddComponent<LayoutElement>();
+            layout.preferredWidth = size;
+            layout.preferredHeight = size;
+
+            artRoot = UIFactory.CreateUIObject("Art", root.rectTransform);
+            UIFactory.StretchFull(artRoot);
+            if (!canInteract)
+            {
+                var group = artRoot.gameObject.AddComponent<CanvasGroup>();
+                group.alpha = 0.55f;
+                group.blocksRaycasts = false;
+            }
+            var hoverSwell = root.gameObject.AddComponent<ShelfItemHover>();
+            hoverSwell.Init(artRoot);
+
+            var button = root.gameObject.AddComponent<Button>();
+            button.targetGraphic = root;
+            button.transition = Selectable.Transition.None;
+            button.interactable = canInteract;
+            var rect = root.rectTransform;
+            button.onClick.AddListener(() =>
+            {
+                if (!affordable)
+                {
+                    StartCoroutine(ShakeCard(rect));
+                    return;
+                }
+                onClick();
+            });
+            return rect;
+        }
+
+        /// <summary>The price tag in an item's top-right corner: Pollen icon + number (red when the player cannot pay), or just a word ("Full (4)", "Sold").</summary>
+        private void BuildPriceBadge(RectTransform item, string label, bool affordable, bool showIcon)
+        {
+            var tag = UIFactory.CreateSlicedImage(item, "Price", UISprites.CardBackground);
+            tag.color = new Color(0.10f, 0.08f, 0.07f, 0.94f);
+            tag.raycastTarget = false;
+            UIFactory.AddThickOutline(tag, new Color(0.96f, 0.78f, 0.30f));
+            tag.rectTransform.anchorMin = new Vector2(1f, 1f);
+            tag.rectTransform.anchorMax = new Vector2(1f, 1f);
+            tag.rectTransform.pivot = new Vector2(1f, 1f);
+            tag.rectTransform.anchoredPosition = new Vector2(8f, 8f);
+            var layout = tag.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 3f;
+            layout.padding = new RectOffset(8, 8, 3, 3);
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            var fitter = tag.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            if (showIcon && VisualDefaults.PollenSprite != null)
+            {
+                var icon = UIFactory.CreatePanel(tag.transform, "PriceIcon", Color.white);
+                icon.sprite = VisualDefaults.PollenSprite;
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                var iconLayout = icon.gameObject.AddComponent<LayoutElement>();
+                iconLayout.preferredWidth = 24f;
+                iconLayout.preferredHeight = 24f;
+            }
+            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, 20, affordable ? UITheme.TextOnBackground : UITheme.Danger);
+            text.raycastTarget = false;
+        }
+
+        // Workshop items: four of them must fit between the two side panels (fertilizers left, next round right).
+        private const float ShelfItemSize = 140f;
+        private const float WorkshopCardHeight = ShelfItemSize;
+        private const float WorkshopCardWidth = ShelfItemSize;
         private const float WorkshopCardSpacing = 12f;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {
             var slot = run.ShopUpgradeSlots[index];
-            var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
-            card.color = WorkshopCardColor;
-            card.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth, WorkshopCardHeight);
-            var cardLayout = card.gameObject.AddComponent<LayoutElement>();
-            cardLayout.preferredWidth = WorkshopCardWidth;
-            cardLayout.preferredHeight = WorkshopCardHeight;
-            UIFactory.AddThickOutline(card, WorkshopOutlineColor);
-
             if (slot == null)
             {
                 return;
             }
-
             var def = slot.HiddenUpgrade;
             bool isForge = def.Id == UpgradeId.Forge && slot.Payload != null;
             bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
-
-            // Packs and services are fully visible: name on top, art, one line saying what you get.
-            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 17, WorkshopTextColor);
-            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -10f);
-            nameLabel.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 16f, 28f);
-
-            var typeLabel = UIFactory.CreateText(card.transform, "Kind", isService ? "Service" : "Pack", 12, WorkshopOutlineColor);
-            typeLabel.fontStyle = FontStyle.Italic;
-            typeLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            typeLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            typeLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            typeLabel.rectTransform.anchoredPosition = new Vector2(0f, -36f);
-            typeLabel.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 16f, 16f);
-
-            var artSprite = UpgradeVisualDefaults.GetIcon(isForge ? slot.Payload.Id : def.Id);
-            if (artSprite != null)
-            {
-                var art = UIFactory.CreatePanel(card.transform, "Art", Color.white);
-                art.sprite = artSprite;
-                art.preserveAspect = true;
-                art.raycastTarget = false;
-                art.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                art.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                art.rectTransform.pivot = new Vector2(0.5f, 1f);
-                art.rectTransform.anchoredPosition = new Vector2(0f, -56f);
-                art.rectTransform.sizeDelta = new Vector2(76f, 76f);
-            }
-
-            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 13, WorkshopTextColor);
-            blurb.raycastTarget = false;
-            blurb.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            blurb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            blurb.rectTransform.pivot = new Vector2(0.5f, 1f);
-            blurb.rectTransform.anchoredPosition = new Vector2(0f, -136f);
-            blurb.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 12f, 44f);
-            blurb.verticalOverflow = VerticalWrapMode.Truncate;
-
-            // Hover: the whole description (and, for the Forge, what its tile upgrade does).
-            var hover = card.gameObject.AddComponent<HoverTooltip>();
-            string body = isForge ? slot.Payload.Name + ": " + slot.Payload.Description + "\nAdd it to any seed of your bag (a wide choice)." : def.Description;
-            hover.Init(_tooltip, isForge ? "Forge: " + slot.Payload.Name : def.Name, DescriptionTextFormatter.Colorize(body, 14), isService ? "Workshop · service" : "Workshop · pack", UITheme.TextMuted);
 
             int price = run.GetUpgradeSlotPrice(index);
             bool fullOfFertilizers = def.Id == UpgradeId.FertilizerPack && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             bool bagTooSmall = def.Id == UpgradeId.Compost && run.Deck.DeckCount <= DeckManager.MinDeckSize;
             bool blocked = fullOfFertilizers || bagTooSmall;
-            string blockedLabel = fullOfFertilizers ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : "Bag too small";
-            BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
-                !slot.Purchased && !blocked && run.PendingUpgrade == null,
-                run.Lueur >= price,
-                () => OnUpgradeBuyClicked(index), WorkshopCardWidth);
-        }
+            var item = CreateShelfItem(_upgradeCardsContainer, "UpgSlot_" + index, ShelfItemSize,
+                !slot.Purchased && !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnUpgradeBuyClicked(index), out var artRoot);
 
-        /// <summary>The one-line promise under a Workshop card's art.</summary>
-        private static string WorkshopBlurb(ShopSlot slot)
-        {
-            switch (slot.HiddenUpgrade.Id)
+            // Every Workshop object is its own picture; the Forge is an anvil with the upgrade's glyph standing on it.
+            var art = UIFactory.CreatePanel(artRoot, "Picture", Color.white);
+            art.sprite = UpgradeVisualDefaults.GetWorkshopArt(isForge || def.Id == UpgradeId.Forge ? "Anvil" : def.Id.ToString());
+            art.preserveAspect = true;
+            art.raycastTarget = false;
+            UIFactory.StretchFull(art.rectTransform);
+            if (isForge)
             {
-                case UpgradeId.SeedPack: return "Keep 1 of 3 seeds";
-                case UpgradeId.SproutPack: return "Pick 1 of 3 sprouts";
-                case UpgradeId.FertilizerPack: return "Keep 1 of 3 fertilizers";
-                case UpgradeId.MasteryPack: return "Pick 1 of 3 masteries";
-                case UpgradeId.Compost: return "Remove 1 seed";
-                case UpgradeId.Forge: return slot.Payload != null ? slot.Payload.Name + " on a seed" : "Upgrade a seed";
-                default: return slot.HiddenUpgrade.Description;
+                var glyphSprite = UpgradeVisualDefaults.GetGlyph(slot.Payload.Id);
+                if (glyphSprite != null)
+                {
+                    var glyph = UIFactory.CreatePanel(artRoot, "Glyph", Color.white);
+                    glyph.sprite = glyphSprite;
+                    glyph.preserveAspect = true;
+                    glyph.raycastTarget = false;
+                    glyph.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                    glyph.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                    glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
+                    glyph.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+                    glyph.rectTransform.sizeDelta = new Vector2(78f, 78f);
+                }
             }
+
+            // Hover: the whole description (and, for the Forge, what its tile upgrade does).
+            var hover = item.gameObject.AddComponent<HoverTooltip>();
+            string body = isForge ? slot.Payload.Name + ": " + slot.Payload.Description + "\nAdd it to any seed of your bag (a wide choice)." : def.Description;
+            hover.Init(_tooltip, isForge ? "Forge: " + slot.Payload.Name : def.Name, DescriptionTextFormatter.Colorize(body, 14), isService ? "Workshop · service" : "Workshop · pack", UITheme.TextMuted);
+
+            string label = slot.Purchased ? "Sold" : fullOfFertilizers ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : bagTooSmall ? "Min bag" : price.ToString();
+            BuildPriceBadge(item, label, run.Lueur >= price || slot.Purchased || blocked, !slot.Purchased && !blocked);
         }
 
         private void OnRerollClicked()
@@ -931,104 +858,6 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>
-        /// Shows the gold-diamond Lueur icon + price, matching every other place this currency appears;
-        /// "Sold" is plain text once purchased. <paramref name="canInteract"/> covers every reason the slot
-        /// itself can't be bought at all (already sold, modifier cap full, no modifiers to upgrade, a
-        /// pending upgrade choice blocking every purchase) — the button stays enabled whenever that's true
-        /// even if <paramref name="affordable"/> (enough Lueur) is false, so clicking it still does
-        /// something: it shakes the card instead of silently doing nothing, which a plain disabled button
-        /// never could.
-        /// </summary>
-        private void BuildBuyButton(Transform parent, bool purchased, string priceLabel, bool canInteract, bool affordable, Action onClick, float cardWidth = CardWidth)
-        {
-            var buyBtn = UIFactory.CreateButton(parent, "Buy", purchased ? "Sold" : "", UISprites.ChooseButtonBackground, 14);
-            UIFactory.DisablePlants(buyBtn);
-            var buyRect = buyBtn.GetComponent<RectTransform>();
-            buyRect.anchorMin = new Vector2(0.5f, 0f);
-            buyRect.anchorMax = new Vector2(0.5f, 0f);
-            buyRect.pivot = new Vector2(0.5f, 0f);
-            buyRect.anchoredPosition = new Vector2(0f, BuyButtonBottomMargin);
-            // A text label ("None owned", "Full (n)") needs more room than a price number.
-            bool isTextLabel = !purchased && !int.TryParse(priceLabel, out _);
-            buyRect.sizeDelta = new Vector2(isTextLabel ? cardWidth - 24f : Mathf.Min(BuyButtonWidth, cardWidth - 24f), BuyButtonHeight);
-            buyBtn.interactable = !purchased && canInteract;
-            var cardRect = (RectTransform)parent;
-            buyBtn.onClick.AddListener(() =>
-            {
-                if (!affordable)
-                {
-                    // Not enough Pollen: the button itself flashes red and shakes, on top of the card shake.
-                    var feedback = buyBtn.GetComponent<ButtonFeedback>();
-                    if (feedback != null)
-                    {
-                        feedback.Deny();
-                    }
-                    StartCoroutine(ShakeCard(cardRect));
-                    return;
-                }
-                onClick();
-            });
-
-            if (purchased)
-            {
-                return;
-            }
-
-            // Same HorizontalLayoutGroup + ContentSizeFitter icon+number
-            // pattern as the shop's own header Lueur readout, just centered
-            // on the button instead of anchored to a corner, and sized down
-            // to fit comfortably inside one this small.
-            var priceContainer = UIFactory.CreateUIObject("Price", buyBtn.transform);
-            priceContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            priceContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            priceContainer.pivot = new Vector2(0.5f, 0.5f);
-            var priceLayout = priceContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            priceLayout.spacing = 4f;
-            priceLayout.childAlignment = TextAnchor.MiddleCenter;
-            priceLayout.childForceExpandWidth = false;
-            priceLayout.childForceExpandHeight = false;
-            var priceFitter = priceContainer.gameObject.AddComponent<ContentSizeFitter>();
-            priceFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            priceFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var priceIcon = UIFactory.CreatePanel(priceContainer, "PriceIcon", VisualDefaults.GoldenColor);
-            priceIcon.raycastTarget = false;
-            priceIcon.rectTransform.sizeDelta = new Vector2(10f, 10f);
-            float priceIconSize = 16f;
-            if (VisualDefaults.PollenSprite != null)
-            {
-                // The Pollen icon (same as the counter), not the old gold diamond.
-                priceIcon.sprite = VisualDefaults.PollenSprite;
-                priceIcon.color = Color.white;
-                priceIcon.preserveAspect = true;
-                priceIconSize = 26f;
-            }
-            else
-            {
-                priceIcon.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-            }
-            var priceIconLayout = priceIcon.gameObject.AddComponent<LayoutElement>();
-            priceIconLayout.preferredWidth = priceIconSize;
-            priceIconLayout.preferredHeight = priceIconSize;
-
-            // Red instead of the default tint when the slot is otherwise buyable but the player just can't
-            // afford it yet — the button stays clickable (see the onClick lambda above), so this is the
-            // visual cue that used to come from Unity's own disabled-button graying.
-            // A text label ("Full (4)", "None owned") isn't a price: it never turns red for lack of Pollen, and carries no Pollen icon.
-            bool showAffordable = affordable || isTextLabel;
-            priceIcon.gameObject.SetActive(!isTextLabel);
-            var priceText = UIFactory.CreateText(priceContainer, "PriceLabel", priceLabel, 21, showAffordable ? UITheme.TextPrimary : UITheme.Danger);
-            priceText.raycastTarget = false;
-            if (!showAffordable)
-            {
-                // The Pollen icon keeps its own colors; only the diamond fallback goes red.
-                if (VisualDefaults.PollenSprite == null)
-                {
-                    priceIcon.color = UITheme.Danger;
-                }
-            }
-        }
 
         /// <summary>Short, decaying side-to-side shake on a card clicked without enough Lueur to afford it — same technique as HandView.ShakeSlot.</summary>
         private System.Collections.IEnumerator ShakeCard(RectTransform rect)
