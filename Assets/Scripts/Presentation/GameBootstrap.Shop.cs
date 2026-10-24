@@ -193,7 +193,8 @@ namespace Contigu.Presentation
                     BuildVisual = (host, size) => BuildSpriteVisual(host, sprite),
                     Name = upgrade.Name,
                     Body = DescriptionTextFormatter.Colorize(upgrade.Description, 14),
-                    Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity))
+                    Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
+                    FillCell = true
                 });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, false, OnPackOptionChosen);
@@ -218,7 +219,8 @@ namespace Contigu.Presentation
                     },
                     Name = def.Name,
                     Body = DescriptionTextFormatter.Colorize(def.Description, 14),
-                    Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category))
+                    Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category)),
+                    FillCell = true
                 });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.fertilizerPackHint"), entries, false, OnPackOptionChosen);
@@ -277,7 +279,8 @@ namespace Contigu.Presentation
                     },
                     Name = name,
                     Body = Loc.T("choice.masteryBody", levelNow, levelNow + o.Gain, o.Gain, levelNow + o.Gain - 1),
-                    Subtitle = Loc.T("choice.masteryTag")
+                    Subtitle = Loc.T("choice.masteryTag"),
+                    FillCell = true
                 });
             }
             ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, false, OnMasteryOptionChosen);

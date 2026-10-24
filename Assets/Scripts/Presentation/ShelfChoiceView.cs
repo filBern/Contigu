@@ -13,6 +13,8 @@ namespace Contigu.Presentation
         public string Name;
         public string Body;
         public string Subtitle;
+        /// <summary>Icon-like options (fertilizers, upgrade glyphs, masteries) fill their whole cell and may use bigger cells than seed previews.</summary>
+        public bool FillCell;
     }
 
     /// <summary>
@@ -59,7 +61,12 @@ namespace Contigu.Presentation
             _needsConfirm = needsConfirm;
             _selectedIndex = -1;
             _cellByIndex.Clear();
-            _stage.Begin(_layout, source, title, entries.Count, needsConfirm);
+            bool anyFill = false;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                anyFill |= entries[i].FillCell;
+            }
+            _stage.Begin(_layout, source, title, entries.Count, needsConfirm, anyFill ? ShelfStage.IconCellSize : ShelfStage.SeedCellSize);
             float cell = _stage.CellSize;
             for (int i = 0; i < entries.Count; i++)
             {
@@ -83,10 +90,11 @@ namespace Contigu.Presentation
             host.anchorMax = new Vector2(0.5f, 0.5f);
             host.pivot = new Vector2(0.5f, 0.5f);
             host.anchoredPosition = Vector2.zero;
-            host.sizeDelta = new Vector2(cellSize * 0.8f, cellSize * 0.8f);
+            float visualSize = entry.FillCell ? cellSize : cellSize * 0.8f;
+            host.sizeDelta = new Vector2(visualSize, visualSize);
             if (entry.BuildVisual != null)
             {
-                entry.BuildVisual(host, cellSize * 0.8f);
+                entry.BuildVisual(host, visualSize);
             }
             if (!string.IsNullOrEmpty(entry.Name))
             {

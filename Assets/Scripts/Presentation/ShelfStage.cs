@@ -31,13 +31,14 @@ namespace Contigu.Presentation
     public sealed class ShelfStage
     {
         private const float CanvasHalfHeight = 400f;
-        private const float SourceSize = 120f;
+        private const float SourceSize = 104f;
         private const float TitleHeight = 36f;
         private const float ShelfHeight = 16f;
         private const float RowOverlap = 2f;
         private const int MaxPerRow = 5;
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
-        private const float MaxCellSize = 96f;
+        public const float SeedCellSize = 96f;
+        public const float IconCellSize = 120f;
 
         private readonly TooltipView _tooltip;
         private readonly Image _source;
@@ -91,12 +92,12 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Clears the previous options and lays the stage out for <paramref name="total"/> options on the given shop shelves.</summary>
-        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm)
+        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm, float maxCellSize = SeedCellSize)
         {
             Clear(_row1);
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
-            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, MaxCellSize);
+            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, maxCellSize);
             float cell = PieceBox.CellSize;
             bool two = total > _firstRowCount;
 
