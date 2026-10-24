@@ -60,6 +60,8 @@ namespace Contigu.Presentation
         // Section plaque (36) + the air under it.
         private const float LabelToCardsGap = 54f;
         private const float PlaqueHeight = 36f;
+        // How far the plaques hang above the items' own slot (they do not move the items).
+        private const float PlaqueLift = 20f;
 
         // Slow, gentle scale wobble on the Lueur readout, same sine-wave
         // technique as GameBootstrap's PulseStatusText.
@@ -626,11 +628,11 @@ namespace Contigu.Presentation
             float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
             float top = blockHeight * 0.5f;
             float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 12f;
-            _blisterPlaque.anchoredPosition = new Vector2(0f, top);
+            _blisterPlaque.anchoredPosition = new Vector2(0f, top + PlaqueLift);
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
             _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight + 6f);
             float secondTop = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap;
-            _upgradePlaque.anchoredPosition = new Vector2(0f, secondTop);
+            _upgradePlaque.anchoredPosition = new Vector2(0f, secondTop + PlaqueLift);
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap);
             _workshopShelf.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap - rowHeight + 6f);
             // The shelves run exactly from one tablet to the other, so the tablets read as the ends of one display case.
