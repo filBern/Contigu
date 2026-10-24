@@ -99,37 +99,42 @@ namespace Contigu.Presentation
         }
     }
 
-    /// <summary>Puts lifted panels back after the frame in which their overlay was torn down with its parent.</summary>
-    internal sealed class DeferredRestore : MonoBehaviour
+    /// <summary>
+    /// Puts lifted panels back one frame after their overlay was torn down together with its parent. Hooks Canvas.willRenderCanvases instead of
+    /// spawning a helper object (a GameObject created while a scene closes is reported as leaked).
+    /// </summary>
+    internal static class DeferredRestore
     {
-        private static DeferredRestore _instance;
-        private readonly List<(RectTransform Panel, Transform Parent, int Index)> _pending = new List<(RectTransform, Transform, int)>();
+        private static readonly List<(RectTransform Panel, Transform Parent, int Index)> Pending = new List<(RectTransform, Transform, int)>();
+        private static bool _hooked;
 
         public static void Add(RectTransform panel, Transform parent, int index)
         {
-            if (_instance == null)
+            Pending.Add((panel, parent, index));
+            if (!_hooked)
             {
-                _instance = new GameObject("OverlayLiftRestore").AddComponent<DeferredRestore>();
+                _hooked = true;
+                Canvas.willRenderCanvases += Process;
             }
-            _instance._pending.Add((panel, parent, index));
         }
 
-        private void LateUpdate()
+        private static void Process()
         {
-            // Oldest-first, so lower sibling indices go back before higher ones in the same parent.
-            _pending.Sort((a, b) => a.Index.CompareTo(b.Index));
-            for (int i = 0; i < _pending.Count; i++)
+            Canvas.willRenderCanvases -= Process;
+            _hooked = false;
+            // Lowest sibling index first, so each panel lands where it was among the others of its parent.
+            Pending.Sort((a, b) => a.Index.CompareTo(b.Index));
+            for (int i = 0; i < Pending.Count; i++)
             {
-                var item = _pending[i];
+                var item = Pending[i];
+                // A panel or parent destroyed with its scene compares equal to null: nothing to restore.
                 if (item.Panel != null && item.Parent != null)
                 {
                     item.Panel.SetParent(item.Parent, false);
                     item.Panel.SetSiblingIndex(item.Index);
                 }
             }
-            _pending.Clear();
-            _instance = null;
-            Destroy(gameObject);
+            Pending.Clear();
         }
     }
 }
