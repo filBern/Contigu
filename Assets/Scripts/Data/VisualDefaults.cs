@@ -1,0 +1,207 @@
+using System.Collections.Generic;
+using Contigu.Core;
+using UnityEngine;
+
+namespace Contigu.Data
+{
+    /// <summary>
+    /// Built-in display defaults (colors and names) for every <see cref="PieceColor"/>
+    /// and <see cref="ShapeId"/> — the only source of this display metadata; no
+    /// ScriptableObject override mechanism exists.
+    ///
+    /// The underlying <see cref="PieceColor"/> enum names (Coral/Teal/Violet/Lime)
+    /// are not renamed to match the displayed color names, since that would ripple
+    /// through ~100 modifier ids (DevotionCoral, EclatTeal, ...); only the rendered
+    /// <see cref="ColorMap"/> value and displayed <see cref="ColorNames"/> string
+    /// differ from the enum name.
+    /// </summary>
+    public static class VisualDefaults
+    {
+        /// <summary>
+        /// Pixel size of one actual grid cell (see GameBootstrap.CellSize,
+        /// which reads this instead of its own literal). Presentation.ShapePreviewFactory
+        /// caps its per-cell preview size at this value so previews (hand slot,
+        /// cursor ghost, draft/deck rows) never render larger than the piece will
+        /// appear once placed on the grid.
+        /// </summary>
+        public const float GridCellSize = 62f;
+
+        private static readonly Dictionary<PieceColor, Color> ColorMap = new Dictionary<PieceColor, Color>
+        {
+            { PieceColor.Coral, new Color(0.784f, 0.251f, 0.247f) }, // #c8403f (Poppy)
+            { PieceColor.Teal, new Color(0.310f, 0.498f, 0.816f) }, // #4f7fd0 (Iris)
+            { PieceColor.Violet, new Color(0.910f, 0.659f, 0.180f) }, // #e8a82e (Sunflower)
+            { PieceColor.Lime, new Color(0.353f, 0.620f, 0.271f) }, // #5a9e45 (Fern)
+            { PieceColor.Joker, new Color(0.549f, 0.388f, 0.690f) } // #8c63b0 (Lavender)
+        };
+
+        private static readonly Dictionary<PieceColor, string> ColorNames = new Dictionary<PieceColor, string>
+        {
+            { PieceColor.Coral, "Poppy" },
+            { PieceColor.Teal, "Iris" },
+            { PieceColor.Violet, "Sunflower" },
+            { PieceColor.Lime, "Fern" },
+            { PieceColor.Joker, "Joker" }
+        };
+
+        private static readonly Dictionary<ShapeId, string> ShapeNames = new Dictionary<ShapeId, string>
+        {
+            { ShapeId.Single, "Single" },
+            { ShapeId.DomH, "Domino" },
+            { ShapeId.TriL, "L-Tromino" },
+            { ShapeId.TriIH, "I-Tromino" },
+            { ShapeId.Sq2, "Square" },
+            { ShapeId.LTetro, "L-Tetromino" },
+            { ShapeId.TTetro, "T-Tetromino" },
+            { ShapeId.STetro, "S-Tetromino" }
+        };
+
+        /// <summary>The Pollen currency icon (a cluster of golden grains); null falls back to the old golden diamond.</summary>
+        public static readonly Sprite PollenSprite = Resources.Load<Sprite>("Icons/Pollen");
+
+        public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
+        public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
+
+        // No longer drawn — TileSprite below now gives every cell its own
+        // card-shaped border directly (see GridCellView.ApplyState). Kept
+        // in case a future look wants it back.
+        public static readonly Sprite FillTileSprite = Resources.Load<Sprite>("Tiles/fill-tile-piece");
+
+        /// <summary>
+        /// Every grid cell and piece-preview square's shared base look: 9-sliced
+        /// card art (duplicated from Presentation.UISprites.CardBackground, since
+        /// Data must not depend on Presentation), shown at its natural pale color
+        /// for an empty cell and tinted with a piece's color for a filled one.
+        /// </summary>
+        public static readonly Sprite TileSprite = Resources.Load<Sprite>("Colorful_UI/colorful/sprites/gameUI/card_bg_3");
+
+        // Hand-painted per-color tile art (Resources/Tiles): a garden-themed frame and flower for each color, plus an unplanted plot for an empty cell. Any missing file falls back to the shared TileSprite tinted with the piece color, as before.
+        private static readonly Dictionary<PieceColor, Sprite> TileSprites = new Dictionary<PieceColor, Sprite>
+        {
+            { PieceColor.Coral, Resources.Load<Sprite>("Tiles/Ember") },
+            { PieceColor.Teal, Resources.Load<Sprite>("Tiles/Frost") },
+            { PieceColor.Violet, Resources.Load<Sprite>("Tiles/Gold") },
+            { PieceColor.Lime, Resources.Load<Sprite>("Tiles/Moss") },
+            { PieceColor.Joker, Resources.Load<Sprite>("Tiles/Joker") }
+        };
+
+        /// <summary>An empty golden cell (see Cell.IsGolden) — golden soil with sparkles; null falls back to the old tinted flat color.</summary>
+        public static readonly Sprite GoldenCellSprite = Resources.Load<Sprite>("Tiles/Golden");
+
+        /// <summary>A plot frozen by Rotbloom (see Cell.IsFrozen) — sealed under ice until its row or column is harvested; null falls back to the generic locked look.</summary>
+        public static readonly Sprite FrozenTileSprite = Resources.Load<Sprite>("Tiles/Frozen");
+
+        /// <summary>An empty plot that doubles whatever scores through it (Permanent Bonus Square / Multiplier Zone): a blue plot with a big x2.</summary>
+        public static readonly Sprite BonusTileSprite = Resources.Load<Sprite>("Tiles/Bonus");
+
+        public static readonly Sprite EmptyTileSprite = Resources.Load<Sprite>("Tiles/Empty") ?? TileSprite;
+
+        /// <summary>The filled-cell sprite for <paramref name="color"/> — its own painted tile, or the shared TileSprite when that art is missing (pair with <see cref="GetTileTint"/>).</summary>
+        public static Sprite GetTileSprite(PieceColor color)
+        {
+            return TileSprites.TryGetValue(color, out var s) && s != null ? s : TileSprite;
+        }
+
+        /// <summary>White for a color with its own painted tile (the art already carries the color); the plain piece color for the tinted TileSprite fallback.</summary>
+        public static Color GetTileTint(PieceColor color)
+        {
+            return TileSprites.TryGetValue(color, out var s) && s != null ? Color.white : GetColor(color);
+        }
+
+        public static Color GetColor(PieceColor color)
+        {
+            return ColorMap.TryGetValue(color, out var c) ? c : Color.gray;
+        }
+
+        private static readonly Dictionary<PieceColor, Sprite> PetalSprites = new Dictionary<PieceColor, Sprite>();
+
+        /// <summary>The petal drawn for the harvest burst of <paramref name="color"/> (Resources/Icons/Petals/&lt;PieceColor&gt;.png, pointing up), or null if missing.</summary>
+        public static Sprite GetPetalSprite(PieceColor color)
+        {
+            if (!PetalSprites.TryGetValue(color, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Petals/" + color);
+                PetalSprites[color] = sprite;
+            }
+            return sprite;
+        }
+
+        /// <summary>A weather's display name, with its seed color's name for Rain/Sunshine.</summary>
+        public static string GetWeatherName(WeatherId id, PieceColor? color)
+        {
+            return WeatherCatalog.GetName(id, color.HasValue ? GetColorName(color.Value) : null);
+        }
+
+        public static string GetWeatherDescription(WeatherId id, PieceColor? color, float intensity = 1f)
+        {
+            return WeatherCatalog.GetDescription(id, color.HasValue ? GetColorName(color.Value) : null, intensity);
+        }
+
+        private static readonly Dictionary<WeatherId, Sprite> WeatherSprites = new Dictionary<WeatherId, Sprite>();
+
+        /// <summary>The icon of a round's weather (Resources/Icons/Weather/&lt;WeatherId&gt;.png), or null if missing.</summary>
+        public static Sprite GetWeatherSprite(WeatherId id)
+        {
+            if (!WeatherSprites.TryGetValue(id, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Weather/" + id);
+                WeatherSprites[id] = sprite;
+            }
+            return sprite;
+        }
+
+        private static readonly Dictionary<string, Sprite> IconSprites = new Dictionary<string, Sprite>();
+
+        /// <summary>A loose icon (Resources/Icons/&lt;name&gt;.png, e.g. IceShard, IceFlash), cached; null if missing.</summary>
+        public static Sprite GetIconSprite(string name)
+        {
+            if (!IconSprites.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/" + name);
+                IconSprites[name] = sprite;
+            }
+            return sprite;
+        }
+
+        private static readonly Dictionary<string, Sprite> AmbientSprites = new Dictionary<string, Sprite>();
+
+        /// <summary>A small ambient garden sprite (Resources/Ambient/&lt;name&gt;.png: Butterfly, Bee, Leaf, Raindrop, Sparkle, SunMote), or null if missing.</summary>
+        public static Sprite GetAmbientSprite(string name)
+        {
+            if (!AmbientSprites.TryGetValue(name, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Ambient/" + name);
+                AmbientSprites[name] = sprite;
+            }
+            return sprite;
+        }
+
+        private static readonly Dictionary<PieceColor, Sprite> AttackSprites = new Dictionary<PieceColor, Sprite>();
+
+        /// <summary>The projectile art flown at an enemy when a piece of <paramref name="color"/> scores (Resources/Icons/Attacks/&lt;PieceColor&gt;.png, pointing right), or null if missing.</summary>
+        public static Sprite GetAttackSprite(PieceColor color)
+        {
+            if (!AttackSprites.TryGetValue(color, out var sprite))
+            {
+                sprite = Resources.Load<Sprite>("Icons/Attacks/" + color);
+                AttackSprites[color] = sprite;
+            }
+            return sprite;
+        }
+
+        public static string GetColorName(PieceColor color)
+        {
+            return ColorNames.TryGetValue(color, out var n) ? n : color.ToString();
+        }
+
+        public static string GetShapeName(ShapeId shape)
+        {
+            return ShapeNames.TryGetValue(shape, out var n) ? n : shape.ToString();
+        }
+
+        public static readonly Color GoldenColor = new Color(1f, 0.773f, 0.239f); // #ffc53d
+        public static readonly Color MultiplierOutline = new Color(0.396f, 0.682f, 0.839f, 0.85f); // #65aed6 — kept distinct from Golden/Tinted so badge types stay distinguishable
+        public static readonly Color LockedColor = new Color(0.071f, 0.188f, 0.290f); // #12304a — same as UITheme.Background
+        public static readonly Color EmptyCellColor = new Color(0.937f, 0.980f, 0.902f); // #effae6
+    }
+}

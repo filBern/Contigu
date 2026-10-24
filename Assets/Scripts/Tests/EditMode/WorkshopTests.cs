@@ -1,0 +1,192 @@
+using System.Collections.Generic;
+using Contigu.Core;
+using NUnit.Framework;
+
+namespace Contigu.Tests
+{
+    /// <summary>The Workshop that replaced the Casino: packs, Compost and Forge.</summary>
+    public sealed class WorkshopTests
+    {
+        private static RunManager ShopRun(int seed = 4)
+        {
+            var run = new RunManager(new SystemRandomProvider(seed));
+            run.DebugDisableWeather();
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
+            run.DebugGrantLueur(1000);
+            return run;
+        }
+
+        [Test]
+        public void TheWorkshop_HoldsTwoDifferentPacks_Compost_AndAForgeWithAVisibleUpgrade()
+        {
+            for (int seed = 1; seed <= 30; seed++)
+            {
+                var run = ShopRun(seed);
+                var slots = run.ShopUpgradeSlots;
+                Assert.AreEqual(4, slots.Count);
+                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[0].HiddenUpgrade) >= 0);
+                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[1].HiddenUpgrade) >= 0);
+                Assert.AreNotSame(slots[0].HiddenUpgrade, slots[1].HiddenUpgrade);
+                Assert.AreEqual(UpgradeId.Compost, slots[2].HiddenUpgrade.Id);
+                Assert.AreEqual(UpgradeId.Forge, slots[3].HiddenUpgrade.Id);
+                Assert.IsNotNull(slots[3].Payload);
+                Assert.IsTrue(UpgradeSystem.TraitKindFor(slots[3].Payload.Id).HasValue, "the Forge only offers real tile upgrades");
+            }
+        }
+
+        [Test]
+        public void SeedPack_OffersThreeUpgradedSeeds_AndKeepsTheChosenOne()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.SeedPack);
+            int before = run.Deck.DeckCount;
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(3, run.PendingUpgradePieceCandidates.Count);
+            foreach (var token in run.PendingUpgradePieceCandidates)
+            {
+                Assert.IsTrue(token.Trait.HasValue);
+            }
+            Assert.IsTrue(run.ResolveUpgradePieceChoice(1));
+            Assert.AreEqual(before + 1, run.Deck.DeckCount);
+            Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void SproutPack_RevealsThreeUpgrades_ThenTheSeedToEnchant()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.SproutPack);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(3, run.PendingPackUpgrades.Count);
+            var chosen = run.PendingPackUpgrades[2];
+            Assert.IsFalse(run.ResolvePackUpgradeChoice(3));
+            Assert.IsTrue(run.ResolvePackUpgradeChoice(2));
+            Assert.AreSame(chosen, run.PendingUpgrade);
+            Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
+            Assert.IsTrue(run.ResolveUpgradeTileChoice(new List<int> { run.PendingUpgradeTileCandidates[0] }));
+            Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void FertilizerPack_RevealsThreeFertilizers_AndGivesTheChosenOneForFree()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.FertilizerPack);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(3, run.PendingPackModifiers.Count);
+            var chosen = run.PendingPackModifiers[1];
+            int pollen = run.Lueur;
+            Assert.IsTrue(run.ResolvePackModifierChoice(1));
+            CollectionAssert.Contains(run.ActiveModifiers, chosen);
+            Assert.AreEqual(pollen, run.Lueur, "taking the fertilizer costs nothing more");
+            Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void SkippingAPack_LeavesNothingPending_AndRefundsNothing()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.FertilizerPack);
+            int pollen = run.Lueur;
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            int afterBuy = run.Lueur;
+            Assert.Less(afterBuy, pollen);
+            Assert.IsTrue(run.SkipPack());
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(afterBuy, run.Lueur);
+            Assert.AreEqual(0, run.ActiveModifiers.Count);
+        }
+
+        [Test]
+        public void AbandonPending_ClosesAnyChoice_WithoutRefund()
+        {
+            var run = ShopRun();
+            Assert.IsFalse(run.AbandonPending());
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.SeedPack);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.IsNotNull(run.PendingUpgrade);
+            Assert.Greater(run.PendingUpgradePieceCandidates.Count, 0);
+            int afterBuy = run.Lueur;
+            Assert.IsTrue(run.AbandonPending());
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradePieceCandidates.Count);
+            Assert.AreEqual(afterBuy, run.Lueur);
+        }
+
+        [Test]
+        public void FertilizerPack_IsNotOffered_WhenTheGardenIsFull()
+        {
+            var run = ShopRun();
+            for (int i = 0; i < ModifierCatalog.All.Length && run.ActiveModifiers.Count < EconomyConstants.MaxActiveModifiers; i++)
+            {
+                run.DebugGrantModifier(ModifierCatalog.All[i].Id);
+            }
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.FertilizerPack);
+            Assert.IsFalse(run.BuyUpgradeSlot(0));
+            Assert.IsFalse(run.ShopUpgradeSlots[0].Purchased);
+        }
+
+        [Test]
+        public void MasteryPack_OffersThreeDistinctMasteries_AndLevelsTheChosenOne()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.MasteryPack);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(3, run.PendingMasteryOptions.Count);
+            var option = run.PendingMasteryOptions[0];
+            Assert.IsTrue(run.ResolveMasteryChoice(0));
+            if (option.Shape.HasValue)
+            {
+                Assert.AreEqual(1 + option.Gain, run.GetShapeMasteryLevel(option.Shape.Value));
+            }
+            else
+            {
+                Assert.AreEqual(1 + option.Gain, run.GetColorMasteryLevel(option.Color.Value));
+            }
+        }
+
+        [Test]
+        public void Compost_RemovesTheChosenSeed_AndStaysSoldAfterAReroll()
+        {
+            var run = ShopRun();
+            int before = run.Deck.DeckCount;
+            Assert.IsTrue(run.BuyUpgradeSlot(2));
+            Assert.Greater(run.PendingUpgradeTypeCandidates.Count, 0);
+            var type = run.PendingUpgradeTypeCandidates[0];
+            Assert.IsTrue(run.ResolveUpgradeSubChoice(new UpgradeSubChoice(type.Shape, type.Color)));
+            Assert.AreEqual(before - 1, run.Deck.DeckCount);
+
+            Assert.IsTrue(run.RerollShop());
+            Assert.IsTrue(run.ShopUpgradeSlots[2].Purchased, "the Compost stays sold for this visit after a reroll");
+        }
+
+        [Test]
+        public void Compost_PriceGrowsWithEveryUseThisRun()
+        {
+            var run = ShopRun();
+            int first = run.GetUpgradeSlotPrice(2);
+            Assert.IsTrue(run.BuyUpgradeSlot(2));
+            var type = run.PendingUpgradeTypeCandidates[0];
+            run.ResolveUpgradeSubChoice(new UpgradeSubChoice(type.Shape, type.Color));
+            run.DebugForceRoundComplete();
+            Assert.IsTrue(run.LeaveShop());
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(EconomyConstants.CompostBasePrice, first);
+            Assert.AreEqual(EconomyConstants.CompostBasePrice + EconomyConstants.CompostPriceIncreasePerUse, run.GetUpgradeSlotPrice(2), "a fresh visit, one Compost already bought this run");
+        }
+
+        [Test]
+        public void Forge_AppliesItsVisibleUpgrade_ToAnyOfManySeeds()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(3, UpgradeCatalog.Forge, UpgradeCatalog.CornerTile);
+            Assert.IsTrue(run.BuyUpgradeSlot(3));
+            Assert.AreSame(UpgradeCatalog.CornerTile, run.PendingUpgrade);
+            Assert.GreaterOrEqual(run.PendingUpgradeTileCandidates.Count, EconomyConstants.ShopTileCandidateCount, "a much wider choice than a normal Sprout Upgrade");
+            int target = run.PendingUpgradeTileCandidates[0];
+            Assert.IsTrue(run.ResolveUpgradeTileChoice(new List<int> { target }));
+            Assert.AreEqual(PieceTraitKind.Corner, run.Deck.Deck[target].Trait.Value.Kind);
+        }
+    }
+}
