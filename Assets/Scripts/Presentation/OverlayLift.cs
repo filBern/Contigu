@@ -76,10 +76,18 @@ namespace Contigu.Presentation
 
         private void OnDisable()
         {
+            // activeSelf still true means the overlay is going down because an ancestor (MainRoot) is being deactivated: Unity forbids
+            // re-parenting during that, so the restore is handed to a throwaway object that does it on its next frame.
+            bool ancestorDeactivating = gameObject.activeSelf;
             for (int i = _lifted.Count - 1; i >= 0; i--)
             {
                 if (_lifted[i] == null || _parents[i] == null)
                 {
+                    continue;
+                }
+                if (ancestorDeactivating)
+                {
+                    DeferredRestore.Add(_lifted[i], _parents[i], _indices[i]);
                     continue;
                 }
                 _lifted[i].SetParent(_parents[i], false);
@@ -88,6 +96,40 @@ namespace Contigu.Presentation
             _lifted.Clear();
             _parents.Clear();
             _indices.Clear();
+        }
+    }
+
+    /// <summary>Puts lifted panels back after the frame in which their overlay was torn down with its parent.</summary>
+    internal sealed class DeferredRestore : MonoBehaviour
+    {
+        private static DeferredRestore _instance;
+        private readonly List<(RectTransform Panel, Transform Parent, int Index)> _pending = new List<(RectTransform, Transform, int)>();
+
+        public static void Add(RectTransform panel, Transform parent, int index)
+        {
+            if (_instance == null)
+            {
+                _instance = new GameObject("OverlayLiftRestore").AddComponent<DeferredRestore>();
+            }
+            _instance._pending.Add((panel, parent, index));
+        }
+
+        private void LateUpdate()
+        {
+            // Oldest-first, so lower sibling indices go back before higher ones in the same parent.
+            _pending.Sort((a, b) => a.Index.CompareTo(b.Index));
+            for (int i = 0; i < _pending.Count; i++)
+            {
+                var item = _pending[i];
+                if (item.Panel != null && item.Parent != null)
+                {
+                    item.Panel.SetParent(item.Parent, false);
+                    item.Panel.SetSiblingIndex(item.Index);
+                }
+            }
+            _pending.Clear();
+            _instance = null;
+            Destroy(gameObject);
         }
     }
 }
