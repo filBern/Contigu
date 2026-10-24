@@ -87,7 +87,7 @@ namespace Contigu.Presentation
                 }
                 if (ancestorDeactivating)
                 {
-                    DeferredRestore.Add(_lifted[i], _parents[i], _indices[i]);
+                    LiftedPanelRestorer.Add(_lifted[i], _parents[i], _indices[i]);
                     continue;
                 }
                 _lifted[i].SetParent(_parents[i], false);
@@ -103,7 +103,7 @@ namespace Contigu.Presentation
     /// Puts lifted panels back one frame after their overlay was torn down together with its parent. Hooks Canvas.willRenderCanvases instead of
     /// spawning a helper object (a GameObject created while a scene closes is reported as leaked).
     /// </summary>
-    internal static class DeferredRestore
+    internal static class LiftedPanelRestorer
     {
         private static readonly List<(RectTransform Panel, Transform Parent, int Index)> Pending = new List<(RectTransform, Transform, int)>();
         private static bool _hooked;
