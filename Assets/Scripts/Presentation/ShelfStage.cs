@@ -36,6 +36,8 @@ namespace Contigu.Presentation
         private const float ShelfHeight = 16f;
         private const float RowOverlap = 2f;
         private const int MaxPerRow = 5;
+        // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
+        private const float MaxCellSize = 96f;
 
         private readonly TooltipView _tooltip;
         private readonly Image _source;
@@ -94,7 +96,7 @@ namespace Contigu.Presentation
             Clear(_row1);
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
-            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f);
+            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, MaxCellSize);
             float cell = PieceBox.CellSize;
             bool two = total > _firstRowCount;
 

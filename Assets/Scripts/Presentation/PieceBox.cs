@@ -48,9 +48,15 @@ namespace Contigu.Presentation
         /// <summary>Same, for an explicit width budget.</summary>
         public static void Configure(int count, float availableWidth)
         {
+            Configure(count, availableWidth, MaxCellSize);
+        }
+
+        /// <summary>Same, with a lower ceiling for the cell size (a few options on a shelf must not balloon).</summary>
+        public static void Configure(int count, float availableWidth, float maxCellSize)
+        {
             int n = Mathf.Max(1, count);
             float usable = availableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
-            CellSize = Mathf.Clamp(usable / n, MinCellSize, MaxCellSize);
+            CellSize = Mathf.Clamp(usable / n, MinCellSize, Mathf.Max(MinCellSize, maxCellSize));
         }
 
         /// <summary>Turns an (already laid out) horizontal container into the big parchment box.</summary>
