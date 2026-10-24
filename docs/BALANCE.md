@@ -137,3 +137,7 @@ Cluster (+6 par autre tuile améliorée du groupe), Crossfire (+1 par tuile de s
 Immunité (`Cell.IsImmune`) : les locks, la glace, le poison et la contamination ne retombent plus sur le plot jusqu'à la fin de la manche. Les tuiles semées n'ont ni score ni compteur.
 Le pool Grid grossit (35 → 51 upgrades) et dilue les fertilizers du Blister ; `EnemyHpMultiplier` réajustés sur le planner profondeur 3 (700 parties) : Spring 0,76 (9,4 %), Winter 1,03 (5,1 %), Summer 1,0 (5,9 %), Autumn 0,49 (4,7 %), Orchard 1,65 (4,9 %), Greenhouse 0,8 (5,0 %).
 
+
+## Workshop : le Casino est remplacé
+
+Le Casino (cartes mystère aléatoires) est remplacé par le **Workshop** : 2 packs distincts (Seed 4, Sprout 5, Fertilizer 6, Mastery 4 Pollen ; on révèle 3 options visibles et on en garde une, Skip possible sur Sprout/Fertilizer), le **Compost** (3 Pollen, +2 par achat : retire une graine du sac) et la **Forge** (4 Pollen : une tile upgrade visible, posée sur une graine au choix parmi 10). Le Blister est inchangé. Le bot (choix de pack au hasard, jamais de Compost) a perdu de la force ; `EnemyHpMultiplier` réajustés (planner profondeur 3, 500 runs) : Spring 0,76 → 0,47 (≈ 9 %), Winter 1,03 → 0,73 (5,2 %), Summer 1,0 → 0,71 (≈ 6 %), Autumn 0,49 → 0,37 (≈ 6 %), Orchard 1,65 → 1,2 (≈ 6 %), Greenhouse 0,8 → 0,58 (≈ 6 %). Un humain choisit ses packs en connaissance de cause : ces cibles restent prudentes.

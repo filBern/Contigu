@@ -72,6 +72,7 @@ namespace Contigu.Presentation
         private TileChoiceView _tileChoiceView;
         private PieceChoiceView _pieceChoiceView;
         private MasteryChoiceView _masteryChoiceView;
+        private PackChoiceView _packChoiceView;
         private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
@@ -496,6 +497,9 @@ namespace Contigu.Presentation
             _masteryChoiceView = gameObject.AddComponent<MasteryChoiceView>();
             _masteryChoiceView.Build(mainRoot);
 
+            _packChoiceView = gameObject.AddComponent<PackChoiceView>();
+            _packChoiceView.Build(mainRoot);
+
             _modifierUpgradeChoiceView = gameObject.AddComponent<ModifierUpgradeChoiceView>();
             _modifierUpgradeChoiceView.Build(mainRoot, _tooltipView);
 
@@ -610,6 +614,8 @@ namespace Contigu.Presentation
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _pieceChoiceView.PieceChoiceConfirmed += OnPieceChoiceConfirmed;
             _masteryChoiceView.OptionChosen += OnMasteryOptionChosen;
+            _packChoiceView.OptionChosen += OnPackOptionChosen;
+            _packChoiceView.Skipped += OnPackSkipped;
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _endScreenView.EndlessRequested += OnEndlessRequested;

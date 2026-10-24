@@ -265,7 +265,7 @@ namespace Contigu.Presentation
 
             _blisterCardsContainer = BuildCardRow("BlisterCards", ModifierCardsTopY);
 
-            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Casino", 16, UITheme.TextMutedOnBackground);
+            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Workshop", 16, UITheme.TextMutedOnBackground);
             _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -722,15 +722,18 @@ namespace Contigu.Presentation
             return 0f;
         }
 
+        // Workshop cards carry a short blurb under the art, so they are a bit taller than the old mystery cards.
+        private const float WorkshopCardHeight = 226f;
+
         private void BuildUpgradeCard(RunManager run, int index)
         {
             var slot = run.ShopUpgradeSlots[index];
             var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
             card.color = UITheme.Panel;
-            card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
+            card.rectTransform.sizeDelta = new Vector2(CardWidth, WorkshopCardHeight);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = CardWidth;
-            cardLayout.preferredHeight = CardHeight;
+            cardLayout.preferredHeight = WorkshopCardHeight;
             UIFactory.AddThickOutline(card, UITheme.Border);
 
             if (slot == null)
@@ -738,79 +741,76 @@ namespace Contigu.Presentation
                 return;
             }
 
-            // Mystery box — only the pool is shown, never the specific
-            // upgrade, even once purchased (the reveal happens in the
-            // follow-up sub-choice/tile-choice overlay). Random Modifier is
-            // named outright instead of showing the generic pool label.
-            bool isRandomModifier = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.RandomModifier;
-            // GetPoolLabel already ends in "Upgrade", so it isn't appended again here.
-            string cardLabel = isRandomModifier ? "Alchemical Boon" : UpgradeVisualDefaults.GetPoolLabel(slot.Pool);
-            // The category's name on top, then its mystery illustration (the real item's silhouette kind, hidden behind a "?"):
-            // a sign for an upgrade pool, a sack for the Alchemical Boon.
-            var poolLabel = UIFactory.CreateText(card.transform, "Pool", cardLabel, 20, UITheme.TextPrimary);
-            poolLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            poolLabel.rectTransform.anchoredPosition = new Vector2(0f, -12f);
-            poolLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 30f);
+            var def = slot.HiddenUpgrade;
+            bool isForge = def.Id == UpgradeId.Forge && slot.Payload != null;
+            bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
 
-            var mysteryArt = Resources.Load<Sprite>("Icons/Mystery/" + (isRandomModifier ? "Boon" : slot.Pool.ToString()));
-            if (mysteryArt != null)
+            // Packs and services are fully visible: name on top, art, one line saying what you get.
+            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 20, UITheme.TextPrimary);
+            nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -10f);
+            nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 28f);
+
+            var typeLabel = UIFactory.CreateText(card.transform, "Kind", isService ? "Service" : "Pack", 12, UITheme.TextMuted);
+            typeLabel.fontStyle = FontStyle.Italic;
+            typeLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            typeLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            typeLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            typeLabel.rectTransform.anchoredPosition = new Vector2(0f, -36f);
+            typeLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 16f);
+
+            var artSprite = UpgradeVisualDefaults.GetIcon(isForge ? slot.Payload.Id : def.Id);
+            if (artSprite != null)
             {
-                var art = UIFactory.CreatePanel(card.transform, "MysteryArt", Color.white);
-                art.sprite = mysteryArt;
+                var art = UIFactory.CreatePanel(card.transform, "Art", Color.white);
+                art.sprite = artSprite;
                 art.preserveAspect = true;
                 art.raycastTarget = false;
                 art.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 art.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 art.rectTransform.pivot = new Vector2(0.5f, 1f);
-                art.rectTransform.anchoredPosition = new Vector2(0f, -44f);
-                art.rectTransform.sizeDelta = new Vector2(98f, 98f);
-            }
-            else
-            {
-                var mysteryHint = UIFactory.CreateText(card.transform, "Hint", "?", 40, UITheme.TextMuted);
-                mysteryHint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                mysteryHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                mysteryHint.rectTransform.pivot = new Vector2(0.5f, 1f);
-                mysteryHint.rectTransform.anchoredPosition = new Vector2(0f, -70f);
-                mysteryHint.rectTransform.sizeDelta = new Vector2(CardWidth - 16f, 40f);
+                art.rectTransform.anchoredPosition = new Vector2(0f, -54f);
+                art.rectTransform.sizeDelta = new Vector2(84f, 84f);
             }
 
-            // Hover: what this mystery card can turn out to be (the pool's whole content, never the exact draw).
-            var casinoHover = card.gameObject.AddComponent<HoverTooltip>();
-            casinoHover.Init(_tooltip, cardLabel, DescriptionTextFormatter.Colorize(BuildCasinoPoolDescription(slot.Pool, isRandomModifier), 14), "Casino · mystery card", UITheme.TextMuted);
+            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 14, UITheme.TextPrimary);
+            blurb.raycastTarget = false;
+            blurb.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            blurb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            blurb.rectTransform.pivot = new Vector2(0.5f, 1f);
+            blurb.rectTransform.anchoredPosition = new Vector2(0f, -142f);
+            blurb.rectTransform.sizeDelta = new Vector2(CardWidth - 20f, 36f);
+
+            // Hover: the whole description (and, for the Forge, what its tile upgrade does).
+            var hover = card.gameObject.AddComponent<HoverTooltip>();
+            string body = isForge ? slot.Payload.Name + ": " + slot.Payload.Description + "\nAdd it to any seed of your bag (a wide choice)." : def.Description;
+            hover.Init(_tooltip, isForge ? "Forge: " + slot.Payload.Name : def.Name, DescriptionTextFormatter.Colorize(body, 14), isService ? "Workshop · service" : "Workshop · pack", UITheme.TextMuted);
 
             int price = run.GetUpgradeSlotPrice(index);
-            // Random Modifier is the one upgrade that respects the modifier
-            // cap; every other upgrade ignores it (see RunManager.BuyUpgradeSlot).
-            bool atModifierCap = isRandomModifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            // Modifier Upgrade needs an already-owned modifier to level up.
-            bool isModifierUpgrade = slot.HiddenUpgrade != null && slot.HiddenUpgrade.Id == UpgradeId.ModifierUpgrade;
-            bool hasNoModifiersToUpgrade = isModifierUpgrade && run.ActiveModifiers.Count == 0;
-            bool blocked = atModifierCap || hasNoModifiersToUpgrade;
-            string blockedLabel = atModifierCap ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : "None owned";
+            bool fullOfFertilizers = def.Id == UpgradeId.FertilizerPack && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
+            bool bagTooSmall = def.Id == UpgradeId.Compost && run.Deck.DeckCount <= DeckManager.MinDeckSize;
+            bool blocked = fullOfFertilizers || bagTooSmall;
+            string blockedLabel = fullOfFertilizers ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : "Bag too small";
             BuildBuyButton(card.transform, slot.Purchased, blocked ? blockedLabel : price.ToString(),
                 !slot.Purchased && !blocked && run.PendingUpgrade == null,
                 run.Lueur >= price,
                 () => OnUpgradeBuyClicked(index));
         }
 
-        /// <summary>What a Casino card of this category can contain: every upgrade of its pool, grouped by rarity for the big Sprout pool.</summary>
-        private static string BuildCasinoPoolDescription(UpgradePool pool, bool isRandomModifier)
+        /// <summary>The one-line promise under a Workshop card's art.</summary>
+        private static string WorkshopBlurb(ShopSlot slot)
         {
-            switch (pool)
+            switch (slot.HiddenUpgrade.Id)
             {
-                case UpgradePool.Bank:
-                    return "Changes your seed bag: replace, duplicate or recolor a seed, add a Wild Seed, or pick a Fresh Sprout.";
-                case UpgradePool.Mastery:
-                    return "Levels up one random seed shape or color: its tiles score +1 pt per level, for the rest of the run.";
-                case UpgradePool.Modifier:
-                    return isRandomModifier
-                        ? "Grants one random fertilizer you don't already have."
-                        : "Choose one of your fertilizers to level up: its effect gets stronger.";
-                default:
-                    return "Enchants a tile of a seed you choose. The enchantment is permanent: it counts again every time its tile is scored.";
+                case UpgradeId.SeedPack: return "Keep 1 of 3 upgraded seeds";
+                case UpgradeId.SproutPack: return "Pick 1 of 3 tile upgrades";
+                case UpgradeId.FertilizerPack: return "Keep 1 of 3 fertilizers";
+                case UpgradeId.MasteryPack: return "Pick 1 of 3 masteries";
+                case UpgradeId.Compost: return "Remove 1 seed from your bag";
+                case UpgradeId.Forge: return slot.Payload != null ? slot.Payload.Name + " on a seed of your choice" : "Upgrade a seed";
+                default: return slot.HiddenUpgrade.Description;
             }
         }
 

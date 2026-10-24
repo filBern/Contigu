@@ -43,7 +43,18 @@ namespace Contigu.Core
         /// stays hidden until purchase. The only section RerollShop still
         /// touches.
         /// </summary>
-        public const int ShopUpgradeSlotCount = 2;
+        public const int ShopUpgradeSlotCount = 4;
+
+        // ---- Workshop prices and sizes (see RunManager.RollWorkshopSlots).
+        public const int SeedPackPrice = 4;
+        public const int SproutPackPrice = 5;
+        public const int FertilizerPackPrice = 6;
+        public const int MasteryPackPrice = 4;
+        public const int CompostBasePrice = 3;
+        public const int CompostPriceIncreasePerUse = 2;
+        public const int ForgePrice = 4;
+        public const int PackChoiceCount = 3;
+        public const int ForgeSeedCandidateCount = 10;
 
         /// <summary>Chance that a Casino upgrade slot rolls from each of the 4 pools — must sum to 100 (see RunManager.RollUpgradeSlot).</summary>
         public const int ModifierUpgradePoolChancePercent = 10;

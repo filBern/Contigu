@@ -119,7 +119,23 @@ namespace Contigu.Presentation
                 }
                 return;
             }
-            if (pending.Pool == UpgradePool.Grid)
+            if (pending.Id == UpgradeId.SproutPack)
+            {
+                ShowPackOfUpgrades();
+            }
+            else if (pending.Id == UpgradeId.FertilizerPack)
+            {
+                ShowPackOfModifiers();
+            }
+            else if (pending.Id == UpgradeId.SeedPack)
+            {
+                _pieceChoiceView.Show(_run.PendingUpgradePieceCandidates, pending, _run);
+            }
+            else if (pending.Id == UpgradeId.MasteryPack)
+            {
+                _masteryChoiceView.Show(_run.PendingMasteryOptions, _run);
+            }
+            else if (pending.Pool == UpgradePool.Grid)
             {
                 _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, pending);
             }
@@ -139,6 +155,65 @@ namespace Contigu.Presentation
             {
                 _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates, _run);
             }
+        }
+
+        private void ShowPackOfUpgrades()
+        {
+            var options = new List<PackOption>();
+            foreach (var upgrade in _run.PendingPackUpgrades)
+            {
+                options.Add(new PackOption
+                {
+                    Name = upgrade.Name,
+                    Description = DescriptionTextFormatter.Colorize(upgrade.Description, 15),
+                    Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity),
+                    Icon = UpgradeVisualDefaults.GetIcon(upgrade.Id),
+                    Accent = UpgradeVisualDefaults.GetRarityColor(upgrade.Rarity)
+                });
+            }
+            _packChoiceView.Show("Sprout Pack", "Pick one, then choose the seed that gets it", options);
+        }
+
+        private void ShowPackOfModifiers()
+        {
+            var options = new List<PackOption>();
+            foreach (var id in _run.PendingPackModifiers)
+            {
+                var def = ModifierCatalog.Get(id);
+                options.Add(new PackOption
+                {
+                    Name = def.Name,
+                    Description = DescriptionTextFormatter.Colorize(def.Description, 15),
+                    Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(def.Category),
+                    Icon = ModifierVisualDefaults.GetIcon(id),
+                    Accent = ModifierVisualDefaults.GetCategoryColor(def.Category)
+                });
+            }
+            _packChoiceView.Show("Fertilizer Pack", "Pick one fertilizer to keep", options);
+        }
+
+        private void OnPackOptionChosen(int index)
+        {
+            var packId = _run.PendingUpgrade != null ? _run.PendingUpgrade.Id : UpgradeId.SproutPack;
+            if (packId == UpgradeId.SproutPack)
+            {
+                if (_run.ResolvePackUpgradeChoice(index))
+                {
+                    var chosen = _run.PendingUpgrade;
+                    _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, chosen);
+                }
+                return;
+            }
+            _run.ResolvePackModifierChoice(index);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        private void OnPackSkipped()
+        {
+            _run.SkipPack();
+            RefreshAll();
+            _shopView.Refresh(_run);
         }
 
         private void OnSubChoiceConfirmed(UpgradeSubChoice subChoice)

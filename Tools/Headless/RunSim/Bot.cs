@@ -320,7 +320,8 @@ namespace Contigu.RunSim
             var upgrades = run.ShopUpgradeSlots;
             for (int i = 0; i < upgrades.Count; i++)
             {
-                if (upgrades[i] != null && !upgrades[i].Purchased)
+                // The bot never composts: thinning the bag is a deliberate human choice it cannot judge.
+                if (upgrades[i] != null && !upgrades[i].Purchased && upgrades[i].HiddenUpgrade.Id != UpgradeId.Compost)
                 {
                     options.Add((false, 1000 + i, run.GetUpgradeSlotPrice(i)));
                 }
@@ -366,9 +367,19 @@ namespace Contigu.RunSim
                 {
                     ok = run.ResolveMasteryChoice(_rng.Next(run.PendingMasteryOptions.Count));
                 }
-                else if (pending.Id == UpgradeId.RandomPiece)
+                else if (pending.Id == UpgradeId.RandomPiece || pending.Id == UpgradeId.SeedPack)
                 {
                     ok = run.ResolveUpgradePieceChoice(_rng.Next(run.PendingUpgradePieceCandidates.Count));
+                }
+                else if (pending.Id == UpgradeId.SproutPack)
+                {
+                    ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(_rng.Next(run.PendingPackUpgrades.Count));
+                    if (!ok) { ok = run.SkipPack(); }
+                }
+                else if (pending.Id == UpgradeId.FertilizerPack)
+                {
+                    ok = run.PendingPackModifiers.Count > 0 && run.ResolvePackModifierChoice(_rng.Next(run.PendingPackModifiers.Count));
+                    if (!ok && run.PendingUpgrade == pending) { ok = run.SkipPack(); }
                 }
                 else if (pending.Id == UpgradeId.ModifierUpgrade)
                 {

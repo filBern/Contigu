@@ -58,6 +58,7 @@ namespace Contigu.Data
                 case UpgradePool.Grid: return "Sprout Upgrade";
                 case UpgradePool.Mastery: return "Mastery Upgrade";
                 case UpgradePool.Modifier: return "Fertilizer Upgrade";
+                case UpgradePool.Workshop: return "Workshop";
                 default: return pool.ToString();
             }
         }

@@ -121,6 +121,14 @@ namespace Contigu.Core
 #endif
 
 #if UNITY_EDITOR || CONTIGU_DEBUG
+        /// <summary>Debug-only helper: puts a specific upgrade (and, for the Forge, its tile upgrade) into Workshop slot <paramref name="index"/>, so a test does not depend on the roll.</summary>
+        public void DebugSetWorkshopSlot(int index, UpgradeDefinition upgrade, UpgradeDefinition forgePayload = null)
+        {
+            _upgradeSlots[index] = upgrade.Id == UpgradeId.Forge ? ShopSlot.ForForge(upgrade, forgePayload ?? UpgradeCatalog.GoldenCells) : ShopSlot.ForUpgrade(upgrade);
+        }
+#endif
+
+#if UNITY_EDITOR || CONTIGU_DEBUG
         /// <summary>Debug-only helper: pins the seeds left in this round's budget.</summary>
         public void DebugSetPiecesRemaining(int amount)
         {

@@ -45,7 +45,7 @@ namespace Contigu.Presentation
             _cardsRow.anchorMax = new Vector2(0.5f, 0.5f);
             _cardsRow.pivot = new Vector2(0.5f, 0.5f);
             _cardsRow.anchoredPosition = Vector2.zero;
-            _cardsRow.sizeDelta = new Vector2(2 * CardWidth + CardSpacing, CardHeight);
+            _cardsRow.sizeDelta = new Vector2(3 * CardWidth + 2 * CardSpacing, CardHeight);
 
             _root.gameObject.SetActive(false);
             return _root;
@@ -58,8 +58,14 @@ namespace Contigu.Presentation
                 Destroy(_cardsRow.GetChild(i).gameObject);
             }
 
-            bool shapes = options.Count > 0 && options[0].Shape.HasValue;
-            _title.text = shapes ? "Choose a seed shape to master" : "Choose a bloom color to master";
+            bool allShapes = options.Count > 0;
+            bool allColors = options.Count > 0;
+            for (int i = 0; i < options.Count; i++)
+            {
+                allShapes &= options[i].Shape.HasValue;
+                allColors &= !options[i].Shape.HasValue;
+            }
+            _title.text = allShapes ? "Choose a seed shape to master" : allColors ? "Choose a bloom color to master" : "Choose a mastery";
 
             float totalWidth = options.Count * CardWidth + (options.Count - 1) * CardSpacing;
             _cardsRow.sizeDelta = new Vector2(totalWidth, CardHeight);

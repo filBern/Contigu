@@ -338,6 +338,55 @@ namespace Contigu.Core
             UpgradeId.SowerTile, UpgradePool.Grid, "Sower Sprout",
             "Plants a free tile of its color on a neighboring empty plot.", false, UpgradeRarity.Rare);
 
+        // ---- Workshop: replaces the Casino. Never rolled from a pool and never in the Blister bag (see WorkshopPacks/WorkshopServices).
+        public static readonly UpgradeDefinition SeedPack = new UpgradeDefinition(
+            UpgradeId.SeedPack, UpgradePool.Workshop, "Seed Pack",
+            "Reveals 3 seeds, each with an upgraded tile. Keep 1.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition SproutPack = new UpgradeDefinition(
+            UpgradeId.SproutPack, UpgradePool.Workshop, "Sprout Pack",
+            "Reveals 3 tile upgrades. Pick 1, then the seed to enchant.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition FertilizerPack = new UpgradeDefinition(
+            UpgradeId.FertilizerPack, UpgradePool.Workshop, "Fertilizer Pack",
+            "Reveals 3 fertilizers. Keep 1 for free.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition MasteryPack = new UpgradeDefinition(
+            UpgradeId.MasteryPack, UpgradePool.Workshop, "Mastery Pack",
+            "Reveals 3 masteries (a seed shape or color and its levels). Pick 1.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition Compost = new UpgradeDefinition(
+            UpgradeId.Compost, UpgradePool.Workshop, "Compost",
+            "Remove 1 seed from your bag to thin it out. Costs more each time.", true, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition Forge = new UpgradeDefinition(
+            UpgradeId.Forge, UpgradePool.Workshop, "Forge",
+            "Add the tile upgrade shown to any seed of your bag.", false, UpgradeRarity.Common);
+
+        /// <summary>The definition with this id (any pool, Workshop included), or null.</summary>
+        public static UpgradeDefinition Get(UpgradeId id)
+        {
+            for (int i = 0; i < All.Length; i++)
+            {
+                if (All[i].Id == id)
+                {
+                    return All[i];
+                }
+            }
+            switch (id)
+            {
+                case UpgradeId.SeedPack: return SeedPack;
+                case UpgradeId.SproutPack: return SproutPack;
+                case UpgradeId.FertilizerPack: return FertilizerPack;
+                case UpgradeId.MasteryPack: return MasteryPack;
+                case UpgradeId.Compost: return Compost;
+                case UpgradeId.Forge: return Forge;
+                default: return null;
+            }
+        }
+
+        public static readonly UpgradeDefinition[] WorkshopPacks = { SeedPack, SproutPack, FertilizerPack, MasteryPack };
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,

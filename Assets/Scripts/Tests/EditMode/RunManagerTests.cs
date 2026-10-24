@@ -559,14 +559,11 @@ namespace Contigu.Tests
             // test) for a shop whose slot 0 happens to roll a Grid-pool
             // upgrade — exercises the real roll instead of bypassing it.
             RunManager run = null;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid && candidate.ShopUpgradeSlots[0].HiddenUpgrade.Id != UpgradeId.PermanentBonusSquare)
-                {
-                    run = candidate;
-                }
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.CatalystTile);
+                run = injected;
             }
             Assert.IsNotNull(run, "Should find a Grid-pool upgrade slot within 500 seeds");
 
@@ -601,19 +598,13 @@ namespace Contigu.Tests
             // real target color) so the resolve step below is unconditional.
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.DuplicatePiece)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.DuplicatePiece));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Dupliquer upgrade slot within 500 seeds");
 
@@ -645,19 +636,13 @@ namespace Contigu.Tests
         {
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.RandomPiece)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.RandomPiece));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Random Piece upgrade slot within 500 seeds");
 
@@ -693,19 +678,13 @@ namespace Contigu.Tests
         {
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.RandomPiece)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.RandomPiece));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Random Piece upgrade slot within 500 seeds");
             run.DebugGrantLueur(1000000);
@@ -723,19 +702,13 @@ namespace Contigu.Tests
             // precedent as RandomModifier respecting the modifier cap.
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.ModifierUpgrade));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
             Assert.AreEqual(0, run.ActiveModifiers.Count, "A fresh run (no starting-modifier grant in this helper) should own nothing yet");
@@ -753,19 +726,13 @@ namespace Contigu.Tests
         {
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.ModifierUpgrade));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
             Assert.IsTrue(run.DebugGrantModifier(ModifierId.Couronne));
@@ -794,19 +761,13 @@ namespace Contigu.Tests
         {
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.ModifierUpgrade));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
             run.DebugGrantModifier(ModifierId.Couronne);
@@ -839,22 +800,9 @@ namespace Contigu.Tests
         private static void RaiseModifierLevelViaShop(RunManager run, int slotIndex)
         {
             run.DebugGrantLueur(1000000);
-            int guard = 0;
-            while (true)
-            {
-                for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
-                {
-                    if (run.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade && !run.ShopUpgradeSlots[i].Purchased)
-                    {
-                        Assert.IsTrue(run.BuyUpgradeSlot(i));
-                        Assert.IsTrue(run.ResolveModifierUpgradeChoice(slotIndex));
-                        return;
-                    }
-                }
-                Assert.IsTrue(run.RerollShop(), "Ran out of Lueur or attempts while rerolling for a Modifier Upgrade slot");
-                guard++;
-                Assert.Less(guard, 500, "Should find a Modifier Upgrade slot within 500 rerolls");
-            }
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.ModifierUpgrade);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.IsTrue(run.ResolveModifierUpgradeChoice(slotIndex));
         }
 
         [Test]
@@ -862,19 +810,13 @@ namespace Contigu.Tests
         {
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.JokerPiece)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.JokerPiece));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Joker upgrade slot within 500 seeds");
 
@@ -897,19 +839,10 @@ namespace Contigu.Tests
         /// <summary>Same seed-search trick as BuyUpgradeSlot_Joker_AppliesImmediately_AndSurfacesTheShapeAdded, for the other no-sub-choice Bank upgrade (spec extension, explicit request: "j'aimerais qu'on rajoute random modifier dans la liste de possibilité d'apparaitre").</summary>
         private static (RunManager Run, int Slot) FindRunWithUpgradeOffered(UpgradeId id, int maxSeeds)
         {
-            for (int seed = 0; seed < maxSeeds; seed++)
-            {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == id)
-                    {
-                        return (candidate, i);
-                    }
-                }
-            }
-            return (null, -1);
+            var run = new RunManager(new SystemRandomProvider(1));
+            PlayRoundToAwaitingShop(run);
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(id));
+            return (run, 0);
         }
 
         [Test]
@@ -1359,14 +1292,11 @@ namespace Contigu.Tests
         public void BuyUpgradeSlot_ResolveWrongFollowUpKind_Fails()
         {
             RunManager run = null;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                if (candidate.ShopUpgradeSlots[0].Pool == UpgradePool.Grid && candidate.ShopUpgradeSlots[0].HiddenUpgrade.Id != UpgradeId.PermanentBonusSquare)
-                {
-                    run = candidate;
-                }
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.CatalystTile);
+                run = injected;
             }
             Assert.IsNotNull(run, "Should find a Grid-pool upgrade slot within 500 seeds");
             run.DebugGrantLueur(1000000);
@@ -3457,19 +3387,13 @@ namespace Contigu.Tests
             // though a leveled-up copy was actually scoring more.
             RunManager run = null;
             int foundSlot = -1;
-            for (int seed = 0; seed < 500 && run == null; seed++)
             {
-                var candidate = new RunManager(new SystemRandomProvider(seed));
-                PlayRoundToAwaitingShop(candidate);
-                for (int i = 0; i < candidate.ShopUpgradeSlots.Count; i++)
-                {
-                    if (candidate.ShopUpgradeSlots[i].HiddenUpgrade.Id == UpgradeId.ModifierUpgrade)
-                    {
-                        run = candidate;
-                        foundSlot = i;
-                        break;
-                    }
-                }
+                // The Workshop rolls packs and services now, so the upgrade under test is placed in slot 0 directly.
+                var injected = new RunManager(new SystemRandomProvider(1));
+                PlayRoundToAwaitingShop(injected);
+                injected.DebugSetWorkshopSlot(0, UpgradeCatalog.Get(UpgradeId.ModifierUpgrade));
+                run = injected;
+                foundSlot = 0;
             }
             Assert.IsNotNull(run, "Should find a Modifier Upgrade slot within 500 seeds");
             Assert.IsTrue(run.DebugGrantModifier(ModifierId.CartesEnchantees));

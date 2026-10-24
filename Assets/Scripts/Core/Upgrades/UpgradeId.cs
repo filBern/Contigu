@@ -13,7 +13,10 @@ namespace Contigu.Core
         Bank,
         Grid,
         Mastery,
-        Modifier
+        Modifier,
+
+        /// <summary>The Workshop (packs and services that replaced the Casino): never part of a random pool, always shown plainly.</summary>
+        Workshop
     }
 
     /// <summary>The Bank upgrades and Grid (piece-enchantment) upgrades.</summary>
@@ -94,6 +97,14 @@ namespace Contigu.Core
 
         PieceMastery,
 
-        ColorMastery
+        ColorMastery,
+
+        // Workshop: packs (choose 1 of several revealed options) and services (Compost, Forge).
+        SeedPack,
+        SproutPack,
+        FertilizerPack,
+        MasteryPack,
+        Compost,
+        Forge
     }
 }

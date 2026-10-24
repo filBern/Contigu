@@ -141,12 +141,12 @@ namespace Contigu.Core
         /// </summary>
         public IReadOnlyList<PieceToken> GetCandidatePiecesFor(UpgradeDefinition upgrade)
         {
-            if (upgrade.Id != UpgradeId.RandomPiece)
+            if (upgrade.Id != UpgradeId.RandomPiece && upgrade.Id != UpgradeId.SeedPack)
             {
                 return System.Array.Empty<PieceToken>();
             }
 
-            var candidates = new PieceToken[EconomyConstants.ShopTileCandidateCount];
+            var candidates = new PieceToken[upgrade.Id == UpgradeId.SeedPack ? EconomyConstants.PackChoiceCount : EconomyConstants.ShopTileCandidateCount];
             for (int i = 0; i < candidates.Length; i++)
             {
                 var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];

@@ -20,10 +20,7 @@ namespace Contigu.Core
             {
                 _blisterSlots[i] = RollBlisterSlot();
             }
-            for (int i = 0; i < _upgradeSlots.Length; i++)
-            {
-                _upgradeSlots[i] = RollUpgradeSlot();
-            }
+            RollWorkshopSlots(keepCompost: false);
         }
 
         /// <summary>
@@ -181,34 +178,44 @@ namespace Contigu.Core
             {
                 return false;
             }
+            if (candidate.Id == UpgradeId.FertilizerPack && (_activeModifiers.Count >= EconomyConstants.MaxActiveModifiers || RollPackModifiers(EconomyConstants.PackChoiceCount, preview: true).Count == 0))
+            {
+                return false;
+            }
+            if (candidate.Id == UpgradeId.Compost && Deck.DeckCount <= DeckManager.MinDeckSize)
+            {
+                return false;
+            }
             return true;
         }
 
-        private ShopSlot RollUpgradeSlot()
+        /// <summary>
+        /// Fills the Workshop (the section that replaced the Casino): slots 0-1 are two different packs, slot 2 the Compost service and slot 3 the
+        /// Forge with its tile upgrade already shown. Everything is visible before buying. A reroll keeps the Compost slot as it was
+        /// (<paramref name="keepCompost"/>) since the service itself never changes.
+        /// </summary>
+        private void RollWorkshopSlots(bool keepCompost)
         {
-            int roll = _rng.Next(100);
-            UpgradePool pool;
-            int modifierCutoff = EconomyConstants.ModifierUpgradePoolChancePercent;
-            int masteryCutoff = modifierCutoff + EconomyConstants.MasteryUpgradePoolChancePercent;
-            int bankCutoff = masteryCutoff + EconomyConstants.BankUpgradePoolChancePercent;
-            if (roll < modifierCutoff)
+            var previousCompost = keepCompost ? _upgradeSlots[2] : null;
+            var packs = new List<UpgradeDefinition>(UpgradeCatalog.WorkshopPacks);
+            for (int i = 0; i < 2; i++)
             {
-                pool = UpgradePool.Modifier;
+                int pick = _rng.Next(packs.Count);
+                _upgradeSlots[i] = ShopSlot.ForUpgrade(packs[pick]);
+                packs.RemoveAt(pick);
             }
-            else if (roll < masteryCutoff)
+            _upgradeSlots[2] = previousCompost != null && previousCompost.HiddenUpgrade.Id == UpgradeId.Compost ? previousCompost : ShopSlot.ForUpgrade(UpgradeCatalog.Compost);
+
+            UpgradeDefinition payload = null;
+            for (int attempt = 0; attempt < 30 && payload == null; attempt++)
             {
-                pool = UpgradePool.Mastery;
+                var rolled = Upgrades.RollFromPool(UpgradePool.Grid);
+                if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue)
+                {
+                    payload = rolled;
+                }
             }
-            else if (roll < bankCutoff)
-            {
-                pool = UpgradePool.Bank;
-            }
-            else
-            {
-                pool = UpgradePool.Grid;
-            }
-            var upgrade = Upgrades.RollFromPool(pool);
-            return ShopSlot.ForUpgrade(upgrade);
+            _upgradeSlots[3] = ShopSlot.ForForge(UpgradeCatalog.Forge, payload ?? UpgradeCatalog.GoldenCells);
         }
 
         /// <summary>Current Lueur price of Blister slot <paramref name="index"/> - a Modifier-kind slot varies per modifier (see ModifierPricing); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice). Includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
@@ -232,9 +239,19 @@ namespace Contigu.Core
             {
                 return 0;
             }
-            int basePrice = _upgradeSlots[index].Pool == UpgradePool.Grid
-                ? EconomyConstants.GridUpgradeShopBasePrice
-                : EconomyConstants.BankUpgradeShopBasePrice;
+            int basePrice;
+            switch (_upgradeSlots[index].HiddenUpgrade.Id)
+            {
+                case UpgradeId.SeedPack: basePrice = EconomyConstants.SeedPackPrice; break;
+                case UpgradeId.SproutPack: basePrice = EconomyConstants.SproutPackPrice; break;
+                case UpgradeId.FertilizerPack: basePrice = EconomyConstants.FertilizerPackPrice; break;
+                case UpgradeId.MasteryPack: basePrice = EconomyConstants.MasteryPackPrice; break;
+                case UpgradeId.Compost: basePrice = EconomyConstants.CompostBasePrice + _compostsBought * EconomyConstants.CompostPriceIncreasePerUse; break;
+                case UpgradeId.Forge: basePrice = EconomyConstants.ForgePrice; break;
+                default:
+                    basePrice = _upgradeSlots[index].Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice;
+                    break;
+            }
             return ComputePrice(basePrice);
         }
 
@@ -361,6 +378,10 @@ namespace Contigu.Core
             _purchasesThisVisit++;
             var slot = _upgradeSlots[index];
             slot.Purchased = true;
+            if (hiddenUpgrade.Id == UpgradeId.Forge)
+            {
+                return ApplyForge(slot.Payload);
+            }
             return ApplyPurchasedUpgrade(slot.HiddenUpgrade);
         }
 
@@ -382,6 +403,10 @@ namespace Contigu.Core
             {
                 ApplyPermanentBonusSquare();
                 return true;
+            }
+            if (upgrade.Pool == UpgradePool.Workshop)
+            {
+                return ApplyWorkshopPurchase(upgrade);
             }
             if (upgrade.Pool == UpgradePool.Grid)
             {
@@ -545,7 +570,7 @@ namespace Contigu.Core
         /// <summary>Resolves Piece/Color Mastery's pending choice: levels up the chosen option's shape/color by its offered gain and surfaces it through <see cref="LastShapeMasteryGranted"/>/<see cref="LastColorMasteryGranted"/>. No-op (false) if nothing is pending or the index is out of range.</summary>
         public bool ResolveMasteryChoice(int optionIndex)
         {
-            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.PieceMastery && PendingUpgrade.Id != UpgradeId.ColorMastery))
+            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.PieceMastery && PendingUpgrade.Id != UpgradeId.ColorMastery && PendingUpgrade.Id != UpgradeId.MasteryPack))
             {
                 return false;
             }
@@ -573,6 +598,10 @@ namespace Contigu.Core
         /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color, or for Replace which SECOND piece type to duplicate in its place). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>
         public bool ResolveUpgradeSubChoice(UpgradeSubChoice subChoice)
         {
+            if (PendingUpgrade != null && PendingUpgrade.Id == UpgradeId.Compost)
+            {
+                return ResolveCompost(subChoice);
+            }
             if (PendingUpgrade == null || PendingUpgrade.Pool != UpgradePool.Bank)
             {
                 return false;
@@ -587,7 +616,7 @@ namespace Contigu.Core
         /// <summary>Resolves "Random Piece"'s sub-choice — <paramref name="candidateIndex"/> must index into <see cref="PendingUpgradePieceCandidates"/> (not validated beyond range here; the presentation layer only ever offers those). No-op (false) if nothing is pending or it's actually a different upgrade.</summary>
         public bool ResolveUpgradePieceChoice(int candidateIndex)
         {
-            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.RandomPiece)
+            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.RandomPiece && PendingUpgrade.Id != UpgradeId.SeedPack))
             {
                 return false;
             }
@@ -660,10 +689,7 @@ namespace Contigu.Core
 
             Lueur -= price;
             _rerollsThisVisit++;
-            for (int i = 0; i < _upgradeSlots.Length; i++)
-            {
-                _upgradeSlots[i] = RollUpgradeSlot();
-            }
+            RollWorkshopSlots(keepCompost: true);
             return true;
         }
 

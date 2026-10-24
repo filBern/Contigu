@@ -342,7 +342,7 @@ namespace Contigu.Core
             get { return _blisterSlots; }
         }
 
-        /// <summary>The "Casino" section - always an Upgrade-kind slot, only its UpgradePool shown until purchased. The only section RerollShop touches.</summary>
+        /// <summary>The "Workshop" section (it replaced the Casino): 2 packs, a Compost service and a Forge, all shown plainly. The only section RerollShop touches.</summary>
         public IReadOnlyList<ShopSlot> ShopUpgradeSlots
         {
             get { return _upgradeSlots; }
@@ -366,6 +366,15 @@ namespace Contigu.Core
 
         /// <summary>Candidate freshly-rolled pieces (trait included) for <see cref="PendingUpgrade"/>'s sub-choice - only populated for "Random Piece"; empty otherwise, since these tokens don't exist in the deck yet.</summary>
         public IReadOnlyList<PieceToken> PendingUpgradePieceCandidates { get; private set; }
+
+        /// <summary>The 3 tile upgrades a Sprout Pack revealed (empty otherwise) — pick one with <see cref="ResolvePackUpgradeChoice"/> (or skip the pack).</summary>
+        public IReadOnlyList<UpgradeDefinition> PendingPackUpgrades { get; private set; } = System.Array.Empty<UpgradeDefinition>();
+
+        /// <summary>The 3 fertilizers a Fertilizer Pack revealed (empty otherwise) — keep one with <see cref="ResolvePackModifierChoice"/> (or skip the pack).</summary>
+        public IReadOnlyList<ModifierId> PendingPackModifiers { get; private set; } = System.Array.Empty<ModifierId>();
+
+        /// <summary>How many Compost services were bought this run (each one makes the next dearer).</summary>
+        private int _compostsBought;
 
         /// <summary>Where the most recent Permanent Bonus Square landed — read once by the presentation layer to show the player which square was marked. Null before any such purchase.</summary>
         public Vector2Int? LastPermanentBonusPosition { get; private set; }

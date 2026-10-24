@@ -315,7 +315,7 @@ def sack(motif_svg, catcol, tagkind, tagtxt):
     return s + '</svg>\n'
 
 # ---------------------------------------------------------------- upgrades: UpgradeId -> (motif, pool)
-POOL = {'Bank': '#c8403f', 'Grid': '#4f7fd0', 'Mastery': '#8c63b0', 'Modifier': '#e8a82e'}
+POOL = {'Workshop': '#3f9a6a', 'Bank': '#c8403f', 'Grid': '#4f7fd0', 'Mastery': '#8c63b0', 'Modifier': '#e8a82e'}
 def sprite_seed(col=None): return seed(50, 46, 2.2)
 M['u_replace'] = lambda: seed(28, 46, 1.5, '#d8b574') + seed(72, 46, 1.5, '#e8c98a') + arrow(40, 26, 62, 26, O, 4) + arrow(60, 68, 38, 68, O, 4)
 M['u_dup'] = lambda: seed(40, 52, 1.8, '#d8b574') + seed(62, 42, 1.8, '#e8c98a')
@@ -389,6 +389,13 @@ M['u_warden'] = lambda: _trait_motif('Warden')
 M['u_aegis'] = lambda: _trait_motif('Aegis')
 M['u_sower'] = lambda: _trait_motif('Sower')
 
+
+M['u_seedpack'] = lambda: seed(36, 52, 1.5, '#d8b574') + seed(56, 40, 1.5, '#e8c98a') + seed(72, 54, 1.5, '#c9a35a')
+M['u_sproutpack'] = lambda: sprout(30, 62, 0.9) + sprout(50, 56, 1.1) + sprout(70, 62, 0.9)
+M['u_fertpack'] = lambda: flask(30, 44, '#7ac943') + flask(50, 40, '#e8a82e') + flask(70, 44, '#b469e0')
+M['u_masterypack'] = lambda: star(50, 46, 28, '#ffd966', 0.45, 5, 3.5) + seed(50, 48, 0.8)
+M['u_compost'] = lambda: path('M22 38 L78 38 L70 76 L30 76 Z', '#8a5a2b', 4) + sprout(50, 40, 0.8) + arrow(50, 14, 50, 30, O, 4)
+M['u_forge'] = lambda: path('M20 56 L80 56 L74 70 L26 70 Z', '#6b7280', 4) + rect(34, 70, 32, 8, '#4b5563', 3, 3) + tile(34, 26, 28, '#ffd966') + star(72, 30, 8, '#fff1b0', 0.4, 4, 2.5)
 U = {
  'ReplacePiece': ('u_replace', 'Bank'), 'DuplicatePiece': ('u_dup', 'Bank'), 'JokerPiece': ('u_joker', 'Bank'), 'RecolorPiece': ('u_recolor', 'Bank'),
  'RandomModifier': ('u_dice', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),
@@ -431,6 +438,8 @@ U = {
  'WardenTile': ('u_warden', 'Grid'),
  'AegisTile': ('u_aegis', 'Grid'),
  'SowerTile': ('u_sower', 'Grid'),
+ 'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
+ 'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),
 }
 
