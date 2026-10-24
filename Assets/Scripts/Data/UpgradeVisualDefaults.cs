@@ -41,6 +41,40 @@ namespace Contigu.Data
             return LoadLoose("Icons/Workshop/" + name);
         }
 
+        /// <summary>Where a glyph stands on the picture it decorates (see <see cref="PlaceGlyph"/>).</summary>
+        public enum GlyphSurface
+        {
+            /// <summary>Resting on top of the anvil.</summary>
+            Anvil,
+            /// <summary>Centered on the label plate of a pack's crate.</summary>
+            Crate
+        }
+
+        // Layout of a glyph on its picture, as fractions of the picture's side: one place to re-tune if the art is re-cropped.
+        private const float AnvilGlyphSize = 0.46f;
+        private const float AnvilGlyphDrop = 0.015f;
+        private const float CrateGlyphSize = 0.30f;
+        private const float CratePlateDrop = 0.125f;
+
+        /// <summary>Sizes and positions <paramref name="glyph"/> (a child of the picture, same square) on its <paramref name="surface"/>, for a picture <paramref name="pictureSize"/> wide.</summary>
+        public static void PlaceGlyph(RectTransform glyph, GlyphSurface surface, float pictureSize)
+        {
+            glyph.anchorMin = new Vector2(0.5f, 0.5f);
+            glyph.anchorMax = new Vector2(0.5f, 0.5f);
+            if (surface == GlyphSurface.Anvil)
+            {
+                glyph.pivot = new Vector2(0.5f, 0f);
+                glyph.anchoredPosition = new Vector2(0f, -pictureSize * AnvilGlyphDrop);
+                glyph.sizeDelta = new Vector2(pictureSize * AnvilGlyphSize, pictureSize * AnvilGlyphSize);
+            }
+            else
+            {
+                glyph.pivot = new Vector2(0.5f, 0.5f);
+                glyph.anchoredPosition = new Vector2(0f, -pictureSize * CratePlateDrop);
+                glyph.sizeDelta = new Vector2(pictureSize * CrateGlyphSize, pictureSize * CrateGlyphSize);
+            }
+        }
+
         private static Sprite LoadLoose(string path)
         {
             if (!LooseIcons.TryGetValue(path, out var sprite))

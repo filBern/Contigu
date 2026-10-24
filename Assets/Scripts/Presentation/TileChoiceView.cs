@@ -177,20 +177,7 @@ namespace Contigu.Presentation
                 glyph.sprite = glyphSprite;
                 glyph.preserveAspect = true;
                 glyph.raycastTarget = false;
-                glyph.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                glyph.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                if (source == UpgradeId.Forge)
-                {
-                    glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
-                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.015f);
-                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.42f, SignSize * 0.42f);
-                }
-                else
-                {
-                    glyph.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.125f);
-                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.30f, SignSize * 0.30f);
-                }
+                UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, source == UpgradeId.Forge ? UpgradeVisualDefaults.GlyphSurface.Anvil : UpgradeVisualDefaults.GlyphSurface.Crate, SignSize);
             }
             var hover = card.gameObject.AddComponent<HoverTooltip>();
             hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(def.Description, 14),

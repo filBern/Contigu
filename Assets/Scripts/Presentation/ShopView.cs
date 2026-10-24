@@ -836,11 +836,7 @@ namespace Contigu.Presentation
                     glyph.sprite = glyphSprite;
                     glyph.preserveAspect = true;
                     glyph.raycastTarget = false;
-                    glyph.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                    glyph.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                    glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
-                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -2f);
-                    glyph.rectTransform.sizeDelta = new Vector2(58f, 58f);
+                    UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, UpgradeVisualDefaults.GlyphSurface.Anvil, ShelfItemSize);
                 }
             }
 
