@@ -35,9 +35,6 @@ namespace Contigu.Presentation
         private RectTransform _cardContainer;
         private Text _title;
         private RectTransform _previewsContainer;
-        private RectTransform _leftBoard;
-        private RectTransform _rightBoard;
-        private const float SideCellSize = 104f;
         private Button _confirmButton;
         private RectTransform _confirmRect;
 
@@ -87,9 +84,6 @@ namespace Contigu.Presentation
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             PieceBox.Setup(_previewsContainer);
 
-            _leftBoard = BuildSideBoard("LeftBoard", -1f);
-            _rightBoard = BuildSideBoard("RightBoard", 1f);
-
             _confirmButton = UIFactory.CreateButton(_root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
             _confirmRect = _confirmButton.GetComponent<RectTransform>();
             _confirmRect.anchorMin = new Vector2(0.5f, 1f);
@@ -101,28 +95,6 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
-        }
-
-        /// <summary>A parchment board standing where a side tablet is: the seeds that do not fit in the middle are displayed on it (two columns).</summary>
-        private RectTransform BuildSideBoard(string name, float side)
-        {
-            var board = UIFactory.CreatePanel(_root, name, Color.white);
-            board.sprite = UISprites.CardBackground;
-            board.type = Image.Type.Sliced;
-            board.raycastTarget = false;
-            var rect = board.rectTransform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(side * PieceBox.SidePanelCenterX, 0f);
-            rect.sizeDelta = new Vector2(ModifierPanelView.PanelWidth, ModifierPanelView.PanelHeight);
-            var grid = board.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(SideCellSize, SideCellSize);
-            grid.spacing = new Vector2(4f, 4f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 2;
-            grid.childAlignment = TextAnchor.MiddleCenter;
-            return rect;
         }
 
         public void Rebind(DeckManager deck)
@@ -154,36 +126,10 @@ namespace Contigu.Presentation
             {
                 Destroy(_previewsContainer.GetChild(i).gameObject);
             }
-            for (int i = _leftBoard.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_leftBoard.GetChild(i).gameObject);
-            }
-            for (int i = _rightBoard.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_rightBoard.GetChild(i).gameObject);
-            }
-            // The middle box holds up to four seeds; the rest are displayed on boards at the two tablets' place (the tablets step aside meanwhile).
-            int centerCount = Mathf.Min(_candidates.Count, 4);
-            int remaining = _candidates.Count - centerCount;
-            int leftCount = (remaining + 1) / 2;
-            OverlayLift.SetSideTabletsHidden(true);
-            _leftBoard.gameObject.SetActive(leftCount > 0);
-            _rightBoard.gameObject.SetActive(remaining - leftCount > 0);
-            PieceBox.Configure(centerCount);
+            PieceBox.Configure(_candidates.Count);
             for (int i = 0; i < _candidates.Count; i++)
             {
-                if (i < centerCount)
-                {
-                    BuildPreviewCell(_candidates[i], _previewsContainer, PieceBox.CellSize, true);
-                }
-                else if (i < centerCount + leftCount)
-                {
-                    BuildPreviewCell(_candidates[i], _leftBoard, SideCellSize, false);
-                }
-                else
-                {
-                    BuildPreviewCell(_candidates[i], _rightBoard, SideCellSize, false);
-                }
+                BuildPreviewCell(_candidates[i]);
             }
 
             LayoutBlock(card.sizeDelta.y);
@@ -210,9 +156,9 @@ namespace Contigu.Presentation
             _confirmRect.anchoredPosition = new Vector2(0f, y);
         }
 
-        private void BuildPreviewCell(int deckIndex, RectTransform container, float cellSize, bool withDivider)
+        private void BuildPreviewCell(int deckIndex)
         {
-            var cell = PieceBox.CreateCell(container, "Tile_" + deckIndex, cellSize, withDivider);
+            var cell = PieceBox.CreateCell(_previewsContainer, "Tile_" + deckIndex);
             _cellBackgroundByIndex[deckIndex] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
@@ -224,7 +170,7 @@ namespace Contigu.Presentation
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             // Nudged up to leave room at the bottom for the level label below.
             previewContainer.anchoredPosition = new Vector2(0f, LevelLabelHeight * 0.5f);
-            previewContainer.sizeDelta = new Vector2(cellSize * 0.8f, cellSize * 0.8f);
+            previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);
@@ -316,7 +262,6 @@ namespace Contigu.Presentation
         private void OnConfirmClicked()
         {
             _root.gameObject.SetActive(false);
-            OverlayLift.SetSideTabletsHidden(false);
             if (TileChoiceConfirmed != null)
             {
                 TileChoiceConfirmed(new List<int>(_selected));
