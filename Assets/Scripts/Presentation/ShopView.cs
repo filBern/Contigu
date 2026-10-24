@@ -52,7 +52,10 @@ namespace Contigu.Presentation
         // actually turns out to be this refresh, since Blister card height
         // varies with description length.
         private const float ModifierCardsTopY = -124f;
-        private const float SectionGap = 20f;
+        private const float SectionGap = 44f;
+        private const float SectionLabelHeight = 22f;
+        private const float ShelfDepth = 18f;
+        private float _sidePanelCenterX = UpcomingBoxCenterX;
         private const float LabelToCardsGap = 24f;
 
         // Slow, gentle scale wobble on the Lueur readout, same sine-wave
@@ -126,6 +129,7 @@ namespace Contigu.Presentation
         /// <summary>Fires when the player asks to see their seed bag from the shop.</summary>
         public event Action SeedBagRequested;
 
+        private Text _blisterSectionLabel;
         private RectTransform _blisterShelf;
         private RectTransform _workshopShelf;
         private Text _upgradeSectionLabel;
@@ -266,8 +270,9 @@ namespace Contigu.Presentation
             _weatherLabel.rectTransform.offsetMax = new Vector2(-6f, 0f);
 
             var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
-            blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            blisterSection.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _blisterSectionLabel = blisterSection;
+            blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            blisterSection.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             blisterSection.rectTransform.pivot = new Vector2(0.5f, 1f);
             blisterSection.rectTransform.anchoredPosition = new Vector2(0f, -100f);
             blisterSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
@@ -275,8 +280,8 @@ namespace Contigu.Presentation
             _blisterCardsContainer = BuildCardRow("BlisterCards", ModifierCardsTopY);
 
             _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Workshop", 16, UITheme.TextMutedOnBackground);
-            _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _upgradeSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 22f);
 
@@ -363,10 +368,10 @@ namespace Contigu.Presentation
             var board = UIFactory.CreatePanel(_root, name, new Color(0.45f, 0.30f, 0.17f, 1f));
             board.raycastTarget = false;
             var rect = board.rectTransform;
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.sizeDelta = new Vector2(0f, 16f);
+            rect.sizeDelta = new Vector2(600f, 16f);
             var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
             lip.raycastTarget = false;
             lip.rectTransform.anchorMin = new Vector2(0f, 1f);
@@ -387,13 +392,13 @@ namespace Contigu.Presentation
         private RectTransform BuildCardRow(string name, float topOffset)
         {
             var container = UIFactory.CreateUIObject(name, _root);
-            container.anchorMin = new Vector2(0.5f, 1f);
-            container.anchorMax = new Vector2(0.5f, 1f);
+            container.anchorMin = new Vector2(0.5f, 0.5f);
+            container.anchorMax = new Vector2(0.5f, 0.5f);
             container.pivot = new Vector2(0.5f, 1f);
             container.anchoredPosition = new Vector2(0f, topOffset);
 
             var layout = container.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 20f;
+            layout.spacing = 36f;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
@@ -439,6 +444,7 @@ namespace Contigu.Presentation
         /// <summary>Mirrors the fertilizer panel: puts the "Next round" box at +<paramref name="sidePanelCenterX"/> from the screen center (the fertilizers sit at -that), so both side panels are equally far from the middle.</summary>
         public void SetSidePanelCenterX(float sidePanelCenterX)
         {
+            _sidePanelCenterX = sidePanelCenterX;
             _upcomingEncounterBox.anchorMin = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchorMax = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchoredPosition = new Vector2(sidePanelCenterX, 0f);
@@ -540,13 +546,21 @@ namespace Contigu.Presentation
             _lueurLabel.text = run.Lueur.ToString();
             BuildUpcomingEncounterPreview(run);
 
-            float modifierCardHeight = BuildBlisterCards(run);
-            float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
-            _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, upgradeSectionY);
-            _upgradeCardsContainer.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap);
-            // Shelves sit just under each row of cards, in front of the back wall but behind the cards.
-            _blisterShelf.anchoredPosition = new Vector2(0f, ModifierCardsTopY - modifierCardHeight + 4f);
-            _workshopShelf.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap - WorkshopCardHeight + 4f);
+            float rowHeight = BuildBlisterCards(run);
+            // The whole display is centered on the screen, between the two tablets, which sit at the same height.
+            float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
+            float top = blockHeight * 0.5f;
+            float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 12f;
+            _blisterSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, top);
+            _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
+            _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight + 6f);
+            float secondTop = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap;
+            _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, secondTop);
+            _upgradeCardsContainer.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap);
+            _workshopShelf.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap - rowHeight + 6f);
+            // The shelves run exactly from one tablet to the other, so the tablets read as the ends of one display case.
+            _blisterShelf.sizeDelta = new Vector2(shelfWidth, 16f);
+            _workshopShelf.sizeDelta = new Vector2(shelfWidth, 16f);
 
             ClearChildren(_upgradeCardsContainer);
             _upgradeCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = WorkshopCardSpacing;
@@ -771,10 +785,10 @@ namespace Contigu.Presentation
         }
 
         // Workshop items: four of them must fit between the two side panels (fertilizers left, next round right).
-        private const float ShelfItemSize = 140f;
+        private const float ShelfItemSize = 112f;
         private const float WorkshopCardHeight = ShelfItemSize;
         private const float WorkshopCardWidth = ShelfItemSize;
-        private const float WorkshopCardSpacing = 12f;
+        private const float WorkshopCardSpacing = 32f;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {
