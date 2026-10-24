@@ -94,6 +94,12 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        /// <summary>Closes the overlay without resolving it (the purchase was abandoned).</summary>
+        public void Hide()
+        {
+            _root.gameObject.SetActive(false);
+        }
+
         public void Show(IReadOnlyList<ModifierId> activeModifiers, System.Func<int, int> levelProvider, UpgradeDefinition def)
         {
             _candidateIds.Clear();

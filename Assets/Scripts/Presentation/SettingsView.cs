@@ -28,6 +28,11 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private readonly System.Collections.Generic.List<(Text Label, string Text)> _confirmLabels = new System.Collections.Generic.List<(Text, string)>();
 
+        public bool IsVisible
+        {
+            get { return _root != null && _root.gameObject.activeSelf; }
+        }
+
         public RectTransform Build(Transform parent)
         {
             var overlay = UIFactory.CreatePanel(parent, "SettingsOverlay", new Color(0f, 0f, 0f, 0.88f));
@@ -57,9 +62,30 @@ namespace Contigu.Presentation
             BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
             BuildConfirmButton(_root, "MainMenu", "Main menu", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); });
             BuildResetButton(_root);
+            BuildMotionToggle(_root);
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>"Reduced motion" switch: when on, the shop's pops, pulses, swells and shakes are skipped.</summary>
+        private static void BuildMotionToggle(Transform parent)
+        {
+            var button = UIFactory.CreateButton(parent, "ReducedMotion", "", UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(button);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 310f);
+            rect.sizeDelta = new Vector2(300f, 46f);
+            var label = button.GetComponentInChildren<Text>();
+            label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");
+            button.onClick.AddListener(() =>
+            {
+                MotionSettings.Reduced = !MotionSettings.Reduced;
+                label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");
+            });
         }
 
         /// <summary>A two-click button (the first click arms it for a few seconds, the second confirms), for actions that throw progress away.</summary>

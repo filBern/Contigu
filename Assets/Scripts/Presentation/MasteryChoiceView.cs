@@ -51,6 +51,12 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        /// <summary>Closes the overlay without resolving it (the purchase was abandoned).</summary>
+        public void Hide()
+        {
+            _root.gameObject.SetActive(false);
+        }
+
         public void Show(IReadOnlyList<MasteryOption> options, RunManager run)
         {
             for (int i = _cardsRow.childCount - 1; i >= 0; i--)

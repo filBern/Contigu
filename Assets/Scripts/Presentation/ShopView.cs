@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
@@ -150,7 +151,7 @@ namespace Contigu.Presentation
             _blisterShelf = BuildShelf("BlisterShelf");
             _workshopShelf = BuildShelf("WorkshopShelf");
 
-            var header = UIFactory.CreateText(_root, "Header", "The Pollen Shop", 26, UITheme.TextOnBackground);
+            var header = UIFactory.CreateText(_root, "Header", Loc.T("shop.header"), 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -269,7 +270,7 @@ namespace Contigu.Presentation
             _weatherLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
             _weatherLabel.rectTransform.offsetMax = new Vector2(-6f, 0f);
 
-            var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", "Blister", 16, UITheme.TextMutedOnBackground);
+            var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", Loc.T("shop.blister"), 16, UITheme.TextMutedOnBackground);
             _blisterSectionLabel = blisterSection;
             blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             blisterSection.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
@@ -279,7 +280,7 @@ namespace Contigu.Presentation
 
             _blisterCardsContainer = BuildCardRow("BlisterCards", ModifierCardsTopY);
 
-            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", "Workshop", 16, UITheme.TextMutedOnBackground);
+            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", Loc.T("shop.workshop"), 16, UITheme.TextMutedOnBackground);
             _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -300,7 +301,7 @@ namespace Contigu.Presentation
             rerollRect.sizeDelta = new Vector2(220f, 46f);
             _rerollButton.onClick.AddListener(OnRerollClicked);
 
-            _leaveButton = UIFactory.CreateButton(_root, "Leave", "Next round", UISprites.ChooseButtonBackground, 16);
+            _leaveButton = UIFactory.CreateButton(_root, "Leave", Loc.T("shop.nextRound"), UISprites.ChooseButtonBackground, 16);
             UIFactory.DisablePlants(_leaveButton);
             var leaveRect = _leaveButton.GetComponent<RectTransform>();
             leaveRect.anchorMin = new Vector2(0.5f, 0f);
@@ -311,7 +312,7 @@ namespace Contigu.Presentation
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
             // The seed bag is one click away from the shop (Tab still works too).
-            var bagButton = UIFactory.CreateButton(_root, "ShowSeedBag", "Show seed bag (Tab)", UISprites.CancelButtonBackground, 15);
+            var bagButton = UIFactory.CreateButton(_root, "ShowSeedBag", Loc.T("shop.seedBag"), UISprites.CancelButtonBackground, 15);
             UIFactory.DisablePlants(bagButton);
             var bagRect = bagButton.GetComponent<RectTransform>();
             bagRect.anchorMin = new Vector2(0f, 0f);
@@ -468,6 +469,34 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Keyboard/controller entry: while nothing is focused, the first arrow / d-pad press lands on the first buyable item of the shop
+        /// (mouse users never see a focus halo they did not ask for).
+        /// </summary>
+        private void Update()
+        {
+            if (_root == null || !_root.gameObject.activeInHierarchy || EventSystem.current == null || EventSystem.current.currentSelectedGameObject != null)
+            {
+                return;
+            }
+            if (Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.5f && Mathf.Abs(Input.GetAxisRaw("Vertical")) < 0.5f)
+            {
+                return;
+            }
+            foreach (var row in new[] { _blisterCardsContainer, _upgradeCardsContainer })
+            {
+                for (int i = 0; row != null && row.gameObject.activeInHierarchy && i < row.childCount; i++)
+                {
+                    var button = row.GetChild(i).GetComponent<Button>();
+                    if (button != null && button.interactable)
+                    {
+                        EventSystem.current.SetSelectedGameObject(button.gameObject, new AxisEventData(EventSystem.current));
+                        return;
+                    }
+                }
+            }
+        }
+
         public void Show(RunManager run)
         {
             SetSelectionMode(false);
@@ -487,6 +516,10 @@ namespace Contigu.Presentation
         /// <summary>The shop "opens": every card pops in from small with a little overshoot, one after the other, Blister first then the Casino.</summary>
         private System.Collections.IEnumerator PlayCardsEntrance()
         {
+            if (MotionSettings.Reduced)
+            {
+                yield break;
+            }
             var cards = new List<RectTransform>();
             foreach (var container in new[] { _blisterCardsContainer, _upgradeCardsContainer })
             {
@@ -545,6 +578,10 @@ namespace Contigu.Presentation
         /// <summary>Continuous sine-wave scale wobble on the Lueur readout. Runs only while the shop is open, started/stopped by Show/Hide.</summary>
         private System.Collections.IEnumerator PulseLueurLabel()
         {
+            if (MotionSettings.Reduced)
+            {
+                yield break;
+            }
             while (true)
             {
                 float scale = 1f + LueurPulseAmplitude * Mathf.Sin(Time.time * LueurPulseSpeed);
@@ -559,6 +596,10 @@ namespace Contigu.Presentation
             _lueurLabel.text = run.Lueur.ToString();
             BuildUpcomingEncounterPreview(run);
 
+            float gap = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 24f;
+            _itemSize = Mathf.Clamp((gap - 3f * PreferredItemSpacing) / 4f, MinItemSize, MaxItemSize);
+            _itemSpacing = Mathf.Clamp((gap - 4f * _itemSize) / 3f, MinItemSpacing, MaxItemSpacing);
+            _blisterCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = _itemSpacing;
             float rowHeight = BuildBlisterCards(run);
             // The whole display is centered on the screen, between the two tablets, which sit at the same height.
             float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
@@ -576,14 +617,14 @@ namespace Contigu.Presentation
             _workshopShelf.sizeDelta = new Vector2(shelfWidth, 16f);
 
             ClearChildren(_upgradeCardsContainer);
-            _upgradeCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = WorkshopCardSpacing;
+            _upgradeCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = _itemSpacing;
             for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
             {
                 BuildUpgradeCard(run, i);
             }
 
             int rerollPrice = run.GetRerollPrice();
-            _rerollLabel.text = "Reroll (" + rerollPrice + ")";
+            _rerollLabel.text = Loc.T("shop.reroll", rerollPrice);
             _rerollButton.interactable = run.PendingUpgrade == null && run.Lueur >= rerollPrice;
             _leaveButton.interactable = run.PendingUpgrade == null;
         }
@@ -677,26 +718,27 @@ namespace Contigu.Presentation
                 }
                 BuildBlisterItem(run, i, slot);
             }
-            return ShelfItemSize;
+            return _itemSize;
         }
 
         private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
             int price = run.GetBlisterSlotPrice(index);
             bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
-            var item = CreateShelfItem(_blisterCardsContainer, "BlisterSlot_" + index, ShelfItemSize,
+            var item = CreateShelfItem(_blisterCardsContainer, "BlisterSlot_" + index, _itemSize,
                 !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnBlisterBuyClicked(index), out var artRoot);
 
             var hover = item.gameObject.AddComponent<HoverTooltip>();
             if (slot.Kind == ShopSlotKind.Modifier)
             {
                 var modifierDef = ModifierCatalog.Get(slot.ModifierId);
-                var badge = ModifierBadgeFactory.Create(artRoot, modifierDef, ShelfItemSize - 8f, _tooltip, showBackground: false, attachTooltip: false);
+                var badge = ModifierBadgeFactory.Create(artRoot, modifierDef, _itemSize - 8f, _tooltip, showBackground: false, attachTooltip: false);
                 badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                 badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 badge.rectTransform.anchoredPosition = Vector2.zero;
-                hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14), "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category), UITheme.TextMuted);
+                hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14),
+                    ShopReason(Loc.T("shop.fertilizer", ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category)), blocked ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : null, price - run.Lueur), UITheme.TextMuted);
             }
             else
             {
@@ -716,14 +758,15 @@ namespace Contigu.Presentation
                 gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 UIFactory.AddThickOutline(gem, UITheme.Border);
                 hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
-                    "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
+                    ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), null, price - run.Lueur), UITheme.TextMuted);
             }
-            BuildPriceBadge(item, blocked ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : price.ToString(), run.Lueur >= price || blocked, !blocked);
+            BuildPriceBadge(item, blocked ? Loc.T("shop.full", EconomyConstants.MaxActiveModifiers) : price.ToString(), run.Lueur >= price || blocked, !blocked);
         }
 
         /// <summary>
         /// One shelf item: an invisible full-size click target (the item IS the button) holding an "art" child the caller fills, with
-        /// a hover swell. A click without enough Pollen shakes the item instead of buying.
+        /// a hover swell, a keyboard/controller focus halo and tooltip, and a long-press tooltip for touch. A click without enough Pollen
+        /// shakes the item instead of buying.
         /// </summary>
         private RectTransform CreateShelfItem(RectTransform container, string name, float size, bool canInteract, bool affordable, Action onClick, out RectTransform artRoot)
         {
@@ -734,6 +777,16 @@ namespace Contigu.Presentation
             layout.preferredWidth = size;
             layout.preferredHeight = size;
 
+            // A soft golden halo behind the item, only visible while it has keyboard/controller focus.
+            var halo = UIFactory.CreateSlicedImage(root.rectTransform, "FocusHalo", UISprites.CardBackground);
+            halo.color = new Color(0.96f, 0.78f, 0.30f, 0.55f);
+            halo.raycastTarget = false;
+            halo.rectTransform.anchorMin = Vector2.zero;
+            halo.rectTransform.anchorMax = Vector2.one;
+            halo.rectTransform.offsetMin = new Vector2(-8f, -8f);
+            halo.rectTransform.offsetMax = new Vector2(8f, 8f);
+            halo.gameObject.SetActive(false);
+
             artRoot = UIFactory.CreateUIObject("Art", root.rectTransform);
             UIFactory.StretchFull(artRoot);
             if (!canInteract)
@@ -743,7 +796,7 @@ namespace Contigu.Presentation
                 group.blocksRaycasts = false;
             }
             var hoverSwell = root.gameObject.AddComponent<ShelfItemHover>();
-            hoverSwell.Init(artRoot);
+            hoverSwell.Init(artRoot, halo.gameObject);
 
             var button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = root;
@@ -752,14 +805,32 @@ namespace Contigu.Presentation
             var rect = root.rectTransform;
             button.onClick.AddListener(() =>
             {
+                // A long press only asked for the tooltip: it must not also buy.
+                if (hoverSwell.ConsumeLongPress())
+                {
+                    return;
+                }
                 if (!affordable)
                 {
-                    StartCoroutine(ShakeCard(rect));
+                    if (!MotionSettings.Reduced)
+                    {
+                        StartCoroutine(ShakeCard(rect));
+                    }
                     return;
                 }
                 onClick();
             });
             return rect;
+        }
+
+        /// <summary>A tooltip subtitle that says why an item cannot be bought right now (a blocked state, or the Pollen still missing), else the plain category line.</summary>
+        private static string ShopReason(string category, string blockedWhy, int missingPollen)
+        {
+            if (!string.IsNullOrEmpty(blockedWhy))
+            {
+                return blockedWhy;
+            }
+            return missingPollen > 0 ? Loc.T("shop.needPollen", missingPollen) : category;
         }
 
         /// <summary>The price tag in an item's top-right corner: Pollen icon + number (red when the player cannot pay), or just a word ("Full (4)", "Sold").</summary>
@@ -789,6 +860,8 @@ namespace Contigu.Presentation
                 icon.sprite = VisualDefaults.PollenSprite;
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
+                // Not color alone: an unaffordable price also has a faded Pollen icon (and the tooltip says how much is missing).
+                icon.color = affordable ? Color.white : new Color(1f, 1f, 1f, 0.45f);
                 var iconLayout = icon.gameObject.AddComponent<LayoutElement>();
                 iconLayout.preferredWidth = 24f;
                 iconLayout.preferredHeight = 24f;
@@ -798,10 +871,14 @@ namespace Contigu.Presentation
         }
 
         // Workshop items: four of them must fit between the two side panels (fertilizers left, next round right).
-        private const float ShelfItemSize = 112f;
-        private const float WorkshopCardHeight = ShelfItemSize;
-        private const float WorkshopCardWidth = ShelfItemSize;
-        private const float WorkshopCardSpacing = 32f;
+        private const float MaxItemSize = 100f;
+        private const float PreferredItemSpacing = 24f;
+        private const float MinItemSize = 64f;
+        private const float MinItemSpacing = 8f;
+        private const float MaxItemSpacing = 32f;
+        // Recomputed on every Refresh from the room left between the two tablets, so a narrower screen shrinks the items instead of overlapping the tablets.
+        private float _itemSize = MaxItemSize;
+        private float _itemSpacing = MaxItemSpacing;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {
@@ -818,7 +895,7 @@ namespace Contigu.Presentation
             bool fullOfFertilizers = def.Id == UpgradeId.FertilizerPack && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             bool bagTooSmall = def.Id == UpgradeId.Compost && run.Deck.DeckCount <= DeckManager.MinDeckSize;
             bool blocked = fullOfFertilizers || bagTooSmall;
-            var item = CreateShelfItem(_upgradeCardsContainer, "UpgSlot_" + index, ShelfItemSize,
+            var item = CreateShelfItem(_upgradeCardsContainer, "UpgSlot_" + index, _itemSize,
                 !slot.Purchased && !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnUpgradeBuyClicked(index), out var artRoot);
 
             // Every Workshop object is its own picture; the Forge is an anvil with the upgrade's glyph standing on it.
@@ -836,16 +913,18 @@ namespace Contigu.Presentation
                     glyph.sprite = glyphSprite;
                     glyph.preserveAspect = true;
                     glyph.raycastTarget = false;
-                    UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, UpgradeVisualDefaults.GlyphSurface.Anvil, ShelfItemSize);
+                    UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, UpgradeVisualDefaults.GlyphSurface.Anvil, _itemSize);
                 }
             }
 
             // Hover: the whole description (and, for the Forge, what its tile upgrade does).
             var hover = item.gameObject.AddComponent<HoverTooltip>();
-            string body = isForge ? slot.Payload.Name + ": " + slot.Payload.Description + "\nAdd it to any seed of your bag (a wide choice)." : def.Description;
-            hover.Init(_tooltip, isForge ? "Forge: " + slot.Payload.Name : def.Name, DescriptionTextFormatter.Colorize(body, 14), isService ? "Workshop · service" : "Workshop · pack", UITheme.TextMuted);
+            string body = isForge ? Loc.T("shop.forgeBody", slot.Payload.Name, slot.Payload.Description) : def.Description;
+            string why = fullOfFertilizers ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : bagTooSmall ? Loc.T("shop.minBagWhy") : null;
+            hover.Init(_tooltip, isForge ? Loc.T("shop.forgeTitle", slot.Payload.Name) : def.Name, DescriptionTextFormatter.Colorize(body, 14),
+                ShopReason(Loc.T(isService ? "shop.workshopService" : "shop.workshopPack"), why, slot.Purchased ? 0 : price - run.Lueur), UITheme.TextMuted);
 
-            string label = slot.Purchased ? "Sold" : fullOfFertilizers ? "Full (" + EconomyConstants.MaxActiveModifiers + ")" : bagTooSmall ? "Min bag" : price.ToString();
+            string label = slot.Purchased ? Loc.T("shop.sold") : fullOfFertilizers ? Loc.T("shop.full", EconomyConstants.MaxActiveModifiers) : bagTooSmall ? Loc.T("shop.minBag") : price.ToString();
             BuildPriceBadge(item, label, run.Lueur >= price || slot.Purchased || blocked, !slot.Purchased && !blocked);
         }
 
@@ -902,6 +981,10 @@ namespace Contigu.Presentation
         /// <summary>Quick overshoot scale pop on the Lueur readout, played on a successful purchase — pauses the ambient PulseLueurLabel wobble for its duration (both drive the same localScale) and resumes it afterward.</summary>
         public void PlayPurchasePop()
         {
+            if (MotionSettings.Reduced)
+            {
+                return;
+            }
             StartCoroutine(PurchasePopRoutine());
         }
 
@@ -946,6 +1029,11 @@ namespace Contigu.Presentation
                 onComplete();
                 return;
             }
+            if (MotionSettings.Reduced)
+            {
+                onComplete();
+                return;
+            }
             StartCoroutine(BlisterRemoveRoutine(cardTransform, onComplete));
         }
 
@@ -973,6 +1061,10 @@ namespace Contigu.Presentation
         /// <summary>Quick vertical flip-reveal on the Casino row, played after a reroll's new cards are already built (Refresh() runs synchronously right after RerollShop(), so there's no window to animate the old ones away) — scales from flat to a slight overshoot to settled, reading as the new cards flipping into place.</summary>
         public void PlayRerollFlip()
         {
+            if (MotionSettings.Reduced)
+            {
+                return;
+            }
             StartCoroutine(RerollFlipRoutine());
         }
 

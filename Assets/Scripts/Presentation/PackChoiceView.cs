@@ -66,7 +66,7 @@ namespace Contigu.Presentation
             _cardsRow.anchoredPosition = Vector2.zero;
             _cardsRow.sizeDelta = new Vector2(3 * CardWidth + 2 * CardSpacing, CardHeight);
 
-            var skip = UIFactory.CreateButton(_root, "Skip", "Skip this pack", UISprites.CancelButtonBackground, 18);
+            var skip = UIFactory.CreateButton(_root, "Skip", Loc.T("choice.skipPack"), UISprites.CancelButtonBackground, 18);
             UIFactory.DisablePlants(skip);
             var skipRect = skip.GetComponent<RectTransform>();
             skipRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -85,6 +85,12 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>Closes the overlay without resolving it (the purchase was abandoned).</summary>
+        public void Hide()
+        {
+            _root.gameObject.SetActive(false);
         }
 
         public void Show(string title, string hint, IReadOnlyList<PackOption> options)

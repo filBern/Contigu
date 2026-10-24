@@ -138,6 +138,12 @@ namespace Contigu.Presentation
             return rect;
         }
 
+        /// <summary>Closes the overlay without resolving it (the purchase was abandoned).</summary>
+        public void Hide()
+        {
+            _root.gameObject.SetActive(false);
+        }
+
         public void Rebind(DeckManager deck)
         {
             _deck = deck;
@@ -183,7 +189,7 @@ namespace Contigu.Presentation
             hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(def.Description, 14),
                 "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
 
-            _title.text = "Select " + _requiredCount + " seeds";
+            _title.text = Loc.T("choice.selectSeeds", _requiredCount);
 
             for (int i = _previewsContainer.childCount - 1; i >= 0; i--)
             {

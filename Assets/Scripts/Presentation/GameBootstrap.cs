@@ -73,6 +73,8 @@ namespace Contigu.Presentation
         private PieceChoiceView _pieceChoiceView;
         private MasteryChoiceView _masteryChoiceView;
         private PackChoiceView _packChoiceView;
+        private Button _abandonButton;
+        private Text _abandonLabel;
         private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
@@ -193,8 +195,25 @@ namespace Contigu.Presentation
             }
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                _settingsView.Toggle();
+                // Back: close the topmost thing first (settings, then the seed bag, then a purchase in progress); only then open the menu.
+                if (_settingsView.IsVisible)
+                {
+                    _settingsView.Toggle();
+                }
+                else if (_deckView.IsVisible)
+                {
+                    _deckView.Hide();
+                }
+                else if (_run != null && _run.State == RunState.AwaitingShop && _run.PendingUpgrade != null)
+                {
+                    RequestAbandonPurchase();
+                }
+                else
+                {
+                    _settingsView.Toggle();
+                }
             }
+            UpdateAbandonButton();
             if (Input.GetKeyDown(KeyCode.X))
             {
                 TrySellHoveredModifier();
@@ -390,6 +409,7 @@ namespace Contigu.Presentation
             var mainRoot = UIFactory.CreateUIObject("MainRoot", canvas);
             UIFactory.StretchFull(mainRoot);
             _mainRoot = mainRoot;
+            mainRoot.gameObject.AddComponent<SafeAreaFitter>();
 
             _comboView = gameObject.AddComponent<ComboView>();
             var comboRect = _comboView.Build(mainRoot);
@@ -499,6 +519,18 @@ namespace Contigu.Presentation
 
             _packChoiceView = gameObject.AddComponent<PackChoiceView>();
             _packChoiceView.Build(mainRoot);
+
+            _abandonButton = UIFactory.CreateButton(mainRoot, "AbandonPurchase", Loc.T("choice.abandon"), UISprites.CancelButtonBackground, 15);
+            UIFactory.DisablePlants(_abandonButton);
+            _abandonLabel = _abandonButton.GetComponentInChildren<Text>();
+            var abandonRect = _abandonButton.GetComponent<RectTransform>();
+            abandonRect.anchorMin = new Vector2(1f, 0f);
+            abandonRect.anchorMax = new Vector2(1f, 0f);
+            abandonRect.pivot = new Vector2(1f, 0f);
+            abandonRect.anchoredPosition = new Vector2(-16f, 40f);
+            abandonRect.sizeDelta = new Vector2(330f, 46f);
+            _abandonButton.onClick.AddListener(RequestAbandonPurchase);
+            _abandonButton.gameObject.SetActive(false);
 
             _modifierUpgradeChoiceView = gameObject.AddComponent<ModifierUpgradeChoiceView>();
             _modifierUpgradeChoiceView.Build(mainRoot, _tooltipView);

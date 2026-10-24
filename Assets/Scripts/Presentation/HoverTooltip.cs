@@ -24,9 +24,23 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            ShowNow();
+        }
+
+        /// <summary>Shows the tooltip without a pointer: keyboard/controller focus or a touch long-press.</summary>
+        public void ShowNow()
+        {
             if (_tooltip != null)
             {
                 _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, placeAbove: true);
+            }
+        }
+
+        public void HideNow()
+        {
+            if (_tooltip != null)
+            {
+                _tooltip.Hide();
             }
         }
 

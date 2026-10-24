@@ -173,12 +173,12 @@ namespace Contigu.Presentation
                 {
                     Name = upgrade.Name,
                     Description = DescriptionTextFormatter.Colorize(upgrade.Description, 15),
-                    Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity),
+                    Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
                     Icon = UpgradeVisualDefaults.GetIcon(upgrade.Id),
                     Accent = UpgradeVisualDefaults.GetRarityColor(upgrade.Rarity)
                 });
             }
-            _packChoiceView.Show("Sprout Pack", "Pick one, then choose the seed that gets it", options);
+            _packChoiceView.Show(Loc.T("choice.sproutPack"), Loc.T("choice.sproutPackHint"), options);
         }
 
         private void ShowPackOfModifiers()
@@ -191,12 +191,12 @@ namespace Contigu.Presentation
                 {
                     Name = def.Name,
                     Description = DescriptionTextFormatter.Colorize(def.Description, 15),
-                    Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(def.Category),
+                    Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category)),
                     Icon = ModifierVisualDefaults.GetIcon(id),
                     Accent = ModifierVisualDefaults.GetCategoryColor(def.Category)
                 });
             }
-            _packChoiceView.Show("Fertilizer Pack", "Pick one fertilizer to keep", options);
+            _packChoiceView.Show(Loc.T("choice.fertilizerPack"), Loc.T("choice.fertilizerPackHint"), options);
         }
 
         private void OnPackOptionChosen(int index)
@@ -221,6 +221,63 @@ namespace Contigu.Presentation
             _run.SkipPack();
             RefreshAll();
             _shopView.Refresh(_run);
+        }
+
+        // ------------------------------------------------------------ abandoning a purchase (Esc / the "Cancel purchase" button)
+
+        private float _abandonArmedAt = -10f;
+
+        /// <summary>
+        /// Gives up the choice in progress (no refund). The first request only arms it (a purchase is a point of no return), the second one
+        /// within a few seconds confirms.
+        /// </summary>
+        private void RequestAbandonPurchase()
+        {
+            if (_run == null || _run.State != RunState.AwaitingShop || _run.PendingUpgrade == null)
+            {
+                return;
+            }
+            if (Time.unscaledTime - _abandonArmedAt > 4f)
+            {
+                _abandonArmedAt = Time.unscaledTime;
+                _abandonLabel.text = Loc.T("choice.abandonConfirm");
+                return;
+            }
+            _abandonArmedAt = -10f;
+            _run.AbandonPending();
+            _packChoiceView.Hide();
+            _tileChoiceView.Hide();
+            _pieceChoiceView.Hide();
+            _masteryChoiceView.Hide();
+            _modifierUpgradeChoiceView.Hide();
+            _draftView.Hide();
+            _shopView.SetSelectionMode(false);
+            RefreshAll();
+            _shopView.Refresh(_run);
+        }
+
+        /// <summary>Shows the "Cancel purchase" button above every overlay while a choice is pending in the shop.</summary>
+        private void UpdateAbandonButton()
+        {
+            bool show = _run != null && _run.State == RunState.AwaitingShop && _run.PendingUpgrade != null;
+            if (_abandonButton.gameObject.activeSelf != show)
+            {
+                _abandonButton.gameObject.SetActive(show);
+                _abandonLabel.text = Loc.T("choice.abandon");
+                _abandonArmedAt = -10f;
+            }
+            if (show)
+            {
+                if (Time.unscaledTime - _abandonArmedAt > 4f && _abandonLabel.text != Loc.T("choice.abandon"))
+                {
+                    _abandonLabel.text = Loc.T("choice.abandon");
+                }
+                var rect = _abandonButton.transform;
+                if (rect.GetSiblingIndex() != rect.parent.childCount - 1)
+                {
+                    rect.SetAsLastSibling();
+                }
+            }
         }
 
         private void OnSubChoiceConfirmed(UpgradeSubChoice subChoice)

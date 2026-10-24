@@ -99,6 +99,22 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void AbandonPending_ClosesAnyChoice_WithoutRefund()
+        {
+            var run = ShopRun();
+            Assert.IsFalse(run.AbandonPending());
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.SeedPack);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.IsNotNull(run.PendingUpgrade);
+            Assert.Greater(run.PendingUpgradePieceCandidates.Count, 0);
+            int afterBuy = run.Lueur;
+            Assert.IsTrue(run.AbandonPending());
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingUpgradePieceCandidates.Count);
+            Assert.AreEqual(afterBuy, run.Lueur);
+        }
+
+        [Test]
         public void FertilizerPack_IsNotOffered_WhenTheGardenIsFull()
         {
             var run = ShopRun();

@@ -154,6 +154,26 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>
+        /// Gives up whatever choice is pending (a pack's options, a seed to upgrade, a type to compost...) without taking anything.
+        /// The Pollen already paid is not refunded. False when nothing was pending.
+        /// </summary>
+        public bool AbandonPending()
+        {
+            if (PendingUpgrade == null)
+            {
+                return false;
+            }
+            PendingUpgrade = null;
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
+            PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
+            PendingPackUpgrades = System.Array.Empty<UpgradeDefinition>();
+            PendingPackModifiers = System.Array.Empty<ModifierId>();
+            PendingMasteryOptions = System.Array.Empty<MasteryOption>();
+            return true;
+        }
+
         /// <summary>Compost: removes one seed of the chosen type from the bag (never below the minimum bag size).</summary>
         private bool ResolveCompost(UpgradeSubChoice subChoice)
         {
