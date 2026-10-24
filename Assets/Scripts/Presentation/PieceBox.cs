@@ -42,14 +42,8 @@ namespace Contigu.Presentation
         /// <summary>Sizes the cells for <paramref name="count"/> candidates; call before building the cells and measuring the block.</summary>
         public static void Configure(int count)
         {
-            Configure(count, _availableWidth);
-        }
-
-        /// <summary>Same, for an explicit width budget (a box that must stay clear of boards standing next to it).</summary>
-        public static void Configure(int count, float availableWidth)
-        {
             int n = Mathf.Max(1, count);
-            float usable = availableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
+            float usable = _availableWidth - BoxPadding * 2f - (n - 1) * DividerWidth;
             CellSize = Mathf.Clamp(usable / n, MinCellSize, MaxCellSize);
         }
 
