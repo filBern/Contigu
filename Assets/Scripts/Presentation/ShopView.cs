@@ -126,6 +126,8 @@ namespace Contigu.Presentation
         /// <summary>Fires when the player asks to see their seed bag from the shop.</summary>
         public event Action SeedBagRequested;
 
+        private RectTransform _blisterShelf;
+        private RectTransform _workshopShelf;
         private Text _upgradeSectionLabel;
         private RectTransform _upgradeCardsContainer;
         private Button _rerollButton;
@@ -136,15 +138,19 @@ namespace Contigu.Presentation
         {
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "ShopOverlay", new Color(0f, 0f, 0f, 0.82f));
+            // Opaque: the HUD behind must not show through, the shop is its own place (a market stall's back wall, awning and shelves).
+            var overlay = UIFactory.CreatePanel(parent, "ShopOverlay", new Color(0.19f, 0.13f, 0.10f, 1f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            BuildStallBackdrop();
+            _blisterShelf = BuildShelf("BlisterShelf");
+            _workshopShelf = BuildShelf("WorkshopShelf");
 
             var header = UIFactory.CreateText(_root, "Header", "The Pollen Shop", 26, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -24f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -38f);
             header.rectTransform.sizeDelta = new Vector2(900f, 36f);
 
             // Diamond icon instead of a "Lueur: " text prefix, consistent
@@ -320,6 +326,64 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        /// <summary>Back wall planks and a striped awning along the top, so the shop reads as a stall rather than a dimmed game screen.</summary>
+        private void BuildStallBackdrop()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                var plank = UIFactory.CreatePanel(_root, "Plank_" + i, i % 2 == 0 ? new Color(0.22f, 0.15f, 0.11f, 1f) : new Color(0.17f, 0.115f, 0.085f, 1f));
+                plank.raycastTarget = false;
+                plank.rectTransform.anchorMin = new Vector2(i / 16f, 0f);
+                plank.rectTransform.anchorMax = new Vector2((i + 1) / 16f, 1f);
+                plank.rectTransform.offsetMin = Vector2.zero;
+                plank.rectTransform.offsetMax = Vector2.zero;
+            }
+            for (int i = 0; i < 16; i++)
+            {
+                var stripe = UIFactory.CreatePanel(_root, "Awning_" + i, i % 2 == 0 ? new Color(0.78f, 0.25f, 0.22f, 1f) : new Color(0.96f, 0.91f, 0.78f, 1f));
+                stripe.raycastTarget = false;
+                stripe.rectTransform.anchorMin = new Vector2(i / 16f, 1f);
+                stripe.rectTransform.anchorMax = new Vector2((i + 1) / 16f, 1f);
+                stripe.rectTransform.pivot = new Vector2(0.5f, 1f);
+                stripe.rectTransform.anchoredPosition = Vector2.zero;
+                stripe.rectTransform.sizeDelta = new Vector2(0f, 30f);
+            }
+            var awningEdge = UIFactory.CreatePanel(_root, "AwningEdge", new Color(0.08f, 0.05f, 0.04f, 0.85f));
+            awningEdge.raycastTarget = false;
+            awningEdge.rectTransform.anchorMin = new Vector2(0f, 1f);
+            awningEdge.rectTransform.anchorMax = new Vector2(1f, 1f);
+            awningEdge.rectTransform.pivot = new Vector2(0.5f, 1f);
+            awningEdge.rectTransform.anchoredPosition = new Vector2(0f, -30f);
+            awningEdge.rectTransform.sizeDelta = new Vector2(0f, 8f);
+        }
+
+        /// <summary>A wooden display shelf spanning the screen; positioned under a row of cards on every Refresh.</summary>
+        private RectTransform BuildShelf(string name)
+        {
+            var board = UIFactory.CreatePanel(_root, name, new Color(0.45f, 0.30f, 0.17f, 1f));
+            board.raycastTarget = false;
+            var rect = board.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, 16f);
+            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
+            lip.raycastTarget = false;
+            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
+            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
+            lip.rectTransform.anchoredPosition = Vector2.zero;
+            lip.rectTransform.sizeDelta = new Vector2(0f, 5f);
+            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(0f, 0f, 0f, 0.35f));
+            shadow.raycastTarget = false;
+            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
+            shadow.rectTransform.anchorMax = new Vector2(1f, 0f);
+            shadow.rectTransform.pivot = new Vector2(0.5f, 1f);
+            shadow.rectTransform.anchoredPosition = Vector2.zero;
+            shadow.rectTransform.sizeDelta = new Vector2(0f, 14f);
+            return rect;
+        }
+
         private RectTransform BuildCardRow(string name, float topOffset)
         {
             var container = UIFactory.CreateUIObject(name, _root);
@@ -480,6 +544,9 @@ namespace Contigu.Presentation
             float upgradeSectionY = ModifierCardsTopY - modifierCardHeight - SectionGap;
             _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, upgradeSectionY);
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap);
+            // Shelves sit just under each row of cards, in front of the back wall but behind the cards.
+            _blisterShelf.anchoredPosition = new Vector2(0f, ModifierCardsTopY - modifierCardHeight + 4f);
+            _workshopShelf.anchoredPosition = new Vector2(0f, upgradeSectionY - LabelToCardsGap - WorkshopCardHeight + 4f);
 
             ClearChildren(_upgradeCardsContainer);
             _upgradeCardsContainer.GetComponent<HorizontalLayoutGroup>().spacing = WorkshopCardSpacing;
