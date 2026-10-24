@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +15,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class TileChoiceView : MonoBehaviour
     {
-        private const float LevelLabelHeight = 18f;
+        private const float SignSize = 120f;
         private const float BadgeFadeDuration = 0.35f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
@@ -158,7 +159,18 @@ namespace Contigu.Presentation
             {
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
-            var card = UpgradeCardFactory.Build(_cardContainer, def);
+            // Only the upgrade's sign: its name, category and description are in the hover tooltip.
+            var card = UIFactory.CreatePanel(_cardContainer, "UpgradeSign", Color.white);
+            card.sprite = UpgradeVisualDefaults.GetIcon(def.Id);
+            card.preserveAspect = true;
+            card.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            card.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            card.rectTransform.pivot = new Vector2(0.5f, 1f);
+            card.rectTransform.anchoredPosition = Vector2.zero;
+            card.rectTransform.sizeDelta = new Vector2(SignSize, SignSize);
+            var hover = card.gameObject.AddComponent<HoverTooltip>();
+            hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(def.Description, 14),
+                "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);
 
             _title.text = "Select " + _requiredCount + " seeds";
 
@@ -181,7 +193,7 @@ namespace Contigu.Presentation
             _previewsContainer2.gameObject.SetActive(_candidates.Count > firstRow);
             _shelf2.gameObject.SetActive(_candidates.Count > firstRow);
 
-            LayoutBlock(card.sizeDelta.y);
+            LayoutBlock(SignSize);
 
             RefreshConfirmInteractable();
             _root.gameObject.SetActive(true);
@@ -232,22 +244,11 @@ namespace Contigu.Presentation
             previewContainer.anchorMin = new Vector2(0.5f, 0.5f);
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            // Nudged up to leave room at the bottom for the level label below.
-            previewContainer.anchoredPosition = new Vector2(0f, LevelLabelHeight * 0.5f);
+            previewContainer.anchoredPosition = Vector2.zero;
             previewContainer.sizeDelta = new Vector2(PieceBox.PreviewSize, PieceBox.PreviewSize);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);
-
-            var token = _deck.Deck[deckIndex];
-            int level = _run.GetColorMasteryLevel(token.Color) + _run.GetShapeMasteryLevel(token.Shape) - 1;
-            var levelLabel = UIFactory.CreateText(cell.transform, "PieceLevel", "Lv. " + level, 13, Color.black);
-            levelLabel.raycastTarget = false;
-            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
-            levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
-            levelLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
-            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, 1f);
-            levelLabel.rectTransform.sizeDelta = new Vector2(0f, LevelLabelHeight);
         }
 
         /// <summary>(Re)draws the piece preview for <paramref name="deckIndex"/> — plain when not selected, or with the actual trait this upgrade grants when <paramref name="showTrait"/> is true. The trait shown is a preview only — DeckManager.TagSpecificTokens still picks the real cell/color once confirmed.</summary>
