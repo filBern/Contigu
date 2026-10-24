@@ -38,6 +38,8 @@ namespace Contigu.Presentation
         private RectTransform _leftBoard;
         private RectTransform _rightBoard;
         private const float SideCellSize = 104f;
+        private int _leftRows;
+        private int _rightRows;
         private Button _confirmButton;
         private RectTransform _confirmRect;
 
@@ -169,7 +171,11 @@ namespace Contigu.Presentation
             OverlayLift.SetSideTabletsHidden(true);
             _leftBoard.gameObject.SetActive(leftCount > 0);
             _rightBoard.gameObject.SetActive(remaining - leftCount > 0);
-            PieceBox.Configure(centerCount);
+            // The middle box stays clear of the side boards: the room between the two tablets' places, minus a gap.
+            float middleWidth = 2f * (PieceBox.SidePanelCenterX - ModifierPanelView.PanelWidth * 0.5f) - 40f;
+            PieceBox.Configure(centerCount, middleWidth);
+            _leftRows = (leftCount + 1) / 2;
+            _rightRows = ((remaining - leftCount) + 1) / 2;
             for (int i = 0; i < _candidates.Count; i++)
             {
                 if (i < centerCount)
@@ -205,9 +211,20 @@ namespace Contigu.Presentation
             y -= TitleHeight + BlockSpacing;
 
             _previewsContainer.anchoredPosition = new Vector2(0f, y);
+            // The side boards stand level with the middle box (the whole block is laid out from the canvas top).
+            float boxCenterFromMiddle = y - PieceBox.BoxHeight * 0.5f + CanvasHeight * 0.5f;
+            PlaceBoard(_leftBoard, _leftRows, boxCenterFromMiddle);
+            PlaceBoard(_rightBoard, _rightRows, boxCenterFromMiddle);
             y -= PieceBox.BoxHeight + BlockSpacing;
 
             _confirmRect.anchoredPosition = new Vector2(0f, y);
+        }
+
+        private void PlaceBoard(RectTransform board, int rows, float centerY)
+        {
+            float height = Mathf.Max(150f, rows * (SideCellSize + 4f) + 32f);
+            board.sizeDelta = new Vector2(ModifierPanelView.PanelWidth, height);
+            board.anchoredPosition = new Vector2(board.anchoredPosition.x, centerY);
         }
 
         private void BuildPreviewCell(int deckIndex, RectTransform container, float cellSize, bool withDivider)
