@@ -143,7 +143,7 @@ namespace Contigu.Presentation
             _deck = deck;
         }
 
-        public void Show(RunManager run, DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def)
+        public void Show(RunManager run, DeckManager deck, IReadOnlyList<int> candidateDeckIndices, int requiredCount, UpgradeDefinition def, UpgradeId? source = null)
         {
             _run = run;
             _deck = deck;
@@ -159,15 +159,39 @@ namespace Contigu.Presentation
             {
                 Destroy(_cardContainer.GetChild(i).gameObject);
             }
-            // Only the upgrade's sign: its name, category and description are in the hover tooltip.
-            var card = UIFactory.CreatePanel(_cardContainer, "UpgradeSign", Color.white);
-            card.sprite = UpgradeVisualDefaults.GetIcon(def.Id);
+            // The shop object that led here (the anvil with the upgrade's glyph, the pack's crate, or the upgrade's own sign); its name, category and description are in the hover tooltip.
+            var card = UIFactory.CreatePanel(_cardContainer, "Source", Color.white);
+            card.sprite = source == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
+                : source == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")
+                : UpgradeVisualDefaults.GetIcon(def.Id);
             card.preserveAspect = true;
             card.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             card.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             card.rectTransform.pivot = new Vector2(0.5f, 1f);
             card.rectTransform.anchoredPosition = Vector2.zero;
             card.rectTransform.sizeDelta = new Vector2(SignSize, SignSize);
+            var glyphSprite = source.HasValue ? UpgradeVisualDefaults.GetGlyph(def.Id) : null;
+            if (glyphSprite != null)
+            {
+                var glyph = UIFactory.CreatePanel(card.transform, "Glyph", Color.white);
+                glyph.sprite = glyphSprite;
+                glyph.preserveAspect = true;
+                glyph.raycastTarget = false;
+                glyph.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                glyph.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                if (source == UpgradeId.Forge)
+                {
+                    glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
+                    glyph.rectTransform.anchoredPosition = new Vector2(0f, SignSize * 0.015f);
+                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.56f, SignSize * 0.56f);
+                }
+                else
+                {
+                    glyph.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.125f);
+                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.36f, SignSize * 0.36f);
+                }
+            }
             var hover = card.gameObject.AddComponent<HoverTooltip>();
             hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(def.Description, 14),
                 "Upgrade · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", ""), UITheme.TextMuted);

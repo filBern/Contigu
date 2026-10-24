@@ -137,7 +137,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Pool == UpgradePool.Grid)
             {
-                ShowTileChoiceInShop(pending);
+                ShowTileChoiceInShop(pending, revealedUpgrade != null && revealedUpgrade.Pool == UpgradePool.Workshop ? revealedUpgrade.Id : (UpgradeId?)null);
             }
             else if (pending.Id == UpgradeId.RandomPiece)
             {
@@ -158,10 +158,10 @@ namespace Contigu.Presentation
         }
 
         /// <summary>The seed choice replaces the shop's shelves on the same screen (same backdrop, same tablets) instead of opening a separate overlay.</summary>
-        private void ShowTileChoiceInShop(UpgradeDefinition upgrade)
+        private void ShowTileChoiceInShop(UpgradeDefinition upgrade, UpgradeId? source = null)
         {
             _shopView.SetSelectionMode(true);
-            _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, upgrade);
+            _tileChoiceView.Show(_run, _run.Deck, _run.PendingUpgradeTileCandidates, EconomyConstants.ShopTileChoiceCount, upgrade, source);
         }
 
         private void ShowPackOfUpgrades()
@@ -207,7 +207,7 @@ namespace Contigu.Presentation
                 if (_run.ResolvePackUpgradeChoice(index))
                 {
                     var chosen = _run.PendingUpgrade;
-                    ShowTileChoiceInShop(chosen);
+                    ShowTileChoiceInShop(chosen, UpgradeId.SproutPack);
                 }
                 return;
             }
