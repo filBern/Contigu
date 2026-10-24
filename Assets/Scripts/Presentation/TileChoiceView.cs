@@ -35,6 +35,11 @@ namespace Contigu.Presentation
         private RectTransform _cardContainer;
         private Text _title;
         private RectTransform _previewsContainer;
+        private RectTransform _previewsContainer2;
+        private RectTransform _shelf1;
+        private RectTransform _shelf2;
+        private const float ShelfHeight = 16f;
+        private const float RowGap = 6f;
         private Button _confirmButton;
         private RectTransform _confirmRect;
 
@@ -70,19 +75,10 @@ namespace Contigu.Presentation
             // Vertical position set in Show(), as part of the whole block's layout — see LayoutBlock.
             _title.rectTransform.sizeDelta = new Vector2(700f, 40f);
 
-            _previewsContainer = UIFactory.CreateUIObject("Previews", _root);
-            _previewsContainer.anchorMin = new Vector2(0.5f, 1f);
-            _previewsContainer.anchorMax = new Vector2(0.5f, 1f);
-            _previewsContainer.pivot = new Vector2(0.5f, 1f);
-            var layout = _previewsContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12f;
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = _previewsContainer.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            PieceBox.Setup(_previewsContainer);
+            _previewsContainer = BuildSeedRow("Previews");
+            _shelf1 = BuildShelf("Shelf1");
+            _previewsContainer2 = BuildSeedRow("Previews2");
+            _shelf2 = BuildShelf("Shelf2");
 
             _confirmButton = UIFactory.CreateButton(_root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
             _confirmRect = _confirmButton.GetComponent<RectTransform>();
@@ -95,6 +91,50 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>One bare row of seeds: no parchment box, just the seeds side by side, resting on a shelf below.</summary>
+        private RectTransform BuildSeedRow(string name)
+        {
+            var row = UIFactory.CreateUIObject(name, _root);
+            row.anchorMin = new Vector2(0.5f, 1f);
+            row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.LowerCenter;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            var fitter = row.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return row;
+        }
+
+        /// <summary>A wooden shelf (same look as the shop's display shelves) under a row of seeds.</summary>
+        private RectTransform BuildShelf(string name)
+        {
+            var board = UIFactory.CreatePanel(_root, name, new Color(0.45f, 0.30f, 0.17f, 1f));
+            board.raycastTarget = false;
+            var rect = board.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
+            lip.raycastTarget = false;
+            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
+            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
+            lip.rectTransform.anchoredPosition = Vector2.zero;
+            lip.rectTransform.sizeDelta = new Vector2(0f, 5f);
+            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(0f, 0f, 0f, 0.35f));
+            shadow.raycastTarget = false;
+            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
+            shadow.rectTransform.anchorMax = new Vector2(1f, 0f);
+            shadow.rectTransform.pivot = new Vector2(0.5f, 1f);
+            shadow.rectTransform.anchoredPosition = Vector2.zero;
+            shadow.rectTransform.sizeDelta = new Vector2(0f, 14f);
+            return rect;
         }
 
         public void Rebind(DeckManager deck)
@@ -126,11 +166,20 @@ namespace Contigu.Presentation
             {
                 Destroy(_previewsContainer.GetChild(i).gameObject);
             }
-            PieceBox.Configure(_candidates.Count);
+            for (int i = _previewsContainer2.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_previewsContainer2.GetChild(i).gameObject);
+            }
+            // Two rows (a second one only when needed), sized to stay between the two tablets.
+            int firstRow = (_candidates.Count + 1) / 2;
+            float middleWidth = 2f * (PieceBox.SidePanelCenterX - ModifierPanelView.PanelWidth * 0.5f) - 40f;
+            PieceBox.Configure(Mathf.Max(1, firstRow), middleWidth);
             for (int i = 0; i < _candidates.Count; i++)
             {
-                BuildPreviewCell(_candidates[i]);
+                BuildPreviewCell(_candidates[i], i < firstRow ? _previewsContainer : _previewsContainer2);
             }
+            _previewsContainer2.gameObject.SetActive(_candidates.Count > firstRow);
+            _shelf2.gameObject.SetActive(_candidates.Count > firstRow);
 
             LayoutBlock(card.sizeDelta.y);
 
@@ -141,7 +190,9 @@ namespace Contigu.Presentation
         /// <summary>Stacks card/title/previews/Confirm as one block and centers it vertically in the overlay. Every height here is either measured (the card) or a fixed constant, never guessed.</summary>
         private void LayoutBlock(float cardHeight)
         {
-            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + PieceBox.BoxHeight + BlockSpacing + ConfirmHeight;
+            float rowHeight = PieceBox.CellSize + RowGap;
+            int rows = _previewsContainer2.gameObject.activeSelf ? 2 : 1;
+            float totalHeight = cardHeight + BlockSpacing + TitleHeight + BlockSpacing + rows * (rowHeight + ShelfHeight + 8f) + BlockSpacing + ConfirmHeight;
             float topY = -Mathf.Max(20f, (CanvasHeight - totalHeight) / 2f);
 
             _cardContainer.anchoredPosition = new Vector2(0f, topY);
@@ -150,15 +201,28 @@ namespace Contigu.Presentation
             _title.rectTransform.anchoredPosition = new Vector2(0f, y);
             y -= TitleHeight + BlockSpacing;
 
-            _previewsContainer.anchoredPosition = new Vector2(0f, y);
-            y -= PieceBox.BoxHeight + BlockSpacing;
+            float shelfWidth = Mathf.Max(PieceBox.CellSize * Mathf.Ceil(_candidates.Count / 2f) + 40f, 280f);
+            y = PlaceRow(_previewsContainer, _shelf1, y, rowHeight, shelfWidth);
+            if (rows == 2)
+            {
+                y = PlaceRow(_previewsContainer2, _shelf2, y, rowHeight, shelfWidth);
+            }
+            y -= BlockSpacing - 8f;
 
             _confirmRect.anchoredPosition = new Vector2(0f, y);
         }
 
-        private void BuildPreviewCell(int deckIndex)
+        private static float PlaceRow(RectTransform row, RectTransform shelf, float y, float rowHeight, float shelfWidth)
         {
-            var cell = PieceBox.CreateCell(_previewsContainer, "Tile_" + deckIndex);
+            row.anchoredPosition = new Vector2(0f, y);
+            shelf.anchoredPosition = new Vector2(0f, y - rowHeight + 4f);
+            shelf.sizeDelta = new Vector2(shelfWidth, ShelfHeight);
+            return y - rowHeight - ShelfHeight - 8f;
+        }
+
+        private void BuildPreviewCell(int deckIndex, RectTransform row)
+        {
+            var cell = PieceBox.CreateCell(row, "Tile_" + deckIndex, PieceBox.CellSize, false);
             _cellBackgroundByIndex[deckIndex] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
