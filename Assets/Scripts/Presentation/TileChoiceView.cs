@@ -182,14 +182,14 @@ namespace Contigu.Presentation
                 if (source == UpgradeId.Forge)
                 {
                     glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
-                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.08f);
-                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.56f, SignSize * 0.56f);
+                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.015f);
+                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.42f, SignSize * 0.42f);
                 }
                 else
                 {
                     glyph.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                     glyph.rectTransform.anchoredPosition = new Vector2(0f, -SignSize * 0.125f);
-                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.36f, SignSize * 0.36f);
+                    glyph.rectTransform.sizeDelta = new Vector2(SignSize * 0.30f, SignSize * 0.30f);
                 }
             }
             var hover = card.gameObject.AddComponent<HoverTooltip>();
