@@ -187,7 +187,7 @@ namespace Contigu.Presentation
             var row = UIFactory.CreateUIObject(name, root);
             TopCenter(row);
             var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 4f;
+            layout.spacing = 14f;
             layout.childAlignment = TextAnchor.LowerCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;

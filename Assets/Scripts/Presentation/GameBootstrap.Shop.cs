@@ -279,8 +279,7 @@ namespace Contigu.Presentation
                     },
                     Name = name,
                     Body = Loc.T("choice.masteryBody", levelNow, levelNow + o.Gain, o.Gain, levelNow + o.Gain - 1),
-                    Subtitle = Loc.T("choice.masteryTag"),
-                    FillCell = true
+                    Subtitle = Loc.T("choice.masteryTag")
                 });
             }
             ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, false, OnMasteryOptionChosen);
