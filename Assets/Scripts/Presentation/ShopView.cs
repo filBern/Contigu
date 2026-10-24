@@ -736,18 +736,22 @@ namespace Contigu.Presentation
         private const float WorkshopCardHeight = 238f;
         // Four cards must fit between the two side panels (fertilizers left, next round right), so they are narrower than Blister cards.
         private const float WorkshopCardWidth = 140f;
+        // A Workshop card is a dark green crate with a golden rim and cream text, so it never reads as a (cream parchment) Blister card.
+        private static readonly Color WorkshopCardColor = new Color(0.17f, 0.33f, 0.27f);
+        private static readonly Color WorkshopOutlineColor = new Color(0.96f, 0.78f, 0.30f);
+        private static readonly Color WorkshopTextColor = new Color(1f, 0.96f, 0.84f);
         private const float WorkshopCardSpacing = 12f;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {
             var slot = run.ShopUpgradeSlots[index];
             var card = UIFactory.CreateSlicedImage(_upgradeCardsContainer, "UpgSlot_" + index, UISprites.CardBackground);
-            card.color = UITheme.Panel;
+            card.color = WorkshopCardColor;
             card.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth, WorkshopCardHeight);
             var cardLayout = card.gameObject.AddComponent<LayoutElement>();
             cardLayout.preferredWidth = WorkshopCardWidth;
             cardLayout.preferredHeight = WorkshopCardHeight;
-            UIFactory.AddThickOutline(card, UITheme.Border);
+            UIFactory.AddThickOutline(card, WorkshopOutlineColor);
 
             if (slot == null)
             {
@@ -759,14 +763,14 @@ namespace Contigu.Presentation
             bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
 
             // Packs and services are fully visible: name on top, art, one line saying what you get.
-            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 17, UITheme.TextPrimary);
+            var nameLabel = UIFactory.CreateText(card.transform, "Pool", def.Name, 17, WorkshopTextColor);
             nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -10f);
             nameLabel.rectTransform.sizeDelta = new Vector2(WorkshopCardWidth - 16f, 28f);
 
-            var typeLabel = UIFactory.CreateText(card.transform, "Kind", isService ? "Service" : "Pack", 12, UITheme.TextMuted);
+            var typeLabel = UIFactory.CreateText(card.transform, "Kind", isService ? "Service" : "Pack", 12, WorkshopOutlineColor);
             typeLabel.fontStyle = FontStyle.Italic;
             typeLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             typeLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -788,7 +792,7 @@ namespace Contigu.Presentation
                 art.rectTransform.sizeDelta = new Vector2(76f, 76f);
             }
 
-            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 13, UITheme.TextPrimary);
+            var blurb = UIFactory.CreateText(card.transform, "Blurb", WorkshopBlurb(slot), 13, WorkshopTextColor);
             blurb.raycastTarget = false;
             blurb.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             blurb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
