@@ -54,10 +54,12 @@ namespace Contigu.Presentation
         // varies with description length.
         private const float ModifierCardsTopY = -124f;
         private const float SectionGap = 44f;
-        private const float SectionLabelHeight = 22f;
+        private const float SectionLabelHeight = 0f;
         private const float ShelfDepth = 18f;
         private float _sidePanelCenterX = UpcomingBoxCenterX;
-        private const float LabelToCardsGap = 24f;
+        // Section plaque (36) + the air under it.
+        private const float LabelToCardsGap = 54f;
+        private const float PlaqueHeight = 36f;
 
         // Slow, gentle scale wobble on the Lueur readout, same sine-wave
         // technique as GameBootstrap's PulseStatusText.
@@ -130,10 +132,10 @@ namespace Contigu.Presentation
         /// <summary>Fires when the player asks to see their seed bag from the shop.</summary>
         public event Action SeedBagRequested;
 
-        private Text _blisterSectionLabel;
+        private RectTransform _blisterPlaque;
         private RectTransform _blisterShelf;
         private RectTransform _workshopShelf;
-        private Text _upgradeSectionLabel;
+        private RectTransform _upgradePlaque;
         private RectTransform _upgradeCardsContainer;
         private Button _rerollButton;
         private Text _rerollLabel;
@@ -270,21 +272,11 @@ namespace Contigu.Presentation
             _weatherLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
             _weatherLabel.rectTransform.offsetMax = new Vector2(-6f, 0f);
 
-            var blisterSection = UIFactory.CreateText(_root, "BlisterLabel", Loc.T("shop.blister"), 16, UITheme.TextMutedOnBackground);
-            _blisterSectionLabel = blisterSection;
-            blisterSection.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            blisterSection.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            blisterSection.rectTransform.pivot = new Vector2(0.5f, 1f);
-            blisterSection.rectTransform.anchoredPosition = new Vector2(0f, -100f);
-            blisterSection.rectTransform.sizeDelta = new Vector2(900f, 22f);
+            _blisterPlaque = BuildSectionPlaque("BlisterPlaque", Loc.T("shop.blister"));
 
             _blisterCardsContainer = BuildCardRow("BlisterCards", ModifierCardsTopY);
 
-            _upgradeSectionLabel = UIFactory.CreateText(_root, "UpgradeLabel", Loc.T("shop.workshop"), 16, UITheme.TextMutedOnBackground);
-            _upgradeSectionLabel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            _upgradeSectionLabel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            _upgradeSectionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _upgradeSectionLabel.rectTransform.sizeDelta = new Vector2(900f, 22f);
+            _upgradePlaque = BuildSectionPlaque("WorkshopPlaque", Loc.T("shop.workshop"));
 
             // Real Y positions set every Refresh(), once the modifier row's
             // actual (dynamic) height for this shop visit is known.
@@ -361,6 +353,35 @@ namespace Contigu.Presentation
             awningEdge.rectTransform.pivot = new Vector2(0.5f, 1f);
             awningEdge.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             awningEdge.rectTransform.sizeDelta = new Vector2(0f, 8f);
+        }
+
+        /// <summary>A small carved wooden sign naming a section ("Blister", "Workshop"), hung above its shelf.</summary>
+        private RectTransform BuildSectionPlaque(string name, string title)
+        {
+            var plaque = UIFactory.CreateSlicedImage(_root, name, UISprites.CardBackground);
+            plaque.color = new Color(0.55f, 0.37f, 0.20f, 1f);
+            plaque.raycastTarget = false;
+            UIFactory.AddThickOutline(plaque, new Color(0.13f, 0.09f, 0.06f, 1f));
+            var rect = plaque.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(190f, PlaqueHeight);
+            // Two small nails, like the upgrade signs.
+            for (int i = 0; i < 2; i++)
+            {
+                var nail = UIFactory.CreatePanel(rect, "Nail" + i, new Color(0.13f, 0.09f, 0.06f, 1f));
+                nail.raycastTarget = false;
+                nail.rectTransform.anchorMin = new Vector2(i == 0 ? 0f : 1f, 0.5f);
+                nail.rectTransform.anchorMax = new Vector2(i == 0 ? 0f : 1f, 0.5f);
+                nail.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                nail.rectTransform.anchoredPosition = new Vector2(i == 0 ? 12f : -12f, 0f);
+                nail.rectTransform.sizeDelta = new Vector2(6f, 6f);
+            }
+            var label = UIFactory.CreateText(rect, "Title", title, 20, new Color(1f, 0.96f, 0.84f));
+            label.raycastTarget = false;
+            UIFactory.StretchFull(label.rectTransform);
+            return rect;
         }
 
         /// <summary>A wooden display shelf spanning the screen; positioned under a row of cards on every Refresh.</summary>
@@ -460,7 +481,7 @@ namespace Contigu.Presentation
         /// <summary>While a seed choice is shown on the shop screen, the shelves (Blister, Workshop) and their buttons step aside; the backdrop and tablets stay.</summary>
         public void SetSelectionMode(bool on)
         {
-            foreach (var part in new Component[] { _blisterSectionLabel, _blisterCardsContainer, _blisterShelf, _upgradeSectionLabel, _upgradeCardsContainer, _workshopShelf, _rerollButton, _leaveButton })
+            foreach (var part in new Component[] { _blisterPlaque, _blisterCardsContainer, _blisterShelf, _upgradePlaque, _upgradeCardsContainer, _workshopShelf, _rerollButton, _leaveButton })
             {
                 if (part != null)
                 {
@@ -605,11 +626,11 @@ namespace Contigu.Presentation
             float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
             float top = blockHeight * 0.5f;
             float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 12f;
-            _blisterSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, top);
+            _blisterPlaque.anchoredPosition = new Vector2(0f, top);
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
             _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight + 6f);
             float secondTop = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap;
-            _upgradeSectionLabel.rectTransform.anchoredPosition = new Vector2(0f, secondTop);
+            _upgradePlaque.anchoredPosition = new Vector2(0f, secondTop);
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap);
             _workshopShelf.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap - rowHeight + 6f);
             // The shelves run exactly from one tablet to the other, so the tablets read as the ends of one display case.
