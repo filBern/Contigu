@@ -23,8 +23,12 @@ namespace Contigu.Presentation
         /// <summary>The two side panels sit at +/-<paramref name="sidePanelCenterX"/>, each <paramref name="panelWidth"/> wide; the box may use what is left between them.</summary>
         public static void SetSidePanelCenterX(float sidePanelCenterX, float panelWidth)
         {
+            SidePanelCenterX = sidePanelCenterX;
             _availableWidth = Mathf.Max(300f, 2f * sidePanelCenterX - panelWidth - 2f * SideGap);
         }
+
+        /// <summary>Distance of each side panel's center from the screen center (the seeds can also be displayed on boards at the panels' place).</summary>
+        public static float SidePanelCenterX { get; private set; } = 355f;
 
         public static float CellSize { get; private set; } = MaxCellSize;
         public static float PreviewSize { get { return CellSize * 0.8f; } }
@@ -59,19 +63,25 @@ namespace Contigu.Presentation
         /// <summary>A transparent, clickable cell with hover feedback; a divider is added first when the box already holds a cell.</summary>
         public static Image CreateCell(RectTransform container, string name)
         {
-            if (container.childCount > 0)
+            return CreateCell(container, name, CellSize, true);
+        }
+
+        /// <summary>A cell of an explicit size, with or without a leading divider (a side board's grid has none).</summary>
+        public static Image CreateCell(RectTransform container, string name, float cellSize, bool withDivider)
+        {
+            if (withDivider && container.childCount > 0)
             {
                 var divider = UIFactory.CreatePanel(container, "Divider", DividerColor);
                 divider.raycastTarget = false;
                 var dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
                 dividerLayout.preferredWidth = DividerWidth;
-                dividerLayout.preferredHeight = CellSize * 0.7f;
+                dividerLayout.preferredHeight = cellSize * 0.7f;
             }
             var cell = UIFactory.CreatePanel(container, name, Idle);
-            cell.rectTransform.sizeDelta = new Vector2(CellSize, CellSize);
+            cell.rectTransform.sizeDelta = new Vector2(cellSize, cellSize);
             var cellLayout = cell.gameObject.AddComponent<LayoutElement>();
-            cellLayout.preferredWidth = CellSize;
-            cellLayout.preferredHeight = CellSize;
+            cellLayout.preferredWidth = cellSize;
+            cellLayout.preferredHeight = cellSize;
             cell.gameObject.AddComponent<PieceBoxCellHover>();
             return cell;
         }

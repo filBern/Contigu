@@ -37,6 +37,30 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Hides (or restores) only the two side tablets (fertilizers, next round): a view that wants to use their place as display boards.</summary>
+        public static void SetSideTabletsHidden(bool hidden)
+        {
+            for (int i = 0; i < 2 && i < Panels.Count; i++)
+            {
+                var panel = Panels[i];
+                if (panel == null)
+                {
+                    continue;
+                }
+                var group = panel.GetComponent<CanvasGroup>();
+                if (group == null)
+                {
+                    if (!hidden)
+                    {
+                        continue;
+                    }
+                    group = panel.gameObject.AddComponent<CanvasGroup>();
+                }
+                group.alpha = hidden ? 0f : 1f;
+                group.blocksRaycasts = !hidden;
+            }
+        }
+
         private readonly List<RectTransform> _lifted = new List<RectTransform>();
         private readonly List<Transform> _parents = new List<Transform>();
         private readonly List<int> _indices = new List<int>();
