@@ -839,7 +839,7 @@ namespace Contigu.Presentation
                     glyph.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                     glyph.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                     glyph.rectTransform.pivot = new Vector2(0.5f, 0f);
-                    glyph.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+                    glyph.rectTransform.anchoredPosition = new Vector2(0f, -9f);
                     glyph.rectTransform.sizeDelta = new Vector2(78f, 78f);
                 }
             }
