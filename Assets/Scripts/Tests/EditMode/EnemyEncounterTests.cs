@@ -267,7 +267,7 @@ namespace Contigu.Tests
 
             var outcome = run.PlacePiece(slot, anchor.Value.x, anchor.Value.y);
 
-            int expectedHp = Mathf.Clamp(hpBefore - outcome.Placement.TotalScore, 0, enemy.Definition.MaxHp);
+            int expectedHp = Mathf.Clamp(hpBefore - outcome.Placement.TotalScore, 0, enemy.CurrentMaxHp);
             Assert.AreEqual(expectedHp, enemy.CurrentHp);
         }
 
@@ -1110,7 +1110,7 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             AdvanceToRound(run, 6); // round 7 (index 6): Basic, Locker, Thief, Leech
             var leech = run.CurrentEncounter[3];
-            leech.ApplyDamage(leech.Definition.MaxHp); // kill it
+            leech.ApplyDamage(leech.CurrentMaxHp); // kill it
             Assert.IsTrue(leech.IsDead);
 
             int slot = ChurnUntilHandMatches(run, t => t.Shape == ShapeId.Single);
