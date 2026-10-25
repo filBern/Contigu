@@ -1361,7 +1361,7 @@ namespace Contigu.Tests
             Assert.IsFalse(grid.GetCell(0, 0).IsFrozen);
             Assert.IsFalse(grid.GetCell(0, 0).IsLocked);
             // Collectionneur counts distinct colors among cleared cells: one Teal row = 1 color, the frozen plot adds none.
-            Assert.AreEqual(ScoringConstants.CollectionneurBonusPerColor, last.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CollectionneurBonusPerColor), last.AdditiveMultBonus);
         }
     }
 }

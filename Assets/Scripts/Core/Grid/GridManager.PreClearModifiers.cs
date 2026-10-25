@@ -13,39 +13,39 @@ namespace Contigu.Core
         {
             return new Dictionary<ModifierId, PreClearModifierEffect>
             {
-                { ModifierId.Haie, ctx => ApplyHaie(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Haie, ctx => PointsToMult(ctx, () => ApplyHaie(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Coeur, ctx => { ctx.Multiplier *= ApplyCoeur(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Treillis, ctx => { ctx.AdditiveMult += ApplyDirectionalPiece(ctx.PlacedCells, true, ScoringConstants.TrellisMultBonus, ctx.Events); return 0; } },
                 { ModifierId.Sillon, ctx => { ctx.AdditiveMult += ApplyDirectionalPiece(ctx.PlacedCells, false, ScoringConstants.FurrowMultBonus, ctx.Events); return 0; } },
-                { ModifierId.Haricot, ctx => ApplyHaricot(ctx.PlacedCells, ctx.Events) },
-                { ModifierId.Patchwork, ctx => ApplyPatchwork(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Haricot, ctx => PointsToMult(ctx, () => ApplyHaricot(ctx.PlacedCells, ctx.Events)) },
+                { ModifierId.Patchwork, ctx => PointsToMult(ctx, () => ApplyPatchwork(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Racines, ctx => { ctx.AdditiveMult += ApplyRacines(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Emboite, ctx => { ctx.AdditiveMult += ApplyEmboite(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Mosaique, ctx => { ctx.AdditiveMult += ApplyMosaique(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Foule, ctx => { ctx.Multiplier *= ApplyFoule(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prairie, ctx => { ctx.AdditiveMult += ApplyPrairie(ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Guirlande, ctx => ApplyGuirlande(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Guirlande, ctx => PointsToMult(ctx, () => ApplyGuirlande(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Pollinisateur, ctx => { ctx.Lueur += ApplyPollinisateur(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Miel, ctx => { ctx.Lueur += ApplyMiel(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Nectar, ctx => { ctx.Lueur += ApplyNectar(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.PierreAngulaire, ctx => { ctx.Multiplier *= ApplyPierreAngulaire(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prisme, ctx => { ctx.Multiplier *= ApplyPrisme(ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Chaine, ctx => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },
-                { ModifierId.MegaChaine, ctx => ApplyMegaChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events) },
-                { ModifierId.Forteresse, ctx => ApplyForteresse(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Prisonnier, ctx => ApplyPrisonnier(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Chaine, ctx => PointsToMult(ctx, () => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events)) },
+                { ModifierId.MegaChaine, ctx => PointsToMult(ctx, () => ApplyMegaChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events)) },
+                { ModifierId.Forteresse, ctx => PointsToMult(ctx, () => ApplyForteresse(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Prisonnier, ctx => PointsToMult(ctx, () => ApplyPrisonnier(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Architecte, ctx => { ctx.Multiplier *= ApplyArchitecte(ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Tricolore, ctx => { ctx.Multiplier *= ApplyTricolore(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Complementaire, ctx => { ctx.Multiplier *= ApplyComplementaire(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Ilot, ctx => { ctx.Multiplier *= ApplyIlot(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Couronne, ctx => ApplyCouronne(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Carrefour, ctx => ApplyCarrefour(ctx.GroupCells, ctx.Events) },
-                { ModifierId.CercleChromatique, ctx => ApplyCercleChromatique(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Monochrome, ctx => ApplyMonochrome(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Contraste, ctx => ApplyContraste(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Couronne, ctx => PointsToMult(ctx, () => ApplyCouronne(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Carrefour, ctx => PointsToMult(ctx, () => ApplyCarrefour(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.CercleChromatique, ctx => PointsToMult(ctx, () => ApplyCercleChromatique(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Monochrome, ctx => PointsToMult(ctx, () => ApplyMonochrome(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Contraste, ctx => PointsToMult(ctx, () => ApplyContraste(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Emmitouflee, ctx => ApplyEmmitouflee(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Jardinier, ctx => ApplyJardinier(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Emmitouflee, ctx => PointsToMult(ctx, () => ApplyEmmitouflee(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Jardinier, ctx => PointsToMult(ctx, () => ApplyJardinier(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Coral, ModifierId.EclatCoral, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Teal, ModifierId.EclatTeal, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Violet, ModifierId.EclatViolet, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -53,29 +53,29 @@ namespace Contigu.Core
                 { ModifierId.FormatPetitSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatMoyenSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatGrandSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.FormatPetitGlow, ctx => ApplyFormatGlow(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.FormatMoyenGlow, ctx => ApplyFormatGlow(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.FormatGrandGlow, ctx => ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.GrandFormat, ctx => ApplyGrandFormat(ctx.PlacedCells, ctx.Events) },
-                { ModifierId.HorsNorme, ctx => ApplyHorsNorme(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.FormatPetitGlow, ctx => PointsToMult(ctx, () => ApplyFormatGlow(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.FormatMoyenGlow, ctx => PointsToMult(ctx, () => ApplyFormatGlow(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.FormatGrandGlow, ctx => PointsToMult(ctx, () => ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.GrandFormat, ctx => PointsToMult(ctx, () => ApplyGrandFormat(ctx.PlacedCells, ctx.Events)) },
+                { ModifierId.HorsNorme, ctx => PointsToMult(ctx, () => ApplyHorsNorme(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.EclatCoral, ctx => ApplyEclat(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
                 { ModifierId.EclatTeal, ctx => ApplyEclat(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
                 { ModifierId.EclatViolet, ctx => ApplyEclat(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
                 { ModifierId.EclatLime, ctx => ApplyEclat(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.Diagonale, ctx => ApplyDiagonale(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Nid, ctx => ApplyNid(ctx.GroupCells, ctx.Events) },
+                { ModifierId.Diagonale, ctx => PointsToMult(ctx, () => ApplyDiagonale(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Nid, ctx => PointsToMult(ctx, () => ApplyNid(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Solitaire, ctx => { ctx.Multiplier *= ApplySolitaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.PetitFormat, ctx => ApplyPetitFormat(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.PetitFormat, ctx => PointsToMult(ctx, () => ApplyPetitFormat(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Fraicheur, ctx => { ctx.Multiplier *= ApplyFraicheur(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Pont, ctx => { ctx.Multiplier *= ApplyPont(ctx.OwnColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Encerclement, ctx => ApplyEncerclement(ctx.GroupCells, ctx.Events) },
-                { ModifierId.Boucher, ctx => ApplyBoucher(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Encerclement, ctx => PointsToMult(ctx, () => ApplyEncerclement(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Boucher, ctx => PointsToMult(ctx, () => ApplyBoucher(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.GrosseFamille, ctx => { ctx.Multiplier *= ApplyGrosseFamille(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Repetition, ctx => { ctx.Multiplier *= ApplyRepetition(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.RepetitionLueur, ctx => { ctx.Lueur += ApplyRepetitionLueur(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.AlternancePieces, ctx => { ctx.AdditiveMult += ApplyAlternancePieces(ctx.OwnColor, ctx.PreviousPlacedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Precision, ctx => ApplyPrecision(ctx.PlacedCells, ctx.Events) },
-                { ModifierId.Surpopulation, ctx => ApplySurpopulation(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Precision, ctx => PointsToMult(ctx, () => ApplyPrecision(ctx.PlacedCells, ctx.Events)) },
+                { ModifierId.Surpopulation, ctx => PointsToMult(ctx, () => ApplySurpopulation(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -100,12 +100,51 @@ namespace Contigu.Core
                 { ModifierId.MultQuatre, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultQuatreBonus, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.MultCinqRisque, ctx => { ctx.AdditiveMult += ApplyFlatAdditiveMult(ScoringConstants.MultCinqRisqueBonus, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Solidarite, ctx => { ctx.AdditiveMult += ApplySolidarite(ctx.ActiveModifierCount, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Epuisement, ctx => ApplyEpuisement(ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Epuisement, ctx => PointsToMult(ctx, () => ApplyEpuisement(ctx.PlacedCells, ctx.Events)) },
                 // Copieur is never actually held — buying it adds another copy
                 // of whichever modifier was purchased right before it (see
                 // RunManager.BuyBlisterSlot), so this entry is never looked up.
                 { ModifierId.Copieur, ctx => 0 }
             };
+        }
+
+        /// <summary>
+        /// Fertilizers are Mult, never points: this runs one of the older point-scoring effects (kept as is — same conditions, same per-cell counting)
+        /// and turns every point event it produced into a +Mult event of <see cref="ScoringConstants.PointsToMult"/> size, added to the additive Mult pool.
+        /// </summary>
+        private int PointsToMult(PreClearModifierContext ctx, System.Func<int> effect)
+        {
+            int before = ctx.Events.Count;
+            effect();
+            ctx.AdditiveMult += ConvertPointEventsToMult(ctx.Events, before);
+            return 0;
+        }
+
+        private int PointsToMult(PostClearModifierContext ctx, System.Func<int> effect)
+        {
+            int before = ctx.Events.Count;
+            effect();
+            ctx.AdditiveMult += ConvertPointEventsToMult(ctx.Events, before);
+            return 0;
+        }
+
+        /// <summary>Rewrites the point events from <paramref name="fromIndex"/> on as +Mult events; returns the Mult they add up to.</summary>
+        private static int ConvertPointEventsToMult(List<ScoreEvent> events, int fromIndex)
+        {
+            int added = 0;
+            for (int i = fromIndex; i < events.Count; i++)
+            {
+                if (events[i].Type != ScoreEventType.Modifier)
+                {
+                    continue;
+                }
+                int mult = ScoringConstants.PointsToMult(events[i].Amount);
+                var converted = new ScoreEvent(ScoreEventType.MultBonus, events[i].Position, mult);
+                converted.ReferencedPosition = events[i].ReferencedPosition;
+                events[i] = converted;
+                added += mult;
+            }
+            return added;
         }
 
         private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)

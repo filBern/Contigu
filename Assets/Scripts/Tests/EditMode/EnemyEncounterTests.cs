@@ -686,12 +686,12 @@ namespace Contigu.Tests
             for (int i = 0; i < outcomeB.Placement.ScoreEvents.Count; i++)
             {
                 var evt = outcomeB.Placement.ScoreEvents[i];
-                if (evt.Type == ScoreEventType.Modifier && evt.ReferencedPosition == poisonedPos && evt.Amount < 0)
+                if (evt.Type == ScoreEventType.MultBonus && evt.ReferencedPosition == poisonedPos && evt.Amount > 0)
                 {
                     foundNegatedContraste = true;
                 }
             }
-            Assert.IsTrue(foundNegatedContraste, "Contraste's own bonus should flip negative when the contrasting neighbor it read is poisoned");
+            Assert.IsTrue(foundNegatedContraste, "Contraste is Mult now: poison only flips point events, so its +Mult survives a poisoned neighbor");
         }
 
         [Test]

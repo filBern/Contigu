@@ -449,6 +449,21 @@ namespace Contigu.Core
         public const int GamblerWinBonus = 40;
         public const int GamblerLossPenalty = 10;
 
+        // ---- fertilizers are Mult: the older point-scoring ones were converted at this rate
+        /// <summary>How many points one +Mult stands for when a point-scoring fertilizer was turned into a Mult one (a tuning knob).</summary>
+        public const float PointsPerMult = 12f;
+        public const int MultitudeCardsPerMult = 10;
+
+        /// <summary>The +Mult that replaces <paramref name="points"/> of a converted fertilizer: at least 1 for any positive amount.</summary>
+        public static int PointsToMult(int points)
+        {
+            if (points <= 0)
+            {
+                return 0;
+            }
+            return System.Math.Max(1, (int)System.Math.Round(points / PointsPerMult, System.MidpointRounding.AwayFromZero));
+        }
+
         // ---- third batch of flat-point tile upgrades (built around stacking several upgrades on one seed)
         public const int KinBonusPerNeighbor = 4;
         public const int CollectorBonusPerKind = 3;

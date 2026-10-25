@@ -462,11 +462,11 @@ namespace Contigu.Core
                 case ModifierId.Densite:
                     return "Currently +" + FormatMultDisplay(Grid.FilledCellCount / (float)ScoringConstants.DensiteFilledCellsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Epuisement:
-                    return "Currently +" + Mathf.RoundToInt(Grid.EpuisementCurrentBonus * levelFactor) + " pts";
+                    return "Currently +" + ScoringConstants.PointsToMult(Mathf.RoundToInt(Grid.EpuisementCurrentBonus * levelFactor)) + " Mult";
                 case ModifierId.Solidarite:
                     return "Currently +" + FormatMultDisplay((_activeModifiers.Count / ScoringConstants.SolidariteModifierCountDivisor) * levelFactor) + " Mult";
                 case ModifierId.Multitude:
-                    return "Currently +" + Mathf.RoundToInt(Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard * levelFactor) + " pts";
+                    return "Currently +" + FormatMultDisplay(Deck.DeckCount / (float)ScoringConstants.MultitudeCardsPerMult * levelFactor) + " Mult";
                 case ModifierId.CartesEnchantees:
                     return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Experience:

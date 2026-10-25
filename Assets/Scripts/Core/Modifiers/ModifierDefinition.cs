@@ -51,19 +51,19 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Chaine = new ModifierDefinition(
             ModifierId.Chaine, ModifierCategory.Connexions, "Chain",
-            "+15 pts if the group has 5+ cells.");
+            "+1 Mult if the group has 5+ cells.");
 
         public static readonly ModifierDefinition MegaChaine = new ModifierDefinition(
             ModifierId.MegaChaine, ModifierCategory.Connexions, "Mega Chain",
-            "+45 pts if the group has 10+ cells, +8 pts per cell past that.");
+            "+4 Mult if the group has 10+ cells, +1 Mult per cell past that.");
 
         public static readonly ModifierDefinition Forteresse = new ModifierDefinition(
             ModifierId.Forteresse, ModifierCategory.Voisinage, "Fortress",
-            "+9 pts per fully surrounded group cell.");
+            "+1 Mult per fully surrounded group cell.");
 
         public static readonly ModifierDefinition Prisonnier = new ModifierDefinition(
             ModifierId.Prisonnier, ModifierCategory.Voisinage, "Prisoner",
-            "+6 pts per group cell with all 4 sides filled.");
+            "+1 Mult per group cell with all 4 sides filled.");
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
             ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
@@ -71,7 +71,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
             ModifierId.Collectionneur, ModifierCategory.Roguelike, "Hoarder",
-            "+12 pts per distinct color in harvested cells.");
+            "+1 Mult per distinct color in harvested cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
             ModifierId.Tricolore, ModifierCategory.Couleurs, "Triad Bloom",
@@ -87,11 +87,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Couronne = new ModifierDefinition(
             ModifierId.Couronne, ModifierCategory.Voisinage, "Crown",
-            "+8 pts per group cell on the grid's edge.");
+            "+1 Mult per group cell on the grid's edge.");
 
         public static readonly ModifierDefinition Carrefour = new ModifierDefinition(
             ModifierId.Carrefour, ModifierCategory.Voisinage, "Crossroads",
-            "+18 pts per group cell surrounded by 2+ colors.");
+            "+2 Mult per group cell surrounded by 2+ colors.");
 
         public static readonly ModifierDefinition Macon = new ModifierDefinition(
             ModifierId.Macon, ModifierCategory.Destruction, "Mason",
@@ -104,15 +104,15 @@ namespace Contigu.Core
         // Requires 4 filled cardinal neighbors showing all 4 base colors at once.
         public static readonly ModifierDefinition CercleChromatique = new ModifierDefinition(
             ModifierId.CercleChromatique, ModifierCategory.Voisinage, "Alchemist's Wheel",
-            "+52 pts per group cell surrounded by all 4 colors.");
+            "+4 Mult per group cell surrounded by all 4 colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
             ModifierId.Monochrome, ModifierCategory.Roguelike, "Ashbound",
-            "+5 pts per group cell if the group has no jokers.");
+            "+1 Mult per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
             ModifierId.Contraste, ModifierCategory.Couleurs, "Dissonant Bloom",
-            "+9 pts per placed cell next to a different color.");
+            "+1 Mult per placed cell next to a different color.");
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
             ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
@@ -120,11 +120,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
             ModifierId.Emmitouflee, ModifierCategory.Voisinage, "Cocooned",
-            "+12 pts per group cell with all 4 diagonals filled.");
+            "+1 Mult per group cell with all 4 diagonals filled.");
 
         public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
             ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
-            "+9 pts per group cell next to an upgraded sprout.");
+            "+1 Mult per group cell next to an upgraded sprout.");
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
@@ -185,11 +185,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
             ModifierId.GrandFormat, ModifierCategory.Roguelike, "Overgrowth",
-            "+12 pts per cell for seeds with 3+ cells.");
+            "+1 Mult per cell for seeds with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
             ModifierId.HorsNorme, ModifierCategory.Roguelike, "Mutant Growth",
-            "+18 pts if the seed isn't exactly 3 cells.");
+            "+2 Mult if the seed isn't exactly 3 cells.");
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Poppy Glow",
@@ -209,11 +209,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",
-            "+8 pts per group cell on either main diagonal.");
+            "+1 Mult per group cell on either main diagonal.");
 
         public static readonly ModifierDefinition Nid = new ModifierDefinition(
             ModifierId.Nid, ModifierCategory.Voisinage, "Nest",
-            "+5 pts per group cell with exactly 3 sides filled.");
+            "+1 Mult per group cell with exactly 3 sides filled.");
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
@@ -229,7 +229,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
             ModifierId.PetitFormat, ModifierCategory.Roguelike, "Seedling",
-            "+8 pts per cell for seeds with 2 or fewer cells.");
+            "+1 Mult per cell for seeds with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
             ModifierId.Fraicheur, ModifierCategory.Couleurs, "New Growth",
@@ -241,11 +241,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Encerclement = new ModifierDefinition(
             ModifierId.Encerclement, ModifierCategory.Voisinage, "Encirclement",
-            "+9 pts per group cell boxed in on all 8 sides (filled or edge).");
+            "+1 Mult per group cell boxed in on all 8 sides (filled or edge).");
 
         public static readonly ModifierDefinition Boucher = new ModifierDefinition(
             ModifierId.Boucher, ModifierCategory.Voisinage, "Sealer",
-            "+15 pts per pre-existing sprout this placement newly encircles.");
+            "+1 Mult per pre-existing sprout this placement newly encircles.");
 
         public static readonly ModifierDefinition GrosseFamille = new ModifierDefinition(
             ModifierId.GrosseFamille, ModifierCategory.Couleurs, "Thriving Colony",
@@ -265,11 +265,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Precision = new ModifierDefinition(
             ModifierId.Precision, ModifierCategory.Voisinage, "Precision",
-            "+8 pts per cell if every cell of the seed touches a filled sprout.");
+            "+1 Mult per cell if every cell of the seed touches a filled sprout.");
 
         public static readonly ModifierDefinition Surpopulation = new ModifierDefinition(
             ModifierId.Surpopulation, ModifierCategory.Voisinage, "Thicket",
-            "+12 pts per cell if every cell of the seed touches 2+ filled sprouts.");
+            "+1 Mult per cell if every cell of the seed touches 2+ filled sprouts.");
 
         public static readonly ModifierDefinition Minimaliste = new ModifierDefinition(
             ModifierId.Minimaliste, ModifierCategory.Voisinage, "Lone Bloom",
@@ -337,11 +337,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+150 pts, -5 per placement for the rest of the run — destroyed once it hits 0.");
+            "+13 Mult, shrinking a little with every placement for the rest of the run — destroyed once it hits 0.");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
-            "+2 pts per seed currently in your seed bag.");
+            "+1 Mult per 10 seeds currently in your seed bag.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
             ModifierId.Experience, ModifierCategory.Roguelike, "Seasoned Growth",
@@ -363,15 +363,15 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition FormatPetitGlow = new ModifierDefinition(
             ModifierId.FormatPetitGlow, ModifierCategory.Formes, "Seedling Glow",
-            "+6 pts per group cell on seeds with 2 or fewer cells (Single, Domino).");
+            "+1 Mult per group cell on seeds with 2 or fewer cells (Single, Domino).");
 
         public static readonly ModifierDefinition FormatMoyenGlow = new ModifierDefinition(
             ModifierId.FormatMoyenGlow, ModifierCategory.Formes, "Sapling Glow",
-            "+6 pts per group cell on 3-cell seeds (any Tromino).");
+            "+1 Mult per group cell on 3-cell seeds (any Tromino).");
 
         public static readonly ModifierDefinition FormatGrandGlow = new ModifierDefinition(
             ModifierId.FormatGrandGlow, ModifierCategory.Formes, "Overgrowth Glow",
-            "+6 pts per group cell on 4-cell seeds (Square or any Tetromino).");
+            "+1 Mult per group cell on 4-cell seeds (Square or any Tetromino).");
 
         public static readonly ModifierDefinition Pair = new ModifierDefinition(
             ModifierId.Pair, ModifierCategory.Roguelike, "Waxing",
@@ -451,7 +451,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Haie = new ModifierDefinition(
             ModifierId.Haie, ModifierCategory.Voisinage, "Hedgerow",
-            "+4 pts per tile of the seed that sits on the edge of the garden.");
+            "+1 Mult per tile of the seed that sits on the edge of the garden.");
 
         public static readonly ModifierDefinition Coeur = new ModifierDefinition(
             ModifierId.Coeur, ModifierCategory.Voisinage, "Heartwood",
@@ -467,11 +467,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Haricot = new ModifierDefinition(
             ModifierId.Haricot, ModifierCategory.Formes, "Beanstalk",
-            "+12 pts when the seed is a straight piece of 3 or more tiles.");
+            "+1 Mult when the seed is a straight piece of 3 or more tiles.");
 
         public static readonly ModifierDefinition Patchwork = new ModifierDefinition(
             ModifierId.Patchwork, ModifierCategory.Couleurs, "Patchwork",
-            "+4 pts for each tile of another color touching the seed.");
+            "+1 Mult for each tile of another color touching the seed.");
 
         public static readonly ModifierDefinition Racines = new ModifierDefinition(
             ModifierId.Racines, ModifierCategory.Connexions, "Taproot",
@@ -495,7 +495,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Guirlande = new ModifierDefinition(
             ModifierId.Guirlande, ModifierCategory.Voisinage, "Wreath",
-            "+8 pts per tile of the seed touching 3 or more planted plots.");
+            "+1 Mult per tile of the seed touching 3 or more planted plots.");
 
         public static readonly ModifierDefinition Pollinisateur = new ModifierDefinition(
             ModifierId.Pollinisateur, ModifierCategory.Couleurs, "Pollinator",
@@ -535,7 +535,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Prime = new ModifierDefinition(
             ModifierId.Prime, ModifierCategory.Destruction, "Bounty",
-            "+3 pts per tile harvested.");
+            "+1 Mult per tile harvested.");
 
         public static readonly ModifierDefinition BriseGlace = new ModifierDefinition(
             ModifierId.BriseGlace, ModifierCategory.Destruction, "Frostbreaker",

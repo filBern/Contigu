@@ -519,12 +519,14 @@ namespace Contigu.Core
                 }
                 else if (_activeModifiers[i] == ModifierId.Multitude)
                 {
-                    int bonus = Mathf.RoundToInt(Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard * GetModifierLevelFactor(i));
-                    placement.ModifierBonus += bonus;
-                    var ptsEvent = new ScoreEvent(ScoreEventType.Modifier, placement.PlacedCells[0], bonus);
-                    ptsEvent.TriggeringModifier = ModifierId.Multitude;
-                    ptsEvent.TriggeringModifierIndex = i;
-                    events.Add(ptsEvent);
+                    // Mult, not points: +1 Mult per ScoringConstants.MultitudeCardsPerMult seeds in the bag (a true float, like Enchanted Cards).
+                    float trueMult = Deck.DeckCount / (float)ScoringConstants.MultitudeCardsPerMult * GetModifierLevelFactor(i);
+                    placement.ProgressiveAdditiveMult += trueMult;
+                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(trueMult));
+                    multEvent.TriggeringModifier = ModifierId.Multitude;
+                    multEvent.TriggeringModifierIndex = i;
+                    multEvent.PreciseAmount = trueMult;
+                    events.Add(multEvent);
                 }
                 else if (_activeModifiers[i] == ModifierId.Experience)
                 {

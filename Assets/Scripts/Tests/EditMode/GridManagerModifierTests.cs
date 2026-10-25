@@ -96,11 +96,11 @@ namespace Contigu.Tests
             for (int x = 0; x < 4; x++)
             {
                 var r = grid.PlacePiece(single, PieceColor.Coral, x, 0, modifiers);
-                Assert.AreEqual(0, r.ModifierBonus, "Chaine shouldn't fire before the group reaches 5 cells");
+                Assert.AreEqual(0, r.AdditiveMultBonus, "Chaine shouldn't fire before the group reaches 5 cells");
             }
 
             var fifth = grid.PlacePiece(single, PieceColor.Coral, 4, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.ChaineBonus, fifth.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.ChaineBonus), fifth.AdditiveMultBonus);
         }
 
         [Test]
@@ -124,7 +124,7 @@ namespace Contigu.Tests
             }
             var tenth = grid.PlacePiece(single, PieceColor.Coral, 4, 1, modifiers);
 
-            Assert.AreEqual(ScoringConstants.MegaChaineBaseBonus, tenth.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.MegaChaineBaseBonus), tenth.AdditiveMultBonus);
         }
 
         [Test]
@@ -149,7 +149,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.ForteresseBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.ForteresseBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -168,7 +168,7 @@ namespace Contigu.Tests
 
             // No diagonal neighbor is filled, so this would NOT qualify for
             // Forteresse, but Prisonnier only cares about the 4 cardinals.
-            Assert.AreEqual(ScoringConstants.PrisonnierBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.PrisonnierBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace Contigu.Tests
             var finalResult = grid.PlacePiece(single, PieceColor.Lime, GridManager.Size - 1, 0, modifiers);
 
             Assert.AreEqual(GridManager.Size, finalResult.LineClearCellCount);
-            Assert.AreEqual(4 * ScoringConstants.CollectionneurBonusPerColor, finalResult.ModifierBonus);
+            Assert.AreEqual(4 * ScoringConstants.PointsToMult(ScoringConstants.CollectionneurBonusPerColor), finalResult.AdditiveMultBonus);
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -351,10 +351,10 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Couronne };
 
             var edgeResult = grid.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, edgeResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CouronneBonusPerCell), edgeResult.AdditiveMultBonus);
 
             var centerResult = grid.PlacePiece(single, PieceColor.Teal, 3, 3, modifiers);
-            Assert.AreEqual(0, centerResult.ModifierBonus);
+            Assert.AreEqual(0, centerResult.AdditiveMultBonus);
         }
 
         [Test]
@@ -371,7 +371,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Joker, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.CarrefourBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CarrefourBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -388,7 +388,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(0, center.ModifierBonus);
+            Assert.AreEqual(0, center.AdditiveMultBonus);
         }
 
         [Test]
@@ -408,7 +408,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.CarrefourBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CarrefourBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -428,7 +428,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(0, center.ModifierBonus);
+            Assert.AreEqual(0, center.AdditiveMultBonus);
         }
 
         [Test]
@@ -570,7 +570,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.CercleChromatiqueBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CercleChromatiqueBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -587,7 +587,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Teal, 2, 2, modifiers);
 
-            Assert.AreEqual(0, center.ModifierBonus, "A joker consumes a slot without contributing a base color, so only 3 real colors show");
+            Assert.AreEqual(0, center.AdditiveMultBonus, "A joker consumes a slot without contributing a base color, so only 3 real colors show");
         }
 
         [Test]
@@ -599,7 +599,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(4 * ScoringConstants.MonochromeBonusPerCell, result.ModifierBonus);
+            Assert.AreEqual(4 * ScoringConstants.PointsToMult(ScoringConstants.MonochromeBonusPerCell), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -612,7 +612,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus, "Monochrome requires zero jokers anywhere in the group");
+            Assert.AreEqual(0, result.AdditiveMultBonus, "Monochrome requires zero jokers anywhere in the group");
         }
 
         [Test]
@@ -625,7 +625,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.ContrasteBonusPerCell, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.ContrasteBonusPerCell), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -638,7 +638,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Coral, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -692,7 +692,7 @@ namespace Contigu.Tests
             // Forteresse/Prisonnier, but Emmitouflée only cares about the 4 diagonals.
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(ScoringConstants.EmmitoufleeBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EmmitoufleeBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -709,7 +709,7 @@ namespace Contigu.Tests
 
             var center = grid.PlacePiece(single, PieceColor.Coral, 2, 2, modifiers);
 
-            Assert.AreEqual(0, center.ModifierBonus);
+            Assert.AreEqual(0, center.AdditiveMultBonus);
         }
 
         [Test]
@@ -721,10 +721,10 @@ namespace Contigu.Tests
             grid.GetCell(4, 5).IsGolden = true;
 
             var adjacentResult = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
-            Assert.AreEqual(ScoringConstants.JardinierBonusPerCell, adjacentResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.JardinierBonusPerCell), adjacentResult.AdditiveMultBonus);
 
             var farResult = grid.PlacePiece(single, PieceColor.Teal, 0, 0, modifiers);
-            Assert.AreEqual(0, farResult.ModifierBonus);
+            Assert.AreEqual(0, farResult.AdditiveMultBonus);
         }
 
         [Test]
@@ -1321,7 +1321,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(triL, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(triL.Cells.Count * ScoringConstants.GrandFormatBonusPerCell, result.ModifierBonus);
+            Assert.AreEqual(triL.Cells.Count * ScoringConstants.PointsToMult(ScoringConstants.GrandFormatBonusPerCell), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1333,7 +1333,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(domino, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1345,7 +1345,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.HorsNormeBonus, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.HorsNormeBonus), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1357,7 +1357,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(triL, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1406,13 +1406,13 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Diagonale };
 
             var onMainDiagonal = grid.PlacePiece(single, PieceColor.Coral, 3, 3, modifiers);
-            Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onMainDiagonal.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.DiagonaleBonusPerCell), onMainDiagonal.AdditiveMultBonus);
 
             var onAntiDiagonal = grid.PlacePiece(single, PieceColor.Teal, 5, 0, modifiers); // 5 + 0 == Size - 1
-            Assert.AreEqual(ScoringConstants.DiagonaleBonusPerCell, onAntiDiagonal.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.DiagonaleBonusPerCell), onAntiDiagonal.AdditiveMultBonus);
 
             var offDiagonal = grid.PlacePiece(single, PieceColor.Violet, 1, 3, modifiers); // neither x == y nor x + y == Size - 1
-            Assert.AreEqual(0, offDiagonal.ModifierBonus);
+            Assert.AreEqual(0, offDiagonal.AdditiveMultBonus);
         }
 
         [Test]
@@ -1429,7 +1429,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Nid };
             var center = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
 
-            Assert.AreEqual(ScoringConstants.NidBonusPerCell, center.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.NidBonusPerCell), center.AdditiveMultBonus);
         }
 
         [Test]
@@ -1441,7 +1441,7 @@ namespace Contigu.Tests
 
             // Zero neighbors filled.
             var isolated = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(0, isolated.ModifierBonus);
+            Assert.AreEqual(0, isolated.AdditiveMultBonus);
         }
 
         [Test]
@@ -1513,15 +1513,15 @@ namespace Contigu.Tests
 
             var single = PieceShapeCatalog.Get(ShapeId.Single);
             var singleResult = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(single.Cells.Count * ScoringConstants.PetitFormatBonusPerCell, singleResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(single.Cells.Count * ScoringConstants.PetitFormatBonusPerCell), singleResult.AdditiveMultBonus);
 
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
             var domResult = grid.PlacePiece(domH, PieceColor.Teal, 2, 0, modifiers);
-            Assert.AreEqual(domH.Cells.Count * ScoringConstants.PetitFormatBonusPerCell, domResult.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(domH.Cells.Count * ScoringConstants.PetitFormatBonusPerCell), domResult.AdditiveMultBonus);
 
             var triL = PieceShapeCatalog.Get(ShapeId.TriL);
             var triResult = grid.PlacePiece(triL, PieceColor.Violet, 4, 4, modifiers);
-            Assert.AreEqual(0, triResult.ModifierBonus, "3-cell piece should not qualify as small format");
+            Assert.AreEqual(0, triResult.AdditiveMultBonus, "3-cell piece should not qualify as small format");
         }
 
         [Test]
@@ -1654,7 +1654,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Encerclement };
             var corner = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.EncerclementBonusPerCell, corner.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EncerclementBonusPerCell), corner.AdditiveMultBonus);
         }
 
         [Test]
@@ -1666,7 +1666,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1683,7 +1683,7 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Boucher };
             var sealing = grid.PlacePiece(single, PieceColor.Coral, 1, 1, modifiers);
 
-            Assert.AreEqual(ScoringConstants.BoucherBonusPerCell, sealing.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.BoucherBonusPerCell), sealing.AdditiveMultBonus);
         }
 
         [Test]
@@ -1900,7 +1900,7 @@ namespace Contigu.Tests
             Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, grid.EpuisementCurrentBonus);
 
             var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, first.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus), first.AdditiveMultBonus);
             Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, grid.EpuisementCurrentBonus, "Already decayed for the NEXT placement");
 
             // Permanent for the whole run, same as Gradient — a round
@@ -1986,7 +1986,7 @@ namespace Contigu.Tests
 
             var isolated = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
 
-            Assert.AreEqual(0, isolated.ModifierBonus);
+            Assert.AreEqual(0, isolated.AdditiveMultBonus);
         }
 
         [Test]
@@ -2002,7 +2002,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(domH, PieceColor.Coral, 3, 3, modifiers);
 
-            Assert.AreEqual(domH.Cells.Count * ScoringConstants.PrecisionBonusPerCell, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(domH.Cells.Count * ScoringConstants.PrecisionBonusPerCell), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -2018,7 +2018,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
 
-            Assert.AreEqual(ScoringConstants.SurpopulationBonusPerCell, result.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.SurpopulationBonusPerCell), result.AdditiveMultBonus);
         }
 
         [Test]
@@ -2031,7 +2031,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Teal, 3, 4);
             var result = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
 
-            Assert.AreEqual(0, result.ModifierBonus);
+            Assert.AreEqual(0, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -2356,7 +2356,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Lime, 0, 0, modifiers);
 
-            Assert.AreEqual(square.Cells.Count * ScoringConstants.FormeGlowBonusPerCell, result.ModifierBonus,
+            Assert.AreEqual(ScoringConstants.PointsToMult(square.Cells.Count * ScoringConstants.FormeGlowBonusPerCell), result.AdditiveMultBonus,
                 "Format*Glow should be a flat per-tile bonus (the +pts sibling of the Format*Specialiste xN multiplier), not a multiplier itself");
         }
 
@@ -2376,6 +2376,20 @@ namespace Contigu.Tests
             AssertFormatGlowFires(ModifierId.FormatGrandGlow, ShapeId.TriL, false);
         }
 
+        /// <summary>The +Mult a placement's fertilizer events add up to (a leveled fertilizer rescales its events, not the pool total).</summary>
+        private static int MultEventSum(PlacementResult result)
+        {
+            int sum = 0;
+            foreach (var scoreEvent in result.ScoreEvents)
+            {
+                if (scoreEvent.Type == ScoreEventType.MultBonus)
+                {
+                    sum += scoreEvent.Amount;
+                }
+            }
+            return sum;
+        }
+
         private static void AssertFormatGlowFires(ModifierId id, ShapeId shape, bool shouldFire)
         {
             var grid = new GridManager();
@@ -2384,8 +2398,8 @@ namespace Contigu.Tests
             var pieceShape = PieceShapeCatalog.Get(shape);
             var result = grid.PlacePiece(pieceShape, PieceColor.Coral, 0, 0, modifiers);
 
-            int expected = shouldFire ? pieceShape.Cells.Count * ScoringConstants.FormeGlowBonusPerCell : 0;
-            Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + shape);
+            int expected = shouldFire ? ScoringConstants.PointsToMult(pieceShape.Cells.Count * ScoringConstants.FormeGlowBonusPerCell) : 0;
+            Assert.AreEqual(expected, result.AdditiveMultBonus, id + " vs " + shape);
         }
 
         [Test]
@@ -2462,13 +2476,13 @@ namespace Contigu.Tests
             var modifiers = new List<ModifierId> { ModifierId.Epuisement };
 
             var first = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus, first.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus), first.AdditiveMultBonus);
 
             var second = grid.PlacePiece(single, PieceColor.Teal, 1, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement, second.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus - ScoringConstants.EpuisementDecayPerPlacement), second.AdditiveMultBonus);
 
             var third = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement, third.ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement), third.AdditiveMultBonus);
         }
 
         [Test]
@@ -2487,7 +2501,7 @@ namespace Contigu.Tests
                 last = grid.PlacePiece(single, PieceColor.Coral, x, y, modifiers);
             }
 
-            Assert.AreEqual(0, last.ModifierBonus, "Epuisement floors at 0 and stays there");
+            Assert.AreEqual(0, last.AdditiveMultBonus, "Epuisement floors at 0 and stays there");
         }
 
         [Test]
@@ -2503,7 +2517,7 @@ namespace Contigu.Tests
             grid.ResetForNewRound();
             var afterReset = grid.PlacePiece(single, PieceColor.Violet, 2, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement, afterReset.ModifierBonus, "A round boundary should not undo the decay — permanent for the whole run, same as Gradient's counter");
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus - 2 * ScoringConstants.EpuisementDecayPerPlacement), afterReset.AdditiveMultBonus, "A round boundary should not undo the decay — permanent for the whole run, same as Gradient's counter");
         }
 
         // ---- "Modifier Upgrade" shop upgrade's generic level system (see
@@ -2530,9 +2544,9 @@ namespace Contigu.Tests
             var gridLeveled = new GridManager();
             var leveled = gridLeveled.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers, new List<int> { 3 });
 
-            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, unleveled.ModifierBonus);
-            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell * 2, leveled.ModifierBonus, "A level-3 (2x factor) flat bonus should be exactly double");
-            Assert.Greater(leveled.Chips, unleveled.Chips, "The real score total (Chips) should reflect the scaled bonus, not just the event shown on screen");
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CouronneBonusPerCell), unleveled.AdditiveMultBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CouronneBonusPerCell) * 2, MultEventSum(leveled), "A level-3 (2x factor) flat bonus should be exactly double");
+            Assert.Greater(leveled.Mult, unleveled.Mult, "The real Mult should reflect the scaled bonus, not just the event shown on screen");
         }
 
         [Test]
@@ -2572,8 +2586,8 @@ namespace Contigu.Tests
             var gridEmptyLevels = new GridManager();
             var emptyLevels = gridEmptyLevels.PlacePiece(single, PieceColor.Coral, 0, 3, modifiers, new List<int>());
 
-            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, noLevels.ModifierBonus);
-            Assert.AreEqual(ScoringConstants.CouronneBonusPerCell, emptyLevels.ModifierBonus, "A modifierLevels list too short to cover this slot should fall back to level 1, not throw or silently zero it out");
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CouronneBonusPerCell), noLevels.AdditiveMultBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.CouronneBonusPerCell), emptyLevels.AdditiveMultBonus, "A modifierLevels list too short to cover this slot should fall back to level 1, not throw or silently zero it out");
         }
     }
 }

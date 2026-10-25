@@ -3134,7 +3134,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Multitude_GivesFlatPointsEqualToDeckSize()
+        public void Multitude_GivesMultPerTenSeedsInTheBag()
         {
             var run = new RunManager(new SystemRandomProvider(1), TestChallenges.QuotaOnlyMarathon);
             GiveActiveModifier(run, ModifierId.Multitude);
@@ -3142,7 +3142,8 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard, outcome.Placement.ModifierBonus);
+            Assert.AreEqual(run.Deck.DeckCount / (float)ScoringConstants.MultitudeCardsPerMult, outcome.Placement.ProgressiveAdditiveMult, 0.001f);
+            Assert.AreEqual(0, outcome.Placement.ModifierBonus, "Multitude no longer scores points");
         }
 
         [Test]
@@ -3190,7 +3191,7 @@ namespace Contigu.Tests
             var outcome = run.PlacePiece(0, 0, 0);
 
             Assert.IsTrue(outcome.Placement.Success);
-            Assert.AreEqual(2 * run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard, outcome.Placement.ModifierBonus, "Holding Multitude twice (via Copieur) should stack additively");
+            Assert.AreEqual(2 * run.Deck.DeckCount / (float)ScoringConstants.MultitudeCardsPerMult, outcome.Placement.ProgressiveAdditiveMult, 0.001f, "Holding Multitude twice (via Copieur) should stack additively");
         }
 
         // ---- Tenth batch: Experience (mult scaling with special pieces
@@ -3342,7 +3343,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
-            Assert.AreEqual("Currently +" + ScoringConstants.EpuisementStartingBonus + " pts", run.GetProgressiveModifierStateText(ModifierId.Epuisement));
+            Assert.AreEqual("Currently +" + ScoringConstants.PointsToMult(ScoringConstants.EpuisementStartingBonus) + " Mult", run.GetProgressiveModifierStateText(ModifierId.Epuisement));
         }
 
         [Test]
@@ -3350,7 +3351,9 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(1));
 
-            Assert.AreEqual("Currently +" + (run.Deck.DeckCount * ScoringConstants.MultitudeBonusPerDeckCard) + " pts", run.GetProgressiveModifierStateText(ModifierId.Multitude));
+            var text = run.GetProgressiveModifierStateText(ModifierId.Multitude);
+            StringAssert.StartsWith("Currently +", text);
+            StringAssert.EndsWith(" Mult", text);
         }
 
         [Test]

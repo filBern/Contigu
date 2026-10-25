@@ -95,7 +95,7 @@ namespace Contigu.Tests
         {
             var edge = Place(new GridManager(), ShapeId.Single, PieceColor.Coral, 0, 3, ModifierId.Haie);
             var middle = Place(new GridManager(), ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Haie);
-            Assert.AreEqual(middle.ModifierBonus + ScoringConstants.HedgerowBonusPerCell, edge.ModifierBonus);
+            Assert.AreEqual(middle.AdditiveMultBonus + ScoringConstants.PointsToMult(ScoringConstants.HedgerowBonusPerCell), edge.AdditiveMultBonus);
         }
 
         [Test]
@@ -124,9 +124,9 @@ namespace Contigu.Tests
         {
             var straight = Place(new GridManager(), ShapeId.TriIH, PieceColor.Coral, 1, 1, ModifierId.Haricot);
             var plain = Place(new GridManager(), ShapeId.TriIH, PieceColor.Coral, 1, 1, ModifierId.Chaine);
-            Assert.AreEqual(ScoringConstants.BeanstalkBonus, straight.ModifierBonus - plain.ModifierBonus + 0);
-            Assert.AreEqual(0, Place(new GridManager(), ShapeId.TriL, PieceColor.Coral, 1, 1, ModifierId.Haricot).ModifierBonus);
-            Assert.AreEqual(0, Place(new GridManager(), ShapeId.DomH, PieceColor.Coral, 1, 1, ModifierId.Haricot).ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.BeanstalkBonus), straight.AdditiveMultBonus - plain.AdditiveMultBonus);
+            Assert.AreEqual(0, Place(new GridManager(), ShapeId.TriL, PieceColor.Coral, 1, 1, ModifierId.Haricot).AdditiveMultBonus);
+            Assert.AreEqual(0, Place(new GridManager(), ShapeId.DomH, PieceColor.Coral, 1, 1, ModifierId.Haricot).AdditiveMultBonus);
         }
 
         [Test]
@@ -136,7 +136,7 @@ namespace Contigu.Tests
             Fill(grid, PieceColor.Teal, (2, 2), (4, 2));
             Fill(grid, PieceColor.Coral, (3, 3));
             var result = Place(grid, ShapeId.Single, PieceColor.Coral, 3, 2, ModifierId.Patchwork);
-            Assert.AreEqual(2 * ScoringConstants.PatchworkBonusPerTile, result.ModifierBonus, "two Teal neighbors, the Coral one doesn't count");
+            Assert.AreEqual(ScoringConstants.PointsToMult(2 * ScoringConstants.PatchworkBonusPerTile), result.AdditiveMultBonus, "two Teal neighbors, the Coral one doesn't count");
         }
 
         [Test]
@@ -216,10 +216,10 @@ namespace Contigu.Tests
         {
             var grid = new GridManager();
             Fill(grid, PieceColor.Teal, (1, 2), (3, 2), (2, 1));
-            Assert.AreEqual(ScoringConstants.WreathBonusPerCell, Place(grid, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Guirlande).ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.WreathBonusPerCell), Place(grid, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Guirlande).AdditiveMultBonus);
             var two = new GridManager();
             Fill(two, PieceColor.Teal, (1, 2), (3, 2));
-            Assert.AreEqual(0, Place(two, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Guirlande).ModifierBonus);
+            Assert.AreEqual(0, Place(two, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Guirlande).AdditiveMultBonus);
         }
 
         [Test]
@@ -274,7 +274,7 @@ namespace Contigu.Tests
         {
             Assert.AreEqual(ScoringConstants.ReaperMultPerLine, HarvestOneRow(ModifierId.Faucheur).AdditiveMultBonus);
             Assert.AreEqual(EconomyConstants.TitheLueurPerLine, HarvestOneRow(ModifierId.Dime).ModifierLueurBonus);
-            Assert.AreEqual(GridManager.Size * ScoringConstants.BountyBonusPerTile, HarvestOneRow(ModifierId.Prime).ModifierBonus);
+            Assert.AreEqual(ScoringConstants.PointsToMult(GridManager.Size * ScoringConstants.BountyBonusPerTile), HarvestOneRow(ModifierId.Prime).AdditiveMultBonus);
             // The lone row was the only thing planted: the garden is empty after the harvest.
             int baseline = HarvestOneRow(ModifierId.Chaine).ModifierMultiplier;
             Assert.AreEqual(baseline * ScoringConstants.CleanSlateMultiplier, HarvestOneRow(ModifierId.TableRase).ModifierMultiplier);

@@ -13,7 +13,7 @@ namespace Contigu.Core
         {
             return new Dictionary<ModifierId, PostClearModifierEffect>
             {
-                { ModifierId.Collectionneur, ctx => ApplyCollectionneur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Collectionneur, ctx => PointsToMult(ctx, () => ApplyCollectionneur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.CollectionneurLueur, ctx => { ctx.Lueur += ApplyCollectionneurLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Macon, ctx => { ctx.AdditiveMult += ApplyMaconBonus(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Demolisseur, ctx => { ctx.Multiplier *= ApplyDemolisseur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -34,7 +34,7 @@ namespace Contigu.Core
                 { ModifierId.Dime, ctx => { ctx.Lueur += ApplyDime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.CultureRang, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, true, ScoringConstants.RowCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.CultureColonne, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, false, ScoringConstants.ColumnCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Prime, ctx => ApplyPrime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events) },
+                { ModifierId.Prime, ctx => PointsToMult(ctx, () => ApplyPrime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.BriseGlace, ctx => { ctx.AdditiveMult += ApplyBriseGlace(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Densite, ctx => { ctx.ProgressiveAdditiveMult += ApplyDensite(ctx.PlacedCells, ctx.Events); return 0; } }
             };
