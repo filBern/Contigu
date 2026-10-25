@@ -99,6 +99,9 @@ namespace Contigu.Core
         /// </summary>
         public const int RandomPieceTraitChancePercent = 100;
 
+        /// <summary>Chance, for a candidate piece of a Seed Pack / Random Piece that already carries an upgrade, to carry one more on another tile (rolled again for a third, and so on).</summary>
+        public const int ExtraUpgradeChancePercent = 12;
+
         // Lueur-earning modifiers, each adapted from an existing score
         // modifier of the same shape, paying Lueur instead. Values are
         // roughly scaled against LueurPerColorGroup (2) — a per-line one is

@@ -99,6 +99,33 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void SeedPackSeeds_SometimesCarryMoreThanOneUpgrade_ButMostlyJustOne()
+        {
+            var run = ShopRun();
+            int total = 0;
+            int multi = 0;
+            for (int roll = 0; roll < 600; roll++)
+            {
+                foreach (var token in run.Upgrades.GetCandidatePiecesFor(UpgradeCatalog.SeedPack))
+                {
+                    total++;
+                    Assert.GreaterOrEqual(token.TraitCount, 1);
+                    if (token.TraitCount > 1)
+                    {
+                        multi++;
+                        var cells = new System.Collections.Generic.HashSet<int>();
+                        foreach (var trait in token.Traits)
+                        {
+                            Assert.IsTrue(cells.Add(trait.LocalCellIndex), "extra upgrades sit on other tiles");
+                        }
+                    }
+                }
+            }
+            Assert.Greater(multi, 0, "a few seeds carry two upgrades");
+            Assert.Less(multi, total / 3, "but most carry only one");
+        }
+
+        [Test]
         public void AbandonPending_ClosesAnyChoice_WithoutRefund()
         {
             var run = ShopRun();

@@ -152,30 +152,60 @@ namespace Contigu.Core
                 var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];
                 var color = PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
 
-                PieceTrait? trait = null;
+                PieceToken token = new PieceToken(shape, color);
                 if (_rng.Next(100) < EconomyConstants.RandomPieceTraitChancePercent)
                 {
-                    // A small number of Grid-pool entries (currently just PermanentBonusSquare) have no
-                    // corresponding PieceTraitKind at all — a board-position upgrade, not a piece
-                    // enchantment — so re-roll rather than crash on a null trait kind. Bounded to stay
-                    // safe even in a hypothetical pool made up mostly of such entries.
-                    PieceTraitKind? kind = null;
-                    for (int attempt = 0; attempt < 50 && !kind.HasValue; attempt++)
+                    // Most candidates carry one upgrade; a small chance adds one more on another tile (and, rarer still, another one after it).
+                    int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
+                    while (token.TraitCount < cellCount)
                     {
-                        var rolledGridUpgrade = RollFromPool(UpgradePool.Grid);
-                        kind = TraitKindFor(rolledGridUpgrade.Id);
-                    }
-                    if (kind.HasValue)
-                    {
-                        int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
-                        int localIndex = _rng.Next(cellCount);
-                        trait = new PieceTrait(kind.Value, localIndex, PieceTrait.TargetColorFor(kind.Value, color));
+                        var rolled = RollCandidateTrait(color, token, cellCount);
+                        if (!rolled.HasValue)
+                        {
+                            break;
+                        }
+                        token = token.WithAddedTrait(rolled.Value);
+                        if (_rng.Next(100) >= EconomyConstants.ExtraUpgradeChancePercent)
+                        {
+                            break;
+                        }
                     }
                 }
-
-                candidates[i] = new PieceToken(shape, color, trait);
+                candidates[i] = token;
             }
             return candidates;
+        }
+
+        /// <summary>
+        /// One rolled Grid-pool tile trait for a candidate piece, on a tile of <paramref name="token"/> that carries none yet. A small number of
+        /// Grid-pool entries (currently just PermanentBonusSquare) have no PieceTraitKind at all — a board-position upgrade, not a piece
+        /// enchantment — so it re-rolls rather than crash on a null kind (bounded, so a hypothetical pool of mostly such entries stays safe).
+        /// </summary>
+        private PieceTrait? RollCandidateTrait(PieceColor color, PieceToken token, int cellCount)
+        {
+            PieceTraitKind? kind = null;
+            for (int attempt = 0; attempt < 50 && !kind.HasValue; attempt++)
+            {
+                kind = TraitKindFor(RollFromPool(UpgradePool.Grid).Id);
+            }
+            if (!kind.HasValue)
+            {
+                return null;
+            }
+            var free = new List<int>();
+            for (int c = 0; c < cellCount; c++)
+            {
+                if (!token.UsesCell(c))
+                {
+                    free.Add(c);
+                }
+            }
+            if (free.Count == 0)
+            {
+                return null;
+            }
+            int localIndex = free[_rng.Next(free.Count)];
+            return new PieceTrait(kind.Value, localIndex, PieceTrait.TargetColorFor(kind.Value, color));
         }
 
         /// <summary>Adds the candidate the player picked (see GetCandidatePiecesFor) straight to the deck, trait included — the counterpart to ApplyToChosenTiles for a Bank-pool sub-choice whose "choice" is a whole token rather than an index into the existing deck.</summary>
