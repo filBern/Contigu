@@ -75,7 +75,7 @@ namespace Contigu.RunSim
                     }
                     catch (Exception e)
                     {
-                        res = new RunResult { Stuck = true, StuckReason = "exception: " + e.GetType().Name + ": " + e.Message };
+                        res = new RunResult { Stuck = true, StuckReason = "exception: " + e.GetType().Name + ": " + e.Message + " @ " + (e.StackTrace ?? "").Split((char)10)[0].Trim() };
                         Console.Error.WriteLine("seed " + runSeed + " (" + policy + "): " + e);
                     }
                     results.Add(res);

@@ -66,6 +66,9 @@ namespace Contigu.Tests
             // Kin on one tile of a domino, a Pip on the other: Kin +4 for the upgraded neighbor, Pip +1.
             var kin = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Kin, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
             Assert.AreEqual(ScoringConstants.KinBonusPerNeighbor + ScoringConstants.PipBonus, kin.TraitBonus);
+            // On the garden's edge the missing neighbors just do not count.
+            var corner = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Kin, 0), new PieceTrait(PieceTraitKind.Pip, 1), 0, 0);
+            Assert.AreEqual(ScoringConstants.KinBonusPerNeighbor + ScoringConstants.PipBonus, corner.TraitBonus);
             // Amplifier counts its neighbor's points twice; Echo copies them.
             var amplifier = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Amplifier, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
             Assert.AreEqual(2 * ScoringConstants.PipBonus, amplifier.TraitBonus);

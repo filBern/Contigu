@@ -489,6 +489,10 @@ namespace Contigu.Core
         /// <summary>The upgrade of the tile at <paramref name="pos"/> as this placement saw it (a tile harvested by this very placement still has it).</summary>
         private PieceTrait? TraitAsPlaced(Vector2Int pos, PlacementResult placement)
         {
+            if (!GridManager.InBounds(pos.x, pos.y))
+            {
+                return null;
+            }
             var cell = Grid.GetCell(pos);
             if (cell.IsFilled && cell.OriginTrait.HasValue)
             {
