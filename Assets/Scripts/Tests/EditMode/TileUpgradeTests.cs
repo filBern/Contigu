@@ -204,7 +204,7 @@ namespace Contigu.Tests
             Assert.AreEqual(7, PlantAt(rich, PieceTraitKind.Miser, PieceColor.Coral, 2, 2).TraitBonus);
             var richer = NewRun();
             richer.DebugSetLueur(500);
-            Assert.AreEqual(ScoringConstants.MiserMaxBonus, PlantAt(richer, PieceTraitKind.Miser, PieceColor.Coral, 2, 2).TraitBonus);
+            Assert.AreEqual(500 * ScoringConstants.MiserBonusPerPollen, PlantAt(richer, PieceTraitKind.Miser, PieceColor.Coral, 2, 2).TraitBonus);
 
             var breeze = NewRun();
             breeze.DebugSetShufflesRemaining(100);

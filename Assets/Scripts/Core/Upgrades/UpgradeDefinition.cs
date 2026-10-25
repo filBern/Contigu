@@ -244,7 +244,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition MiserTile = new UpgradeDefinition(
             UpgradeId.MiserTile, UpgradePool.Grid, "Miser Sprout",
-            "+1 pt per Pollen held (up to +15).", false, UpgradeRarity.Common);
+            "+1 pt per Pollen held, with no limit.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition StormyTile = new UpgradeDefinition(
             UpgradeId.StormyTile, UpgradePool.Grid, "Stormy Sprout",

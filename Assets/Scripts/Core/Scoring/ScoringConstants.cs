@@ -424,7 +424,6 @@ namespace Contigu.Core
         public const int DawnBonus = 12;
         public const int DuskBonus = 20;
         public const int MiserBonusPerPollen = 1;
-        public const int MiserMaxBonus = 15;
         public const int StormyBonus = 12;
         public const int ElderBonusPerRound = 2;
         public const int HarvesterBonusPerLine = 10;
@@ -447,7 +446,6 @@ namespace Contigu.Core
         public const int HoneycombPollen = 1;
         public const int DewdropPollenPerLine = 2;
         public const int KeystoneMultBonus = 5;
-        public const int GrowthMaxBonus = 30;
         public const int GamblerWinBonus = 40;
         public const int GamblerLossPenalty = 10;
     }

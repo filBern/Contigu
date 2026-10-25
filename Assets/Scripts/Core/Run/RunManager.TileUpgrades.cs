@@ -199,7 +199,7 @@ namespace Contigu.Core
                     }
                     break;
                 case PieceTraitKind.Miser:
-                    bonus = Mathf.Min(Lueur * ScoringConstants.MiserBonusPerPollen, ScoringConstants.MiserMaxBonus);
+                    bonus = Lueur * ScoringConstants.MiserBonusPerPollen;
                     break;
                 case PieceTraitKind.Stormy:
                     if (CurrentWeather != WeatherId.Clear)
@@ -326,7 +326,7 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Growth:
                     var growthCell = Grid.GetCell(pos);
-                    bonus = 1 + Mathf.Min(growthCell.GrowthCount, ScoringConstants.GrowthMaxBonus - 1);
+                    bonus = 1 + growthCell.GrowthCount;
                     growthCell.GrowthCount++;
                     break;
                 case PieceTraitKind.Gambler:

@@ -165,7 +165,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Dusk:
                     return "Scores +" + ScoringConstants.DuskBonus + " pts when planted as the last seed of your hand.";
                 case PieceTraitKind.Miser:
-                    return "Scores +" + ScoringConstants.MiserBonusPerPollen + " pt per Pollen you hold (up to +" + ScoringConstants.MiserMaxBonus + ").";
+                    return "Scores +" + ScoringConstants.MiserBonusPerPollen + " pt per Pollen you hold, with no limit.";
                 case PieceTraitKind.Stormy:
                     return "Scores +" + ScoringConstants.StormyBonus + " pts when the weather isn't Clear skies.";
                 case PieceTraitKind.Elder:
@@ -203,7 +203,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Keystone:
                     return "Adds +" + ScoringConstants.KeystoneMultBonus + " Mult when it sits on a corner or in the middle of the garden.";
                 case PieceTraitKind.Growth:
-                    return "Scores +1 pt, then one more each time it scores again this round (up to +" + ScoringConstants.GrowthMaxBonus + ").";
+                    return "Scores +1 pt, then one more each time it scores again this round, with no limit.";
                 case PieceTraitKind.Gambler:
                     return "A coin flip: +" + ScoringConstants.GamblerWinBonus + " pts or -" + ScoringConstants.GamblerLossPenalty + " pts.";
                 case PieceTraitKind.Warden:

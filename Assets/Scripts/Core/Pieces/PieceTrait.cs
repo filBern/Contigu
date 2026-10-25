@@ -84,7 +84,7 @@ namespace Contigu.Core
         /// <summary>"Dusk Sprout" — +20 pts if planted as the last seed of the round.</summary>
         Dusk,
 
-        /// <summary>"Miser Sprout" — +1 pt per Pollen held (up to +15).</summary>
+        /// <summary>"Miser Sprout" — +1 pt per Pollen held, no cap.</summary>
         Miser,
 
         /// <summary>"Stormy Sprout" — +12 pts when the weather isn't Clear.</summary>
