@@ -254,7 +254,7 @@ namespace Contigu.Presentation
             previewContainer.sizeDelta = new Vector2(RowPreviewSize, RowPreviewSize);
 
             var trait = FindRepresentativeTrait(shape, color);
-            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject, PreviewTileSize);
+            ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject, PreviewTileSize);
 
             int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
             var levelLabel = UIFactory.CreateText(row.transform, "Level", "Lv. " + level, 14, Color.black);
@@ -276,17 +276,19 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait.</summary>
-        private PieceTrait? FindRepresentativeTrait(ShapeId shape, PieceColor color)
+        private IReadOnlyList<PieceTrait> FindRepresentativeTrait(ShapeId shape, PieceColor color)
         {
+            // The most upgraded copy of this type stands for it.
             var tokens = _deck.Deck;
+            IReadOnlyList<PieceTrait> best = null;
             for (int i = 0; i < tokens.Count; i++)
             {
-                if (tokens[i].Matches(shape, color) && tokens[i].Trait.HasValue)
+                if (tokens[i].Matches(shape, color) && tokens[i].TraitCount > (best == null ? 0 : best.Count))
                 {
-                    return tokens[i].Trait;
+                    best = tokens[i].Traits;
                 }
             }
-            return null;
+            return best;
         }
     }
 }

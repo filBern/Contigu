@@ -53,6 +53,49 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
+        {
+            var run = NewRun();
+            var token = new PieceToken(ShapeId.DomH, PieceColor.Coral, new PieceTrait(PieceTraitKind.Pip, 0), new[] { new PieceTrait(PieceTraitKind.Pip, 1) });
+            Assert.AreEqual(2, token.TraitCount);
+            int slot = HandSlotWith(run, token);
+            var placement = run.PlacePiece(slot, 2, 2).Placement;
+            Assert.IsTrue(placement.Success);
+            Assert.AreEqual(2 * ScoringConstants.PipBonus, placement.TraitBonus);
+        }
+
+        [Test]
+        public void TaggingASeedTwice_PutsTheSecondUpgradeOnAnotherTile()
+        {
+            var run = NewRun();
+            var deck = run.Deck;
+            int index = -1;
+            for (int i = 0; i < deck.Deck.Count && index < 0; i++)
+            {
+                if (deck.Deck[i].Shape == ShapeId.Sq2 && !deck.Deck[i].Trait.HasValue)
+                {
+                    index = i;
+                }
+            }
+            Assert.GreaterOrEqual(index, 0);
+            var rng = new SystemRandomProvider(5);
+            for (int round = 0; round < 4; round++)
+            {
+                deck.TagSpecificTokens(new[] { index }, PieceTraitKind.Pip, rng);
+            }
+            var token = deck.Deck[index];
+            Assert.AreEqual(4, token.TraitCount, "a 4-tile seed holds four upgrades");
+            var cells = new HashSet<int>();
+            foreach (var trait in token.Traits)
+            {
+                Assert.IsTrue(cells.Add(trait.LocalCellIndex), "each upgrade sits on its own tile");
+            }
+            // Once every tile has one, a new upgrade replaces one instead of stacking on a tile.
+            deck.TagSpecificTokens(new[] { index }, PieceTraitKind.Lucky, rng);
+            Assert.AreEqual(4, deck.Deck[index].TraitCount);
+        }
+
+        [Test]
         public void EveryNewTileUpgrade_IsInTheGridPool_WithATraitKindAndAnIcon()
         {
             var ids = new[]

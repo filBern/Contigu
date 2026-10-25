@@ -23,7 +23,7 @@ namespace Contigu.Presentation
         private GridCellView[,] _cells;
         private PieceShape _selectedShape;
         private PieceColor? _selectedColor;
-        private PieceTrait? _selectedTrait;
+        private IReadOnlyList<PieceTrait> _selectedTraits;
         private readonly List<Vector2Int> _hoveredFootprint = new List<Vector2Int>();
         // Separate from _hoveredFootprint: tracks whole rows/columns that would clear, mostly cells outside the piece's own footprint.
         private readonly List<Vector2Int> _lineClearPreviewCells = new List<Vector2Int>();
@@ -506,11 +506,11 @@ namespace Contigu.Presentation
             }
         }
 
-        public void SetSelectedShape(PieceShape shape, PieceColor? color = null, PieceTrait? trait = null)
+        public void SetSelectedShape(PieceShape shape, PieceColor? color = null, IReadOnlyList<PieceTrait> traits = null)
         {
             _selectedShape = shape;
             _selectedColor = color;
-            _selectedTrait = trait;
+            _selectedTraits = traits;
             _lastHoverOrigin = null;
             ClearHover();
         }
@@ -525,7 +525,7 @@ namespace Contigu.Presentation
         {
             _selectedShape = null;
             _selectedColor = null;
-            _selectedTrait = null;
+            _selectedTraits = null;
             _lastHoverOrigin = null;
             _hoveredFootprint.Clear();
             _lineClearPreviewCells.Clear();
@@ -565,8 +565,15 @@ namespace Contigu.Presentation
                 {
                     // Only the one cell matching the selected piece's own
                     // enchanted local index previews the trait badge.
-                    bool isTraitCell = _selectedTrait.HasValue && _selectedTrait.Value.LocalCellIndex == i;
-                    _cells[cx, cy].SetHoverTint(overlay, valid, isTraitCell ? _selectedTrait : null, _selectedColor);
+                    PieceTrait? cellTrait = null;
+                    for (int t = 0; _selectedTraits != null && t < _selectedTraits.Count; t++)
+                    {
+                        if (_selectedTraits[t].LocalCellIndex == i)
+                        {
+                            cellTrait = _selectedTraits[t];
+                        }
+                    }
+                    _cells[cx, cy].SetHoverTint(overlay, valid, cellTrait, _selectedColor);
                     _hoveredFootprint.Add(new Vector2Int(cx, cy));
                     footprint.Add(new Vector2Int(cx, cy));
                 }

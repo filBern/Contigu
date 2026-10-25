@@ -177,9 +177,9 @@ namespace Contigu.Presentation
             _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen);
         }
 
-        private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip)
+        private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
         {
-            ShapePreviewFactory.Build(host, shape, color, trait, tooltip, host.parent.gameObject);
+            ShapePreviewFactory.BuildWithTraits(host, shape, color, traits, tooltip, host.parent.gameObject);
         }
 
         private void ShowPackOfUpgrades(UpgradeDefinition pack)
@@ -241,7 +241,7 @@ namespace Contigu.Presentation
             foreach (var token in _run.PendingUpgradePieceCandidates)
             {
                 var t = token;
-                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Trait, _tooltipView) });
+                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
             }
             ShowShelfChoice(source, Loc.T("choice.pickSeed"), entries, true, OnPieceChoiceConfirmed);
         }

@@ -122,15 +122,27 @@ namespace Contigu.Presentation
                 Destroy(previewContainer.GetChild(i).gameObject);
             }
 
-            PieceTrait? previewTrait = null;
+            // The seed's upgrades it already carries, plus (when selected) the one it is about to get on a free tile.
+            var shown = new List<PieceTrait>(token.Traits);
             if (showTrait && _previewTraitKind.HasValue)
             {
-                // Tinted always tints to the token's own color; cell index 0 is a placeholder, the exact cell is decided on confirm.
+                int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
+                int freeCell = 0;
+                for (int c = 0; c < cellCount; c++)
+                {
+                    if (!token.UsesCell(c))
+                    {
+                        freeCell = c;
+                        break;
+                    }
+                }
+                // Tinted always tints to the token's own color; the exact tile is decided on confirm (this is a preview only).
                 PieceColor? tintedColor = PieceTrait.TargetColorFor(_previewTraitKind.Value, token.Color);
-                previewTrait = new PieceTrait(_previewTraitKind.Value, 0, tintedColor);
+                shown.RemoveAll(existing => existing.LocalCellIndex == freeCell && token.TraitCount >= cellCount);
+                shown.Add(new PieceTrait(_previewTraitKind.Value, freeCell, tintedColor));
             }
 
-            var badge = ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, previewTrait, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject);
+            var badge = ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, shown, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject);
             if (animate && badge != null && !MotionSettings.Reduced)
             {
                 StartCoroutine(FadeInBadge(badge));

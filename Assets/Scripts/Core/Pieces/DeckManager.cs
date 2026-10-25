@@ -374,10 +374,10 @@ namespace Contigu.Core
             }
 
             var current = _hand[handIndex].Value;
-            var recolored = new PieceToken(current.Shape, newColor, current.Trait);
+            var recolored = current.WithColor(newColor);
             _hand[handIndex] = recolored;
 
-            int deckIdx = _deck.FindIndex(t => t.Shape == current.Shape && t.Color == current.Color && Equals(t.Trait, current.Trait));
+            int deckIdx = _deck.FindIndex(t => t.Equals(current));
             if (deckIdx >= 0)
             {
                 _deck[deckIdx] = recolored;
@@ -410,7 +410,7 @@ namespace Contigu.Core
         /// </summary>
         private void SyncTagIntoLiveCopy(PieceToken before, PieceToken after)
         {
-            int dpIndex = _drawPile.FindIndex(t => t.Shape == before.Shape && t.Color == before.Color && Equals(t.Trait, before.Trait));
+            int dpIndex = _drawPile.FindIndex(t => t.Equals(before));
             if (dpIndex >= 0)
             {
                 _drawPile[dpIndex] = after;
@@ -423,7 +423,7 @@ namespace Contigu.Core
                     continue;
                 }
                 var handToken = _hand[i].Value;
-                if (handToken.Shape == before.Shape && handToken.Color == before.Color && Equals(handToken.Trait, before.Trait))
+                if (handToken.Equals(before))
                 {
                     _hand[i] = after;
                     return;
@@ -591,12 +591,24 @@ namespace Contigu.Core
         /// </summary>
         public IReadOnlyList<int> GetCandidateTokenIndices(int count, IRandomProvider rng, System.Func<PieceToken, bool> eligible = null)
         {
+            // Tiers: pieces with no upgrade yet, then pieces that still have a free cell for one more, then anything.
             var candidates = new List<int>();
             for (int i = 0; i < _deck.Count; i++)
             {
                 if (!_deck[i].Trait.HasValue && (eligible == null || eligible(_deck[i])))
                 {
                     candidates.Add(i);
+                }
+            }
+            if (candidates.Count < count)
+            {
+                candidates.Clear();
+                for (int i = 0; i < _deck.Count; i++)
+                {
+                    if ((eligible == null || eligible(_deck[i])) && _deck[i].TraitCount < PieceShapeCatalog.Get(_deck[i].Shape).Cells.Count)
+                    {
+                        candidates.Add(i);
+                    }
                 }
             }
             if (candidates.Count < count)
@@ -636,12 +648,47 @@ namespace Contigu.Core
                 int deckIndex = deckIndices[i];
                 var token = _deck[deckIndex];
                 int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
-                int localIndex = rng.Next(cellCount);
-                var trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
-                var taggedToken = token.WithTrait(trait);
+                // A piece can carry several upgrades, each on its own cell: prefer a free cell; only a piece with every cell already upgraded loses one.
+                var freeCells = new List<int>();
+                for (int c = 0; c < cellCount; c++)
+                {
+                    if (!token.UsesCell(c))
+                    {
+                        freeCells.Add(c);
+                    }
+                }
+                var trait = new PieceTrait(kind, 0, PieceTrait.TargetColorFor(kind, token.Color));
+                PieceToken taggedToken;
+                if (freeCells.Count > 0)
+                {
+                    int localIndex = freeCells[rng.Next(freeCells.Count)];
+                    trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
+                    taggedToken = token.WithAddedTrait(trait);
+                }
+                else
+                {
+                    int localIndex = rng.Next(cellCount);
+                    trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
+                    taggedToken = ReplaceTraitOnCell(token, trait);
+                }
                 _deck[deckIndex] = taggedToken;
                 SyncTagIntoLiveCopy(token, taggedToken);
             }
+        }
+
+        /// <summary>Puts <paramref name="trait"/> on its cell of a piece whose cells all carry an upgrade already, replacing the one there.</summary>
+        private static PieceToken ReplaceTraitOnCell(PieceToken token, PieceTrait trait)
+        {
+            var all = token.Traits;
+            PieceToken result = default(PieceToken);
+            bool started = false;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var keep = all[i].LocalCellIndex == trait.LocalCellIndex ? trait : all[i];
+                result = started ? result.WithAddedTrait(keep) : new PieceToken(token.Shape, token.Color, keep, null);
+                started = true;
+            }
+            return started ? result : token.WithTrait(trait);
         }
     }
 }

@@ -767,9 +767,12 @@ namespace Contigu.Core
                 return new PlacementOutcome(PlacementResult.Failure("Invalid placement"), State, RoundScore, TotalScore, PiecesRemainingThisRound);
             }
 
-            Vector2Int? traitCellPos = token.Trait.HasValue
-                ? new Vector2Int(x, y) + shape.Cells[token.Trait.Value.LocalCellIndex]
-                : (Vector2Int?)null;
+            // A piece can carry several upgrades, each on its own cell: every one fires.
+            var tokenTraits = new List<(PieceTrait Trait, Vector2Int Pos)>();
+            foreach (var ownTrait in token.Traits)
+            {
+                tokenTraits.Add((ownTrait, new Vector2Int(x, y) + shape.Cells[ownTrait.LocalCellIndex]));
+            }
 
             // Chameleon and Spark both need grid state read BEFORE Grid.PlacePiece
             // mutates it: Chameleon overrides the color the piece places as, and
@@ -779,14 +782,17 @@ namespace Contigu.Core
             PieceColor placementColor = token.Color;
             PieceColor? chameleonOriginalColor = null;
             int sparkStreakBeforePlacement = 0;
-            if (token.Trait.HasValue)
+            if (tokenTraits.Count > 0)
             {
-                // Experience's driver - every trait kind counts as "special".
+                // Experience's driver - every trait kind counts as "special" (once per piece, however many upgrades it carries).
                 _specialPiecesPlayedCount++;
-                var kind = token.Trait.Value.Kind;
-                if (kind == PieceTraitKind.Chameleon)
+            }
+            for (int t = 0; t < tokenTraits.Count; t++)
+            {
+                var kind = tokenTraits[t].Trait.Kind;
+                if (kind == PieceTraitKind.Chameleon && placementColor == token.Color)
                 {
-                    placementColor = ResolveChameleonColor(shape, x, y, traitCellPos.Value, token.Color);
+                    placementColor = ResolveChameleonColor(shape, x, y, tokenTraits[t].Pos, token.Color);
                     if (placementColor != token.Color)
                     {
                         // Recoloring also updates the deck copy, not just this placement.
@@ -810,7 +816,11 @@ namespace Contigu.Core
             int streakBeforePlacement = Grid.PlacementsSinceLastClear;
 
             StampMasteryBonuses(shape, placementColor, x, y);
-            var transientTraitCells = ApplyTokenTrait(token.Trait, traitCellPos, shape, x, y);
+            var transientTraitCells = new List<Cell>();
+            for (int t = 0; t < tokenTraits.Count; t++)
+            {
+                transientTraitCells.AddRange(ApplyTokenTrait(tokenTraits[t].Trait, tokenTraits[t].Pos, shape, x, y));
+            }
             StampPersistentTraits(persistentTraits, shape, x, y, transientTraitCells);
             // Snapshot BEFORE Grid.PlacePiece, same reasoning as the
             // Chameleon/Spark reads above: a poisoned cell this placement clears
@@ -818,9 +828,9 @@ namespace Contigu.Core
             var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
             var placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
             ClearTokenTraitCells(transientTraitCells);
-            if (token.Trait.HasValue)
+            for (int t = 0; t < tokenTraits.Count; t++)
             {
-                ApplyPostPlacementTraitBonus(token.Trait.Value, traitCellPos.Value, sparkStreakBeforePlacement, placement);
+                ApplyPostPlacementTraitBonus(tokenTraits[t].Trait, tokenTraits[t].Pos, sparkStreakBeforePlacement, placement);
             }
             ApplyPersistentTraitBonuses(persistentTraits, streakBeforePlacement, placement);
             ApplyHandSlotModifierBonus(handIndex, placement);

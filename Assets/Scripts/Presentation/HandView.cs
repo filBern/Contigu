@@ -501,7 +501,7 @@ namespace Contigu.Presentation
             {
                 Destroy(_dragGhostPreview.GetChild(c).gameObject);
             }
-            ShapePreviewFactory.Build(_dragGhostPreview, shape, token.Color, token.Trait, _tooltip, null, GhostTileSize);
+            ShapePreviewFactory.BuildWithTraits(_dragGhostPreview, shape, token.Color, token.Traits, _tooltip, null, GhostTileSize);
 
             _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
             _dragGhost.gameObject.SetActive(true);
@@ -808,7 +808,7 @@ namespace Contigu.Presentation
                 maxExtent = Mathf.Max(maxExtent, shape.Cells[i].x + 1, shape.Cells[i].y + 1);
             }
             float cellSize = Mathf.Min(PreviewTileSize, SlotPreviewBudget / maxExtent);
-            ShapePreviewFactory.Build(container, shape, token.Color, token.Trait, _tooltip, clickForwardTarget, cellSize);
+            ShapePreviewFactory.BuildWithTraits(container, shape, token.Color, token.Traits, _tooltip, clickForwardTarget, cellSize);
         }
     }
 }

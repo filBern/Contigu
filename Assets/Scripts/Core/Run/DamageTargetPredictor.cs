@@ -78,7 +78,16 @@ namespace Contigu.Core
                 var token = tokenSlot.Value;
                 var shape = PieceShapeCatalog.GetRotated(token.Shape, run.Deck.HandRotations[handIndex]);
                 var previewGroup = run.Grid.PreviewGroup(shape, token.Color, anchorX, anchorY);
-                kind = FindPriorityCombatKind(run, previewGroup, token.Trait);
+                PieceTrait? combatTrait = null;
+                foreach (var ownTrait in token.Traits)
+                {
+                    if (PieceTrait.IsJokerCombatKind(ownTrait.Kind))
+                    {
+                        combatTrait = ownTrait;
+                        break;
+                    }
+                }
+                kind = FindPriorityCombatKind(run, previewGroup, combatTrait);
             }
             combatKind = kind;
 

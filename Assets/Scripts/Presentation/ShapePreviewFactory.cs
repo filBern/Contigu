@@ -35,6 +35,12 @@ namespace Contigu.Presentation
         /// </summary>
         public static RectTransform Build(RectTransform container, PieceShape shape, PieceColor color, PieceTrait? trait, TooltipView tooltip, GameObject clickForwardTarget, float? fixedCellSize = null)
         {
+            return BuildWithTraits(container, shape, color, trait.HasValue ? new[] { trait.Value } : null, tooltip, clickForwardTarget, fixedCellSize);
+        }
+
+        /// <summary>Same as <see cref="Build"/> for a piece carrying several upgrades, one badge on each upgraded cell.</summary>
+        public static RectTransform BuildWithTraits(RectTransform container, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip, GameObject clickForwardTarget, float? fixedCellSize = null)
+        {
             RectTransform builtBadge = null;
             int maxX = 0;
             int maxY = 0;
@@ -54,8 +60,19 @@ namespace Contigu.Presentation
                 ? fixedCellSize.Value
                 : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
 
-            bool badgeEveryCell = trait.HasValue && PieceTrait.IsJokerCombatKind(trait.Value.Kind);
-            Vector2Int? traitPos = trait.HasValue && !badgeEveryCell ? (Vector2Int?)shape.Cells[trait.Value.LocalCellIndex] : null;
+            PieceTrait? everyCellTrait = null;
+            var traitAt = new Dictionary<Vector2Int, PieceTrait>();
+            for (int t = 0; traits != null && t < traits.Count; t++)
+            {
+                if (PieceTrait.IsJokerCombatKind(traits[t].Kind))
+                {
+                    everyCellTrait = traits[t];
+                }
+                else
+                {
+                    traitAt[shape.Cells[traits[t].LocalCellIndex]] = traits[t];
+                }
+            }
 
             float startX = -(cols * cell) / 2f + cell / 2f;
             // Y increases upward, matching GridView's convention; otherwise shapes render vertically flipped from how they look once placed.
@@ -79,11 +96,22 @@ namespace Contigu.Presentation
                     img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                     img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
 
-                    if (badgeEveryCell || (traitPos.HasValue && traitPos.Value == new Vector2Int(x, y)))
+                    PieceTrait cellTrait = default(PieceTrait);
+                    bool hasCellTrait = everyCellTrait.HasValue;
+                    if (hasCellTrait)
+                    {
+                        cellTrait = everyCellTrait.Value;
+                    }
+                    else if (traitAt.TryGetValue(new Vector2Int(x, y), out var found))
+                    {
+                        hasCellTrait = true;
+                        cellTrait = found;
+                    }
+                    if (hasCellTrait)
                     {
                         // Sized relative to the cell itself rather than a fixed 14px, since a smaller preview cell would otherwise be nearly covered by the badge.
                         float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
-                        builtBadge = BuildTraitBadge(img.transform, trait.Value, tooltip, clickForwardTarget, badgeSize);
+                        builtBadge = BuildTraitBadge(img.transform, cellTrait, tooltip, clickForwardTarget, badgeSize);
                     }
                 }
             }

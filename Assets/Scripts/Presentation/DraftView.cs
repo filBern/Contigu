@@ -194,7 +194,7 @@ namespace Contigu.Presentation
             _typePreviewContainerByIndex[index] = previewContainer;
 
             var trait = FindRepresentativeTrait(shape, color);
-            ShapePreviewFactory.Build(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, cell.gameObject);
+            ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, cell.gameObject);
 
             int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
             var levelLabel = UIFactory.CreateText(cell.transform, "TypeLevel", "Lv. " + level, 14, Color.black);
@@ -207,17 +207,19 @@ namespace Contigu.Presentation
         }
 
         /// <summary>The trait carried by the first deck token matching (shape, color) that has one, or null if none of that type's copies are enchanted. Replace/Dupliquer/Recolorer operate on a type rather than a specific token (see DeckManager.ReplaceOneOfType), so this is a representative sample when copies carry different traits.</summary>
-        private PieceTrait? FindRepresentativeTrait(ShapeId shape, PieceColor color)
+        private IReadOnlyList<PieceTrait> FindRepresentativeTrait(ShapeId shape, PieceColor color)
         {
+            // The most upgraded copy of this type stands for it.
             var tokens = _deck.Deck;
+            IReadOnlyList<PieceTrait> best = null;
             for (int i = 0; i < tokens.Count; i++)
             {
-                if (tokens[i].Matches(shape, color) && tokens[i].Trait.HasValue)
+                if (tokens[i].Matches(shape, color) && tokens[i].TraitCount > (best == null ? 0 : best.Count))
                 {
-                    return tokens[i].Trait;
+                    best = tokens[i].Traits;
                 }
             }
-            return null;
+            return best;
         }
 
         private void OnTypeCellClicked(int index)

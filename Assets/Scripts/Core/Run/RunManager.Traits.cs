@@ -655,9 +655,12 @@ namespace Contigu.Core
             var deck = Deck.Deck;
             for (int i = 0; i < deck.Count; i++)
             {
-                if (deck[i].Trait.HasValue && PieceTrait.IsJokerCombatKind(deck[i].Trait.Value.Kind))
+                foreach (var trait in deck[i].Traits)
                 {
-                    kindsSeen.Add(deck[i].Trait.Value.Kind);
+                    if (PieceTrait.IsJokerCombatKind(trait.Kind))
+                    {
+                        kindsSeen.Add(trait.Kind);
+                    }
                 }
             }
             return kindsSeen.Count;

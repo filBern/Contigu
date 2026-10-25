@@ -28,7 +28,7 @@ namespace Contigu.Presentation
             var token = slot.Value;
             var rotation = _run.Deck.HandRotations[handIndex];
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
-            _gridView.SetSelectedShape(shape, token.Color, token.Trait);
+            _gridView.SetSelectedShape(shape, token.Color, token.Traits);
             _handView.SetShufflePulsing(false);
             SetStatusText("Drag onto the grid, or click a sprout, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
         }
