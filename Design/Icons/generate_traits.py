@@ -89,6 +89,20 @@ T['Warden'] = ('#3a6fb0', g('<path d="M32 8 L52 15 V32 C52 45 42 52 32 56 C22 52
 T['Aegis'] = ('#2f4f8c', g('<path d="M32 8 L52 15 V32 C52 45 42 52 32 56 C22 52 12 45 12 32 V15 Z"/>', '#e6f4ff') + g('<path d="M32 20 L38 30 H26 Z M26 32 H38 L32 44 Z"/>', '#4f7fd0', 2))
 T['Sower'] = ('#6fb04f', g('<ellipse cx="22" cy="42" rx="9" ry="13" transform="rotate(25 22 42)"/>', '#d8b574') + g('<path d="M42 54 V34 M42 42 C34 40 32 32 34 28 C42 28 46 34 42 42 M42 38 C50 36 54 28 52 24 C44 24 40 30 42 38" fill="none"/>', 'none', 4).replace(O, W))
 
+
+# ---- third batch (stacking / scaling tile upgrades)
+T['Kin'] = ('#d86f94', g('<rect x="8" y="20" width="21" height="24" rx="5"/><rect x="35" y="20" width="21" height="24" rx="5"/>', W) + g('<path d="M29 32 H35"/>', 'none', 4.5).replace(O, W) + g('<path d="M32 12 L36 18 H28 Z"/>', '#ffd84d', 2.5))
+T['Amplifier'] = ('#e8863a', g('<path d="M10 25 H22 L40 12 V52 L22 39 H10 Z"/>', W) + g('<path d="M46 22 Q54 32 46 42 M50 14 Q64 32 50 50" fill="none"/>', 'none', 3.5).replace(O, W))
+T['Echo'] = ('#6f8fd0', g('<circle cx="32" cy="32" r="7"/>', W) + g('<circle cx="32" cy="32" r="14" fill="none"/><circle cx="32" cy="32" r="21" fill="none"/>', 'none', 3.5).replace(O, W))
+T['Collector'] = ('#8c63b0', g('<circle cx="21" cy="21" r="9"/>', '#c8403f') + g('<circle cx="43" cy="21" r="9"/>', '#4f7fd0') + g('<circle cx="21" cy="43" r="9"/>', '#5a9e45') + g('<circle cx="43" cy="43" r="9"/>', '#e8a82e'))
+T['Resonance'] = ('#2f8c8c', g('<path d="M6 32 C14 8 22 8 28 32 C34 56 42 56 50 32 L58 32" fill="none"/>', 'none', 5).replace(O, W))
+T['Pouch'] = ('#a07a3a', g('<path d="M22 14 H42 L40 22 C54 30 54 54 32 54 C10 54 10 30 24 22 Z"/>', '#e8c98a') + g('<path d="M20 22 H44"/>', 'none', 4))
+T['Perennial'] = ('#3f9a5a', g('<path d="M32 54 V30 M32 40 C22 38 18 30 20 24 C28 24 34 32 32 40 M32 34 C42 32 46 24 44 18 C36 18 30 26 32 34" fill="none"/>', 'none', 4.5).replace(O, W) + text('∞', 22, 20, '#ffd84d'))
+T['Crescendo'] = ('#d86a3a', g('<rect x="8" y="40" width="12" height="14" rx="2"/><rect x="26" y="28" width="12" height="26" rx="2"/><rect x="44" y="12" width="12" height="42" rx="2"/>', W))
+T['Scholar'] = ('#4f7fd0', g('<path d="M32 18 C24 12 14 12 8 14 V50 C14 48 24 48 32 54 C40 48 50 48 56 50 V14 C50 12 40 12 32 18 Z"/>', W) + '<path d="M32 18 V54" stroke="%s" stroke-width="3"/>' % O)
+T['FullHouse'] = ('#c8403f', g(''.join('<rect x="%d" y="%d" width="14" height="14" rx="3"/>' % (x, y) for x, y in ((25, 8), (25, 25), (25, 42), (8, 25), (42, 25))), '#ffd84d', 3))
+T['Compound'] = ('#e8a82e', g('<ellipse cx="32" cy="46" rx="18" ry="7"/><ellipse cx="32" cy="36" rx="18" ry="7"/><ellipse cx="32" cy="26" rx="18" ry="7"/>', '#fff1b0', 3) + g('<path d="M50 16 V4 M44 10 H56" fill="none"/>', 'none', 4).replace(O, W))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

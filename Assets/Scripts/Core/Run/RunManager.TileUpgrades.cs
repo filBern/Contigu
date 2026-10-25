@@ -11,6 +11,55 @@ namespace Contigu.Core
         /// <summary>The tiles that do not count as "neighbors" of the tile upgrade being scored: the placed seed's own tiles for a fresh upgrade, none for an older one being counted again.</summary>
         private IReadOnlyList<Vector2Int> _tileUpgradeOwnCells;
 
+        /// <summary>Perennial Sprout's run-long counter: how many times any Perennial has scored this run.</summary>
+        private int _perennialScores;
+
+        /// <summary>
+        /// Amplifier (the points of every upgraded tile touching it count twice) and Echo (copies the biggest points bonus among them): they read
+        /// what the other upgrades just scored, so they resolve last. Only upgrades that scored points count, and an amplified or copied bonus is
+        /// never amplified again.
+        /// </summary>
+        private void ApplyNeighborCopyUpgrades(PlacementResult placement)
+        {
+            var scoredAt = new Dictionary<Vector2Int, int>();
+            foreach (var scoreEvent in placement.ScoreEvents)
+            {
+                if (scoreEvent.Type == ScoreEventType.Trait && scoreEvent.Amount > 0)
+                {
+                    int already;
+                    scoredAt.TryGetValue(scoreEvent.Position, out already);
+                    scoredAt[scoreEvent.Position] = already + scoreEvent.Amount;
+                }
+            }
+            if (scoredAt.Count == 0)
+            {
+                return;
+            }
+            foreach (var pos in placement.GroupCells)
+            {
+                var trait = TraitAsPlaced(pos, placement);
+                if (!trait.HasValue || (trait.Value.Kind != PieceTraitKind.Amplifier && trait.Value.Kind != PieceTraitKind.Echo))
+                {
+                    continue;
+                }
+                int sum = 0;
+                int best = 0;
+                for (int s = 0; s < TileUpgradeSteps.Length; s++)
+                {
+                    if (scoredAt.TryGetValue(pos + TileUpgradeSteps[s], out int amount))
+                    {
+                        sum += amount;
+                        best = Mathf.Max(best, amount);
+                    }
+                }
+                int copied = trait.Value.Kind == PieceTraitKind.Amplifier ? sum : best;
+                if (copied > 0)
+                {
+                    AddTraitBonus(placement, pos, copied);
+                }
+            }
+        }
+
         /// <summary>The upgraded tiles already on the garden, with their upgrade, as they stand right before a placement.</summary>
         private List<(Vector2Int Pos, PieceTrait Trait)> CollectPersistentTraits()
         {
@@ -347,6 +396,77 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Aegis:
                     CleanseAndShield(pos, placement);
+                    break;
+                case PieceTraitKind.Kin:
+                    for (int s2 = 0; s2 < TileUpgradeSteps.Length; s2++)
+                    {
+                        if (TraitAsPlaced(pos + TileUpgradeSteps[s2], placement).HasValue)
+                        {
+                            bonus += ScoringConstants.KinBonusPerNeighbor;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Amplifier:
+                case PieceTraitKind.Echo:
+                    // Resolved once every other upgrade has scored (see ApplyNeighborCopyUpgrades).
+                    break;
+                case PieceTraitKind.Collector:
+                    var kinds = new HashSet<PieceTraitKind>();
+                    foreach (var any in GridManager.AllPositions())
+                    {
+                        var seen = TraitAsPlaced(any, placement);
+                        if (seen.HasValue)
+                        {
+                            kinds.Add(seen.Value.Kind);
+                        }
+                    }
+                    bonus = kinds.Count * ScoringConstants.CollectorBonusPerKind;
+                    break;
+                case PieceTraitKind.Resonance:
+                    foreach (var any in GridManager.AllPositions())
+                    {
+                        if (TraitAsPlaced(any, placement).HasValue)
+                        {
+                            bonus += ScoringConstants.ResonanceBonusPerTile;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Pouch:
+                    bonus = CountUpgradedDeckCards() * ScoringConstants.PouchBonusPerUpgradedSeed;
+                    break;
+                case PieceTraitKind.Perennial:
+                    bonus = 1 + _perennialScores;
+                    _perennialScores++;
+                    break;
+                case PieceTraitKind.Crescendo:
+                    // Seeds planted before this one this round (PiecesRemainingThisRound still counts this very seed).
+                    bonus = Mathf.Max(0, CurrentBudget - PiecesRemainingThisRound) * ScoringConstants.CrescendoBonusPerSeed;
+                    break;
+                case PieceTraitKind.Scholar:
+                    int levels = 0;
+                    foreach (ShapeId shapeId in System.Enum.GetValues(typeof(ShapeId)))
+                    {
+                        levels += GetShapeMasteryLevel(shapeId) - 1;
+                    }
+                    foreach (var baseColor in PieceColorUtility.BaseColors)
+                    {
+                        levels += GetColorMasteryLevel(baseColor) - 1;
+                    }
+                    bonus = Mathf.Max(0, levels) * ScoringConstants.ScholarBonusPerLevel;
+                    break;
+                case PieceTraitKind.FullHouse:
+                    int rowFilled = 0;
+                    int columnFilled = 0;
+                    for (int k = 0; k < GridManager.Size; k++)
+                    {
+                        if (ColorAsPlaced(new Vector2Int(k, pos.y), placement).HasValue) { rowFilled++; }
+                        if (ColorAsPlaced(new Vector2Int(pos.x, k), placement).HasValue) { columnFilled++; }
+                    }
+                    if (rowFilled >= ScoringConstants.FullHouseMinFilled) { bonus += ScoringConstants.FullHouseBonus; }
+                    if (columnFilled >= ScoringConstants.FullHouseMinFilled) { bonus += ScoringConstants.FullHouseBonus; }
+                    break;
+                case PieceTraitKind.Compound:
+                    AddTilePollen(placement, pos, Lueur * ScoringConstants.CompoundPollenPercent / 100);
                     break;
                 case PieceTraitKind.Sower:
                     var sownColor = ColorAsPlaced(pos, placement);

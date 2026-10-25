@@ -52,6 +52,97 @@ namespace Contigu.Tests
             return outcome.Placement;
         }
 
+        private static PlacementResult PlaceDomino(RunManager run, PieceTrait first, PieceTrait second, int x, int y)
+        {
+            int slot = HandSlotWith(run, new PieceToken(ShapeId.DomH, PieceColor.Coral, first, new[] { second }));
+            var outcome = run.PlacePiece(slot, x, y);
+            Assert.IsTrue(outcome.Placement.Success);
+            return outcome.Placement;
+        }
+
+        [Test]
+        public void StackingUpgrades_Kin_Amplifier_Echo_ReadTheirNeighbors()
+        {
+            // Kin on one tile of a domino, a Pip on the other: Kin +4 for the upgraded neighbor, Pip +1.
+            var kin = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Kin, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
+            Assert.AreEqual(ScoringConstants.KinBonusPerNeighbor + ScoringConstants.PipBonus, kin.TraitBonus);
+            // Amplifier counts its neighbor's points twice; Echo copies them.
+            var amplifier = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Amplifier, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
+            Assert.AreEqual(2 * ScoringConstants.PipBonus, amplifier.TraitBonus);
+            var echo = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Echo, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
+            Assert.AreEqual(2 * ScoringConstants.PipBonus, echo.TraitBonus);
+        }
+
+        [Test]
+        public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
+        {
+            Assert.AreEqual(ScoringConstants.CollectorBonusPerKind, PlantAt(NewRun(), PieceTraitKind.Collector, PieceColor.Coral, 2, 2).TraitBonus);
+            var withPip = NewRun();
+            PlantAt(withPip, PieceTraitKind.Pip, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(2 * ScoringConstants.CollectorBonusPerKind, PlantAt(withPip, PieceTraitKind.Collector, PieceColor.Coral, 5, 5).TraitBonus);
+
+            Assert.AreEqual(ScoringConstants.ResonanceBonusPerTile, PlantAt(NewRun(), PieceTraitKind.Resonance, PieceColor.Coral, 2, 2).TraitBonus);
+            var crowded = NewRun();
+            crowded.DebugSetPiecesRemaining(50);
+            PlantAt(crowded, PieceTraitKind.Pip, PieceColor.Coral, 0, 0);
+            PlantAt(crowded, PieceTraitKind.Pip, PieceColor.Coral, 5, 5);
+            Assert.AreEqual(3 * ScoringConstants.ResonanceBonusPerTile, PlantAt(crowded, PieceTraitKind.Resonance, PieceColor.Coral, 3, 3).TraitBonus);
+
+            var pouch = NewRun();
+            int slot = HandSlotWith(pouch, new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Pouch, 0)));
+            int upgradedSeeds = 0;
+            foreach (var token in pouch.Deck.Deck)
+            {
+                if (token.Trait.HasValue)
+                {
+                    upgradedSeeds++;
+                }
+            }
+            Assert.AreEqual(upgradedSeeds * ScoringConstants.PouchBonusPerUpgradedSeed, pouch.PlacePiece(slot, 2, 2).Placement.TraitBonus);
+
+            var rich = NewRun();
+            rich.DebugSetLueur(57);
+            Assert.AreEqual(5, PlantAt(rich, PieceTraitKind.Compound, PieceColor.Coral, 2, 2).ModifierLueurBonus);
+        }
+
+        [Test]
+        public void Perennial_Crescendo_Scholar_FullHouse_GrowWithTheRun()
+        {
+            var perennial = NewRun();
+            Assert.AreEqual(1, PlantAt(perennial, PieceTraitKind.Perennial, PieceColor.Coral, 0, 0).TraitBonus);
+            // The first one scores again (it is in the group); a second one now starts from the run-long count.
+            Assert.GreaterOrEqual(PlantAt(perennial, PieceTraitKind.Perennial, PieceColor.Coral, 5, 5).TraitBonus, 2);
+
+            var crescendo = NewRun();
+            PlantAt(crescendo, PieceTraitKind.Pip, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(ScoringConstants.CrescendoBonusPerSeed, PlantAt(crescendo, PieceTraitKind.Crescendo, PieceColor.Coral, 5, 5).TraitBonus);
+
+            var scholar = NewRun();
+            scholar.DebugTriggerShapeMasteryGrant();
+            scholar.DebugTriggerColorMasteryGrant();
+            int levels = 0;
+            foreach (ShapeId shape in System.Enum.GetValues(typeof(ShapeId)))
+            {
+                levels += scholar.GetShapeMasteryLevel(shape) - 1;
+            }
+            foreach (var color in PieceColorUtility.BaseColors)
+            {
+                levels += scholar.GetColorMasteryLevel(color) - 1;
+            }
+            Assert.Greater(levels, 0);
+            Assert.AreEqual(levels * ScoringConstants.ScholarBonusPerLevel, PlantAt(scholar, PieceTraitKind.Scholar, PieceColor.Coral, 4, 4).TraitBonus);
+
+            var house = NewRun();
+            house.DebugSetPiecesRemaining(50);
+            int others = ScoringConstants.FullHouseMinFilled - 1;
+            for (int x = 0; x < others; x++)
+            {
+                PlantAt(house, PieceTraitKind.Pip, PieceColor.Coral, x, 0);
+            }
+            // The Pips already on the row join the group and score again (+1 each) next to the Full House's own 12.
+            Assert.AreEqual(ScoringConstants.FullHouseBonus + others * ScoringConstants.PipBonus, PlantAt(house, PieceTraitKind.FullHouse, PieceColor.Coral, others, 0).TraitBonus);
+        }
+
         [Test]
         public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
         {

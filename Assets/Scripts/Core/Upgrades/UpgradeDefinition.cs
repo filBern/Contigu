@@ -387,6 +387,50 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition[] WorkshopPacks = { SeedPack, SproutPack, FertilizerPack, MasteryPack };
 
+        public static readonly UpgradeDefinition KinTile = new UpgradeDefinition(
+            UpgradeId.KinTile, UpgradePool.Grid, "Kin Sprout",
+            "+4 pts per other upgraded tile touching it.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition AmplifierTile = new UpgradeDefinition(
+            UpgradeId.AmplifierTile, UpgradePool.Grid, "Amplifier Sprout",
+            "Doubles the points of the upgraded tiles touching it.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition EchoTile = new UpgradeDefinition(
+            UpgradeId.EchoTile, UpgradePool.Grid, "Echo Sprout",
+            "Copies the best points bonus among the upgraded tiles touching it.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition CollectorTile = new UpgradeDefinition(
+            UpgradeId.CollectorTile, UpgradePool.Grid, "Collector Sprout",
+            "+3 pts per different upgrade in the garden.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition ResonanceTile = new UpgradeDefinition(
+            UpgradeId.ResonanceTile, UpgradePool.Grid, "Resonance Sprout",
+            "+2 pts per upgraded tile in the garden.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition PouchTile = new UpgradeDefinition(
+            UpgradeId.PouchTile, UpgradePool.Grid, "Pouch Sprout",
+            "+1 pt per upgraded seed in your bag.", false, UpgradeRarity.Common);
+
+        public static readonly UpgradeDefinition PerennialTile = new UpgradeDefinition(
+            UpgradeId.PerennialTile, UpgradePool.Grid, "Perennial Sprout",
+            "+1 pt, then +1 more every time any Perennial scores, all run long.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition CrescendoTile = new UpgradeDefinition(
+            UpgradeId.CrescendoTile, UpgradePool.Grid, "Crescendo Sprout",
+            "+2 pts per seed already planted this round.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition ScholarTile = new UpgradeDefinition(
+            UpgradeId.ScholarTile, UpgradePool.Grid, "Scholar Sprout",
+            "+1 pt per mastery level earned this run.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition FullHouseTile = new UpgradeDefinition(
+            UpgradeId.FullHouseTile, UpgradePool.Grid, "Full House Sprout",
+            "+12 pts for its row and +12 for its column when 3/4 or more of it is full.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition CompoundTile = new UpgradeDefinition(
+            UpgradeId.CompoundTile, UpgradePool.Grid, "Compound Sprout",
+            "Earns 10% of the Pollen you hold (rounded down) every time it scores.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -395,7 +439,8 @@ namespace Contigu.Core
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
             BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare, PieceMastery, ColorMastery,
             PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
-            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile
+            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
+            KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -422,7 +467,8 @@ namespace Contigu.Core
             CatalystTile, TwinTile, DetonatorTile, ChameleonTile, SparkTile, VoidTile,
             BastionTile, KamikazeTile, VenomTile, PermanentBonusSquare,
             PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
-            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile
+            ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
+            KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile
         };
     }
 }

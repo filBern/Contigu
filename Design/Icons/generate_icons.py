@@ -371,6 +371,17 @@ M['u_breeze'] = lambda: _trait_motif('Breeze')
 M['u_harmony'] = lambda: _trait_motif('Harmony')
 M['u_prism'] = lambda: _trait_motif('Prism')
 M['u_gardener'] = lambda: _trait_motif('Gardener')
+M['u_kin'] = lambda: _trait_motif('Kin')
+M['u_amplifier'] = lambda: _trait_motif('Amplifier')
+M['u_echo'] = lambda: _trait_motif('Echo')
+M['u_collector'] = lambda: _trait_motif('Collector')
+M['u_resonance'] = lambda: _trait_motif('Resonance')
+M['u_pouch'] = lambda: _trait_motif('Pouch')
+M['u_perennial'] = lambda: _trait_motif('Perennial')
+M['u_crescendo'] = lambda: _trait_motif('Crescendo')
+M['u_scholar'] = lambda: _trait_motif('Scholar')
+M['u_fullhouse'] = lambda: _trait_motif('FullHouse')
+M['u_compound'] = lambda: _trait_motif('Compound')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -438,6 +449,17 @@ U = {
  'WardenTile': ('u_warden', 'Grid'),
  'AegisTile': ('u_aegis', 'Grid'),
  'SowerTile': ('u_sower', 'Grid'),
+ 'KinTile': ('u_kin', 'Grid'),
+ 'AmplifierTile': ('u_amplifier', 'Grid'),
+ 'EchoTile': ('u_echo', 'Grid'),
+ 'CollectorTile': ('u_collector', 'Grid'),
+ 'ResonanceTile': ('u_resonance', 'Grid'),
+ 'PouchTile': ('u_pouch', 'Grid'),
+ 'PerennialTile': ('u_perennial', 'Grid'),
+ 'CrescendoTile': ('u_crescendo', 'Grid'),
+ 'ScholarTile': ('u_scholar', 'Grid'),
+ 'FullHouseTile': ('u_fullhouse', 'Grid'),
+ 'CompoundTile': ('u_compound', 'Grid'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),

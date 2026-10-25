@@ -448,5 +448,22 @@ namespace Contigu.Core
         public const int KeystoneMultBonus = 5;
         public const int GamblerWinBonus = 40;
         public const int GamblerLossPenalty = 10;
+
+        // ---- third batch of flat-point tile upgrades (built around stacking several upgrades on one seed)
+        public const int KinBonusPerNeighbor = 4;
+        public const int CollectorBonusPerKind = 3;
+        public const int ResonanceBonusPerTile = 2;
+        public const int PouchBonusPerUpgradedSeed = 1;
+        public const int CrescendoBonusPerSeed = 2;
+        public const int ScholarBonusPerLevel = 1;
+        public const int FullHouseBonus = 12;
+        public const float FullHouseFillFraction = 0.75f;
+
+        /// <summary>How many plots of a row or column must be full for Full House (three quarters of it, rounded up).</summary>
+        public static int FullHouseMinFilled
+        {
+            get { return (int)System.Math.Ceiling(GridManager.Size * FullHouseFillFraction); }
+        }
+        public const int CompoundPollenPercent = 10;
     }
 }

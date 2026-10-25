@@ -833,6 +833,7 @@ namespace Contigu.Core
                 ApplyPostPlacementTraitBonus(tokenTraits[t].Trait, tokenTraits[t].Pos, sparkStreakBeforePlacement, placement);
             }
             ApplyPersistentTraitBonuses(persistentTraits, streakBeforePlacement, placement);
+            ApplyNeighborCopyUpgrades(placement);
             ApplyHandSlotModifierBonus(handIndex, placement);
             ApplyDeckStateModifierBonuses(placement);
             ApplyWeatherPlacementBonus(placement, placementColor);

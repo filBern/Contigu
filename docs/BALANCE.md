@@ -145,3 +145,11 @@ Le Casino (cartes mystère aléatoires) est remplacé par le **Workshop** : 2 pa
 ## Tile upgrades sans plafond
 
 Demande : « retire toutes les limites des tile upgrades, c'est ce qui rend le fun ». Les deux seuls plafonds chiffrés des tile upgrades sont retirés : Miser Sprout (+1 par Pollen, ancien max +15) et Growth Sprout (+1 de plus à chaque score de la manche, ancien max +30). Lucky (0 à 20 au hasard) est une plage de tirage, pas un plafond : inchangé. Une graine ne porte toujours qu'une seule tile upgrade (en poser une nouvelle remplace l'ancienne).
+
+## 11 tile upgrades de plus, pensées pour l'empilement
+
+Une graine peut maintenant porter une tile upgrade par tuile (voir DECISIONS.md) et plus rien n'est plafonné : voici onze upgrades de points qui en profitent (toutes en points ou en Pollen, aucune en Mult).
+
+Kin (+4 par autre tuile améliorée qui la touche), Amplifier (les points des tuiles améliorées voisines comptent deux fois), Echo (copie le plus gros bonus de points d'une tuile améliorée voisine), Collector (+3 par type d'upgrade différent dans le jardin), Resonance (+2 par tuile améliorée dans le jardin), Pouch (+1 par graine améliorée dans le sac), Perennial (+1 puis +1 de plus à chaque score de n'importe quel Perennial, tout au long de la partie), Crescendo (+2 par graine déjà plantée dans la manche), Scholar (+1 par niveau de mastery gagné), Full House (+12 pour sa ligne et +12 pour sa colonne si les trois quarts sont pleins), Compound (gagne 10 % du Pollen détenu à chaque score).
+
+Amplifier et Echo se résolvent en dernier (ils lisent ce que les autres upgrades viennent de marquer) et un bonus copié n'est jamais recopié. Les PV ennemis et les simulations n'ont pas été re-réglés.

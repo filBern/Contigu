@@ -156,6 +156,39 @@ namespace Contigu.Core
         /// <summary>"Sower Sprout" — Plants a free tile of its color on a neighboring empty plot.</summary>
         Sower,
 
+        /// <summary>"Kin Sprout" — +4 pts per other upgraded tile touching it.</summary>
+        Kin,
+
+        /// <summary>"Amplifier Sprout" — Doubles the points of the upgraded tiles touching it.</summary>
+        Amplifier,
+
+        /// <summary>"Echo Sprout" — Copies the best points bonus among the upgraded tiles touching it.</summary>
+        Echo,
+
+        /// <summary>"Collector Sprout" — +3 pts per different upgrade in the garden.</summary>
+        Collector,
+
+        /// <summary>"Resonance Sprout" — +2 pts per upgraded tile in the garden.</summary>
+        Resonance,
+
+        /// <summary>"Pouch Sprout" — +1 pt per upgraded seed in your bag.</summary>
+        Pouch,
+
+        /// <summary>"Perennial Sprout" — +1 pt, then +1 more every time any Perennial scores, all run long.</summary>
+        Perennial,
+
+        /// <summary>"Crescendo Sprout" — +2 pts per seed already planted this round.</summary>
+        Crescendo,
+
+        /// <summary>"Scholar Sprout" — +1 pt per mastery level earned this run.</summary>
+        Scholar,
+
+        /// <summary>"Full House Sprout" — +12 pts for its row and +12 for its column when 6 or more plots of it are full.</summary>
+        FullHouse,
+
+        /// <summary>"Compound Sprout" — Earns 10% of the Pollen you hold (rounded down) every time it scores.</summary>
+        Compound,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active

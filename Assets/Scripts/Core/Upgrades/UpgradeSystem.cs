@@ -353,6 +353,17 @@ namespace Contigu.Core
                 case UpgradeId.WardenTile: return PieceTraitKind.Warden;
                 case UpgradeId.AegisTile: return PieceTraitKind.Aegis;
                 case UpgradeId.SowerTile: return PieceTraitKind.Sower;
+                case UpgradeId.KinTile: return PieceTraitKind.Kin;
+                case UpgradeId.AmplifierTile: return PieceTraitKind.Amplifier;
+                case UpgradeId.EchoTile: return PieceTraitKind.Echo;
+                case UpgradeId.CollectorTile: return PieceTraitKind.Collector;
+                case UpgradeId.ResonanceTile: return PieceTraitKind.Resonance;
+                case UpgradeId.PouchTile: return PieceTraitKind.Pouch;
+                case UpgradeId.PerennialTile: return PieceTraitKind.Perennial;
+                case UpgradeId.CrescendoTile: return PieceTraitKind.Crescendo;
+                case UpgradeId.ScholarTile: return PieceTraitKind.Scholar;
+                case UpgradeId.FullHouseTile: return PieceTraitKind.FullHouse;
+                case UpgradeId.CompoundTile: return PieceTraitKind.Compound;
                 default: return null; // Bank pool — no trait
             }
         }

@@ -89,6 +89,17 @@ namespace Contigu.Data
                 case PieceTraitKind.Warden: return "Warden Sprout";
                 case PieceTraitKind.Aegis: return "Aegis Sprout";
                 case PieceTraitKind.Sower: return "Sower Sprout";
+                case PieceTraitKind.Kin: return "Kin Sprout";
+                case PieceTraitKind.Amplifier: return "Amplifier Sprout";
+                case PieceTraitKind.Echo: return "Echo Sprout";
+                case PieceTraitKind.Collector: return "Collector Sprout";
+                case PieceTraitKind.Resonance: return "Resonance Sprout";
+                case PieceTraitKind.Pouch: return "Pouch Sprout";
+                case PieceTraitKind.Perennial: return "Perennial Sprout";
+                case PieceTraitKind.Crescendo: return "Crescendo Sprout";
+                case PieceTraitKind.Scholar: return "Scholar Sprout";
+                case PieceTraitKind.FullHouse: return "Full House Sprout";
+                case PieceTraitKind.Compound: return "Compound Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -212,6 +223,28 @@ namespace Contigu.Data
                     return "Frees its own plot from enemy effects (locks, ice, poison) and makes it immune for the round.";
                 case PieceTraitKind.Sower:
                     return "Plants a free tile of its color on a neighboring empty plot.";
+                case PieceTraitKind.Kin:
+                    return "Scores +" + ScoringConstants.KinBonusPerNeighbor + " pts for every other upgraded tile touching it (stack upgrades on one seed!).";
+                case PieceTraitKind.Amplifier:
+                    return "Scores again the points of every upgraded tile touching it: their bonus counts twice.";
+                case PieceTraitKind.Echo:
+                    return "Copies the biggest points bonus scored by an upgraded tile touching it.";
+                case PieceTraitKind.Collector:
+                    return "Scores +" + ScoringConstants.CollectorBonusPerKind + " pts for each different kind of upgrade planted in the garden.";
+                case PieceTraitKind.Resonance:
+                    return "Scores +" + ScoringConstants.ResonanceBonusPerTile + " pts for every upgraded tile in the garden.";
+                case PieceTraitKind.Pouch:
+                    return "Scores +" + ScoringConstants.PouchBonusPerUpgradedSeed + " pt for every upgraded seed in your bag.";
+                case PieceTraitKind.Perennial:
+                    return "Scores +1 pt, then one more every time any Perennial Sprout scores, all run long (it never resets).";
+                case PieceTraitKind.Crescendo:
+                    return "Scores +" + ScoringConstants.CrescendoBonusPerSeed + " pts for every seed already planted this round.";
+                case PieceTraitKind.Scholar:
+                    return "Scores +" + ScoringConstants.ScholarBonusPerLevel + " pt for every mastery level (shapes and colors) you have earned.";
+                case PieceTraitKind.FullHouse:
+                    return "Scores +" + ScoringConstants.FullHouseBonus + " pts for its row and +" + ScoringConstants.FullHouseBonus + " for its column when at least " + ScoringConstants.FullHouseMinFilled + " of its plots are full.";
+                case PieceTraitKind.Compound:
+                    return "Earns " + ScoringConstants.CompoundPollenPercent + "% of the Pollen you hold (rounded down) every time it scores.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -264,6 +297,17 @@ namespace Contigu.Data
                 case PieceTraitKind.Warden: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Aegis: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Sower: return UpgradeRarity.Rare;
+                case PieceTraitKind.Kin: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Amplifier: return UpgradeRarity.Rare;
+                case PieceTraitKind.Echo: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Collector: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Resonance: return UpgradeRarity.Rare;
+                case PieceTraitKind.Pouch: return UpgradeRarity.Common;
+                case PieceTraitKind.Perennial: return UpgradeRarity.Rare;
+                case PieceTraitKind.Crescendo: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Scholar: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.FullHouse: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Compound: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -379,6 +423,17 @@ namespace Contigu.Data
                 case PieceTraitKind.Warden:
                 case PieceTraitKind.Aegis:
                 case PieceTraitKind.Sower:
+                case PieceTraitKind.Kin:
+                case PieceTraitKind.Amplifier:
+                case PieceTraitKind.Echo:
+                case PieceTraitKind.Collector:
+                case PieceTraitKind.Resonance:
+                case PieceTraitKind.Pouch:
+                case PieceTraitKind.Perennial:
+                case PieceTraitKind.Crescendo:
+                case PieceTraitKind.Scholar:
+                case PieceTraitKind.FullHouse:
+                case PieceTraitKind.Compound:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:
