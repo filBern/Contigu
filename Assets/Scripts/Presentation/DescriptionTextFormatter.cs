@@ -17,7 +17,7 @@ namespace Contigu.Presentation
     public static class DescriptionTextFormatter
     {
         private const string PointsColorHex = "65AED6"; // UITheme.ButtonSelected
-        private const string MultiplierColorHex = "B56D7F"; // UITheme.Danger
+        private const string MultiplierColorHex = "C8403F"; // the red of the Mult pills on the fertilizer sacks
         private const string DiamondColorHex = "F0B38D"; // VisualDefaults.GoldenColor
         private const string PollenColorHex = "E8A82E"; // the Pollen gold (matches the counter's icon)
         private const string DiamondGlyph = "◆";
@@ -30,14 +30,24 @@ namespace Contigu.Presentation
                 return description;
             }
 
-            var words = description.Split(' ');
-            string result = null;
-            for (int i = 0; i < words.Length; i++)
+            // Words are separated by spaces or line breaks, both kept as they are.
+            var result = new System.Text.StringBuilder(description.Length + 32);
+            int start = 0;
+            for (int i = 0; i <= description.Length; i++)
             {
-                string colored = ColorizeWord(words[i], fontSize);
-                result = result == null ? colored : result + " " + colored;
+                bool atSeparator = i == description.Length || description[i] == ' ' || description[i] == '\n';
+                if (!atSeparator)
+                {
+                    continue;
+                }
+                result.Append(ColorizeWord(description.Substring(start, i - start), fontSize));
+                if (i < description.Length)
+                {
+                    result.Append(description[i]);
+                }
+                start = i + 1;
             }
-            return result;
+            return result.ToString();
         }
 
         private static string ColorizeWord(string word, int fontSize)
@@ -59,7 +69,7 @@ namespace Contigu.Presentation
             {
                 return Wrap(core, MultiplierColorHex) + trailing;
             }
-            if (lower == "pollen")
+            if (lower == "pollen" || lower == "lueur")
             {
                 return Wrap(core, PollenColorHex) + trailing;
             }

@@ -220,7 +220,8 @@ namespace Contigu.Presentation
 
             float usedHeight = contentTop - Padding;
             _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
-            _descLabel.text = description;
+            // Every tooltip gets the same coloring: points blue, Mult red, Pollen gold (already-colored text is left alone).
+            _descLabel.text = DescriptionTextFormatter.Colorize(description, 15);
 
             // Height fits the actual description length. Text.preferredHeight
             // already reflects wrapping at the label's current fixed width,
