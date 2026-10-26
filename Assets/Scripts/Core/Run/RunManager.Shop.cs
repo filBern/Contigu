@@ -98,7 +98,7 @@ namespace Contigu.Core
                 upgradeCandidates.Add(candidate);
             }
 
-            const int ModifierBlisterWeight = 8; // matches UpgradeRarityUtility.GetDraftWeight(Common)
+            const int ModifierBlisterWeight = EconomyConstants.BlisterModifierWeight;
             int totalWeight = modifierCandidates.Count * ModifierBlisterWeight;
             for (int i = 0; i < upgradeCandidates.Count; i++)
             {

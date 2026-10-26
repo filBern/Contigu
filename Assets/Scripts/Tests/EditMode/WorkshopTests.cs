@@ -126,6 +126,29 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void BlisterSlots_AreAFertilizerAboutTwoTimesOutOfThree()
+        {
+            int total = 0;
+            int fertilizers = 0;
+            for (int seed = 1; seed <= 300; seed++)
+            {
+                var run = ShopRun(seed);
+                foreach (var slot in run.ShopBlisterSlots)
+                {
+                    total++;
+                    if (slot.Kind == ShopSlotKind.Modifier)
+                    {
+                        fertilizers++;
+                    }
+                }
+            }
+            double share = fertilizers / (double)total;
+            TestContext.WriteLine("Blister fertilizer share: " + share.ToString("0.00"));
+            Assert.Greater(share, 0.55, "fertilizers are the most common Blister item");
+            Assert.Less(share, 0.80, "but upgrades still show up");
+        }
+
+        [Test]
         public void AbandonPending_ClosesAnyChoice_WithoutRefund()
         {
             var run = ShopRun();

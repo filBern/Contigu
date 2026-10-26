@@ -38,6 +38,13 @@ namespace Contigu.Core
         public const int BlisterUpgradeWeightMultiplier = 3;
 
         /// <summary>
+        /// Weight of every fertilizer in a Blister roll (an upgrade weighs its rarity weight times
+        /// <see cref="BlisterUpgradeWeightMultiplier"/>: 24 common, 12 uncommon, 6 rare). Raised from 8 to 16 so a Blister slot is a fertilizer
+        /// about two times out of three instead of one in two.
+        /// </summary>
+        public const int BlisterModifierWeight = 16;
+
+        /// <summary>
         /// How many "Casino" slots the shop offers per visit — only the
         /// UpgradePool is shown, the specific UpgradeDefinition underneath
         /// stays hidden until purchase. The only section RerollShop still
