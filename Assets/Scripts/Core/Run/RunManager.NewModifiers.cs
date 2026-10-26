@@ -60,7 +60,7 @@ namespace Contigu.Core
                     }
                     break;
                 case ModifierId.Tirelire:
-                    AddRunStateMultBonus(placement, events, id, index, Mathf.Min(Lueur * ScoringConstants.PiggyBankMultPerPollen, ScoringConstants.PiggyBankMaxMult) * level, whole: false);
+                    AddRunStateMultBonus(placement, events, id, index, Lueur * ScoringConstants.PiggyBankMultPerPollen * level, whole: false);
                     break;
                 case ModifierId.BanqueGraines:
                     AddRunStateMultBonus(placement, events, id, index, Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed * level, whole: false);
@@ -153,7 +153,7 @@ namespace Contigu.Core
                 case ModifierId.PremiereGraine:
                     return PiecesRemainingThisRound == CurrentBudget ? "Active: x" + ScoringConstants.FirstSeedMultiplier : "Inactive: not the first seed";
                 case ModifierId.Tirelire:
-                    return "Currently +" + FormatMultDisplay(Mathf.Min(Lueur * ScoringConstants.PiggyBankMultPerPollen, ScoringConstants.PiggyBankMaxMult) * level) + " Mult";
+                    return "Currently +" + FormatMultDisplay(Lueur * ScoringConstants.PiggyBankMultPerPollen * level) + " Mult";
                 case ModifierId.BanqueGraines:
                     return "Currently +" + FormatMultDisplay(Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed * level) + " Mult";
                 case ModifierId.SousBois:

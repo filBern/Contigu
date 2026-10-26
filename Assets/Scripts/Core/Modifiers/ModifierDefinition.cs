@@ -563,7 +563,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Tirelire = new ModifierDefinition(
             ModifierId.Tirelire, ModifierCategory.Roguelike, "Piggy Bank",
-            "+0.1 Mult per Pollen you hold (up to +5).");
+            "+0.1 Mult per Pollen you hold.");
 
         public static readonly ModifierDefinition BanqueGraines = new ModifierDefinition(
             ModifierId.BanqueGraines, ModifierCategory.Roguelike, "Seed Bank",

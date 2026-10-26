@@ -249,7 +249,7 @@ namespace Contigu.Core
         /// <summary>x2 Mult on the first seed of the round.</summary>
         PremiereGraine,
 
-        /// <summary>+0.1 Mult per Pollen you hold (up to +5).</summary>
+        /// <summary>+0.1 Mult per Pollen you hold.</summary>
         Tirelire,
 
         /// <summary>+0.05 Mult per seed in your bag.</summary>

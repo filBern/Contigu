@@ -397,7 +397,6 @@ namespace Contigu.Core
         public const int LastSeedMultiplier = 3;
         public const int FirstSeedMultiplier = 2;
         public const float PiggyBankMultPerPollen = 0.1f;
-        public const float PiggyBankMaxMult = 5f;
         public const float SeedBankMultPerSeed = 0.05f;
         public const int UnderbrushMultPerEnemy = 1;
         public const int WeatherDancerMultBonus = 4;

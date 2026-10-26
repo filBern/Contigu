@@ -181,7 +181,7 @@ namespace Contigu.Core
 
                 case ModifierId.Polyvalence: return 8; // scales with modifier category spread, up to +6 Mult at a full build
                 case ModifierId.RenfortJoker: return 7; // strong but does nothing without Joker combat pieces already owned
-                case ModifierId.Arsenal: return 8; // scales with distinct Joker combat kinds in deck, up to +5 Mult
+                case ModifierId.Arsenal: return 8; // scales with distinct Joker combat kinds in deck, up to +4 Mult
 
                 case ModifierId.CollectionChromatique: return 8; // needs 2 other modifiers held PER color to scale at all
                 case ModifierId.Cadence: return 6; // x2, but needs 2 other specific modifiers held to ever fire

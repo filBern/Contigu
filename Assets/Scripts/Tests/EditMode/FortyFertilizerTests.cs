@@ -371,8 +371,8 @@ namespace Contigu.Tests
             float expected = 30 * ScoringConstants.PiggyBankMultPerPollen + run.Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed;
             Assert.AreEqual(expected, PlaceAny(run).ProgressiveAdditiveMult, 1e-3f);
             run.DebugSetLueur(10000);
-            float capped = ScoringConstants.PiggyBankMaxMult + run.Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed;
-            Assert.AreEqual(capped, PlaceAny(run).ProgressiveAdditiveMult, 1e-3f);
+            float uncapped = 10000 * ScoringConstants.PiggyBankMultPerPollen + run.Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed;
+            Assert.AreEqual(uncapped, PlaceAny(run).ProgressiveAdditiveMult, 1e-3f);
         }
 
         [Test]
