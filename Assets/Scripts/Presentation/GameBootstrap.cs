@@ -240,7 +240,7 @@ namespace Contigu.Presentation
 
             if (badgeAnchor != null)
             {
-                _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + refundedLueur, VisualDefaults.GoldenColor);
+                _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + refundedLueur, UITheme.ScorePollen);
             }
             _modifierPanelView.Refresh(_run.ActiveModifiers);
             _hudView.SetLueur(_run.Lueur);

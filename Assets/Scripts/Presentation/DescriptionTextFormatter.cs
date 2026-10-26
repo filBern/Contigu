@@ -17,7 +17,7 @@ namespace Contigu.Presentation
     public static class DescriptionTextFormatter
     {
         private const string PointsColorHex = "65AED6"; // UITheme.ButtonSelected
-        private const string MultiplierColorHex = "C8403F"; // the red of the Mult pills on the fertilizer sacks
+        private const string MultiplierColorHex = "E84D45"; // UITheme.ScoreMult
         private const string DiamondColorHex = "F0B38D"; // VisualDefaults.GoldenColor
         private const string PollenColorHex = "E8A82E"; // the Pollen gold (matches the counter's icon)
         private const string DiamondGlyph = "◆";

@@ -105,7 +105,7 @@ namespace Contigu.Presentation
                 displayedPieces--;
                 displayedLueur++;
                 _hudView.SetPieces(displayedPieces, _run.CurrentBudget);
-                _feedbackLayer.SpawnPollenFlight(fromAnchor.position, _hudView.LueurLabelTransform, "+1", VisualDefaults.GoldenColor);
+                _feedbackLayer.SpawnPollenFlight(fromAnchor.position, _hudView.LueurLabelTransform, "+1", UITheme.ScorePollen);
                 _hudView.SetLueur(displayedLueur);
                 SfxManager.Play(SfxId.LueurGain);
                 yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);

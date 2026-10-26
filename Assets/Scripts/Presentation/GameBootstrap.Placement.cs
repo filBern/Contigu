@@ -458,7 +458,7 @@ namespace Contigu.Presentation
                 if (cellsWithTransform > 0)
                 {
                     Vector3 center = centerSum / cellsWithTransform;
-                    _feedbackLayer.SpawnPollenFlight(center, _hudView.LueurLabelTransform, "+" + group.Amount, VisualDefaults.GoldenColor);
+                    _feedbackLayer.SpawnPollenFlight(center, _hudView.LueurLabelTransform, "+" + group.Amount, UITheme.ScorePollen);
                 }
                 SfxManager.Play(SfxId.LueurGain);
 
@@ -535,14 +535,14 @@ namespace Contigu.Presentation
                     {
                         var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
                             ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
+                        _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, UITheme.ScorePollen);
                         _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                     }
                     else
                     {
                         // A tile upgrade's Pollen (Honeycomb, Dewdrop): its badge pulses and the Pollen flies from its tile.
                         _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPollenFlight(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y).position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, VisualDefaults.GoldenColor);
+                        _feedbackLayer.SpawnPollenFlight(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y).position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, UITheme.ScorePollen);
                     }
                     SfxManager.Play(SfxId.LueurGain);
                     displayedLueur += scoreEvent.Amount;
@@ -597,11 +597,8 @@ namespace Contigu.Presentation
                     displayAmount += masteryAtThisCell;
                 }
                 bool negative = displayAmount < 0;
-                Color color = negative ? UITheme.Danger
-                    : scoreEvent.Type == ScoreEventType.Golden ? VisualDefaults.GoldenColor
-                    : scoreEvent.Type == ScoreEventType.Modifier ? UITheme.ButtonSelected
-                    : scoreEvent.Type == ScoreEventType.Bastion ? UITheme.Success
-                    : UITheme.TextPrimary;
+                // Every points popup is blue, whatever produced it (group, golden tile, fertilizer, tile upgrade, line...); a flipped (poisoned) one stays red.
+                Color color = negative ? UITheme.Danger : UITheme.ScorePoints;
                 _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 SfxManager.PlayComboTick();
 
@@ -640,7 +637,7 @@ namespace Contigu.Presentation
                 int amount = clearedCellAmounts.TryGetValue(pos, out int signed) ? signed : ScoringConstants.LineClearBonusPerCell;
                 bool negative = amount < 0;
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
-                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.Success, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.ScorePoints, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 _gridView.PulseCell(pos.x, pos.y);
                 SfxManager.Play(SfxId.LineClear);
 
@@ -728,19 +725,19 @@ namespace Contigu.Presentation
                     string label = scoreEvent.Type == ScoreEventType.ModifierMultiplier
                         ? "x" + FormatMultAmount(amount)
                         : "+" + FormatMultAmount(amount);
-                    _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.Danger);
+                    _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.ScoreMult);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
                 }
                 else if (scoreEvent.Type == ScoreEventType.MultBonus)
                 {
                     // A tile upgrade's flat Mult (Keystone Sprout): its badge pulses and the popup sits on its tile.
                     _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
-                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y), "+" + FormatMultAmount(amount), UITheme.Danger);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y), "+" + FormatMultAmount(amount), UITheme.ScoreMult);
                 }
                 else if (scoreEvent.Type == ScoreEventType.ModifierMultiplier)
                 {
                     // Not from a modifier: the whole grid was just cleared (see GridManager's GridClearMultiplier).
-                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2), "CLEAN SWEEP x" + FormatMultAmount(amount), UITheme.Success, fontSize: 40);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2), "CLEAN SWEEP x" + FormatMultAmount(amount), UITheme.ScoreMult, fontSize: 40);
                 }
                 SfxManager.PlayComboTick();
 
@@ -763,7 +760,7 @@ namespace Contigu.Presentation
             if (placement.ComboMultiplier > 1)
             {
                 var centerAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.Success);
+                _feedbackLayer.SpawnPopup(centerAnchor, "COMBO x" + placement.ComboMultiplier, UITheme.ScoreMult);
                 if (placement.ComboMultiplier >= BigComboShakeThreshold)
                 {
                     _gridView.PlayShake(ComboShakeDuration, ComboShakeMagnitude);
@@ -805,7 +802,7 @@ namespace Contigu.Presentation
                 var siphonAnchor = damagedEnemyIndex >= 0 ? _hudView.GetEnemyIconTransform(damagedEnemyIndex) : null;
                 if (siphonAnchor != null)
                 {
-                    _feedbackLayer.SpawnPollenFlight(siphonAnchor.position, _hudView.LueurLabelTransform, "+" + siphoned, VisualDefaults.GoldenColor);
+                    _feedbackLayer.SpawnPollenFlight(siphonAnchor.position, _hudView.LueurLabelTransform, "+" + siphoned, UITheme.ScorePollen);
                 }
                 SfxManager.Play(SfxId.LueurGain);
                 displayedLueur = expectedLueur;
