@@ -190,6 +190,14 @@ namespace Contigu.Core
 
                 case ModifierId.QuatriemeEmplacement: return 9; // permanent extra hand slot — more flexibility on every single placement for the rest of the run
 
+                case ModifierId.CharmedPatch: return 6;
+                case ModifierId.Grafter: return 5;
+                case ModifierId.TwinGraft: return 6;
+                case ModifierId.Botanist: return 6;
+                case ModifierId.Hothouse: return 7;
+                case ModifierId.GoodNeighbors: return 6;
+                case ModifierId.Gleaner: return 6;
+
                 default:
                     return -1;
             }

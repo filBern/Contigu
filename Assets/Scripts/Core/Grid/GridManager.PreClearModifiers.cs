@@ -79,6 +79,12 @@ namespace Contigu.Core
                 { ModifierId.Minimaliste, ctx => { ctx.Multiplier *= ApplyMinimaliste(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Pair, ctx => { ctx.Multiplier *= ApplyParitePaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Impair, ctx => { ctx.Multiplier *= ApplyPariteImpaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.CharmedPatch, ctx => { ctx.AdditiveMult += ApplyCharmedPatch(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Grafter, ctx => { ctx.AdditiveMult += ApplyGrafter(ctx.PlacedCells, ctx.Events, 1, ScoringConstants.GrafterMultBonus); return 0; } },
+                { ModifierId.TwinGraft, ctx => { ctx.AdditiveMult += ApplyGrafter(ctx.PlacedCells, ctx.Events, 2, ScoringConstants.TwinGraftMultBonus); return 0; } },
+                { ModifierId.Botanist, ctx => { ctx.AdditiveMult += ApplyBotanist(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Hothouse, ctx => { ctx.AdditiveMult += ApplyHothouse(ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.GoodNeighbors, ctx => { ctx.AdditiveMult += ApplyGoodNeighbors(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Polyvalence, ctx => { ctx.AdditiveMult += ApplyPolyvalence(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
                 // Renfort Joker/Arsenal/Siphon are resolved in RunManager
                 // instead (enemy damage/Lueur scaling, or deck scanning that
@@ -226,6 +232,95 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionEclatPairBonus));
             return ScoringConstants.DevotionEclatPairBonus;
+        }
+
+        private bool HasUpgradedTile(int x, int y)
+        {
+            return InBounds(x, y) && _cells[x, y].IsFilled && _cells[x, y].OriginTrait.HasValue;
+        }
+
+        /// <summary>Charmed Patch: +Mult per upgraded tile of the scored group (a Wildroot tile's extra copy counts too).</summary>
+        private int ApplyCharmedPatch(List<Vector2Int> groupCells, List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int upgraded = 0;
+            for (int i = 0; i < groupCells.Count; i++)
+            {
+                if (HasUpgradedTile(groupCells[i].x, groupCells[i].y))
+                {
+                    upgraded++;
+                }
+            }
+            return upgraded == 0 ? 0 : AddMultAndReturn(events, placedCells[0], upgraded * ScoringConstants.CharmedPatchMultPerTile);
+        }
+
+        /// <summary>Grafter / Twin Graft: a flat +Mult when the planted seed carries at least <paramref name="minUpgrades"/> upgrades (one per upgraded tile).</summary>
+        private int ApplyGrafter(List<Vector2Int> placedCells, List<ScoreEvent> events, int minUpgrades, int bonus)
+        {
+            int upgraded = 0;
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                if (HasUpgradedTile(placedCells[i].x, placedCells[i].y))
+                {
+                    upgraded++;
+                }
+            }
+            return upgraded >= minUpgrades ? AddMultAndReturn(events, placedCells[0], bonus) : 0;
+        }
+
+        /// <summary>Botanist: +Mult per different kind of upgrade anywhere in the garden.</summary>
+        private int ApplyBotanist(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var kinds = new HashSet<PieceTraitKind>();
+            foreach (var pos in AllPositions())
+            {
+                var cell = _cells[pos.x, pos.y];
+                if (cell.IsFilled && cell.OriginTrait.HasValue)
+                {
+                    kinds.Add(cell.OriginTrait.Value.Kind);
+                }
+            }
+            return kinds.Count == 0 ? 0 : AddMultAndReturn(events, placedCells[0], kinds.Count * ScoringConstants.BotanistMultPerKind);
+        }
+
+        /// <summary>Hothouse: +1 Mult per <see cref="ScoringConstants.HothouseTilesPerMult"/> upgraded tiles in the garden.</summary>
+        private int ApplyHothouse(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            int upgraded = 0;
+            foreach (var pos in AllPositions())
+            {
+                if (HasUpgradedTile(pos.x, pos.y))
+                {
+                    upgraded++;
+                }
+            }
+            int mult = upgraded / ScoringConstants.HothouseTilesPerMult;
+            return mult == 0 ? 0 : AddMultAndReturn(events, placedCells[0], mult);
+        }
+
+        /// <summary>Good Neighbors: +Mult per upgraded tile touching the planted seed (the seed's own tiles do not count).</summary>
+        private int ApplyGoodNeighbors(List<Vector2Int> placedCells, List<ScoreEvent> events)
+        {
+            var placed = new HashSet<Vector2Int>(placedCells);
+            var counted = new HashSet<Vector2Int>();
+            var steps = new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+            for (int i = 0; i < placedCells.Count; i++)
+            {
+                for (int s = 0; s < steps.Length; s++)
+                {
+                    var n = placedCells[i] + steps[s];
+                    if (!placed.Contains(n) && HasUpgradedTile(n.x, n.y))
+                    {
+                        counted.Add(n);
+                    }
+                }
+            }
+            return counted.Count == 0 ? 0 : AddMultAndReturn(events, placedCells[0], counted.Count * ScoringConstants.GoodNeighborsMultPerTile);
+        }
+
+        private int AddMultAndReturn(List<ScoreEvent> events, Vector2Int at, int amount)
+        {
+            AddMult(events, at, amount);
+            return amount;
         }
 
         /// <summary>Polyvalence: +N Mult, N = the number of distinct ModifierCategory values among currently held modifiers (this one's own category included).</summary>

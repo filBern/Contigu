@@ -609,6 +609,34 @@ namespace Contigu.Core
             ModifierId.Grange, ModifierCategory.Roguelike, "Granary",
             "+1 Pollen per fertilizer held when you clear a round.");
 
+        public static readonly ModifierDefinition CharmedPatch = new ModifierDefinition(
+            ModifierId.CharmedPatch, ModifierCategory.Roguelike, "Charmed Patch",
+            "+1 Mult per upgraded tile in the scored group.");
+
+        public static readonly ModifierDefinition Grafter = new ModifierDefinition(
+            ModifierId.Grafter, ModifierCategory.Roguelike, "Grafter",
+            "+3 Mult when the seed you plant carries an upgrade.");
+
+        public static readonly ModifierDefinition TwinGraft = new ModifierDefinition(
+            ModifierId.TwinGraft, ModifierCategory.Roguelike, "Twin Graft",
+            "+5 Mult when the seed you plant carries 2 or more upgrades.");
+
+        public static readonly ModifierDefinition Botanist = new ModifierDefinition(
+            ModifierId.Botanist, ModifierCategory.Roguelike, "Botanist",
+            "+1 Mult per different kind of upgrade in the garden.");
+
+        public static readonly ModifierDefinition Hothouse = new ModifierDefinition(
+            ModifierId.Hothouse, ModifierCategory.Roguelike, "Hothouse",
+            "+1 Mult per 2 upgraded tiles in the garden.");
+
+        public static readonly ModifierDefinition GoodNeighbors = new ModifierDefinition(
+            ModifierId.GoodNeighbors, ModifierCategory.Voisinage, "Good Neighbors",
+            "+2 Mult per upgraded tile touching the seed you plant.");
+
+        public static readonly ModifierDefinition Gleaner = new ModifierDefinition(
+            ModifierId.Gleaner, ModifierCategory.Destruction, "Gleaner",
+            "+2 Mult per upgraded tile harvested by this placement.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -634,7 +662,8 @@ namespace Contigu.Core
             Mosaique, Foule, Prairie, Guirlande, Pollinisateur, Miel, Nectar, MoissonCroisee,
             Faucheur, TableRase, Dime, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
             Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
-            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, Tonneau, Grange
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, Tonneau, Grange,
+            CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner
         };
 
         public static ModifierDefinition Get(ModifierId id)

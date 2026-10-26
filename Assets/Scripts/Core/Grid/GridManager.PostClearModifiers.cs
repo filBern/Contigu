@@ -29,6 +29,7 @@ namespace Contigu.Core
                 { ModifierId.EspaceLibre, ctx => { ctx.Multiplier *= ApplyEspaceLibre(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Rafale, ctx => { ctx.Multiplier *= ApplyRafale(ctx.ClearedByPreviousPlacement, ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.MoissonCroisee, ctx => { ctx.AdditiveMult += ApplyMoissonCroisee(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.Gleaner, ctx => { ctx.AdditiveMult += ApplyGleaner(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Faucheur, ctx => { ctx.AdditiveMult += ApplyFaucheur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.TableRase, ctx => { ctx.Multiplier *= ApplyTableRase(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Dime, ctx => { ctx.Lueur += ApplyDime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -619,6 +620,20 @@ namespace Contigu.Core
         private bool IsInBoundsAndFilled(int x, int y)
         {
             return InBounds(x, y) && _cells[x, y].IsFilled;
+        }
+
+        /// <summary>Gleaner: +Mult per upgraded tile harvested by this placement's line clears (read from the tiles' own upgrade right before they were cleared).</summary>
+        private int ApplyGleaner(ClearInfo info, List<Vector2Int> placed, List<ScoreEvent> events)
+        {
+            int harvested = 0;
+            for (int i = 0; i < info.ClearedCellTraits.Count; i++)
+            {
+                if (info.ClearedCellTraits[i].HasValue && !info.ClearedCellFrozen[i])
+                {
+                    harvested++;
+                }
+            }
+            return harvested == 0 ? 0 : AddMultAndReturn(events, placed[0], harvested * ScoringConstants.GleanerMultPerTile);
         }
 
         private int ApplyJardinier(List<Vector2Int> groupCells, List<ScoreEvent> events)

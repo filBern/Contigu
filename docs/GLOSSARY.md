@@ -98,6 +98,13 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Pair` | Waxing | Roguelike |
 | `Impair` | Waning | Roguelike |
 | `Polyvalence` | Hardy Growth | Roguelike |
+| `CharmedPatch` | Charmed Patch | Roguelike |
+| `Grafter` | Grafter | Roguelike |
+| `TwinGraft` | Twin Graft | Roguelike |
+| `Botanist` | Botanist | Roguelike |
+| `Hothouse` | Hothouse | Roguelike |
+| `GoodNeighbors` | Good Neighbors | Voisinage |
+| `Gleaner` | Gleaner | Destruction |
 | `RenfortJoker` | Battle Tonic | Roguelike |
 | `Arsenal` | Arsenal | Roguelike |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |

@@ -240,6 +240,13 @@ F = {
  'FormatPetitSpecialiste': ('sh2', 'm', '×2', 'Formes'), 'FormatMoyenSpecialiste': ('sh3', 'm', '×2', 'Formes'), 'FormatGrandSpecialiste': ('sh4', 'm', '×2', 'Formes'),
  'FormatPetitGlow': ('sh2g', 'm', '+1', 'Formes'), 'FormatMoyenGlow': ('sh3g', 'm', '+1', 'Formes'), 'FormatGrandGlow': ('sh4g', 'm', '+1', 'Formes'),
  'Pair': ('waxing', 'm', '×2', 'Roguelike'), 'Impair': ('waning', 'm', '×2', 'Roguelike'), 'Polyvalence': ('cactus', 'm', '+1', 'Roguelike'),
+ 'CharmedPatch': ('f_charmedpatch', 'm', '+1', 'Roguelike'),
+ 'Grafter': ('f_grafter', 'm', '+3', 'Roguelike'),
+ 'TwinGraft': ('f_twingraft', 'm', '+5', 'Roguelike'),
+ 'Botanist': ('f_botanist', 'm', '+1', 'Roguelike'),
+ 'Hothouse': ('f_hothouse', 'm', '+1', 'Roguelike'),
+ 'GoodNeighbors': ('f_goodneighbors', 'm', '+2', 'Voisinage'),
+ 'Gleaner': ('f_gleaner', 'm', '+2', 'Destruction'),
  'RenfortJoker': ('tonic', 'd', '+25%', 'Roguelike'), 'Arsenal': ('quiver', 'm', '+1', 'Roguelike'), 'CollectionChromatique': ('hoardjar', 'm', '+2', 'Couleurs'),
  'Barometre': ('barometer', 'm', '+3', 'Roguelike'), 'ChasseurTempete': ('stormchaser', 'm', '×2', 'Roguelike'), 'Impermeable': ('umbrella', None, None, 'Roguelike'),
  'Epines': ('thorns', 'm', '+4', 'Roguelike'), 'Exterminateur': ('ladybug', 'm', '+1', 'Roguelike'), 'Hate': ('stopwatch', 'm', '+0.1', 'Roguelike'),
@@ -417,6 +424,14 @@ M['u_fertpack'] = lambda: flask(30, 44, '#7ac943') + flask(50, 40, '#e8a82e') + 
 M['u_masterypack'] = lambda: star(50, 46, 28, '#ffd966', 0.45, 5, 3.5) + seed(50, 48, 0.8)
 M['u_compost'] = lambda: path('M22 38 L78 38 L70 76 L30 76 Z', '#8a5a2b', 4) + sprout(50, 40, 0.8) + arrow(50, 14, 50, 30, O, 4)
 M['u_forge'] = lambda: path('M20 56 L80 56 L74 70 L26 70 Z', '#6b7280', 4) + rect(34, 70, 32, 8, '#4b5563', 3, 3) + tile(34, 26, 28, '#ffd966') + star(72, 30, 8, '#fff1b0', 0.4, 4, 2.5)
+M['f_charmedpatch'] = lambda: _trait_motif('Cluster')
+M['f_grafter'] = lambda: _trait_motif('Pip')
+M['f_twingraft'] = lambda: _trait_motif('Kin')
+M['f_botanist'] = lambda: _trait_motif('Collector')
+M['f_hothouse'] = lambda: _trait_motif('Perennial')
+M['f_goodneighbors'] = lambda: _trait_motif('Cuddly')
+M['f_gleaner'] = lambda: _trait_motif('Harvester')
+
 U = {
  'ReplacePiece': ('u_replace', 'Bank'), 'DuplicatePiece': ('u_dup', 'Bank'), 'JokerPiece': ('u_joker', 'Bank'), 'RecolorPiece': ('u_recolor', 'Bank'),
  'RandomModifier': ('u_dice', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),

@@ -464,6 +464,15 @@ namespace Contigu.Core
             return System.Math.Max(1, (int)System.Math.Round(points / PointsPerMult, System.MidpointRounding.AwayFromZero));
         }
 
+        // ---- fertilizers that read the upgraded tiles (all Mult)
+        public const int CharmedPatchMultPerTile = 1;
+        public const int GrafterMultBonus = 3;
+        public const int TwinGraftMultBonus = 5;
+        public const int BotanistMultPerKind = 1;
+        public const int HothouseTilesPerMult = 2;
+        public const int GoodNeighborsMultPerTile = 2;
+        public const int GleanerMultPerTile = 2;
+
         // ---- third batch of flat-point tile upgrades (built around stacking several upgrades on one seed)
         public const int KinBonusPerNeighbor = 4;
         public const int CollectorBonusPerKind = 3;

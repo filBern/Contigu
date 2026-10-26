@@ -285,6 +285,27 @@ namespace Contigu.Core
         /// <summary>+1 Pollen per fertilizer held when you clear a round.</summary>
         Grange,
 
+        /// <summary>+1 Mult per upgraded tile in the scored group.</summary>
+        CharmedPatch,
+
+        /// <summary>+3 Mult when the seed you plant carries an upgrade.</summary>
+        Grafter,
+
+        /// <summary>+5 Mult when the seed you plant carries 2 or more upgrades.</summary>
+        TwinGraft,
+
+        /// <summary>+1 Mult per different kind of upgrade in the garden.</summary>
+        Botanist,
+
+        /// <summary>+1 Mult per 2 upgraded tiles in the garden.</summary>
+        Hothouse,
+
+        /// <summary>+2 Mult per upgraded tile touching the seed you plant.</summary>
+        GoodNeighbors,
+
+        /// <summary>+2 Mult per upgraded tile harvested by this placement.</summary>
+        Gleaner,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }

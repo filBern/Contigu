@@ -167,3 +167,7 @@ Gap (une ligne ou colonne qui le contient est récoltée avec une case vide ; l'
 ## 5 tile upgrades de plus qui touchent la grille (deuxième lot)
 
 Pruner (après le score, déracine les tuiles voisines d'une autre couleur : +8 pts chacune, et libère les cases), Glow (les cases vides voisines deviennent dorées pour la manche), Bridge (joint son groupe, en ligne droite, à une tuile de la même couleur par-dessus une case vide), Seedpod (quand sa tuile est récoltée, plante 2 tuiles gratuites de sa couleur autour de sa case), Locksmith (à chaque score, libère une case verrouillée, gelée ou empoisonnée n'importe où).
+
+## 7 fertilizers qui lisent les tuiles améliorées (tous en Mult)
+
+Charmed Patch (+1 Mult par tuile améliorée du groupe scoré, la copie d'un Wildroot compte), Grafter (+3 Mult si la graine plantée porte une upgrade), Twin Graft (+5 Mult si elle en porte 2 ou plus), Botanist (+1 Mult par type d'upgrade différent dans le jardin), Hothouse (+1 Mult par 2 tuiles améliorées dans le jardin), Good Neighbors (+2 Mult par tuile améliorée qui touche la graine plantée), Gleaner (+2 Mult par tuile améliorée récoltée par la ligne). Prix 5 à 7 Pollen.

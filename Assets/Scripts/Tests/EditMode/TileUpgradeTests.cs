@@ -264,6 +264,61 @@ namespace Contigu.Tests
             Assert.IsFalse(smith.Grid.GetCell(0, GridManager.Size - 1).IsLocked);
         }
 
+        private static PlacementResult PlantUpgraded(GridManager grid, int x, int y, PieceColor color, PieceTraitKind? kind, params ModifierId[] modifiers)
+        {
+            if (kind.HasValue)
+            {
+                // The same stamp RunManager.ApplyTokenTrait puts on a tile right before it is placed.
+                grid.GetCell(x, y).OriginTrait = new PieceTrait(kind.Value, 0);
+            }
+            return grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), color, x, y, new List<ModifierId>(modifiers));
+        }
+
+        [Test]
+        public void FertilizersThatReadUpgradedTiles_AreAllMult()
+        {
+            // Charmed Patch: +1 Mult per upgraded tile in the scored group.
+            var charm = new GridManager();
+            PlantUpgraded(charm, 0, 0, PieceColor.Coral, PieceTraitKind.Pip, ModifierId.CharmedPatch);
+            Assert.AreEqual(2 * ScoringConstants.CharmedPatchMultPerTile, PlantUpgraded(charm, 1, 0, PieceColor.Coral, PieceTraitKind.Pip, ModifierId.CharmedPatch).AdditiveMultBonus);
+            Assert.AreEqual(0, PlantUpgraded(new GridManager(), 0, 0, PieceColor.Coral, null, ModifierId.CharmedPatch).AdditiveMultBonus);
+
+            // Grafter: the planted seed carries an upgrade. Twin Graft needs two.
+            Assert.AreEqual(ScoringConstants.GrafterMultBonus, PlantUpgraded(new GridManager(), 2, 2, PieceColor.Coral, PieceTraitKind.Pip, ModifierId.Grafter).AdditiveMultBonus);
+            Assert.AreEqual(0, PlantUpgraded(new GridManager(), 2, 2, PieceColor.Coral, null, ModifierId.Grafter).AdditiveMultBonus);
+            var domino = new GridManager();
+            domino.GetCell(2, 2).OriginTrait = new PieceTrait(PieceTraitKind.Pip, 0);
+            Assert.AreEqual(0, domino.PlacePiece(PieceShapeCatalog.Get(ShapeId.DomH), PieceColor.Coral, 2, 2, new List<ModifierId> { ModifierId.TwinGraft }).AdditiveMultBonus);
+            var twin = new GridManager();
+            twin.GetCell(2, 2).OriginTrait = new PieceTrait(PieceTraitKind.Pip, 0);
+            twin.GetCell(3, 2).OriginTrait = new PieceTrait(PieceTraitKind.Spark, 1);
+            Assert.AreEqual(ScoringConstants.TwinGraftMultBonus, twin.PlacePiece(PieceShapeCatalog.Get(ShapeId.DomH), PieceColor.Coral, 2, 2, new List<ModifierId> { ModifierId.TwinGraft }).AdditiveMultBonus);
+
+            // Botanist: one per different kind in the garden; Hothouse: one per two upgraded tiles.
+            var garden = new GridManager();
+            PlantUpgraded(garden, 0, 0, PieceColor.Coral, PieceTraitKind.Pip, ModifierId.Botanist, ModifierId.Hothouse);
+            PlantUpgraded(garden, 5, 5, PieceColor.Teal, PieceTraitKind.Spark, ModifierId.Botanist, ModifierId.Hothouse);
+            PlantUpgraded(garden, 0, 5, PieceColor.Violet, PieceTraitKind.Spark, ModifierId.Botanist, ModifierId.Hothouse);
+            var fourth = PlantUpgraded(garden, 5, 0, PieceColor.Lime, PieceTraitKind.Pip, ModifierId.Botanist, ModifierId.Hothouse);
+            Assert.AreEqual(2 * ScoringConstants.BotanistMultPerKind + 4 / ScoringConstants.HothouseTilesPerMult, fourth.AdditiveMultBonus);
+
+            // Good Neighbors: upgraded tiles touching the planted seed.
+            var neighbors = new GridManager();
+            PlantUpgraded(neighbors, 2, 2, PieceColor.Teal, PieceTraitKind.Pip);
+            Assert.AreEqual(ScoringConstants.GoodNeighborsMultPerTile, PlantUpgraded(neighbors, 3, 2, PieceColor.Coral, null, ModifierId.GoodNeighbors).AdditiveMultBonus);
+
+            // Gleaner: upgraded tiles harvested by the placement's line.
+            var gleaner = new GridManager();
+            int last = GridManager.Size - 1;
+            for (int x = 0; x < last; x++)
+            {
+                PlantUpgraded(gleaner, x, 0, PieceColor.Coral, x == 1 ? PieceTraitKind.Pip : (PieceTraitKind?)null);
+            }
+            var done = PlantUpgraded(gleaner, last, 0, PieceColor.Coral, null, ModifierId.Gleaner);
+            Assert.AreEqual(1, done.ClearedLineCount);
+            Assert.AreEqual(ScoringConstants.GleanerMultPerTile, done.AdditiveMultBonus);
+        }
+
         [Test]
         public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
         {
