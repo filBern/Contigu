@@ -105,6 +105,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Dye: return "Dye Sprout";
                 case PieceTraitKind.Fertile: return "Fertile Sprout";
                 case PieceTraitKind.Evergreen: return "Evergreen Sprout";
+                case PieceTraitKind.Pruner: return "Pruner Sprout";
+                case PieceTraitKind.Glow: return "Glow Sprout";
+                case PieceTraitKind.Bridge: return "Bridge Sprout";
+                case PieceTraitKind.Seedpod: return "Seedpod Sprout";
+                case PieceTraitKind.Locksmith: return "Locksmith Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -260,6 +265,16 @@ namespace Contigu.Data
                     return "When its tile is harvested by a line, its plot turns golden for the rest of the round.";
                 case PieceTraitKind.Evergreen:
                     return "Its tile survives harvests: when its line is harvested it stays planted and still scores the line points.";
+                case PieceTraitKind.Pruner:
+                    return "After scoring, uproots every touching tile of another color (+" + ScoringConstants.PrunerBonusPerTile + " pts each), freeing the plots.";
+                case PieceTraitKind.Glow:
+                    return "After scoring, the empty plots touching it turn golden for the rest of the round.";
+                case PieceTraitKind.Bridge:
+                    return "Joins its group across one empty plot to a tile of the same color in a straight line.";
+                case PieceTraitKind.Seedpod:
+                    return "When its tile is harvested by a line, plants 2 free tiles of its color on the empty plots around it.";
+                case PieceTraitKind.Locksmith:
+                    return "Each time it scores, frees one locked, frozen or poisoned plot anywhere in the garden.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -328,6 +343,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Dye: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Fertile: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Evergreen: return UpgradeRarity.Rare;
+                case PieceTraitKind.Pruner: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Glow: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Bridge: return UpgradeRarity.Rare;
+                case PieceTraitKind.Seedpod: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Locksmith: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -459,6 +479,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Dye:
                 case PieceTraitKind.Fertile:
                 case PieceTraitKind.Evergreen:
+                case PieceTraitKind.Pruner:
+                case PieceTraitKind.Glow:
+                case PieceTraitKind.Bridge:
+                case PieceTraitKind.Seedpod:
+                case PieceTraitKind.Locksmith:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:

@@ -182,6 +182,11 @@ namespace Contigu.Core
                 case PieceTraitKind.Dye:
                 case PieceTraitKind.Fertile:
                 case PieceTraitKind.Evergreen:
+                case PieceTraitKind.Pruner:
+                case PieceTraitKind.Glow:
+                case PieceTraitKind.Bridge:
+                case PieceTraitKind.Seedpod:
+                case PieceTraitKind.Locksmith:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -404,6 +409,10 @@ namespace Contigu.Core
                 case PieceTraitKind.Compound:
                 case PieceTraitKind.Dye:
                 case PieceTraitKind.Fertile:
+                case PieceTraitKind.Pruner:
+                case PieceTraitKind.Glow:
+                case PieceTraitKind.Seedpod:
+                case PieceTraitKind.Locksmith:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }

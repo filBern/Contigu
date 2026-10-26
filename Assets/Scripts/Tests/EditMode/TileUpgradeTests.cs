@@ -218,6 +218,53 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Bridge_Pruner_Glow_Seedpod_Locksmith_ShapeTheGarden()
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+
+            // Bridge: a tile two plots away across one empty plot joins the group.
+            var bridge = new GridManager();
+            bridge.GetCell(2, 0).OriginTrait = new PieceTrait(PieceTraitKind.Bridge, 0);
+            bridge.PlacePiece(single, PieceColor.Teal, 0, 0);
+            var joined = bridge.PlacePiece(single, PieceColor.Teal, 2, 0);
+            CollectionAssert.Contains(joined.GroupCells, new Vector2Int(0, 0));
+
+            // Pruner: uproots the touching tile of another color and scores for it.
+            var pruner = NewRun();
+            pruner.DebugSetPiecesRemaining(10);
+            PlantAt(pruner, PieceTraitKind.Pip, PieceColor.Teal, 2, 2);
+            var pruned = PlantAt(pruner, PieceTraitKind.Pruner, PieceColor.Coral, 3, 2);
+            CollectionAssert.Contains(pruned.UprootedTiles, new Vector2Int(2, 2));
+            Assert.IsFalse(pruner.Grid.GetCell(2, 2).IsFilled);
+            Assert.GreaterOrEqual(pruned.TraitBonus, ScoringConstants.PrunerBonusPerTile);
+
+            // Glow: the empty plots around it turn golden.
+            var glow = NewRun();
+            var glowed = PlantAt(glow, PieceTraitKind.Glow, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(4, glowed.FertilizedPlots.Count);
+            Assert.IsTrue(glow.Grid.GetCell(2, 3).IsGolden);
+
+            // Seedpod: harvested, it plants two free tiles of its color next to its plot.
+            var pod = NewRun();
+            pod.DebugSetPiecesRemaining(10);
+            int last = GridManager.Size - 1;
+            for (int x = 0; x < last; x++)
+            {
+                pod.Grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var podded = PlantAt(pod, PieceTraitKind.Seedpod, PieceColor.Coral, last, 0);
+            Assert.AreEqual(1, podded.ClearedLineCount);
+            Assert.AreEqual(2, podded.SownTiles.Count);
+
+            // Locksmith: frees one locked plot anywhere.
+            var smith = NewRun();
+            smith.Grid.GetCell(0, GridManager.Size - 1).IsLocked = true;
+            var freed = PlantAt(smith, PieceTraitKind.Locksmith, PieceColor.Coral, 2, 2);
+            CollectionAssert.Contains(freed.FreedPlots, new Vector2Int(0, GridManager.Size - 1));
+            Assert.IsFalse(smith.Grid.GetCell(0, GridManager.Size - 1).IsLocked);
+        }
+
+        [Test]
         public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
         {
             var run = NewRun();

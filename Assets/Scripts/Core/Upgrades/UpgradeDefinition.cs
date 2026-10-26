@@ -451,6 +451,26 @@ namespace Contigu.Core
             UpgradeId.EvergreenTile, UpgradePool.Grid, "Evergreen Sprout",
             "Its tile survives harvests: it stays planted and still scores the line points.", false, UpgradeRarity.Rare);
 
+        public static readonly UpgradeDefinition PrunerTile = new UpgradeDefinition(
+            UpgradeId.PrunerTile, UpgradePool.Grid, "Pruner Sprout",
+            "After scoring, uproots the touching tiles of another color: +8 pts each.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition GlowTile = new UpgradeDefinition(
+            UpgradeId.GlowTile, UpgradePool.Grid, "Glow Sprout",
+            "The empty plots touching it turn golden for the round.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition BridgeTile = new UpgradeDefinition(
+            UpgradeId.BridgeTile, UpgradePool.Grid, "Bridge Sprout",
+            "Joins its group across one empty plot to a tile of the same color.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition SeedpodTile = new UpgradeDefinition(
+            UpgradeId.SeedpodTile, UpgradePool.Grid, "Seedpod Sprout",
+            "When its tile is harvested, plants 2 free tiles of its color nearby.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition LocksmithTile = new UpgradeDefinition(
+            UpgradeId.LocksmithTile, UpgradePool.Grid, "Locksmith Sprout",
+            "Each time it scores, frees one locked, frozen or poisoned plot anywhere.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -461,7 +481,8 @@ namespace Contigu.Core
             PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
-            GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile
+            GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -490,7 +511,8 @@ namespace Contigu.Core
             PipTile, LuckyTile, CompanionTile, ColonyTile, BorderTile, HeartTile, CornerTile, HermitTile, CuddlyTile, DawnTile, DuskTile, MiserTile, StormyTile, ElderTile, HarvesterTile, BreezeTile, HarmonyTile, PrismTile, GardenerTile,
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
-            GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile
+            GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile
         };
     }
 }

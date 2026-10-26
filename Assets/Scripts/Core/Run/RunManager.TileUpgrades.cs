@@ -484,6 +484,77 @@ namespace Contigu.Core
                         }
                     }
                     break;
+                case PieceTraitKind.Pruner:
+                    var keep = ColorAsPlaced(pos, placement);
+                    if (keep.HasValue && Grid.GetCell(pos).IsFilled)
+                    {
+                        for (int s4 = 0; s4 < TileUpgradeSteps.Length; s4++)
+                        {
+                            var touching = pos + TileUpgradeSteps[s4];
+                            if (GridManager.InBounds(touching.x, touching.y) && Grid.UprootTile(touching, keep.Value))
+                            {
+                                bonus += ScoringConstants.PrunerBonusPerTile;
+                                var uprooted = new List<Vector2Int>(placement.UprootedTiles);
+                                uprooted.Add(touching);
+                                placement.UprootedTiles = uprooted;
+                            }
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Glow:
+                    for (int s5 = 0; s5 < TileUpgradeSteps.Length; s5++)
+                    {
+                        var plot = pos + TileUpgradeSteps[s5];
+                        if (GridManager.InBounds(plot.x, plot.y) && Grid.GildEmptyPlot(plot))
+                        {
+                            var gilded = new List<Vector2Int>(placement.FertilizedPlots);
+                            gilded.Add(plot);
+                            placement.FertilizedPlots = gilded;
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Seedpod:
+                    for (int c3 = 0; c3 < placement.ClearedCells.Count; c3++)
+                    {
+                        if (placement.ClearedCells[c3] == pos && !placement.ClearedCellFrozen[c3])
+                        {
+                            var podColor = placement.ClearedCellColors[c3];
+                            if (podColor == PieceColor.Joker)
+                            {
+                                podColor = PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
+                            }
+                            for (int pod = 0; pod < 2; pod++)
+                            {
+                                var landed2 = Grid.PlantFreeTileNear(pos, podColor, _rng);
+                                if (landed2.HasValue)
+                                {
+                                    var sown2 = new List<(Vector2Int, PieceColor)>(placement.SownTiles);
+                                    sown2.Add((landed2.Value, podColor));
+                                    placement.SownTiles = sown2;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Locksmith:
+                    var afflicted = new List<Vector2Int>();
+                    foreach (var any2 in GridManager.AllPositions())
+                    {
+                        var plotCell = Grid.GetCell(any2);
+                        if ((plotCell.IsLocked && !plotCell.IsBastion) || plotCell.IsFrozen || plotCell.IsPoisoned)
+                        {
+                            afflicted.Add(any2);
+                        }
+                    }
+                    if (afflicted.Count > 0)
+                    {
+                        var freed = afflicted[_rng.Next(afflicted.Count)];
+                        FreePlot(freed);
+                        var freedList = new List<Vector2Int>(placement.FreedPlots);
+                        freedList.Add(freed);
+                        placement.FreedPlots = freedList;
+                    }
+                    break;
                 case PieceTraitKind.Fertile:
                     for (int c2 = 0; c2 < placement.ClearedCells.Count; c2++)
                     {
@@ -559,6 +630,27 @@ namespace Contigu.Core
         }
 
         /// <summary>Warden / Aegis: lifts every enemy effect (lock, ice, poison) from one plot, forgets it in the enemies that own it, and makes the plot immune for the round.</summary>
+        /// <summary>Frees one plot from every enemy effect (lock, ice, poison) without making it immune — Locksmith Sprout.</summary>
+        private void FreePlot(Vector2Int pos)
+        {
+            var cell = Grid.GetCell(pos);
+            if (!cell.IsBastion)
+            {
+                cell.IsLocked = false;
+                cell.IsFrozen = false;
+                cell.IsLineClearObstacle = false;
+            }
+            cell.IsPoisoned = false;
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.LockedCell == pos) { enemy.LockedCell = null; }
+                if (enemy.ExtraLockedCell == pos) { enemy.ExtraLockedCell = null; }
+                enemy.RemovePoisonedCell(pos);
+                enemy.FrozenCells.Remove(pos);
+            }
+        }
+
         private void CleanseAndShield(Vector2Int pos, PlacementResult placement)
         {
             if (!GridManager.InBounds(pos.x, pos.y))

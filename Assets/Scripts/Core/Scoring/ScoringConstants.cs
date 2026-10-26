@@ -480,5 +480,6 @@ namespace Contigu.Core
             get { return (int)System.Math.Ceiling(GridManager.Size * FullHouseFillFraction); }
         }
         public const int CompoundPollenPercent = 10;
+        public const int PrunerBonusPerTile = 8;
     }
 }

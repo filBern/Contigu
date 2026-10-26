@@ -1093,6 +1093,30 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.ValidDrop);
                 any = true;
             }
+            if (placement.UprootedTiles.Count > 0)
+            {
+                // Pruner Sprout: the uprooted tiles vanish with a puff.
+                var uprooted = new List<Vector2Int>(placement.UprootedTiles);
+                _gridView.RefreshCells(uprooted);
+                for (int i = 0; i < uprooted.Count; i++)
+                {
+                    _gridView.PlayClearBurst(uprooted[i].x, uprooted[i].y, UITheme.Danger);
+                }
+                SfxManager.Play(SfxId.LineClear);
+                any = true;
+            }
+            if (placement.FreedPlots.Count > 0)
+            {
+                // Locksmith Sprout: the freed plot flashes.
+                for (int i = 0; i < placement.FreedPlots.Count; i++)
+                {
+                    var plot = placement.FreedPlots[i];
+                    _gridView.RefreshCells(new List<Vector2Int> { plot });
+                    _gridView.PlayClearBurst(plot.x, plot.y, UITheme.LightBlue);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(plot.x, plot.y), "Freed", UITheme.LightBlue);
+                }
+                any = true;
+            }
             if (placement.FertilizedPlots.Count > 0)
             {
                 // Fertile Sprout: the harvested plot is golden from now on.

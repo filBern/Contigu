@@ -369,6 +369,11 @@ namespace Contigu.Core
                 case UpgradeId.DyeTile: return PieceTraitKind.Dye;
                 case UpgradeId.FertileTile: return PieceTraitKind.Fertile;
                 case UpgradeId.EvergreenTile: return PieceTraitKind.Evergreen;
+                case UpgradeId.PrunerTile: return PieceTraitKind.Pruner;
+                case UpgradeId.GlowTile: return PieceTraitKind.Glow;
+                case UpgradeId.BridgeTile: return PieceTraitKind.Bridge;
+                case UpgradeId.SeedpodTile: return PieceTraitKind.Seedpod;
+                case UpgradeId.LocksmithTile: return PieceTraitKind.Locksmith;
                 default: return null; // Bank pool — no trait
             }
         }

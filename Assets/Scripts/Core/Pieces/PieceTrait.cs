@@ -204,6 +204,21 @@ namespace Contigu.Core
         /// <summary>"Evergreen Sprout" — Its tile survives harvests: it stays planted and still scores the line points.</summary>
         Evergreen,
 
+        /// <summary>"Pruner Sprout" — After scoring, uproots the touching tiles of another color: +8 pts each.</summary>
+        Pruner,
+
+        /// <summary>"Glow Sprout" — The empty plots touching it turn golden for the round.</summary>
+        Glow,
+
+        /// <summary>"Bridge Sprout" — Joins its group across one empty plot to a tile of the same color.</summary>
+        Bridge,
+
+        /// <summary>"Seedpod Sprout" — When its tile is harvested, plants 2 free tiles of its color nearby.</summary>
+        Seedpod,
+
+        /// <summary>"Locksmith Sprout" — Each time it scores, frees one locked, frozen or poisoned plot anywhere.</summary>
+        Locksmith,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active

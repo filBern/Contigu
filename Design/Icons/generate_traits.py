@@ -110,6 +110,13 @@ T['Dye'] = ('#d86fb0', g('<path d="M32 8 C46 26 50 36 44 46 C40 54 24 54 20 46 C
 T['Fertile'] = ('#e8a82e', g('<rect x="12" y="30" width="40" height="24" rx="6"/>', '#fff1b0') + g('<path d="M32 30 V14 M32 22 C24 20 22 14 24 10 C30 10 34 16 32 22 M32 18 C40 16 44 10 42 6 C36 6 30 12 32 18" fill="none"/>', 'none', 4).replace(O, W))
 T['Evergreen'] = ('#2f7f4a', g('<path d="M32 6 L48 26 H38 L52 44 H12 L26 26 H16 Z"/>', '#7ad07a') + g('<rect x="28" y="44" width="8" height="12" rx="2"/>', '#8a5a2b', 3))
 
+# ---- fifth batch (more grid-shaping tile upgrades)
+T['Pruner'] = ('#b5483f', g('<path d="M12 52 L40 24 M40 24 L52 12" fill="none"/>', 'none', 6).replace(O, W) + g('<path d="M30 14 L50 34 L40 40 L22 22 Z"/>', '#d4d8de', 3))
+T['Glow'] = ('#e8a82e', g(star(32, 32, 22, 8, 0.55), '#fff1b0') + g('<circle cx="32" cy="32" r="8"/>', '#ffffff', 2.5))
+T['Bridge'] = ('#4f7fd0', g('<rect x="4" y="30" width="16" height="16" rx="3"/><rect x="44" y="30" width="16" height="16" rx="3"/>', W) + g('<path d="M12 30 C12 8 52 8 52 30" fill="none"/>', 'none', 5).replace(O, '#ffd84d'))
+T['Seedpod'] = ('#6f9f3f', g('<path d="M32 8 C48 14 52 38 32 56 C12 38 16 14 32 8 Z"/>', '#c8a45a') + g('<circle cx="32" cy="24" r="4"/><circle cx="32" cy="36" r="4"/><circle cx="32" cy="46" r="3"/>', '#6fb04f', 2))
+T['Locksmith'] = ('#5f699c', g('<rect x="14" y="28" width="36" height="26" rx="6"/>', '#e8c98a') + g('<path d="M22 28 V20 C22 6 42 6 42 20" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="40" r="4"/>', '#3a2a1c', 2))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

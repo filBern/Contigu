@@ -186,6 +186,30 @@ namespace Contigu.Core
             dst.ColorMasteryBonus = src.ColorMasteryBonus;
         }
 
+        /// <summary>Pruner Sprout: uproots a filled, unlocked, non-Bastion tile of a color other than <paramref name="keepColor"/>. False (no-op) otherwise.</summary>
+        public bool UprootTile(Vector2Int pos, PieceColor keepColor)
+        {
+            var cell = _cells[pos.x, pos.y];
+            if (!cell.IsFilled || cell.IsLocked || cell.IsBastion || !cell.FilledColor.HasValue || cell.FilledColor.Value == keepColor)
+            {
+                return false;
+            }
+            cell.ClearFill();
+            return true;
+        }
+
+        /// <summary>Glow Sprout: turns an empty, unlocked plot golden. False (no-op) when it is filled, locked or already golden.</summary>
+        public bool GildEmptyPlot(Vector2Int pos)
+        {
+            var cell = _cells[pos.x, pos.y];
+            if (cell.IsFilled || cell.IsLocked || cell.IsGolden)
+            {
+                return false;
+            }
+            cell.IsGolden = true;
+            return true;
+        }
+
         /// <summary>Dye Sprout: repaints a filled, unlocked tile in <paramref name="color"/>. False (no-op) for an empty, locked, joker or already-that-color plot.</summary>
         public bool RecolorFilledTile(Vector2Int pos, PieceColor color)
         {

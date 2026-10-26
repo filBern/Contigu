@@ -90,6 +90,11 @@ namespace Contigu.Core
         DyeTile,
         FertileTile,
         EvergreenTile,
+        PrunerTile,
+        GlowTile,
+        BridgeTile,
+        SeedpodTile,
+        LocksmithTile,
 
         PipTile,
         LuckyTile,

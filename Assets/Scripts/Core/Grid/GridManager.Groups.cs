@@ -250,6 +250,7 @@ namespace Contigu.Core
                 TryVisitGroupNeighbor(pos.x + 1, pos.y, ref anchorColor, visited, stack);
                 TryVisitGroupNeighbor(pos.x, pos.y - 1, ref anchorColor, visited, stack);
                 TryVisitGroupNeighbor(pos.x, pos.y + 1, ref anchorColor, visited, stack);
+                TryBridgeAcrossGap(pos, ref anchorColor, visited, stack);
             }
 
             // A stack-based flood fill visits cells in an arbitrary order.
@@ -264,6 +265,36 @@ namespace Contigu.Core
                 return rowCompare != 0 ? rowCompare : a.x.CompareTo(b.x);
             });
             return group;
+        }
+
+        /// <summary>Bridge Sprout: from its tile, a straight line over ONE empty plot reaches a filled tile of the same color and joins it to the group.</summary>
+        private void TryBridgeAcrossGap(Vector2Int pos, ref PieceColor? anchorColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)
+        {
+            var origin = _cells[pos.x, pos.y];
+            if (!origin.OriginTrait.HasValue || origin.OriginTrait.Value.Kind != PieceTraitKind.Bridge)
+            {
+                return;
+            }
+            var steps = new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+            for (int i = 0; i < steps.Length; i++)
+            {
+                var middle = pos + steps[i];
+                var far = pos + steps[i] + steps[i];
+                if (!InBounds(middle.x, middle.y) || !InBounds(far.x, far.y) || _cells[middle.x, middle.y].IsFilled || _cells[middle.x, middle.y].IsLocked)
+                {
+                    continue;
+                }
+                var farCell = _cells[far.x, far.y];
+                if (!farCell.IsFilled || !farCell.FilledColor.HasValue || visited.Contains(far))
+                {
+                    continue;
+                }
+                if (anchorColor.HasValue && farCell.FilledColor.Value != anchorColor.Value && farCell.FilledColor.Value != PieceColor.Joker)
+                {
+                    continue;
+                }
+                TryVisitGroupNeighbor(far.x, far.y, ref anchorColor, visited, stack);
+            }
         }
 
         private void TryVisitGroupNeighbor(int x, int y, ref PieceColor? anchorColor, HashSet<Vector2Int> visited, Stack<Vector2Int> stack)

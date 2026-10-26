@@ -204,7 +204,13 @@ namespace Contigu.Core
         /// <summary>Tiles a Dye Sprout painted another color on this placement (position, new color).</summary>
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> RecoloredTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 
-        /// <summary>Plots a Fertile Sprout turned golden because its tile was harvested on this placement.</summary>
+        /// <summary>Tiles a Pruner Sprout uprooted on this placement.</summary>
+        public IReadOnlyList<Vector2Int> UprootedTiles = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Plots a Locksmith Sprout freed from an enemy effect on this placement.</summary>
+        public IReadOnlyList<Vector2Int> FreedPlots = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Plots a Fertile or Glow Sprout turned golden because its tile was harvested on this placement.</summary>
         public IReadOnlyList<Vector2Int> FertilizedPlots = System.Array.Empty<Vector2Int>();
 
         /// <summary>

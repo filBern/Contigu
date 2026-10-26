@@ -163,3 +163,7 @@ Une première simulation (planner profondeur 3) à PV inchangés donnait 14 à 3
 ## 5 tile upgrades qui changent le jardin
 
 Gap (une ligne ou colonne qui le contient est récoltée avec une case vide ; l'espace vide reste vide, un Gap par case vide pardonnée), Wildroot (compte comme une tuile de plus dans son groupe : plus de points de groupe et les fertilizers à seuil de taille se déclenchent plus tôt), Dye (peint ses voisines de sa couleur après le score : le groupe grandit), Fertile (quand sa tuile est récoltée par une ligne, sa case devient dorée pour la manche), Evergreen (sa tuile survit aux récoltes : elle reste plantée et marque quand même les points de ligne).
+
+## 5 tile upgrades de plus qui touchent la grille (deuxième lot)
+
+Pruner (après le score, déracine les tuiles voisines d'une autre couleur : +8 pts chacune, et libère les cases), Glow (les cases vides voisines deviennent dorées pour la manche), Bridge (joint son groupe, en ligne droite, à une tuile de la même couleur par-dessus une case vide), Seedpod (quand sa tuile est récoltée, plante 2 tuiles gratuites de sa couleur autour de sa case), Locksmith (à chaque score, libère une case verrouillée, gelée ou empoisonnée n'importe où).
