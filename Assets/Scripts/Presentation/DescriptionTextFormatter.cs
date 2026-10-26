@@ -66,7 +66,110 @@ namespace Contigu.Presentation
                 return description;
             }
 
-            return Rebuild(description, word => ColorizeWord(word, fontSize));
+            // Split into words and the separators (spaces, line breaks) between them, both kept as they are.
+            var words = new List<string>();
+            var separators = new List<char>();
+            int start = 0;
+            for (int i = 0; i <= description.Length; i++)
+            {
+                if (i == description.Length || description[i] == ' ' || description[i] == '\n')
+                {
+                    words.Add(description.Substring(start, i - start));
+                    separators.Add(i < description.Length ? description[i] : '\0');
+                    start = i + 1;
+                }
+            }
+
+            var result = new System.Text.StringBuilder(description.Length + 64);
+            string lastUnit = null;
+            for (int i = 0; i < words.Count; i++)
+            {
+                string word = words[i];
+                if (IsSignedNumber(word, out string core, out string trailing))
+                {
+                    // A "+15" takes the color of what it counts: the next unit word (pts / Mult / Pollen) a few words on,
+                    // else the unit of the same sentence ("+1 pt, then +1 more...").
+                    string hex = null;
+                    for (int j = i + 1; j < words.Count && j <= i + 3 && hex == null; j++)
+                    {
+                        hex = UnitHex(words[j]);
+                    }
+                    hex = hex ?? lastUnit;
+                    result.Append(hex != null ? Wrap(core, hex) + trailing : word);
+                }
+                else
+                {
+                    string unit = UnitHex(word);
+                    if (unit != null || IsMultiplierFactor(StripPunctuation(word).ToLowerInvariant()))
+                    {
+                        lastUnit = unit ?? MultiplierColorHex;
+                    }
+                    result.Append(ColorizeWord(word, fontSize));
+                }
+                if (word.EndsWith(".") || word.EndsWith(":"))
+                {
+                    lastUnit = null;
+                }
+                if (separators[i] != '\0')
+                {
+                    result.Append(separators[i]);
+                }
+            }
+            return result.ToString();
+        }
+
+        private static string StripPunctuation(string word)
+        {
+            int end = word.Length;
+            while (end > 0 && IsTrailingPunctuation(word[end - 1]))
+            {
+                end--;
+            }
+            return word.Substring(0, end);
+        }
+
+        /// <summary>The color of the unit this word names (points blue, Mult red, Pollen gold), or null if it is not a unit word.</summary>
+        private static string UnitHex(string word)
+        {
+            string lower = StripPunctuation(word).ToLowerInvariant();
+            if (lower == "pts" || lower == "pt" || lower == "points" || lower == "point")
+            {
+                return PointsColorHex;
+            }
+            if (lower == "multiplier" || lower == "multipliers" || lower == "mult")
+            {
+                return MultiplierColorHex;
+            }
+            if (lower == "pollen" || lower == "lueur")
+            {
+                return PollenColorHex;
+            }
+            return null;
+        }
+
+        /// <summary>"+15", "-3", "+0.5" (no percent sign): a signed amount, split from its trailing punctuation.</summary>
+        private static bool IsSignedNumber(string word, out string core, out string trailing)
+        {
+            core = StripPunctuation(word);
+            trailing = word.Substring(core.Length);
+            if (core.Length < 2 || (core[0] != '+' && core[0] != '-'))
+            {
+                return false;
+            }
+            bool seenDot = false;
+            for (int i = 1; i < core.Length; i++)
+            {
+                if (core[i] == '.' && !seenDot && i > 1 && i < core.Length - 1)
+                {
+                    seenDot = true;
+                    continue;
+                }
+                if (!char.IsDigit(core[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private static string Rebuild(string text, System.Func<string, string> colorizeWord)
