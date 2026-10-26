@@ -168,7 +168,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Lucky:
                     return "Scores a random bonus from 0 to " + ScoringConstants.LuckyMaxBonus + " pts when planted.";
                 case PieceTraitKind.Companion:
-                    return "Scores +" + ScoringConstants.CompanionBonusPerTile + " pts for each tile of " + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its chosen color") + " touching this sprout.";
+                    return "Scores +" + ScoringConstants.CompanionBonusPerOtherColor + " pts for each touching tile of another color, and +" + ScoringConstants.CompanionBonusPerChosenColor + " pts for each touching " + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "tile of its chosen color") + " tile.";
                 case PieceTraitKind.Colony:
                     return "Scores +" + ScoringConstants.ColonyBonus + " pts when its scored group has more than " + ScoringConstants.ColonyMinGroupExclusive + " cells.";
                 case PieceTraitKind.Border:

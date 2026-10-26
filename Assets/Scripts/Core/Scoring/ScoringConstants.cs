@@ -412,7 +412,11 @@ namespace Contigu.Core
         // ---- tile upgrades that score flat placement points (see RunManager.TileUpgrades.cs)
         public const int PipBonus = 1;
         public const int LuckyMaxBonus = 20;
-        public const int CompanionBonusPerTile = 8;
+        /// <summary>Companion Sprout: +8 for each touching tile of any other color...</summary>
+        public const int CompanionBonusPerOtherColor = 8;
+
+        /// <summary>...and +25 instead for each touching tile of its chosen color.</summary>
+        public const int CompanionBonusPerChosenColor = 25;
         public const int ColonyMinGroupExclusive = 10;
         public const int ColonyBonus = 20;
         public const int BorderBonus = 8;

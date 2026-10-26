@@ -208,7 +208,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition CompanionTile = new UpgradeDefinition(
             UpgradeId.CompanionTile, UpgradePool.Grid, "Companion Sprout",
-            "+8 pts per touching tile of another chosen color.", false, UpgradeRarity.Uncommon);
+            "+8 pts per touching tile of another color, +25 for one of its chosen color.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition ColonyTile = new UpgradeDefinition(
             UpgradeId.ColonyTile, UpgradePool.Grid, "Colony Sprout",

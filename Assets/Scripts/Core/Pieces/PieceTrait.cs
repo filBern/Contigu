@@ -57,7 +57,7 @@ namespace Contigu.Core
         /// <summary>"Lucky Sprout" — +0 to +20 pts at random when planted.</summary>
         Lucky,
 
-        /// <summary>"Companion Sprout" — +8 pts per touching tile of another chosen color.</summary>
+        /// <summary>"Companion Sprout" — +8 pts per touching tile of another color, +25 for its chosen color.</summary>
         Companion,
 
         /// <summary>"Colony Sprout" — +20 pts when its group has more than 10 cells.</summary>

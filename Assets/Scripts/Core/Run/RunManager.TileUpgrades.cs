@@ -170,14 +170,17 @@ namespace Contigu.Core
                     bonus = _rng.Next(ScoringConstants.LuckyMaxBonus + 1);
                     break;
                 case PieceTraitKind.Companion:
-                    if (trait.TintedColor.HasValue)
+                    // +8 for every touching tile of another color, +25 for one of its chosen color (a tile of its own color joins its group instead).
+                    var companionOwn = ColorAsPlaced(pos, placement);
+                    foreach (var color in OutsideNeighborColors(pos, placement))
                     {
-                        foreach (var color in OutsideNeighborColors(pos, placement))
+                        if (trait.TintedColor.HasValue && color == trait.TintedColor.Value)
                         {
-                            if (color == trait.TintedColor.Value)
-                            {
-                                bonus += ScoringConstants.CompanionBonusPerTile;
-                            }
+                            bonus += ScoringConstants.CompanionBonusPerChosenColor;
+                        }
+                        else if (!companionOwn.HasValue || color != companionOwn.Value)
+                        {
+                            bonus += ScoringConstants.CompanionBonusPerOtherColor;
                         }
                     }
                     break;

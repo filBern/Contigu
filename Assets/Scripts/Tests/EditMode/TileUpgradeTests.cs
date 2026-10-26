@@ -405,12 +405,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Companion_PaysPerTouchingTileOfItsColor()
+        public void Companion_PaysMoreForItsChosenColor_AndForAnyOtherColor()
         {
             var run = NewRun();
             Fill(run, PieceColor.Teal, (1, 2), (3, 2));
             Fill(run, PieceColor.Violet, (2, 1));
-            Assert.AreEqual(2 * ScoringConstants.CompanionBonusPerTile, PlantAt(run, PieceTraitKind.Companion, PieceColor.Coral, 2, 2, PieceColor.Teal).TraitBonus);
+            // Two chosen-color (Teal) neighbors at +25 and one other color (Violet) at +8.
+            Assert.AreEqual(2 * ScoringConstants.CompanionBonusPerChosenColor + ScoringConstants.CompanionBonusPerOtherColor, PlantAt(run, PieceTraitKind.Companion, PieceColor.Coral, 2, 2, PieceColor.Teal).TraitBonus);
+            // A tile of its own color joins the group instead and pays nothing.
+            var own = NewRun();
+            Fill(own, PieceColor.Coral, (1, 2));
+            Assert.AreEqual(0, PlantAt(own, PieceTraitKind.Companion, PieceColor.Coral, 2, 2, PieceColor.Teal).TraitBonus);
         }
 
         [Test]
