@@ -272,6 +272,7 @@ namespace Contigu.Core
             // connected (every shape in the catalog is edge-connected), so a
             // single flood-fill from any placed cell finds the whole group.
             var groupCells = FindConnectedGroup(placedCells[0]);
+            AddWildrootCells(groupCells);
             result.GroupCells = groupCells;
 
             // Captured before being overwritten below, for Momentum (Dégradé)

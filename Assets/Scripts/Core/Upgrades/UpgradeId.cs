@@ -85,6 +85,11 @@ namespace Contigu.Core
         ScholarTile,
         FullHouseTile,
         CompoundTile,
+        GapTile,
+        WildrootTile,
+        DyeTile,
+        FertileTile,
+        EvergreenTile,
 
         PipTile,
         LuckyTile,

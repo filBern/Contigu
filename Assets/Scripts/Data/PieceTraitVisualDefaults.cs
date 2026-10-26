@@ -100,6 +100,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Scholar: return "Scholar Sprout";
                 case PieceTraitKind.FullHouse: return "Full House Sprout";
                 case PieceTraitKind.Compound: return "Compound Sprout";
+                case PieceTraitKind.Gap: return "Gap Sprout";
+                case PieceTraitKind.Wildroot: return "Wildroot Sprout";
+                case PieceTraitKind.Dye: return "Dye Sprout";
+                case PieceTraitKind.Fertile: return "Fertile Sprout";
+                case PieceTraitKind.Evergreen: return "Evergreen Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -245,6 +250,16 @@ namespace Contigu.Data
                     return "Scores +" + ScoringConstants.FullHouseBonus + " pts for its row and +" + ScoringConstants.FullHouseBonus + " for its column when at least " + ScoringConstants.FullHouseMinFilled + " of its plots are full.";
                 case PieceTraitKind.Compound:
                     return "Earns " + ScoringConstants.CompoundPollenPercent + "% of the Pollen you hold (rounded down) every time it scores.";
+                case PieceTraitKind.Gap:
+                    return "A row or column holding it is harvested even with one plot still empty (the empty plot stays empty).";
+                case PieceTraitKind.Wildroot:
+                    return "Counts as one extra tile of its group: bigger groups, more group points, and group-size fertilizers fire sooner.";
+                case PieceTraitKind.Dye:
+                    return "After scoring, paints the tiles touching it in its own color, growing the group for the next seed.";
+                case PieceTraitKind.Fertile:
+                    return "When its tile is harvested by a line, its plot turns golden for the rest of the round.";
+                case PieceTraitKind.Evergreen:
+                    return "Its tile survives harvests: when its line is harvested it stays planted and still scores the line points.";
                 case PieceTraitKind.Bombe:
                     return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
                 case PieceTraitKind.Range:
@@ -308,6 +323,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Scholar: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.FullHouse: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Compound: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Gap: return UpgradeRarity.Rare;
+                case PieceTraitKind.Wildroot: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Dye: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Fertile: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Evergreen: return UpgradeRarity.Rare;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -434,6 +454,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Scholar:
                 case PieceTraitKind.FullHouse:
                 case PieceTraitKind.Compound:
+                case PieceTraitKind.Gap:
+                case PieceTraitKind.Wildroot:
+                case PieceTraitKind.Dye:
+                case PieceTraitKind.Fertile:
+                case PieceTraitKind.Evergreen:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:

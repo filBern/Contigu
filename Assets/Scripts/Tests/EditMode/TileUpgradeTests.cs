@@ -147,6 +147,77 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void GapSprout_Wildroot_Evergreen_ChangeHowTheGardenWorks()
+        {
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            int last = GridManager.Size - 1;
+
+            // Row 0 filled except its last plot: nothing clears without a Gap Sprout in it...
+            var plain = new GridManager();
+            for (int x = 0; x < last; x++)
+            {
+                var r = plain.PlacePiece(single, PieceColor.Coral, x, 0);
+                Assert.AreEqual(0, r.ClearedLineCount);
+            }
+
+            // ...and with one, the last tile placed harvests the row although the final plot stays empty.
+            var withGap = new GridManager();
+            withGap.GetCell(1, 0).OriginTrait = new PieceTrait(PieceTraitKind.Gap, 0);
+            PlacementResult harvest = null;
+            for (int x = 0; x < last; x++)
+            {
+                harvest = withGap.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            Assert.AreEqual(1, harvest.ClearedLineCount);
+            Assert.IsFalse(withGap.GetCell(last, 0).IsFilled);
+            CollectionAssert.DoesNotContain(harvest.ClearedCells, new Vector2Int(last, 0), "the forgiven empty plot is not harvested");
+
+            // Wildroot: three tiles in a row, the middle one counts twice in its group.
+            var roots = new GridManager();
+            roots.GetCell(1, 3).OriginTrait = new PieceTrait(PieceTraitKind.Wildroot, 0);
+            roots.PlacePiece(single, PieceColor.Teal, 0, 3);
+            roots.PlacePiece(single, PieceColor.Teal, 1, 3);
+            var group = roots.PlacePiece(single, PieceColor.Teal, 2, 3);
+            Assert.AreEqual(4, group.GroupCells.Count);
+
+            // Evergreen: its tile stays planted when its row is harvested.
+            var evergreen = new GridManager();
+            evergreen.GetCell(2, 5).OriginTrait = new PieceTrait(PieceTraitKind.Evergreen, 0);
+            PlacementResult done = null;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                done = evergreen.PlacePiece(single, PieceColor.Coral, x, 5);
+            }
+            Assert.AreEqual(1, done.ClearedLineCount);
+            Assert.IsTrue(evergreen.GetCell(2, 5).IsFilled, "Evergreen survives the harvest");
+            Assert.IsFalse(evergreen.GetCell(3, 5).IsFilled);
+        }
+
+        [Test]
+        public void Dye_PaintsNeighbors_AndFertile_TurnsItsHarvestedPlotGolden()
+        {
+            var dye = NewRun();
+            dye.DebugSetPiecesRemaining(10);
+            PlantAt(dye, PieceTraitKind.Pip, PieceColor.Teal, 2, 2);
+            var placement = PlantAt(dye, PieceTraitKind.Dye, PieceColor.Coral, 3, 2);
+            CollectionAssert.Contains(placement.RecoloredTiles, (new Vector2Int(2, 2), PieceColor.Coral));
+            Assert.AreEqual(PieceColor.Coral, dye.Grid.GetCell(2, 2).FilledColor);
+
+            var fertile = NewRun();
+            fertile.DebugSetPiecesRemaining(10);
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            int last = GridManager.Size - 1;
+            for (int x = 0; x < last; x++)
+            {
+                fertile.Grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            var harvested = PlantAt(fertile, PieceTraitKind.Fertile, PieceColor.Coral, last, 0);
+            Assert.AreEqual(1, harvested.ClearedLineCount);
+            Assert.IsTrue(fertile.Grid.GetCell(last, 0).IsGolden, "its plot turns golden");
+            CollectionAssert.Contains(harvested.FertilizedPlots, new Vector2Int(last, 0));
+        }
+
+        [Test]
         public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
         {
             var run = NewRun();

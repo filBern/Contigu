@@ -382,6 +382,11 @@ M['u_crescendo'] = lambda: _trait_motif('Crescendo')
 M['u_scholar'] = lambda: _trait_motif('Scholar')
 M['u_fullhouse'] = lambda: _trait_motif('FullHouse')
 M['u_compound'] = lambda: _trait_motif('Compound')
+M['u_gap'] = lambda: _trait_motif('Gap')
+M['u_wildroot'] = lambda: _trait_motif('Wildroot')
+M['u_dye'] = lambda: _trait_motif('Dye')
+M['u_fertile'] = lambda: _trait_motif('Fertile')
+M['u_evergreen'] = lambda: _trait_motif('Evergreen')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -460,6 +465,11 @@ U = {
  'ScholarTile': ('u_scholar', 'Grid'),
  'FullHouseTile': ('u_fullhouse', 'Grid'),
  'CompoundTile': ('u_compound', 'Grid'),
+ 'GapTile': ('u_gap', 'Grid'),
+ 'WildrootTile': ('u_wildroot', 'Grid'),
+ 'DyeTile': ('u_dye', 'Grid'),
+ 'FertileTile': ('u_fertile', 'Grid'),
+ 'EvergreenTile': ('u_evergreen', 'Grid'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),

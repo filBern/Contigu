@@ -103,6 +103,13 @@ T['Scholar'] = ('#4f7fd0', g('<path d="M32 18 C24 12 14 12 8 14 V50 C14 48 24 48
 T['FullHouse'] = ('#c8403f', g(''.join('<rect x="%d" y="%d" width="14" height="14" rx="3"/>' % (x, y) for x, y in ((25, 8), (25, 25), (25, 42), (8, 25), (42, 25))), '#ffd84d', 3))
 T['Compound'] = ('#e8a82e', g('<ellipse cx="32" cy="46" rx="18" ry="7"/><ellipse cx="32" cy="36" rx="18" ry="7"/><ellipse cx="32" cy="26" rx="18" ry="7"/>', '#fff1b0', 3) + g('<path d="M50 16 V4 M44 10 H56" fill="none"/>', 'none', 4).replace(O, W))
 
+# ---- fourth batch (grid-shaping tile upgrades)
+T['Gap'] = ('#7a6fb0', g('<rect x="6" y="20" width="18" height="24" rx="4"/><rect x="40" y="20" width="18" height="24" rx="4"/>', W) + '<path d="M28 32 H36" stroke="%s" stroke-width="4" stroke-dasharray="3 4" stroke-linecap="round"/>' % W)
+T['Wildroot'] = ('#8a6a3a', g('<path d="M32 10 V30 M32 30 C26 36 20 40 14 54 M32 30 C38 36 44 40 50 54 M32 36 C32 44 32 48 32 56" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="14" r="8"/>', '#6fb04f', 3))
+T['Dye'] = ('#d86fb0', g('<path d="M32 8 C46 26 50 36 44 46 C40 54 24 54 20 46 C14 36 18 26 32 8Z"/>', '#4f7fd0') + g('<circle cx="26" cy="40" r="4"/><circle cx="38" cy="38" r="3"/>', '#e8a82e', 2))
+T['Fertile'] = ('#e8a82e', g('<rect x="12" y="30" width="40" height="24" rx="6"/>', '#fff1b0') + g('<path d="M32 30 V14 M32 22 C24 20 22 14 24 10 C30 10 34 16 32 22 M32 18 C40 16 44 10 42 6 C36 6 30 12 32 18" fill="none"/>', 'none', 4).replace(O, W))
+T['Evergreen'] = ('#2f7f4a', g('<path d="M32 6 L48 26 H38 L52 44 H12 L26 26 H16 Z"/>', '#7ad07a') + g('<rect x="28" y="44" width="8" height="12" rx="2"/>', '#8a5a2b', 3))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

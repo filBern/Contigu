@@ -1075,6 +1075,35 @@ namespace Contigu.Presentation
                 SfxManager.Play(SfxId.ValidDrop);
                 any = true;
             }
+            if (placement.RecoloredTiles.Count > 0)
+            {
+                // Dye Sprout: the painted tiles take their new color with a little burst of it.
+                var painted = new List<Vector2Int>();
+                for (int i = 0; i < placement.RecoloredTiles.Count; i++)
+                {
+                    painted.Add(placement.RecoloredTiles[i].Position);
+                }
+                _gridView.RefreshCells(painted);
+                for (int i = 0; i < placement.RecoloredTiles.Count; i++)
+                {
+                    var tile = placement.RecoloredTiles[i];
+                    _gridView.PulseCell(tile.Position.x, tile.Position.y);
+                    _gridView.PlayClearBurst(tile.Position.x, tile.Position.y, VisualDefaults.GetColor(tile.Color));
+                }
+                SfxManager.Play(SfxId.ValidDrop);
+                any = true;
+            }
+            if (placement.FertilizedPlots.Count > 0)
+            {
+                // Fertile Sprout: the harvested plot is golden from now on.
+                var plots = new List<Vector2Int>(placement.FertilizedPlots);
+                _gridView.RefreshCells(plots);
+                for (int i = 0; i < plots.Count; i++)
+                {
+                    _gridView.PlayClearBurst(plots[i].x, plots[i].y, UITheme.ScorePollen);
+                }
+                any = true;
+            }
             for (int i = 0; i < placement.CleansedCells.Count; i++)
             {
                 var pos = placement.CleansedCells[i];

@@ -110,7 +110,17 @@ namespace Contigu.Core
         private void CollectLineCell(Vector2Int pos, HashSet<Vector2Int> cellsToClear, HashSet<Vector2Int> bastionBonus, HashSet<Vector2Int> frozenCleared)
         {
             var cell = _cells[pos.x, pos.y];
-            if (!cell.IsLocked)
+            if (!cell.IsFilled && !cell.IsLocked)
+            {
+                // The empty plot a Gap Sprout forgave: nothing to harvest there.
+                return;
+            }
+            if (!cell.IsLocked && cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.Evergreen)
+            {
+                // Evergreen Sprout: the tile stays planted and still earns the line points, like a Bastion tile.
+                bastionBonus.Add(pos);
+            }
+            else if (!cell.IsLocked)
             {
                 cellsToClear.Add(pos);
             }
@@ -148,44 +158,48 @@ namespace Contigu.Core
 
         private bool IsRowComplete(int y)
         {
-            bool hasUnlockedCell = false;
-            for (int x = 0; x < Size; x++)
-            {
-                var cell = _cells[x, y];
-                // A Locker obstacle cell is not skipped like an ordinary
-                // locked cell: it falls through to the IsFilled check below,
-                // which it can never pass (CanPlace already refuses it), so
-                // a row/column containing one can never complete.
-                if (cell.IsLocked && !cell.IsLineClearObstacle)
-                {
-                    continue;
-                }
-                hasUnlockedCell = true;
-                if (!cell.IsFilled)
-                {
-                    return false;
-                }
-            }
-            return hasUnlockedCell;
+            return IsLineComplete(true, y, null);
         }
 
         private bool IsColumnComplete(int x)
         {
+            return IsLineComplete(false, x, null);
+        }
+
+        /// <summary>
+        /// The one "is this row/column complete" rule: every unlocked cell filled (a Locker obstacle cell is never skipped, see
+        /// Cell.IsLineClearObstacle), at least one unlocked cell — except that each Gap Sprout tile in the line forgives one empty plot.
+        /// With a <paramref name="footprint"/>, those cells count as filled (the hypothetical placement PreviewClearedLineCells checks).
+        /// </summary>
+        private bool IsLineComplete(bool isRow, int index, HashSet<Vector2Int> footprint)
+        {
             bool hasUnlockedCell = false;
-            for (int y = 0; y < Size; y++)
+            int empties = 0;
+            int gapTiles = 0;
+            for (int i = 0; i < Size; i++)
             {
-                var cell = _cells[x, y];
+                var pos = isRow ? new Vector2Int(i, index) : new Vector2Int(index, i);
+                var cell = _cells[pos.x, pos.y];
                 if (cell.IsLocked && !cell.IsLineClearObstacle)
                 {
                     continue;
                 }
                 hasUnlockedCell = true;
-                if (!cell.IsFilled)
+                bool filled = cell.IsFilled || (footprint != null && footprint.Contains(pos));
+                if (!filled)
                 {
-                    return false;
+                    if (cell.IsLocked)
+                    {
+                        return false;
+                    }
+                    empties++;
+                }
+                else if (cell.IsFilled && cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.Gap)
+                {
+                    gapTiles++;
                 }
             }
-            return hasUnlockedCell;
+            return hasUnlockedCell && empties <= gapTiles;
         }
     }
 }

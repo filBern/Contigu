@@ -27,6 +27,20 @@ namespace Contigu.Core
             return ResolveBestJokerGroup(seed);
         }
 
+        /// <summary>Wildroot Sprout: each such tile in the group counts as one extra tile of it — listed once more, so the group is bigger for every rule that reads its size or walks its cells.</summary>
+        private void AddWildrootCells(List<Vector2Int> groupCells)
+        {
+            int original = groupCells.Count;
+            for (int i = 0; i < original; i++)
+            {
+                var cell = _cells[groupCells[i].x, groupCells[i].y];
+                if (cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.Wildroot)
+                {
+                    groupCells.Add(groupCells[i]);
+                }
+            }
+        }
+
         /// <summary>
         /// Read-only preview of the connected group a placement WOULD produce
         /// at (anchorX, anchorY) — this piece's own cells plus every
@@ -109,44 +123,16 @@ namespace Contigu.Core
             return result;
         }
 
-        /// <summary>Same rule as <see cref="IsRowComplete"/> (every unlocked cell filled, at least one unlocked cell, a Locker obstacle cell never skipped — see Cell.IsLineClearObstacle), but also treats every cell in <paramref name="footprint"/> as filled, regardless of its actual current state — the hypothetical placement <see cref="PreviewClearedLineCells"/> checks.</summary>
+        /// <summary>Same rule as <see cref="IsRowComplete"/>, but also treats every cell in <paramref name="footprint"/> as filled — the hypothetical placement <see cref="PreviewClearedLineCells"/> checks.</summary>
         private bool IsRowCompleteWithFootprint(int y, HashSet<Vector2Int> footprint)
         {
-            bool hasUnlockedCell = false;
-            for (int x = 0; x < Size; x++)
-            {
-                var cell = _cells[x, y];
-                if (cell.IsLocked && !cell.IsLineClearObstacle)
-                {
-                    continue;
-                }
-                hasUnlockedCell = true;
-                if (!cell.IsFilled && !footprint.Contains(new Vector2Int(x, y)))
-                {
-                    return false;
-                }
-            }
-            return hasUnlockedCell;
+            return IsLineComplete(true, y, footprint);
         }
 
-        /// <summary>Column counterpart to <see cref="IsRowCompleteWithFootprint"/> — see its own doc comment.</summary>
+        /// <summary>Column counterpart to <see cref="IsRowCompleteWithFootprint"/>.</summary>
         private bool IsColumnCompleteWithFootprint(int x, HashSet<Vector2Int> footprint)
         {
-            bool hasUnlockedCell = false;
-            for (int y = 0; y < Size; y++)
-            {
-                var cell = _cells[x, y];
-                if (cell.IsLocked && !cell.IsLineClearObstacle)
-                {
-                    continue;
-                }
-                hasUnlockedCell = true;
-                if (!cell.IsFilled && !footprint.Contains(new Vector2Int(x, y)))
-                {
-                    return false;
-                }
-            }
-            return hasUnlockedCell;
+            return IsLineComplete(false, x, footprint);
         }
 
         /// <summary>

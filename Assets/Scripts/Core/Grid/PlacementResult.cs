@@ -201,6 +201,12 @@ namespace Contigu.Core
         /// <summary>Free tiles a Sower Sprout planted on this placement.</summary>
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> SownTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 
+        /// <summary>Tiles a Dye Sprout painted another color on this placement (position, new color).</summary>
+        public IReadOnlyList<(Vector2Int Position, PieceColor Color)> RecoloredTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
+
+        /// <summary>Plots a Fertile Sprout turned golden because its tile was harvested on this placement.</summary>
+        public IReadOnlyList<Vector2Int> FertilizedPlots = System.Array.Empty<Vector2Int>();
+
         /// <summary>
         /// Every additive scoring source folded together, including the
         /// per-cell <see cref="GroupMultiplier"/>/<see cref="LineClearMultiplier"/>

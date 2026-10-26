@@ -364,6 +364,11 @@ namespace Contigu.Core
                 case UpgradeId.ScholarTile: return PieceTraitKind.Scholar;
                 case UpgradeId.FullHouseTile: return PieceTraitKind.FullHouse;
                 case UpgradeId.CompoundTile: return PieceTraitKind.Compound;
+                case UpgradeId.GapTile: return PieceTraitKind.Gap;
+                case UpgradeId.WildrootTile: return PieceTraitKind.Wildroot;
+                case UpgradeId.DyeTile: return PieceTraitKind.Dye;
+                case UpgradeId.FertileTile: return PieceTraitKind.Fertile;
+                case UpgradeId.EvergreenTile: return PieceTraitKind.Evergreen;
                 default: return null; // Bank pool — no trait
             }
         }

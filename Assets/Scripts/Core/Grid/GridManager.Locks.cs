@@ -186,6 +186,18 @@ namespace Contigu.Core
             dst.ColorMasteryBonus = src.ColorMasteryBonus;
         }
 
+        /// <summary>Dye Sprout: repaints a filled, unlocked tile in <paramref name="color"/>. False (no-op) for an empty, locked, joker or already-that-color plot.</summary>
+        public bool RecolorFilledTile(Vector2Int pos, PieceColor color)
+        {
+            var cell = _cells[pos.x, pos.y];
+            if (!cell.IsFilled || cell.IsLocked || !cell.FilledColor.HasValue || cell.FilledColor.Value == color || cell.FilledColor.Value == PieceColor.Joker)
+            {
+                return false;
+            }
+            cell.FilledColor = color;
+            return true;
+        }
+
         /// <summary>Sower Sprout: plants a free tile (no score, no counters) of <paramref name="color"/> on a random empty, unlocked plot touching <paramref name="origin"/>. Returns where it landed, or null with no free neighbor.</summary>
         public Vector2Int? PlantFreeTileNear(Vector2Int origin, PieceColor color, IRandomProvider rng)
         {

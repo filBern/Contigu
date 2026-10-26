@@ -468,6 +468,34 @@ namespace Contigu.Core
                 case PieceTraitKind.Compound:
                     AddTilePollen(placement, pos, Lueur * ScoringConstants.CompoundPollenPercent / 100);
                     break;
+                case PieceTraitKind.Dye:
+                    var dyeColor = ColorAsPlaced(pos, placement);
+                    if (dyeColor.HasValue && dyeColor.Value != PieceColor.Joker && Grid.GetCell(pos).IsFilled)
+                    {
+                        for (int s3 = 0; s3 < TileUpgradeSteps.Length; s3++)
+                        {
+                            var around = pos + TileUpgradeSteps[s3];
+                            if (GridManager.InBounds(around.x, around.y) && Grid.RecolorFilledTile(around, dyeColor.Value))
+                            {
+                                var painted = new List<(Vector2Int, PieceColor)>(placement.RecoloredTiles);
+                                painted.Add((around, dyeColor.Value));
+                                placement.RecoloredTiles = painted;
+                            }
+                        }
+                    }
+                    break;
+                case PieceTraitKind.Fertile:
+                    for (int c2 = 0; c2 < placement.ClearedCells.Count; c2++)
+                    {
+                        if (placement.ClearedCells[c2] == pos && !placement.ClearedCellFrozen[c2])
+                        {
+                            Grid.GetCell(pos).IsGolden = true;
+                            var fertilized = new List<Vector2Int>(placement.FertilizedPlots);
+                            fertilized.Add(pos);
+                            placement.FertilizedPlots = fertilized;
+                        }
+                    }
+                    break;
                 case PieceTraitKind.Sower:
                     var sownColor = ColorAsPlaced(pos, placement);
                     var tileColor = sownColor.HasValue && sownColor.Value != PieceColor.Joker ? sownColor.Value : PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];

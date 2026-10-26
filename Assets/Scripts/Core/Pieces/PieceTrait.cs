@@ -189,6 +189,21 @@ namespace Contigu.Core
         /// <summary>"Compound Sprout" — Earns 10% of the Pollen you hold (rounded down) every time it scores.</summary>
         Compound,
 
+        /// <summary>"Gap Sprout" — A row or column holding it is harvested even with one empty plot.</summary>
+        Gap,
+
+        /// <summary>"Wildroot Sprout" — Counts as one extra tile of its group.</summary>
+        Wildroot,
+
+        /// <summary>"Dye Sprout" — Paints the tiles touching it its own color after scoring.</summary>
+        Dye,
+
+        /// <summary>"Fertile Sprout" — When its tile is harvested, its plot turns golden for the round.</summary>
+        Fertile,
+
+        /// <summary>"Evergreen Sprout" — Its tile survives harvests: it stays planted and still scores the line points.</summary>
+        Evergreen,
+
         // Joker-exclusive combat traits — unlike every trait above, these
         // never score anything on their own: they only change which enemy
         // (or enemies) this placement's damage lands on during an active
