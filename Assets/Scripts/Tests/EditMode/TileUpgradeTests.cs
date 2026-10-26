@@ -109,6 +109,17 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PreviewText_MatchesWhatTheUpgradeScores()
+        {
+            var scholar = NewRun();
+            scholar.DebugTriggerShapeMasteryGrant();
+            string preview = scholar.GetTileUpgradePreviewText(PieceTraitKind.Scholar);
+            int expected = PlantAt(scholar, PieceTraitKind.Scholar, PieceColor.Coral, 4, 4).TraitBonus;
+            Assert.AreEqual("Currently +" + expected + " pts", preview);
+            Assert.IsNull(scholar.GetTileUpgradePreviewText(PieceTraitKind.Kin), "Position-dependent upgrades have no preview");
+        }
+
+        [Test]
         public void Perennial_Crescendo_Scholar_FullHouse_GrowWithTheRun()
         {
             var perennial = NewRun();

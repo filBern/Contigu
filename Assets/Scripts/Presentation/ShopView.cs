@@ -787,7 +787,7 @@ namespace Contigu.Presentation
                 gem.rectTransform.sizeDelta = new Vector2(18f, 18f);
                 gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 UIFactory.AddThickOutline(gem, UITheme.Border);
-                hover.Init(_tooltip, upgradeDef.Name, DescriptionTextFormatter.Colorize(upgradeDef.Description, 14),
+                hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), null, price - run.Lueur), UITheme.TextMuted);
             }
             BuildPriceBadge(item, blocked ? Loc.T("shop.full", EconomyConstants.MaxActiveModifiers) : price.ToString(), run.Lueur >= price || blocked, !blocked);

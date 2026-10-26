@@ -192,7 +192,7 @@ namespace Contigu.Presentation
                 {
                     BuildVisual = (host, size) => BuildSpriteVisual(host, sprite),
                     Name = upgrade.Name,
-                    Body = DescriptionTextFormatter.Colorize(upgrade.Description, 14),
+                    Body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgrade.Description, 14), upgrade.Id),
                     Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
                     FillCell = true
                 });

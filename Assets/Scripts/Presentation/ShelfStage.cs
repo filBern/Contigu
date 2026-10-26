@@ -140,7 +140,7 @@ namespace Contigu.Presentation
             var source = new ChoiceSource
             {
                 Name = def.Name,
-                Body = DescriptionTextFormatter.Colorize(def.Description, 14),
+                Body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(def.Description, 14), def.Id),
                 Subtitle = Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(def.Rarity), UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", "")),
                 Art = from == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
                     : from == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")

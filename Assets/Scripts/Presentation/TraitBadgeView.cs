@@ -37,12 +37,12 @@ namespace Contigu.Presentation
             if (PieceTrait.IsJokerCombatKind(_trait.Kind))
             {
                 var jokerColor = VisualDefaults.GetColor(PieceColor.Joker);
-                _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), (RectTransform)transform, "Joker-exclusive", jokerColor);
+                _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, "Joker-exclusive", jokerColor);
                 return;
             }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
             string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
-            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
+            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
         }
 
         public void OnPointerExit(PointerEventData eventData)

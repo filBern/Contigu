@@ -499,16 +499,7 @@ namespace Contigu.Core
                     bonus = Mathf.Max(0, CurrentBudget - PiecesRemainingThisRound) * ScoringConstants.CrescendoBonusPerSeed;
                     break;
                 case PieceTraitKind.Scholar:
-                    int levels = 0;
-                    foreach (ShapeId shapeId in System.Enum.GetValues(typeof(ShapeId)))
-                    {
-                        levels += GetShapeMasteryLevel(shapeId) - 1;
-                    }
-                    foreach (var baseColor in PieceColorUtility.BaseColors)
-                    {
-                        levels += GetColorMasteryLevel(baseColor) - 1;
-                    }
-                    bonus = Mathf.Max(0, levels) * ScoringConstants.ScholarBonusPerLevel;
+                    bonus = CountMasteryLevelsEarned() * ScoringConstants.ScholarBonusPerLevel;
                     break;
                 case PieceTraitKind.FullHouse:
                     int rowFilled = 0;
@@ -675,6 +666,64 @@ namespace Contigu.Core
             var events = new List<ScoreEvent>(placement.ScoreEvents);
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, pos, mult));
             placement.ScoreEvents = events;
+        }
+
+        /// <summary>Mastery levels earned this run, shapes and colors together (level 1 is the starting level, so it counts for nothing).</summary>
+        private int CountMasteryLevelsEarned()
+        {
+            int levels = 0;
+            foreach (ShapeId shapeId in System.Enum.GetValues(typeof(ShapeId)))
+            {
+                levels += GetShapeMasteryLevel(shapeId) - 1;
+            }
+            foreach (var baseColor in PieceColorUtility.BaseColors)
+            {
+                levels += GetColorMasteryLevel(baseColor) - 1;
+            }
+            return Mathf.Max(0, levels);
+        }
+
+        /// <summary>
+        /// The tooltip's extra line for a tile upgrade whose score is already known before it is planted (it only depends on the run's
+        /// current state, not on where it lands): what it would score right now. Null for upgrades that depend on the placement itself.
+        /// </summary>
+        public string GetTileUpgradePreviewText(PieceTraitKind kind)
+        {
+            switch (kind)
+            {
+                case PieceTraitKind.Scholar:
+                    return PreviewPoints(CountMasteryLevelsEarned() * ScoringConstants.ScholarBonusPerLevel);
+                case PieceTraitKind.Pouch:
+                    return PreviewPoints(CountUpgradedDeckCards() * ScoringConstants.PouchBonusPerUpgradedSeed);
+                case PieceTraitKind.Crescendo:
+                    return PreviewPoints(Mathf.Max(0, CurrentBudget - PiecesRemainingThisRound) * ScoringConstants.CrescendoBonusPerSeed);
+                case PieceTraitKind.Perennial:
+                    return PreviewPoints(1 + _perennialScores);
+                case PieceTraitKind.Miser:
+                    return PreviewPoints(Lueur * ScoringConstants.MiserBonusPerPollen);
+                case PieceTraitKind.Elder:
+                    return PreviewPoints(CurrentRoundIndex * ScoringConstants.ElderBonusPerRound);
+                case PieceTraitKind.Breeze:
+                    return PreviewPoints(ShufflesRemaining * ScoringConstants.BreezeBonusPerShuffle);
+                case PieceTraitKind.Gardener:
+                    return PreviewPoints(_activeModifiers.Count * ScoringConstants.GardenerBonusPerFertilizer);
+                case PieceTraitKind.Hunter:
+                    return PreviewPoints(HasActiveEncounter ? CountAliveEnemies() * ScoringConstants.HunterBonusPerEnemy : 0);
+                case PieceTraitKind.Stormy:
+                    return PreviewPoints(CurrentWeather != WeatherId.Clear ? ScoringConstants.StormyBonus : 0);
+                case PieceTraitKind.Sunseeker:
+                    var sky = WeatherCatalog.Mechanic(CurrentWeather);
+                    return PreviewPoints(sky == WeatherId.Sunshine || sky == WeatherId.GoldenHour ? ScoringConstants.SunseekerBonus : 0);
+                case PieceTraitKind.Compound:
+                    return "Currently +" + (Lueur * ScoringConstants.CompoundPollenPercent / 100) + " Pollen";
+                default:
+                    return null;
+            }
+        }
+
+        private static string PreviewPoints(int points)
+        {
+            return "Currently +" + points + " pts";
         }
 
         /// <summary>Warden / Aegis: lifts every enemy effect (lock, ice, poison) from one plot, forgets it in the enemies that own it, and makes the plot immune for the round.</summary>
