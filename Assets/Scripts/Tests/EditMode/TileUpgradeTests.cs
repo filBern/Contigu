@@ -320,6 +320,22 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Catalyst_ScoresAgainWhenAnotherSeedJoinsItsGroup()
+        {
+            var run = NewRun();
+            run.DebugSetPiecesRemaining(10);
+            // Alone on the garden: nothing was planted before it, so nothing to count.
+            var first = PlantAt(run, PieceTraitKind.Catalyst, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(0, first.TraitBonus);
+            // A new seed joins: the Catalyst tile (already planted) scores again, counting the tiles that were there before the new seed.
+            var join = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 3, 2);
+            Assert.AreEqual(ScoringConstants.CatalystBonusPerExistingCell + ScoringConstants.PipBonus, join.TraitBonus);
+            // And again with a third seed: now two tiles were there before it.
+            var again = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 4, 2);
+            Assert.AreEqual(2 * ScoringConstants.CatalystBonusPerExistingCell + 2 * ScoringConstants.PipBonus, again.TraitBonus);
+        }
+
+        [Test]
         public void ASeed_CanCarryTwoUpgrades_OnDifferentTiles_AndBothFire()
         {
             var run = NewRun();

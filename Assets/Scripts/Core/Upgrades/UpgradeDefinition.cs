@@ -132,7 +132,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition CatalystTile = new UpgradeDefinition(
             UpgradeId.CatalystTile, UpgradePool.Grid, "Catalyst Sprout",
-            "+3 pts for each tile already planted that joins its group (the seed's own tiles do not count).", false, UpgradeRarity.Common);
+            "+3 pts for each tile already planted that joins the group, counted again every time a new seed joins it.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition TwinTile = new UpgradeDefinition(
             UpgradeId.TwinTile, UpgradePool.Grid, "Twin Sprout",

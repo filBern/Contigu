@@ -146,7 +146,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Seeder:
                     return "Turns golden for the rest of the round, rescoring every time its group is scored again.";
                 case PieceTraitKind.Catalyst:
-                    return "Scores +" + ScoringConstants.CatalystBonusPerExistingCell + " pts for each tile already planted that joins this seed's group. The seed's own tiles do not count: planting next to a group of 6 tiles scores +" + (6 * ScoringConstants.CatalystBonusPerExistingCell) + " pts.";
+                    return "Scores +" + ScoringConstants.CatalystBonusPerExistingCell + " pts for each tile already planted when a seed joins its group (the new seed's own tiles do not count). It scores again every time a new seed joins the group: a group of 6 plus a new seed gives +" + (6 * ScoringConstants.CatalystBonusPerExistingCell) + " pts.";
                 case PieceTraitKind.Twin:
                     return "Copies this sprout's group bonus onto EVERY other sprout in the group, not just one like Mirror Sprout.";
                 case PieceTraitKind.Detonator:
