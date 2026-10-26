@@ -367,7 +367,8 @@ namespace Contigu.Core
         public const float SiphonLueurFraction = 0.04f;
 
         // ---- the 40 fertilizers added in one batch (see GridManager.NewModifiers.cs and RunManager.NewModifiers.cs) ----
-        public const int HedgerowBonusPerCell = 4;
+        /// <summary>Hedgerow: points per edge tile, converted to Mult at PointsPerMult - so exactly +1 Mult per edge tile (a lower value rounded every placement down to +1 total).</summary>
+        public const int HedgerowBonusPerCell = (int)PointsPerMult;
         public const int HeartwoodMultiplier = 2;
         public const int TrellisMultBonus = 3;
         public const int FurrowMultBonus = 3;

@@ -99,6 +99,14 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Hedgerow_GivesOneMultPerEdgeTile_ACornerSquareGivesThree()
+        {
+            var edge = Place(new GridManager(), ShapeId.Sq2, PieceColor.Coral, 0, 0, ModifierId.Haie);
+            var middle = Place(new GridManager(), ShapeId.Sq2, PieceColor.Coral, 2, 2, ModifierId.Haie);
+            Assert.AreEqual(middle.AdditiveMultBonus + 3, edge.AdditiveMultBonus);
+        }
+
+        [Test]
         public void Heartwood_DoublesOnlyInTheMiddle()
         {
             Assert.AreEqual(ScoringConstants.HeartwoodMultiplier, Place(new GridManager(), ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Coeur).ModifierMultiplier);
