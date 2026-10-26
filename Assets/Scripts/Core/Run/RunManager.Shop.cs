@@ -598,10 +598,6 @@ namespace Contigu.Core
         /// <summary>Resolves a Bank-pool <see cref="PendingUpgrade"/> that needed a sub-choice (which piece type, and for Recolorer which target color, or for Replace which SECOND piece type to duplicate in its place). No-op (false) if nothing is pending or it's actually a Grid-pool upgrade.</summary>
         public bool ResolveUpgradeSubChoice(UpgradeSubChoice subChoice)
         {
-            if (PendingUpgrade != null && PendingUpgrade.Id == UpgradeId.Compost)
-            {
-                return ResolveCompost(subChoice);
-            }
             if (PendingUpgrade == null || PendingUpgrade.Pool != UpgradePool.Bank)
             {
                 return false;

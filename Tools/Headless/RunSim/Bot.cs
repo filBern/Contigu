@@ -399,6 +399,11 @@ namespace Contigu.RunSim
                     }
                     ok = run.ResolveUpgradeTileChoice(chosen);
                 }
+                else if (pending.Id == UpgradeId.Compost)
+                {
+                    var compostable = run.PendingUpgradeTileCandidates;
+                    ok = compostable.Count > 0 && run.ResolveCompostChoice(compostable[_rng.Next(compostable.Count)]);
+                }
                 else if (pending.RequiresSubChoice && run.PendingUpgradeTypeCandidates.Count > 0)
                 {
                     var type = run.PendingUpgradeTypeCandidates[_rng.Next(run.PendingUpgradeTypeCandidates.Count)];

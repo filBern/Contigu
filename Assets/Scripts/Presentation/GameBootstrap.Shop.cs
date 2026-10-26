@@ -287,15 +287,20 @@ namespace Contigu.Presentation
 
         private void ShowCompost(UpgradeDefinition pending)
         {
-            var types = new List<(ShapeId Shape, PieceColor Color)>(_run.PendingUpgradeTypeCandidates);
+            var deckIndices = new List<int>(_run.PendingUpgradeTileCandidates);
             var entries = new List<ChoiceEntry>();
-            foreach (var type in types)
+            foreach (var deckIndex in deckIndices)
             {
-                var t = type;
-                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, null, _tooltipView) });
+                var t = _run.Deck.Deck[deckIndex];
+                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
             }
-            ShowShelfChoice(ShelfStage.ForWorkshop(pending), Loc.T("choice.pickCompost"), entries, true,
-                index => OnSubChoiceConfirmed(new UpgradeSubChoice(types[index].Shape, types[index].Color)));
+            ShowShelfChoice(ShelfStage.ForWorkshop(pending), Loc.T("choice.pickCompost"), entries, true, index =>
+            {
+                _run.ResolveCompostChoice(deckIndices[index]);
+                _shopView.SetSelectionMode(false);
+                RefreshAll();
+                _shopView.Refresh(_run);
+            });
         }
 
         private void OnPackOptionChosen(int index)

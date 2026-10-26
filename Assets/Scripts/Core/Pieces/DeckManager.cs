@@ -257,6 +257,42 @@ namespace Contigu.Core
             return chosen;
         }
 
+        /// <summary>Up to <paramref name="count"/> random deck positions, upgraded seeds included (Compost shows the real seeds, upgrades and all).</summary>
+        public IReadOnlyList<int> GetRandomTokenIndices(int count, IRandomProvider rng)
+        {
+            var candidates = new List<int>();
+            for (int i = 0; i < _deck.Count; i++)
+            {
+                candidates.Add(i);
+            }
+            var chosen = new List<int>();
+            int take = count < candidates.Count ? count : candidates.Count;
+            for (int i = 0; i < take; i++)
+            {
+                int pick = rng.Next(candidates.Count);
+                chosen.Add(candidates[pick]);
+                candidates.RemoveAt(pick);
+            }
+            return chosen;
+        }
+
+        /// <summary>Removes the seed at <paramref name="deckIndex"/> (and one equal copy from the draw pile); false when the bag is already at its minimum size or the index is invalid.</summary>
+        public bool RemoveTokenAt(int deckIndex)
+        {
+            if (deckIndex < 0 || deckIndex >= _deck.Count || _deck.Count <= MinDeckSize)
+            {
+                return false;
+            }
+            var token = _deck[deckIndex];
+            _deck.RemoveAt(deckIndex);
+            int dpIdx = _drawPile.FindIndex(t => t.Equals(token));
+            if (dpIdx >= 0)
+            {
+                _drawPile.RemoveAt(dpIdx);
+            }
+            return true;
+        }
+
         public bool CanRemove(ShapeId shape, PieceColor color)
         {
             if (_deck.Count <= MinDeckSize)

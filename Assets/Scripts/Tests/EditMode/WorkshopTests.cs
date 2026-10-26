@@ -202,13 +202,29 @@ namespace Contigu.Tests
             var run = ShopRun();
             int before = run.Deck.DeckCount;
             Assert.IsTrue(run.BuyUpgradeSlot(2));
-            Assert.Greater(run.PendingUpgradeTypeCandidates.Count, 0);
-            var type = run.PendingUpgradeTypeCandidates[0];
-            Assert.IsTrue(run.ResolveUpgradeSubChoice(new UpgradeSubChoice(type.Shape, type.Color)));
+            Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
+            Assert.IsTrue(run.ResolveCompostChoice(run.PendingUpgradeTileCandidates[0]));
             Assert.AreEqual(before - 1, run.Deck.DeckCount);
 
             Assert.IsTrue(run.RerollShop());
             Assert.IsTrue(run.ShopUpgradeSlots[2].Purchased, "the Compost stays sold for this visit after a reroll");
+        }
+
+        [Test]
+        public void Compost_RemovesExactlyTheChosenSeed_EvenAnUpgradedOne()
+        {
+            var run = ShopRun();
+            run.Deck.TagSpecificTokens(new[] { 0 }, PieceTraitKind.Golden, new SystemRandomProvider(1));
+            Assert.IsTrue(run.BuyUpgradeSlot(2));
+            var candidates = run.PendingUpgradeTileCandidates;
+            int upgradedBefore = 0;
+            foreach (var token in run.Deck.Deck) { if (token.Trait.HasValue) { upgradedBefore++; } }
+            int pick = candidates[0];
+            bool pickedUpgraded = run.Deck.Deck[pick].Trait.HasValue;
+            Assert.IsTrue(run.ResolveCompostChoice(pick));
+            int upgradedAfter = 0;
+            foreach (var token in run.Deck.Deck) { if (token.Trait.HasValue) { upgradedAfter++; } }
+            Assert.AreEqual(pickedUpgraded ? upgradedBefore - 1 : upgradedBefore, upgradedAfter);
         }
 
         [Test]
@@ -217,8 +233,7 @@ namespace Contigu.Tests
             var run = ShopRun();
             int first = run.GetUpgradeSlotPrice(2);
             Assert.IsTrue(run.BuyUpgradeSlot(2));
-            var type = run.PendingUpgradeTypeCandidates[0];
-            run.ResolveUpgradeSubChoice(new UpgradeSubChoice(type.Shape, type.Color));
+            run.ResolveCompostChoice(run.PendingUpgradeTileCandidates[0]);
             run.DebugForceRoundComplete();
             Assert.IsTrue(run.LeaveShop());
             run.DebugForceRoundComplete();

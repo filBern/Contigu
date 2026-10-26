@@ -29,7 +29,7 @@ namespace Contigu.Core
                     return true;
                 case UpgradeId.Compost:
                     PendingUpgrade = upgrade;
-                    PendingUpgradeTypeCandidates = Deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng, t => Deck.CanRemove(t.Shape, t.Color));
+                    PendingUpgradeTileCandidates = Deck.GetRandomTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng);
                     _compostsBought++;
                     return true;
                 default:
@@ -174,12 +174,28 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>Compost: removes one seed of the chosen type from the bag (never below the minimum bag size).</summary>
-        private bool ResolveCompost(UpgradeSubChoice subChoice)
+        private bool IsPendingTileCandidate(int deckIndex)
         {
-            bool removed = Deck.RemoveOneOfType(subChoice.Shape, subChoice.Color);
+            for (int i = 0; i < PendingUpgradeTileCandidates.Count; i++)
+            {
+                if (PendingUpgradeTileCandidates[i] == deckIndex)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Compost: removes the chosen seed (a deck position among <see cref="PendingUpgradeTileCandidates"/>) from the bag, never below the minimum bag size.</summary>
+        public bool ResolveCompostChoice(int deckIndex)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.Compost || !IsPendingTileCandidate(deckIndex))
+            {
+                return false;
+            }
+            bool removed = Deck.RemoveTokenAt(deckIndex);
             PendingUpgrade = null;
-            PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
             return removed;
         }
     }
