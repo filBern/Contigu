@@ -695,7 +695,7 @@ namespace Contigu.Presentation
             {
                 _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(nextWeather.Value);
                 _weatherIcon.enabled = _weatherIcon.sprite != null;
-                _weatherLabel.text = VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor);
+                _weatherLabel.text = DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor));
                 _weatherTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor), VisualDefaults.GetWeatherDescription(nextWeather.Value, run.NextWeatherColor, run.WeatherIntensity), "Next round's weather · " + WeatherCatalog.GetRarityLabel(nextWeather.Value), UITheme.TextMuted);
             }
 
