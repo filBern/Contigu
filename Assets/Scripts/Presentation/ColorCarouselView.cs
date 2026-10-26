@@ -246,7 +246,7 @@ namespace Contigu.Presentation
             // Unity's legacy Text synthesizes one by double-drawing a
             // shifted copy, which reads as blurry rather than bold. Size
             // alone carries the emphasis.
-            var name = UIFactory.CreateText(cardImage.transform, "Name", VisualDefaults.GetColorName(color), 18, UITheme.TextPrimary);
+            var name = UIFactory.CreateText(cardImage.transform, "Name", DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetColorName(color)), 18, UITheme.TextPrimary);
             name.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             name.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             name.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -264,7 +264,7 @@ namespace Contigu.Presentation
             string descText = level > 1
                 ? "+" + (level - 1) + " pts every time you place a " + VisualDefaults.GetColorName(color) + " seed."
                 : "Not leveled up yet.";
-            var desc = UIFactory.CreateText(cardImage.transform, "Desc", descText, 13, UITheme.TextPrimary);
+            var desc = UIFactory.CreateText(cardImage.transform, "Desc", DescriptionTextFormatter.Colorize(descText, 13), 13, UITheme.TextPrimary);
             desc.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             desc.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             desc.rectTransform.pivot = new Vector2(0.5f, 1f);

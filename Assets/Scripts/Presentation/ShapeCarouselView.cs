@@ -259,7 +259,7 @@ namespace Contigu.Presentation
             string descText = level > 1
                 ? "+" + (level - 1) + " pts every time you place a " + VisualDefaults.GetShapeName(id) + "."
                 : "Not leveled up yet.";
-            var desc = UIFactory.CreateText(cardImage.transform, "Desc", descText, 13, UITheme.TextPrimary);
+            var desc = UIFactory.CreateText(cardImage.transform, "Desc", DescriptionTextFormatter.Colorize(descText, 13), 13, UITheme.TextPrimary);
             desc.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             desc.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             desc.rectTransform.pivot = new Vector2(0.5f, 1f);
