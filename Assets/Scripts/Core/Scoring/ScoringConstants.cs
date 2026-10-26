@@ -111,7 +111,7 @@ namespace Contigu.Core
         /// <summary>Emmitouflée: bonus per group cell whose 4 diagonal neighbors are all filled.</summary>
         public const int EmmitoufleeBonusPerCell = 12;
 
-        /// <summary>Jardinier: bonus per group cell orthogonally adjacent to a golden/tinted/multiplier-zone cell.</summary>
+        /// <summary>Jardinier: bonus per group cell orthogonally adjacent to an upgraded sprout (or a golden/tinted/multiplier-zone/bastion cell).</summary>
         public const int JardinierBonusPerCell = 9;
 
         /// <summary>Arc-en-ciel: xN multiplier PER cleared row/column containing all 4 base colors (stacks across simultaneous lines).</summary>

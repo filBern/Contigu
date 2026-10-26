@@ -660,7 +660,8 @@ namespace Contigu.Core
 
         private bool HasModifierAt(int x, int y)
         {
-            return InBounds(x, y) && _cells[x, y].HasAnyModifier;
+            // An upgraded sprout (its tile-upgrade stamp lasts the round) or a golden/tinted/zone/bastion plot.
+            return InBounds(x, y) && (_cells[x, y].OriginTrait.HasValue || _cells[x, y].HasAnyModifier);
         }
 
         /// <summary>Maçon: flat +Mult (additive, see PlacementResult.AdditiveMultBonus, see ScoringConstants.MaconBonus) for a placement that clears no line/column at all. Returns 0 (no-op) otherwise.</summary>

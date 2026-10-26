@@ -728,6 +728,18 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Jardinier_FiresForGroupCellsAdjacentToAnUpgradedSprout()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Jardinier };
+            grid.GetCell(4, 5).OriginTrait = new PieceTrait(PieceTraitKind.Gardener, 0);
+
+            var adjacentResult = grid.PlacePiece(single, PieceColor.Coral, 4, 4, modifiers);
+            Assert.AreEqual(ScoringConstants.PointsToMult(ScoringConstants.JardinierBonusPerCell), adjacentResult.AdditiveMultBonus);
+        }
+
+        [Test]
         public void ArcEnCiel_FiresWhenAClearedLineContainsAllFourBaseColors()
         {
             var grid = new GridManager();
