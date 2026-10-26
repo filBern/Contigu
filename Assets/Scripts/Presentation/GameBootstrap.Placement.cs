@@ -79,6 +79,7 @@ namespace Contigu.Presentation
             bool targetWasShielded = damagedEnemyIndex >= 0 && _run.CurrentEncounter[damagedEnemyIndex].HasShield;
 
             string blightBefore = BlightSignature();
+            var frozenBefore = SnapshotFrozenCells();
             int weatherBonusesBefore = _run.WeatherBonusTriggerCount;
             var outcome = _run.PlacePiece(handIndex, x, y);
             if (_run.WeatherBonusTriggerCount != weatherBonusesBefore)
@@ -212,6 +213,9 @@ namespace Contigu.Presentation
             }
             _gridView.HoldHiddenCells(sownPositions);
             _gridView.SetFrozenHold(heldFrozenCells, true);
+            // Ice the placement melted without a line (Hoarfrost dying, Locksmith/Warden) keeps showing until its own reveal step.
+            _thawedHeldCells = ThawedFrozenCells(frozenBefore, outcome.Placement);
+            _gridView.SetFrozenHold(_thawedHeldCells, true);
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
             _gridView.ShowCellsAsEmpty(weatherHiddenCells);
             // Sower Sprout's tiles were planted before the scoring: they are on the garden from the start and pop in with the seed.
@@ -339,6 +343,55 @@ namespace Contigu.Presentation
                 }
             }
             return null;
+        }
+
+        private List<Vector2Int> _thawedHeldCells = new List<Vector2Int>();
+
+        private List<Vector2Int> SnapshotFrozenCells()
+        {
+            var frozen = new List<Vector2Int>();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (_run.Grid.GetCell(pos).IsFrozen)
+                {
+                    frozen.Add(pos);
+                }
+            }
+            return frozen;
+        }
+
+        /// <summary>Plots that were frozen before the placement and are not any more, other than the ones its lines broke (those are held and shattered separately).</summary>
+        private List<Vector2Int> ThawedFrozenCells(List<Vector2Int> frozenBefore, PlacementResult placement)
+        {
+            var brokenByLines = new HashSet<Vector2Int>(FrozenClearedCells(placement));
+            var thawed = new List<Vector2Int>();
+            for (int i = 0; i < frozenBefore.Count; i++)
+            {
+                if (!_run.Grid.GetCell(frozenBefore[i]).IsFrozen && !brokenByLines.Contains(frozenBefore[i]))
+                {
+                    thawed.Add(frozenBefore[i]);
+                }
+            }
+            return thawed;
+        }
+
+        /// <summary>Lets the held ice of thawed plots go (only those in <paramref name="only"/> when given) with a shatter, now that the score has been counted.</summary>
+        private void ReleaseThawedHeldCells(HashSet<Vector2Int> only)
+        {
+            for (int i = _thawedHeldCells.Count - 1; i >= 0; i--)
+            {
+                var pos = _thawedHeldCells[i];
+                if (only != null && !only.Contains(pos))
+                {
+                    continue;
+                }
+                _thawedHeldCells.RemoveAt(i);
+                var single = new List<Vector2Int> { pos };
+                _gridView.SetFrozenHold(single, false);
+                _gridView.RefreshCells(single);
+                SfxManager.Play(SfxId.LineClear);
+                _gridView.PlayIceShatter(pos.x, pos.y);
+            }
         }
 
         private static List<Vector2Int> FrozenClearedCells(PlacementResult placement)
@@ -803,6 +856,11 @@ namespace Contigu.Presentation
             // event, so the counter only caught up on the next refresh. Fold the remainder in right here, as
             // part of this same count — a round-ending bonus is excluded, the shop sequence animates that one.
             int expectedLueur = _run.Lueur - (_run.State == RunState.AwaitingShop ? _run.LastRoundEndLueurBonus : 0);
+            // The Locust Swarm's bite (auto-refill) is already off the model's Pollen, but is only shown once the count is over (PlayDeferredShuffleActs).
+            if (handWasAboutToAutoRefill)
+            {
+                expectedLueur += _run.LastPollenEaten;
+            }
             int siphoned = expectedLueur - displayedLueur;
             if (siphoned > 0)
             {
@@ -870,6 +928,7 @@ namespace Contigu.Presentation
                 var pos = outcome.DeathReleasedCells[i];
                 _gridView.PlayClearBurst(pos.x, pos.y, UITheme.Danger);
             }
+            ReleaseThawedHeldCells(deathReleasedSet);
             if (handWasAboutToAutoRefill)
             {
                 yield return _gridView.FadeMalusForCells(shuffleReleasedCells, 1f, 0f, ShuffleFadeDuration);
@@ -938,6 +997,8 @@ namespace Contigu.Presentation
                 _pendingShuffleActs = false;
                 // Whatever happened above, no ice may stay held (a normal run already released it in PlayFrozenShatters).
                 var frozenToRelease = FrozenClearedCells(outcome.Placement);
+                frozenToRelease.AddRange(_thawedHeldCells);
+                _thawedHeldCells.Clear();
                 if (frozenToRelease.Count > 0)
                 {
                     _gridView.SetFrozenHold(frozenToRelease, false);
@@ -1065,6 +1126,7 @@ namespace Contigu.Presentation
         private System.Collections.IEnumerator PlayTileUpgradeWorldEffects(PlacementResult placement)
         {
             bool any = false;
+            ReleaseThawedHeldCells(null);
             if (placement.SownTiles.Count > 0)
             {
                 var sown = new List<Vector2Int>();
