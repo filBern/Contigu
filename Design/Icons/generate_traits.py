@@ -41,7 +41,6 @@ T['Bombe'] = (P, g(star(32, 32, 22, 8, 0.45), W) + g('<circle cx="32" cy="32" r=
 T['Range'] = (P, g('<path d="M8 32 H46 M36 20 L50 32 L36 44" fill="none"/>', 'none', 6).replace(O, W) + '<path d="M8 32 H46 M36 20 L50 32 L36 44" fill="none" stroke="%s" stroke-width="2" stroke-linecap="round"/>' % O + '<path d="M54 14 V50" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
 T['Eclat'] = (P, g('<rect x="12" y="10" width="40" height="12" rx="4"/>', W) + g('<path d="M32 26 V48 M22 40 L32 52 L42 40" fill="none"/>', 'none', 6).replace(O, W))
 T['Precision'] = (P, g('<circle cx="32" cy="32" r="19" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="32" r="5"/>', W, 2.5) + '<path d="M32 6 V18 M32 46 V58 M6 32 H18 M46 32 H58" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
-T['Sangsue'] = (P, g('<path d="M32 8 C44 24 50 34 44 46 C40 54 24 54 20 46 C14 34 20 24 32 8Z"/>', '#c8403f') + '<path d="M26 40 C26 46 30 48 34 48" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>')
 
 # ---- placement-point tile upgrades
 def dots3(cells_fill):

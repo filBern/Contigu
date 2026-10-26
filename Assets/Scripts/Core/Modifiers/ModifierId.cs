@@ -135,7 +135,7 @@ namespace Contigu.Core
         /// <summary>Replays whatever modifier sits immediately before it in the player's held order, for this placement only — "as if holding a second copy of it" (see GridManager.ApplyEcho). Never chains into another Écho.</summary>
         Echo,
 
-        /// <summary>Sangsue's own Lueur siphon, generalized to fire alongside ANY Joker combat trait kind, not just Sangsue itself (see RunManager.ApplyJokerCombatOrDefaultDamage) — stacks independently if Sangsue is also held and also fires.</summary>
+        /// <summary>Lueur siphon that fires alongside ANY Joker combat trait kind (see RunManager.ApplyJokerCombatOrDefaultDamage).</summary>
         Siphon,
 
         /// <summary>Grows the hand by one extra slot (see DeckManager.SetEffectiveHandSize/MaxHandSize), applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt rather than scored on placement like every other modifier.</summary>

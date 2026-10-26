@@ -200,7 +200,6 @@ namespace Contigu.Core
                 case PieceTraitKind.Range:
                 case PieceTraitKind.Eclat:
                 case PieceTraitKind.Precision:
-                case PieceTraitKind.Sangsue:
                     // Joker-exclusive combat traits never score anything of their own
                     // (the OriginTrait stamp is purely cosmetic); their effect is
                     // resolved from PlacePiece's own HasActiveEncounter block, after

@@ -1286,31 +1286,6 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Sangsue_DamagesTheFrontEnemy_AndConvertsAFractionOfDamageIntoLueur()
-        {
-            // Explicit request: find 2 more combat-upgrade ideas — Sangsue
-            // ties combat back into the Lueur economy.
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugSetEncounter(EnemyId.Basic);
-            var front = run.CurrentEncounter[0];
-            int frontHpBefore = front.CurrentHp;
-            int lueurBefore = run.Lueur;
-
-            // A 4-cell shape scores 1+2+3+4=10 (progressive group scoring)
-            // — large enough that a fraction of it floors to a clearly nonzero,
-            // testable Lueur gain, unlike a lone Single's 1-point score.
-            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Sangsue, 0)));
-            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Sangsue);
-            var outcome = run.PlacePiece(slot, 0, 0);
-            Assert.IsTrue(outcome.Placement.Success);
-
-            int totalScore = outcome.Placement.TotalScore;
-            Assert.AreEqual(frontHpBefore - totalScore, front.CurrentHp);
-            int expectedLueurGain = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction));
-            Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
-        }
-
-        [Test]
         public void JokerCombatTrait_RetriggersWhenALaterPlacementMergesIntoItsStampedGroup()
         {
             // Explicit request: "Pour les jokers, s'ils sont retrigger plus
@@ -1418,12 +1393,9 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur_NotJustSangsue()
+        public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur()
         {
-            // Explicit request: generalize Sangsue's siphon to every combat
-            // kind ("un modifier qui convertit une partie des PV retirés à
-            // un ennemi en Lueur bonus pour TOUT type de combat (pas juste
-            // Sangsue)").
+            // Siphon converts a fraction of any combat kind's damage into Lueur.
             var run = new RunManager(new SystemRandomProvider(1));
             run.DebugSetEncounter(EnemyId.Basic);
             run.DebugGrantModifier(ModifierId.Siphon);
@@ -1437,26 +1409,6 @@ namespace Contigu.Tests
             int totalScore = outcome.Placement.TotalScore;
             int expectedLueurGain = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction));
             Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
-        }
-
-        [Test]
-        public void Siphon_StacksWithSangsue_WhenBothAreHeldOnASangsuePlacement()
-        {
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugSetEncounter(EnemyId.Basic);
-            run.DebugGrantModifier(ModifierId.Siphon);
-            int lueurBefore = run.Lueur;
-
-            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Sangsue, 0)));
-            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Sangsue);
-            var outcome = run.PlacePiece(slot, 0, 0);
-            Assert.IsTrue(outcome.Placement.Success);
-
-            int totalScore = outcome.Placement.TotalScore;
-            int expectedFromSangsue = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SangsueLueurFraction));
-            int expectedFromSiphon = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction));
-            Assert.AreEqual(lueurBefore + expectedFromSangsue + expectedFromSiphon, run.Lueur,
-                "Both siphons should stack independently on a Sangsue placement");
         }
 
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>

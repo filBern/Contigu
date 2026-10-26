@@ -23,7 +23,7 @@ noms de code et le reste de ce document gardent l'ancien vocabulaire.
 | Coral / Teal / Violet / Lime | Poppy / Iris / Sunflower / Fern |
 | Classic / Marathon / Chaos | Spring / Winter / Wildgrowth |
 | Common / Uncommon / Rare | Wild / Cultivated / Heirloom |
-| Bombe / Range / Éclat / Précision / Sangsue | Spore Burst / Long Reach / Overflow / Pruning / Sap Drain |
+| Bombe / Range / Éclat / Précision | Spore Burst / Long Reach / Overflow / Pruning |
 
 Les visuels vectoriels et leurs générateurs sont dans `Design/` ; les PNG
 utilisés par le jeu sont dans `Assets/Resources/` :

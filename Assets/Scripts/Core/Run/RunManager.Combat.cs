@@ -288,11 +288,8 @@ namespace Contigu.Core
                 ApplyJokerCombatDamage(kindsFound[i], boostedDamage);
             }
 
-            // Siphon: Sangsue's own siphon generalized to any combat kind found
-            // above, not just Sangsue itself - fires once per placement off the
-            // same boosted damage total, regardless of how many enemies it
-            // actually reached. Stacks independently with Sangsue if both are
-            // held and Sangsue is among the kinds found.
+            // Siphon: fires once per placement off the same boosted damage total,
+            // regardless of how many enemies it actually reached.
             if (boostedDamage > 0 && HasEffectiveModifier(ModifierId.Siphon))
             {
                 Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction));
@@ -321,9 +318,6 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Precision:
                     ApplyPrecisionDamage(damage);
-                    break;
-                case PieceTraitKind.Sangsue:
-                    ApplySangsueDamage(damage);
                     break;
                 default:
                     ApplyDamageToEncounter(damage);
@@ -440,16 +434,6 @@ namespace Contigu.Core
             if (weakest.ApplyDamage(damage))
             {
                 CleanUpDefeatedEnemy(weakest);
-            }
-        }
-
-        /// <summary>"Sangsue" — damages the front alive enemy exactly like the default rule, but also converts <see cref="ScoringConstants.SangsueLueurFraction"/> of the damage dealt into bonus Lueur (rounded down), tying combat back into the economy. Only a positive damage total siphons anything — a poison-flipped negative placement still heals the enemy same as ever, but grants no Lueur for it.</summary>
-        private void ApplySangsueDamage(int damage)
-        {
-            ApplyDamageToEncounter(damage);
-            if (damage > 0)
-            {
-                Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(damage * ScoringConstants.SangsueLueurFraction));
             }
         }
 

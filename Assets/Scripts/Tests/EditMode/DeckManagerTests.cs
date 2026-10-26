@@ -360,7 +360,7 @@ namespace Contigu.Tests
                 kindsSeen.Add(combatKind);
             }
 
-            Assert.AreEqual(PieceTrait.JokerCombatKinds.Length, kindsSeen.Count, "200 seeds should be more than enough to roll all 5 combat kinds at least once");
+            Assert.AreEqual(PieceTrait.JokerCombatKinds.Length, kindsSeen.Count, "200 seeds should be more than enough to roll all 4 combat kinds at least once");
         }
 
         [Test]

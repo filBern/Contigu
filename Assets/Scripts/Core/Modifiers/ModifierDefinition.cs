@@ -390,7 +390,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
             ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
-            "+25% damage on placements that trigger a Joker combat trait (Spore Burst/Long Reach/Overflow/Pruning/Sap Drain). No effect otherwise.");
+            "+25% damage on placements that trigger a Joker combat trait (Spore Burst/Long Reach/Overflow/Pruning). No effect otherwise.");
 
         public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
             ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
@@ -410,7 +410,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Siphon = new ModifierDefinition(
             ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
-            "Converts 4% of the damage from any Joker combat trait into bonus Pollen (max 10). Stacks with Sap Drain.");
+            "Converts 4% of the damage from any Joker combat trait into bonus Pollen (max 10).");
 
         /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
         public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(

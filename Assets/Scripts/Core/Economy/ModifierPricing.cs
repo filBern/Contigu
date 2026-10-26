@@ -186,7 +186,7 @@ namespace Contigu.Core
                 case ModifierId.CollectionChromatique: return 8; // needs 2 other modifiers held PER color to scale at all
                 case ModifierId.Cadence: return 6; // x2, but needs 2 other specific modifiers held to ever fire
                 case ModifierId.Echo: return 9; // doubles whatever comes right before it — build-order dependent, potentially huge
-                case ModifierId.Siphon: return 6; // smaller fraction than Sangsue, but fires alongside every combat kind
+                case ModifierId.Siphon: return 6; // fires alongside every combat kind
 
                 case ModifierId.QuatriemeEmplacement: return 9; // permanent extra hand slot — more flexibility on every single placement for the rest of the run
 

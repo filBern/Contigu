@@ -7,7 +7,7 @@
 | Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs` |
 | Ennemis par round | `Core/Enemies/EncounterCatalog.cs` |
 | PV, rôle et texte de chaque ennemi | `Core/Enemies/EnemyCatalog.cs` |
-| Constantes de score (ligne récoltée 3/6/9, ×2 grille vidée, fractions Sap Drain/Siphon et plafond, bonus dorés…) | `Core/Scoring/ScoringConstants.cs` |
+| Constantes de score (ligne récoltée 3/6/9, ×2 grille vidée, fraction Siphon et plafond, bonus dorés…) | `Core/Scoring/ScoringConstants.cs` |
 | Prix des fertilizers | `Core/Economy/ModifierPricing.cs` ; économie générale dans `Core/Economy/EconomyConstants.cs` |
 | Effet de chaque fertilizer | `Core/Grid/GridManager.cs` (tables `BuildPreClearEffects` / post-clear) et `Core/Modifiers/ModifierDefinition.cs` (texte) |
 
@@ -27,7 +27,7 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 - Round 2 : 24 → 28 graines, Bramble 750 → 600 PV (réussite du bot 58 % → 87 %).
 - Round 8 : 22 → 28 graines, Deadroot 2350 → 2000 PV (27 % → 54 %).
 - Blightmoth : debut moved from round 11 to round 7 (replaces the Bramble there), 1750 → 800 PV so round 7 stays near its neighbours (64 % for the bot).
-- Sap Drain : 25 % → 8 % des dégâts en Pollen, Siphon : 15 % → 4 %, plafond de 10 Pollen par déclenchement.
+- Siphon : 15 % → 4 %, plafond de 10 Pollen par déclenchement.
 
 ## Météo et ennemis à minuterie
 

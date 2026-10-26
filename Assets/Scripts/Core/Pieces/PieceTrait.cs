@@ -241,10 +241,7 @@ namespace Contigu.Core
         Eclat,
 
         /// <summary>"Précision" — always damages whichever ALIVE enemy currently has the LOWEST HP, ignoring the usual front-to-back order — a finishing blow instead of chipping at the front.</summary>
-        Precision,
-
-        /// <summary>"Sangsue" — damages the front alive enemy exactly like the default rule, but also converts a fraction of the damage dealt into bonus Lueur (see ScoringConstants.SangsueLueurFraction).</summary>
-        Sangsue
+        Precision
     }
 
     /// <summary>
@@ -274,7 +271,7 @@ namespace Contigu.Core
         /// <summary>Every Joker-exclusive combat kind (see their own doc comments on <see cref="PieceTraitKind"/>) — DeckManager.AddJoker rolls uniformly from this array, and ShapePreviewFactory/RunManager.ApplyTokenTrait check membership in it to badge every cell instead of just <see cref="LocalCellIndex"/>.</summary>
         public static readonly PieceTraitKind[] JokerCombatKinds =
         {
-            PieceTraitKind.Bombe, PieceTraitKind.Range, PieceTraitKind.Eclat, PieceTraitKind.Precision, PieceTraitKind.Sangsue
+            PieceTraitKind.Bombe, PieceTraitKind.Range, PieceTraitKind.Eclat, PieceTraitKind.Precision
         };
 
         /// <summary>The color a freshly tagged trait of <paramref name="kind"/> is pinned to: Tinted keeps its token's own, Companion looks for the next color of the run after it (so a Companion Sprout always wants a different color); null for every other kind.</summary>
@@ -303,7 +300,7 @@ namespace Contigu.Core
         public static bool IsJokerCombatKind(PieceTraitKind kind)
         {
             return kind == PieceTraitKind.Bombe || kind == PieceTraitKind.Range || kind == PieceTraitKind.Eclat
-                || kind == PieceTraitKind.Precision || kind == PieceTraitKind.Sangsue;
+                || kind == PieceTraitKind.Precision;
         }
     }
 }

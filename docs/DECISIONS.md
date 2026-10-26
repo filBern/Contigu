@@ -9282,3 +9282,10 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - **Shop : le Casino laisse place au Workshop (packs + services)** : sur demande ("je n'aime plus le randomness du casino… plus fun pour un deck builder"), choix « mélange packs + services ». Quatre slots : 2 packs (Seed/Sprout/Fertilizer/Mastery), Compost (retire une graine, prix croissant, conservé au reroll), Forge (tile upgrade visible). `UpgradePool.Workshop`, `RunManager.Workshop.cs`, `PackChoiceView`, 6 icônes de panneau, `ShopSlot.Payload`. Non vérifié dans Unity (compilation seulement) ; 590 tests headless verts.
 
 - **Plusieurs tile upgrades sur une même graine** : sur demande, une graine peut porter une tile upgrade par tuile (`PieceToken.Trait` + `ExtraTraits`, `Traits`, `WithAddedTrait`, `UsesCell`). Poser une upgrade choisit une tuile libre au hasard ; si toutes les tuiles de la graine ont déjà la leur, la nouvelle remplace celle de la tuile tirée. Au placement, chaque upgrade de la graine se déclenche (`RunManager.PlacePiece` boucle sur `tokenTraits`) ; les tuiles déjà posées comptaient déjà chacune leur upgrade (`CollectPersistentTraits`). Les candidates du choix de graine préfèrent les graines sans upgrade, puis celles avec une tuile libre. L'affichage (main, aperçu, tuile de survol, sac, choix) montre un badge par tuile améliorée. Tests : 593 verts ; non vérifié dans Unity.
+
+
+- **Retrait de Sangsue (Sap Drain)** — demande explicite « Remove Sap drain
+  joker ». Le trait de combat Joker Sangsue (enum, pool de `AddJoker`,
+  `ApplySangsueDamage`, `SangsueLueurFraction`, badge, test) est supprimé : il
+  reste 4 types de combat (Bombe/Range/Éclat/Précision), donc Arsenal plafonne
+  à +4. Siphon ne mentionne plus Sangsue et reste inchangé.

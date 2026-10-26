@@ -114,7 +114,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
                 case PieceTraitKind.Precision: return "Pruning";
-                case PieceTraitKind.Sangsue: return "Sap Drain";
                 default: return kind.ToString();
             }
         }
@@ -283,8 +282,6 @@ namespace Contigu.Data
                     return "Damages the front alive enemy, but any overkill beyond its remaining HP cascades onto the next alive enemy, and so on.";
                 case PieceTraitKind.Precision:
                     return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one — a finishing blow.";
-                case PieceTraitKind.Sangsue:
-                    return "Damages the front alive enemy like usual, and also converts " + (int)(ScoringConstants.SangsueLueurFraction * 100) + "% of the damage dealt into bonus Pollen (max " + ScoringConstants.SiphonLueurCapPerTrigger + ").";
                 default:
                     return string.Empty;
             }
@@ -489,7 +486,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Range:
                 case PieceTraitKind.Eclat:
                 case PieceTraitKind.Precision:
-                case PieceTraitKind.Sangsue:
                     return JokerCombatBadgeColor;
                 default:
                     return Color.gray;

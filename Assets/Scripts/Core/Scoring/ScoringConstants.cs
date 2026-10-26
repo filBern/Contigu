@@ -336,10 +336,7 @@ namespace Contigu.Core
         /// <summary>Enemy tricks that also fire on a timer: every this many seeds placed in a round (see RunManager.ResolveEnemyTickEffects).</summary>
         public const int EnemyTickInterval = 6;
 
-        /// <summary>"Sangsue" (Joker-exclusive combat trait, see PieceTrait.JokerCombatKinds) — fraction of the damage it deals to its target that also converts into bonus Lueur (floored), see RunManager.ApplySangsueDamage.</summary>
-        public const float SangsueLueurFraction = 0.08f;
-
-        /// <summary>Hard cap on the Pollen a single Sap Drain / Siphon trigger can grant, so a huge score can't flood the economy.</summary>
+        /// <summary>Hard cap on the Pollen a single Siphon trigger can grant, so a huge score can't flood the economy.</summary>
         public const int SiphonLueurCapPerTrigger = 10;
 
         /// <summary>Pair: xN multiplier (see GridManager.ApplyParitePaire) when the placement's scored group has an EVEN total cell count.</summary>
@@ -357,7 +354,7 @@ namespace Contigu.Core
         /// <summary>Renfort Joker: percentage damage bonus applied only to a placement whose scored group carries at least one Joker-exclusive combat trait (see RunManager.ApplyJokerCombatOrDefaultDamage) — no effect otherwise.</summary>
         public const int RenfortJokerDamageBonusPercent = 25;
 
-        /// <summary>Arsenal: +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 5 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
+        /// <summary>Arsenal: +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 4 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
         public const int ArsenalMultPerDistinctCombatKind = 1;
 
         /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which BOTH Devotion and Éclat are currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
@@ -366,7 +363,7 @@ namespace Contigu.Core
         /// <summary>Cadence: xN multiplier (see GridManager.ApplyCadence) when this placement's group parity matches a held Pair/Impair modifier AND its piece size matches a held Format* Specialist tier, both at once.</summary>
         public const int CadenceMultiplier = 2;
 
-        /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — Sangsue's own fraction generalized to fire alongside every combat kind, not just Sangsue. Set lower than Sangsue's own (0.25f) since it fires on strictly more placements.</summary>
+        /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — fires alongside every combat kind.</summary>
         public const float SiphonLueurFraction = 0.04f;
 
         // ---- the 40 fertilizers added in one batch (see GridManager.NewModifiers.cs and RunManager.NewModifiers.cs) ----
