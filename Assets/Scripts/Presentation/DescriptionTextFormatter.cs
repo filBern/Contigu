@@ -1,3 +1,8 @@
+using System.Collections.Generic;
+using Contigu.Core;
+using Contigu.Data;
+using UnityEngine;
+
 namespace Contigu.Presentation
 {
     /// <summary>
@@ -23,6 +28,37 @@ namespace Contigu.Presentation
         private const string DiamondGlyph = "◆";
         private const float DiamondSizeMultiplier = 1.5f;
 
+        private static Dictionary<string, string> _flowerHex;
+
+        /// <summary>Flower name (and its plural) to the hex of the color it stands for: Poppy, Iris, Sunflower, Fern.</summary>
+        private static Dictionary<string, string> FlowerHexByName()
+        {
+            if (_flowerHex == null)
+            {
+                _flowerHex = new Dictionary<string, string>();
+                foreach (var color in PieceColorUtility.BaseColors)
+                {
+                    string name = VisualDefaults.GetColorName(color).ToLowerInvariant();
+                    // Slightly deepened so a pale flower (Sunflower) still reads on a cream tooltip.
+                    var tint = VisualDefaults.GetColor(color);
+                    string hex = ColorUtility.ToHtmlStringRGB(new Color(tint.r * 0.88f, tint.g * 0.88f, tint.b * 0.88f));
+                    _flowerHex[name] = hex;
+                    _flowerHex[name.EndsWith("y") ? name.Substring(0, name.Length - 1) + "ies" : name.EndsWith("s") ? name + "es" : name + "s"] = hex;
+                }
+            }
+            return _flowerHex;
+        }
+
+        /// <summary>Colors only the flower names (Poppy, Iris, Sunflower, Fern) in <paramref name="text"/> — for titles and chips that are not scored descriptions.</summary>
+        public static string ColorizeFlowers(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+            return Rebuild(text, word => ColorizeFlowerWord(word, null));
+        }
+
         public static string Colorize(string description, int fontSize)
         {
             if (string.IsNullOrEmpty(description))
@@ -30,20 +66,25 @@ namespace Contigu.Presentation
                 return description;
             }
 
+            return Rebuild(description, word => ColorizeWord(word, fontSize));
+        }
+
+        private static string Rebuild(string text, System.Func<string, string> colorizeWord)
+        {
             // Words are separated by spaces or line breaks, both kept as they are.
-            var result = new System.Text.StringBuilder(description.Length + 32);
+            var result = new System.Text.StringBuilder(text.Length + 32);
             int start = 0;
-            for (int i = 0; i <= description.Length; i++)
+            for (int i = 0; i <= text.Length; i++)
             {
-                bool atSeparator = i == description.Length || description[i] == ' ' || description[i] == '\n';
+                bool atSeparator = i == text.Length || text[i] == ' ' || text[i] == '\n';
                 if (!atSeparator)
                 {
                     continue;
                 }
-                result.Append(ColorizeWord(description.Substring(start, i - start), fontSize));
-                if (i < description.Length)
+                result.Append(colorizeWord(text.Substring(start, i - start)));
+                if (i < text.Length)
                 {
-                    result.Append(description[i]);
+                    result.Append(text[i]);
                 }
                 start = i + 1;
             }
@@ -77,6 +118,32 @@ namespace Contigu.Presentation
             {
                 int diamondSize = (int)(fontSize * DiamondSizeMultiplier + 0.5f);
                 return "<size=" + diamondSize + ">" + Wrap(core, DiamondColorHex) + "</size>" + trailing;
+            }
+            return ColorizeFlowerWord(word, fontSize);
+        }
+
+        /// <summary>A flower name, with or without a plural, a possessive or surrounding brackets, in the color it stands for.</summary>
+        private static string ColorizeFlowerWord(string word, int? fontSize)
+        {
+            int begin = 0;
+            int end = word.Length;
+            while (begin < end && (word[begin] == '(' || word[begin] == '"'))
+            {
+                begin++;
+            }
+            while (end > begin && (IsTrailingPunctuation(word[end - 1]) || word[end - 1] == '"'))
+            {
+                end--;
+            }
+            string core = word.Substring(begin, end - begin);
+            string key = core.ToLowerInvariant();
+            if (key.EndsWith("'s"))
+            {
+                key = key.Substring(0, key.Length - 2);
+            }
+            if (FlowerHexByName().TryGetValue(key, out var hex))
+            {
+                return word.Substring(0, begin) + Wrap(core, hex) + word.Substring(end);
             }
             return word;
         }

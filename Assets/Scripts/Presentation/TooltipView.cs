@@ -184,7 +184,7 @@ namespace Contigu.Presentation
         /// </summary>
         public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false)
         {
-            _nameLabel.text = name;
+            _nameLabel.text = DescriptionTextFormatter.ColorizeFlowers(name);
 
             bool hasSellValue = sellValue.HasValue;
             _sellValueLabel.gameObject.SetActive(hasSellValue);
