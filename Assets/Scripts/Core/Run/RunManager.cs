@@ -826,7 +826,10 @@ namespace Contigu.Core
             // Chameleon/Spark reads above: a poisoned cell this placement clears
             // would read back "not poisoned" once Cell.ClearFill resets the flag.
             var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
+            // Sower Sprouts plant their free tiles BEFORE the scoring, so a planted tile counts: it can join the group or complete a line.
+            var prePlantedTiles = PlantSowerTiles(tokenTraits, persistentTraits, shape, placementColor, x, y);
             var placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
+            placement.PrePlantedTiles = prePlantedTiles;
             ClearTokenTraitCells(transientTraitCells);
             for (int t = 0; t < tokenTraits.Count; t++)
             {

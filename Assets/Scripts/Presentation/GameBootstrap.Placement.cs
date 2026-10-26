@@ -214,6 +214,13 @@ namespace Contigu.Presentation
             _gridView.SetFrozenHold(heldFrozenCells, true);
             _gridView.RefreshHoldingClearedCells(heldCells, heldColors, heldTraits, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, heldFrozenCells);
             _gridView.ShowCellsAsEmpty(weatherHiddenCells);
+            // Sower Sprout's tiles were planted before the scoring: they are on the garden from the start and pop in with the seed.
+            for (int i = 0; i < outcome.Placement.PrePlantedTiles.Count; i++)
+            {
+                var planted = outcome.Placement.PrePlantedTiles[i].Position;
+                _gridView.PulseCell(planted.x, planted.y);
+                _gridView.PlayClearBurst(planted.x, planted.y, UITheme.Success);
+            }
             // Same hold for the hand when auto-refill already dealt the
             // next hand — PlayPlacementSequence reveals it once the
             // sequence finishes (see HandView.RefreshHoldingEmpty).

@@ -700,11 +700,29 @@ namespace Contigu.Tests
         {
             var run = NewRun();
             var first = PlantAt(run, PieceTraitKind.Sower, PieceColor.Teal, 2, 2);
-            Assert.AreEqual(1, first.SownTiles.Count);
-            var sown = first.SownTiles[0];
+            Assert.AreEqual(1, first.PrePlantedTiles.Count);
+            var sown = first.PrePlantedTiles[0];
             Assert.AreEqual(PieceColor.Teal, sown.Color);
             Assert.IsTrue(run.Grid.GetCell(sown.Position).IsFilled);
             Assert.AreEqual(1, Mathf.Abs(sown.Position.x - 2) + Mathf.Abs(sown.Position.y - 2), "it lands right next to its sower");
+        }
+
+        [Test]
+        public void Sower_PlantsBeforeTheScoring_SoItsTileCanCompleteALine()
+        {
+            var run = NewRun();
+            run.DebugSetPiecesRemaining(10);
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            // Row 0: x=0..3 are full, the Sower goes on x=4, and x=5 is the only free plot it can reach (the plot above it is locked).
+            for (int x = 0; x < 4; x++)
+            {
+                run.Grid.PlacePiece(single, PieceColor.Coral, x, 0);
+            }
+            run.Grid.GetCell(4, 1).IsLocked = true;
+            var placement = PlantAt(run, PieceTraitKind.Sower, PieceColor.Coral, 4, 0);
+            Assert.AreEqual(1, placement.PrePlantedTiles.Count);
+            Assert.AreEqual(new Vector2Int(5, 0), placement.PrePlantedTiles[0].Position);
+            Assert.AreEqual(1, placement.ClearedLineCount, "the planted tile completed the row, and it was harvested in the same turn");
         }
 
         [Test]

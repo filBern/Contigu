@@ -223,14 +223,14 @@ namespace Contigu.Core
         }
 
         /// <summary>Sower Sprout: plants a free tile (no score, no counters) of <paramref name="color"/> on a random empty, unlocked plot touching <paramref name="origin"/>. Returns where it landed, or null with no free neighbor.</summary>
-        public Vector2Int? PlantFreeTileNear(Vector2Int origin, PieceColor color, IRandomProvider rng)
+        public Vector2Int? PlantFreeTileNear(Vector2Int origin, PieceColor color, IRandomProvider rng, ICollection<Vector2Int> avoid = null)
         {
             var candidates = new List<Vector2Int>();
             var steps = new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
             for (int i = 0; i < steps.Length; i++)
             {
                 var pos = origin + steps[i];
-                if (InBounds(pos.x, pos.y) && !GetCell(pos).IsFilled && !GetCell(pos).IsLocked)
+                if (InBounds(pos.x, pos.y) && !GetCell(pos).IsFilled && !GetCell(pos).IsLocked && (avoid == null || !avoid.Contains(pos)))
                 {
                     candidates.Add(pos);
                 }

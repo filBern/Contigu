@@ -201,6 +201,9 @@ namespace Contigu.Core
         /// <summary>Free tiles a Sower Sprout planted on this placement.</summary>
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> SownTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 
+        /// <summary>Free tiles a Sower Sprout planted BEFORE this placement was scored (they are on the garden for the scoring itself, so they can join the group or complete a line).</summary>
+        public IReadOnlyList<(Vector2Int Position, PieceColor Color)> PrePlantedTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
+
         /// <summary>Tiles a Dye Sprout painted another color on this placement (position, new color).</summary>
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> RecoloredTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 

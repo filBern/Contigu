@@ -11,6 +11,59 @@ namespace Contigu.Core
         /// <summary>The tiles that do not count as "neighbors" of the tile upgrade being scored: the placed seed's own tiles for a fresh upgrade, none for an older one being counted again.</summary>
         private IReadOnlyList<Vector2Int> _tileUpgradeOwnCells;
 
+        /// <summary>
+        /// Sower Sprout, resolved BEFORE the scoring: each Sower on the planted seed, and each older Sower that the new seed's group will
+        /// score again, plants a free tile of its color on an empty plot touching it (never on the seed's own footprint). The tiles are on the
+        /// garden when the placement is scored, so they join the group and can complete a line that is then harvested in the same turn.
+        /// </summary>
+        private List<(Vector2Int, PieceColor)> PlantSowerTiles(List<(PieceTrait Trait, Vector2Int Pos)> tokenTraits, List<(Vector2Int Pos, PieceTrait Trait)> persistentTraits, PieceShape shape, PieceColor placementColor, int x, int y)
+        {
+            var planted = new List<(Vector2Int, PieceColor)>();
+            var footprint = new HashSet<Vector2Int>();
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                footprint.Add(new Vector2Int(x, y) + shape.Cells[i]);
+            }
+            for (int t = 0; t < tokenTraits.Count; t++)
+            {
+                if (tokenTraits[t].Trait.Kind == PieceTraitKind.Sower)
+                {
+                    PlantOneSownTile(tokenTraits[t].Pos, placementColor, footprint, planted);
+                }
+            }
+            HashSet<Vector2Int> scoredAgain = null;
+            for (int i = 0; i < persistentTraits.Count; i++)
+            {
+                if (persistentTraits[i].Trait.Kind != PieceTraitKind.Sower)
+                {
+                    continue;
+                }
+                if (scoredAgain == null)
+                {
+                    scoredAgain = new HashSet<Vector2Int>(Grid.PreviewGroup(shape, placementColor, x, y));
+                }
+                if (scoredAgain.Contains(persistentTraits[i].Pos) && !footprint.Contains(persistentTraits[i].Pos))
+                {
+                    var cell = Grid.GetCell(persistentTraits[i].Pos);
+                    PlantOneSownTile(persistentTraits[i].Pos, cell.FilledColor ?? placementColor, footprint, planted);
+                }
+            }
+            return planted;
+        }
+
+        private void PlantOneSownTile(Vector2Int origin, PieceColor tileColor, HashSet<Vector2Int> footprint, List<(Vector2Int, PieceColor)> planted)
+        {
+            if (tileColor == PieceColor.Joker)
+            {
+                tileColor = PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
+            }
+            var landed = Grid.PlantFreeTileNear(origin, tileColor, _rng, footprint);
+            if (landed.HasValue)
+            {
+                planted.Add((landed.Value, tileColor));
+            }
+        }
+
         /// <summary>Perennial Sprout's run-long counter: how many times any Perennial has scored this run.</summary>
         private int _perennialScores;
 
@@ -571,15 +624,7 @@ namespace Contigu.Core
                     }
                     break;
                 case PieceTraitKind.Sower:
-                    var sownColor = ColorAsPlaced(pos, placement);
-                    var tileColor = sownColor.HasValue && sownColor.Value != PieceColor.Joker ? sownColor.Value : PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
-                    var landed = Grid.PlantFreeTileNear(pos, tileColor, _rng);
-                    if (landed.HasValue)
-                    {
-                        var sown = new List<(Vector2Int, PieceColor)>(placement.SownTiles);
-                        sown.Add((landed.Value, tileColor));
-                        placement.SownTiles = sown;
-                    }
+                    // Planted before the scoring (see PlantSowerTiles), nothing left to do here.
                     break;
             }
             if (bonus > 0)
