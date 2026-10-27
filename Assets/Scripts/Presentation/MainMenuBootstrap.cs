@@ -91,6 +91,7 @@ namespace Contigu.Presentation
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 800f);
             scaler.matchWidthOrHeight = 1f;
+            canvasGo.AddComponent<CanvasAspectFit>();
 
             canvasGo.AddComponent<GraphicRaycaster>();
 

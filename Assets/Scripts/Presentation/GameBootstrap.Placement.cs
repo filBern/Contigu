@@ -286,6 +286,16 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>On a tablet the system can end the app while it is in the background: keep the run's checkpoint on disk the moment it leaves the foreground.</summary>
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused)
+            {
+                SaveCheckpoint();
+                GamePrefs.Save();
+            }
+        }
+
         private void OnDisable()
         {
             GameSpeed.Changed -= ApplyTimeScale;

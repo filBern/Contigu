@@ -242,11 +242,16 @@ namespace Contigu.Presentation
         /// <summary>Sells the currently hovered modifier badge; ModifierPanelView.HoveredRowIndex is -1 while the panel is blocked mid-animation. No-op if nothing's hovered or the run isn't InProgress/AwaitingShop.</summary>
         private void TrySellHoveredModifier()
         {
+            TrySellModifierAt(_modifierPanelView.HoveredRowIndex);
+        }
+
+        /// <summary>Sells the fertilizer in row <paramref name="hoveredIndex"/> (the X key under the pointer, or the Sell button under a tapped badge).</summary>
+        private void TrySellModifierAt(int hoveredIndex)
+        {
             if (_run.State != RunState.InProgress && _run.State != RunState.AwaitingShop)
             {
                 return;
             }
-            int hoveredIndex = _modifierPanelView.HoveredRowIndex;
             if (hoveredIndex < 0 || hoveredIndex >= _run.ActiveModifiers.Count)
             {
                 return;
@@ -401,6 +406,7 @@ namespace Contigu.Presentation
             // exactly 800 units tall regardless of aspect ratio, so the
             // hand row never gets squeezed off-screen on wide/short windows.
             scaler.matchWidthOrHeight = 1f;
+            canvasGo.AddComponent<CanvasAspectFit>();
 
             canvasGo.AddComponent<GraphicRaycaster>();
 
@@ -578,6 +584,7 @@ namespace Contigu.Presentation
             // Modifier order determines scoring order (see
             // PlacementResult.Mult); same lambda-captures-_run reasoning as
             // above.
+            _modifierPanelView.SellRequested += TrySellModifierAt;
             _modifierPanelView.SwapRequested += (a, b) =>
             {
                 _run.SwapModifiers(a, b);

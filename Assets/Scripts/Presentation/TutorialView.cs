@@ -89,7 +89,9 @@ namespace Contigu.Presentation
                 string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
+            text += MobileSetup.IsTouchDevice
+                ? "\n\nTouch: tap a seed then a plot to plant it, or drag it. Press and hold anything to read what it does. Tap a fertilizer, then Sell, to sell it; tap two fertilizers to swap them. Menu (top right): settings and Save & quit."
+                : "\n\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
             return text;
         }
     }

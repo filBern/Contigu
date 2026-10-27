@@ -93,6 +93,13 @@ namespace Contigu.Presentation
         /// <summary>Fired when the player taps two different badges in a row — RunManager.SwapModifiers(a, b) is the expected response, followed by a Refresh.</summary>
         public event System.Action<int, int> SwapRequested;
 
+        /// <summary>Fired by the Sell button that appears under a tapped (armed) badge: the row to sell. The touch-friendly twin of the X key.</summary>
+        public event System.Action<int> SellRequested;
+
+        private UnityEngine.UI.Button _sellButton;
+        private UnityEngine.UI.Text _sellLabel;
+        private readonly List<ModifierId> _heldModifiers = new List<ModifierId>();
+
         /// <summary>Fired when the player drags a badge and drops it onto another — RunManager.MoveModifier(from, to) is the expected response, followed by a Refresh.</summary>
         public event System.Action<int, int> MoveRequested;
 
@@ -171,7 +178,43 @@ namespace Contigu.Presentation
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = 2;
 
+            _sellButton = UIFactory.CreateButton(_root, "SellButton", "Sell", UISprites.CancelButtonBackground, 18);
+            UIFactory.DisablePlants(_sellButton);
+            var sellRect = (RectTransform)_sellButton.transform;
+            sellRect.anchorMin = new Vector2(0.5f, 0f);
+            sellRect.anchorMax = new Vector2(0.5f, 0f);
+            sellRect.pivot = new Vector2(0.5f, 0f);
+            sellRect.anchoredPosition = new Vector2(0f, 10f);
+            sellRect.sizeDelta = new Vector2(150f, 44f);
+            _sellLabel = _sellButton.GetComponentInChildren<UnityEngine.UI.Text>();
+            _sellButton.onClick.AddListener(() =>
+            {
+                if (_selectedRowIndex >= 0 && SellRequested != null)
+                {
+                    SellRequested(_selectedRowIndex);
+                }
+            });
+            _sellButton.gameObject.SetActive(false);
+
             return _root;
+        }
+
+        /// <summary>The Sell button shows only while a badge is armed by a tap (and says what it would pay).</summary>
+        private void Update()
+        {
+            if (_sellButton == null)
+            {
+                return;
+            }
+            bool show = _interactable && _selectedRowIndex >= 0 && _selectedRowIndex < _heldModifiers.Count;
+            if (_sellButton.gameObject.activeSelf != show)
+            {
+                _sellButton.gameObject.SetActive(show);
+            }
+            if (show)
+            {
+                _sellLabel.text = "Sell +" + (ModifierPricing.GetPrice(_heldModifiers[_selectedRowIndex]) - 1);
+            }
         }
 
         private Text _emptyHint;
@@ -226,6 +269,11 @@ namespace Contigu.Presentation
                 }
             }
 
+            _heldModifiers.Clear();
+            for (int h = 0; h < activeModifiers.Count; h++)
+            {
+                _heldModifiers.Add(activeModifiers[h]);
+            }
             _rowIds.Clear();
             _rowBadges.Clear();
             _rowBaseColors.Clear();
