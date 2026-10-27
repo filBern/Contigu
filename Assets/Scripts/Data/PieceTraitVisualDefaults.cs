@@ -130,14 +130,14 @@ namespace Contigu.Data
             switch (trait.Kind)
             {
                 case PieceTraitKind.Golden:
-                    return "Scores a flat golden bonus when placed.";
+                    return "Scores +" + ScoringConstants.GoldenCellBonus + " pts when placed.";
                 case PieceTraitKind.Tinted:
                     return "Doubles this placement's group and golden bonus (not harvest) — tinted to "
                         + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + ", so it always fires.";
                 case PieceTraitKind.Multiplier:
                     return "Doubles the placement's ENTIRE score (group, golden, and harvest) — broader than Tinted Sprout, which skips harvest.";
                 case PieceTraitKind.Blast:
-                    return "This sprout and its 4 orthogonal neighbors score golden if they land in the same scored group.";
+                    return "This sprout and its 4 orthogonal neighbors each score +" + ScoringConstants.GoldenCellBonus + " pts, like golden plots, if they land in the same scored group.";
                 case PieceTraitKind.Beacon:
                     return "Every filled sprout in this sprout's row and column becomes a multiplier for this placement.";
                 case PieceTraitKind.Mirror:

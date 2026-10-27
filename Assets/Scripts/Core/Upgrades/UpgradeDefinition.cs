@@ -96,7 +96,7 @@ namespace Contigu.Core
         // TileChoiceView), not a property of the upgrade.
         public static readonly UpgradeDefinition GoldenCells = new UpgradeDefinition(
             UpgradeId.GoldenCells, UpgradePool.Grid, "Golden Cells",
-            "Scores +18 flat when placed.", false, UpgradeRarity.Common);
+            "Scores +18 pts when placed.", false, UpgradeRarity.Common);
 
         /// <summary>
         /// Retired from the shop/draft pools (see All/GridPool below) — playtesting found it read as nearly
@@ -116,7 +116,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition BlastTile = new UpgradeDefinition(
             UpgradeId.BlastTile, UpgradePool.Grid, "Blast Sprout",
-            "Makes itself and its 4 neighbors score golden if same color.", false, UpgradeRarity.Rare);
+            "Itself and its 4 neighbors each score +18 pts, like golden plots, if they join the scored group.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
             UpgradeId.MultiplierBeacon, UpgradePool.Grid, "Multiplier Beacon",
