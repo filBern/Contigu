@@ -35,6 +35,16 @@ namespace Contigu.Presentation
         private Coroutine _chipsPulseCoroutine;
         private Coroutine _multPulseCoroutine;
 
+        /// <summary>Makes the whole card explain itself on hover (the Score x Mult readout is the core of the game and never said what it is).</summary>
+        public void AttachTooltip(TooltipView tooltip)
+        {
+            var hit = UIFactory.CreatePanel(_root, "TooltipHit", new Color(0f, 0f, 0f, 0f));
+            UIFactory.StretchFull(hit.rectTransform);
+            hit.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            hit.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Score",
+                "Points x Mult. Points come from the groups you form and the lines you harvest; Mult from fertilizers and upgrades. The result is the damage dealt to the first pest.", "This placement", UITheme.TextMuted);
+        }
+
         public RectTransform Build(Transform parent)
         {
             _root = UIFactory.CreateUIObject("ComboView", parent);

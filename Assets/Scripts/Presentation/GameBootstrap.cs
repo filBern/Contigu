@@ -442,6 +442,7 @@ namespace Contigu.Presentation
             // hand piece trait badges).
             _tooltipView = gameObject.AddComponent<TooltipView>();
             _tooltipView.Build(mainRoot);
+            _comboView.AttachTooltip(_tooltipView);
 
             // Both progress bars pin themselves to the top/bottom edges inside
             // HudView.Build — nothing to position here.

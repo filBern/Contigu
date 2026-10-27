@@ -94,6 +94,8 @@ namespace Contigu.Presentation
             BuildBar(parent, "ScoreBar", UITheme.ButtonSelected, top: true, out _scoreFillRect, out _scoreLabel);
             _scoreBarRoot = _scoreFillRect.parent.gameObject;
             BuildBar(parent, "PiecesBar", UITheme.Success, top: false, out _piecesFillRect, out _piecesLabel);
+            _piecesLabel.transform.parent.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Seeds left",
+                "How many seeds you can still plant this round, out of the round's budget. Run out while pests are still alive and the run ends. Seeds you do not use are paid back in Pollen when you win the round.", "Round", UITheme.TextMuted);
             BuildEnemyBand(parent);
             // Built after the score bar/enemy band so it renders as a later sibling, on top of either —
             // both of them occupy the full top edge and hide/show depending on HasActiveEncounter (see
@@ -135,6 +137,10 @@ namespace Contigu.Presentation
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
             _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
+            var lueurHit = _lueurContainer.gameObject.AddComponent<Image>();
+            lueurHit.color = new Color(0f, 0f, 0f, 0f);
+            _lueurContainer.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Pollen",
+                "Your money. You earn it by harvesting lines with several colors, from seeds left unplanted at the end of a round, and from some fertilizers. Spend it in the shop between rounds.", "Currency", UITheme.TextMuted);
         }
 
         /// <summary>Builds a flat track rectangle plus a solid-color fill rectangle, rather than a sprite-based slider, so the bar fully follows UITheme colors.</summary>
