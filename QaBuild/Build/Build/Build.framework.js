@@ -2085,13 +2085,13 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  1953056: function() {return Module.webglContextAttributes.premultipliedAlpha;},  
- 1953117: function() {return Module.webglContextAttributes.preserveDrawingBuffer;},  
- 1953181: function() {return Module.webglContextAttributes.powerPreference;},  
- 1953239: function() {Module['emscripten_get_now_backup'] = performance.now;},  
- 1953294: function($0) {performance.now = function() { return $0; };},  
- 1953342: function($0) {performance.now = function() { return $0; };},  
- 1953390: function() {performance.now = Module['emscripten_get_now_backup'];}
+  1953952: function() {return Module.webglContextAttributes.premultipliedAlpha;},  
+ 1954013: function() {return Module.webglContextAttributes.preserveDrawingBuffer;},  
+ 1954077: function() {return Module.webglContextAttributes.powerPreference;},  
+ 1954135: function() {Module['emscripten_get_now_backup'] = performance.now;},  
+ 1954190: function($0) {performance.now = function() { return $0; };},  
+ 1954238: function($0) {performance.now = function() { return $0; };},  
+ 1954286: function() {performance.now = Module['emscripten_get_now_backup'];}
 };
 
 
@@ -4599,6 +4599,11 @@ var ASM_CONSTS = {
   		return Module.SystemInfo.hasWebGL;
   	}
 
+  function _JS_SystemInfo_IsMobile() 
+  	{
+  		return Module.SystemInfo.mobile;
+  	}
+
   function _JS_UnityEngineShouldQuit() {
   	return !!Module.shouldQuit;
   }
@@ -4643,6 +4648,18 @@ var ASM_CONSTS = {
       if (window.__qa) {
         var r = JSON.parse(UTF8ToString(ptr));
         window.__qa.results[r.id] = r.result;
+      }
+    }
+
+  function _WebFileSync_Flush() {
+      try {
+        if (typeof FS !== 'undefined' && FS.syncfs) {
+          FS.syncfs(false, function (err) { if (err) { console.warn('WebFileSync: syncfs failed: ' + err); } });
+        } else if (typeof _JS_FileSystem_Sync === 'function') {
+          _JS_FileSystem_Sync();
+        }
+      } catch (e) {
+        console.warn('WebFileSync: ' + e);
       }
     }
 
@@ -15237,11 +15254,13 @@ var asmLibraryArg = {
   "JS_SystemInfo_HasCursorLock": _JS_SystemInfo_HasCursorLock,
   "JS_SystemInfo_HasFullscreen": _JS_SystemInfo_HasFullscreen,
   "JS_SystemInfo_HasWebGL": _JS_SystemInfo_HasWebGL,
+  "JS_SystemInfo_IsMobile": _JS_SystemInfo_IsMobile,
   "JS_UnityEngineShouldQuit": _JS_UnityEngineShouldQuit,
   "QaBridge_Enabled": _QaBridge_Enabled,
   "QaBridge_Poll": _QaBridge_Poll,
   "QaBridge_Publish": _QaBridge_Publish,
   "QaBridge_Result": _QaBridge_Result,
+  "WebFileSync_Flush": _WebFileSync_Flush,
   "__assert_fail": ___assert_fail,
   "__cxa_allocate_exception": ___cxa_allocate_exception,
   "__cxa_begin_catch": ___cxa_begin_catch,
