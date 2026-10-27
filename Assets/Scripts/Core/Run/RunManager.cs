@@ -691,18 +691,11 @@ namespace Contigu.Core
             // The boss round lock ratchets up gradually instead of all at once -
             // see ApplyBossLockTick, called from PlacePiece every
             // _challenge.BossLockPiecesInterval pieces.
-            // Normally a no-op (the hand carries over from the previous round
-            // untouched) - only fires when the placement that empties the hand
-            // also ends the round, so PlacePiece defers the draw here instead of
-            // dealing it before the player has picked this round's upgrade.
-            // Deliberately plain Deck.DrawNewHand, not DrawFreshHand: this is the
-            // round's starting hand, not a Shuffle triggered mid-round, so no
-            // enemy here should get an on-Shuffle tick before the player has
-            // placed a single piece against it.
-            if (Deck.IsHandFullyEmpty())
-            {
-                Deck.DrawNewHand();
-            }
+            // The round's starting hand is dealt here, always (never carried over). Deliberately a plain
+            // deal, not DrawFreshHand: this is not a Shuffle triggered mid-round, so no enemy here should
+            // get an on-Shuffle tick before the player has placed a single piece against it.
+            // Every round starts with a fresh hand: seeds left over from the previous round go back to the draw pile.
+            Deck.RedealHand();
             RoundScore = 0;
             PiecesRemainingThisRound = CurrentBudget;
             LastRoundEndLueurBonus = 0;

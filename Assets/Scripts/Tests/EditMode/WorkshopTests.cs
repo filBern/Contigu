@@ -242,6 +242,41 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void EveryRoundStartsWithAFreshFullHand()
+        {
+            var run = new RunManager(new SystemRandomProvider(4));
+            run.DebugDisableWeather();
+            for (int i = 0; i < run.Deck.Hand.Count; i++)
+            {
+                if (run.Deck.Hand[i].HasValue)
+                {
+                    var anchor = FirstFreeAnchor(run, i);
+                    run.PlacePiece(i, anchor.x, anchor.y);
+                    break;
+                }
+            }
+            int leftOver = 0;
+            for (int i = 0; i < run.Deck.Hand.Count; i++) { if (run.Deck.Hand[i].HasValue) { leftOver++; } }
+            Assert.Greater(leftOver, 0, "The test needs seeds left over from the first round");
+            run.DebugForceRoundComplete();
+            Assert.IsTrue(run.LeaveShop());
+            for (int i = 0; i < run.Deck.Hand.Count; i++)
+            {
+                Assert.IsTrue(run.Deck.Hand[i].HasValue, "Slot " + i + " should be dealt at the start of round 2");
+            }
+        }
+
+        private static UnityEngine.Vector2Int FirstFreeAnchor(RunManager run, int slot)
+        {
+            var shape = PieceShapeCatalog.GetRotated(run.Deck.Hand[slot].Value.Shape, run.Deck.HandRotations[slot]);
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (run.Grid.CanPlace(shape, pos.x, pos.y)) { return pos; }
+            }
+            return new UnityEngine.Vector2Int(0, 0);
+        }
+
+        [Test]
         public void Forge_AppliesItsVisibleUpgrade_ToAnyOfManySeeds()
         {
             var run = ShopRun();

@@ -2301,16 +2301,16 @@ namespace Contigu.Tests
         public void PlacePiece_SparkTrait_ScoresMoreTheLongerSinceTheLastClearThisRound()
         {
             var run = new RunManager(new SystemRandomProvider(1));
-            run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
 
             // 2 ordinary placements first (neither clearing a line, using
             // whatever piece actually happens to occupy the first available
-            // slot each time — tagging only updates the deck, not the
-            // already-dealt hand), so the streak reaches 2 by the time the
-            // Spark-tagged token lands.
+            // slot each time), so the streak reaches 2 by the time the
+            // Spark-tagged token lands. The deck is tagged only afterwards: a
+            // tagged piece placed earlier would be scored again by the later one.
             PlaceFirstAvailableHandPiece(run);
             PlaceFirstAvailableHandPiece(run);
             Assert.AreEqual(2, run.Grid.PlacementsSinceLastClear);
+            run.Deck.TagSparkTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
 
             int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
             var anchorC = FindAnyValidAnchor(run.Grid, PieceShapeCatalog.Get(ShapeId.Single));
@@ -2563,6 +2563,7 @@ namespace Contigu.Tests
             for (int seed = 0; seed < 256 && run == null; seed++)
             {
                 var candidate = new RunManager(new SystemRandomProvider(seed), TestChallenges.QuotaOnlyMarathon);
+                candidate.DebugDisableWeather();
                 AdvanceToRound(candidate, 3);
                 if (candidate.CurrentBossEffect == BossEffect.ProgressiveCellLock)
                 {

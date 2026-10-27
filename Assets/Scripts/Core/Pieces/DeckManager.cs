@@ -59,6 +59,26 @@ namespace Contigu.Core
             DrawNewHand();
         }
 
+        /// <summary>
+        /// Deals a brand-new hand for a new round: whatever seeds are still in the old hand go back to the BOTTOM of the draw pile (they come
+        /// up again later in the cycle, none is lost), then every slot is dealt fresh.
+        /// </summary>
+        public void RedealHand()
+        {
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                if (_hand[i].HasValue)
+                {
+                    _drawPile.Insert(0, _hand[i].Value);
+                }
+            }
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                _hand[i] = null;
+            }
+            DrawNewHand();
+        }
+
         /// <summary>Replaces the whole bag (a resumed run) and deals a fresh hand from it.</summary>
         public void RestoreDeck(IEnumerable<PieceToken> tokens)
         {
