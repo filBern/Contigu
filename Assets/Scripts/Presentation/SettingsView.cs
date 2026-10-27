@@ -39,6 +39,11 @@ namespace Contigu.Presentation
             var overlay = UIFactory.CreatePanel(parent, "SettingsOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            // Above the shop's choice screens, which bring themselves to the front when they open (Menu, at 100, stays above this).
+            var settingsCanvas = overlay.gameObject.AddComponent<Canvas>();
+            settingsCanvas.overrideSorting = true;
+            settingsCanvas.sortingOrder = 90;
+            overlay.gameObject.AddComponent<GraphicRaycaster>();
 
             var header = UIFactory.CreateText(_root, "Header", "Menu", 32, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);

@@ -716,7 +716,7 @@ namespace Contigu.Presentation
             deckRect.anchorMin = new Vector2(0.5f, 0f);
             deckRect.anchorMax = new Vector2(0.5f, 0f);
             deckRect.pivot = new Vector2(0.5f, 1f);
-            deckRect.anchoredPosition = new Vector2(-81f, -24f);
+            deckRect.anchoredPosition = new Vector2(MobileSetup.IsTouchDevice ? -88f : -81f, -24f);
             deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             deckButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             deckButton.onClick.AddListener(() => _deckView.Show());
@@ -729,7 +729,7 @@ namespace Contigu.Presentation
             rulesRect.anchorMin = new Vector2(0.5f, 0f);
             rulesRect.anchorMax = new Vector2(0.5f, 0f);
             rulesRect.pivot = new Vector2(0.5f, 1f);
-            rulesRect.anchoredPosition = new Vector2(81f, -24f);
+            rulesRect.anchoredPosition = new Vector2(MobileSetup.IsTouchDevice ? 88f : 81f, -24f);
             rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             rulesButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             rulesButton.onClick.AddListener(() => _tutorialView.Show());

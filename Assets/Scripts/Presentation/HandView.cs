@@ -240,7 +240,7 @@ namespace Contigu.Presentation
             buttonRect.anchorMax = new Vector2(1f, 1f);
             buttonRect.pivot = new Vector2(1f, 1f);
             buttonRect.anchoredPosition = new Vector2(20f, 20f);
-            buttonRect.sizeDelta = new Vector2(MobileSetup.TouchMin(ShuffleButtonWidth), MobileSetup.TouchMin(ShuffleButtonHeight));
+            buttonRect.sizeDelta = new Vector2(ShuffleButtonWidth, ShuffleButtonHeight);
 
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
             _shuffleCountLabel.text = _run.ShufflesRemaining.ToString();
