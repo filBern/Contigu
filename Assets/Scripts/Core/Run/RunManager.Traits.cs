@@ -109,6 +109,17 @@ namespace Contigu.Core
                     cell.IsMultiplierZone = true;
                     transientCells.Add(cell);
                     StampMultiplierAlongRowAndColumn(pos, transientCells);
+                    // The seed's own other cells in the beacon's row or column count too (they are not on the garden yet, so the sweep above misses them).
+                    for (int c = 0; c < shape.Cells.Count; c++)
+                    {
+                        var own = new Vector2Int(anchorX, anchorY) + shape.Cells[c];
+                        if (own != pos && (own.x == pos.x || own.y == pos.y))
+                        {
+                            var ownCell = Grid.GetCell(own.x, own.y);
+                            ownCell.IsMultiplierZone = true;
+                            transientCells.Add(ownCell);
+                        }
+                    }
                     break;
 
                 case PieceTraitKind.Seeder:

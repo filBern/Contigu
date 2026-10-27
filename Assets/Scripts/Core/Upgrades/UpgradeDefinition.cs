@@ -120,7 +120,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition MultiplierBeacon = new UpgradeDefinition(
             UpgradeId.MultiplierBeacon, UpgradePool.Grid, "Multiplier Beacon",
-            "Turns its whole row/column into multipliers for that placement.", false, UpgradeRarity.Rare);
+            "Every sprout in its row and column (its own seed included) doubles the score of the group it joins, x2 each.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition MirrorTile = new UpgradeDefinition(
             UpgradeId.MirrorTile, UpgradePool.Grid, "Mirror Sprout",

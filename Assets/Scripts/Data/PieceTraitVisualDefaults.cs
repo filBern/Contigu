@@ -139,7 +139,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Blast:
                     return "This sprout and its 4 orthogonal neighbors each score +" + ScoringConstants.GoldenCellBonus + " pts, like golden plots, if they land in the same scored group.";
                 case PieceTraitKind.Beacon:
-                    return "Every filled sprout in this sprout's row and column becomes a multiplier for this placement.";
+                    return "Every sprout in this sprout's row and column (its own seed included) doubles the score of the group it joins, x2 each.";
                 case PieceTraitKind.Mirror:
                     return "Copies this sprout's group bonus onto one random other sprout in the scored group.";
                 case PieceTraitKind.Seeder:

@@ -1871,6 +1871,20 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_BeaconTrait_AlsoCountsTheSeedsOwnCellsInItsRow()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.DomH, PieceColor.Coral, new PieceTrait(PieceTraitKind.Beacon, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Beacon && t.Shape == ShapeId.DomH);
+
+            var outcome = run.PlacePiece(slot, 2, 2);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(ScoringConstants.MultiplierZoneMultiplier * ScoringConstants.MultiplierZoneMultiplier, outcome.Placement.GroupMultiplier,
+                "Both cells of the domino sit in the beacon's row, so each doubles");
+        }
+
+        [Test]
         public void PlacePiece_MirrorTrait_DuplicatesGroupBonusOntoTheOnlyOtherGroupCell()
         {
             var run = new RunManager(new SystemRandomProvider(1));
