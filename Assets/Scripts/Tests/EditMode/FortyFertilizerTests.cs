@@ -364,6 +364,22 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void FertilizersPromisingOneMultPerUnit_PayExactlyOnePerUnit()
+        {
+            int one = (int)ScoringConstants.PointsPerMult;
+            Assert.AreEqual(one, ScoringConstants.BountyBonusPerTile);
+            Assert.AreEqual(one, ScoringConstants.PatchworkBonusPerTile);
+            Assert.AreEqual(one, ScoringConstants.PrecisionBonusPerCell);
+            Assert.AreEqual(one, ScoringConstants.PetitFormatBonusPerCell);
+            Assert.AreEqual(one, ScoringConstants.FormeGlowBonusPerCell);
+            Assert.AreEqual(one, ScoringConstants.WreathBonusPerCell);
+            Assert.AreEqual(one, ScoringConstants.MegaChaineBonusPerExtraCell);
+            Assert.AreEqual(4 * one, ScoringConstants.MegaChaineBaseBonus);
+            // A 5-tile harvest with Bounty is +5 Mult, not the +2 the old 3-points-per-tile value rounded to.
+            Assert.AreEqual(5, ScoringConstants.PointsToMult(5 * ScoringConstants.BountyBonusPerTile));
+        }
+
+        [Test]
         public void PiggyBankAndSeedBank_ScaleWithWhatYouHold()
         {
             var run = NewRun(ModifierId.Tirelire, ModifierId.BanqueGraines);

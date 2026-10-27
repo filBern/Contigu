@@ -87,7 +87,7 @@ namespace Contigu.Presentation
         {
             _titleText.text = "Victory!";
             _titleText.color = UITheme.Success;
-            _subtitleText.text = "Run complete — total score: " + totalScore;
+            _subtitleText.text = "Run complete - total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             SprigComment(true, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(190f, 0f);
@@ -99,9 +99,9 @@ namespace Contigu.Presentation
         public void ShowDefeat(int roundNumber, int totalScore, MetaStats metaStats, bool isNewBestScore, bool endless = false)
         {
             _endlessButtonRect.gameObject.SetActive(false);
-            _titleText.text = endless ? "Endless — fell in Round " + roundNumber : "Defeat — Round " + roundNumber;
+            _titleText.text = endless ? "Endless - fell in Round " + roundNumber : "Defeat - Round " + roundNumber;
             _titleText.color = UITheme.Danger;
-            _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " — " : "Quota not reached — ") + "total score: " + totalScore;
+            _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " - " : "Quota not reached - ") + "total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore);
             SprigComment(false, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
@@ -116,7 +116,7 @@ namespace Contigu.Presentation
         private void SetMetaStatsText(MetaStats metaStats, bool isNewBestScore)
         {
             string bestScoreLine = isNewBestScore
-                ? "Best score: " + metaStats.BestScore + " — new record!"
+                ? "Best score: " + metaStats.BestScore + " - new record!"
                 : "Best score: " + metaStats.BestScore;
             _metaStatsText.text = bestScoreLine
                 + "\nBest round reached: " + metaStats.BestRoundReached

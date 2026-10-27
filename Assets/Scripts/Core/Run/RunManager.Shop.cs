@@ -183,6 +183,11 @@ namespace Contigu.Core
             {
                 return false;
             }
+            if (candidate.Id == UpgradeId.PrismTile && PieceColorUtility.BaseColors.Count < ScoringConstants.PrismMinColors)
+            {
+                // Needs 3 different colors around it: impossible with only 2 seed colors (Orchard).
+                return false;
+            }
             if (candidate.Id == UpgradeId.Compost && Deck.DeckCount <= DeckManager.MinDeckSize)
             {
                 return false;
@@ -221,7 +226,7 @@ namespace Contigu.Core
             for (int attempt = 0; attempt < 30 && payload == null; attempt++)
             {
                 var rolled = Upgrades.RollFromPool(UpgradePool.Grid);
-                if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue)
+                if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue && IsUpgradeEligibleForOffer(rolled))
                 {
                     payload = rolled;
                 }
@@ -509,7 +514,7 @@ namespace Contigu.Core
             var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
-                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
+                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && ModifierCatalog.All[i].Id != ModifierId.Copieur && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
                 {
                     available.Add(ModifierCatalog.All[i]);
                 }

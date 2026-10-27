@@ -46,7 +46,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Summer,
             Name = "Summer",
-            Description = "Every round brings real weather — never calm skies — and it hits 1.5x harder. Plan around the forecast. Home of the Locust Swarm.",
+            Description = "Every round brings real weather - never calm skies - and it hits 1.5x harder. Plan around the forecast. Home of the Locust Swarm.",
             UnlockCost = 8,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -66,7 +66,7 @@ namespace Contigu.Core
             Id = ChallengeId.Autumn,
             Name = "Autumn",
             WeatherProfile = WeatherProfile.Autumn,
-            Description = "Fertilizers wither after 4 rounds — a random new one sprouts in their place — and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
+            Description = "Fertilizers wither after 4 rounds - a random new one sprouts in their place - and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
             UnlockCost = 12,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,

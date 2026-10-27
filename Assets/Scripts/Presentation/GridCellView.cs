@@ -203,7 +203,7 @@ namespace Contigu.Presentation
             else if (cell.IsMultiplierZone)
             {
                 _infoName = "Multiplier Zone";
-                _infoDescription = "Doubles the whole placement's score — harvest included — when a seed is planted here.";
+                _infoDescription = "Doubles the whole placement's score - harvest included - when a seed is planted here.";
             }
             else if (cell.IsGolden)
             {

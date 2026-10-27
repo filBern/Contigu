@@ -55,9 +55,9 @@ namespace Contigu.Core
         public const int ChaineMinGroupSize = 5;
 
         /// <summary>Méga-chaîne: base bonus at the size threshold, plus a per-cell bonus for every cell beyond it.</summary>
-        public const int MegaChaineBaseBonus = 45;
+        public const int MegaChaineBaseBonus = 4 * (int)PointsPerMult;
         public const int MegaChaineMinGroupSize = 10;
-        public const int MegaChaineBonusPerExtraCell = 8;
+        public const int MegaChaineBonusPerExtraCell = (int)PointsPerMult;
 
         /// <summary>Forteresse: bonus per group cell whose 8 surrounding neighbors are all filled.</summary>
         public const int ForteresseBonusPerCell = 9;
@@ -165,7 +165,7 @@ namespace Contigu.Core
         public const int SolitaireMultiplier = 2;
 
         /// <summary>Petit Format: bonus per placed cell when the piece has at most this many cells.</summary>
-        public const int PetitFormatBonusPerCell = 8;
+        public const int PetitFormatBonusPerCell = (int)PointsPerMult;
         public const int PetitFormatMaxPieceSize = 2;
 
         /// <summary>Fraîcheur: xN multiplier when this placement's fill color is nowhere else on the board yet.</summary>
@@ -210,7 +210,7 @@ namespace Contigu.Core
         public const int ComboMultiplierFactor = 2;
 
         /// <summary>Precision: bonus per placed cell when EVERY one of this placement's own cells has at least one pre-existing filled orthogonal neighbor.</summary>
-        public const int PrecisionBonusPerCell = 8;
+        public const int PrecisionBonusPerCell = (int)PointsPerMult;
 
         /// <summary>Overcrowding (Surpopulation): bonus per placed cell when EVERY one of this placement's own cells has at least 2 pre-existing filled orthogonal neighbors — a stricter sibling of Precision.</summary>
         public const int SurpopulationBonusPerCell = 12;
@@ -233,7 +233,7 @@ namespace Contigu.Core
         public const int FormeSpecialistMultiplier = 2;
 
         /// <summary>The "+pts" sibling of each Format* "Specialist" tier above — bonus per scored group cell when the placed piece's cell count falls in the tier, same pattern as Éclat's per-color bonus.</summary>
-        public const int FormeGlowBonusPerCell = 6;
+        public const int FormeGlowBonusPerCell = (int)PointsPerMult;
 
         /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
         public const int MultCinqRisqueBonus = 5;
@@ -366,6 +366,7 @@ namespace Contigu.Core
         /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — fires alongside every combat kind.</summary>
         public const float SiphonLueurFraction = 0.04f;
 
+        // Fertilizers whose text says "+1 Mult per X" are worth exactly PointsPerMult points per X, so the points-to-Mult conversion of their (aggregated) event gives +1 Mult per X.
         // ---- the 40 fertilizers added in one batch (see GridManager.NewModifiers.cs and RunManager.NewModifiers.cs) ----
         /// <summary>Hedgerow: points per edge tile, converted to Mult at PointsPerMult - so exactly +1 Mult per edge tile (a lower value rounded every placement down to +1 total).</summary>
         public const int HedgerowBonusPerCell = (int)PointsPerMult;
@@ -374,7 +375,7 @@ namespace Contigu.Core
         public const int FurrowMultBonus = 3;
         public const int BeanstalkMinCells = 3;
         public const int BeanstalkBonus = 12;
-        public const int PatchworkBonusPerTile = 4;
+        public const int PatchworkBonusPerTile = (int)PointsPerMult;
         public const int TaprootCellsPerMult = 3;
         public const int SnugFitMultBonus = 5;
         public const int MosaicMinNeighbors = 2;
@@ -382,13 +383,13 @@ namespace Contigu.Core
         public const int CrowdMultiplier = 2;
         public const int MeadowMultBonus = 4;
         public const int WreathMinNeighbors = 3;
-        public const int WreathBonusPerCell = 8;
+        public const int WreathBonusPerCell = (int)PointsPerMult;
         public const int CrossHarvestMultBonus = 6;
         public const int ReaperMultPerLine = 3;
         public const int CleanSlateMultiplier = 3;
         public const int RowCropMultiplier = 2;
         public const int ColumnCropMultiplier = 2;
-        public const int BountyBonusPerTile = 3;
+        public const int BountyBonusPerTile = (int)PointsPerMult;
         public const int FrostbreakerMultBonus = 6;
         public const float SeasonedMultPerRound = 0.5f;
         public const int UnderdogMultBonus = 3;

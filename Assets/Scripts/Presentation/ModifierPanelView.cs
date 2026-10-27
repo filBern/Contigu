@@ -253,7 +253,7 @@ namespace Contigu.Presentation
                 // can't safely be auto-rewritten per modifier. Shown only
                 // past level 1 to avoid noise for the common unleveled case.
                 System.Func<ModifierId, string> rowLevelState = level > 1
-                    ? (System.Func<ModifierId, string>)(rowId => "Level " + level + " — x" + ModifierLevelUtility.LevelToFactor(level).ToString(System.Globalization.CultureInfo.InvariantCulture) + " effect")
+                    ? (System.Func<ModifierId, string>)(rowId => "Level " + level + " - x" + ModifierLevelUtility.LevelToFactor(level).ToString(System.Globalization.CultureInfo.InvariantCulture) + " effect")
                     : null;
                 bool blighted = BlightProvider != null && BlightProvider(i);
                 if (blighted)

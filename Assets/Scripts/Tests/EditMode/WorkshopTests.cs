@@ -242,6 +242,44 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PrismSprout_IsNeverOfferedWithOnlyTwoSeedColors()
+        {
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var run = new RunManager(new SystemRandomProvider(seed), ChallengeCatalog.Orchard);
+                run.DebugDisableWeather();
+                run.DebugForceRoundComplete();
+                foreach (var slot in run.ShopBlisterSlots) { AssertNotPrism(slot); }
+                foreach (var slot in run.ShopUpgradeSlots) { AssertNotPrism(slot); }
+                run.DebugGrantLueur(500);
+                if (run.BuyUpgradeSlot(0) && run.PendingPackUpgrades.Count > 0)
+                {
+                    foreach (var up in run.PendingPackUpgrades) { Assert.AreNotEqual(UpgradeId.PrismTile, up.Id); }
+                }
+            }
+        }
+
+        private static void AssertNotPrism(ShopSlot slot)
+        {
+            if (slot == null || slot.Kind != ShopSlotKind.Upgrade) { return; }
+            Assert.AreNotEqual(UpgradeId.PrismTile, slot.HiddenUpgrade.Id);
+            if (slot.Payload != null) { Assert.AreNotEqual(UpgradeId.PrismTile, slot.Payload.Id); }
+        }
+
+        [Test]
+        public void Mimic_IsNeverHandedOutAsAHeldFertilizer()
+        {
+            for (int seed = 1; seed <= 60; seed++)
+            {
+                var run = new RunManager(new SystemRandomProvider(seed));
+                run.DebugDisableWeather();
+                run.DebugForceRoundComplete();
+                run.DebugTriggerRandomModifierGrant();
+                foreach (var id in run.ActiveModifiers) { Assert.AreNotEqual(ModifierId.Copieur, id); }
+            }
+        }
+
+        [Test]
         public void EveryRoundStartsWithAFreshFullHand()
         {
             var run = new RunManager(new SystemRandomProvider(4));

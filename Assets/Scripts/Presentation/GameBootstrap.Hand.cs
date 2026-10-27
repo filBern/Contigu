@@ -40,11 +40,11 @@ namespace Contigu.Presentation
             if (_handView.IsHandStuck)
             {
                 _handView.SetShufflePulsing(true);
-                SetStatusText("This seed can't be placed anywhere — try shuffling your hand.", emphasize: true);
+                SetStatusText("This seed can't be placed anywhere - try shuffling your hand.", emphasize: true);
             }
             else
             {
-                SetStatusText("This seed can't be placed anywhere — try another one.", emphasize: true);
+                SetStatusText("This seed can't be placed anywhere - try another one.", emphasize: true);
             }
         }
 

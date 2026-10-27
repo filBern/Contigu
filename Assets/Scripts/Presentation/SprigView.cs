@@ -374,7 +374,7 @@ namespace Contigu.Presentation
             "The pests are hungry today. Plant smart!",
             "Same-colored seeds love to sit together.",
             "Tip: a full row or column is a harvest. Easy Pollen!",
-            "Don't forget your fertilizers — they stack up nicely.",
+            "Don't forget your fertilizers - they stack up nicely.",
             "Shuffle is free of shame when you're stuck.",
         };
 

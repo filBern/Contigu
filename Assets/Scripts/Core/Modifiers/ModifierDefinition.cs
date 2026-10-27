@@ -128,7 +128,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
             ModifierId.ArcEnCiel, ModifierCategory.Couleurs, "Rainbow",
-            "x2 Mult per harvested line with all 4 colors, stacking.");
+            "x2 Mult per harvested line with every color of the run, stacking.");
 
         public static readonly ModifierDefinition Alternance = new ModifierDefinition(
             ModifierId.Alternance, ModifierCategory.Couleurs, "Alternation",
@@ -217,11 +217,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Solitaire = new ModifierDefinition(
             ModifierId.Solitaire, ModifierCategory.Connexions, "Solitaire",
-            "x2 Mult when the group is only this seed (2+ cells) — nothing merged in.");
+            "x2 Mult when the group is only this seed (2+ cells) - nothing merged in.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Fallow Ground",
-            "x2 Mult when the board ends up 25% filled or less.");
+            "x2 Mult when the board ends up with " + ScoringConstants.EspaceLibreMaxFilledCells + " plots filled or fewer.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
             ModifierId.Rafale, ModifierCategory.Destruction, "Burst",
@@ -281,7 +281,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
-            "+n Mult, n = filled cells on the board ÷ 10 — scales with how full the board is.");
+            "+n Mult, n = filled cells on the board ÷ 10 - scales with how full the board is.");
 
         // Lueur-earning modifiers, each using the same trigger condition as
         // an existing score modifier but paying Lueur (shop currency)
@@ -289,7 +289,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
             ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 Pollen per harvested line with all 4 colors, stacking.");
+            "+6 Pollen per harvested line with every color of the run, stacking.");
 
         public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
             ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
@@ -337,7 +337,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
             ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
-            "+13 Mult, shrinking a little with every placement for the rest of the run — destroyed once it hits 0.");
+            "+13 Mult, shrinking a little with every placement for the rest of the run - destroyed once it hits 0.");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
             ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",

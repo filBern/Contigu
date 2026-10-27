@@ -88,7 +88,7 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition ModifierUpgrade = new UpgradeDefinition(
             UpgradeId.ModifierUpgrade, UpgradePool.Modifier, "Fertilizer Upgrade",
-            "Choose one of your active fertilizers to level up — its effect gets stronger.", true, UpgradeRarity.Uncommon);
+            "Choose one of your active fertilizers to level up - its effect gets stronger.", true, UpgradeRarity.Uncommon);
 
         // Descriptions below describe the trait itself rather than how many
         // pieces get it — that count is a shop mechanic (see
@@ -191,12 +191,12 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
             UpgradeId.PieceMastery, UpgradePool.Mastery, "Seed Mastery",
-            "Levels up one random seed shape — its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
+            "Levels up one random seed shape - its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
 
         /// <summary>Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
             UpgradeId.ColorMastery, UpgradePool.Mastery, "Color Mastery",
-            "Levels up one random seed color — its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
+            "Levels up one random seed color - its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition PipTile = new UpgradeDefinition(
             UpgradeId.PipTile, UpgradePool.Grid, "Pip Sprout",
@@ -345,7 +345,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition SproutPack = new UpgradeDefinition(
             UpgradeId.SproutPack, UpgradePool.Workshop, "Sprout Pack",
-            "Reveals 3 tile upgrades. Pick 1, then the seed to enchant.", false, UpgradeRarity.Common);
+            "Reveals 3 tile upgrades. Pick 1, then 3 seeds of your bag to enchant.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition FertilizerPack = new UpgradeDefinition(
             UpgradeId.FertilizerPack, UpgradePool.Workshop, "Fertilizer Pack",
@@ -361,7 +361,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition Forge = new UpgradeDefinition(
             UpgradeId.Forge, UpgradePool.Workshop, "Forge",
-            "Add the tile upgrade shown to any seed of your bag.", false, UpgradeRarity.Common);
+            "Add the tile upgrade shown to 3 seeds of your bag, of your choice.", false, UpgradeRarity.Common);
 
         /// <summary>The definition with this id (any pool, Workshop included), or null.</summary>
         public static UpgradeDefinition Get(UpgradeId id)

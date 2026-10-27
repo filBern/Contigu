@@ -52,7 +52,7 @@ namespace Contigu.Core
             for (int attempt = 0; attempt < 60 && picked.Count < count; attempt++)
             {
                 var rolled = Upgrades.RollFromPool(UpgradePool.Grid);
-                if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue && !picked.Contains(rolled))
+                if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue && IsUpgradeEligibleForOffer(rolled) && !picked.Contains(rolled))
                 {
                     picked.Add(rolled);
                 }

@@ -285,7 +285,7 @@ namespace Contigu.Presentation
                 return;
             }
             _shopView.Refresh(_run);
-            SetStatusText("F7: upgrade slot 1 is now Random Fertilizer — buy it for real.");
+            SetStatusText("F7: upgrade slot 1 is now Random Fertilizer - buy it for real.");
         }
 
         /// <summary>Editor-only debug shortcut (F8): triggers the Random Modifier grant+reveal directly, bypassing the shop's roll odds. Works any time, unlike a real purchase.</summary>

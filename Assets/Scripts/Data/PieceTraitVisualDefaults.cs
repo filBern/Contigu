@@ -132,10 +132,10 @@ namespace Contigu.Data
                 case PieceTraitKind.Golden:
                     return "Scores +" + ScoringConstants.GoldenCellBonus + " pts when placed.";
                 case PieceTraitKind.Tinted:
-                    return "Doubles this placement's group and golden bonus (not harvest) — tinted to "
+                    return "Doubles this placement's group and golden bonus (not harvest) - tinted to "
                         + (trait.TintedColor.HasValue ? VisualDefaults.GetColorName(trait.TintedColor.Value) : "its target color") + ", so it always fires.";
                 case PieceTraitKind.Multiplier:
-                    return "Doubles the placement's ENTIRE score (group, golden, and harvest) — broader than Tinted Sprout, which skips harvest.";
+                    return "Doubles the placement's ENTIRE score (group, golden, and harvest) - broader than Tinted Sprout, which skips harvest.";
                 case PieceTraitKind.Blast:
                     return "This sprout and its 4 orthogonal neighbors each score +" + ScoringConstants.GoldenCellBonus + " pts, like golden plots, if they land in the same scored group.";
                 case PieceTraitKind.Beacon:
@@ -153,7 +153,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Chameleon:
                     return "If this sprout has a filled neighbor, the WHOLE seed recolors to match it before scoring, merging into that group.";
                 case PieceTraitKind.Spark:
-                    return "Scores more the longer since the last harvest this round — resets once a harvest happens.";
+                    return "Scores more the longer since the last harvest this round - resets once a harvest happens.";
                 case PieceTraitKind.Void:
                     return "Also uproots one random filled sprout elsewhere on the grid, scoring +" + ScoringConstants.VoidBonusPerDestroyedCell + " for the sprout broken.";
                 case PieceTraitKind.Bastion:
@@ -161,7 +161,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Kamikaze:
                     return "Destroys itself and its 8 surrounding sprouts (including this seed's own other sprouts) and shatters frozen plots around it, scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per sprout or ice destroyed.";
                 case PieceTraitKind.Venom:
-                    return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed — fires even if this placement scores nothing.";
+                    return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed - fires even if this placement scores nothing.";
                 case PieceTraitKind.Pip:
                     return "Scores +" + ScoringConstants.PipBonus + " pt when planted.";
                 case PieceTraitKind.Lucky:
@@ -281,7 +281,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Eclat:
                     return "Damages the front alive enemy, but any overkill beyond its remaining HP cascades onto the next alive enemy, and so on.";
                 case PieceTraitKind.Precision:
-                    return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one — a finishing blow.";
+                    return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one - a finishing blow.";
                 default:
                     return string.Empty;
             }

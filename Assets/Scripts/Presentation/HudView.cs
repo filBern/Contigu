@@ -471,7 +471,7 @@ namespace Contigu.Presentation
                 return;
             }
             string roundLabel = "Round " + _roundNumber + "/" + _roundCount;
-            _scoreLabel.text = roundLabel + "  —  " + roundScore + " / " + quota;
+            _scoreLabel.text = roundLabel + "  -  " + roundScore + " / " + quota;
             _scoreFillRect.GetComponent<Image>().color = UITheme.ButtonSelected;
             SetRatio(_scoreFillRect, quota > 0 ? (float)roundScore / quota : 0f);
         }

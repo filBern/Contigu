@@ -266,8 +266,8 @@ namespace Contigu.Presentation
             {
                 bool affordable = _metaStats.Stars >= challenge.UnlockCost;
                 _statusLabel.text = affordable
-                    ? "Locked — " + challenge.UnlockCost + " Stars to unlock"
-                    : "Locked — needs " + challenge.UnlockCost + " Stars (you have " + _metaStats.Stars + ")";
+                    ? "Locked - " + challenge.UnlockCost + " Stars to unlock"
+                    : "Locked - needs " + challenge.UnlockCost + " Stars (you have " + _metaStats.Stars + ")";
                 _playButtonLabel.text = affordable ? "Unlock & Play" : "Locked";
                 _playButton.interactable = affordable;
             }

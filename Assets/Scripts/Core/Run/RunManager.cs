@@ -159,7 +159,7 @@ namespace Contigu.Core
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
                 var id = ModifierCatalog.All[i].Id;
-                if (!_activeModifiers.Contains(id) && IsModifierUsableThisRun(id))
+                if (!_activeModifiers.Contains(id) && id != ModifierId.Copieur && IsModifierUsableThisRun(id))
                 {
                     candidates.Add(id);
                 }
