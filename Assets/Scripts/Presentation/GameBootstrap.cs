@@ -683,11 +683,13 @@ namespace Contigu.Presentation
             var label = menuButton.GetComponentInChildren<Text>();
             label.fontSize = 22;
             var rect = menuButton.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(226f, -16f);
-            rect.sizeDelta = new Vector2(92f, 40f);
+            // Top-right corner, the usual home of Menu/Settings, and the same place on the board and in the shop
+            // (it used to sit in the middle of the round/weather chips at the top left, where it read as one of them).
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-16f, -16f);
+            rect.sizeDelta = new Vector2(110f, 44f);
             menuButton.onClick.AddListener(() => _settingsView.Toggle());
         }
 
