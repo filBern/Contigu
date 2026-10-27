@@ -4654,13 +4654,17 @@ var ASM_CONSTS = {
   function _WebFileSync_Flush() {
       try {
         if (typeof FS !== 'undefined' && FS.syncfs) {
-          if (WebFileSyncState.running) { WebFileSyncState.again = true; return; }
-          WebFileSyncState.running = true;
-          FS.syncfs(false, function (err) {
-            if (err) { console.warn('WebFileSync: syncfs failed: ' + err); }
-            WebFileSyncState.running = false;
-            if (WebFileSyncState.again) { WebFileSyncState.again = false; _WebFileSync_Flush(); }
-          });
+          var state = Module.webFileSyncState || (Module.webFileSyncState = { running: false, again: false });
+          if (state.running) { state.again = true; return; }
+          var run = function () {
+            state.running = true;
+            FS.syncfs(false, function (err) {
+              if (err) { console.warn('WebFileSync: syncfs failed: ' + err); }
+              state.running = false;
+              if (state.again) { state.again = false; run(); }
+            });
+          };
+          run();
         } else if (typeof _JS_FileSystem_Sync === 'function') {
           _JS_FileSystem_Sync();
         }
