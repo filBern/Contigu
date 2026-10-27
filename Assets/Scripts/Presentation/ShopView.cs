@@ -784,7 +784,8 @@ namespace Contigu.Presentation
             {
                 var upgradeDef = slot.HiddenUpgrade;
                 var sign = UIFactory.CreatePanel(artRoot, "UpgradeSign", Color.white);
-                sign.sprite = UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
+                // Just the icon, without the signpost around it.
+                sign.sprite = UpgradeVisualDefaults.GetGlyph(upgradeDef.Id) ?? UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
                 UIFactory.StretchFull(sign.rectTransform);

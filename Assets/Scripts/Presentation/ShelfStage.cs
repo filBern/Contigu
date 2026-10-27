@@ -144,7 +144,7 @@ namespace Contigu.Presentation
                 Subtitle = Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(def.Rarity), UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", "")),
                 Art = from == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
                     : from == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")
-                    : UpgradeVisualDefaults.GetIcon(def.Id)
+                    : (UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id))
             };
             if (from.HasValue)
             {
