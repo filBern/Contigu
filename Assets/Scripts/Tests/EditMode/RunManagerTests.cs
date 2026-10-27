@@ -2472,6 +2472,24 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void PlacePiece_KamikazeTrait_ShattersFrozenPlotsAround()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.Deck.TagKamikazeTokensRandom(run.Deck.DeckCount, new SystemRandomProvider(2));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Shape == ShapeId.Single);
+            var ice = run.Grid.GetCell(5, 4);
+            ice.IsFrozen = true;
+            ice.IsLocked = true;
+
+            var outcome = run.PlacePiece(slot, 4, 4);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsFalse(ice.IsFrozen);
+            Assert.IsFalse(ice.IsLocked);
+            Assert.AreEqual(2 * ScoringConstants.KamikazeBonusPerDestroyedCell, outcome.Placement.TraitBonus, "The tile itself plus the shattered ice");
+        }
+
+        [Test]
         public void PlacePiece_KamikazeTrait_CanDestroyThisPlacementsOwnOtherCells()
         {
             // On explicit request: "The kamikaze tile shouldn't exclude

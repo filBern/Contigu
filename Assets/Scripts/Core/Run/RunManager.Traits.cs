@@ -885,7 +885,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// "Kamikaze Tile": destroys the enchanted cell itself plus every
-        /// already-filled, unlocked cell in its 8 surrounding tiles (Moore
+        /// already-filled, unlocked cell (and the ice on every frozen plot) in its 8 surrounding tiles (Moore
         /// neighborhood), including this same placement's own other cells.
         /// Scores ScoringConstants.KamikazeBonusPerDestroyedCell per tile
         /// actually destroyed, the trait cell included.
@@ -922,6 +922,18 @@ namespace Contigu.Core
 
                     var pos = new Vector2Int(x, y);
                     var cell = Grid.GetCell(pos);
+                    if (!cell.IsFilled && cell.IsFrozen)
+                    {
+                        // The blast shatters the ice on an empty frozen plot (and the Hoarfrost that froze it forgets it).
+                        cell.IsFrozen = false;
+                        cell.IsLocked = false;
+                        for (int e = 0; e < _currentEncounter.Count; e++)
+                        {
+                            _currentEncounter[e].FrozenCells.Remove(pos);
+                        }
+                        destroyed++;
+                        continue;
+                    }
                     if (!cell.IsFilled || cell.IsLocked)
                     {
                         continue;

@@ -160,7 +160,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition KamikazeTile = new UpgradeDefinition(
             UpgradeId.KamikazeTile, UpgradePool.Grid, "Kamikaze Sprout",
-            "Destroys itself and its 8 surrounding sprouts (+6 per sprout destroyed).", false, UpgradeRarity.Rare);
+            "Destroys itself and its 8 surrounding sprouts, and shatters the ice around it (+6 per sprout or ice destroyed).", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition VenomTile = new UpgradeDefinition(
             UpgradeId.VenomTile, UpgradePool.Grid, "Venom Sprout",

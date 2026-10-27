@@ -159,7 +159,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bastion:
                     return "Locks in place instead of being harvested, but keeps scoring every line it completes for the rest of the round.";
                 case PieceTraitKind.Kamikaze:
-                    return "Destroys itself and its 8 surrounding sprouts (including this seed's own other sprouts), scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per sprout destroyed.";
+                    return "Destroys itself and its 8 surrounding sprouts (including this seed's own other sprouts) and shatters frozen plots around it, scoring +" + ScoringConstants.KamikazeBonusPerDestroyedCell + " per sprout or ice destroyed.";
                 case PieceTraitKind.Venom:
                     return "Poisons the front alive enemy for " + (int)ScoringConstants.VenomDamagePercentOfMaxHp + "% of its own max HP when placed — fires even if this placement scores nothing.";
                 case PieceTraitKind.Pip:
