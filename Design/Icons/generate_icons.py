@@ -328,6 +328,12 @@ M['u_replace'] = lambda: seed(28, 46, 1.5, '#d8b574') + seed(72, 46, 1.5, '#e8c9
 M['u_dup'] = lambda: seed(40, 52, 1.8, '#d8b574') + seed(62, 42, 1.8, '#e8c98a')
 M['u_joker'] = lambda: seed(50, 50, 2.2, P) + star(50, 46, 12, '#fff1b0', 0.4, 5, 3)
 M['u_recolor'] = lambda: seed(36, 50, 1.6) + drop(70, 26, 14, R) + drop(80, 54, 11, B) + drop(64, 70, 10, Y)
+# The Alchemical Boon: a small sack with a flask on its label, standing on the sign.
+M['u_boonsack'] = lambda: ('<g transform="translate(50 50) scale(1.12) translate(-50 -49)">' + path('M36 26 C32 12 40 6 50 6 C60 6 68 12 64 26 Z', '#c9a064', 3.5)
+    + path('M34 24 C14 36 8 62 14 76 C18 87 32 92 50 92 C68 92 82 87 86 76 C92 62 86 36 66 24 Z', '#d8b574', 4)
+    + rect(34, 22, 32, 8, '#8a5a2b', 4, 3.5)
+    + rect(28, 44, 44, 40, CREAM, 7, 3.5)
+    + '<g transform="translate(50 64) scale(0.5)">' + flask(0, 0, '#b469e0') + '</g></g>')
 M['u_dice'] = lambda: rect(22, 18, 56, 56, CREAM, 10, 4) + ''.join(circ(x, y, 5.5, O, 1) for x, y in ((38, 34), (62, 34), (50, 46), (38, 58), (62, 58)))
 M['u_randseed'] = lambda: seed(38, 54, 1.8, '#d8b574') + rect(54, 20, 34, 34, CREAM, 7, 3.5) + ''.join(circ(x, y, 3.2, O, 1) for x, y in ((64, 30), (78, 30), (71, 37), (64, 44), (78, 44)))
 M['u_fertup'] = lambda: M['pots']() + arrow(80, 44, 80, 14, G, 6)
@@ -434,7 +440,7 @@ M['f_gleaner'] = lambda: _trait_motif('Harvester')
 
 U = {
  'ReplacePiece': ('u_replace', 'Bank'), 'DuplicatePiece': ('u_dup', 'Bank'), 'JokerPiece': ('u_joker', 'Bank'), 'RecolorPiece': ('u_recolor', 'Bank'),
- 'RandomModifier': ('u_dice', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),
+ 'RandomModifier': ('u_boonsack', 'Bank'), 'RandomPiece': ('u_randseed', 'Bank'), 'ModifierUpgrade': ('u_fertup', 'Modifier'),
  'GoldenCells': ('u_goldtile', 'Grid'), 'TintedCells': ('u_tint', 'Grid'), 'MultiplierZone': ('u_mult', 'Grid'), 'BlastTile': ('u_blast', 'Grid'),
  'MultiplierBeacon': ('u_beacon', 'Grid'), 'MirrorTile': ('u_mirror', 'Grid'), 'Seeder': ('u_seeder', 'Grid'), 'CatalystTile': ('u_catalyst', 'Grid'),
  'TwinTile': ('u_twin', 'Grid'), 'DetonatorTile': ('u_detonator', 'Grid'), 'ChameleonTile': ('u_chameleon', 'Grid'), 'SparkTile': ('u_spark', 'Grid'),
@@ -516,9 +522,7 @@ if __name__ == '__main__':
     for k, (m, kind, txt, cat) in F.items():
         open('fertilizers/%s.svg' % k, 'w').write(sack(M[m](), CAT[cat], kind, txt))
     for k, (m, pool) in U.items():
-        # The Alchemical Boon is a little sack with a flask on its label (like the fertilizers), not a sign.
-        art = sack(flask(50, 46, '#b469e0'), '#e8863a', None, None) if k == 'RandomModifier' else sign(M[m](), POOL[pool])
-        open('upgrades/%s.svg' % k, 'w').write(art)
+        open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
     print(len(F), 'fertilizers,', len(U), 'upgrades')
 
 # ---------------------------------------------------------------- mystery plates for the shop's Casino cards
