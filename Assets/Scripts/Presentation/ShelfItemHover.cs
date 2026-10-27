@@ -21,6 +21,18 @@ namespace Contigu.Presentation
         private bool _longPressShown;
         private bool _longPressPending;
 
+        /// <summary>True if the latest press was a finger (not a mouse button).</summary>
+        public bool LastPressWasTouch { get; private set; }
+
+        /// <summary>The golden halo marks the item a touch has selected (tap again to buy).</summary>
+        public void SetArmed(bool armed)
+        {
+            if (_halo != null)
+            {
+                _halo.SetActive(armed);
+            }
+        }
+
         public void Init(RectTransform art, GameObject halo)
         {
             _art = art;
@@ -79,6 +91,7 @@ namespace Contigu.Presentation
         {
             // Long press is a touch gesture only: a mouse button held down still buys on release.
             _pressing = eventData.pointerId >= 0;
+            LastPressWasTouch = _pressing;
             _longPressShown = false;
             _longPressPending = false;
             _pressStart = Time.unscaledTime;

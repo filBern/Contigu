@@ -513,6 +513,10 @@ namespace Contigu.Presentation
         /// </summary>
         private void Update()
         {
+            if (EventSystem.current != null)
+            {
+                CancelArmedItemOnOutsideTap();
+            }
             if (_root == null || !_root.gameObject.activeInHierarchy || EventSystem.current == null || EventSystem.current.currentSelectedGameObject != null)
             {
                 return;
@@ -603,6 +607,7 @@ namespace Contigu.Presentation
 
         public void Hide()
         {
+            DisarmShelfItem();
             _root.gameObject.SetActive(false);
             SetSharedLueurRaised(false);
             if (_lueurPulseCoroutine != null)
@@ -838,8 +843,18 @@ namespace Contigu.Presentation
             var rect = root.rectTransform;
             button.onClick.AddListener(() =>
             {
-                // A long press only asked for the tooltip: it must not also buy.
-                if (hoverSwell.ConsumeLongPress())
+                // Touch: the first tap (or a long press) selects the item and keeps its tooltip up, with "Tap again to buy"; only a second tap on it buys.
+                bool longPress = hoverSwell.ConsumeLongPress();
+                if (hoverSwell.LastPressWasTouch || MobileSetup.IsTouchDevice)
+                {
+                    if (longPress || _armedItem != rect)
+                    {
+                        ArmShelfItem(rect, hoverSwell, affordable);
+                        return;
+                    }
+                    DisarmShelfItem();
+                }
+                else if (longPress)
                 {
                     return;
                 }
@@ -854,6 +869,72 @@ namespace Contigu.Presentation
                 onClick();
             });
             return rect;
+        }
+
+        private RectTransform _armedItem;
+        private ShelfItemHover _armedHover;
+
+        private void ArmShelfItem(RectTransform item, ShelfItemHover hover, bool affordable)
+        {
+            DisarmShelfItem();
+            _armedItem = item;
+            _armedHover = hover;
+            hover.SetArmed(true);
+            var tip = item.GetComponent<HoverTooltip>();
+            if (tip != null)
+            {
+                tip.Pin(affordable ? Loc.T("shop.tapAgain") : null);
+            }
+        }
+
+        private void DisarmShelfItem()
+        {
+            if (_armedItem != null)
+            {
+                var tip = _armedItem.GetComponent<HoverTooltip>();
+                if (tip != null)
+                {
+                    tip.Unpin();
+                }
+                if (_armedHover != null)
+                {
+                    _armedHover.SetArmed(false);
+                }
+            }
+            _armedItem = null;
+            _armedHover = null;
+        }
+
+        /// <summary>A tap anywhere that is not on the selected item cancels the selection.</summary>
+        private void CancelArmedItemOnOutsideTap()
+        {
+            if (_armedItem == null)
+            {
+                return;
+            }
+            Vector2 position;
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                position = Input.GetTouch(0).position;
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                position = Input.mousePosition;
+            }
+            else
+            {
+                return;
+            }
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, results);
+            foreach (var hit in results)
+            {
+                if (hit.gameObject.transform.IsChildOf(_armedItem))
+                {
+                    return;
+                }
+            }
+            DisarmShelfItem();
         }
 
         /// <summary>A tooltip subtitle that says why an item cannot be bought right now (a blocked state, or the Pollen still missing), else the plain category line.</summary>

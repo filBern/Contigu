@@ -20,6 +20,7 @@ namespace Contigu.Presentation
             { "shop.sold", "Sold" },
             { "shop.full", "Full ({0})" },
             { "shop.minBag", "Min bag" },
+            { "shop.tapAgain", "Tap again to buy" },
             { "shop.needPollen", "Not enough Pollen: {0} more needed" },
             { "shop.priceNote", "Every purchase makes the other prices rise for this visit." },
             { "shop.unavailable", "N/A" },

@@ -13,6 +13,28 @@ namespace Contigu.Presentation
         private string _subtitle;
         private Color? _subtitleColor;
 
+        private string _footer;
+        private bool _pinned;
+
+        /// <summary>Touch: keeps the tooltip up after the finger lifts (a release normally counts as the pointer leaving), with a hint line at its foot. <see cref="Unpin"/> hides it.</summary>
+        public void Pin(string footer)
+        {
+            _pinned = true;
+            _footer = footer;
+            ShowNow();
+        }
+
+        public void Unpin()
+        {
+            if (!_pinned)
+            {
+                return;
+            }
+            _pinned = false;
+            _footer = null;
+            HideNow();
+        }
+
         public void Init(TooltipView tooltip, string name, string description, string subtitle = null, Color? subtitleColor = null)
         {
             _tooltip = tooltip;
@@ -32,7 +54,7 @@ namespace Contigu.Presentation
         {
             if (_tooltip != null)
             {
-                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, placeAbove: true);
+                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, footer: _footer, placeAbove: true);
             }
         }
 
@@ -46,6 +68,10 @@ namespace Contigu.Presentation
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            if (_pinned)
+            {
+                return;
+            }
             if (_tooltip != null)
             {
                 _tooltip.Hide();
@@ -55,6 +81,8 @@ namespace Contigu.Presentation
         /// <summary>A card rebuilt (or purchased and removed) while hovered never gets an exit event.</summary>
         private void OnDisable()
         {
+            _pinned = false;
+            _footer = null;
             if (_tooltip != null)
             {
                 _tooltip.Hide();

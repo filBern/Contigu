@@ -19,6 +19,7 @@ Exige **un Mac avec Xcode** (impossible depuis Windows) et le module *iOS Build 
 ## Comportement tactile
 - Appui long sur un élément = infobulle (remplace le survol).
 - Vendre un fertilisant : le toucher, puis bouton **Sell** ; toucher deux fertilisants = les échanger.
+- Boutique : un premier toucher sélectionne l'objet (halo doré, infobulle maintenue, « Tap again to buy »), un second toucher dessus l'achète ; toucher ailleurs annule.
 - Planter : toucher la graine puis la parcelle, ou la glisser.
 - Le jeu se sauvegarde quand l'app passe en arrière-plan ; l'écran ne se met pas en veille ; multitouch désactivé ; 60 images/s.
 - L'interface suit la largeur sur les écrans plus carrés que 16:10 (iPad 4:3) pour que rien ne sorte de l'écran.
