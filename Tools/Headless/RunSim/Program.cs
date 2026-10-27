@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -30,6 +30,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--csv" && i + 1 < args.Length) { csvPath = args[++i]; }
                 else if (args[i] == "--fail-on-error") { failOnError = true; }
                 else if (args[i] == "--endless") { endless = true; }
+                else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--challenge" && i + 1 < args.Length)
                 {
                     string wanted = args[++i];

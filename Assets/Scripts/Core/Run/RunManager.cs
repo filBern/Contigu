@@ -835,6 +835,7 @@ namespace Contigu.Core
             var prePlantedTiles = PlantSowerTiles(tokenTraits, persistentTraits, shape, placementColor, x, y);
             var placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
             placement.PrePlantedTiles = prePlantedTiles;
+            ForgetBrokenIce();
             ClearTokenTraitCells(transientTraitCells);
             for (int t = 0; t < tokenTraits.Count; t++)
             {

@@ -149,6 +149,8 @@ namespace Contigu.Core
             StartRound();
             // The saved count already includes this round's own start bonus (Wind's free Shuffle), which StartRound just granted again.
             ShufflesRemaining = s.ShufflesRemaining;
+            // Same for Pollen: a Pollen Shower pays out at round start, and the saved amount already holds it.
+            Lueur = s.Lueur;
             RoundStartSnapshot = CaptureSnapshot();
             CheckpointSnapshot = RoundStartSnapshot;
 

@@ -61,9 +61,20 @@ namespace Contigu.RunSim
             var result = new RunResult();
             int placementsThisRound = 0;
             int guard = 0;
+            Invariants.Reset();
 
             while (run.State != RunState.RunDefeat && (run.State != RunState.RunVictory || _endless))
             {
+                if (Invariants.Enabled)
+                {
+                    string violation = Invariants.Check(run);
+                    if (violation != null)
+                    {
+                        result.Stuck = true;
+                        result.StuckReason = "invariant: " + violation + " [round " + (run.CurrentRoundIndex + 1) + ", " + run.State + "]";
+                        break;
+                    }
+                }
                 if (run.State == RunState.RunVictory)
                 {
                     // Endless: bank the win, then keep playing into rounds 16+.

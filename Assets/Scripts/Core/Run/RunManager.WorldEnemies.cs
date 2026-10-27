@@ -65,6 +65,22 @@ namespace Contigu.Core
             ReportWorldEnemy(EnemyId.Hoarfrost, "Hoarfrost freezes a plot.");
         }
 
+        /// <summary>A line that harvests a frozen plot breaks its ice behind the Hoarfrost's back: the Hoarfrost must stop counting that plot toward its limit.</summary>
+        private void ForgetBrokenIce()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var frozen = _currentEncounter[i].FrozenCells;
+                for (int c = frozen.Count - 1; c >= 0; c--)
+                {
+                    if (!Grid.GetCell(frozen[c]).IsFrozen)
+                    {
+                        frozen.RemoveAt(c);
+                    }
+                }
+            }
+        }
+
         private void ThawCell(Vector2Int pos)
         {
             var cell = Grid.GetCell(pos);
