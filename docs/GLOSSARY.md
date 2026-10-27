@@ -227,3 +227,16 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Pourfendeur` | Bossbane | Roguelike |
 | `Tonneau` | Rain Barrel | Roguelike |
 | `Grange` | Granary | Roguelike |
+
+## Challenges (id in code, name on screen)
+
+| Id (`ChallengeId`, RunSim `--challenge`) | Name on screen |
+|---|---|
+| `Classic` | Spring |
+| `Marathon` | Winter |
+| `Summer` | Summer |
+| `Autumn` | Autumn |
+| `Orchard` | Orchard |
+| `Greenhouse` | Greenhouse |
+
+Stars: 1 per round cleared, +2 for a victory; they unlock the other challenges.

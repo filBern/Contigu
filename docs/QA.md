@@ -8,6 +8,7 @@ Ce qu'il utilise, et que tu peux lancer toi-même :
 |---|---|
 | `cd Tools/Headless/Tests && dotnet test` | tests des règles (Core) |
 | `python3 Tools/qa/content_audit.py [--strict]` | contenu manquant ou incohérent : id sans description, prix, icône ou texte de tooltip, doublons de noms, textes douteux |
+| `python3 Tools/qa/glyph_audit.py` | caractères des textes que la police du jeu (Digitalt) ne sait pas dessiner (ils disparaissent à l'écran) |
 | `python3 Tools/check_icon_tags.py` | pastilles des icônes de fertilizers contre leurs descriptions |
 | `cd Tools/Headless/RunSim && dotnet run --no-build -- --each --runs 8` | joue des runs où chaque fertilizer, puis chaque sprout sur toutes les graines, est seul en jeu (Classic et Orchard), avec les invariants : un plantage dans un contenu précis ressort par son nom |
 | `cd Tools/Headless/RunSim && dotnet run --no-build -- --policy random --runs 100 --challenge Classic --check` | joue des runs complets et vérifie après chaque action des invariants (Pollen ≥ 0, sac ≥ taille minimale, PV d'ennemi cohérents, glace cohérente, sauvegarde qui se relit à l'identique…) ; `Tools/Headless/RunSim/Invariants.cs` |
@@ -22,5 +23,9 @@ Le jeu embarque un crochet de test (`QaBridge`, actif seulement quand la page es
 4. `qa.js` expose les briques pour écrire d'autres scénarios (`state`, `click`, `clickText`, `realClick`, `hover`, `gameCommand`, `idle`, `shot`). Les coordonnées sont les pixels Unity, origine en haut à gauche.
 
 `node` + `playwright` + Chromium sont déjà installés dans l'environnement cloud. Le harnais est vérifié contre une page simulée (`Tools/qa/web/mock`), pas encore contre un vrai build Unity.
+
+Notes de lecture de l'état publié : `game.grid` a la rangée 0 en haut (comme `cells`) ; seuls les boutons interactables sont listés (un Reroll grisé n'y est pas) ; le guide de Sprig (`SprigGuide`) couvre l'écran et avale les clics, `qa.dismissGuide()` l'avance (une étape = un ou deux clics selon la machine à écrire). Le premier clic après un changement de scène peut ne pas recevoir de réponse : relancer le clic puis attendre l'état. Ouvre les overlays par un clic de bouton (`ShowRulesButton`), pas au clavier : une capture écran ferme ceux ouverts au clavier. `flows.js reload` vérifie que la sauvegarde, les étoiles et la Collection survivent à un rechargement de page.
+
+Le crochet de test ne s'ouvre que dans un build avec le symbole `CONTIGU_DEBUG` (jamais en production).
 
 Limite : Unity ne tourne pas dans cet environnement. Le Core est testé pour de vrai ; l'interface est auditée par lecture de code seulement.
