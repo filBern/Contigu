@@ -248,8 +248,6 @@ namespace Contigu.Presentation
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);
 
-            _shuffleButton.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Shuffle",
-                "Swaps your whole hand for new seeds. Each Shuffle spent is counted by the number on the button, and the pests act when you shuffle.", "Hand", UITheme.TextMuted);
             _shuffleButton.onClick.AddListener(() =>
             {
                 if (ShuffleRequested != null)
