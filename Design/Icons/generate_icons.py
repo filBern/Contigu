@@ -516,7 +516,9 @@ if __name__ == '__main__':
     for k, (m, kind, txt, cat) in F.items():
         open('fertilizers/%s.svg' % k, 'w').write(sack(M[m](), CAT[cat], kind, txt))
     for k, (m, pool) in U.items():
-        open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
+        # The Alchemical Boon is a little sack with a flask on its label (like the fertilizers), not a sign.
+        art = sack(flask(50, 46, '#b469e0'), '#e8863a', None, None) if k == 'RandomModifier' else sign(M[m](), POOL[pool])
+        open('upgrades/%s.svg' % k, 'w').write(art)
     print(len(F), 'fertilizers,', len(U), 'upgrades')
 
 # ---------------------------------------------------------------- mystery plates for the shop's Casino cards
