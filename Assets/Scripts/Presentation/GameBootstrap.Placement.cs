@@ -282,12 +282,13 @@ namespace Contigu.Presentation
             }
             finally
             {
-                Time.timeScale = 1f;
+                ApplyTimeScale();
             }
         }
 
         private void OnDisable()
         {
+            GameSpeed.Changed -= ApplyTimeScale;
             Time.timeScale = 1f;
         }
 

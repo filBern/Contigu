@@ -95,7 +95,23 @@ namespace Contigu.Presentation
         private FeedbackLayer _feedbackLayer;
         private Text _statusText;
         private Coroutine _statusPulseCoroutine;
-        private bool _isPlayingPlacementSequence;
+        private bool _playingSequence;
+
+        /// <summary>True while a placement or shuffle sequence plays; the speed button (x2/x4) only applies then.</summary>
+        private bool _isPlayingPlacementSequence
+        {
+            get { return _playingSequence; }
+            set
+            {
+                _playingSequence = value;
+                ApplyTimeScale();
+            }
+        }
+
+        private void ApplyTimeScale()
+        {
+            Time.timeScale = _playingSequence ? GameSpeed.Multiplier : 1f;
+        }
 
         private void Awake()
         {
@@ -103,6 +119,7 @@ namespace Contigu.Presentation
             var canvasRect = BuildCanvas();
 
             _run = new RunManager(new SystemRandomProvider());
+            GameSpeed.Changed += ApplyTimeScale;
             TileUpgradePreview.Provider = kind => _run != null ? _run.GetTileUpgradePreviewText(kind) : null;
             _metaStatsStore = new MetaStatsFileStore();
             _metaStats = _metaStatsStore.Load();

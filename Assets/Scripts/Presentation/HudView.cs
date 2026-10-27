@@ -198,6 +198,29 @@ namespace Contigu.Presentation
             _weatherChipIcon.rectTransform.offsetMin = new Vector2(3f, 3f);
             _weatherChipIcon.rectTransform.offsetMax = new Vector2(-3f, -3f);
             _weatherChipTooltip = weatherChip.gameObject.AddComponent<HoverTooltip>();
+
+            // Speed button under the round chip: x1, then x2, then x4, then back to x1 (see GameSpeed).
+            var speed = UIFactory.CreateButton(parent, "SpeedButton", GameSpeed.Label, UITheme.PanelLight, 22);
+            UIFactory.AddThickOutline(speed.GetComponent<Image>(), UITheme.Border);
+            var speedRect = (RectTransform)speed.transform;
+            speedRect.anchorMin = new Vector2(0f, 1f);
+            speedRect.anchorMax = new Vector2(0f, 1f);
+            speedRect.pivot = new Vector2(0f, 1f);
+            speedRect.anchoredPosition = new Vector2(16f, -62f);
+            speedRect.sizeDelta = new Vector2(64f, 36f);
+            var speedLabel = speed.GetComponentInChildren<Text>();
+            if (speedLabel != null)
+            {
+                speedLabel.color = UITheme.TextPrimary;
+            }
+            speed.onClick.AddListener(() =>
+            {
+                GameSpeed.Cycle();
+                if (speedLabel != null)
+                {
+                    speedLabel.text = GameSpeed.Label;
+                }
+            });
         }
 
         private Coroutine _weatherPulseCoroutine;
