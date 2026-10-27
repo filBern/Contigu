@@ -121,8 +121,11 @@ namespace Contigu.Core
             }
             if (CurrentHp >= CurrentMaxHp)
             {
-                CurrentMaxHp += amount;
-                CurrentHp += amount;
+                // Same ceiling as EncounterCatalog.ScaleHp: far past it (Endless, hundreds of rounds in) the sum would wrap to a negative HP.
+                int room = Mathf.Max(0, EncounterCatalog.MaxEnemyHp - CurrentMaxHp);
+                int grow = Mathf.Min(amount, room);
+                CurrentMaxHp += grow;
+                CurrentHp += grow;
                 return;
             }
             CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, CurrentMaxHp);

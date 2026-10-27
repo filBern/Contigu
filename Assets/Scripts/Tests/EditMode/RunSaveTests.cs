@@ -95,6 +95,17 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Restore_KeepsGradientAndDwindlingRunCounters()
+        {
+            var snapshot = RichRun().RoundStartSnapshot;
+            snapshot.GradientBonus = 3;
+            snapshot.EpuisementValue = 7;
+            var restored = RunManager.Restore(RunSnapshot.FromText(snapshot.ToText()), new SystemRandomProvider(2));
+            Assert.AreEqual(4f, restored.Grid.GradientCurrentMultiplier, 1e-4f);
+            Assert.AreEqual(7, restored.Grid.EpuisementCurrentBonus);
+        }
+
+        [Test]
         public void FromText_RejectsGarbageAndOtherVersions()
         {
             Assert.IsNull(RunSnapshot.FromText(null));

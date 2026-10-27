@@ -46,6 +46,9 @@ namespace Contigu.RunSim
         private readonly bool _endless;
         private readonly Planner _planner;
 
+        /// <summary>Called on the fresh run before the first move (QA smoke tests give every run one specific fertilizer or upgrade).</summary>
+        public System.Action<RunManager> Setup;
+
         public Bot(int seed, BotPolicy policy, ChallengeDefinition challenge = null, bool endless = false)
         {
             _rng = new Random(seed ^ 0x5bd1e995);
@@ -58,6 +61,7 @@ namespace Contigu.RunSim
         public RunResult PlayRun(int seed)
         {
             var run = new RunManager(new SystemRandomProvider(seed), _challenge);
+            if (Setup != null) { Setup(run); }
             var result = new RunResult();
             int placementsThisRound = 0;
             int guard = 0;

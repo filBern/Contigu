@@ -31,6 +31,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--fail-on-error") { failOnError = true; }
                 else if (args[i] == "--endless") { endless = true; }
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
+                else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
                 else if (args[i] == "--challenge" && i + 1 < args.Length)
                 {
                     string wanted = args[++i];

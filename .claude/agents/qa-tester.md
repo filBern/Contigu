@@ -28,7 +28,7 @@ Réponds et écris tes rapports **en français** (les noms du jeu restent en ang
 1. `cd Tools/Headless/Tests && dotnet test` : tout doit passer. Note le nombre.
 2. `python3 Tools/qa/content_audit.py` et `python3 Tools/check_icon_tags.py` : contenu manquant ou incohérent (id sans description/prix/icône, texte douteux).
 3. **Fuzz avec invariants** du Core : `cd Tools/Headless/RunSim && dotnet build -c Debug` puis, pour chaque défi (Classic, Marathon, Summer, Autumn, Orchard, Greenhouse) :
-   `dotnet run --no-build -- --runs 100 --policy random --challenge <défi> --check` puis `PLAN_DEPTH=2 dotnet run --no-build -- --runs 40 --policy planner --challenge <défi> --check --endless` (varie `--seed`). Toute ligne `invariant: …` ou `exception: …` est un bug candidat : reproduis-le avec la seed et le défi indiqués. Les invariants sont dans `Tools/Headless/RunSim/Invariants.cs` : propose-en de nouveaux quand tu repères une règle qui devrait toujours tenir.
+   `dotnet run --no-build -- --runs 100 --policy random --challenge <défi> --check` puis `PLAN_DEPTH=2 dotnet run --no-build -- --runs 40 --policy planner --challenge <défi> --check --endless` (varie `--seed`). Ajoute `dotnet run --no-build -- --each --runs 8` : chaque fertilizer et chaque sprout joué seul, invariants vérifiés, le contenu fautif est nommé. Toute ligne `invariant: …` ou `exception: …` est un bug candidat : reproduis-le avec la seed et le défi indiqués. Les invariants sont dans `Tools/Headless/RunSim/Invariants.cs` : propose-en de nouveaux quand tu repères une règle qui devrait toujours tenir.
 
 ## Passes de revue (les plus rentables : cible-les)
 

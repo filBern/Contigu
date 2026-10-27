@@ -108,6 +108,19 @@ namespace Contigu.Core
             get { return _placementsSinceLastClear; }
         }
 
+        /// <summary>The two counters that live for the whole run (Gradient's lines and Dwindling's bonus), for the save.</summary>
+        public int GradientPermanentBonus
+        {
+            get { return _gradientPermanentBonus; }
+        }
+
+        /// <summary>Puts back the run-long counters of a resumed run.</summary>
+        public void RestoreRunCounters(int gradientPermanentBonus, int epuisementValue)
+        {
+            _gradientPermanentBonus = gradientPermanentBonus;
+            _epuisementValue = epuisementValue;
+        }
+
         /// <summary>Gradient's current permanent multiplier (1 + <see cref="_gradientPermanentBonus"/>) — what it would apply right now if a qualifying line were cleared this instant.</summary>
         public int GradientCurrentMultiplier
         {

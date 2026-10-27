@@ -31,6 +31,8 @@ namespace Contigu.Core
         public int SpecialPiecesPlayed;
         public int CompostsBought;
         public int PerennialScores;
+        public int GradientBonus;
+        public int EpuisementValue = ScoringConstants.EpuisementStartingBonus;
         public ModifierId? LastPurchasedModifier;
         public List<WeatherId> Weather = new List<WeatherId>();
         public List<PieceColor> WeatherColors = new List<PieceColor>();
@@ -72,6 +74,8 @@ namespace Contigu.Core
             Line(sb, "special", SpecialPiecesPlayed);
             Line(sb, "composts", CompostsBought);
             Line(sb, "perennial", PerennialScores);
+            Line(sb, "gradient", GradientBonus);
+            Line(sb, "dwindling", EpuisementValue);
             Line(sb, "lastmod", LastPurchasedModifier.HasValue ? (int)LastPurchasedModifier.Value : -1);
             Line(sb, "weather", Join(Weather, w => ((int)w).ToString(CultureInfo.InvariantCulture)));
             Line(sb, "weathercolors", Join(WeatherColors, c => ((int)c).ToString(CultureInfo.InvariantCulture)));
@@ -138,6 +142,8 @@ namespace Contigu.Core
                 s.SpecialPiecesPlayed = Int(values, "special");
                 s.CompostsBought = Int(values, "composts");
                 s.PerennialScores = Int(values, "perennial");
+                s.GradientBonus = values.ContainsKey("gradient") ? Int(values, "gradient") : 0;
+                s.EpuisementValue = values.ContainsKey("dwindling") ? Int(values, "dwindling") : ScoringConstants.EpuisementStartingBonus;
                 int lastMod = Int(values, "lastmod");
                 s.LastPurchasedModifier = lastMod >= 0 ? (ModifierId?)(ModifierId)lastMod : null;
                 foreach (var v in Split(values, "weather", ',')) { s.Weather.Add((WeatherId)ParseInt(v)); }

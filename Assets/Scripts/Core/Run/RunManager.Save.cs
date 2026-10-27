@@ -68,6 +68,8 @@ namespace Contigu.Core
             s.SpecialPiecesPlayed = _specialPiecesPlayedCount;
             s.CompostsBought = _compostsBought;
             s.PerennialScores = _perennialScores;
+            s.GradientBonus = Grid.GradientPermanentBonus;
+            s.EpuisementValue = Grid.EpuisementCurrentBonus;
             s.LastPurchasedModifier = _lastPurchasedModifierId;
             s.Weather.AddRange(_weatherByRound);
             s.WeatherColors.AddRange(_weatherColorByRound);
@@ -125,6 +127,7 @@ namespace Contigu.Core
             _specialPiecesPlayedCount = s.SpecialPiecesPlayed;
             _compostsBought = s.CompostsBought;
             _perennialScores = s.PerennialScores;
+            Grid.RestoreRunCounters(s.GradientBonus, s.EpuisementValue);
             _lastPurchasedModifierId = s.LastPurchasedModifier;
             Lueur = s.Lueur;
             TotalScore = s.TotalScore;

@@ -1396,6 +1396,17 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void HealOrGrow_NeverWrapsPastTheHpCeiling()
+        {
+            var enemy = new EnemyInstance(EnemyCatalog.Get(EnemyId.Reclaimer), 1e7f);
+            Assert.AreEqual(EncounterCatalog.MaxEnemyHp, enemy.CurrentMaxHp);
+            enemy.HealOrGrow(1000000);
+            Assert.AreEqual(EncounterCatalog.MaxEnemyHp, enemy.CurrentMaxHp);
+            Assert.AreEqual(EncounterCatalog.MaxEnemyHp, enemy.CurrentHp);
+            Assert.IsFalse(enemy.IsDead);
+        }
+
+        [Test]
         public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur()
         {
             // Siphon converts a fraction of any combat kind's damage into Lueur.
