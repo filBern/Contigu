@@ -60,7 +60,7 @@ namespace Contigu.Presentation
             closeBtn.onClick.AddListener(Hide);
 
             BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
-            BuildConfirmButton(_root, "MainMenu", "Main menu", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); });
+            BuildConfirmButton(_root, "MainMenu", "Save & quit", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
             BuildResetButton(_root);
             BuildMotionToggle(_root);
 
@@ -89,7 +89,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>A two-click button (the first click arms it for a few seconds, the second confirms), for actions that throw progress away.</summary>
-        private void BuildConfirmButton(Transform parent, string name, string text, float y, Action onConfirmed)
+        private void BuildConfirmButton(Transform parent, string name, string text, float y, Action onConfirmed, bool requireConfirm = true)
         {
             var button = UIFactory.CreateButton(parent, name, text, UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(button);
@@ -105,7 +105,7 @@ namespace Contigu.Presentation
             float armedAt = 0f;
             button.onClick.AddListener(() =>
             {
-                if (!armed || Time.unscaledTime - armedAt > 4f)
+                if (requireConfirm && (!armed || Time.unscaledTime - armedAt > 4f))
                 {
                     armed = true;
                     armedAt = Time.unscaledTime;

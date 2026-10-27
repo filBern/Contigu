@@ -660,6 +660,7 @@ namespace Contigu.Presentation
             _endScreenView.RestartRequested += OnRestartRequested;
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
+            _challengeSelectView.ContinueRequested += OnContinueRequested;
             _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
             _settingsView.AbandonRunRequested += OnAbandonRunRequested;
             _settingsView.MainMenuRequested += OnMainMenuRequested;

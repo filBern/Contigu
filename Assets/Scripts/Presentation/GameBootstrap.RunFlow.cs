@@ -49,6 +49,7 @@ namespace Contigu.Presentation
                 case RunState.RunVictory:
                 {
                     _unrecordedRun = false;
+                    RunSaveStore.Delete();
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
                     break;
@@ -57,6 +58,7 @@ namespace Contigu.Presentation
                 case RunState.RunDefeat:
                 {
                     _unrecordedRun = false;
+                    RunSaveStore.Delete();
                     bool isNewBestScore;
                     if (_run.IsEndless)
                     {
@@ -227,14 +229,19 @@ namespace Contigu.Presentation
         private void OnAbandonRunRequested()
         {
             RecordLeftRun();
+            RunSaveStore.Delete();
             Time.timeScale = 1f;
             UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         }
 
-        /// <summary>Settings → "Main menu": same scoring as abandoning, then back to the title scene.</summary>
+        /// <summary>Settings → "Save and quit": the run is saved (it resumes from the start of its current round, nothing is scored) and the title scene opens. Without a run in progress it is just a way back to the title.</summary>
         private void OnMainMenuRequested()
         {
-            RecordLeftRun();
+            SaveCheckpoint();
+            if (!(_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop)))
+            {
+                RecordLeftRun();
+            }
             Time.timeScale = 1f;
             UnityEngine.SceneManagement.SceneManager.LoadScene(MainMenuSceneName);
         }
@@ -311,9 +318,45 @@ namespace Contigu.Presentation
 
         private void StartNewRun(ChallengeDefinition challenge)
         {
+            BeginRun(new RunManager(new SystemRandomProvider(), challenge), challenge);
+        }
+
+        /// <summary>Saves the run as it stood when its current round began (also what Save and quit writes). Only while a run is actually in progress.</summary>
+        private void SaveCheckpoint()
+        {
+            if (_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop) && _run.RoundStartSnapshot != null)
+            {
+                RunSaveStore.Save(_run.RoundStartSnapshot);
+            }
+        }
+
+        /// <summary>The picker's "Continue": resumes the saved run at the start of the round it was saved in.</summary>
+        private void OnContinueRequested()
+        {
+            var snapshot = RunSaveStore.Load();
+            var resumed = snapshot != null ? RunManager.Restore(snapshot, new SystemRandomProvider()) : null;
+            if (resumed == null)
+            {
+                RunSaveStore.Delete();
+                _challengeSelectView.Refresh(_metaStats);
+                return;
+            }
+            _challengeSelectView.Hide();
+            BeginRun(resumed, resumed.Challenge);
+            _roundBannerView.Play(_run);
+            if (_run.CurrentWeather != WeatherId.Clear)
+            {
+                _hudView.PulseWeather();
+            }
+            SetStatusText("Welcome back! Your run resumes at the start of the round.");
+        }
+
+        private void BeginRun(RunManager run, ChallengeDefinition challenge)
+        {
             _isPlayingPlacementSequence = false;
-            _run = new RunManager(new SystemRandomProvider(), challenge);
+            _run = run;
             _unrecordedRun = true;
+            SaveCheckpoint();
             ApplyChallengeAmbiance(challenge);
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run);

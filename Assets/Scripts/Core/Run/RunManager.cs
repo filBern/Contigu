@@ -664,6 +664,8 @@ namespace Contigu.Core
             RollWeatherForRun();
             // StartRound ran before the weather existed: a challenge whose first round isn't clear applies it now (a no-op under Clear).
             ApplyWeatherRoundStart();
+            // The weather forecast only exists now, after the first StartRound took its snapshot.
+            RoundStartSnapshot = CaptureSnapshot();
         }
 
         private void StartRound()
@@ -704,6 +706,7 @@ namespace Contigu.Core
             PiecesRemainingThisRound = CurrentBudget;
             LastRoundEndLueurBonus = 0;
             State = RunState.InProgress;
+            RoundStartSnapshot = CaptureSnapshot();
 
             // Same stuck-check PlacePiece runs after a mid-round redraw (see
             // there) - covers a boss round's locked cells leaving zero legal

@@ -31,6 +31,10 @@ namespace Contigu.Presentation
         /// <summary>Fired once a challenge is actually ready to play — after any auto-unlock spend already happened and was persisted by the caller.</summary>
         public event Action<ChallengeDefinition> ChallengeChosen;
 
+        /// <summary>The "Continue" button: resume the saved run.</summary>
+        public event Action ContinueRequested;
+        private Button _continueButton;
+
         private RectTransform _root;
         private CanvasGroup _canvasGroup;
         private Coroutine _fadeCoroutine;
@@ -135,6 +139,17 @@ namespace Contigu.Presentation
             playRect.sizeDelta = new Vector2(CardWidth - 40f, 40f);
             _playButtonLabel = _playButton.GetComponentInChildren<Text>();
             _playButton.onClick.AddListener(OnPlayClicked);
+
+            // Under the card: resume the run saved by Save and quit (or the start of the last round), shown only when there is one.
+            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue saved run", UISprites.ChooseButtonBackground, 18);
+            var continueRect = _continueButton.GetComponent<RectTransform>();
+            continueRect.anchorMin = new Vector2(0.5f, 0f);
+            continueRect.anchorMax = new Vector2(0.5f, 0f);
+            continueRect.pivot = new Vector2(0.5f, 0f);
+            continueRect.anchoredPosition = new Vector2(0f, 36f);
+            continueRect.sizeDelta = new Vector2(300f, 50f);
+            _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
+            _continueButton.gameObject.SetActive(false);
         }
 
         private void BuildArrowButton(Transform parent, string name, string label, float x, Action onClick)
@@ -169,6 +184,7 @@ namespace Contigu.Presentation
             SfxManager.Play(SfxId.Overlay);
             _metaStats = metaStats;
             ShowChallengeAt(0);
+            _continueButton.gameObject.SetActive(RunSaveStore.Exists);
             _root.gameObject.SetActive(true);
             if (_fadeCoroutine != null)
             {

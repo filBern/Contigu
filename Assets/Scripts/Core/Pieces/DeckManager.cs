@@ -59,6 +59,15 @@ namespace Contigu.Core
             DrawNewHand();
         }
 
+        /// <summary>Replaces the whole bag (a resumed run) and deals a fresh hand from it.</summary>
+        public void RestoreDeck(IEnumerable<PieceToken> tokens)
+        {
+            _deck.Clear();
+            _deck.AddRange(tokens);
+            ReshuffleDrawPile();
+            DrawNewHand();
+        }
+
         private void ReshuffleDrawPile()
         {
             _drawPile.Clear();

@@ -430,6 +430,7 @@ namespace Contigu.Presentation
                 return;
             }
             _shopView.Hide();
+            SaveCheckpoint();
             RefreshAll();
             SetStatusText(GetCurrentRoundStatus());
             _roundBannerView.Play(_run);
