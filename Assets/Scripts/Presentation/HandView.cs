@@ -25,10 +25,13 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewWidth = 142f;
         private const float DragGhostPreviewHeight = 142f;
         private const float SlotLevelLabelHeight = 22f;
-        private const float HandBoxPadding = 8f;
+        private const float HandBoxPadding = 14f;
         // Smallest a slot gets (an empty or tiny piece), and the air kept around a piece inside its slot.
         private const float MinSlotSize = 96f;
         private const float SlotMargin = 8f;
+        // Sideways, slots get more room than they need so the box reads as a roomy tray (their height stays tight).
+        private const float SlotMarginX = 28f;
+        private const float MinSlotWidth = 140f;
         // Where the hand box's top edge sits, relative to the screen's middle (it used to be centered at -230 at 174 tall).
         private float _boxTopY = -143f;
         /// <summary>Tallest the hand box can get: the biggest piece (140 tall) plus its margins and the box padding.</summary>
@@ -48,7 +51,7 @@ namespace Contigu.Presentation
         private const float SlotPreviewBudget = 140f;
         private const float SlotWidth = 150f;
         private const float SlotHeight = 150f;
-        private const float SlotSpacing = 22f;
+        private const float SlotSpacing = 30f;
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
         // The ghost hides fully over a valid spot since the grid's own
@@ -790,7 +793,7 @@ namespace Contigu.Presentation
                 float pieceWidth;
                 float pieceHeight;
                 GetPieceExtent(i, out pieceWidth, out pieceHeight);
-                widths[i] = Mathf.Max(MinSlotSize, pieceWidth + SlotMargin * 2f);
+                widths[i] = Mathf.Max(MinSlotWidth, pieceWidth + SlotMarginX * 2f);
                 tallest = Mathf.Max(tallest, pieceHeight);
             }
             float slotHeight = Mathf.Max(MinSlotSize, tallest + SlotMargin * 2f);
