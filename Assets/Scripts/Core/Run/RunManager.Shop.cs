@@ -21,6 +21,7 @@ namespace Contigu.Core
                 _blisterSlots[i] = RollBlisterSlot();
             }
             RollWorkshopSlots(keepCompost: false);
+            CaptureShopCheckpoint();
         }
 
         /// <summary>

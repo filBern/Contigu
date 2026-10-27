@@ -20,6 +20,7 @@ namespace Contigu.Presentation
             switch (state)
             {
                 case RunState.AwaitingShop:
+                    SaveCheckpoint();
                     if (_run.LastWitheredModifiers.Count > 0)
                     {
                         // Autumn: the fertilizers that just withered shrink away from the panel, and the status says which.
@@ -324,9 +325,9 @@ namespace Contigu.Presentation
         /// <summary>Saves the run as it stood when its current round began (also what Save and quit writes). Only while a run is actually in progress.</summary>
         private void SaveCheckpoint()
         {
-            if (_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop) && _run.RoundStartSnapshot != null)
+            if (_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop) && _run.CheckpointSnapshot != null)
             {
-                RunSaveStore.Save(_run.RoundStartSnapshot);
+                RunSaveStore.Save(_run.CheckpointSnapshot);
             }
         }
 
@@ -343,6 +344,13 @@ namespace Contigu.Presentation
             }
             _challengeSelectView.Hide();
             BeginRun(resumed, resumed.Challenge);
+            if (_run.State == RunState.AwaitingShop)
+            {
+                // Saved in the shop: back in it, with the offers and the Pollen it opened with.
+                HandleStateTransition(_run.State);
+                SetStatusText("Welcome back! The shop is as it was when it opened.");
+                return;
+            }
             _roundBannerView.Play(_run);
             if (_run.CurrentWeather != WeatherId.Clear)
             {

@@ -37,6 +37,20 @@ namespace Contigu.Core
         public bool WeatherDisabled;
         public List<Vector2Int> PermanentBonusCells = new List<Vector2Int>();
 
+        /// <summary>True for a checkpoint taken the moment the shop opened (RoundIndex is then the round just cleared): the run resumes in that shop, with these exact offers.</summary>
+        public bool InShop;
+        public List<ShopSlotData> ShopBlister = new List<ShopSlotData>();
+        public List<ShopSlotData> ShopWorkshop = new List<ShopSlotData>();
+
+        /// <summary>One shop offer as saved: a fertilizer, or an upgrade (with its Forge payload when it is the Forge). Null Slot means an empty position.</summary>
+        public struct ShopSlotData
+        {
+            public bool Empty;
+            public bool IsModifier;
+            public int Id;
+            public int PayloadId;
+        }
+
         public string ToText()
         {
             var sb = new StringBuilder();
@@ -63,7 +77,25 @@ namespace Contigu.Core
             Line(sb, "weathercolors", Join(WeatherColors, c => ((int)c).ToString(CultureInfo.InvariantCulture)));
             Line(sb, "weatheroff", WeatherDisabled ? 1 : 0);
             Line(sb, "permanent", Join(PermanentBonusCells, p => p.x.ToString(CultureInfo.InvariantCulture) + ":" + p.y.ToString(CultureInfo.InvariantCulture)));
+            Line(sb, "inshop", InShop ? 1 : 0);
+            Line(sb, "blister", Join(ShopBlister, SlotToText, ";"));
+            Line(sb, "workshop", Join(ShopWorkshop, SlotToText, ";"));
             return sb.ToString();
+        }
+
+        private static string SlotToText(ShopSlotData d)
+        {
+            return d.Empty ? "-" : (d.IsModifier ? "m" : "u") + "," + d.Id.ToString(CultureInfo.InvariantCulture) + "," + d.PayloadId.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static ShopSlotData SlotFromText(string text)
+        {
+            if (text == "-")
+            {
+                return new ShopSlotData { Empty = true };
+            }
+            var f = text.Split(',');
+            return new ShopSlotData { IsModifier = f[0] == "m", Id = ParseInt(f[1]), PayloadId = ParseInt(f[2]) };
         }
 
         /// <summary>Parses <see cref="ToText"/>'s output; null when the text is empty, from another version or damaged.</summary>
@@ -116,6 +148,9 @@ namespace Contigu.Core
                     var xy = v.Split(':');
                     s.PermanentBonusCells.Add(new Vector2Int(ParseInt(xy[0]), ParseInt(xy[1])));
                 }
+                s.InShop = values.ContainsKey("inshop") && Int(values, "inshop") == 1;
+                foreach (var v in Split(values, "blister", ';')) { s.ShopBlister.Add(SlotFromText(v)); }
+                foreach (var v in Split(values, "workshop", ';')) { s.ShopWorkshop.Add(SlotFromText(v)); }
                 if (s.Deck.Count == 0 || s.Modifiers.Count != s.ModifierLevels.Count || s.Modifiers.Count != s.ModifierAges.Count)
                 {
                     return null;

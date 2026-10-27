@@ -666,6 +666,7 @@ namespace Contigu.Core
             ApplyWeatherRoundStart();
             // The weather forecast only exists now, after the first StartRound took its snapshot.
             RoundStartSnapshot = CaptureSnapshot();
+            CheckpointSnapshot = RoundStartSnapshot;
         }
 
         private void StartRound()
@@ -707,6 +708,7 @@ namespace Contigu.Core
             LastRoundEndLueurBonus = 0;
             State = RunState.InProgress;
             RoundStartSnapshot = CaptureSnapshot();
+            CheckpointSnapshot = RoundStartSnapshot;
 
             // Same stuck-check PlacePiece runs after a mid-round redraw (see
             // there) - covers a boss round's locked cells leaving zero legal

@@ -6,8 +6,47 @@ namespace Contigu.Core
     /// <summary>Saving and resuming a run: a checkpoint is taken at the start of every round, and a run resumes from the start of its last checkpoint's round.</summary>
     public sealed partial class RunManager
     {
-        /// <summary>The run as it stood when the current round started — what "Save &amp; Quit" writes. Never null.</summary>
+        /// <summary>The run as it stood when the current round started. Never null.</summary>
         public RunSnapshot RoundStartSnapshot { get; private set; }
+
+        /// <summary>The latest checkpoint — what "Save &amp; Quit" writes: the start of the current round, or, once the shop has opened, that shop as it opened (nothing bought yet). Never null.</summary>
+        public RunSnapshot CheckpointSnapshot { get; private set; }
+
+        private void CaptureShopCheckpoint()
+        {
+            var s = CaptureSnapshot();
+            s.InShop = true;
+            for (int i = 0; i < _blisterSlots.Length; i++) { s.ShopBlister.Add(ToSlotData(_blisterSlots[i])); }
+            for (int i = 0; i < _upgradeSlots.Length; i++) { s.ShopWorkshop.Add(ToSlotData(_upgradeSlots[i])); }
+            CheckpointSnapshot = s;
+        }
+
+        private static RunSnapshot.ShopSlotData ToSlotData(ShopSlot slot)
+        {
+            if (slot == null)
+            {
+                return new RunSnapshot.ShopSlotData { Empty = true };
+            }
+            if (slot.Kind == ShopSlotKind.Modifier)
+            {
+                return new RunSnapshot.ShopSlotData { IsModifier = true, Id = (int)slot.ModifierId, PayloadId = -1 };
+            }
+            return new RunSnapshot.ShopSlotData { Id = (int)slot.HiddenUpgrade.Id, PayloadId = slot.Payload != null ? (int)slot.Payload.Id : -1 };
+        }
+
+        private static ShopSlot FromSlotData(RunSnapshot.ShopSlotData d)
+        {
+            if (d.Empty)
+            {
+                return null;
+            }
+            if (d.IsModifier)
+            {
+                return ShopSlot.ForModifier((ModifierId)d.Id);
+            }
+            var upgrade = UpgradeCatalog.Get((UpgradeId)d.Id);
+            return d.PayloadId >= 0 ? ShopSlot.ForForge(upgrade, UpgradeCatalog.Get((UpgradeId)d.PayloadId)) : ShopSlot.ForUpgrade(upgrade);
+        }
 
         private RunSnapshot CaptureSnapshot()
         {
@@ -111,6 +150,26 @@ namespace Contigu.Core
             // The saved count already includes this round's own start bonus (Wind's free Shuffle), which StartRound just granted again.
             ShufflesRemaining = s.ShufflesRemaining;
             RoundStartSnapshot = CaptureSnapshot();
+            CheckpointSnapshot = RoundStartSnapshot;
+
+            if (s.InShop)
+            {
+                // Back in the shop exactly as it opened: the round just cleared, the same offers, the Pollen from before any purchase.
+                Lueur = s.Lueur;
+                State = RunState.AwaitingShop;
+                LastRoundEndLueurBonus = 0;
+                _purchasesThisVisit = 0;
+                _rerollsThisVisit = 0;
+                for (int i = 0; i < _blisterSlots.Length; i++)
+                {
+                    _blisterSlots[i] = i < s.ShopBlister.Count ? FromSlotData(s.ShopBlister[i]) : null;
+                }
+                for (int i = 0; i < _upgradeSlots.Length; i++)
+                {
+                    _upgradeSlots[i] = i < s.ShopWorkshop.Count ? FromSlotData(s.ShopWorkshop[i]) : null;
+                }
+                CaptureShopCheckpoint();
+            }
         }
     }
 }

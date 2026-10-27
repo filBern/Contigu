@@ -66,6 +66,35 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void SavingInTheShop_ResumesInThatShopBeforeAnyPurchase()
+        {
+            var run = new RunManager(new SystemRandomProvider(11));
+            run.DebugDisableWeather();
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
+            run.DebugGrantLueur(500);
+            string checkpointText = run.CheckpointSnapshot.ToText();
+            int lueurAtOpening = run.CheckpointSnapshot.Lueur;
+            var offeredFirst = run.ShopBlisterSlots[0];
+            // Buy something afterwards: the checkpoint must not know about it.
+            run.BuyBlisterSlot(0);
+
+            Assert.AreEqual(checkpointText, run.CheckpointSnapshot.ToText());
+            var restored = RunManager.Restore(RunSnapshot.FromText(checkpointText), new SystemRandomProvider(3));
+
+            Assert.AreEqual(RunState.AwaitingShop, restored.State);
+            Assert.AreEqual(lueurAtOpening, restored.Lueur);
+            Assert.AreEqual(run.CurrentRoundIndex, restored.CurrentRoundIndex);
+            Assert.IsFalse(restored.ShopBlisterSlots[0].Purchased);
+            Assert.AreEqual(offeredFirst.Kind, restored.ShopBlisterSlots[0].Kind);
+            for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
+            {
+                Assert.AreEqual(run.ShopUpgradeSlots[i].HiddenUpgrade.Id, restored.ShopUpgradeSlots[i].HiddenUpgrade.Id);
+            }
+            Assert.IsTrue(restored.LeaveShop(), "The restored shop can be left to start the next round");
+        }
+
+        [Test]
         public void FromText_RejectsGarbageAndOtherVersions()
         {
             Assert.IsNull(RunSnapshot.FromText(null));
