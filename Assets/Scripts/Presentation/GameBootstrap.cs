@@ -469,11 +469,24 @@ namespace Contigu.Presentation
             // Slightly above screen center to make room for the horizontal
             // hand row below while keeping a clear gap below the status text.
             _gridView = gameObject.AddComponent<GridView>();
-            var gridRect = _gridView.Build(mainRoot, _run.Grid, CellSize, _tooltipView);
+            // The plots take all the room between the enemy band and the hand box (whose worst-case height is known), as wide as the score card allows.
+            LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
+            float aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 1.6f;
+            float canvasHeight = aspect >= 1.6f ? 800f : 1280f / aspect;
+            float layoutHalfWidth = Mathf.Max(1280f, 800f * aspect) * 0.5f;
+            float gridTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + 8f);
+            float handTopY = -canvasHeight * 0.5f + HudView.BarHeight + 6f + HandView.WorstCaseBoxHeight;
+            float gridBottomY = handTopY + 8f;
+            const float PlotSpacing = 2f; // GridView.CellSpacing
+            int plots = GridManager.Size;
+            float cellByHeight = (gridTopY - gridBottomY - (plots - 1) * PlotSpacing) / plots;
+            float cellByWidth = (2f * (layoutHalfWidth - comboRect.rect.width - 24f) - (plots - 1) * PlotSpacing) / plots;
+            float gridCellSize = Mathf.Clamp(Mathf.Min(cellByHeight, cellByWidth), CellSize, 100f);
+            var gridRect = _gridView.Build(mainRoot, _run.Grid, gridCellSize, _tooltipView);
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = new Vector2(0f, 79f);
+            gridRect.anchoredPosition = new Vector2(0f, (gridTopY + gridBottomY) * 0.5f);
 
             // Center each side panel in the gap between the grid edge and
             // the screen edge. Computed from Screen.width/height (matching
@@ -516,7 +529,8 @@ namespace Contigu.Presentation
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            handRect.anchoredPosition = new Vector2(0f, -230f);
+            _handView.SetBoxTop(handTopY);
+            handRect.anchoredPosition = new Vector2(0f, handTopY - HandView.WorstCaseBoxHeight * 0.5f);
             // Now that the box is placed, let it size itself around the current hand.
             _handView.Refresh();
             BuildComboUtilityButtons(comboRect);

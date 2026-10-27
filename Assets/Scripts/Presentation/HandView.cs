@@ -25,12 +25,20 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewWidth = 142f;
         private const float DragGhostPreviewHeight = 142f;
         private const float SlotLevelLabelHeight = 22f;
-        private const float HandBoxPadding = 12f;
+        private const float HandBoxPadding = 8f;
         // Smallest a slot gets (an empty or tiny piece), and the air kept around a piece inside its slot.
         private const float MinSlotSize = 96f;
-        private const float SlotMargin = 12f;
+        private const float SlotMargin = 8f;
         // Where the hand box's top edge sits, relative to the screen's middle (it used to be centered at -230 at 174 tall).
-        private const float BoxTopY = -143f;
+        private float _boxTopY = -143f;
+        /// <summary>Tallest the hand box can get: the biggest piece (140 tall) plus its margins and the box padding.</summary>
+        public const float WorstCaseBoxHeight = SlotPreviewBudget + 2f * SlotMargin + 2f * HandBoxPadding;
+
+        /// <summary>Where the box's top edge sits, relative to the screen's middle (the board is sized to the room above it).</summary>
+        public void SetBoxTop(float y)
+        {
+            _boxTopY = y;
+        }
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 56f;
         private const float GhostTileSize = 46f;
@@ -817,7 +825,7 @@ namespace Contigu.Presentation
             float boxHeight = slotHeight + HandBoxPadding * 2f;
             var boxRect = _handContainer.rectTransform;
             boxRect.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, boxHeight);
-            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, BoxTopY - boxHeight * 0.5f);
+            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, _boxTopY - boxHeight * 0.5f);
         }
 
         /// <summary>Width and height, in canvas units, that the piece in hand slot <paramref name="index"/> is drawn at (0 for an empty slot); mirrors BuildShapePreview.</summary>

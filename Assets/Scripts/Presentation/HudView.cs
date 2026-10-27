@@ -13,7 +13,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private const float BarHeight = 68f;
+        public const float BarHeight = 68f;
         private static readonly Dictionary<EnemyId, Sprite> _enemySpriteCache = new Dictionary<EnemyId, Sprite>();
         private RectTransform _scoreFillRect;
         private Text _scoreLabel;
