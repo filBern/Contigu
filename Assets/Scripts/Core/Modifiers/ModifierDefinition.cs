@@ -221,7 +221,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
             ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Fallow Ground",
-            "x2 Mult when the board ends up with " + ScoringConstants.EspaceLibreMaxFilledCells + " plots filled or fewer.");
+            "x2 Mult when the board ends up with 16 plots filled or fewer.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
             ModifierId.Rafale, ModifierCategory.Destruction, "Burst",

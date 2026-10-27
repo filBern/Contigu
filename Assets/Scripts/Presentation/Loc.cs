@@ -32,7 +32,7 @@ namespace Contigu.Presentation
             { "shop.upgrade", "Upgrade · {0} · {1}" },
             { "shop.forgeTitle", "Forge: {0}" },
             { "shop.forgeBody", "{0}: {1}\nAdd it to 3 seeds of your bag, of your choice." },
-            { "choice.selectSeeds", "Select {0} seeds" },
+            { "choice.selectSeeds", "Select {0} seeds for {1}" },
             { "choice.sproutPack", "Sprout Pack" },
             { "choice.sproutPackHint", "Pick one, then choose the seed that gets it" },
             { "choice.fertilizerPack", "Fertilizer Pack" },

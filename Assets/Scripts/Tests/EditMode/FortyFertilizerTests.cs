@@ -364,6 +364,12 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void FallowGround_TextMatchesItsThreshold()
+        {
+            Assert.IsTrue(ModifierCatalog.Get(ModifierId.EspaceLibre).Description.Contains(ScoringConstants.EspaceLibreMaxFilledCells + " plots"));
+        }
+
+        [Test]
         public void FertilizersPromisingOneMultPerUnit_PayExactlyOnePerUnit()
         {
             int one = (int)ScoringConstants.PointsPerMult;

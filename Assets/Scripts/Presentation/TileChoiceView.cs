@@ -81,7 +81,7 @@ namespace Contigu.Presentation
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
             _previewTraitKind = UpgradeSystem.TraitKindFor(def.Id);
 
-            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount), _candidates.Count, true);
+            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount, def.Name), _candidates.Count, true);
             for (int i = 0; i < _candidates.Count; i++)
             {
                 BuildPreviewCell(_candidates[i], i);

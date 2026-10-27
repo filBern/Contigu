@@ -1,10 +1,10 @@
-// node flows.js <build folder> [shop|save|all]
+// node flows.js <build folder> [shop|save|reload|all]
 // Longer end-to-end flows: the shop (with purchases) and Save & quit -> Continue. Needs the build's CONTIGU_DEBUG define for the cheats.
 const { launch, sleep } = require('./qa');
 
 const dir = process.argv[2];
 const which = process.argv[3] || 'all';
-if (!dir) { console.error('usage: node flows.js <build folder> [shop|save|all]'); process.exit(2); }
+if (!dir) { console.error('usage: node flows.js <build folder> [shop|save|reload|all]'); process.exit(2); }
 const problems = [];
 const note = (m) => { problems.push(m); console.log('PROBLEM: ' + m); };
 
@@ -168,9 +168,49 @@ async function saveFlow() {
   await qa.close();
 }
 
+async function reloadFlow() {
+  console.log('--- save survives a page reload');
+  const qa = await launch({ dir, port: 8813, shots: 'qa-shots/reload' });
+  try {
+    await startRun(qa);
+    let s = await reachShop(qa);
+    await sleep(1500);
+    const before = { state: s.game.state, round: s.game.round, pollen: s.game.pollen };
+    console.log('Before quitting from the shop: ' + JSON.stringify(before));
+    await qa.clickLabel('Menu'); await sleep(800);
+    await qa.clickLabel('Save');
+    await qa.waitState((st) => st.scene === 'MainMenu', 30000, 'the main menu');
+    await sleep(4000); // let the browser copy the files into IndexedDB
+    await qa.page.reload();
+    await qa.waitState((st) => st.screenW > 0, 120000, 'the game after the reload');
+    await sleep(2000);
+    await qa.clickLabel('Play');
+    await qa.waitState((st) => st.scene === 'Main', 30000, 'the game scene');
+    await sleep(2500);
+    const cont = (await qa.buttons()).find((b) => /continue/i.test(b.text + ' ' + b.name));
+    if (!cont) { note('No Continue button after reloading the page: the save did not survive'); }
+    else {
+      await qa.click(cont.x, cont.y);
+      s = await qa.waitState((st) => st.game && (st.game.state === 'AwaitingShop' || st.game.state === 'InProgress'), 30000, 'the resumed run');
+      await sleep(2000);
+      s = await qa.state();
+      const after = { state: s.game.state, round: s.game.round, pollen: s.game.pollen };
+      console.log('After reload + Continue: ' + JSON.stringify(after));
+      if (JSON.stringify(before) !== JSON.stringify(after)) { note('The run resumed after a reload differs from the saved one: ' + JSON.stringify(before) + ' vs ' + JSON.stringify(after)); }
+      await qa.shot('01-resumed');
+    }
+  } catch (e) {
+    note('Reload flow stopped: ' + e.message);
+    try { await qa.shot('failure'); } catch (_) {}
+  }
+  if (qa.errors.length) { note(qa.errors.length + ' console error(s) in the reload flow:\n  ' + qa.errors.slice(0, 8).join('\n  ')); }
+  await qa.close();
+}
+
 (async () => {
   if (which === 'shop' || which === 'all') { await shopFlow(); }
   if (which === 'save' || which === 'all') { await saveFlow(); }
+  if (which === 'reload' || which === 'all') { await reloadFlow(); }
   console.log(problems.length ? '\n' + problems.length + ' problem(s).' : '\nAll flows passed.');
   process.exit(problems.length ? 1 : 0);
 })();
