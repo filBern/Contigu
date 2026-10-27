@@ -86,7 +86,6 @@ namespace Contigu.Presentation
         // height plus a visible gap, so it reads as sitting above the box rather than overlapping it.
         private const float LueurAboveBoxClearance = 70f;
         private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
-        private const int UpcomingBannerFontSize = 28;
         private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
         private const float UpcomingBoxBottomPadding = ModifierPanelView.BottomPadding;
         // Icon size, HP label height/font and row gap below are each this round's full-size default — a
@@ -233,26 +232,8 @@ namespace Contigu.Presentation
             // round's enemy count isn't capped, so a very populated round can run past the available space.
             _upcomingEncounterBox.gameObject.AddComponent<RectMask2D>();
 
-            // Red "Next round" banner flush against the box's top edge, same width as the box.
-            // A plain title with an underline (same as the Fertilizers panel), not a glossy pill: that reads as a button.
-            var upcomingBanner = UIFactory.CreatePanel(_upcomingEncounterBox, "NextRoundBanner", Color.clear);
-            upcomingBanner.raycastTarget = false;
-            var upcomingRule = UIFactory.CreatePanel(upcomingBanner.transform, "BannerRule", UITheme.Border);
-            upcomingRule.raycastTarget = false;
-            upcomingRule.rectTransform.anchorMin = new Vector2(0f, 0f);
-            upcomingRule.rectTransform.anchorMax = new Vector2(1f, 0f);
-            upcomingRule.rectTransform.pivot = new Vector2(0.5f, 0f);
-            upcomingRule.rectTransform.anchoredPosition = Vector2.zero;
-            upcomingRule.rectTransform.sizeDelta = new Vector2(0f, 3f);
-            upcomingBanner.rectTransform.anchorMin = new Vector2(0f, 1f);
-            upcomingBanner.rectTransform.anchorMax = new Vector2(1f, 1f);
-            upcomingBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            upcomingBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
-            upcomingBanner.rectTransform.sizeDelta = new Vector2(-20f, UpcomingBannerHeight - 8f);
-
-            var upcomingBannerLabel = UIFactory.CreateText(upcomingBanner.transform, "BannerLabel", "Coming up", UpcomingBannerFontSize, UITheme.TextPrimary);
-            upcomingBannerLabel.alignment = TextAnchor.MiddleCenter;
-            UIFactory.StretchFull(upcomingBannerLabel.rectTransform);
+            // Same hanging wooden sign as the Fertilizers panel (it must not read as a button, nor share the name of the green "Next round" button).
+            ShopSign.Build(_upcomingEncounterBox, "Coming up", 24);
 
             // One enemy per cell, one column while count<=2 (reads as a plain vertical stack), two columns
             // side by side beyond that (see BuildUpcomingEncounterPreview, which sets constraintCount/

@@ -147,24 +147,8 @@ namespace Contigu.Presentation
             _root.sizeDelta = new Vector2(PanelWidth, PanelHeight);
             _root.anchoredPosition = new Vector2(horizontalCenterX, 0f);
 
-            // A plain title with an underline, not a glossy pill: a raised, colored band reads as a button.
-            var headerBand = UIFactory.CreatePanel(_root, "HeaderBand", Color.clear);
-            headerBand.raycastTarget = false;
-            var headerRule = UIFactory.CreatePanel(headerBand.transform, "HeaderRule", UITheme.Border);
-            headerRule.raycastTarget = false;
-            headerRule.rectTransform.anchorMin = new Vector2(0f, 0f);
-            headerRule.rectTransform.anchorMax = new Vector2(1f, 0f);
-            headerRule.rectTransform.pivot = new Vector2(0.5f, 0f);
-            headerRule.rectTransform.anchoredPosition = Vector2.zero;
-            headerRule.rectTransform.sizeDelta = new Vector2(0f, 3f);
-            headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
-            headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);
-            headerBand.rectTransform.pivot = new Vector2(0.5f, 1f);
-            headerBand.rectTransform.anchoredPosition = new Vector2(0f, -8f);
-            headerBand.rectTransform.sizeDelta = new Vector2(-20f, HeaderHeight - 8f);
-
-            var header = UIFactory.CreateText(headerBand.transform, "Header", "Fertilizers", 28, UITheme.TextPrimary, TextAnchor.MiddleCenter);
-            UIFactory.StretchFull(header.rectTransform);
+            // A wooden sign hanging from the top of the card, not a glossy pill (that reads as a button).
+            ShopSign.Build(_root, "Fertilizers", 24);
 
             _emptyHint = UIFactory.CreateText(_root, "EmptyHint", "No fertilizer yet.\nBuy a sack in the Blister.", 16, new Color(0.075f, 0.13f, 0.18f, 0.65f), TextAnchor.UpperCenter);
             _emptyHint.rectTransform.anchorMin = new Vector2(0f, 1f);
