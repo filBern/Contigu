@@ -57,6 +57,7 @@ namespace Contigu.Presentation
         private const float SectionLabelHeight = 0f;
         private const float ShelfDepth = 18f;
         private float _sidePanelCenterX = UpcomingBoxCenterX;
+        private ShopZoom _zoom;
         // Section plaque (36) + the air under it.
         private const float LabelToCardsGap = 54f;
         private const float PlaqueHeight = 36f;
@@ -150,6 +151,8 @@ namespace Contigu.Presentation
             var overlay = UIFactory.CreatePanel(parent, "ShopOverlay", new Color(0.19f, 0.13f, 0.10f, 1f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            // Enabled with the shop's own activation (the overlay starts inactive), so it zooms the UI exactly while the shop is on screen.
+            _zoom = overlay.gameObject.AddComponent<ShopZoom>();
             BuildStallBackdrop();
             _blisterShelf = BuildShelf("BlisterShelf");
             _workshopShelf = BuildShelf("WorkshopShelf");
@@ -468,6 +471,10 @@ namespace Contigu.Presentation
         public void SetSidePanelCenterX(float sidePanelCenterX)
         {
             _sidePanelCenterX = sidePanelCenterX;
+            if (_zoom != null)
+            {
+                _zoom.HalfContentWidth = sidePanelCenterX + UpcomingBoxWidth * 0.5f;
+            }
             _upcomingEncounterBox.anchorMin = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchorMax = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchoredPosition = new Vector2(sidePanelCenterX, 0f);
