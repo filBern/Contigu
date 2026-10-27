@@ -1062,6 +1062,12 @@ namespace Contigu.Presentation
 
         private void OnLeaveClicked()
         {
+            // Whatever tooltip a touch left up (a selected item, a pinned hint) goes away with the shop.
+            DisarmShelfItem();
+            if (_tooltip != null)
+            {
+                _tooltip.Hide();
+            }
             if (LeaveRequested != null)
             {
                 LeaveRequested();

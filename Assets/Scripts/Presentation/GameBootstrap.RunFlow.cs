@@ -17,6 +17,11 @@ namespace Contigu.Presentation
             // to the shop) before the player ever clears that selection
             // themselves.
             _handView.SetShufflePulsing(false);
+            // A state change (shop to round, round to shop, end of run) never leaves a tooltip from the previous screen showing.
+            if (_tooltipView != null)
+            {
+                _tooltipView.Hide();
+            }
             CollectionTracker.Scan(_run);
             switch (state)
             {
