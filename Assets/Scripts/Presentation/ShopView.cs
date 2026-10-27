@@ -234,14 +234,23 @@ namespace Contigu.Presentation
             _upcomingEncounterBox.gameObject.AddComponent<RectMask2D>();
 
             // Red "Next round" banner flush against the box's top edge, same width as the box.
-            var upcomingBanner = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "NextRoundBanner", UISprites.Garden("Red"));
+            // A plain title with an underline (same as the Fertilizers panel), not a glossy pill: that reads as a button.
+            var upcomingBanner = UIFactory.CreatePanel(_upcomingEncounterBox, "NextRoundBanner", Color.clear);
+            upcomingBanner.raycastTarget = false;
+            var upcomingRule = UIFactory.CreatePanel(upcomingBanner.transform, "BannerRule", UITheme.Border);
+            upcomingRule.raycastTarget = false;
+            upcomingRule.rectTransform.anchorMin = new Vector2(0f, 0f);
+            upcomingRule.rectTransform.anchorMax = new Vector2(1f, 0f);
+            upcomingRule.rectTransform.pivot = new Vector2(0.5f, 0f);
+            upcomingRule.rectTransform.anchoredPosition = Vector2.zero;
+            upcomingRule.rectTransform.sizeDelta = new Vector2(0f, 3f);
             upcomingBanner.rectTransform.anchorMin = new Vector2(0f, 1f);
             upcomingBanner.rectTransform.anchorMax = new Vector2(1f, 1f);
             upcomingBanner.rectTransform.pivot = new Vector2(0.5f, 1f);
             upcomingBanner.rectTransform.anchoredPosition = new Vector2(0f, -8f);
             upcomingBanner.rectTransform.sizeDelta = new Vector2(-20f, UpcomingBannerHeight - 8f);
 
-            var upcomingBannerLabel = UIFactory.CreateText(upcomingBanner.transform, "BannerLabel", "Next round", UpcomingBannerFontSize, UITheme.TextOnBackground);
+            var upcomingBannerLabel = UIFactory.CreateText(upcomingBanner.transform, "BannerLabel", "Coming up", UpcomingBannerFontSize, UITheme.TextPrimary);
             upcomingBannerLabel.alignment = TextAnchor.MiddleCenter;
             UIFactory.StretchFull(upcomingBannerLabel.rectTransform);
 
