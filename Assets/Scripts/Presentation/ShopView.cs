@@ -473,11 +473,33 @@ namespace Contigu.Presentation
             _sidePanelCenterX = sidePanelCenterX;
             if (_zoom != null)
             {
-                _zoom.HalfContentWidth = sidePanelCenterX + UpcomingBoxWidth * 0.5f;
+                _zoom.PlacePanels = PlaceSidePanels;
+                _zoom.RestorePanels = () => PlaceSidePanels(_sidePanelCenterX);
             }
             _upcomingEncounterBox.anchorMin = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchorMax = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchoredPosition = new Vector2(sidePanelCenterX, 0f);
+        }
+
+        private RectTransform _fertilizerPanel;
+
+        /// <summary>The fertilizer panel is built by GameBootstrap, outside the shop; the shop moves it while it zooms the screen.</summary>
+        public void SetFertilizerPanel(RectTransform panel)
+        {
+            _fertilizerPanel = panel;
+        }
+
+        private void PlaceSidePanels(float centerX)
+        {
+            if (_fertilizerPanel != null)
+            {
+                _fertilizerPanel.anchoredPosition = new Vector2(-centerX, _fertilizerPanel.anchoredPosition.y);
+            }
+            _upcomingEncounterBox.anchoredPosition = new Vector2(centerX, _upcomingEncounterBox.anchoredPosition.y);
+            if (_lueurContainer != null)
+            {
+                _lueurContainer.anchoredPosition = new Vector2(centerX, _lueurContainer.anchoredPosition.y);
+            }
         }
 
         /// <summary>The "Next round" enemy preview box (see OverlayLift).</summary>

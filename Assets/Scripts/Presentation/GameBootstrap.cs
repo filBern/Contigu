@@ -483,8 +483,10 @@ namespace Contigu.Presentation
             // synchronous Build call, and could under-compute canvasWidth
             // on a wide-aspect screen.
             float halfGridWidth = gridRect.rect.width * 0.5f;
-            float canvasWidth = Screen.height > 0 ? 800f * Screen.width / Screen.height : mainRoot.rect.width;
+            // Never narrower than the 1280 the layout is drawn for: below 16:10 the canvas scales to the width (see CanvasAspectFit).
+            float canvasWidth = Screen.height > 0 ? Mathf.Max(1280f, 800f * Screen.width / Screen.height) : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
+            // Both side blocks (fertilizers on the left, score and buttons on the right) sit as far out as the score card allows, mirrored around the grid.
             float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
 
             // Clamp so the combo card (the widest thing at sidePanelCenterX)
@@ -495,10 +497,7 @@ namespace Contigu.Presentation
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
             const float SidePanelEdgeMargin = 12f;
             float maxSidePanelCenterX = halfCanvasWidth - comboRect.rect.width * 0.5f - SidePanelEdgeMargin;
-            if (sidePanelCenterX > maxSidePanelCenterX)
-            {
-                sidePanelCenterX = maxSidePanelCenterX;
-            }
+            sidePanelCenterX = maxSidePanelCenterX;
             comboRect.anchoredPosition = new Vector2(sidePanelCenterX, 65f);
 
             var lueurRect = _hudView.LueurLabelTransform;
@@ -576,6 +575,7 @@ namespace Contigu.Presentation
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
+            _shopView.SetFertilizerPanel(modifierPanelRect);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
             OverlayLift.Panels.Add(modifierPanelRect);

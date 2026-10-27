@@ -12,25 +12,33 @@ namespace Contigu.Presentation
     public sealed class ShopZoom : MonoBehaviour
     {
         private const float MaxZoom = 1.3f;
-        private const float EdgeMargin = 8f;
 
         private CanvasScaler _scaler;
         private Vector2 _baseReference;
         private bool _zoomed;
 
-        /// <summary>Distance from the screen's middle to the outer edge of the side panels, in canvas units; set by ShopView once the layout is known.</summary>
-        public float HalfContentWidth { get; set; }
+        // Half the width the shop's own content needs, in canvas units: a shelf (600 wide), a gap, a side panel and an edge margin.
+        private const float ShelfHalfWidth = 300f;
+        private const float ShelfToPanelGap = 24f;
+        private const float PanelToEdgeMargin = 40f;
+
+        /// <summary>Moves the side panels (and the Pollen counter above one) to a centre x, in the zoomed canvas' units; set by ShopView.</summary>
+        public System.Action<float> PlacePanels { get; set; }
+
+        /// <summary>Puts the side panels back where the board screen has them.</summary>
+        public System.Action RestorePanels { get; set; }
 
         private void OnEnable()
         {
             _scaler = GetComponentInParent<CanvasScaler>();
             var rect = transform as RectTransform;
-            if (_scaler == null || rect == null || HalfContentWidth <= 0f || _zoomed)
+            if (_scaler == null || rect == null || _zoomed)
             {
                 return;
             }
             float halfWidth = rect.rect.width * 0.5f;
-            float zoom = Mathf.Clamp(halfWidth / (HalfContentWidth + EdgeMargin), 1f, MaxZoom);
+            float panelWidth = ModifierPanelView.PanelWidth;
+            float zoom = Mathf.Clamp(halfWidth / (ShelfHalfWidth + ShelfToPanelGap + panelWidth + PanelToEdgeMargin), 1f, MaxZoom);
             if (zoom <= 1.01f)
             {
                 return;
@@ -38,6 +46,11 @@ namespace Contigu.Presentation
             _baseReference = _scaler.referenceResolution;
             _scaler.referenceResolution = _baseReference / zoom;
             _zoomed = true;
+            if (PlacePanels != null)
+            {
+                // The side panels keep their on-screen place (about where the board screen has them): near the edges, outside the shelves.
+                PlacePanels(halfWidth / zoom - panelWidth * 0.5f - PanelToEdgeMargin);
+            }
         }
 
         private void OnDisable()
@@ -55,6 +68,10 @@ namespace Contigu.Presentation
             if (_zoomed && _scaler != null)
             {
                 _scaler.referenceResolution = _baseReference;
+                if (RestorePanels != null)
+                {
+                    RestorePanels();
+                }
             }
             _zoomed = false;
         }
