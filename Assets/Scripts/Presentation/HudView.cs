@@ -213,7 +213,7 @@ namespace Contigu.Presentation
             speedRect.anchorMax = new Vector2(0f, 1f);
             speedRect.pivot = new Vector2(0f, 1f);
             speedRect.anchoredPosition = new Vector2(16f, -62f);
-            speedRect.sizeDelta = new Vector2(64f, 44f);
+            speedRect.sizeDelta = new Vector2(MobileSetup.TouchMin(64f), MobileSetup.TouchMin(44f));
             var speedLabel = speed.GetComponentInChildren<Text>();
             if (speedLabel != null)
             {

@@ -47,6 +47,19 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -36f);
             header.rectTransform.sizeDelta = new Vector2(1000f, 46f);
 
+            if (inRun)
+            {
+                // Said before the player quits, not after: what Continue gives back.
+                var saveHint = UIFactory.CreateText(_root, "SaveHint", "Save & quit resumes at the start of the current round, with a fresh hand (in the shop: as it was when it opened, purchases undone).", 15, UITheme.TextOnBackground);
+                saveHint.color = UITheme.TextMutedOnBackground;
+                saveHint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                saveHint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                saveHint.rectTransform.pivot = new Vector2(0.5f, 1f);
+                saveHint.rectTransform.anchoredPosition = new Vector2(0f, -86f);
+                saveHint.rectTransform.sizeDelta = new Vector2(900f, 44f);
+                saveHint.raycastTarget = false;
+            }
+
             BuildVolumeRow(_root, -140f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
             BuildVolumeRow(_root, -230f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
             BuildVolumeRow(_root, -320f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
@@ -57,7 +70,7 @@ namespace Contigu.Presentation
             closeRect.anchorMax = new Vector2(0.5f, 0f);
             closeRect.pivot = new Vector2(0.5f, 0f);
             closeRect.anchoredPosition = new Vector2(0f, 30f);
-            closeRect.sizeDelta = new Vector2(220f, 52f);
+            closeRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(52f));
             closeBtn.onClick.AddListener(Hide);
 
             if (inRun)
@@ -82,7 +95,7 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 310f);
-            rect.sizeDelta = new Vector2(300f, 46f);
+            rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");
             button.onClick.AddListener(() =>
@@ -102,7 +115,7 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, y);
-            rect.sizeDelta = new Vector2(220f, 46f);
+            rect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             _confirmLabels.Add((label, text));
             bool armed = false;
@@ -140,7 +153,7 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 100f);
-            rect.sizeDelta = new Vector2(220f, 46f);
+            rect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             var label = resetBtn.GetComponentInChildren<Text>();
             bool armed = false;
             float armedAt = 0f;

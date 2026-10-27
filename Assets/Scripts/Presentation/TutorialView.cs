@@ -23,31 +23,36 @@ namespace Contigu.Presentation
             rulesCard.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             rulesCard.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             rulesCard.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rulesCard.rectTransform.anchoredPosition = new Vector2(0f, 15f);
-            rulesCard.rectTransform.sizeDelta = new Vector2(1120f, 700f);
+            rulesCard.rectTransform.anchoredPosition = Vector2.zero;
+            rulesCard.rectTransform.sizeDelta = new Vector2(1120f, 740f);
 
-            var header = UIFactory.CreateText(_root, "Header", "How to Play", 32, UITheme.TextPrimary);
+            // Everything lives inside the card (so it stays together at any aspect ratio), with the rules in two columns.
+            var header = UIFactory.CreateText(rulesCard.rectTransform, "Header", "How to Play", 32, UITheme.TextPrimary);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -36f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -22f);
             header.rectTransform.sizeDelta = new Vector2(1000f, 46f);
 
-            var body = UIFactory.CreateText(_root, "Body", BuildRulesText(), 17, UITheme.TextPrimary, TextAnchor.UpperLeft);
-            body.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            body.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            body.rectTransform.pivot = new Vector2(0.5f, 1f);
-            body.rectTransform.anchoredPosition = new Vector2(0f, -96f);
-            body.rectTransform.sizeDelta = new Vector2(980f, 560f);
-            body.lineSpacing = 1.2f;
+            string[] columns = BuildRulesColumns();
+            for (int i = 0; i < columns.Length; i++)
+            {
+                var body = UIFactory.CreateText(rulesCard.rectTransform, "Body" + i, columns[i], BodyFontSize, UITheme.TextPrimary, TextAnchor.UpperLeft);
+                body.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                body.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                body.rectTransform.pivot = new Vector2(0.5f, 1f);
+                body.rectTransform.anchoredPosition = new Vector2(i == 0 ? -272f : 272f, -82f);
+                body.rectTransform.sizeDelta = new Vector2(520f, 560f);
+                body.lineSpacing = 1.15f;
+            }
 
-            var closeBtn = UIFactory.CreateButton(_root, "Close", "Got it", UISprites.ChooseButtonBackground, 18);
+            var closeBtn = UIFactory.CreateButton(rulesCard.rectTransform, "Close", "Got it", UISprites.ChooseButtonBackground, 18);
             var closeRect = closeBtn.GetComponent<RectTransform>();
             closeRect.anchorMin = new Vector2(0.5f, 0f);
             closeRect.anchorMax = new Vector2(0.5f, 0f);
             closeRect.pivot = new Vector2(0.5f, 0f);
-            closeRect.anchoredPosition = new Vector2(0f, 30f);
-            closeRect.sizeDelta = new Vector2(220f, 52f);
+            closeRect.anchoredPosition = new Vector2(0f, 20f);
+            closeRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(52f));
             closeBtn.onClick.AddListener(Hide);
 
             _root.gameObject.SetActive(false);
@@ -67,10 +72,11 @@ namespace Contigu.Presentation
         }
 
         // Larger than the body text's own size (see Build). A <size=> tag is a true rescale, unlike <b>, which Unity synthesizes by redrawing the glyph and can read as blurry.
-        private const int HeaderFontSize = 24;
+        private const int HeaderFontSize = 22;
+        private const int BodyFontSize = 16;
 
         /// <summary>Seven short sections covering everything a new player needs before their first placement. Headers are kept out of DescriptionTextFormatter.Colorize entirely (only each section's body line goes through it) — otherwise a header like "LUEUR AND THE SHOP" would have its own leading &lt;size=&gt; tag glued onto "LUEUR", which stops the keyword match from firing on the very word it's supposed to recognize.</summary>
-        private static string BuildRulesText()
+        private static string[] BuildRulesColumns()
         {
             (string Header, string Body)[] sections =
             {
@@ -83,16 +89,23 @@ namespace Contigu.Presentation
                 ("DEFEAT", "The run ends if your seeds run out while pests are still alive, or if none of the seeds in your hand can be placed and you have no Shuffle left.")
             };
 
-            string text = null;
-            for (int i = 0; i < sections.Length; i++)
+            // Left column: the basics of a round; right column: the economy, the enemy and the controls.
+            int[][] layout = { new[] { 0, 1, 2, 6 }, new[] { 3, 4, 5 } };
+            var result = new string[layout.Length];
+            for (int col = 0; col < layout.Length; col++)
             {
-                string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
-                text = text == null ? block : text + "\n\n" + block;
+                string text = null;
+                foreach (int i in layout[col])
+                {
+                    string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
+                    text = text == null ? block : text + "\n\n" + block;
+                }
+                result[col] = text;
             }
-            text += MobileSetup.IsTouchDevice
-                ? "\n\nTouch: tap a seed then a plot to plant it, or drag it. Press and hold anything to read what it does. Tap a fertilizer, then Sell, to sell it; tap two fertilizers to swap them. Menu (top right): settings and Save & quit."
-                : "\n\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
-            return text;
+            result[1] += MobileSetup.IsTouchDevice
+                ? "\n\n<size=" + HeaderFontSize + ">CONTROLS</size>\nTap a seed then a plot to plant it, or drag it. Press and hold anything to read what it does. Tap a fertilizer, then Sell, to sell it; tap two fertilizers to swap them. Menu (top right): settings and Save & quit."
+                : "\n\n<size=" + HeaderFontSize + ">CONTROLS</size>\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
+            return result;
         }
     }
 }

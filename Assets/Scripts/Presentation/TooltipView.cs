@@ -190,7 +190,7 @@ namespace Contigu.Presentation
             _sellValueLabel.gameObject.SetActive(hasSellValue);
             if (hasSellValue)
             {
-                _sellValueLabel.text = "Sell " + sellValue.Value + " (X)";
+                _sellValueLabel.text = MobileSetup.IsTouchDevice ? "Tap, then Sell +" + sellValue.Value : "Sell +" + sellValue.Value + " (X)";
             }
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f), HeaderHeight);
 

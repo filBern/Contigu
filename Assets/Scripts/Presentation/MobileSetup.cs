@@ -11,6 +11,17 @@ namespace Contigu.Presentation
             get { return Application.isMobilePlatform || Input.touchSupported; }
         }
 
+        /// <summary>
+        /// Smallest comfortable touch target in canvas units: Apple asks for 44 pt, and the canvas shrinks to 0.8 on an iPad (4:3, see CanvasAspectFit),
+        /// so 56 units stay above 44 points. Desktop keeps the size it was designed with.
+        /// </summary>
+        public const float MinTouchSize = 56f;
+
+        public static float TouchMin(float size)
+        {
+            return IsTouchDevice ? Mathf.Max(size, MinTouchSize) : size;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Apply()
         {

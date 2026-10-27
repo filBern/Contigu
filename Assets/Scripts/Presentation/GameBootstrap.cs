@@ -696,8 +696,13 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(1f, 1f);
             rect.anchoredPosition = new Vector2(-16f, -16f);
-            rect.sizeDelta = new Vector2(110f, 44f);
+            rect.sizeDelta = new Vector2(MobileSetup.TouchMin(110f), MobileSetup.TouchMin(44f));
             menuButton.onClick.AddListener(() => _settingsView.Toggle());
+            // Its own sorting layer above every overlay (shop choices, end screens, challenge picker): Menu stays reachable, and never looks active while something covers it.
+            var menuCanvas = menuButton.gameObject.AddComponent<Canvas>();
+            menuCanvas.overrideSorting = true;
+            menuCanvas.sortingOrder = 100;
+            menuButton.gameObject.AddComponent<GraphicRaycaster>();
         }
 
         /// <summary>Quick access to the deck and rules, anchored below the combo card so their position follows its content-driven height.</summary>
@@ -712,7 +717,7 @@ namespace Contigu.Presentation
             deckRect.anchorMax = new Vector2(0.5f, 0f);
             deckRect.pivot = new Vector2(0.5f, 1f);
             deckRect.anchoredPosition = new Vector2(-81f, -24f);
-            deckRect.sizeDelta = new Vector2(150f, 46.5f);
+            deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             deckButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             deckButton.onClick.AddListener(() => _deckView.Show());
 
@@ -725,7 +730,7 @@ namespace Contigu.Presentation
             rulesRect.anchorMax = new Vector2(0.5f, 0f);
             rulesRect.pivot = new Vector2(0.5f, 1f);
             rulesRect.anchoredPosition = new Vector2(81f, -24f);
-            rulesRect.sizeDelta = new Vector2(150f, 46.5f);
+            rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             rulesButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             rulesButton.onClick.AddListener(() => _tutorialView.Show());
         }

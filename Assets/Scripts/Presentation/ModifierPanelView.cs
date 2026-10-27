@@ -181,11 +181,12 @@ namespace Contigu.Presentation
             _sellButton = UIFactory.CreateButton(_root, "SellButton", "Sell", UISprites.CancelButtonBackground, 18);
             UIFactory.DisablePlants(_sellButton);
             var sellRect = (RectTransform)_sellButton.transform;
+            // Just below the panel, never over a badge: a tap meant to swap or disarm a fertilizer must not land on Sell.
             sellRect.anchorMin = new Vector2(0.5f, 0f);
             sellRect.anchorMax = new Vector2(0.5f, 0f);
-            sellRect.pivot = new Vector2(0.5f, 0f);
-            sellRect.anchoredPosition = new Vector2(0f, 10f);
-            sellRect.sizeDelta = new Vector2(150f, 44f);
+            sellRect.pivot = new Vector2(0.5f, 1f);
+            sellRect.anchoredPosition = new Vector2(0f, -10f);
+            sellRect.sizeDelta = new Vector2(170f, MobileSetup.TouchMin(48f));
             _sellLabel = _sellButton.GetComponentInChildren<UnityEngine.UI.Text>();
             _sellButton.onClick.AddListener(() =>
             {
