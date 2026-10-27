@@ -1,0 +1,19 @@
+<!doctype html><html><body style="margin:0"><canvas id="c" width="1280" height="800"></canvas>
+<script>
+// Stand-in for the Unity build: the same window.__qa contract, so the Node harness can be checked without Unity.
+if (/[?&]qa=1/.test(location.search)) {
+  window.__qa = { stateJson: null, stateTick: 0, queue: [], results: {}, seq: 0,
+    send: function (c) { var id = ++this.seq; c.id = id; this.queue.push(JSON.stringify(c)); return id; } };
+  var clicks = 0;
+  setInterval(function () {
+    while (window.__qa.queue.length) {
+      var c = JSON.parse(window.__qa.queue.shift());
+      if (c.cmd === 'click') { clicks++; }
+      window.__qa.results[c.id] = 'ok';
+    }
+    window.__qa.stateJson = JSON.stringify({ tick: ++window.__qa.stateTick, scene: 'Main', screenW: 1280, screenH: 800, timeScale: 1,
+      buttons: [{ name: 'Slot0', text: '', x: 640, y: 700, w: 100, h: 80, visible: true }, { name: 'Play', text: 'Play', x: 640, y: 400, w: 200, h: 60, visible: true }],
+      texts: [], game: { state: 'InProgress', challenge: 'Spring', round: 1, sequence: false, clicks: clicks, moves: [{ slot: 0, x: 1, y: 1 }], cells: [], grid: [] } });
+  }, 100);
+}
+</script></body></html>

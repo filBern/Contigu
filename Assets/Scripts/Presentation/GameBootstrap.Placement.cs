@@ -289,6 +289,7 @@ namespace Contigu.Presentation
         private void OnDisable()
         {
             GameSpeed.Changed -= ApplyTimeScale;
+            UnregisterQaBridge();
             Time.timeScale = 1f;
         }
 

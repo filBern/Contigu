@@ -122,6 +122,7 @@ namespace Contigu.Presentation
 
             _run = new RunManager(new SystemRandomProvider());
             GameSpeed.Changed += ApplyTimeScale;
+            RegisterQaBridge();
             TileUpgradePreview.Provider = kind => _run != null ? _run.GetTileUpgradePreviewText(kind) : null;
             _metaStatsStore = new MetaStatsFileStore();
             _metaStats = _metaStatsStore.Load();
