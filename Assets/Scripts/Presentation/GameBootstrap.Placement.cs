@@ -854,6 +854,12 @@ namespace Contigu.Presentation
                 // finishes, rather than a second parallel lerp.
                 yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
+            else if (damagedEnemyIndex >= 0 && placement.TotalScore < 0)
+            {
+                // A negative score (poison) heals the enemy: same flight as an attack, in green.
+                yield return new WaitForSeconds(PostComboReadDelaySeconds);
+                yield return HealEnemyFromNegativeScore(placement.TotalScore, placement.Chips, placement.Mult, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
+            }
 
             yield return PlayVenomHits(placement);
 
@@ -1364,6 +1370,48 @@ namespace Contigu.Presentation
                 yield return new WaitForSeconds(0.25f);
                 yield return _hudView.FadeOutEnemySlot(enemyIndex, 0.3f);
             }
+        }
+
+        /// <summary>
+        /// A placement that scored below zero heals the front enemy by that much (up to its max HP): a green orb flies from the combo readout
+        /// to it, "+N" lands, the icon pulses and the HP bar climbs while the negative total runs back to 0. The first time it ever happens,
+        /// Sprig explains it.
+        /// </summary>
+        private System.Collections.IEnumerator HealEnemyFromNegativeScore(int startTotal, int startChips, float startMult, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
+        {
+            if (GamePrefs.ConsumeFirstTime(NegativeScoreTipPrefsKey))
+            {
+                _sprigView.Say("A negative score heals the enemy instead of hurting it! Poisoned plots subtract points, so keep them out of your groups.", SprigMood.Sad, 7f);
+            }
+            var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
+            int healed = hpAfter - hpBefore;
+            if (enemyAnchor != null && healed > 0)
+            {
+                bool landed = false;
+                _feedbackLayer.SpawnFlyingDamageOrb(_comboView.TotalTransform.position, enemyAnchor, "+" + healed, UITheme.Success, fontSize: SubtractionFlyingPopupFontSize, onArrival: () =>
+                {
+                    _hudView.PlayEnemyEffectPulse(enemyIndex);
+                    landed = true;
+                });
+                while (!landed)
+                {
+                    yield return null;
+                }
+            }
+            const float duration = 0.6f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                _comboView.SetTotal(Mathf.RoundToInt(Mathf.Lerp(startTotal, 0f, p)));
+                _comboView.SetPills(Mathf.RoundToInt(Mathf.Lerp(startChips, 0f, p)), Mathf.Lerp(startMult, 1f, p));
+                _hudView.SetEnemyHpDisplay(enemyIndex, Mathf.RoundToInt(Mathf.Lerp(hpBefore, hpAfter, p)), maxHp, identity, false);
+                yield return null;
+            }
+            _comboView.SetTotal(0);
+            _comboView.SetPills(0, 1f);
+            _hudView.SetEnemyHpDisplay(enemyIndex, hpAfter, maxHp, identity, false);
         }
 
         /// <summary>

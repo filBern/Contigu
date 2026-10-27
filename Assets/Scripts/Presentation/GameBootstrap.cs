@@ -43,6 +43,7 @@ namespace Contigu.Presentation
         private const int EmphasizedStatusFontSize = 27;
         private const string TutorialSeenPrefsKey = "TutorialSeen";
         private const string BoardEffectTipPrefsKey = "SprigBoardEffectTip";
+        private const string NegativeScoreTipPrefsKey = "SprigNegativeScoreTip";
         // Juice: a big Combo (at least two stacked Combo modifiers) or a Boss-tier kill shakes the grid —
         // see the "COMBO xN" callout below and DrainComboIntoDamage/DrainSecondaryEnemyHits.
         private const int BigComboShakeThreshold = 4;
