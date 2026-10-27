@@ -189,6 +189,16 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>False when the upgrade in Blister slot <paramref name="index"/> cannot be bought right now (e.g. Random Modifier with the garden full of fertilizers): the shop shows it as unavailable instead of letting the click fail silently.</summary>
+        public bool IsBlisterUpgradeEligible(int index)
+        {
+            if (index < 0 || index >= _blisterSlots.Length || _blisterSlots[index] == null || _blisterSlots[index].Kind != ShopSlotKind.Upgrade)
+            {
+                return true;
+            }
+            return IsUpgradeEligibleForOffer(_blisterSlots[index].HiddenUpgrade);
+        }
+
         /// <summary>
         /// Fills the Workshop (the section that replaced the Casino): slots 0-1 are two different packs, slot 2 the Compost service and slot 3 the
         /// Forge with its tile upgrade already shown. Everything is visible before buying. A reroll keeps the Compost slot as it was

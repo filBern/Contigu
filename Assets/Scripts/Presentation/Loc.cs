@@ -21,6 +21,8 @@ namespace Contigu.Presentation
             { "shop.full", "Full ({0})" },
             { "shop.minBag", "Min bag" },
             { "shop.needPollen", "Not enough Pollen: {0} more needed" },
+            { "shop.unavailable", "N/A" },
+            { "shop.unavailableWhy", "Nothing to use it on right now" },
             { "shop.fullWhy", "Your garden already holds {0} fertilizers" },
             { "shop.minBagWhy", "Your seed bag is already at its minimum size" },
             { "shop.workshopPack", "Workshop · pack" },

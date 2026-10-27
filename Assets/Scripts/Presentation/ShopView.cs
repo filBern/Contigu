@@ -754,7 +754,8 @@ namespace Contigu.Presentation
         private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
             int price = run.GetBlisterSlotPrice(index);
-            bool blocked = slot.Kind == ShopSlotKind.Modifier && run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
+            bool blocked = slot.Kind == ShopSlotKind.Modifier ? run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers : !run.IsBlisterUpgradeEligible(index);
+            bool gardenFull = run.ActiveModifiers.Count >= EconomyConstants.MaxActiveModifiers;
             var item = CreateShelfItem(_blisterCardsContainer, "BlisterSlot_" + index, _itemSize,
                 !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnBlisterBuyClicked(index), out var artRoot);
 
@@ -788,9 +789,10 @@ namespace Contigu.Presentation
                 gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
                 UIFactory.AddThickOutline(gem, UITheme.Border);
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
-                    ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), null, price - run.Lueur), UITheme.TextMuted);
+                    ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);
             }
-            BuildPriceBadge(item, blocked ? Loc.T("shop.full", EconomyConstants.MaxActiveModifiers) : price.ToString(), run.Lueur >= price || blocked, !blocked);
+            string blockedLabel = slot.Kind == ShopSlotKind.Upgrade && !gardenFull ? Loc.T("shop.unavailable") : Loc.T("shop.full", EconomyConstants.MaxActiveModifiers);
+            BuildPriceBadge(item, blocked ? blockedLabel : price.ToString(), run.Lueur >= price || blocked, !blocked);
         }
 
         /// <summary>
