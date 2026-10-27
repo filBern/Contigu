@@ -17,16 +17,20 @@ async function launch({ dir, port = 8765, headless = true, shots = 'qa-shots', l
   const page = await browser.newPage({ viewport });
   const consoleLines = [];
   const errors = [];
+  const environmentNoise = [];
   page.on('console', (m) => {
     const line = '[' + m.type() + '] ' + m.text();
     consoleLines.push(line);
-    if (m.type() === 'error' || /exception|error|NullReference|IndexOutOfRange/i.test(m.text())) { errors.push(line); }
+    // Headless Chromium has no MP3/AAC codecs: the sound clips fail to decode there, which says nothing about the game.
+    const audioNoise = /decode audio|Unable to decode|Loading FSB failed/i.test(m.text());
+    if (audioNoise) { environmentNoise.push(line); }
+    else if (m.type() === 'error' || /exception|error|NullReference|IndexOutOfRange/i.test(m.text())) { errors.push(line); }
   });
-  page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message));
+  page.on('pageerror', (e) => { if (/decode audio/i.test(e.message)) { environmentNoise.push('[pageerror] ' + e.message); } else { errors.push('[pageerror] ' + e.message); } });
   fs.mkdirSync(shots, { recursive: true });
 
   const qa = {
-    page, consoleLines, errors, shotsDir: shots,
+    page, consoleLines, errors, environmentNoise, shotsDir: shots,
     async state() {
       const json = await page.evaluate(() => (window.__qa && window.__qa.stateJson) || null);
       return json ? JSON.parse(json) : null;
@@ -55,6 +59,17 @@ async function launch({ dir, port = 8765, headless = true, shots = 'qa-shots', l
     click(x, y) { return qa.command({ cmd: 'click', x, y }); },
     hover(x, y) { return qa.command({ cmd: 'hover', x, y }); },
     clickText(text) { return qa.command({ cmd: 'clickText', text }); },
+    /** Clicks the first visible button whose label OR object name contains the text (art buttons carry no label text, only a name). */
+    async clickLabel(label, timeoutMs = 15000) {
+      const needle = label.toLowerCase();
+      const end = Date.now() + timeoutMs;
+      while (Date.now() < end) {
+        const hit = (await qa.buttons()).find((b) => (b.text || '').toLowerCase().includes(needle) || (b.name || '').toLowerCase().includes(needle));
+        if (hit) { return qa.click(hit.x, hit.y); }
+        await sleep(200);
+      }
+      throw new Error('No visible button labelled ' + label);
+    },
     /** A real mouse click in the browser (goes through the whole input stack), mapped from Unity pixels. */
     async realClick(x, y) {
       const st = await qa.state();
@@ -67,6 +82,16 @@ async function launch({ dir, port = 8765, headless = true, shots = 'qa-shots', l
       const b = await qa.buttonNamed(name);
       if (!b) { throw new Error('No visible button named ' + name); }
       return qa.click(b.x, b.y);
+    },
+    /** The first-run guide (Sprig) covers the whole screen and swallows clicks: advance it until it is gone. */
+    async dismissGuide(maxSteps = 30) {
+      for (let i = 0; i < maxSteps; i++) {
+        const guide = (await qa.buttons()).find((b) => b.name === 'SprigGuide');
+        if (!guide) { return i; }
+        await qa.click(guide.x, guide.y);
+        await sleep(450);
+      }
+      throw new Error('The Sprig guide never ended');
     },
     gameCommand(cmd, arg) { return qa.command({ cmd, arg: arg === undefined ? '' : String(arg) }); },
     async shot(name) {

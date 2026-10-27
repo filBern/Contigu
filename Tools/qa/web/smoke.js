@@ -18,20 +18,20 @@ if (!dir) { console.error('usage: node smoke.js <build folder> [--rounds N]'); p
 
     // Main menu: Collection and back, then Play.
     if (s.scene !== 'Main') {
-      await qa.clickText('Collection'); await sleep(600); await qa.shot('02-collection');
-      await qa.clickText('Close'); await sleep(300);
-      await qa.clickText('Play');
+      await qa.clickLabel('Collection'); await sleep(800); await qa.shot('02-collection');
+      await qa.clickLabel('Close'); await sleep(500);
+      await qa.clickLabel('Play');
       await qa.waitState((st) => st.scene === 'Main', 30000, 'the game scene');
     }
     await sleep(1500);
     await qa.gameCommand('unlockAll');
     await sleep(300);
     await qa.shot('03-challenges');
-    const play = (await qa.buttons()).find((b) => /play|choose|unlock/i.test(b.text) && b.name === 'Play');
-    if (!play) { note('No Play button on the challenge screen'); }
-    else { await qa.click(play.x, play.y); }
+    try { await qa.clickLabel('Play'); } catch (e) { note('No Play button on the challenge screen'); }
     s = await qa.waitState((st) => st.game && st.game.state === 'InProgress', 30000, 'a run in progress');
     await sleep(2500);
+    const guideSteps = await qa.dismissGuide();
+    console.log('Sprig guide: ' + guideSteps + ' step(s) dismissed');
     await qa.shot('04-round1');
 
     let placements = 0;
@@ -46,7 +46,7 @@ if (!dir) { console.error('usage: node smoke.js <build folder> [--rounds N]'); p
         for (const slot of (g.blister || []).concat(g.workshop || [])) { if (!slot.name) { note('A shop slot has no name'); } }
         if (g.round >= rounds) { console.log('Reached round ' + g.round + ' shop, enough'); break; }
         await qa.gameCommand('grantPollen', 60);
-        const leave = (await qa.buttons()).find((b) => /next round|leave|continue/i.test(b.text));
+        const leave = (await qa.buttons()).find((b) => /next round|leave|continue/i.test(b.text + ' ' + b.name));
         if (!leave) { note('No way out of the shop'); break; }
         await qa.click(leave.x, leave.y);
         await sleep(1500);
@@ -55,7 +55,7 @@ if (!dir) { console.error('usage: node smoke.js <build folder> [--rounds N]'); p
       if (g.round !== lastRound) { lastRound = g.round; console.log('Round ' + g.round + ' (' + g.challenge + ')'); }
       const move = g.moves[Math.floor(Math.random() * g.moves.length)];
       if (!move) {
-        const shuffle = (await qa.buttons()).find((b) => /shuffle/i.test(b.text));
+        const shuffle = (await qa.buttons()).find((b) => /shuffle/i.test(b.text + ' ' + b.name));
         if (!shuffle) { note('No legal move and no shuffle button'); break; }
         await qa.click(shuffle.x, shuffle.y);
         continue;
