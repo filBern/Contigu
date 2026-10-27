@@ -474,7 +474,9 @@ namespace Contigu.Presentation
                 var resolvedColor = ResolvedPlacedColor(outcome);
                 if (resolvedColor.HasValue)
                 {
-                    yield return _gridView.PlayChameleonColorTransition(placement.PlacedCells, outcome.ChameleonOriginalColor.Value, resolvedColor.Value);
+                    // The redraw at the end of the fade is skipped: a placed cell a completed line already emptied in the model is held on
+                    // screen until the score is counted, and a redraw from the real state would make it vanish right now.
+                    yield return _gridView.PlayChameleonColorTransition(placement.PlacedCells, outcome.ChameleonOriginalColor.Value, resolvedColor.Value, false);
                 }
             }
 

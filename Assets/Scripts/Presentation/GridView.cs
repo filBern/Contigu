@@ -979,21 +979,22 @@ namespace Contigu.Presentation
         /// <paramref name="to"/>, so this starts by forcing them back to <paramref name="from"/> and animates
         /// forward from there. Meant to be yielded before any score/Lueur pulse reads these cells' color.
         /// </summary>
-        public System.Collections.IEnumerator PlayChameleonColorTransition(IReadOnlyList<Vector2Int> cells, PieceColor from, PieceColor to)
+        public System.Collections.IEnumerator PlayChameleonColorTransition(IReadOnlyList<Vector2Int> cells, PieceColor from, PieceColor to, bool refreshAtEnd = true)
         {
             var list = new List<(Vector2Int Pos, PieceColor From)>();
             for (int i = 0; i < cells.Count; i++)
             {
                 list.Add((cells[i], from));
             }
-            return PlayTileCrossfade(list);
+            return PlayTileCrossfade(list, refreshAtEnd);
         }
 
         /// <summary>
         /// Crossfade of each cell from its own previous color's painted tile to the one it now shows: the OLD tile is laid over the new
         /// one and faded out, so the switch is clean instead of a muddy tint. Shared by the Chameleon, Fruitworm and Whitefly.
         /// </summary>
-        public System.Collections.IEnumerator PlayTileCrossfade(IReadOnlyList<(Vector2Int Pos, PieceColor From)> cells)
+        /// <param name="refreshAtEnd">False when the cells are being held on screen (a line this very placement completed): re-rendering them from the grid's real state would empty them before the score is counted.</param>
+        public System.Collections.IEnumerator PlayTileCrossfade(IReadOnlyList<(Vector2Int Pos, PieceColor From)> cells, bool refreshAtEnd = true)
         {
             var overlays = new List<Image>();
             var tints = new List<Color>();
@@ -1039,7 +1040,10 @@ namespace Contigu.Presentation
                 }
             }
             // Re-render the true state so no tint/sprite from the crossfade (or an earlier hover preview) can linger.
-            RefreshCells(refresh);
+            if (refreshAtEnd)
+            {
+                RefreshCells(refresh);
+            }
         }
 
         /// <summary>Re-renders just these cells from the grid's actual current state.</summary>
