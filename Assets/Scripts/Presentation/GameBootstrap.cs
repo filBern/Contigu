@@ -517,6 +517,8 @@ namespace Contigu.Presentation
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
             handRect.anchoredPosition = new Vector2(0f, -230f);
+            // Now that the box is placed, let it size itself around the current hand.
+            _handView.Refresh();
             BuildComboUtilityButtons(comboRect);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();

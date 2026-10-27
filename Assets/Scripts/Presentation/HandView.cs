@@ -26,6 +26,11 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewHeight = 142f;
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 12f;
+        // Smallest a slot gets (an empty or tiny piece), and the air kept around a piece inside its slot.
+        private const float MinSlotSize = 96f;
+        private const float SlotMargin = 12f;
+        // Where the hand box's top edge sits, relative to the screen's middle (it used to be centered at -230 at 174 tall).
+        private const float BoxTopY = -143f;
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 56f;
         private const float GhostTileSize = 46f;
@@ -768,17 +773,73 @@ namespace Contigu.Presentation
             {
                 _slotBackgrounds[i].gameObject.SetActive(i < activeCount);
             }
-            float slotsWidth = activeCount * SlotWidth + (activeCount - 1) * SlotSpacing;
-            _slotsRow.sizeDelta = new Vector2(slotsWidth, SlotHeight);
+            // The box hugs the pieces: each slot is as wide as its piece (never narrower than a minimum), all share the height of the tallest one.
+            // Pieces keep their size; only the empty room around them goes. The top edge stays put, so the box shrinks and grows downward.
+            float tallest = 0f;
+            var widths = new float[activeCount];
+            for (int i = 0; i < activeCount; i++)
+            {
+                float pieceWidth;
+                float pieceHeight;
+                GetPieceExtent(i, out pieceWidth, out pieceHeight);
+                widths[i] = Mathf.Max(MinSlotSize, pieceWidth + SlotMargin * 2f);
+                tallest = Mathf.Max(tallest, pieceHeight);
+            }
+            float slotHeight = Mathf.Max(MinSlotSize, tallest + SlotMargin * 2f);
+            float slotsWidth = (activeCount - 1) * SlotSpacing;
+            for (int i = 0; i < activeCount; i++)
+            {
+                slotsWidth += widths[i];
+                var slotRect = _slotBackgrounds[i].rectTransform;
+                slotRect.sizeDelta = new Vector2(widths[i], slotHeight);
+                var slotLayout = _slotBackgrounds[i].GetComponent<LayoutElement>();
+                slotLayout.preferredWidth = widths[i];
+                slotLayout.preferredHeight = slotHeight;
+                _previewContainers[i].sizeDelta = new Vector2(widths[i] - 4f, slotHeight - 4f);
+            }
+            _slotsRow.sizeDelta = new Vector2(slotsWidth, slotHeight);
             if (_slotDividers != null)
             {
+                float edge = -slotsWidth / 2f;
                 for (int i = 0; i < _slotDividers.Length; i++)
                 {
-                    _slotDividers[i].gameObject.SetActive(i < activeCount - 1);
-                    _slotDividers[i].anchoredPosition = new Vector2(-slotsWidth / 2f + (i + 1) * SlotWidth + (i + 0.5f) * SlotSpacing, 0f);
+                    bool active = i < activeCount - 1;
+                    _slotDividers[i].gameObject.SetActive(active);
+                    if (active)
+                    {
+                        edge += widths[i];
+                        _slotDividers[i].anchoredPosition = new Vector2(edge + SlotSpacing * 0.5f, 0f);
+                        _slotDividers[i].sizeDelta = new Vector2(3f, slotHeight * 0.62f);
+                        edge += SlotSpacing;
+                    }
                 }
             }
-            _handContainer.rectTransform.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, SlotHeight + HandBoxPadding * 2f);
+            float boxHeight = slotHeight + HandBoxPadding * 2f;
+            var boxRect = _handContainer.rectTransform;
+            boxRect.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, boxHeight);
+            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, BoxTopY - boxHeight * 0.5f);
+        }
+
+        /// <summary>Width and height, in canvas units, that the piece in hand slot <paramref name="index"/> is drawn at (0 for an empty slot); mirrors BuildShapePreview.</summary>
+        private void GetPieceExtent(int index, out float width, out float height)
+        {
+            width = 0f;
+            height = 0f;
+            if (index >= _deck.Hand.Count || !_deck.Hand[index].HasValue)
+            {
+                return;
+            }
+            var shape = PieceShapeCatalog.GetRotated(_deck.Hand[index].Value.Shape, _deck.HandRotations[index]);
+            int columns = 1;
+            int rows = 1;
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                columns = Mathf.Max(columns, shape.Cells[i].x + 1);
+                rows = Mathf.Max(rows, shape.Cells[i].y + 1);
+            }
+            float cellSize = Mathf.Min(PreviewTileSize, SlotPreviewBudget / Mathf.Max(columns, rows));
+            width = columns * cellSize;
+            height = rows * cellSize;
         }
 
         /// <summary>Same as <see cref="Refresh"/>, except every slot is shown empty regardless of the live model, to hold the new hand hidden until the current placement's feedback finishes. Call <see cref="Refresh"/> afterward to reveal it.</summary>
