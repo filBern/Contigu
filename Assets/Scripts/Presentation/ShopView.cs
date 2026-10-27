@@ -788,15 +788,6 @@ namespace Contigu.Presentation
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
                 UIFactory.StretchFull(sign.rectTransform);
-                var gem = UIFactory.CreatePanel(artRoot, "RarityGem", UpgradeVisualDefaults.GetRarityColor(upgradeDef.Rarity));
-                gem.raycastTarget = false;
-                gem.rectTransform.anchorMin = new Vector2(1f, 0f);
-                gem.rectTransform.anchorMax = new Vector2(1f, 0f);
-                gem.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                gem.rectTransform.anchoredPosition = new Vector2(-14f, 28f);
-                gem.rectTransform.sizeDelta = new Vector2(18f, 18f);
-                gem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-                UIFactory.AddThickOutline(gem, UITheme.Border);
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);
             }
