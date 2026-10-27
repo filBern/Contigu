@@ -33,7 +33,7 @@ namespace Contigu.Presentation
         // Reserved on the right of the Name row whenever a sell value is
         // shown (see Show()'s sellValue parameter), so a long modifier name
         // never runs under it.
-        private const float SellValueWidth = 56f;
+        private const float SellValueWidth = 96f;
 
         private RectTransform _root;
         private RectTransform _panel;
@@ -190,7 +190,7 @@ namespace Contigu.Presentation
             _sellValueLabel.gameObject.SetActive(hasSellValue);
             if (hasSellValue)
             {
-                _sellValueLabel.text = "Sell " + sellValue.Value;
+                _sellValueLabel.text = "Sell " + sellValue.Value + " (X)";
             }
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f), HeaderHeight);
 

@@ -579,7 +579,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition DanseDuSoleil = new ModifierDefinition(
             ModifierId.DanseDuSoleil, ModifierCategory.Roguelike, "Sun Dancer",
-            "+4 Mult on Sunshine and Golden Hour days (and their indoor cousins).");
+            "+4 Mult on Sunshine and Golden Hour days (and their indoor variants).");
 
         public static readonly ModifierDefinition Rustique = new ModifierDefinition(
             ModifierId.Rustique, ModifierCategory.Roguelike, "Frost Hardy",
@@ -587,7 +587,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CavalierVent = new ModifierDefinition(
             ModifierId.CavalierVent, ModifierCategory.Roguelike, "Windrider",
-            "+4 Mult in Wind and Hurricane weather (and their indoor cousins).");
+            "+4 Mult in Wind and Hurricane weather (and their indoor variants).");
 
         public static readonly ModifierDefinition Matinal = new ModifierDefinition(
             ModifierId.Matinal, ModifierCategory.Roguelike, "Early Bird",

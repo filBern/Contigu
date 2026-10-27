@@ -33,7 +33,8 @@ namespace Contigu.Presentation
             get { return _root != null && _root.gameObject.activeSelf; }
         }
 
-        public RectTransform Build(Transform parent)
+        /// <param name="inRun">False on the main menu, where there is no run to abandon or save: those two buttons are left out.</param>
+        public RectTransform Build(Transform parent, bool inRun = true)
         {
             var overlay = UIFactory.CreatePanel(parent, "SettingsOverlay", new Color(0f, 0f, 0f, 0.88f));
             _root = overlay.rectTransform;
@@ -59,8 +60,11 @@ namespace Contigu.Presentation
             closeRect.sizeDelta = new Vector2(220f, 52f);
             closeBtn.onClick.AddListener(Hide);
 
-            BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
-            BuildConfirmButton(_root, "MainMenu", "Save & quit", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
+            if (inRun)
+            {
+                BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
+                BuildConfirmButton(_root, "MainMenu", "Save & quit", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
+            }
             BuildResetButton(_root);
             BuildMotionToggle(_root);
 

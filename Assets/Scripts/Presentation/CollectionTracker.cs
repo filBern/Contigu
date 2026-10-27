@@ -48,6 +48,7 @@ namespace Contigu.Presentation
                 if (File.Exists(FilePath))
                 {
                     File.Delete(FilePath);
+                    WebFileSync.Flush();
                 }
             }
             catch (Exception)
@@ -152,6 +153,7 @@ namespace Contigu.Presentation
             try
             {
                 File.WriteAllText(FilePath, Progress.ToText());
+                WebFileSync.Flush();
             }
             catch (Exception)
             {

@@ -25,9 +25,9 @@ namespace Contigu.Presentation
     public sealed class SprigView : MonoBehaviour
     {
         private const float TypeInterval = 0.018f;
-        private const float GuidePortraitSize = 210f;
+        private const float GuidePortraitSize = 150f;
         private const float ToastPortraitSize = 120f;
-        private const float BubbleWidthGuide = 430f;
+        private const float BubbleWidthGuide = 350f;
         private const float BubbleWidthToast = 300f;
 
         private static readonly Dictionary<SprigMood, Sprite> _portraits = new Dictionary<SprigMood, Sprite>();

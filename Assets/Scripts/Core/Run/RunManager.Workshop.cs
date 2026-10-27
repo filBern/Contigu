@@ -30,7 +30,6 @@ namespace Contigu.Core
                 case UpgradeId.Compost:
                     PendingUpgrade = upgrade;
                     PendingUpgradeTileCandidates = Deck.GetRandomTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng);
-                    _compostsBought++;
                     return true;
                 default:
                     return false;
@@ -194,6 +193,11 @@ namespace Contigu.Core
                 return false;
             }
             bool removed = Deck.RemoveTokenAt(deckIndex);
+            if (removed)
+            {
+                // Only a seed actually removed makes the next Compost dearer: abandoning the purchase changes nothing.
+                _compostsBought++;
+            }
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             return removed;

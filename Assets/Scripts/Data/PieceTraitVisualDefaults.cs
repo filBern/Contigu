@@ -209,7 +209,7 @@ namespace Contigu.Data
                 case PieceTraitKind.RainbowRow:
                     return "Scores +" + ScoringConstants.RainbowRowBonus + " pts when its row holds every color of the run.";
                 case PieceTraitKind.Sunseeker:
-                    return "Scores +" + ScoringConstants.SunseekerBonus + " pts on Sunshine and Golden Hour days (and their indoor cousins).";
+                    return "Scores +" + ScoringConstants.SunseekerBonus + " pts on Sunshine and Golden Hour days (and their indoor variants).";
                 case PieceTraitKind.Hunter:
                     return "Scores +" + ScoringConstants.HunterBonusPerEnemy + " pts for each enemy still alive.";
                 case PieceTraitKind.Executioner:

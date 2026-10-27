@@ -23,6 +23,7 @@ namespace Contigu.Presentation
             try
             {
                 File.WriteAllText(FilePath, snapshot.ToText());
+                WebFileSync.Flush();
             }
             catch (Exception)
             {
@@ -50,6 +51,7 @@ namespace Contigu.Presentation
                 if (File.Exists(FilePath))
                 {
                     File.Delete(FilePath);
+                    WebFileSync.Flush();
                 }
             }
             catch (Exception)

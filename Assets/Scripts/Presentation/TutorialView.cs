@@ -74,13 +74,13 @@ namespace Contigu.Presentation
         {
             (string Header, string Body)[] sections =
             {
-                ("GOAL", "Clear each round - reach its score quota or defeat its enemies before you run out of seeds. Clear all 15 rounds to win the run."),
-                ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st sprout 1 pt, 2nd sprout 2 pts, 3rd sprout 3 pts, and so on."),
-                ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per sprout for the first line, +6 per sprout for a second line harvested by the same move, +9 for a third, and so on. Emptying the whole grid with one move doubles your Mult. Harvesting a line containing several distinct colors also earns Pollen (+2 Pollen per distinct color in it)."),
+                ("GOAL", "Clear each round by defeating its pests before you run out of seeds: your score is the damage you deal them. Clear all 15 rounds to win the run."),
+                ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on."),
+                ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per tile for the first line, +6 per tile for a second line harvested by the same move, +9 for a third, and so on. Emptying the whole grid with one move doubles your Mult. Harvesting a line containing several distinct colors also earns Pollen (+2 Pollen per distinct color in it)."),
                 ("POLLEN AND THE SHOP", "Between rounds, spend Pollen in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) - some add flat bonuses, some multiply."),
                 ("PESTS FIGHT ON YOUR GARDEN", "Your score is damage against the pests, but they strike back on the board itself: they lock plots, blight tiles (points scored there turn negative and the blight spreads), steal seeds from your hand, even blight a fertilizer so it does nothing. Read each pest's tooltip and plan around it."),
-                ("BOSS ROUNDS", "Every 4 rounds, a random boss rule applies: the grid locks 1 cell every 5 seeds, one hand slot is locked, or one color scores no points."),
-                ("DEFEAT", "If none of your 3 hand seeds can be placed anywhere on the grid before reaching the quota, the run ends there.")
+                ("BOSS ROUNDS", "Every 4th round a boss pest shows up, with tricks of its own. Read its tooltip before you plant."),
+                ("DEFEAT", "The run ends if your seeds run out while pests are still alive, or if none of the seeds in your hand can be placed and you have no Shuffle left.")
             };
 
             string text = null;
@@ -89,7 +89,7 @@ namespace Contigu.Presentation
                 string block = "<size=" + HeaderFontSize + ">" + sections[i].Header + "</size>\n" + sections[i].Body;
                 text = text == null ? block : text + "\n\n" + block;
             }
-            text += "\n\nTab: view your seed bag · H: show this screen again · Esc: settings";
+            text += "\n\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
             return text;
         }
     }

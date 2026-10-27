@@ -52,8 +52,9 @@ namespace Contigu.Presentation
                 {
                     _unrecordedRun = false;
                     RunSaveStore.Delete();
+                    int starsBefore = _metaStats.Stars;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
-                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore);
+                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, _metaStats.Stars - starsBefore);
                     break;
                 }
 
@@ -62,6 +63,7 @@ namespace Contigu.Presentation
                     _unrecordedRun = false;
                     RunSaveStore.Delete();
                     bool isNewBestScore;
+                    int starsBeforeDefeat = _metaStats.Stars;
                     if (_run.IsEndless)
                     {
                         // The win was already counted when the finale was cleared: only the extra rounds and records are new.
@@ -73,7 +75,7 @@ namespace Contigu.Presentation
                     {
                         isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
                     }
-                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless);
+                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, _metaStats.Stars - starsBeforeDefeat, _run.PiecesRemainingThisRound <= 0);
                     break;
                 }
             }

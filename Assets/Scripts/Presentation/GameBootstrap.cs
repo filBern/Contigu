@@ -512,7 +512,6 @@ namespace Contigu.Presentation
             handRect.pivot = new Vector2(0.5f, 0.5f);
             handRect.anchoredPosition = new Vector2(0f, -230f);
             BuildComboUtilityButtons(comboRect);
-            BuildMenuButton(mainRoot);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -522,6 +521,8 @@ namespace Contigu.Presentation
             // it once a purchase needs a follow-up.
             _shopView = gameObject.AddComponent<ShopView>();
             _shopView.Build(mainRoot, _tooltipView);
+            // Built after the shop so it stays above the shop board: Menu (settings, Save & quit) must be reachable from the shop too.
+            BuildMenuButton(mainRoot);
             _shopView.UseSharedLueur(_hudView.LueurLabelTransform, _hudView.LueurLabel);
 
             _draftView = gameObject.AddComponent<DraftView>();

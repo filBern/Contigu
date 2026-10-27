@@ -34,7 +34,7 @@ namespace Contigu.Presentation
             // Settings carries no state beyond its static PlayerPrefs-backed classes. Built after MainMenuView
             // so it renders as a later sibling, on top of the menu's buttons rather than underneath them.
             _settingsView = gameObject.AddComponent<SettingsView>();
-            _settingsView.Build(_canvasRect);
+            _settingsView.Build(_canvasRect, false);
 
             // The Collection and its hover tooltip, above the menu's buttons.
             var tooltip = gameObject.AddComponent<TooltipView>();

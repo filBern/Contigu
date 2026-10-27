@@ -248,7 +248,7 @@ namespace Contigu.Presentation
                 return;
             }
 
-            _starsLabel.text = "Stars: " + _metaStats.Stars;
+            _starsLabel.text = "Stars: " + _metaStats.Stars + "   (1 per round cleared, +2 for a victory; they unlock the other challenges)";
 
             var challenge = ChallengeCatalog.All[_currentIndex];
             _nameLabel.text = challenge.Name.ToUpperInvariant();

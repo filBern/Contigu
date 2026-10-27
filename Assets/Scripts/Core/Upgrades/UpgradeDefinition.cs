@@ -191,12 +191,12 @@ namespace Contigu.Core
         /// </summary>
         public static readonly UpgradeDefinition PieceMastery = new UpgradeDefinition(
             UpgradeId.PieceMastery, UpgradePool.Mastery, "Seed Mastery",
-            "Levels up one random seed shape - its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
+            "Levels up one random seed shape - its tiles score +1 pt per level gained.", false, UpgradeRarity.Common);
 
         /// <summary>Piece Mastery's exact sibling, keyed by PieceColor instead of ShapeId (see RunManager.GrantColorMastery/LastColorMasteryGranted, ColorCarouselView). Same no-sub-choice/no-cap/level-(N-1)-flat-points mechanics.</summary>
         public static readonly UpgradeDefinition ColorMastery = new UpgradeDefinition(
             UpgradeId.ColorMastery, UpgradePool.Mastery, "Color Mastery",
-            "Levels up one random seed color - its sprouts score +1 pts per level.", false, UpgradeRarity.Common);
+            "Levels up one random seed color - its tiles score +1 pt per level gained.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition PipTile = new UpgradeDefinition(
             UpgradeId.PipTile, UpgradePool.Grid, "Pip Sprout",
@@ -292,7 +292,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition SunseekerTile = new UpgradeDefinition(
             UpgradeId.SunseekerTile, UpgradePool.Grid, "Sunseeker Sprout",
-            "+10 pts on Sunshine and Golden Hour days (and their indoor cousins).", false, UpgradeRarity.Common);
+            "+10 pts on Sunshine and Golden Hour days (and their indoor variants).", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition HunterTile = new UpgradeDefinition(
             UpgradeId.HunterTile, UpgradePool.Grid, "Hunter Sprout",

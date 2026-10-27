@@ -6,6 +6,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 cmap = set(TTFont(os.path.join(ROOT, 'Assets/Resources/Colorful_UI/colorful/font/Digitalt.ttf')).getBestCmap().keys())
+ALLOWED = {'◆'}  # only a constant in DescriptionTextFormatter; no visible text contains it
 found = {}
 for path in glob.glob(os.path.join(ROOT, 'Assets/Scripts/**/*.cs'), recursive=True):
     if '/Tests/' in path:
@@ -15,7 +16,7 @@ for path in glob.glob(os.path.join(ROOT, 'Assets/Scripts/**/*.cs'), recursive=Tr
             continue
         for lit in re.findall(r'"((?:[^"\\]|\\.)*)"', line):
             for ch in set(lit):
-                if ord(ch) > 127 and ord(ch) not in cmap:
+                if ord(ch) > 127 and ord(ch) not in cmap and ch not in ALLOWED:
                     found.setdefault(ch, []).append('%s:%d' % (os.path.relpath(path, ROOT), n))
 for ch, locs in found.items():
     print('%r U+%04X not in Digitalt (%d): %s' % (ch, ord(ch), len(locs), ', '.join(locs[:8])))

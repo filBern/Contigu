@@ -131,6 +131,10 @@ namespace Contigu.Presentation
             exitRect.sizeDelta = new Vector2(330f, 84f);
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // A web page has no window of its own to quit: the button would do nothing.
+            exitButton.gameObject.SetActive(false);
+#endif
             exitButton.gameObject.AddComponent<MainMenuButtonHover>();
             DisableFeedbackScale(exitButton);
 

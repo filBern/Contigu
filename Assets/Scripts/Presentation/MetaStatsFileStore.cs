@@ -48,6 +48,7 @@ namespace Contigu.Presentation
             if (File.Exists(_filePath))
             {
                 File.Delete(_filePath);
+                WebFileSync.Flush();
             }
         }
 
@@ -55,6 +56,7 @@ namespace Contigu.Presentation
         {
             string json = JsonUtility.ToJson(stats);
             File.WriteAllText(_filePath, json);
+            WebFileSync.Flush();
         }
     }
 }

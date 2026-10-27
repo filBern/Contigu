@@ -120,7 +120,7 @@ namespace Contigu.Core
         /// <summary>"Rainbow Row Sprout" — +15 pts when its row holds every color of the run.</summary>
         RainbowRow,
 
-        /// <summary>"Sunseeker Sprout" — +10 pts on Sunshine and Golden Hour days (and their indoor cousins).</summary>
+        /// <summary>"Sunseeker Sprout" — +10 pts on Sunshine and Golden Hour days (and their indoor variants).</summary>
         Sunseeker,
 
         /// <summary>"Hunter Sprout" — +3 pts per enemy still alive.</summary>

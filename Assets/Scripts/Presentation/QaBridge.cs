@@ -89,6 +89,10 @@ namespace Contigu.Presentation
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
+#if !CONTIGU_DEBUG
+            // A production build never opens this hook, whatever the URL says: it can unlock everything and hand out stars.
+            return;
+#else
             if (QaBridge_Enabled() != 1)
             {
                 return;
@@ -96,6 +100,7 @@ namespace Contigu.Presentation
             var go = new GameObject("QaBridge");
             DontDestroyOnLoad(go);
             go.AddComponent<QaBridge>();
+#endif
         }
 #endif
 

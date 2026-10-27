@@ -228,6 +228,19 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Compost_AbandonedPurchase_DoesNotRaiseItsPrice()
+        {
+            var run = ShopRun();
+            int first = run.GetUpgradeSlotPrice(2);
+            Assert.IsTrue(run.BuyUpgradeSlot(2));
+            Assert.IsTrue(run.AbandonPending());
+            run.DebugForceRoundComplete();
+            Assert.IsTrue(run.LeaveShop());
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(first, run.GetUpgradeSlotPrice(2), "no seed was removed, so the next Compost costs the same");
+        }
+
+        [Test]
         public void Compost_PriceGrowsWithEveryUseThisRun()
         {
             var run = ShopRun();

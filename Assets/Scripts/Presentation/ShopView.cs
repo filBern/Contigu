@@ -162,6 +162,15 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -38f);
             header.rectTransform.sizeDelta = new Vector2(900f, 36f);
 
+            // Prices climb with every purchase of a visit (and with each Reroll): say so, or the jump looks like a bug.
+            var priceNote = UIFactory.CreateText(_root, "PriceNote", Loc.T("shop.priceNote"), 15, UITheme.TextMutedOnBackground);
+            priceNote.raycastTarget = false;
+            priceNote.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            priceNote.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            priceNote.rectTransform.pivot = new Vector2(0.5f, 1f);
+            priceNote.rectTransform.anchoredPosition = new Vector2(0f, -78f);
+            priceNote.rectTransform.sizeDelta = new Vector2(900f, 24f);
+
             // Diamond icon instead of a "Lueur: " text prefix, consistent
             // with HudView's own readout. Larger here than in the HUD, with
             // a slow pulse (see PulseLueurLabel) since this is the one
