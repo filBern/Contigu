@@ -17,6 +17,7 @@ namespace Contigu.Presentation
             // to the shop) before the player ever clears that selection
             // themselves.
             _handView.SetShufflePulsing(false);
+            CollectionTracker.Scan(_run);
             switch (state)
             {
                 case RunState.AwaitingShop:
@@ -380,6 +381,7 @@ namespace Contigu.Presentation
         /// <summary><paramref name="refreshModifierPanel"/> defaults to true; OnUpgradeBuyRequested passes false when a Random Modifier grant is about to reveal through the carousel, deferring the panel's own refresh until that reveal is dismissed (see its own comment for why).</summary>
         private void RefreshAll(bool refreshModifierPanel = true)
         {
+            CollectionTracker.Scan(_run);
             _gridView.Refresh();
             _handView.SetBossLockedSlot(_run.BossLockedHandSlotIndex);
             _handView.Refresh();

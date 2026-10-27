@@ -84,6 +84,7 @@ namespace Contigu.Presentation
         private DeckView _deckView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
+        private CollectionView _collectionView;
         private SprigView _sprigView;
         private ChallengeSelectView _challengeSelectView;
         private SettingsView _settingsView;
@@ -585,6 +586,8 @@ namespace Contigu.Presentation
                 _modifierPanelView.Refresh(_run.ActiveModifiers);
             };
 
+            _collectionView = gameObject.AddComponent<CollectionView>();
+            _collectionView.Build(mainRoot, _tooltipView);
             _deckView = gameObject.AddComponent<DeckView>();
             _deckView.Build(mainRoot, _run, _tooltipView);
 
@@ -661,6 +664,7 @@ namespace Contigu.Presentation
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _challengeSelectView.ContinueRequested += OnContinueRequested;
+            _challengeSelectView.CollectionRequested += _collectionView.Show;
             _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
             _settingsView.AbandonRunRequested += OnAbandonRunRequested;
             _settingsView.MainMenuRequested += OnMainMenuRequested;

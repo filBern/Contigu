@@ -33,6 +33,9 @@ namespace Contigu.Presentation
 
         /// <summary>The "Continue" button: resume the saved run.</summary>
         public event Action ContinueRequested;
+
+        /// <summary>The "Collection" button: open the collection of discoveries.</summary>
+        public event Action CollectionRequested;
         private Button _continueButton;
 
         private RectTransform _root;
@@ -150,6 +153,16 @@ namespace Contigu.Presentation
             continueRect.sizeDelta = new Vector2(300f, 50f);
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);
+
+            var collectionButton = UIFactory.CreateButton(_root, "Collection", "Collection", UITheme.PanelLight, 18);
+            var collectionRect = collectionButton.GetComponent<RectTransform>();
+            collectionRect.anchorMin = new Vector2(0f, 1f);
+            collectionRect.anchorMax = new Vector2(0f, 1f);
+            collectionRect.pivot = new Vector2(0f, 1f);
+            collectionRect.anchoredPosition = new Vector2(30f, -30f);
+            collectionRect.sizeDelta = new Vector2(180f, 44f);
+            collectionButton.GetComponentInChildren<Text>().color = UITheme.TextPrimary;
+            collectionButton.onClick.AddListener(() => { if (CollectionRequested != null) { CollectionRequested(); } });
         }
 
         private void BuildArrowButton(Transform parent, string name, string label, float x, Action onClick)

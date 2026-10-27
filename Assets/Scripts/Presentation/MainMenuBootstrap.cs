@@ -16,6 +16,7 @@ namespace Contigu.Presentation
 
         private MainMenuView _mainMenuView;
         private SettingsView _settingsView;
+        private CollectionView _collectionView;
         private AnimatedBackgroundView _animatedBackgroundView;
         private RectTransform _canvasRect;
         // Guards against a double-click re-triggering (and stacking) the cover sweep while it's already playing.
@@ -34,6 +35,13 @@ namespace Contigu.Presentation
             // so it renders as a later sibling, on top of the menu's buttons rather than underneath them.
             _settingsView = gameObject.AddComponent<SettingsView>();
             _settingsView.Build(_canvasRect);
+
+            // The Collection and its hover tooltip, above the menu's buttons.
+            var tooltip = gameObject.AddComponent<TooltipView>();
+            tooltip.Build(_canvasRect);
+            _collectionView = gameObject.AddComponent<CollectionView>();
+            _collectionView.Build(_canvasRect, tooltip);
+            _mainMenuView.CollectionClicked += _collectionView.Show;
 
             _mainMenuView.PlayClicked += OnPlayClicked;
             _mainMenuView.SettingsClicked += _settingsView.Toggle;

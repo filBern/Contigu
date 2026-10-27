@@ -150,6 +150,8 @@ namespace Contigu.Presentation
                     return;
                 }
                 new MetaStatsFileStore().Delete();
+                RunSaveStore.Delete();
+                CollectionTracker.Reset();
                 GamePrefs.DeleteAll();
                 GamePrefs.Save();
                 VolumeSettings.ResetToDefaults();

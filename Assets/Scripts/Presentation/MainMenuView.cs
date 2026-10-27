@@ -35,6 +35,9 @@ namespace Contigu.Presentation
         /// <summary>Fired once the player clicks through to actually start playing.</summary>
         public event Action PlayClicked;
 
+        /// <summary>Fired when the player opens the Collection from the main menu.</summary>
+        public event Action CollectionClicked;
+
         /// <summary>Fired when the player opens the Settings overlay from the main menu.</summary>
         public event Action SettingsClicked;
 
@@ -82,7 +85,7 @@ namespace Contigu.Presentation
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
             playRect.pivot = new Vector2(0.5f, 0.5f);
-            playRect.anchoredPosition = new Vector2(0f, -46f);
+            playRect.anchoredPosition = new Vector2(0f, -34f);
             playRect.sizeDelta = new Vector2(330f, 84f);
             var playImage = playButton.GetComponent<Image>();
             playImage.color = UISprites.Garden("Gold") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Lime);
@@ -91,12 +94,26 @@ namespace Contigu.Presentation
             playButton.gameObject.AddComponent<MainMenuButtonHover>();
             DisableFeedbackScale(playButton);
 
+            var collectionButton = UIFactory.CreateButton(_root, "Collection", "Collection", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 33);
+            var collectionRect = collectionButton.GetComponent<RectTransform>();
+            collectionRect.anchorMin = new Vector2(0.5f, 0.5f);
+            collectionRect.anchorMax = new Vector2(0.5f, 0.5f);
+            collectionRect.pivot = new Vector2(0.5f, 0.5f);
+            collectionRect.anchoredPosition = new Vector2(0f, -134f);
+            collectionRect.sizeDelta = new Vector2(330f, 84f);
+            var collectionImage = collectionButton.GetComponent<Image>();
+            collectionImage.color = UISprites.Garden("Green") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Violet);
+            UIFactory.AddThickOutline(collectionImage, UITheme.Border);
+            collectionButton.onClick.AddListener(() => { if (CollectionClicked != null) { CollectionClicked(); } });
+            collectionButton.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(collectionButton);
+
             var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 33);
             var settingsRect = settingsButton.GetComponent<RectTransform>();
             settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
             settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
             settingsRect.pivot = new Vector2(0.5f, 0.5f);
-            settingsRect.anchoredPosition = new Vector2(0f, -176f);
+            settingsRect.anchoredPosition = new Vector2(0f, -234f);
             settingsRect.sizeDelta = new Vector2(330f, 84f);
             var settingsImage = settingsButton.GetComponent<Image>();
             settingsImage.color = UISprites.Garden("Blue") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Teal);
@@ -110,7 +127,7 @@ namespace Contigu.Presentation
             exitRect.anchorMin = new Vector2(0.5f, 0.5f);
             exitRect.anchorMax = new Vector2(0.5f, 0.5f);
             exitRect.pivot = new Vector2(0.5f, 0.5f);
-            exitRect.anchoredPosition = new Vector2(0f, -306f);
+            exitRect.anchoredPosition = new Vector2(0f, -334f);
             exitRect.sizeDelta = new Vector2(330f, 84f);
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
