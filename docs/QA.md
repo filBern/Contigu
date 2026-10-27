@@ -17,8 +17,8 @@ Ce qu'il utilise, et que tu peux lancer toi-même :
 Le jeu embarque un crochet de test (`QaBridge`, actif seulement quand la page est ouverte avec `?qa=1`). Il publie les boutons, les textes et l'état de la partie, et exécute de vrais clics à travers le système d'événements d'Unity.
 
 1. Build Settings → WebGL. **Compression : Disabled** (sinon `serve.py` sait servir `.br`/`.gz`, mais c'est plus fragile). Coche **Development Build** pour des erreurs lisibles. Pour les raccourcis de triche (`grantPollen`, `forceRoundWin`), ajoute le symbole `CONTIGU_DEBUG` dans Player Settings → Scripting Define Symbols ; sans lui ces deux commandes répondent « build without CONTIGU_DEBUG » et le reste marche.
-2. Mets le dossier du build dans le dépôt (par exemple `Builds/WebGL`, sur une branche à part si c'est lourd) et pousse-le.
-3. `cd Tools/qa/web && node smoke.js ../../../Builds/WebGL --rounds 3` : charge le jeu, passe par le menu et la collection, lance une partie, joue des coups légaux tirés de l'état, visite la boutique, et échoue à la moindre erreur de console ou état impossible. Captures dans `qa-shots/`.
+2. Mets le dossier du build dans le dépôt (le dossier `QaBuild` à la racine : `Builds/` est ignoré par git) et pousse-le.
+3. `cd Tools/qa/web && node smoke.js ../../../QaBuild --rounds 3` : charge le jeu, passe par le menu et la collection, lance une partie, joue des coups légaux tirés de l'état, visite la boutique, et échoue à la moindre erreur de console ou état impossible. Captures dans `qa-shots/`.
 4. `qa.js` expose les briques pour écrire d'autres scénarios (`state`, `click`, `clickText`, `realClick`, `hover`, `gameCommand`, `idle`, `shot`). Les coordonnées sont les pixels Unity, origine en haut à gauche.
 
 `node` + `playwright` + Chromium sont déjà installés dans l'environnement cloud. Le harnais est vérifié contre une page simulée (`Tools/qa/web/mock`), pas encore contre un vrai build Unity.
