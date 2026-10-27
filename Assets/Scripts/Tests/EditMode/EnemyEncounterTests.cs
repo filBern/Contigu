@@ -1387,6 +1387,9 @@ namespace Contigu.Tests
             Assert.IsTrue(outcome.Placement.Success);
 
             int expectedVenomDamage = Mathf.RoundToInt(maxHpBefore * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f));
+            Assert.AreEqual(1, outcome.Placement.VenomHits.Count, "The strike is reported for the presentation");
+            Assert.AreEqual(0, outcome.Placement.VenomHits[0].EnemyIndex);
+            Assert.AreEqual(expectedVenomDamage, outcome.Placement.VenomHits[0].Damage);
             int expectedTotalDamage = outcome.Placement.TotalScore + expectedVenomDamage;
             Assert.Greater(expectedVenomDamage, 0, "Need a large enough max HP for the poison tick to actually be observable");
             Assert.AreEqual(hpBefore - expectedTotalDamage, enemy.CurrentHp);

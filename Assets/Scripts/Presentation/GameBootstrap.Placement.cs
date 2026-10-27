@@ -853,6 +853,8 @@ namespace Contigu.Presentation
                 yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
 
+            yield return PlayVenomHits(placement);
+
             // Siphon converts the damage just dealt into Pollen inside RunManager without any score
             // event, so the counter only caught up on the next refresh. Fold the remainder in right here, as
             // part of this same count — a round-ending bonus is excluded, the shop sequence animates that one.
@@ -1090,6 +1092,29 @@ namespace Contigu.Presentation
             if (leechHealAmount > 0)
             {
                 PlayLeechHealEffect(leechIndex, leechHealAmount);
+            }
+        }
+
+        private static readonly Color VenomGreen = new Color(0.373f, 0.624f, 0.373f);
+
+        /// <summary>Venom Sprout's strike: the tile flashes green, a green droplet burst lands on the enemy it poisoned, its icon flinches and "Venom -N" floats up, and its HP bar settles on the new value.</summary>
+        private System.Collections.IEnumerator PlayVenomHits(PlacementResult placement)
+        {
+            for (int i = 0; i < placement.VenomHits.Count; i++)
+            {
+                var hit = placement.VenomHits[i];
+                _gridView.PulseCell(hit.Position.x, hit.Position.y);
+                _gridView.PlayClearBurst(hit.Position.x, hit.Position.y, VenomGreen);
+                SfxManager.Play(SfxId.Score);
+                var anchor = _hudView.GetEnemyIconTransform(hit.EnemyIndex);
+                if (anchor != null)
+                {
+                    _hudView.PlayEnemyHurtEffect(hit.EnemyIndex);
+                    _feedbackLayer.SpawnPopup(anchor, "Venom -" + hit.Damage, VenomGreen, floatDown: true);
+                    var enemy = _run.CurrentEncounter[hit.EnemyIndex];
+                    _hudView.SetEnemyHpDisplay(hit.EnemyIndex, enemy.CurrentHp, enemy.CurrentMaxHp, enemy.Definition.Id, enemy.IsDead);
+                }
+                yield return new WaitForSeconds(0.45f);
             }
         }
 

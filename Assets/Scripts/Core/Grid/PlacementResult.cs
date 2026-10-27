@@ -205,6 +205,9 @@ namespace Contigu.Core
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> PrePlantedTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 
         /// <summary>Tiles a Dye Sprout painted another color on this placement (position, new color).</summary>
+        /// <summary>Each Venom Sprout strike this placement: the tile that fired, the index of the enemy it hit (in the encounter) and the damage dealt.</summary>
+        public IReadOnlyList<(Vector2Int Position, int EnemyIndex, int Damage)> VenomHits = System.Array.Empty<(Vector2Int, int, int)>();
+
         public IReadOnlyList<(Vector2Int Position, PieceColor Color)> RecoloredTiles = System.Array.Empty<(Vector2Int, PieceColor)>();
 
         /// <summary>Tiles a Pruner Sprout uprooted on this placement.</summary>

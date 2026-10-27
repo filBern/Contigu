@@ -358,7 +358,7 @@ namespace Contigu.Core
                     ApplyKamikazeEffect(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Venom:
-                    ApplyVenomEffect();
+                    ApplyVenomEffect(traitCellPos, placement);
                     break;
                 case PieceTraitKind.Pip:
                 case PieceTraitKind.Lucky:
@@ -937,7 +937,7 @@ namespace Contigu.Core
         /// ApplyDamageToEncounter's flat damage parameter, the amount here is computed per-target
         /// since it depends on the target's own CurrentMaxHp, so it can't reuse that helper directly.
         /// </summary>
-        private void ApplyVenomEffect()
+        private void ApplyVenomEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
             if (!HasActiveEncounter)
             {
@@ -951,6 +951,9 @@ namespace Contigu.Core
                     continue;
                 }
                 int damage = Mathf.RoundToInt(enemy.CurrentMaxHp * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f));
+                var hits = new List<(Vector2Int Position, int EnemyIndex, int Damage)>(placement.VenomHits);
+                hits.Add((traitCellPos, i, damage));
+                placement.VenomHits = hits;
                 if (enemy.ApplyDamage(damage))
                 {
                     CleanUpDefeatedEnemy(enemy);
