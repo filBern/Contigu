@@ -54,3 +54,21 @@ Trouvailles : 1 Majeur, 2 Mineurs, 1 Clarté.
 
 ## 5. Test à ajouter
 - Test de présentation : pour chaque overlay de choix ouvert, `SettingsView` doit avoir un ordre de rendu supérieur à celui de l'overlay, ou `Toggle()` doit le remonter.
+
+## 6. Re-vérification (build `9d2630d New build`, incluant `210b1d3`)
+
+Scripts du scratchpad `v1.js`, `v4.js`, `v7.js`, `v8.js`, à 1280x800 et 1024x768. Captures `docs/qa/shots-verif/re-*.png`. Observé dans le build.
+
+| Point | Résultat |
+|---|---|
+| Majeur : Settings sur choix de seed pack | **Corrigé.** Resume, Save & quit, Abandon run, Reduced motion, Reset data sont `visible:true`, 0 chevauchement, aux deux résolutions. Le choix reste en place après Resume. |
+| Majeur : Settings sur choix de tuiles / de type d'un sprout | **Corrigé** (Tile_* à 1280 et 1024, Type_* à 1280 et 1024). |
+| Save & quit depuis un choix, puis Continue | **OK.** Seed pack (1280, 1024), choix de type (1280, 1024), choix de tuiles (1024) : Continue propose la reprise, boutique manche 1, Pollen d'ouverture (30, et non les 3000 accordés avant l'achat), achat annulé, blister identique (`sold:false`). Save & quit depuis un choix de **tuiles (Tile_*) à 1280** non rejoué : ce build a tiré un choix de type à la place, couvert de la même façon. |
+| Menu ferme Settings au 2e clic | **OK** en manche, sur le choix de défi (via Resume), sur choix de type et choix de tuiles (1280, 1024). Le choix reste ouvert dessous. |
+| Settings lisible ailleurs | OK en boutique, manche, Rules, défaite (non rejoué, inchangé), choix de défi : boutons sans chevauchement, aucun texte hors écran. |
+| Shuffle / Slot2 | **Pas résolu au sens strict** : le bouton Shuffle fait maintenant 46x48 (1280) / 37x38 (1024) mais son rect chevauche encore le rect de Slot2 de 14x16 px (1280) et 12x13 px (1024) (Shuffle 873-919 x 523-571, Slot2 737-887 x 555-705). Sur la capture, le cercle Shuffle est posé sur le coin haut-droit du plateau de main, sans masquer de graine visible. Le chevauchement ne concerne que la zone cliquable de Slot2 (150x150, plus grande que le sprite). Reste Mineur. |
+| Seed bag / Rules | **Corrigé** : rects 893-1043 et 1069-1219, écart 26 px (`re-round-buttons-1280.png`). |
+
+Observation restante (Clarté, mineure) : le voile de Settings sur les écrans de choix et la boutique est translucide, donc le titre du choix (« PROPAGATE A CUTTING », « The Pollen Shop », le compteur de Pollen) transparaît derrière le titre « Menu » et les curseurs (`re-sprout-settings-1024.png`, `re-seedpack-settings-1280.png`). Lisible, mais chargé ; un voile plus opaque règlerait aussi le point c2 en manche (le texte « Save & quit resumes… » chevauche toujours le compteur 400/400 de 100x20 px à 1280, 80x16 à 1024).
+
+Limite : la variante clavier de l'infobulle (c1) reste non testée (Chromium annonce le tactile). Aucune erreur JS/Unity hors syncfs.

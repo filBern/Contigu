@@ -36,7 +36,7 @@ namespace Contigu.Presentation
         /// <param name="inRun">False on the main menu, where there is no run to abandon or save: those two buttons are left out.</param>
         public RectTransform Build(Transform parent, bool inRun = true)
         {
-            var overlay = UIFactory.CreatePanel(parent, "SettingsOverlay", new Color(0f, 0f, 0f, 0.88f));
+            var overlay = UIFactory.CreatePanel(parent, "SettingsOverlay", new Color(0f, 0f, 0f, 0.97f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             // Above the shop's choice screens, which bring themselves to the front when they open (Menu, at 100, stays above this).
