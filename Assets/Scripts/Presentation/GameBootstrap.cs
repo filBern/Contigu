@@ -518,17 +518,17 @@ namespace Contigu.Presentation
             float buttonsTopY = deckY + UtilityButtonHeight * 0.5f;
             float fertilizerY = (scoreBottomY + buttonsTopY) * 0.5f;
 
-            // Pollen sits in the top band, left of the Menu button (the shop moves it back above its own panel).
+            // Pollen is a small chip in the top-left HUD, on the speed button's row (right of it), growing rightwards as the count does;
+            // the shop moves it back above its own panel and then restores it here.
             var lueurRect = _hudView.LueurLabelTransform;
             lueurRect.anchorMin = new Vector2(0.5f, 0.5f);
             lueurRect.anchorMax = new Vector2(0.5f, 0.5f);
-            lueurRect.pivot = new Vector2(0.5f, 0.5f);
+            lueurRect.pivot = new Vector2(0f, 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
-            const float BoardPollenScale = 0.8f;
+            const float BoardPollenScale = 0.5f;
             lueurRect.localScale = Vector3.one * BoardPollenScale;
-            float menuButtonWidth = MobileSetup.TouchMin(110f);
-            float pollenX = halfCanvasWidth - 16f - menuButtonWidth - 24f - lueurRect.rect.width * BoardPollenScale * 0.5f;
-            float pollenY = canvasHeight * 0.5f - HudView.EnemyBandHeight * 0.5f;
+            float pollenX = -halfCanvasWidth + 16f + MobileSetup.TouchMin(64f) + 14f;
+            float pollenY = canvasHeight * 0.5f - 62f - MobileSetup.TouchMin(44f) * 0.5f;
             lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
 
             // The hand: a tall column on the right, as tall as the grid.

@@ -513,6 +513,7 @@ namespace Contigu.Presentation
             }
             if (_lueurContainer != null)
             {
+                _lueurContainer.pivot = new Vector2(0f, 0.5f);
                 _lueurContainer.anchoredPosition = new Vector2(_boardPollenX, _boardPollenY);
                 _lueurContainer.localScale = Vector3.one * _boardPollenScale;
             }
@@ -530,6 +531,7 @@ namespace Contigu.Presentation
             if (_lueurContainer != null)
             {
                 // Clear above the "Coming up" box (its top edge is fixed, the box being centered on the screen), not over its sign and enemies.
+                _lueurContainer.pivot = new Vector2(0.5f, 0.5f);
                 _lueurContainer.anchoredPosition = new Vector2(centerX, UpcomingBoxTopY + LueurAboveBoxClearance);
                 _lueurContainer.localScale = Vector3.one;
             }
