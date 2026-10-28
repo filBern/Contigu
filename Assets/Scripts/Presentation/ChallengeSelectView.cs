@@ -15,11 +15,17 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class ChallengeSelectView : MonoBehaviour
     {
-        private const float CardWidth = 280f;
-        private const float CardHeight = 320f;
-        private const float CardY = -20f;
-        private const float ArrowButtonSize = 56f;
-        private const float ArrowGap = 20f;
+        private const float CardWidth = 380f;
+        private const float CardHeight = 440f;
+        private const float CardY = -10f;
+        private const float BannerHeight = 92f;
+        private const float ArrowButtonSize = 76f;
+        private const float ArrowGap = 28f;
+        private const float PopDuration = 0.18f;
+        private static readonly Color BackdropWood = new Color(0.15f, 0.10f, 0.08f, 1f);
+        private static readonly Color BackdropStripe = new Color(0.20f, 0.13f, 0.10f, 1f);
+        private static readonly Color AwningRed = new Color(0.78f, 0.25f, 0.22f, 1f);
+        private static readonly Color AwningCream = new Color(0.96f, 0.90f, 0.76f, 1f);
         // Entrance fade — Show() can now fire slightly before the main menu's uncover sweep has fully
         // cleared the screen (see GameBootstrap.Awake), so this view needs its own visible transition
         // in rather than just snapping to fully opaque underneath still-vanishing tiles.
@@ -51,39 +57,81 @@ namespace Contigu.Presentation
         private Text _statusLabel;
         private Button _playButton;
         private Text _playButtonLabel;
-        private Text _pageLabel;
+        private Image _banner;
+        private Text _statsLabel;
+        private Image[] _dots;
+        private Coroutine _popCoroutine;
 
         public RectTransform Build(Transform parent)
         {
-            var overlay = UIFactory.CreatePanel(parent, "ChallengeSelectOverlay", new Color(0f, 0f, 0f, 0.88f));
+            var overlay = UIFactory.CreatePanel(parent, "ChallengeSelectOverlay", BackdropWood);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             _canvasGroup = overlay.gameObject.AddComponent<CanvasGroup>();
 
-            var header = UIFactory.CreateText(_root, "Header", "CHOOSE YOUR CHALLENGE", 30, UITheme.TextOnBackground);
+            // Same stall as the shop: dark wooden planks and a striped awning along the top.
+            const int Planks = 9;
+            for (int i = 0; i < Planks; i += 2)
+            {
+                var stripe = UIFactory.CreatePanel(_root, "Plank" + i, BackdropStripe);
+                stripe.raycastTarget = false;
+                stripe.rectTransform.anchorMin = new Vector2(i / (float)Planks, 0f);
+                stripe.rectTransform.anchorMax = new Vector2((i + 1) / (float)Planks, 1f);
+                stripe.rectTransform.offsetMin = Vector2.zero;
+                stripe.rectTransform.offsetMax = Vector2.zero;
+            }
+            const int AwningStripes = 16;
+            for (int i = 0; i < AwningStripes; i++)
+            {
+                var piece = UIFactory.CreatePanel(_root, "Awning" + i, i % 2 == 0 ? AwningRed : AwningCream);
+                piece.raycastTarget = false;
+                piece.rectTransform.anchorMin = new Vector2(i / (float)AwningStripes, 1f);
+                piece.rectTransform.anchorMax = new Vector2((i + 1) / (float)AwningStripes, 1f);
+                piece.rectTransform.pivot = new Vector2(0.5f, 1f);
+                piece.rectTransform.offsetMin = new Vector2(0f, -22f);
+                piece.rectTransform.offsetMax = Vector2.zero;
+            }
+
+            var header = UIFactory.CreateText(_root, "Header", "CHOOSE YOUR CHALLENGE", 44, UITheme.TextOnBackground);
             header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -40f);
-            header.rectTransform.sizeDelta = new Vector2(1000f, 44f);
+            header.rectTransform.anchoredPosition = new Vector2(0f, -48f);
+            header.rectTransform.sizeDelta = new Vector2(1000f, 56f);
 
-            _starsLabel = UIFactory.CreateText(_root, "Stars", "", 18, VisualDefaults.GoldenColor);
+            _starsLabel = UIFactory.CreateText(_root, "Stars", "", 26, VisualDefaults.GoldenColor);
             _starsLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _starsLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _starsLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _starsLabel.rectTransform.anchoredPosition = new Vector2(0f, -84f);
-            _starsLabel.rectTransform.sizeDelta = new Vector2(1000f, 28f);
+            _starsLabel.rectTransform.anchoredPosition = new Vector2(0f, -108f);
+            _starsLabel.rectTransform.sizeDelta = new Vector2(1000f, 34f);
+
+            var hint = UIFactory.CreateText(_root, "StarsHint", "1 per round cleared, +2 for a victory. Stars unlock the other challenges.", 15, UITheme.TextMutedOnBackground);
+            hint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            hint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            hint.rectTransform.pivot = new Vector2(0.5f, 1f);
+            hint.rectTransform.anchoredPosition = new Vector2(0f, -142f);
+            hint.rectTransform.sizeDelta = new Vector2(1000f, 24f);
 
             BuildCard(_root);
             BuildArrowButton(_root, "LeftArrow", "<", -(CardWidth / 2f + ArrowGap + ArrowButtonSize / 2f), Step(-1));
             BuildArrowButton(_root, "RightArrow", ">", CardWidth / 2f + ArrowGap + ArrowButtonSize / 2f, Step(1));
 
-            _pageLabel = UIFactory.CreateText(_root, "Page", "", 16, UITheme.TextMutedOnBackground);
-            _pageLabel.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            _pageLabel.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            _pageLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _pageLabel.rectTransform.anchoredPosition = new Vector2(0f, CardY - CardHeight / 2f - 12f);
-            _pageLabel.rectTransform.sizeDelta = new Vector2(200f, 24f);
+            // One dot per challenge under the card.
+            int count = ChallengeCatalog.All.Length;
+            _dots = new Image[count];
+            const float DotSpacing = 26f;
+            for (int i = 0; i < count; i++)
+            {
+                var dot = UIFactory.CreatePanel(_root, "Dot" + i, Color.white);
+                dot.raycastTarget = false;
+                dot.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                dot.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                dot.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                dot.rectTransform.anchoredPosition = new Vector2((i - (count - 1) / 2f) * DotSpacing, CardY - CardHeight / 2f - 24f);
+                dot.rectTransform.sizeDelta = new Vector2(12f, 12f);
+                _dots[i] = dot;
+            }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD || CONTIGU_DEBUG
             var unlockAll = UIFactory.CreateButton(_root, "UnlockAll", "Unlock all (dev)", UITheme.PanelLight, 14);
@@ -111,35 +159,49 @@ namespace Contigu.Presentation
             _card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
             _card.rectTransform.anchoredPosition = new Vector2(0f, CardY);
 
-            _nameLabel = UIFactory.CreateText(_card.transform, "Name", "", 22, UITheme.TextPrimary);
-            _nameLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _nameLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _nameLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _nameLabel.rectTransform.anchoredPosition = new Vector2(0f, -18f);
-            _nameLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 32f);
+            // A banner in the challenge's own color carries its name.
+            _banner = UIFactory.CreatePanel(_card.transform, "Banner", Color.white);
+            _banner.raycastTarget = false;
+            _banner.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _banner.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _banner.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _banner.rectTransform.offsetMin = new Vector2(6f, -BannerHeight - 6f);
+            _banner.rectTransform.offsetMax = new Vector2(-6f, -6f);
 
-            _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 17, UITheme.TextMuted);
+            _nameLabel = UIFactory.CreateText(_banner.transform, "Name", "", 38, UITheme.TextOnBackground);
+            _nameLabel.raycastTarget = false;
+            UIFactory.StretchFull(_nameLabel.rectTransform);
+
+            _statsLabel = UIFactory.CreateText(_card.transform, "Stats", "", 18, UITheme.TextPrimary);
+            _statsLabel.raycastTarget = false;
+            _statsLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _statsLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _statsLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _statsLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 20f);
+            _statsLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 28f);
+
+            _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 19, UITheme.TextMuted);
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -58f);
-            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 28f, 150f);
+            _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 62f);
+            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 170f);
 
             // Coral rather than gold: gold has poor contrast against this card's light fill, and coral already reads as "blocked" elsewhere (see UITheme.Danger/HoverInvalid).
-            _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 15, UITheme.Danger);
+            _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 16, UITheme.Danger);
             _statusLabel.rectTransform.anchorMin = new Vector2(0.5f, 0f);
             _statusLabel.rectTransform.anchorMax = new Vector2(0.5f, 0f);
             _statusLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
-            _statusLabel.rectTransform.anchoredPosition = new Vector2(0f, 60f);
-            _statusLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 24f);
+            _statusLabel.rectTransform.anchoredPosition = new Vector2(0f, 84f);
+            _statusLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 26f);
 
-            _playButton = UIFactory.CreateButton(_card.transform, "Play", "", UISprites.ChooseButtonBackground, 16);
+            _playButton = UIFactory.CreateButton(_card.transform, "Play", "", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 26);
             var playRect = _playButton.GetComponent<RectTransform>();
             playRect.anchorMin = new Vector2(0.5f, 0f);
             playRect.anchorMax = new Vector2(0.5f, 0f);
             playRect.pivot = new Vector2(0.5f, 0f);
-            playRect.anchoredPosition = new Vector2(0f, 20f);
-            playRect.sizeDelta = new Vector2(CardWidth - 40f, 40f);
+            playRect.anchoredPosition = new Vector2(0f, 22f);
+            playRect.sizeDelta = new Vector2(CardWidth - 60f, 56f);
             _playButtonLabel = _playButton.GetComponentInChildren<Text>();
             _playButton.onClick.AddListener(OnPlayClicked);
 
@@ -154,20 +216,19 @@ namespace Contigu.Presentation
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);
 
-            var collectionButton = UIFactory.CreateButton(_root, "Collection", "Collection", UITheme.PanelLight, 18);
+            var collectionButton = UIFactory.CreateButton(_root, "Collection", "Collection", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 22);
             var collectionRect = collectionButton.GetComponent<RectTransform>();
             collectionRect.anchorMin = new Vector2(0f, 1f);
             collectionRect.anchorMax = new Vector2(0f, 1f);
             collectionRect.pivot = new Vector2(0f, 1f);
-            collectionRect.anchoredPosition = new Vector2(30f, -30f);
-            collectionRect.sizeDelta = new Vector2(180f, 44f);
-            collectionButton.GetComponentInChildren<Text>().color = UITheme.TextPrimary;
+            collectionRect.anchoredPosition = new Vector2(30f, -44f);
+            collectionRect.sizeDelta = new Vector2(210f, 54f);
             collectionButton.onClick.AddListener(() => { if (CollectionRequested != null) { CollectionRequested(); } });
         }
 
         private void BuildArrowButton(Transform parent, string name, string label, float x, Action onClick)
         {
-            var button = UIFactory.CreateButton(parent, name, label, UITheme.PanelLight, 22);
+            var button = UIFactory.CreateButton(parent, name, label, UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 36);
             var rect = button.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -237,8 +298,52 @@ namespace Contigu.Presentation
         private void ShowChallengeAt(int index)
         {
             int count = ChallengeCatalog.All.Length;
+            bool moved = _currentIndex != ((index % count) + count) % count;
             _currentIndex = ((index % count) + count) % count;
             RefreshCurrentCard();
+            if (moved && !MotionSettings.Reduced && _root.gameObject.activeInHierarchy)
+            {
+                if (_popCoroutine != null)
+                {
+                    StopCoroutine(_popCoroutine);
+                }
+                _popCoroutine = StartCoroutine(PopRoutine());
+            }
+        }
+
+        private static Color AccentFor(ChallengeDefinition challenge)
+        {
+            string name = challenge.Name.ToLowerInvariant();
+            if (name.Contains("spring")) return new Color(0.36f, 0.66f, 0.28f);
+            if (name.Contains("winter")) return new Color(0.36f, 0.62f, 0.86f);
+            if (name.Contains("summer")) return new Color(0.92f, 0.58f, 0.16f);
+            if (name.Contains("autumn")) return new Color(0.76f, 0.36f, 0.16f);
+            if (name.Contains("orchard")) return new Color(0.78f, 0.24f, 0.30f);
+            if (name.Contains("greenhouse")) return new Color(0.24f, 0.66f, 0.60f);
+            return new Color(0.55f, 0.38f, 0.72f);
+        }
+
+        private static string StatsFor(ChallengeDefinition challenge)
+        {
+            string rounds = challenge.RoundCount >= 60 ? "ENDLESS" : challenge.RoundCount + " ROUNDS";
+            return rounds + "   -   " + challenge.GridSize + "x" + challenge.GridSize + "   -   " + challenge.ActiveColorCount + " COLORS";
+        }
+
+        /// <summary>The card pops in whenever the carousel moves, so stepping feels alive.</summary>
+        private System.Collections.IEnumerator PopRoutine()
+        {
+            float t = 0f;
+            var rect = _card.rectTransform;
+            while (t < PopDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Mathf.Clamp01(t / PopDuration);
+                float scale = Mathf.Lerp(0.93f, 1f, 1f - (1f - k) * (1f - k));
+                rect.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            rect.localScale = Vector3.one;
+            _popCoroutine = null;
         }
 
         private void RefreshCurrentCard()
@@ -248,12 +353,20 @@ namespace Contigu.Presentation
                 return;
             }
 
-            _starsLabel.text = "Stars: " + _metaStats.Stars + "   (1 per round cleared, +2 for a victory; they unlock the other challenges)";
+            _starsLabel.text = "STARS: " + _metaStats.Stars;
 
             var challenge = ChallengeCatalog.All[_currentIndex];
             _nameLabel.text = challenge.Name.ToUpperInvariant();
             _descriptionLabel.text = challenge.Description;
-            _pageLabel.text = (_currentIndex + 1) + " / " + ChallengeCatalog.All.Length;
+            var accent = AccentFor(challenge);
+            _banner.color = accent;
+            _statsLabel.text = StatsFor(challenge);
+            for (int i = 0; _dots != null && i < _dots.Length; i++)
+            {
+                bool active = i == _currentIndex;
+                _dots[i].color = active ? accent : new Color(1f, 1f, 1f, 0.35f);
+                _dots[i].rectTransform.sizeDelta = active ? new Vector2(18f, 18f) : new Vector2(12f, 12f);
+            }
 
             bool unlocked = _metaStats.IsUnlocked(challenge.Id);
             if (unlocked)
