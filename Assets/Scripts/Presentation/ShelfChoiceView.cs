@@ -90,7 +90,7 @@ namespace Contigu.Presentation
             host.anchorMax = new Vector2(0.5f, 0.5f);
             host.pivot = new Vector2(0.5f, 0.5f);
             host.anchoredPosition = Vector2.zero;
-            float visualSize = entry.FillCell ? cellSize : cellSize * 0.8f;
+            float visualSize = entry.FillCell ? cellSize : cellSize * 0.9f;
             host.sizeDelta = new Vector2(visualSize, visualSize);
             if (entry.BuildVisual != null)
             {

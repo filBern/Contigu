@@ -502,6 +502,7 @@ namespace Contigu.Presentation
 
         private void RestoreBoardPanels()
         {
+            PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
                 _fertilizerPanel.anchoredPosition = new Vector2(-_sidePanelCenterX, _boardPanelY);
@@ -514,6 +515,8 @@ namespace Contigu.Presentation
 
         private void PlaceSidePanels(float centerX)
         {
+            // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
+            PieceBox.SetSidePanelCenterX(centerX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
                 _fertilizerPanel.anchoredPosition = new Vector2(-centerX, 0f);

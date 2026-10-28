@@ -106,7 +106,7 @@ namespace Contigu.Presentation
             previewContainer.anchorMax = new Vector2(0.5f, 0.5f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             previewContainer.anchoredPosition = Vector2.zero;
-            previewContainer.sizeDelta = new Vector2(cellSize * 0.8f, cellSize * 0.8f);
+            previewContainer.sizeDelta = new Vector2(cellSize * 0.9f, cellSize * 0.9f);
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);

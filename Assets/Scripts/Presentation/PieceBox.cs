@@ -31,7 +31,7 @@ namespace Contigu.Presentation
         public static float SidePanelCenterX { get; private set; } = 355f;
 
         public static float CellSize { get; private set; } = MaxCellSize;
-        public static float PreviewSize { get { return CellSize * 0.8f; } }
+        public static float PreviewSize { get { return CellSize * 0.9f; } }
         public static float BoxHeight { get { return CellSize + BoxPadding * 2f; } }
 
         public static readonly Color Idle = new Color(1f, 1f, 1f, 0f);

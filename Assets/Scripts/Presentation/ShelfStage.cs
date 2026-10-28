@@ -39,6 +39,8 @@ namespace Contigu.Presentation
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
         public const float SeedCellSize = 96f;
         public const float IconCellSize = 120f;
+        // One row of options stands on the LOWER shelf, which leaves the room above it for much bigger cells (the stack still ends below the shop header).
+        public const float SingleRowCellSize = 190f;
 
         private readonly TooltipView _tooltip;
         private readonly Image _source;
@@ -97,18 +99,19 @@ namespace Contigu.Presentation
             Clear(_row1);
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
-            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, maxCellSize);
-            float cell = PieceBox.CellSize;
             bool two = total > _firstRowCount;
+            float firstShelfY = two ? layout.FirstShelfY : layout.SecondShelfY;
+            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, two ? maxCellSize : Mathf.Max(maxCellSize, SingleRowCellSize));
+            float cell = PieceBox.CellSize;
 
             _shelf1.sizeDelta = new Vector2(layout.Width, ShelfHeight);
             _shelf2.sizeDelta = new Vector2(layout.Width, ShelfHeight);
-            _shelf1.anchoredPosition = new Vector2(0f, layout.FirstShelfY - CanvasHalfHeight);
+            _shelf1.anchoredPosition = new Vector2(0f, firstShelfY - CanvasHalfHeight);
             _shelf2.anchoredPosition = new Vector2(0f, layout.SecondShelfY - CanvasHalfHeight);
             _shelf2.gameObject.SetActive(two);
             _row2.gameObject.SetActive(two);
 
-            float row1Top = layout.FirstShelfY + cell - RowOverlap;
+            float row1Top = firstShelfY + cell - RowOverlap;
             _row1.anchoredPosition = new Vector2(0f, row1Top - CanvasHalfHeight);
             _row2.anchoredPosition = new Vector2(0f, layout.SecondShelfY + cell - RowOverlap - CanvasHalfHeight);
 
@@ -130,7 +133,7 @@ namespace Contigu.Presentation
 
             var confirmRect = ConfirmButton.GetComponent<RectTransform>();
             ConfirmButton.gameObject.SetActive(withConfirm);
-            float lastShelf = two ? layout.SecondShelfY : layout.FirstShelfY;
+            float lastShelf = two ? layout.SecondShelfY : firstShelfY;
             confirmRect.anchoredPosition = new Vector2(0f, lastShelf - ShelfHeight - 12f - CanvasHalfHeight);
         }
 
