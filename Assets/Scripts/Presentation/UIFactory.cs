@@ -101,6 +101,18 @@ namespace Contigu.Presentation
             return button;
         }
 
+        /// <summary>
+        /// Draws a button above every other element, including the always-on-top Menu button (sorting 100): a full-screen overlay's Close must
+        /// never end up hidden under another button, which would lock the player in.
+        /// </summary>
+        public static void KeepOnTop(Button button)
+        {
+            var canvas = button.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 110;
+            button.gameObject.AddComponent<GraphicRaycaster>();
+        }
+
         /// <summary>Switches off the garden plants on a button (the shop keeps its buttons plain). Call right after creating it.</summary>
         public static void DisablePlants(Button button)
         {

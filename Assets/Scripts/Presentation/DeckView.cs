@@ -93,6 +93,7 @@ namespace Contigu.Presentation
             closeRect.anchoredPosition = new Vector2(-30f, -30f);
             closeRect.sizeDelta = new Vector2(160f, 44f);
             closeBtn.onClick.AddListener(Hide);
+            UIFactory.KeepOnTop(closeBtn);
 
             _root.gameObject.SetActive(false);
             return _root;

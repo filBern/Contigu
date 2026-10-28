@@ -87,6 +87,7 @@ namespace Contigu.Presentation
             var closeRect = (RectTransform)close.transform;
             Place(closeRect, new Vector2(1f, 1f), new Vector2(-100f, -34f), new Vector2(160f, 44f));
             close.onClick.AddListener(Hide);
+            UIFactory.KeepOnTop(close);
 
             _root.gameObject.SetActive(false);
             return _root;
