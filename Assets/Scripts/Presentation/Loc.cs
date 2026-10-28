@@ -39,7 +39,7 @@ namespace Contigu.Presentation
             { "choice.fertilizerPack", "Fertilizer Pack" },
             { "choice.fertilizerPackHint", "Pick one fertilizer to keep" },
             { "choice.skipPack", "Skip (no refund)" },
-            { "choice.abandon", "Cancel purchase (no refund)" },
+            { "choice.abandon", "Skip" },
             { "choice.abandonConfirm", "Sure? Click again (no refund)" },
             { "choice.sproutTag", "Sprout · {0}" },
             { "choice.fertilizerTag", "Fertilizer · {0}" },

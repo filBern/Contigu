@@ -335,8 +335,7 @@ namespace Contigu.Presentation
         private float _abandonArmedAt = -10f;
 
         /// <summary>
-        /// Gives up the choice in progress (no refund). The first request only arms it (a purchase is a point of no return), the second one
-        /// within a few seconds confirms.
+        /// Skips the choice in progress: nothing is taken and the Pollen is not refunded, but the purchase counts as made.
         /// </summary>
         private void RequestAbandonPurchase()
         {
@@ -344,12 +343,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            if (Time.unscaledTime - _abandonArmedAt > 4f)
-            {
-                _abandonArmedAt = Time.unscaledTime;
-                _abandonLabel.text = Loc.T("choice.abandonConfirm");
-                return;
-            }
+            // Skipping counts as having taken the purchase: the Pollen is spent and the item's next price rises, one click.
             _abandonArmedAt = -10f;
             _run.AbandonPending();
             _shelfChoiceView.Hide();
@@ -361,7 +355,7 @@ namespace Contigu.Presentation
             _shopView.Refresh(_run);
         }
 
-        /// <summary>Shows the "Cancel purchase" button above every overlay while a choice is pending in the shop.</summary>
+        /// <summary>Shows the "Skip" button above every overlay while a choice is pending in the shop.</summary>
         private void UpdateAbandonButton()
         {
             bool show = _run != null && _run.State == RunState.AwaitingShop && _run.PendingUpgrade != null;

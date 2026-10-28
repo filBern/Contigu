@@ -245,7 +245,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Compost_AbandonedPurchase_DoesNotRaiseItsPrice()
+        public void Compost_SkippedPurchase_StillRaisesItsPrice()
         {
             var run = ShopRun();
             int first = run.GetUpgradeSlotPrice(2);
@@ -254,7 +254,7 @@ namespace Contigu.Tests
             run.DebugForceRoundComplete();
             Assert.IsTrue(run.LeaveShop());
             run.DebugForceRoundComplete();
-            Assert.AreEqual(first, run.GetUpgradeSlotPrice(2), "no seed was removed, so the next Compost costs the same");
+            Assert.Greater(run.GetUpgradeSlotPrice(2), first, "skipping counts as using it: the next Compost is dearer");
         }
 
         [Test]

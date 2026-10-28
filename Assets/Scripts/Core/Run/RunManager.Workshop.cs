@@ -154,14 +154,19 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Gives up whatever choice is pending (a pack's options, a seed to upgrade, a type to compost...) without taking anything.
-        /// The Pollen already paid is not refunded. False when nothing was pending.
+        /// Skips whatever choice is pending (a pack's options, a seed to upgrade, a type to compost...) without taking anything.
+        /// The Pollen already paid is not refunded, and the purchase counts as made (a skipped Compost still makes the next one dearer). False when nothing was pending.
         /// </summary>
         public bool AbandonPending()
         {
             if (PendingUpgrade == null)
             {
                 return false;
+            }
+            // Skipping a Compost is as good as using it: the next one is dearer either way.
+            if (PendingUpgrade.Id == UpgradeId.Compost)
+            {
+                _compostsBought++;
             }
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
