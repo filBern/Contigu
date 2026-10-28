@@ -44,7 +44,7 @@ namespace Contigu.Presentation
         /// </summary>
         public static float UniformTile(float box)
         {
-            return Mathf.Min(VisualDefaults.GridCellSize, box * 1.12f / 3f);
+            return Mathf.Min(VisualDefaults.GridCellSize * 4f / 3f, box * 1.12f * 4f / 3f / 3f);
         }
 
         /// <summary>Same as <see cref="Build"/> for a piece carrying several upgrades, one badge on each upgraded cell.</summary>
