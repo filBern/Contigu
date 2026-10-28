@@ -52,7 +52,7 @@ namespace Contigu.Presentation
         // No longer tied to BarHeight (the score/pieces bars it replaces) — the band needs more room than a
         // plain bar to fit a much bigger portrait, label, and breathing room below it. GameBootstrap's status
         // text position derives from this directly (see BuildUI), so the two stay in sync.
-        public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 34f;
+        public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 30f;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
         private readonly List<Image> _enemyHpBarBackgrounds = new List<Image>();
@@ -282,31 +282,9 @@ namespace Contigu.Presentation
         /// </summary>
         private void BuildEnemyBand(Transform parent)
         {
-            // A battlefield, like a monster-battle screen: dusk sky, a strip of grass along the bottom, and each pest standing on its own grass
-            // platform with its HP under it. (A light band made the golden Pollen counter and the cream chips fight for attention.)
-            var band = UIFactory.CreatePanel(parent, "EnemyBand", new Color(0.17f, 0.29f, 0.40f, 1f));
+            // A plain dark slate band: the golden Pollen and the cream chips read on it, and nothing competes with the pests.
+            var band = UIFactory.CreatePanel(parent, "EnemyBand", new Color(0.16f, 0.26f, 0.36f, 1f));
             UIFactory.AddThickOutline(band, UITheme.Border);
-            var horizon = UIFactory.CreatePanel(band.transform, "Horizon", new Color(0.24f, 0.40f, 0.52f, 1f));
-            horizon.raycastTarget = false;
-            horizon.rectTransform.anchorMin = new Vector2(0f, 0f);
-            horizon.rectTransform.anchorMax = new Vector2(1f, 0f);
-            horizon.rectTransform.pivot = new Vector2(0.5f, 0f);
-            horizon.rectTransform.anchoredPosition = Vector2.zero;
-            horizon.rectTransform.sizeDelta = new Vector2(0f, 62f);
-            var ground = UIFactory.CreatePanel(band.transform, "Ground", new Color(0.26f, 0.46f, 0.26f, 1f));
-            ground.raycastTarget = false;
-            ground.rectTransform.anchorMin = new Vector2(0f, 0f);
-            ground.rectTransform.anchorMax = new Vector2(1f, 0f);
-            ground.rectTransform.pivot = new Vector2(0.5f, 0f);
-            ground.rectTransform.anchoredPosition = Vector2.zero;
-            ground.rectTransform.sizeDelta = new Vector2(0f, 38f);
-            var groundEdge = UIFactory.CreatePanel(ground.transform, "GroundEdge", new Color(0.42f, 0.68f, 0.34f, 1f));
-            groundEdge.raycastTarget = false;
-            groundEdge.rectTransform.anchorMin = new Vector2(0f, 1f);
-            groundEdge.rectTransform.anchorMax = new Vector2(1f, 1f);
-            groundEdge.rectTransform.pivot = new Vector2(0.5f, 1f);
-            groundEdge.rectTransform.anchoredPosition = Vector2.zero;
-            groundEdge.rectTransform.sizeDelta = new Vector2(0f, 4f);
             band.rectTransform.anchorMin = new Vector2(0f, 1f);
             band.rectTransform.anchorMax = new Vector2(1f, 1f);
             band.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -362,16 +340,6 @@ namespace Contigu.Presentation
                 // Plain background panel behind the sprite — no outline (see README for why one was tried and
                 // dropped: even moved here off the sprite itself, the player still read it as an unwanted box
                 // around each portrait).
-                // The pest stands on a grass platform (drawn first, so under the portrait).
-                var platform = UIFactory.CreatePanel(slot, "EnemyPlatform" + i, Color.white);
-                platform.sprite = Resources.Load<Sprite>("UI/Platform");
-                platform.raycastTarget = false;
-                platform.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                platform.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                platform.rectTransform.pivot = new Vector2(0.5f, 1f);
-                platform.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize - 16f));
-                platform.rectTransform.sizeDelta = new Vector2(EnemyIconSize * 1.45f, EnemyIconSize * 1.45f / 4f);
-
                 var iconBackground = UIFactory.CreatePanel(slot, "EnemyIconBackground" + i, new Color(1f, 1f, 1f, 0f));
                 iconBackground.raycastTarget = false;
                 iconBackground.rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -424,7 +392,7 @@ namespace Contigu.Presentation
                 label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 label.rectTransform.pivot = new Vector2(0.5f, 1f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize + 14f));
+                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize + 6f));
                 label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 20f);
 
                 slot.gameObject.SetActive(false);
