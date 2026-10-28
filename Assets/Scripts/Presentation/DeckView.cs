@@ -90,8 +90,9 @@ namespace Contigu.Presentation
             closeRect.anchorMin = new Vector2(1f, 1f);
             closeRect.anchorMax = new Vector2(1f, 1f);
             closeRect.pivot = new Vector2(1f, 1f);
-            closeRect.anchoredPosition = new Vector2(-30f, -30f);
-            closeRect.sizeDelta = new Vector2(160f, 44f);
+            // Left of the Menu button (top right, always on top in the game), on its row.
+            closeRect.anchoredPosition = new Vector2(-(16f + MobileSetup.TouchMin(110f) + 14f), -16f);
+            closeRect.sizeDelta = new Vector2(160f, MobileSetup.TouchMin(44f));
             closeBtn.onClick.AddListener(Hide);
 
             _root.gameObject.SetActive(false);

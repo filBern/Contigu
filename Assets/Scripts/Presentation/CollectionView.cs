@@ -85,7 +85,8 @@ namespace Contigu.Presentation
 
             var close = UIFactory.CreateButton(_root, "Close", "Close", UISprites.CancelButtonBackground);
             var closeRect = (RectTransform)close.transform;
-            Place(closeRect, new Vector2(1f, 1f), new Vector2(-100f, -34f), new Vector2(160f, 44f));
+            // Left of the Menu button (top right, always on top in the game), on its row.
+            Place(closeRect, new Vector2(1f, 1f), new Vector2(-(16f + MobileSetup.TouchMin(110f) + 14f + 80f), -16f), new Vector2(160f, MobileSetup.TouchMin(44f)));
             close.onClick.AddListener(Hide);
 
             _root.gameObject.SetActive(false);
