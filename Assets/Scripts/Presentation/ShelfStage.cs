@@ -176,7 +176,9 @@ namespace Contigu.Presentation
             _row1.anchoredPosition = new Vector2(0f, row1Top - CanvasHalfHeight);
             _row2.anchoredPosition = new Vector2(0f, layout.SecondShelfY + cell - RowOverlap - CanvasHalfHeight);
 
-            float titleTop = row1Top + 10f + TitleHeight;
+            // The title clears the tallest piece (3 tiles high), not just the cell.
+            float stackTop = Mathf.Max(row1Top, firstShelfY + 3f * Tile + 6f);
+            float titleTop = stackTop + 14f + TitleHeight;
             _title.text = title;
             _title.rectTransform.anchoredPosition = new Vector2(0f, titleTop - CanvasHalfHeight);
             float sourceTop = titleTop + 6f + SourceSize;
