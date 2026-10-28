@@ -15,6 +15,8 @@ namespace Contigu.Presentation
         public string Subtitle;
         /// <summary>Icon-like options (fertilizers, upgrade glyphs, masteries) fill their whole cell and may use bigger cells than seed previews.</summary>
         public bool FillCell;
+        /// <summary>Drawn smaller than a standard preview (mastery pack).</summary>
+        public bool Compact;
         /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
         public int Columns;
         /// <summary>How many tiles tall the piece is, so it can stand on the shelf by its own bottom edge.</summary>
@@ -107,7 +109,7 @@ namespace Contigu.Presentation
             host.anchorMax = new Vector2(0.5f, 0.5f);
             host.pivot = new Vector2(0.5f, 0.5f);
             host.anchoredPosition = Vector2.zero;
-            float visualSize = entry.FillCell ? cellSize * 0.8f : cellSize * 0.9f;
+            float visualSize = entry.FillCell ? cellSize * 0.64f : cellSize * (entry.Compact ? 0.72f : 0.9f);
             host.sizeDelta = new Vector2(visualSize, visualSize);
             if (entry.Columns > 0 && _stage.Tile > 0f)
             {
