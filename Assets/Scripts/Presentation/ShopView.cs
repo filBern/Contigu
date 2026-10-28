@@ -715,7 +715,8 @@ namespace Contigu.Presentation
                 StopCoroutine(_lueurPulseCoroutine);
                 _lueurPulseCoroutine = null;
             }
-            _lueurContainer.localScale = Vector3.one;
+            // Back to the board's small chip (not full size): the counter is shared with the board's HUD.
+            _lueurContainer.localScale = Vector3.one * _boardPollenScale;
         }
 
         /// <summary>Continuous sine-wave scale wobble on the Lueur readout. Runs only while the shop is open, started/stopped by Show/Hide.</summary>
