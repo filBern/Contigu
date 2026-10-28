@@ -35,7 +35,7 @@ namespace Contigu.Presentation
         private const float TitleHeight = 36f;
         private const float ShelfHeight = 16f;
         private const float RowOverlap = 2f;
-        private const int MaxPerRow = 5;
+        private const int MaxPerRow = 3; // one row up to 3 options; beyond that two rows (up to 4 each: 8 is the most the shop ever shows)
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
         public const float SeedCellSize = 96f;
         public const float IconCellSize = 120f;

@@ -64,7 +64,7 @@ namespace Contigu.Core
         public const float WorkshopRepeatPriceIncrease = 0.5f;
         public const int ForgePrice = 4;
         public const int PackChoiceCount = 3;
-        public const int ForgeSeedCandidateCount = 10;
+        public const int ForgeSeedCandidateCount = 8;
 
         /// <summary>Chance that a Casino upgrade slot rolls from each of the 4 pools — must sum to 100 (see RunManager.RollUpgradeSlot).</summary>
         public const int ModifierUpgradePoolChancePercent = 10;
