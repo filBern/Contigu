@@ -44,7 +44,25 @@ namespace Contigu.Presentation
         /// </summary>
         public static float UniformTile(float box)
         {
+            if (TileOverride > 0f)
+            {
+                return TileOverride;
+            }
             return Mathf.Min(VisualDefaults.GridCellSize * 4f / 3f, box * 1.12f * 4f / 3f / 3f);
+        }
+
+        /// <summary>While set (&gt; 0), <see cref="UniformTile"/> returns it: a shop choice picks one tile size for all its pieces (see ShelfStage) before drawing them.</summary>
+        public static float TileOverride;
+
+        /// <summary>How many tiles wide a shape is.</summary>
+        public static int ColumnsOf(PieceShape shape)
+        {
+            int columns = 1;
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                columns = Mathf.Max(columns, shape.Cells[i].x + 1);
+            }
+            return columns;
         }
 
         /// <summary>Same as <see cref="Build"/> for a piece carrying several upgrades, one badge on each upgraded cell.</summary>

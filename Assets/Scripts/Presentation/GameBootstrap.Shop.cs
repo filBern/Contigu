@@ -242,7 +242,7 @@ namespace Contigu.Presentation
             foreach (var token in _run.PendingUpgradePieceCandidates)
             {
                 var t = token;
-                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
+                entries.Add(new ChoiceEntry { Columns = ShapePreviewFactory.ColumnsOf(PieceShapeCatalog.Get(t.Shape)), BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
             }
             ShowShelfChoice(source, Loc.T("choice.pickSeed"), entries, true, OnPieceChoiceConfirmed);
         }
@@ -293,7 +293,7 @@ namespace Contigu.Presentation
             foreach (var deckIndex in deckIndices)
             {
                 var t = _run.Deck.Deck[deckIndex];
-                entries.Add(new ChoiceEntry { BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
+                entries.Add(new ChoiceEntry { Columns = ShapePreviewFactory.ColumnsOf(PieceShapeCatalog.Get(t.Shape)), BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pending), Loc.T("choice.pickCompost"), entries, true, index =>
             {

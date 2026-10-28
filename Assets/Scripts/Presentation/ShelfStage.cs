@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -94,7 +95,18 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Clears the previous options and lays the stage out for <paramref name="total"/> options on the given shop shelves.</summary>
-        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm, float maxCellSize = SeedCellSize)
+        /// <summary>The one tile size every piece of the current choice is drawn with (0 when the options are not pieces).</summary>
+        public float Tile { get; private set; }
+
+        private float[] _cellWidths;
+
+        /// <summary>The width option <paramref name="index"/> takes in its row: its piece's real width when pieces are spaced by their own width, else a plain cell.</summary>
+        public float CellWidthFor(int index)
+        {
+            return _cellWidths != null && index < _cellWidths.Length && _cellWidths[index] > 0f ? _cellWidths[index] : CellSize;
+        }
+
+        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm, float maxCellSize = SeedCellSize, IReadOnlyList<int> columns = null)
         {
             Clear(_row1);
             Clear(_row2);
@@ -108,8 +120,46 @@ namespace Contigu.Presentation
             float fitWidth = (layout.Width - 24f) * perRow / (perRow + RowGapPerCell * (perRow - 1));
             PieceBox.Configure(perRow, fitWidth, two ? maxCellSize : Mathf.Max(maxCellSize, SingleRowCellSize));
             float cell = PieceBox.CellSize;
-            _row1.GetComponent<HorizontalLayoutGroup>().spacing = RowGapPerCell * cell;
-            _row2.GetComponent<HorizontalLayoutGroup>().spacing = RowGapPerCell * cell;
+            float spacing = RowGapPerCell * cell;
+            Tile = 0f;
+            _cellWidths = null;
+            bool pieces = false;
+            for (int i = 0; columns != null && i < columns.Count; i++)
+            {
+                pieces |= columns[i] > 0;
+            }
+            if (pieces)
+            {
+                // Pieces: one tile size for all, and the gap between two neighbors is the same whatever their widths: each cell is exactly as wide
+                // as its piece, the rows are spaced by one gap, and the tile shrinks only if the widest row would not fit the shelf.
+                const float GapPerTile = 0.4f;
+                float width = layout.Width - 24f;
+                float tileFit = float.MaxValue;
+                for (int row = 0; row < 2; row++)
+                {
+                    int from = row == 0 ? 0 : _firstRowCount;
+                    int to = row == 0 ? Mathf.Min(_firstRowCount, columns.Count) : columns.Count;
+                    int sum = 0;
+                    for (int i = from; i < to; i++)
+                    {
+                        sum += columns[i];
+                    }
+                    int count = to - from;
+                    if (sum > 0)
+                    {
+                        tileFit = Mathf.Min(tileFit, width / (sum + GapPerTile * (count - 1)));
+                    }
+                }
+                Tile = Mathf.Min(cell * 0.447f, VisualDefaults.GridCellSize * 4f / 3f, tileFit);
+                spacing = GapPerTile * Tile;
+                _cellWidths = new float[columns.Count];
+                for (int i = 0; i < columns.Count; i++)
+                {
+                    _cellWidths[i] = columns[i] > 0 ? columns[i] * Tile : 0f;
+                }
+            }
+            _row1.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
+            _row2.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
 
             _shelf1.sizeDelta = new Vector2(layout.Width, ShelfHeight);
             _shelf2.sizeDelta = new Vector2(layout.Width, ShelfHeight);

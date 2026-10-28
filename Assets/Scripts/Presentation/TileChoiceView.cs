@@ -81,7 +81,12 @@ namespace Contigu.Presentation
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
             _previewTraitKind = UpgradeSystem.TraitKindFor(def.Id);
 
-            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount, def.Name), _candidates.Count, true);
+            var columns = new List<int>();
+            for (int i = 0; i < _candidates.Count; i++)
+            {
+                columns.Add(ShapePreviewFactory.ColumnsOf(PieceShapeCatalog.Get(_deck.Deck[_candidates[i]].Shape)));
+            }
+            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount, def.Name), _candidates.Count, true, ShelfStage.SeedCellSize, columns);
             for (int i = 0; i < _candidates.Count; i++)
             {
                 BuildPreviewCell(_candidates[i], i);
@@ -96,6 +101,12 @@ namespace Contigu.Presentation
         {
             float cellSize = _stage.CellSize;
             var cell = PieceBox.CreateCell(_stage.RowFor(position), "Tile_" + deckIndex, cellSize, false);
+            float cellWidth = _stage.CellWidthFor(position);
+            if (!Mathf.Approximately(cellWidth, cellSize))
+            {
+                cell.rectTransform.sizeDelta = new Vector2(cellWidth, cellSize);
+                cell.GetComponent<LayoutElement>().preferredWidth = cellWidth;
+            }
             _cellBackgroundByIndex[deckIndex] = cell;
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
@@ -142,7 +153,7 @@ namespace Contigu.Presentation
                 shown.Add(new PieceTrait(_previewTraitKind.Value, freeCell, tintedColor));
             }
 
-            var badge = ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, shown, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject, ShapePreviewFactory.UniformTile(previewContainer.sizeDelta.x));
+            var badge = ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, shown, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject, _stage.Tile > 0f ? _stage.Tile : ShapePreviewFactory.UniformTile(previewContainer.sizeDelta.x));
             if (animate && badge != null && !MotionSettings.Reduced)
             {
                 StartCoroutine(FadeInBadge(badge));

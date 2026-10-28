@@ -15,6 +15,8 @@ namespace Contigu.Presentation
         public string Subtitle;
         /// <summary>Icon-like options (fertilizers, upgrade glyphs, masteries) fill their whole cell and may use bigger cells than seed previews.</summary>
         public bool FillCell;
+        /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
+        public int Columns;
     }
 
     /// <summary>
@@ -66,12 +68,19 @@ namespace Contigu.Presentation
             {
                 anyFill |= entries[i].FillCell;
             }
-            _stage.Begin(_layout, source, title, entries.Count, needsConfirm, anyFill ? ShelfStage.IconCellSize : ShelfStage.SeedCellSize);
+            var columns = new List<int>();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                columns.Add(entries[i].Columns);
+            }
+            _stage.Begin(_layout, source, title, entries.Count, needsConfirm, anyFill ? ShelfStage.IconCellSize : ShelfStage.SeedCellSize, columns);
             float cell = _stage.CellSize;
+            ShapePreviewFactory.TileOverride = _stage.Tile;
             for (int i = 0; i < entries.Count; i++)
             {
                 BuildCell(i, entries[i], cell);
             }
+            ShapePreviewFactory.TileOverride = 0f;
             _stage.ConfirmButton.interactable = false;
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
@@ -80,6 +89,12 @@ namespace Contigu.Presentation
         private void BuildCell(int index, ChoiceEntry entry, float cellSize)
         {
             var cell = PieceBox.CreateCell(_stage.RowFor(index), "Option_" + index, cellSize, false);
+            float cellWidth = _stage.CellWidthFor(index);
+            if (!Mathf.Approximately(cellWidth, cellSize))
+            {
+                cell.rectTransform.sizeDelta = new Vector2(cellWidth, cellSize);
+                cell.GetComponent<LayoutElement>().preferredWidth = cellWidth;
+            }
             _cellByIndex[index] = cell;
             var button = cell.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
