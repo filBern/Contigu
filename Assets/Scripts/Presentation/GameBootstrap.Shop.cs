@@ -197,7 +197,7 @@ namespace Contigu.Presentation
                     FillCell = true
                 });
             }
-            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, false, OnPackOptionChosen);
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen);
         }
 
         private void ShowPackOfModifiers(UpgradeDefinition pack)
@@ -223,7 +223,7 @@ namespace Contigu.Presentation
                     FillCell = true
                 });
             }
-            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.fertilizerPackHint"), entries, false, OnPackOptionChosen);
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.fertilizerPackHint"), entries, true, OnPackOptionChosen);
         }
 
         private static void BuildSpriteVisual(RectTransform host, Sprite sprite)
@@ -282,7 +282,7 @@ namespace Contigu.Presentation
                     Subtitle = Loc.T("choice.masteryTag")
                 });
             }
-            ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, false, OnMasteryOptionChosen);
+            ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, true, OnMasteryOptionChosen);
         }
 
         private void ShowCompost(UpgradeDefinition pending)

@@ -113,9 +113,20 @@ namespace Contigu.Presentation
             if (_selectedIndex >= 0 && _cellByIndex.TryGetValue(_selectedIndex, out var previous))
             {
                 previous.color = PieceBox.Idle;
+                var previousTip = previous.GetComponent<HoverTooltip>();
+                if (previousTip != null)
+                {
+                    previousTip.Unpin();
+                }
             }
             _selectedIndex = index;
             _cellByIndex[index].color = PieceBox.Selected;
+            // Touch has no hover: the chosen option keeps its tooltip up, so it can be read before Confirm.
+            var tip = _cellByIndex[index].GetComponent<HoverTooltip>();
+            if (tip != null && MobileSetup.IsTouchDevice)
+            {
+                tip.Pin(null);
+            }
             _stage.ConfirmButton.interactable = true;
         }
 
