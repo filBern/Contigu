@@ -43,7 +43,13 @@ namespace Contigu.Presentation
         private const float PreviewTileSize = 56f;
         private const float GhostTileSize = 46f;
         private static readonly Color SlotDividerColor = new Color(0.075f, 0.13f, 0.18f, 0.35f);
-        private static readonly Color SlotClear = new Color(1f, 1f, 1f, 0f);
+        // Each slot is its own darker parchment tray set into the column's card; selection, hover and boss locks lighten or redden it.
+        private static readonly Color SlotClear = new Color(0.93f, 0.86f, 0.70f, 1f);
+        private static readonly Color SlotHoverColor = new Color(0.98f, 0.93f, 0.80f, 1f);
+        private static readonly Color SlotSelectedColor = new Color(1f, 0.97f, 0.82f, 1f);
+        private static readonly Color SlotLockedColor = new Color(0.88f, 0.60f, 0.55f, 1f);
+        // The widest/tallest a piece is drawn (shrinks when four slots share the column).
+        private float _previewBudget = SlotPreviewBudget;
         /// <summary>Largest side a slot preview may span: the slot minus its border and a little breathing room.</summary>
         private const float SlotPreviewBudget = 140f;
         private const float SlotWidth = 150f;
@@ -147,7 +153,9 @@ namespace Contigu.Presentation
             containerImage.type = Image.Type.Sliced;
             containerImage.raycastTarget = false;
             var container = containerImage.rectTransform;
+            container.sizeDelta = new Vector2(ColumnWidth, _columnHeight);
             _handContainer = containerImage;
+            ShopSign.Build(container, "Seeds", 24);
 
             var slotsRow = UIFactory.CreateUIObject("SlotsRow", container);
             slotsRow.anchorMin = new Vector2(0.5f, 0.5f);
@@ -195,6 +203,16 @@ namespace Contigu.Presentation
                 previewContainer.sizeDelta = new Vector2(146f, 146f);
                 // Wraps just the piece's preview, not the slot's background/level/lock chrome, so a shuffle can fade the piece alone (see FadeSlotPieces).
                 var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
+
+                // Small mint number tag in the tray's corner, like the fertilizer slots'.
+                var tag = UIFactory.CreatePanel(slot.transform, "SlotNumber", UITheme.Success);
+                tag.raycastTarget = false;
+                tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = tag.rectTransform.pivot = new Vector2(0f, 1f);
+                tag.rectTransform.anchoredPosition = new Vector2(6f, -6f);
+                tag.rectTransform.sizeDelta = new Vector2(24f, 24f);
+                var tagText = UIFactory.CreateText(tag.transform, "Number", (i + 1).ToString(), 16, UITheme.TextPrimary);
+                tagText.raycastTarget = false;
+                UIFactory.StretchFull(tagText.rectTransform);
 
                 var levelLabel = UIFactory.CreateText(slot.transform, "PieceLevel", "", 14, Color.black);
                 levelLabel.raycastTarget = false;
@@ -695,9 +713,9 @@ namespace Contigu.Presentation
             {
                 bool selected = i == _selectedIndex;
                 bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
-                _slotBackgrounds[i].color = lockedByBoss ? new Color(0.8f, 0.2f, 0.2f, 0.16f)
-                    : selected && _interactable ? new Color(1f, 1f, 1f, 0.35f)
-                    : IsHoverActive(i) ? new Color(1f, 1f, 1f, 0.14f)
+                _slotBackgrounds[i].color = lockedByBoss ? SlotLockedColor
+                    : selected && _interactable ? SlotSelectedColor
+                    : IsHoverActive(i) ? SlotHoverColor
                     : SlotClear;
                 if (_slotLockLabels != null)
                 {
@@ -783,7 +801,8 @@ namespace Contigu.Presentation
             }
             // Slots are stacked in the column, sharing its height equally (three slots, or four with the fourth-slot upgrade).
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
-            float innerHeight = _columnHeight - HandBoxPadding * 2f;
+            // The wooden "Seeds" sign hangs at the top of the card; the trays fill the rest.
+            float innerHeight = _columnHeight - ModifierPanelView.HeaderHeight - HandBoxPadding;
             float slotHeight = (innerHeight - (activeCount - 1) * SlotSpacing) / Mathf.Max(1, activeCount);
             for (int i = 0; i < activeCount; i++)
             {
@@ -794,11 +813,14 @@ namespace Contigu.Presentation
                 _previewContainers[i].sizeDelta = new Vector2(innerWidth - 4f, slotHeight - 4f);
             }
             _slotsRow.sizeDelta = new Vector2(innerWidth, innerHeight);
+            _slotsRow.anchoredPosition = new Vector2(0f, _columnHeight * 0.5f - ModifierPanelView.HeaderHeight - innerHeight * 0.5f);
+            _previewBudget = Mathf.Min(SlotPreviewBudget, slotHeight - 10f);
             if (_slotDividers != null)
             {
                 for (int i = 0; i < _slotDividers.Length; i++)
                 {
-                    bool active = i < activeCount - 1;
+                    // The trays are separated by their own gaps; the old divider lines are gone.
+                    bool active = false;
                     _slotDividers[i].gameObject.SetActive(active);
                     if (active)
                     {
@@ -830,7 +852,7 @@ namespace Contigu.Presentation
                 columns = Mathf.Max(columns, shape.Cells[i].x + 1);
                 rows = Mathf.Max(rows, shape.Cells[i].y + 1);
             }
-            float cellSize = Mathf.Min(PreviewTileSize, SlotPreviewBudget / Mathf.Max(columns, rows));
+            float cellSize = Mathf.Min(PreviewTileSize, _previewBudget / Mathf.Max(columns, rows));
             width = columns * cellSize;
             height = rows * cellSize;
         }
@@ -861,7 +883,7 @@ namespace Contigu.Presentation
             {
                 maxExtent = Mathf.Max(maxExtent, shape.Cells[i].x + 1, shape.Cells[i].y + 1);
             }
-            float cellSize = Mathf.Min(PreviewTileSize, SlotPreviewBudget / maxExtent);
+            float cellSize = Mathf.Min(PreviewTileSize, _previewBudget / maxExtent);
             ShapePreviewFactory.BuildWithTraits(container, shape, token.Color, token.Traits, _tooltip, clickForwardTarget, cellSize);
         }
     }
