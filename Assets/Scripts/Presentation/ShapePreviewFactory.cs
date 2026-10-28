@@ -54,6 +54,17 @@ namespace Contigu.Presentation
         /// <summary>While set (&gt; 0), <see cref="UniformTile"/> returns it: a shop choice picks one tile size for all its pieces (see ShelfStage) before drawing them.</summary>
         public static float TileOverride;
 
+        /// <summary>How many tiles tall a shape is.</summary>
+        public static int RowsOf(PieceShape shape)
+        {
+            int rows = 1;
+            for (int i = 0; i < shape.Cells.Count; i++)
+            {
+                rows = Mathf.Max(rows, shape.Cells[i].y + 1);
+            }
+            return rows;
+        }
+
         /// <summary>How many tiles wide a shape is.</summary>
         public static int ColumnsOf(PieceShape shape)
         {

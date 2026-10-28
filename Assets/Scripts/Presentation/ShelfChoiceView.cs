@@ -17,6 +17,8 @@ namespace Contigu.Presentation
         public bool FillCell;
         /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
         public int Columns;
+        /// <summary>How many tiles tall the piece is, so it can stand on the shelf by its own bottom edge.</summary>
+        public int Rows;
     }
 
     /// <summary>
@@ -107,6 +109,14 @@ namespace Contigu.Presentation
             host.anchoredPosition = Vector2.zero;
             float visualSize = entry.FillCell ? cellSize : cellSize * 0.9f;
             host.sizeDelta = new Vector2(visualSize, visualSize);
+            if (entry.Columns > 0 && _stage.Tile > 0f)
+            {
+                // A piece stands on the shelf by its own bottom edge, whatever its height.
+                host.anchorMin = host.anchorMax = new Vector2(0.5f, 0f);
+                host.pivot = new Vector2(0.5f, 0f);
+                host.anchoredPosition = new Vector2(0f, 2f);
+                host.sizeDelta = new Vector2(entry.Columns * _stage.Tile, Mathf.Max(1, entry.Rows) * _stage.Tile);
+            }
             if (entry.BuildVisual != null)
             {
                 entry.BuildVisual(host, visualSize);

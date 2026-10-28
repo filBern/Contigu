@@ -118,6 +118,15 @@ namespace Contigu.Presentation
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             previewContainer.anchoredPosition = Vector2.zero;
             previewContainer.sizeDelta = new Vector2(cellSize * 0.9f, cellSize * 0.9f);
+            if (_stage.Tile > 0f)
+            {
+                // The seed stands on the shelf by its own bottom edge, whatever its height.
+                var shape = PieceShapeCatalog.Get(_deck.Deck[deckIndex].Shape);
+                previewContainer.anchorMin = previewContainer.anchorMax = new Vector2(0.5f, 0f);
+                previewContainer.pivot = new Vector2(0.5f, 0f);
+                previewContainer.anchoredPosition = new Vector2(0f, 2f);
+                previewContainer.sizeDelta = new Vector2(ShapePreviewFactory.ColumnsOf(shape) * _stage.Tile, ShapePreviewFactory.RowsOf(shape) * _stage.Tile);
+            }
             _previewContainerByIndex[deckIndex] = previewContainer;
 
             RebuildPreview(deckIndex, showTrait: false, animate: false);
