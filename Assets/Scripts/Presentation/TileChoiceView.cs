@@ -108,6 +108,8 @@ namespace Contigu.Presentation
                 cell.GetComponent<LayoutElement>().preferredWidth = cellWidth;
             }
             _cellBackgroundByIndex[deckIndex] = cell;
+            Destroy(cell.GetComponent<PieceBoxCellHover>()); // shelf feedback: lift on hover, higher + glow when chosen
+            cell.gameObject.AddComponent<ShelfCellFeedback>();
 
             var cellBtn = cell.gameObject.AddComponent<Button>();
             cellBtn.onClick.AddListener(() => OnCellClicked(deckIndex));
@@ -204,7 +206,7 @@ namespace Contigu.Presentation
             }
 
             bool nowSelected = _selected.Contains(deckIndex);
-            _cellBackgroundByIndex[deckIndex].color = nowSelected ? PieceBox.Selected : PieceBox.Idle;
+            _cellBackgroundByIndex[deckIndex].GetComponent<ShelfCellFeedback>().SetSelected(nowSelected);
             if (nowSelected != wasSelected)
             {
                 RebuildPreview(deckIndex, showTrait: nowSelected, animate: nowSelected);
