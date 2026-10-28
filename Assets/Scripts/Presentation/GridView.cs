@@ -391,6 +391,16 @@ namespace Contigu.Presentation
         /// (PlayEnemyEffectsSequentially) is ready to show it for real.
         /// </summary>
         /// <summary>Empties a cleared cell's visual. <paramref name="keepLocked"/>/<paramref name="keepPoisoned"/> keep a lock/poison badge the model already released (e.g. by the auto-refill's shuffle) on screen until the end-of-sequence reveal.</summary>
+        /// <summary>A Pruner Sprout pulls the tile out: it jolts, spins and shrinks away with a burst of its color, then the plot is drawn empty.</summary>
+        public void PlayUproot(int x, int y, PieceColor color)
+        {
+            if (!GridManager.InBounds(x, y))
+            {
+                return;
+            }
+            _cells[x, y].PlayUproot(() => PlayClearBurst(x, y, VisualDefaults.GetColor(color), color), () => RefreshCell(x, y));
+        }
+
         public void ClearCellVisual(int x, int y, bool suppressMalus = false, bool keepLocked = false, bool keepPoisoned = false)
         {
             RefreshCell(x, y, suppressMalus, keepLocked, keepPoisoned);

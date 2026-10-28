@@ -538,12 +538,19 @@ namespace Contigu.Core
                         for (int s4 = 0; s4 < TileUpgradeSteps.Length; s4++)
                         {
                             var touching = pos + TileUpgradeSteps[s4];
+                            PieceColor? colorBefore = GridManager.InBounds(touching.x, touching.y) ? Grid.GetCell(touching).FilledColor : null;
                             if (GridManager.InBounds(touching.x, touching.y) && Grid.UprootTile(touching, keep.Value))
                             {
                                 bonus += ScoringConstants.PrunerBonusPerTile;
                                 var uprooted = new List<Vector2Int>(placement.UprootedTiles);
                                 uprooted.Add(touching);
                                 placement.UprootedTiles = uprooted;
+                                var uprootedColors = new List<PieceColor>(placement.UprootedTileColors);
+                                uprootedColors.Add(colorBefore.Value);
+                                placement.UprootedTileColors = uprootedColors;
+                                var uprootedBy = new List<Vector2Int>(placement.UprootedBy);
+                                uprootedBy.Add(pos);
+                                placement.UprootedBy = uprootedBy;
                             }
                         }
                     }

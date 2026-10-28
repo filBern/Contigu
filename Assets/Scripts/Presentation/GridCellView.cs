@@ -442,6 +442,59 @@ namespace Contigu.Presentation
             _scaleCoroutine = null;
         }
 
+        private const float UprootDuration = 0.4f;
+
+        /// <summary>
+        /// A tile pulled out by a Pruner Sprout: it jolts up, then spins and shrinks away. <paramref name="atShrink"/> fires when it starts to shrink
+        /// (the caller puts its burst there), <paramref name="onDone"/> once it is gone (the caller redraws the plot empty).
+        /// </summary>
+        public void PlayUproot(System.Action atShrink, System.Action onDone)
+        {
+            StartCoroutine(UprootRoutine(atShrink, onDone));
+        }
+
+        private IEnumerator UprootRoutine(System.Action atShrink, System.Action onDone)
+        {
+            var rt = (RectTransform)transform;
+            const float jolt = 0.25f;
+            bool burst = false;
+            float t = 0f;
+            while (t < UprootDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / UprootDuration);
+                if (p < jolt)
+                {
+                    float k = p / jolt;
+                    float s = Mathf.Lerp(1f, 1.2f, k);
+                    rt.localScale = new Vector3(s, s, 1f);
+                    rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(0f, -9f, k));
+                }
+                else
+                {
+                    if (!burst)
+                    {
+                        burst = true;
+                        if (atShrink != null)
+                        {
+                            atShrink();
+                        }
+                    }
+                    float k = (p - jolt) / (1f - jolt);
+                    float s = Mathf.Lerp(1.2f, 0f, k * k);
+                    rt.localScale = new Vector3(s, s, 1f);
+                    rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(-9f, 50f, k));
+                }
+                yield return null;
+            }
+            rt.localScale = Vector3.one;
+            rt.localRotation = Quaternion.identity;
+            if (onDone != null)
+            {
+                onDone();
+            }
+        }
+
         private const float BurnDuration = 0.9f;
 
         /// <summary>A planted tile scorched by the Heatwave: it chars dark while flames flicker up from it (the caller refreshes the cell to empty afterwards).</summary>

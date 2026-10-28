@@ -188,6 +188,14 @@ namespace Contigu.Presentation
                     heldTraits.Add(null);
                 }
             }
+            // Pruner Sprout: the uprooted tiles stay on the garden until their Pruner's icon pulses in the count (see PlayUprootedBy).
+            for (int i = 0; i < outcome.Placement.UprootedTiles.Count; i++)
+            {
+                heldCells.Add(outcome.Placement.UprootedTiles[i]);
+                heldColors.Add(outcome.Placement.UprootedTileColors[i]);
+                heldTraits.Add(null);
+            }
+            _uprootedDone.Clear();
             // Boss-locked cells and any Locker/Poisoner cell this
             // placement's auto-refill (or an enemy death) just changed are
             // held back from this redraw, revealed only once
@@ -634,6 +642,8 @@ namespace Contigu.Presentation
                 {
                     // A tile upgrade scoring: the upgrade's own badge pulses, not the whole tile.
                     _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
+                    // A Pruner Sprout tears out its tiles exactly now, as its icon pulses.
+                    PlayUprootedBy(placement, scoreEvent.Position);
                 }
                 else
                 {
@@ -1167,6 +1177,29 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Index of the first alive enemy in CurrentEncounter matching <paramref name="id"/>, or -1 if there's no active encounter or none alive — see OnCellClicked's own Leech HP snapshot.</summary>
+        private readonly HashSet<int> _uprootedDone = new HashSet<int>();
+
+        /// <summary>Plays the uproot animation on every tile pulled out by the Pruner Sprout standing at <paramref name="pruner"/> (once each).</summary>
+        private void PlayUprootedBy(PlacementResult placement, Vector2Int pruner)
+        {
+            bool any = false;
+            for (int i = 0; i < placement.UprootedTiles.Count; i++)
+            {
+                if (placement.UprootedBy[i] != pruner || _uprootedDone.Contains(i))
+                {
+                    continue;
+                }
+                _uprootedDone.Add(i);
+                var tile = placement.UprootedTiles[i];
+                _gridView.PlayUproot(tile.x, tile.y, placement.UprootedTileColors[i]);
+                any = true;
+            }
+            if (any)
+            {
+                SfxManager.Play(SfxId.LineClear);
+            }
+        }
+
         /// <summary>The board effects of tile upgrades, revealed once the score has been counted: Sower Sprout's free tiles pop in, Warden/Aegis plots flash as freed and immune.</summary>
         private System.Collections.IEnumerator PlayTileUpgradeWorldEffects(PlacementResult placement)
         {
@@ -1209,15 +1242,16 @@ namespace Contigu.Presentation
             }
             if (placement.UprootedTiles.Count > 0)
             {
-                // Pruner Sprout: the uprooted tiles vanish with a puff.
-                var uprooted = new List<Vector2Int>(placement.UprootedTiles);
-                _gridView.RefreshCells(uprooted);
-                for (int i = 0; i < uprooted.Count; i++)
+                // Pruner Sprout: any tile not already torn out when its Pruner pulsed (no matching score event) goes now.
+                for (int i = 0; i < placement.UprootedTiles.Count; i++)
                 {
-                    _gridView.PlayClearBurst(uprooted[i].x, uprooted[i].y, UITheme.Danger);
+                    if (_uprootedDone.Add(i))
+                    {
+                        var tile = placement.UprootedTiles[i];
+                        _gridView.PlayUproot(tile.x, tile.y, placement.UprootedTileColors[i]);
+                        any = true;
+                    }
                 }
-                SfxManager.Play(SfxId.LineClear);
-                any = true;
             }
             if (placement.FreedPlots.Count > 0)
             {

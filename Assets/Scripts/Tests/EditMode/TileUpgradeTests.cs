@@ -248,6 +248,9 @@ namespace Contigu.Tests
             CollectionAssert.Contains(pruned.UprootedTiles, new Vector2Int(2, 2));
             Assert.IsFalse(pruner.Grid.GetCell(2, 2).IsFilled);
             Assert.GreaterOrEqual(pruned.TraitBonus, ScoringConstants.PrunerBonusPerTile);
+            // The view keeps each tile on screen until its Pruner pulses: it needs the color the tile had and which Pruner took it.
+            Assert.AreEqual(PieceColor.Teal, pruned.UprootedTileColors[0]);
+            Assert.AreEqual(new Vector2Int(3, 2), pruned.UprootedBy[0]);
 
             // Glow: the empty plots around it turn golden.
             var glow = NewRun();

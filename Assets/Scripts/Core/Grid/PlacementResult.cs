@@ -213,6 +213,12 @@ namespace Contigu.Core
         /// <summary>Tiles a Pruner Sprout uprooted on this placement.</summary>
         public IReadOnlyList<Vector2Int> UprootedTiles = System.Array.Empty<Vector2Int>();
 
+        /// <summary>The color each uprooted tile had (same order as <see cref="UprootedTiles"/>), so the view can keep showing it until its Pruner pulses.</summary>
+        public IReadOnlyList<PieceColor> UprootedTileColors = System.Array.Empty<PieceColor>();
+
+        /// <summary>The Pruner Sprout's tile that uprooted each one (same order as <see cref="UprootedTiles"/>).</summary>
+        public IReadOnlyList<Vector2Int> UprootedBy = System.Array.Empty<Vector2Int>();
+
         /// <summary>Plots a Locksmith Sprout freed from an enemy effect on this placement.</summary>
         public IReadOnlyList<Vector2Int> FreedPlots = System.Array.Empty<Vector2Int>();
 
