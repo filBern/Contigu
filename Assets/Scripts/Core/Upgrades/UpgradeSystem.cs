@@ -240,7 +240,7 @@ namespace Contigu.Core
         /// old random tagging did (a Joker cell's stored color never resolves
         /// to a real one, so Tinted could never fire on it either way).
         /// </summary>
-        public IReadOnlyList<int> GetCandidateTilesFor(UpgradeDefinition upgrade, DeckManager deck)
+        public IReadOnlyList<int> GetCandidateTilesFor(UpgradeDefinition upgrade, DeckManager deck, int count = EconomyConstants.ShopTileCandidateCount)
         {
             var kind = TraitKindFor(upgrade.Id);
             if (!kind.HasValue)
@@ -250,7 +250,7 @@ namespace Contigu.Core
             System.Func<PieceToken, bool> eligible = kind.Value == PieceTraitKind.Tinted
                 ? (System.Func<PieceToken, bool>)(token => token.Color != PieceColor.Joker)
                 : null;
-            return deck.GetCandidateTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng, eligible);
+            return deck.GetCandidateTokenIndices(count, _rng, eligible);
         }
 
         /// <summary>
