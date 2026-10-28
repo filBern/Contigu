@@ -240,7 +240,7 @@ namespace Contigu.Core
         /// old random tagging did (a Joker cell's stored color never resolves
         /// to a real one, so Tinted could never fire on it either way).
         /// </summary>
-        public IReadOnlyList<int> GetCandidateTilesFor(UpgradeDefinition upgrade, DeckManager deck, int count = EconomyConstants.ShopTileCandidateCount)
+        public IReadOnlyList<int> GetCandidateTilesFor(UpgradeDefinition upgrade, DeckManager deck, int count = EconomyConstants.ForgeSeedCandidateCount)
         {
             var kind = TraitKindFor(upgrade.Id);
             if (!kind.HasValue)

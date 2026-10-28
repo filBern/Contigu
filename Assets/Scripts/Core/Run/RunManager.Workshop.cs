@@ -117,7 +117,7 @@ namespace Contigu.Core
             var chosen = PendingPackUpgrades[index];
             PendingPackUpgrades = System.Array.Empty<UpgradeDefinition>();
             PendingUpgrade = chosen;
-            PendingUpgradeTileCandidates = Upgrades.GetCandidateTilesFor(chosen, Deck, EconomyConstants.ForgeSeedCandidateCount); // same wide choice as the Forge
+            PendingUpgradeTileCandidates = Upgrades.GetCandidateTilesFor(chosen, Deck);
             return true;
         }
 

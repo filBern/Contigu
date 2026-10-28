@@ -215,7 +215,7 @@ namespace Contigu.Tests
 
             var candidates = system.GetCandidateTilesFor(UpgradeCatalog.GoldenCells, deck);
 
-            Assert.AreEqual(EconomyConstants.ShopTileCandidateCount, candidates.Count);
+            Assert.AreEqual(EconomyConstants.ForgeSeedCandidateCount, candidates.Count);
             Assert.AreEqual(candidates.Count, new HashSet<int>(candidates).Count, "Candidates should be distinct deck indices");
         }
 

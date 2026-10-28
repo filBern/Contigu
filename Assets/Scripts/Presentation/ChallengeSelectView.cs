@@ -58,6 +58,7 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private Image _banner;
+        private Image _bannerIcon;
         private Text _statsLabel;
         private Image[] _dots;
         private Coroutine _popCoroutine;
@@ -167,6 +168,15 @@ namespace Contigu.Presentation
             _banner.rectTransform.pivot = new Vector2(0.5f, 1f);
             _banner.rectTransform.offsetMin = new Vector2(6f, -BannerHeight - 6f);
             _banner.rectTransform.offsetMax = new Vector2(-6f, -6f);
+
+            _bannerIcon = UIFactory.CreatePanel(_banner.transform, "SeasonIcon", Color.white);
+            _bannerIcon.raycastTarget = false;
+            _bannerIcon.preserveAspect = true;
+            _bannerIcon.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            _bannerIcon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            _bannerIcon.rectTransform.pivot = new Vector2(0f, 0.5f);
+            _bannerIcon.rectTransform.anchoredPosition = new Vector2(12f, 0f);
+            _bannerIcon.rectTransform.sizeDelta = new Vector2(BannerHeight - 12f, BannerHeight - 12f);
 
             _nameLabel = UIFactory.CreateText(_banner.transform, "Name", "", 38, UITheme.TextOnBackground);
             _nameLabel.raycastTarget = false;
@@ -360,6 +370,12 @@ namespace Contigu.Presentation
             _descriptionLabel.text = challenge.Description;
             var accent = AccentFor(challenge);
             _banner.color = accent;
+            var icon = Resources.Load<Sprite>("Icons/Challenges/" + challenge.Name);
+            _bannerIcon.sprite = icon;
+            _bannerIcon.enabled = icon != null;
+            // With an icon the name sits in the rest of the banner, centered there.
+            _nameLabel.rectTransform.offsetMin = new Vector2(icon != null ? BannerHeight : 0f, 0f);
+            _nameLabel.rectTransform.offsetMax = Vector2.zero;
             _statsLabel.text = StatsFor(challenge);
             for (int i = 0; _dots != null && i < _dots.Length; i++)
             {
