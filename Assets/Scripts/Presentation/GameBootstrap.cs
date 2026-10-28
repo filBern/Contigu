@@ -522,7 +522,8 @@ namespace Contigu.Presentation
             handRect.anchoredPosition = new Vector2(0f, handCenterY);
             // Now that the box is placed, let it size itself around the current hand.
             _handView.Refresh();
-            BuildComboUtilityButtons(comboRect);
+            // Seed bag and Rules stand in the bottom corners, on either side of the hand box, in line with the side blocks above them.
+            BuildComboUtilityButtons(mainRoot, -sidePanelCenterX, scoreBlockCenterX, handCenterY);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -711,33 +712,31 @@ namespace Contigu.Presentation
             menuButton.gameObject.AddComponent<GraphicRaycaster>();
         }
 
-        /// <summary>Quick access to the deck and rules, anchored below the combo card so their position follows its content-driven height.</summary>
-        private void BuildComboUtilityButtons(Transform comboParent)
+        /// <summary>Quick access to the deck (bottom left) and the rules (bottom right), level with the hand box and in line with the side blocks above them.</summary>
+        private void BuildComboUtilityButtons(Transform parent, float deckX, float rulesX, float y)
         {
-            var deckButton = UIFactory.CreateButton(comboParent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
+            var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
             var deckLabel = deckButton.GetComponentInChildren<Text>();
             deckLabel.color = Color.black;
             deckLabel.fontSize = 25;
             var deckRect = deckButton.GetComponent<RectTransform>();
-            deckRect.anchorMin = new Vector2(0.5f, 0f);
-            deckRect.anchorMax = new Vector2(0.5f, 0f);
-            deckRect.pivot = new Vector2(0.5f, 1f);
-            deckRect.anchoredPosition = new Vector2(MobileSetup.IsTouchDevice ? -88f : -81f, -24f);
+            deckRect.anchorMin = new Vector2(0.5f, 0.5f);
+            deckRect.anchorMax = new Vector2(0.5f, 0.5f);
+            deckRect.pivot = new Vector2(0.5f, 0.5f);
+            deckRect.anchoredPosition = new Vector2(deckX, y);
             deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
-            deckButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             deckButton.onClick.AddListener(() => _deckView.Show());
 
-            var rulesButton = UIFactory.CreateButton(comboParent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
+            var rulesButton = UIFactory.CreateButton(parent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
             var rulesLabel = rulesButton.GetComponentInChildren<Text>();
             rulesLabel.color = Color.black;
             rulesLabel.fontSize = 25;
             var rulesRect = rulesButton.GetComponent<RectTransform>();
-            rulesRect.anchorMin = new Vector2(0.5f, 0f);
-            rulesRect.anchorMax = new Vector2(0.5f, 0f);
-            rulesRect.pivot = new Vector2(0.5f, 1f);
-            rulesRect.anchoredPosition = new Vector2(MobileSetup.IsTouchDevice ? 88f : 81f, -24f);
+            rulesRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rulesRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rulesRect.pivot = new Vector2(0.5f, 0.5f);
+            rulesRect.anchoredPosition = new Vector2(rulesX, y);
             rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
-            rulesButton.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             rulesButton.onClick.AddListener(() => _tutorialView.Show());
         }
     }
