@@ -194,7 +194,7 @@ namespace Contigu.Presentation
             _typePreviewContainerByIndex[index] = previewContainer;
 
             var trait = FindRepresentativeTrait(shape, color);
-            ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, cell.gameObject);
+            ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, cell.gameObject, ShapePreviewFactory.UniformTile(previewContainer.sizeDelta.x));
 
             int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
             var levelLabel = UIFactory.CreateText(cell.transform, "TypeLevel", "Lv. " + level, 14, Color.black);

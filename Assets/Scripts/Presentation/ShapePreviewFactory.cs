@@ -38,6 +38,15 @@ namespace Contigu.Presentation
             return BuildWithTraits(container, shape, color, trait.HasValue ? new[] { trait.Value } : null, tooltip, clickForwardTarget, fixedCellSize);
         }
 
+        /// <summary>
+        /// One tile size for every piece shown in a box of <paramref name="box"/> (shop choices): a 3-wide piece just overflows its box a little,
+        /// a 2-wide one is no bigger per tile, and a 4-wide one overflows more rather than shrinking. Capped at the real grid's cell size.
+        /// </summary>
+        public static float UniformTile(float box)
+        {
+            return Mathf.Min(VisualDefaults.GridCellSize, box * 1.12f / 3f);
+        }
+
         /// <summary>Same as <see cref="Build"/> for a piece carrying several upgrades, one badge on each upgraded cell.</summary>
         public static RectTransform BuildWithTraits(RectTransform container, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip, GameObject clickForwardTarget, float? fixedCellSize = null)
         {

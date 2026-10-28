@@ -142,7 +142,7 @@ namespace Contigu.Presentation
                 shown.Add(new PieceTrait(_previewTraitKind.Value, freeCell, tintedColor));
             }
 
-            var badge = ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, shown, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject);
+            var badge = ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(token.Shape), token.Color, shown, _tooltip, _cellBackgroundByIndex[deckIndex].gameObject, ShapePreviewFactory.UniformTile(previewContainer.sizeDelta.x));
             if (animate && badge != null && !MotionSettings.Reduced)
             {
                 StartCoroutine(FadeInBadge(badge));

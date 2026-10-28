@@ -179,15 +179,7 @@ namespace Contigu.Presentation
 
         private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
         {
-            // One tile size for every piece (so a 3-wide piece is not drawn smaller than a 2-wide one): sized so a 3-wide piece just overflows its
-            // box a little, capped at the real grid's cell size; 4-wide pieces still have to fit.
-            int extent = 1;
-            for (int i = 0; i < shape.Cells.Count; i++)
-            {
-                extent = Mathf.Max(extent, shape.Cells[i].x + 1, shape.Cells[i].y + 1);
-            }
-            float box = host.sizeDelta.x;
-            float tile = Mathf.Min(VisualDefaults.GridCellSize, box * 1.12f / 3f, box * 1.12f / extent);
+            float tile = ShapePreviewFactory.UniformTile(host.sizeDelta.x);
             ShapePreviewFactory.BuildWithTraits(host, shape, color, traits, tooltip, host.parent.gameObject, tile);
         }
 
