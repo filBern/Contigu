@@ -41,7 +41,7 @@ namespace Contigu.Core
                 { ModifierId.Couronne, ctx => PointsToMult(ctx, () => ApplyCouronne(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Carrefour, ctx => PointsToMult(ctx, () => ApplyCarrefour(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.CercleChromatique, ctx => PointsToMult(ctx, () => ApplyCercleChromatique(ctx.GroupCells, ctx.Events)) },
-                { ModifierId.Monochrome, ctx => PointsToMult(ctx, () => ApplyMonochrome(ctx.GroupCells, ctx.Events)) },
+                { ModifierId.Monochrome, ctx => { ApplyMonochrome(ctx.GroupCells, ctx.Events); return 0; } },
                 { ModifierId.Contraste, ctx => PointsToMult(ctx, () => ApplyContraste(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Emmitouflee, ctx => PointsToMult(ctx, () => ApplyEmmitouflee(ctx.GroupCells, ctx.Events)) },

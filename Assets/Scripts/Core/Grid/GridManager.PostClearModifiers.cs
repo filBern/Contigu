@@ -535,11 +535,14 @@ namespace Contigu.Core
                 }
             }
 
+            // +0.5 Mult per cell: a true fractional contribution, kept exact for PlacementResult.Mult's fold (Amount only carries the rounded value).
             int total = 0;
             for (int i = 0; i < groupCells.Count; i++)
             {
-                events.Add(new ScoreEvent(ScoreEventType.Modifier, groupCells[i], ScoringConstants.MonochromeBonusPerCell));
-                total += ScoringConstants.MonochromeBonusPerCell;
+                var multEvent = new ScoreEvent(ScoreEventType.MultBonus, groupCells[i], 1);
+                multEvent.PreciseAmount = ScoringConstants.MonochromeMultPerCell;
+                events.Add(multEvent);
+                total++;
             }
             return total;
         }

@@ -108,7 +108,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
             ModifierId.Monochrome, ModifierCategory.Roguelike, "Ashbound",
-            "+1 Mult per group cell if the group has no jokers.");
+            "+0.5 Mult per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
             ModifierId.Contraste, ModifierCategory.Couleurs, "Dissonant Bloom",

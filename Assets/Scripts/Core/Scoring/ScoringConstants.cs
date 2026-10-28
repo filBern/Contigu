@@ -99,8 +99,8 @@ namespace Contigu.Core
         /// <summary>Cercle Chromatique: bonus per group cell whose 4 filled cardinal neighbors together show all 4 base colors.</summary>
         public const int CercleChromatiqueBonusPerCell = 52;
 
-        /// <summary>Monochrome: bonus per group cell when the whole group is a single real color with zero jokers.</summary>
-        public const int MonochromeBonusPerCell = 5;
+        /// <summary>Monochrome (Ashbound): +Mult per group cell when the whole group is a single real color with zero jokers - a fraction, kept exact in the Mult fold.</summary>
+        public const float MonochromeMultPerCell = 0.5f;
 
         /// <summary>Contraste: bonus per placed cell with at least one filled orthogonal neighbor of a different color.</summary>
         public const int ContrasteBonusPerCell = 9;

@@ -599,7 +599,8 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(4 * ScoringConstants.PointsToMult(ScoringConstants.MonochromeBonusPerCell), result.AdditiveMultBonus);
+            // Ashbound: +0.5 Mult per group cell (4 cells), exact in the Mult fold.
+            Assert.AreEqual(1f + 4 * ScoringConstants.MonochromeMultPerCell, result.Mult, 0.0001f);
         }
 
         [Test]
@@ -612,7 +613,7 @@ namespace Contigu.Tests
             grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers);
             var result = grid.PlacePiece(single, PieceColor.Joker, 1, 0, modifiers);
 
-            Assert.AreEqual(0, result.AdditiveMultBonus, "Monochrome requires zero jokers anywhere in the group");
+            Assert.AreEqual(1f, result.Mult, 0.0001f, "Monochrome requires zero jokers anywhere in the group");
         }
 
         [Test]
