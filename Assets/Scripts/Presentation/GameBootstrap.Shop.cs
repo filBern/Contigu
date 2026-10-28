@@ -265,8 +265,12 @@ namespace Contigu.Presentation
                     name = VisualDefaults.GetColorName(o.Color.Value);
                     levelNow = _run.GetColorMasteryLevel(o.Color.Value);
                 }
+                var masteryShape = PieceShapeCatalog.Get(o.Shape ?? ShapeId.Single);
                 entries.Add(new ChoiceEntry
                 {
+                    // Like seeds, mastery pieces stand on the shelf with the shop's common tile size.
+                    Columns = ShapePreviewFactory.ColumnsOf(masteryShape),
+                    Rows = ShapePreviewFactory.RowsOf(masteryShape),
                     BuildVisual = (host, size) =>
                     {
                         if (o.Shape.HasValue)
@@ -280,8 +284,7 @@ namespace Contigu.Presentation
                     },
                     Name = name,
                     Body = Loc.T("choice.masteryBody", levelNow, levelNow + o.Gain, o.Gain, levelNow + o.Gain - 1),
-                    Subtitle = Loc.T("choice.masteryTag"),
-                    Compact = true
+                    Subtitle = Loc.T("choice.masteryTag")
                 });
             }
             ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, true, OnMasteryOptionChosen);
