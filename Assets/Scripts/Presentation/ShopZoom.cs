@@ -16,14 +16,27 @@ namespace Contigu.Presentation
         private CanvasScaler _scaler;
         private Vector2 _baseReference;
         private bool _zoomed;
+        private bool _placed;
+
+        private void PlaceUnzoomed()
+        {
+            if (PlacePanels != null && UnzoomedPanelX > 0f)
+            {
+                PlacePanels(UnzoomedPanelX);
+                _placed = true;
+            }
+        }
 
         // Half the width the shop's own content needs, in canvas units: a shelf (600 wide), a gap, a side panel and an edge margin.
         private const float ShelfHalfWidth = 300f;
         private const float ShelfToPanelGap = 24f;
         private const float PanelToEdgeMargin = 40f;
 
-        /// <summary>Moves the side panels (and the Pollen counter above one) to a centre x, in the zoomed canvas' units; set by ShopView.</summary>
+        /// <summary>Moves the side panels (and the Pollen counter above one) to the shop's places, at a centre x in the (possibly zoomed) canvas' units; set by ShopView.</summary>
         public System.Action<float> PlacePanels { get; set; }
+
+        /// <summary>The centre x the side panels get while the shop is not zoomed.</summary>
+        public float UnzoomedPanelX { get; set; }
 
         /// <summary>Puts the side panels back where the board screen has them.</summary>
         public System.Action RestorePanels { get; set; }
@@ -41,6 +54,7 @@ namespace Contigu.Presentation
             float zoom = Mathf.Clamp(halfWidth / (ShelfHalfWidth + ShelfToPanelGap + panelWidth + PanelToEdgeMargin), 1f, MaxZoom);
             if (zoom <= 1.01f)
             {
+                PlaceUnzoomed();
                 return;
             }
             _baseReference = _scaler.referenceResolution;
@@ -51,6 +65,7 @@ namespace Contigu.Presentation
                 // The side panels keep their on-screen place (about where the board screen has them): near the edges, outside the shelves.
                 PlacePanels(halfWidth / zoom - panelWidth * 0.5f - PanelToEdgeMargin);
             }
+            _placed = true;
         }
 
         private void OnDisable()
@@ -68,12 +83,13 @@ namespace Contigu.Presentation
             if (_zoomed && _scaler != null)
             {
                 _scaler.referenceResolution = _baseReference;
-                if (RestorePanels != null)
-                {
-                    RestorePanels();
-                }
+            }
+            if (_placed && RestorePanels != null)
+            {
+                RestorePanels();
             }
             _zoomed = false;
+            _placed = false;
         }
     }
 }

@@ -488,30 +488,17 @@ namespace Contigu.Presentation
             gridRect.pivot = new Vector2(0.5f, 0.5f);
             gridRect.anchoredPosition = new Vector2(0f, (gridTopY + gridBottomY) * 0.5f);
 
-            // Center each side panel in the gap between the grid edge and
-            // the screen edge. Computed from Screen.width/height (matching
-            // CanvasScaler's match-height formula — see BuildCanvas) rather
-            // than mainRoot.rect.width, which isn't guaranteed to reflect
-            // CanvasScaler's applied scale factor yet at this point in a
-            // synchronous Build call, and could under-compute canvasWidth
-            // on a wide-aspect screen.
-            float halfGridWidth = gridRect.rect.width * 0.5f;
             // Never narrower than the 1280 the layout is drawn for: below 16:10 the canvas scales to the width (see CanvasAspectFit).
             float canvasWidth = Screen.height > 0 ? Mathf.Max(1280f, 800f * Screen.width / Screen.height) : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
-            // Both side blocks (fertilizers on the left, score and buttons on the right) sit as far out as the score card allows, mirrored around the grid.
-            float sidePanelCenterX = (halfGridWidth + halfCanvasWidth) * 0.5f;
-
-            // Clamp so the combo card (the widest thing at sidePanelCenterX)
-            // never hangs off the screen edge on a narrow aspect ratio.
-            // Needs the card's real, content-fitted width, hence the forced
-            // rebuild here. Prioritizes staying on-screen over exact
-            // centering in the gap.
+            // Both side blocks (fertilizers on the left, Pollen + score + buttons on the right) leave the same margin to the screen edge, and
+            // are centered on the grid's height. They differ in width, so their centers are not mirror images.
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
-            const float SidePanelEdgeMargin = 12f;
-            float maxSidePanelCenterX = halfCanvasWidth - comboRect.rect.width * 0.5f - SidePanelEdgeMargin;
-            sidePanelCenterX = maxSidePanelCenterX;
-            comboRect.anchoredPosition = new Vector2(sidePanelCenterX, 65f);
+            const float SidePanelEdgeMargin = 24f;
+            float sidePanelCenterX = halfCanvasWidth - SidePanelEdgeMargin - ModifierPanelView.PanelWidth * 0.5f;
+            float scoreBlockCenterX = halfCanvasWidth - SidePanelEdgeMargin - comboRect.rect.width * 0.5f;
+            float boardCenterY = (gridTopY + gridBottomY) * 0.5f;
+            comboRect.anchoredPosition = new Vector2(scoreBlockCenterX, boardCenterY);
 
             var lueurRect = _hudView.LueurLabelTransform;
             lueurRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -519,7 +506,7 @@ namespace Contigu.Presentation
             lueurRect.pivot = new Vector2(0.5f, 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
             lueurRect.anchoredPosition = new Vector2(
-                sidePanelCenterX,
+                scoreBlockCenterX,
                 comboRect.anchoredPosition.y + comboRect.rect.height * 0.5f + 12f + lueurRect.rect.height * 0.5f);
 
             // Center the three horizontal piece slots beneath the grid;
@@ -593,7 +580,8 @@ namespace Contigu.Presentation
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
-            _shopView.SetFertilizerPanel(modifierPanelRect);
+            modifierPanelRect.anchoredPosition = new Vector2(-sidePanelCenterX, boardCenterY);
+            _shopView.SetBoardPanels(modifierPanelRect, boardCenterY, scoreBlockCenterX);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
             OverlayLift.Panels.Add(modifierPanelRect);

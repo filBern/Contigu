@@ -474,7 +474,8 @@ namespace Contigu.Presentation
             if (_zoom != null)
             {
                 _zoom.PlacePanels = PlaceSidePanels;
-                _zoom.RestorePanels = () => PlaceSidePanels(_sidePanelCenterX);
+                _zoom.UnzoomedPanelX = sidePanelCenterX;
+                _zoom.RestorePanels = RestoreBoardPanels;
             }
             _upcomingEncounterBox.anchorMin = new Vector2(0.5f, 0.5f);
             _upcomingEncounterBox.anchorMax = new Vector2(0.5f, 0.5f);
@@ -482,18 +483,38 @@ namespace Contigu.Presentation
         }
 
         private RectTransform _fertilizerPanel;
+        private float _boardPanelY;
+        private float _boardPollenX;
 
-        /// <summary>The fertilizer panel is built by GameBootstrap, outside the shop; the shop moves it while it zooms the screen.</summary>
-        public void SetFertilizerPanel(RectTransform panel)
+        /// <summary>
+        /// The fertilizer panel and the Pollen counter are built by GameBootstrap, outside the shop. The shop moves them (centered vertically,
+        /// panels mirrored) while it is open, and puts them back at their board places (panel's height <paramref name="boardPanelY"/>, Pollen at
+        /// <paramref name="boardPollenX"/>) when it closes.
+        /// </summary>
+        public void SetBoardPanels(RectTransform fertilizerPanel, float boardPanelY, float boardPollenX)
         {
-            _fertilizerPanel = panel;
+            _fertilizerPanel = fertilizerPanel;
+            _boardPanelY = boardPanelY;
+            _boardPollenX = boardPollenX;
+        }
+
+        private void RestoreBoardPanels()
+        {
+            if (_fertilizerPanel != null)
+            {
+                _fertilizerPanel.anchoredPosition = new Vector2(-_sidePanelCenterX, _boardPanelY);
+            }
+            if (_lueurContainer != null)
+            {
+                _lueurContainer.anchoredPosition = new Vector2(_boardPollenX, _lueurContainer.anchoredPosition.y);
+            }
         }
 
         private void PlaceSidePanels(float centerX)
         {
             if (_fertilizerPanel != null)
             {
-                _fertilizerPanel.anchoredPosition = new Vector2(-centerX, _fertilizerPanel.anchoredPosition.y);
+                _fertilizerPanel.anchoredPosition = new Vector2(-centerX, 0f);
             }
             _upcomingEncounterBox.anchoredPosition = new Vector2(centerX, _upcomingEncounterBox.anchoredPosition.y);
             if (_lueurContainer != null)
