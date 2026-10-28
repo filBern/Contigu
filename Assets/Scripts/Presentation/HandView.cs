@@ -26,21 +26,18 @@ namespace Contigu.Presentation
         private const float DragGhostPreviewHeight = 142f;
         private const float SlotLevelLabelHeight = 22f;
         private const float HandBoxPadding = 14f;
-        // Smallest a slot gets (an empty or tiny piece), and the air kept around a piece inside its slot.
-        private const float MinSlotSize = 96f;
-        private const float SlotMargin = 8f;
-        // Sideways, slots get more room than they need so the box reads as a roomy tray (their height stays tight).
-        private const float SlotMarginX = 28f;
-        private const float MinSlotWidth = 140f;
-        // Where the hand box's top edge sits, relative to the screen's middle (it used to be centered at -230 at 174 tall).
-        private float _boxCenterY = -230f;
-        /// <summary>Tallest the hand box can get: the biggest piece (140 tall) plus its margins and the box padding.</summary>
-        public const float WorstCaseBoxHeight = SlotPreviewBudget + 2f * SlotMargin + 2f * HandBoxPadding;
+        // The hand is a tall column beside the grid: as wide as the biggest piece (140) plus its margins, as tall as the grid, slots stacked.
+        public const float ColumnWidth = 190f;
+        private float _columnCenterX;
+        private float _columnCenterY = -230f;
+        private float _columnHeight = 590f;
 
-        /// <summary>Where the box is centered vertically, relative to the screen's middle: the middle of the room between the grid and the bottom bar, so a short box leaves equal air above and below it.</summary>
-        public void SetBoxCenter(float y)
+        /// <summary>Places the hand column (canvas units, relative to the screen's middle) and sets its height, which is the grid's.</summary>
+        public void SetColumn(float centerX, float centerY, float height)
         {
-            _boxCenterY = y;
+            _columnCenterX = centerX;
+            _columnCenterY = centerY;
+            _columnHeight = height;
         }
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 56f;
@@ -51,7 +48,7 @@ namespace Contigu.Presentation
         private const float SlotPreviewBudget = 140f;
         private const float SlotWidth = 150f;
         private const float SlotHeight = 150f;
-        private const float SlotSpacing = 30f;
+        private const float SlotSpacing = 12f;
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
         // The ghost hides fully over a valid spot since the grid's own
@@ -146,8 +143,8 @@ namespace Contigu.Presentation
             // hand's effective size (which starts at HandSize, see DeckManager) ever grows it (see
             // UpdateHandSizeLayout, called at the end of this method and from every Refresh after).
             var containerImage = UIFactory.CreatePanel(parent, "HandContainer", Color.white);
-            containerImage.sprite = UISprites.SlotGroupBackground;
-            containerImage.type = Image.Type.Simple;
+            containerImage.sprite = UISprites.CardBackground;
+            containerImage.type = Image.Type.Sliced;
             containerImage.raycastTarget = false;
             var container = containerImage.rectTransform;
             _handContainer = containerImage;
@@ -156,7 +153,7 @@ namespace Contigu.Presentation
             slotsRow.anchorMin = new Vector2(0.5f, 0.5f);
             slotsRow.anchorMax = new Vector2(0.5f, 0.5f);
             slotsRow.pivot = new Vector2(0.5f, 0.5f);
-            var layout = slotsRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            var layout = slotsRow.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = SlotSpacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
@@ -233,7 +230,7 @@ namespace Contigu.Presentation
                 divider.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                 var dr = divider.rectTransform;
                 dr.anchorMin = dr.anchorMax = dr.pivot = new Vector2(0.5f, 0.5f);
-                dr.sizeDelta = new Vector2(3f, SlotHeight * 0.62f);
+                dr.sizeDelta = new Vector2(SlotWidth * 0.62f, 3f);
                 _slotDividers[i] = dr;
             }
 
@@ -784,51 +781,36 @@ namespace Contigu.Presentation
             {
                 _slotBackgrounds[i].gameObject.SetActive(i < activeCount);
             }
-            // The box hugs the pieces: each slot is as wide as its piece (never narrower than a minimum), all share the height of the tallest one.
-            // Pieces keep their size; only the empty room around them goes. The box stays centered in the room under the grid, so it shrinks and grows evenly up and down.
-            float tallest = 0f;
-            var widths = new float[activeCount];
+            // Slots are stacked in the column, sharing its height equally (three slots, or four with the fourth-slot upgrade).
+            float innerWidth = ColumnWidth - HandBoxPadding * 2f;
+            float innerHeight = _columnHeight - HandBoxPadding * 2f;
+            float slotHeight = (innerHeight - (activeCount - 1) * SlotSpacing) / Mathf.Max(1, activeCount);
             for (int i = 0; i < activeCount; i++)
             {
-                float pieceWidth;
-                float pieceHeight;
-                GetPieceExtent(i, out pieceWidth, out pieceHeight);
-                widths[i] = Mathf.Max(MinSlotWidth, pieceWidth + SlotMarginX * 2f);
-                tallest = Mathf.Max(tallest, pieceHeight);
-            }
-            float slotHeight = Mathf.Max(MinSlotSize, tallest + SlotMargin * 2f);
-            float slotsWidth = (activeCount - 1) * SlotSpacing;
-            for (int i = 0; i < activeCount; i++)
-            {
-                slotsWidth += widths[i];
-                var slotRect = _slotBackgrounds[i].rectTransform;
-                slotRect.sizeDelta = new Vector2(widths[i], slotHeight);
+                _slotBackgrounds[i].rectTransform.sizeDelta = new Vector2(innerWidth, slotHeight);
                 var slotLayout = _slotBackgrounds[i].GetComponent<LayoutElement>();
-                slotLayout.preferredWidth = widths[i];
+                slotLayout.preferredWidth = innerWidth;
                 slotLayout.preferredHeight = slotHeight;
-                _previewContainers[i].sizeDelta = new Vector2(widths[i] - 4f, slotHeight - 4f);
+                _previewContainers[i].sizeDelta = new Vector2(innerWidth - 4f, slotHeight - 4f);
             }
-            _slotsRow.sizeDelta = new Vector2(slotsWidth, slotHeight);
+            _slotsRow.sizeDelta = new Vector2(innerWidth, innerHeight);
             if (_slotDividers != null)
             {
-                float edge = -slotsWidth / 2f;
                 for (int i = 0; i < _slotDividers.Length; i++)
                 {
                     bool active = i < activeCount - 1;
                     _slotDividers[i].gameObject.SetActive(active);
                     if (active)
                     {
-                        edge += widths[i];
-                        _slotDividers[i].anchoredPosition = new Vector2(edge + SlotSpacing * 0.5f, 0f);
-                        _slotDividers[i].sizeDelta = new Vector2(3f, slotHeight * 0.62f);
-                        edge += SlotSpacing;
+                        float bottomOfSlot = innerHeight / 2f - (i + 1) * slotHeight - i * SlotSpacing;
+                        _slotDividers[i].anchoredPosition = new Vector2(0f, bottomOfSlot - SlotSpacing * 0.5f);
+                        _slotDividers[i].sizeDelta = new Vector2(innerWidth * 0.62f, 3f);
                     }
                 }
             }
-            float boxHeight = slotHeight + HandBoxPadding * 2f;
             var boxRect = _handContainer.rectTransform;
-            boxRect.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, boxHeight);
-            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, _boxCenterY);
+            boxRect.sizeDelta = new Vector2(ColumnWidth, _columnHeight);
+            boxRect.anchoredPosition = new Vector2(_columnCenterX, _columnCenterY);
         }
 
         /// <summary>Width and height, in canvas units, that the piece in hand slot <paramref name="index"/> is drawn at (0 for an empty slot); mirrors BuildShapePreview.</summary>

@@ -174,27 +174,8 @@ namespace Contigu.Presentation
             AudioListener.volume = VolumeSettings.MasterVolume;
         }
 
-        private RectTransform _handBoxRect;
-        private RectTransform _deckButtonRect;
-        private RectTransform _rulesButtonRect;
-        private const float UtilityButtonGap = 36f;
-
-        /// <summary>Seed bag and Rules keep the same distance from the hand box on each side, whatever width the box has for this hand.</summary>
-        private void KeepUtilityButtonsBesideHand()
-        {
-            if (_handBoxRect == null || _deckButtonRect == null || _rulesButtonRect == null)
-            {
-                return;
-            }
-            float half = _handBoxRect.rect.width * 0.5f;
-            float y = _handBoxRect.anchoredPosition.y;
-            _deckButtonRect.anchoredPosition = new Vector2(-(half + UtilityButtonGap + _deckButtonRect.rect.width * 0.5f), y);
-            _rulesButtonRect.anchoredPosition = new Vector2(half + UtilityButtonGap + _rulesButtonRect.rect.width * 0.5f, y);
-        }
-
         private void Update()
         {
-            KeepUtilityButtonsBesideHand();
 #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.F7))
             {
@@ -485,66 +466,80 @@ namespace Contigu.Presentation
             _statusText.rectTransform.sizeDelta = new Vector2(700f, 26f);
             _statusText.gameObject.SetActive(false);
 
-            // Slightly above screen center to make room for the horizontal
-            // hand row below while keeping a clear gap below the status text.
+            // One row, centered: [score, fertilizers, Seed bag / Rules] [grid] [hand, a tall column]. The grid and the hand column take the whole
+            // height between the enemy band and the bottom bar; the left column stacks the score card on top, the buttons at the bottom and the
+            // fertilizers between them.
             _gridView = gameObject.AddComponent<GridView>();
-            // The plots take all the room between the enemy band and the hand box (whose worst-case height is known), as wide as the score card allows.
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
             float aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 1.6f;
             float canvasHeight = aspect >= 1.6f ? 800f : 1280f / aspect;
-            float layoutHalfWidth = Mathf.Max(1280f, 800f * aspect) * 0.5f;
-            float gridTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + 12f);
-            float handTopY = -canvasHeight * 0.5f + HudView.BarHeight + 12f + HandView.WorstCaseBoxHeight;
-            float gridBottomY = handTopY + 12f;
+            // Never narrower than the 1280 the layout is drawn for: below 16:10 the canvas scales to the width (see CanvasAspectFit).
+            float canvasWidth = Mathf.Max(1280f, 800f * aspect);
+            float halfCanvasWidth = canvasWidth * 0.5f;
+            const float ZoneMargin = 12f;
+            const float ColumnGap = 24f;
+            const float ScreenMargin = 16f;
+            float zoneTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + ZoneMargin);
+            float zoneBottomY = -canvasHeight * 0.5f + HudView.BarHeight + ZoneMargin;
+            float leftColumnWidth = Mathf.Max(comboRect.rect.width, ModifierPanelView.PanelWidth);
             const float PlotSpacing = 2f; // GridView.CellSpacing
             int plots = GridManager.Size;
-            float cellByHeight = (gridTopY - gridBottomY - (plots - 1) * PlotSpacing) / plots;
-            float cellByWidth = (2f * (layoutHalfWidth - comboRect.rect.width - 24f) - (plots - 1) * PlotSpacing) / plots;
-            float gridCellSize = Mathf.Clamp(Mathf.Min(cellByHeight, cellByWidth), CellSize, 100f);
+            float cellByHeight = (zoneTopY - zoneBottomY - (plots - 1) * PlotSpacing) / plots;
+            float cellByWidth = (canvasWidth - 2f * ScreenMargin - leftColumnWidth - HandView.ColumnWidth - 2f * ColumnGap - (plots - 1) * PlotSpacing) / plots;
+            float gridCellSize = Mathf.Clamp(Mathf.Min(cellByHeight, cellByWidth), CellSize, 130f);
             var gridRect = _gridView.Build(mainRoot, _run.Grid, gridCellSize, _tooltipView);
+            float gridSize = plots * gridCellSize + (plots - 1) * PlotSpacing;
+            float rowWidth = leftColumnWidth + ColumnGap + gridSize + ColumnGap + HandView.ColumnWidth;
+            float rowStartX = -rowWidth * 0.5f;
+            float leftColumnX = rowStartX + leftColumnWidth * 0.5f;
+            float gridCenterX = rowStartX + leftColumnWidth + ColumnGap + gridSize * 0.5f;
+            float handColumnX = rowStartX + leftColumnWidth + ColumnGap + gridSize + ColumnGap + HandView.ColumnWidth * 0.5f;
+            float gridCenterY = (zoneTopY + zoneBottomY) * 0.5f;
+            float gridTopY = gridCenterY + gridSize * 0.5f;
+            float gridBottomY = gridCenterY - gridSize * 0.5f;
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = new Vector2(0f, (gridTopY + gridBottomY) * 0.5f);
+            gridRect.anchoredPosition = new Vector2(gridCenterX, gridCenterY);
 
-            // Never narrower than the 1280 the layout is drawn for: below 16:10 the canvas scales to the width (see CanvasAspectFit).
-            float canvasWidth = Screen.height > 0 ? Mathf.Max(1280f, 800f * Screen.width / Screen.height) : mainRoot.rect.width;
-            float halfCanvasWidth = canvasWidth * 0.5f;
-            // Both side blocks (fertilizers on the left, Pollen + score + buttons on the right) leave the same margin (64) to the screen edge, and
-            // are centered on the screen's height. They differ in width, so their centers are not mirror images.
-            LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
+            // The shop keeps its own side-panel spots (mirrored, see ShopView); these two feed it.
             const float SidePanelEdgeMargin = 64f;
             float sidePanelCenterX = halfCanvasWidth - SidePanelEdgeMargin - ModifierPanelView.PanelWidth * 0.5f;
-            float scoreBlockCenterX = halfCanvasWidth - SidePanelEdgeMargin - comboRect.rect.width * 0.5f;
-            // Vertically centered on the whole screen, like the shop's panels.
-            float boardCenterY = 0f;
-            comboRect.anchoredPosition = new Vector2(scoreBlockCenterX, boardCenterY);
 
+            // Left column, top: the score card.
+            comboRect.anchoredPosition = new Vector2(leftColumnX, gridTopY - comboRect.rect.height * 0.5f);
+            // Left column, bottom: Seed bag and Rules side by side.
+            const float UtilityButtonHeight = 56f;
+            float buttonsY = gridBottomY + UtilityButtonHeight * 0.5f;
+            // Left column, between: the fertilizer panel, centered in what is left.
+            float scoreBottomY = gridTopY - comboRect.rect.height;
+            float buttonsTopY = gridBottomY + UtilityButtonHeight;
+            float fertilizerY = (scoreBottomY + buttonsTopY) * 0.5f;
+
+            // Pollen sits in the top band, left of the Menu button (the shop moves it back above its own panel).
             var lueurRect = _hudView.LueurLabelTransform;
             lueurRect.anchorMin = new Vector2(0.5f, 0.5f);
             lueurRect.anchorMax = new Vector2(0.5f, 0.5f);
             lueurRect.pivot = new Vector2(0.5f, 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
-            lueurRect.anchoredPosition = new Vector2(
-                scoreBlockCenterX,
-                comboRect.anchoredPosition.y + comboRect.rect.height * 0.5f + 12f + lueurRect.rect.height * 0.5f);
+            const float BoardPollenScale = 0.8f;
+            lueurRect.localScale = Vector3.one * BoardPollenScale;
+            float menuButtonWidth = MobileSetup.TouchMin(110f);
+            float pollenX = halfCanvasWidth - 16f - menuButtonWidth - 24f - lueurRect.rect.width * BoardPollenScale * 0.5f;
+            float pollenY = canvasHeight * 0.5f - HudView.EnemyBandHeight * 0.5f;
+            lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
 
-            // Center the three horizontal piece slots beneath the grid;
-            // HandView anchors Shuffle separately just to the row's right.
+            // The hand: a tall column on the right, as tall as the grid.
             _handView = gameObject.AddComponent<HandView>();
             var handRect = _handView.Build(mainRoot, _run, _tooltipView);
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            // Centered in the room between the grid and the bottom bar: whatever its height this hand, the air above and below it is equal.
-            float handCenterY = (gridBottomY + (-canvasHeight * 0.5f + HudView.BarHeight)) * 0.5f;
-            _handView.SetBoxCenter(handCenterY);
-            handRect.anchoredPosition = new Vector2(0f, handCenterY);
-            // Now that the box is placed, let it size itself around the current hand.
+            _handView.SetColumn(handColumnX, gridCenterY, gridSize);
+            handRect.anchoredPosition = new Vector2(handColumnX, gridCenterY);
+            // Now that the column is placed, let it size its slots.
             _handView.Refresh();
-            // Seed bag and Rules stand in the bottom corners, on either side of the hand box, in line with the side blocks above them.
-            _handBoxRect = handRect;
-            BuildComboUtilityButtons(mainRoot, -sidePanelCenterX, scoreBlockCenterX, handCenterY);
+            BuildComboUtilityButtons(mainRoot, leftColumnX - 81f, leftColumnX + 81f, buttonsY);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -602,8 +597,8 @@ namespace Contigu.Presentation
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
-            modifierPanelRect.anchoredPosition = new Vector2(-sidePanelCenterX, boardCenterY);
-            _shopView.SetBoardPanels(modifierPanelRect, boardCenterY, scoreBlockCenterX, lueurRect.anchoredPosition.y);
+            modifierPanelRect.anchoredPosition = new Vector2(leftColumnX, fertilizerY);
+            _shopView.SetBoardPanels(modifierPanelRect, leftColumnX, fertilizerY, pollenX, pollenY, BoardPollenScale);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
             OverlayLift.Panels.Add(modifierPanelRect);
@@ -733,7 +728,7 @@ namespace Contigu.Presentation
             menuButton.gameObject.AddComponent<GraphicRaycaster>();
         }
 
-        /// <summary>Quick access to the deck (bottom left) and the rules (bottom right), level with the hand box and in line with the side blocks above them.</summary>
+        /// <summary>Quick access to the deck and the rules: side by side at the bottom of the left column.</summary>
         private void BuildComboUtilityButtons(Transform parent, float deckX, float rulesX, float y)
         {
             var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
@@ -747,7 +742,6 @@ namespace Contigu.Presentation
             deckRect.anchoredPosition = new Vector2(deckX, y);
             deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             deckButton.onClick.AddListener(() => _deckView.Show());
-            _deckButtonRect = deckRect;
 
             var rulesButton = UIFactory.CreateButton(parent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
             var rulesLabel = rulesButton.GetComponentInChildren<Text>();
@@ -760,7 +754,6 @@ namespace Contigu.Presentation
             rulesRect.anchoredPosition = new Vector2(rulesX, y);
             rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             rulesButton.onClick.AddListener(() => _tutorialView.Show());
-            _rulesButtonRect = rulesRect;
         }
     }
 }

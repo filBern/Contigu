@@ -486,18 +486,22 @@ namespace Contigu.Presentation
         private float _boardPanelY;
         private float _boardPollenX;
         private float _boardPollenY;
+        private float _boardPanelX;
+        private float _boardPollenScale = 1f;
 
         /// <summary>
         /// The fertilizer panel and the Pollen counter are built by GameBootstrap, outside the shop. The shop moves them (centered vertically,
         /// panels mirrored) while it is open, and puts them back at their board places (panel's height <paramref name="boardPanelY"/>, Pollen at
         /// <paramref name="boardPollenX"/>) when it closes.
         /// </summary>
-        public void SetBoardPanels(RectTransform fertilizerPanel, float boardPanelY, float boardPollenX, float boardPollenY)
+        public void SetBoardPanels(RectTransform fertilizerPanel, float boardPanelX, float boardPanelY, float boardPollenX, float boardPollenY, float boardPollenScale)
         {
             _fertilizerPanel = fertilizerPanel;
             _boardPanelY = boardPanelY;
             _boardPollenX = boardPollenX;
             _boardPollenY = boardPollenY;
+            _boardPanelX = boardPanelX;
+            _boardPollenScale = boardPollenScale;
         }
 
         private void RestoreBoardPanels()
@@ -505,11 +509,12 @@ namespace Contigu.Presentation
             PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
-                _fertilizerPanel.anchoredPosition = new Vector2(-_sidePanelCenterX, _boardPanelY);
+                _fertilizerPanel.anchoredPosition = new Vector2(_boardPanelX, _boardPanelY);
             }
             if (_lueurContainer != null)
             {
                 _lueurContainer.anchoredPosition = new Vector2(_boardPollenX, _boardPollenY);
+                _lueurContainer.localScale = Vector3.one * _boardPollenScale;
             }
         }
 
@@ -526,6 +531,7 @@ namespace Contigu.Presentation
             {
                 // Clear above the "Coming up" box (its top edge is fixed, the box being centered on the screen), not over its sign and enemies.
                 _lueurContainer.anchoredPosition = new Vector2(centerX, UpcomingBoxTopY + LueurAboveBoxClearance);
+                _lueurContainer.localScale = Vector3.one;
             }
         }
 
