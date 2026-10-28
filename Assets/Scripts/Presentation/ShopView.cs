@@ -308,14 +308,15 @@ namespace Contigu.Presentation
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
             // The seed bag is one click away from the shop (Tab still works too).
-            var bagButton = UIFactory.CreateButton(_root, "ShowSeedBag", Loc.T("shop.seedBag"), UISprites.CancelButtonBackground, 15);
-            UIFactory.DisablePlants(bagButton);
-            var bagRect = bagButton.GetComponent<RectTransform>();
-            bagRect.anchorMin = new Vector2(0f, 0f);
-            bagRect.anchorMax = new Vector2(0f, 0f);
-            bagRect.pivot = new Vector2(0f, 0f);
-            bagRect.anchoredPosition = new Vector2(16f, 40f);
-            bagRect.sizeDelta = new Vector2(220f, 46f);
+            // The same wooden Seed bag button as on the board, right under the fertilizer panel (see PlaceSidePanels).
+            var bagButton = UIFactory.CreateButton(_root, "ShowSeedBag", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
+            _bagButtonRect = bagButton.GetComponent<RectTransform>();
+            var bagRect = _bagButtonRect;
+            bagRect.anchorMin = new Vector2(0.5f, 0.5f);
+            bagRect.anchorMax = new Vector2(0.5f, 0.5f);
+            bagRect.pivot = new Vector2(0.5f, 0.5f);
+            bagRect.sizeDelta = new Vector2(ModifierPanelView.PanelWidth, 56f);
+            bagRect.anchoredPosition = new Vector2(-_sidePanelCenterX, SeedBagY);
             bagButton.onClick.AddListener(() =>
             {
                 if (SeedBagRequested != null)
@@ -471,6 +472,10 @@ namespace Contigu.Presentation
         public void SetSidePanelCenterX(float sidePanelCenterX)
         {
             _sidePanelCenterX = sidePanelCenterX;
+            if (_bagButtonRect != null)
+            {
+                _bagButtonRect.anchoredPosition = new Vector2(-sidePanelCenterX, SeedBagY);
+            }
             if (_zoom != null)
             {
                 _zoom.PlacePanels = PlaceSidePanels;
@@ -484,6 +489,9 @@ namespace Contigu.Presentation
 
         private RectTransform _fertilizerPanel;
         private GameObject _shopMenuButton;
+        private RectTransform _bagButtonRect;
+        // Just under the fertilizer panel (centered on the screen's height): its bottom edge, a gap, then the button's own half height.
+        private const float SeedBagY = -(ModifierPanelView.PanelHeight * 0.5f) - 8f - 28f;
 
         /// <summary>The Menu button the shop shows in its top-right corner (the board's own Menu button sits in the left column, under the shop).</summary>
         public void SetShopMenuButton(GameObject button)
@@ -513,6 +521,10 @@ namespace Contigu.Presentation
 
         private void RestoreBoardPanels()
         {
+            if (_bagButtonRect != null)
+            {
+                _bagButtonRect.anchoredPosition = new Vector2(-_sidePanelCenterX, SeedBagY);
+            }
             if (_shopMenuButton != null)
             {
                 _shopMenuButton.SetActive(false);
@@ -532,6 +544,10 @@ namespace Contigu.Presentation
 
         private void PlaceSidePanels(float centerX)
         {
+            if (_bagButtonRect != null)
+            {
+                _bagButtonRect.anchoredPosition = new Vector2(-centerX, SeedBagY);
+            }
             if (_shopMenuButton != null)
             {
                 _shopMenuButton.SetActive(true);
