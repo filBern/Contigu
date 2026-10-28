@@ -439,6 +439,7 @@ namespace Contigu.Presentation
             }
             // Always selects (never the OnSlotClicked toggle-off path) so starting a drag on the selected slot keeps it selected.
             _draggedSlot = index;
+            ClosePieceInfo();
             SelectSlot(index);
         }
 
@@ -530,6 +531,7 @@ namespace Contigu.Presentation
         private void Update()
         {
             UpdateHoverScale();
+            ClosePieceInfoOnOutsideTap();
             if (_selectedIndex < 0)
             {
                 return;
@@ -580,8 +582,106 @@ namespace Contigu.Presentation
             _dragGhost.anchoredPosition = localPoint;
         }
 
+        private bool _lastPressWasTouch;
+        private int _infoPinnedSlot = -1;
+
+        /// <summary>True while a tapped piece's upgrade tooltip is held open (the badges' own hover must not close it).</summary>
+        public static bool PieceInfoPinned { get; private set; }
+
+        public void NotePress(bool touch)
+        {
+            _lastPressWasTouch = touch;
+        }
+
+        /// <summary>Touch: a tap on a piece never selects it (pieces are placed by drag and drop); it shows every upgrade the piece carries, until a tap elsewhere.</summary>
+        private void ToggleTouchInfo(int idx)
+        {
+            bool wasThis = _infoPinnedSlot == idx;
+            ClosePieceInfo();
+            if (wasThis)
+            {
+                return;
+            }
+            var traits = _deck.Hand[idx].Value.Traits;
+            if (traits == null || traits.Count == 0 || _tooltip == null)
+            {
+                return;
+            }
+            var anchor = _previewContainers[idx];
+            if (traits.Count == 1)
+            {
+                _tooltip.Show(PieceTraitVisualDefaults.GetName(traits[0].Kind), TraitInfoText(traits[0]), anchor);
+            }
+            else
+            {
+                var all = new System.Text.StringBuilder();
+                for (int i = 0; i < traits.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        all.Append("\n\n");
+                    }
+                    all.Append("<size=17>").Append(PieceTraitVisualDefaults.GetName(traits[i].Kind).ToUpperInvariant()).Append("</size>\n").Append(TraitInfoText(traits[i]));
+                }
+                _tooltip.Show("This seed", all.ToString(), anchor);
+            }
+            _infoPinnedSlot = idx;
+            PieceInfoPinned = true;
+        }
+
+        private static string TraitInfoText(PieceTrait trait)
+        {
+            return TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(trait), 14), trait.Kind);
+        }
+
+        public void ClosePieceInfo()
+        {
+            if (_infoPinnedSlot >= 0 && _tooltip != null)
+            {
+                _tooltip.Hide();
+            }
+            _infoPinnedSlot = -1;
+            PieceInfoPinned = false;
+        }
+
+        private void ClosePieceInfoOnOutsideTap()
+        {
+            if (_infoPinnedSlot < 0 || EventSystem.current == null)
+            {
+                return;
+            }
+            Vector2 position;
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                position = Input.GetTouch(0).position;
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                position = Input.mousePosition;
+            }
+            else
+            {
+                return;
+            }
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, results);
+            foreach (var hit in results)
+            {
+                if (hit.gameObject.transform.IsChildOf(_slotBackgrounds[_infoPinnedSlot].transform))
+                {
+                    return;
+                }
+            }
+            ClosePieceInfo();
+        }
+
         private void OnSlotClicked(int idx)
         {
+            if (_lastPressWasTouch && idx < _deck.Hand.Count && _deck.Hand[idx].HasValue)
+            {
+                ToggleTouchInfo(idx);
+                return;
+            }
             if (!_interactable || IsBossLockedSlot(idx) || !_deck.Hand[idx].HasValue)
             {
                 return;
@@ -790,6 +890,7 @@ namespace Contigu.Presentation
 
         public void Refresh()
         {
+            ClosePieceInfo();
             UpdateHandSizeLayout();
             for (int i = 0; i < _deck.Hand.Count; i++)
             {

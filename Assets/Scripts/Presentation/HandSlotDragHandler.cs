@@ -12,7 +12,7 @@ namespace Contigu.Presentation
     /// EventSystem only fires OnBeginDrag once the pointer moves past its
     /// drag threshold, so a quick tap still resolves as a plain click.
     /// </summary>
-    public sealed class HandSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
+    public sealed class HandSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
     {
         private HandView _owner;
         private int _index;
@@ -21,6 +21,12 @@ namespace Contigu.Presentation
         {
             _owner = owner;
             _index = index;
+        }
+
+        /// <summary>Tells the hand whether the press was a finger (a tap then only shows the piece's upgrades; pieces are placed by dragging).</summary>
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            _owner.NotePress(eventData.pointerId >= 0);
         }
 
         public void OnPointerEnter(PointerEventData eventData)

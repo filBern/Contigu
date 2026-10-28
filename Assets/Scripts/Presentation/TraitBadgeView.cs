@@ -47,7 +47,8 @@ namespace Contigu.Presentation
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (_tooltip == null)
+            // A tapped hand piece keeps its (combined) tooltip open after the finger lifts.
+            if (_tooltip == null || HandView.PieceInfoPinned)
             {
                 return;
             }

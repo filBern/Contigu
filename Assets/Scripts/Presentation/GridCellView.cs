@@ -794,12 +794,16 @@ namespace Contigu.Presentation
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            // Touch, nothing to place: the tap shows everything this tile carries (its plot, upgrade and blight), until a tap elsewhere.
-            bool placing = _owner != null && _owner.HasSelectedShape;
             ClosePinnedInfo();
-            if (!placing && eventData != null && eventData.pointerId >= 0 && ShowAllInfo())
+            if (eventData != null && eventData.pointerId >= 0)
             {
-                _pinnedInfoCell = this;
+                // Touch: a tap only shows everything this tile carries (its plot, upgrade and blight), until a tap elsewhere.
+                // Pieces are placed by dragging them here (OnDrop), never by tapping.
+                if (ShowAllInfo())
+                {
+                    _pinnedInfoCell = this;
+                }
+                return;
             }
             if (_owner != null) _owner.OnCellClicked(X, Y);
         }

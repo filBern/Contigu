@@ -103,7 +103,7 @@ namespace Contigu.Presentation
                 result[col] = text;
             }
             result[1] += MobileSetup.IsTouchDevice
-                ? "\n\n<size=" + HeaderFontSize + ">CONTROLS</size>\nTap a seed then a plot to plant it, or drag it. Press and hold anything to read what it does. Tap a fertilizer, then Sell, to sell it; tap two fertilizers to swap them. Menu (bottom left): settings, these rules and Save & quit."
+                ? "\n\n<size=" + HeaderFontSize + ">CONTROLS</size>\nDrag a seed onto a plot to plant it. Tap a seed or a planted tile to read the upgrades it carries (tap elsewhere to close), and press and hold anything else to read what it does. Tap a fertilizer, then Sell, to sell it; tap two fertilizers to swap them. Menu (bottom left): settings, these rules and Save & quit."
                 : "\n\n<size=" + HeaderFontSize + ">CONTROLS</size>\nTab: view your seed bag · H: show this screen again · Esc: settings · X: sell the fertilizer you are pointing at";
             return result;
         }
