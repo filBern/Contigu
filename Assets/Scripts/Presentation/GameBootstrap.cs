@@ -525,7 +525,8 @@ namespace Contigu.Presentation
             lueurRect.anchorMax = new Vector2(0.5f, 0.5f);
             lueurRect.pivot = new Vector2(0f, 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
-            const float BoardPollenScale = 0.5f;
+            // Sized so the dark pill (digits + padding) is about as tall as the x1 button beside it (44), not taller than the round chip row.
+            const float BoardPollenScale = 0.38f;
             lueurRect.localScale = Vector3.one * BoardPollenScale;
             float pollenX = -halfCanvasWidth + 16f + MobileSetup.TouchMin(64f) + 14f;
             float pollenY = canvasHeight * 0.5f - 62f - MobileSetup.TouchMin(44f) * 0.5f;
@@ -537,8 +538,8 @@ namespace Contigu.Presentation
             pollenBackdrop.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             pollenBackdrop.rectTransform.anchorMin = Vector2.zero;
             pollenBackdrop.rectTransform.anchorMax = Vector2.one;
-            pollenBackdrop.rectTransform.offsetMin = new Vector2(-26f, -8f);
-            pollenBackdrop.rectTransform.offsetMax = new Vector2(26f, 8f);
+            pollenBackdrop.rectTransform.offsetMin = new Vector2(-24f, -6f);
+            pollenBackdrop.rectTransform.offsetMax = new Vector2(24f, 6f);
             pollenBackdrop.transform.SetAsFirstSibling();
 
             // The hand: a tall column on the right, as tall as the grid.
