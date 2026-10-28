@@ -519,7 +519,25 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            UpdateGhostPosition(Input.mousePosition);
+            Vector2 pointer = Input.mousePosition;
+            if (MobileSetup.IsTouchDevice)
+            {
+                // A finger has no cursor: the ghost exists only while one is down (a drag), so a drop on a bad spot - or a plain tap - never leaves it behind.
+                bool fingerDown = Input.touchCount > 0 || Input.GetMouseButton(0);
+                if (_dragGhost.gameObject.activeSelf != fingerDown)
+                {
+                    _dragGhost.gameObject.SetActive(fingerDown);
+                }
+                if (!fingerDown)
+                {
+                    return;
+                }
+                if (Input.touchCount > 0)
+                {
+                    pointer = Input.GetTouch(0).position;
+                }
+            }
+            UpdateGhostPosition(pointer);
         }
 
         private void ShowCursorGhost(int index)
