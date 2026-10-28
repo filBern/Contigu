@@ -39,6 +39,7 @@ namespace Contigu.Presentation
         // The stage's shelves are a little wider than the shop's (they pass under the side panels), to leave pieces room to breathe.
         private const float ExtraWidth = 110f;
         private const float UpperShelfDrop = 56f;
+        private const float IconGapPerCell = 0.04f;
         private const int MaxPerRow = 3; // one row up to 3 options; beyond that two rows (up to 4 each: 8 is the most the shop ever shows)
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
         public const float SeedCellSize = 96f;
@@ -161,6 +162,10 @@ namespace Contigu.Presentation
                 {
                     _cellWidths[i] = columns[i] > 0 ? columns[i] * Tile : 0f;
                 }
+            }
+            if (!pieces)
+            {
+                spacing = IconGapPerCell * cell; // icons do not overflow their cell: no need for the pieces' wide gap
             }
             _row1.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
             _row2.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
