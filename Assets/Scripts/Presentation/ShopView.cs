@@ -489,13 +489,6 @@ namespace Contigu.Presentation
 
         private RectTransform _fertilizerPanel;
         private GameObject _shopMenuButton;
-        private GameObject _pollenBackdrop;
-
-        /// <summary>The dark pill behind the Pollen counter on the board's light HUD band; the shop (a dark wall) hides it.</summary>
-        public void SetPollenBackdrop(GameObject backdrop)
-        {
-            _pollenBackdrop = backdrop;
-        }
         private RectTransform _bagButtonRect;
         // Just under the fertilizer panel (centered on the screen's height): its bottom edge, a gap, then the button's own half height.
         private const float SeedBagY = -(ModifierPanelView.PanelHeight * 0.5f) - 8f - 28f;
@@ -536,10 +529,6 @@ namespace Contigu.Presentation
             {
                 _shopMenuButton.SetActive(false);
             }
-            if (_pollenBackdrop != null)
-            {
-                _pollenBackdrop.SetActive(true);
-            }
             PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
@@ -562,10 +551,6 @@ namespace Contigu.Presentation
             if (_shopMenuButton != null)
             {
                 _shopMenuButton.SetActive(true);
-            }
-            if (_pollenBackdrop != null)
-            {
-                _pollenBackdrop.SetActive(false);
             }
             // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
             PieceBox.SetSidePanelCenterX(centerX, ModifierPanelView.PanelWidth);
