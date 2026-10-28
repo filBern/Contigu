@@ -545,9 +545,9 @@ namespace Contigu.Presentation
             _upcomingEncounterBox.anchoredPosition = new Vector2(centerX, _upcomingEncounterBox.anchoredPosition.y);
             if (_lueurContainer != null)
             {
-                // Clear above the "Coming up" box (its top edge is fixed, the box being centered on the screen), not over its sign and enemies.
+                // Above the fertilizer panel on the left, nearer to where the counter sits on the board (the "Coming up" box is on the right).
                 _lueurContainer.pivot = new Vector2(0.5f, 0.5f);
-                _lueurContainer.anchoredPosition = new Vector2(centerX, UpcomingBoxTopY + LueurAboveBoxClearance);
+                _lueurContainer.anchoredPosition = new Vector2(-centerX, UpcomingBoxTopY + LueurAboveBoxClearance);
                 _lueurContainer.localScale = Vector3.one;
             }
         }
