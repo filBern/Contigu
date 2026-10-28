@@ -708,7 +708,7 @@ namespace Contigu.Presentation
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }
 
-        /// <summary>A small always-visible "Menu" button (top-left, beside the round and weather chips) that opens Settings — where a run can be abandoned or the game left for the main menu — for players who don't know the Escape key.</summary>
+        /// <summary>The shop's own "Menu" button (it opens Settings, where a run can be abandoned or left for the main menu, for players who don't know the Escape key). On the board the Menu button is in the left column.</summary>
         private void BuildMenuButton(Transform parent)
         {
             // The green button style with its own light label: black text on the wooden utility button was unreadable here.
@@ -716,16 +716,7 @@ namespace Contigu.Presentation
             UIFactory.DisablePlants(menuButton);
             var label = menuButton.GetComponentInChildren<Text>();
             label.fontSize = 22;
-            var rect = menuButton.GetComponent<RectTransform>();
-            // Top-right corner, the usual home of Menu/Settings, and the same place on the board and in the shop
-            // (it used to sit in the middle of the round/weather chips at the top left, where it read as one of them).
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-16f, -16f);
-            // The wooden Menu art is 260 wide for a 56-high body: keep that proportion at this height.
-            float menuHeight = MobileSetup.TouchMin(44f);
-            rect.sizeDelta = new Vector2(260f * menuHeight / 56f, menuHeight);
+            // Position and size are set by the shop each time it opens (under its Seed bag button, see ShopView.PlaceSidePanels).
             menuButton.onClick.AddListener(() => _settingsView.Toggle());
             // Its own sorting layer above every overlay (shop choices, end screens, challenge picker): Menu stays reachable, and never looks active while something covers it.
             var menuCanvas = menuButton.gameObject.AddComponent<Canvas>();

@@ -493,7 +493,7 @@ namespace Contigu.Presentation
         // Just under the fertilizer panel (centered on the screen's height): its bottom edge, a gap, then the button's own half height.
         private const float SeedBagY = -(ModifierPanelView.PanelHeight * 0.5f) - 8f - 28f;
 
-        /// <summary>The Menu button the shop shows in its top-right corner (the board's own Menu button sits in the left column, under the shop).</summary>
+        /// <summary>The Menu button the shop shows under its Seed bag button (the board's own Menu button sits in the left column, under the shop).</summary>
         public void SetShopMenuButton(GameObject button)
         {
             _shopMenuButton = button;
@@ -550,6 +550,13 @@ namespace Contigu.Presentation
             }
             if (_shopMenuButton != null)
             {
+                // Under the Seed bag button, same size, in the same column as the fertilizer panel.
+                var menuRect = (RectTransform)_shopMenuButton.transform;
+                menuRect.anchorMin = new Vector2(0.5f, 0.5f);
+                menuRect.anchorMax = new Vector2(0.5f, 0.5f);
+                menuRect.pivot = new Vector2(0.5f, 0.5f);
+                menuRect.sizeDelta = new Vector2(ModifierPanelView.PanelWidth, 56f);
+                menuRect.anchoredPosition = new Vector2(-centerX, SeedBagY - 56f - 8f);
                 _shopMenuButton.SetActive(true);
             }
             // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
