@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
@@ -98,6 +99,9 @@ namespace Contigu.Presentation
                 cell.GetComponent<LayoutElement>().preferredWidth = cellWidth;
             }
             _cellByIndex[index] = cell;
+            // On the shelf there is no tinted box: hover lifts the piece a little, the chosen one lifts higher and glows on the shelf.
+            Destroy(cell.GetComponent<PieceBoxCellHover>());
+            cell.gameObject.AddComponent<ShelfCellFeedback>();
             var button = cell.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.onClick.AddListener(() => OnCellClicked(index));
@@ -137,7 +141,7 @@ namespace Contigu.Presentation
             }
             if (_selectedIndex >= 0 && _cellByIndex.TryGetValue(_selectedIndex, out var previous))
             {
-                previous.color = PieceBox.Idle;
+                previous.GetComponent<ShelfCellFeedback>().SetSelected(false);
                 var previousTip = previous.GetComponent<HoverTooltip>();
                 if (previousTip != null)
                 {
@@ -145,7 +149,7 @@ namespace Contigu.Presentation
                 }
             }
             _selectedIndex = index;
-            _cellByIndex[index].color = PieceBox.Selected;
+            _cellByIndex[index].GetComponent<ShelfCellFeedback>().SetSelected(true);
             // Touch has no hover: the chosen option keeps its tooltip up, so it can be read before Confirm.
             var tip = _cellByIndex[index].GetComponent<HoverTooltip>();
             if (tip != null && MobileSetup.IsTouchDevice)
@@ -170,6 +174,73 @@ namespace Contigu.Presentation
             {
                 _onChosen(index);
             }
+        }
+    }
+    /// <summary>Feedback of a shelf option: the preview lifts and grows slightly on mouse hover, more when chosen, and a warm bar glows on the shelf under the chosen one.</summary>
+    public sealed class ShelfCellFeedback : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        private const float HoverLift = 6f;
+        private const float SelectedLift = 14f;
+        private const float HoverScale = 1.04f;
+        private const float SelectedScale = 1.08f;
+        private const float Speed = 14f;
+        private static readonly Color GlowColor = new Color(1f, 0.82f, 0.35f, 0.95f);
+        private RectTransform _preview;
+        private Image _glow;
+        private bool _hovered;
+        private bool _selected;
+        private float _t;
+        private float _baseY;
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _hovered = eventData.pointerId < 0; // touch has no hover
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _hovered = false;
+        }
+
+        private void OnDisable()
+        {
+            _hovered = false;
+        }
+
+        private void Update()
+        {
+            if (_preview == null)
+            {
+                var found = transform.Find("Preview");
+                if (found == null)
+                {
+                    return;
+                }
+                _preview = (RectTransform)found;
+                _baseY = _preview.anchoredPosition.y;
+                _glow = UIFactory.CreatePanel(transform, "Glow", GlowColor);
+                _glow.raycastTarget = false;
+                var rect = _glow.rectTransform;
+                rect.anchorMin = new Vector2(0f, 0f);
+                rect.anchorMax = new Vector2(1f, 0f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.offsetMin = new Vector2(-6f, -5f);
+                rect.offsetMax = new Vector2(6f, 1f);
+            }
+            float target = _selected ? 2f : _hovered ? 1f : 0f;
+            _t = Mathf.MoveTowards(_t, target, Speed * Time.unscaledDeltaTime);
+            float lift = _t <= 1f ? Mathf.Lerp(0f, HoverLift, _t) : Mathf.Lerp(HoverLift, SelectedLift, _t - 1f);
+            float scale = _t <= 1f ? Mathf.Lerp(1f, HoverScale, _t) : Mathf.Lerp(HoverScale, SelectedScale, _t - 1f);
+            _preview.anchoredPosition = new Vector2(_preview.anchoredPosition.x, _baseY + lift);
+            _preview.localScale = new Vector3(scale, scale, 1f);
+            var c = GlowColor;
+            c.a = GlowColor.a * Mathf.Clamp01(_t - 1f);
+            _glow.color = c;
         }
     }
 }
