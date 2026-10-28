@@ -87,7 +87,9 @@ namespace Contigu.Presentation
         // height plus a visible gap, so it reads as sitting above the box rather than overlapping it.
         private const float LueurAboveBoxClearance = 70f;
         private const float UpcomingBannerHeight = ModifierPanelView.HeaderHeight;
-        private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap;
+        // Room under the sign for the "Round N/M" line, then the usual gap.
+        private const float UpcomingRoundLineHeight = 22f;
+        private const float UpcomingBoxTopPadding = ModifierPanelView.HeaderRowGap + UpcomingRoundLineHeight;
         private const float UpcomingBoxBottomPadding = ModifierPanelView.BottomPadding;
         // Icon size, HP label height/font and row gap below are each this round's full-size default — a
         // round with few enough enemies to fit the box at full size uses these as-is (count<=2 always did,
@@ -124,6 +126,7 @@ namespace Contigu.Presentation
         private Coroutine _lueurPulseCoroutine;
         private RectTransform _upcomingEncounterBox;
         private RectTransform _upcomingEncounterRow;
+        private Text _upcomingRoundLabel;
         private RectTransform _weatherRow;
         private Image _weatherIcon;
         private Text _weatherLabel;
@@ -237,6 +240,14 @@ namespace Contigu.Presentation
 
             // Same hanging wooden sign as the Fertilizers panel (it must not read as a button, nor share the name of the green "Next round" button).
             ShopSign.Build(_upcomingEncounterBox, "Coming up", 24);
+            // Which round the next one is, right under the sign.
+            _upcomingRoundLabel = UIFactory.CreateText(_upcomingEncounterBox, "RoundLabel", "", 20, UITheme.TextPrimary);
+            _upcomingRoundLabel.raycastTarget = false;
+            _upcomingRoundLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _upcomingRoundLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _upcomingRoundLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _upcomingRoundLabel.rectTransform.anchoredPosition = new Vector2(0f, -(UpcomingBannerHeight + 4f));
+            _upcomingRoundLabel.rectTransform.sizeDelta = new Vector2(UpcomingBoxWidth - 24f, UpcomingRoundLineHeight);
 
             // One enemy per cell, one column while count<=2 (reads as a plain vertical stack), two columns
             // side by side beyond that (see BuildUpcomingEncounterPreview, which sets constraintCount/
@@ -800,6 +811,9 @@ namespace Contigu.Presentation
             {
                 return;
             }
+
+            int nextRound = run.CurrentRoundNumber + 1;
+            _upcomingRoundLabel.text = run.IsEndless ? "Round " + nextRound : "Round " + nextRound + "/" + run.Challenge.RoundCount;
 
             var nextWeather = run.NextWeather;
             _weatherRow.gameObject.SetActive(nextWeather.HasValue);
