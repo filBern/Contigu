@@ -38,6 +38,7 @@ namespace Contigu.Presentation
         private const float RowOverlap = 2f;
         // The stage's shelves are a little wider than the shop's (they pass under the side panels), to leave pieces room to breathe.
         private const float ExtraWidth = 110f;
+        private const float UpperShelfDrop = 28f;
         private const int MaxPerRow = 3; // one row up to 3 options; beyond that two rows (up to 4 each: 8 is the most the shop ever shows)
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
         public const float SeedCellSize = 96f;
@@ -114,7 +115,8 @@ namespace Contigu.Presentation
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
             bool two = total > _firstRowCount;
-            float firstShelfY = two ? layout.FirstShelfY : layout.SecondShelfY;
+            // With two rows the upper shelf (and everything resting on it) is lowered a little, closer to the lower row.
+            float firstShelfY = two ? layout.FirstShelfY - UpperShelfDrop : layout.SecondShelfY;
             // Pieces are drawn bigger than their cell (a 3-wide one overflows by about a third of a cell): the cells of a row are spaced to match, so
             // neighbors never touch. The width left for the cells shrinks accordingly.
             const float RowGapPerCell = 0.34f;
