@@ -174,8 +174,27 @@ namespace Contigu.Presentation
             AudioListener.volume = VolumeSettings.MasterVolume;
         }
 
+        private RectTransform _handBoxRect;
+        private RectTransform _deckButtonRect;
+        private RectTransform _rulesButtonRect;
+        private const float UtilityButtonGap = 36f;
+
+        /// <summary>Seed bag and Rules keep the same distance from the hand box on each side, whatever width the box has for this hand.</summary>
+        private void KeepUtilityButtonsBesideHand()
+        {
+            if (_handBoxRect == null || _deckButtonRect == null || _rulesButtonRect == null)
+            {
+                return;
+            }
+            float half = _handBoxRect.rect.width * 0.5f;
+            float y = _handBoxRect.anchoredPosition.y;
+            _deckButtonRect.anchoredPosition = new Vector2(-(half + UtilityButtonGap + _deckButtonRect.rect.width * 0.5f), y);
+            _rulesButtonRect.anchoredPosition = new Vector2(half + UtilityButtonGap + _rulesButtonRect.rect.width * 0.5f, y);
+        }
+
         private void Update()
         {
+            KeepUtilityButtonsBesideHand();
 #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.F7))
             {
@@ -524,6 +543,7 @@ namespace Contigu.Presentation
             // Now that the box is placed, let it size itself around the current hand.
             _handView.Refresh();
             // Seed bag and Rules stand in the bottom corners, on either side of the hand box, in line with the side blocks above them.
+            _handBoxRect = handRect;
             BuildComboUtilityButtons(mainRoot, -sidePanelCenterX, scoreBlockCenterX, handCenterY);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
@@ -727,6 +747,7 @@ namespace Contigu.Presentation
             deckRect.anchoredPosition = new Vector2(deckX, y);
             deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             deckButton.onClick.AddListener(() => _deckView.Show());
+            _deckButtonRect = deckRect;
 
             var rulesButton = UIFactory.CreateButton(parent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
             var rulesLabel = rulesButton.GetComponentInChildren<Text>();
@@ -739,6 +760,7 @@ namespace Contigu.Presentation
             rulesRect.anchoredPosition = new Vector2(rulesX, y);
             rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
             rulesButton.onClick.AddListener(() => _tutorialView.Show());
+            _rulesButtonRect = rulesRect;
         }
     }
 }
