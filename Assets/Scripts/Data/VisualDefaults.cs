@@ -60,6 +60,8 @@ namespace Contigu.Data
         public static readonly Sprite PollenSprite = Resources.Load<Sprite>("Icons/Pollen");
 
         public static readonly Sprite GoldenTileSprite = Resources.Load<Sprite>("Icons/GoldenTile");
+        /// <summary>The four-point star of the empty golden plot's art, on its own: marks a seed planted on a golden plot.</summary>
+        public static readonly Sprite GoldenStarSprite = Resources.Load<Sprite>("Icons/GoldenStar");
         public static readonly Sprite LockedTileSprite = Resources.Load<Sprite>("Icons/LockedTile");
 
         // No longer drawn — TileSprite below now gives every cell its own

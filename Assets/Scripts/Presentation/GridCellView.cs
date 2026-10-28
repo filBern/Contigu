@@ -176,9 +176,11 @@ namespace Contigu.Presentation
             _badgeGolden.gameObject.SetActive(showGoldenBadge);
             if (showGoldenBadge)
             {
-                if (VisualDefaults.GoldenTileSprite != null)
+                // The star of the empty golden plot's art (not the coin icon): the planted seed sits on that same plot.
+                var badgeSprite = VisualDefaults.GoldenStarSprite != null ? VisualDefaults.GoldenStarSprite : VisualDefaults.GoldenTileSprite;
+                if (badgeSprite != null)
                 {
-                    _badgeGolden.sprite = VisualDefaults.GoldenTileSprite;
+                    _badgeGolden.sprite = badgeSprite;
                     _badgeGolden.color = Color.white;
                 }
                 else
@@ -256,7 +258,8 @@ namespace Contigu.Presentation
                 _traitOriginBadgeView.Init(_tooltip, originTrait.Value, gameObject);
             }
 
-            string effectText = BuildEffectLabel(cell, seederCell || goldenArtShown);
+            // The golden bonus is told by the star (and the tooltip), never as a "+18" over the seed.
+            string effectText = BuildEffectLabel(cell, true);
             _effectLabel.text = effectText;
             _effectLabel.gameObject.SetActive(effectText.Length > 0);
 
