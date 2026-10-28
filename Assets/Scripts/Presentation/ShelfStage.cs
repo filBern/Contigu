@@ -116,8 +116,8 @@ namespace Contigu.Presentation
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
             bool two = total > _firstRowCount;
-            // With two rows the upper shelf (and everything resting on it) is lowered a little, closer to the lower row.
-            float firstShelfY = two ? layout.FirstShelfY - UpperShelfDrop : layout.SecondShelfY;
+            // The upper shelf (and everything resting on it) is lowered a little, closer to the lower row.
+            float firstShelfY = layout.FirstShelfY - UpperShelfDrop; // one row also rests on the upper shelf
             // Pieces are drawn bigger than their cell (a 3-wide one overflows by about a third of a cell): the cells of a row are spaced to match, so
             // neighbors never touch. The width left for the cells shrinks accordingly.
             const float RowGapPerCell = 0.34f;
