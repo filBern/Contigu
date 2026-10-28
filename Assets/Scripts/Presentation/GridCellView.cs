@@ -58,6 +58,9 @@ namespace Contigu.Presentation
         /// <summary>Locked/frozen look drawn over the empty-cell Background, so fading the malus out reveals an empty cell instead of nothing.</summary>
         private Image _lockedOverlay;
         private bool _isShowingPoisonBadge;
+        private PieceTrait? _originTrait;
+        // The cell whose tooltip a touch left open (see OnPointerClick): closed by a tap anywhere else.
+        private static GridCellView _pinnedInfoCell;
 
         public void Init(GridView owner, int x, int y, Image background, Image fillTile, Image badgeGolden, Image badgeSpecial, Image badgePoison, Image invalidMarker, Text effectLabel, Image badgeTraitOrigin, GameObject lineClearOverlay, TooltipView tooltip)
         {
@@ -250,6 +253,7 @@ namespace Contigu.Presentation
 
             // Marks which deck upgrade originally enchanted this cell (see Cell.OriginTrait), independent
             // of the Golden/Tinted/MultiplierZone badges above.
+            _originTrait = originTrait;
             bool showTraitOrigin = originTrait.HasValue;
             _badgeTraitOrigin.gameObject.SetActive(showTraitOrigin);
             if (showTraitOrigin)
@@ -729,7 +733,7 @@ namespace Contigu.Presentation
         public void OnPointerExit(PointerEventData eventData)
         {
             if (_owner != null) _owner.OnCellHoverExit(X, Y);
-            if (_tooltip != null && _infoName != null)
+            if (_tooltip != null && _infoName != null && _pinnedInfoCell != this)
             {
                 _tooltip.Hide();
             }
@@ -737,7 +741,111 @@ namespace Contigu.Presentation
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            // Touch, nothing to place: the tap shows everything this tile carries (its plot, upgrade and blight), until a tap elsewhere.
+            bool placing = _owner != null && _owner.HasSelectedShape;
+            ClosePinnedInfo();
+            if (!placing && eventData != null && eventData.pointerId >= 0 && ShowAllInfo())
+            {
+                _pinnedInfoCell = this;
+            }
             if (_owner != null) _owner.OnCellClicked(X, Y);
+        }
+
+        /// <summary>Closes the tooltip a touch left open on a tile, if any.</summary>
+        public static void ClosePinnedInfo()
+        {
+            if (_pinnedInfoCell != null)
+            {
+                if (_pinnedInfoCell._tooltip != null)
+                {
+                    _pinnedInfoCell._tooltip.Hide();
+                }
+                _pinnedInfoCell = null;
+            }
+        }
+
+        /// <summary>A press that lands anywhere but on the tile whose tooltip is pinned closes it.</summary>
+        public static void ClosePinnedInfoOnOutsideTap()
+        {
+            if (_pinnedInfoCell == null || EventSystem.current == null)
+            {
+                return;
+            }
+            if (_pinnedInfoCell == null || !_pinnedInfoCell.gameObject.activeInHierarchy)
+            {
+                ClosePinnedInfo();
+                return;
+            }
+            Vector2 position;
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                position = Input.GetTouch(0).position;
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                position = Input.mousePosition;
+            }
+            else
+            {
+                return;
+            }
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, results);
+            foreach (var hit in results)
+            {
+                if (hit.gameObject.transform.IsChildOf(_pinnedInfoCell.transform))
+                {
+                    return;
+                }
+            }
+            ClosePinnedInfo();
+        }
+
+        /// <summary>One tooltip for the whole tile: its plot bonus, the upgrade it carries and any blight, each with its own name and effect.</summary>
+        private bool ShowAllInfo()
+        {
+            if (_tooltip == null)
+            {
+                return false;
+            }
+            var names = new List<string>();
+            var descriptions = new List<string>();
+            if (_infoName != null)
+            {
+                names.Add(_infoName);
+                descriptions.Add(DescriptionTextFormatter.Colorize(_infoDescription, 14));
+            }
+            if (_isShowingPoisonBadge)
+            {
+                names.Add(PoisonBadgeView.TooltipName);
+                descriptions.Add(DescriptionTextFormatter.Colorize(PoisonBadgeView.TooltipDescription, 14));
+            }
+            if (_originTrait.HasValue)
+            {
+                var trait = _originTrait.Value;
+                names.Add(PieceTraitVisualDefaults.GetName(trait.Kind));
+                descriptions.Add(TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(trait), 14), trait.Kind));
+            }
+            if (names.Count == 0)
+            {
+                return false;
+            }
+            if (names.Count == 1)
+            {
+                _tooltip.Show(names[0], descriptions[0], (RectTransform)transform);
+                return true;
+            }
+            var all = new System.Text.StringBuilder();
+            for (int i = 0; i < names.Count; i++)
+            {
+                if (i > 0)
+                {
+                    all.Append("\n\n");
+                }
+                all.Append("<size=17>").Append(names[i].ToUpperInvariant()).Append("</size>\n").Append(descriptions[i]);
+            }
+            _tooltip.Show("This tile", all.ToString(), (RectTransform)transform);
+            return true;
         }
 
         /// <summary>Fired by Unity's EventSystem when a drag (see HandSlotDragHandler) is released over this cell — reuses the exact same placement path as a plain click.</summary>

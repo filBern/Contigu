@@ -75,6 +75,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>(Re)creates every cell for the current <see cref="GridManager.Size"/>, scaling their size so the plot keeps the same footprint on screen.</summary>
+        private void Update()
+        {
+            GridCellView.ClosePinnedInfoOnOutsideTap();
+        }
+
         private void BuildCells()
         {
             for (int i = _container.childCount - 1; i >= 0; i--)

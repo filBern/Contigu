@@ -11,8 +11,8 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class PoisonBadgeView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
-        private const string TooltipName = "Blight";
-        private const string TooltipDescription = "Points scored on a blighted plot are negative, and the blight spreads to 1 adjacent plot when it happens. It is removed on the next Shuffle, or when the enemy that spread it is defeated.";
+        public const string TooltipName = "Blight";
+        public const string TooltipDescription = "Points scored on a blighted plot are negative, and the blight spreads to 1 adjacent plot when it happens. It is removed on the next Shuffle, or when the enemy that spread it is defeated.";
 
         private TooltipView _tooltip;
         private GameObject _clickForwardTarget;
