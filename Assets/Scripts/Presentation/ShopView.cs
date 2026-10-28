@@ -56,6 +56,8 @@ namespace Contigu.Presentation
         private const float SectionGap = 44f;
         private const float SectionLabelHeight = 0f;
         private const float ShelfDepth = 18f;
+        // Total width kept free between a shelf end and the side tablets (shared with the seed choice screens, which use the same shelves).
+        private const float ShelfEdgeMargin = 56f;
         private float _sidePanelCenterX = UpcomingBoxCenterX;
         private ShopZoom _zoom;
         // Section plaque (36) + the air under it.
@@ -756,7 +758,7 @@ namespace Contigu.Presentation
             // The whole display is centered on the screen, between the two tablets, which sit at the same height.
             float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
             float top = blockHeight * 0.5f;
-            float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 12f;
+            float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - ShelfEdgeMargin;
             _blisterPlaque.anchoredPosition = new Vector2(0f, top + PlaqueLift);
             _shelfLayout = new ShelfLayout { FirstShelfY = top - LabelToCardsGap - rowHeight + 6f, SecondShelfY = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap - LabelToCardsGap - rowHeight + 6f, Width = shelfWidth };
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
