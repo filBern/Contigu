@@ -485,17 +485,19 @@ namespace Contigu.Presentation
         private RectTransform _fertilizerPanel;
         private float _boardPanelY;
         private float _boardPollenX;
+        private float _boardPollenY;
 
         /// <summary>
         /// The fertilizer panel and the Pollen counter are built by GameBootstrap, outside the shop. The shop moves them (centered vertically,
         /// panels mirrored) while it is open, and puts them back at their board places (panel's height <paramref name="boardPanelY"/>, Pollen at
         /// <paramref name="boardPollenX"/>) when it closes.
         /// </summary>
-        public void SetBoardPanels(RectTransform fertilizerPanel, float boardPanelY, float boardPollenX)
+        public void SetBoardPanels(RectTransform fertilizerPanel, float boardPanelY, float boardPollenX, float boardPollenY)
         {
             _fertilizerPanel = fertilizerPanel;
             _boardPanelY = boardPanelY;
             _boardPollenX = boardPollenX;
+            _boardPollenY = boardPollenY;
         }
 
         private void RestoreBoardPanels()
@@ -506,7 +508,7 @@ namespace Contigu.Presentation
             }
             if (_lueurContainer != null)
             {
-                _lueurContainer.anchoredPosition = new Vector2(_boardPollenX, _lueurContainer.anchoredPosition.y);
+                _lueurContainer.anchoredPosition = new Vector2(_boardPollenX, _boardPollenY);
             }
         }
 
@@ -519,7 +521,8 @@ namespace Contigu.Presentation
             _upcomingEncounterBox.anchoredPosition = new Vector2(centerX, _upcomingEncounterBox.anchoredPosition.y);
             if (_lueurContainer != null)
             {
-                _lueurContainer.anchoredPosition = new Vector2(centerX, _lueurContainer.anchoredPosition.y);
+                // Clear above the "Coming up" box (its top edge is fixed, the box being centered on the screen), not over its sign and enemies.
+                _lueurContainer.anchoredPosition = new Vector2(centerX, UpcomingBoxTopY + LueurAboveBoxClearance);
             }
         }
 

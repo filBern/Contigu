@@ -193,9 +193,70 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        /// <summary>Pins the tooltip of row <paramref name="index"/> open on touch (-1 unpins every row).</summary>
+        private void PinTooltip(int index)
+        {
+            for (int i = 0; i < _rowBadges.Count; i++)
+            {
+                var view = _rowBadges[i] != null ? _rowBadges[i].GetComponent<ModifierBadgeView>() : null;
+                if (view == null)
+                {
+                    continue;
+                }
+                if (i == index && MobileSetup.IsTouchDevice)
+                {
+                    view.Pin();
+                }
+                else
+                {
+                    view.Unpin();
+                }
+            }
+        }
+
+        /// <summary>A tap anywhere but on a badge or the Sell button drops the armed badge, which also closes its pinned tooltip.</summary>
+        private void DisarmOnOutsideTap()
+        {
+            if (_selectedRowIndex < 0 || UnityEngine.EventSystems.EventSystem.current == null)
+            {
+                return;
+            }
+            Vector2 position;
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                position = Input.GetTouch(0).position;
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                position = Input.mousePosition;
+            }
+            else
+            {
+                return;
+            }
+            var results = new List<UnityEngine.EventSystems.RaycastResult>();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = position }, results);
+            foreach (var hit in results)
+            {
+                var t = hit.gameObject.transform;
+                if (t.IsChildOf(_rowsContainer) || (_sellButton != null && t.IsChildOf(_sellButton.transform)))
+                {
+                    return;
+                }
+            }
+            int armed = _selectedRowIndex;
+            _selectedRowIndex = -1;
+            if (armed < _rowBadges.Count)
+            {
+                ApplyRestingColor(armed);
+            }
+            PinTooltip(-1);
+        }
+
         /// <summary>The Sell button shows only while a badge is armed by a tap (and says what it would pay).</summary>
         private void Update()
         {
+            DisarmOnOutsideTap();
             if (_sellButton == null)
             {
                 return;
@@ -417,12 +478,15 @@ namespace Contigu.Presentation
             {
                 _selectedRowIndex = index;
                 ApplyRestingColor(index);
+                // Touch has no hover: the tap that arms a badge also keeps its tooltip up (tap it again, or anywhere else, to close it).
+                PinTooltip(index);
                 return;
             }
 
             int armed = _selectedRowIndex;
             _selectedRowIndex = -1;
             ApplyRestingColor(armed);
+            PinTooltip(-1);
 
             if (armed == index)
             {
@@ -475,6 +539,7 @@ namespace Contigu.Presentation
                 int armed = _selectedRowIndex;
                 _selectedRowIndex = -1;
                 ApplyRestingColor(armed);
+                PinTooltip(-1);
             }
 
             _draggingRowIndex = index;

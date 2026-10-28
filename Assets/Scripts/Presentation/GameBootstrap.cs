@@ -583,7 +583,7 @@ namespace Contigu.Presentation
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             modifierPanelRect.anchoredPosition = new Vector2(-sidePanelCenterX, boardCenterY);
-            _shopView.SetBoardPanels(modifierPanelRect, boardCenterY, scoreBlockCenterX);
+            _shopView.SetBoardPanels(modifierPanelRect, boardCenterY, scoreBlockCenterX, lueurRect.anchoredPosition.y);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
             OverlayLift.Panels.Add(modifierPanelRect);

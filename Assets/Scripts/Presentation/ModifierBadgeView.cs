@@ -21,6 +21,37 @@ namespace Contigu.Presentation
         // underlying values (usage count, progressive state) keep changing.
         private bool _hovering;
 
+        // Touch: the tooltip stays up after the finger lifts, until the panel unpins it (a second tap on the badge, or a tap elsewhere).
+        private bool _pinned;
+
+        public void Pin()
+        {
+            _pinned = true;
+            ShowTooltip();
+        }
+
+        public void Unpin()
+        {
+            if (!_pinned)
+            {
+                return;
+            }
+            _pinned = false;
+            if (!_hovering)
+            {
+                _tooltip.Hide();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_pinned)
+            {
+                _pinned = false;
+                _tooltip.Hide();
+            }
+        }
+
         public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
         {
             _tooltip = tooltip;
@@ -40,12 +71,16 @@ namespace Contigu.Presentation
         public void OnPointerExit(PointerEventData eventData)
         {
             _hovering = false;
+            if (_pinned)
+            {
+                return;
+            }
             _tooltip.Hide();
         }
 
         private void Update()
         {
-            if (_hovering)
+            if (_hovering || _pinned)
             {
                 ShowTooltip();
             }
