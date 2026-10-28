@@ -639,6 +639,23 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Whenever the shop is not on screen, the shared Pollen counter is the board's small chip. Several shop animations drive its scale
+        /// (the wobble, the purchase pop) and one of them finishing late must never leave it at full size on the board.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (_lueurContainer == null || _root == null || _root.gameObject.activeInHierarchy || _lueurContainer.parent != _root.parent)
+            {
+                return;
+            }
+            var wanted = Vector3.one * _boardPollenScale;
+            if (_lueurContainer.localScale != wanted)
+            {
+                _lueurContainer.localScale = wanted;
+            }
+        }
+
         public void Show(RunManager run)
         {
             SetSelectionMode(false);
