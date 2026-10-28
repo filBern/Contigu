@@ -474,9 +474,9 @@ namespace Contigu.Presentation
             float aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 1.6f;
             float canvasHeight = aspect >= 1.6f ? 800f : 1280f / aspect;
             float layoutHalfWidth = Mathf.Max(1280f, 800f * aspect) * 0.5f;
-            float gridTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + 8f);
-            float handTopY = -canvasHeight * 0.5f + HudView.BarHeight + 6f + HandView.WorstCaseBoxHeight;
-            float gridBottomY = handTopY + 8f;
+            float gridTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + 12f);
+            float handTopY = -canvasHeight * 0.5f + HudView.BarHeight + 12f + HandView.WorstCaseBoxHeight;
+            float gridBottomY = handTopY + 12f;
             const float PlotSpacing = 2f; // GridView.CellSpacing
             int plots = GridManager.Size;
             float cellByHeight = (gridTopY - gridBottomY - (plots - 1) * PlotSpacing) / plots;
@@ -529,8 +529,10 @@ namespace Contigu.Presentation
             handRect.anchorMin = new Vector2(0.5f, 0.5f);
             handRect.anchorMax = new Vector2(0.5f, 0.5f);
             handRect.pivot = new Vector2(0.5f, 0.5f);
-            _handView.SetBoxTop(handTopY);
-            handRect.anchoredPosition = new Vector2(0f, handTopY - HandView.WorstCaseBoxHeight * 0.5f);
+            // Centered in the room between the grid and the bottom bar: whatever its height this hand, the air above and below it is equal.
+            float handCenterY = (gridBottomY + (-canvasHeight * 0.5f + HudView.BarHeight)) * 0.5f;
+            _handView.SetBoxCenter(handCenterY);
+            handRect.anchoredPosition = new Vector2(0f, handCenterY);
             // Now that the box is placed, let it size itself around the current hand.
             _handView.Refresh();
             BuildComboUtilityButtons(comboRect);

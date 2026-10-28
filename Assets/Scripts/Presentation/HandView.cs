@@ -33,14 +33,14 @@ namespace Contigu.Presentation
         private const float SlotMarginX = 28f;
         private const float MinSlotWidth = 140f;
         // Where the hand box's top edge sits, relative to the screen's middle (it used to be centered at -230 at 174 tall).
-        private float _boxTopY = -143f;
+        private float _boxCenterY = -230f;
         /// <summary>Tallest the hand box can get: the biggest piece (140 tall) plus its margins and the box padding.</summary>
         public const float WorstCaseBoxHeight = SlotPreviewBudget + 2f * SlotMargin + 2f * HandBoxPadding;
 
-        /// <summary>Where the box's top edge sits, relative to the screen's middle (the board is sized to the room above it).</summary>
-        public void SetBoxTop(float y)
+        /// <summary>Where the box is centered vertically, relative to the screen's middle: the middle of the room between the grid and the bottom bar, so a short box leaves equal air above and below it.</summary>
+        public void SetBoxCenter(float y)
         {
-            _boxTopY = y;
+            _boxCenterY = y;
         }
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 56f;
@@ -785,7 +785,7 @@ namespace Contigu.Presentation
                 _slotBackgrounds[i].gameObject.SetActive(i < activeCount);
             }
             // The box hugs the pieces: each slot is as wide as its piece (never narrower than a minimum), all share the height of the tallest one.
-            // Pieces keep their size; only the empty room around them goes. The top edge stays put, so the box shrinks and grows downward.
+            // Pieces keep their size; only the empty room around them goes. The box stays centered in the room under the grid, so it shrinks and grows evenly up and down.
             float tallest = 0f;
             var widths = new float[activeCount];
             for (int i = 0; i < activeCount; i++)
@@ -828,7 +828,7 @@ namespace Contigu.Presentation
             float boxHeight = slotHeight + HandBoxPadding * 2f;
             var boxRect = _handContainer.rectTransform;
             boxRect.sizeDelta = new Vector2(slotsWidth + HandBoxPadding * 2f, boxHeight);
-            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, _boxTopY - boxHeight * 0.5f);
+            boxRect.anchoredPosition = new Vector2(boxRect.anchoredPosition.x, _boxCenterY);
         }
 
         /// <summary>Width and height, in canvas units, that the piece in hand slot <paramref name="index"/> is drawn at (0 for an empty slot); mirrors BuildShapePreview.</summary>
