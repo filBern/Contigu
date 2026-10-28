@@ -101,8 +101,15 @@ namespace Contigu.Presentation
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;
             bool two = total > _firstRowCount;
             float firstShelfY = two ? layout.FirstShelfY : layout.SecondShelfY;
-            PieceBox.Configure(Mathf.Max(1, _firstRowCount), layout.Width - 24f, two ? maxCellSize : Mathf.Max(maxCellSize, SingleRowCellSize));
+            // Pieces are drawn bigger than their cell (a 3-wide one overflows by about a third of a cell): the cells of a row are spaced to match, so
+            // neighbors never touch. The width left for the cells shrinks accordingly.
+            const float RowGapPerCell = 0.34f;
+            int perRow = Mathf.Max(1, _firstRowCount);
+            float fitWidth = (layout.Width - 24f) * perRow / (perRow + RowGapPerCell * (perRow - 1));
+            PieceBox.Configure(perRow, fitWidth, two ? maxCellSize : Mathf.Max(maxCellSize, SingleRowCellSize));
             float cell = PieceBox.CellSize;
+            _row1.GetComponent<HorizontalLayoutGroup>().spacing = RowGapPerCell * cell;
+            _row2.GetComponent<HorizontalLayoutGroup>().spacing = RowGapPerCell * cell;
 
             _shelf1.sizeDelta = new Vector2(layout.Width, ShelfHeight);
             _shelf2.sizeDelta = new Vector2(layout.Width, ShelfHeight);
