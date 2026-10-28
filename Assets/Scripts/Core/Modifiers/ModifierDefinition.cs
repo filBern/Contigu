@@ -193,19 +193,19 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Poppy Glow",
-            "+6 pts per group cell on Poppy seeds.");
+            "+1 Mult per group cell on Poppy seeds.");
 
         public static readonly ModifierDefinition EclatTeal = new ModifierDefinition(
             ModifierId.EclatTeal, ModifierCategory.Couleurs, "Iris Glow",
-            "+6 pts per group cell on Iris seeds.");
+            "+1 Mult per group cell on Iris seeds.");
 
         public static readonly ModifierDefinition EclatViolet = new ModifierDefinition(
             ModifierId.EclatViolet, ModifierCategory.Couleurs, "Sunflower Glow",
-            "+6 pts per group cell on Sunflower seeds.");
+            "+1 Mult per group cell on Sunflower seeds.");
 
         public static readonly ModifierDefinition EclatLime = new ModifierDefinition(
             ModifierId.EclatLime, ModifierCategory.Couleurs, "Fern Glow",
-            "+6 pts per group cell on Fern seeds.");
+            "+1 Mult per group cell on Fern seeds.");
 
         public static readonly ModifierDefinition Diagonale = new ModifierDefinition(
             ModifierId.Diagonale, ModifierCategory.Voisinage, "Diagonal",

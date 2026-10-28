@@ -1086,10 +1086,11 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(ScoringConstants.DevotionBonus + ScoringConstants.DevotionEclatPairBonus, result.AdditiveMultBonus,
-                "Holding both Devotion and Éclat for the same color should add the pairing kicker on top of Devotion's own bonus");
-            Assert.AreEqual(square.Cells.Count * ScoringConstants.EclatBonusPerCell, result.ModifierBonus,
-                "Éclat's own +pts bonus should fire independently, completely unaffected by the pairing kicker");
+            // Éclat is +1 Mult per group cell now, added to the same additive Mult as Devotion's bonus and the pairing kicker.
+            int eclatMult = ScoringConstants.PointsToMult(square.Cells.Count * ScoringConstants.EclatBonusPerCell);
+            Assert.AreEqual(ScoringConstants.DevotionBonus + ScoringConstants.DevotionEclatPairBonus + eclatMult, result.AdditiveMultBonus,
+                "Holding both Devotion and Éclat for the same color should add the pairing kicker on top of Devotion's own bonus and Éclat's own Mult");
+            Assert.AreEqual(0, result.ModifierBonus, "Éclat gives Mult, never points");
         }
 
         [Test]
@@ -1381,8 +1382,9 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
 
-            Assert.AreEqual(square.Cells.Count * ScoringConstants.EclatBonusPerCell, result.ModifierBonus,
-                "Éclat should be a flat per-tile bonus, not Devotion's full double");
+            Assert.AreEqual(square.Cells.Count, result.AdditiveMultBonus,
+                "Éclat should be a flat +1 Mult per group cell, not Devotion's full double");
+            Assert.AreEqual(0, result.ModifierBonus, "Éclat gives Mult, never points");
         }
 
         [Test]
@@ -1403,8 +1405,8 @@ namespace Contigu.Tests
             {
                 var grid = new GridManager();
                 var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
-                int expected = baseColors[i] == matchingColor ? ScoringConstants.EclatBonusPerCell : 0;
-                Assert.AreEqual(expected, result.ModifierBonus, id + " vs " + baseColors[i]);
+                int expected = baseColors[i] == matchingColor ? 1 : 0; // +1 Mult for the single cell
+                Assert.AreEqual(expected, result.AdditiveMultBonus, id + " vs " + baseColors[i]);
             }
         }
 
@@ -2076,28 +2078,22 @@ namespace Contigu.Tests
         public void Joker_ResolvesAJokerPieceToWhicheverColorMaximizesDevotionOrEclat()
         {
             var grid = new GridManager();
-            // 4 cells (not DomH's 2) — Devotion's triangular group bonus
-            // scales quadratically with cell count while Éclat's is only
-            // linear, so a big enough piece is needed for Devotion to stay
-            // ahead now that Éclat's own per-cell bonus was raised (explicit
-            // request: "Les modifiers qui ajoute des pts combo ... on
-            // pourrait les upgrade un peu").
-            var sq2 = PieceShapeCatalog.Get(ShapeId.Sq2);
+            // Both are flat additive Mult now: Devotion gives a fixed +DevotionBonus (3), Éclat +1 per group cell.
+            // A 2-cell piece makes Devotion the bigger prize (3 vs 2).
+            var domH = PieceShapeCatalog.Get(ShapeId.DomH);
             var modifiers = new List<ModifierId> { ModifierId.Joker, ModifierId.DevotionCoral, ModifierId.EclatLime };
 
-            var result = grid.PlacePiece(sq2, PieceColor.Joker, 0, 0, modifiers);
+            var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
 
-            // Devotion(Coral) would add groupBonus*DevotionBonus (see
-            // ResolveJokerColorForModifiers, the group's own triangular
-            // bonus for 4 cells, scaled by Devotion's flat +Mult value since
-            // it's additive now); Éclat(Lime) adds group-size *
-            // EclatBonusPerCell (4*6=24) — Coral still wins here, so
-            // Devotion actually fires (into AdditiveMultBonus), not Éclat.
-            int devotionWouldGive = ExpectedGroupBonus(sq2.Cells.Count) * ScoringConstants.DevotionBonus;
-            int eclatWouldGive = sq2.Cells.Count * ScoringConstants.EclatBonusPerCell;
-            Assert.Greater(devotionWouldGive, eclatWouldGive, "Test setup sanity: Devotion should be the bigger prize here");
+            Assert.Greater(ScoringConstants.DevotionBonus, domH.Cells.Count, "Test setup sanity: Devotion should be the bigger prize here");
             Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus);
-            Assert.AreEqual(0, result.ModifierBonus, "Éclat shouldn't have fired — the Joker resolved to Coral, not Lime");
+
+            // A 4-cell piece tips it the other way: Éclat's +4 beats Devotion's +3, so the Joker becomes Lime.
+            var bigGrid = new GridManager();
+            var sq2 = PieceShapeCatalog.Get(ShapeId.Sq2);
+            var bigResult = bigGrid.PlacePiece(sq2, PieceColor.Joker, 0, 0, modifiers);
+            Assert.AreEqual(sq2.Cells.Count, bigResult.AdditiveMultBonus, "Éclat (+1 per cell) beats Devotion's flat +3 on a 4-cell piece");
+            Assert.AreEqual(0, bigResult.ModifierBonus, "Éclat gives Mult, never points");
         }
 
         [Test]

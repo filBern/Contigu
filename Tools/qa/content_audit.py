@@ -138,6 +138,9 @@ unit_variants = defaultdict(int)
 texts = [(m, d) for m, (n, d) in defined.items()] + [(u, d) for u, (n, d) in upgrade_names.items()]
 for ident, text in texts:
     low = text.lower()
+    # Fertilizers are Mult, never points (see ScoringConstants.PointsToMult): only sprouts (tile upgrades) may talk about points.
+    if ident in defined and re.search(r'\bpts?\b|\bpoints?\b', low):
+        report('Fertilizers', '%s: gives points, fertilizers must give Mult: "%s"' % (ident, text))
     if '  ' in text or text != text.strip():
         report('Clarity', '%s: double or stray spaces in its description: "%s"' % (ident, text))
     if text and text[-1] not in '.)!?':

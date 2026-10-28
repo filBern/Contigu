@@ -58,10 +58,10 @@ namespace Contigu.Core
                 { ModifierId.FormatGrandGlow, ctx => PointsToMult(ctx, () => ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
                 { ModifierId.GrandFormat, ctx => PointsToMult(ctx, () => ApplyGrandFormat(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.HorsNorme, ctx => PointsToMult(ctx, () => ApplyHorsNorme(ctx.PlacedCells, ctx.Events)) },
-                { ModifierId.EclatCoral, ctx => ApplyEclat(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.EclatTeal, ctx => ApplyEclat(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.EclatViolet, ctx => ApplyEclat(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
-                { ModifierId.EclatLime, ctx => ApplyEclat(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events) },
+                { ModifierId.EclatCoral, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.EclatTeal, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.EclatViolet, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
+                { ModifierId.EclatLime, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Diagonale, ctx => PointsToMult(ctx, () => ApplyDiagonale(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Nid, ctx => PointsToMult(ctx, () => ApplyNid(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Solitaire, ctx => { ctx.Multiplier *= ApplySolitaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -1060,19 +1060,13 @@ namespace Contigu.Core
                 int score = 0;
                 if (ContainsModifier(activeModifiers, DevotionModifierFor(candidate)))
                 {
-                    // Devotion is a flat +Mult (additive, see
-                    // ApplyColorDevotionBonus), not a genuine multiplier —
-                    // its points-equivalent "extra" for this comparison
-                    // scales with groupBonus the same way an xN catch-up
-                    // would (e.g. GameBootstrap's multipliedExtra), using
-                    // DevotionBonus directly as that scale factor, so a
-                    // bigger group still favors whichever color has an
-                    // applicable Devotion modifier.
-                    score += groupBonus * ScoringConstants.DevotionBonus;
+                    // Both are flat additive Mult now, so they compare directly in Mult:
+                    // Devotion's fixed +DevotionBonus against Éclat's +1 per group cell.
+                    score += ScoringConstants.DevotionBonus;
                 }
                 if (ContainsModifier(activeModifiers, EclatModifierFor(candidate)))
                 {
-                    score += groupCellCount * ScoringConstants.EclatBonusPerCell;
+                    score += ScoringConstants.PointsToMult(groupCellCount * ScoringConstants.EclatBonusPerCell);
                 }
                 if (score > bestScore)
                 {

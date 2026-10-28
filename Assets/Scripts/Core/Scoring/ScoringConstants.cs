@@ -150,8 +150,8 @@ namespace Contigu.Core
         public const int HorsNormeBonus = 18;
         public const int HorsNormeExactPieceSize = 3;
 
-        /// <summary>Éclat (per-color): bonus per scored group cell of the matching color — unlike Devotion's full double, a flat per-tile amount.</summary>
-        public const int EclatBonusPerCell = 6;
+        /// <summary>Éclat (per-color): +1 Mult per scored group cell of the matching color (points worth one Mult), a flat per-tile amount unlike Devotion's full double.</summary>
+        public const int EclatBonusPerCell = (int)PointsPerMult;
 
         // ---- More modifier bonuses (see ModifierCatalog) ----
 
