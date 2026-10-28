@@ -530,6 +530,16 @@ namespace Contigu.Presentation
             float pollenX = -halfCanvasWidth + 16f + MobileSetup.TouchMin(64f) + 14f;
             float pollenY = canvasHeight * 0.5f - 62f - MobileSetup.TouchMin(44f) * 0.5f;
             lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
+            // The golden digits vanish on the light HUD band: on the board they sit on a dark pill (the shop's dark wall needs none).
+            var pollenBackdrop = UIFactory.CreateSlicedImage(lueurRect, "PollenBackdrop", UISprites.CardBackground);
+            pollenBackdrop.color = new Color(0.075f, 0.13f, 0.18f, 1f);
+            pollenBackdrop.raycastTarget = false;
+            pollenBackdrop.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            pollenBackdrop.rectTransform.anchorMin = Vector2.zero;
+            pollenBackdrop.rectTransform.anchorMax = Vector2.one;
+            pollenBackdrop.rectTransform.offsetMin = new Vector2(-26f, -8f);
+            pollenBackdrop.rectTransform.offsetMax = new Vector2(26f, 8f);
+            pollenBackdrop.transform.SetAsFirstSibling();
 
             // The hand: a tall column on the right, as tall as the grid.
             _handView = gameObject.AddComponent<HandView>();
@@ -600,6 +610,7 @@ namespace Contigu.Presentation
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             modifierPanelRect.anchoredPosition = new Vector2(leftColumnX, fertilizerY);
+            _shopView.SetPollenBackdrop(pollenBackdrop.gameObject);
             _shopView.SetBoardPanels(modifierPanelRect, leftColumnX, fertilizerY, pollenX, pollenY, BoardPollenScale);
             PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
