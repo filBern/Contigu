@@ -492,12 +492,13 @@ namespace Contigu.Presentation
             float canvasWidth = Screen.height > 0 ? Mathf.Max(1280f, 800f * Screen.width / Screen.height) : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
             // Both side blocks (fertilizers on the left, Pollen + score + buttons on the right) leave the same margin to the screen edge, and
-            // are centered on the grid's height. They differ in width, so their centers are not mirror images.
+            // are centered on the screen's height. They differ in width, so their centers are not mirror images.
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
             const float SidePanelEdgeMargin = 24f;
             float sidePanelCenterX = halfCanvasWidth - SidePanelEdgeMargin - ModifierPanelView.PanelWidth * 0.5f;
             float scoreBlockCenterX = halfCanvasWidth - SidePanelEdgeMargin - comboRect.rect.width * 0.5f;
-            float boardCenterY = (gridTopY + gridBottomY) * 0.5f;
+            // Vertically centered on the whole screen, like the shop's panels.
+            float boardCenterY = 0f;
             comboRect.anchoredPosition = new Vector2(scoreBlockCenterX, boardCenterY);
 
             var lueurRect = _hudView.LueurLabelTransform;
