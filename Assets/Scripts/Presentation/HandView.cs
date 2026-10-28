@@ -438,6 +438,7 @@ namespace Contigu.Presentation
                 return;
             }
             // Always selects (never the OnSlotClicked toggle-off path) so starting a drag on the selected slot keeps it selected.
+            _draggedSlot = index;
             SelectSlot(index);
         }
 
@@ -463,7 +464,21 @@ namespace Contigu.Presentation
         /// <summary>Ghost visibility depends only on whether a piece is selected (see SelectSlot/ClearSelection), so an ended drag without a valid drop leaves the piece selected.</summary>
         public void EndSlotDrag(PointerEventData eventData)
         {
+            // A drop that placed the piece has already cleared the selection (OnDrop runs before this). Still selected means the finger let go
+            // on a bad spot: on touch the piece goes back, instead of staying armed for a stray tap.
+            int dragged = _draggedSlot;
+            _draggedSlot = -1;
+            if (MobileSetup.IsTouchDevice && dragged >= 0 && _selectedIndex == dragged)
+            {
+                ClearSelection();
+                if (SelectionCleared != null)
+                {
+                    SelectionCleared();
+                }
+            }
         }
+
+        private int _draggedSlot = -1;
 
         private int _hoverIndex = -1;
         private const float HoverScale = 1.1f;
