@@ -57,7 +57,7 @@ namespace Contigu.Presentation
         private const float SectionLabelHeight = 0f;
         private const float ShelfDepth = 18f;
         // Total width kept free between a shelf end and the side tablets (shared with the seed choice screens, which use the same shelves).
-        private const float ShelfEdgeMargin = 56f;
+        private const float ShelfEdgeMargin = 40f;
         private float _sidePanelCenterX = UpcomingBoxCenterX;
         private ShopZoom _zoom;
         // Section plaque (36) + the air under it.
@@ -744,6 +744,21 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Distance (in the shop root's units) between the fertilizer tablet's right edge and the "Coming up" tablet's left edge; 0 when they cannot be measured.</summary>
+        private float MeasureGapBetweenTablets()
+        {
+            if (_fertilizerPanel == null || _upcomingEncounterBox == null || _root == null)
+            {
+                return 0f;
+            }
+            var corners = new Vector3[4];
+            _fertilizerPanel.GetWorldCorners(corners);
+            float leftTabletRight = _root.InverseTransformPoint(corners[3]).x;
+            _upcomingEncounterBox.GetWorldCorners(corners);
+            float rightTabletLeft = _root.InverseTransformPoint(corners[0]).x;
+            return rightTabletLeft - leftTabletRight;
+        }
+
         /// <summary>Rebuilds every card from the run's current shop state — called on Show and after every purchase/reroll so prices, affordability and "sold" states stay accurate.</summary>
         public void Refresh(RunManager run)
         {
@@ -759,6 +774,12 @@ namespace Contigu.Presentation
             float blockHeight = 2f * (SectionLabelHeight + LabelToCardsGap + rowHeight + ShelfDepth) + SectionGap;
             float top = blockHeight * 0.5f;
             float shelfWidth = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - ShelfEdgeMargin;
+            // What is on screen decides: the shelves stop short of the two tablets' real inner edges, whatever their real width.
+            float measuredGap = MeasureGapBetweenTablets();
+            if (measuredGap > 200f)
+            {
+                shelfWidth = measuredGap - ShelfEdgeMargin;
+            }
             _blisterPlaque.anchoredPosition = new Vector2(0f, top + PlaqueLift);
             _shelfLayout = new ShelfLayout { FirstShelfY = top - LabelToCardsGap - rowHeight + 6f, SecondShelfY = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap - LabelToCardsGap - rowHeight + 6f, Width = shelfWidth };
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
