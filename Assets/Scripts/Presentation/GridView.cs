@@ -130,7 +130,8 @@ namespace Contigu.Presentation
             var badgeGolden = UIFactory.CreatePanel(cellGo, "BadgeGolden", Color.yellow);
             UIFactory.SetAnchor(badgeGolden.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f));
             badgeGolden.rectTransform.pivot = new Vector2(0f, 1f);
-            badgeGolden.rectTransform.sizeDelta = new Vector2(16f, 16f);
+            float goldenBadgeSize = Mathf.Max(16f, _builtCellSize * 0.27f);
+            badgeGolden.rectTransform.sizeDelta = new Vector2(goldenBadgeSize, goldenBadgeSize);
             badgeGolden.rectTransform.anchoredPosition = new Vector2(3f, -3f);
             // Dark outline so the badge stays readable regardless of the cell's
             // fill color (a plain gold square can blend into a light piece color).
@@ -143,7 +144,9 @@ namespace Contigu.Presentation
             var badgeTraitOrigin = UIFactory.CreatePanel(cellGo, "BadgeTraitOrigin", Color.cyan);
             UIFactory.SetAnchor(badgeTraitOrigin.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f));
             badgeTraitOrigin.rectTransform.pivot = new Vector2(1f, 1f);
-            badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(20f, 20f);
+            // Proportional to the plot (about a third of it, like the badges on the hand's pieces), never smaller than 20.
+            float traitBadgeSize = Mathf.Max(20f, _builtCellSize * 0.34f);
+            badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(traitBadgeSize, traitBadgeSize);
             badgeTraitOrigin.rectTransform.anchoredPosition = new Vector2(-3f, -3f);
             var badgeTraitOriginOutline = badgeTraitOrigin.gameObject.AddComponent<Outline>();
             badgeTraitOriginOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
