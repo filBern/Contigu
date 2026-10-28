@@ -81,14 +81,14 @@ def button(label, color, variety, w=None, h=56, plant_cap=None, plants=True):
 
 # name -> (label, body color, plant variety, fixed width or None)
 SPEC = {
- 'Play': ('Play', 'Gold', 1, 330), 'Settings': ('Settings', 'Blue', 2, 330), 'Exit': ('Exit', 'Red', 6, 330),
+ 'Play': ('Play', 'Gold', 1, 290), 'Collection': ('Collection', 'Green', 3, 290), 'Settings': ('Settings', 'Blue', 2, 290), 'Exit': ('Exit', 'Red', 6, 290),
  'Confirm': ('Confirm', 'Green', 3, None), 'OK': ('OK', 'Green', 4, None), 'Gotit': ('Got it', 'Green', 5, None),
  'Close': ('Close', 'Green', 7, None), 'NewRun': ('New Run', 'Green', 8, None), 'Nextround': ('Next round', 'Green', 9, None),
  'Seedbag': ('Seed bag', 'Wood', 10, 180), 'Rules': ('Rules', 'Wood', 1, 180),
 }
-HEIGHT = {'Play': 84, 'Settings': 84, 'Exit': 84}
+HEIGHT = {'Play': 76, 'Collection': 76, 'Settings': 76, 'Exit': 76}  # the main menu's four buttons stand in one row
 NO_PLANTS = {'Confirm', 'OK', 'Gotit', 'Close', 'NewRun', 'Nextround', 'Seedbag', 'Rules'}  # plants only on the main menu buttons (Play, Settings, Exit)
-PLANT_CAP = {'Play': 52, 'Settings': 52, 'Exit': 52}  # menu buttons are stacked close together: keep their plants short
+PLANT_CAP = {'Play': 48, 'Collection': 48, 'Settings': 48, 'Exit': 48}  # menu buttons are stacked close together: keep their plants short
 
 if __name__ == '__main__':
     os.makedirs('full', exist_ok=True)

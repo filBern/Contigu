@@ -60,17 +60,17 @@ namespace Contigu.Presentation
             titleContainer.anchorMin = new Vector2(0.5f, 0.5f);
             titleContainer.anchorMax = new Vector2(0.5f, 0.5f);
             titleContainer.pivot = new Vector2(0.5f, 0.5f);
-            titleContainer.anchoredPosition = new Vector2(0f, _logoRect != null ? 195f : 170f);
+            titleContainer.anchoredPosition = new Vector2(0f, _logoRect != null ? LogoBaseY : 170f);
 
             // Short tagline under the title, setting up the game's premise (an alchemist tending the
             // last blooming garden at the edge of a dying world) before the player ever sees a board.
-            var subtitle = UIFactory.CreateText(_root, "Subtitle", "The last garden still blooms, at the edge of ruin.", 18, UITheme.TextMutedOnBackground);
+            var subtitle = UIFactory.CreateText(_root, "Subtitle", "The last garden still blooms, at the edge of ruin.", 22, UITheme.TextMutedOnBackground);
             var subtitleRect = subtitle.GetComponent<RectTransform>();
             subtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
             subtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
             subtitleRect.pivot = new Vector2(0.5f, 0.5f);
-            subtitleRect.anchoredPosition = new Vector2(0f, 58f);
-            subtitleRect.sizeDelta = new Vector2(480f, 30f);
+            subtitleRect.anchoredPosition = new Vector2(0f, -22f);
+            subtitleRect.sizeDelta = new Vector2(640f, 30f);
 
             // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
             // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"
@@ -85,8 +85,8 @@ namespace Contigu.Presentation
             playRect.anchorMin = new Vector2(0.5f, 0.5f);
             playRect.anchorMax = new Vector2(0.5f, 0.5f);
             playRect.pivot = new Vector2(0.5f, 0.5f);
-            playRect.anchoredPosition = new Vector2(0f, -34f);
-            playRect.sizeDelta = new Vector2(330f, 84f);
+            playRect.anchoredPosition = new Vector2(RowX(0), ButtonRowY);
+            playRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
             var playImage = playButton.GetComponent<Image>();
             playImage.color = UISprites.Garden("Gold") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Lime);
             UIFactory.AddThickOutline(playImage, UITheme.Border);
@@ -99,8 +99,8 @@ namespace Contigu.Presentation
             collectionRect.anchorMin = new Vector2(0.5f, 0.5f);
             collectionRect.anchorMax = new Vector2(0.5f, 0.5f);
             collectionRect.pivot = new Vector2(0.5f, 0.5f);
-            collectionRect.anchoredPosition = new Vector2(0f, -134f);
-            collectionRect.sizeDelta = new Vector2(330f, 84f);
+            collectionRect.anchoredPosition = new Vector2(RowX(1), ButtonRowY);
+            collectionRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
             var collectionImage = collectionButton.GetComponent<Image>();
             collectionImage.color = UISprites.Garden("Green") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Violet);
             UIFactory.AddThickOutline(collectionImage, UITheme.Border);
@@ -113,8 +113,8 @@ namespace Contigu.Presentation
             settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
             settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
             settingsRect.pivot = new Vector2(0.5f, 0.5f);
-            settingsRect.anchoredPosition = new Vector2(0f, -234f);
-            settingsRect.sizeDelta = new Vector2(330f, 84f);
+            settingsRect.anchoredPosition = new Vector2(RowX(2), ButtonRowY);
+            settingsRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
             var settingsImage = settingsButton.GetComponent<Image>();
             settingsImage.color = UISprites.Garden("Blue") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Teal);
             UIFactory.AddThickOutline(settingsImage, UITheme.Border);
@@ -127,8 +127,8 @@ namespace Contigu.Presentation
             exitRect.anchorMin = new Vector2(0.5f, 0.5f);
             exitRect.anchorMax = new Vector2(0.5f, 0.5f);
             exitRect.pivot = new Vector2(0.5f, 0.5f);
-            exitRect.anchoredPosition = new Vector2(0f, -334f);
-            exitRect.sizeDelta = new Vector2(330f, 84f);
+            exitRect.anchoredPosition = new Vector2(RowX(3), ButtonRowY);
+            exitRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
             UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
             exitButton.onClick.AddListener(OnExitClicked);
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -142,11 +142,28 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        // The four menu buttons stand in one row (three in a web page, which has no Exit).
+        private const float ButtonWidth = 290f;
+        private const float ButtonHeight = 76f;
+        private const float ButtonGap = 18f;
+        private const float ButtonRowY = -168f;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private const int ButtonCount = 3;
+#else
+        private const int ButtonCount = 4;
+#endif
+
+        private static float RowX(int index)
+        {
+            return (index - (ButtonCount - 1) * 0.5f) * (ButtonWidth + ButtonGap);
+        }
+
         private RectTransform _logoRect;
         private Image _logoImage;
 
         // The vector LASTBLOOM logo (Resources/Title/LastBloom.png, 1080x300). Shown at this width instead of the dot-matrix tile title when the art exists.
-        private const float LogoWidth = 820f;
+        private const float LogoWidth = 1060f;
+        private const float LogoBaseY = 150f;
         private const float LogoAspect = 300f / 1080f;
         private const float LogoEntranceDuration = 0.55f;
 
@@ -165,6 +182,7 @@ namespace Contigu.Presentation
             logo.rectTransform.sizeDelta = new Vector2(LogoWidth, LogoWidth * LogoAspect);
             _logoImage = logo;
             _logoRect = logo.rectTransform;
+            BuildSparkles(_logoRect);
             return _logoRect;
         }
 
@@ -185,6 +203,77 @@ namespace Contigu.Presentation
             }
             _logoRect.localScale = Vector3.one;
             _logoImage.color = Color.white;
+            _logoLive = true;
+        }
+
+        // Once the entrance has played, the logo stays alive: it floats, sways and breathes a little, and sparkles twinkle across its letters.
+        private bool _logoLive;
+        private const int SparkleCount = 7;
+        private readonly List<Sparkle> _sparkles = new List<Sparkle>();
+
+        private sealed class Sparkle
+        {
+            public RectTransform Rect;
+            public float Start;
+            public float Duration;
+        }
+
+        private void BuildSparkles(RectTransform logo)
+        {
+            for (int i = 0; i < SparkleCount; i++)
+            {
+                var holder = UIFactory.CreateUIObject("Sparkle" + i, logo);
+                holder.anchorMin = holder.anchorMax = new Vector2(0.5f, 0.5f);
+                holder.sizeDelta = new Vector2(30f, 30f);
+                holder.localScale = Vector3.zero;
+                holder.anchoredPosition = new Vector2(UnityEngine.Random.Range(-0.46f, 0.46f) * LogoWidth, UnityEngine.Random.Range(-0.28f, 0.30f) * LogoWidth * LogoAspect);
+                foreach (var size in new[] { new Vector2(30f, 4f), new Vector2(4f, 30f) })
+                {
+                    var bar = UIFactory.CreatePanel(holder, "Bar", new Color(1f, 0.97f, 0.85f, 0.95f));
+                    bar.raycastTarget = false;
+                    bar.rectTransform.anchorMin = bar.rectTransform.anchorMax = bar.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    bar.rectTransform.sizeDelta = size;
+                }
+                // Staggered so they never all flash at once.
+                _sparkles.Add(new Sparkle { Rect = holder, Start = Time.unscaledTime + i * 0.45f, Duration = 1.1f });
+            }
+        }
+
+        private void Update()
+        {
+            if (_logoRect == null || !_logoLive || _root == null || !_root.gameObject.activeInHierarchy)
+            {
+                return;
+            }
+            float t = Time.unscaledTime;
+            if (!MotionSettings.Reduced)
+            {
+                _logoRect.anchoredPosition = new Vector2(0f, LogoBaseY + Mathf.Sin(t * 1.3f) * 7f);
+                _logoRect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 0.8f) * 0.9f);
+                float breath = 1f + Mathf.Sin(t * 2.2f) * 0.012f;
+                _logoRect.localScale = new Vector3(breath, breath, 1f);
+            }
+            var size = _logoRect.rect.size;
+            foreach (var sparkle in _sparkles)
+            {
+                float p = (t - sparkle.Start) / sparkle.Duration;
+                if (p < 0f)
+                {
+                    continue;
+                }
+                if (p > 1f)
+                {
+                    // Twinkle somewhere new along the letters.
+                    sparkle.Rect.anchoredPosition = new Vector2(UnityEngine.Random.Range(-0.46f, 0.46f) * size.x, UnityEngine.Random.Range(-0.28f, 0.30f) * size.y);
+                    sparkle.Start = t + UnityEngine.Random.Range(0.1f, 0.9f);
+                    sparkle.Duration = UnityEngine.Random.Range(0.8f, 1.4f);
+                    sparkle.Rect.localScale = Vector3.zero;
+                    continue;
+                }
+                float grow = Mathf.Sin(p * Mathf.PI) * (MotionSettings.Reduced ? 0.6f : 1f);
+                sparkle.Rect.localScale = new Vector3(grow, grow, 1f);
+                sparkle.Rect.localRotation = Quaternion.Euler(0f, 0f, p * 90f);
+            }
         }
 
         /// <summary>Lays out a Thickness x Thickness cluster of tiles per filled glyph cell, letter by letter with a 1-column gap between letters, centered on <paramref name="parent"/>. Each tile starts at its own random color and recolors independently on hover (see TitleTileView).</summary>
@@ -259,6 +348,7 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(true);
             if (_logoRect != null)
             {
+                _logoLive = false;
                 StartCoroutine(PlayLogoEntrance());
             }
             for (int i = 0; i < _titleTiles.Count; i++)
