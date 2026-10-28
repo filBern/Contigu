@@ -329,6 +329,8 @@ namespace Contigu.Core
 
         private readonly ShopSlot[] _blisterSlots = new ShopSlot[EconomyConstants.ShopBlisterSlotCount];
         private readonly ShopSlot[] _upgradeSlots = new ShopSlot[EconomyConstants.ShopUpgradeSlotCount];
+        // How many times each Workshop item was bought this visit: it is never "sold", each purchase just makes the next one of it dearer.
+        private readonly int[] _upgradeBuys = new int[EconomyConstants.ShopUpgradeSlotCount];
 
         /// <summary>How many slot purchases have happened in the current shop visit - raises the price of every other slot still on offer (see GetBlisterSlotPrice/GetUpgradeSlotPrice). Reset to 0 each time the shop opens. Separate from <see cref="_rerollsThisVisit"/>: a slot purchase no longer escalates the reroll price.</summary>
         private int _purchasesThisVisit;

@@ -435,11 +435,18 @@ namespace Contigu.Tests
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
-            int priceBefore = run.GetBlisterSlotPrice(0);
 
             Assert.IsTrue(run.RerollShop());
 
-            Assert.AreEqual(priceBefore, run.GetBlisterSlotPrice(0), "A reroll should not raise Blister slot prices");
+            // The reroll replaced the Blister slots; each new one must cost its plain base price (no purchase yet this visit).
+            for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
+            {
+                var slot = run.ShopBlisterSlots[i];
+                int expected = slot.Kind == ShopSlotKind.Modifier
+                    ? ModifierPricing.GetPrice(slot.ModifierId)
+                    : (slot.Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice);
+                Assert.AreEqual(expected, run.GetBlisterSlotPrice(i), "A reroll should not raise Blister slot prices, slot " + i);
+            }
         }
 
         [Test]
@@ -474,41 +481,26 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RerollShop_ReplacesEveryCasinoSlot_ButNeverTouchesBlister()
+        public void RerollShop_ReplacesEveryBlisterSlot_ButNeverTouchesTheWorkshop()
         {
-            // Used to leave a purchased CASINO slot exactly as it was
-            // ("SOLD" forever, for the rest of that shop visit) — changed
-            // on explicit feedback that this read as reroll doing nothing:
-            // "mes upgrades et modifiers que j'ai acheté sont encore
-            // marqué sold, il faut que j'aie tout de disponible". The
-            // Blister section is a newer addition (explicit request:
-            // "le bouton reroll ne reroll pas la section 'blister'") —
-            // checked here via reference equality (AreSame), proving
-            // RerollShop never even REASSIGNS a Blister slot, let alone
-            // resets its Purchased flag.
+            // Reroll is for the Blister only: the Workshop (packs, Compost, Forge) keeps what it opened with, bought or not.
             var run = new RunManager(new SystemRandomProvider(1));
             PlayRoundToAwaitingShop(run);
             run.DebugGrantLueur(1000000);
-            // Force a no-sub-choice upgrade (Random Modifier — see
-            // DebugForceUpgradeSlotToRandomModifier) into Casino slot 0 so
-            // the purchase always applies immediately and leaves
-            // PendingUpgrade null. Whatever actually rolled there could
-            // easily have needed a sub-choice (a tile pick, a deck-type
-            // pick, ...) instead, and RerollShop refuses to run at all
-            // while a purchase is still pending — unrelated to what this
-            // test is actually about.
-            Assert.IsTrue(run.DebugForceUpgradeSlotToRandomModifier(0));
-            Assert.IsTrue(run.BuyUpgradeSlot(0));
-            var blisterSlotsBefore = new List<ShopSlot>(run.ShopBlisterSlots);
+            var blisterBefore = new List<ShopSlot>(run.ShopBlisterSlots);
+            var workshopBefore = new List<ShopSlot>(run.ShopUpgradeSlots);
 
             bool rerolled = run.RerollShop();
 
             Assert.IsTrue(rerolled);
-            Assert.IsFalse(run.ShopUpgradeSlots[0].Purchased, "A previously-sold Casino slot should come back purchasable after a reroll");
-            Assert.IsFalse(run.ShopUpgradeSlots[1].Purchased);
             for (int i = 0; i < run.ShopBlisterSlots.Count; i++)
             {
-                Assert.AreSame(blisterSlotsBefore[i], run.ShopBlisterSlots[i], "Reroll should never touch the Blister section, slot " + i);
+                Assert.AreNotSame(blisterBefore[i], run.ShopBlisterSlots[i], "Reroll should roll the Blister slot afresh, slot " + i);
+                Assert.IsFalse(run.ShopBlisterSlots[i].Purchased);
+            }
+            for (int i = 0; i < run.ShopUpgradeSlots.Count; i++)
+            {
+                Assert.AreSame(workshopBefore[i], run.ShopUpgradeSlots[i], "Reroll should never touch the Workshop, slot " + i);
             }
         }
 
@@ -573,7 +565,7 @@ namespace Contigu.Tests
             bool bought = run.BuyUpgradeSlot(0);
 
             Assert.IsTrue(bought);
-            Assert.IsTrue(run.ShopUpgradeSlots[0].Purchased);
+            Assert.IsFalse(run.ShopUpgradeSlots[0].Purchased, "A Workshop item is never sold out");
             Assert.AreSame(hiddenUpgrade, run.PendingUpgrade);
             Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
             // Nothing else in the shop can happen while a purchase is pending.

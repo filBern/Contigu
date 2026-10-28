@@ -197,7 +197,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Compost_RemovesTheChosenSeed_AndStaysSoldAfterAReroll()
+        public void Compost_RemovesTheChosenSeed_AndStaysOnTheShelfAfterAReroll()
         {
             var run = ShopRun();
             int before = run.Deck.DeckCount;
@@ -206,8 +206,25 @@ namespace Contigu.Tests
             Assert.IsTrue(run.ResolveCompostChoice(run.PendingUpgradeTileCandidates[0]));
             Assert.AreEqual(before - 1, run.Deck.DeckCount);
 
+            var compostSlot = run.ShopUpgradeSlots[2];
             Assert.IsTrue(run.RerollShop());
-            Assert.IsTrue(run.ShopUpgradeSlots[2].Purchased, "the Compost stays sold for this visit after a reroll");
+            Assert.IsFalse(run.ShopUpgradeSlots[2].Purchased, "the Compost is never sold out");
+            Assert.AreSame(compostSlot, run.ShopUpgradeSlots[2], "the reroll leaves the Workshop alone");
+        }
+
+        [Test]
+        public void WorkshopItems_AreNeverSoldOut_EachPurchaseOnlyMakesTheNextOneDearer()
+        {
+            var run = ShopRun();
+            int first = run.GetUpgradeSlotPrice(0);
+
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.IsTrue(run.AbandonPending());
+
+            Assert.IsFalse(run.ShopUpgradeSlots[0].Purchased, "no 'sold' on a Workshop item");
+            int second = run.GetUpgradeSlotPrice(0);
+            Assert.Greater(second, first, "buying it again costs more");
+            Assert.IsTrue(run.BuyUpgradeSlot(0), "and it can be bought again");
         }
 
         [Test]

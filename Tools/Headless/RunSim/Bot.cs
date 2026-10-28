@@ -305,8 +305,12 @@ namespace Contigu.RunSim
         // ---------------------------------------------------------------- shopping
 
         /// <summary>Spends Pollen, resolves every pending choice, leaves the shop. False if a choice could not be resolved.</summary>
+        // A Workshop item is never sold out any more (each purchase only makes the next dearer): the bot takes each at most once per visit.
+        private readonly HashSet<int> _workshopBought = new HashSet<int>();
+
         private bool ShopPhase(RunManager run, RunResult result)
         {
+            _workshopBought.Clear();
             for (int guard = 0; guard < 40; guard++)
             {
                 if (!TryBuyOne(run, result))
@@ -336,7 +340,7 @@ namespace Contigu.RunSim
             for (int i = 0; i < upgrades.Count; i++)
             {
                 // The bot never composts: thinning the bag is a deliberate human choice it cannot judge.
-                if (upgrades[i] != null && !upgrades[i].Purchased && upgrades[i].HiddenUpgrade.Id != UpgradeId.Compost)
+                if (upgrades[i] != null && !_workshopBought.Contains(i) && upgrades[i].HiddenUpgrade.Id != UpgradeId.Compost)
                 {
                     options.Add((false, 1000 + i, run.GetUpgradeSlotPrice(i)));
                 }
@@ -365,6 +369,10 @@ namespace Contigu.RunSim
                 bool bought = options[i].Index >= 1000 ? run.BuyUpgradeSlot(options[i].Index - 1000) : run.BuyBlisterSlot(options[i].Index);
                 if (bought)
                 {
+                    if (options[i].Index >= 1000)
+                    {
+                        _workshopBought.Add(options[i].Index - 1000);
+                    }
                     result.PollenSpent += lueurBefore - run.Lueur;
                     return true;
                 }

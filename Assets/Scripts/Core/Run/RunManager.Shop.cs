@@ -11,6 +11,7 @@ namespace Contigu.Core
         {
             _purchasesThisVisit = 0;
             _rerollsThisVisit = 0;
+            System.Array.Clear(_upgradeBuys, 0, _upgradeBuys.Length);
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
@@ -268,6 +269,11 @@ namespace Contigu.Core
                     basePrice = _upgradeSlots[index].Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice;
                     break;
             }
+            // Bought again this visit: dearer each time (Compost already climbs with every seed it removes).
+            if (_upgradeSlots[index].HiddenUpgrade.Id != UpgradeId.Compost)
+            {
+                basePrice = Mathf.RoundToInt(basePrice * (1f + EconomyConstants.WorkshopRepeatPriceIncrease * _upgradeBuys[index]));
+            }
             return ComputePrice(basePrice);
         }
 
@@ -393,7 +399,8 @@ namespace Contigu.Core
             Lueur -= price;
             _purchasesThisVisit++;
             var slot = _upgradeSlots[index];
-            slot.Purchased = true;
+            // Never marked sold: the item stays on its shelf, just dearer next time.
+            _upgradeBuys[index]++;
             if (hiddenUpgrade.Id == UpgradeId.Forge)
             {
                 return ApplyForge(slot.Payload);
@@ -701,7 +708,11 @@ namespace Contigu.Core
 
             Lueur -= price;
             _rerollsThisVisit++;
-            RollWorkshopSlots(keepCompost: true);
+            // Reroll is for the Blister only: the Workshop keeps what it opened with.
+            for (int i = 0; i < _blisterSlots.Length; i++)
+            {
+                _blisterSlots[i] = RollBlisterSlot();
+            }
             return true;
         }
 

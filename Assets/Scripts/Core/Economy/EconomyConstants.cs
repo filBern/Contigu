@@ -59,6 +59,9 @@ namespace Contigu.Core
         public const int MasteryPackPrice = 4;
         public const int CompostBasePrice = 3;
         public const int CompostPriceIncreasePerUse = 2;
+
+        /// <summary>A Workshop item is never sold out: buying it again in the same visit costs this much more each time (a fraction of its price, per earlier purchase).</summary>
+        public const float WorkshopRepeatPriceIncrease = 0.5f;
         public const int ForgePrice = 4;
         public const int PackChoiceCount = 3;
         public const int ForgeSeedCandidateCount = 10;

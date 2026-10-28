@@ -107,7 +107,7 @@ namespace Contigu.Presentation
         private const float CantAffordShakeDuration = 0.3f;
         private const float CantAffordShakeMagnitude = 8f;
         private const float CantAffordShakeCycles = 4f;
-        // A quick vertical flip-reveal on the Casino row once a reroll's new cards are already built —
+        // A quick vertical flip-reveal on the Blister row once a reroll's new cards are already built —
         // Refresh() runs synchronously right after RerollShop(), so there's no window to animate the OLD
         // cards away; this instead gives the NEW ones a "flipping into place" entrance.
         private const float RerollFlipDuration = 0.25f;
@@ -1311,7 +1311,7 @@ namespace Contigu.Presentation
 
         private System.Collections.IEnumerator RerollFlipRoutine()
         {
-            var rt = _upgradeCardsContainer;
+            var rt = _blisterCardsContainer;
             float t = 0f;
             while (t < RerollFlipDuration)
             {
