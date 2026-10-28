@@ -20,7 +20,8 @@ namespace Contigu.Presentation
     {
         // internal (not private) so ShopView's own "Next round" preview box can match this panel's exact
         // size instead of carrying its own separate magic numbers — see ShopView.UpcomingBoxWidth etc.
-        internal const float PanelWidth = 230f;
+        // The whole left column (score card, fertilizers, Seed bag, Rules) is this wide.
+        internal const float PanelWidth = 260f;
         private const float BadgeSize = 90f;
         private const float BadgeSpacing = 10f;
         internal const float HeaderHeight = 58f;

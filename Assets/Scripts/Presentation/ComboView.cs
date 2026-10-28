@@ -20,10 +20,10 @@ namespace Contigu.Presentation
         private const float PulseDuration = 0.35f;
         private const float PulsePeakScale = 1.2f;
         private const float PulsePeakFraction = 0.4f;
-        private const float PillWidth = 120.9f;
-        private const float PillHeight = 66.3f;
-        private const float PillSpacing = 11.55f;
-        private const float XLabelWidth = 23.1f;
+        private const float PillWidth = 99f;
+        private const float PillHeight = 58f;
+        private const float PillSpacing = 8f;
+        private const float XLabelWidth = 22f;
         private const float TotalRowSpacing = 4.35f;
 
         private RectTransform _root;
@@ -51,8 +51,9 @@ namespace Contigu.Presentation
             var backgroundRect = UIFactory.CreateUIObject("Background", _root);
             UIFactory.StretchFull(backgroundRect);
             var background = backgroundRect.gameObject.AddComponent<Image>();
-            background.sprite = UISprites.ComboBackground;
-            background.type = Image.Type.Simple;
+            // The same parchment card as the Fertilizers panel under it, so the column reads as one set.
+            background.sprite = UISprites.CardBackground;
+            background.type = Image.Type.Sliced;
             background.color = Color.white;
             background.raycastTarget = false;
             backgroundRect.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -65,16 +66,16 @@ namespace Contigu.Presentation
             // childControlWidth/Height default to false, which would leave the group positioning children by their unset RectTransform height while ContentSizeFitter sizes the root off preferredHeight, creating a gap; forcing control here keeps them in sync.
             rootLayout.childControlWidth = true;
             rootLayout.childControlHeight = true;
-            rootLayout.padding = new RectOffset(12, 12, 12, 12);
+            rootLayout.padding = new RectOffset(12, 12, 10, 12);
             var rootFitter = _root.gameObject.AddComponent<ContentSizeFitter>();
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Running total (chips x mult).
-            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 65, Color.black);
+            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 58, UITheme.TextPrimary);
             var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
             totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
-            totalLayout.preferredHeight = 69f;
+            totalLayout.preferredHeight = 62f;
 
             var row = UIFactory.CreateUIObject("Row", _root);
             var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();

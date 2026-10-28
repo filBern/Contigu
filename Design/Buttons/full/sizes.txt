@@ -8,5 +8,5 @@ Gotit 208.627 72 8 8 56
 Close 200.899 72 8 8 56
 NewRun 237.994 72 8 8 56
 Nextround 293.12 72 8 8 56
-Seedbag 220 72 8 8 56
-Rules 220 72 8 8 56
+Seedbag 300 72 8 8 56
+Rules 300 72 8 8 56

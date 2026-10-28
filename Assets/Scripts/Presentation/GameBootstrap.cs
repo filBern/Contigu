@@ -481,7 +481,7 @@ namespace Contigu.Presentation
             const float ScreenMargin = 16f;
             float zoneTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + ZoneMargin);
             float zoneBottomY = -canvasHeight * 0.5f + HudView.BarHeight + ZoneMargin;
-            float leftColumnWidth = Mathf.Max(comboRect.rect.width, ModifierPanelView.PanelWidth);
+            float leftColumnWidth = ModifierPanelView.PanelWidth; // the score card, the fertilizers and the two buttons are all this wide
             const float PlotSpacing = 2f; // GridView.CellSpacing
             int plots = GridManager.Size;
             float cellByHeight = (zoneTopY - zoneBottomY - (plots - 1) * PlotSpacing) / plots;
@@ -508,12 +508,14 @@ namespace Contigu.Presentation
 
             // Left column, top: the score card.
             comboRect.anchoredPosition = new Vector2(leftColumnX, gridTopY - comboRect.rect.height * 0.5f);
-            // Left column, bottom: Seed bag and Rules side by side.
+            // Left column, bottom: Seed bag over Rules, full width.
             const float UtilityButtonHeight = 56f;
-            float buttonsY = gridBottomY + UtilityButtonHeight * 0.5f;
+            const float UtilityButtonGap = 8f;
+            float rulesY = gridBottomY + UtilityButtonHeight * 0.5f;
+            float deckY = rulesY + UtilityButtonHeight + UtilityButtonGap;
             // Left column, between: the fertilizer panel, centered in what is left.
             float scoreBottomY = gridTopY - comboRect.rect.height;
-            float buttonsTopY = gridBottomY + UtilityButtonHeight;
+            float buttonsTopY = deckY + UtilityButtonHeight * 0.5f;
             float fertilizerY = (scoreBottomY + buttonsTopY) * 0.5f;
 
             // Pollen sits in the top band, left of the Menu button (the shop moves it back above its own panel).
@@ -539,7 +541,7 @@ namespace Contigu.Presentation
             handRect.anchoredPosition = new Vector2(handColumnX, gridCenterY);
             // Now that the column is placed, let it size its slots.
             _handView.Refresh();
-            BuildComboUtilityButtons(mainRoot, leftColumnX - 81f, leftColumnX + 81f, buttonsY);
+            BuildComboUtilityButtons(mainRoot, leftColumnX, deckY, rulesY, leftColumnWidth, UtilityButtonHeight);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
@@ -728,8 +730,8 @@ namespace Contigu.Presentation
             menuButton.gameObject.AddComponent<GraphicRaycaster>();
         }
 
-        /// <summary>Quick access to the deck and the rules: side by side at the bottom of the left column.</summary>
-        private void BuildComboUtilityButtons(Transform parent, float deckX, float rulesX, float y)
+        /// <summary>Quick access to the deck and the rules: stacked, full width, at the bottom of the left column.</summary>
+        private void BuildComboUtilityButtons(Transform parent, float centerX, float deckY, float rulesY, float width, float height)
         {
             var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
             var deckLabel = deckButton.GetComponentInChildren<Text>();
@@ -739,8 +741,8 @@ namespace Contigu.Presentation
             deckRect.anchorMin = new Vector2(0.5f, 0.5f);
             deckRect.anchorMax = new Vector2(0.5f, 0.5f);
             deckRect.pivot = new Vector2(0.5f, 0.5f);
-            deckRect.anchoredPosition = new Vector2(deckX, y);
-            deckRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
+            deckRect.anchoredPosition = new Vector2(centerX, deckY);
+            deckRect.sizeDelta = new Vector2(width, height);
             deckButton.onClick.AddListener(() => _deckView.Show());
 
             var rulesButton = UIFactory.CreateButton(parent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
@@ -751,8 +753,8 @@ namespace Contigu.Presentation
             rulesRect.anchorMin = new Vector2(0.5f, 0.5f);
             rulesRect.anchorMax = new Vector2(0.5f, 0.5f);
             rulesRect.pivot = new Vector2(0.5f, 0.5f);
-            rulesRect.anchoredPosition = new Vector2(rulesX, y);
-            rulesRect.sizeDelta = new Vector2(150f, MobileSetup.TouchMin(46.5f));
+            rulesRect.anchoredPosition = new Vector2(centerX, rulesY);
+            rulesRect.sizeDelta = new Vector2(width, height);
             rulesButton.onClick.AddListener(() => _tutorialView.Show());
         }
     }
