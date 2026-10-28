@@ -715,6 +715,11 @@ namespace Contigu.Presentation
                 StopCoroutine(_lueurPulseCoroutine);
                 _lueurPulseCoroutine = null;
             }
+            if (_purchasePopCoroutine != null)
+            {
+                StopCoroutine(_purchasePopCoroutine);
+                _purchasePopCoroutine = null;
+            }
             // Back to the board's small chip (not full size): the counter is shared with the board's HUD.
             _lueurContainer.localScale = Vector3.one * _boardPollenScale;
         }
@@ -1207,8 +1212,15 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            StartCoroutine(PurchasePopRoutine());
+            if (_purchasePopCoroutine != null)
+            {
+                StopCoroutine(_purchasePopCoroutine);
+            }
+            _purchasePopCoroutine = StartCoroutine(PurchasePopRoutine());
         }
+
+        // Stopped when the shop closes: a pop still running then would reset the board's small Pollen chip to full size and restart the shop's wobble on it.
+        private Coroutine _purchasePopCoroutine;
 
         private System.Collections.IEnumerator PurchasePopRoutine()
         {
@@ -1230,6 +1242,7 @@ namespace Contigu.Presentation
                 yield return null;
             }
             _lueurContainer.localScale = Vector3.one;
+            _purchasePopCoroutine = null;
             if (wasPulsing)
             {
                 _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
