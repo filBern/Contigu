@@ -109,8 +109,8 @@ namespace Contigu.Presentation
                     }
                     if (hasCellTrait)
                     {
-                        // Sized relative to the cell itself rather than a fixed 14px, since a smaller preview cell would otherwise be nearly covered by the badge.
-                        float badgeSize = Mathf.Clamp(cell * 0.55f, 8f, 14f);
+                        // About a third of the cell (as on the grid), so the upgrade stays readable on big previews and a small preview cell is not covered by it.
+                        float badgeSize = Mathf.Clamp(cell * 0.34f, 10f, 30f);
                         builtBadge = BuildTraitBadge(img.transform, cellTrait, tooltip, clickForwardTarget, badgeSize);
                     }
                 }
