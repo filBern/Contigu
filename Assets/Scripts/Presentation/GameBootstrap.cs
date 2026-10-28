@@ -491,10 +491,10 @@ namespace Contigu.Presentation
             // Never narrower than the 1280 the layout is drawn for: below 16:10 the canvas scales to the width (see CanvasAspectFit).
             float canvasWidth = Screen.height > 0 ? Mathf.Max(1280f, 800f * Screen.width / Screen.height) : mainRoot.rect.width;
             float halfCanvasWidth = canvasWidth * 0.5f;
-            // Both side blocks (fertilizers on the left, Pollen + score + buttons on the right) leave the same margin to the screen edge, and
+            // Both side blocks (fertilizers on the left, Pollen + score + buttons on the right) leave the same margin (64) to the screen edge, and
             // are centered on the screen's height. They differ in width, so their centers are not mirror images.
             LayoutRebuilder.ForceRebuildLayoutImmediate(comboRect);
-            const float SidePanelEdgeMargin = 24f;
+            const float SidePanelEdgeMargin = 64f;
             float sidePanelCenterX = halfCanvasWidth - SidePanelEdgeMargin - ModifierPanelView.PanelWidth * 0.5f;
             float scoreBlockCenterX = halfCanvasWidth - SidePanelEdgeMargin - comboRect.rect.width * 0.5f;
             // Vertically centered on the whole screen, like the shop's panels.
