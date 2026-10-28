@@ -259,7 +259,7 @@ namespace Contigu.Presentation
             return container;
         }
 
-        /// <summary>Builds the Shuffle button in the hand box's upper-right corner, with the remaining-use count centered over the icon.</summary>
+        /// <summary>Builds the Shuffle button on the hand box's right edge, under the sign, with the remaining-use count centered over the icon.</summary>
         private void BuildShuffleButton(Transform container)
         {
             _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ShuffleIcon, 15);
@@ -270,7 +270,8 @@ namespace Contigu.Presentation
             buttonRect.anchorMin = new Vector2(1f, 1f);
             buttonRect.anchorMax = new Vector2(1f, 1f);
             buttonRect.pivot = new Vector2(1f, 1f);
-            buttonRect.anchoredPosition = new Vector2(20f, 20f);
+            // On the card's right edge just under the "Seeds" sign (no longer over the sign's corner).
+            buttonRect.anchoredPosition = new Vector2(24f, -(ModifierPanelView.HeaderHeight + 8f));
             buttonRect.sizeDelta = new Vector2(ShuffleButtonWidth, ShuffleButtonHeight);
 
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
