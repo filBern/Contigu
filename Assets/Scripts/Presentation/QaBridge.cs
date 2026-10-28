@@ -104,11 +104,13 @@ namespace Contigu.Presentation
         }
 #endif
 
+        private GameObject _hovered;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // Only the web build publishes its state on a timer (the editor has no page to publish to).
         private const float PublishInterval = 0.25f;
-        private int _tick;
         private float _nextPublish;
         private bool _publishNow = true;
-        private GameObject _hovered;
+#endif
 
         private void Update()
         {
