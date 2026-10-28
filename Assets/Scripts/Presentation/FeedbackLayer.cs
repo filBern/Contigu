@@ -24,8 +24,8 @@ namespace Contigu.Presentation
             return root;
         }
 
-        public const int DefaultPopupFontSize = 22;
-        public const int DefaultFlyingPopupFontSize = 20;
+        public const int DefaultPopupFontSize = 33;
+        public const int DefaultFlyingPopupFontSize = 30;
 
         /// <summary>
         /// <paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for

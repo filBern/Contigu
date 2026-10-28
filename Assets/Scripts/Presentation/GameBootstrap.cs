@@ -54,7 +54,7 @@ namespace Contigu.Presentation
         // Red subtraction text (poison-flipped score, enemy damage) was getting lost at the same size as
         // every other popup — these are exactly double FeedbackLayer's own DefaultPopupFontSize/
         // DefaultFlyingPopupFontSize.
-        private const int SubtractionPopupFontSize = 44;
+        private const int SubtractionPopupFontSize = 66;
         private const int SubtractionFlyingPopupFontSize = 40;
         // Pause between the combo total finishing its catch-up and DrainComboIntoDamage starting, so the
         // player gets a beat to read the final number before it starts draining into enemy damage.
