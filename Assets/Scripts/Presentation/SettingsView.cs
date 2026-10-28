@@ -25,6 +25,9 @@ namespace Contigu.Presentation
         /// <summary>The player confirmed they want to leave for the main menu (the run in progress, if any, is scored as a defeat).</summary>
         public event Action MainMenuRequested;
 
+        /// <summary>Fires when the player opens the rules ("How to play") from the menu.</summary>
+        public event Action RulesRequested;
+
         private RectTransform _root;
         private readonly System.Collections.Generic.List<(Text Label, string Text)> _confirmLabels = new System.Collections.Generic.List<(Text, string)>();
 
@@ -64,6 +67,16 @@ namespace Contigu.Presentation
                 saveHint.rectTransform.sizeDelta = new Vector2(900f, 44f);
                 saveHint.raycastTarget = false;
             }
+
+            var rulesBtn = UIFactory.CreateButton(_root, "Rules", "How to play", UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(rulesBtn);
+            var rulesRect = rulesBtn.GetComponent<RectTransform>();
+            rulesRect.anchorMin = new Vector2(0.5f, 0f);
+            rulesRect.anchorMax = new Vector2(0.5f, 0f);
+            rulesRect.pivot = new Vector2(0.5f, 0f);
+            rulesRect.anchoredPosition = new Vector2(0f, 372f);
+            rulesRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
+            rulesBtn.onClick.AddListener(() => { Hide(); if (RulesRequested != null) RulesRequested(); });
 
             BuildVolumeRow(_root, -140f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
             BuildVolumeRow(_root, -230f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);

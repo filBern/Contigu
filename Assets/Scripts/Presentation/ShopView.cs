@@ -483,6 +483,13 @@ namespace Contigu.Presentation
         }
 
         private RectTransform _fertilizerPanel;
+        private GameObject _shopMenuButton;
+
+        /// <summary>The Menu button the shop shows in its top-right corner (the board's own Menu button sits in the left column, under the shop).</summary>
+        public void SetShopMenuButton(GameObject button)
+        {
+            _shopMenuButton = button;
+        }
         private float _boardPanelY;
         private float _boardPollenX;
         private float _boardPollenY;
@@ -506,6 +513,10 @@ namespace Contigu.Presentation
 
         private void RestoreBoardPanels()
         {
+            if (_shopMenuButton != null)
+            {
+                _shopMenuButton.SetActive(false);
+            }
             PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
@@ -521,6 +532,10 @@ namespace Contigu.Presentation
 
         private void PlaceSidePanels(float centerX)
         {
+            if (_shopMenuButton != null)
+            {
+                _shopMenuButton.SetActive(true);
+            }
             // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
             PieceBox.SetSidePanelCenterX(centerX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)

@@ -10,3 +10,4 @@ NewRun 56 8 8
 Nextround 56 8 8
 Seedbag 56 8 8
 Rules 56 8 8
+Menu 56 8 8

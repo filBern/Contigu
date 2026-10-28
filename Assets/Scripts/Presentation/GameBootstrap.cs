@@ -703,6 +703,7 @@ namespace Contigu.Presentation
             _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
             _settingsView.AbandonRunRequested += OnAbandonRunRequested;
             _settingsView.MainMenuRequested += OnMainMenuRequested;
+            _settingsView.RulesRequested += _tutorialView.Show;
             _modifierCarouselView.Dismissed += OnModifierCarouselDismissed;
         }
 
@@ -710,7 +711,7 @@ namespace Contigu.Presentation
         private void BuildMenuButton(Transform parent)
         {
             // The green button style with its own light label: black text on the wooden utility button was unreadable here.
-            var menuButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.ChooseButtonBackground, 12);
+            var menuButton = UIFactory.CreateButton(parent, "ShopMenuButton", "Menu", UISprites.ChooseButtonBackground, 12);
             UIFactory.DisablePlants(menuButton);
             var label = menuButton.GetComponentInChildren<Text>();
             label.fontSize = 22;
@@ -721,16 +722,21 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(1f, 1f);
             rect.anchoredPosition = new Vector2(-16f, -16f);
-            rect.sizeDelta = new Vector2(MobileSetup.TouchMin(110f), MobileSetup.TouchMin(44f));
+            // The wooden Menu art is 260 wide for a 56-high body: keep that proportion at this height.
+            float menuHeight = MobileSetup.TouchMin(44f);
+            rect.sizeDelta = new Vector2(260f * menuHeight / 56f, menuHeight);
             menuButton.onClick.AddListener(() => _settingsView.Toggle());
             // Its own sorting layer above every overlay (shop choices, end screens, challenge picker): Menu stays reachable, and never looks active while something covers it.
             var menuCanvas = menuButton.gameObject.AddComponent<Canvas>();
             menuCanvas.overrideSorting = true;
             menuCanvas.sortingOrder = 100;
             menuButton.gameObject.AddComponent<GraphicRaycaster>();
+            // Only the shop shows this one (its screens cover the board's own Menu button): the shop switches it on and off.
+            menuButton.gameObject.SetActive(false);
+            _shopView.SetShopMenuButton(menuButton.gameObject);
         }
 
-        /// <summary>Quick access to the deck and the rules: stacked, full width, at the bottom of the left column.</summary>
+        /// <summary>The seed bag and the menu (settings and the rules): stacked, full width, at the bottom of the left column.</summary>
         private void BuildComboUtilityButtons(Transform parent, float centerX, float deckY, float rulesY, float width, float height)
         {
             var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
@@ -745,17 +751,17 @@ namespace Contigu.Presentation
             deckRect.sizeDelta = new Vector2(width, height);
             deckButton.onClick.AddListener(() => _deckView.Show());
 
-            var rulesButton = UIFactory.CreateButton(parent, "ShowRulesButton", "Rules", UISprites.HandUtilityButtonBackground, 12);
-            var rulesLabel = rulesButton.GetComponentInChildren<Text>();
-            rulesLabel.color = Color.black;
-            rulesLabel.fontSize = 25;
-            var rulesRect = rulesButton.GetComponent<RectTransform>();
-            rulesRect.anchorMin = new Vector2(0.5f, 0.5f);
-            rulesRect.anchorMax = new Vector2(0.5f, 0.5f);
-            rulesRect.pivot = new Vector2(0.5f, 0.5f);
-            rulesRect.anchoredPosition = new Vector2(centerX, rulesY);
-            rulesRect.sizeDelta = new Vector2(width, height);
-            rulesButton.onClick.AddListener(() => _tutorialView.Show());
+            var menuColumnButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.HandUtilityButtonBackground, 12);
+            var menuColumnLabel = menuColumnButton.GetComponentInChildren<Text>();
+            menuColumnLabel.color = Color.black;
+            menuColumnLabel.fontSize = 25;
+            var menuColumnRect = menuColumnButton.GetComponent<RectTransform>();
+            menuColumnRect.anchorMin = new Vector2(0.5f, 0.5f);
+            menuColumnRect.anchorMax = new Vector2(0.5f, 0.5f);
+            menuColumnRect.pivot = new Vector2(0.5f, 0.5f);
+            menuColumnRect.anchoredPosition = new Vector2(centerX, rulesY);
+            menuColumnRect.sizeDelta = new Vector2(width, height);
+            menuColumnButton.onClick.AddListener(() => _settingsView.Toggle());
         }
     }
 }
