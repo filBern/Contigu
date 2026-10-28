@@ -36,6 +36,8 @@ namespace Contigu.Presentation
         private const float TitleHeight = 36f;
         private const float ShelfHeight = 16f;
         private const float RowOverlap = 2f;
+        // The stage's shelves are a little wider than the shop's (they pass under the side panels), to leave pieces room to breathe.
+        private const float ExtraWidth = 110f;
         private const int MaxPerRow = 3; // one row up to 3 options; beyond that two rows (up to 4 each: 8 is the most the shop ever shows)
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
         public const float SeedCellSize = 96f;
@@ -132,8 +134,8 @@ namespace Contigu.Presentation
             {
                 // Pieces: one tile size for all, and the gap between two neighbors is the same whatever their widths: each cell is exactly as wide
                 // as its piece, the rows are spaced by one gap, and the tile shrinks only if the widest row would not fit the shelf.
-                const float GapPerTile = 0.4f;
-                float width = layout.Width - 24f;
+                const float GapPerTile = 1f; // one tile of air between two neighbors
+                float width = layout.Width + ExtraWidth - 24f;
                 float tileFit = float.MaxValue;
                 for (int row = 0; row < 2; row++)
                 {
@@ -161,8 +163,8 @@ namespace Contigu.Presentation
             _row1.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
             _row2.GetComponent<HorizontalLayoutGroup>().spacing = spacing;
 
-            _shelf1.sizeDelta = new Vector2(layout.Width, ShelfHeight);
-            _shelf2.sizeDelta = new Vector2(layout.Width, ShelfHeight);
+            _shelf1.sizeDelta = new Vector2(layout.Width + ExtraWidth, ShelfHeight);
+            _shelf2.sizeDelta = new Vector2(layout.Width + ExtraWidth, ShelfHeight);
             _shelf1.anchoredPosition = new Vector2(0f, firstShelfY - CanvasHalfHeight);
             _shelf2.anchoredPosition = new Vector2(0f, layout.SecondShelfY - CanvasHalfHeight);
             _shelf2.gameObject.SetActive(two);
