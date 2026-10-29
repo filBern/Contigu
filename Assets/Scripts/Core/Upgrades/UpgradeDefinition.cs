@@ -65,7 +65,7 @@ namespace Contigu.Core
         /// (see EconomyConstants.RandomPieceTraitChancePercent,
         /// UpgradeSystem.GetCandidatePiecesFor) — so it gets its own
         /// RunManager.PendingUpgradePieceCandidates/ResolveUpgradePieceChoice
-        /// pair and Presentation.PieceChoiceView instead of reusing DraftView
+        /// pair and Presentation.PieceChoiceView instead of reusing the type picker
         /// (which only knows how to show plain (Shape, Color) types, never
         /// a trait preview).
         /// </summary>

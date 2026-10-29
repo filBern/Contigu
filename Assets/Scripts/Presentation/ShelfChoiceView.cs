@@ -91,7 +91,7 @@ namespace Contigu.Presentation
 
         private void BuildCell(int index, ChoiceEntry entry, float cellSize)
         {
-            var cell = PieceBox.CreateCell(_stage.RowFor(index), "Option_" + index, cellSize, false);
+            var cell = PieceBox.CreateCell(_stage.RowFor(index), "Option_" + index, cellSize);
             float cellWidth = _stage.CellWidthFor(index);
             if (!Mathf.Approximately(cellWidth, cellSize))
             {
@@ -100,7 +100,6 @@ namespace Contigu.Presentation
             }
             _cellByIndex[index] = cell;
             // On the shelf there is no tinted box: hover lifts the piece a little, the chosen one lifts higher and glows on the shelf.
-            Destroy(cell.GetComponent<PieceBoxCellHover>());
             cell.gameObject.AddComponent<ShelfCellFeedback>();
             var button = cell.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;

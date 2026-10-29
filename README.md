@@ -66,7 +66,7 @@ Le code est séparé en 3 assemblies (voir `Assets/Scripts/*/Contigu.*.asmdef`) 
   qu'aucun asset ne soit créé dans l'éditeur.
 - **`Contigu.Presentation`** — couche `MonoBehaviour`/uGUI : `GameBootstrap`
   construit tout le Canvas au runtime et relie `GridView`, `HandView`,
-  `HudView`, `DraftView`, `EndScreenView` et `FeedbackLayer` (popups de score)
+  `HudView`, `EndScreenView` et `FeedbackLayer` (popups de score)
   au `RunManager`.
 
 Les tests EditMode (NUnit) sont dans `Assets/Scripts/Tests/EditMode/` et

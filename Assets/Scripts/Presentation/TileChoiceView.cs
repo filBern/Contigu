@@ -100,7 +100,7 @@ namespace Contigu.Presentation
         private void BuildPreviewCell(int deckIndex, int position)
         {
             float cellSize = _stage.CellSize;
-            var cell = PieceBox.CreateCell(_stage.RowFor(position), "Tile_" + deckIndex, cellSize, false);
+            var cell = PieceBox.CreateCell(_stage.RowFor(position), "Tile_" + deckIndex, cellSize);
             float cellWidth = _stage.CellWidthFor(position);
             if (!Mathf.Approximately(cellWidth, cellSize))
             {
@@ -108,7 +108,6 @@ namespace Contigu.Presentation
                 cell.GetComponent<LayoutElement>().preferredWidth = cellWidth;
             }
             _cellBackgroundByIndex[deckIndex] = cell;
-            Destroy(cell.GetComponent<PieceBoxCellHover>()); // shelf feedback: lift on hover, higher + glow when chosen
             cell.gameObject.AddComponent<ShelfCellFeedback>();
 
             var cellBtn = cell.gameObject.AddComponent<Button>();

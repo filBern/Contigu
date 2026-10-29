@@ -376,7 +376,6 @@ namespace Contigu.Presentation
             ApplyChallengeAmbiance(challenge);
             _gridView.Rebind(_run.Grid);
             _handView.Rebind(_run);
-            _draftView.Rebind(_run.Deck);
             _tileChoiceView.Rebind(_run.Deck);
             _deckView.Rebind(_run);
             _deckView.Hide();
