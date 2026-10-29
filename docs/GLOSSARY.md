@@ -51,10 +51,6 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `SlotTrois` | Slot 3 Loyalty | Roguelike |
 | `GrandFormat` | Overgrowth | Roguelike |
 | `HorsNorme` | Mutant Growth | Roguelike |
-| `EclatCoral` | Poppy Glow | Couleurs |
-| `EclatTeal` | Iris Glow | Couleurs |
-| `EclatViolet` | Sunflower Glow | Couleurs |
-| `EclatLime` | Fern Glow | Couleurs |
 | `Diagonale` | Diagonal | Voisinage |
 | `Nid` | Nest | Voisinage |
 | `Solitaire` | Solitaire | Connexions |

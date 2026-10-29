@@ -42,7 +42,7 @@ namespace Contigu.Core
         // Any bonus that scales per group cell or per placed cell (Forteresse,
         // Prisonnier, Couronne, Carrefour, Contraste, Emmitouflée, Jardinier,
         // Cercle Chromatique, Monochrome, Collectionneur, Diagonale, Nid,
-        // Encerclement, Boucher, Éclat x4, Grand/Petit/Hors-Norme Format,
+        // Encerclement, Boucher, Grand/Petit/Hors-Norme Format,
         // Precision, Surpopulation, Chaîne/Méga-chaîne) stays a flat +pts
         // bonus instead, so it can't scale unboundedly with group size.
 
@@ -150,9 +150,6 @@ namespace Contigu.Core
         public const int HorsNormeBonus = 18;
         public const int HorsNormeExactPieceSize = 3;
 
-        /// <summary>Éclat (per-color): +1 Mult per scored group cell of the matching color (points worth one Mult), a flat per-tile amount unlike Devotion's full double.</summary>
-        public const int EclatBonusPerCell = (int)PointsPerMult;
-
         // ---- More modifier bonuses (see ModifierCatalog) ----
 
         /// <summary>Diagonale: bonus per group cell sitting on either of the grid's two main diagonals.</summary>
@@ -232,7 +229,7 @@ namespace Contigu.Core
         /// <summary>Format* "Specialist" (per-piece-size tier, not per-exact-shape): xN multiplier when the placed piece's cell count falls in the modifier's tier.</summary>
         public const int FormeSpecialistMultiplier = 2;
 
-        /// <summary>The "+pts" sibling of each Format* "Specialist" tier above — bonus per scored group cell when the placed piece's cell count falls in the tier, same pattern as Éclat's per-color bonus.</summary>
+        /// <summary>The "+pts" sibling of each Format* "Specialist" tier above — bonus per scored group cell when the placed piece's cell count falls in the tier.</summary>
         public const int FormeGlowBonusPerCell = (int)PointsPerMult;
 
         /// <summary>Risky Mult: flat +Mult (see PlacementResult.AdditiveMultBonus), always fires — the risk is EconomyConstants.MultCinqRisqueLossChanceDenominator's chance to lose the modifier itself at round end, not a scoring condition.</summary>
@@ -345,9 +342,6 @@ namespace Contigu.Core
         /// <summary>Impair: xN multiplier (see GridManager.ApplyPariteImpaire) when the placement's scored group has an ODD total cell count — Pair's exact mirror.</summary>
         public const int ImpairMultiplier = 2;
 
-        /// <summary>Devotion/Éclat pairing bonus: extra flat +Mult (additive, see PlacementResult.AdditiveMultBonus) when BOTH a color's Devotion and Éclat modifier are held, on top of Devotion's own bonus — see GridManager.ApplyDevotionEclatPairBonus, checked only from the Devotion side so the pair is never double-counted.</summary>
-        public const int DevotionEclatPairBonus = 2;
-
         /// <summary>Polyvalence: +N Mult (additive), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — see GridManager.ApplyPolyvalence. Capped at 6 in practice (ModifierCategory's own value count).</summary>
         public const int PolyvalenceMultPerCategory = 1;
 
@@ -357,7 +351,7 @@ namespace Contigu.Core
         /// <summary>Arsenal: +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 4 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
         public const int ArsenalMultPerDistinctCombatKind = 1;
 
-        /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which BOTH Devotion and Éclat are currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
+        /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which Devotion is currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
         public const int CollectionChromatiqueMultPerCompletePair = 2;
 
         /// <summary>Cadence: xN multiplier (see GridManager.ApplyCadence) when this placement's group parity matches a held Pair/Impair modifier AND its piece size matches a held Format* Specialist tier, both at once.</summary>

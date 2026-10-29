@@ -9289,3 +9289,5 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   `ApplySangsueDamage`, `SangsueLueurFraction`, badge, test) est supprimé : il
   reste 4 types de combat (Bombe/Range/Éclat/Précision), donc Arsenal plafonne
   à +4. Siphon ne mentionne plus Sangsue et reste inchangé.
+
+- **Retrait des quatre fertilizers « Glow » de couleur (Poppy/Iris/Sunflower/Fern Glow)** — demande explicite : les Devotion font déjà la même chose (+Mult sur une couleur). Les `ModifierId.Eclat*` restent dans l'enum (les ids sont sauvegardés en entiers) mais ne sont plus dans le catalogue : jamais proposés, jamais comptés. Le bonus de paire Devotion+Glow disparaît ; Chromatic Hoard devient « +2 Mult par couleur dont tu as le Devotion » ; Wildcard ne compare plus que les Devotion. Les Glow de format (Seedling/Sapling/Overgrowth) et Rainbow Glow restent.

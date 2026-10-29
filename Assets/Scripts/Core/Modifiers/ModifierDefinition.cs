@@ -191,6 +191,8 @@ namespace Contigu.Core
             ModifierId.HorsNorme, ModifierCategory.Roguelike, "Mutant Growth",
             "+2 Mult if the seed isn't exactly 3 cells.");
 
+        // Retired: the four color "Glow" fertilizers (EclatCoral/Teal/Violet/Lime) did what Devotion already does. They stay defined so an old
+        // save that still holds one loads, but they are no longer in All (never offered, never scored).
         public static readonly ModifierDefinition EclatCoral = new ModifierDefinition(
             ModifierId.EclatCoral, ModifierCategory.Couleurs, "Poppy Glow",
             "+1 Mult per group cell on Poppy seeds.");
@@ -277,7 +279,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
-            "Joker sprouts count as whichever color scores best with your Devotion/Glow fertilizers.");
+            "Joker sprouts count as whichever color scores best with your Devotion fertilizers.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
@@ -381,9 +383,6 @@ namespace Contigu.Core
             ModifierId.Impair, ModifierCategory.Roguelike, "Waning",
             "x2 Mult when the scored group has an odd number of cells.");
 
-        // The Devotion/Éclat same-color pairing bonus needs no definition
-        // here — see GridManager.ApplyDevotionEclatPairBonus.
-
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
             ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
             "+1 Mult per distinct fertilizer category you hold at least one of.");
@@ -398,7 +397,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
-            "+2 Mult per color for which you hold BOTH its Devotion and Glow fertilizer.");
+            "+2 Mult per color for which you hold its Devotion fertilizer.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(
             ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
@@ -644,7 +643,7 @@ namespace Contigu.Core
             CercleChromatique, Monochrome, Contraste, Degrade, Emmitouflee, Jardinier,
             ArcEnCiel, Alternance, Palindrome, Gradient, Bloc, MonochromeLigne,
             DevotionCoral, DevotionTeal, DevotionViolet, DevotionLime,
-            SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme, EclatCoral, EclatTeal, EclatViolet, EclatLime,
+            SlotUn, SlotDeux, SlotTrois, GrandFormat, HorsNorme,
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
             Densite,

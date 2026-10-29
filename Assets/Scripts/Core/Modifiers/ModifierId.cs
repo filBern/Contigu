@@ -44,6 +44,7 @@ namespace Contigu.Core
         SlotTrois,
         GrandFormat,
         HorsNorme,
+        // Retired (kept so saved ids stay valid): see ModifierDefinition.EclatCoral.
         EclatCoral,
         EclatTeal,
         EclatViolet,
@@ -117,11 +118,9 @@ namespace Contigu.Core
         Impair,
 
         // Modifiers that reward owning other specific things (a matching
-        // Devotion/Éclat pair, a spread of modifier categories, a spread
-        // of Joker combat trait kinds) instead of each one scoring in
-        // isolation off its own fixed condition. The Devotion/Éclat
-        // pairing bonus needed no new ModifierId at all — see
-        // GridManager.ApplyDevotionEclatPairBonus.
+        // Devotion fertilizer per color, a spread of modifier categories,
+        // a spread of Joker combat trait kinds) instead of each one scoring
+        // in isolation off its own fixed condition.
         Polyvalence,
         RenfortJoker,
         Arsenal,

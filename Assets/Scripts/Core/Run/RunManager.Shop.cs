@@ -48,16 +48,12 @@ namespace Contigu.Core
                 case ModifierId.Complementaire:
                     return GridManager.HasComplementaryPair(colors);
                 case ModifierId.DevotionCoral:
-                case ModifierId.EclatCoral:
                     return PieceColorUtility.IsActive(PieceColor.Coral);
                 case ModifierId.DevotionTeal:
-                case ModifierId.EclatTeal:
                     return PieceColorUtility.IsActive(PieceColor.Teal);
                 case ModifierId.DevotionViolet:
-                case ModifierId.EclatViolet:
                     return PieceColorUtility.IsActive(PieceColor.Violet);
                 case ModifierId.DevotionLime:
-                case ModifierId.EclatLime:
                     return PieceColorUtility.IsActive(PieceColor.Lime);
                 default:
                     return true;

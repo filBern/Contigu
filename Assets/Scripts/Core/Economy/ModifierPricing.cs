@@ -120,10 +120,6 @@ namespace Contigu.Core
                 case ModifierId.SlotTrois: return 7;
                 case ModifierId.GrandFormat: return 5;
                 case ModifierId.HorsNorme: return 5;
-                case ModifierId.EclatCoral: return 5;
-                case ModifierId.EclatTeal: return 5;
-                case ModifierId.EclatViolet: return 5;
-                case ModifierId.EclatLime: return 5;
 
                 case ModifierId.Diagonale: return 5;
                 case ModifierId.Nid: return 4;

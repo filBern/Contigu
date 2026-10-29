@@ -46,10 +46,10 @@ namespace Contigu.Core
                 { ModifierId.Degrade, ctx => { ctx.Multiplier *= ApplyDegrade(ctx.GroupCells.Count, ctx.PreviousGroupSize, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Emmitouflee, ctx => PointsToMult(ctx, () => ApplyEmmitouflee(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Jardinier, ctx => PointsToMult(ctx, () => ApplyJardinier(ctx.GroupCells, ctx.Events)) },
-                { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Coral, ModifierId.EclatCoral, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Teal, ModifierId.EclatTeal, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Violet, ModifierId.EclatViolet, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.DevotionLime, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events) + ApplyDevotionEclatPairBonus(PieceColor.Lime, ModifierId.EclatLime, ctx.ActiveModifiers, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionCoral, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionTeal, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionViolet, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
+                { ModifierId.DevotionLime, ctx => { ctx.AdditiveMult += ApplyColorDevotionBonus(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatPetitSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(1, ScoringConstants.FormatPetitMaxCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatMoyenSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatMoyenCells, ScoringConstants.FormatMoyenCells, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.FormatGrandSpecialiste, ctx => { ctx.Multiplier *= ApplyFormatSpecialistMultiplier(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -58,10 +58,6 @@ namespace Contigu.Core
                 { ModifierId.FormatGrandGlow, ctx => PointsToMult(ctx, () => ApplyFormatGlow(ScoringConstants.FormatGrandMinCells, int.MaxValue, ctx.Shape, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
                 { ModifierId.GrandFormat, ctx => PointsToMult(ctx, () => ApplyGrandFormat(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.HorsNorme, ctx => PointsToMult(ctx, () => ApplyHorsNorme(ctx.PlacedCells, ctx.Events)) },
-                { ModifierId.EclatCoral, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Coral, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
-                { ModifierId.EclatTeal, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Teal, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
-                { ModifierId.EclatViolet, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Violet, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
-                { ModifierId.EclatLime, ctx => PointsToMult(ctx, () => ApplyEclat(PieceColor.Lime, ctx.JokerResolvedColor, ctx.PlacedCells, ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Diagonale, ctx => PointsToMult(ctx, () => ApplyDiagonale(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Nid, ctx => PointsToMult(ctx, () => ApplyNid(ctx.GroupCells, ctx.Events)) },
                 { ModifierId.Solitaire, ctx => { ctx.Multiplier *= ApplySolitaire(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
@@ -160,8 +156,8 @@ namespace Contigu.Core
             // (see FindConnectedGroup), so every color-conditional modifier
             // below normally never matches it. When the Joker modifier is
             // held, this resolves to whichever base color would score the
-            // most from the Devotion/Éclat modifiers currently active, and
-            // ApplyColorDevotionBonus/ApplyEclat use this instead of the cell.
+            // most from the Devotion modifiers currently active, and
+            // ApplyColorDevotionBonus uses this instead of the cell.
             var jokerResolvedColor = ResolveJokerColorForModifiers(ownColor, activeModifiers, groupBonus, groupCells.Count);
 
             var ctx = new PreClearModifierContext
@@ -220,18 +216,6 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionBonus));
             return ScoringConstants.DevotionBonus;
-        }
-
-        /// <summary>Extra flat +Mult when both this color's Devotion and Éclat modifiers are held — checked only from the Devotion side so the two modifiers' lambdas never both add it.</summary>
-        private static int ApplyDevotionEclatPairBonus(PieceColor targetColor, ModifierId eclatId, IReadOnlyList<ModifierId> activeModifiers, PieceColor ownColor, List<Vector2Int> placedCells, List<ScoreEvent> events)
-        {
-            if (ownColor != targetColor || !ContainsModifier(activeModifiers, eclatId))
-            {
-                return 0;
-            }
-
-            events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], ScoringConstants.DevotionEclatPairBonus));
-            return ScoringConstants.DevotionEclatPairBonus;
         }
 
         private bool HasUpgradedTile(int x, int y)
@@ -342,14 +326,14 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Collection Chromatique: +N Mult, N = how many of the 4 base colors have both their Devotion and Éclat modifier currently held.</summary>
+        /// <summary>Collection Chromatique: +N Mult, N = how many of the 4 base colors have their Devotion modifier currently held.</summary>
         private static int ApplyCollectionChromatique(IReadOnlyList<ModifierId> activeModifiers, List<Vector2Int> placedCells, List<ScoreEvent> events)
         {
             int completePairs = 0;
             var baseColors = PieceColorUtility.BaseColors;
             for (int i = 0; i < baseColors.Count; i++)
             {
-                if (ContainsModifier(activeModifiers, DevotionModifierFor(baseColors[i])) && ContainsModifier(activeModifiers, EclatModifierFor(baseColors[i])))
+                if (ContainsModifier(activeModifiers, DevotionModifierFor(baseColors[i])))
                 {
                     completePairs++;
                 }
@@ -441,20 +425,7 @@ namespace Contigu.Core
             return ScoringConstants.HorsNormeBonus;
         }
 
-        /// <summary>Éclat (per-color): flat bonus per scored group cell when the placement's fill color matches <paramref name="targetColor"/> — a group is always monochrome (see FindConnectedGroup), so a match means every group cell counts. <paramref name="ownColor"/> may be Joker-resolved first (see ResolveJokerColorForModifiers).</summary>
-        private static int ApplyEclat(PieceColor targetColor, PieceColor ownColor, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
-        {
-            if (ownColor != targetColor)
-            {
-                return 0;
-            }
-
-            int bonus = groupCells.Count * ScoringConstants.EclatBonusPerCell;
-            events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
-            return bonus;
-        }
-
-        /// <summary>The "+pts" sibling of ApplyFormatSpecialistMultiplier — flat bonus per scored group cell when the placed piece's cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive, mirroring ApplyEclat's per-color role but for piece size.</summary>
+        /// <summary>The "+pts" sibling of ApplyFormatSpecialistMultiplier — flat bonus per scored group cell when the placed piece's cell count falls within [<paramref name="minCells"/>, <paramref name="maxCells"/>] inclusive, a flat bonus for piece size.</summary>
         private static int ApplyFormatGlow(int minCells, int maxCells, PieceShape shape, List<Vector2Int> placedCells, List<Vector2Int> groupCells, List<ScoreEvent> events)
         {
             int cellCount = shape.Cells.Count;
@@ -1040,8 +1011,8 @@ namespace Contigu.Core
         /// <summary>
         /// When this placement's own color is actually <see
         /// cref="PieceColor.Joker"/> and the Joker modifier is held, resolves
-        /// to whichever base color would score the most from the Devotion/
-        /// Éclat modifiers currently active. Falls back to the piece's real
+        /// to whichever base color would score the most from the Devotion
+        /// modifiers currently active. Falls back to the piece's real
         /// color otherwise.
         /// </summary>
         private static PieceColor ResolveJokerColorForModifiers(PieceColor actualColor, IReadOnlyList<ModifierId> activeModifiers, int groupBonus, int groupCellCount)
@@ -1060,13 +1031,7 @@ namespace Contigu.Core
                 int score = 0;
                 if (ContainsModifier(activeModifiers, DevotionModifierFor(candidate)))
                 {
-                    // Both are flat additive Mult now, so they compare directly in Mult:
-                    // Devotion's fixed +DevotionBonus against Éclat's +1 per group cell.
                     score += ScoringConstants.DevotionBonus;
-                }
-                if (ContainsModifier(activeModifiers, EclatModifierFor(candidate)))
-                {
-                    score += ScoringConstants.PointsToMult(groupCellCount * ScoringConstants.EclatBonusPerCell);
                 }
                 if (score > bestScore)
                 {
@@ -1085,17 +1050,6 @@ namespace Contigu.Core
                 case PieceColor.Teal: return ModifierId.DevotionTeal;
                 case PieceColor.Violet: return ModifierId.DevotionViolet;
                 default: return ModifierId.DevotionLime;
-            }
-        }
-
-        private static ModifierId EclatModifierFor(PieceColor color)
-        {
-            switch (color)
-            {
-                case PieceColor.Coral: return ModifierId.EclatCoral;
-                case PieceColor.Teal: return ModifierId.EclatTeal;
-                case PieceColor.Violet: return ModifierId.EclatViolet;
-                default: return ModifierId.EclatLime;
             }
         }
 

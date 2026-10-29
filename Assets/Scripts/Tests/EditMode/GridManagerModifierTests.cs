@@ -1079,47 +1079,6 @@ namespace Contigu.Tests
         // "Je veux juste le 1 et le 2 finalement") ----
 
         [Test]
-        public void DevotionEclatPair_AddsAnExtraKicker_WhenBothTheMatchingColorModifiersAreHeld()
-        {
-            var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatCoral };
-
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
-
-            // Éclat is +1 Mult per group cell now, added to the same additive Mult as Devotion's bonus and the pairing kicker.
-            int eclatMult = ScoringConstants.PointsToMult(square.Cells.Count * ScoringConstants.EclatBonusPerCell);
-            Assert.AreEqual(ScoringConstants.DevotionBonus + ScoringConstants.DevotionEclatPairBonus + eclatMult, result.AdditiveMultBonus,
-                "Holding both Devotion and Éclat for the same color should add the pairing kicker on top of Devotion's own bonus and Éclat's own Mult");
-            Assert.AreEqual(0, result.ModifierBonus, "Éclat gives Mult, never points");
-        }
-
-        [Test]
-        public void DevotionEclatPair_DoesNotFire_WhenOnlyDevotionIsHeld()
-        {
-            var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral };
-
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus, "No Éclat held, so no pairing kicker");
-        }
-
-        [Test]
-        public void DevotionEclatPair_DoesNotFire_ForADifferentColorsPair()
-        {
-            var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            // Coral Devotion + a DIFFERENT color's Éclat — not a real pair.
-            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatTeal };
-
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus, "Mismatched colors shouldn't count as a pair");
-        }
-
-        [Test]
         public void Polyvalence_GivesMultEqualToDistinctModifierCategoriesHeld()
         {
             var grid = new GridManager();
@@ -1152,31 +1111,29 @@ namespace Contigu.Tests
         // "As-tu d'autres bonnes idée comme ça?" -> "Fait les toutes") ----
 
         [Test]
-        public void CollectionChromatique_GivesMultPerColorWithBothDevotionAndEclatHeld()
+        public void CollectionChromatique_GivesMultPerColorWithItsDevotionHeld()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
-            // Coral: complete pair. Teal: only Devotion (incomplete, shouldn't count).
-            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.EclatCoral, ModifierId.DevotionTeal };
+            // Coral and Teal Devotion held; Lime and Violet not.
+            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.DevotionTeal };
 
-            // Placed as Violet so Devotion/Éclat's OWN conditions never
-            // fire themselves, isolating CollectionChromatique's own
-            // contribution to AdditiveMultBonus.
-            var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
-
-            Assert.AreEqual(ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
-        }
-
-        [Test]
-        public void CollectionChromatique_CountsEachCompletePairAcrossColors()
-        {
-            var grid = new GridManager();
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.EclatCoral, ModifierId.DevotionTeal, ModifierId.EclatTeal };
-
+            // Placed as Violet so Devotion's OWN condition never fires itself, isolating CollectionChromatique's own contribution.
             var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
 
             Assert.AreEqual(2 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
+        }
+
+        [Test]
+        public void CollectionChromatique_CountsEveryDevotionHeld()
+        {
+            var grid = new GridManager();
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.CollectionChromatique, ModifierId.DevotionCoral, ModifierId.DevotionTeal, ModifierId.DevotionLime };
+
+            var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
+
+            Assert.AreEqual(3 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
         }
 
         // Cadence's own condition pair (Pair/Impair + FormatXSpecialiste)
@@ -1372,43 +1329,6 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(triL, PieceColor.Coral, 0, 0, modifiers);
 
             Assert.AreEqual(0, result.AdditiveMultBonus);
-        }
-
-        [Test]
-        public void EclatCoral_GivesFlatPerCellBonus_WhenPlacementColorMatches()
-        {
-            var grid = new GridManager();
-            var square = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var modifiers = new List<ModifierId> { ModifierId.EclatCoral };
-
-            var result = grid.PlacePiece(square, PieceColor.Coral, 0, 0, modifiers);
-
-            Assert.AreEqual(square.Cells.Count, result.AdditiveMultBonus,
-                "Éclat should be a flat +1 Mult per group cell, not Devotion's full double");
-            Assert.AreEqual(0, result.ModifierBonus, "Éclat gives Mult, never points");
-        }
-
-        [Test]
-        public void EclatModifiers_EachOnlyFiresForItsOwnColor()
-        {
-            AssertEclatFiresOnlyForColor(ModifierId.EclatCoral, PieceColor.Coral);
-            AssertEclatFiresOnlyForColor(ModifierId.EclatTeal, PieceColor.Teal);
-            AssertEclatFiresOnlyForColor(ModifierId.EclatViolet, PieceColor.Violet);
-            AssertEclatFiresOnlyForColor(ModifierId.EclatLime, PieceColor.Lime);
-        }
-
-        private static void AssertEclatFiresOnlyForColor(ModifierId id, PieceColor matchingColor)
-        {
-            var single = PieceShapeCatalog.Get(ShapeId.Single);
-            var modifiers = new List<ModifierId> { id };
-            var baseColors = PieceColorUtility.BaseColors;
-            for (int i = 0; i < baseColors.Count; i++)
-            {
-                var grid = new GridManager();
-                var result = grid.PlacePiece(single, baseColors[i], 0, 0, modifiers);
-                int expected = baseColors[i] == matchingColor ? 1 : 0; // +1 Mult for the single cell
-                Assert.AreEqual(expected, result.AdditiveMultBonus, id + " vs " + baseColors[i]);
-            }
         }
 
         // ---- Fifth batch: 8 new modifiers (on explicit request) ----
@@ -2076,25 +1996,15 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Joker_ResolvesAJokerPieceToWhicheverColorMaximizesDevotionOrEclat()
+        public void Joker_ResolvesAJokerPieceToAColorWhoseDevotionIsHeld()
         {
             var grid = new GridManager();
-            // Both are flat additive Mult now: Devotion gives a fixed +DevotionBonus (3), Éclat +1 per group cell.
-            // A 2-cell piece makes Devotion the bigger prize (3 vs 2).
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
-            var modifiers = new List<ModifierId> { ModifierId.Joker, ModifierId.DevotionCoral, ModifierId.EclatLime };
+            var modifiers = new List<ModifierId> { ModifierId.Joker, ModifierId.DevotionCoral };
 
             var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
 
-            Assert.Greater(ScoringConstants.DevotionBonus, domH.Cells.Count, "Test setup sanity: Devotion should be the bigger prize here");
             Assert.AreEqual(ScoringConstants.DevotionBonus, result.AdditiveMultBonus);
-
-            // A 4-cell piece tips it the other way: Éclat's +4 beats Devotion's +3, so the Joker becomes Lime.
-            var bigGrid = new GridManager();
-            var sq2 = PieceShapeCatalog.Get(ShapeId.Sq2);
-            var bigResult = bigGrid.PlacePiece(sq2, PieceColor.Joker, 0, 0, modifiers);
-            Assert.AreEqual(sq2.Cells.Count, bigResult.AdditiveMultBonus, "Éclat (+1 per cell) beats Devotion's flat +3 on a 4-cell piece");
-            Assert.AreEqual(0, bigResult.ModifierBonus, "Éclat gives Mult, never points");
         }
 
         [Test]
@@ -2102,7 +2012,7 @@ namespace Contigu.Tests
         {
             var grid = new GridManager();
             var domH = PieceShapeCatalog.Get(ShapeId.DomH);
-            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral, ModifierId.EclatLime };
+            var modifiers = new List<ModifierId> { ModifierId.DevotionCoral };
 
             var result = grid.PlacePiece(domH, PieceColor.Joker, 0, 0, modifiers);
 
