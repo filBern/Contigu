@@ -357,7 +357,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition Compost = new UpgradeDefinition(
             UpgradeId.Compost, UpgradePool.Workshop, "Compost",
-            "Remove 1 seed from your bag to thin it out. Costs more each time.", true, UpgradeRarity.Common);
+            "Remove 1 seed from your bag to thin it out. Costs more each time you buy it in a visit.", true, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition Forge = new UpgradeDefinition(
             UpgradeId.Forge, UpgradePool.Workshop, "Forge",

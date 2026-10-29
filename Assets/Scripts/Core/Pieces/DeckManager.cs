@@ -374,14 +374,15 @@ namespace Contigu.Core
         /// </summary>
         public bool ReplaceOneOfType(ShapeId removeShape, PieceColor removeColor, ShapeId addShape, PieceColor addColor)
         {
-            int idx = _deck.FindIndex(t => t.Matches(removeShape, removeColor));
+            int idx = IndexOfPlainestCopy(removeShape, removeColor);
             if (idx < 0 || !_deck.Exists(t => t.Matches(addShape, addColor)))
             {
                 return false;
             }
 
+            var removed = _deck[idx];
             _deck.RemoveAt(idx);
-            int dpIdx = _drawPile.FindIndex(t => t.Matches(removeShape, removeColor));
+            int dpIdx = _drawPile.FindIndex(t => t.Equals(removed));
             if (dpIdx >= 0)
             {
                 _drawPile.RemoveAt(dpIdx);
@@ -406,21 +407,38 @@ namespace Contigu.Core
             return shape;
         }
 
+        /// <summary>Recolors one copy of the type: the plainest one (see <see cref="IndexOfPlainestCopy"/>), which keeps its sprouts.</summary>
         public bool RecolorOneOfType(ShapeId shape, PieceColor fromColor, PieceColor toColor)
         {
-            int idx = _deck.FindIndex(t => t.Matches(shape, fromColor));
+            int idx = IndexOfPlainestCopy(shape, fromColor);
             if (idx < 0)
             {
                 return false;
             }
-            _deck[idx] = new PieceToken(shape, toColor);
+            var before = _deck[idx];
+            var after = before.WithColor(toColor);
+            _deck[idx] = after;
 
-            int dpIdx = _drawPile.FindIndex(t => t.Matches(shape, fromColor));
+            int dpIdx = _drawPile.FindIndex(t => t.Equals(before));
             if (dpIdx >= 0)
             {
-                _drawPile[dpIdx] = new PieceToken(shape, toColor);
+                _drawPile[dpIdx] = after;
             }
             return true;
+        }
+
+        /// <summary>The copy of (shape, color) with the fewest upgrades (the first on a tie): the one Replace and Recolor take, so a seed the player enchanted is never lost to an action that acts on a type. -1 when there is none.</summary>
+        public int IndexOfPlainestCopy(ShapeId shape, PieceColor color)
+        {
+            int best = -1;
+            for (int i = 0; i < _deck.Count; i++)
+            {
+                if (_deck[i].Matches(shape, color) && (best < 0 || _deck[i].TraitCount < _deck[best].TraitCount))
+                {
+                    best = i;
+                }
+            }
+            return best;
         }
 
         /// <summary>

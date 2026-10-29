@@ -352,7 +352,7 @@ namespace Contigu.Core
         public const int ArsenalMultPerDistinctCombatKind = 1;
 
         /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which Devotion is currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
-        public const int CollectionChromatiqueMultPerCompletePair = 2;
+        public const int CollectionChromatiqueMultPerColor = 2;
 
         /// <summary>Cadence: xN multiplier (see GridManager.ApplyCadence) when this placement's group parity matches a held Pair/Impair modifier AND its piece size matches a held Format* Specialist tier, both at once.</summary>
         public const int CadenceMultiplier = 2;

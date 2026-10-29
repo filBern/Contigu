@@ -9,7 +9,7 @@ namespace Contigu.Presentation
     /// Builds one modifier badge (a category-colored chip showing its 2-letter abbreviation, wired to reveal
     /// a hover tooltip with the full name/description) — shared by the modifier draft cards and the
     /// persistent modifier side panel. A modifier with real icon art (see ModifierVisualDefaults.GetIcon)
-    /// shows that instead; absent that, per-color modifiers like "Glow"/"Devotion" show an actual colored
+    /// shows that instead; absent that, per-color modifiers like "Devotion" show an actual colored
     /// tile (see ModifierVisualDefaults.GetColorTileColor) instead of the 2-letter code.
     /// </summary>
     public static class ModifierBadgeFactory

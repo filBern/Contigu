@@ -169,6 +169,7 @@ namespace Contigu.Core
                 _compostsBought++;
             }
             PendingUpgrade = null;
+            LastRandomModifierGranted = null; // never replay the reveal of an earlier purchase
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();

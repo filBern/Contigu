@@ -246,6 +246,38 @@ namespace Contigu.Tests
         // changer pour un replace?") ----
 
         [Test]
+        public void ReplaceOneOfType_TakesThePlainCopy_AndKeepsTheEnchantedOne()
+        {
+            var enchanted = new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Scholar, 0));
+            var tokens = new List<PieceToken>
+            {
+                enchanted,
+                new PieceToken(ShapeId.Single, PieceColor.Coral),
+                new PieceToken(ShapeId.Sq2, PieceColor.Teal)
+            };
+            var dm = new DeckManager(tokens, new SystemRandomProvider(1));
+
+            Assert.IsTrue(dm.ReplaceOneOfType(ShapeId.Single, PieceColor.Coral, ShapeId.Sq2, PieceColor.Teal));
+
+            Assert.AreEqual(1, dm.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Coral)));
+            Assert.AreEqual(1, dm.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Coral) && t.TraitCount == 1), "the enchanted copy stays");
+        }
+
+        [Test]
+        public void RecolorOneOfType_TakesThePlainCopy_AndKeepsItsUpgrades()
+        {
+            var enchanted = new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Scholar, 0));
+            var dm = new DeckManager(new List<PieceToken> { enchanted, new PieceToken(ShapeId.Single, PieceColor.Coral) }, new SystemRandomProvider(1));
+            int upgradesBefore = dm.Deck.Sum(t => t.TraitCount);
+
+            Assert.IsTrue(dm.RecolorOneOfType(ShapeId.Single, PieceColor.Coral, PieceColor.Teal));
+
+            Assert.AreEqual(upgradesBefore, dm.Deck.Sum(t => t.TraitCount), "no upgrade is lost");
+            Assert.AreEqual(1, dm.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Teal)));
+            Assert.AreEqual(1, dm.Deck.Count(t => t.Matches(ShapeId.Single, PieceColor.Coral) && t.TraitCount == 1), "the enchanted copy keeps its color");
+        }
+
+        [Test]
         public void ReplaceOneOfType_RemovesOneAddsOne_NetCountUnchanged()
         {
             var tokens = new List<PieceToken>

@@ -98,10 +98,6 @@ namespace Contigu.Data
             { ModifierId.SlotTrois, "3S" },
             { ModifierId.GrandFormat, "GF" },
             { ModifierId.HorsNorme, "HN" },
-            { ModifierId.EclatCoral, "EC" },
-            { ModifierId.EclatTeal, "ET" },
-            { ModifierId.EclatViolet, "EV" },
-            { ModifierId.EclatLime, "EL" },
             { ModifierId.Diagonale, "DI" },
             { ModifierId.Nid, "NI" },
             { ModifierId.Solitaire, "SO" },
@@ -199,14 +195,10 @@ namespace Contigu.Data
             return CategoryColors.TryGetValue(category, out var c) ? c : Color.gray;
         }
 
-        // Éclat and Devotion are both per-color families, so each shows an
+        // Devotion is a per-color family, so each shows an
         // actual colored tile instead of an opaque 2-letter code.
         private static readonly Dictionary<ModifierId, PieceColor> ColorTileColors = new Dictionary<ModifierId, PieceColor>
         {
-            { ModifierId.EclatCoral, PieceColor.Coral },
-            { ModifierId.EclatTeal, PieceColor.Teal },
-            { ModifierId.EclatViolet, PieceColor.Violet },
-            { ModifierId.EclatLime, PieceColor.Lime },
             { ModifierId.DevotionCoral, PieceColor.Coral },
             { ModifierId.DevotionTeal, PieceColor.Teal },
             { ModifierId.DevotionViolet, PieceColor.Violet },

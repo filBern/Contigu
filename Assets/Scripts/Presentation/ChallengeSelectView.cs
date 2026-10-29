@@ -57,6 +57,7 @@ namespace Contigu.Presentation
         private Text _statusLabel;
         private Button _playButton;
         private Text _playButtonLabel;
+        private bool _playArmed;
         private Image _banner;
         private Image _bannerIcon;
         private Text _statsLabel;
@@ -260,6 +261,14 @@ namespace Contigu.Presentation
 
         private void OnPlayClicked()
         {
+            // A new run replaces the saved one: ask once, right on the button, before throwing it away.
+            if (RunSaveStore.Exists && !_playArmed)
+            {
+                _playArmed = true;
+                _playButtonLabel.text = "Replace saved run? Click again";
+                return;
+            }
+            _playArmed = false;
             ChallengeChosen?.Invoke(ChallengeCatalog.All[_currentIndex]);
         }
 
@@ -335,7 +344,7 @@ namespace Contigu.Presentation
 
         private static string StatsFor(ChallengeDefinition challenge)
         {
-            string rounds = challenge.RoundCount >= 60 ? "ENDLESS" : challenge.RoundCount + " ROUNDS";
+            string rounds = challenge.RoundCount + " ROUNDS";
             return rounds + "   -   " + challenge.GridSize + "x" + challenge.GridSize + "   -   " + challenge.ActiveColorCount + " COLORS";
         }
 
@@ -365,6 +374,7 @@ namespace Contigu.Presentation
 
             _starsLabel.text = "STARS: " + _metaStats.Stars;
 
+            _playArmed = false;
             var challenge = ChallengeCatalog.All[_currentIndex];
             _nameLabel.text = challenge.Name.ToUpperInvariant();
             _descriptionLabel.text = challenge.Description;

@@ -1121,7 +1121,7 @@ namespace Contigu.Tests
             // Placed as Violet so Devotion's OWN condition never fires itself, isolating CollectionChromatique's own contribution.
             var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
 
-            Assert.AreEqual(2 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
+            Assert.AreEqual(2 * ScoringConstants.CollectionChromatiqueMultPerColor, result.AdditiveMultBonus);
         }
 
         [Test]
@@ -1133,7 +1133,7 @@ namespace Contigu.Tests
 
             var result = grid.PlacePiece(single, PieceColor.Violet, 0, 0, modifiers);
 
-            Assert.AreEqual(3 * ScoringConstants.CollectionChromatiqueMultPerCompletePair, result.AdditiveMultBonus);
+            Assert.AreEqual(3 * ScoringConstants.CollectionChromatiqueMultPerColor, result.AdditiveMultBonus);
         }
 
         // Cadence's own condition pair (Pair/Impair + FormatXSpecialiste)

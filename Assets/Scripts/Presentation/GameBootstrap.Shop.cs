@@ -30,12 +30,14 @@ namespace Contigu.Presentation
                 return;
             }
             _shopView.PlayPurchasePop();
+            _purchaseAnimating = true; // Skip/Esc stay quiet until the choice screen is up
 
             // Lets the bought card shrink/fade away in place before the row rebuilds without it (see
             // ShopView.PlayBlisterRemoval) — the follow-up dispatch (reveal overlay or plain refresh) only
             // runs once that's done, so it never pops in mid-animation.
             _shopView.PlayBlisterRemoval(index, () =>
             {
+                _purchaseAnimating = false;
                 if (isUpgrade)
                 {
                     HandleUpgradePurchaseResult(revealedUpgrade);
@@ -157,7 +159,7 @@ namespace Contigu.Presentation
             }
             else
             {
-                ShowTypeShelf(pending, _run.PendingUpgradeTypeCandidates, "Choose a seed type", null);
+                ShowTypeShelf(pending, _run.PendingUpgradeTypeCandidates, TypeChoiceTitle(pending), null);
             }
         }
 
@@ -184,19 +186,22 @@ namespace Contigu.Presentation
             ShowShelfChoice(ShelfStage.ForUpgrade(def, null), title, entries, true, index => OnTypeChosen(def, candidates[index], replacing));
         }
 
-        /// <summary>The upgrades of the most enchanted copy of this type stand for it (the upgrade acts on a type, not on one token).</summary>
+        private static string TypeChoiceTitle(UpgradeDefinition def)
+        {
+            switch (def.Id)
+            {
+                case UpgradeId.DuplicatePiece: return "Choose a seed to duplicate";
+                case UpgradeId.ReplacePiece: return "Choose the seed to remove";
+                case UpgradeId.RecolorPiece: return "Choose a seed to recolor";
+                default: return "Choose a seed type";
+            }
+        }
+
+        /// <summary>The copy the upgrade will really act on (the plainest one, see DeckManager.IndexOfPlainestCopy) is the one shown.</summary>
         private IReadOnlyList<PieceTrait> RepresentativeTraits(ShapeId shape, PieceColor color)
         {
-            IReadOnlyList<PieceTrait> best = null;
-            var tokens = _run.Deck.Deck;
-            for (int i = 0; i < tokens.Count; i++)
-            {
-                if (tokens[i].Matches(shape, color) && tokens[i].TraitCount > (best == null ? 0 : best.Count))
-                {
-                    best = tokens[i].Traits;
-                }
-            }
-            return best;
+            int idx = _run.Deck.IndexOfPlainestCopy(shape, color);
+            return idx >= 0 ? _run.Deck.Deck[idx].Traits : null;
         }
 
         private void OnTypeChosen(UpgradeDefinition def, (ShapeId Shape, PieceColor Color) chosen, (ShapeId Shape, PieceColor Color)? replacing)
@@ -214,7 +219,7 @@ namespace Contigu.Presentation
             if (def.Id == UpgradeId.ReplacePiece)
             {
                 var next = _run.Upgrades.GetReplacementCandidateTypesFor(_run.Deck, chosen.Shape, chosen.Color);
-                ShowTypeShelf(def, next, "Choose a seed to duplicate instead", chosen);
+                ShowTypeShelf(def, next, "Choose the seed to add instead", chosen);
                 return;
             }
             OnSubChoiceConfirmed(new UpgradeSubChoice(chosen.Shape, chosen.Color));
@@ -417,9 +422,12 @@ namespace Contigu.Presentation
         /// <summary>
         /// Skips the choice in progress: nothing is taken and the Pollen is not refunded, but the purchase counts as made.
         /// </summary>
+        /// <summary>True from the click that buys a Blister item until its card has finished leaving the shelf.</summary>
+        private bool _purchaseAnimating;
+
         private void RequestAbandonPurchase()
         {
-            if (_run == null || _run.State != RunState.AwaitingShop || _run.PendingUpgrade == null)
+            if (_run == null || _run.State != RunState.AwaitingShop || _run.PendingUpgrade == null || _purchaseAnimating)
             {
                 return;
             }
@@ -437,7 +445,7 @@ namespace Contigu.Presentation
         /// <summary>Shows the "Skip" button above every overlay while a choice is pending in the shop.</summary>
         private void UpdateAbandonButton()
         {
-            bool show = _run != null && _run.State == RunState.AwaitingShop && _run.PendingUpgrade != null;
+            bool show = _run != null && _run.State == RunState.AwaitingShop && _run.PendingUpgrade != null && !_purchaseAnimating;
             if (_abandonButton.gameObject.activeSelf != show)
             {
                 _abandonButton.gameObject.SetActive(show);

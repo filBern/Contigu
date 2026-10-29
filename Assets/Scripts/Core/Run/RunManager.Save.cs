@@ -111,11 +111,23 @@ namespace Contigu.Core
             _activeModifiers.Clear();
             _modifierLevels.Clear();
             _modifierAges.Clear();
+            int kept = 0;
             for (int i = 0; i < s.Modifiers.Count; i++)
             {
-                AddActiveModifier(s.Modifiers[i]);
-                _modifierLevels[i] = s.ModifierLevels[i];
-                _modifierAges[i] = s.ModifierAges[i];
+                var id = s.Modifiers[i];
+                // A retired fertilizer (the color Glows) becomes its Devotion; dropped when that Devotion is already held.
+                if (ModifierCatalog.RetiredReplacement(id) is ModifierId replacement)
+                {
+                    id = replacement;
+                    if (s.Modifiers.Contains(id) || _activeModifiers.Contains(id))
+                    {
+                        continue;
+                    }
+                }
+                AddActiveModifier(id);
+                _modifierLevels[kept] = s.ModifierLevels[i];
+                _modifierAges[kept] = s.ModifierAges[i];
+                kept++;
             }
             _modifierUsageCounts.Clear();
             foreach (var kv in s.ModifierUsage) { _modifierUsageCounts[kv.Key] = kv.Value; }

@@ -89,3 +89,12 @@ Trouvailles : 0 Bloquant, 2 Majeur, 3 Mineur, 6 Clarté, 2 Observations.
 - Tout ce qui exige Unity : mise en page des étagères (1 à 8 options, pièces de 3-4 de large, `ShelfStage.Begin`), `ShelfCellFeedback`, tooltips, animation de retrait de carte, barre Skip au-dessus des overlays, rendu du sélecteur de défi (bannière, icônes `Resources/Icons/Challenges`, points). Aucun build WebGL dans le dépôt, donc `Tools/qa/web/smoke.js` non lancé.
 - Fuzz endless du planner non terminé (trop lent) ; couverture de la boutique par la politique random faible.
 - Suite proposée : (1) corriger/tester M1 puis ajouter l'invariant sur les ids actifs et un test de restauration d'id retiré ; (2) décider du comportement de M2 ; (3) un scénario `qa.js` : acheter un Sprout Pack, passer par les deux étapes, Skip à l'étape 2, vérifier Pollen/prix ; (4) un scénario Replace en deck mono-type.
+
+## 4. Corrections (même jour)
+
+- **M1** : `ApplySnapshot` convertit un Glow de couleur retiré en son Devotion (retiré si le Devotion est déjà tenu) ; invariant RunSim « tout fertilizer tenu existe au catalogue » ; test `Restore_TurnsARetiredGlowFertilizerIntoItsDevotion`.
+- **M2** : Replace et Recolor prennent la copie la plus simple du type (`DeckManager.IndexOfPlainestCopy`) ; Recolor garde les sprouts ; l'écran montre cette même copie ; trois tests.
+- **m1** : Skip/Esc inactifs pendant l'animation de retrait de la carte ; `AbandonPending` remet `LastRandomModifierGranted` à null.
+- **m2** : « Select 1 seed for … » au singulier. **m3** : « Play » demande « Replace saved run? Click again » quand une sauvegarde existe.
+- **C1** texte du Compost, **C2** bouton « Skip (no refund) », **C3** titres des étapes (duplicate / remove / recolor / add instead), **C4** branche ENDLESS morte retirée, **C5** texte de Wildcard, **C6** restes Eclat retirés des visuels, `CollectionChromatiqueMultPerColor`.
+- **O1** (Save & quit pendant un achat) : laissé tel quel, voulu. **O2** (`_compostsBought` sauvegardé) : inoffensif, laissé.

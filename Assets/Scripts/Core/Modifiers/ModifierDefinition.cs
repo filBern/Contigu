@@ -279,7 +279,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
             ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
-            "Joker sprouts count as whichever color scores best with your Devotion fertilizers.");
+            "Joker sprouts count as the color of one of your Devotion fertilizers.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
             ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
@@ -664,6 +664,19 @@ namespace Contigu.Core
             DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, Tonneau, Grange,
             CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner
         };
+
+        /// <summary>The fertilizer a retired id turns into when an old save is loaded (the color Glows become their Devotion); null for every other id.</summary>
+        public static ModifierId? RetiredReplacement(ModifierId id)
+        {
+            switch (id)
+            {
+                case ModifierId.EclatCoral: return ModifierId.DevotionCoral;
+                case ModifierId.EclatTeal: return ModifierId.DevotionTeal;
+                case ModifierId.EclatViolet: return ModifierId.DevotionViolet;
+                case ModifierId.EclatLime: return ModifierId.DevotionLime;
+                default: return null;
+            }
+        }
 
         public static ModifierDefinition Get(ModifierId id)
         {

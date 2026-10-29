@@ -339,7 +339,7 @@ namespace Contigu.Core
                 }
             }
 
-            int bonus = completePairs * ScoringConstants.CollectionChromatiqueMultPerCompletePair;
+            int bonus = completePairs * ScoringConstants.CollectionChromatiqueMultPerColor;
             events.Add(new ScoreEvent(ScoreEventType.MultBonus, placedCells[0], bonus));
             return bonus;
         }

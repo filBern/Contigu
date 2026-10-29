@@ -49,6 +49,29 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Restore_TurnsARetiredGlowFertilizerIntoItsDevotion()
+        {
+            var original = RichRun();
+            var snapshot = RunSnapshot.FromText(original.RoundStartSnapshot.ToText());
+            int held = snapshot.Modifiers.Count;
+            snapshot.Modifiers.Add(ModifierId.EclatCoral);
+            snapshot.ModifierLevels.Add(1);
+            snapshot.ModifierAges.Add(0);
+            bool devotionAlreadyHeld = snapshot.Modifiers.Contains(ModifierId.DevotionCoral);
+
+            var restored = RunManager.Restore(snapshot, new SystemRandomProvider(7));
+
+            Assert.IsFalse(System.Linq.Enumerable.Contains(restored.ActiveModifiers, ModifierId.EclatCoral), "the retired id never stays active");
+            for (int i = 0; i < restored.ActiveModifiers.Count; i++)
+            {
+                Assert.IsNotNull(ModifierCatalog.Get(restored.ActiveModifiers[i]), restored.ActiveModifiers[i] + " must exist in the catalog");
+                Assert.GreaterOrEqual(restored.GetModifierLevel(i), 1);
+            }
+            Assert.AreEqual(devotionAlreadyHeld ? held : held + 1, restored.ActiveModifiers.Count);
+            Assert.IsTrue(System.Linq.Enumerable.Contains(restored.ActiveModifiers, ModifierId.DevotionCoral));
+        }
+
+        [Test]
         public void Restore_KeepsTheUpgradesOnTheSeeds()
         {
             var original = RichRun();

@@ -27,6 +27,7 @@ namespace Contigu.RunSim
             for (int i = 0; i < run.ActiveModifiers.Count; i++)
             {
                 if (run.GetModifierLevel(i) < 1) { return "Fertilizer " + run.ActiveModifiers[i] + " has level " + run.GetModifierLevel(i); }
+                if (ModifierCatalog.Get(run.ActiveModifiers[i]) == null) { return "Fertilizer " + run.ActiveModifiers[i] + " is held but not in the catalog"; }
             }
 
             var hand = run.Deck.Hand;

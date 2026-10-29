@@ -86,7 +86,7 @@ namespace Contigu.Presentation
             {
                 columns.Add(ShapePreviewFactory.ColumnsOf(PieceShapeCatalog.Get(_deck.Deck[_candidates[i]].Shape)));
             }
-            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T("choice.selectSeeds", _requiredCount, def.Name), _candidates.Count, true, ShelfStage.SeedCellSize, columns);
+            _stage.Begin(_layout, ShelfStage.ForUpgrade(def, source), Loc.T(_requiredCount == 1 ? "choice.selectSeed" : "choice.selectSeeds", _requiredCount, def.Name), _candidates.Count, true, ShelfStage.SeedCellSize, columns);
             for (int i = 0; i < _candidates.Count; i++)
             {
                 BuildPreviewCell(_candidates[i], i);
