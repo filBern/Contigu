@@ -67,7 +67,7 @@ namespace Contigu.Presentation
             get { return _button == null || _button.interactable; }
         }
 
-        public void OnPointerEnter(PointerEventData eventData) { _hovering = true; }
+        public void OnPointerEnter(PointerEventData eventData) { _hovering = eventData.pointerId < 0; } // touch has no hover
         public void OnPointerExit(PointerEventData eventData) { _hovering = false; _pressing = false; }
         public void OnPointerDown(PointerEventData eventData) { _pressing = true; }
         public void OnPointerUp(PointerEventData eventData) { _pressing = false; }

@@ -113,6 +113,7 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (eventData.pointerId >= 0) { return; } // touch has no hover
             _hovered = true;
             if (_cell != null && _cell.color == PieceBox.Idle)
             {

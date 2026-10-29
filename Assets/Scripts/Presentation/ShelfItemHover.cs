@@ -49,7 +49,7 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            _hovered = true;
+            _hovered = eventData.pointerId < 0; // touch has no hover
         }
 
         public void OnPointerExit(PointerEventData eventData)
