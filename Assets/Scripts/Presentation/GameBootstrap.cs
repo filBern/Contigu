@@ -726,6 +726,7 @@ namespace Contigu.Presentation
             // Only the shop shows this one (its screens cover the board's own Menu button): the shop switches it on and off.
             menuButton.gameObject.SetActive(false);
             _shopView.SetShopMenuButton(menuButton.gameObject);
+            _shopView.MenuHiddenWhen = () => _deckView != null && _deckView.IsVisible;
         }
 
         /// <summary>The seed bag and the menu (settings and the rules): stacked, full width, at the bottom of the left column.</summary>

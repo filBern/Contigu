@@ -511,6 +511,11 @@ namespace Contigu.Presentation
         {
             _shopMenuButton = button;
         }
+
+        private bool _shopMenuWanted;
+
+        /// <summary>While this returns true (the Seed bag screen is open) the shop's Menu button steps aside: it would sit on top of that screen.</summary>
+        public Func<bool> MenuHiddenWhen;
         private float _boardPanelY;
         private float _boardPollenX;
         private float _boardPollenY;
@@ -540,6 +545,7 @@ namespace Contigu.Presentation
             }
             if (_shopMenuButton != null)
             {
+                _shopMenuWanted = false;
                 _shopMenuButton.SetActive(false);
             }
             PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
@@ -570,7 +576,8 @@ namespace Contigu.Presentation
                 menuRect.pivot = new Vector2(0.5f, 0.5f);
                 menuRect.sizeDelta = new Vector2(ModifierPanelView.PanelWidth, 56f);
                 menuRect.anchoredPosition = new Vector2(-centerX, SeedBagY - 56f - 8f);
-                _shopMenuButton.SetActive(true);
+                _shopMenuWanted = true;
+                _shopMenuButton.SetActive(!(MenuHiddenWhen != null && MenuHiddenWhen()));
             }
             // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
             PieceBox.SetSidePanelCenterX(centerX, ModifierPanelView.PanelWidth);
@@ -621,6 +628,14 @@ namespace Contigu.Presentation
             if (EventSystem.current != null)
             {
                 CancelArmedItemOnOutsideTap();
+            }
+            if (_shopMenuButton != null && _shopMenuWanted)
+            {
+                bool menuVisible = !(MenuHiddenWhen != null && MenuHiddenWhen());
+                if (_shopMenuButton.activeSelf != menuVisible)
+                {
+                    _shopMenuButton.SetActive(menuVisible);
+                }
             }
             if (_root == null || !_root.gameObject.activeInHierarchy || EventSystem.current == null || EventSystem.current.currentSelectedGameObject != null)
             {
