@@ -157,8 +157,92 @@ namespace Contigu.Presentation
             }
             else
             {
-                _draftView.ShowForPendingUpgrade(pending, _run.PendingUpgradeTypeCandidates, _run);
+                ShowTypeShelf(pending, _run.PendingUpgradeTypeCandidates, "Choose a seed type", null);
             }
+        }
+
+        /// <summary>Seed-type choice (Propagate a cutting, Replace, Recolor) on the shop's shelves, like every other choice; Replace and Recolor chain a second shelf screen.</summary>
+        private void ShowTypeShelf(UpgradeDefinition def, IReadOnlyList<(ShapeId Shape, PieceColor Color)> candidateTypes, string title, (ShapeId Shape, PieceColor Color)? replacing)
+        {
+            var candidates = new List<(ShapeId Shape, PieceColor Color)>(candidateTypes);
+            var entries = new List<ChoiceEntry>();
+            foreach (var candidate in candidates)
+            {
+                var shape = PieceShapeCatalog.Get(candidate.Shape);
+                var color = candidate.Color;
+                var traits = RepresentativeTraits(candidate.Shape, color);
+                int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(candidate.Shape) - 1;
+                entries.Add(new ChoiceEntry
+                {
+                    Columns = ShapePreviewFactory.ColumnsOf(shape),
+                    Rows = ShapePreviewFactory.RowsOf(shape),
+                    BuildVisual = (host, size) => BuildSeedVisual(host, shape, color, traits, _tooltipView),
+                    Name = VisualDefaults.GetColorName(color) + " " + VisualDefaults.GetShapeName(candidate.Shape),
+                    Body = "Mastery level " + level
+                });
+            }
+            ShowShelfChoice(ShelfStage.ForUpgrade(def, null), title, entries, true, index => OnTypeChosen(def, candidates[index], replacing));
+        }
+
+        /// <summary>The upgrades of the most enchanted copy of this type stand for it (the upgrade acts on a type, not on one token).</summary>
+        private IReadOnlyList<PieceTrait> RepresentativeTraits(ShapeId shape, PieceColor color)
+        {
+            IReadOnlyList<PieceTrait> best = null;
+            var tokens = _run.Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                if (tokens[i].Matches(shape, color) && tokens[i].TraitCount > (best == null ? 0 : best.Count))
+                {
+                    best = tokens[i].Traits;
+                }
+            }
+            return best;
+        }
+
+        private void OnTypeChosen(UpgradeDefinition def, (ShapeId Shape, PieceColor Color) chosen, (ShapeId Shape, PieceColor Color)? replacing)
+        {
+            if (replacing.HasValue)
+            {
+                OnSubChoiceConfirmed(new UpgradeSubChoice(replacing.Value.Shape, replacing.Value.Color, addShape: chosen.Shape, addColor: chosen.Color));
+                return;
+            }
+            if (def.Id == UpgradeId.RecolorPiece)
+            {
+                ShowRecolorShelf(def, chosen.Shape, chosen.Color);
+                return;
+            }
+            if (def.Id == UpgradeId.ReplacePiece)
+            {
+                var next = _run.Upgrades.GetReplacementCandidateTypesFor(_run.Deck, chosen.Shape, chosen.Color);
+                ShowTypeShelf(def, next, "Choose a seed to duplicate instead", chosen);
+                return;
+            }
+            OnSubChoiceConfirmed(new UpgradeSubChoice(chosen.Shape, chosen.Color));
+        }
+
+        private void ShowRecolorShelf(UpgradeDefinition def, ShapeId shapeId, PieceColor fromColor)
+        {
+            var shape = PieceShapeCatalog.Get(shapeId);
+            var targets = new List<PieceColor>();
+            var entries = new List<ChoiceEntry>();
+            var baseColors = PieceColorUtility.BaseColors;
+            for (int i = 0; i < baseColors.Count; i++)
+            {
+                var target = baseColors[i];
+                if (target == fromColor)
+                {
+                    continue;
+                }
+                targets.Add(target);
+                entries.Add(new ChoiceEntry
+                {
+                    Columns = ShapePreviewFactory.ColumnsOf(shape),
+                    Rows = ShapePreviewFactory.RowsOf(shape),
+                    BuildVisual = (host, size) => BuildSeedVisual(host, shape, target, null, _tooltipView),
+                    Name = VisualDefaults.GetColorName(target)
+                });
+            }
+            ShowShelfChoice(ShelfStage.ForUpgrade(def, null), "Choose the target color", entries, true, index => OnSubChoiceConfirmed(new UpgradeSubChoice(shapeId, fromColor, targets[index])));
         }
 
         /// <summary>The seed choice replaces the shop's shelves on the same screen (same backdrop, same tablets) instead of opening a separate overlay.</summary>
