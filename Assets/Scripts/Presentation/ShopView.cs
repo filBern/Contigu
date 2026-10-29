@@ -548,7 +548,6 @@ namespace Contigu.Presentation
                 _shopMenuWanted = false;
                 _shopMenuButton.SetActive(false);
             }
-            PieceBox.SetSidePanelCenterX(_sidePanelCenterX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
                 _fertilizerPanel.anchoredPosition = new Vector2(_boardPanelX, _boardPanelY);
@@ -579,8 +578,6 @@ namespace Contigu.Presentation
                 _shopMenuWanted = true;
                 _shopMenuButton.SetActive(!(MenuHiddenWhen != null && MenuHiddenWhen()));
             }
-            // The pickers that fill the space between the panels (PieceBox) must use the room there really is on this (possibly zoomed) screen.
-            PieceBox.SetSidePanelCenterX(centerX, ModifierPanelView.PanelWidth);
             if (_fertilizerPanel != null)
             {
                 _fertilizerPanel.anchoredPosition = new Vector2(-centerX, 0f);

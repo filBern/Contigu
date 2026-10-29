@@ -11,8 +11,7 @@ namespace Contigu.Presentation
     /// as a filled grid cell (VisualDefaults.TileSprite tinted the piece's
     /// color) — with an optional enchanted-tile trait badge overlaid on its
     /// LocalCellIndex square. Shared by HandView (a dealt hand piece, its own
-    /// rotation) and DraftView (a deck-composition row in the Retirer/
-    /// Dupliquer/Recolorer type picker, always shown unrotated).
+    /// rotation) and the shop's seed-type choices (always shown unrotated).
     /// </summary>
     public static class ShapePreviewFactory
     {

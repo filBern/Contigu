@@ -429,7 +429,6 @@ namespace Contigu.Presentation
             _shelfChoiceView.Hide();
             _tileChoiceView.Hide();
             _modifierUpgradeChoiceView.Hide();
-            _draftView.Hide();
             _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);

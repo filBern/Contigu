@@ -69,7 +69,6 @@ namespace Contigu.Presentation
         private HudView _hudView;
         private ComboView _comboView;
         private ShopView _shopView;
-        private DraftView _draftView;
         private TileChoiceView _tileChoiceView;
         private ShelfChoiceView _shelfChoiceView;
         private Button _abandonButton;
@@ -556,8 +555,6 @@ namespace Contigu.Presentation
             BuildMenuButton(mainRoot);
             _shopView.UseSharedLueur(_hudView.LueurLabelTransform, _hudView.LueurLabel);
 
-            _draftView = gameObject.AddComponent<DraftView>();
-            _draftView.Build(mainRoot, _run.Deck, _tooltipView);
 
             _tileChoiceView = gameObject.AddComponent<TileChoiceView>();
             _tileChoiceView.Build(mainRoot, _tooltipView);
@@ -602,7 +599,6 @@ namespace Contigu.Presentation
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             modifierPanelRect.anchoredPosition = new Vector2(leftColumnX, fertilizerY);
             _shopView.SetBoardPanels(modifierPanelRect, leftColumnX, fertilizerY, pollenX, pollenY, BoardPollenScale);
-            PieceBox.SetSidePanelCenterX(sidePanelCenterX, ModifierPanelView.PanelWidth);
             OverlayLift.Panels.Clear();
             OverlayLift.Panels.Add(modifierPanelRect);
             OverlayLift.Panels.Add(_shopView.UpcomingBox);
@@ -692,7 +688,6 @@ namespace Contigu.Presentation
             _shopView.UpgradeBuyRequested += OnUpgradeBuyRequested;
             _shopView.RerollRequested += OnRerollRequested;
             _shopView.LeaveRequested += OnLeaveShopRequested;
-            _draftView.SubChoiceConfirmed += OnSubChoiceConfirmed;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _shopView.SeedBagRequested += () => _deckView.Show();
             _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;

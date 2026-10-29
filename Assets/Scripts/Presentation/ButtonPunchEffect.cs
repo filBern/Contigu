@@ -18,6 +18,7 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (eventData.pointerId >= 0) { return; } // touch has no hover
             SfxManager.Play(SfxId.ButtonHover);
         }
 

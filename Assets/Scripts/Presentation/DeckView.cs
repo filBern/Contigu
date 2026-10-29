@@ -9,9 +9,9 @@ namespace Contigu.Presentation
     /// <summary>
     /// Read-only, toggleable overlay listing the player's full persistent deck
     /// composition (one row per shape/color combo, with its count and a
-    /// representative trait badge if any copy is enchanted). Reuses DraftView's
-    /// row-building approach (see BuildTypeRow/FindRepresentativeTrait there)
-    /// since it shares the same underlying data (DeckManager.GetDeckComposition).
+    /// representative trait badge if any copy is enchanted). Shares
+    /// its row-building approach with the shop's seed-type choices (see BuildTypeRow/FindRepresentativeTrait
+    /// below) because it uses the same underlying data (DeckManager.GetDeckComposition).
     ///
     /// Grouped by color into its own labeled section per PieceColor, each a
     /// single horizontal line of compact type cards, manually positioned
@@ -237,7 +237,7 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>Same look as DraftView.BuildTypeRow, minus the Button/onClick — this view is purely informational, never a picker. Positioned explicitly at (x, y) within _listContainer rather than through a LayoutGroup, since each color section wraps its own row count.</summary>
+        /// <summary>Same look as the shop seed-type choice, minus the Button/onClick — this view is purely informational, never a picker. Positioned explicitly at (x, y) within _listContainer rather than through a LayoutGroup, since each color section wraps its own row count.</summary>
         private void BuildTypeCard(float x, float y, ShapeId shape, PieceColor color, int count)
         {
             var row = UIFactory.CreatePanel(_listContainer, "Type_" + shape + "_" + color, UITheme.ButtonIdle);
@@ -276,7 +276,7 @@ namespace Contigu.Presentation
             countLabel.rectTransform.sizeDelta = new Vector2(50f, 32.5f);
         }
 
-        /// <summary>Same representative-sample approach as DraftView.FindRepresentativeTrait — see there for why a per-type row can't show more than one sample trait.</summary>
+        /// <summary>Same representative-sample approach as GameBootstrap.RepresentativeTraits — see there for why a per-type row can't show more than one sample trait.</summary>
         private IReadOnlyList<PieceTrait> FindRepresentativeTrait(ShapeId shape, PieceColor color)
         {
             // The most upgraded copy of this type stands for it.
