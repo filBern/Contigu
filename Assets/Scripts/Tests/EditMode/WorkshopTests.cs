@@ -245,30 +245,28 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Compost_SkippedPurchase_StillRaisesItsPrice()
+        public void Compost_SkippedPurchase_StillRaisesItsPriceWithinTheVisit()
         {
             var run = ShopRun();
             int first = run.GetUpgradeSlotPrice(2);
             Assert.IsTrue(run.BuyUpgradeSlot(2));
             Assert.IsTrue(run.AbandonPending());
-            run.DebugForceRoundComplete();
-            Assert.IsTrue(run.LeaveShop());
-            run.DebugForceRoundComplete();
-            Assert.Greater(run.GetUpgradeSlotPrice(2), first, "skipping counts as using it: the next Compost is dearer");
+            Assert.Greater(run.GetUpgradeSlotPrice(2), first, "skipping counts as using it: the next Compost is dearer in the same visit");
         }
 
         [Test]
-        public void Compost_PriceGrowsWithEveryUseThisRun()
+        public void Compost_PriceGrowsWithUseWithinAVisit_ButResetsEachRound()
         {
             var run = ShopRun();
             int first = run.GetUpgradeSlotPrice(2);
             Assert.IsTrue(run.BuyUpgradeSlot(2));
             run.ResolveCompostChoice(run.PendingUpgradeTileCandidates[0]);
+            Assert.AreEqual(EconomyConstants.CompostBasePrice, first);
+            Assert.Greater(run.GetUpgradeSlotPrice(2), first, "dearer within the same visit");
             run.DebugForceRoundComplete();
             Assert.IsTrue(run.LeaveShop());
             run.DebugForceRoundComplete();
-            Assert.AreEqual(EconomyConstants.CompostBasePrice, first);
-            Assert.AreEqual(EconomyConstants.CompostBasePrice + EconomyConstants.CompostPriceIncreasePerUse, run.GetUpgradeSlotPrice(2), "a fresh visit, one Compost already bought this run");
+            Assert.AreEqual(EconomyConstants.CompostBasePrice, run.GetUpgradeSlotPrice(2), "a new visit starts again at the base price");
         }
 
         [Test]

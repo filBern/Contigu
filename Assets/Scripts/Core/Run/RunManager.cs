@@ -375,7 +375,7 @@ namespace Contigu.Core
         /// <summary>The 3 fertilizers a Fertilizer Pack revealed (empty otherwise) — keep one with <see cref="ResolvePackModifierChoice"/> (or skip the pack).</summary>
         public IReadOnlyList<ModifierId> PendingPackModifiers { get; private set; } = System.Array.Empty<ModifierId>();
 
-        /// <summary>How many Compost services were bought this run (each one makes the next dearer).</summary>
+        /// <summary>How many Compost services were bought in this shop visit (each one makes the next dearer; reset when the shop opens).</summary>
         private int _compostsBought;
 
         /// <summary>Where the most recent Permanent Bonus Square landed — read once by the presentation layer to show the player which square was marked. Null before any such purchase.</summary>

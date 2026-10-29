@@ -12,6 +12,7 @@ namespace Contigu.Core
             _purchasesThisVisit = 0;
             _rerollsThisVisit = 0;
             System.Array.Clear(_upgradeBuys, 0, _upgradeBuys.Length);
+            _compostsBought = 0; // Compost gets dearer with use, but only within one visit: every round starts at the base price again
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
