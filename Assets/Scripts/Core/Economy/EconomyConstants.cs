@@ -64,6 +64,10 @@ namespace Contigu.Core
         public const float WorkshopRepeatPriceIncrease = 0.5f;
         public const int ForgePrice = 4;
         public const int PackChoiceCount = 3;
+        /// <summary>How many tile upgrades a Sprout Pack reveals (pick 1).</summary>
+        public const int SproutPackChoiceCount = 5;
+        /// <summary>How many tile upgrades the Forge offers when bought: the one shown on its shelf plus this many minus one more (pick 1).</summary>
+        public const int ForgeChoiceCount = 3;
         public const int ForgeSeedCandidateCount = 8;
 
         /// <summary>Chance that a Casino upgrade slot rolls from each of the 4 pools — must sum to 100 (see RunManager.RollUpgradeSlot).</summary>

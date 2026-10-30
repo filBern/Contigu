@@ -20,6 +20,8 @@ namespace Contigu.Presentation
         public int Columns;
         /// <summary>How many tiles tall the piece is, so it can stand on the shelf by its own bottom edge.</summary>
         public int Rows;
+        /// <summary>The option goes well with the fertilizers held: it wears a star.</summary>
+        public bool Fits;
     }
 
     /// <summary>
@@ -123,6 +125,15 @@ namespace Contigu.Presentation
             if (entry.BuildVisual != null)
             {
                 entry.BuildVisual(host, visualSize);
+            }
+            if (entry.Fits)
+            {
+                var star = UIFactory.CreateText(host, "FitsStar", "*", 40, VisualDefaults.GoldenColor);
+                star.raycastTarget = false;
+                star.rectTransform.anchorMin = star.rectTransform.anchorMax = new Vector2(1f, 1f);
+                star.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                star.rectTransform.anchoredPosition = new Vector2(-6f, -6f);
+                star.rectTransform.sizeDelta = new Vector2(40f, 40f);
             }
             if (!string.IsNullOrEmpty(entry.Name))
             {

@@ -121,7 +121,7 @@ namespace Contigu.Presentation
                 }
                 return;
             }
-            if (pending.Id == UpgradeId.SproutPack)
+            if (pending.Id == UpgradeId.SproutPack || pending.Id == UpgradeId.Forge)
             {
                 ShowPackOfUpgrades(revealedUpgrade);
             }
@@ -278,13 +278,22 @@ namespace Contigu.Presentation
             foreach (var upgrade in _run.PendingPackUpgrades)
             {
                 var sprite = UpgradeVisualDefaults.GetGlyph(upgrade.Id);
+                var fitting = Synergy.FittingModifiers(upgrade, _run.ActiveModifiers);
+                string body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgrade.Description, 14), upgrade.Id);
+                if (fitting.Count > 0)
+                {
+                    var names = new List<string>();
+                    foreach (var id in fitting) { names.Add(ModifierCatalog.Get(id).Name); }
+                    body += "\n* " + Loc.T("choice.fits", string.Join(", ", names));
+                }
                 entries.Add(new ChoiceEntry
                 {
                     BuildVisual = (host, size) => BuildSpriteVisual(host, sprite),
                     Name = upgrade.Name,
-                    Body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgrade.Description, 14), upgrade.Id),
+                    Body = body,
                     Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
-                    FillCell = true
+                    FillCell = true,
+                    Fits = fitting.Count > 0
                 });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen);
@@ -400,12 +409,12 @@ namespace Contigu.Presentation
         private void OnPackOptionChosen(int index)
         {
             var packId = _run.PendingUpgrade != null ? _run.PendingUpgrade.Id : UpgradeId.SproutPack;
-            if (packId == UpgradeId.SproutPack)
+            if (packId == UpgradeId.SproutPack || packId == UpgradeId.Forge)
             {
                 if (_run.ResolvePackUpgradeChoice(index))
                 {
                     var chosen = _run.PendingUpgrade;
-                    ShowTileChoiceInShop(chosen, UpgradeId.SproutPack);
+                    ShowTileChoiceInShop(chosen, packId);
                 }
                 return;
             }

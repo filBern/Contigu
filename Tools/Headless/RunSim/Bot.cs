@@ -394,7 +394,7 @@ namespace Contigu.RunSim
                 {
                     ok = run.ResolveUpgradePieceChoice(_rng.Next(run.PendingUpgradePieceCandidates.Count));
                 }
-                else if (pending.Id == UpgradeId.SproutPack)
+                else if (pending.Id == UpgradeId.SproutPack || pending.Id == UpgradeId.Forge)
                 {
                     ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(_rng.Next(run.PendingPackUpgrades.Count));
                     if (!ok) { ok = run.SkipPack(); }

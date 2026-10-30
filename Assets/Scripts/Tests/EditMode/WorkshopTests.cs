@@ -53,14 +53,14 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void SproutPack_RevealsThreeUpgrades_ThenTheSeedToEnchant()
+        public void SproutPack_RevealsFiveUpgrades_ThenTheSeedToEnchant()
         {
             var run = ShopRun();
             run.DebugSetWorkshopSlot(0, UpgradeCatalog.SproutPack);
             Assert.IsTrue(run.BuyUpgradeSlot(0));
-            Assert.AreEqual(3, run.PendingPackUpgrades.Count);
+            Assert.AreEqual(EconomyConstants.SproutPackChoiceCount, run.PendingPackUpgrades.Count);
             var chosen = run.PendingPackUpgrades[2];
-            Assert.IsFalse(run.ResolvePackUpgradeChoice(3));
+            Assert.IsFalse(run.ResolvePackUpgradeChoice(EconomyConstants.SproutPackChoiceCount));
             Assert.IsTrue(run.ResolvePackUpgradeChoice(2));
             Assert.AreSame(chosen, run.PendingUpgrade);
             Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
@@ -343,16 +343,77 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Forge_AppliesItsVisibleUpgrade_ToAnyOfManySeeds()
+        public void Forge_OffersThreeUpgrades_ShelfOneFirst_ThenAnyOfManySeeds()
         {
             var run = ShopRun();
             run.DebugSetWorkshopSlot(3, UpgradeCatalog.Forge, UpgradeCatalog.CornerTile);
             Assert.IsTrue(run.BuyUpgradeSlot(3));
+            Assert.AreEqual(UpgradeId.Forge, run.PendingUpgrade.Id);
+            Assert.AreEqual(EconomyConstants.ForgeChoiceCount, run.PendingPackUpgrades.Count);
+            Assert.AreSame(UpgradeCatalog.CornerTile, run.PendingPackUpgrades[0], "the upgrade on the shelf is offered first");
+            Assert.AreEqual(run.PendingPackUpgrades.Count, new HashSet<UpgradeDefinition>(run.PendingPackUpgrades).Count, "no upgrade twice");
+
+            Assert.IsTrue(run.ResolvePackUpgradeChoice(0));
             Assert.AreSame(UpgradeCatalog.CornerTile, run.PendingUpgrade);
             Assert.GreaterOrEqual(run.PendingUpgradeTileCandidates.Count, EconomyConstants.ShopTileCandidateCount, "a much wider choice than a normal Sprout Upgrade");
             int target = run.PendingUpgradeTileCandidates[0];
             Assert.IsTrue(run.ResolveUpgradeTileChoice(new List<int> { target }));
             Assert.AreEqual(PieceTraitKind.Corner, run.Deck.Deck[target].Trait.Value.Kind);
+        }
+
+        [Test]
+        public void Forge_AlwaysOffersOneUpgradeThatFitsAHeldFertilizer()
+        {
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var run = ShopRun(seed);
+                run.DebugGrantModifier(ModifierId.DevotionCoral); // a Colors fertilizer
+                run.DebugSetWorkshopSlot(3, UpgradeCatalog.Forge, UpgradeCatalog.CornerTile);
+                Assert.IsTrue(run.BuyUpgradeSlot(3));
+                bool anyFits = false;
+                foreach (var offer in run.PendingPackUpgrades)
+                {
+                    anyFits |= Synergy.FittingModifiers(offer, run.ActiveModifiers).Count > 0;
+                }
+                Assert.IsTrue(anyFits, "seed " + seed + ": none of the 3 Forge offers fits a Colors fertilizer");
+            }
+        }
+
+        [Test]
+        public void Synergy_ColorsFertilizer_FitsColorUpgrades_NotCornerOnes()
+        {
+            var held = new List<ModifierId> { ModifierId.DevotionCoral };
+            Assert.AreEqual(1, Synergy.FittingModifiers(UpgradeCatalog.DyeTile, held).Count);
+            Assert.AreEqual(0, Synergy.FittingModifiers(UpgradeCatalog.CornerTile, held).Count);
+            Assert.AreEqual(1f, Synergy.WeightMultiplier(UpgradeCatalog.CornerTile, held), 0.001f);
+            Assert.AreEqual(1f + Synergy.WeightBonusPerFittingFertilizer, Synergy.WeightMultiplier(UpgradeCatalog.DyeTile, held), 0.001f);
+        }
+
+        [Test]
+        public void Synergy_FittingUpgradesAreOfferedMoreOften()
+        {
+            int fitting = 0;
+            int total = 0;
+            for (int seed = 1; seed <= 60; seed++)
+            {
+                var run = ShopRun(seed);
+                run.DebugGrantModifier(ModifierId.DevotionCoral);
+                run.DebugSetWorkshopSlot(0, UpgradeCatalog.SproutPack);
+                Assert.IsTrue(run.BuyUpgradeSlot(0));
+                foreach (var offer in run.PendingPackUpgrades)
+                {
+                    total++;
+                    if (Synergy.FittingModifiers(offer, run.ActiveModifiers).Count > 0) { fitting++; }
+                }
+            }
+            int fitShare = 0;
+            int pool = 0;
+            foreach (var def in UpgradeCatalog.GridPool)
+            {
+                pool++;
+                if (Synergy.FittingModifiers(def, new List<ModifierId> { ModifierId.DevotionCoral }).Count > 0) { fitShare++; }
+            }
+            Assert.Greater(fitting / (float)total, fitShare / (float)pool, "the offers lean toward the build");
         }
     }
 }

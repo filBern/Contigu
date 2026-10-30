@@ -345,7 +345,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition SproutPack = new UpgradeDefinition(
             UpgradeId.SproutPack, UpgradePool.Workshop, "Sprout Pack",
-            "Reveals 3 tile upgrades. Pick 1, then 3 seeds of your bag to enchant.", false, UpgradeRarity.Common);
+            "Reveals 5 tile upgrades, leaning toward your fertilizers. Pick 1, then 3 seeds of your bag to enchant.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition FertilizerPack = new UpgradeDefinition(
             UpgradeId.FertilizerPack, UpgradePool.Workshop, "Fertilizer Pack",
@@ -361,7 +361,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition Forge = new UpgradeDefinition(
             UpgradeId.Forge, UpgradePool.Workshop, "Forge",
-            "Add the tile upgrade shown to 3 seeds of your bag, of your choice.", false, UpgradeRarity.Common);
+            "Offers the tile upgrade shown plus 2 more, one of them fitting your fertilizers. Pick 1, then 3 seeds of your bag.", false, UpgradeRarity.Common);
 
         /// <summary>The definition with this id (any pool, Workshop included), or null.</summary>
         public static UpgradeDefinition Get(UpgradeId id)
