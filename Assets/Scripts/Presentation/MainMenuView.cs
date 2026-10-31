@@ -69,8 +69,10 @@ namespace Contigu.Presentation
             subtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
             subtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
             subtitleRect.pivot = new Vector2(0.5f, 0.5f);
-            subtitleRect.anchoredPosition = new Vector2(0f, -22f);
+            subtitleRect.anchoredPosition = new Vector2(0f, 22f);
             subtitleRect.sizeDelta = new Vector2(640f, 30f);
+
+            BuildSprig(_root);
 
             // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
             // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"
@@ -146,7 +148,7 @@ namespace Contigu.Presentation
         private const float ButtonWidth = 290f;
         private const float ButtonHeight = 76f;
         private const float ButtonGap = 18f;
-        private const float ButtonRowY = -168f;
+        private const float ButtonRowY = -226f;
 #if UNITY_WEBGL && !UNITY_EDITOR
         private const int ButtonCount = 3;
 #else
@@ -163,7 +165,7 @@ namespace Contigu.Presentation
 
         // The vector LASTBLOOM logo (Resources/Title/LastBloom.png, 1080x300). Shown at this width instead of the dot-matrix tile title when the art exists.
         private const float LogoWidth = 1060f;
-        private const float LogoBaseY = 150f;
+        private const float LogoBaseY = 200f;
         private const float LogoAspect = 300f / 1080f;
         private const float LogoEntranceDuration = 0.55f;
 
@@ -239,8 +241,58 @@ namespace Contigu.Presentation
             }
         }
 
+        // A small sprig between the tagline and the buttons: it grows in once the logo has landed, then sways gently.
+        private const float SprigBaseY = -155f;
+        private const float SprigWidth = 80f;
+        private const float SprigHeight = 100f;
+        private const float SprigGrowDuration = 0.9f;
+        private RectTransform _sprigRect;
+        private float _sprigStart;
+
+        private void BuildSprig(RectTransform parent)
+        {
+            var sprite = Resources.Load<Sprite>("Title/Sprig");
+            if (sprite == null)
+            {
+                return;
+            }
+            var sprig = UIFactory.CreatePanel(parent, "Sprig", Color.white);
+            sprig.sprite = sprite;
+            sprig.preserveAspect = true;
+            sprig.raycastTarget = false;
+            _sprigRect = sprig.rectTransform;
+            _sprigRect.anchorMin = _sprigRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _sprigRect.pivot = new Vector2(0.5f, 0f);
+            _sprigRect.sizeDelta = new Vector2(SprigWidth, SprigHeight);
+            _sprigRect.anchoredPosition = new Vector2(0f, SprigBaseY);
+        }
+
+        private void AnimateSprig()
+        {
+            if (_sprigRect == null || _root == null || !_root.gameObject.activeInHierarchy)
+            {
+                return;
+            }
+            float t = Time.unscaledTime;
+            if (MotionSettings.Reduced)
+            {
+                _sprigRect.localScale = Vector3.one;
+                _sprigRect.localRotation = Quaternion.identity;
+                return;
+            }
+            float p = Mathf.Clamp01((t - _sprigStart) / SprigGrowDuration);
+            // Grows up from its base with a small overshoot, a little narrower while it is still young.
+            float eased = 1f + 2.2f * Mathf.Pow(p - 1f, 3f) + 1.2f * Mathf.Pow(p - 1f, 2f);
+            float height = Mathf.Max(0f, eased);
+            float width = Mathf.Lerp(0.5f, 1f, p) * Mathf.Min(1f, height + 0.2f);
+            _sprigRect.localScale = new Vector3(p <= 0f ? 0f : width, height, 1f);
+            float sway = p >= 1f ? Mathf.Sin(t * 1.5f) * 4f : Mathf.Sin(t * 3f) * 6f * (1f - p);
+            _sprigRect.localRotation = Quaternion.Euler(0f, 0f, sway);
+        }
+
         private void Update()
         {
+            AnimateSprig();
             if (_logoRect == null || !_logoLive || _root == null || !_root.gameObject.activeInHierarchy)
             {
                 return;
@@ -346,6 +398,11 @@ namespace Contigu.Presentation
         public void Show()
         {
             _root.gameObject.SetActive(true);
+            _sprigStart = Time.unscaledTime + LogoEntranceDuration;
+            if (_sprigRect != null)
+            {
+                _sprigRect.localScale = MotionSettings.Reduced ? Vector3.one : Vector3.zero;
+            }
             if (_logoRect != null)
             {
                 _logoLive = false;
