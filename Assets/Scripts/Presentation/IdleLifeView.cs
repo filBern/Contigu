@@ -191,7 +191,7 @@ namespace Contigu.Presentation
             {
                 int slot = UnityEngine.Random.Range(0, DeckManager.MaxHandSize);
                 var preview = _handView.GetSlotPreviewTransform(slot);
-                if (preview != null && preview.gameObject.activeInHierarchy && preview.childCount > 0) { Spawn(preview, 24f, SparkleLife, now, 0.35f); }
+                if (preview != null && preview.gameObject.activeInHierarchy && preview.childCount > 0 && _handView.IsSlotPlayable(slot)) { Spawn(preview, 24f, SparkleLife, now, 0.35f); }
             }
         }
 

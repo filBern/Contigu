@@ -801,6 +801,17 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Blocks and visually greys out hand selection while a placement's feedback sequence animates.</summary>
+        /// <summary>True when the slot holds a seed that can go somewhere on the grid right now (and is not locked by a boss).</summary>
+        public bool IsSlotPlayable(int index)
+        {
+            if (_deck == null || _run == null || index < 0 || index >= _deck.Hand.Count || !_deck.Hand[index].HasValue || IsBossLockedSlot(index))
+            {
+                return false;
+            }
+            var shape = PieceShapeCatalog.GetRotated(_deck.Hand[index].Value.Shape, _deck.HandRotations[index]);
+            return _run.Grid.HasAnyValidPlacement(new[] { shape });
+        }
+
         /// <summary>False while a placement is being scored (and during round transitions): the player cannot act yet.</summary>
         public bool IsInteractable { get { return _interactable; } }
 
