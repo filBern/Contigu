@@ -30,6 +30,21 @@ namespace Contigu.Presentation
                 return;
             }
             _shopView.PlayPurchasePop();
+
+            // A fertilizer does not shrink away: its sack flies from the shelf to its slot in the fertilizer panel.
+            if (!isUpgrade && !MotionSettings.Reduced)
+            {
+                var card = _shopView.GetBlisterItem(index);
+                Vector3? from = card != null ? WorldCenter(card) : (Vector3?)null;
+                float fromWidth = card != null ? WorldWidth(card) : 0f;
+                RefreshAll();
+                _shopView.Refresh(_run);
+                if (from.HasValue)
+                {
+                    StartCoroutine(FlyFertilizerToSlot(slot.ModifierId, from.Value, fromWidth));
+                }
+                return;
+            }
             _purchaseAnimating = true; // Skip/Esc stay quiet until the choice screen is up
 
             // Lets the bought card shrink/fade away in place before the row rebuilds without it (see

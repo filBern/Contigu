@@ -313,7 +313,16 @@ namespace Contigu.Presentation
             // Random Modifier the carousel just revealed — refreshing
             // earlier would show the badge in the side panel while the
             // carousel's spin was still playing.
+            var landed = _modifierCarouselView.WinningBadge;
+            var granted = _run.LastRandomModifierGranted;
+            Vector3? from = landed != null ? WorldCenter(landed) : (Vector3?)null;
+            float fromWidth = landed != null ? WorldWidth(landed) : 0f;
             _modifierPanelView.Refresh(_run.ActiveModifiers);
+            // The fertilizer the reel landed on flies into its slot.
+            if (from.HasValue && granted.HasValue && !MotionSettings.Reduced)
+            {
+                StartCoroutine(FlyFertilizerToSlot(granted.Value, from.Value, fromWidth));
+            }
         }
 
         /// <summary>Gives the whole backdrop this challenge's own world: its scenery, the tone of the drifting shapes, and its creatures and particles.</summary>

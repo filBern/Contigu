@@ -159,6 +159,12 @@ namespace Contigu.Presentation
         /// time this shows; the spin is purely presentational suspense.
         /// <paramref name="title"/> is shown above the reel.
         /// </summary>
+        /// <summary>The badge of the fertilizer the reel landed on (valid until the next Show), so it can fly to its slot after the reveal; null before any spin.</summary>
+        public RectTransform WinningBadge
+        {
+            get { return _reelRect != null && _reelRect.childCount > WinningIndex ? _reelRect.GetChild(WinningIndex) as RectTransform : null; }
+        }
+
         public void Show(ModifierId granted, string title)
         {
             _titleText.text = title;

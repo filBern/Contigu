@@ -1289,6 +1289,12 @@ namespace Contigu.Presentation
         /// recenters (via BuildBlisterCards skipping Purchased slots) once that departure has played out.
         /// Falls back to calling onComplete immediately if the card can't be found (e.g. already gone).
         /// </summary>
+        /// <summary>The shelf item of Blister slot <paramref name="index"/> as it stands now (before the row is rebuilt), or null.</summary>
+        public RectTransform GetBlisterItem(int index)
+        {
+            return _blisterCardsContainer.Find("BlisterSlot_" + index) as RectTransform;
+        }
+
         public void PlayBlisterRemoval(int index, Action onComplete)
         {
             var cardTransform = _blisterCardsContainer.Find("BlisterSlot_" + index) as RectTransform;
