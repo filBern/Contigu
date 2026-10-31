@@ -458,7 +458,11 @@ namespace Contigu.Presentation
             {
                 yield break;
             }
-            var hide = target.gameObject.GetComponent<CanvasGroup>() ?? target.gameObject.AddComponent<CanvasGroup>();
+            var hide = target.gameObject.GetComponent<CanvasGroup>();
+            if (hide == null)
+            {
+                hide = target.gameObject.AddComponent<CanvasGroup>();
+            }
             hide.alpha = 0f;
 
             var layer = UIFactory.CreateUIObject("FertilizerFlight", _mainRoot);
