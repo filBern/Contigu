@@ -265,7 +265,7 @@ namespace Contigu.Presentation
             if (RunSaveStore.Exists && !_playArmed)
             {
                 _playArmed = true;
-                _playButtonLabel.text = "Replace saved run? Click again";
+                _playButtonLabel.text = "Replace save?";
                 return;
             }
             _playArmed = false;
