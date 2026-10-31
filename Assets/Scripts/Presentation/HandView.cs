@@ -42,11 +42,14 @@ namespace Contigu.Presentation
         // Every hand preview uses this same tile size, so a 2x2 piece and a 3x2 piece show equally big tiles; sized so the widest piece (3 cells) fits the 142px preview box.
         private const float PreviewTileSize = 56f;
         private const float GhostTileSize = 46f;
-        private static readonly Color SlotDividerColor = new Color(0.075f, 0.13f, 0.18f, 0.35f);
+        private static readonly Color SlotDividerColor = new Color(0f, 0f, 0f, 0f); // the cards stand apart on the board: no separators
         // Each slot is its own darker parchment tray set into the column's card; selection, hover and boss locks lighten or redden it.
-        private static readonly Color SlotClear = new Color(0.93f, 0.86f, 0.70f, 1f);
-        private static readonly Color SlotHoverColor = new Color(0.98f, 0.93f, 0.80f, 1f);
-        private static readonly Color SlotSelectedColor = new Color(1f, 0.97f, 0.82f, 1f);
+        // Same look as the left column: slots are cream cards on a dark wooden board.
+        private static readonly Color BoardWood = new Color(0.33f, 0.22f, 0.13f, 1f);
+        private static readonly Color BoardDark = new Color(0.13f, 0.09f, 0.06f, 1f);
+        private static readonly Color SlotClear = new Color(1f, 0.969f, 0.910f, 1f);
+        private static readonly Color SlotHoverColor = new Color(1f, 0.95f, 0.80f, 1f);
+        private static readonly Color SlotSelectedColor = new Color(1f, 0.89f, 0.58f, 1f);
         private static readonly Color SlotLockedColor = new Color(0.88f, 0.60f, 0.55f, 1f);
         // The widest/tallest a piece is drawn (shrinks when four slots share the column).
         private float _previewBudget = SlotPreviewBudget;
@@ -148,13 +151,15 @@ namespace Contigu.Presentation
             // Box starts sized for the base HandSize, same as before this slot was introduced — only the
             // hand's effective size (which starts at HandSize, see DeckManager) ever grows it (see
             // UpdateHandSizeLayout, called at the end of this method and from every Refresh after).
-            var containerImage = UIFactory.CreatePanel(parent, "HandContainer", Color.white);
+            var containerImage = UIFactory.CreatePanel(parent, "HandContainer", BoardWood);
             containerImage.sprite = UISprites.CardBackground;
             containerImage.type = Image.Type.Sliced;
             containerImage.raycastTarget = false;
+            UIFactory.AddThickOutline(containerImage, BoardDark);
             var container = containerImage.rectTransform;
             container.sizeDelta = new Vector2(ColumnWidth, _columnHeight);
             _handContainer = containerImage;
+            AddBoardTrim(container);
             ShopSign.Build(container, "Seeds", 24);
 
             var slotsRow = UIFactory.CreateUIObject("SlotsRow", container);
@@ -183,6 +188,7 @@ namespace Contigu.Presentation
                 var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.CardBackground);
                 // No card art: the slot is an invisible hit area that only tints for selection/feedback (see UpdateSelectionVisuals).
                 slot.color = SlotClear;
+                UIFactory.AddThickOutline(slot, BoardDark);
                 slot.rectTransform.sizeDelta = new Vector2(SlotWidth, SlotHeight);
                 // Plain Image/Button has no ILayoutElement; the row's HorizontalLayoutGroup needs explicit preferred dimensions.
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
@@ -926,6 +932,29 @@ namespace Contigu.Presentation
         /// element) needs its size driven explicitly. A no-op resync at the base HandSize for every player
         /// who never buys QuatriemeEmplacement.
         /// </summary>
+        /// <summary>A lighter lip along the top and a nail in each corner, like the left column's board.</summary>
+        private static void AddBoardTrim(RectTransform board)
+        {
+            var lip = UIFactory.CreatePanel(board, "Lip", new Color(0.46f, 0.31f, 0.18f, 1f));
+            lip.raycastTarget = false;
+            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
+            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
+            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
+            lip.rectTransform.anchoredPosition = new Vector2(0f, -3f);
+            lip.rectTransform.sizeDelta = new Vector2(-16f, 3f);
+            for (int i = 0; i < 4; i++)
+            {
+                var nail = UIFactory.CreatePanel(board, "Nail" + i, BoardDark);
+                nail.raycastTarget = false;
+                float x = i % 2 == 0 ? 0f : 1f;
+                float y = i < 2 ? 1f : 0f;
+                nail.rectTransform.anchorMin = nail.rectTransform.anchorMax = new Vector2(x, y);
+                nail.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                nail.rectTransform.anchoredPosition = new Vector2(x == 0f ? 6f : -6f, y == 1f ? -6f : 6f);
+                nail.rectTransform.sizeDelta = new Vector2(5f, 5f);
+            }
+        }
+
         private void UpdateHandSizeLayout()
         {
             int activeCount = _deck.Hand.Count;
