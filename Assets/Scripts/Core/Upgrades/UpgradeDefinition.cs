@@ -361,7 +361,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition Forge = new UpgradeDefinition(
             UpgradeId.Forge, UpgradePool.Workshop, "Forge",
-            "Offers the tile upgrade shown plus 2 more. Pick 1, then 3 seeds of your bag.", false, UpgradeRarity.Common);
+            "Offers 3 tile upgrades. Pick 1, then 3 seeds of your bag.", false, UpgradeRarity.Common);
 
         /// <summary>The definition with this id (any pool, Workshop included), or null.</summary>
         public static UpgradeDefinition Get(UpgradeId id)

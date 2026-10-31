@@ -117,7 +117,6 @@ namespace Contigu.Presentation
                 else
                 {
                     changed |= DiscoverUpgrade(slot.HiddenUpgrade);
-                    changed |= DiscoverUpgrade(slot.Payload);
                 }
             }
             return changed;

@@ -1150,7 +1150,6 @@ namespace Contigu.Presentation
                 return;
             }
             var def = slot.HiddenUpgrade;
-            bool isForge = def.Id == UpgradeId.Forge && slot.Payload != null;
             bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
 
             int price = run.GetUpgradeSlotPrice(index);
@@ -1160,30 +1159,17 @@ namespace Contigu.Presentation
             var item = CreateShelfItem(_upgradeCardsContainer, "UpgSlot_" + index, _itemSize,
                 !slot.Purchased && !blocked && run.PendingUpgrade == null, run.Lueur >= price, () => OnUpgradeBuyClicked(index), out var artRoot);
 
-            // Every Workshop object is its own picture; the Forge is an anvil with the upgrade's glyph standing on it.
+            // Every Workshop object is its own picture (the Forge is a plain anvil: its upgrades are chosen after buying).
             var art = UIFactory.CreatePanel(artRoot, "Picture", Color.white);
-            art.sprite = UpgradeVisualDefaults.GetWorkshopArt(isForge || def.Id == UpgradeId.Forge ? "Anvil" : def.Id.ToString());
+            art.sprite = UpgradeVisualDefaults.GetWorkshopArt(def.Id == UpgradeId.Forge ? "Anvil" : def.Id.ToString());
             art.preserveAspect = true;
             art.raycastTarget = false;
             UIFactory.StretchFull(art.rectTransform);
-            if (isForge)
-            {
-                var glyphSprite = UpgradeVisualDefaults.GetGlyph(slot.Payload.Id);
-                if (glyphSprite != null)
-                {
-                    var glyph = UIFactory.CreatePanel(artRoot, "Glyph", Color.white);
-                    glyph.sprite = glyphSprite;
-                    glyph.preserveAspect = true;
-                    glyph.raycastTarget = false;
-                    UpgradeVisualDefaults.PlaceGlyph(glyph.rectTransform, UpgradeVisualDefaults.GlyphSurface.Anvil, _itemSize);
-                }
-            }
-
-            // Hover: the whole description (and, for the Forge, what its tile upgrade does).
+            // Hover: the whole description.
             var hover = item.gameObject.AddComponent<HoverTooltip>();
-            string body = isForge ? Loc.T("shop.forgeBody", slot.Payload.Name, slot.Payload.Description) : def.Description;
+            string body = def.Description;
             string why = fullOfFertilizers ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : bagTooSmall ? Loc.T("shop.minBagWhy") : null;
-            hover.Init(_tooltip, isForge ? Loc.T("shop.forgeTitle", slot.Payload.Name) : def.Name, DescriptionTextFormatter.Colorize(body, 14),
+            hover.Init(_tooltip, def.Name, DescriptionTextFormatter.Colorize(body, 14),
                 ShopReason(Loc.T(isService ? "shop.workshopService" : "shop.workshopPack"), why, slot.Purchased ? 0 : price - run.Lueur), UITheme.TextMuted);
 
             string label = slot.Purchased ? Loc.T("shop.sold") : fullOfFertilizers ? Loc.T("shop.full", EconomyConstants.MaxActiveModifiers) : bagTooSmall ? Loc.T("shop.minBag") : price.ToString();

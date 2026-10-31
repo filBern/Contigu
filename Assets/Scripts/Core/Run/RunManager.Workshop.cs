@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Contigu.Core
 {
-    /// <summary>The Workshop that replaced the Casino: packs (reveal a few options, keep one), Compost (thin the bag) and Forge (a visible tile upgrade on any seed).</summary>
+    /// <summary>The Workshop that replaced the Casino: packs (reveal a few options, keep one), Compost (thin the bag) and Forge (a choice of tile upgrades for any seed).</summary>
     public sealed partial class RunManager
     {
         /// <summary>Applies a just-paid Workshop pack or service: sets up whatever the player must now choose from.</summary>
@@ -36,14 +36,11 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Forge: the shown tile upgrade goes to a seed the player picks among a wide choice of the bag (see <see cref="PendingUpgradeTileCandidates"/>).</summary>
-        private bool ApplyForge(UpgradeDefinition featured)
+        /// <summary>Forge: offers a few tile upgrades to pick from (see <see cref="PendingPackUpgrades"/>), then the seeds it goes on (a wide choice of the bag, see <see cref="PendingUpgradeTileCandidates"/>).</summary>
+        private bool ApplyForge()
         {
-            // The upgrade on the shelf comes first, then more to choose from (see RollTileUpgradeOffers).
             PendingUpgrade = UpgradeCatalog.Forge;
-            var offers = new List<UpgradeDefinition> { featured };
-            offers.AddRange(RollTileUpgradeOffers(EconomyConstants.ForgeChoiceCount - 1, offers));
-            PendingPackUpgrades = offers;
+            PendingPackUpgrades = RollTileUpgradeOffers(EconomyConstants.ForgeChoiceCount, null);
             return true;
         }
 

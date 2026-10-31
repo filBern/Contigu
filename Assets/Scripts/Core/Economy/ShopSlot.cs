@@ -33,9 +33,6 @@ namespace Contigu.Core
         /// <summary>Meaningful only when <see cref="Kind"/> is Upgrade — the actual upgrade this slot grants, resolved the moment the slot was rolled but not exposed anywhere the presentation layer could read it before purchase.</summary>
         public readonly UpgradeDefinition HiddenUpgrade;
 
-        /// <summary>Forge only: the tile upgrade this slot adds to a seed (visible before buying, unlike the old mystery cards).</summary>
-        public UpgradeDefinition Payload;
-
         public bool Purchased;
 
         private ShopSlot(ShopSlotKind kind, ModifierId modifierId, UpgradePool pool, UpgradeDefinition hiddenUpgrade)
@@ -49,13 +46,6 @@ namespace Contigu.Core
         public static ShopSlot ForModifier(ModifierId id)
         {
             return new ShopSlot(ShopSlotKind.Modifier, id, default(UpgradePool), null);
-        }
-
-        public static ShopSlot ForForge(UpgradeDefinition forge, UpgradeDefinition payload)
-        {
-            var slot = new ShopSlot(ShopSlotKind.Upgrade, default(ModifierId), forge.Pool, forge);
-            slot.Payload = payload;
-            return slot;
         }
 
         public static ShopSlot ForUpgrade(UpgradeDefinition hiddenUpgrade)

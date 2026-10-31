@@ -31,7 +31,7 @@ namespace Contigu.Core
             {
                 return new RunSnapshot.ShopSlotData { IsModifier = true, Id = (int)slot.ModifierId, PayloadId = -1 };
             }
-            return new RunSnapshot.ShopSlotData { Id = (int)slot.HiddenUpgrade.Id, PayloadId = slot.Payload != null ? (int)slot.Payload.Id : -1 };
+            return new RunSnapshot.ShopSlotData { Id = (int)slot.HiddenUpgrade.Id, PayloadId = -1 };
         }
 
         private static ShopSlot FromSlotData(RunSnapshot.ShopSlotData d)
@@ -45,7 +45,7 @@ namespace Contigu.Core
                 return ShopSlot.ForModifier((ModifierId)d.Id);
             }
             var upgrade = UpgradeCatalog.Get((UpgradeId)d.Id);
-            return d.PayloadId >= 0 ? ShopSlot.ForForge(upgrade, UpgradeCatalog.Get((UpgradeId)d.PayloadId)) : ShopSlot.ForUpgrade(upgrade);
+            return ShopSlot.ForUpgrade(upgrade);
         }
 
         private RunSnapshot CaptureSnapshot()

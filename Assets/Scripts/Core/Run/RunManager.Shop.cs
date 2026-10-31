@@ -220,9 +220,7 @@ namespace Contigu.Core
             }
             _upgradeSlots[2] = previousCompost != null && previousCompost.HiddenUpgrade.Id == UpgradeId.Compost ? previousCompost : ShopSlot.ForUpgrade(UpgradeCatalog.Compost);
 
-            var featured = RollTileUpgradeOffers(1, null);
-            UpgradeDefinition payload = featured.Count > 0 ? featured[0] : null;
-            _upgradeSlots[3] = ShopSlot.ForForge(UpgradeCatalog.Forge, payload ?? UpgradeCatalog.GoldenCells);
+            _upgradeSlots[3] = ShopSlot.ForUpgrade(UpgradeCatalog.Forge);
         }
 
         /// <summary>Current Lueur price of Blister slot <paramref name="index"/> - a Modifier-kind slot varies per modifier (see ModifierPricing); an Upgrade-kind slot uses the same Bank/Grid base price as a Casino slot (see GetUpgradeSlotPrice). Includes this visit's escalation (see EconomyConstants.ShopPriceEscalationPerPurchase).</summary>
@@ -393,7 +391,7 @@ namespace Contigu.Core
             _upgradeBuys[index]++;
             if (hiddenUpgrade.Id == UpgradeId.Forge)
             {
-                return ApplyForge(slot.Payload);
+                return ApplyForge();
             }
             return ApplyPurchasedUpgrade(slot.HiddenUpgrade);
         }

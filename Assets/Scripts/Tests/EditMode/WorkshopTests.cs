@@ -18,7 +18,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void TheWorkshop_HoldsTwoDifferentPacks_Compost_AndAForgeWithAVisibleUpgrade()
+        public void TheWorkshop_HoldsTwoDifferentPacks_Compost_AndTheForge()
         {
             for (int seed = 1; seed <= 30; seed++)
             {
@@ -30,8 +30,6 @@ namespace Contigu.Tests
                 Assert.AreNotSame(slots[0].HiddenUpgrade, slots[1].HiddenUpgrade);
                 Assert.AreEqual(UpgradeId.Compost, slots[2].HiddenUpgrade.Id);
                 Assert.AreEqual(UpgradeId.Forge, slots[3].HiddenUpgrade.Id);
-                Assert.IsNotNull(slots[3].Payload);
-                Assert.IsTrue(UpgradeSystem.TraitKindFor(slots[3].Payload.Id).HasValue, "the Forge only offers real tile upgrades");
             }
         }
 
@@ -291,7 +289,6 @@ namespace Contigu.Tests
         {
             if (slot == null || slot.Kind != ShopSlotKind.Upgrade) { return; }
             Assert.AreNotEqual(UpgradeId.PrismTile, slot.HiddenUpgrade.Id);
-            if (slot.Payload != null) { Assert.AreNotEqual(UpgradeId.PrismTile, slot.Payload.Id); }
         }
 
         [Test]
@@ -343,22 +340,23 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Forge_OffersThreeUpgrades_ShelfOneFirst_ThenAnyOfManySeeds()
+        public void Forge_OffersThreeUpgrades_ThenAnyOfManySeeds()
         {
             var run = ShopRun();
-            run.DebugSetWorkshopSlot(3, UpgradeCatalog.Forge, UpgradeCatalog.CornerTile);
+            run.DebugSetWorkshopSlot(3, UpgradeCatalog.Forge);
             Assert.IsTrue(run.BuyUpgradeSlot(3));
             Assert.AreEqual(UpgradeId.Forge, run.PendingUpgrade.Id);
             Assert.AreEqual(EconomyConstants.ForgeChoiceCount, run.PendingPackUpgrades.Count);
-            Assert.AreSame(UpgradeCatalog.CornerTile, run.PendingPackUpgrades[0], "the upgrade on the shelf is offered first");
             Assert.AreEqual(run.PendingPackUpgrades.Count, new HashSet<UpgradeDefinition>(run.PendingPackUpgrades).Count, "no upgrade twice");
+            foreach (var offer in run.PendingPackUpgrades) { Assert.IsTrue(UpgradeSystem.TraitKindFor(offer.Id).HasValue, "the Forge only offers real tile upgrades"); }
 
-            Assert.IsTrue(run.ResolvePackUpgradeChoice(0));
-            Assert.AreSame(UpgradeCatalog.CornerTile, run.PendingUpgrade);
+            var chosen = run.PendingPackUpgrades[1];
+            Assert.IsTrue(run.ResolvePackUpgradeChoice(1));
+            Assert.AreSame(chosen, run.PendingUpgrade);
             Assert.GreaterOrEqual(run.PendingUpgradeTileCandidates.Count, EconomyConstants.ShopTileCandidateCount, "a much wider choice than a normal Sprout Upgrade");
             int target = run.PendingUpgradeTileCandidates[0];
             Assert.IsTrue(run.ResolveUpgradeTileChoice(new List<int> { target }));
-            Assert.AreEqual(PieceTraitKind.Corner, run.Deck.Deck[target].Trait.Value.Kind);
+            Assert.IsTrue(run.Deck.Deck[target].Trait.HasValue);
         }
     }
 }

@@ -231,7 +231,7 @@ namespace Contigu.Presentation
             bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
             return new ChoiceSource
             {
-                Art = UpgradeVisualDefaults.GetWorkshopArt(def.Id.ToString()),
+                Art = UpgradeVisualDefaults.GetWorkshopArt(def.Id == UpgradeId.Forge ? "Anvil" : def.Id.ToString()),
                 Name = def.Name,
                 Body = DescriptionTextFormatter.Colorize(def.Description, 14),
                 Subtitle = Loc.T(isService ? "shop.workshopService" : "shop.workshopPack")
