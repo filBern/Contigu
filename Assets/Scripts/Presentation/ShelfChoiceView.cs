@@ -286,7 +286,7 @@ namespace Contigu.Presentation
                 preview.localScale = new Vector3(scale * (1.12f - 0.12f * eased), scale * (0.82f + 0.18f * eased), 1f);
                 yield return null;
             }
-            preview.gameObject.SetActive(false);
+            // The icon stays where it landed (the next screen shows it on the anvil): it is not hidden.
 
             // The hit: the source punches and sparks fly.
             SfxManager.Play(SfxId.ValidDrop);
