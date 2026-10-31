@@ -543,6 +543,9 @@ namespace Contigu.Presentation
             _handView.Refresh();
             BuildComboUtilityButtons(mainRoot, leftColumnX, deckY, rulesY, leftColumnWidth, UtilityButtonHeight);
             BuildLeftColumnFrame(mainRoot, comboRect, leftColumnX, gridTopY, gridBottomY, leftColumnWidth);
+            // While the player thinks, the board keeps sparkling (above the board, under the shop and every overlay built after it).
+            var idleLife = gameObject.AddComponent<IdleLifeView>();
+            idleLife.Build(mainRoot, () => _run != null ? _run.Grid : null, _gridView, _handView, () => _run != null && _run.State == RunState.InProgress);
 
             _feedbackLayer = gameObject.AddComponent<FeedbackLayer>();
             _feedbackLayer.Build(mainRoot);
