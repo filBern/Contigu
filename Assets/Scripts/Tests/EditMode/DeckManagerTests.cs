@@ -246,6 +246,21 @@ namespace Contigu.Tests
         // changer pour un replace?") ----
 
         [Test]
+        public void GetCandidateTypes_NeverOffersAJokerType()
+        {
+            var rng = new SystemRandomProvider(1);
+            var dm = new DeckManager(new List<PieceToken>(), rng);
+            var tokens = new List<PieceToken> { new PieceToken(ShapeId.Single, PieceColor.Coral), new PieceToken(ShapeId.Sq2, PieceColor.Teal) };
+            dm.RestoreDeck(tokens);
+            dm.AddJoker(rng, out _);
+
+            for (int i = 0; i < 20; i++)
+            {
+                foreach (var type in dm.GetCandidateTypes(5, rng)) { Assert.AreNotEqual(PieceColor.Joker, type.Color); }
+            }
+        }
+
+        [Test]
         public void ReplaceOneOfType_TakesThePlainCopy_AndKeepsTheEnchantedOne()
         {
             var enchanted = new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Scholar, 0));

@@ -264,7 +264,8 @@ namespace Contigu.Core
         private void AddDistinctNeighborColor(int x, int y, List<PieceColor> candidates)
         {
             var color = TryGetFilledNeighborColor(x, y);
-            if (color.HasValue && !candidates.Contains(color.Value))
+            // A Joker plot is never copied: the seed would turn into a Joker for good, without the combat trait every Joker carries.
+            if (color.HasValue && color.Value != PieceColor.Joker && !candidates.Contains(color.Value))
             {
                 candidates.Add(color.Value);
             }

@@ -3564,5 +3564,23 @@ namespace Contigu.Tests
             Assert.AreEqual(0, run.ShufflesRemaining);
             Assert.AreEqual(RunState.RunDefeat, run.State);
         }
+
+        [Test]
+        public void Chameleon_NeverCopiesAJokerPlot_SoNoSeedBecomesAJoker()
+        {
+            var run = new RunManager(new SystemRandomProvider(3), null);
+            run.DebugDisableWeather();
+            var tokens = new List<PieceToken>();
+            for (int i = 0; i < 12; i++) { tokens.Add(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Chameleon, 0))); }
+            run.Deck.RestoreDeck(tokens);
+            run.Deck.RedealHand();
+            run.Grid.PlacePiece(PieceShapeCatalog.Get(ShapeId.Single), PieceColor.Joker, 1, 0); // a Joker plot already planted
+            int slot = -1;
+            for (int i = 0; i < run.Deck.Hand.Count && slot < 0; i++) { if (run.Deck.Hand[i].HasValue) { slot = i; } }
+
+            run.PlacePiece(slot, 2, 0);
+
+            foreach (var token in run.Deck.Deck) { Assert.AreNotEqual(PieceColor.Joker, token.Color, "the bag never gains a Joker from Chameleon"); }
+        }
     }
 }

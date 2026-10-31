@@ -262,14 +262,15 @@ namespace Contigu.Core
         /// the deck's composition, randomly sampled — same idea as
         /// <see cref="GetCandidateTokenIndices"/> but per-TYPE rather than
         /// per-token, since a Bank sub-choice (Retirer/Dupliquer/Recolorer)
-        /// acts on a whole type at once.
+        /// acts on a whole type at once. Joker types are left out.
         /// </summary>
         public IReadOnlyList<(ShapeId Shape, PieceColor Color)> GetCandidateTypes(int count, IRandomProvider rng, System.Func<(ShapeId Shape, PieceColor Color), bool> eligible = null)
         {
             var candidates = new List<(ShapeId Shape, PieceColor Color)>();
             foreach (var kvp in GetDeckComposition())
             {
-                if (eligible == null || eligible(kvp.Key))
+                // Jokers are never offered: duplicating or recoloring one would make a Joker without its combat trait.
+                if (kvp.Key.Color != PieceColor.Joker && (eligible == null || eligible(kvp.Key)))
                 {
                     candidates.Add(kvp.Key);
                 }

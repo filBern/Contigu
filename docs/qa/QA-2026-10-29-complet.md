@@ -149,3 +149,7 @@ Trouvailles : 0 Bloquant, 1 Majeur, 7 Mineurs, 6 Clarté, 3 Observations d'équi
 - Pas de scénario WebGL de tutoriel Sprig, de Collection (juste la première capture du sélecteur) ni de sélecteur de défi à 4:3 avec sauvegarde existante.
 - Le fuzz du planner à profondeur 3 et le planner `--endless` sur 40 runs n'ont pas été relancés pour tous les défis (le `--endless` à 40 runs sur Classic dépasse largement 10 minutes) : 12 à 40 runs selon le défi.
 - Invariants à ajouter à `Tools/Headless/RunSim/Invariants.cs` : « Joker ⇔ exactement 1 trait de combat » (M1), « tout trait a un kind défini et un indice dans la forme, unique par graine », « tout slot de boutique et tout fertilizer tenu existent au catalogue » (m1), et un test de restauration qui injecte un slot de boutique retiré.
+
+## Corrections (même jour)
+
+- **M1** : Chameleon ne copie plus la couleur d'une tuile Joker (`AddDistinctNeighborColor`) ; Propagate, Replace et Recolor ne proposent plus de type Joker (`DeckManager.GetCandidateTypes`) ; invariant RunSim « un Joker a exactement 1 trait de combat » ; tests `Chameleon_NeverCopiesAJokerPlot_SoNoSeedBecomesAJoker` et `GetCandidateTypes_NeverOffersAJokerType`. Le fuzz de la reproduction (planner Classic, seed 9, 12 runs, avec le nouvel invariant) passe.

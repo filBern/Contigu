@@ -30,6 +30,14 @@ namespace Contigu.RunSim
                 if (ModifierCatalog.Get(run.ActiveModifiers[i]) == null) { return "Fertilizer " + run.ActiveModifiers[i] + " is held but not in the catalog"; }
             }
 
+            foreach (var token in run.Deck.Deck)
+            {
+                if (token.Color != PieceColor.Joker) { continue; }
+                int combat = 0;
+                foreach (var trait in token.Traits) { if (PieceTrait.IsJokerCombatKind(trait.Kind)) { combat++; } }
+                if (combat != 1) { return "A Joker seed has " + combat + " combat traits (it must have exactly 1): " + token.Shape; }
+            }
+
             var hand = run.Deck.Hand;
             if (hand.Count != DeckManager.HandSize && hand.Count != DeckManager.MaxHandSize) { return "The hand has " + hand.Count + " slots"; }
             for (int i = 0; i < hand.Count; i++)
