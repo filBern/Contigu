@@ -912,6 +912,9 @@ namespace Contigu.Presentation
             return _itemSize;
         }
 
+        /// <summary>Share of its cell a tile-upgrade glyph fills in the shop (fertilizer sacks leave margin of their own).</summary>
+        public const float UpgradeGlyphShopScale = 0.8f;
+
         private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
             int price = run.GetBlisterSlotPrice(index);
@@ -940,7 +943,10 @@ namespace Contigu.Presentation
                 sign.sprite = UpgradeVisualDefaults.GetGlyph(upgradeDef.Id) ?? UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
-                UIFactory.StretchFull(sign.rectTransform);
+                // A bit smaller than the cell: the glyphs fill their whole square, the fertilizer sacks do not, so they looked bigger.
+                sign.rectTransform.anchorMin = new Vector2(0.5f - UpgradeGlyphShopScale * 0.5f, 0.5f - UpgradeGlyphShopScale * 0.5f);
+                sign.rectTransform.anchorMax = new Vector2(0.5f + UpgradeGlyphShopScale * 0.5f, 0.5f + UpgradeGlyphShopScale * 0.5f);
+                sign.rectTransform.offsetMin = sign.rectTransform.offsetMax = Vector2.zero;
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);
             }

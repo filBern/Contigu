@@ -323,7 +323,9 @@ namespace Contigu.Presentation
             image.sprite = sprite;
             image.preserveAspect = true;
             image.raycastTarget = false;
-            UIFactory.StretchFull(image.rectTransform);
+            image.rectTransform.anchorMin = new Vector2(0.5f - ShopView.UpgradeGlyphShopScale * 0.5f, 0.5f - ShopView.UpgradeGlyphShopScale * 0.5f);
+            image.rectTransform.anchorMax = new Vector2(0.5f + ShopView.UpgradeGlyphShopScale * 0.5f, 0.5f + ShopView.UpgradeGlyphShopScale * 0.5f);
+            image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
         }
 
         private void ShowSeedPack(ChoiceSource source)
