@@ -574,7 +574,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition DanseDePluie = new ModifierDefinition(
             ModifierId.DanseDePluie, ModifierCategory.Roguelike, "Rain Dancer",
-            "+4 Mult while it rains (Rain, Snowfall, Timely Sprinklers).");
+            "+4 Mult while it rains (Rain, Snowfall, Sprinkler Shower).");
 
         public static readonly ModifierDefinition DanseDuSoleil = new ModifierDefinition(
             ModifierId.DanseDuSoleil, ModifierCategory.Roguelike, "Sun Dancer",

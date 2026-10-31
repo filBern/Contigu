@@ -257,7 +257,7 @@ namespace Contigu.Core
         /// <summary>+1 Mult per enemy still alive.</summary>
         SousBois,
 
-        /// <summary>+4 Mult while it rains (Rain, Snowfall, Timely Sprinklers).</summary>
+        /// <summary>+4 Mult while it rains (Rain, Snowfall, Sprinkler Shower).</summary>
         DanseDePluie,
 
         /// <summary>+4 Mult on Sunshine and Golden Hour days (and their indoor cousins).</summary>

@@ -203,7 +203,7 @@ namespace Contigu.Core
                 case WeatherId.Blizzard: return "Blizzard";
                 case WeatherId.Aurora: return "Aurora";
                 case WeatherId.IndianSummer: return "Indian Summer";
-                case WeatherId.Sprinkler: return "Timely Sprinklers" + withColor;
+                case WeatherId.Sprinkler: return "Sprinkler Shower" + withColor;
                 case WeatherId.GrowLamp: return "Grow Lamp" + withColor;
                 case WeatherId.VentFan: return "Ventilation Fan";
                 case WeatherId.Condensation: return "Condensation";
