@@ -243,12 +243,12 @@ namespace Contigu.Presentation
 
         // Sprig, the garden's mascot, stands between the tagline and the buttons: it pops in once the logo has landed, bobs and sways,
         // and every few seconds hops with a cheer.
-        private const float SprigBaseY = -182f;
-        private const float SprigSize = 150f;
+        private const float SprigBaseY = -134f;
+        private const float SprigSize = 130f;
         private const float SprigEntranceDuration = 0.5f;
         private const float SprigHopEvery = 5.5f;
         private const float SprigHopDuration = 0.7f;
-        private const float SprigHopHeight = 26f;
+        private const float SprigHopHeight = 16f;
         private RectTransform _sprigRect;
         private Image _sprigImage;
         private Sprite _sprigHappy;
