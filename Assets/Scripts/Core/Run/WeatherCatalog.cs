@@ -203,7 +203,7 @@ namespace Contigu.Core
                 case WeatherId.Blizzard: return "Blizzard";
                 case WeatherId.Aurora: return "Aurora";
                 case WeatherId.IndianSummer: return "Indian Summer";
-                case WeatherId.Sprinkler: return "Sprinkler Malfunction" + withColor;
+                case WeatherId.Sprinkler: return "Timely Sprinklers" + withColor;
                 case WeatherId.GrowLamp: return "Grow Lamp" + withColor;
                 case WeatherId.VentFan: return "Ventilation Fan";
                 case WeatherId.Condensation: return "Condensation";
@@ -230,7 +230,7 @@ namespace Contigu.Core
                 case WeatherId.Blizzard: return "A howling whiteout.";
                 case WeatherId.Aurora: return "Green lights dance over the snow.";
                 case WeatherId.IndianSummer: return "A last scorching week of summer.";
-                case WeatherId.Sprinkler: return "Someone forgot to turn the sprinklers off.";
+                case WeatherId.Sprinkler: return "The sprinklers come on right on schedule.";
                 case WeatherId.GrowLamp: return "The grow lamps hum at full power.";
                 case WeatherId.VentFan: return "The ventilation fan whirs up.";
                 case WeatherId.Condensation: return "The glass is dripping.";
