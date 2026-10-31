@@ -19,6 +19,8 @@ namespace Contigu.Presentation
         public bool FillCell;
         /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
         public int Columns;
+        /// <summary>Shown rising over the option when it is chosen with the celebration on (e.g. the new mastery level).</summary>
+        public string CelebrationText;
         /// <summary>How many tiles tall the piece is, so it can stand on the shelf by its own bottom edge.</summary>
         public int Rows;
     }
@@ -62,10 +64,13 @@ namespace Contigu.Presentation
         }
 
         /// <param name="destroyChosen">The chosen option is destroyed (Compost): it shakes and crumbles before the choice is applied.</param>
-        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false)
+        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false)
         {
             _onChosen = onChosen;
             _destroyChosen = destroyChosen;
+            _celebrateChosen = celebrateChosen;
+            _celebrationTexts.Clear();
+            for (int i = 0; i < entries.Count; i++) { _celebrationTexts.Add(entries[i].CelebrationText); }
             _resolving = false;
             _needsConfirm = needsConfirm;
             _selectedIndex = -1;
@@ -178,6 +183,8 @@ namespace Contigu.Presentation
         }
 
         private bool _destroyChosen;
+        private bool _celebrateChosen;
+        private readonly List<string> _celebrationTexts = new List<string>();
         private bool _resolving;
 
         private void Resolve(int index)
@@ -191,6 +198,11 @@ namespace Contigu.Presentation
                 StartCoroutine(DestroyThenResolve(index, cell));
                 return;
             }
+            if (_celebrateChosen && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var winner) && winner != null && winner.transform.Find("Preview") != null)
+            {
+                StartCoroutine(CelebrateThenResolve(index, winner));
+                return;
+            }
             Finish(index);
         }
 
@@ -200,6 +212,132 @@ namespace Contigu.Presentation
             if (_onChosen != null)
             {
                 _onChosen(index);
+            }
+        }
+
+        private const float PopDuration = 0.28f;
+        private const float CelebrationDuration = 1.0f;
+        private const int SparkCount = 18;
+
+        /// <summary>
+        /// Mastery: the chosen option pops up with an overshoot while the others dim, a golden flash and a burst of sparkles go off behind it, and its
+        /// new level rises over it, before the choice is applied.
+        /// </summary>
+        private IEnumerator CelebrateThenResolve(int index, Image cell)
+        {
+            _resolving = true;
+            foreach (var other in _cellByIndex)
+            {
+                var button = other.Value.GetComponent<Button>();
+                if (button != null) { button.interactable = false; }
+                if (other.Key != index)
+                {
+                    other.Value.gameObject.AddComponent<CanvasGroup>().alpha = 1f;
+                }
+            }
+            _stage.ConfirmButton.interactable = false;
+            var preview = (RectTransform)cell.transform.Find("Preview");
+            var feedback = cell.GetComponent<ShelfCellFeedback>();
+            if (feedback != null) { feedback.enabled = false; } // the animation owns the preview's scale and position now
+            var home = preview.anchoredPosition;
+            var center = home + new Vector2(0f, preview.sizeDelta.y * 0.5f);
+            SfxManager.Play(SfxId.LueurGain);
+
+            // A warm flash behind the option.
+            var flash = UIFactory.CreatePanel(cell.transform, "Flash", new Color(1f, 0.86f, 0.35f, 0f));
+            flash.raycastTarget = false;
+            flash.sprite = UISprites.CardBackground;
+            flash.type = Image.Type.Sliced;
+            var flashRect = flash.rectTransform;
+            flashRect.anchorMin = flashRect.anchorMax = new Vector2(0.5f, 0f);
+            flashRect.pivot = new Vector2(0.5f, 0.5f);
+            flashRect.anchoredPosition = center;
+            flashRect.SetSiblingIndex(preview.GetSiblingIndex());
+
+            // Sparkles flying out of it in every direction.
+            var sparks = new RectTransform[SparkCount];
+            var velocity = new Vector2[SparkCount];
+            var spin = new float[SparkCount];
+            var gold = new[] { new Color(1f, 0.89f, 0.40f), new Color(1f, 0.97f, 0.80f), new Color(1f, 0.72f, 0.25f) };
+            for (int i = 0; i < SparkCount; i++)
+            {
+                var spark = UIFactory.CreatePanel(cell.transform, "Spark" + i, gold[i % gold.Length]);
+                spark.raycastTarget = false;
+                var rect = spark.rectTransform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                float size = UnityEngine.Random.Range(9f, 18f);
+                rect.sizeDelta = new Vector2(size, size);
+                rect.anchoredPosition = center;
+                float angle = (i / (float)SparkCount) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.2f, 0.2f);
+                velocity[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * UnityEngine.Random.Range(220f, 420f);
+                spin[i] = UnityEngine.Random.Range(-540f, 540f);
+                sparks[i] = rect;
+            }
+
+            // The new level rising above the option.
+            string label = index < _celebrationTexts.Count ? _celebrationTexts[index] : null;
+            RectTransform labelRect = null;
+            Text labelText = null;
+            if (!string.IsNullOrEmpty(label))
+            {
+                labelText = UIFactory.CreateText(cell.transform, "Celebration", label, 38, VisualDefaults.GoldenColor);
+                labelText.raycastTarget = false;
+                labelRect = labelText.rectTransform;
+                labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0f);
+                labelRect.pivot = new Vector2(0.5f, 0f);
+                labelRect.sizeDelta = new Vector2(260f, 50f);
+                labelRect.anchoredPosition = center + new Vector2(0f, preview.sizeDelta.y * 0.5f + 8f);
+            }
+
+            float t = 0f;
+            while (t < CelebrationDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / PopDuration);
+                // Pop: up past 1.35 and settling at 1.2, with a small hop.
+                float pop = p < 0.6f ? Mathf.Lerp(1f, 1.4f, p / 0.6f) : Mathf.Lerp(1.4f, 1.2f, (p - 0.6f) / 0.4f);
+                preview.localScale = new Vector3(pop, pop, 1f);
+                preview.anchoredPosition = home + new Vector2(0f, Mathf.Sin(p * Mathf.PI) * 18f);
+                float life = Mathf.Clamp01(t / CelebrationDuration);
+
+                flashRect.sizeDelta = Vector2.one * Mathf.Lerp(40f, preview.sizeDelta.y * 2.4f, Mathf.Clamp01(t / 0.35f));
+                var fc = flash.color;
+                fc.a = Mathf.Sin(Mathf.Clamp01(t / 0.5f) * Mathf.PI) * 0.55f;
+                flash.color = fc;
+
+                foreach (var other in _cellByIndex)
+                {
+                    if (other.Key == index) { continue; }
+                    var g = other.Value.GetComponent<CanvasGroup>();
+                    if (g != null) { g.alpha = Mathf.Lerp(1f, 0.2f, Mathf.Clamp01(t / 0.2f)); }
+                }
+
+                for (int i = 0; i < SparkCount; i++)
+                {
+                    velocity[i] *= 1f - 2.2f * Time.unscaledDeltaTime;
+                    sparks[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    sparks[i].localRotation = Quaternion.Euler(0f, 0f, 45f + spin[i] * t);
+                    float s = 1f - life * life;
+                    sparks[i].localScale = new Vector3(s, s, 1f);
+                }
+
+                if (labelRect != null)
+                {
+                    float lp = Mathf.Clamp01(t / 0.25f);
+                    float labelScale = lp < 0.7f ? Mathf.Lerp(0f, 1.25f, lp / 0.7f) : Mathf.Lerp(1.25f, 1f, (lp - 0.7f) / 0.3f);
+                    labelRect.localScale = new Vector3(labelScale, labelScale, 1f);
+                    labelRect.anchoredPosition = center + new Vector2(0f, preview.sizeDelta.y * 0.5f * pop + 8f + life * 34f);
+                    var lc = labelText.color;
+                    lc.a = life < 0.7f ? 1f : 1f - (life - 0.7f) / 0.3f;
+                    labelText.color = lc;
+                }
+                yield return null;
+            }
+            _resolving = false;
+            if (_root.gameObject.activeSelf)
+            {
+                Finish(index);
             }
         }
 
@@ -220,6 +358,8 @@ namespace Contigu.Presentation
             }
             _stage.ConfirmButton.interactable = false;
             var preview = (RectTransform)cell.transform.Find("Preview");
+            var feedback = cell.GetComponent<ShelfCellFeedback>();
+            if (feedback != null) { feedback.enabled = false; } // the animation owns the preview's scale and position now
             var group = preview.gameObject.AddComponent<CanvasGroup>();
             var home = preview.anchoredPosition;
             var center = home + new Vector2(0f, preview.sizeDelta.y * 0.5f);

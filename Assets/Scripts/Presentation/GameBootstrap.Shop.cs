@@ -259,11 +259,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Gives the shelf choice the shop's own shelf positions and puts the shop's shelves away while it is shown.</summary>
-        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false)
+        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false)
         {
             _shopView.SetSelectionMode(true);
             _shelfChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
-            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen);
+            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen, celebrateChosen);
         }
 
         private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
@@ -376,10 +376,11 @@ namespace Contigu.Presentation
                     },
                     Name = name,
                     Body = Loc.T("choice.masteryBody", levelNow, levelNow + o.Gain, o.Gain, levelNow + o.Gain - 1),
-                    Subtitle = Loc.T("choice.masteryTag")
+                    Subtitle = Loc.T("choice.masteryTag"),
+                    CelebrationText = "LV. " + (levelNow + o.Gain)
                 });
             }
-            ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, true, OnMasteryOptionChosen);
+            ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, true, OnMasteryOptionChosen, celebrateChosen: true);
         }
 
         private void ShowCompost(UpgradeDefinition pending)
