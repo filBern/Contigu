@@ -15,8 +15,9 @@ namespace Contigu.Presentation
         private const float TwinkleMax = 1.1f;
         private const float SparkleLife = 0.95f;
         private const float GlintEvery = 8f;
-        private const float GlintDelayPerStep = 0.075f;
+        private const float GlintSweepDuration = 1.1f;
         private const float GlintLife = 0.7f;
+        private const float BandAngle = 18f;
         private const int PoolSize = 64;
         private static readonly Color SparkleColor = new Color(1f, 0.97f, 0.85f, 0.95f);
 
@@ -47,6 +48,13 @@ namespace Contigu.Presentation
         private float _nextTwinkle;
         private float _nextGlint;
 
+        // The sweeping band: a soft slanted streak of light that crosses the garden once in a while, clipped to the garden's outline.
+        private RectTransform _bandMask;
+        private RectTransform _band;
+        private float _bandStart = -100f;
+        private Vector3 _bandLeft;
+        private Vector3 _bandRight;
+
         public void Build(Transform parent, Func<GridManager> grid, GridView gridView, HandView handView, Func<bool> boardVisible)
         {
             _grid = grid;
@@ -71,6 +79,21 @@ namespace Contigu.Presentation
                 holder.gameObject.SetActive(false);
                 _pool.Add(new Sparkle { Holder = holder, Bars = bars });
             }
+            _bandMask = UIFactory.CreateUIObject("GlintMask", _layer);
+            _bandMask.anchorMin = _bandMask.anchorMax = _bandMask.pivot = new Vector2(0.5f, 0.5f);
+            _bandMask.gameObject.AddComponent<RectMask2D>();
+            _band = UIFactory.CreateUIObject("Band", _bandMask);
+            _band.anchorMin = _band.anchorMax = _band.pivot = new Vector2(0.5f, 0.5f);
+            _band.localRotation = Quaternion.Euler(0f, 0f, BandAngle);
+            // Three bars side by side: a faint wide halo around a brighter core.
+            foreach (var bar in new[] { (width: 150f, alpha: 0.07f), (width: 90f, alpha: 0.10f), (width: 34f, alpha: 0.16f) })
+            {
+                var image = UIFactory.CreatePanel(_band, "Bar", new Color(1f, 1f, 1f, bar.alpha));
+                image.raycastTarget = false;
+                image.rectTransform.anchorMin = image.rectTransform.anchorMax = image.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                image.rectTransform.sizeDelta = new Vector2(bar.width, 2000f);
+            }
+            _bandMask.gameObject.SetActive(false);
             _nextTwinkle = Time.unscaledTime + 1.5f;
             _nextGlint = Time.unscaledTime + GlintEvery;
         }
@@ -90,6 +113,8 @@ namespace Contigu.Presentation
                     if (_pool[i].Active) { Deactivate(_pool[i]); }
                 }
                 _scheduled.Clear();
+                _bandStart = -100f;
+                _bandMask.gameObject.SetActive(false);
                 _nextTwinkle = Mathf.Max(_nextTwinkle, now + 1f);
                 _nextGlint = Mathf.Max(_nextGlint, now + GlintEvery);
                 return;
@@ -113,10 +138,24 @@ namespace Contigu.Presentation
                     _scheduled.RemoveAt(i);
                 }
             }
+            AnimateBand(now);
             for (int i = 0; i < _pool.Count; i++)
             {
                 if (_pool[i].Active) { Animate(_pool[i], now); }
             }
+        }
+
+        private void AnimateBand(float now)
+        {
+            float p = (now - _bandStart) / GlintSweepDuration;
+            if (p < 0f || p > 1f)
+            {
+                if (_bandMask.gameObject.activeSelf) { _bandMask.gameObject.SetActive(false); }
+                return;
+            }
+            if (!_bandMask.gameObject.activeSelf) { _bandMask.gameObject.SetActive(true); }
+            float eased = p * p * (3f - 2f * p);
+            _band.position = Vector3.Lerp(_bandLeft, _bandRight, eased);
         }
 
         /// <summary>A sparkle on a random planted tile (mostly) or a seed in hand.</summary>
@@ -142,11 +181,32 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>A small glint on every planted tile, one diagonal step after the other.</summary>
+        /// <summary>The band crosses the garden from left to right; every planted tile throws a small sparkle at the moment the band passes over it.</summary>
         private void ScheduleGlint(float now)
         {
             var grid = _grid != null ? _grid() : null;
             if (grid == null) { return; }
+            var first = _gridView.GetCellTransform(0, 0);
+            var last = _gridView.GetCellTransform(GridManager.Size - 1, GridManager.Size - 1);
+            if (first == null || last == null) { return; }
+            var corners = new Vector3[4];
+            first.GetWorldCorners(corners);
+            var low = corners[0];
+            last.GetWorldCorners(corners);
+            var high = corners[2];
+            float minX = Mathf.Min(low.x, high.x), maxX = Mathf.Max(low.x, high.x);
+            float minY = Mathf.Min(low.y, high.y), maxY = Mathf.Max(low.y, high.y);
+
+            // The mask is the garden's outline, in this layer's own units.
+            float scale = Mathf.Max(0.0001f, _layer.lossyScale.x);
+            _bandMask.position = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, low.z);
+            _bandMask.sizeDelta = new Vector2((maxX - minX) / scale, (maxY - minY) / scale);
+            float margin = 120f * scale;
+            float midY = (minY + maxY) * 0.5f;
+            _bandLeft = new Vector3(minX - margin, midY, low.z);
+            _bandRight = new Vector3(maxX + margin, midY, low.z);
+            _bandStart = now;
+
             int filled = 0;
             for (int x = 0; x < GridManager.Size; x++)
             {
@@ -156,10 +216,19 @@ namespace Contigu.Presentation
                     var cell = _gridView.GetCellTransform(x, y);
                     if (cell == null) { continue; }
                     filled++;
-                    _scheduled.Add(new Scheduled { At = now + (x + y) * GlintDelayPerStep, Target = cell, Size = 16f });
+                    // The moment the (eased) band is over this tile's column.
+                    float along = Mathf.InverseLerp(minX - margin, maxX + margin, cell.position.x);
+                    float linear = EaseInverse(along);
+                    _scheduled.Add(new Scheduled { At = now + linear * GlintSweepDuration, Target = cell, Size = 18f });
                 }
             }
-            if (filled < 3) { _scheduled.Clear(); }
+            if (filled == 0) { _scheduled.Clear(); }
+        }
+
+        /// <summary>Inverse of smoothstep, so a sparkle fires when the eased band actually reaches its column.</summary>
+        private static float EaseInverse(float y)
+        {
+            return 0.5f - Mathf.Sin(Mathf.Asin(1f - 2f * Mathf.Clamp01(y)) / 3f);
         }
 
         private void Spawn(Transform target, float size, float life, float now, float jitter)
