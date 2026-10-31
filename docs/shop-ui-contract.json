@@ -1,0 +1,44 @@
+{
+  "scope": "Shop (between rounds): Blister, Workshop, choice steps, abandon purchase",
+  "validated_by": "manual review against the game-ui-ux skill (its validator script and example are not bundled in this session)",
+  "player_decisions": {
+    "shop": "What to spend Pollen on, knowing the item and its price",
+    "pack_opening": "Which one of three revealed options to keep (or skip)",
+    "seed_choice": "Which seed(s) receive the tile upgrade (Forge, Sprout Pack, Blister sprout)"
+  },
+  "screens": ["shop", "pack_choice", "seed_choice_on_shop_screen", "seed_piece_choice", "mastery_choice", "draft_type_choice", "fertilizer_upgrade_choice", "seed_bag", "settings"],
+  "states": ["affordable", "unaffordable", "blocked_full_garden", "blocked_min_bag", "sold", "choice_pending", "abandon_armed"],
+  "information_hierarchy": {
+    "critical": ["Pollen count", "price (top-right of each item)", "why an item cannot be bought (tooltip + badge text)"],
+    "decision_support": ["item art", "tooltip: name, effect, category/rarity (hover, focus or long-press)"],
+    "contextual": ["Next round box", "fertilizer tablet"],
+    "decorative": ["stall backdrop, shelves, awning"]
+  },
+  "input": {
+    "pointer": "hover shows tooltip; click buys; unaffordable click shakes (skipped with reduced motion)",
+    "keyboard_gamepad": "first arrow/d-pad press while nothing is focused selects the first buyable item; Selectable navigation; focus halo + tooltip; Submit buys",
+    "touch": "tap buys; long press (0.45 s) shows the tooltip without buying",
+    "back": "Esc closes, in order: settings, seed bag, then arms/confirms abandoning a pending purchase; otherwise opens settings",
+    "abandon": "'Cancel purchase (no refund)' button, bottom right, two-step confirm; Skip on packs"
+  },
+  "layout": {
+    "reference": "1280x800, CanvasScaler match height",
+    "safe_area": "SafeAreaFitter on MainRoot",
+    "adaptive": "item size 64-100 px and spacing 8-32 px computed from the room between the two tablets on every Refresh"
+  },
+  "localization": "Shop and choice strings go through Loc.T (English table, Override hook); badges size to their text. Other screens still hard-coded.",
+  "accessibility": {
+    "reduced_motion": "Settings toggle (MotionSettings.Reduced): entrance pop, Pollen pulse, purchase pop, reroll flip, removal, hover swell, shake",
+    "not_color_only": ["unaffordable: faded icon + tooltip says how much Pollen is missing", "blocked: badge word + tooltip reason", "focus: halo + tooltip"],
+    "text_scale": "follows CanvasScaler only; no separate user text-size setting"
+  },
+  "data_contract": {
+    "source": "RunManager (Core): ShopBlisterSlots, ShopUpgradeSlots, Pending*; presentation never mutates it except through RunManager methods",
+    "update": "full rebuild on ShopView.Refresh after each action",
+    "hidden_data": "none exposed (Forge payload is visible by design)"
+  },
+  "verification": {
+    "done": "headless Core tests (591 pass); code review",
+    "missing": ["Unity play-mode run", "controller/touch devices", "non-English locale", "4:3 and portrait aspect screenshots"]
+  }
+}

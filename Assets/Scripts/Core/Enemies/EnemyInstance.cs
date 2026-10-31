@@ -1,0 +1,165 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Contigu.Core
+{
+    /// <summary>
+    /// One enemy actually present in the CURRENT round's encounter (see
+    /// RunManager.CurrentEncounter/BuildEncounter) — built fresh every
+    /// round from its EnemyDefinition, never carried over or reused across
+    /// rounds even for the same EnemyId (a "Locker" fought in round 2 and
+    /// another "Locker" fought in round 4 are two unrelated instances).
+    /// </summary>
+    public sealed class EnemyInstance
+    {
+        public EnemyDefinition Definition { get; }
+        public int CurrentHp { get; private set; }
+
+        /// <summary>
+        /// This instance's own HP ceiling — starts equal to <see
+        /// cref="EnemyDefinition.MaxHp"/> but can grow past it (see <see
+        /// cref="HealOrGrow"/>), so it's tracked per-instance rather than
+        /// read straight off the shared <see cref="Definition"/> (which
+        /// every instance of the same EnemyId points at — mutating IT
+        /// would grow every copy of this enemy across every round of every
+        /// run at once).
+        /// </summary>
+        public int CurrentMaxHp { get; private set; }
+
+        public bool IsDead
+        {
+            get { return CurrentHp <= 0; }
+        }
+
+        /// <summary>Locker only: the cell it currently has locked, or null before its first Shuffle tick or once it's dead (see RunManager.ResolveLockerShuffleEffect/CleanUpDefeatedEnemy).</summary>
+        public Vector2Int? LockedCell;
+
+        /// <summary>Locker (Bramble) only: its second lock, thrown by the every-N-seeds trick — it lives alongside <see cref="LockedCell"/> (the Shuffle lock) instead of replacing it, and is itself replaced the next time that trick fires.</summary>
+        public Vector2Int? ExtraLockedCell;
+
+        /// <summary>Hoarfrost only: the plots it froze, oldest first (at most <see cref="ScoringConstants.HoarfrostMaxFrozenPlots"/>); they thaw when it dies.</summary>
+        public readonly List<Vector2Int> FrozenCells = new List<Vector2Int>();
+
+        /// <summary>Color Hater only: the one base color it was randomly assigned on spawn (see RunManager.BuildEncounter), never changes for the rest of this instance's life. Null for every other EnemyId.</summary>
+        public PieceColor? HatedColor;
+
+        /// <summary>Shape Hater only: Color Hater's exact mirror, the one piece shape it was randomly assigned on spawn (see RunManager.BuildEncounter). Null for every other EnemyId.</summary>
+        public ShapeId? HatedShape;
+
+        /// <summary>
+        /// Reclaimer only (set in RunManager.BuildEncounter), playtest request: "Boss qui ne prend pas de
+        /// dégât avant... ou tant que ... n'est pas vrai ... pour ne pas pouvoir one shot". Absorbs the
+        /// first otherwise-damaging hit this instance would take for free — see <see cref="ApplyDamage"/> —
+        /// then clears itself, regardless of how large that first hit would have been. Never true for any
+        /// other EnemyId.
+        /// </summary>
+        public bool HasShield;
+
+        private readonly List<Vector2Int> _poisonedCells = new List<Vector2Int>();
+
+        /// <summary>Poisoner/Plague: every cell THIS instance has poisoned so far, including any extra cell "contamination" spread onto a neighbor in between Shuffles (see RunManager.ContaminateAdjacentCell) — unlike Locker's single roaming lock, poison accumulates until this instance's next Shuffle releases the whole list at once, or until it dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>
+        public IReadOnlyList<Vector2Int> PoisonedCells
+        {
+            get { return _poisonedCells; }
+        }
+
+        public EnemyInstance(EnemyDefinition definition, float hpScale = 1f)
+        {
+            Definition = definition;
+            CurrentMaxHp = EncounterCatalog.ScaleHp(definition.MaxHp, hpScale);
+            CurrentHp = CurrentMaxHp;
+        }
+
+        public void AddPoisonedCell(Vector2Int pos)
+        {
+            _poisonedCells.Add(pos);
+        }
+
+        public void RemovePoisonedCell(Vector2Int pos)
+        {
+            _poisonedCells.Remove(pos);
+        }
+
+        public void ClearPoisonedCells()
+        {
+            _poisonedCells.Clear();
+        }
+
+        /// <summary>
+        /// Clamped at <see cref="CurrentMaxHp"/>, same ceiling <see
+        /// cref="ApplyDamage"/>'s own negative-damage healing already
+        /// respects — see <see cref="HealOrGrow"/> for the Reclaimer/Leech
+        /// variant that grows the ceiling instead of capping out.
+        /// </summary>
+        public void Heal(int amount)
+        {
+            if (IsDead || amount <= 0)
+            {
+                return;
+            }
+            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, CurrentMaxHp);
+        }
+
+        /// <summary>
+        /// A heal that arrives while already at <see cref="CurrentMaxHp"/>
+        /// doesn't just cap out and go to waste: it raises both CurrentMaxHp
+        /// and CurrentHp by the same amount instead, making this instance
+        /// permanently tougher. A heal that only partially overflows (not
+        /// yet full before this heal, but would exceed the cap) still just
+        /// clamps normally like <see cref="Heal"/> — growth is specifically
+        /// for being at full already when more healing arrives. Used by
+        /// RunManager.HealReclaimer and RunManager.HealLeech — poison's own
+        /// negative-damage-heals-the-front-enemy-back-up (via ApplyDamage)
+        /// is the only healer left that stays capped at its ordinary
+        /// CurrentMaxHp with no growth.
+        /// </summary>
+        public void HealOrGrow(int amount)
+        {
+            if (IsDead || amount <= 0)
+            {
+                return;
+            }
+            if (CurrentHp >= CurrentMaxHp)
+            {
+                // Same ceiling as EncounterCatalog.ScaleHp: far past it (Endless, hundreds of rounds in) the sum would wrap to a negative HP.
+                int room = Mathf.Max(0, EncounterCatalog.MaxEnemyHp - CurrentMaxHp);
+                int grow = Mathf.Min(amount, room);
+                CurrentMaxHp += grow;
+                CurrentHp += grow;
+                return;
+            }
+            CurrentHp = Mathf.Clamp(CurrentHp + amount, 0, CurrentMaxHp);
+        }
+
+        /// <summary>
+        /// Applies <paramref name="damage"/> (this run's own placement score
+        /// — see RunManager.ApplyDamageToEncounter) clamped to [0,
+        /// CurrentMaxHp]. Can be negative: a placement that scored through
+        /// one of this instance's own poisoned tiles comes out net-negative
+        /// (see RunManager.ApplyPoisonScoreRule), which HEALS this enemy
+        /// back up instead of damaging it — intentional, the cost of
+        /// playing into poison; capped at the ordinary CurrentMaxHp, never
+        /// triggers Reclaimer's own growth (see HealOrGrow — that's
+        /// deliberately only reachable through RunManager.HealReclaimer's
+        /// own poison-magnitude heal, not through absorbing damage as the
+        /// front target). Returns true if this hit just brought it from
+        /// alive to dead (false if it was already dead, or if it survives).
+        /// </summary>
+        public bool ApplyDamage(int damage)
+        {
+            if (IsDead)
+            {
+                return false;
+            }
+            if (HasShield && damage > 0)
+            {
+                // Absorbs this one hit outright, however large — a heal (negative damage, see this
+                // method's own doc comment) never consumes it.
+                HasShield = false;
+                return false;
+            }
+            CurrentHp = Mathf.Clamp(CurrentHp - damage, 0, CurrentMaxHp);
+            return IsDead;
+        }
+    }
+}

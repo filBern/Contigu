@@ -1,0 +1,19 @@
+{
+    "name": "Contigu.Presentation",
+    "rootNamespace": "Contigu.Presentation",
+    "references": [
+        "Contigu.Core",
+        "Contigu.Data",
+        "UnityEngine.UI",
+        "UnityEngine.EventSystems"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
