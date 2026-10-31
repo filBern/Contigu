@@ -56,7 +56,7 @@ que la scène contienne le GameObject `GameBootstrap`.
 Le code est séparé en 3 assemblies (voir `Assets/Scripts/*/Contigu.*.asmdef`) :
 
 - **`Contigu.Core`** — logique de jeu pure (pas de `MonoBehaviour`), testable
-  unitairement : `GridManager` (grille 8×8, placement, bonus de groupe connecté,
+  unitairement : `GridManager` (grille 6×6, placement, bonus de groupe connecté,
   clears de ligne/colonne, modificateurs persistants), `DeckManager` (deck,
   pioche, main, upgrades de banque), `RunManager` (manches, quotas, budgets,
   victoire/défaite), `UpgradeSystem` (draft + application des améliorations).
@@ -79,6 +79,7 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
 - **Tests rapides sans Unity** : `cd Tools/Headless/Tests && dotnet test` (les mêmes tests EditMode, contre Core compilé comme bibliothèque .NET).
 - **Simulateur d'équilibrage** : `cd Tools/Headless/RunSim && dotnet run -- --runs 1000 --policy greedy` (voir `Tools/Headless/README.md`).
 - **CI** : `.github/workflows/headless-ci.yml` (tests + simulateur, toutes les branches) et `unity-ci.yml` (compile tout le projet dans Unity, sur `main`/PR).
+- `docs/GDD.md` : document de conception, état actuel du jeu.
 - `docs/BALANCE.md` : où vivent les chiffres d'équilibrage et comment les mesurer.
 - `docs/GLOSSARY.md` : correspondance identifiants de code (français) / noms affichés (anglais).
 - `docs/DECISIONS.md` : journal des décisions de conception.
