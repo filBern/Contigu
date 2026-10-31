@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -60,9 +61,12 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen)
+        /// <param name="destroyChosen">The chosen option is destroyed (Compost): it shakes and crumbles before the choice is applied.</param>
+        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false)
         {
             _onChosen = onChosen;
+            _destroyChosen = destroyChosen;
+            _resolving = false;
             _needsConfirm = needsConfirm;
             _selectedIndex = -1;
             _cellByIndex.Clear();
@@ -173,12 +177,114 @@ namespace Contigu.Presentation
             }
         }
 
+        private bool _destroyChosen;
+        private bool _resolving;
+
         private void Resolve(int index)
+        {
+            if (_resolving)
+            {
+                return;
+            }
+            if (_destroyChosen && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var cell) && cell != null && cell.transform.Find("Preview") != null)
+            {
+                StartCoroutine(DestroyThenResolve(index, cell));
+                return;
+            }
+            Finish(index);
+        }
+
+        private void Finish(int index)
         {
             _root.gameObject.SetActive(false);
             if (_onChosen != null)
             {
                 _onChosen(index);
+            }
+        }
+
+        private const float ShakeDuration = 0.2f;
+        private const float CrumbleDuration = 0.45f;
+        private const float DebrisLife = 0.7f;
+        private const int DebrisCount = 16;
+        private const float DebrisGravity = 900f;
+
+        /// <summary>Compost: the chosen seed shakes, then crumbles into earth and leaf bits that fly out and fall, before the choice is applied.</summary>
+        private IEnumerator DestroyThenResolve(int index, Image cell)
+        {
+            _resolving = true;
+            foreach (var other in _cellByIndex.Values)
+            {
+                var button = other.GetComponent<Button>();
+                if (button != null) { button.interactable = false; }
+            }
+            _stage.ConfirmButton.interactable = false;
+            var preview = (RectTransform)cell.transform.Find("Preview");
+            var group = preview.gameObject.AddComponent<CanvasGroup>();
+            var home = preview.anchoredPosition;
+            var center = home + new Vector2(0f, preview.sizeDelta.y * 0.5f);
+            SfxManager.Play(SfxId.InvalidDrop);
+
+            float t = 0f;
+            while (t < ShakeDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                preview.anchoredPosition = home + new Vector2(Mathf.Sin(t * 70f) * 5f, 0f);
+                yield return null;
+            }
+            preview.anchoredPosition = home;
+
+            // Debris: small earth/leaf squares thrown up and out from the middle of the seed.
+            var colors = new[] { new Color(0.45f, 0.30f, 0.17f), new Color(0.60f, 0.42f, 0.25f), new Color(0.43f, 0.69f, 0.31f), new Color(0.30f, 0.20f, 0.12f) };
+            var bits = new RectTransform[DebrisCount];
+            var velocity = new Vector2[DebrisCount];
+            var spin = new float[DebrisCount];
+            for (int i = 0; i < DebrisCount; i++)
+            {
+                var bit = UIFactory.CreatePanel(cell.transform, "Debris" + i, colors[i % colors.Length]);
+                bit.raycastTarget = false;
+                var rect = bit.rectTransform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                float size = UnityEngine.Random.Range(7f, 15f);
+                rect.sizeDelta = new Vector2(size, size);
+                rect.anchoredPosition = center + new Vector2(UnityEngine.Random.Range(-18f, 18f), UnityEngine.Random.Range(-14f, 14f));
+                float angle = UnityEngine.Random.Range(35f, 145f) * Mathf.Deg2Rad;
+                float speed = UnityEngine.Random.Range(150f, 340f);
+                velocity[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
+                spin[i] = UnityEngine.Random.Range(-420f, 420f);
+                bits[i] = rect;
+            }
+
+            t = 0f;
+            float total = Mathf.Max(CrumbleDuration, DebrisLife);
+            while (t < total)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / CrumbleDuration);
+                float scale = Mathf.Lerp(1f, 0.15f, p * p);
+                preview.localScale = new Vector3(scale, scale, 1f);
+                preview.localRotation = Quaternion.Euler(0f, 0f, -22f * p);
+                group.alpha = 1f - p;
+                float life = Mathf.Clamp01(t / DebrisLife);
+                for (int i = 0; i < DebrisCount; i++)
+                {
+                    if (bits[i] == null) { continue; }
+                    velocity[i].y -= DebrisGravity * Time.unscaledDeltaTime;
+                    bits[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    bits[i].localRotation = Quaternion.Euler(0f, 0f, spin[i] * t);
+                    var image = bits[i].GetComponent<Image>();
+                    var c = image.color;
+                    c.a = 1f - life * life;
+                    image.color = c;
+                }
+                yield return null;
+            }
+            _resolving = false;
+            // Skipped meanwhile (the screen was hidden by the abandon): nothing left to apply.
+            if (_root.gameObject.activeSelf)
+            {
+                Finish(index);
             }
         }
     }

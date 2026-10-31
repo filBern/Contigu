@@ -259,11 +259,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Gives the shelf choice the shop's own shelf positions and puts the shop's shelves away while it is shown.</summary>
-        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen)
+        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false)
         {
             _shopView.SetSelectionMode(true);
             _shelfChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
-            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen);
+            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen);
         }
 
         private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
@@ -397,7 +397,7 @@ namespace Contigu.Presentation
                 _shopView.SetSelectionMode(false);
                 RefreshAll();
                 _shopView.Refresh(_run);
-            });
+            }, destroyChosen: true);
         }
 
         private void OnPackOptionChosen(int index)
