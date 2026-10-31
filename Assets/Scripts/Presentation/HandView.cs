@@ -801,6 +801,9 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Blocks and visually greys out hand selection while a placement's feedback sequence animates.</summary>
+        /// <summary>False while a placement is being scored (and during round transitions): the player cannot act yet.</summary>
+        public bool IsInteractable { get { return _interactable; } }
+
         public void SetInteractable(bool interactable)
         {
             _interactable = interactable;

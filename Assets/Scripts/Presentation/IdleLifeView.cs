@@ -15,7 +15,7 @@ namespace Contigu.Presentation
         private const float TwinkleMin = 0.45f;
         private const float TwinkleMax = 1.1f;
         private const float SparkleLife = 0.95f;
-        private const float GlintEvery = 8f;
+        private const float GlintAfterIdle = 8f; // seconds without a tile placed, counted once the scoring of the last one is over
         private const float GlintSweepDuration = 1.1f;
         private const float GlintLife = 0.7f;
         private const float BandAngle = 18f;
@@ -47,7 +47,8 @@ namespace Contigu.Presentation
         private readonly List<Sparkle> _pool = new List<Sparkle>();
         private readonly List<Scheduled> _scheduled = new List<Scheduled>();
         private float _nextTwinkle;
-        private float _nextGlint;
+        private Func<bool> _playerCanAct;
+        private float _idleSince = -1f;
 
         // The sweeping band: a soft slanted streak of light that crosses the garden once in a while, clipped to the garden's outline.
         private RectTransform _bandMask;
@@ -56,12 +57,14 @@ namespace Contigu.Presentation
         private Vector3 _bandLeft;
         private Vector3 _bandRight;
 
-        public void Build(Transform parent, Func<GridManager> grid, GridView gridView, HandView handView, Func<bool> boardVisible)
+        /// <param name="playerCanAct">True once the player can place a tile again (nothing is being scored); the idle count starts then.</param>
+        public void Build(Transform parent, Func<GridManager> grid, GridView gridView, HandView handView, Func<bool> boardVisible, Func<bool> playerCanAct)
         {
             _grid = grid;
             _gridView = gridView;
             _handView = handView;
             _boardVisible = boardVisible;
+            _playerCanAct = playerCanAct;
             _layer = UIFactory.CreateUIObject("IdleLife", parent);
             UIFactory.StretchFull(_layer);
             for (int i = 0; i < PoolSize; i++)
@@ -96,7 +99,6 @@ namespace Contigu.Presentation
             }
             _bandMask.gameObject.SetActive(false);
             _nextTwinkle = Time.unscaledTime + 1.5f;
-            _nextGlint = Time.unscaledTime + GlintEvery;
         }
 
         private void Update()
@@ -117,7 +119,7 @@ namespace Contigu.Presentation
                 _bandStart = -100f;
                 _bandMask.gameObject.SetActive(false);
                 _nextTwinkle = Mathf.Max(_nextTwinkle, now + 1f);
-                _nextGlint = Mathf.Max(_nextGlint, now + GlintEvery);
+                _idleSince = -1f;
                 return;
             }
 
@@ -126,9 +128,20 @@ namespace Contigu.Presentation
                 _nextTwinkle = now + UnityEngine.Random.Range(TwinkleMin, TwinkleMax);
                 Twinkle(now);
             }
-            if (now >= _nextGlint)
+            // The band shows up when the player has not placed a tile for a while: the count starts once the last placement has been fully scored
+            // (the hand is playable again), restarts at every placement, and repeats while the player keeps thinking.
+            bool canAct = _playerCanAct == null || _playerCanAct();
+            if (!canAct)
             {
-                _nextGlint = now + GlintEvery + UnityEngine.Random.Range(-1.5f, 1.5f);
+                _idleSince = -1f;
+            }
+            else if (_idleSince < 0f)
+            {
+                _idleSince = now;
+            }
+            else if (now - _idleSince >= GlintAfterIdle)
+            {
+                _idleSince = now;
                 ScheduleGlint(now);
             }
             for (int i = _scheduled.Count - 1; i >= 0; i--)
