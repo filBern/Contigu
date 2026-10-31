@@ -328,12 +328,13 @@ M['u_replace'] = lambda: seed(28, 46, 1.5, '#d8b574') + seed(72, 46, 1.5, '#e8c9
 M['u_dup'] = lambda: seed(40, 52, 1.8, '#d8b574') + seed(62, 42, 1.8, '#e8c98a')
 M['u_joker'] = lambda: seed(50, 50, 2.2, P) + star(50, 46, 12, '#fff1b0', 0.4, 5, 3)
 M['u_recolor'] = lambda: seed(36, 50, 1.6) + drop(70, 26, 14, R) + drop(80, 54, 11, B) + drop(64, 70, 10, Y)
-# The Alchemical Boon: a small sack with a flask on its label, standing on the sign.
+# The Alchemical Boon: a fertilizer sack (like every fertilizer) whose label shows a golden "?" — you get a random one — with sparkles.
 M['u_boonsack'] = lambda: ('<g transform="translate(50 50) scale(1.12) translate(-50 -49)">' + path('M36 26 C32 12 40 6 50 6 C60 6 68 12 64 26 Z', '#c9a064', 3.5)
     + path('M34 24 C14 36 8 62 14 76 C18 87 32 92 50 92 C68 92 82 87 86 76 C92 62 86 36 66 24 Z', '#d8b574', 4)
     + rect(34, 22, 32, 8, '#8a5a2b', 4, 3.5)
-    + rect(28, 44, 44, 40, CREAM, 7, 3.5)
-    + '<g transform="translate(50 64) scale(0.5)">' + flask(0, 0, '#b469e0') + '</g></g>')
+    + rect(28, 40, 44, 46, CREAM, 7, 3.5)
+    + '<text x="50" y="76" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="40" text-anchor="middle" fill="#f1b92e" stroke="%s" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">?</text>' % O
+    + star(14, 18, 9, '#fff1b0', 0.4, 4, 2.5) + star(88, 30, 7, '#fff1b0', 0.4, 4, 2.5) + star(90, 78, 6, '#fff1b0', 0.4, 4, 2.5) + '</g>')
 M['u_dice'] = lambda: rect(22, 18, 56, 56, CREAM, 10, 4) + ''.join(circ(x, y, 5.5, O, 1) for x, y in ((38, 34), (62, 34), (50, 46), (38, 58), (62, 58)))
 M['u_randseed'] = lambda: seed(38, 54, 1.8, '#d8b574') + rect(54, 20, 34, 34, CREAM, 7, 3.5) + ''.join(circ(x, y, 3.2, O, 1) for x, y in ((64, 30), (78, 30), (71, 37), (64, 44), (78, 44)))
 M['u_fertup'] = lambda: M['pots']() + arrow(80, 44, 80, 14, G, 6)
