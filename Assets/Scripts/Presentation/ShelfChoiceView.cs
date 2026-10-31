@@ -112,6 +112,13 @@ namespace Contigu.Presentation
             host.anchoredPosition = Vector2.zero;
             float visualSize = entry.FillCell ? cellSize * 0.64f : cellSize * 0.9f;
             host.sizeDelta = new Vector2(visualSize, visualSize);
+            if (entry.FillCell)
+            {
+                // Icons stand on the shelf too, like the seeds, instead of floating in the middle of their cell.
+                host.anchorMin = host.anchorMax = new Vector2(0.5f, 0f);
+                host.pivot = new Vector2(0.5f, 0f);
+                host.anchoredPosition = new Vector2(0f, 6f);
+            }
             if (entry.Columns > 0 && _stage.Tile > 0f)
             {
                 // A piece stands on the shelf by its own bottom edge, whatever its height.
