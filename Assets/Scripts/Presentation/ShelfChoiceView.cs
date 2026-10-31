@@ -207,8 +207,12 @@ namespace Contigu.Presentation
             Finish(index);
         }
 
+        /// <summary>The picture of the option chosen last (still valid right after the screen closes), so the caller can fly it somewhere; null if none.</summary>
+        public RectTransform LastChosenPreview { get; private set; }
+
         private void Finish(int index)
         {
+            LastChosenPreview = _cellByIndex.TryGetValue(index, out var chosenCell) && chosenCell != null ? chosenCell.transform.Find("Preview") as RectTransform : null;
             _root.gameObject.SetActive(false);
             if (_onChosen != null)
             {

@@ -413,10 +413,95 @@ namespace Contigu.Presentation
                 }
                 return;
             }
+            var chosenId = _run.PendingPackModifiers[index];
+            var source = _shelfChoiceView.LastChosenPreview;
+            var sourceCenter = source != null ? WorldCenter(source) : (Vector3?)null;
+            float sourceWidth = source != null ? WorldWidth(source) : 0f;
             _run.ResolvePackModifierChoice(index);
             _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
+            if (sourceCenter.HasValue && !MotionSettings.Reduced)
+            {
+                StartCoroutine(FlyFertilizerToSlot(chosenId, sourceCenter.Value, sourceWidth));
+            }
+        }
+
+        private static Vector3 WorldCenter(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return (corners[0] + corners[2]) * 0.5f;
+        }
+
+        private static float WorldWidth(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Mathf.Abs(corners[2].x - corners[0].x);
+        }
+
+        /// <summary>
+        /// The fertilizer picked in a Fertilizer Pack flies from where it stood on the shelf to its place in the fertilizer panel on an arc, shrinking to the
+        /// slot's size, and the slot pops when it lands. The real badge stays hidden until then.
+        /// </summary>
+        private System.Collections.IEnumerator FlyFertilizerToSlot(ModifierId id, Vector3 from, float fromWidth)
+        {
+            int slotIndex = -1;
+            for (int i = 0; i < _run.ActiveModifiers.Count; i++)
+            {
+                if (_run.ActiveModifiers[i] == id) { slotIndex = i; }
+            }
+            var target = slotIndex >= 0 ? _modifierPanelView.GetBadgeTransform(id, slotIndex) : null;
+            var definition = ModifierCatalog.Get(id);
+            if (target == null || definition == null)
+            {
+                yield break;
+            }
+            var hide = target.gameObject.GetComponent<CanvasGroup>() ?? target.gameObject.AddComponent<CanvasGroup>();
+            hide.alpha = 0f;
+
+            var layer = UIFactory.CreateUIObject("FertilizerFlight", _mainRoot);
+            UIFactory.StretchFull(layer);
+            layer.SetAsLastSibling();
+            const float FlyingSize = 90f;
+            var flying = ModifierBadgeFactory.Create(layer, definition, FlyingSize, _tooltipView, showBackground: false, attachTooltip: false);
+            flying.raycastTarget = false;
+            var flyRect = flying.rectTransform;
+            flyRect.anchorMin = flyRect.anchorMax = new Vector2(0.5f, 0.5f);
+            flyRect.pivot = new Vector2(0.5f, 0.5f);
+            float flyWorldWidth = Mathf.Max(0.0001f, WorldWidth(flyRect));
+            float startScale = fromWidth > 0f ? fromWidth / flyWorldWidth : 1f;
+            flyRect.position = from;
+            flyRect.localScale = Vector3.one * startScale;
+            SfxManager.Play(SfxId.PickUpPiece);
+
+            const float Duration = 0.65f;
+            float t = 0f;
+            float arc = Mathf.Abs(WorldWidth(target)) * 1.6f;
+            while (t < Duration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / Duration);
+                float eased = p * p * (3f - 2f * p);
+                // The end is read every frame: the panel may still be moving into place as the shop rebuilds.
+                var to = WorldCenter(target);
+                float endScale = WorldWidth(target) / flyWorldWidth;
+                var pos = Vector3.Lerp(from, to, eased) + new Vector3(0f, Mathf.Sin(p * Mathf.PI) * arc, 0f);
+                flyRect.position = pos;
+                // A little swell in the middle of the flight, then down to the slot's size; a slight tumble.
+                float scale = Mathf.Lerp(startScale, endScale, eased) * (1f + 0.25f * Mathf.Sin(p * Mathf.PI));
+                flyRect.localScale = Vector3.one * scale;
+                flyRect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * Mathf.PI * 2f) * 14f);
+                yield return null;
+            }
+            Destroy(layer.gameObject);
+            if (target != null)
+            {
+                hide.alpha = 1f;
+            }
+            _modifierPanelView.Pulse(id);
+            SfxManager.Play(SfxId.ValidDrop);
         }
 
         // ------------------------------------------------------------ abandoning a purchase (Esc / the "Cancel purchase" button)
