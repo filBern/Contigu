@@ -65,8 +65,9 @@ namespace Contigu.Presentation
         }
 
         /// <param name="destroyChosen">The chosen option is destroyed (Compost): it shakes and crumbles before the choice is applied.</param>
-        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false)
+        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false)
         {
+            _flyToSource = flyToSource;
             _onChosen = onChosen;
             _destroyChosen = destroyChosen;
             _celebrateChosen = celebrateChosen;
@@ -185,6 +186,7 @@ namespace Contigu.Presentation
 
         private bool _destroyChosen;
         private bool _celebrateChosen;
+        private bool _flyToSource;
         private readonly List<string> _celebrationTexts = new List<string>();
         private bool _resolving;
 
@@ -197,6 +199,11 @@ namespace Contigu.Presentation
             if (_destroyChosen && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var cell) && cell != null && cell.transform.Find("Preview") != null)
             {
                 StartCoroutine(DestroyThenResolve(index, cell));
+                return;
+            }
+            if (_flyToSource && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var flier) && flier != null && flier.transform.Find("Preview") != null && _stage.SourceRect != null && _stage.SourceRect.gameObject.activeInHierarchy)
+            {
+                StartCoroutine(FlyToSourceThenResolve(index, flier));
                 return;
             }
             if (_celebrateChosen && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var winner) && winner != null && winner.transform.Find("Preview") != null)
@@ -218,6 +225,127 @@ namespace Contigu.Presentation
             {
                 _onChosen(index);
             }
+        }
+
+        private const float FlyWindUp = 0.14f;
+        private const float FlyDuration = 0.4f;
+        private const float HitDuration = 0.28f;
+        private const int HitSparks = 12;
+
+        /// <summary>
+        /// Forge / Sprout Pack: the chosen upgrade winds up, then shoots up to the anvil (or crate) at the top of the screen, which takes the hit
+        /// (a punch and a burst of sparks), before the seed choice comes up.
+        /// </summary>
+        private IEnumerator FlyToSourceThenResolve(int index, Image cell)
+        {
+            _resolving = true;
+            foreach (var other in _cellByIndex)
+            {
+                var button = other.Value.GetComponent<Button>();
+                if (button != null) { button.interactable = false; }
+                if (other.Key != index) { other.Value.gameObject.AddComponent<CanvasGroup>().alpha = 1f; }
+            }
+            _stage.ConfirmButton.interactable = false;
+            var preview = (RectTransform)cell.transform.Find("Preview");
+            var feedback = cell.GetComponent<ShelfCellFeedback>();
+            if (feedback != null) { feedback.enabled = false; }
+            var source = _stage.SourceRect;
+
+            var start = WorldCenterOf(preview);
+            float startWidth = Mathf.Max(0.0001f, WorldWidthOf(preview));
+            var home = preview.position;
+            SfxManager.Play(SfxId.PickUpPiece);
+
+            // Wind-up: a quick squash down while the others dim.
+            float t = 0f;
+            while (t < FlyWindUp)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / FlyWindUp);
+                preview.localScale = new Vector3(1f + 0.12f * p, 1f - 0.18f * p, 1f);
+                foreach (var other in _cellByIndex)
+                {
+                    if (other.Key == index) { continue; }
+                    var g = other.Value.GetComponent<CanvasGroup>();
+                    if (g != null) { g.alpha = Mathf.Lerp(1f, 0.2f, p); }
+                }
+                yield return null;
+            }
+
+            // Flight: accelerates toward the source, shrinking to roughly its glyph's size.
+            t = 0f;
+            while (t < FlyDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / FlyDuration);
+                float eased = p * p * p;
+                var end = WorldCenterOf(source);
+                float endScale = Mathf.Clamp(WorldWidthOf(source) * 0.5f / startWidth, 0.2f, 1f);
+                preview.position = Vector3.Lerp(home, home + (end - start), eased);
+                float scale = Mathf.Lerp(1f, endScale, eased);
+                preview.localScale = new Vector3(scale * (1.12f - 0.12f * eased), scale * (0.82f + 0.18f * eased), 1f);
+                yield return null;
+            }
+            preview.gameObject.SetActive(false);
+
+            // The hit: the source punches and sparks fly.
+            SfxManager.Play(SfxId.ValidDrop);
+            var host = source.parent as RectTransform;
+            var sparks = new RectTransform[HitSparks];
+            var velocity = new Vector2[HitSparks];
+            var colors = new[] { new Color(1f, 0.89f, 0.40f), new Color(1f, 0.97f, 0.80f), new Color(1f, 0.62f, 0.2f) };
+            for (int i = 0; i < HitSparks; i++)
+            {
+                var spark = UIFactory.CreatePanel(host, "HitSpark" + i, colors[i % colors.Length]);
+                spark.raycastTarget = false;
+                var rect = spark.rectTransform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                float size = UnityEngine.Random.Range(6f, 13f);
+                rect.sizeDelta = new Vector2(size, size);
+                rect.position = WorldCenterOf(source);
+                float angle = (i / (float)HitSparks) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.25f, 0.25f);
+                velocity[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * UnityEngine.Random.Range(180f, 360f);
+                sparks[i] = rect;
+            }
+            var sourceBase = source.localScale;
+            t = 0f;
+            while (t < HitDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / HitDuration);
+                float punch = 1f + 0.2f * Mathf.Sin(p * Mathf.PI);
+                source.localScale = sourceBase * punch;
+                for (int i = 0; i < HitSparks; i++)
+                {
+                    velocity[i] *= 1f - 3f * Time.unscaledDeltaTime;
+                    sparks[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    float s = 1f - p;
+                    sparks[i].localScale = new Vector3(s, s, 1f);
+                }
+                yield return null;
+            }
+            source.localScale = sourceBase;
+            for (int i = 0; i < HitSparks; i++) { if (sparks[i] != null) { Destroy(sparks[i].gameObject); } }
+            _resolving = false;
+            if (_root.gameObject.activeSelf)
+            {
+                Finish(index);
+            }
+        }
+
+        private static Vector3 WorldCenterOf(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return (corners[0] + corners[2]) * 0.5f;
+        }
+
+        private static float WorldWidthOf(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Mathf.Abs(corners[2].x - corners[0].x);
         }
 
         private const float PopDuration = 0.28f;

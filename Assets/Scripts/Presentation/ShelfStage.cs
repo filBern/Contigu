@@ -60,6 +60,9 @@ namespace Contigu.Presentation
 
         public Button ConfirmButton { get; private set; }
 
+        /// <summary>The picture of the source (anvil, crate, sign) at the top of the screen.</summary>
+        public RectTransform SourceRect { get { return _source.rectTransform; } }
+
         public ShelfStage(RectTransform root, TooltipView tooltip)
         {
             _tooltip = tooltip;

@@ -274,11 +274,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Gives the shelf choice the shop's own shelf positions and puts the shop's shelves away while it is shown.</summary>
-        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false)
+        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false)
         {
             _shopView.SetSelectionMode(true);
             _shelfChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
-            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen, celebrateChosen);
+            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen, celebrateChosen, flyToSource);
         }
 
         private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
@@ -303,7 +303,7 @@ namespace Contigu.Presentation
                     FillCell = true
                 });
             }
-            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen);
+            ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen, flyToSource: true);
         }
 
         private void ShowPackOfModifiers(UpgradeDefinition pack)
