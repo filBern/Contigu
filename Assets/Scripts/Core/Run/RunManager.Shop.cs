@@ -220,8 +220,7 @@ namespace Contigu.Core
             }
             _upgradeSlots[2] = previousCompost != null && previousCompost.HiddenUpgrade.Id == UpgradeId.Compost ? previousCompost : ShopSlot.ForUpgrade(UpgradeCatalog.Compost);
 
-            // The upgrade shown on the Forge's shelf fits the build whenever it can.
-            var featured = RollTileUpgradeOffers(1, null, guaranteeFit: true);
+            var featured = RollTileUpgradeOffers(1, null);
             UpgradeDefinition payload = featured.Count > 0 ? featured[0] : null;
             _upgradeSlots[3] = ShopSlot.ForForge(UpgradeCatalog.Forge, payload ?? UpgradeCatalog.GoldenCells);
         }

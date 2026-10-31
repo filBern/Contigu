@@ -43,7 +43,6 @@ namespace Contigu.Presentation
             { "choice.abandon", "Skip (no refund)" },
             { "choice.abandonConfirm", "Sure? Click again (no refund)" },
             { "choice.sproutTag", "Sprout · {0}" },
-            { "choice.fits", "Goes well with: {0}" },
             { "choice.fertilizerTag", "Fertilizer · {0}" },
             { "choice.pickSeed", "Choose 1 seed to add" },
             { "choice.pickMastery", "Choose a mastery" },

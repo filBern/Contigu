@@ -72,37 +72,6 @@ namespace Contigu.Core
             return pool[pool.Count - 1];
         }
 
-        /// <summary>
-        /// A Grid-pool roll whose odds are tilted by <paramref name="multiplier"/> (the rarity weight times it, e.g. <see cref="Synergy.WeightMultiplier"/>);
-        /// an upgrade with a multiplier of 0 is never picked. Falls back to the plain rarity roll when nothing has weight.
-        /// </summary>
-        public UpgradeDefinition RollGridWeighted(System.Func<UpgradeDefinition, float> multiplier)
-        {
-            var options = UpgradeCatalog.GridPool;
-            var weights = new int[options.Length];
-            int total = 0;
-            for (int i = 0; i < options.Length; i++)
-            {
-                weights[i] = UnityEngine.Mathf.RoundToInt(GetWeight(options[i]) * 100f * UnityEngine.Mathf.Max(0f, multiplier(options[i])));
-                total += weights[i];
-            }
-            if (total <= 0)
-            {
-                return RollFromPool(UpgradePool.Grid);
-            }
-            int roll = _rng.Next(total);
-            int cumulative = 0;
-            for (int i = 0; i < options.Length; i++)
-            {
-                cumulative += weights[i];
-                if (roll < cumulative)
-                {
-                    return options[i];
-                }
-            }
-            return options[options.Length - 1];
-        }
-
         /// <summary>Draft weight for one upgrade — just its rarity's weight (see UpgradeRarityUtility.GetDraftWeight).</summary>
         private static int GetWeight(UpgradeDefinition upgrade)
         {

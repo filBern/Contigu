@@ -17,7 +17,7 @@ namespace Contigu.Core
                     return true;
                 case UpgradeId.SproutPack:
                     PendingUpgrade = upgrade;
-                    PendingPackUpgrades = RollTileUpgradeOffers(EconomyConstants.SproutPackChoiceCount, null, guaranteeFit: false);
+                    PendingPackUpgrades = RollTileUpgradeOffers(EconomyConstants.SproutPackChoiceCount, null);
                     return true;
                 case UpgradeId.FertilizerPack:
                     PendingUpgrade = upgrade;
@@ -39,27 +39,21 @@ namespace Contigu.Core
         /// <summary>Forge: the shown tile upgrade goes to a seed the player picks among a wide choice of the bag (see <see cref="PendingUpgradeTileCandidates"/>).</summary>
         private bool ApplyForge(UpgradeDefinition featured)
         {
-            // The upgrade on the shelf comes first, then more to choose from, one of which fits the build when any can (see RollTileUpgradeOffers).
+            // The upgrade on the shelf comes first, then more to choose from (see RollTileUpgradeOffers).
             PendingUpgrade = UpgradeCatalog.Forge;
             var offers = new List<UpgradeDefinition> { featured };
-            offers.AddRange(RollTileUpgradeOffers(EconomyConstants.ForgeChoiceCount - 1, offers, guaranteeFit: true));
+            offers.AddRange(RollTileUpgradeOffers(EconomyConstants.ForgeChoiceCount - 1, offers));
             PendingPackUpgrades = offers;
             return true;
         }
 
-        /// <summary>
-        /// Distinct tile upgrades for a Sprout Pack or the Forge: rarity-weighted like any draft, tilted toward the ones that fit the fertilizers held
-        /// (see <see cref="Synergy"/>). With <paramref name="guaranteeFit"/>, the first pick is a fitting one whenever a fertilizer is held and one exists.
-        /// <paramref name="already"/> lists upgrades already on offer, which are not drawn again.
-        /// </summary>
-        private List<UpgradeDefinition> RollTileUpgradeOffers(int count, IReadOnlyList<UpgradeDefinition> already, bool guaranteeFit)
+        /// <summary>Distinct tile upgrades for a Sprout Pack or the Forge, rarity-weighted like any draft (nothing steers them toward the player's build). <paramref name="already"/> lists upgrades already on offer, which are not drawn again.</summary>
+        private List<UpgradeDefinition> RollTileUpgradeOffers(int count, IReadOnlyList<UpgradeDefinition> already)
         {
             var picked = new List<UpgradeDefinition>();
-            bool needFit = guaranteeFit && _activeModifiers.Count > 0 && !AlreadyFits(already);
             for (int attempt = 0; attempt < 120 && picked.Count < count; attempt++)
             {
-                bool restrictToFit = needFit && picked.Count == 0 && attempt < 60;
-                var rolled = Upgrades.RollGridWeighted(def => restrictToFit && Synergy.FittingModifiers(def, _activeModifiers).Count == 0 ? 0f : Synergy.WeightMultiplier(def, _activeModifiers));
+                var rolled = Upgrades.RollFromPool(UpgradePool.Grid);
                 if (rolled.Id != UpgradeId.PermanentBonusSquare && UpgradeSystem.TraitKindFor(rolled.Id).HasValue && IsUpgradeEligibleForOffer(rolled)
                     && !picked.Contains(rolled) && (already == null || !System.Linq.Enumerable.Contains(already, rolled)))
                 {
@@ -67,18 +61,6 @@ namespace Contigu.Core
                 }
             }
             return picked;
-        }
-
-        private bool AlreadyFits(IReadOnlyList<UpgradeDefinition> offers)
-        {
-            for (int i = 0; offers != null && i < offers.Count; i++)
-            {
-                if (Synergy.FittingModifiers(offers[i], _activeModifiers).Count > 0)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         /// <summary>Distinct fertilizers the player does not hold and could use, for a Fertilizer Pack (uniform). With <paramref name="preview"/> it does not touch the run's random sequence's meaning: it only counts availability.</summary>

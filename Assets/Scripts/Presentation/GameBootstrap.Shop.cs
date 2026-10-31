@@ -278,22 +278,14 @@ namespace Contigu.Presentation
             foreach (var upgrade in _run.PendingPackUpgrades)
             {
                 var sprite = UpgradeVisualDefaults.GetGlyph(upgrade.Id);
-                var fitting = Synergy.FittingModifiers(upgrade, _run.ActiveModifiers);
                 string body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgrade.Description, 14), upgrade.Id);
-                if (fitting.Count > 0)
-                {
-                    var names = new List<string>();
-                    foreach (var id in fitting) { names.Add(ModifierCatalog.Get(id).Name); }
-                    body += "\n* " + Loc.T("choice.fits", string.Join(", ", names));
-                }
                 entries.Add(new ChoiceEntry
                 {
                     BuildVisual = (host, size) => BuildSpriteVisual(host, sprite),
                     Name = upgrade.Name,
                     Body = body,
                     Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
-                    FillCell = true,
-                    Fits = fitting.Count > 0
+                    FillCell = true
                 });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen);
