@@ -241,29 +241,37 @@ namespace Contigu.Presentation
             }
         }
 
-        // A small sprig between the tagline and the buttons: it grows in once the logo has landed, then sways gently.
-        private const float SprigBaseY = -155f;
-        private const float SprigWidth = 80f;
-        private const float SprigHeight = 100f;
-        private const float SprigGrowDuration = 0.9f;
+        // Sprig, the garden's mascot, stands between the tagline and the buttons: it pops in once the logo has landed, bobs and sways,
+        // and every few seconds hops with a cheer.
+        private const float SprigBaseY = -182f;
+        private const float SprigSize = 150f;
+        private const float SprigEntranceDuration = 0.5f;
+        private const float SprigHopEvery = 5.5f;
+        private const float SprigHopDuration = 0.7f;
+        private const float SprigHopHeight = 26f;
         private RectTransform _sprigRect;
+        private Image _sprigImage;
+        private Sprite _sprigHappy;
+        private Sprite _sprigCheer;
         private float _sprigStart;
 
         private void BuildSprig(RectTransform parent)
         {
-            var sprite = Resources.Load<Sprite>("Title/Sprig");
-            if (sprite == null)
+            _sprigHappy = Resources.Load<Sprite>("Characters/Sprig_Happy");
+            _sprigCheer = Resources.Load<Sprite>("Characters/Sprig_Cheer");
+            if (_sprigHappy == null)
             {
                 return;
             }
             var sprig = UIFactory.CreatePanel(parent, "Sprig", Color.white);
-            sprig.sprite = sprite;
+            sprig.sprite = _sprigHappy;
             sprig.preserveAspect = true;
             sprig.raycastTarget = false;
+            _sprigImage = sprig;
             _sprigRect = sprig.rectTransform;
             _sprigRect.anchorMin = _sprigRect.anchorMax = new Vector2(0.5f, 0.5f);
             _sprigRect.pivot = new Vector2(0.5f, 0f);
-            _sprigRect.sizeDelta = new Vector2(SprigWidth, SprigHeight);
+            _sprigRect.sizeDelta = new Vector2(SprigSize, SprigSize);
             _sprigRect.anchoredPosition = new Vector2(0f, SprigBaseY);
         }
 
@@ -278,16 +286,40 @@ namespace Contigu.Presentation
             {
                 _sprigRect.localScale = Vector3.one;
                 _sprigRect.localRotation = Quaternion.identity;
+                _sprigRect.anchoredPosition = new Vector2(0f, SprigBaseY);
                 return;
             }
-            float p = Mathf.Clamp01((t - _sprigStart) / SprigGrowDuration);
-            // Grows up from its base with a small overshoot, a little narrower while it is still young.
-            float eased = 1f + 2.2f * Mathf.Pow(p - 1f, 3f) + 1.2f * Mathf.Pow(p - 1f, 2f);
-            float height = Mathf.Max(0f, eased);
-            float width = Mathf.Lerp(0.5f, 1f, p) * Mathf.Min(1f, height + 0.2f);
-            _sprigRect.localScale = new Vector3(p <= 0f ? 0f : width, height, 1f);
-            float sway = p >= 1f ? Mathf.Sin(t * 1.5f) * 4f : Mathf.Sin(t * 3f) * 6f * (1f - p);
-            _sprigRect.localRotation = Quaternion.Euler(0f, 0f, sway);
+            float since = t - _sprigStart;
+            if (since < 0f)
+            {
+                _sprigRect.localScale = Vector3.zero;
+                return;
+            }
+            // Pop-in with a little overshoot, then the idle loop.
+            float p = Mathf.Clamp01(since / SprigEntranceDuration);
+            float pop = p < 0.7f ? Mathf.Lerp(0f, 1.12f, p / 0.7f) : Mathf.Lerp(1.12f, 1f, (p - 0.7f) / 0.3f);
+            float breathe = p >= 1f ? Mathf.Sin(t * 2.4f) * 0.025f : 0f;
+            // Every few seconds: a hop (squash before, stretch in the air) while cheering.
+            float cycle = since % SprigHopEvery;
+            float hopStart = SprigHopEvery - SprigHopDuration;
+            float hop = 0f;
+            float stretch = 0f;
+            bool cheering = false;
+            if (p >= 1f && cycle > hopStart)
+            {
+                float h = (cycle - hopStart) / SprigHopDuration;
+                hop = Mathf.Sin(h * Mathf.PI) * SprigHopHeight;
+                stretch = Mathf.Sin(h * Mathf.PI) * 0.08f;
+                cheering = true;
+            }
+            _sprigRect.localScale = new Vector3(pop * (1f - breathe - stretch * 0.5f), pop * (1f + breathe + stretch), 1f);
+            _sprigRect.localRotation = Quaternion.Euler(0f, 0f, p >= 1f ? Mathf.Sin(t * 1.3f) * 3f : 0f);
+            _sprigRect.anchoredPosition = new Vector2(0f, SprigBaseY + hop);
+            var wanted = cheering && _sprigCheer != null ? _sprigCheer : _sprigHappy;
+            if (_sprigImage.sprite != wanted)
+            {
+                _sprigImage.sprite = wanted;
+            }
         }
 
         private void Update()
