@@ -19,6 +19,7 @@ MonoBehaviour:
   shopItemMaxSpacing: 32
   shelfEdgeMargin: 40
   upgradeGlyphScale: 0.8
+  priceShowBackground: 0
   priceTagColor: {r: 1, g: 0.969, b: 0.91, a: 1}
   priceTextColor: {r: 1, g: 0.84, b: 0.3, a: 1}
   priceTextUnaffordable: {r: 1, g: 0.45, b: 0.4, a: 1}

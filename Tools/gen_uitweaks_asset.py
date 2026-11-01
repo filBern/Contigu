@@ -12,10 +12,12 @@ def num(s):
     return s.strip().rstrip('f')
 
 lines = []
-for m in re.finditer(r'public (float|int|Color|Vector2) (\w+) = (.+?);', src):
+for m in re.finditer(r'public (float|int|bool|Color|Vector2) (\w+) = (.+?);', src):
     kind, name, value = m.groups()
     if kind in ('float', 'int'):
         lines.append('  %s: %s' % (name, num(value)))
+    elif kind == 'bool':
+        lines.append('  %s: %d' % (name, 1 if value.strip() == 'true' else 0))
     elif kind == 'Color':
         r, g, b, a = [num(x) for x in re.search(r'\((.*)\)', value).group(1).split(',')]
         lines.append('  %s: {r: %s, g: %s, b: %s, a: %s}' % (name, r, g, b, a))
