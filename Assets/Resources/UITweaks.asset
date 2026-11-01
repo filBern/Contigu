@@ -20,11 +20,13 @@ MonoBehaviour:
   shelfEdgeMargin: 40
   upgradeGlyphScale: 0.8
   priceTagColor: {r: 1, g: 0.969, b: 0.91, a: 1}
+  priceTextColor: {r: 1, g: 0.84, b: 0.3, a: 1}
+  priceTextUnaffordable: {r: 1, g: 0.45, b: 0.4, a: 1}
   priceTagOutline: {r: 0.075, g: 0.129, b: 0.18, a: 1}
-  priceTagRotation: -4
-  priceTagFontSize: 22
-  priceTagIconSize: 24
-  priceTagOffset: {x: 8, y: 8}
+  priceTagRotation: 0
+  priceTagFontSize: 26
+  priceTagIconSize: 26
+  priceTagOffset: {x: 0, y: 4}
   upperShelfDrop: 56
   seedCellSize: 96
   iconCellSize: 120

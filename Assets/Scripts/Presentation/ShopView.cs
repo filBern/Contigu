@@ -1103,20 +1103,26 @@ namespace Contigu.Presentation
         /// <summary>The price tag in an item's top-right corner: Pollen icon + number (red when the player cannot pay), or just a word ("Full (4)", "Sold").</summary>
         private void BuildPriceBadge(RectTransform item, string label, bool affordable, bool showIcon)
         {
-            var tag = UIFactory.CreateSlicedImage(item, "Price", UISprites.CardBackground);
-            // A cream price tag with the game's dark outline, hanging a little crooked from the item's corner (like the signs of the stall).
+            // The price is plain lettering over the item's head, like the Pollen counter: a Pollen icon and a thick-outlined number (no box).
             var tweaks = UITweaks.Current;
-            tag.color = tweaks.priceTagColor;
-            tag.raycastTarget = false;
-            UIFactory.AddThickOutline(tag, tweaks.priceTagOutline);
-            tag.rectTransform.localRotation = Quaternion.Euler(0f, 0f, tweaks.priceTagRotation);
-            tag.rectTransform.anchorMin = new Vector2(1f, 1f);
-            tag.rectTransform.anchorMax = new Vector2(1f, 1f);
-            tag.rectTransform.pivot = new Vector2(1f, 1f);
-            tag.rectTransform.anchoredPosition = UITweaks.Current.priceTagOffset;
+            var tag = UIFactory.CreateUIObject("Price", item);
+            tag.anchorMin = new Vector2(0.5f, 1f);
+            tag.anchorMax = new Vector2(0.5f, 1f);
+            tag.pivot = new Vector2(0.5f, 0f);
+            tag.anchoredPosition = tweaks.priceTagOffset;
+            tag.localRotation = Quaternion.Euler(0f, 0f, tweaks.priceTagRotation);
+            if (tweaks.priceShowBackground)
+            {
+                var back = tag.gameObject.AddComponent<Image>();
+                back.sprite = UISprites.CardBackground;
+                back.type = Image.Type.Sliced;
+                back.color = tweaks.priceTagColor;
+                back.raycastTarget = false;
+                UIFactory.AddThickOutline(back, tweaks.priceTagOutline);
+            }
             var layout = tag.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 3f;
-            layout.padding = new RectOffset(9, 10, 3, 3);
+            layout.spacing = 2f;
+            layout.padding = new RectOffset(6, 6, 2, 2);
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
@@ -1126,18 +1132,21 @@ namespace Contigu.Presentation
 
             if (showIcon && VisualDefaults.PollenSprite != null)
             {
-                var icon = UIFactory.CreatePanel(tag.transform, "PriceIcon", Color.white);
+                var icon = UIFactory.CreatePanel(tag, "PriceIcon", Color.white);
                 icon.sprite = VisualDefaults.PollenSprite;
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
                 // Not color alone: an unaffordable price also has a faded Pollen icon (and the tooltip says how much is missing).
-                icon.color = affordable ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+                icon.color = affordable ? Color.white : new Color(1f, 1f, 1f, 0.5f);
                 var iconLayout = icon.gameObject.AddComponent<LayoutElement>();
-                iconLayout.preferredWidth = UITweaks.Current.priceTagIconSize;
-                iconLayout.preferredHeight = UITweaks.Current.priceTagIconSize;
+                iconLayout.preferredWidth = tweaks.priceTagIconSize;
+                iconLayout.preferredHeight = tweaks.priceTagIconSize;
             }
-            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, UITweaks.Current.priceTagFontSize, affordable ? UITheme.TextPrimary : UITheme.Danger);
+            var text = UIFactory.CreateText(tag, "PriceLabel", label, tweaks.priceTagFontSize, affordable ? tweaks.priceTextColor : tweaks.priceTextUnaffordable);
             text.raycastTarget = false;
+            var outline = text.gameObject.AddComponent<Outline>();
+            outline.effectColor = tweaks.priceTagOutline;
+            outline.effectDistance = new Vector2(2.5f, -2.5f);
         }
 
         // Workshop items: four of them must fit between the two side panels (fertilizers left, next round right).

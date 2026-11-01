@@ -19,13 +19,16 @@ namespace Contigu.Presentation
         [Tooltip("Espace total laissé libre entre une tablette et les deux panneaux latéraux (somme des deux côtés).")] [Range(0f, 120f)] public float shelfEdgeMargin = 40f;
         [Tooltip("Part de sa case que remplit l'icône d'une tile upgrade (1 = toute la case).")] [Range(0.4f, 1f)] public float upgradeGlyphScale = 0.8f;
 
-        [Header("Boutique : étiquette de prix")]
+        [Header("Boutique : prix")]
+        [Tooltip("Le prix est un texte contouré ; coche pour le mettre dans une étiquette (couleur ci-dessous).")] public bool priceShowBackground = false;
         public Color priceTagColor = new Color(1f, 0.969f, 0.91f, 1f);
-        public Color priceTagOutline = new Color(0.075f, 0.129f, 0.18f, 1f);
-        [Range(-20f, 20f)] public float priceTagRotation = -4f;
-        [Range(14f, 36f)] public int priceTagFontSize = 22;
-        [Range(12f, 40f)] public float priceTagIconSize = 24f;
-        [Tooltip("Décalage de l'étiquette par rapport au coin haut droit de l'article.")] public Vector2 priceTagOffset = new Vector2(8f, 8f);
+        public Color priceTextColor = new Color(1f, 0.84f, 0.3f, 1f);
+        public Color priceTextUnaffordable = new Color(1f, 0.45f, 0.4f, 1f);
+        [Tooltip("Couleur du contour du chiffre (et de l'étiquette si elle est cochée).")] public Color priceTagOutline = new Color(0.075f, 0.129f, 0.18f, 1f);
+        [Range(-20f, 20f)] public float priceTagRotation = 0f;
+        [Range(14f, 40f)] public int priceTagFontSize = 26;
+        [Range(12f, 44f)] public float priceTagIconSize = 26f;
+        [Tooltip("Décalage du prix au-dessus de l'article (centré).")] public Vector2 priceTagOffset = new Vector2(0f, 4f);
 
         [Header("Écrans de choix (packs, Forge, Compost…)")]
         [Tooltip("De combien l'étagère du haut descend.")] [Range(0f, 120f)] public float upperShelfDrop = 56f;
