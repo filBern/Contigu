@@ -20,13 +20,13 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
-        private const float CardWidth = 135f;
-        private const float CardHeight = 90f;
+        private const float CardWidth = 138f;
+        private const float MaxCardHeight = 128f;
+        private const float MinCardHeight = 92f;
         private const float CardSpacing = 6.25f;
-        private const float RowPreviewSize = 56.25f;
-        private const float PreviewTileSize = 18.75f;
-        private const float LevelLabelHeight = 20f;
-        private const float SectionHeaderHeight = 27.5f;
+        private const float PreviewTileSize = 27f;
+        private const float FooterHeight = 30f;
+        private const float SectionHeaderHeight = 32f;
         private const float SectionHeaderToGridGap = 5f;
         private const float SectionGap = 8f;
         private const float ListWidth = 1150f;
@@ -45,6 +45,7 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private RectTransform _listContainer;
         private Text _countLabel;
+        private float _cardHeight = MaxCardHeight;
 
         public bool IsVisible
         {
@@ -68,7 +69,7 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             header.rectTransform.sizeDelta = new Vector2(900f, 40f);
 
-            _countLabel = UIFactory.CreateText(_root, "Count", "", 18, UITheme.TextOnBackground);
+            _countLabel = UIFactory.CreateText(_root, "Count", "", 22, UITheme.TextOnBackground);
             _countLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -163,6 +164,10 @@ namespace Contigu.Presentation
                 }
             }
 
+            // Cards grow to fill the free height: fewer colors, taller cards.
+            float perSection = (ListHeight - 4f) / Mathf.Max(1, sections.Count) - SectionHeaderHeight - SectionHeaderToGridGap - SectionGap;
+            _cardHeight = Mathf.Clamp(perSection, MinCardHeight, MaxCardHeight);
+
             // Every section shares the same horizontal offset/width, based on whichever section has the most distinct types (capped at the number of possible shapes), so the whole block reads as centered rather than flush left.
             int columnsUsed = Mathf.Min(ColumnsPerSection, widestSection);
             float contentWidth = columnsUsed * CardWidth + (columnsUsed - 1) * CardSpacing;
@@ -203,7 +208,7 @@ namespace Contigu.Presentation
         private float BuildColorSectionHeader(PieceColor color, int totalCount, float y, float xOffset, float contentWidth)
         {
             string headerText = VisualDefaults.GetColorName(color).ToUpperInvariant() + " (" + totalCount + ")";
-            var label = UIFactory.CreateText(_listContainer, "Header_" + color, headerText, 19, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
+            var label = UIFactory.CreateText(_listContainer, "Header_" + color, headerText, 24, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
             label.rectTransform.anchorMin = new Vector2(0f, 1f);
             label.rectTransform.anchorMax = new Vector2(0f, 1f);
             label.rectTransform.pivot = new Vector2(0f, 1f);
@@ -220,12 +225,12 @@ namespace Contigu.Presentation
                 int col = i % ColumnsPerSection;
                 int row = i / ColumnsPerSection;
                 float x = xOffset + col * (CardWidth + CardSpacing);
-                float cardY = y - row * (CardHeight + CardSpacing);
+                float cardY = y - row * (_cardHeight + CardSpacing);
                 BuildTypeCard(x, cardY, types[i].Shape, color, types[i].Count);
             }
 
             int rowCount = Mathf.CeilToInt(types.Count / (float)ColumnsPerSection);
-            float gridHeight = rowCount * CardHeight + (rowCount - 1) * CardSpacing;
+            float gridHeight = rowCount * _cardHeight + (rowCount - 1) * CardSpacing;
             return y - gridHeight;
         }
 
@@ -245,35 +250,42 @@ namespace Contigu.Presentation
             row.rectTransform.anchorMax = new Vector2(0f, 1f);
             row.rectTransform.pivot = new Vector2(0f, 1f);
             row.rectTransform.anchoredPosition = new Vector2(x, y);
-            row.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
+            row.rectTransform.sizeDelta = new Vector2(CardWidth, _cardHeight);
 
+            // A thin bar in the seed's color on top, so a card is recognised before it is read.
+            var bar = UIFactory.CreatePanel(row.transform, "ColorBar", VisualDefaults.GetColor(color));
+            bar.raycastTarget = false;
+            bar.rectTransform.anchorMin = new Vector2(0f, 1f);
+            bar.rectTransform.anchorMax = new Vector2(1f, 1f);
+            bar.rectTransform.pivot = new Vector2(0.5f, 1f);
+            bar.rectTransform.anchoredPosition = Vector2.zero;
+            bar.rectTransform.sizeDelta = new Vector2(0f, 6f);
+
+            // The piece sits centered above the footer line (level on the left, count on the right).
             var previewContainer = UIFactory.CreateUIObject("Preview", row.transform);
-            previewContainer.anchorMin = new Vector2(0f, 0.5f);
-            previewContainer.anchorMax = new Vector2(0f, 0.5f);
-            previewContainer.pivot = new Vector2(0f, 0.5f);
-            previewContainer.anchoredPosition = new Vector2(9.375f, 11.875f);
-            previewContainer.sizeDelta = new Vector2(RowPreviewSize, RowPreviewSize);
+            previewContainer.anchorMin = previewContainer.anchorMax = new Vector2(0.5f, 1f);
+            previewContainer.pivot = new Vector2(0.5f, 0.5f);
+            float previewAreaHeight = _cardHeight - FooterHeight - 6f;
+            previewContainer.anchoredPosition = new Vector2(0f, -(6f + previewAreaHeight / 2f));
+            previewContainer.sizeDelta = new Vector2(CardWidth - 20f, previewAreaHeight);
 
             var trait = FindRepresentativeTrait(shape, color);
             ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject, PreviewTileSize);
 
             int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
-            var levelLabel = UIFactory.CreateText(row.transform, "Level", "Lv. " + level, 14, Color.black);
+            var levelLabel = UIFactory.CreateText(row.transform, "Level", "Lv. " + level, 17, UITheme.TextMuted, TextAnchor.MiddleLeft);
             levelLabel.raycastTarget = false;
-            levelLabel.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            levelLabel.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-            levelLabel.rectTransform.pivot = new Vector2(0f, 0.5f);
-            levelLabel.rectTransform.anchoredPosition = new Vector2(0f, -28.125f);
-            levelLabel.rectTransform.sizeDelta = new Vector2(52.5f, LevelLabelHeight);
+            levelLabel.rectTransform.anchorMin = levelLabel.rectTransform.anchorMax = new Vector2(0f, 0f);
+            levelLabel.rectTransform.pivot = new Vector2(0f, 0f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(10f, 4f);
+            levelLabel.rectTransform.sizeDelta = new Vector2(70f, FooterHeight);
 
-            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 18, UITheme.TextPrimary);
-            countLabel.rectTransform.anchorMin = new Vector2(1f, 0.5f);
-            countLabel.rectTransform.anchorMax = new Vector2(1f, 0.5f);
-            countLabel.rectTransform.pivot = new Vector2(1f, 0.5f);
-            // Pull the count inward so it stays visually close to the piece
-            // instead of scaling up the old empty gap along with the card.
-            countLabel.rectTransform.anchoredPosition = new Vector2(-14f, 0f);
-            countLabel.rectTransform.sizeDelta = new Vector2(50f, 32.5f);
+            var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 26, UITheme.TextPrimary, TextAnchor.MiddleRight);
+            countLabel.raycastTarget = false;
+            countLabel.rectTransform.anchorMin = countLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            countLabel.rectTransform.pivot = new Vector2(1f, 0f);
+            countLabel.rectTransform.anchoredPosition = new Vector2(-10f, 3f);
+            countLabel.rectTransform.sizeDelta = new Vector2(60f, FooterHeight + 2f);
         }
 
         /// <summary>Same representative-sample approach as GameBootstrap.RepresentativeTraits — see there for why a per-type row can't show more than one sample trait.</summary>
