@@ -101,7 +101,7 @@ Rééquilibrage après leur arrivée (victoires du bot, graines 31337 / 4001) : 
 
 - **Grille, avant les lignes** (`GridManager.NewModifiers.cs`) : Hedgerow, Heartwood, Trellis, Furrow, Beanstalk, Patchwork, Taproot, Snug Fit, Mosaic, Crowd, Wildflower Meadow, Wreath, plus les trois qui rapportent du Pollen (Pollinator, Honey, Nectar).
 - **Grille, après les lignes** : Cross Harvest, Reaper, Clean Slate, Tithe (Pollen), Row Crop, Column Crop, Bounty, Frostbreaker. Clean Slate se cumule avec le ×2 intégré quand la grille est vidée.
-- **État de la run** (`RunManager.NewModifiers.cs`) : Seasoned, Underdog, Finishing Blow, Last Seed, First Seed, Piggy Bank (plafonné à +5), Seed Bank, Underbrush, Rain Dancer, Sun Dancer, Frost Hardy, Windrider, Early Bird, Bossbane, Marathoner ; Rain Barrel et Granary paient du Pollen à la fin de la manche (ajoutés à `LastRoundEndLueurBonus`).
+- **État de la run** (`RunManager.NewModifiers.cs`) : Seasoned, Underdog, Finishing Blow, Last Seed, First Seed, Piggy Bank (0,1 Pollen gagné par Pollen tenu, sans plafond), Seed Bank, Underbrush, Rain Dancer, Sun Dancer, Frost Hardy, Windrider, Early Bird, Bossbane, Marathoner ; Rain Barrel et Granary paient du Pollen à la fin de la manche (ajoutés à `LastRoundEndLueurBonus`).
 - `IsModifierUsableThisRun` écarte ceux qui ne pourraient jamais se déclencher : Underdog, Finishing Blow et Underbrush sans ennemis, Frost Hardy dans un monde sans gel (Summer).
 - Prix 4 à 7 Pollen ; les valeurs sont dans `ScoringConstants` / `EconomyConstants` (section « 40 fertilizers »).
 
@@ -140,7 +140,7 @@ Le pool Grid grossit (35 → 51 upgrades) et dilue les fertilizers du Blister ; 
 
 ## Workshop : le Casino est remplacé
 
-Le Casino (cartes mystère aléatoires) est remplacé par le **Workshop** : 2 packs distincts (Seed 4, Sprout 5, Fertilizer 6, Mastery 4 Pollen ; on révèle 3 options visibles et on en garde une, Skip possible sur Sprout/Fertilizer), le **Compost** (3 Pollen, +2 par achat : retire une graine du sac) et la **Forge** (4 Pollen : une tile upgrade visible, posée sur une graine au choix parmi 10). Le Blister est inchangé. Le bot (choix de pack au hasard, jamais de Compost) a perdu de la force ; `EnemyHpMultiplier` réajustés (planner profondeur 3, 500 runs) : Spring 0,76 → 0,47 (≈ 9 %), Winter 1,03 → 0,73 (5,2 %), Summer 1,0 → 0,71 (≈ 6 %), Autumn 0,49 → 0,37 (≈ 6 %), Orchard 1,65 → 1,2 (≈ 6 %), Greenhouse 0,8 → 0,58 (≈ 6 %). Un humain choisit ses packs en connaissance de cause : ces cibles restent prudentes.
+Le Casino (cartes mystère aléatoires) est remplacé par le **Workshop** : 2 packs distincts (Seed 4, Sprout 5, Fertilizer 6, Mastery 4 Pollen ; on révèle 3 options visibles, 5 pour le Sprout Pack, et on en garde une ; Skip possible partout), le **Compost** (3 Pollen, +2 par achat dans la visite, remis à 3 à chaque manche : retire une graine du sac) et la **Forge** (4 Pollen : 3 tile upgrades au choix, puis 3 graines parmi 8). Le Blister est inchangé. Le bot (choix de pack au hasard, jamais de Compost) a perdu de la force ; `EnemyHpMultiplier` réajustés (planner profondeur 3, 500 runs) : Spring 0,76 → 0,47 (≈ 9 %), Winter 1,03 → 0,73 (5,2 %), Summer 1,0 → 0,71 (≈ 6 %), Autumn 0,49 → 0,37 (≈ 6 %), Orchard 1,65 → 1,2 (≈ 6 %), Greenhouse 0,8 → 0,58 (≈ 6 %). Un humain choisit ses packs en connaissance de cause : ces cibles restent prudentes.
 
 ## Tile upgrades sans plafond
 

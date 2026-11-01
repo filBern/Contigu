@@ -619,8 +619,10 @@ namespace Contigu.Presentation
             }
             float target = _selected ? 2f : _hovered ? 1f : 0f;
             _t = Mathf.MoveTowards(_t, target, Speed * Time.unscaledDeltaTime);
-            float lift = _t <= 1f ? Mathf.Lerp(0f, HoverLift, _t) : Mathf.Lerp(HoverLift, SelectedLift, _t - 1f);
-            float scale = _t <= 1f ? Mathf.Lerp(1f, HoverScale, _t) : Mathf.Lerp(HoverScale, SelectedScale, _t - 1f);
+            // With reduced motion the option stays put: only the golden bar under the chosen one marks the selection.
+            float motion = MotionSettings.Reduced ? 0f : 1f;
+            float lift = (_t <= 1f ? Mathf.Lerp(0f, HoverLift, _t) : Mathf.Lerp(HoverLift, SelectedLift, _t - 1f)) * motion;
+            float scale = 1f + ((_t <= 1f ? Mathf.Lerp(1f, HoverScale, _t) : Mathf.Lerp(HoverScale, SelectedScale, _t - 1f)) - 1f) * motion;
             _preview.anchoredPosition = new Vector2(_preview.anchoredPosition.x, _baseY + lift);
             _preview.localScale = new Vector3(scale, scale, 1f);
             var c = GlowColor;

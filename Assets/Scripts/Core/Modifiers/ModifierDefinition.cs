@@ -494,11 +494,11 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Guirlande = new ModifierDefinition(
             ModifierId.Guirlande, ModifierCategory.Voisinage, "Wreath",
-            "+1 Mult per tile of the seed touching 3 or more planted plots.");
+            "+1 Mult per tile of the seed touching 3 or more planted plots (the seed's own other tiles count).");
 
         public static readonly ModifierDefinition Pollinisateur = new ModifierDefinition(
             ModifierId.Pollinisateur, ModifierCategory.Couleurs, "Pollinator",
-            "+2 Pollen when the seed touches 2 or more different colors.");
+            "+2 Pollen when the seed touches a plot of another color.");
 
         public static readonly ModifierDefinition Miel = new ModifierDefinition(
             ModifierId.Miel, ModifierCategory.Connexions, "Honey",

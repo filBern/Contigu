@@ -575,7 +575,7 @@ namespace Contigu.Presentation
             abandonRect.anchorMax = new Vector2(1f, 0f);
             abandonRect.pivot = new Vector2(1f, 0f);
             abandonRect.anchoredPosition = new Vector2(-16f, 40f);
-            abandonRect.sizeDelta = new Vector2(330f, 46f);
+            abandonRect.sizeDelta = new Vector2(330f, MobileSetup.TouchMin(46f));
             _abandonButton.onClick.AddListener(RequestAbandonPurchase);
             _abandonButton.gameObject.SetActive(false);
 

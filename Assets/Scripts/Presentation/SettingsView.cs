@@ -6,8 +6,8 @@ namespace Contigu.Presentation
 {
     /// <summary>
     /// Settings overlay, reachable any time via the Escape key. Master/Music/SFX are real
-    /// UnityEngine.UI.Slider controls persisted via VolumeSettings; only Master does anything audible today
-    /// (see GameBootstrap.ApplyVolumeSettings).
+    /// UnityEngine.UI.Slider controls persisted via VolumeSettings; Master, Music and SFX all apply
+    /// (see SfxManager.ApplyVolumes).
     /// </summary>
     public sealed class SettingsView : MonoBehaviour
     {

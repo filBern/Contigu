@@ -223,7 +223,7 @@ namespace Contigu.Presentation
             continueRect.anchorMax = new Vector2(0.5f, 0f);
             continueRect.pivot = new Vector2(0.5f, 0f);
             continueRect.anchoredPosition = new Vector2(0f, 36f);
-            continueRect.sizeDelta = new Vector2(300f, 50f);
+            continueRect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(50f));
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);
 

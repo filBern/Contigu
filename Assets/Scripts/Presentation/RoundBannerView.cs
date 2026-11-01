@@ -78,10 +78,11 @@ namespace Contigu.Presentation
                     }
                 }
             }
-            bool boss = bosses.Count > 0 || run.IsBossRound;
+            // "BOSS" is reserved for the boss rounds (the ones with a boss effect, Bossbane and the like); a round that only holds a boss-type pest names it.
+            bool boss = run.IsBossRound;
             var weather = run.CurrentWeather;
             _title.text = "ROUND " + run.CurrentRoundNumber + (boss ? " - BOSS" : "");
-            _subtitle.text = (boss && bosses.Count > 0 ? string.Join(" + ", bosses) + "  ·  " : "") + DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(weather, run.CurrentWeatherColor));
+            _subtitle.text = (bosses.Count > 0 ? string.Join(" + ", bosses) + "  ·  " : "") + DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(weather, run.CurrentWeatherColor));
             _band.color = boss ? new Color(0.95f, 0.62f, 0.55f, 1f) : UITheme.PanelLight;
             _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(weather);
             _weatherIcon.enabled = _weatherIcon.sprite != null;

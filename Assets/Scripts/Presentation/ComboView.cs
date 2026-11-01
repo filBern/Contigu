@@ -181,6 +181,10 @@ namespace Contigu.Presentation
 
         private Coroutine RestartPulse(Coroutine running, RectTransform target)
         {
+            if (MotionSettings.Reduced)
+            {
+                return running;
+            }
             if (running != null)
             {
                 StopCoroutine(running);

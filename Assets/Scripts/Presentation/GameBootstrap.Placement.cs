@@ -283,6 +283,10 @@ namespace Contigu.Presentation
         /// <summary>A brief near-freeze on a killing blow, restored by the finally block (and OnDisable) so time can never stay slowed.</summary>
         private System.Collections.IEnumerator PlayHitStop(float realSeconds)
         {
+            if (MotionSettings.Reduced)
+            {
+                yield break;
+            }
             try
             {
                 Time.timeScale = 0.06f;

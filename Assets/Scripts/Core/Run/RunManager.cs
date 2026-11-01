@@ -645,7 +645,7 @@ namespace Contigu.Core
             get { return _challenge.BudgetFor(CurrentRoundIndex); }
         }
 
-        /// <summary>Rounds 4 and 8 (every RunConfig.BossRoundInterval).</summary>
+        /// <summary>Every BossRoundInterval-th round (4, 8, 12) (every RunConfig.BossRoundInterval).</summary>
         public bool IsBossRound
         {
             get { return (CurrentRoundIndex + 1) % RunConfig.BossRoundInterval == 0; }

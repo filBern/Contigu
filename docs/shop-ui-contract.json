@@ -6,7 +6,7 @@
     "pack_opening": "Which one of three revealed options to keep (or skip)",
     "seed_choice": "Which seed(s) receive the tile upgrade (Forge, Sprout Pack, Blister sprout)"
   },
-  "screens": ["shop", "pack_choice", "seed_choice_on_shop_screen", "seed_piece_choice", "mastery_choice", "draft_type_choice", "fertilizer_upgrade_choice", "seed_bag", "settings"],
+  "screens": ["shop", "pack_choice", "seed_choice_on_shop_screen", "seed_piece_choice", "mastery_choice", "fertilizer_upgrade_choice", "seed_bag", "settings"],
   "states": ["affordable", "unaffordable", "blocked_full_garden", "blocked_min_bag", "sold", "choice_pending", "abandon_armed"],
   "information_hierarchy": {
     "critical": ["Pollen count", "price (top-right of each item)", "why an item cannot be bought (tooltip + badge text)"],
@@ -19,7 +19,7 @@
     "keyboard_gamepad": "first arrow/d-pad press while nothing is focused selects the first buyable item; Selectable navigation; focus halo + tooltip; Submit buys",
     "touch": "tap buys; long press (0.45 s) shows the tooltip without buying",
     "back": "Esc closes, in order: settings, seed bag, then arms/confirms abandoning a pending purchase; otherwise opens settings",
-    "abandon": "'Cancel purchase (no refund)' button, bottom right, two-step confirm; Skip on packs"
+    "abandon": "'Skip (no refund)' button, bottom right, one click, no confirmation (see DECISIONS.md)"
   },
   "layout": {
     "reference": "1280x800, CanvasScaler match height",

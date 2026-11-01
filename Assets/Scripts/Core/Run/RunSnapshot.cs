@@ -139,7 +139,11 @@ namespace Contigu.Core
                 foreach (var v in Split(values, "mods", ',')) { s.Modifiers.Add((ModifierId)ParseInt(v)); }
                 foreach (var v in Split(values, "levels", ',')) { s.ModifierLevels.Add(ParseInt(v)); }
                 foreach (var v in Split(values, "ages", ',')) { s.ModifierAges.Add(ParseInt(v)); }
-                foreach (var p in Pairs(values, "usage")) { s.ModifierUsage[(ModifierId)p.Key] = p.Value; }
+                foreach (var p in Pairs(values, "usage"))
+                {
+                    var usageId = ModifierCatalog.RetiredReplacement((ModifierId)p.Key) ?? (ModifierId)p.Key;
+                    s.ModifierUsage[usageId] = (s.ModifierUsage.TryGetValue(usageId, out var already) ? already : 0) + p.Value;
+                }
                 foreach (var p in Pairs(values, "shapemastery")) { s.ShapeMastery[(ShapeId)p.Key] = p.Value; }
                 foreach (var p in Pairs(values, "colormastery")) { s.ColorMastery[(PieceColor)p.Key] = p.Value; }
                 s.SpecialPiecesPlayed = Int(values, "special");
@@ -149,7 +153,7 @@ namespace Contigu.Core
                 s.GradientBonus = values.ContainsKey("gradient") ? Int(values, "gradient") : 0;
                 s.EpuisementValue = values.ContainsKey("dwindling") ? Int(values, "dwindling") : ScoringConstants.EpuisementStartingBonus;
                 int lastMod = Int(values, "lastmod");
-                s.LastPurchasedModifier = lastMod >= 0 ? (ModifierId?)(ModifierId)lastMod : null;
+                s.LastPurchasedModifier = lastMod >= 0 ? (ModifierId?)(ModifierCatalog.RetiredReplacement((ModifierId)lastMod) ?? (ModifierId)lastMod) : null;
                 foreach (var v in Split(values, "weather", ',')) { s.Weather.Add((WeatherId)ParseInt(v)); }
                 foreach (var v in Split(values, "weathercolors", ',')) { s.WeatherColors.Add((PieceColor)ParseInt(v)); }
                 s.WeatherDisabled = Int(values, "weatheroff") == 1;
@@ -195,7 +199,17 @@ namespace Contigu.Core
             {
                 var f = parts[i].Split('.');
                 int tint = ParseInt(f[2]);
+                // A trait that no longer exists (the retired Sap Drain, id 76) is dropped instead of loading as a nameless one.
+                if (!System.Enum.IsDefined(typeof(PieceTraitKind), ParseInt(f[0])))
+                {
+                    continue;
+                }
                 traits.Add(new PieceTrait((PieceTraitKind)ParseInt(f[0]), ParseInt(f[1]), tint >= 0 ? (PieceColor?)(PieceColor)tint : null));
+            }
+            // Every Joker carries exactly one combat trait: one that lost it to a retired trait gets the plainest one back.
+            if (color == PieceColor.Joker && !traits.Exists(t => PieceTrait.IsJokerCombatKind(t.Kind)))
+            {
+                traits.Insert(0, new PieceTrait(PieceTraitKind.Bombe, 0));
             }
             if (traits.Count == 0)
             {

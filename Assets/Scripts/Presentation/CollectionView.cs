@@ -133,11 +133,17 @@ namespace Contigu.Presentation
             int total = 0;
             for (int i = 0; i < Tabs.Length; i++)
             {
-                int count = progress.Count(Tabs[i]);
-                int size = EntriesFor(Tabs[i]).Count;
-                found += Mathf.Min(count, size);
+                // Only entries that still exist count: ids retired from the game stay in an old save without inflating the total.
+                var entries = EntriesFor(Tabs[i]);
+                int count = 0;
+                for (int e = 0; e < entries.Count; e++)
+                {
+                    if (progress.IsDiscovered(Tabs[i], entries[e].Id)) { count++; }
+                }
+                int size = entries.Count;
+                found += count;
                 total += size;
-                _tabLabels[i].text = TabName(Tabs[i]) + "  " + Mathf.Min(count, size) + "/" + size;
+                _tabLabels[i].text = TabName(Tabs[i]) + "  " + count + "/" + size;
                 _tabImages[i].color = Tabs[i] == _current ? UITheme.ButtonSelected : UITheme.PanelLight;
             }
             int percent = total > 0 ? Mathf.FloorToInt(100f * found / total) : 0;

@@ -195,5 +195,30 @@ namespace Contigu.Tests
             Assert.AreEqual(1, run.LastRoundSummary.RoundNumber);
             Assert.AreEqual(1, run.LastRoundSummary.StarsEarned);
         }
+
+        [Test]
+        public void Restore_ConvertsARetiredOfferAndLoadsAnUnknownTraitAsNothing()
+        {
+            var original = RichRun();
+            string text = original.RoundStartSnapshot.ToText();
+            var snapshot = RunSnapshot.FromText(text);
+            snapshot.InShop = true;
+            snapshot.ShopBlister.Clear();
+            snapshot.ShopBlister.Add(new RunSnapshot.ShopSlotData { IsModifier = true, Id = (int)ModifierId.EclatCoral, PayloadId = -1 });
+            // A Joker whose only trait is the retired Sap Drain (76) gets a plain combat trait back; a plain seed just loses it.
+            string damaged = snapshot.ToText().Replace("deck=", "deck=" + (int)ShapeId.Single + "," + (int)PieceColor.Joker + ",76.0.-1;" + (int)ShapeId.Sq2 + "," + (int)PieceColor.Coral + ",76.0.-1;");
+
+            var parsed = RunSnapshot.FromText(damaged);
+
+            Assert.IsNotNull(parsed);
+            Assert.AreEqual(PieceTraitKind.Bombe, parsed.Deck[0].Trait.Value.Kind);
+            Assert.IsFalse(parsed.Deck[1].Trait.HasValue);
+            var restored = RunManager.Restore(parsed, new SystemRandomProvider(3));
+            Assert.IsNotNull(restored);
+            foreach (var slot in restored.ShopBlisterSlots)
+            {
+                if (slot != null && slot.Kind == ShopSlotKind.Modifier) { Assert.IsNotNull(ModifierCatalog.Get(slot.ModifierId)); }
+            }
+        }
     }
 }

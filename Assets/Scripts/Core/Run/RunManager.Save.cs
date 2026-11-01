@@ -42,7 +42,8 @@ namespace Contigu.Core
             }
             if (d.IsModifier)
             {
-                return ShopSlot.ForModifier((ModifierId)d.Id);
+                // A shop offer saved before a fertilizer was retired is offered as its replacement.
+                return ShopSlot.ForModifier(ModifierCatalog.RetiredReplacement((ModifierId)d.Id) ?? (ModifierId)d.Id);
             }
             var upgrade = UpgradeCatalog.Get((UpgradeId)d.Id);
             return ShopSlot.ForUpgrade(upgrade);

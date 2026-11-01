@@ -1,6 +1,6 @@
 namespace Contigu.Presentation
 {
-    /// <summary>"Reduced motion" preference (Settings): the shop's pops, pulses, swells and shakes are skipped; feedback stays readable as text and state.</summary>
+    /// <summary>"Reduced motion" preference (Settings): the shop's pops, the hit-stop, the combo and button pulses, the choice-screen lifts and the decorative sparkles are skipped; feedback stays readable as text and state.</summary>
     public static class MotionSettings
     {
         private const string Key = "ReducedMotion";

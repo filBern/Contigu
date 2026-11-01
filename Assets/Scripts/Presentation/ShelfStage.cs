@@ -87,7 +87,7 @@ namespace Contigu.Presentation
             ConfirmButton = UIFactory.CreateButton(root, "Confirm", "Confirm", UISprites.ChooseButtonBackground, 18);
             var confirmRect = ConfirmButton.GetComponent<RectTransform>();
             TopCenter(confirmRect);
-            confirmRect.sizeDelta = new Vector2(200f, 46f);
+            confirmRect.sizeDelta = new Vector2(200f, MobileSetup.TouchMin(46f));
         }
 
         /// <summary>Which row (a rest on which shelf) the option <paramref name="index"/> goes to.</summary>

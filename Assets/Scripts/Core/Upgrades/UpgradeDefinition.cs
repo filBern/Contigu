@@ -144,7 +144,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition ChameleonTile = new UpgradeDefinition(
             UpgradeId.ChameleonTile, UpgradePool.Grid, "Chameleon Sprout",
-            "Recolors the WHOLE seed to match a filled neighbor when placed.", false, UpgradeRarity.Common);
+            "Recolors the WHOLE seed to match a filled neighbor when placed, for good.", false, UpgradeRarity.Common);
 
         public static readonly UpgradeDefinition SparkTile = new UpgradeDefinition(
             UpgradeId.SparkTile, UpgradePool.Grid, "Spark Sprout",

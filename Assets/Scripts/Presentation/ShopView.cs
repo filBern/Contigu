@@ -307,7 +307,7 @@ namespace Contigu.Presentation
             rerollRect.anchorMax = new Vector2(0.5f, 0f);
             rerollRect.pivot = new Vector2(0.5f, 0f);
             rerollRect.anchoredPosition = new Vector2(-120f, 40f);
-            rerollRect.sizeDelta = new Vector2(220f, 46f);
+            rerollRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             _rerollButton.onClick.AddListener(OnRerollClicked);
 
             _leaveButton = UIFactory.CreateButton(_root, "Leave", Loc.T("shop.nextRound"), UISprites.ChooseButtonBackground, 16);
@@ -317,7 +317,7 @@ namespace Contigu.Presentation
             leaveRect.anchorMax = new Vector2(0.5f, 0f);
             leaveRect.pivot = new Vector2(0.5f, 0f);
             leaveRect.anchoredPosition = new Vector2(120f, 40f);
-            leaveRect.sizeDelta = new Vector2(220f, 46f);
+            leaveRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             _leaveButton.onClick.AddListener(OnLeaveClicked);
 
             // The seed bag is one click away from the shop (Tab still works too).
@@ -998,7 +998,7 @@ namespace Contigu.Presentation
             {
                 // Touch: the first tap (or a long press) selects the item and keeps its tooltip up, with "Tap again to buy"; only a second tap on it buys.
                 bool longPress = hoverSwell.ConsumeLongPress();
-                if (hoverSwell.LastPressWasTouch || MobileSetup.IsTouchDevice)
+                if (hoverSwell.LastPressWasTouch) // decided by the pointer of this very press: a mouse on a touch laptop buys with one click
                 {
                     if (longPress || _armedItem != rect)
                     {
