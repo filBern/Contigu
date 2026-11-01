@@ -79,7 +79,6 @@ namespace Contigu.Presentation
             AddRow(ref row, "Seeds planted", summary.Placements.ToString(), false);
             AddRow(ref row, "Pollen from placements", "+" + summary.PollenFromPlacements, false);
             AddRow(ref row, "Unused seeds + bonuses", "+" + summary.EndOfRoundPollen + " Pollen", false);
-            AddRow(ref row, "Stars", "+" + summary.StarsEarned, false);
             _root.gameObject.SetActive(true);
             _root.SetAsLastSibling();
             SfxManager.Play(SfxId.RoundClear);
