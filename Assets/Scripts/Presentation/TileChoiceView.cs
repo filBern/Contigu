@@ -34,6 +34,8 @@ namespace Contigu.Presentation
 
         // Set once per Show() call from the upgrade being resolved, so OnCellClicked doesn't need to know about upgrades itself.
         private PieceTraitKind? _previewTraitKind;
+        private Sprite _upgradeGlyph;
+        private bool _applying;
 
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
@@ -80,6 +82,8 @@ namespace Contigu.Presentation
             _previewContainerByIndex.Clear();
             _requiredCount = Mathf.Min(requiredCount, _candidates.Count);
             _previewTraitKind = UpgradeSystem.TraitKindFor(def.Id);
+            _upgradeGlyph = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id);
+            _applying = false;
 
             var columns = new List<int>();
             for (int i = 0; i < _candidates.Count; i++)
@@ -206,10 +210,7 @@ namespace Contigu.Presentation
 
             bool nowSelected = _selected.Contains(deckIndex);
             _cellBackgroundByIndex[deckIndex].GetComponent<ShelfCellFeedback>().SetSelected(nowSelected);
-            if (nowSelected != wasSelected)
-            {
-                RebuildPreview(deckIndex, showTrait: nowSelected, animate: nowSelected);
-            }
+            // No preview of the upgrade on the seed any more: it only lands there when the choice is confirmed (see ApplyThenConfirm).
             RefreshConfirmInteractable();
         }
 
@@ -220,11 +221,144 @@ namespace Contigu.Presentation
 
         private void OnConfirmClicked()
         {
+            if (_applying)
+            {
+                return;
+            }
+            if (MotionSettings.Reduced || _upgradeGlyph == null || _stage.SourceRect == null || !_stage.SourceRect.gameObject.activeInHierarchy)
+            {
+                FinishConfirm();
+                return;
+            }
+            StartCoroutine(ApplyThenConfirm());
+        }
+
+        private void FinishConfirm()
+        {
             _root.gameObject.SetActive(false);
             if (TileChoiceConfirmed != null)
             {
                 TileChoiceConfirmed(new List<int>(_selected));
             }
+        }
+
+        private const float FlightStagger = 0.2f;
+        private const float FlightDuration = 0.45f;
+        private const float SettleDuration = 0.45f;
+
+        /// <summary>The upgrade leaves the anvil/crate and flies onto each chosen seed one after the other; each seed shows it on landing, then the choice goes through.</summary>
+        private IEnumerator ApplyThenConfirm()
+        {
+            _applying = true;
+            _stage.ConfirmButton.interactable = false;
+            var chosen = new List<int>();
+            foreach (var candidate in _candidates) { if (_selected.Contains(candidate)) { chosen.Add(candidate); } }
+            foreach (var cell in _cellBackgroundByIndex.Values)
+            {
+                var button = cell.GetComponent<Button>();
+                if (button != null) { button.interactable = false; }
+                var feedback = cell.GetComponent<ShelfCellFeedback>();
+                if (feedback != null) { feedback.enabled = false; }
+            }
+            for (int i = 0; i < chosen.Count; i++)
+            {
+                StartCoroutine(FlyOntoSeed(chosen[i], i * FlightStagger));
+            }
+            float total = (chosen.Count - 1) * FlightStagger + FlightDuration + SettleDuration;
+            float t = 0f;
+            while (t < total)
+            {
+                t += GameSpeed.AnimationDelta;
+                yield return null;
+            }
+            _applying = false;
+            if (_root.gameObject.activeSelf)
+            {
+                FinishConfirm();
+            }
+        }
+
+        private IEnumerator FlyOntoSeed(int deckIndex, float delay)
+        {
+            float t = 0f;
+            while (t < delay)
+            {
+                t += GameSpeed.AnimationDelta;
+                yield return null;
+            }
+            var target = _previewContainerByIndex[deckIndex];
+            var flying = UIFactory.CreatePanel(_root, "FlyingUpgrade", Color.white);
+            flying.sprite = _upgradeGlyph;
+            flying.preserveAspect = true;
+            flying.raycastTarget = false;
+            var rect = flying.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(64f, 64f);
+            rect.SetAsLastSibling();
+            var from = WorldCenter(_stage.SourceRect);
+            SfxManager.Play(SfxId.PickUpPiece);
+
+            t = 0f;
+            while (t < FlightDuration)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / FlightDuration);
+                float eased = p * p * (3f - 2f * p);
+                var to = WorldCenter(target);
+                float arc = Mathf.Abs(from.y - to.y) * 0.25f + 40f * rect.lossyScale.y;
+                rect.position = Vector3.Lerp(from, to, eased) + new Vector3(0f, Mathf.Sin(p * Mathf.PI) * arc, 0f);
+                float scale = Mathf.Lerp(1.3f, 0.7f, eased);
+                rect.localScale = Vector3.one * scale;
+                rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * Mathf.PI * 2f) * 16f);
+                yield return null;
+            }
+            Destroy(flying.gameObject);
+
+            // Landing: the seed shows its new upgrade, punches and throws a few sparks.
+            SfxManager.Play(SfxId.SlotPop);
+            RebuildPreview(deckIndex, showTrait: true, animate: true);
+            var center = WorldCenter(target);
+            var sparks = new RectTransform[8];
+            var velocity = new Vector2[8];
+            for (int i = 0; i < sparks.Length; i++)
+            {
+                var spark = UIFactory.CreatePanel(_root, "LandSpark" + i, i % 2 == 0 ? new Color(1f, 0.9f, 0.45f) : new Color(1f, 0.97f, 0.82f));
+                spark.raycastTarget = false;
+                var sr = spark.rectTransform;
+                sr.anchorMin = sr.anchorMax = sr.pivot = new Vector2(0.5f, 0.5f);
+                float size = UnityEngine.Random.Range(6f, 12f);
+                sr.sizeDelta = new Vector2(size, size);
+                sr.position = center;
+                float angle = (i / (float)sparks.Length) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.3f, 0.3f);
+                velocity[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * UnityEngine.Random.Range(120f, 260f);
+                sparks[i] = sr;
+            }
+            float punchTime = 0f;
+            const float PunchDuration = 0.3f;
+            while (punchTime < PunchDuration)
+            {
+                punchTime += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(punchTime / PunchDuration);
+                float punch = 1f + 0.22f * Mathf.Sin(p * Mathf.PI);
+                if (target != null) { target.localScale = new Vector3(punch, punch, 1f); }
+                for (int i = 0; i < sparks.Length; i++)
+                {
+                    velocity[i] *= 1f - 3f * Time.unscaledDeltaTime;
+                    sparks[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    float s = 1f - p;
+                    sparks[i].localScale = new Vector3(s, s, 1f);
+                }
+                yield return null;
+            }
+            if (target != null) { target.localScale = Vector3.one; }
+            for (int i = 0; i < sparks.Length; i++) { if (sparks[i] != null) { Destroy(sparks[i].gameObject); } }
+        }
+
+        private static Vector3 WorldCenter(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return (corners[0] + corners[2]) * 0.5f;
         }
     }
 }
