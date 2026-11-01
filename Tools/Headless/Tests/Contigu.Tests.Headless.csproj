@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Runs the EditMode NUnit tests (Assets/Scripts/Tests/EditMode) against the headless Core build: `dotnet test`. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS1591;CS0649;CS0414;CS0169;NU1701</NoWarn>
+    <DefineConstants>$(DefineConstants);CONTIGU_DEBUG</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../Assets/Scripts/Tests/EditMode/**/*.cs" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <ProjectReference Include="../Core/Contigu.Core.Headless.csproj" />
+  </ItemGroup>
+</Project>

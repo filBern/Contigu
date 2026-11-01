@@ -44,6 +44,8 @@
 ExportedObj/
 .consulo/
 *.csproj
+# The headless Core/test/simulator projects are hand-written (not Unity-generated): CI needs them.
+!Tools/Headless/**/*.csproj
 *.unityproj
 *.sln
 *.slnx
