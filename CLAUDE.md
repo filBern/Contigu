@@ -22,7 +22,7 @@ Garde ce fichier court : seulement ce qui change la façon de travailler. L'éta
 - Toute modification d'un texte ou chiffre de fertilizer : relancer `check_icon_tags.py` (pastille de l'icône).
 
 ## Points ouverts
-- Mineurs du rapport `docs/qa/QA-2026-10-29-complet.md` non corrigés (migration des ids retirés dans les offres de boutique, compteur de Collection, étiquette BOSS, boutons tactiles de 46, accessibilité du mouvement réduit).
+- Undo d'une pose : non fait. Le Core n'a pas de copie profonde de l'état d'une manche (le snapshot est celui du début de manche et ne garde pas l'ordre de la pioche), donc un vrai Undo demande une décision de conception (voir le résumé de la session du 2026-11-01).
 - Bug mobile du bouton Seed bag jamais élucidé (soupçon : le bouton Sell le recouvre).
-- Build WebGL `QaBuild/` à régénérer pour rejouer `Tools/qa/web/flows.js`.
+- Build WebGL `QaBuild/` à régénérer pour rejouer `Tools/qa/web/flows.js`, puis une passe QA sur les nouveautés (résumé de manche, pledges, Transplant, sons, bulles de Sprig).
 - Équilibre : victoires du planner (profondeur 2) de 5 % à 14 % selon le challenge.
