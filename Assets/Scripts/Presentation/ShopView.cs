@@ -1104,16 +1104,18 @@ namespace Contigu.Presentation
         private void BuildPriceBadge(RectTransform item, string label, bool affordable, bool showIcon)
         {
             var tag = UIFactory.CreateSlicedImage(item, "Price", UISprites.CardBackground);
-            tag.color = new Color(0.10f, 0.08f, 0.07f, 0.94f);
+            // A cream price tag with the game's dark outline, hanging a little crooked from the item's corner (like the signs of the stall).
+            tag.color = UITheme.Panel;
             tag.raycastTarget = false;
-            UIFactory.AddThickOutline(tag, new Color(0.96f, 0.78f, 0.30f));
+            UIFactory.AddThickOutline(tag, UITheme.Border);
+            tag.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -4f);
             tag.rectTransform.anchorMin = new Vector2(1f, 1f);
             tag.rectTransform.anchorMax = new Vector2(1f, 1f);
             tag.rectTransform.pivot = new Vector2(1f, 1f);
             tag.rectTransform.anchoredPosition = new Vector2(8f, 8f);
             var layout = tag.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 3f;
-            layout.padding = new RectOffset(8, 8, 3, 3);
+            layout.padding = new RectOffset(9, 10, 3, 3);
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
@@ -1133,7 +1135,7 @@ namespace Contigu.Presentation
                 iconLayout.preferredWidth = 24f;
                 iconLayout.preferredHeight = 24f;
             }
-            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, 20, affordable ? UITheme.TextOnBackground : UITheme.Danger);
+            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, 22, affordable ? UITheme.TextPrimary : UITheme.Danger);
             text.raycastTarget = false;
         }
 
