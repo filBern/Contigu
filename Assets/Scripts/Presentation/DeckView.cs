@@ -26,9 +26,9 @@ namespace Contigu.Presentation
         private const float CardSpacing = 6.25f;
         private const float PreviewTileSize = 27f;
         private const float FooterHeight = 30f;
-        private const float SectionHeaderHeight = 32f;
+        private const float SectionHeaderHeight = 28f;
         private const float SectionHeaderToGridGap = 5f;
-        private const float SectionGap = 8f;
+        private const float SectionGap = 6f;
         private const float ListWidth = 1150f;
         private const float ListHeight = 700f;
 
@@ -270,7 +270,10 @@ namespace Contigu.Presentation
             previewContainer.sizeDelta = new Vector2(CardWidth - 20f, previewAreaHeight);
 
             var trait = FindRepresentativeTrait(shape, color);
-            ShapePreviewFactory.BuildWithTraits(previewContainer, PieceShapeCatalog.Get(shape), color, trait, _tooltip, row.gameObject, PreviewTileSize);
+            // The tile shrinks just enough for the tallest shapes to fit above the footer (many colors = shorter cards).
+            var shapeData = PieceShapeCatalog.Get(shape);
+            float tile = Mathf.Min(PreviewTileSize, (previewAreaHeight - 6f) / Mathf.Max(1, ShapePreviewFactory.RowsOf(shapeData)));
+            ShapePreviewFactory.BuildWithTraits(previewContainer, shapeData, color, trait, _tooltip, row.gameObject, tile);
 
             int level = _run.GetColorMasteryLevel(color) + _run.GetShapeMasteryLevel(shape) - 1;
             var levelLabel = UIFactory.CreateText(row.transform, "Level", "Lv. " + level, 17, UITheme.TextMuted, TextAnchor.MiddleLeft);
