@@ -19,6 +19,7 @@ namespace Contigu.Presentation
         private float _rollT = 1f;
         private float _bounce;
         private bool _initialized;
+        private bool _bounceActive;
         private Vector3 _baseScale = Vector3.one;
 
         /// <summary>Shows <paramref name="value"/> on <paramref name="label"/>, rolling toward it. The first call (and reduced motion) just sets it.</summary>
@@ -76,11 +77,18 @@ namespace Contigu.Presentation
                     _text.text = now.ToString();
                 }
             }
+            // The scale is only touched while a bounce is running (and once when it ends), so other effects on the label are left alone.
             if (_bounce > 0f)
             {
                 _bounce = Mathf.Max(0f, _bounce - BounceDecay * Time.unscaledDeltaTime * Mathf.Max(0.5f, _bounce * 2f));
+                transform.localScale = _baseScale * (1f + _bounce);
+                _bounceActive = true;
             }
-            transform.localScale = _baseScale * (1f + _bounce);
+            else if (_bounceActive)
+            {
+                transform.localScale = _baseScale;
+                _bounceActive = false;
+            }
         }
 
         private void OnDisable()
