@@ -1340,6 +1340,12 @@ namespace Contigu.Presentation
         /// Falls back to calling onComplete immediately if the card can't be found (e.g. already gone).
         /// </summary>
         /// <summary>The shelf item of Blister slot <paramref name="index"/> as it stands now (before the row is rebuilt), or null.</summary>
+        /// <summary>The shop's Seed bag button (where a seed won in a pack flies to), or null before the shop is built.</summary>
+        public RectTransform SeedBagButton
+        {
+            get { return _bagButtonRect; }
+        }
+
         public RectTransform GetBlisterItem(int index)
         {
             return _blisterCardsContainer.Find("BlisterSlot_" + index) as RectTransform;

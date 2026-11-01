@@ -651,10 +651,86 @@ namespace Contigu.Presentation
 
         private void OnPieceChoiceConfirmed(int candidateIndex)
         {
+            var source = _shelfChoiceView.LastChosenPreview;
             _run.ResolveUpgradePieceChoice(candidateIndex);
             _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
+            var bag = _shopView.SeedBagButton;
+            if (source != null && bag != null && !MotionSettings.Reduced)
+            {
+                StartCoroutine(FlySeedToBag(source, bag));
+            }
+        }
+
+        /// <summary>The seed won in a pack is copied where it stood and flies into the Seed bag button, which punches and shows "+1" as it lands.</summary>
+        private System.Collections.IEnumerator FlySeedToBag(RectTransform source, RectTransform bag)
+        {
+            float fromWidth = WorldWidth(source);
+            var from = WorldCenter(source);
+            var layer = UIFactory.CreateUIObject("SeedFlight", _mainRoot);
+            UIFactory.StretchFull(layer);
+            layer.SetAsLastSibling();
+            // A copy of the seed as it was drawn on the shelf (the shelf screen is already gone).
+            var copy = Instantiate(source.gameObject, layer, false);
+            foreach (var graphic in copy.GetComponentsInChildren<Graphic>(true)) { graphic.raycastTarget = false; }
+            var rect = (RectTransform)copy.transform;
+            copy.SetActive(true);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.localRotation = Quaternion.identity;
+            rect.localScale = Vector3.one;
+            rect.position = from;
+            float ownWidth = Mathf.Max(0.0001f, WorldWidth(rect));
+            float startScale = fromWidth > 0f ? fromWidth / ownWidth : 1f;
+            rect.localScale = Vector3.one * startScale;
+            SfxManager.Play(SfxId.PickUpPiece);
+
+            const float Duration = 0.6f;
+            float t = 0f;
+            while (t < Duration)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / Duration);
+                float eased = p * p * (3f - 2f * p);
+                var to = WorldCenter(bag);
+                float arc = Mathf.Abs(from.y - to.y) * 0.2f + 30f * rect.lossyScale.y;
+                rect.position = Vector3.Lerp(from, to, eased) + new Vector3(0f, Mathf.Sin(p * Mathf.PI) * arc, 0f);
+                // It shrinks to about the size of the button's text while it falls into the bag.
+                float endScale = Mathf.Clamp(WorldWidth(bag) * 0.28f / ownWidth, 0.1f, 1f);
+                rect.localScale = Vector3.one * Mathf.Lerp(startScale, endScale, eased);
+                rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * Mathf.PI * 2f) * 12f);
+                yield return null;
+            }
+            Destroy(layer.gameObject);
+
+            // Landing: the Seed bag button punches and a "+1" rises from it.
+            SfxManager.Play(SfxId.SlotPop);
+            var plus = UIFactory.CreateText(_mainRoot, "SeedPlusOne", "+1 seed", 30, VisualDefaults.GoldenColor);
+            plus.raycastTarget = false;
+            plus.rectTransform.anchorMin = plus.rectTransform.anchorMax = plus.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            plus.rectTransform.sizeDelta = new Vector2(220f, 44f);
+            plus.rectTransform.position = WorldCenter(bag);
+            var outline = plus.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0.075f, 0.129f, 0.18f, 1f);
+            outline.effectDistance = new Vector2(2f, -2f);
+            plus.rectTransform.SetAsLastSibling();
+            var baseScale = bag.localScale;
+            var plusStart = plus.rectTransform.position;
+            const float PunchDuration = 0.5f;
+            t = 0f;
+            while (t < PunchDuration)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / PunchDuration);
+                bag.localScale = baseScale * (1f + 0.16f * Mathf.Sin(Mathf.Min(1f, p / 0.5f) * Mathf.PI));
+                plus.rectTransform.position = plusStart + new Vector3(0f, 70f * p * bag.lossyScale.y, 0f);
+                var c = plus.color;
+                c.a = p < 0.6f ? 1f : 1f - (p - 0.6f) / 0.4f;
+                plus.color = c;
+                yield return null;
+            }
+            bag.localScale = baseScale;
+            Destroy(plus.gameObject);
         }
 
         private void OnMasteryOptionChosen(int optionIndex)
