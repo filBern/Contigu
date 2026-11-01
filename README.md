@@ -80,6 +80,7 @@ depuis `Window > General > Test Runner > EditMode` dans l'éditeur.
 - **Simulateur d'équilibrage** : `cd Tools/Headless/RunSim && dotnet run -- --runs 1000 --policy greedy` (voir `Tools/Headless/README.md`).
 - **CI** : `.github/workflows/headless-ci.yml` (tests + simulateur, toutes les branches) et `unity-ci.yml` (compile tout le projet dans Unity, sur `main`/PR).
 - `docs/GDD.md` : document de conception, état actuel du jeu.
+- `docs/TWEAKS.md` : régler l'interface dans l'Inspector (fichier de réglages et scènes de démo), sans toucher au code.
 - `docs/BALANCE.md` : où vivent les chiffres d'équilibrage et comment les mesurer.
 - `docs/GLOSSARY.md` : correspondance identifiants de code (français) / noms affichés (anglais).
 - `docs/DECISIONS.md` : journal des décisions de conception.

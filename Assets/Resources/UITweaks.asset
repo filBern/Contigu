@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55b511c9a384bc28846cc8b4d07a2cb, type: 3}
+  m_Name: UITweaks
+  m_EditorClassIdentifier: 
+  shopItemMaxSize: 100
+  shopItemMinSize: 64
+  shopItemPreferredSpacing: 24
+  shopItemMinSpacing: 8
+  shopItemMaxSpacing: 32
+  shelfEdgeMargin: 40
+  upgradeGlyphScale: 0.8
+  priceTagColor: {r: 1, g: 0.969, b: 0.91, a: 1}
+  priceTagOutline: {r: 0.075, g: 0.129, b: 0.18, a: 1}
+  priceTagRotation: -4
+  priceTagFontSize: 22
+  priceTagIconSize: 24
+  priceTagOffset: {x: 8, y: 8}
+  upperShelfDrop: 56
+  seedCellSize: 96
+  iconCellSize: 120
+  singleRowCellSize: 190
+  iconFillScale: 0.64
+  previewScale: 0.9
+  iconGapPerCell: 0.04
+  screenMargin: 16
+  columnGap: 24
+  leftColumnFramePad: 10
+  boardWood: {r: 0.33, g: 0.22, b: 0.13, a: 1}
+  boardDark: {r: 0.13, g: 0.09, b: 0.06, a: 1}
+  handSlotSize: 150
+  handSlotSpacing: 12
+  logoY: 200
+  subtitleY: 22
+  buttonRowY: -226
+  sprigY: -134
+  sprigSize: 130
+  sprigHopEvery: 5.5
+  challengeCardWidth: 380
+  challengeCardHeight: 480
+  challengeBannerHeight: 92
+  glintAfterIdle: 8
+  fertilizerFlightSeconds: 0.65

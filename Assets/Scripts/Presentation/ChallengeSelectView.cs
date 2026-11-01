@@ -16,10 +16,10 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class ChallengeSelectView : MonoBehaviour
     {
-        private const float CardWidth = 380f;
-        private const float CardHeight = 480f;
+        private static float CardWidth { get { return UITweaks.Current.challengeCardWidth; } }
+        private static float CardHeight { get { return UITweaks.Current.challengeCardHeight; } }
         private const float CardY = -10f;
-        private const float BannerHeight = 92f;
+        private static float BannerHeight { get { return UITweaks.Current.challengeBannerHeight; } }
         private const float ArrowButtonSize = 76f;
         private const float ArrowGap = 28f;
         private const float PopDuration = 0.18f;

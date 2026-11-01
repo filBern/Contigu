@@ -69,7 +69,7 @@ namespace Contigu.Presentation
             subtitleRect.anchorMin = new Vector2(0.5f, 0.5f);
             subtitleRect.anchorMax = new Vector2(0.5f, 0.5f);
             subtitleRect.pivot = new Vector2(0.5f, 0.5f);
-            subtitleRect.anchoredPosition = new Vector2(0f, 22f);
+            subtitleRect.anchoredPosition = new Vector2(0f, UITweaks.Current.subtitleY);
             subtitleRect.sizeDelta = new Vector2(640f, 30f);
 
             BuildSprig(_root);
@@ -148,7 +148,7 @@ namespace Contigu.Presentation
         private const float ButtonWidth = 290f;
         private const float ButtonHeight = 76f;
         private const float ButtonGap = 18f;
-        private const float ButtonRowY = -226f;
+        private static float ButtonRowY { get { return UITweaks.Current.buttonRowY; } }
 #if UNITY_WEBGL && !UNITY_EDITOR
         private const int ButtonCount = 3;
 #else
@@ -165,7 +165,7 @@ namespace Contigu.Presentation
 
         // The vector LASTBLOOM logo (Resources/Title/LastBloom.png, 1080x300). Shown at this width instead of the dot-matrix tile title when the art exists.
         private const float LogoWidth = 1060f;
-        private const float LogoBaseY = 200f;
+        private static float LogoBaseY { get { return UITweaks.Current.logoY; } }
         private const float LogoAspect = 300f / 1080f;
         private const float LogoEntranceDuration = 0.55f;
 
@@ -243,10 +243,10 @@ namespace Contigu.Presentation
 
         // Sprig, the garden's mascot, stands between the tagline and the buttons: it pops in once the logo has landed, bobs and sways,
         // and every few seconds hops with a cheer.
-        private const float SprigBaseY = -134f;
-        private const float SprigSize = 130f;
+        private static float SprigBaseY { get { return UITweaks.Current.sprigY; } }
+        private static float SprigSize { get { return UITweaks.Current.sprigSize; } }
         private const float SprigEntranceDuration = 0.5f;
-        private const float SprigHopEvery = 5.5f;
+        private static float SprigHopEvery { get { return UITweaks.Current.sprigHopEvery; } }
         private const float SprigHopDuration = 0.7f;
         private const float SprigHopHeight = 16f;
         private RectTransform _sprigRect;

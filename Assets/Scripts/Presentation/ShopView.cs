@@ -57,7 +57,7 @@ namespace Contigu.Presentation
         private const float SectionLabelHeight = 0f;
         private const float ShelfDepth = 18f;
         // Total width kept free between a shelf end and the side tablets (shared with the seed choice screens, which use the same shelves).
-        private const float ShelfEdgeMargin = 40f;
+        private static float ShelfEdgeMargin { get { return UITweaks.Current.shelfEdgeMargin; } }
         private float _sidePanelCenterX = UpcomingBoxCenterX;
         private ShopZoom _zoom;
         // Section plaque (36) + the air under it.
@@ -913,7 +913,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Share of its cell a tile-upgrade glyph fills in the shop (fertilizer sacks leave margin of their own).</summary>
-        public const float UpgradeGlyphShopScale = 0.8f;
+        public static float UpgradeGlyphShopScale { get { return UITweaks.Current.upgradeGlyphScale; } }
 
         private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
@@ -1105,14 +1105,15 @@ namespace Contigu.Presentation
         {
             var tag = UIFactory.CreateSlicedImage(item, "Price", UISprites.CardBackground);
             // A cream price tag with the game's dark outline, hanging a little crooked from the item's corner (like the signs of the stall).
-            tag.color = UITheme.Panel;
+            var tweaks = UITweaks.Current;
+            tag.color = tweaks.priceTagColor;
             tag.raycastTarget = false;
-            UIFactory.AddThickOutline(tag, UITheme.Border);
-            tag.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -4f);
+            UIFactory.AddThickOutline(tag, tweaks.priceTagOutline);
+            tag.rectTransform.localRotation = Quaternion.Euler(0f, 0f, tweaks.priceTagRotation);
             tag.rectTransform.anchorMin = new Vector2(1f, 1f);
             tag.rectTransform.anchorMax = new Vector2(1f, 1f);
             tag.rectTransform.pivot = new Vector2(1f, 1f);
-            tag.rectTransform.anchoredPosition = new Vector2(8f, 8f);
+            tag.rectTransform.anchoredPosition = UITweaks.Current.priceTagOffset;
             var layout = tag.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 3f;
             layout.padding = new RectOffset(9, 10, 3, 3);
@@ -1132,23 +1133,23 @@ namespace Contigu.Presentation
                 // Not color alone: an unaffordable price also has a faded Pollen icon (and the tooltip says how much is missing).
                 icon.color = affordable ? Color.white : new Color(1f, 1f, 1f, 0.45f);
                 var iconLayout = icon.gameObject.AddComponent<LayoutElement>();
-                iconLayout.preferredWidth = 24f;
-                iconLayout.preferredHeight = 24f;
+                iconLayout.preferredWidth = UITweaks.Current.priceTagIconSize;
+                iconLayout.preferredHeight = UITweaks.Current.priceTagIconSize;
             }
-            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, 22, affordable ? UITheme.TextPrimary : UITheme.Danger);
+            var text = UIFactory.CreateText(tag.transform, "PriceLabel", label, UITweaks.Current.priceTagFontSize, affordable ? UITheme.TextPrimary : UITheme.Danger);
             text.raycastTarget = false;
         }
 
         // Workshop items: four of them must fit between the two side panels (fertilizers left, next round right).
-        private const float MaxItemSize = 100f;
-        private const float PreferredItemSpacing = 24f;
-        private const float MinItemSize = 64f;
-        private const float MinItemSpacing = 8f;
-        private const float MaxItemSpacing = 32f;
+        private static float MaxItemSize { get { return UITweaks.Current.shopItemMaxSize; } }
+        private static float PreferredItemSpacing { get { return UITweaks.Current.shopItemPreferredSpacing; } }
+        private static float MinItemSize { get { return UITweaks.Current.shopItemMinSize; } }
+        private static float MinItemSpacing { get { return UITweaks.Current.shopItemMinSpacing; } }
+        private static float MaxItemSpacing { get { return UITweaks.Current.shopItemMaxSpacing; } }
         // Recomputed on every Refresh from the room left between the two tablets, so a narrower screen shrinks the items instead of overlapping the tablets.
         private ShelfLayout _shelfLayout;
-        private float _itemSize = MaxItemSize;
-        private float _itemSpacing = MaxItemSpacing;
+        private float _itemSize = 100f; // recomputed from UITweaks at every Refresh (Resources cannot be read in a field initializer)
+        private float _itemSpacing = 32f;
 
         private void BuildUpgradeCard(RunManager run, int index)
         {

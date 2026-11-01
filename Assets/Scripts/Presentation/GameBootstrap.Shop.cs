@@ -554,7 +554,7 @@ namespace Contigu.Presentation
             flyRect.localScale = Vector3.one * startScale;
             SfxManager.Play(SfxId.PickUpPiece);
 
-            const float Duration = 0.65f;
+            float Duration = UITweaks.Current.fertilizerFlightSeconds;
             float t = 0f;
             float arc = Mathf.Abs(WorldWidth(target)) * 1.6f;
             while (t < Duration)

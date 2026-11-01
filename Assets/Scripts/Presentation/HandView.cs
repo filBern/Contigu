@@ -45,8 +45,8 @@ namespace Contigu.Presentation
         private static readonly Color SlotDividerColor = new Color(0f, 0f, 0f, 0f); // the cards stand apart on the board: no separators
         // Each slot is its own darker parchment tray set into the column's card; selection, hover and boss locks lighten or redden it.
         // Same look as the left column: slots are cream cards on a dark wooden board.
-        private static readonly Color BoardWood = new Color(0.33f, 0.22f, 0.13f, 1f);
-        private static readonly Color BoardDark = new Color(0.13f, 0.09f, 0.06f, 1f);
+        private static Color BoardWood { get { return UITweaks.Current.boardWood; } }
+        private static Color BoardDark { get { return UITweaks.Current.boardDark; } }
         private static readonly Color SlotClear = new Color(1f, 0.969f, 0.910f, 1f);
         private static readonly Color SlotHoverColor = new Color(1f, 0.95f, 0.80f, 1f);
         private static readonly Color SlotSelectedColor = new Color(1f, 0.89f, 0.58f, 1f);
@@ -55,9 +55,9 @@ namespace Contigu.Presentation
         private float _previewBudget = SlotPreviewBudget;
         /// <summary>Largest side a slot preview may span: the slot minus its border and a little breathing room.</summary>
         private const float SlotPreviewBudget = 140f;
-        private const float SlotWidth = 150f;
-        private const float SlotHeight = 150f;
-        private const float SlotSpacing = 12f;
+        private static float SlotWidth { get { return UITweaks.Current.handSlotSize; } }
+        private static float SlotHeight { get { return UITweaks.Current.handSlotSize; } }
+        private static float SlotSpacing { get { return UITweaks.Current.handSlotSpacing; } }
         private const float ShuffleButtonWidth = 46f;
         private const float ShuffleButtonHeight = 48f;
         // The ghost hides fully over a valid spot since the grid's own

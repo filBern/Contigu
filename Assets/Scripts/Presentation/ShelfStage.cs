@@ -38,14 +38,14 @@ namespace Contigu.Presentation
         private const float RowOverlap = 2f;
         // The stage shelves are exactly as wide as the shop shelves (both stop short of the side tablets).
         private const float ExtraWidth = 0f;
-        private const float UpperShelfDrop = 56f;
-        private const float IconGapPerCell = 0.04f;
+        private static float UpperShelfDrop { get { return UITweaks.Current.upperShelfDrop; } }
+        private static float IconGapPerCell { get { return UITweaks.Current.iconGapPerCell; } }
         private const int MaxPerRow = 3; // one row up to 3 options; beyond that two rows (up to 4 each: 8 is the most the shop ever shows)
         // A pack with only 3 options must not get huge cells: the stack (source, title, row) has to stay below the shop header.
-        public const float SeedCellSize = 96f;
-        public const float IconCellSize = 120f;
+        public static float SeedCellSize { get { return UITweaks.Current.seedCellSize; } }
+        public static float IconCellSize { get { return UITweaks.Current.iconCellSize; } }
         // One row of options stands on the LOWER shelf, which leaves the room above it for much bigger cells (the stack still ends below the shop header).
-        public const float SingleRowCellSize = 190f;
+        public static float SingleRowCellSize { get { return UITweaks.Current.singleRowCellSize; } }
 
         private readonly TooltipView _tooltip;
         private readonly Image _source;
@@ -113,8 +113,12 @@ namespace Contigu.Presentation
             return _cellWidths != null && index < _cellWidths.Length && _cellWidths[index] > 0f ? _cellWidths[index] : CellSize;
         }
 
-        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm, float maxCellSize = SeedCellSize, IReadOnlyList<int> columns = null)
+        public void Begin(ShelfLayout layout, ChoiceSource source, string title, int total, bool withConfirm, float maxCellSize = -1f, IReadOnlyList<int> columns = null)
         {
+            if (maxCellSize <= 0f)
+            {
+                maxCellSize = SeedCellSize;
+            }
             Clear(_row1);
             Clear(_row2);
             _firstRowCount = total <= MaxPerRow ? total : (total + 1) / 2;

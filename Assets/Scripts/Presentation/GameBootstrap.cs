@@ -477,8 +477,8 @@ namespace Contigu.Presentation
             float canvasWidth = Mathf.Max(1280f, 800f * aspect);
             float halfCanvasWidth = canvasWidth * 0.5f;
             const float ZoneMargin = 12f;
-            const float ColumnGap = 24f;
-            const float ScreenMargin = 16f;
+            float ColumnGap = UITweaks.Current.columnGap;
+            float ScreenMargin = UITweaks.Current.screenMargin;
             float zoneTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + ZoneMargin);
             float zoneBottomY = -canvasHeight * 0.5f + HudView.BarHeight + ZoneMargin;
             float leftColumnWidth = ModifierPanelView.PanelWidth; // the score card, the fertilizers and the two buttons are all this wide
@@ -734,9 +734,9 @@ namespace Contigu.Presentation
         /// <summary>One dark wooden board behind the whole left column (score card, fertilizers, Seed bag, Menu) so the four pieces read as a single object, nailed at its corners.</summary>
         private void BuildLeftColumnFrame(Transform parent, RectTransform behind, float centerX, float topY, float bottomY, float columnWidth)
         {
-            const float Pad = 10f;
-            var wood = new Color(0.33f, 0.22f, 0.13f, 1f);
-            var dark = new Color(0.13f, 0.09f, 0.06f, 1f);
+            float Pad = UITweaks.Current.leftColumnFramePad;
+            var wood = UITweaks.Current.boardWood;
+            var dark = UITweaks.Current.boardDark;
             var frame = UIFactory.CreateSlicedImage(parent, "LeftColumnFrame", UISprites.CardBackground);
             frame.color = wood;
             frame.raycastTarget = false;

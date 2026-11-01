@@ -15,7 +15,7 @@ namespace Contigu.Presentation
         private const float TwinkleMin = 0.45f;
         private const float TwinkleMax = 1.1f;
         private const float SparkleLife = 0.95f;
-        private const float GlintAfterIdle = 8f; // seconds without a tile placed, counted once the scoring of the last one is over
+        private static float GlintAfterIdle { get { return UITweaks.Current.glintAfterIdle; } } // seconds without a tile placed, counted once the scoring of the last one is over
         private const float GlintSweepDuration = 1.1f;
         private const float GlintLife = 0.7f;
         private const float BandAngle = 18f;
