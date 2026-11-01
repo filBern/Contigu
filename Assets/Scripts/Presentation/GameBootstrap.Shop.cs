@@ -500,7 +500,7 @@ namespace Contigu.Presentation
             float arc = Mathf.Abs(WorldWidth(target)) * 1.6f;
             while (t < Duration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / Duration);
                 float eased = p * p * (3f - 2f * p);
                 // The end is read every frame: the panel may still be moving into place as the shop rebuilds.

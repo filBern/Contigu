@@ -260,7 +260,7 @@ namespace Contigu.Presentation
             float t = 0f;
             while (t < FlyWindUp)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / FlyWindUp);
                 preview.localScale = new Vector3(1f + 0.12f * p, 1f - 0.18f * p, 1f);
                 foreach (var other in _cellByIndex)
@@ -276,7 +276,7 @@ namespace Contigu.Presentation
             t = 0f;
             while (t < FlyDuration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / FlyDuration);
                 float eased = p * p * p;
                 var end = WorldCenterOf(source);
@@ -312,14 +312,14 @@ namespace Contigu.Presentation
             t = 0f;
             while (t < HitDuration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / HitDuration);
                 float punch = 1f + 0.2f * Mathf.Sin(p * Mathf.PI);
                 source.localScale = sourceBase * punch;
                 for (int i = 0; i < HitSparks; i++)
                 {
-                    velocity[i] *= 1f - 3f * Time.unscaledDeltaTime;
-                    sparks[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    velocity[i] *= 1f - 3f * GameSpeed.AnimationDelta;
+                    sparks[i].anchoredPosition += velocity[i] * GameSpeed.AnimationDelta;
                     float s = 1f - p;
                     sparks[i].localScale = new Vector3(s, s, 1f);
                 }
@@ -426,7 +426,7 @@ namespace Contigu.Presentation
             float t = 0f;
             while (t < CelebrationDuration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / PopDuration);
                 // Pop: up past 1.35 and settling at 1.2, with a small hop.
                 float pop = p < 0.6f ? Mathf.Lerp(1f, 1.4f, p / 0.6f) : Mathf.Lerp(1.4f, 1.2f, (p - 0.6f) / 0.4f);
@@ -448,8 +448,8 @@ namespace Contigu.Presentation
 
                 for (int i = 0; i < SparkCount; i++)
                 {
-                    velocity[i] *= 1f - 2.2f * Time.unscaledDeltaTime;
-                    sparks[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    velocity[i] *= 1f - 2.2f * GameSpeed.AnimationDelta;
+                    sparks[i].anchoredPosition += velocity[i] * GameSpeed.AnimationDelta;
                     sparks[i].localRotation = Quaternion.Euler(0f, 0f, 45f + spin[i] * t);
                     float s = 1f - life * life;
                     sparks[i].localScale = new Vector3(s, s, 1f);
@@ -501,7 +501,7 @@ namespace Contigu.Presentation
             float t = 0f;
             while (t < ShakeDuration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 preview.anchoredPosition = home + new Vector2(Mathf.Sin(t * 70f) * 5f, 0f);
                 yield return null;
             }
@@ -534,7 +534,7 @@ namespace Contigu.Presentation
             float total = Mathf.Max(CrumbleDuration, DebrisLife);
             while (t < total)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / CrumbleDuration);
                 float scale = Mathf.Lerp(1f, 0.15f, p * p);
                 preview.localScale = new Vector3(scale, scale, 1f);
@@ -544,8 +544,8 @@ namespace Contigu.Presentation
                 for (int i = 0; i < DebrisCount; i++)
                 {
                     if (bits[i] == null) { continue; }
-                    velocity[i].y -= DebrisGravity * Time.unscaledDeltaTime;
-                    bits[i].anchoredPosition += velocity[i] * Time.unscaledDeltaTime;
+                    velocity[i].y -= DebrisGravity * GameSpeed.AnimationDelta;
+                    bits[i].anchoredPosition += velocity[i] * GameSpeed.AnimationDelta;
                     bits[i].localRotation = Quaternion.Euler(0f, 0f, spin[i] * t);
                     var image = bits[i].GetComponent<Image>();
                     var c = image.color;
@@ -619,7 +619,7 @@ namespace Contigu.Presentation
                 rect.offsetMax = new Vector2(6f, 1f);
             }
             float target = _selected ? 2f : _hovered ? 1f : 0f;
-            _t = Mathf.MoveTowards(_t, target, Speed * Time.unscaledDeltaTime);
+            _t = Mathf.MoveTowards(_t, target, Speed * GameSpeed.AnimationDelta);
             // With reduced motion the option stays put: only the golden bar under the chosen one marks the selection.
             float motion = MotionSettings.Reduced ? 0f : 1f;
             float lift = (_t <= 1f ? Mathf.Lerp(0f, HoverLift, _t) : Mathf.Lerp(HoverLift, SelectedLift, _t - 1f)) * motion;

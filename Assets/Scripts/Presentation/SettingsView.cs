@@ -98,9 +98,30 @@ namespace Contigu.Presentation
             }
             BuildResetButton(_root);
             BuildMotionToggle(_root);
+            BuildSpeedToggle(_root);
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>"Animation speed" button: x1, x2, x4, then back to x1 (see GameSpeed); beside the Reduced motion switch.</summary>
+        private static void BuildSpeedToggle(Transform parent)
+        {
+            var button = UIFactory.CreateButton(parent, "AnimationSpeed", "", UISprites.CancelButtonBackground, 16);
+            UIFactory.DisablePlants(button);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(165f, 310f);
+            rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
+            var label = button.GetComponentInChildren<Text>();
+            label.text = "Animation speed: " + GameSpeed.Label;
+            button.onClick.AddListener(() =>
+            {
+                GameSpeed.Cycle();
+                label.text = "Animation speed: " + GameSpeed.Label;
+            });
         }
 
         /// <summary>"Reduced motion" switch: when on, the shop's pops, pulses, swells and shakes are skipped.</summary>
@@ -112,7 +133,7 @@ namespace Contigu.Presentation
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 310f);
+            rect.anchoredPosition = new Vector2(-165f, 310f);
             rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");

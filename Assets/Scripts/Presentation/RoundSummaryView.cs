@@ -119,7 +119,7 @@ namespace Contigu.Presentation
             const float Duration = 0.3f;
             while (t < Duration)
             {
-                t += Time.unscaledDeltaTime;
+                t += GameSpeed.AnimationDelta;
                 float p = Mathf.Clamp01(t / Duration);
                 float s = p < 0.7f ? Mathf.Lerp(0.8f, 1.06f, p / 0.7f) : Mathf.Lerp(1.06f, 1f, (p - 0.7f) / 0.3f);
                 _card.localScale = new Vector3(s, s, 1f);

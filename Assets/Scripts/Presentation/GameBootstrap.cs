@@ -528,7 +528,7 @@ namespace Contigu.Presentation
             // Sized to be about as tall as the x1 button beside it (44): no pill behind it any more, the band is dark.
             const float BoardPollenScale = 0.45f;
             lueurRect.localScale = Vector3.one * BoardPollenScale;
-            float pollenX = -halfCanvasWidth + 16f + MobileSetup.TouchMin(64f) + 14f;
+            float pollenX = -halfCanvasWidth + 16f; // the speed button moved to Settings: the chip takes its place
             float pollenY = canvasHeight * 0.5f - 62f - MobileSetup.TouchMin(44f) * 0.5f;
             lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
 
