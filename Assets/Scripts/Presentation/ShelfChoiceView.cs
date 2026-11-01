@@ -65,8 +65,9 @@ namespace Contigu.Presentation
         }
 
         /// <param name="destroyChosen">The chosen option is destroyed (Compost): it shakes and crumbles before the choice is applied.</param>
-        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false)
+        public void Show(ChoiceSource source, string title, IReadOnlyList<ChoiceEntry> entries, bool needsConfirm, Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false, Sprite carriedGlyph = null)
         {
+            _carriedGlyph = carriedGlyph;
             _flyToSource = flyToSource;
             _onChosen = onChosen;
             _destroyChosen = destroyChosen;
@@ -187,6 +188,7 @@ namespace Contigu.Presentation
         private bool _destroyChosen;
         private bool _celebrateChosen;
         private bool _flyToSource;
+        private Sprite _carriedGlyph;
         private readonly List<string> _celebrationTexts = new List<string>();
         private bool _resolving;
 
@@ -204,6 +206,11 @@ namespace Contigu.Presentation
             if (_flyToSource && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var flier) && flier != null && flier.transform.Find("Preview") != null && _stage.SourceRect != null && _stage.SourceRect.gameObject.activeInHierarchy)
             {
                 StartCoroutine(FlyToSourceThenResolve(index, flier));
+                return;
+            }
+            if (_carriedGlyph != null && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var receiver) && receiver != null && receiver.transform.Find("Preview") != null && _stage.SourceRect != null && _stage.SourceRect.gameObject.activeInHierarchy)
+            {
+                StartCoroutine(CarryOntoSeedThenResolve(index, receiver));
                 return;
             }
             if (_celebrateChosen && !MotionSettings.Reduced && _cellByIndex.TryGetValue(index, out var winner) && winner != null && winner.transform.Find("Preview") != null)
@@ -327,6 +334,101 @@ namespace Contigu.Presentation
             }
             source.localScale = sourceBase;
             for (int i = 0; i < HitSparks; i++) { if (sparks[i] != null) { Destroy(sparks[i].gameObject); } }
+            _resolving = false;
+            if (_root.gameObject.activeSelf)
+            {
+                Finish(index);
+            }
+        }
+
+        /// <summary>
+        /// Transplant, step 2: the upgrade the tool took in step 1 leaves it again, arcs over to the chosen seed and lands on it
+        /// (punch + sparks, the other seeds dim) before the choice goes through.
+        /// </summary>
+        private IEnumerator CarryOntoSeedThenResolve(int index, Image cell)
+        {
+            _resolving = true;
+            foreach (var other in _cellByIndex)
+            {
+                var button = other.Value.GetComponent<Button>();
+                if (button != null) { button.interactable = false; }
+                if (other.Key != index) { other.Value.gameObject.AddComponent<CanvasGroup>(); }
+            }
+            _stage.ConfirmButton.interactable = false;
+            var preview = (RectTransform)cell.transform.Find("Preview");
+            var feedback = cell.GetComponent<ShelfCellFeedback>();
+            if (feedback != null) { feedback.enabled = false; }
+
+            var flying = UIFactory.CreatePanel(_root, "CarriedUpgrade", Color.white);
+            flying.sprite = _carriedGlyph;
+            flying.preserveAspect = true;
+            flying.raycastTarget = false;
+            var rect = flying.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(72f, 72f);
+            rect.SetAsLastSibling();
+            var from = WorldCenterOf(_stage.SourceRect);
+            SfxManager.Play(SfxId.PickUpPiece);
+
+            const float Duration = 0.5f;
+            float t = 0f;
+            while (t < Duration)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / Duration);
+                float eased = p * p * (3f - 2f * p);
+                var to = WorldCenterOf(preview);
+                float arc = Mathf.Abs(from.y - to.y) * 0.25f + 40f * rect.lossyScale.y;
+                rect.position = Vector3.Lerp(from, to, eased) + new Vector3(0f, Mathf.Sin(p * Mathf.PI) * arc, 0f);
+                rect.localScale = Vector3.one * Mathf.Lerp(1.3f, 0.8f, eased);
+                rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(p * Mathf.PI * 2f) * 16f);
+                foreach (var other in _cellByIndex)
+                {
+                    if (other.Key == index) { continue; }
+                    var g = other.Value.GetComponent<CanvasGroup>();
+                    if (g != null) { g.alpha = Mathf.Lerp(1f, 0.3f, p); }
+                }
+                yield return null;
+            }
+            Destroy(flying.gameObject);
+
+            // Landing: the seed punches and throws sparks.
+            SfxManager.Play(SfxId.SlotPop);
+            var center = WorldCenterOf(preview);
+            const int Count = 10;
+            var sparks = new RectTransform[Count];
+            var velocity = new Vector2[Count];
+            for (int i = 0; i < Count; i++)
+            {
+                var spark = UIFactory.CreatePanel(_root, "LandSpark" + i, i % 2 == 0 ? new Color(1f, 0.9f, 0.45f) : new Color(1f, 0.97f, 0.82f));
+                spark.raycastTarget = false;
+                var sr = spark.rectTransform;
+                sr.anchorMin = sr.anchorMax = sr.pivot = new Vector2(0.5f, 0.5f);
+                float size = UnityEngine.Random.Range(6f, 12f);
+                sr.sizeDelta = new Vector2(size, size);
+                sr.position = center;
+                float angle = (i / (float)Count) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.3f, 0.3f);
+                velocity[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * UnityEngine.Random.Range(140f, 280f);
+                sparks[i] = sr;
+            }
+            const float Punch = 0.35f;
+            t = 0f;
+            while (t < Punch)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / Punch);
+                preview.localScale = Vector3.one * (1f + 0.25f * Mathf.Sin(p * Mathf.PI));
+                for (int i = 0; i < Count; i++)
+                {
+                    velocity[i] *= 1f - 3f * GameSpeed.AnimationDelta;
+                    sparks[i].anchoredPosition += velocity[i] * GameSpeed.AnimationDelta;
+                    float sc = 1f - p;
+                    sparks[i].localScale = new Vector3(sc, sc, 1f);
+                }
+                yield return null;
+            }
+            preview.localScale = Vector3.one;
+            for (int i = 0; i < Count; i++) { if (sparks[i] != null) { Destroy(sparks[i].gameObject); } }
             _resolving = false;
             if (_root.gameObject.activeSelf)
             {

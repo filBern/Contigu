@@ -278,11 +278,11 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Gives the shelf choice the shop's own shelf positions and puts the shop's shelves away while it is shown.</summary>
-        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false)
+        private void ShowShelfChoice(ChoiceSource source, string title, List<ChoiceEntry> entries, bool needsConfirm, System.Action<int> onChosen, bool destroyChosen = false, bool celebrateChosen = false, bool flyToSource = false, Sprite carriedGlyph = null)
         {
             _shopView.SetSelectionMode(true);
             _shelfChoiceView.SetShelfLayout(_shopView.GetShelfLayout());
-            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen, celebrateChosen, flyToSource);
+            _shelfChoiceView.Show(source, title, entries, needsConfirm, onChosen, destroyChosen, celebrateChosen, flyToSource, carriedGlyph);
         }
 
         private static void BuildSeedVisual(RectTransform host, PieceShape shape, PieceColor color, IReadOnlyList<PieceTrait> traits, TooltipView tooltip)
@@ -407,6 +407,7 @@ namespace Contigu.Presentation
         {
             var sources = new List<RunManager.TransplantSource>(_run.PendingTransplantSources);
             var upgradeNames = new List<string>();
+            var upgradeGlyphs = new List<Sprite>();
             var entries = new List<ChoiceEntry>();
             foreach (var source in sources)
             {
@@ -415,6 +416,7 @@ namespace Contigu.Presentation
                 var trait = token.Traits[source.TraitIndex];
                 var only = new List<PieceTrait> { trait };
                 upgradeNames.Add(PieceTraitVisualDefaults.GetName(trait.Kind));
+                upgradeGlyphs.Add(PieceTraitVisualDefaults.GetBadgeSprite(trait.Kind));
                 entries.Add(new ChoiceEntry
                 {
                     Columns = ShapePreviewFactory.ColumnsOf(shape),
@@ -428,18 +430,18 @@ namespace Contigu.Presentation
             {
                 if (_run.ResolveTransplantSource(index))
                 {
-                    ShowTransplantTargets(pending, upgradeNames[index]);
+                    ShowTransplantTargets(pending, upgradeNames[index], upgradeGlyphs[index]);
                 }
                 else
                 {
                     SetStatusText("No other seed has a free tile for it: pick another upgrade or skip.");
                     ShowTransplantSources(pending);
                 }
-            });
+            }, flyToSource: true);
         }
 
         /// <summary>Transplant, step 2: the seeds that can receive the chosen upgrade.</summary>
-        private void ShowTransplantTargets(UpgradeDefinition pending, string upgradeName)
+        private void ShowTransplantTargets(UpgradeDefinition pending, string upgradeName, Sprite glyph)
         {
             var deckIndices = new List<int>(_run.PendingUpgradeTileCandidates);
             var entries = new List<ChoiceEntry>();
@@ -454,7 +456,8 @@ namespace Contigu.Presentation
                 _shopView.SetSelectionMode(false);
                 RefreshAll();
                 _shopView.Refresh(_run);
-            });
+                SetStatusText(upgradeName + " moved to a new seed.");
+            }, carriedGlyph: glyph);
         }
 
         private void ShowCompost(UpgradeDefinition pending)
