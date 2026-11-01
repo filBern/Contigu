@@ -17,7 +17,7 @@ namespace Contigu.Presentation
     public sealed class ChallengeSelectView : MonoBehaviour
     {
         private const float CardWidth = 380f;
-        private const float CardHeight = 440f;
+        private const float CardHeight = 480f;
         private const float CardY = -10f;
         private const float BannerHeight = 92f;
         private const float ArrowButtonSize = 76f;
@@ -59,7 +59,7 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private bool _playArmed;
-        private const string PledgeHeading = "Optional pledges: +1 Star each, if kept until the victory";
+        private const string PledgeHeading = "Optional pledges: +1 Star each if kept to the victory";
         private Text _pledgeTitle;
         private Pledge _selectedPledges;
         private readonly Dictionary<Pledge, Image> _pledgeChips = new Dictionary<Pledge, Image>();
@@ -143,7 +143,7 @@ namespace Contigu.Presentation
                 _dots[i] = dot;
             }
 
-            BuildPledgeRow(_root);
+            BuildPledgeRow(_card.transform);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD || CONTIGU_DEBUG
             var unlockAll = UIFactory.CreateButton(_root, "UnlockAll", "Unlock all (dev)", UITheme.PanelLight, 14);
@@ -160,34 +160,41 @@ namespace Contigu.Presentation
             return _root;
         }
 
-        private const float PledgeChipWidth = 150f;
-        private static readonly Color PledgeOff = new Color(1f, 1f, 1f, 0.16f);
-        private static readonly Color PledgeOn = new Color(0.95f, 0.78f, 0.28f, 1f);
+        private const float PledgeChipWidth = 170f;
+        private static readonly Color PledgeOff = new Color(0.62f, 0.62f, 0.62f, 1f);
+        private static readonly Color PledgeOn = new Color(1f, 0.9f, 0.5f, 1f);
+        private RectTransform _pledgeGroup;
 
-        /// <summary>Optional pledges under the card: tick the rules you want to play by; each one still kept at the victory pays one extra Star.</summary>
-        private void BuildPledgeRow(Transform parent)
+        /// <summary>
+        /// Optional pledges inside the card, above Play (2 x 2 chips): tick the rules you want to play by; each one still kept at the victory
+        /// pays one extra Star. Only shown once the default challenge has been won.
+        /// </summary>
+        private void BuildPledgeRow(Transform card)
         {
-            var title = UIFactory.CreateText(parent, "PledgeTitle", PledgeHeading, 15, UITheme.TextMutedOnBackground);
+            _pledgeGroup = UIFactory.CreateUIObject("Pledges", card);
+            UIFactory.StretchFull(_pledgeGroup);
+            var title = UIFactory.CreateText(_pledgeGroup, "PledgeTitle", PledgeHeading, 14, UITheme.TextMuted);
             _pledgeTitle = title;
             title.raycastTarget = false;
             title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0.5f, 0f);
             title.rectTransform.pivot = new Vector2(0.5f, 0f);
-            title.rectTransform.anchoredPosition = new Vector2(0f, 118f);
-            title.rectTransform.sizeDelta = new Vector2(700f, 22f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, 204f);
+            title.rectTransform.sizeDelta = new Vector2(CardWidth - 30f, 24f);
             int n = PledgeCatalog.All.Length;
             for (int i = 0; i < n; i++)
             {
                 var pledge = PledgeCatalog.All[i];
-                var chip = UIFactory.CreateButton(parent, "Pledge" + pledge, PledgeCatalog.Name(pledge), UITheme.PanelLight, 16);
+                var chip = UIFactory.CreateButton(_pledgeGroup, "Pledge" + pledge, PledgeCatalog.Name(pledge), UISprites.ChooseButtonBackground, 16);
                 UIFactory.DisablePlants(chip);
                 var rect = chip.GetComponent<RectTransform>();
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
                 rect.pivot = new Vector2(0.5f, 0f);
-                rect.sizeDelta = new Vector2(PledgeChipWidth, MobileSetup.TouchMin(40f));
-                rect.anchoredPosition = new Vector2((i - (n - 1) / 2f) * (PledgeChipWidth + 12f), 74f);
+                float height = MobileSetup.TouchMin(38f);
+                rect.sizeDelta = new Vector2(PledgeChipWidth, height);
+                int column = i % 2;
+                int row = i / 2;
+                rect.anchoredPosition = new Vector2((column == 0 ? -1f : 1f) * (PledgeChipWidth * 0.5f + 6f), 118f + (1 - row) * (height + 6f));
                 var image = chip.GetComponent<Image>();
-                var label = chip.GetComponentInChildren<Text>();
-                if (label != null) { label.color = UITheme.TextPrimary; }
                 _pledgeChips[pledge] = image;
                 chip.onClick.AddListener(() =>
                 {
@@ -255,7 +262,7 @@ namespace Contigu.Presentation
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 62f);
-            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 170f);
+            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 100f);
 
             // Coral rather than gold: gold has poor contrast against this card's light fill, and coral already reads as "blocked" elsewhere (see UITheme.Danger/HoverInvalid).
             _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 16, UITheme.Danger);
@@ -339,6 +346,8 @@ namespace Contigu.Presentation
             _selectedPledges = Pledge.None;
             RefreshPledgeChips();
             if (_pledgeTitle != null) { _pledgeTitle.text = PledgeHeading; }
+            // Pledges are a reward for having won the default challenge once.
+            if (_pledgeGroup != null) { _pledgeGroup.gameObject.SetActive(metaStats != null && metaStats.ClassicVictory); }
             _continueButton.gameObject.SetActive(RunSaveStore.Exists);
             _root.gameObject.SetActive(true);
             if (_fadeCoroutine != null)

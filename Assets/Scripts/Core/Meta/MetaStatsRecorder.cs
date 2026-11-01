@@ -26,7 +26,7 @@ namespace Contigu.Core
         /// including the boss was cleared) or <paramref name="roundReached"/>
         /// - 1 on defeat (the round you died in was never cleared).
         /// </summary>
-        public static MetaStats RecordRunOutcome(MetaStats current, int finalScore, int roundReached, bool victory, int pledgeBonusStars = 0)
+        public static MetaStats RecordRunOutcome(MetaStats current, int finalScore, int roundReached, bool victory, int pledgeBonusStars = 0, ChallengeId challenge = ChallengeId.Classic)
         {
             int roundsCleared = victory ? roundReached : roundReached - 1;
             int starsEarned = roundsCleared + (victory ? VictoryBonusStars + pledgeBonusStars : 0);
@@ -37,6 +37,7 @@ namespace Contigu.Core
             updated.BestScore = System.Math.Max(current.BestScore, finalScore);
             updated.BestRoundReached = System.Math.Max(current.BestRoundReached, roundReached);
             updated.Stars = current.Stars + starsEarned;
+            updated.ClassicVictory = current.ClassicVictory || (victory && challenge == ChallengeId.Classic);
             return updated;
         }
 
@@ -49,6 +50,7 @@ namespace Contigu.Core
             updated.AutumnUnlocked = true;
             updated.OrchardUnlocked = true;
             updated.GreenhouseUnlocked = true;
+            updated.ClassicVictory = true;
             return updated;
         }
 

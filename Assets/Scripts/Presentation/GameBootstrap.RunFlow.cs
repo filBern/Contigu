@@ -208,7 +208,7 @@ namespace Contigu.Presentation
         private bool RecordRunOutcome(bool victory, int roundReached)
         {
             bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
-            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, victory ? _run.PledgeBonusStars : 0);
+            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, victory ? _run.PledgeBonusStars : 0, _run.Challenge.Id);
             _metaStatsStore.Save(_metaStats);
             return isNewBestScore;
         }

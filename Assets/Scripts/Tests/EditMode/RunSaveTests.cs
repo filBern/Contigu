@@ -253,5 +253,17 @@ namespace Contigu.Tests
             var restored = RunManager.Restore(RunSnapshot.FromText(run.RoundStartSnapshot.ToText()), new SystemRandomProvider(23));
             Assert.AreEqual(Pledge.LeanBag | Pledge.NoReroll, restored.Pledges);
         }
+
+        [Test]
+        public void PledgesUnlock_OnlyAfterTheDefaultChallengeIsWon()
+        {
+            var lost = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 10, 3, victory: false);
+            Assert.IsFalse(lost.ClassicVictory);
+            var summerWin = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 10, RunConfig.RoundCount, victory: true, challenge: ChallengeId.Summer);
+            Assert.IsFalse(summerWin.ClassicVictory, "another challenge does not unlock them");
+            var springWin = MetaStatsRecorder.RecordRunOutcome(lost, 10, RunConfig.RoundCount, victory: true, challenge: ChallengeId.Classic);
+            Assert.IsTrue(springWin.ClassicVictory);
+            Assert.IsTrue(MetaStatsRecorder.RecordRunOutcome(springWin, 10, 2, victory: false).ClassicVictory, "kept for good");
+        }
     }
 }

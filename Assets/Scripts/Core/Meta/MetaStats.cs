@@ -24,6 +24,8 @@ namespace Contigu.Core
         public bool AutumnUnlocked;
         public bool OrchardUnlocked;
         public bool GreenhouseUnlocked;
+        /// <summary>The default challenge (Spring) has been won at least once: unlocks the optional pledges.</summary>
+        public bool ClassicVictory;
 
         /// <summary>A field-by-field copy, so a pure update never forgets a field it didn't touch.</summary>
         public MetaStats Copy()
