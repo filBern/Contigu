@@ -749,7 +749,13 @@ namespace Contigu.Presentation
             var rect = badge.rectTransform;
             rect.SetParent(_root, worldPositionStays: true);
             rect.SetAsLastSibling();
-            var canvasGroup = badge.gameObject.AddComponent<CanvasGroup>();
+            // The fertilizer's flight into its slot already left a CanvasGroup on the badge: reuse it.
+            var canvasGroup = badge.gameObject.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = badge.gameObject.AddComponent<CanvasGroup>();
+            }
+            canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = false;
             canvasGroup.interactable = false;
             StartCoroutine(RemovedBadgeRoutine(rect, canvasGroup));
