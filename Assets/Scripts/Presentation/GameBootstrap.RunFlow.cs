@@ -134,6 +134,13 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Sprig says one line about each enemy or weather met for the very first time (never again after that), once the round banner is gone.</summary>
+        /// <summary>The garden and the hand come in with a little wave when a round begins.</summary>
+        private void PlayRoundIntro()
+        {
+            _gridView.PlayRoundIntro();
+            _handView.PlayRoundIntro();
+        }
+
         private void ShowFirstEncounterIntros()
         {
             var intros = CollectionTracker.TakeIntroductions();
@@ -314,6 +321,7 @@ namespace Contigu.Presentation
         {
             RecordLeftRun();
             RunSaveStore.Delete();
+            SfxManager.StopPad();
             Time.timeScale = 1f;
             UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         }
@@ -326,6 +334,7 @@ namespace Contigu.Presentation
             {
                 RecordLeftRun();
             }
+            SfxManager.StopPad();
             Time.timeScale = 1f;
             UnityEngine.SceneManagement.SceneManager.LoadScene(MainMenuSceneName);
         }
@@ -355,6 +364,7 @@ namespace Contigu.Presentation
             _challengeSelectView.Hide();
             StartNewRun(challenge, _challengeSelectView.SelectedPledges);
             _roundBannerView.Play(_run);
+            PlayRoundIntro();
             ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
             {
@@ -470,6 +480,7 @@ namespace Contigu.Presentation
                 return;
             }
             _roundBannerView.Play(_run);
+            PlayRoundIntro();
             ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
             {
@@ -482,6 +493,7 @@ namespace Contigu.Presentation
         {
             _isPlayingPlacementSequence = false;
             _run = run;
+            SfxManager.PlayPad(challenge.Id.ToString());
             _unrecordedRun = true;
             SaveCheckpoint();
             ApplyChallengeAmbiance(challenge);

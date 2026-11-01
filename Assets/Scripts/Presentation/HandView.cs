@@ -427,6 +427,14 @@ namespace Contigu.Presentation
             _dragGhostCanvasGroup.blocksRaycasts = false;
             _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
 
+            // A soft shadow under the held seed: it is lifted off the board.
+            var shadow = UIFactory.CreateSlicedImage(_dragGhost, "HeldShadow", UISprites.CardBackground);
+            shadow.color = new Color(0f, 0f, 0f, 0.28f);
+            shadow.raycastTarget = false;
+            shadow.rectTransform.anchorMin = shadow.rectTransform.anchorMax = shadow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            shadow.rectTransform.sizeDelta = new Vector2(DragGhostPreviewWidth * 0.78f, DragGhostPreviewHeight * 0.78f);
+            shadow.rectTransform.anchoredPosition = new Vector2(10f, -14f);
+
             _dragGhostPreview = UIFactory.CreateUIObject("Preview", _dragGhost);
             _dragGhostPreview.anchorMin = new Vector2(0.5f, 0.5f);
             _dragGhostPreview.anchorMax = new Vector2(0.5f, 0.5f);
@@ -576,16 +584,38 @@ namespace Contigu.Presentation
             ShapePreviewFactory.BuildWithTraits(_dragGhostPreview, shape, token.Color, token.Traits, _tooltip, null, GhostTileSize);
 
             _dragGhostCanvasGroup.alpha = CursorGhostInvalidAlpha;
+            _ghostPickedAt = Time.unscaledTime;
+            _ghostSideSpeed = 0f;
             _dragGhost.gameObject.SetActive(true);
             _dragGhost.SetAsLastSibling();
             UpdateGhostPosition(Input.mousePosition);
         }
 
+        private Vector2 _ghostLastPoint;
+        private float _ghostSideSpeed;
+        private float _ghostPickedAt;
+
         private void UpdateGhostPosition(Vector2 screenPosition)
         {
             var parentRect = (RectTransform)_dragLayerParent;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, screenPosition, null, out var localPoint);
+            float dt = Mathf.Max(0.0001f, Time.unscaledDeltaTime);
+            _ghostSideSpeed = Mathf.Lerp(_ghostSideSpeed, (localPoint.x - _ghostLastPoint.x) / dt, 0.2f);
+            _ghostLastPoint = localPoint;
             _dragGhost.anchoredPosition = localPoint;
+            if (MotionSettings.Reduced)
+            {
+                _dragGhost.localRotation = Quaternion.identity;
+                _dragGhost.localScale = Vector3.one;
+                return;
+            }
+            // Picked up: a little pop, then held slightly bigger; it leans into the direction it is dragged and sways a touch at rest.
+            float p = Mathf.Clamp01((Time.unscaledTime - _ghostPickedAt) / 0.16f);
+            float pop = p < 0.7f ? Mathf.Lerp(0.78f, 1.14f, p / 0.7f) : Mathf.Lerp(1.14f, 1.07f, (p - 0.7f) / 0.3f);
+            float breathe = Mathf.Sin(Time.unscaledTime * 3.2f) * 0.012f;
+            _dragGhost.localScale = Vector3.one * (pop + breathe);
+            float tilt = Mathf.Clamp(-_ghostSideSpeed * 0.012f, -9f, 9f) + Mathf.Sin(Time.unscaledTime * 2.4f) * 1.2f;
+            _dragGhost.localRotation = Quaternion.Euler(0f, 0f, tilt);
         }
 
         private bool _lastPressWasTouch;
@@ -801,6 +831,45 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Blocks and visually greys out hand selection while a placement's feedback sequence animates.</summary>
+        /// <summary>A new round: the hand slots pop in one after the other, top to bottom.</summary>
+        public void PlayRoundIntro()
+        {
+            if (MotionSettings.Reduced || _slotBackgrounds == null)
+            {
+                return;
+            }
+            StartCoroutine(HandIntroRoutine());
+        }
+
+        private IEnumerator HandIntroRoutine()
+        {
+            var slots = new List<RectTransform>();
+            for (int i = 0; i < _slotBackgrounds.Length; i++)
+            {
+                if (_slotBackgrounds[i] != null && _slotBackgrounds[i].gameObject.activeSelf)
+                {
+                    slots.Add(_slotBackgrounds[i].rectTransform);
+                    _slotBackgrounds[i].rectTransform.localScale = Vector3.zero;
+                }
+            }
+            const float Step = 0.1f;
+            const float Pop = 0.3f;
+            float t = 0f;
+            float total = (slots.Count - 1) * Step + Pop;
+            while (t < total)
+            {
+                t += GameSpeed.AnimationDelta;
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    float p = Mathf.Clamp01((t - 0.25f - i * Step) / Pop);
+                    float s = p < 0.65f ? Mathf.Lerp(0f, 1.1f, p / 0.65f) : Mathf.Lerp(1.1f, 1f, (p - 0.65f) / 0.35f);
+                    if (slots[i] != null) { slots[i].localScale = new Vector3(s, s, 1f); }
+                }
+                yield return null;
+            }
+            for (int i = 0; i < slots.Count; i++) { if (slots[i] != null) { slots[i].localScale = Vector3.one; } }
+        }
+
         /// <summary>True when the slot holds a seed that can go somewhere on the grid right now (and is not locked by a boss).</summary>
         public bool IsSlotPlayable(int index)
         {

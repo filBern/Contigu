@@ -750,6 +750,57 @@ namespace Contigu.Presentation
         }
 
         /// <summary>World/screen anchored position of a cell's center, for spawning floating score popups.</summary>
+        private const float IntroStep = 0.045f;
+        private const float IntroPop = 0.3f;
+
+        /// <summary>A new round: the plots pop in one diagonal step after the other, from the top-left corner.</summary>
+        public void PlayRoundIntro()
+        {
+            if (MotionSettings.Reduced)
+            {
+                return;
+            }
+            StartCoroutine(RoundIntroRoutine());
+        }
+
+        private System.Collections.IEnumerator RoundIntroRoutine()
+        {
+            int size = GridManager.Size;
+            var cells = new RectTransform[size, size];
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    cells[x, y] = GetCellTransform(x, y);
+                    if (cells[x, y] != null) { cells[x, y].localScale = Vector3.zero; }
+                }
+            }
+            float t = 0f;
+            float total = (2 * size - 2) * IntroStep + IntroPop;
+            while (t < total)
+            {
+                t += GameSpeed.AnimationDelta;
+                for (int x = 0; x < size; x++)
+                {
+                    for (int y = 0; y < size; y++)
+                    {
+                        if (cells[x, y] == null) { continue; }
+                        float p = Mathf.Clamp01((t - (x + y) * IntroStep) / IntroPop);
+                        float s = p < 0.65f ? Mathf.Lerp(0f, 1.12f, p / 0.65f) : Mathf.Lerp(1.12f, 1f, (p - 0.65f) / 0.35f);
+                        cells[x, y].localScale = new Vector3(s, s, 1f);
+                    }
+                }
+                yield return null;
+            }
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    if (cells[x, y] != null) { cells[x, y].localScale = Vector3.one; }
+                }
+            }
+        }
+
         public RectTransform GetCellTransform(int x, int y)
         {
             if (!GridManager.InBounds(x, y))

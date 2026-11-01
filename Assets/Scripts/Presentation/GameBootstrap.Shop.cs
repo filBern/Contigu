@@ -694,6 +694,7 @@ namespace Contigu.Presentation
             RefreshAll();
             SetStatusText(GetCurrentRoundStatus());
             _roundBannerView.Play(_run);
+            PlayRoundIntro();
             ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
             {

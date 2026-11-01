@@ -63,6 +63,8 @@ namespace Contigu.Presentation
 
         private static AudioSource _sfxSource;
         private static AudioSource _musicSource;
+        private static AudioSource _padSource;
+        private static PadFader _padFader;
         private static Dictionary<SfxId, AudioClip> _clips;
         private static int _comboStep;
 
@@ -80,6 +82,11 @@ namespace Contigu.Presentation
             _musicSource = host.AddComponent<AudioSource>();
             _musicSource.playOnAwake = false;
             _musicSource.loop = true;
+            _padSource = host.AddComponent<AudioSource>();
+            _padSource.playOnAwake = false;
+            _padSource.loop = true;
+            _padSource.volume = 0f;
+            _padFader = host.AddComponent<PadFader>();
 
             _clips = new Dictionary<SfxId, AudioClip>
             {
@@ -117,6 +124,40 @@ namespace Contigu.Presentation
             // these two just need their own Music/Sfx slider applied on top.
             _sfxSource.volume = VolumeSettings.SfxVolume;
             _musicSource.volume = VolumeSettings.MusicVolume * MusicVolumeScale;
+        }
+
+        /// <summary>The ambient pad sits well under the music.</summary>
+        private const float PadVolumeScale = 0.35f;
+
+        /// <summary>Volume the pad settles at when audible: the Music slider, scaled down.</summary>
+        public static float PadBaseVolume
+        {
+            get { return VolumeSettings.MusicVolume * PadVolumeScale; }
+        }
+
+        /// <summary>Fades in the ambient pad of a challenge (Resources/SFX/Pad_&lt;name&gt;), crossfading from the previous one.</summary>
+        public static void PlayPad(string challengeName)
+        {
+            EnsureInitialized();
+            var clip = Resources.Load<AudioClip>(ClipFolder + "Pad_" + challengeName);
+            _padFader.Switch(_padSource, clip);
+        }
+
+        public static void StopPad()
+        {
+            if (_padFader != null)
+            {
+                _padFader.Switch(_padSource, null);
+            }
+        }
+
+        /// <summary>The pad steps back (shop, menus over it) or returns to its level.</summary>
+        public static void DuckPad(bool ducked)
+        {
+            if (_padFader != null)
+            {
+                _padFader.Ducked = ducked;
+            }
         }
 
         /// <summary>Starts the background music loop — a no-op if it's already playing (safe to call again from either scene's bootstrap) or if the clip failed to load.</summary>
@@ -164,6 +205,51 @@ namespace Contigu.Presentation
             _sfxSource.pitch = Mathf.Min(ComboPitchMax, 1f + _comboStep * ComboPitchStep + Random.Range(-ComboPitchJitter, ComboPitchJitter));
             _comboStep++;
             _sfxSource.PlayOneShot(clip);
+        }
+    }
+
+    /// <summary>Fades the ambient pad in and out (and swaps its clip while it is silent): the pad never starts or stops abruptly.</summary>
+    public sealed class PadFader : MonoBehaviour
+    {
+        private const float FadeSeconds = 1.6f;
+        private const float DuckedFactor = 0.45f;
+        private AudioSource _source;
+        private AudioClip _wanted;
+        private bool _hasWanted;
+        public bool Ducked;
+
+        public void Switch(AudioSource source, AudioClip clip)
+        {
+            _source = source;
+            _wanted = clip;
+            _hasWanted = true;
+        }
+
+        private void Update()
+        {
+            if (_source == null)
+            {
+                return;
+            }
+            // A different clip (or none): fade out first, swap once silent.
+            bool clipPending = _hasWanted && _source.clip != _wanted;
+            float target = clipPending || _wanted == null ? 0f : SfxManager.PadBaseVolume * (Ducked ? DuckedFactor : 1f);
+            float rate = Mathf.Max(0.01f, SfxManager.PadBaseVolume) / FadeSeconds;
+            _source.volume = Mathf.MoveTowards(_source.volume, target, rate * Time.unscaledDeltaTime);
+            if (clipPending && _source.volume <= 0.001f)
+            {
+                _source.Stop();
+                _source.clip = _wanted;
+                if (_wanted != null)
+                {
+                    _source.Play();
+                }
+                _hasWanted = false;
+            }
+            if (!clipPending && _wanted != null && !_source.isPlaying)
+            {
+                _source.Play();
+            }
         }
     }
 }

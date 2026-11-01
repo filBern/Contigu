@@ -660,6 +660,8 @@ namespace Contigu.Presentation
         {
             SetSelectionMode(false);
             _root.gameObject.SetActive(true);
+            SfxManager.DuckPad(true);
+            StartCoroutine(PlayEntranceLight());
             SetSharedLueurRaised(true);
             Refresh(run);
             StartCoroutine(PlayCardsEntrance());
@@ -667,6 +669,39 @@ namespace Contigu.Presentation
             {
                 _lueurPulseCoroutine = StartCoroutine(PulseLueurLabel());
             }
+        }
+
+        /// <summary>Entering the shop: the stall fades in from the round and a warm light washes over it, then fades.</summary>
+        private System.Collections.IEnumerator PlayEntranceLight()
+        {
+            if (MotionSettings.Reduced)
+            {
+                yield break;
+            }
+            var group = _root.GetComponent<CanvasGroup>();
+            if (group == null)
+            {
+                group = _root.gameObject.AddComponent<CanvasGroup>();
+            }
+            var light = UIFactory.CreatePanel(_root, "EntranceLight", new Color(1f, 0.86f, 0.5f, 0.45f));
+            light.raycastTarget = false;
+            UIFactory.StretchFull(light.rectTransform);
+            light.rectTransform.SetAsLastSibling();
+            group.alpha = 0f;
+            const float Duration = 0.7f;
+            float t = 0f;
+            while (t < Duration)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / Duration);
+                group.alpha = Mathf.Clamp01(p / 0.4f);
+                var c = light.color;
+                c.a = 0.45f * (1f - p) * (1f - p);
+                light.color = c;
+                yield return null;
+            }
+            group.alpha = 1f;
+            Destroy(light.gameObject);
         }
 
         private const float EntranceStagger = 0.07f;
@@ -724,6 +759,7 @@ namespace Contigu.Presentation
 
         public void Hide()
         {
+            SfxManager.DuckPad(false);
             DisarmShelfItem();
             _root.gameObject.SetActive(false);
             SetSharedLueurRaised(false);
@@ -774,7 +810,7 @@ namespace Contigu.Presentation
         /// <summary>Rebuilds every card from the run's current shop state — called on Show and after every purchase/reroll so prices, affordability and "sold" states stay accurate.</summary>
         public void Refresh(RunManager run)
         {
-            _lueurLabel.text = run.Lueur.ToString();
+            NumberRoll.Set(_lueurLabel, run.Lueur);
             BuildUpcomingEncounterPreview(run);
 
             float gap = 2f * (Mathf.Abs(_sidePanelCenterX) - ModifierPanelView.PanelWidth * 0.5f) - 24f;

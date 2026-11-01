@@ -446,7 +446,7 @@ namespace Contigu.Presentation
         /// <summary>Updates just the Lueur label, letting the presentation layer animate it up progressively instead of jumping straight to the final value.</summary>
         public void SetLueur(int lueur)
         {
-            _lueurLabel.text = lueur.ToString();
+            NumberRoll.Set(_lueurLabel, lueur);
         }
 
         /// <summary>Updates just the score bar, letting the presentation layer animate it in sync with score popups. No-op while <see cref="_isEncounterMode"/> is set.</summary>
