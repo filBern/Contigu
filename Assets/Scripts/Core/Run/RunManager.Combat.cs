@@ -21,6 +21,7 @@ namespace Contigu.Core
                 return false;
             }
             ShufflesRemaining--;
+            Stats.ShufflesUsed++;
             ResetWorldEnemyReport();
             ApplyHeatwaveShuffleBurn();
             DrawFreshHand();
@@ -129,6 +130,18 @@ namespace Contigu.Core
             // convention as every other scoring event in PlacePiece.
             LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus + RoundEndFertilizerPollen();
             Lueur += LastRoundEndLueurBonus;
+            LastRoundSummary = new RoundSummary
+            {
+                RoundNumber = CurrentRoundIndex + 1,
+                Score = RoundScore,
+                Placements = _roundPlacements,
+                BestPlacementScore = _roundBestPlacement,
+                LinesHarvested = _roundLines,
+                PollenFromPlacements = _roundPollen,
+                SeedsLeft = PiecesRemainingThisRound,
+                EndOfRoundPollen = LastRoundEndLueurBonus,
+                StarsEarned = 1
+            };
             ApplyMultCinqRisqueLossChance();
             AgeAndWitherModifiers();
             // Only ever true once (the challenge's own final CurrentRoundIndex,

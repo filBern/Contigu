@@ -67,6 +67,7 @@ namespace Contigu.Core
             foreach (var kv in _colorMasteryLevels) { s.ColorMastery[kv.Key] = kv.Value; }
             s.SpecialPiecesPlayed = _specialPiecesPlayedCount;
             s.CompostsBought = _compostsBought;
+            s.Stats = Stats.ToText();
             s.PerennialScores = _perennialScores;
             s.GradientBonus = Grid.GradientPermanentBonus;
             s.EpuisementValue = Grid.EpuisementCurrentBonus;
@@ -138,6 +139,7 @@ namespace Contigu.Core
 
             _specialPiecesPlayedCount = s.SpecialPiecesPlayed;
             _compostsBought = s.CompostsBought;
+            Stats = RunStats.FromText(s.Stats);
             _perennialScores = s.PerennialScores;
             Grid.RestoreRunCounters(s.GradientBonus, s.EpuisementValue);
             _lastPurchasedModifierId = s.LastPurchasedModifier;

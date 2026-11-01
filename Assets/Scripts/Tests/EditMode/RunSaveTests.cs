@@ -149,5 +149,51 @@ namespace Contigu.Tests
                 Assert.AreEqual(run.CurrentWeather, restored.CurrentWeather, challenge.Id.ToString());
             }
         }
+
+        [Test]
+        public void RunStats_RoundTripThroughText_AndThroughTheSnapshot()
+        {
+            var stats = new RunStats { Placements = 7, BestPlacementScore = 1234, BestPlacementRound = 3, BestPlacementShape = ShapeId.Sq2, BestPlacementColor = PieceColor.Teal, BestMultTimes100 = 450, BestGroupSize = 9, LinesHarvested = 5, BestHarvestLines = 2, PollenFromPlacements = 31, ShufflesUsed = 4, UndosUsed = 1 };
+            var parsed = RunStats.FromText(stats.ToText());
+            Assert.AreEqual(stats.ToText(), parsed.ToText());
+            Assert.AreEqual(4.5f, parsed.BestMult, 0.001f);
+
+            var run = RichRun();
+            var snapshot = run.RoundStartSnapshot;
+            snapshot.Stats = stats.ToText();
+            var restored = RunManager.Restore(RunSnapshot.FromText(snapshot.ToText()), new SystemRandomProvider(2));
+            Assert.AreEqual(7, restored.Stats.Placements);
+            Assert.AreEqual(1234, restored.Stats.BestPlacementScore);
+        }
+
+        [Test]
+        public void Placing_RecordsTheRunStats()
+        {
+            var run = new RunManager(new SystemRandomProvider(11));
+            run.DebugDisableWeather();
+            int slot = -1;
+            for (int i = 0; i < run.Deck.Hand.Count && slot < 0; i++) { if (run.Deck.Hand[i].HasValue) { slot = i; } }
+            var shape = PieceShapeCatalog.GetRotated(run.Deck.Hand[slot].Value.Shape, run.Deck.HandRotations[slot]);
+            UnityEngine.Vector2Int anchor = new UnityEngine.Vector2Int(0, 0);
+            foreach (var pos in GridManager.AllPositions()) { if (run.Grid.CanPlace(shape, pos.x, pos.y)) { anchor = pos; break; } }
+
+            var outcome = run.PlacePiece(slot, anchor.x, anchor.y);
+
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.AreEqual(1, run.Stats.Placements);
+            Assert.AreEqual(outcome.Placement.TotalScore, run.Stats.BestPlacementScore);
+            Assert.AreEqual(1, run.Stats.BestPlacementRound);
+        }
+
+        [Test]
+        public void ClearingARound_FillsTheRoundSummary()
+        {
+            var run = new RunManager(new SystemRandomProvider(5));
+            run.DebugDisableWeather();
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(RunState.AwaitingShop, run.State);
+            Assert.AreEqual(1, run.LastRoundSummary.RoundNumber);
+            Assert.AreEqual(1, run.LastRoundSummary.StarsEarned);
+        }
     }
 }
