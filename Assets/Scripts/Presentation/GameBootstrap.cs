@@ -68,6 +68,7 @@ namespace Contigu.Presentation
         private HandView _handView;
         private HudView _hudView;
         private ComboView _comboView;
+        private RoundSummaryView _roundSummaryView;
         private ShopView _shopView;
         private TileChoiceView _tileChoiceView;
         private ShelfChoiceView _shelfChoiceView;
@@ -627,6 +628,8 @@ namespace Contigu.Presentation
             _deckView = gameObject.AddComponent<DeckView>();
             _deckView.Build(mainRoot, _run, _tooltipView);
 
+            _roundSummaryView = gameObject.AddComponent<RoundSummaryView>();
+            _roundSummaryView.Build(mainRoot);
             _endScreenView = gameObject.AddComponent<EndScreenView>();
             _endScreenView.Build(mainRoot);
 

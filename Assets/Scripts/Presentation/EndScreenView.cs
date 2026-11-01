@@ -1,5 +1,6 @@
 using System;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 
 namespace Contigu.Presentation
@@ -14,6 +15,7 @@ namespace Contigu.Presentation
         private UnityEngine.UI.Text _titleText;
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
+        private UnityEngine.UI.Text _runStatsText;
         private RectTransform _restartButtonRect;
         private RectTransform _endlessButtonRect;
         private UnityEngine.UI.Image _sprigPortrait;
@@ -42,6 +44,13 @@ namespace Contigu.Presentation
             _metaStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0.45f);
             _metaStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _metaStatsText.rectTransform.sizeDelta = new Vector2(700f, 60f);
+
+            // This run's records (biggest placement, best Mult, harvests…), under the buttons.
+            _runStatsText = UIFactory.CreateText(_root, "RunStats", "", 19, UITheme.TextOnBackground);
+            _runStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0.18f);
+            _runStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0.18f);
+            _runStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            _runStatsText.rectTransform.sizeDelta = new Vector2(620f, 150f);
 
             var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UISprites.ChooseButtonBackground, 18);
             var rect = restartBtn.GetComponent<RectTransform>();
@@ -75,6 +84,18 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        /// <summary>The run's records, listed under the buttons. <paramref name="topFertilizer"/> is a ready-made line about the most triggered fertilizer, or empty.</summary>
+        public void SetRunStats(RunStats stats, string topFertilizer)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            lines.Add("Biggest placement: " + stats.BestPlacementScore.ToString("N0") + (stats.BestPlacementScore > 0 ? "  (round " + stats.BestPlacementRound + ", " + VisualDefaults.GetColorName(stats.BestPlacementColor) + " " + VisualDefaults.GetShapeName(stats.BestPlacementShape) + ")" : ""));
+            lines.Add("Highest Mult: x" + stats.BestMult.ToString("0.#") + "   ·   Biggest group: " + stats.BestGroupSize + " sprouts");
+            lines.Add("Lines harvested: " + stats.LinesHarvested + "   ·   Most at once: " + stats.BestHarvestLines);
+            lines.Add("Seeds planted: " + stats.Placements + "   ·   Pollen from placements: " + stats.PollenFromPlacements + "   ·   Shuffles: " + stats.ShufflesUsed);
+            if (!string.IsNullOrEmpty(topFertilizer)) { lines.Add(topFertilizer); }
+            _runStatsText.text = string.Join("\n", lines);
         }
 
         private void SprigComment(bool victory, bool isNewBestScore)

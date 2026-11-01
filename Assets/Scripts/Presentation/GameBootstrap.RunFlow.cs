@@ -49,7 +49,7 @@ namespace Contigu.Presentation
                     }
                     else
                     {
-                        _shopView.Show(_run);
+                        ShowRoundSummaryThenShop();
                     }
                     break;
 
@@ -59,6 +59,7 @@ namespace Contigu.Presentation
                     RunSaveStore.Delete();
                     int starsBefore = _metaStats.Stars;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
+                    _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, _metaStats.Stars - starsBefore);
                     break;
                 }
@@ -80,6 +81,7 @@ namespace Contigu.Presentation
                     {
                         isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
                     }
+                    _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
                     _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, _metaStats.Stars - starsBeforeDefeat, _run.PiecesRemainingThisRound <= 0);
                     break;
                 }
@@ -126,7 +128,31 @@ namespace Contigu.Presentation
             _handView.SetInteractable(true);
             RefreshShuffleButton();
             _modifierPanelView.SetInteractable(true);
-            _shopView.Show(_run);
+            ShowRoundSummaryThenShop();
+        }
+
+        /// <summary>"Most triggered fertilizer: X (n times)" for the end screen, among the ones still held; empty when none fired.</summary>
+        private string TopFertilizerLine()
+        {
+            ModifierId? best = null;
+            int bestCount = 0;
+            for (int i = 0; i < _run.ActiveModifiers.Count; i++)
+            {
+                int count = _run.GetModifierUsageCount(_run.ActiveModifiers[i]);
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    best = _run.ActiveModifiers[i];
+                }
+            }
+            var definition = best.HasValue ? ModifierCatalog.Get(best.Value) : null;
+            return definition != null ? "Most triggered fertilizer: " + definition.Name + " (" + bestCount + " times)" : "";
+        }
+
+        /// <summary>How the round just cleared went (score, biggest placement, harvests, Pollen), then the shop opens.</summary>
+        private void ShowRoundSummaryThenShop()
+        {
+            _roundSummaryView.Show(_run.LastRoundSummary, () => _shopView.Show(_run));
         }
 
         /// <summary>Folds this run's outcome into the persisted MetaStats and saves immediately — there's no guaranteed exit hook in a WebGL/browser build. Returns whether this run's score is a new all-time best, for the end screen's "new record" callout.</summary>
