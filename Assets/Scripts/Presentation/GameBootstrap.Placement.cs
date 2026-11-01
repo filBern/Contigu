@@ -1147,7 +1147,7 @@ namespace Contigu.Presentation
                     var enemy = _run.CurrentEncounter[hit.EnemyIndex];
                     _hudView.SetEnemyHpDisplay(hit.EnemyIndex, enemy.CurrentHp, enemy.CurrentMaxHp, enemy.Definition.Id, enemy.IsDead);
                 }
-                yield return new WaitForSeconds(0.45f);
+                yield return new WaitForSeconds(i == placement.VenomHits.Count - 1 ? 0.45f : 0.12f);
             }
         }
 

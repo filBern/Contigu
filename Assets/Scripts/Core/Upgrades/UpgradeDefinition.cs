@@ -164,7 +164,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition VenomTile = new UpgradeDefinition(
             UpgradeId.VenomTile, UpgradePool.Grid, "Venom Sprout",
-            "Poisons the front enemy for 10% of its max HP when placed, no scoring required.", false, UpgradeRarity.Uncommon);
+            "Poisons every enemy for 1% of its max HP when placed, no scoring required.", false, UpgradeRarity.Uncommon);
 
         /// <summary>
         /// Playtest request, cited textually: "Permanent debuff or buff on tile comme au scrabble. Grid

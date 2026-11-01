@@ -1368,7 +1368,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void VenomTile_DealsExtraDamageEqualToTenPercentOfTargetsMaxHp_OnTopOfOrdinaryScoreDamage()
+        public void VenomTile_DealsOnePercentOfEachEnemysMaxHp_OnTopOfOrdinaryScoreDamage()
         {
             // Explicit playtest request: "Une tile upgrade qui empoisonne l'ennemi (qui fait 10% de
             // dégat de max hp" — an ordinary (non-Joker-combat) tile trait, so it stacks additively on

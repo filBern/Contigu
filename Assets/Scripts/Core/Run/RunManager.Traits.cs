@@ -955,8 +955,8 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// "Venom Tile": deals the front alive enemy direct damage equal to ScoringConstants.
-        /// VenomDamagePercentOfMaxHp% of its OWN current max HP, independent of whether this
+        /// "Venom Tile": deals EVERY alive enemy direct damage equal to ScoringConstants.
+        /// VenomDamagePercentOfMaxHp% (at least 1) of its OWN current max HP, independent of whether this
         /// placement scored anything — a no-op outside an active encounter. Unlike
         /// ApplyDamageToEncounter's flat damage parameter, the amount here is computed per-target
         /// since it depends on the target's own CurrentMaxHp, so it can't reuse that helper directly.
@@ -974,7 +974,7 @@ namespace Contigu.Core
                 {
                     continue;
                 }
-                int damage = Mathf.RoundToInt(enemy.CurrentMaxHp * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f));
+                int damage = Mathf.Max(1, Mathf.RoundToInt(enemy.CurrentMaxHp * (ScoringConstants.VenomDamagePercentOfMaxHp / 100f)));
                 var hits = new List<(Vector2Int Position, int EnemyIndex, int Damage)>(placement.VenomHits);
                 hits.Add((traitCellPos, i, damage));
                 placement.VenomHits = hits;
@@ -982,7 +982,6 @@ namespace Contigu.Core
                 {
                     CleanUpDefeatedEnemy(enemy);
                 }
-                break;
             }
         }
     }
