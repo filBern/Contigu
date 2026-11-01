@@ -317,6 +317,11 @@ namespace Contigu.Presentation
             // badge for it is about to be built below.
             for (int j = 0; j < previousBadges.Count; j++)
             {
+                // A badge already destroyed from outside (the row was torn down by something else) has nothing left to animate or destroy.
+                if (previousBadges[j] == null)
+                {
+                    continue;
+                }
                 if (oldClaimed[j])
                 {
                     Destroy(previousBadges[j].gameObject);
@@ -737,6 +742,10 @@ namespace Contigu.Presentation
         /// </summary>
         private void PlayRemovedBadge(Image badge)
         {
+            if (badge == null)
+            {
+                return;
+            }
             var rect = badge.rectTransform;
             rect.SetParent(_root, worldPositionStays: true);
             rect.SetAsLastSibling();
