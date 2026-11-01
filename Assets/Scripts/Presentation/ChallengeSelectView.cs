@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
@@ -58,6 +59,13 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private bool _playArmed;
+        private const string PledgeHeading = "Optional pledges: +1 Star each, if kept until the victory";
+        private Text _pledgeTitle;
+        private Pledge _selectedPledges;
+        private readonly Dictionary<Pledge, Image> _pledgeChips = new Dictionary<Pledge, Image>();
+
+        /// <summary>The optional pledges ticked for the run about to start (one extra Star each, if still kept at the victory).</summary>
+        public Pledge SelectedPledges { get { return _selectedPledges; } }
         private Image _banner;
         private Image _bannerIcon;
         private Text _statsLabel;
@@ -135,6 +143,8 @@ namespace Contigu.Presentation
                 _dots[i] = dot;
             }
 
+            BuildPledgeRow(_root);
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD || CONTIGU_DEBUG
             var unlockAll = UIFactory.CreateButton(_root, "UnlockAll", "Unlock all (dev)", UITheme.PanelLight, 14);
             var unlockRect = unlockAll.GetComponent<RectTransform>();
@@ -148,6 +158,55 @@ namespace Contigu.Presentation
 
             _root.gameObject.SetActive(false);
             return _root;
+        }
+
+        private const float PledgeChipWidth = 150f;
+        private static readonly Color PledgeOff = new Color(1f, 1f, 1f, 0.16f);
+        private static readonly Color PledgeOn = new Color(0.95f, 0.78f, 0.28f, 1f);
+
+        /// <summary>Optional pledges under the card: tick the rules you want to play by; each one still kept at the victory pays one extra Star.</summary>
+        private void BuildPledgeRow(Transform parent)
+        {
+            var title = UIFactory.CreateText(parent, "PledgeTitle", PledgeHeading, 15, UITheme.TextMutedOnBackground);
+            _pledgeTitle = title;
+            title.raycastTarget = false;
+            title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+            title.rectTransform.pivot = new Vector2(0.5f, 0f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, 118f);
+            title.rectTransform.sizeDelta = new Vector2(700f, 22f);
+            int n = PledgeCatalog.All.Length;
+            for (int i = 0; i < n; i++)
+            {
+                var pledge = PledgeCatalog.All[i];
+                var chip = UIFactory.CreateButton(parent, "Pledge" + pledge, PledgeCatalog.Name(pledge), UITheme.PanelLight, 16);
+                UIFactory.DisablePlants(chip);
+                var rect = chip.GetComponent<RectTransform>();
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0f);
+                rect.sizeDelta = new Vector2(PledgeChipWidth, MobileSetup.TouchMin(40f));
+                rect.anchoredPosition = new Vector2((i - (n - 1) / 2f) * (PledgeChipWidth + 12f), 74f);
+                var image = chip.GetComponent<Image>();
+                var label = chip.GetComponentInChildren<Text>();
+                if (label != null) { label.color = UITheme.TextPrimary; }
+                _pledgeChips[pledge] = image;
+                chip.onClick.AddListener(() =>
+                {
+                    _selectedPledges ^= pledge;
+                    RefreshPledgeChips();
+                    // The rule of the pledge just touched replaces the heading until the next visit.
+                    _pledgeTitle.text = PledgeCatalog.Name(pledge) + ": " + PledgeCatalog.Description(pledge) + ((_selectedPledges & pledge) != Pledge.None ? "  (on)" : "  (off)");
+                });
+            }
+            RefreshPledgeChips();
+        }
+
+        private void RefreshPledgeChips()
+        {
+            foreach (var chip in _pledgeChips)
+            {
+                bool on = (_selectedPledges & chip.Key) != Pledge.None;
+                chip.Value.color = on ? PledgeOn : Color.white;
+            }
         }
 
         private void BuildCard(Transform parent)
@@ -277,6 +336,9 @@ namespace Contigu.Presentation
             SfxManager.Play(SfxId.Overlay);
             _metaStats = metaStats;
             ShowChallengeAt(0);
+            _selectedPledges = Pledge.None;
+            RefreshPledgeChips();
+            if (_pledgeTitle != null) { _pledgeTitle.text = PledgeHeading; }
             _continueButton.gameObject.SetActive(RunSaveStore.Exists);
             _root.gameObject.SetActive(true);
             if (_fadeCoroutine != null)

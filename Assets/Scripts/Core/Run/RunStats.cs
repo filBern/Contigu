@@ -18,6 +18,8 @@ namespace Contigu.Core
         public int PollenFromPlacements;
         public int ShufflesUsed;
         public int UndosUsed;
+        public int RerollsUsed;
+        public int MaxFertilizersHeld;
 
         public float BestMult { get { return BestMultTimes100 / 100f; } }
 
@@ -46,7 +48,7 @@ namespace Contigu.Core
             return string.Join(",", new[]
             {
                 Placements, BestPlacementScore, BestPlacementRound, (int)BestPlacementShape, (int)BestPlacementColor, BestMultTimes100,
-                BestGroupSize, LinesHarvested, BestHarvestLines, PollenFromPlacements, ShufflesUsed, UndosUsed
+                BestGroupSize, LinesHarvested, BestHarvestLines, PollenFromPlacements, ShufflesUsed, UndosUsed, RerollsUsed, MaxFertilizersHeld
             }.ToStrings());
         }
 
@@ -68,6 +70,8 @@ namespace Contigu.Core
             stats.PollenFromPlacements = At(9);
             stats.ShufflesUsed = At(10);
             stats.UndosUsed = At(11);
+            stats.RerollsUsed = At(12);
+            stats.MaxFertilizersHeld = At(13);
             return stats;
         }
     }

@@ -220,5 +220,38 @@ namespace Contigu.Tests
                 if (slot != null && slot.Kind == ShopSlotKind.Modifier) { Assert.IsNotNull(ModifierCatalog.Get(slot.ModifierId)); }
             }
         }
+
+        [Test]
+        public void Pledges_AreKeptUntilBroken_AndPayOneStarEachOnVictory()
+        {
+            var run = new RunManager(new SystemRandomProvider(21), null, Pledge.NoShuffle | Pledge.NoReroll | Pledge.Minimalist);
+            run.DebugDisableWeather();
+            Assert.AreEqual(3, run.PledgeBonusStars);
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsFalse(run.IsPledgeKept(Pledge.NoShuffle));
+            Assert.AreEqual(2, run.PledgeBonusStars);
+
+            run.DebugGrantModifier(ModifierId.DevotionCoral);
+            run.DebugGrantModifier(ModifierId.DevotionTeal);
+            Assert.IsTrue(run.IsPledgeKept(Pledge.Minimalist), "two fertilizers is the limit");
+            run.DebugGrantModifier(ModifierId.DevotionLime);
+            Assert.IsFalse(run.IsPledgeKept(Pledge.Minimalist));
+            Assert.AreEqual(1, run.PledgeBonusStars);
+
+            var withBonus = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, RunConfig.RoundCount, victory: true, pledgeBonusStars: 2);
+            var without = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, RunConfig.RoundCount, victory: true);
+            Assert.AreEqual(without.Stars + 2, withBonus.Stars);
+            var defeat = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, 4, victory: false, pledgeBonusStars: 2);
+            Assert.AreEqual(3, defeat.Stars, "a lost run never pays a pledge bonus");
+        }
+
+        [Test]
+        public void Pledges_SurviveSaveAndResume()
+        {
+            var run = new RunManager(new SystemRandomProvider(22), null, Pledge.LeanBag | Pledge.NoReroll);
+            var restored = RunManager.Restore(RunSnapshot.FromText(run.RoundStartSnapshot.ToText()), new SystemRandomProvider(23));
+            Assert.AreEqual(Pledge.LeanBag | Pledge.NoReroll, restored.Pledges);
+        }
     }
 }

@@ -60,7 +60,7 @@ namespace Contigu.Presentation
                     int starsBefore = _metaStats.Stars;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
                     SfxManager.Play(SfxId.Victory);
-                    _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
+                    _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, _metaStats.Stars - starsBefore);
                     break;
                 }
@@ -83,7 +83,7 @@ namespace Contigu.Presentation
                         isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
                     }
                     SfxManager.Play(SfxId.Defeat);
-                    _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
+                    _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
                     _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, _metaStats.Stars - starsBeforeDefeat, _run.PiecesRemainingThisRound <= 0);
                     break;
                 }
@@ -167,6 +167,11 @@ namespace Contigu.Presentation
             }
         }
 
+        private static string JoinLines(string a, string b)
+        {
+            return string.IsNullOrEmpty(a) ? b : string.IsNullOrEmpty(b) ? a : a + "\n" + b;
+        }
+
         private static string FirstSentence(string text)
         {
             if (string.IsNullOrEmpty(text)) { return ""; }
@@ -203,7 +208,7 @@ namespace Contigu.Presentation
         private bool RecordRunOutcome(bool victory, int roundReached)
         {
             bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
-            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory);
+            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, victory ? _run.PledgeBonusStars : 0);
             _metaStatsStore.Save(_metaStats);
             return isNewBestScore;
         }
@@ -348,7 +353,7 @@ namespace Contigu.Presentation
             _metaStatsStore.Save(_metaStats);
 
             _challengeSelectView.Hide();
-            StartNewRun(challenge);
+            StartNewRun(challenge, _challengeSelectView.SelectedPledges);
             _roundBannerView.Play(_run);
             ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
@@ -405,9 +410,34 @@ namespace Contigu.Presentation
             _ambientLifeView.SetChallenge(ambiance);
         }
 
-        private void StartNewRun(ChallengeDefinition challenge)
+        private void StartNewRun(ChallengeDefinition challenge, Pledge pledges = Pledge.None)
         {
-            BeginRun(new RunManager(new SystemRandomProvider(), challenge), challenge);
+            BeginRun(new RunManager(new SystemRandomProvider(), challenge, pledges), challenge);
+        }
+
+        /// <summary>Says once that a pledge the player took on has just been broken.</summary>
+        private void NotePledgeBroken(Pledge pledge, bool firstTime)
+        {
+            if (firstTime && (_run.Pledges & pledge) != Pledge.None)
+            {
+                SetStatusText("Pledge broken: " + PledgeCatalog.Name(pledge) + ". No bonus Star for it this run.");
+            }
+        }
+
+        /// <summary>The pledges of the run for the end screen: "Pledge kept: X (+1 Star)" / "Pledge broken: Y", one line, empty when none were taken.</summary>
+        private string PledgeSummaryLine()
+        {
+            var kept = new List<string>();
+            var broken = new List<string>();
+            foreach (var pledge in PledgeCatalog.All)
+            {
+                if ((_run.Pledges & pledge) == Pledge.None) { continue; }
+                (_run.IsPledgeKept(pledge) ? kept : broken).Add(PledgeCatalog.Name(pledge));
+            }
+            var parts = new List<string>();
+            if (kept.Count > 0) { parts.Add("Pledges kept: " + string.Join(", ", kept) + " (+" + kept.Count + " Star" + (kept.Count > 1 ? "s" : "") + " on victory)"); }
+            if (broken.Count > 0) { parts.Add("Broken: " + string.Join(", ", broken)); }
+            return string.Join("   ·   ", parts);
         }
 
         /// <summary>Saves the run as it stood when its current round began (also what Save and quit writes). Only while a run is actually in progress.</summary>

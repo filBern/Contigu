@@ -615,7 +615,10 @@ namespace Contigu.Presentation
 
         private void OnRerollRequested()
         {
-            _run.RerollShop();
+            if (_run.RerollShop())
+            {
+                NotePledgeBroken(Pledge.NoReroll, _run.Stats.RerollsUsed == 1);
+            }
             _shopView.Refresh(_run);
             _shopView.PlayRerollFlip();
             _hudView.Refresh(_run);

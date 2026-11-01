@@ -26,10 +26,10 @@ namespace Contigu.Core
         /// including the boss was cleared) or <paramref name="roundReached"/>
         /// - 1 on defeat (the round you died in was never cleared).
         /// </summary>
-        public static MetaStats RecordRunOutcome(MetaStats current, int finalScore, int roundReached, bool victory)
+        public static MetaStats RecordRunOutcome(MetaStats current, int finalScore, int roundReached, bool victory, int pledgeBonusStars = 0)
         {
             int roundsCleared = victory ? roundReached : roundReached - 1;
-            int starsEarned = roundsCleared + (victory ? VictoryBonusStars : 0);
+            int starsEarned = roundsCleared + (victory ? VictoryBonusStars + pledgeBonusStars : 0);
 
             var updated = current.Copy();
             updated.TotalRunsPlayed = current.TotalRunsPlayed + 1;

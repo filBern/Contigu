@@ -86,6 +86,7 @@ namespace Contigu.Presentation
             bool shuffled = _run.ShuffleHand();
             if (shuffled)
             {
+                NotePledgeBroken(Pledge.NoShuffle, _run.Stats.ShufflesUsed == 1);
                 PlayBlightmothActIfBlightChanged(blightBefore);
                 // The resident enemy's grid change stays hidden until the hand is back, then plays (see below).
                 var worldChange = _run.LastWorldGridChange;

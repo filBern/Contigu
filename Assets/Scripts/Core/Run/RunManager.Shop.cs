@@ -695,6 +695,7 @@ namespace Contigu.Core
             }
 
             Lueur -= price;
+            Stats.RerollsUsed++;
             _rerollsThisVisit++;
             // Reroll is for the Blister only: the Workshop keeps what it opened with.
             for (int i = 0; i < _blisterSlots.Length; i++)

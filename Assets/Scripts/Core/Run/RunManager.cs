@@ -189,6 +189,7 @@ namespace Contigu.Core
         private void AddActiveModifier(ModifierId id)
         {
             _activeModifiers.Add(id);
+            Stats.MaxFertilizersHeld = Mathf.Max(Stats.MaxFertilizersHeld, _activeModifiers.Count);
             _modifierLevels.Add(1);
             _modifierAges.Add(0);
             if (id == ModifierId.QuatriemeEmplacement)
@@ -383,6 +384,36 @@ namespace Contigu.Core
 
         /// <summary>How the round that just ended went (valid once <see cref="State"/> is AwaitingShop or RunVictory).</summary>
         public RoundSummary LastRoundSummary { get; private set; }
+
+        /// <summary>The optional rules the player took on for this run (see <see cref="Pledge"/>).</summary>
+        public Pledge Pledges { get; private set; }
+
+        /// <summary>Whether the pledge is still kept as things stand (Lean Bag is judged on the bag as it is now: it only counts at the end).</summary>
+        public bool IsPledgeKept(Pledge pledge)
+        {
+            switch (pledge)
+            {
+                case Pledge.NoShuffle: return Stats.ShufflesUsed == 0;
+                case Pledge.NoReroll: return Stats.RerollsUsed == 0;
+                case Pledge.LeanBag: return Deck.DeckCount <= PledgeCatalog.LeanBagMaxSeeds;
+                case Pledge.Minimalist: return Stats.MaxFertilizersHeld <= PledgeCatalog.MinimalistMaxFertilizers;
+                default: return true;
+            }
+        }
+
+        /// <summary>How many of the chosen pledges are kept right now: the extra Stars a victory pays.</summary>
+        public int PledgeBonusStars
+        {
+            get
+            {
+                int kept = 0;
+                foreach (var pledge in PledgeCatalog.All)
+                {
+                    if ((Pledges & pledge) != Pledge.None && IsPledgeKept(pledge)) { kept++; }
+                }
+                return kept;
+            }
+        }
 
         private int _roundPlacements;
         private int _roundBestPlacement;
@@ -657,9 +688,10 @@ namespace Contigu.Core
         }
 
         /// <summary><paramref name="challenge"/> defaults to ChallengeCatalog.Classic when omitted.</summary>
-        public RunManager(IRandomProvider rng, ChallengeDefinition challenge = null)
+        public RunManager(IRandomProvider rng, ChallengeDefinition challenge = null, Pledge pledges = Pledge.None)
         {
             _rng = rng;
+            Pledges = pledges;
             _challenge = challenge ?? ChallengeCatalog.Classic;
             ConfigureChallengeWorld();
             Grid = new GridManager();

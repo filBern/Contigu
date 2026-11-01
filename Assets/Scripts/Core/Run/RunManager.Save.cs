@@ -69,6 +69,7 @@ namespace Contigu.Core
             s.SpecialPiecesPlayed = _specialPiecesPlayedCount;
             s.CompostsBought = _compostsBought;
             s.Stats = Stats.ToText();
+            s.Pledges = (int)Pledges;
             s.PerennialScores = _perennialScores;
             s.GradientBonus = Grid.GradientPermanentBonus;
             s.EpuisementValue = Grid.EpuisementCurrentBonus;
@@ -141,6 +142,7 @@ namespace Contigu.Core
             _specialPiecesPlayedCount = s.SpecialPiecesPlayed;
             _compostsBought = s.CompostsBought;
             Stats = RunStats.FromText(s.Stats);
+            Pledges = (Pledge)s.Pledges;
             _perennialScores = s.PerennialScores;
             Grid.RestoreRunCounters(s.GradientBonus, s.EpuisementValue);
             _lastPurchasedModifierId = s.LastPurchasedModifier;

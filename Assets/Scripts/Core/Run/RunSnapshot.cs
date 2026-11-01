@@ -30,6 +30,7 @@ namespace Contigu.Core
         public Dictionary<PieceColor, int> ColorMastery = new Dictionary<PieceColor, int>();
         public int SpecialPiecesPlayed;
         public int CompostsBought;
+        public int Pledges;
         /// <summary>The run's records (see <see cref="RunStats"/>), as text.</summary>
         public string Stats = "";
         public int PerennialScores;
@@ -76,6 +77,7 @@ namespace Contigu.Core
             Line(sb, "special", SpecialPiecesPlayed);
             Line(sb, "composts", CompostsBought);
             Line(sb, "stats", Stats);
+            Line(sb, "pledges", Pledges);
             Line(sb, "perennial", PerennialScores);
             Line(sb, "gradient", GradientBonus);
             Line(sb, "dwindling", EpuisementValue);
@@ -149,6 +151,7 @@ namespace Contigu.Core
                 s.SpecialPiecesPlayed = Int(values, "special");
                 s.CompostsBought = Int(values, "composts");
                 s.Stats = values.ContainsKey("stats") ? values["stats"] : "";
+                s.Pledges = values.ContainsKey("pledges") ? Int(values, "pledges") : 0;
                 s.PerennialScores = Int(values, "perennial");
                 s.GradientBonus = values.ContainsKey("gradient") ? Int(values, "gradient") : 0;
                 s.EpuisementValue = values.ContainsKey("dwindling") ? Int(values, "dwindling") : ScoringConstants.EpuisementStartingBonus;
