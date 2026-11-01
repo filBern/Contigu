@@ -56,6 +56,23 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>An enemy or a weather seen for the very first time (ever, over all runs) since the last <see cref="TakeIntroductions"/>.</summary>
+        public struct Introduction
+        {
+            public CollectionCategory Category;
+            public int Id;
+        }
+
+        private static readonly List<Introduction> PendingIntroductions = new List<Introduction>();
+
+        /// <summary>The enemies and weathers met for the first time since the last call (then forgotten), so Sprig can introduce them once.</summary>
+        public static List<Introduction> TakeIntroductions()
+        {
+            var taken = new List<Introduction>(PendingIntroductions);
+            PendingIntroductions.Clear();
+            return taken;
+        }
+
         /// <summary>Records everything the run currently shows: call whenever the run's visible state changes. Saves only when something is new.</summary>
         public static void Scan(RunManager run)
         {
@@ -88,11 +105,23 @@ namespace Contigu.Presentation
             if (run.HasActiveEncounter)
             {
                 var encounter = run.CurrentEncounter;
-                for (int i = 0; i < encounter.Count; i++) { changed |= Progress.Discover(CollectionCategory.Enemy, (int)encounter[i].Definition.Id); }
+                for (int i = 0; i < encounter.Count; i++)
+                {
+                    int enemyId = (int)encounter[i].Definition.Id;
+                    if (Progress.Discover(CollectionCategory.Enemy, enemyId))
+                    {
+                        changed = true;
+                        PendingIntroductions.Add(new Introduction { Category = CollectionCategory.Enemy, Id = enemyId });
+                    }
+                }
             }
             if (run.CurrentWeather != WeatherId.Clear)
             {
-                changed |= Progress.Discover(CollectionCategory.Weather, (int)run.CurrentWeather);
+                if (Progress.Discover(CollectionCategory.Weather, (int)run.CurrentWeather))
+                {
+                    changed = true;
+                    PendingIntroductions.Add(new Introduction { Category = CollectionCategory.Weather, Id = (int)run.CurrentWeather });
+                }
             }
             if (changed)
             {

@@ -133,6 +133,48 @@ namespace Contigu.Presentation
             ShowRoundSummaryThenShop();
         }
 
+        /// <summary>Sprig says one line about each enemy or weather met for the very first time (never again after that), once the round banner is gone.</summary>
+        private void ShowFirstEncounterIntros()
+        {
+            var intros = CollectionTracker.TakeIntroductions();
+            if (intros.Count > 0)
+            {
+                StartCoroutine(IntroRoutine(intros));
+            }
+        }
+
+        private System.Collections.IEnumerator IntroRoutine(List<CollectionTracker.Introduction> intros)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            foreach (var intro in intros)
+            {
+                string line = null;
+                if (intro.Category == CollectionCategory.Enemy)
+                {
+                    var enemy = EnemyCatalog.Get((EnemyId)intro.Id);
+                    line = "New pest! " + enemy.Name + ": " + FirstSentence(enemy.Description);
+                }
+                else if (intro.Category == CollectionCategory.Weather)
+                {
+                    var weather = (WeatherId)intro.Id;
+                    line = "New weather: " + VisualDefaults.GetWeatherName(weather, _run.CurrentWeatherColor) + ". " + FirstSentence(VisualDefaults.GetWeatherDescription(weather, _run.CurrentWeatherColor, _run.WeatherIntensity));
+                }
+                if (!string.IsNullOrEmpty(line))
+                {
+                    _sprigView.Say(line, SprigMood.Happy, 7f);
+                    yield return new WaitForSecondsRealtime(7.5f);
+                }
+            }
+        }
+
+        private static string FirstSentence(string text)
+        {
+            if (string.IsNullOrEmpty(text)) { return ""; }
+            int end = text.IndexOf(". ", System.StringComparison.Ordinal);
+            string first = end > 0 ? text.Substring(0, end + 1) : text;
+            return first.Length > 120 ? first.Substring(0, 117) + "..." : first;
+        }
+
         /// <summary>"Most triggered fertilizer: X (n times)" for the end screen, among the ones still held; empty when none fired.</summary>
         private string TopFertilizerLine()
         {
@@ -308,6 +350,7 @@ namespace Contigu.Presentation
             _challengeSelectView.Hide();
             StartNewRun(challenge);
             _roundBannerView.Play(_run);
+            ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
             {
                 _hudView.PulseWeather();
@@ -397,6 +440,7 @@ namespace Contigu.Presentation
                 return;
             }
             _roundBannerView.Play(_run);
+            ShowFirstEncounterIntros();
             if (_run.CurrentWeather != WeatherId.Clear)
             {
                 _hudView.PulseWeather();
