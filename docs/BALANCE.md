@@ -166,7 +166,7 @@ Gap (une ligne ou colonne qui le contient est récoltée avec une case vide ; l'
 
 ## 5 tile upgrades de plus qui touchent la grille (deuxième lot)
 
-Pruner (après le score, déracine les tuiles voisines d'une autre couleur : +8 pts chacune, et libère les cases), Glow (les cases vides voisines deviennent dorées pour la manche), Bridge (joint son groupe, en ligne droite, à une tuile de la même couleur par-dessus une case vide), Seedpod (quand sa tuile est récoltée, plante 2 tuiles gratuites de sa couleur autour de sa case), Locksmith (à chaque score, libère une case verrouillée, gelée ou empoisonnée n'importe où).
+Pruner (après le score, déracine les tuiles voisines d'une autre couleur : +8 pts chacune, et libère les cases), Glow (les cases vides voisines deviennent dorées pour la manche), Bridge (joint son groupe, en ligne droite, à une tuile de la même couleur par-dessus une case vide), Seedpod (quand sa tuile est récoltée, plante 2 tuiles gratuites de sa couleur autour de sa case), Locksmith (à chaque score, libère une case verrouillée, gelée ou empoisonnée n'importe où), Mimic (rejoue, sur sa propre case, l'upgrade de chaque voisin orthogonal de son groupe ; jamais un autre Mimic, un Amplifier, un Echo ni un trait de combat du Joker).
 
 ## 7 fertilizers qui lisent les tuiles améliorées (tous en Mult)
 

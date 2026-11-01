@@ -110,6 +110,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bridge: return "Bridge Sprout";
                 case PieceTraitKind.Seedpod: return "Seedpod Sprout";
                 case PieceTraitKind.Locksmith: return "Locksmith Sprout";
+                case PieceTraitKind.Mimic: return "Mimic Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -272,6 +273,8 @@ namespace Contigu.Data
                     return "Joins its group across one empty plot to a tile of the same color in a straight line.";
                 case PieceTraitKind.Seedpod:
                     return "When its tile is harvested by a line, plants 2 free tiles of its color on the empty plots around it.";
+                case PieceTraitKind.Mimic:
+                    return "Replays the upgrade of every tile of its group touching it, as if it carried them itself.";
                 case PieceTraitKind.Locksmith:
                     return "Each time it scores, frees one locked, frozen or poisoned plot anywhere in the garden.";
                 case PieceTraitKind.Bombe:
@@ -345,6 +348,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bridge: return UpgradeRarity.Rare;
                 case PieceTraitKind.Seedpod: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Locksmith: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Mimic: return UpgradeRarity.Rare;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -481,6 +485,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Bridge:
                 case PieceTraitKind.Seedpod:
                 case PieceTraitKind.Locksmith:
+                case PieceTraitKind.Mimic:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:

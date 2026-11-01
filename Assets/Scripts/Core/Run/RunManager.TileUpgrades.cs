@@ -72,8 +72,9 @@ namespace Contigu.Core
         /// what the other upgrades just scored, so they resolve last. Only upgrades that scored points count, and an amplified or copied bonus is
         /// never amplified again.
         /// </summary>
-        private void ApplyNeighborCopyUpgrades(PlacementResult placement)
+        private void ApplyNeighborCopyUpgrades(PlacementResult placement, int streakBeforePlacement)
         {
+            ApplyMimicUpgrades(placement, streakBeforePlacement);
             var scoredAt = new Dictionary<Vector2Int, int>();
             foreach (var scoreEvent in placement.ScoreEvents)
             {
@@ -111,6 +112,42 @@ namespace Contigu.Core
                     AddTraitBonus(placement, pos, copied);
                 }
             }
+        }
+
+        /// <summary>
+        /// Mimic Sprout: replays, at its own plot, the upgrade of every orthogonal neighbour that belongs to the scored group (Amplifier, Echo, other
+        /// Mimics and the Joker's combat traits are never copied). Runs before Amplifier/Echo, which can then read what it scored.
+        /// </summary>
+        private void ApplyMimicUpgrades(PlacementResult placement, int streakBeforePlacement)
+        {
+            var group = new HashSet<Vector2Int>(placement.GroupCells);
+            foreach (var pos in placement.GroupCells)
+            {
+                var own = TraitAsPlaced(pos, placement);
+                if (!own.HasValue || own.Value.Kind != PieceTraitKind.Mimic)
+                {
+                    continue;
+                }
+                for (int s = 0; s < TileUpgradeSteps.Length; s++)
+                {
+                    var neighbor = pos + TileUpgradeSteps[s];
+                    if (!group.Contains(neighbor))
+                    {
+                        continue;
+                    }
+                    var copied = TraitAsPlaced(neighbor, placement);
+                    if (!copied.HasValue || !IsMimicCopyable(copied.Value.Kind))
+                    {
+                        continue;
+                    }
+                    ApplyPostPlacementTraitBonus(copied.Value, pos, streakBeforePlacement, placement);
+                }
+            }
+        }
+
+        private static bool IsMimicCopyable(PieceTraitKind kind)
+        {
+            return kind != PieceTraitKind.Mimic && kind != PieceTraitKind.Amplifier && kind != PieceTraitKind.Echo && !PieceTrait.IsJokerCombatKind(kind);
         }
 
         /// <summary>The upgraded tiles already on the garden, with their upgrade, as they stand right before a placement.</summary>
@@ -464,6 +501,7 @@ namespace Contigu.Core
                     break;
                 case PieceTraitKind.Amplifier:
                 case PieceTraitKind.Echo:
+                case PieceTraitKind.Mimic:
                     // Resolved once every other upgrade has scored (see ApplyNeighborCopyUpgrades).
                     break;
                 case PieceTraitKind.Collector:

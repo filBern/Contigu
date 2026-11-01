@@ -115,6 +115,7 @@ T['Glow'] = ('#e8a82e', g(star(32, 32, 22, 8, 0.55), '#fff1b0') + g('<circle cx=
 T['Bridge'] = ('#4f7fd0', g('<rect x="4" y="30" width="16" height="16" rx="3"/><rect x="44" y="30" width="16" height="16" rx="3"/>', W) + g('<path d="M12 30 C12 8 52 8 52 30" fill="none"/>', 'none', 5).replace(O, '#ffd84d'))
 T['Seedpod'] = ('#6f9f3f', g('<path d="M32 8 C48 14 52 38 32 56 C12 38 16 14 32 8 Z"/>', '#c8a45a') + g('<circle cx="32" cy="24" r="4"/><circle cx="32" cy="36" r="4"/><circle cx="32" cy="46" r="3"/>', '#6fb04f', 2))
 T['Locksmith'] = ('#5f699c', g('<rect x="14" y="28" width="36" height="26" rx="6"/>', '#e8c98a') + g('<path d="M22 28 V20 C22 6 42 6 42 20" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="40" r="4"/>', '#3a2a1c', 2))
+T['Mimic'] = ('#9a6fc0', g('<rect x="8" y="14" width="26" height="26" rx="5"/>', W) + '<rect x="30" y="26" width="26" height="26" rx="5" fill="none" stroke="%s" stroke-width="4" stroke-dasharray="6 4"/>' % W + g('<path d="M22 27 L44 39" fill="none"/>', 'none', 3).replace(O, W))
 
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')

@@ -374,6 +374,7 @@ namespace Contigu.Core
                 case UpgradeId.BridgeTile: return PieceTraitKind.Bridge;
                 case UpgradeId.SeedpodTile: return PieceTraitKind.Seedpod;
                 case UpgradeId.LocksmithTile: return PieceTraitKind.Locksmith;
+                case UpgradeId.MimicTile: return PieceTraitKind.Mimic;
                 default: return null; // Bank pool — no trait
             }
         }

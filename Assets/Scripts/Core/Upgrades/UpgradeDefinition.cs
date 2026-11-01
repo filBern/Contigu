@@ -476,6 +476,10 @@ namespace Contigu.Core
             UpgradeId.LocksmithTile, UpgradePool.Grid, "Locksmith Sprout",
             "Each time it scores, frees one locked, frozen or poisoned plot anywhere.", false, UpgradeRarity.Uncommon);
 
+        public static readonly UpgradeDefinition MimicTile = new UpgradeDefinition(
+            UpgradeId.MimicTile, UpgradePool.Grid, "Mimic Sprout",
+            "Copies the upgrade of every tile of its group touching it, as if it carried them itself.", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -487,7 +491,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -517,7 +521,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile
         };
     }
 }

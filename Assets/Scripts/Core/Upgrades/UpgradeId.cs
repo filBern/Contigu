@@ -127,6 +127,8 @@ namespace Contigu.Core
         MasteryPack,
         Compost,
         Forge,
-        Transplant
+        Transplant,
+
+        MimicTile
     }
 }

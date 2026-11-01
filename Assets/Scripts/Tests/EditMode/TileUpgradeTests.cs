@@ -77,6 +77,20 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Mimic_ReplaysTheUpgradeOfItsGroupNeighbor_ButNeverAnotherMimicOrAnAmplifier()
+        {
+            // Mimic next to a Pip: the Pip scores its own +N, and the Mimic replays it (+N more).
+            var mimic = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Mimic, 0), new PieceTrait(PieceTraitKind.Pip, 1), 2, 2);
+            Assert.AreEqual(2 * ScoringConstants.PipBonus, mimic.TraitBonus);
+            // Two Mimics side by side copy nothing from each other.
+            var twin = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Mimic, 0), new PieceTrait(PieceTraitKind.Mimic, 1), 2, 2);
+            Assert.AreEqual(0, twin.TraitBonus);
+            // An Amplifier is not copyable: only the Amplifier's own (empty) effect remains.
+            var amp = PlaceDomino(NewRun(), new PieceTrait(PieceTraitKind.Mimic, 0), new PieceTrait(PieceTraitKind.Amplifier, 1), 2, 2);
+            Assert.AreEqual(0, amp.TraitBonus);
+        }
+
+        [Test]
         public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
         {
             Assert.AreEqual(ScoringConstants.CollectorBonusPerKind, PlantAt(NewRun(), PieceTraitKind.Collector, PieceColor.Coral, 2, 2).TraitBonus);

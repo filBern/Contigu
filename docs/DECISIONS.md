@@ -9300,3 +9300,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 - **Venom Sprout : 1 % des PV max de TOUS les ennemis vivants (2026-11-01)**
   - Trop fort à 10 % sur l'ennemi de tête. Désormais `VenomDamagePercentOfMaxHp = 1` appliqué à chaque ennemi vivant (minimum 1 dégât). Présentation : un popup « Venom -N » par ennemi, enchaînés rapidement.
+
+- **Mimic Sprout : nouvelle tile upgrade (Grid, Rare) (2026-11-01)**
+  - Demande de l'auteur : « Mimic — copie tous les voisins orthogonaux du groupe ». Interprétation retenue : le Mimic **rejoue l'upgrade complet** (effet, pas seulement les points) de chaque voisin orthogonal appartenant au groupe marqué, comme s'il le portait sur sa propre case (`RunManager.ApplyMimicUpgrades`, avant Amplifier/Echo).
+  - Jamais copiés : un autre Mimic, Amplifier, Echo et les traits de combat du Joker (pas de récursion). Les upgrades à drapeau de cellule (Golden, Tinted, Multiplier, Blast, Beacon) ne se copient pas : ils n'agissent que sur leur propre case.
+  - Ajoutés en fin d'enum (`PieceTraitKind.Mimic`, `UpgradeId.MimicTile`) : ids sauvegardés. Le test de reprise de sauvegarde utilisait l'id 76 comme « inconnu » : remplacé par 200.

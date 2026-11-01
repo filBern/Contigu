@@ -406,6 +406,7 @@ M['u_glow'] = lambda: _trait_motif('Glow')
 M['u_bridge'] = lambda: _trait_motif('Bridge')
 M['u_seedpod'] = lambda: _trait_motif('Seedpod')
 M['u_locksmith'] = lambda: _trait_motif('Locksmith')
+M['u_mimic'] = lambda: _trait_motif('Mimic')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -502,6 +503,7 @@ U = {
  'BridgeTile': ('u_bridge', 'Grid'),
  'SeedpodTile': ('u_seedpod', 'Grid'),
  'LocksmithTile': ('u_locksmith', 'Grid'),
+ 'MimicTile': ('u_mimic', 'Grid'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),

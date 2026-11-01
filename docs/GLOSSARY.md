@@ -144,6 +144,7 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `BastionTile` | Bastion Sprout | Grid |
 | `KamikazeTile` | Kamikaze Sprout | Grid |
 | `VenomTile` | Venom Sprout | Grid |
+| `MimicTile` | Mimic Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |
