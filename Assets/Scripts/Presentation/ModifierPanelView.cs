@@ -280,7 +280,8 @@ namespace Contigu.Presentation
         {
             if (_emptyHint != null)
             {
-                _emptyHint.gameObject.SetActive(activeModifiers.Count == 0);
+                // The empty-panel hint waits for the last badge to finish shrinking away (see below): it never sits under a fading badge.
+                _emptyHint.gameObject.SetActive(activeModifiers.Count == 0 && _rowBadges.Count == 0);
             }
             // Snapshotted before the rebuild below so add/remove feedback can
             // diff against what was on screen a moment ago; a plain reorder
@@ -323,6 +324,10 @@ namespace Contigu.Presentation
                 else
                 {
                     PlayRemovedBadge(previousBadges[j]);
+                    if (activeModifiers.Count == 0 && _emptyHint != null)
+                    {
+                        StartCoroutine(ShowHintAfterRemoval());
+                    }
                 }
             }
 
@@ -739,6 +744,15 @@ namespace Contigu.Presentation
             canvasGroup.blocksRaycasts = false;
             canvasGroup.interactable = false;
             StartCoroutine(RemovedBadgeRoutine(rect, canvasGroup));
+        }
+
+        private IEnumerator ShowHintAfterRemoval()
+        {
+            yield return new WaitForSeconds(RemovedShrinkDuration);
+            if (_emptyHint != null && _heldModifiers.Count == 0)
+            {
+                _emptyHint.gameObject.SetActive(true);
+            }
         }
 
         private IEnumerator RemovedBadgeRoutine(RectTransform rect, CanvasGroup canvasGroup)
