@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Contigu.Core
@@ -98,5 +99,22 @@ namespace Contigu.Core
         public int SeedsLeft;
         public int EndOfRoundPollen;
         public int StarsEarned;
+        /// <summary>Pollen earned from the color groups of harvested lines.</summary>
+        public int LinesPollen;
+        /// <summary>Pollen from tile upgrades (Honeycomb, Dewdrop...), i.e. Pollen events no fertilizer claimed.</summary>
+        public int TilePollen;
+        /// <summary>Pollen from the unused seeds (1 each).</summary>
+        public int UnusedSeedsPollen;
+        /// <summary>Pollen from the challenge's own end-of-round bonus.</summary>
+        public int ChallengePollen;
+        /// <summary>Pollen per fertilizer: during placements and at the end of the round, merged by fertilizer.</summary>
+        public List<PollenSource> FertilizerPollen;
+    }
+
+    /// <summary>One fertilizer's Pollen contribution to a round.</summary>
+    public struct PollenSource
+    {
+        public ModifierId Id;
+        public int Amount;
     }
 }

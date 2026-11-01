@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Contigu.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,9 @@ namespace Contigu.Presentation
     {
         private const float CardWidth = 440f;
         private const float RowHeight = 34f;
+        private const float TotalRowHeight = 40f;
+        private const float PaperHeight = 250f;
+        private const int MaxBodyRows = 6;
         private static readonly Color Wood = new Color(0.33f, 0.22f, 0.13f, 1f);
         private static readonly Color Dark = new Color(0.13f, 0.09f, 0.06f, 1f);
 
@@ -49,7 +53,7 @@ namespace Contigu.Presentation
             paper.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             paper.rectTransform.pivot = new Vector2(0.5f, 1f);
             paper.rectTransform.anchoredPosition = new Vector2(0f, -72f);
-            paper.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 250f);
+            paper.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, PaperHeight);
             _rows = paper.rectTransform;
 
             _continue = UIFactory.CreateButton(_card, "Continue", "To the shop", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 24);
@@ -72,13 +76,35 @@ namespace Contigu.Presentation
             {
                 Destroy(_rows.GetChild(i).gameObject);
             }
+            // Pollen only, by source: harvested lines, unused seeds, tile upgrades, challenge bonus, then each fertilizer.
+            var lines = new System.Collections.Generic.List<KeyValuePair<string, int>>();
+            lines.Add(new KeyValuePair<string, int>("Lines harvested (" + summary.LinesHarvested + ")", summary.LinesPollen));
+            lines.Add(new KeyValuePair<string, int>("Unused seeds (" + summary.UnusedSeedsPollen + ")", summary.UnusedSeedsPollen));
+            if (summary.TilePollen > 0) { lines.Add(new KeyValuePair<string, int>("Seed upgrades", summary.TilePollen)); }
+            if (summary.ChallengePollen > 0) { lines.Add(new KeyValuePair<string, int>("Season bonus", summary.ChallengePollen)); }
+            var fertilizers = summary.FertilizerPollen;
+                        int hidden = 0;
+            for (int i = 0; fertilizers != null && i < fertilizers.Count; i++)
+            {
+                if (lines.Count < MaxBodyRows - 1 || (lines.Count < MaxBodyRows && i == fertilizers.Count - 1))
+                {
+                    lines.Add(new KeyValuePair<string, int>(ModifierCatalog.Get(fertilizers[i].Id).Name, fertilizers[i].Amount));
+                }
+                else { hidden += fertilizers[i].Amount; }
+            }
+            if (hidden > 0) { lines.Add(new KeyValuePair<string, int>("Other fertilizers", hidden)); }
+            int total = 0;
+            for (int i = 0; i < lines.Count; i++) { total += lines[i].Value; }
+            float rowHeight = Mathf.Min(RowHeight, (PaperHeight - 28f - TotalRowHeight) / lines.Count);
+            int fontSize = rowHeight < 30f ? 18 : 20;
             int row = 0;
-            AddRow(ref row, "Round score", summary.Score.ToString("N0"), false);
-            AddRow(ref row, "Biggest placement", summary.BestPlacementScore.ToString("N0"), true);
-            AddRow(ref row, "Lines harvested", summary.LinesHarvested.ToString(), false);
-            AddRow(ref row, "Seeds planted", summary.Placements.ToString(), false);
-            AddRow(ref row, "Pollen from placements", "+" + summary.PollenFromPlacements, false);
-            AddRow(ref row, "Unused seeds + bonuses", "+" + summary.EndOfRoundPollen + " Pollen", false);
+            float y = 14f;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                AddRow(ref row, lines[i].Key, "+" + lines[i].Value, false, rowHeight, fontSize, ref y);
+            }
+            y += 6f;
+            AddRow(ref row, "Pollen earned", "+" + total, true, TotalRowHeight, 22, ref y);
             _root.gameObject.SetActive(true);
             _root.SetAsLastSibling();
             SfxManager.Play(SfxId.RoundClear);
@@ -93,22 +119,23 @@ namespace Contigu.Presentation
             }
         }
 
-        private void AddRow(ref int row, string label, string value, bool highlight)
+        private void AddRow(ref int row, string label, string value, bool highlight, float rowHeight, int fontSize, ref float y)
         {
-            var left = UIFactory.CreateText(_rows, "Label" + row, label, 20, UITheme.TextMuted, TextAnchor.MiddleLeft);
+            var left = UIFactory.CreateText(_rows, "Label" + row, label, highlight ? 24 : fontSize, UITheme.TextMuted, TextAnchor.MiddleLeft);
             left.raycastTarget = false;
             left.rectTransform.anchorMin = new Vector2(0f, 1f);
             left.rectTransform.anchorMax = new Vector2(0.62f, 1f);
             left.rectTransform.pivot = new Vector2(0f, 1f);
-            left.rectTransform.offsetMin = new Vector2(18f, -(14f + (row + 1) * RowHeight));
-            left.rectTransform.offsetMax = new Vector2(0f, -(14f + row * RowHeight));
-            var right = UIFactory.CreateText(_rows, "Value" + row, value, highlight ? 26 : 22, highlight ? UITheme.Success : UITheme.TextPrimary, TextAnchor.MiddleRight);
+            left.rectTransform.offsetMin = new Vector2(18f, -(y + rowHeight));
+            left.rectTransform.offsetMax = new Vector2(0f, -y);
+            var right = UIFactory.CreateText(_rows, "Value" + row, value, highlight ? 28 : fontSize + 2, highlight ? UITheme.Success : UITheme.TextPrimary, TextAnchor.MiddleRight);
             right.raycastTarget = false;
             right.rectTransform.anchorMin = new Vector2(0.55f, 1f);
             right.rectTransform.anchorMax = new Vector2(1f, 1f);
             right.rectTransform.pivot = new Vector2(1f, 1f);
-            right.rectTransform.offsetMin = new Vector2(0f, -(14f + (row + 1) * RowHeight));
-            right.rectTransform.offsetMax = new Vector2(-18f, -(14f + row * RowHeight));
+            right.rectTransform.offsetMin = new Vector2(0f, -(y + rowHeight));
+            right.rectTransform.offsetMax = new Vector2(-18f, -y);
+            y += rowHeight;
             row++;
         }
 

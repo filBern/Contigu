@@ -194,6 +194,10 @@ namespace Contigu.Tests
             Assert.AreEqual(RunState.AwaitingShop, run.State);
             Assert.AreEqual(1, run.LastRoundSummary.RoundNumber);
             Assert.AreEqual(1, run.LastRoundSummary.StarsEarned);
+            var s = run.LastRoundSummary;
+            int fertilizerPollen = 0;
+            if (s.FertilizerPollen != null) { foreach (var f in s.FertilizerPollen) { fertilizerPollen += f.Amount; } }
+            Assert.AreEqual(run.LastRoundEndLueurBonus, s.UnusedSeedsPollen + s.ChallengePollen + fertilizerPollen);
         }
 
         [Test]

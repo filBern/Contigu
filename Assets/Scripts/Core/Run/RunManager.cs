@@ -419,6 +419,9 @@ namespace Contigu.Core
         private int _roundBestPlacement;
         private int _roundLines;
         private int _roundPollen;
+        private int _roundLinesPollen;
+        private int _roundTilePollen;
+        private readonly Dictionary<ModifierId, int> _roundFertilizerPollen = new Dictionary<ModifierId, int>();
 
         /// <summary>Where the most recent Permanent Bonus Square landed — read once by the presentation layer to show the player which square was marked. Null before any such purchase.</summary>
         public Vector2Int? LastPermanentBonusPosition { get; private set; }
@@ -746,6 +749,9 @@ namespace Contigu.Core
             _roundBestPlacement = 0;
             _roundLines = 0;
             _roundPollen = 0;
+            _roundLinesPollen = 0;
+            _roundTilePollen = 0;
+            _roundFertilizerPollen.Clear();
             PiecesRemainingThisRound = CurrentBudget;
             LastRoundEndLueurBonus = 0;
             State = RunState.InProgress;
@@ -910,6 +916,7 @@ namespace Contigu.Core
             _roundBestPlacement = Mathf.Max(_roundBestPlacement, placement.TotalScore);
             _roundLines += placement.ClearedLineCount;
             _roundPollen += placement.LueurEarned + placement.ModifierLueurBonus;
+            TallyRoundPollen(placement);
             // ModifierLueurBonus is a second, independent source of Lueur, on top
             // of the line-clearing LueurEarned above.
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;

@@ -177,7 +177,33 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>Rain Barrel and Granary: Pollen banked when a round is cleared.</summary>
+        /// <summary>Splits a placement's Pollen by source for the round summary: line groups, each fertilizer, and tile upgrades (whatever no fertilizer claimed).</summary>
+        private void TallyRoundPollen(PlacementResult placement)
+        {
+            _roundLinesPollen += placement.LueurEarned;
+            int claimed = 0;
+            var events = placement.ScoreEvents;
+            for (int i = 0; events != null && i < events.Count; i++)
+            {
+                var e = events[i];
+                if (e.Type != ScoreEventType.LueurBonus || !e.TriggeringModifier.HasValue)
+                {
+                    continue;
+                }
+                AddRoundFertilizerPollen(e.TriggeringModifier.Value, e.Amount);
+                claimed += e.Amount;
+            }
+            _roundTilePollen += Mathf.Max(0, placement.ModifierLueurBonus - claimed);
+        }
+
+        private void AddRoundFertilizerPollen(ModifierId id, int amount)
+        {
+            int current;
+            _roundFertilizerPollen.TryGetValue(id, out current);
+            _roundFertilizerPollen[id] = current + amount;
+        }
+
+        /// <summary>Rain Barrel and Granary: Pollen banked when a round is cleared (also tallied per fertilizer into the round summary).</summary>
         private int RoundEndFertilizerPollen()
         {
             int pollen = 0;
@@ -188,16 +214,36 @@ namespace Contigu.Core
                     continue;
                 }
                 float level = GetModifierLevelFactor(i);
+                int gained = 0;
                 if (_activeModifiers[i] == ModifierId.Tonneau)
                 {
-                    pollen += Mathf.RoundToInt(ShufflesRemaining * EconomyConstants.RainBarrelLueurPerShuffle * level);
+                    gained = Mathf.RoundToInt(ShufflesRemaining * EconomyConstants.RainBarrelLueurPerShuffle * level);
                 }
                 else if (_activeModifiers[i] == ModifierId.Grange)
                 {
-                    pollen += Mathf.RoundToInt(_activeModifiers.Count * EconomyConstants.GranaryLueurPerFertilizer * level);
+                    gained = Mathf.RoundToInt(_activeModifiers.Count * EconomyConstants.GranaryLueurPerFertilizer * level);
+                }
+                if (gained > 0)
+                {
+                    pollen += gained;
+                    AddRoundFertilizerPollen(_activeModifiers[i], gained);
                 }
             }
             return pollen;
+        }
+
+        private List<PollenSource> BuildFertilizerPollenList()
+        {
+            var list = new List<PollenSource>();
+            foreach (var pair in _roundFertilizerPollen)
+            {
+                if (pair.Value > 0)
+                {
+                    list.Add(new PollenSource { Id = pair.Key, Amount = pair.Value });
+                }
+            }
+            list.Sort((x, y) => y.Amount.CompareTo(x.Amount));
+            return list;
         }
 
         /// <summary>False for a new fertilizer that could never fire in this challenge (needs enemies, or a weather the world never has).</summary>
