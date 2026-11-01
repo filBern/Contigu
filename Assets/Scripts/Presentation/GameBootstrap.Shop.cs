@@ -144,6 +144,10 @@ namespace Contigu.Presentation
             {
                 ShowPackOfModifiers(revealedUpgrade);
             }
+            else if (pending.Id == UpgradeId.Transplant)
+            {
+                ShowTransplantSources(pending);
+            }
             else if (pending.Id == UpgradeId.SeedPack)
             {
                 ShowSeedPack(ShelfStage.ForWorkshop(pending));
@@ -396,6 +400,61 @@ namespace Contigu.Presentation
                 });
             }
             ShowShelfChoice(source, Loc.T("choice.pickMastery"), entries, true, OnMasteryOptionChosen, celebrateChosen: true);
+        }
+
+        /// <summary>Transplant, step 1: the seeds that carry a movable upgrade, each shown with just that upgrade.</summary>
+        private void ShowTransplantSources(UpgradeDefinition pending)
+        {
+            var sources = new List<RunManager.TransplantSource>(_run.PendingTransplantSources);
+            var upgradeNames = new List<string>();
+            var entries = new List<ChoiceEntry>();
+            foreach (var source in sources)
+            {
+                var token = _run.Deck.Deck[source.DeckIndex];
+                var shape = PieceShapeCatalog.Get(token.Shape);
+                var trait = token.Traits[source.TraitIndex];
+                var only = new List<PieceTrait> { trait };
+                upgradeNames.Add(PieceTraitVisualDefaults.GetName(trait.Kind));
+                entries.Add(new ChoiceEntry
+                {
+                    Columns = ShapePreviewFactory.ColumnsOf(shape),
+                    Rows = ShapePreviewFactory.RowsOf(shape),
+                    BuildVisual = (host, size) => BuildSeedVisual(host, shape, token.Color, only, _tooltipView),
+                    Name = PieceTraitVisualDefaults.GetName(trait.Kind),
+                    Body = "Moves to another seed of your bag."
+                });
+            }
+            ShowShelfChoice(ShelfStage.ForWorkshop(pending), "Choose the upgrade to move", entries, true, index =>
+            {
+                if (_run.ResolveTransplantSource(index))
+                {
+                    ShowTransplantTargets(pending, upgradeNames[index]);
+                }
+                else
+                {
+                    SetStatusText("No other seed has a free tile for it: pick another upgrade or skip.");
+                    ShowTransplantSources(pending);
+                }
+            });
+        }
+
+        /// <summary>Transplant, step 2: the seeds that can receive the chosen upgrade.</summary>
+        private void ShowTransplantTargets(UpgradeDefinition pending, string upgradeName)
+        {
+            var deckIndices = new List<int>(_run.PendingUpgradeTileCandidates);
+            var entries = new List<ChoiceEntry>();
+            foreach (var deckIndex in deckIndices)
+            {
+                var t = _run.Deck.Deck[deckIndex];
+                entries.Add(new ChoiceEntry { Columns = ShapePreviewFactory.ColumnsOf(PieceShapeCatalog.Get(t.Shape)), Rows = ShapePreviewFactory.RowsOf(PieceShapeCatalog.Get(t.Shape)), BuildVisual = (host, size) => BuildSeedVisual(host, PieceShapeCatalog.Get(t.Shape), t.Color, t.Traits, _tooltipView) });
+            }
+            ShowShelfChoice(ShelfStage.ForWorkshop(pending), "Choose the seed that receives " + upgradeName, entries, true, index =>
+            {
+                _run.ResolveTransplantTarget(deckIndices[index]);
+                _shopView.SetSelectionMode(false);
+                RefreshAll();
+                _shopView.Refresh(_run);
+            });
         }
 
         private void ShowCompost(UpgradeDefinition pending)

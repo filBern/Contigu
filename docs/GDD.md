@@ -35,7 +35,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **Ennemis** (16) : Withered Stalk (base), Bramble, Blightmoth, Rotbloom, Crow, Creeping Root, Root Leech, Inkcap, … chacun avec un rôle (Baseline, Creator, Reactor, Boss) et un effet sur le plateau ou la main (verrous, poison, vol de Pollen, soin à chaque ligne, couleur ou forme détestée…). Les PV augmentent à partir du round 9.
 - **Météo** (10 météos de base et 13 variantes thématiques qui jouent comme une base) : tirée par manche, jamais deux fois la même d'affilée, manche 1 toujours dégagée. Pluie et Soleil visent une couleur ; les autres changent les scores, le Pollen, la grille ou la main. Les challenges thématiques ont leurs variantes (neige, lampes de serre, chat…).
 - **Challenges** : Spring (didacticiel, par défaut), Winter (sac réduit, budgets serrés), Summer (météo dure ×1,5, Locust Swarm), Autumn (les fertilizers fanent après 4 manches, plus de Pollen, Rotgrub), Orchard (2 couleurs seulement, Fruitworm), Greenhouse (grille 5×5, Whitefly, météo de serre). Chacun a un ennemi résident et une signature.
-- **Stars** : +1 par manche réussie, +2 pour une victoire ; elles débloquent les challenges suivants.
+- **Stars** : +1 par manche réussie, +2 pour une victoire ; elles débloquent les challenges suivants. Quatre **pledges** facultatifs (No Shuffle, No Reroll, Lean Bag : 14 graines maximum, Minimalist : 2 fertilizers maximum) se cochent avant la run : chacun encore tenu à la victoire rapporte +1 Star.
 
 ## 6. Économie et boutique
 
@@ -43,11 +43,12 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **Fertilizers** (modificateurs, 145) : jusqu'à **4 actifs**, rangés dans le panneau Fertilizers ; chacun a un prix, une catégorie (Couleurs, Voisinage, Connexions, Formes, Destruction, Roguelike) et un niveau améliorable. On peut les vendre ou les réordonner.
 - **La boutique** montre deux étagères :
   - **Blister** (3 emplacements) : fertilizers et tile upgrades à l'achat direct. Seul le Blister se re-tire contre du Pollen (Reroll).
-  - **Workshop** (4 emplacements) : deux packs tirés parmi quatre, le Compost et la Forge.
+  - **Workshop** (4 emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), le Compost et la Forge.
     - *Seed Pack* : 3 graines améliorées, on en garde 1.
     - *Sprout Pack* : 5 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
     - *Fertilizer Pack* : 3 fertilizers, on en garde 1 gratuitement.
     - *Mastery Pack* : 3 masteries, on en garde 1.
+    - *Transplant* : déplace une tile upgrade d'une graine vers une autre (on choisit l'upgrade, puis la graine qui la reçoit) ; proposé seulement si une graine porte une upgrade déplaçable. Le Joker garde son trait de combat.
     - *Compost* : retire une graine du sac pour l'alléger (prix qui remonte dans la visite, remis à zéro à chaque manche).
     - *Forge* : 3 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
 - Chaque achat de la visite renchérit les autres de 50 %. Les objets du Workshop restent achetables mais plus chers à chaque fois. Les choix (packs, Forge, Compost) se font sur les mêmes étagères que la boutique, avec leurs animations (vol vers l'enclume, effritement du Compost, vol du fertilizer vers son emplacement, célébration d'une mastery).
@@ -55,6 +56,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 
 ## 7. Méta et sauvegarde
 
+- **Fin de manche et de run** : un résumé s'affiche entre la manche et la boutique ; l'écran de fin liste les records de la run (plus grosse pose, Mult maximal, plus gros groupe, lignes récoltées, fertilizer le plus déclenché…).
 - **Collection** : fertilizers, upgrades, ennemis, météos, graines découvertes ; une barre de progression.
 - **Sauvegarde** : « Save & quit » écrit la run telle qu'elle était au début de la manche (ou à l'ouverture de la boutique) ; « Continue saved run » la reprend. Une nouvelle partie demande confirmation avant d'écraser la sauvegarde. Les anciens identifiants retirés (par exemple les Glow de couleur) sont convertis à la reprise.
 

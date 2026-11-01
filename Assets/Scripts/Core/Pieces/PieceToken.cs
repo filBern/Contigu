@@ -86,6 +86,22 @@ namespace Contigu.Core
             return new PieceToken(Shape, Color, Trait, extras);
         }
 
+        /// <summary>This token without its upgrade number <paramref name="index"/> (in <see cref="Traits"/> order); the others stay.</summary>
+        public PieceToken WithoutTraitAt(int index)
+        {
+            var all = Traits;
+            var rest = new System.Collections.Generic.List<PieceTrait>();
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (i != index) { rest.Add(all[i]); }
+            }
+            if (rest.Count == 0)
+            {
+                return new PieceToken(Shape, Color);
+            }
+            return new PieceToken(Shape, Color, rest[0], rest.GetRange(1, rest.Count - 1).ToArray());
+        }
+
         /// <summary>Same piece in another color, keeping every upgrade.</summary>
         public PieceToken WithColor(PieceColor color)
         {

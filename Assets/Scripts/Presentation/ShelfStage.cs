@@ -231,7 +231,7 @@ namespace Contigu.Presentation
         /// <summary>The source for a Workshop pack or service: its own picture (crate, bucket) and description.</summary>
         public static ChoiceSource ForWorkshop(UpgradeDefinition def)
         {
-            bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge;
+            bool isService = def.Id == UpgradeId.Compost || def.Id == UpgradeId.Forge || def.Id == UpgradeId.Transplant;
             return new ChoiceSource
             {
                 Art = UpgradeVisualDefaults.GetWorkshopArt(def.Id == UpgradeId.Forge ? "Anvil" : def.Id.ToString()),

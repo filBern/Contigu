@@ -399,6 +399,18 @@ namespace Contigu.RunSim
                     ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(_rng.Next(run.PendingPackUpgrades.Count));
                     if (!ok) { ok = run.SkipPack(); }
                 }
+                else if (pending.Id == UpgradeId.Transplant)
+                {
+                    if (run.PendingTransplantChosen.HasValue)
+                    {
+                        ok = run.PendingUpgradeTileCandidates.Count > 0 && run.ResolveTransplantTarget(run.PendingUpgradeTileCandidates[_rng.Next(run.PendingUpgradeTileCandidates.Count)]);
+                    }
+                    else
+                    {
+                        ok = run.PendingTransplantSources.Count > 0 && run.ResolveTransplantSource(_rng.Next(run.PendingTransplantSources.Count));
+                    }
+                    if (!ok) { ok = run.AbandonPending(); }
+                }
                 else if (pending.Id == UpgradeId.FertilizerPack)
                 {
                     ok = run.PendingPackModifiers.Count > 0 && run.ResolvePackModifierChoice(_rng.Next(run.PendingPackModifiers.Count));

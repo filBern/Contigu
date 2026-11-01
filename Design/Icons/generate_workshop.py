@@ -49,6 +49,7 @@ if __name__ == '__main__':
     open('workshop/SproutPack.svg', 'w').write(crate(M['u_sproutpack'](), POOL['Grid']))
     open('workshop/FertilizerPack.svg', 'w').write(crate(M['u_fertpack'](), POOL['Modifier']))
     open('workshop/MasteryPack.svg', 'w').write(crate(M['u_masterypack'](), POOL['Mastery']))
+    open('workshop/Transplant.svg', 'w').write(crate(M['u_replace'](), POOL['Workshop']))
     open('workshop/Compost.svg', 'w').write(bucket())
     open('workshop/Anvil.svg', 'w').write(anvil())
-    print(len(U), 'glyphs, 6 workshop')
+    print(len(U), 'glyphs, 7 workshop')

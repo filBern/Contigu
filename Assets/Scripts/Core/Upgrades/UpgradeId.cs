@@ -126,6 +126,7 @@ namespace Contigu.Core
         FertilizerPack,
         MasteryPack,
         Compost,
-        Forge
+        Forge,
+        Transplant
     }
 }

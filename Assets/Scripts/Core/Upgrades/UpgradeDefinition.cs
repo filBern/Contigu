@@ -363,6 +363,10 @@ namespace Contigu.Core
             UpgradeId.Forge, UpgradePool.Workshop, "Forge",
             "Offers 3 tile upgrades. Pick 1, then 3 seeds of your bag.", false, UpgradeRarity.Common);
 
+        public static readonly UpgradeDefinition Transplant = new UpgradeDefinition(
+            UpgradeId.Transplant, UpgradePool.Workshop, "Transplant",
+            "Moves a tile upgrade from one seed of your bag to another: pick the upgrade, then the seed that receives it.", false, UpgradeRarity.Common);
+
         /// <summary>The definition with this id (any pool, Workshop included), or null.</summary>
         public static UpgradeDefinition Get(UpgradeId id)
         {
@@ -377,6 +381,7 @@ namespace Contigu.Core
             {
                 case UpgradeId.SeedPack: return SeedPack;
                 case UpgradeId.SproutPack: return SproutPack;
+                case UpgradeId.Transplant: return Transplant;
                 case UpgradeId.FertilizerPack: return FertilizerPack;
                 case UpgradeId.MasteryPack: return MasteryPack;
                 case UpgradeId.Compost: return Compost;
@@ -385,7 +390,7 @@ namespace Contigu.Core
             }
         }
 
-        public static readonly UpgradeDefinition[] WorkshopPacks = { SeedPack, SproutPack, FertilizerPack, MasteryPack };
+        public static readonly UpgradeDefinition[] WorkshopPacks = { SeedPack, SproutPack, FertilizerPack, MasteryPack, Transplant };
 
         public static readonly UpgradeDefinition KinTile = new UpgradeDefinition(
             UpgradeId.KinTile, UpgradePool.Grid, "Kin Sprout",

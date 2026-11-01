@@ -492,6 +492,55 @@ namespace Contigu.Core
         /// copy already drawn into the draw pile or hand. No-op if neither
         /// holds a matching token.
         /// </summary>
+        /// <summary>The lowest cell of the token's shape that carries no upgrade yet, or -1 when every cell has one.</summary>
+        public static int FirstFreeCell(PieceToken token)
+        {
+            int cells = PieceShapeCatalog.Get(token.Shape).Cells.Count;
+            for (int c = 0; c < cells; c++)
+            {
+                if (!token.UsesCell(c)) { return c; }
+            }
+            return -1;
+        }
+
+        /// <summary>Whether upgrade number <paramref name="traitIndex"/> of the deck token at <paramref name="deckIndex"/> may be moved: a Joker keeps its combat trait for good.</summary>
+        public bool CanTransplantFrom(int deckIndex, int traitIndex)
+        {
+            if (deckIndex < 0 || deckIndex >= _deck.Count) { return false; }
+            var token = _deck[deckIndex];
+            var traits = token.Traits;
+            if (traitIndex < 0 || traitIndex >= traits.Count) { return false; }
+            return !(token.Color == PieceColor.Joker && PieceTrait.IsJokerCombatKind(traits[traitIndex].Kind));
+        }
+
+        /// <summary>
+        /// Moves upgrade number <paramref name="traitIndex"/> of the seed at <paramref name="fromIndex"/> onto the lowest free cell of the seed at
+        /// <paramref name="toIndex"/>. False (nothing changes) when the move is not allowed or the receiving seed has no free cell.
+        /// </summary>
+        public bool TransplantTrait(int fromIndex, int traitIndex, int toIndex)
+        {
+            if (fromIndex == toIndex || !CanTransplantFrom(fromIndex, traitIndex) || toIndex < 0 || toIndex >= _deck.Count)
+            {
+                return false;
+            }
+            var from = _deck[fromIndex];
+            var to = _deck[toIndex];
+            int freeCell = FirstFreeCell(to);
+            if (freeCell < 0)
+            {
+                return false;
+            }
+            var moved = from.Traits[traitIndex];
+            var tint = PieceTrait.TargetColorFor(moved.Kind, to.Color);
+            var fromAfter = from.WithoutTraitAt(traitIndex);
+            var toAfter = to.WithAddedTrait(new PieceTrait(moved.Kind, freeCell, tint));
+            _deck[fromIndex] = fromAfter;
+            _deck[toIndex] = toAfter;
+            SyncTagIntoLiveCopy(from, fromAfter);
+            SyncTagIntoLiveCopy(to, toAfter);
+            return true;
+        }
+
         private void SyncTagIntoLiveCopy(PieceToken before, PieceToken after)
         {
             int dpIndex = _drawPile.FindIndex(t => t.Equals(before));

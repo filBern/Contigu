@@ -358,5 +358,81 @@ namespace Contigu.Tests
             Assert.IsTrue(run.ResolveUpgradeTileChoice(new List<int> { target }));
             Assert.IsTrue(run.Deck.Deck[target].Trait.HasValue);
         }
+
+        private static void SetToken(RunManager run, int index, PieceToken token)
+        {
+            var list = new List<PieceToken>(run.Deck.Deck);
+            list[index] = token;
+            run.Deck.RestoreDeck(list);
+        }
+
+        [Test]
+        public void Transplant_MovesAnUpgradeFromOneSeedToAnother()
+        {
+            var run = ShopRun(8);
+            int source = -1;
+            for (int i = 0; i < run.Deck.Deck.Count && source < 0; i++) { if (!run.Deck.Deck[i].Trait.HasValue && run.Deck.Deck[i].Color != PieceColor.Joker) { source = i; } }
+            var shape = run.Deck.Deck[source].Shape;
+            SetToken(run, source, run.Deck.Deck[source].WithTrait(new PieceTrait(PieceTraitKind.Corner, 0)));
+            int traitsBefore = 0;
+            foreach (var token in run.Deck.Deck) { traitsBefore += token.TraitCount; }
+
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.Transplant);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(UpgradeId.Transplant, run.PendingUpgrade.Id);
+            int entry = -1;
+            for (int i = 0; i < run.PendingTransplantSources.Count; i++) { if (run.PendingTransplantSources[i].DeckIndex == source) { entry = i; } }
+            Assert.GreaterOrEqual(entry, 0, "the seed carrying the upgrade is offered");
+
+            Assert.IsTrue(run.ResolveTransplantSource(entry));
+            Assert.IsTrue(run.PendingTransplantChosen.HasValue);
+            Assert.Greater(run.PendingUpgradeTileCandidates.Count, 0);
+            int target = run.PendingUpgradeTileCandidates[0];
+            Assert.AreNotEqual(source, target);
+            Assert.IsFalse(run.ResolveTransplantTarget(source), "only an offered receiver is accepted");
+            Assert.IsTrue(run.ResolveTransplantTarget(target));
+
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.IsFalse(run.Deck.Deck[source].Trait.HasValue, "the upgrade left its seed");
+            bool arrived = false;
+            foreach (var trait in run.Deck.Deck[target].Traits) { arrived |= trait.Kind == PieceTraitKind.Corner; }
+            Assert.IsTrue(arrived, "the Corner upgrade is now on the receiving seed");
+            int traitsAfter = 0;
+            foreach (var token in run.Deck.Deck) { traitsAfter += token.TraitCount; }
+            Assert.AreEqual(traitsBefore, traitsAfter, "moved, not duplicated or lost");
+        }
+
+        [Test]
+        public void Transplant_IsNotOffered_WhenNoSeedCarriesAMovableUpgrade()
+        {
+            var run = ShopRun(9);
+            for (int i = 0; i < run.Deck.Deck.Count; i++) { SetToken(run, i, new PieceToken(run.Deck.Deck[i].Shape, run.Deck.Deck[i].Color)); }
+            Assert.IsFalse(run.HasTransplantableUpgrade());
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.Transplant);
+            Assert.IsFalse(run.BuyUpgradeSlot(0), "nothing to move: the purchase is refused");
+        }
+
+        [Test]
+        public void Transplant_NeverMovesAJokersCombatTrait()
+        {
+            var run = ShopRun(10);
+            var rng = new SystemRandomProvider(4);
+            run.Deck.AddJoker(rng, out _);
+            int joker = run.Deck.Deck.Count - 1;
+            Assert.IsFalse(run.Deck.CanTransplantFrom(joker, 0));
+        }
+
+        [Test]
+        public void Transplant_Skipped_LeavesTheBagAsItWas()
+        {
+            var run = ShopRun(11);
+            SetToken(run, 0, run.Deck.Deck[0].WithTrait(new PieceTrait(PieceTraitKind.Corner, 0)));
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.Transplant);
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.IsTrue(run.AbandonPending());
+            Assert.IsNull(run.PendingUpgrade);
+            Assert.AreEqual(0, run.PendingTransplantSources.Count);
+            Assert.IsFalse(run.PendingTransplantChosen.HasValue);
+        }
     }
 }

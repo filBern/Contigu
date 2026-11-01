@@ -63,6 +63,9 @@ namespace Contigu.Core
         /// <summary>A Workshop item is never sold out: buying it again in the same visit costs this much more each time (a fraction of its price, per earlier purchase).</summary>
         public const float WorkshopRepeatPriceIncrease = 0.5f;
         public const int ForgePrice = 4;
+        public const int TransplantPrice = 4;
+        /// <summary>How many upgrades (then how many receiving seeds) a Transplant shows.</summary>
+        public const int TransplantChoiceCount = 8;
         public const int PackChoiceCount = 3;
         /// <summary>How many tile upgrades a Sprout Pack reveals (pick 1).</summary>
         public const int SproutPackChoiceCount = 5;

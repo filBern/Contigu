@@ -12,6 +12,7 @@ namespace Contigu.Core
             _purchasesThisVisit = 0;
             _rerollsThisVisit = 0;
             System.Array.Clear(_upgradeBuys, 0, _upgradeBuys.Length);
+            ClearPendingTransplant();
             _compostsBought = 0; // Compost gets dearer with use, but only within one visit: every round starts at the base price again
             PendingUpgrade = null;
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
@@ -190,6 +191,10 @@ namespace Contigu.Core
             {
                 return false;
             }
+            if (candidate.Id == UpgradeId.Transplant && !HasTransplantableUpgrade())
+            {
+                return false;
+            }
             return true;
         }
 
@@ -212,6 +217,8 @@ namespace Contigu.Core
         {
             var previousCompost = keepCompost ? _upgradeSlots[2] : null;
             var packs = new List<UpgradeDefinition>(UpgradeCatalog.WorkshopPacks);
+            // Nothing to move: the Transplant is not even offered.
+            packs.RemoveAll(p => !IsUpgradeEligibleForOffer(p));
             for (int i = 0; i < 2; i++)
             {
                 int pick = _rng.Next(packs.Count);
@@ -249,6 +256,7 @@ namespace Contigu.Core
             {
                 case UpgradeId.SeedPack: basePrice = EconomyConstants.SeedPackPrice; break;
                 case UpgradeId.SproutPack: basePrice = EconomyConstants.SproutPackPrice; break;
+                case UpgradeId.Transplant: basePrice = EconomyConstants.TransplantPrice; break;
                 case UpgradeId.FertilizerPack: basePrice = EconomyConstants.FertilizerPackPrice; break;
                 case UpgradeId.MasteryPack: basePrice = EconomyConstants.MasteryPackPrice; break;
                 case UpgradeId.Compost: basePrice = EconomyConstants.CompostBasePrice + _compostsBought * EconomyConstants.CompostPriceIncreasePerUse; break;

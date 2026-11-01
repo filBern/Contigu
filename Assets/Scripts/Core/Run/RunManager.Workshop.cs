@@ -27,6 +27,10 @@ namespace Contigu.Core
                     PendingUpgrade = upgrade;
                     PendingMasteryOptions = RollPackMasteryOptions(EconomyConstants.PackChoiceCount);
                     return true;
+                case UpgradeId.Transplant:
+                    PendingUpgrade = upgrade;
+                    RollTransplantSources();
+                    return true;
                 case UpgradeId.Compost:
                     PendingUpgrade = upgrade;
                     PendingUpgradeTileCandidates = Deck.GetRandomTokenIndices(EconomyConstants.ShopTileCandidateCount, _rng);
@@ -34,6 +38,110 @@ namespace Contigu.Core
                 default:
                     return false;
             }
+        }
+
+        /// <summary>One movable upgrade of a seed: the seed's place in the bag and the upgrade's number on it.</summary>
+        public struct TransplantSource
+        {
+            public int DeckIndex;
+            public int TraitIndex;
+        }
+
+        /// <summary>Transplant, step 1: the upgrades that can be moved (null outside that step).</summary>
+        public IReadOnlyList<TransplantSource> PendingTransplantSources { get; private set; } = System.Array.Empty<TransplantSource>();
+
+        /// <summary>Transplant, step 2: the upgrade chosen in step 1 (-1 outside that step); the seeds that can receive it are in <see cref="PendingUpgradeTileCandidates"/>.</summary>
+        public TransplantSource? PendingTransplantChosen { get; private set; }
+
+        /// <summary>True when at least one seed of the bag carries an upgrade that can move.</summary>
+        public bool HasTransplantableUpgrade()
+        {
+            var tokens = Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                for (int t = 0; t < tokens[i].TraitCount; t++)
+                {
+                    if (Deck.CanTransplantFrom(i, t)) { return true; }
+                }
+            }
+            return false;
+        }
+
+        private void RollTransplantSources()
+        {
+            var all = new List<TransplantSource>();
+            var tokens = Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                for (int t = 0; t < tokens[i].TraitCount; t++)
+                {
+                    if (Deck.CanTransplantFrom(i, t)) { all.Add(new TransplantSource { DeckIndex = i, TraitIndex = t }); }
+                }
+            }
+            var picked = new List<TransplantSource>();
+            while (picked.Count < EconomyConstants.TransplantChoiceCount && all.Count > 0)
+            {
+                int pick = _rng.Next(all.Count);
+                picked.Add(all[pick]);
+                all.RemoveAt(pick);
+            }
+            PendingTransplantSources = picked;
+            PendingTransplantChosen = null;
+        }
+
+        /// <summary>Transplant, step 1: keeps upgrade number <paramref name="index"/> of <see cref="PendingTransplantSources"/>; the seeds that can receive it are then offered. False when no other seed has a free cell.</summary>
+        public bool ResolveTransplantSource(int index)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.Transplant || PendingTransplantChosen.HasValue || index < 0 || index >= PendingTransplantSources.Count)
+            {
+                return false;
+            }
+            var chosen = PendingTransplantSources[index];
+            var receivers = new List<int>();
+            var tokens = Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                if (i != chosen.DeckIndex && DeckManager.FirstFreeCell(tokens[i]) >= 0) { receivers.Add(i); }
+            }
+            if (receivers.Count == 0)
+            {
+                return false;
+            }
+            var offered = new List<int>();
+            while (offered.Count < EconomyConstants.TransplantChoiceCount && receivers.Count > 0)
+            {
+                int pick = _rng.Next(receivers.Count);
+                offered.Add(receivers[pick]);
+                receivers.RemoveAt(pick);
+            }
+            PendingTransplantChosen = chosen;
+            PendingTransplantSources = System.Array.Empty<TransplantSource>();
+            PendingUpgradeTileCandidates = offered;
+            return true;
+        }
+
+        /// <summary>Transplant, step 2: moves the chosen upgrade onto the seed at deck position <paramref name="deckIndex"/> (one of <see cref="PendingUpgradeTileCandidates"/>).</summary>
+        public bool ResolveTransplantTarget(int deckIndex)
+        {
+            if (PendingUpgrade == null || PendingUpgrade.Id != UpgradeId.Transplant || !PendingTransplantChosen.HasValue || !System.Linq.Enumerable.Contains(PendingUpgradeTileCandidates, deckIndex))
+            {
+                return false;
+            }
+            var source = PendingTransplantChosen.Value;
+            if (!Deck.TransplantTrait(source.DeckIndex, source.TraitIndex, deckIndex))
+            {
+                return false;
+            }
+            ClearPendingTransplant();
+            PendingUpgrade = null;
+            PendingUpgradeTileCandidates = System.Array.Empty<int>();
+            return true;
+        }
+
+        private void ClearPendingTransplant()
+        {
+            PendingTransplantSources = System.Array.Empty<TransplantSource>();
+            PendingTransplantChosen = null;
         }
 
         /// <summary>Forge: offers a few tile upgrades to pick from (see <see cref="PendingPackUpgrades"/>), then the seeds it goes on (a wide choice of the bag, see <see cref="PendingUpgradeTileCandidates"/>).</summary>
@@ -169,6 +277,7 @@ namespace Contigu.Core
             {
                 _compostsBought++;
             }
+            ClearPendingTransplant();
             PendingUpgrade = null;
             LastRandomModifierGranted = null; // never replay the reveal of an earlier purchase
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
