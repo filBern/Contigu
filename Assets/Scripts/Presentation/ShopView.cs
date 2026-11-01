@@ -1241,6 +1241,7 @@ namespace Contigu.Presentation
         /// <summary>Quick overshoot scale pop on the Lueur readout, played on a successful purchase — pauses the ambient PulseLueurLabel wobble for its duration (both drive the same localScale) and resumes it afterward.</summary>
         public void PlayPurchasePop()
         {
+            SfxManager.Play(SfxId.Buy);
             if (MotionSettings.Reduced)
             {
                 return;

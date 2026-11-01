@@ -82,6 +82,7 @@ namespace Contigu.Presentation
             AddRow(ref row, "Stars", "+" + summary.StarsEarned, false);
             _root.gameObject.SetActive(true);
             _root.SetAsLastSibling();
+            SfxManager.Play(SfxId.RoundClear);
             if (!MotionSettings.Reduced)
             {
                 if (_pop != null) { StopCoroutine(_pop); }

@@ -520,7 +520,7 @@ namespace Contigu.Presentation
                 hide.alpha = 1f;
             }
             _modifierPanelView.Pulse(id);
-            SfxManager.Play(SfxId.ValidDrop);
+            SfxManager.Play(SfxId.SlotPop);
         }
 
         // ------------------------------------------------------------ abandoning a purchase (Esc / the "Cancel purchase" button)

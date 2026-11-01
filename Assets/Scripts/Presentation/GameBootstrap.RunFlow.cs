@@ -59,6 +59,7 @@ namespace Contigu.Presentation
                     RunSaveStore.Delete();
                     int starsBefore = _metaStats.Stars;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
+                    SfxManager.Play(SfxId.Victory);
                     _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
                     _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, _metaStats.Stars - starsBefore);
                     break;
@@ -81,6 +82,7 @@ namespace Contigu.Presentation
                     {
                         isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
                     }
+                    SfxManager.Play(SfxId.Defeat);
                     _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
                     _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, _metaStats.Stars - starsBeforeDefeat, _run.PiecesRemainingThisRound <= 0);
                     break;

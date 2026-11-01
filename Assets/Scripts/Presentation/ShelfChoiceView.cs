@@ -289,7 +289,7 @@ namespace Contigu.Presentation
             // The icon stays where it landed (the next screen shows it on the anvil): it is not hidden.
 
             // The hit: the source punches and sparks fly.
-            SfxManager.Play(SfxId.ValidDrop);
+            SfxManager.Play(SfxId.Clang);
             var host = source.parent as RectTransform;
             var sparks = new RectTransform[HitSparks];
             var velocity = new Vector2[HitSparks];
@@ -374,7 +374,7 @@ namespace Contigu.Presentation
             if (feedback != null) { feedback.enabled = false; } // the animation owns the preview's scale and position now
             var home = preview.anchoredPosition;
             var center = home + new Vector2(0f, preview.sizeDelta.y * 0.5f);
-            SfxManager.Play(SfxId.LueurGain);
+            SfxManager.Play(SfxId.LevelUp);
 
             // A warm flash behind the option.
             var flash = UIFactory.CreatePanel(cell.transform, "Flash", new Color(1f, 0.86f, 0.35f, 0f));
@@ -496,7 +496,7 @@ namespace Contigu.Presentation
             var group = preview.gameObject.AddComponent<CanvasGroup>();
             var home = preview.anchoredPosition;
             var center = home + new Vector2(0f, preview.sizeDelta.y * 0.5f);
-            SfxManager.Play(SfxId.InvalidDrop);
+            SfxManager.Play(SfxId.InvalidDrop); // the seed resists
 
             float t = 0f;
             while (t < ShakeDuration)
@@ -507,6 +507,7 @@ namespace Contigu.Presentation
             }
             preview.anchoredPosition = home;
 
+            SfxManager.Play(SfxId.Crumble);
             // Debris: small earth/leaf squares thrown up and out from the middle of the seed.
             var colors = new[] { new Color(0.45f, 0.30f, 0.17f), new Color(0.60f, 0.42f, 0.25f), new Color(0.43f, 0.69f, 0.31f), new Color(0.30f, 0.20f, 0.12f) };
             var bits = new RectTransform[DebrisCount];

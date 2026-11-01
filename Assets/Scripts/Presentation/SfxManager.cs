@@ -16,7 +16,16 @@ namespace Contigu.Presentation
         ButtonHover,
         ButtonClick,
         Overlay,
-        CarouselTick
+        CarouselTick,
+        Harvest,
+        Clang,
+        Crumble,
+        LevelUp,
+        Victory,
+        Defeat,
+        RoundClear,
+        SlotPop,
+        Buy
     }
 
     /// <summary>
@@ -78,13 +87,22 @@ namespace Contigu.Presentation
                 { SfxId.ValidDrop, Resources.Load<AudioClip>(ClipFolder + "ValidDropPiece") },
                 { SfxId.InvalidDrop, Resources.Load<AudioClip>(ClipFolder + "Denied") },
                 { SfxId.Score, Resources.Load<AudioClip>(ClipFolder + "Score") },
-                { SfxId.LineClear, Resources.Load<AudioClip>(ClipFolder + "Whoosh") },
+                { SfxId.LineClear, Resources.Load<AudioClip>(ClipFolder + "Harvest") },
                 { SfxId.LueurGain, Resources.Load<AudioClip>(ClipFolder + "LueurGain") },
                 { SfxId.Shuffle, Resources.Load<AudioClip>(ClipFolder + "Shuffle") },
                 { SfxId.ButtonHover, Resources.Load<AudioClip>(ClipFolder + "ButtonHover") },
                 { SfxId.ButtonClick, Resources.Load<AudioClip>(ClipFolder + "ButtonClick") },
                 { SfxId.Overlay, Resources.Load<AudioClip>(ClipFolder + "Whoosh") },
-                { SfxId.CarouselTick, Resources.Load<AudioClip>(ClipFolder + "CarouselTick") }
+                { SfxId.CarouselTick, Resources.Load<AudioClip>(ClipFolder + "CarouselTick") },
+                { SfxId.Harvest, Resources.Load<AudioClip>(ClipFolder + "Harvest") },
+                { SfxId.Clang, Resources.Load<AudioClip>(ClipFolder + "Clang") },
+                { SfxId.Crumble, Resources.Load<AudioClip>(ClipFolder + "Crumble") },
+                { SfxId.LevelUp, Resources.Load<AudioClip>(ClipFolder + "LevelUp") },
+                { SfxId.Victory, Resources.Load<AudioClip>(ClipFolder + "Victory") },
+                { SfxId.Defeat, Resources.Load<AudioClip>(ClipFolder + "Defeat") },
+                { SfxId.RoundClear, Resources.Load<AudioClip>(ClipFolder + "RoundClear") },
+                { SfxId.SlotPop, Resources.Load<AudioClip>(ClipFolder + "SlotPop") },
+                { SfxId.Buy, Resources.Load<AudioClip>(ClipFolder + "Buy") }
             };
             _musicSource.clip = Resources.Load<AudioClip>(ClipFolder + "BackgroundMusic");
 
@@ -118,8 +136,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            float basePitch = id == SfxId.LineClear ? LineClearPitch
-                : id == SfxId.Overlay ? OverlayPitch
+            float basePitch = id == SfxId.Overlay ? OverlayPitch
                 : 1f;
             _sfxSource.pitch = basePitch + Random.Range(-PitchJitter, PitchJitter);
             _sfxSource.PlayOneShot(clip);
