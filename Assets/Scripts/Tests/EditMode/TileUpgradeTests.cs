@@ -91,6 +91,20 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void SproutOnAOneCellJoker_NeverReplacesItsCombatTrait()
+        {
+            var run = NewRun();
+            var deck = run.Deck;
+            deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0), null));
+            int jokerIndex = deck.Deck.Count - 1;
+            Assert.IsTrue(PieceTrait.IsJokerCombatKind(deck.Deck[jokerIndex].Traits[0].Kind));
+            deck.TagSpecificTokens(new[] { jokerIndex }, PieceTraitKind.Mimic, new SystemRandomProvider(3));
+            var traits = deck.Deck[jokerIndex].Traits;
+            Assert.AreEqual(1, traits.Count);
+            Assert.AreEqual(PieceTraitKind.Bombe, traits[0].Kind);
+        }
+
+        [Test]
         public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
         {
             Assert.AreEqual(ScoringConstants.CollectorBonusPerKind, PlantAt(NewRun(), PieceTraitKind.Collector, PieceColor.Coral, 2, 2).TraitBonus);

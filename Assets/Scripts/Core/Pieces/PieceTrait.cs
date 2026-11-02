@@ -243,8 +243,8 @@ namespace Contigu.Core
         /// <summary>"Précision" — always damages whichever ALIVE enemy currently has the LOWEST HP, ignoring the usual front-to-back order — a finishing blow instead of chipping at the front.</summary>
         Precision,
 
-        /// <summary>"Mimic Sprout" — replays the upgrade of every tile of its group touching it (orthogonally), as if it carried those upgrades itself. Appended last: kinds are saved as integers.</summary>
-        Mimic
+        /// <summary>"Mimic Sprout" — replays the upgrade of every tile of its group touching it (orthogonally), as if it carried those upgrades itself. Explicit id 100: 76 belonged to the retired Sap Drain, which old saves still carry (converted on restore).</summary>
+        Mimic = 100
     }
 
     /// <summary>

@@ -247,9 +247,10 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<int>();
             }
-            System.Func<PieceToken, bool> eligible = kind.Value == PieceTraitKind.Tinted
-                ? (System.Func<PieceToken, bool>)(token => token.Color != PieceColor.Joker)
-                : null;
+            bool tinted = kind.Value == PieceTraitKind.Tinted;
+            // A Joker whose every cell is taken (a one-cell Joker, whose only cell holds its combat trait) has nothing to give up: not offered.
+            System.Func<PieceToken, bool> eligible = token =>
+                (!tinted || token.Color != PieceColor.Joker) && !HasOnlyCombatCells(token);
             return deck.GetCandidateTokenIndices(count, _rng, eligible);
         }
 
@@ -295,6 +296,28 @@ namespace Contigu.Core
                 return candidates;
             }
             return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng);
+        }
+
+        /// <summary>True when no cell of the piece is free or holds an ordinary upgrade, i.e. every cell carries a Joker combat trait.</summary>
+        private static bool HasOnlyCombatCells(PieceToken token)
+        {
+            int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
+            var traits = token.Traits;
+            for (int c = 0; c < cellCount; c++)
+            {
+                if (!token.UsesCell(c))
+                {
+                    return false;
+                }
+                for (int k = 0; k < traits.Count; k++)
+                {
+                    if (traits[k].LocalCellIndex == c && !PieceTrait.IsJokerCombatKind(traits[k].Kind))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>Public so Presentation can preview a Grid upgrade's trait on a candidate piece before it's actually applied (see TileChoiceView) — everything else about resolving/applying an upgrade still goes through an UpgradeSystem instance.</summary>

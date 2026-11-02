@@ -800,7 +800,23 @@ namespace Contigu.Core
                 }
                 else
                 {
-                    int localIndex = rng.Next(cellCount);
+                    // Never the Joker's combat trait: it is what makes the piece a Joker.
+                    var replaceable = new List<int>();
+                    var current = token.Traits;
+                    for (int c = 0; c < cellCount; c++)
+                    {
+                        bool combat = false;
+                        for (int k = 0; k < current.Count; k++)
+                        {
+                            if (current[k].LocalCellIndex == c && PieceTrait.IsJokerCombatKind(current[k].Kind)) { combat = true; }
+                        }
+                        if (!combat) { replaceable.Add(c); }
+                    }
+                    if (replaceable.Count == 0)
+                    {
+                        continue;
+                    }
+                    int localIndex = replaceable[rng.Next(replaceable.Count)];
                     trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
                     taggedToken = ReplaceTraitOnCell(token, trait);
                 }

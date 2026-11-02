@@ -209,8 +209,8 @@ namespace Contigu.Tests
             snapshot.InShop = true;
             snapshot.ShopBlister.Clear();
             snapshot.ShopBlister.Add(new RunSnapshot.ShopSlotData { IsModifier = true, Id = (int)ModifierId.EclatCoral, PayloadId = -1 });
-            // A Joker whose only trait is the retired Sap Drain (an id no longer defined, 200 here) gets a plain combat trait back; a plain seed just loses it.
-            string damaged = snapshot.ToText().Replace("deck=", "deck=" + (int)ShapeId.Single + "," + (int)PieceColor.Joker + ",200.0.-1;" + (int)ShapeId.Sq2 + "," + (int)PieceColor.Coral + ",200.0.-1;");
+            // A Joker whose only trait is the retired Sap Drain (76, retired and no longer defined) gets a plain combat trait back; a plain seed just loses it.
+            string damaged = snapshot.ToText().Replace("deck=", "deck=" + (int)ShapeId.Single + "," + (int)PieceColor.Joker + ",76.0.-1;" + (int)ShapeId.Sq2 + "," + (int)PieceColor.Coral + ",76.0.-1;");
 
             var parsed = RunSnapshot.FromText(damaged);
 
