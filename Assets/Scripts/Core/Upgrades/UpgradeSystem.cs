@@ -141,14 +141,23 @@ namespace Contigu.Core
         /// </summary>
         public IReadOnlyList<PieceToken> GetCandidatePiecesFor(UpgradeDefinition upgrade)
         {
-            if (upgrade.Id != UpgradeId.RandomPiece && upgrade.Id != UpgradeId.SeedPack)
+            if (upgrade.Id != UpgradeId.RandomPiece && upgrade.Id != UpgradeId.SeedPack && upgrade.Id != UpgradeId.WildPack)
             {
                 return System.Array.Empty<PieceToken>();
+            }
+            if (upgrade.Id == UpgradeId.WildPack)
+            {
+                return RollWildSeeds(EconomyConstants.PackChoiceCount);
             }
 
             var candidates = new PieceToken[upgrade.Id == UpgradeId.SeedPack ? EconomyConstants.PackChoiceCount : EconomyConstants.ShopTileCandidateCount];
             for (int i = 0; i < candidates.Length; i++)
             {
+                if (upgrade.Id == UpgradeId.SeedPack && _rng.Next(100) < EconomyConstants.SeedPackWildSeedChancePercent)
+                {
+                    candidates[i] = RollWildSeed();
+                    continue;
+                }
                 var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];
                 var color = PieceColorUtility.BaseColors[_rng.Next(PieceColorUtility.BaseColors.Count)];
 
@@ -174,6 +183,36 @@ namespace Contigu.Core
                 candidates[i] = token;
             }
             return candidates;
+        }
+
+        /// <summary>A Wild Seed: a Joker of a random shape carrying exactly one random combat trait.</summary>
+        private PieceToken RollWildSeed()
+        {
+            var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];
+            var kind = PieceTrait.JokerCombatKinds[_rng.Next(PieceTrait.JokerCombatKinds.Length)];
+            return new PieceToken(shape, PieceColor.Joker, new PieceTrait(kind, 0));
+        }
+
+        /// <summary>The Wild Pack's seeds: Wild Seeds that differ from each other by shape or combat trait.</summary>
+        private PieceToken[] RollWildSeeds(int count)
+        {
+            var seeds = new PieceToken[count];
+            for (int i = 0; i < count; i++)
+            {
+                PieceToken seed = RollWildSeed();
+                for (int attempt = 0; attempt < 20; attempt++)
+                {
+                    bool duplicate = false;
+                    for (int j = 0; j < i; j++)
+                    {
+                        if (seeds[j].Equals(seed)) { duplicate = true; }
+                    }
+                    if (!duplicate) { break; }
+                    seed = RollWildSeed();
+                }
+                seeds[i] = seed;
+            }
+            return seeds;
         }
 
         /// <summary>

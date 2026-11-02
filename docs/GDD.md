@@ -44,7 +44,8 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **La boutique** montre deux étagères :
   - **Blister** (3 emplacements) : fertilizers et tile upgrades à l'achat direct. Seul le Blister se re-tire contre du Pollen (Reroll).
   - **Workshop** (4 emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), le Compost et la Forge.
-    - *Seed Pack* : 3 graines améliorées, on en garde 1.
+    - *Seed Pack* : 3 graines améliorées, on en garde 1 ; chaque graine a 12 % de chances d'être une *Wild Seed* (un Joker de forme aléatoire avec son trait de combat visible).
+    - *Wild Pack* (rare : 12 % des visites, jamais deux) : 3 Wild Seeds, chacune avec son trait de combat, on en garde 1. Prix 6.
     - *Sprout Pack* : 5 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
     - *Fertilizer Pack* : 3 fertilizers, on en garde 1 gratuitement.
     - *Mastery Pack* : 3 masteries, on en garde 1.

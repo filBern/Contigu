@@ -123,7 +123,8 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 |---|---|---|
 | `ReplacePiece` | Transmute a Seed | Bank |
 | `DuplicatePiece` | Propagate a Cutting | Bank |
-| `JokerPiece` | Wild Seed | Bank |
+| `JokerPiece` | Wild Seed | Bank (plus proposé au shop : les Jokers viennent du Seed Pack et du Wild Pack) |
+| `WildPack` | Wild Pack | Workshop |
 | `RecolorPiece` | Rebloom a Seed | Bank |
 | `RandomModifier` | Alchemical Boon | Modifier |
 | `RandomPiece` | Fresh Sprout | Bank |

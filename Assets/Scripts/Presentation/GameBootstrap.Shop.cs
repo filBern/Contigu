@@ -148,7 +148,7 @@ namespace Contigu.Presentation
             {
                 ShowTransplantSources(pending);
             }
-            else if (pending.Id == UpgradeId.SeedPack)
+            else if (pending.Id == UpgradeId.SeedPack || pending.Id == UpgradeId.WildPack)
             {
                 ShowSeedPack(ShelfStage.ForWorkshop(pending));
             }

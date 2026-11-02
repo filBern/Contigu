@@ -15,6 +15,10 @@ namespace Contigu.Core
                     PendingUpgrade = upgrade;
                     PendingUpgradePieceCandidates = Upgrades.GetCandidatePiecesFor(upgrade);
                     return true;
+                case UpgradeId.WildPack:
+                    PendingUpgrade = upgrade;
+                    PendingUpgradePieceCandidates = Upgrades.GetCandidatePiecesFor(upgrade);
+                    return true;
                 case UpgradeId.SproutPack:
                     PendingUpgrade = upgrade;
                     PendingPackUpgrades = RollTileUpgradeOffers(EconomyConstants.SproutPackChoiceCount, null);

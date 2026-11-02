@@ -64,6 +64,11 @@ namespace Contigu.Core
         public const float WorkshopRepeatPriceIncrease = 0.5f;
         public const int ForgePrice = 4;
         public const int TransplantPrice = 4;
+        public const int WildPackPrice = 6;
+        /// <summary>Chance that one of the Workshop's two pack slots is the Wild Pack (rare; at most one per visit).</summary>
+        public const int WildPackChancePercent = 12;
+        /// <summary>Chance that each seed revealed by a Seed Pack is a Wild Seed (a Joker with a combat trait) instead of a colored seed.</summary>
+        public const int SeedPackWildSeedChancePercent = 12;
         /// <summary>How many upgrades (then how many receiving seeds) a Transplant shows.</summary>
         public const int TransplantChoiceCount = 8;
         public const int PackChoiceCount = 3;

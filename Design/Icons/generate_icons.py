@@ -504,6 +504,7 @@ U = {
  'SeedpodTile': ('u_seedpod', 'Grid'),
  'LocksmithTile': ('u_locksmith', 'Grid'),
  'MimicTile': ('u_mimic', 'Grid'),
+ 'WildPack': ('u_joker', 'Workshop'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
  'PermanentBonusSquare': ('u_bonussq', 'Grid'), 'PieceMastery': ('u_seedmastery', 'Mastery'), 'ColorMastery': ('u_colormastery', 'Mastery'),

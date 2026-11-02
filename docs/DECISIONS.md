@@ -9305,3 +9305,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - Demande de l'auteur : « Mimic — copie tous les voisins orthogonaux du groupe ». Interprétation retenue : le Mimic **rejoue l'upgrade complet** (effet, pas seulement les points) de chaque voisin orthogonal appartenant au groupe marqué, comme s'il le portait sur sa propre case (`RunManager.ApplyMimicUpgrades`, avant Amplifier/Echo).
   - Jamais copiés : un autre Mimic, Amplifier, Echo et les traits de combat du Joker (pas de récursion). Les upgrades à drapeau de cellule (Golden, Tinted, Multiplier, Blast, Beacon) ne se copient pas : ils n'agissent que sur leur propre case.
   - Ajoutés en fin d'enum (`PieceTraitKind.Mimic`, `UpgradeId.MimicTile`) : ids sauvegardés. Le test de reprise de sauvegarde utilisait l'id 76 comme « inconnu » : remplacé par 200.
+
+- **Les Jokers reviennent via le Seed Pack et le Wild Pack (2026-11-02)**
+  - Constat : le seul accès aux Jokers (« Wild Seed », pool Bank du Casino) avait disparu avec le remplacement du Casino par l'Atelier : plus aucun Joker en partie normale.
+  - Seed Pack : chaque graine révélée a 12 % de chances (`SeedPackWildSeedChancePercent`) d'être une Wild Seed (Joker, forme aléatoire, un trait de combat tiré, visible avant le choix).
+  - Wild Pack (nouveau, Atelier, Rare, prix 6) : 3 Wild Seeds distinctes, on en garde 1. Il remplace un des deux emplacements de pack avec 12 % de chances par visite (`WildPackChancePercent`), jamais les deux. `UpgradeId.WildPack` ajouté en fin d'enum.

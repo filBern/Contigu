@@ -129,6 +129,8 @@ namespace Contigu.Core
         Forge,
         Transplant,
 
-        MimicTile
+        MimicTile,
+
+        WildPack
     }
 }

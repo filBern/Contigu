@@ -390,7 +390,7 @@ namespace Contigu.RunSim
                 {
                     ok = run.ResolveMasteryChoice(_rng.Next(run.PendingMasteryOptions.Count));
                 }
-                else if (pending.Id == UpgradeId.RandomPiece || pending.Id == UpgradeId.SeedPack)
+                else if (pending.Id == UpgradeId.RandomPiece || pending.Id == UpgradeId.SeedPack || pending.Id == UpgradeId.WildPack)
                 {
                     ok = run.ResolveUpgradePieceChoice(_rng.Next(run.PendingUpgradePieceCandidates.Count));
                 }

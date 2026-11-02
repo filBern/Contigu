@@ -355,6 +355,10 @@ namespace Contigu.Core
             UpgradeId.MasteryPack, UpgradePool.Workshop, "Mastery Pack",
             "Reveals 3 masteries (a seed shape or color and its levels). Pick 1.", false, UpgradeRarity.Common);
 
+        public static readonly UpgradeDefinition WildPack = new UpgradeDefinition(
+            UpgradeId.WildPack, UpgradePool.Workshop, "Wild Pack",
+            "Reveals 3 Wild Seeds, each with its own combat trait. Keep 1.", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition Compost = new UpgradeDefinition(
             UpgradeId.Compost, UpgradePool.Workshop, "Compost",
             "Remove 1 seed from your bag to thin it out. Costs more each time you buy it in a visit.", true, UpgradeRarity.Common);
@@ -382,6 +386,7 @@ namespace Contigu.Core
                 case UpgradeId.SeedPack: return SeedPack;
                 case UpgradeId.SproutPack: return SproutPack;
                 case UpgradeId.Transplant: return Transplant;
+                case UpgradeId.WildPack: return WildPack;
                 case UpgradeId.FertilizerPack: return FertilizerPack;
                 case UpgradeId.MasteryPack: return MasteryPack;
                 case UpgradeId.Compost: return Compost;

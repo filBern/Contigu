@@ -25,8 +25,8 @@ namespace Contigu.Tests
                 var run = ShopRun(seed);
                 var slots = run.ShopUpgradeSlots;
                 Assert.AreEqual(4, slots.Count);
-                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[0].HiddenUpgrade) >= 0);
-                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[1].HiddenUpgrade) >= 0);
+                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[0].HiddenUpgrade) >= 0 || slots[0].HiddenUpgrade.Id == UpgradeId.WildPack);
+                Assert.IsTrue(System.Array.IndexOf(UpgradeCatalog.WorkshopPacks, slots[1].HiddenUpgrade) >= 0 || slots[1].HiddenUpgrade.Id == UpgradeId.WildPack);
                 Assert.AreNotSame(slots[0].HiddenUpgrade, slots[1].HiddenUpgrade);
                 Assert.AreEqual(UpgradeId.Compost, slots[2].HiddenUpgrade.Id);
                 Assert.AreEqual(UpgradeId.Forge, slots[3].HiddenUpgrade.Id);
@@ -48,6 +48,54 @@ namespace Contigu.Tests
             Assert.IsTrue(run.ResolveUpgradePieceChoice(1));
             Assert.AreEqual(before + 1, run.Deck.DeckCount);
             Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void WildPack_OffersThreeWildSeeds_EachWithExactlyOneCombatTrait()
+        {
+            var run = ShopRun();
+            run.DebugSetWorkshopSlot(0, UpgradeCatalog.WildPack);
+            int before = run.Deck.DeckCount;
+            Assert.IsTrue(run.BuyUpgradeSlot(0));
+            Assert.AreEqual(3, run.PendingUpgradePieceCandidates.Count);
+            foreach (var token in run.PendingUpgradePieceCandidates)
+            {
+                Assert.AreEqual(PieceColor.Joker, token.Color);
+                Assert.AreEqual(1, token.TraitCount);
+                Assert.IsTrue(PieceTrait.IsJokerCombatKind(token.Trait.Value.Kind));
+            }
+            Assert.IsTrue(run.ResolveUpgradePieceChoice(2));
+            Assert.AreEqual(before + 1, run.Deck.DeckCount);
+            Assert.IsNull(run.PendingUpgrade);
+        }
+
+        [Test]
+        public void WildSeeds_ComeFromTheSeedPackAboutOneTimeInEight_AndTheWildPackStaysRare()
+        {
+            var run = ShopRun();
+            int total = 0;
+            int wild = 0;
+            for (int roll = 0; roll < 800; roll++)
+            {
+                foreach (var token in run.Upgrades.GetCandidatePiecesFor(UpgradeCatalog.SeedPack))
+                {
+                    total++;
+                    if (token.Color == PieceColor.Joker) { wild++; }
+                }
+            }
+            Assert.That(wild / (float)total, Is.InRange(0.09f, 0.15f));
+
+            int visits = 0;
+            int withWildPack = 0;
+            for (int seed = 1; seed <= 400; seed++)
+            {
+                visits++;
+                var slots = ShopRun(seed * 7919).ShopUpgradeSlots;
+                int count = (slots[0].HiddenUpgrade.Id == UpgradeId.WildPack ? 1 : 0) + (slots[1].HiddenUpgrade.Id == UpgradeId.WildPack ? 1 : 0);
+                Assert.LessOrEqual(count, 1, "never two Wild Packs");
+                withWildPack += count;
+            }
+            Assert.That(withWildPack / (float)visits, Is.InRange(0.06f, 0.18f));
         }
 
         [Test]

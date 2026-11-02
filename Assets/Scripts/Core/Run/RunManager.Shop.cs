@@ -219,8 +219,15 @@ namespace Contigu.Core
             var packs = new List<UpgradeDefinition>(UpgradeCatalog.WorkshopPacks);
             // Nothing to move: the Transplant is not even offered.
             packs.RemoveAll(p => !IsUpgradeEligibleForOffer(p));
+            // The rare Wild Pack takes one of the two pack slots now and then (never both).
+            int wildSlot = _rng.Next(100) < EconomyConstants.WildPackChancePercent ? _rng.Next(2) : -1;
             for (int i = 0; i < 2; i++)
             {
+                if (i == wildSlot)
+                {
+                    _upgradeSlots[i] = ShopSlot.ForUpgrade(UpgradeCatalog.WildPack);
+                    continue;
+                }
                 int pick = _rng.Next(packs.Count);
                 _upgradeSlots[i] = ShopSlot.ForUpgrade(packs[pick]);
                 packs.RemoveAt(pick);
@@ -257,6 +264,7 @@ namespace Contigu.Core
                 case UpgradeId.SeedPack: basePrice = EconomyConstants.SeedPackPrice; break;
                 case UpgradeId.SproutPack: basePrice = EconomyConstants.SproutPackPrice; break;
                 case UpgradeId.Transplant: basePrice = EconomyConstants.TransplantPrice; break;
+                case UpgradeId.WildPack: basePrice = EconomyConstants.WildPackPrice; break;
                 case UpgradeId.FertilizerPack: basePrice = EconomyConstants.FertilizerPackPrice; break;
                 case UpgradeId.MasteryPack: basePrice = EconomyConstants.MasteryPackPrice; break;
                 case UpgradeId.Compost: basePrice = EconomyConstants.CompostBasePrice + _compostsBought * EconomyConstants.CompostPriceIncreasePerUse; break;
@@ -631,7 +639,7 @@ namespace Contigu.Core
         /// <summary>Resolves "Random Piece"'s sub-choice — <paramref name="candidateIndex"/> must index into <see cref="PendingUpgradePieceCandidates"/> (not validated beyond range here; the presentation layer only ever offers those). No-op (false) if nothing is pending or it's actually a different upgrade.</summary>
         public bool ResolveUpgradePieceChoice(int candidateIndex)
         {
-            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.RandomPiece && PendingUpgrade.Id != UpgradeId.SeedPack))
+            if (PendingUpgrade == null || (PendingUpgrade.Id != UpgradeId.RandomPiece && PendingUpgrade.Id != UpgradeId.SeedPack && PendingUpgrade.Id != UpgradeId.WildPack))
             {
                 return false;
             }
