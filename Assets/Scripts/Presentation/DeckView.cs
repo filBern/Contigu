@@ -20,9 +20,11 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
-        private const float CardWidth = 138f;
+        private const float MaxCardWidth = 138f;
         private const float MaxCardHeight = 128f;
-        private const float MinCardHeight = 92f;
+        private const float MinCardHeight = 64f;
+        private const float ListTop = 110f;
+        private const float BottomMargin = 14f;
         private const float CardSpacing = 6.25f;
         private const float PreviewTileSize = 27f;
         private const float FooterHeight = 30f;
@@ -46,6 +48,8 @@ namespace Contigu.Presentation
         private RectTransform _listContainer;
         private Text _countLabel;
         private float _cardHeight = MaxCardHeight;
+        private float _cardWidth = MaxCardWidth;
+        private float _listWidth = ListWidth;
 
         public bool IsVisible
         {
@@ -83,7 +87,7 @@ namespace Contigu.Presentation
             _listContainer.anchorMin = new Vector2(0.5f, 1f);
             _listContainer.anchorMax = new Vector2(0.5f, 1f);
             _listContainer.pivot = new Vector2(0.5f, 1f);
-            _listContainer.anchoredPosition = new Vector2(0f, -110f);
+            _listContainer.anchoredPosition = new Vector2(0f, -ListTop);
             _listContainer.sizeDelta = new Vector2(ListWidth, ListHeight);
 
             var closeBtn = UIFactory.CreateButton(_root, "Close", "Close", UISprites.CancelButtonBackground);
@@ -126,6 +130,7 @@ namespace Contigu.Presentation
             // Full-screen and opaque: nothing else (lifted shop panels included) may show through or above it.
             _root.SetAsLastSibling();
             OverlayLift.SetPanelsHidden(true);
+            Canvas.ForceUpdateCanvases();
             RebuildRows();
         }
 
@@ -165,13 +170,20 @@ namespace Contigu.Presentation
             }
 
             // Cards grow to fill the free height: fewer colors, taller cards.
-            float perSection = (ListHeight - 4f) / Mathf.Max(1, sections.Count) - SectionHeaderHeight - SectionHeaderToGridGap - SectionGap;
+            // The overlay is as big as the screen's canvas, which is not always the reference size (a wide window crops the height): fit to what is really there.
+            var rootRect = _root.rect;
+            float availableHeight = rootRect.height > 100f ? rootRect.height - ListTop - BottomMargin : ListHeight;
+            float availableWidth = rootRect.width > 100f ? Mathf.Min(ListWidth, rootRect.width - 24f) : ListWidth;
+            float perSection = availableHeight / Mathf.Max(1, sections.Count) - SectionHeaderHeight - SectionHeaderToGridGap - SectionGap;
             _cardHeight = Mathf.Clamp(perSection, MinCardHeight, MaxCardHeight);
+            _cardWidth = Mathf.Min(MaxCardWidth, (availableWidth - (ColumnsPerSection - 1) * CardSpacing) / ColumnsPerSection);
+            _listWidth = availableWidth;
+            _listContainer.sizeDelta = new Vector2(_listWidth, availableHeight);
 
             // Every section shares the same horizontal offset/width, based on whichever section has the most distinct types (capped at the number of possible shapes), so the whole block reads as centered rather than flush left.
             int columnsUsed = Mathf.Min(ColumnsPerSection, widestSection);
-            float contentWidth = columnsUsed * CardWidth + (columnsUsed - 1) * CardSpacing;
-            float xOffset = (ListWidth - contentWidth) / 2f;
+            float contentWidth = columnsUsed * _cardWidth + (columnsUsed - 1) * CardSpacing;
+            float xOffset = (_listWidth - contentWidth) / 2f;
 
             float y = 0f;
             for (int i = 0; i < sections.Count; i++)
@@ -224,7 +236,7 @@ namespace Contigu.Presentation
             {
                 int col = i % ColumnsPerSection;
                 int row = i / ColumnsPerSection;
-                float x = xOffset + col * (CardWidth + CardSpacing);
+                float x = xOffset + col * (_cardWidth + CardSpacing);
                 float cardY = y - row * (_cardHeight + CardSpacing);
                 BuildTypeCard(x, cardY, types[i].Shape, color, types[i].Count);
             }
@@ -250,7 +262,7 @@ namespace Contigu.Presentation
             row.rectTransform.anchorMax = new Vector2(0f, 1f);
             row.rectTransform.pivot = new Vector2(0f, 1f);
             row.rectTransform.anchoredPosition = new Vector2(x, y);
-            row.rectTransform.sizeDelta = new Vector2(CardWidth, _cardHeight);
+            row.rectTransform.sizeDelta = new Vector2(_cardWidth, _cardHeight);
 
             // A thin bar in the seed's color on top, so a card is recognised before it is read.
             var bar = UIFactory.CreatePanel(row.transform, "ColorBar", VisualDefaults.GetColor(color));
@@ -267,7 +279,7 @@ namespace Contigu.Presentation
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
             float previewAreaHeight = _cardHeight - FooterHeight - 6f;
             previewContainer.anchoredPosition = new Vector2(0f, -(6f + previewAreaHeight / 2f));
-            previewContainer.sizeDelta = new Vector2(CardWidth - 20f, previewAreaHeight);
+            previewContainer.sizeDelta = new Vector2(_cardWidth - 20f, previewAreaHeight);
 
             var trait = FindRepresentativeTrait(shape, color);
             // The tile shrinks just enough for the tallest shapes to fit above the footer (many colors = shorter cards).
