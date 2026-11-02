@@ -11,11 +11,21 @@ namespace Contigu.Presentation
         public event Action RestartRequested;
         public event Action EndlessRequested;
 
+        private const float CardWidth = 800f;
+        private const float CardHeight = 600f;
+        private const float RecordCellHeight = 58f;
+        private static readonly Color Wood = new Color(0.33f, 0.22f, 0.13f, 1f);
+        private static readonly Color Dark = new Color(0.13f, 0.09f, 0.06f, 1f);
+        private static readonly Color VictoryBanner = new Color(0.27f, 0.58f, 0.27f, 1f);
+        private static readonly Color DefeatBanner = new Color(0.72f, 0.24f, 0.2f, 1f);
+
         private RectTransform _root;
+        private UnityEngine.UI.Image _banner;
         private UnityEngine.UI.Text _titleText;
         private UnityEngine.UI.Text _subtitleText;
         private UnityEngine.UI.Text _metaStatsText;
-        private UnityEngine.UI.Text _runStatsText;
+        private RectTransform _recordsPaper;
+        private UnityEngine.UI.Text _extraText;
         private RectTransform _restartButtonRect;
         private RectTransform _endlessButtonRect;
         private UnityEngine.UI.Image _sprigPortrait;
@@ -23,79 +33,142 @@ namespace Contigu.Presentation
 
         public RectTransform Build(Transform parent)
         {
-            var overlay = UIFactory.CreatePanel(parent, "EndScreen", new Color(0.04f, 0.04f, 0.06f, 0.95f));
+            // The garden stays visible, dimmed, behind one wooden card: the same look as the round summary and the challenge screen.
+            var overlay = UIFactory.CreatePanel(parent, "EndScreen", new Color(0.04f, 0.04f, 0.06f, 0.72f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            _titleText = UIFactory.CreateText(_root, "Title", "", 42, UITheme.TextPrimary);
-            _titleText.rectTransform.anchorMin = new Vector2(0.5f, 0.6f);
-            _titleText.rectTransform.anchorMax = new Vector2(0.5f, 0.6f);
-            _titleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _titleText.rectTransform.sizeDelta = new Vector2(700f, 80f);
+            var board = UIFactory.CreateSlicedImage(_root, "Card", UISprites.CardBackground);
+            board.color = Wood;
+            UIFactory.AddThickOutline(board, Dark);
+            var card = board.rectTransform;
+            card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0f);
+            card.anchoredPosition = new Vector2(0f, 160f);
+            card.sizeDelta = new Vector2(CardWidth, CardHeight);
 
-            _subtitleText = UIFactory.CreateText(_root, "Subtitle", "", 28, UITheme.TextOnBackground);
-            _subtitleText.rectTransform.anchorMin = new Vector2(0.5f, 0.52f);
-            _subtitleText.rectTransform.anchorMax = new Vector2(0.5f, 0.52f);
-            _subtitleText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _subtitleText.rectTransform.sizeDelta = new Vector2(700f, 50f);
+            // The outcome on a colored banner that overlaps the card's top edge.
+            _banner = UIFactory.CreateSlicedImage(card, "Banner", UISprites.CardBackground);
+            UIFactory.AddThickOutline(_banner, Dark);
+            _banner.rectTransform.anchorMin = _banner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _banner.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            _banner.rectTransform.anchoredPosition = new Vector2(0f, 4f);
+            _banner.rectTransform.sizeDelta = new Vector2(560f, 76f);
+            _titleText = UIFactory.CreateText(_banner.rectTransform, "Title", "", 38, UITheme.TextOnBackground);
+            UIFactory.StretchFull(_titleText.rectTransform);
 
-            _metaStatsText = UIFactory.CreateText(_root, "MetaStats", "", 20, UITheme.TextMutedOnBackground);
-            _metaStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0.45f);
-            _metaStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0.45f);
-            _metaStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _metaStatsText.rectTransform.sizeDelta = new Vector2(700f, 60f);
+            _subtitleText = UIFactory.CreateText(card, "Subtitle", "", 24, UITheme.TextOnBackground);
+            _subtitleText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _subtitleText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _subtitleText.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _subtitleText.rectTransform.anchoredPosition = new Vector2(0f, -52f);
+            _subtitleText.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 36f);
 
-            // This run's records (biggest placement, best Mult, harvests…), under the buttons.
-            _runStatsText = UIFactory.CreateText(_root, "RunStats", "", 19, UITheme.TextOnBackground);
-            _runStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0.18f);
-            _runStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0.18f);
-            _runStatsText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _runStatsText.rectTransform.sizeDelta = new Vector2(620f, 150f);
+            // The run's records sit on a cream parchment, two columns of label over value.
+            var paper = UIFactory.CreateSlicedImage(card, "Records", UISprites.CardBackground);
+            paper.color = UITheme.Panel;
+            UIFactory.AddThickOutline(paper, Dark);
+            _recordsPaper = paper.rectTransform;
+            _recordsPaper.anchorMin = _recordsPaper.anchorMax = new Vector2(0.5f, 1f);
+            _recordsPaper.pivot = new Vector2(0.5f, 1f);
+            _recordsPaper.anchoredPosition = new Vector2(0f, -98f);
+            _recordsPaper.sizeDelta = new Vector2(CardWidth - 60f, RecordCellHeight * 4f + 24f);
 
-            var restartBtn = UIFactory.CreateButton(_root, "Restart", "New Run", UISprites.ChooseButtonBackground, 18);
+            // Most triggered fertilizer and pledges, in two short lines under the parchment.
+            _extraText = UIFactory.CreateText(card, "Extra", "", 18, UITheme.TextOnBackground);
+            _extraText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _extraText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _extraText.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _extraText.rectTransform.anchoredPosition = new Vector2(0f, -98f - (RecordCellHeight * 4f + 24f) - 8f);
+            _extraText.rectTransform.sizeDelta = new Vector2(CardWidth - 60f, 60f);
+
+            // Best score, best round, runs, Stars.
+            _metaStatsText = UIFactory.CreateText(card, "MetaStats", "", 19, UITheme.TextOnBackground);
+            _metaStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0f);
+            _metaStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+            _metaStatsText.rectTransform.pivot = new Vector2(0.5f, 0f);
+            _metaStatsText.rectTransform.anchoredPosition = new Vector2(0f, 92f);
+            _metaStatsText.rectTransform.sizeDelta = new Vector2(CardWidth - 60f, 76f);
+
+            var restartBtn = UIFactory.CreateButton(card, "Restart", "New Run", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 22);
             var rect = restartBtn.GetComponent<RectTransform>();
             _restartButtonRect = rect;
-            rect.anchorMin = new Vector2(0.5f, 0.34f);
-            rect.anchorMax = new Vector2(0.5f, 0.34f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(120f, 0f);
-            rect.sizeDelta = new Vector2(220f, 52f);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 20f);
+            rect.sizeDelta = new Vector2(220f, 58f);
             restartBtn.onClick.AddListener(() =>
             {
                 if (RestartRequested != null) RestartRequested();
             });
 
             // After a victory: keep playing past the final round, enemies sturdier by the round, until the garden falls.
-            var endlessBtn = UIFactory.CreateButton(_root, "Endless", "Keep Growing (Endless)", UISprites.ChooseButtonBackground, 18);
+            var endlessBtn = UIFactory.CreateButton(card, "Endless", "Keep Growing (Endless)", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 20);
             _endlessButtonRect = endlessBtn.GetComponent<RectTransform>();
-            _endlessButtonRect.anchorMin = new Vector2(0.5f, 0.34f);
-            _endlessButtonRect.anchorMax = new Vector2(0.5f, 0.34f);
-            _endlessButtonRect.pivot = new Vector2(0.5f, 0.5f);
-            _endlessButtonRect.sizeDelta = new Vector2(320f, 52f);
+            _endlessButtonRect.anchorMin = _endlessButtonRect.anchorMax = new Vector2(0.5f, 0f);
+            _endlessButtonRect.pivot = new Vector2(0.5f, 0f);
+            _endlessButtonRect.anchoredPosition = new Vector2(-120f, 20f);
+            _endlessButtonRect.sizeDelta = new Vector2(320f, 58f);
             endlessBtn.onClick.AddListener(() =>
             {
                 if (EndlessRequested != null) EndlessRequested();
             });
 
-            // Sprig's closing comment, bottom-left.
+            // Sprig's closing comment, bottom-left of the screen, below the card.
             _sprigPortrait = SprigView.BuildSpeaker(_root, "Sprig", 130f, 300f, 18, out _sprigText, out var sprigRoot);
-            // Small and low: it must stay clear of the buttons in the middle (a wider block covered Keep Growing and New Run).
-            sprigRoot.anchoredPosition = new Vector2(24f, 20f);
+            sprigRoot.anchoredPosition = new Vector2(24f, 16f);
 
             _root.gameObject.SetActive(false);
             return _root;
         }
 
-        /// <summary>The run's records, listed under the buttons. <paramref name="topFertilizer"/> is a ready-made line about the most triggered fertilizer, or empty.</summary>
+        /// <summary>The run's records on the parchment, as a grid of label over value. <paramref name="topFertilizer"/> is a ready-made line about the most triggered fertilizer (plus any pledge lines), or empty.</summary>
         public void SetRunStats(RunStats stats, string topFertilizer)
         {
-            var lines = new System.Collections.Generic.List<string>();
-            lines.Add("Biggest placement: " + stats.BestPlacementScore.ToString("N0") + (stats.BestPlacementScore > 0 ? "  (round " + stats.BestPlacementRound + ", " + VisualDefaults.GetColorName(stats.BestPlacementColor) + " " + VisualDefaults.GetShapeName(stats.BestPlacementShape) + ")" : ""));
-            lines.Add("Highest Mult: x" + stats.BestMult.ToString("0.#") + "   ·   Biggest group: " + stats.BestGroupSize + " sprouts");
-            lines.Add("Lines harvested: " + stats.LinesHarvested + "   ·   Most at once: " + stats.BestHarvestLines);
-            lines.Add("Seeds planted: " + stats.Placements + "   ·   Pollen from placements: " + stats.PollenFromPlacements + "   ·   Shuffles: " + stats.ShufflesUsed);
-            if (!string.IsNullOrEmpty(topFertilizer)) { lines.Add(topFertilizer); }
-            _runStatsText.text = string.Join("\n", lines);
+            for (int i = _recordsPaper.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_recordsPaper.GetChild(i).gameObject);
+            }
+            string placementLabel = "Biggest placement";
+            if (stats.BestPlacementScore > 0)
+            {
+                placementLabel += " - round " + stats.BestPlacementRound + ", " + VisualDefaults.GetColorName(stats.BestPlacementColor) + " " + VisualDefaults.GetShapeName(stats.BestPlacementShape);
+            }
+            var cells = new[]
+            {
+                new[] { placementLabel, stats.BestPlacementScore.ToString("N0") },
+                new[] { "Highest Mult", "x" + stats.BestMult.ToString("0.#") },
+                new[] { "Biggest group", stats.BestGroupSize + " sprouts" },
+                new[] { "Lines harvested", stats.LinesHarvested + "   (most at once: " + stats.BestHarvestLines + ")" },
+                new[] { "Seeds planted", stats.Placements.ToString() },
+                new[] { "Pollen from placements", stats.PollenFromPlacements.ToString() },
+                new[] { "Shuffles used", stats.ShufflesUsed.ToString() },
+            };
+            float columnWidth = (_recordsPaper.sizeDelta.x - 24f) / 2f;
+            for (int i = 0; i < cells.Length; i++)
+            {
+                int column = i / 4;
+                int row = i % 4;
+                float x = 18f + column * columnWidth;
+                float y = -(12f + row * RecordCellHeight);
+                AddRecordCell(cells[i][0], cells[i][1], x, y, columnWidth - 12f);
+            }
+            _extraText.text = string.IsNullOrEmpty(topFertilizer) ? "" : topFertilizer;
+        }
+
+        private void AddRecordCell(string label, string value, float x, float y, float width)
+        {
+            var l = UIFactory.CreateText(_recordsPaper, "Label", label, 15, UITheme.TextMuted, TextAnchor.LowerLeft);
+            l.raycastTarget = false;
+            l.rectTransform.anchorMin = l.rectTransform.anchorMax = new Vector2(0f, 1f);
+            l.rectTransform.pivot = new Vector2(0f, 1f);
+            l.rectTransform.anchoredPosition = new Vector2(x, y);
+            l.rectTransform.sizeDelta = new Vector2(width, 22f);
+            var v = UIFactory.CreateText(_recordsPaper, "Value", value, 26, UITheme.TextPrimary, TextAnchor.UpperLeft);
+            v.raycastTarget = false;
+            v.rectTransform.anchorMin = v.rectTransform.anchorMax = new Vector2(0f, 1f);
+            v.rectTransform.pivot = new Vector2(0f, 1f);
+            v.rectTransform.anchoredPosition = new Vector2(x, y - 22f);
+            v.rectTransform.sizeDelta = new Vector2(width, 34f);
         }
 
         private void SprigComment(bool victory, bool isNewBestScore)
@@ -108,12 +181,12 @@ namespace Contigu.Presentation
         public void ShowVictory(int totalScore, MetaStats metaStats, bool isNewBestScore, int starsEarned = 0)
         {
             _titleText.text = "Victory!";
-            _titleText.color = UITheme.Success;
+            _banner.color = VictoryBanner;
             _subtitleText.text = "Run complete - total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore, starsEarned);
             SprigComment(true, isNewBestScore);
-            _restartButtonRect.anchoredPosition = new Vector2(190f, 0f);
-            _endlessButtonRect.anchoredPosition = new Vector2(-120f, 0f);
+            _restartButtonRect.anchoredPosition = new Vector2(190f, 20f);
+            _endlessButtonRect.anchoredPosition = new Vector2(-120f, 20f);
             _endlessButtonRect.gameObject.SetActive(true);
             _root.gameObject.SetActive(true);
         }
@@ -123,11 +196,11 @@ namespace Contigu.Presentation
         {
             _endlessButtonRect.gameObject.SetActive(false);
             _titleText.text = endless ? "Endless - fell in Round " + roundNumber : "Defeat - Round " + roundNumber;
-            _titleText.color = UITheme.Danger;
+            _banner.color = DefeatBanner;
             _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " - " : (outOfSeeds ? "Out of seeds - " : "No seed can be planted - ")) + "total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore, starsEarned);
             SprigComment(false, isNewBestScore);
-            _restartButtonRect.anchoredPosition = new Vector2(0f, 0f);
+            _restartButtonRect.anchoredPosition = new Vector2(0f, 20f);
             _root.gameObject.SetActive(true);
         }
 
@@ -146,7 +219,7 @@ namespace Contigu.Presentation
                 + "   ·   Runs played: " + metaStats.TotalRunsPlayed
                 + "   ·   Victories: " + metaStats.TotalVictories
                 + (starsEarned > 0 ? "\nStars earned: +" + starsEarned + " (total " + metaStats.Stars + ")" : "");
-            _metaStatsText.color = isNewBestScore ? UITheme.Success : UITheme.TextMutedOnBackground;
+            _metaStatsText.color = isNewBestScore ? new Color(0.62f, 0.9f, 0.45f) : UITheme.TextOnBackground;
         }
 
         public void Hide()
