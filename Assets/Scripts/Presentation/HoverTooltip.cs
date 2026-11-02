@@ -46,6 +46,10 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (!MobileSetup.PassiveHoverAllowed)
+            {
+                return;
+            }
             ShowNow();
         }
 

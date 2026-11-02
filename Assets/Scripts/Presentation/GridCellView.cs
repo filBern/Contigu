@@ -777,7 +777,7 @@ namespace Contigu.Presentation
         {
             if (_owner != null) _owner.OnCellHoverEnter(X, Y);
             // Explains a special plot (bonus square, golden, tinted, multiplier zone); stays quiet while a seed is being placed.
-            if (_tooltip != null && _infoName != null && (_owner == null || !_owner.HasSelectedShape))
+            if (_tooltip != null && _infoName != null && MobileSetup.PassiveHoverAllowed && (_owner == null || !_owner.HasSelectedShape))
             {
                 _tooltip.Show(_infoName, DescriptionTextFormatter.Colorize(_infoDescription, 14), (RectTransform)transform);
             }

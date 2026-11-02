@@ -12,6 +12,15 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
+        /// Whether a pointer entering an element may open a tooltip by itself. On a touch screen there is no hover: a tooltip may only open while a
+        /// finger is actually down (a tap), never because a screen appeared under a pointer that was already resting there (the shop opening).
+        /// </summary>
+        public static bool PassiveHoverAllowed
+        {
+            get { return !IsTouchDevice || Input.touchCount > 0 || Input.GetMouseButton(0); }
+        }
+
+        /// <summary>
         /// Smallest comfortable touch target in canvas units: Apple asks for 44 pt, and the canvas shrinks to 0.8 on an iPad (4:3, see CanvasAspectFit),
         /// so 56 units stay above 44 points. Desktop keeps the size it was designed with.
         /// </summary>

@@ -659,6 +659,8 @@ namespace Contigu.Presentation
         public void Show(RunManager run)
         {
             SetSelectionMode(false);
+            // Nothing may be open when the shop appears (a tooltip left from the round, or one a resting pointer would trigger).
+            if (_tooltip != null) { _tooltip.Hide(); }
             _root.gameObject.SetActive(true);
             SfxManager.DuckPad(true);
             StartCoroutine(PlayEntranceLight());

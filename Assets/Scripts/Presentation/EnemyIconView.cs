@@ -31,7 +31,7 @@ namespace Contigu.Presentation
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (_tooltip == null)
+            if (_tooltip == null || !MobileSetup.PassiveHoverAllowed)
             {
                 return;
             }
