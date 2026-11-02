@@ -450,7 +450,7 @@ namespace Contigu.Core
 
         public static readonly ModifierDefinition Haie = new ModifierDefinition(
             ModifierId.Haie, ModifierCategory.Voisinage, "Hedgerow",
-            "+1 Mult per tile of the seed that sits on the edge of the garden.");
+            "+1 Mult for each tile of the seed you just placed that lands on the edge of the garden. Only the placed seed counts, not the rest of its group.");
 
         public static readonly ModifierDefinition Coeur = new ModifierDefinition(
             ModifierId.Coeur, ModifierCategory.Voisinage, "Heartwood",
