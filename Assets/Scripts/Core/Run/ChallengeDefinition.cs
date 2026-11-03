@@ -105,13 +105,26 @@ namespace Contigu.Core
         /// <summary>The seed budget of any round — Endless rounds keep the last authored budget.</summary>
         public int BudgetFor(int roundIndex)
         {
-            return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)] + PieceBudgetBonus;
+            return PieceBudgets[System.Math.Min(TierOf(roundIndex), PieceBudgets.Length - 1)] + PieceBudgetBonus;
         }
 
         /// <summary>A shallow copy (arrays shared) — lets a test tweak one rule of a catalog challenge without touching the catalog.</summary>
         public ChallengeDefinition Clone()
         {
             return (ChallengeDefinition)MemberwiseClone();
+        }
+
+        /// <summary>
+        /// The authored difficulty step (0-14) a round plays at: a shorter run (fewer rounds than the 15 authored) stretches the same arc,
+        /// so its last round is still the finale. Identity for a 15-round challenge and past the last round (Endless).
+        /// </summary>
+        public int TierOf(int roundIndex)
+        {
+            if (RoundCount == RunConfig.RoundCount || roundIndex >= RoundCount || RoundCount < 2)
+            {
+                return roundIndex;
+            }
+            return (int)System.Math.Round(roundIndex * (RunConfig.RoundCount - 1) / (double)(RoundCount - 1));
         }
 
         public int BossRoundIndex

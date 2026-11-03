@@ -47,6 +47,16 @@ namespace Contigu.RunSim
 
             for (int i = 0; i < args.Length; i++)
             {
+                // --rounds N plays a shorter run on the same difficulty arc (the last round stays the finale).
+                if (args[i] == "--rounds" && i + 1 < args.Length)
+                {
+                    challenge = challenge.Clone();
+                    challenge.RoundCount = int.Parse(args[i + 1]);
+                }
+            }
+
+            for (int i = 0; i < args.Length; i++)
+            {
                 // --hp X overrides the challenge's enemy HP multiplier (for balance sweeps without rebuilding).
                 if (args[i] == "--hp" && i + 1 < args.Length)
                 {

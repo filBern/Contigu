@@ -123,7 +123,7 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<EnemyId>();
             }
-            var roster = roundIndex >= RunConfig.RoundCount ? EndlessEncounter(roundIndex) : GetAuthored(roundIndex);
+            var roster = roundIndex >= challenge.RoundCount && roundIndex >= RunConfig.RoundCount ? EndlessEncounter(roundIndex) : GetAuthored(challenge.TierOf(roundIndex));
             // Each challenge is its own world: its resident enemy joins every third round (rounds 3, 6, 9, ... — Endless included), right
             // behind the leading Basic. A full roster loses its last enemy to make room.
             if (challenge.WorldEnemy.HasValue && roundIndex % ScoringConstants.WorldEnemyRoundInterval == ScoringConstants.WorldEnemyRoundInterval - 1)
