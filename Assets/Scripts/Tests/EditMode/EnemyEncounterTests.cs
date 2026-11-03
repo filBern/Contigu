@@ -168,9 +168,9 @@ namespace Contigu.Tests
                 {
                     Assert.That(roster, Is.InRange(0, 14));
                 }
-                Assert.That(schedule[3], Is.AnyOf(3, 4, 8));
-                Assert.That(schedule[7], Is.AnyOf(6, 7, 9, 10));
-                Assert.That(schedule[11], Is.AnyOf(11, 12, 13));
+                Assert.Contains(schedule[3], new[] { 3, 4, 8 });
+                Assert.Contains(schedule[7], new[] { 6, 7, 9, 10 });
+                Assert.Contains(schedule[11], new[] { 11, 12, 13 });
                 seenBossRosters.Add(schedule[3] * 100 + schedule[7] * 10 + schedule[11]);
             }
             Assert.Greater(seenBossRosters.Count, 8, "the bosses are not always the same ones");
