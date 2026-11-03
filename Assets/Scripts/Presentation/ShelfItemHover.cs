@@ -156,9 +156,36 @@ namespace Contigu.Presentation
             }
         }
 
+        // Every moving item makes Unity rebuild the whole canvas each frame, which a slow device (an iPad in a browser) cannot afford: when the
+        // frame rate stays low while the shelves idle, the idle motion switches itself off for the rest of the session.
+        private static float _smoothFrameTime = 0.016f;
+        private static int _lastTrackedFrame = -1;
+        private static float _slowSince = -1f;
+        private static bool _idleDisabled;
+
+        private static void TrackFrameRate()
+        {
+            if (_lastTrackedFrame == Time.frameCount)
+            {
+                return;
+            }
+            _lastTrackedFrame = Time.frameCount;
+            _smoothFrameTime = Mathf.Lerp(_smoothFrameTime, Mathf.Min(Time.unscaledDeltaTime, 0.1f), 0.1f);
+            if (_smoothFrameTime > 0.027f)
+            {
+                if (_slowSince < 0f) { _slowSince = Time.unscaledTime; }
+                else if (Time.unscaledTime - _slowSince > 1.5f) { _idleDisabled = true; }
+            }
+            else
+            {
+                _slowSince = -1f;
+            }
+        }
+
         private void UpdateIdleLife()
         {
-            bool still = MotionSettings.Reduced || _hovered || _pressing || (_halo != null && _halo.activeSelf);
+            TrackFrameRate();
+            bool still = _idleDisabled || MotionSettings.Reduced || _hovered || _pressing || (_halo != null && _halo.activeSelf);
             // A greyed-out item (not buyable) stays put.
             var group = _art.GetComponent<CanvasGroup>();
             if (group != null && group.alpha < 0.9f)
