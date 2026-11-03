@@ -12,7 +12,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Classic,
             Name = "Spring",
-            Description = "The gentle start: 15 rounds, each its own enemy encounter. The place to learn the garden.",
+            Description = "The gentle start: 12 rounds, each its own enemy encounter. The place to learn the garden.",
             UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
@@ -29,7 +29,7 @@ namespace Contigu.Core
             Id = ChallengeId.Marathon,
             Name = "Winter",
             WeatherProfile = WeatherProfile.Winter,
-            Description = "A smaller starting seed bag and tighter seed budgets. Same 15 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
+            Description = "A smaller starting seed bag and tighter seed budgets. Same 12 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
             UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,

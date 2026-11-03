@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Contigu.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -117,14 +118,14 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Plague, round12[2]);
             Assert.AreEqual(EnemyId.Reclaimer, round12[3]);
 
-            var round13 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 12);
+            var round13 = EncounterCatalog.GetAuthoredRoster(12);
             Assert.AreEqual(4, round13.Count);
             Assert.AreEqual(EnemyId.Basic, round13[0]);
             Assert.AreEqual(EnemyId.ColorHater, round13[1]);
             Assert.AreEqual(EnemyId.ShapeHater, round13[2]);
             Assert.AreEqual(EnemyId.Thief, round13[3]);
 
-            var round14 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 13);
+            var round14 = EncounterCatalog.GetAuthoredRoster(13);
             Assert.AreEqual(5, round14.Count);
             Assert.AreEqual(EnemyId.Basic, round14[0]);
             Assert.AreEqual(EnemyId.HeavyLocker, round14[1]);
@@ -134,7 +135,7 @@ namespace Contigu.Tests
 
             // Round 15 is the true finale — the biggest roster of the
             // whole run.
-            var round15 = EncounterCatalog.GetEncounter(ChallengeId.Classic, 14);
+            var round15 = EncounterCatalog.GetAuthoredRoster(14);
             Assert.AreEqual(6, round15.Count);
             Assert.AreEqual(EnemyId.Basic, round15[0]);
             Assert.AreEqual(EnemyId.HeavyLocker, round15[1]);
@@ -143,13 +144,53 @@ namespace Contigu.Tests
             Assert.AreEqual(EnemyId.Thief, round15[4]);
             Assert.AreEqual(EnemyId.Leech, round15[5]);
 
-            // Round 16+ is Endless: Act 2's rosters come around again (rounds 9-15, then 9 ...), only sturdier.
-            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 15));
-            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 14), EncounterCatalog.GetEncounter(ChallengeId.Classic, 21));
-            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 22));
+            // Past the last round (Endless) Act 2's rosters come around again (rounds 9-12, then 9 ...), only sturdier.
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 12));
+            Assert.AreEqual(EncounterCatalog.GetAuthoredRoster(11), EncounterCatalog.GetEncounter(ChallengeId.Classic, 15));
+            Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 8), EncounterCatalog.GetEncounter(ChallengeId.Classic, 16));
             // Winter fights the same enemies as Spring; only a quota-only rule (tests) has none.
             Assert.AreEqual(EncounterCatalog.GetEncounter(ChallengeId.Classic, 0), EncounterCatalog.GetEncounter(ChallengeId.Marathon, 0));
             Assert.AreEqual(0, EncounterCatalog.GetEncounter(TestChallenges.QuotaOnlyMarathon, 0).Count);
+        }
+
+        [Test]
+        public void RosterSchedule_KeepsRoundOneFixed_DrawsBossesFromPools_AndNeverRepeatsARoster()
+        {
+            var seenBossRosters = new HashSet<int>();
+            for (int seed = 1; seed <= 200; seed++)
+            {
+                var schedule = EncounterCatalog.RollSchedule(new SystemRandomProvider(seed), RunConfig.RoundCount);
+                Assert.AreEqual(RunConfig.RoundCount, schedule.Length);
+                Assert.AreEqual(0, schedule[0], "round 1 is always the same opener");
+                var distinct = new HashSet<int>(schedule);
+                Assert.AreEqual(schedule.Length, distinct.Count, "a roster never appears twice in a run (seed " + seed + ")");
+                foreach (int roster in schedule)
+                {
+                    Assert.That(roster, Is.InRange(0, 14));
+                }
+                Assert.That(schedule[3], Is.AnyOf(3, 4, 8));
+                Assert.That(schedule[7], Is.AnyOf(6, 7, 9, 10));
+                Assert.That(schedule[11], Is.AnyOf(11, 12, 13));
+                seenBossRosters.Add(schedule[3] * 100 + schedule[7] * 10 + schedule[11]);
+            }
+            Assert.Greater(seenBossRosters.Count, 8, "the bosses are not always the same ones");
+        }
+
+        [Test]
+        public void RosterSchedule_IsFixedPerSeed_SurvivesASaveAndSetsTheRoundsEnemies()
+        {
+            var a = new RunManager(new SystemRandomProvider(9));
+            var b = new RunManager(new SystemRandomProvider(9));
+            for (int round = 1; round < RunConfig.RoundCount; round++)
+            {
+                CollectionAssert.AreEqual(a.UpcomingEncounterIdsForRound(round), b.UpcomingEncounterIdsForRound(round));
+            }
+            var restored = RunManager.Restore(RunSnapshot.FromText(a.RoundStartSnapshot.ToText()), new SystemRandomProvider(2));
+            Assert.IsNotNull(restored);
+            for (int round = 1; round < RunConfig.RoundCount; round++)
+            {
+                CollectionAssert.AreEqual(a.UpcomingEncounterIdsForRound(round), restored.UpcomingEncounterIdsForRound(round));
+            }
         }
 
         [Test]
@@ -1571,6 +1612,7 @@ namespace Contigu.Tests
         private static void AdvanceToRound(RunManager run, int targetRoundIndex)
         {
             run.DebugDisableWeather();
+            run.DebugUseAuthoredRosters();
             while (run.CurrentRoundIndex < targetRoundIndex)
             {
                 run.DebugForceRoundComplete();

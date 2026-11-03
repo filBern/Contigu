@@ -9310,3 +9310,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - Constat : le seul accès aux Jokers (« Wild Seed », pool Bank du Casino) avait disparu avec le remplacement du Casino par l'Atelier : plus aucun Joker en partie normale.
   - Seed Pack : chaque graine révélée a 12 % de chances (`SeedPackWildSeedChancePercent`) d'être une Wild Seed (Joker, forme aléatoire, un trait de combat tiré, visible avant le choix).
   - Wild Pack (nouveau, Atelier, Rare, prix 6) : 3 Wild Seeds distinctes, on en garde 1. Il remplace un des deux emplacements de pack avec 12 % de chances par visite (`WildPackChancePercent`), jamais les deux. `UpgradeId.WildPack` ajouté en fin d'enum.
+
+- **12 manches et rosters aléatoires (2026-11-03)**
+  - Demande : runs trop longues (≈ 1 h à 1 h 30) et trop répétitives (mêmes ennemis, mêmes boss aux mêmes manches).
+  - `RunConfig.RoundCount` passe de 15 à 12 pour tous les challenges. On coupe les 3 dernières manches de l'arc authored (les plus dures) au lieu de compresser l'arc : le simulateur (planner profondeur 2, 200 parties) donne 16,5 % de victoires coupé, contre 12 % à 15 manches et 5 % compressé. Les PV, budgets et quotas de chaque manche restent ceux de la courbe ; boss aux manches 4, 8 et 12.
+  - `EncounterCatalog.RollSchedule` tire en début de run le roster de chaque manche : manche 1 toujours identique, boss tirés dans des listes (manche 4 : rosters 4, 5 ou 9 ; manche 8 : 7, 8, 10 ou 11 ; manche 12 : 12, 13 ou 14, numéros d'affichage), les autres parmi les rosters de difficulté voisine, sans répétition dans la run. Le programme est sauvegardé (ligne `roster=` du snapshot) ; une ancienne sauvegarde sans cette ligne joue l'ordre authored. Endless rejoue les rosters de l'Acte 2 (manches 9 à 12).
+  - Les tests qui dépendent de l'ordre authored appellent `DebugUseAuthoredRosters()`.

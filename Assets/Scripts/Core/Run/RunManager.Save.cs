@@ -77,6 +77,7 @@ namespace Contigu.Core
             s.Weather.AddRange(_weatherByRound);
             s.WeatherColors.AddRange(_weatherColorByRound);
             s.WeatherDisabled = _weatherDisabled;
+            if (_rosterSchedule != null) { s.Roster.AddRange(_rosterSchedule); }
             foreach (var pos in GridManager.AllPositions())
             {
                 if (Grid.GetCell(pos).IsPermanentMultiplier)
@@ -155,6 +156,7 @@ namespace Contigu.Core
             _weatherColorByRound.Clear();
             _weatherColorByRound.AddRange(s.WeatherColors);
             _weatherDisabled = s.WeatherDisabled;
+            _rosterSchedule = s.Roster.Count > 0 ? s.Roster.ToArray() : null;
 
             for (int i = 0; i < s.PermanentBonusCells.Count; i++)
             {

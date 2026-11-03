@@ -10,7 +10,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 
 ## 2. Boucle de jeu
 
-1. **Run** : 15 manches (Act 1 : manches 1 à 8, Act 2 : 9 à 15 ; un boss toutes les 4 manches, et un boss final à la manche 15). Victoire après la manche 15 ; « Keep Growing » prolonge en mode Endless.
+1. **Run** : 12 manches (Act 1 : manches 1 à 8, Act 2 : 9 à 12 ; un boss aux manches 4, 8 et 12). Les ennemis de chaque manche sont tirés au hasard à chaque run parmi des rosters de difficulté voisine (les boss dans des listes de boss), sans jamais répéter un roster ; les PV et le budget de chaque manche restent ceux de la courbe. Victoire après la manche 12 ; « Keep Growing » prolonge en mode Endless.
 2. **Manche** : on dispose d'un nombre limité de graines (budget). On pose des graines de la main sur la grille. Chaque pose marque des points et inflige des dégâts à l'ennemi de devant. La manche est gagnée quand tous les ennemis sont vaincus, perdue quand le budget ou les coups possibles sont épuisés.
 3. **Boutique** entre les manches (voir §6), puis manche suivante.
 4. **Fin de run** : écran de victoire ou de défaite ; les Stars gagnées débloquent les autres challenges.

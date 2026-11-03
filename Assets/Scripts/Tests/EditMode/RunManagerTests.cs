@@ -15,11 +15,12 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void RunConfig_ArraysHaveFifteenEntries()
+        public void RunConfig_ArraysCoverTheFifteenAuthoredRounds_AndARunPlaysTwelve()
         {
             Assert.AreEqual(15, RunConfig.Quotas.Length);
             Assert.AreEqual(15, RunConfig.PieceBudgets.Length);
-            Assert.AreEqual(14, RunConfig.BossRoundIndex);
+            Assert.AreEqual(11, RunConfig.BossRoundIndex);
+            Assert.AreEqual(12, RunConfig.RoundCount);
         }
 
         [Test]
@@ -2691,6 +2692,7 @@ namespace Contigu.Tests
         /// <summary>Drives a fresh run straight to the start of <paramref name="targetRoundIndex"/> via DebugForceRoundComplete, without needing to actually reach each round's real quota — the upgrade/modifier picked each round don't matter for these tests, only reaching the round does.</summary>
         private static void AdvanceToRound(RunManager run, int targetRoundIndex)
         {
+            run.DebugUseAuthoredRosters();
             while (run.CurrentRoundIndex < targetRoundIndex)
             {
                 run.DebugForceRoundComplete();

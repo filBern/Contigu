@@ -195,14 +195,13 @@ namespace Contigu.Core
         /// <summary>The HP multiplier of every enemy in a round: the round's own growth (Act 2, Endless) times this challenge's own multiplier.</summary>
         public float EnemyHpScaleFor(int roundIndex)
         {
-            int tier = _challenge.TierOf(roundIndex);
-            float actOne = tier < ScoringConstants.EnemyHpGrowthFirstRoundIndex ? _challenge.ActOneHpMultiplier : 1f;
-            return EncounterCatalog.GetHpScale(tier) * _challenge.EnemyHpMultiplier * actOne;
+            float actOne = roundIndex < ScoringConstants.EnemyHpGrowthFirstRoundIndex ? _challenge.ActOneHpMultiplier : 1f;
+            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier * actOne;
         }
 
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)
         {
-            var ids = EncounterCatalog.GetEncounter(_challenge, roundIndex);
+            var ids = EncounterCatalog.GetEncounter(_challenge, roundIndex, _rosterSchedule);
             if (ids.Count == 0)
             {
                 return System.Array.Empty<EnemyInstance>();

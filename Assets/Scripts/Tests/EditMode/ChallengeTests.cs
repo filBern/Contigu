@@ -316,10 +316,10 @@ namespace Contigu.Tests
             Assert.IsFalse(run.ContinueEndless(), "only once, and only from a victory");
 
             Assert.IsTrue(run.LeaveShop());
-            Assert.AreEqual(16, run.CurrentRoundNumber);
+            Assert.AreEqual(RunConfig.RoundCount + 1, run.CurrentRoundNumber);
             Assert.AreEqual(RunState.InProgress, run.State);
             Assert.IsTrue(run.HasActiveEncounter);
-            // Round 16 replays round 9's roster, far sturdier.
+            // The first Endless round replays round 9's roster, far sturdier.
             var roster = EncounterCatalog.GetEncounter(ChallengeId.Classic, 8);
             Assert.AreEqual(roster.Count, run.CurrentEncounter.Count);
             int round9Hp = EncounterCatalog.ScaleHp(run.CurrentEncounter[1].Definition.MaxHp, EncounterCatalog.GetHpScale(8));
@@ -329,8 +329,8 @@ namespace Contigu.Tests
         [Test]
         public void Endless_HpGrowsEveryRound_WithoutCeilingAndWithoutOverflow()
         {
-            float previous = EncounterCatalog.GetHpScale(14);
-            for (int round = 15; round < 120; round++)
+            float previous = EncounterCatalog.GetHpScale(RunConfig.RoundCount - 1);
+            for (int round = RunConfig.RoundCount; round < 120; round++)
             {
                 float scale = EncounterCatalog.GetHpScale(round);
                 Assert.GreaterOrEqual(scale, previous, "round " + (round + 1));
@@ -347,10 +347,10 @@ namespace Contigu.Tests
             var run = RunAtVictory(TestChallenges.QuotaOnlyMarathon);
             Assert.IsTrue(run.ContinueEndless());
             Assert.IsTrue(run.LeaveShop());
-            Assert.AreEqual(16, run.CurrentRoundNumber);
+            Assert.AreEqual(RunConfig.RoundCount + 1, run.CurrentRoundNumber);
             Assert.IsFalse(run.HasActiveEncounter, "a quota-only challenge has no authored enemies");
-            Assert.Greater(run.CurrentQuota, TestChallenges.QuotaOnlyMarathon.QuotaFor(14));
-            Assert.AreEqual(TestChallenges.QuotaOnlyMarathon.BudgetFor(14), run.CurrentBudget);
+            Assert.Greater(run.CurrentQuota, TestChallenges.QuotaOnlyMarathon.QuotaFor(RunConfig.RoundCount - 1));
+            Assert.AreEqual(TestChallenges.QuotaOnlyMarathon.BudgetFor(RunConfig.RoundCount), run.CurrentBudget);
             Assert.Greater(TestChallenges.QuotaOnlyMarathon.QuotaFor(40), TestChallenges.QuotaOnlyMarathon.QuotaFor(20));
             Assert.LessOrEqual(TestChallenges.QuotaOnlyMarathon.QuotaFor(500), 2000000000);
         }
@@ -359,7 +359,7 @@ namespace Contigu.Tests
         public void Endless_KeepsRollingWeather_AndAnnouncesTheNextOne()
         {
             var run = new RunManager(new SystemRandomProvider(4), ChallengeCatalog.Classic);
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < RunConfig.RoundCount - 1; i++)
             {
                 ClearRoundAndLeaveShop(run);
             }

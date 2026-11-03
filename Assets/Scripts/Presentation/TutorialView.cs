@@ -80,7 +80,7 @@ namespace Contigu.Presentation
         {
             (string Header, string Body)[] sections =
             {
-                ("GOAL", "Clear each round by defeating its pests before you run out of seeds: your score is the damage you deal them. Clear all 15 rounds to win the run."),
+                ("GOAL", "Clear each round by defeating its pests before you run out of seeds: your score is the damage you deal them. Clear all 12 rounds to win the run."),
                 ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on."),
                 ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per tile for the first line, +6 per tile for a second line harvested by the same move, +9 for a third, and so on. Emptying the whole grid with one move doubles your Mult. Harvesting a line containing several distinct colors also earns Pollen (+2 Pollen per distinct color in it)."),
                 ("POLLEN AND THE SHOP", "Between rounds, spend Pollen in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) - some add flat bonuses, some multiply."),

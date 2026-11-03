@@ -40,6 +40,8 @@ namespace Contigu.Core
         public List<WeatherId> Weather = new List<WeatherId>();
         public List<PieceColor> WeatherColors = new List<PieceColor>();
         public bool WeatherDisabled;
+        /// <summary>Which authored roster each round plays (empty: the authored order, as in older saves).</summary>
+        public List<int> Roster = new List<int>();
         public List<Vector2Int> PermanentBonusCells = new List<Vector2Int>();
 
         /// <summary>True for a checkpoint taken the moment the shop opened (RoundIndex is then the round just cleared): the run resumes in that shop, with these exact offers.</summary>
@@ -85,6 +87,7 @@ namespace Contigu.Core
             Line(sb, "weather", Join(Weather, w => ((int)w).ToString(CultureInfo.InvariantCulture)));
             Line(sb, "weathercolors", Join(WeatherColors, c => ((int)c).ToString(CultureInfo.InvariantCulture)));
             Line(sb, "weatheroff", WeatherDisabled ? 1 : 0);
+            Line(sb, "roster", Join(Roster, r => r.ToString(CultureInfo.InvariantCulture)));
             Line(sb, "permanent", Join(PermanentBonusCells, p => p.x.ToString(CultureInfo.InvariantCulture) + ":" + p.y.ToString(CultureInfo.InvariantCulture)));
             Line(sb, "inshop", InShop ? 1 : 0);
             Line(sb, "blister", Join(ShopBlister, SlotToText, ";"));
@@ -160,6 +163,7 @@ namespace Contigu.Core
                 foreach (var v in Split(values, "weather", ',')) { s.Weather.Add((WeatherId)ParseInt(v)); }
                 foreach (var v in Split(values, "weathercolors", ',')) { s.WeatherColors.Add((PieceColor)ParseInt(v)); }
                 s.WeatherDisabled = Int(values, "weatheroff") == 1;
+                foreach (var v in Split(values, "roster", ',')) { s.Roster.Add(ParseInt(v)); }
                 foreach (var v in Split(values, "permanent", ','))
                 {
                     var xy = v.Split(':');

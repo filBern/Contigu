@@ -415,6 +415,9 @@ namespace Contigu.Core
             }
         }
 
+        /// <summary>Which authored roster each round plays (see EncounterCatalog.RollSchedule); null reads as the authored order.</summary>
+        private int[] _rosterSchedule;
+
         private int _roundPlacements;
         private int _roundBestPlacement;
         private int _roundLines;
@@ -664,8 +667,14 @@ namespace Contigu.Core
                 {
                     return System.Array.Empty<EnemyId>();
                 }
-                return EncounterCatalog.GetEncounter(_challenge, nextRoundIndex);
+                return EncounterCatalog.GetEncounter(_challenge, nextRoundIndex, _rosterSchedule);
             }
+        }
+
+        /// <summary>The enemies round <paramref name="roundIndex"/> (0-based) will hold in this run, as scheduled at its start.</summary>
+        public IReadOnlyList<EnemyId> UpcomingEncounterIdsForRound(int roundIndex)
+        {
+            return EncounterCatalog.GetEncounter(_challenge, roundIndex, _rosterSchedule);
         }
 
         /// <summary>This round's score target. Still read for display even once <see cref="HasActiveEncounter"/> makes "every enemy dead" the real win condition.</summary>
@@ -710,6 +719,11 @@ namespace Contigu.Core
             CurrentRoundIndex = 0;
             StartRound();
             RollWeatherForRun();
+            // Rolled after round 1 (always the same opener) so it never shifts the first deck and hand draws.
+            if (_challenge.UsesEncounters)
+            {
+                _rosterSchedule = EncounterCatalog.RollSchedule(_rng, _challenge.RoundCount);
+            }
             // StartRound ran before the weather existed: a challenge whose first round isn't clear applies it now (a no-op under Clear).
             ApplyWeatherRoundStart();
             // The weather forecast only exists now, after the first StartRound took its snapshot.

@@ -47,12 +47,11 @@ namespace Contigu.RunSim
 
             for (int i = 0; i < args.Length; i++)
             {
-                // --rounds N plays a shorter run on the same difficulty arc (the last round stays the finale).
+                // --rounds N overrides the number of rounds (rounds past the authored ones are not meaningful).
                 if (args[i] == "--rounds" && i + 1 < args.Length)
                 {
                     challenge = challenge.Clone();
                     challenge.RoundCount = int.Parse(args[i + 1]);
-                    challenge.StretchTiers = !System.Array.Exists(args, a => a == "--cut");
                 }
             }
 

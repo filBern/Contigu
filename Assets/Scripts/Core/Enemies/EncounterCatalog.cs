@@ -104,7 +104,7 @@ namespace Contigu.Core
             return (int)System.Math.Min(System.Math.Max(50.0, scaled), (double)MaxEnemyHp);
         }
 
-        /// <summary>Endless rounds replay Act 2's rosters in order (rounds 9-15, then 9 again...), so every lap meets the same enemies — only far sturdier.</summary>
+        /// <summary>Endless rounds replay Act 2's rosters in order (rounds 9-12, then 9 again...), so every lap meets the same enemies — only far sturdier.</summary>
         private static IReadOnlyList<EnemyId> EndlessEncounter(int roundIndex)
         {
             int actTwoStart = ScoringConstants.EnemyHpGrowthFirstRoundIndex;
@@ -119,11 +119,16 @@ namespace Contigu.Core
 
         public static IReadOnlyList<EnemyId> GetEncounter(ChallengeDefinition challenge, int roundIndex)
         {
+            return GetEncounter(challenge, roundIndex, null);
+        }
+
+        public static IReadOnlyList<EnemyId> GetEncounter(ChallengeDefinition challenge, int roundIndex, int[] schedule)
+        {
             if (!challenge.UsesEncounters)
             {
                 return System.Array.Empty<EnemyId>();
             }
-            var roster = roundIndex >= challenge.RoundCount && roundIndex >= RunConfig.RoundCount ? EndlessEncounter(roundIndex) : GetAuthored(challenge.TierOf(roundIndex));
+            var roster = roundIndex >= challenge.RoundCount && roundIndex >= RunConfig.RoundCount ? EndlessEncounter(roundIndex) : GetAuthored(schedule != null && roundIndex < schedule.Length ? schedule[roundIndex] : roundIndex);
             // Each challenge is its own world: its resident enemy joins every third round (rounds 3, 6, 9, ... — Endless included), right
             // behind the leading Basic. A full roster loses its last enemy to make room.
             if (challenge.WorldEnemy.HasValue && roundIndex % ScoringConstants.WorldEnemyRoundInterval == ScoringConstants.WorldEnemyRoundInterval - 1)
@@ -137,6 +142,64 @@ namespace Contigu.Core
                 return withResident;
             }
             return roster;
+        }
+
+        // Boss rounds (every 4th) draw their roster from a pool of heavier ones instead of always meeting the same boss.
+        private static readonly int[][] BossPools =
+        {
+            new[] { 3, 4, 8 },          // round 4: Locker+Poisoner, Poisoner+Reclaimer, Locker+Plague
+            new[] { 6, 7, 9, 10 },      // round 8: the gauntlet, Blightmoth+Thief+Leech, Color Hater+Thief, Blightmoth+Shape Hater+Leech
+            new[] { 11, 12, 13 }        // round 12: the finale pool
+        };
+
+        /// <summary>
+        /// A run's roster for every round, as indices of the authored rosters: round 1 is always the same opener, boss rounds (every 4th) draw
+        /// from a boss pool, the others from the authored rosters around their own difficulty. A roster never appears twice in a run, so no
+        /// two runs share the same enemy order while the round's HP and budget stay on the authored curve.
+        /// </summary>
+        public static int[] RollSchedule(IRandomProvider rng, int roundCount)
+        {
+            var schedule = new int[roundCount];
+            var used = new HashSet<int>();
+            for (int i = 0; i < roundCount; i++)
+            {
+                schedule[i] = i;
+            }
+            used.Add(0);
+            for (int i = 1; i < roundCount; i++)
+            {
+                var candidates = new List<int>();
+                bool boss = (i + 1) % RunConfig.BossRoundInterval == 0;
+                if (boss)
+                {
+                    int[] pool = BossPools[System.Math.Min(((i + 1) / RunConfig.BossRoundInterval) - 1, BossPools.Length - 1)];
+                    foreach (int roster in pool) { if (!used.Contains(roster)) { candidates.Add(roster); } }
+                }
+                // Widen the window until something unused is found (a plain round also keeps clear of the boss-only rosters).
+                for (int radius = i < 4 ? 1 : 2; candidates.Count == 0 && radius <= 14; radius++)
+                {
+                    for (int roster = System.Math.Max(1, i - radius); roster <= System.Math.Min(13, i + radius); roster++)
+                    {
+                        if (!used.Contains(roster) && (boss || !IsBossOnly(roster, roundCount))) { candidates.Add(roster); }
+                    }
+                }
+                int pick = candidates.Count > 0 ? candidates[rng.Next(candidates.Count)] : i;
+                schedule[i] = pick;
+                used.Add(pick);
+            }
+            return schedule;
+        }
+
+        /// <summary>The heaviest rosters stay for boss rounds: a plain round never draws a roster of the boss pools' top end.</summary>
+        private static bool IsBossOnly(int roster, int roundCount)
+        {
+            return roster == 7 || roster == 12 || roster == 13;
+        }
+
+        /// <summary>The authored roster number <paramref name="index"/> (0-14), whatever the run's length or schedule.</summary>
+        public static IReadOnlyList<EnemyId> GetAuthoredRoster(int index)
+        {
+            return GetAuthored(index);
         }
 
         private static IReadOnlyList<EnemyId> GetAuthored(int roundIndex)

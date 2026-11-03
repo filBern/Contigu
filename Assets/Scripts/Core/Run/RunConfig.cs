@@ -3,8 +3,9 @@ namespace Contigu.Core
     /// <summary>Reference run-structure values.</summary>
     public static class RunConfig
     {
-        public const int RoundCount = 15;
-        public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 15 (0-based index 14)
+        /// <summary>Rounds of a run. The authored arc has 15 rosters; a run plays 12 of them (the last three, the hardest, are only met in Endless via the Act 2 laps).</summary>
+        public const int RoundCount = 12;
+        public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 12 (0-based index 11)
         public const int BossRoundInterval = 4;
 
         /// <summary>
