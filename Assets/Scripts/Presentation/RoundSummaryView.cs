@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Contigu.Core;
+using Contigu.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -136,7 +137,24 @@ namespace Contigu.Presentation
             right.rectTransform.anchorMax = new Vector2(1f, 1f);
             right.rectTransform.pivot = new Vector2(1f, 1f);
             right.rectTransform.offsetMin = new Vector2(0f, -(y + rowHeight));
-            right.rectTransform.offsetMax = new Vector2(-18f, -y);
+            // Every figure here is Pollen: the Pollen icon sits right after it.
+            float iconSize = Mathf.Clamp(rowHeight * 0.72f, 22f, 32f);
+            right.rectTransform.offsetMax = new Vector2(-(18f + iconSize + 6f), -y);
+            var icon = UIFactory.CreatePanel(_rows, "PollenIcon" + row, Color.white);
+            icon.raycastTarget = false;
+            icon.preserveAspect = true;
+            if (VisualDefaults.PollenSprite != null)
+            {
+                icon.sprite = VisualDefaults.PollenSprite;
+            }
+            else
+            {
+                icon.color = DarkPollenGold;
+            }
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(1f, 1f);
+            icon.rectTransform.pivot = new Vector2(1f, 0.5f);
+            icon.rectTransform.anchoredPosition = new Vector2(-18f, -(y + rowHeight * 0.5f));
+            icon.rectTransform.sizeDelta = new Vector2(iconSize, iconSize);
             y += rowHeight;
             row++;
         }
