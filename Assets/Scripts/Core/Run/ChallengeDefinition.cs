@@ -118,9 +118,12 @@ namespace Contigu.Core
         /// The authored difficulty step (0-14) a round plays at: a shorter run (fewer rounds than the 15 authored) stretches the same arc,
         /// so its last round is still the finale. Identity for a 15-round challenge and past the last round (Endless).
         /// </summary>
+        /// <summary>False: a shorter run simply stops early on the authored arc (round N keeps round N's roster, budget and HP) instead of stretching it.</summary>
+        public bool StretchTiers = true;
+
         public int TierOf(int roundIndex)
         {
-            if (RoundCount == RunConfig.RoundCount || roundIndex >= RoundCount || RoundCount < 2)
+            if (!StretchTiers || RoundCount == RunConfig.RoundCount || roundIndex >= RoundCount || RoundCount < 2)
             {
                 return roundIndex;
             }

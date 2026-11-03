@@ -52,6 +52,7 @@ namespace Contigu.RunSim
                 {
                     challenge = challenge.Clone();
                     challenge.RoundCount = int.Parse(args[i + 1]);
+                    challenge.StretchTiers = !System.Array.Exists(args, a => a == "--cut");
                 }
             }
 
