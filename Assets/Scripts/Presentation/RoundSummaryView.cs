@@ -15,6 +15,8 @@ namespace Contigu.Presentation
         private const float PaperHeight = 250f;
         private const int MaxBodyRows = 6;
         private static readonly Color Wood = new Color(0.33f, 0.22f, 0.13f, 1f);
+        // The Pollen gold (E8A82E), darkened so it reads on the cream parchment.
+        private static readonly Color DarkPollenGold = new Color(0.72f, 0.46f, 0.02f, 1f);
         private static readonly Color Dark = new Color(0.13f, 0.09f, 0.06f, 1f);
 
         private RectTransform _root;
@@ -128,7 +130,7 @@ namespace Contigu.Presentation
             left.rectTransform.pivot = new Vector2(0f, 1f);
             left.rectTransform.offsetMin = new Vector2(18f, -(y + rowHeight));
             left.rectTransform.offsetMax = new Vector2(0f, -y);
-            var right = UIFactory.CreateText(_rows, "Value" + row, value, highlight ? 28 : fontSize + 2, highlight ? UITheme.Success : UITheme.TextPrimary, TextAnchor.MiddleRight);
+            var right = UIFactory.CreateText(_rows, "Value" + row, value, highlight ? 28 : fontSize + 2, highlight ? DarkPollenGold : UITheme.TextPrimary, TextAnchor.MiddleRight);
             right.raycastTarget = false;
             right.rectTransform.anchorMin = new Vector2(0.55f, 1f);
             right.rectTransform.anchorMax = new Vector2(1f, 1f);
