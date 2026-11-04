@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check] [--each] [--study]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -21,6 +21,7 @@ namespace Contigu.RunSim
             string csvPath = null;
             bool failOnError = false;
             bool endless = false;
+            bool studyMode = false;
             var challenge = ChallengeCatalog.Classic;
             for (int i = 0; i < args.Length; i++)
             {
@@ -32,6 +33,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--endless") { endless = true; }
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
+                else if (args[i] == "--study") { studyMode = true; }
                 else if (args[i] == "--challenge" && i + 1 < args.Length)
                 {
                     string wanted = args[++i];
@@ -63,6 +65,11 @@ namespace Contigu.RunSim
                     challenge = challenge.Clone();
                     challenge.EnemyHpMultiplier = float.Parse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture);
                 }
+            }
+
+            if (studyMode)
+            {
+                return Study.Run(runs, seed, policyArg == "planner" ? BotPolicy.Planner : BotPolicy.Greedy, csvPath);
             }
 
             var policies = new List<BotPolicy>();
