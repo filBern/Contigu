@@ -174,22 +174,21 @@ namespace Contigu.Tests
         [Test]
         public void Scythe_BreaksItsRowAfterTheCount_AndTallyCountsEveryLineOfTheRound()
         {
-            // Scythe: a row of three Coral tiles, nowhere near full, is broken open once the Scythe seed scores.
+            // Scythe: a row of three Coral tiles, nowhere near full, is harvested with the column of the Scythe tile, with the usual bonuses.
             var run = NewRun();
             Fill(run, PieceColor.Coral, (0, 2), (1, 2), (4, 2));
-            Fill(run, PieceColor.Teal, (3, 4));
+            Fill(run, PieceColor.Teal, (1, 4));
             var scythe = PlantAt(run, PieceTraitKind.Scythe, PieceColor.Coral, 3, 2);
-            Assert.AreEqual(1, scythe.ForcedLineBreaks);
+            Assert.AreEqual(2, scythe.ClearedLineCount, "its row and its column");
+            Assert.Greater(scythe.LueurEarned, 0, "the usual harvest Pollen");
             foreach (int x in new[] { 0, 1, 3, 4 })
             {
-                Assert.IsFalse(run.Grid.GetCell(x, 2).IsFilled, "the row is broken open at x=" + x);
+                Assert.IsFalse(run.Grid.GetCell(x, 2).IsFilled, "the row is harvested at x=" + x);
             }
-            Assert.IsTrue(run.Grid.GetCell(3, 4).IsFilled, "other rows are left alone");
-            Assert.AreEqual(4, scythe.DestroyedCells.Count);
+            Assert.IsTrue(run.Grid.GetCell(1, 4).IsFilled, "other lines are left alone");
 
-            // Nothing in the way of an empty row: no break is counted.
-            var empty = NewRun();
-            Assert.AreEqual(0, PlantAt(empty, PieceTraitKind.Pip, PieceColor.Coral, 1, 1).ForcedLineBreaks);
+            // An ordinary seed harvests nothing on its own.
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Pip, PieceColor.Coral, 1, 1).ClearedLineCount);
 
             // Tally: +5 per line harvested this round, this placement's own harvest included.
             var tally = NewRun();

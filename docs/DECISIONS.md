@@ -9334,3 +9334,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - *Scythe Sprout* (Grid, Rare) : après le décompte, détruit tout le rang de sa tuile même s'il n'est pas plein (cases verrouillées ou gelées épargnées). Le rang compte comme une ligne cassée (`PlacementResult.ForcedLineBreaks`, ajouté au compteur de lignes de la manche) mais ne rapporte ni Pollen ni bonus de récolte. Un Mimic voisin peut le copier. Choix de conception : le rang, pas la colonne.
   - *Tally Sprout* (Grid, Uncommon) : +5 points par ligne récoltée dans la manche, y compris les lignes cassées et la récolte de la pose en cours.
   - Ids en fin d'enum : `ModifierId.CropRotation`, `PieceTraitKind.Scythe` = 103 et `Tally` = 104.
+
+- **Scythe Sprout corrigé : rang ET colonne, avec les bonus habituels (2026-11-04)**
+  - Réponses de l'auteur : Crop Rotation tel quel ; Scythe casse **le rang et la colonne** ; les lignes cassées donnent **les bonus de récolte habituels**.
+  - Au lieu d'une destruction après coup, les lignes forcées passent par la vraie détection de lignes : `GridManager.SetForcedLines` les compte comme complètes dans `CheckAndClearLines` (après le décompte des groupes), donc points de récolte par case, Pollen par groupes de couleurs, multiplicateur de lignes multiples, fertilizers de récolte, soin de Leech, statistiques… s'appliquent normalement. Seule la graine plantée déclenche : un Scythe déjà sur le jardin ne rejoue pas, et un Mimic ne le copie pas. `PlacementResult.ForcedLineBreaks` est supprimé (les lignes forcées sont dans `ClearedLineCount`).

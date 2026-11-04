@@ -911,7 +911,27 @@ namespace Contigu.Core
             var poisonedPositions = HasActiveEncounter ? GetPoisonedPositionsSnapshot() : null;
             // Sower Sprouts plant their free tiles BEFORE the scoring, so a planted tile counts: it can join the group or complete a line.
             var prePlantedTiles = PlantSowerTiles(tokenTraits, persistentTraits, shape, placementColor, x, y);
-            var placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
+            // Scythe Sprout: the row and column of each Scythe tile of this seed are harvested after the count even if they are not full.
+            var forcedRows = new List<int>();
+            var forcedColumns = new List<int>();
+            for (int t = 0; t < tokenTraits.Count; t++)
+            {
+                if (tokenTraits[t].Trait.Kind == PieceTraitKind.Scythe)
+                {
+                    forcedRows.Add(tokenTraits[t].Pos.y);
+                    forcedColumns.Add(tokenTraits[t].Pos.x);
+                }
+            }
+            if (forcedRows.Count > 0) { Grid.SetForcedLines(forcedRows, forcedColumns); }
+            PlacementResult placement;
+            try
+            {
+                placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
+            }
+            finally
+            {
+                Grid.ClearForcedLines();
+            }
             placement.PrePlantedTiles = prePlantedTiles;
             ForgetBrokenIce();
             ClearTokenTraitCells(transientTraitCells);
@@ -944,7 +964,7 @@ namespace Contigu.Core
             Stats.Record(placement, CurrentRoundIndex + 1, token.Shape, placementColor);
             _roundPlacements++;
             _roundBestPlacement = Mathf.Max(_roundBestPlacement, placement.TotalScore);
-            _roundLines += placement.ClearedLineCount + placement.ForcedLineBreaks;
+            _roundLines += placement.ClearedLineCount;
             _roundPollen += placement.LueurEarned + placement.ModifierLueurBonus;
             TallyRoundPollen(placement);
             // ModifierLueurBonus is a second, independent source of Lueur, on top

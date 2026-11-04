@@ -147,7 +147,7 @@ namespace Contigu.Core
 
         private static bool IsMimicCopyable(PieceTraitKind kind)
         {
-            return kind != PieceTraitKind.Mimic && kind != PieceTraitKind.Amplifier && kind != PieceTraitKind.Echo && !PieceTrait.IsJokerCombatKind(kind);
+            return kind != PieceTraitKind.Scythe && kind != PieceTraitKind.Mimic && kind != PieceTraitKind.Amplifier && kind != PieceTraitKind.Echo && !PieceTrait.IsJokerCombatKind(kind);
         }
 
         /// <summary>The upgraded tiles already on the garden, with their upgrade, as they stand right before a placement.</summary>
@@ -500,10 +500,10 @@ namespace Contigu.Core
                     }
                     break;
                 case PieceTraitKind.Tally:
-                    bonus = (_roundLines + placement.ClearedLineCount + placement.ForcedLineBreaks) * ScoringConstants.TallyBonusPerLine;
+                    bonus = (_roundLines + placement.ClearedLineCount) * ScoringConstants.TallyBonusPerLine;
                     break;
                 case PieceTraitKind.Scythe:
-                    // Breaks its row after the count (see ApplyScytheEffect).
+                    // Its row and column are harvested by the line check itself (see RunManager.PlacePiece / GridManager.SetForcedLines).
                     break;
                 case PieceTraitKind.Dominant:
                 case PieceTraitKind.Heritage:

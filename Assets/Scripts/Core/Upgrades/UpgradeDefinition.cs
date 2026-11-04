@@ -495,7 +495,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition ScytheTile = new UpgradeDefinition(
             UpgradeId.ScytheTile, UpgradePool.Grid, "Scythe Sprout",
-            "After scoring, harvests the whole row of its tile, even if it is not full.", false, UpgradeRarity.Rare);
+            "When its seed is planted, harvests the row AND the column of its tile after the count, even if they are not full.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition TallyTile = new UpgradeDefinition(
             UpgradeId.TallyTile, UpgradePool.Grid, "Tally Sprout",

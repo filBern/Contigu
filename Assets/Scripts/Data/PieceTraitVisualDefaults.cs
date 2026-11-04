@@ -278,7 +278,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Seedpod:
                     return "When its tile is harvested by a line, plants 2 free tiles of its color on the empty plots around it.";
                 case PieceTraitKind.Scythe:
-                    return "After scoring, harvests the whole row of its tile, even if the row is not full.";
+                    return "When its seed is planted, harvests the row AND the column of its tile after the count, even if they are not full, with the usual harvest bonuses.";
                 case PieceTraitKind.Tally:
                     return "Scores +" + ScoringConstants.TallyBonusPerLine + " pts for every line harvested this round (forced harvests count too).";
                 case PieceTraitKind.Dominant:

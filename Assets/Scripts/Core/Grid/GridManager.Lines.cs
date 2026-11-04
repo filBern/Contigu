@@ -17,6 +17,42 @@ namespace Contigu.Core
             return total;
         }
 
+        // Scythe Sprout: rows and columns forced to count as complete for the placement being scored (set by RunManager around PlacePiece).
+        private HashSet<int> _forcedRows;
+        private HashSet<int> _forcedColumns;
+
+        /// <summary>The rows and columns this placement harvests even if they are not full (a Scythe Sprout planted on them).</summary>
+        public void SetForcedLines(IEnumerable<int> rows, IEnumerable<int> columns)
+        {
+            _forcedRows = new HashSet<int>(rows);
+            _forcedColumns = new HashSet<int>(columns);
+        }
+
+        public void ClearForcedLines()
+        {
+            _forcedRows = null;
+            _forcedColumns = null;
+        }
+
+        private bool IsForcedLine(bool isRow, int index)
+        {
+            var forced = isRow ? _forcedRows : _forcedColumns;
+            if (forced == null || !forced.Contains(index))
+            {
+                return false;
+            }
+            // A forced line still needs something to harvest.
+            for (int i = 0; i < Size; i++)
+            {
+                var cell = isRow ? _cells[i, index] : _cells[index, i];
+                if (cell.IsFilled)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private ClearInfo CheckAndClearLines()
         {
             var cellsToClear = new HashSet<Vector2Int>();
@@ -27,7 +63,7 @@ namespace Contigu.Core
 
             for (int y = 0; y < Size; y++)
             {
-                if (IsRowComplete(y))
+                if (IsRowComplete(y) || IsForcedLine(true, y))
                 {
                     clearedLineCount++;
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: true, index: y), isRow: true, index: y));
@@ -40,7 +76,7 @@ namespace Contigu.Core
 
             for (int x = 0; x < Size; x++)
             {
-                if (IsColumnComplete(x))
+                if (IsColumnComplete(x) || IsForcedLine(false, x))
                 {
                     clearedLineCount++;
                     clearedLines.Add(new ClearedLine(ExtractLineColors(isRow: false, index: x), isRow: false, index: x));
