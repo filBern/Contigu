@@ -96,6 +96,9 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Hothouse` | Hothouse | Roguelike |
 | `GoodNeighbors` | Good Neighbors | Voisinage |
 | `Gleaner` | Gleaner | Destruction |
+| `WildCluster` | Wild Cluster | Roguelike |
+| `WildReserve` | Wild Reserve | Roguelike |
+| `WildSurge` | Wild Surge | Roguelike |
 | `RenfortJoker` | Battle Tonic | Roguelike |
 | `Arsenal` | Arsenal | Roguelike |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
@@ -140,6 +143,8 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `KamikazeTile` | Kamikaze Sprout | Grid |
 | `VenomTile` | Venom Sprout | Grid |
 | `MimicTile` | Mimic Sprout | Grid |
+| `DominantTile` | Dominant Sprout | Grid |
+| `HeritageTile` | Heritage Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |

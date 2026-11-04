@@ -286,7 +286,7 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<int>();
             }
-            bool tinted = kind.Value == PieceTraitKind.Tinted;
+            bool tinted = kind.Value == PieceTraitKind.Tinted || kind.Value == PieceTraitKind.Dominant || kind.Value == PieceTraitKind.Heritage; // a recoloring upgrade is never offered for a Joker
             // A Joker whose every cell is taken (a one-cell Joker, whose only cell holds its combat trait) has nothing to give up: not offered.
             System.Func<PieceToken, bool> eligible = token =>
                 (!tinted || token.Color != PieceColor.Joker) && !HasOnlyCombatCells(token);
@@ -437,6 +437,8 @@ namespace Contigu.Core
                 case UpgradeId.SeedpodTile: return PieceTraitKind.Seedpod;
                 case UpgradeId.LocksmithTile: return PieceTraitKind.Locksmith;
                 case UpgradeId.MimicTile: return PieceTraitKind.Mimic;
+                case UpgradeId.DominantTile: return PieceTraitKind.Dominant;
+                case UpgradeId.HeritageTile: return PieceTraitKind.Heritage;
                 default: return null; // Bank pool — no trait
             }
         }

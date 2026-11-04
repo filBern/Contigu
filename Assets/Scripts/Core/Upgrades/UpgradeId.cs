@@ -131,6 +131,9 @@ namespace Contigu.Core
 
         MimicTile,
 
-        WildPack
+        WildPack,
+
+        DominantTile,
+        HeritageTile
     }
 }

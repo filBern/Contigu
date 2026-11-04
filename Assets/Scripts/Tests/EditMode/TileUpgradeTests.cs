@@ -135,6 +135,43 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Dominant_And_Heritage_RecolorTheSeedToTheMajorityColor_AndKeepItsOwnOnATie()
+        {
+            // Dominant: the garden holds more Teal than anything else, so a Coral seed turns Teal (for good, in the bag too).
+            var garden = NewRun();
+            Fill(garden, PieceColor.Teal, (0, 0), (1, 0), (0, 1));
+            Fill(garden, PieceColor.Coral, (5, 5));
+            PlantAt(garden, PieceTraitKind.Dominant, PieceColor.Coral, 3, 3);
+            Assert.AreEqual(PieceColor.Teal, garden.Grid.GetCell(3, 3).FilledColor);
+
+            // Nothing on the garden (or a tie that includes its own color): the seed keeps its color.
+            var empty = NewRun();
+            PlantAt(empty, PieceTraitKind.Dominant, PieceColor.Coral, 3, 3);
+            Assert.AreEqual(PieceColor.Coral, empty.Grid.GetCell(3, 3).FilledColor);
+            var tie = NewRun();
+            Fill(tie, PieceColor.Teal, (0, 0));
+            Fill(tie, PieceColor.Coral, (5, 5));
+            PlantAt(tie, PieceTraitKind.Dominant, PieceColor.Coral, 3, 3);
+            Assert.AreEqual(PieceColor.Coral, tie.Grid.GetCell(3, 3).FilledColor);
+
+            // Heritage: the bag holds extra Lime seeds, so a Coral seed turns Lime.
+            var bag = NewRun();
+            for (int i = 0; i < 6; i++)
+            {
+                bag.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Lime));
+            }
+            PlantAt(bag, PieceTraitKind.Heritage, PieceColor.Coral, 3, 3);
+            Assert.AreEqual(PieceColor.Lime, bag.Grid.GetCell(3, 3).FilledColor);
+
+            // A Joker is never offered a recoloring upgrade.
+            var jokerRun = NewRun();
+            jokerRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            var jokerIndex = jokerRun.Deck.DeckCount - 1;
+            var offered = jokerRun.Upgrades.GetCandidateTilesFor(UpgradeCatalog.DominantTile, jokerRun.Deck, 500);
+            CollectionAssert.DoesNotContain(offered, jokerIndex);
+        }
+
+        [Test]
         public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
         {
             Assert.AreEqual(ScoringConstants.CollectorBonusPerKind, PlantAt(NewRun(), PieceTraitKind.Collector, PieceColor.Coral, 2, 2).TraitBonus);

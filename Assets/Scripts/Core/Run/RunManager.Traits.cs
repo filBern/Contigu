@@ -137,6 +137,8 @@ namespace Contigu.Core
                 case PieceTraitKind.Twin:
                 case PieceTraitKind.Detonator:
                 case PieceTraitKind.Chameleon:
+                case PieceTraitKind.Dominant:
+                case PieceTraitKind.Heritage:
                 case PieceTraitKind.Spark:
                 case PieceTraitKind.Void:
                 case PieceTraitKind.Bastion:
@@ -260,6 +262,51 @@ namespace Contigu.Core
                 }
             }
             return bestColor;
+        }
+
+        /// <summary>
+        /// Dominant / Heritage Sprout: the most common base color on the garden (or in the Seed Bag when <paramref name="fromBag"/>). A tie keeps
+        /// <paramref name="own"/> if it is among the leaders, else the first leader in color order; nothing counted keeps <paramref name="own"/>.
+        /// </summary>
+        private PieceColor ResolveMajorityColor(bool fromBag, PieceColor own)
+        {
+            var counts = new Dictionary<PieceColor, int>();
+            for (int i = 0; i < PieceColorUtility.BaseColors.Count; i++)
+            {
+                counts[PieceColorUtility.BaseColors[i]] = 0;
+            }
+            if (fromBag)
+            {
+                var tokens = Deck.Deck;
+                for (int i = 0; i < tokens.Count; i++)
+                {
+                    if (counts.ContainsKey(tokens[i].Color)) { counts[tokens[i].Color]++; }
+                }
+            }
+            else
+            {
+                foreach (var pos in GridManager.AllPositions())
+                {
+                    var cell = Grid.GetCell(pos);
+                    if (cell.IsFilled && cell.FilledColor.HasValue && counts.ContainsKey(cell.FilledColor.Value)) { counts[cell.FilledColor.Value]++; }
+                }
+            }
+            int best = 0;
+            foreach (var pair in counts) { if (pair.Value > best) { best = pair.Value; } }
+            if (best == 0)
+            {
+                return own;
+            }
+            int ownCount;
+            if (counts.TryGetValue(own, out ownCount) && ownCount == best)
+            {
+                return own;
+            }
+            for (int i = 0; i < PieceColorUtility.BaseColors.Count; i++)
+            {
+                if (counts[PieceColorUtility.BaseColors[i]] == best) { return PieceColorUtility.BaseColors[i]; }
+            }
+            return own;
         }
 
         private void AddDistinctNeighborColor(int x, int y, List<PieceColor> candidates)
@@ -426,6 +473,8 @@ namespace Contigu.Core
                 case PieceTraitKind.Seedpod:
                 case PieceTraitKind.Locksmith:
                 case PieceTraitKind.Mimic:
+                case PieceTraitKind.Dominant:
+                case PieceTraitKind.Heritage:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }

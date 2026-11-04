@@ -244,7 +244,13 @@ namespace Contigu.Core
         Precision,
 
         /// <summary>"Mimic Sprout" — replays the upgrade of every tile of its group touching it (orthogonally), as if it carried those upgrades itself. Explicit id 100: 76 belonged to the retired Sap Drain, which old saves still carry (converted on restore).</summary>
-        Mimic = 100
+        Mimic = 100,
+
+        /// <summary>"Dominant Sprout" — when placed, the WHOLE seed recolors, for good, to the most common color on the garden (its own color on a tie).</summary>
+        Dominant = 101,
+
+        /// <summary>"Heritage Sprout" — when placed, the WHOLE seed recolors, for good, to the most common color in the Seed Bag (its own color on a tie).</summary>
+        Heritage = 102
     }
 
     /// <summary>

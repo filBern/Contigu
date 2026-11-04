@@ -499,6 +499,10 @@ namespace Contigu.Core
                         }
                     }
                     break;
+                case PieceTraitKind.Dominant:
+                case PieceTraitKind.Heritage:
+                    // Recolor the seed before it is placed (see PlacePiece): nothing to score here.
+                    break;
                 case PieceTraitKind.Amplifier:
                 case PieceTraitKind.Echo:
                 case PieceTraitKind.Mimic:

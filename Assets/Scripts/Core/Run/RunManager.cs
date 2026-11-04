@@ -857,9 +857,13 @@ namespace Contigu.Core
             for (int t = 0; t < tokenTraits.Count; t++)
             {
                 var kind = tokenTraits[t].Trait.Kind;
-                if (kind == PieceTraitKind.Chameleon && placementColor == token.Color)
+                bool recolors = kind == PieceTraitKind.Chameleon
+                    || ((kind == PieceTraitKind.Dominant || kind == PieceTraitKind.Heritage) && token.Color != PieceColor.Joker);
+                if (recolors && placementColor == token.Color)
                 {
-                    placementColor = ResolveChameleonColor(shape, x, y, tokenTraits[t].Pos, token.Color);
+                    placementColor = kind == PieceTraitKind.Chameleon
+                        ? ResolveChameleonColor(shape, x, y, tokenTraits[t].Pos, token.Color)
+                        : ResolveMajorityColor(kind == PieceTraitKind.Heritage, token.Color);
                     if (placementColor != token.Color)
                     {
                         // Recoloring also updates the deck copy, not just this placement.
