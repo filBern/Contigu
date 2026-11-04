@@ -134,6 +134,8 @@ namespace Contigu.Core
         WildPack,
 
         DominantTile,
-        HeritageTile
+        HeritageTile,
+        ScytheTile,
+        TallyTile
     }
 }

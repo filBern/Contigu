@@ -499,6 +499,12 @@ namespace Contigu.Core
                         }
                     }
                     break;
+                case PieceTraitKind.Tally:
+                    bonus = (_roundLines + placement.ClearedLineCount + placement.ForcedLineBreaks) * ScoringConstants.TallyBonusPerLine;
+                    break;
+                case PieceTraitKind.Scythe:
+                    // Breaks its row after the count (see ApplyScytheEffect).
+                    break;
                 case PieceTraitKind.Dominant:
                 case PieceTraitKind.Heritage:
                     // Recolor the seed before it is placed (see PlacePiece): nothing to score here.

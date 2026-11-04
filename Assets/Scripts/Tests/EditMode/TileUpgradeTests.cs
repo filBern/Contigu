@@ -172,6 +172,50 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Scythe_BreaksItsRowAfterTheCount_AndTallyCountsEveryLineOfTheRound()
+        {
+            // Scythe: a row of three Coral tiles, nowhere near full, is broken open once the Scythe seed scores.
+            var run = NewRun();
+            Fill(run, PieceColor.Coral, (0, 2), (1, 2), (4, 2));
+            Fill(run, PieceColor.Teal, (3, 4));
+            var scythe = PlantAt(run, PieceTraitKind.Scythe, PieceColor.Coral, 3, 2);
+            Assert.AreEqual(1, scythe.ForcedLineBreaks);
+            foreach (int x in new[] { 0, 1, 3, 4 })
+            {
+                Assert.IsFalse(run.Grid.GetCell(x, 2).IsFilled, "the row is broken open at x=" + x);
+            }
+            Assert.IsTrue(run.Grid.GetCell(3, 4).IsFilled, "other rows are left alone");
+            Assert.AreEqual(4, scythe.DestroyedCells.Count);
+
+            // Nothing in the way of an empty row: no break is counted.
+            var empty = NewRun();
+            Assert.AreEqual(0, PlantAt(empty, PieceTraitKind.Pip, PieceColor.Coral, 1, 1).ForcedLineBreaks);
+
+            // Tally: +5 per line harvested this round, this placement's own harvest included.
+            var tally = NewRun();
+            Fill(tally, PieceColor.Coral, (0, 0), (1, 0), (2, 0), (3, 0), (4, 0));
+            var harvest = PlantAt(tally, PieceTraitKind.Tally, PieceColor.Coral, 5, 0);
+            Assert.AreEqual(1, harvest.ClearedLineCount);
+            Assert.AreEqual(ScoringConstants.TallyBonusPerLine, harvest.TraitBonus);
+            Assert.AreEqual(0, PlantAt(NewRun(), PieceTraitKind.Tally, PieceColor.Coral, 1, 1).TraitBonus, "no line yet, no bonus");
+        }
+
+        [Test]
+        public void CropRotation_GrowsOnEveryShapeChangeThisRound()
+        {
+            var run = NewRun();
+            Assert.IsTrue(run.DebugGrantModifier(ModifierId.CropRotation));
+            var first = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 0, 0);
+            Assert.AreEqual(0f, first.ProgressiveAdditiveMult, 1e-3f, "nothing before the first seed to differ from");
+            var second = PlaceDomino(run, new PieceTrait(PieceTraitKind.Pip, 0), new PieceTrait(PieceTraitKind.Pip, 1), 0, 3);
+            Assert.AreEqual(ScoringConstants.CropRotationMultPerChange, second.ProgressiveAdditiveMult, 1e-3f);
+            var third = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 5, 5);
+            Assert.AreEqual(2 * ScoringConstants.CropRotationMultPerChange, third.ProgressiveAdditiveMult, 1e-3f);
+            var fourth = PlantAt(run, PieceTraitKind.Pip, PieceColor.Coral, 5, 4);
+            Assert.AreEqual(2 * ScoringConstants.CropRotationMultPerChange, fourth.ProgressiveAdditiveMult, 1e-3f, "the same shape again adds nothing");
+        }
+
+        [Test]
         public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
         {
             Assert.AreEqual(ScoringConstants.CollectorBonusPerKind, PlantAt(NewRun(), PieceTraitKind.Collector, PieceColor.Coral, 2, 2).TraitBonus);

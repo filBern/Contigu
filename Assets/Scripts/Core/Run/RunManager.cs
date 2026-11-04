@@ -421,6 +421,9 @@ namespace Contigu.Core
         private int _roundPlacements;
         private int _roundBestPlacement;
         private int _roundLines;
+        /// <summary>Crop Rotation's counter: placements this round whose shape differed from the one before.</summary>
+        private int _shapeChangesThisRound;
+        private ShapeId? _lastShapeThisRound;
         private int _roundPollen;
         private int _roundLinesPollen;
         private int _roundTilePollen;
@@ -762,6 +765,8 @@ namespace Contigu.Core
             _roundPlacements = 0;
             _roundBestPlacement = 0;
             _roundLines = 0;
+            _shapeChangesThisRound = 0;
+            _lastShapeThisRound = null;
             _roundPollen = 0;
             _roundLinesPollen = 0;
             _roundTilePollen = 0;
@@ -886,6 +891,13 @@ namespace Contigu.Core
             var persistentTraits = CollectPersistentTraits();
             int streakBeforePlacement = Grid.PlacementsSinceLastClear;
 
+            // Crop Rotation reads this before scoring: a shape change counts for the placement that makes it.
+            if (_lastShapeThisRound.HasValue && _lastShapeThisRound.Value != token.Shape)
+            {
+                _shapeChangesThisRound++;
+            }
+            _lastShapeThisRound = token.Shape;
+
             StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = new List<Cell>();
             for (int t = 0; t < tokenTraits.Count; t++)
@@ -932,7 +944,7 @@ namespace Contigu.Core
             Stats.Record(placement, CurrentRoundIndex + 1, token.Shape, placementColor);
             _roundPlacements++;
             _roundBestPlacement = Mathf.Max(_roundBestPlacement, placement.TotalScore);
-            _roundLines += placement.ClearedLineCount;
+            _roundLines += placement.ClearedLineCount + placement.ForcedLineBreaks;
             _roundPollen += placement.LueurEarned + placement.ModifierLueurBonus;
             TallyRoundPollen(placement);
             // ModifierLueurBonus is a second, independent source of Lueur, on top

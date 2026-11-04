@@ -493,6 +493,14 @@ namespace Contigu.Core
             UpgradeId.HeritageTile, UpgradePool.Grid, "Heritage Sprout",
             "Recolors the WHOLE seed to the most common color in your bag when placed, for good.", false, UpgradeRarity.Uncommon);
 
+        public static readonly UpgradeDefinition ScytheTile = new UpgradeDefinition(
+            UpgradeId.ScytheTile, UpgradePool.Grid, "Scythe Sprout",
+            "After scoring, harvests the whole row of its tile, even if it is not full.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition TallyTile = new UpgradeDefinition(
+            UpgradeId.TallyTile, UpgradePool.Grid, "Tally Sprout",
+            "+5 pts per line harvested this round, forced harvests included.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -504,7 +512,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -534,7 +542,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile
         };
     }
 }

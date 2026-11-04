@@ -463,6 +463,12 @@ namespace Contigu.Core
         /// <summary>Wild Reserve: +Mult per Joker seed in the bag.</summary>
         public const float WildReserveMultPerJoker = 0.1f;
 
+        /// <summary>Crop Rotation: +Mult per placement this round whose shape differs from the previous placement's.</summary>
+        public const float CropRotationMultPerChange = 0.1f;
+
+        /// <summary>Tally Sprout: points per line harvested (or forced) so far this round.</summary>
+        public const int TallyBonusPerLine = 5;
+
         /// <summary>Wild Surge: xN when the scored group contains a Joker tile.</summary>
         public const int WildSurgeMultiplier = 2;
         public const int GrafterMultBonus = 3;

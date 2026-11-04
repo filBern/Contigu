@@ -314,6 +314,9 @@ namespace Contigu.Core
         /// <summary>x2 Mult when the scored group contains a Joker tile.</summary>
         WildSurge,
 
+        /// <summary>+0.1 Mult each time a seed of a different shape than the previous one is planted this round, stacking.</summary>
+        CropRotation,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }

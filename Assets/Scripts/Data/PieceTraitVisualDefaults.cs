@@ -113,6 +113,8 @@ namespace Contigu.Data
                 case PieceTraitKind.Mimic: return "Mimic Sprout";
                 case PieceTraitKind.Dominant: return "Dominant Sprout";
                 case PieceTraitKind.Heritage: return "Heritage Sprout";
+                case PieceTraitKind.Scythe: return "Scythe Sprout";
+                case PieceTraitKind.Tally: return "Tally Sprout";
                 case PieceTraitKind.Bombe: return "Spore Burst";
                 case PieceTraitKind.Range: return "Long Reach";
                 case PieceTraitKind.Eclat: return "Overflow";
@@ -275,6 +277,10 @@ namespace Contigu.Data
                     return "Joins its group across one empty plot to a tile of the same color in a straight line.";
                 case PieceTraitKind.Seedpod:
                     return "When its tile is harvested by a line, plants 2 free tiles of its color on the empty plots around it.";
+                case PieceTraitKind.Scythe:
+                    return "After scoring, harvests the whole row of its tile, even if the row is not full.";
+                case PieceTraitKind.Tally:
+                    return "Scores +" + ScoringConstants.TallyBonusPerLine + " pts for every line harvested this round (forced harvests count too).";
                 case PieceTraitKind.Dominant:
                     return "When placed, the WHOLE seed recolors, for good, to the most common color on the garden (it keeps its own color on a tie).";
                 case PieceTraitKind.Heritage:
@@ -357,6 +363,8 @@ namespace Contigu.Data
                 case PieceTraitKind.Mimic: return UpgradeRarity.Rare;
                 case PieceTraitKind.Dominant: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Heritage: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Scythe: return UpgradeRarity.Rare;
+                case PieceTraitKind.Tally: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -496,6 +504,8 @@ namespace Contigu.Data
                 case PieceTraitKind.Seedpod:
                 case PieceTraitKind.Locksmith:
                 case PieceTraitKind.Mimic:
+                case PieceTraitKind.Scythe:
+                case PieceTraitKind.Tally:
                     return PlacementPointBadgeColor;
                 case PieceTraitKind.Bombe:
                 case PieceTraitKind.Range:

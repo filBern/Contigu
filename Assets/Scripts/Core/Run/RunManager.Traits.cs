@@ -139,6 +139,8 @@ namespace Contigu.Core
                 case PieceTraitKind.Chameleon:
                 case PieceTraitKind.Dominant:
                 case PieceTraitKind.Heritage:
+                case PieceTraitKind.Scythe:
+                case PieceTraitKind.Tally:
                 case PieceTraitKind.Spark:
                 case PieceTraitKind.Void:
                 case PieceTraitKind.Bastion:
@@ -420,6 +422,9 @@ namespace Contigu.Core
                 case PieceTraitKind.Venom:
                     ApplyVenomEffect(traitCellPos, placement);
                     break;
+                case PieceTraitKind.Scythe:
+                    ApplyScytheEffect(traitCellPos, placement);
+                    break;
                 case PieceTraitKind.Pip:
                 case PieceTraitKind.Lucky:
                 case PieceTraitKind.Companion:
@@ -475,6 +480,7 @@ namespace Contigu.Core
                 case PieceTraitKind.Mimic:
                 case PieceTraitKind.Dominant:
                 case PieceTraitKind.Heritage:
+                case PieceTraitKind.Tally:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }
@@ -942,6 +948,32 @@ namespace Contigu.Core
         /// Scores ScoringConstants.KamikazeBonusPerDestroyedCell per tile
         /// actually destroyed, the trait cell included.
         /// </summary>
+        /// <summary>
+        /// "Scythe Sprout": after the count, breaks open the row of its tile even if it is not full: every unlocked, unfrozen tile of the row is
+        /// destroyed (reported like any destroyed cell) and the row counts as one line broken this round. Nothing to break, nothing counted.
+        /// </summary>
+        private void ApplyScytheEffect(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            int broken = 0;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                var cell = Grid.GetCell(x, traitCellPos.y);
+                if (!cell.IsFilled || cell.IsLocked || cell.IsFrozen)
+                {
+                    continue;
+                }
+                var color = cell.FilledColor;
+                var shapeId = cell.FilledShapeId;
+                cell.ClearFill();
+                AddDestroyedCell(placement, new Vector2Int(x, traitCellPos.y), color, shapeId);
+                broken++;
+            }
+            if (broken > 0)
+            {
+                placement.ForcedLineBreaks++;
+            }
+        }
+
         private void ApplyKamikazeEffect(Vector2Int traitCellPos, PlacementResult placement)
         {
             int destroyed = 0;

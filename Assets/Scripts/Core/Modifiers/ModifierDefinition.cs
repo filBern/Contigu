@@ -600,6 +600,10 @@ namespace Contigu.Core
             ModifierId.WildSurge, ModifierCategory.Roguelike, "Wild Surge",
             "x2 Mult when the scored group contains a Joker tile.");
 
+        public static readonly ModifierDefinition CropRotation = new ModifierDefinition(
+            ModifierId.CropRotation, ModifierCategory.Formes, "Crop Rotation",
+            "+0.1 Mult each time you plant a different shape than the last seed this round, stacking.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -624,7 +628,7 @@ namespace Contigu.Core
             Mosaique, Foule, Prairie, Guirlande, MoissonCroisee,
             Faucheur, TableRase, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
             Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
-            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner, WildCluster, WildReserve, WildSurge
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner, WildCluster, WildReserve, WildSurge, CropRotation
         };
 
         /// <summary>The fertilizer a retired id turns into when an old save is loaded (the color Glows become their Devotion); null for every other id.</summary>

@@ -142,6 +142,7 @@ namespace Contigu.Data
             { ModifierId.WildCluster, "JC" },
             { ModifierId.WildReserve, "JR" },
             { ModifierId.WildSurge, "JS" },
+            { ModifierId.CropRotation, "RO" },
             { ModifierId.RenfortJoker, "RJ" },
             { ModifierId.Arsenal, "AS" },
             { ModifierId.CollectionChromatique, "CC" },

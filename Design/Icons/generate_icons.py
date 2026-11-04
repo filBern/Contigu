@@ -239,7 +239,7 @@ F = {
  'FormatPetitGlow': ('sh2g', 'm', '+1', 'Formes'), 'FormatMoyenGlow': ('sh3g', 'm', '+1', 'Formes'), 'FormatGrandGlow': ('sh4g', 'm', '+1', 'Formes'),
  'Pair': ('waxing', 'm', '×2', 'Roguelike'), 'Impair': ('waning', 'm', '×2', 'Roguelike'), 'Polyvalence': ('cactus', 'm', '+1', 'Roguelike'),
  'CharmedPatch': ('f_charmedpatch', 'm', '+1', 'Roguelike'),
- 'WildCluster': ('f_wildcluster', 'm', '+0.5', 'Roguelike'), 'WildReserve': ('f_wildreserve', 'm', '+0.1', 'Roguelike'), 'WildSurge': ('f_wildsurge', 'm', '×2', 'Roguelike'),
+ 'CropRotation': ('f_croprotation', 'm', '+0.1', 'Formes'), 'WildCluster': ('f_wildcluster', 'm', '+0.5', 'Roguelike'), 'WildReserve': ('f_wildreserve', 'm', '+0.1', 'Roguelike'), 'WildSurge': ('f_wildsurge', 'm', '×2', 'Roguelike'),
  'Grafter': ('f_grafter', 'm', '+3', 'Roguelike'),
  'TwinGraft': ('f_twingraft', 'm', '+5', 'Roguelike'),
  'Botanist': ('f_botanist', 'm', '+1', 'Roguelike'),
@@ -402,6 +402,8 @@ M['u_locksmith'] = lambda: _trait_motif('Locksmith')
 M['u_mimic'] = lambda: _trait_motif('Mimic')
 M['u_dominant'] = lambda: _trait_motif('Dominant')
 M['u_heritage'] = lambda: _trait_motif('Heritage')
+M['u_scythe'] = lambda: _trait_motif('Scythe')
+M['u_tally'] = lambda: _trait_motif('Tally')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -428,6 +430,7 @@ M['u_masterypack'] = lambda: star(50, 46, 28, '#ffd966', 0.45, 5, 3.5) + seed(50
 M['u_compost'] = lambda: path('M22 38 L78 38 L70 76 L30 76 Z', '#8a5a2b', 4) + sprout(50, 40, 0.8) + arrow(50, 14, 50, 30, O, 4)
 M['u_forge'] = lambda: path('M20 56 L80 56 L74 70 L26 70 Z', '#6b7280', 4) + rect(34, 70, 32, 8, '#4b5563', 3, 3) + tile(34, 26, 28, '#ffd966') + star(72, 30, 8, '#fff1b0', 0.4, 4, 2.5)
 M['f_charmedpatch'] = lambda: _trait_motif('Cluster')
+M['f_croprotation'] = lambda: seed(26, 66, 1.5, '#d8b574') + rect(54, 40, 32, 32, '#e8a82e', 6, 3.5) + arrow(28, 30, 70, 26, G, 5)
 M['f_wildcluster'] = lambda: seed(30, 62, 1.5, P) + seed(62, 56, 1.5, P) + star(46, 24, 11, '#fff1b0', 0.4, 5, 3)
 M['f_wildreserve'] = lambda: path('M30 30 C16 42 12 64 18 76 C22 86 34 90 50 90 C66 90 78 86 82 76 C88 64 84 42 70 30 Z', '#d8b574', 4) + rect(30, 24, 40, 8, '#8a5a2b', 4, 3.5) + star(50, 62, 15, '#fff1b0', 0.4, 5, 3)
 M['f_wildsurge'] = lambda: seed(50, 62, 2.2, P) + star(50, 36, 18, '#ffd84d', 0.4, 5, 3)
@@ -503,6 +506,7 @@ U = {
  'LocksmithTile': ('u_locksmith', 'Grid'),
  'MimicTile': ('u_mimic', 'Grid'),
  'DominantTile': ('u_dominant', 'Grid'), 'HeritageTile': ('u_heritage', 'Grid'),
+ 'ScytheTile': ('u_scythe', 'Grid'), 'TallyTile': ('u_tally', 'Grid'),
  'WildPack': ('u_joker', 'Workshop'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),

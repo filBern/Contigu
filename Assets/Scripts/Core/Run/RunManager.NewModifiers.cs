@@ -11,7 +11,7 @@ namespace Contigu.Core
             ModifierId.Saisons, ModifierId.Outsider, ModifierId.CoupFinal, ModifierId.DerniereGraine, ModifierId.PremiereGraine,
             ModifierId.Tirelire, ModifierId.BanqueGraines, ModifierId.SousBois, ModifierId.DanseDePluie, ModifierId.DanseDuSoleil,
             ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur,
-            ModifierId.WildCluster, ModifierId.WildReserve, ModifierId.WildSurge
+            ModifierId.WildCluster, ModifierId.WildReserve, ModifierId.WildSurge, ModifierId.CropRotation
         };
 
         private bool HoldsAnyNewRunStateModifier()
@@ -117,6 +117,9 @@ namespace Contigu.Core
                 case ModifierId.WildReserve:
                     AddRunStateMultBonus(placement, events, id, index, CountJokerSeedsInBag() * ScoringConstants.WildReserveMultPerJoker * level, whole: false);
                     break;
+                case ModifierId.CropRotation:
+                    AddRunStateMultBonus(placement, events, id, index, _shapeChangesThisRound * ScoringConstants.CropRotationMultPerChange * level, whole: false);
+                    break;
                 case ModifierId.WildSurge:
                     if (CountJokerTilesInGroup(placement) > 0)
                     {
@@ -216,6 +219,8 @@ namespace Contigu.Core
                     return "Per Joker tile in the group: +" + FormatMultDisplay(ScoringConstants.WildClusterMultPerJoker * level) + " Mult";
                 case ModifierId.WildReserve:
                     return "Currently +" + FormatMultDisplay(CountJokerSeedsInBag() * ScoringConstants.WildReserveMultPerJoker * level) + " Mult";
+                case ModifierId.CropRotation:
+                    return "Currently +" + FormatMultDisplay(_shapeChangesThisRound * ScoringConstants.CropRotationMultPerChange * level) + " Mult (" + _shapeChangesThisRound + " shape changes this round)";
                 case ModifierId.WildSurge:
                     return "Active when the scored group holds a Joker tile: x" + ScoringConstants.WildSurgeMultiplier;
                 case ModifierId.Pourfendeur:

@@ -250,7 +250,13 @@ namespace Contigu.Core
         Dominant = 101,
 
         /// <summary>"Heritage Sprout" — when placed, the WHOLE seed recolors, for good, to the most common color in the Seed Bag (its own color on a tie).</summary>
-        Heritage = 102
+        Heritage = 102,
+
+        /// <summary>"Scythe Sprout" — after the count, harvests the whole row of its tile even if the row is not full.</summary>
+        Scythe = 103,
+
+        /// <summary>"Tally Sprout" — scores +5 points per line harvested this round (forced breaks included).</summary>
+        Tally = 104
     }
 
     /// <summary>

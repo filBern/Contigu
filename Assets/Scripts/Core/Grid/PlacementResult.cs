@@ -133,6 +133,9 @@ namespace Contigu.Core
         /// </summary>
         public int ClearedLineCount;
 
+        /// <summary>Lines broken open by a Scythe Sprout after the count (they are not full): they add to the round's line count but pay no harvest bonus.</summary>
+        public int ForcedLineBreaks;
+
         /// <summary>
         /// Cell(s) destroyed by a trait effect (Void Tile's random clear,
         /// Kamikaze Tile's surrounding-tile wipe) rather than by completing

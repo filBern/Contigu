@@ -99,6 +99,7 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `WildCluster` | Wild Cluster | Roguelike |
 | `WildReserve` | Wild Reserve | Roguelike |
 | `WildSurge` | Wild Surge | Roguelike |
+| `CropRotation` | Crop Rotation | Formes |
 | `RenfortJoker` | Battle Tonic | Roguelike |
 | `Arsenal` | Arsenal | Roguelike |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
@@ -145,6 +146,8 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `MimicTile` | Mimic Sprout | Grid |
 | `DominantTile` | Dominant Sprout | Grid |
 | `HeritageTile` | Heritage Sprout | Grid |
+| `ScytheTile` | Scythe Sprout | Grid |
+| `TallyTile` | Tally Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |

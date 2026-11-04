@@ -439,6 +439,8 @@ namespace Contigu.Core
                 case UpgradeId.MimicTile: return PieceTraitKind.Mimic;
                 case UpgradeId.DominantTile: return PieceTraitKind.Dominant;
                 case UpgradeId.HeritageTile: return PieceTraitKind.Heritage;
+                case UpgradeId.ScytheTile: return PieceTraitKind.Scythe;
+                case UpgradeId.TallyTile: return PieceTraitKind.Tally;
                 default: return null; // Bank pool — no trait
             }
         }

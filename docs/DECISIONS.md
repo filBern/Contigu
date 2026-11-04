@@ -9328,3 +9328,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - **Trois fertilizers et deux sprouts autour du Joker et des couleurs (2026-11-04)**
   - Idées de l'auteur. Fertilizers (Roguelike) : *Wild Cluster* (+0,5 Mult par Joker du groupe scoré, 6 Pollen), *Wild Reserve* (+0,1 Mult par Joker du sac, 5), *Wild Surge* (x2 Mult si le groupe scoré contient un Joker, 8). Implémentés comme fertilizers « d'état de run » (`RunManager.ApplyNewRunStateModifier`) ; un Joker déraciné par la pose compte encore.
   - Sprouts (Grid, Uncommon) : *Dominant Sprout* (la graine entière prend, pour de bon comme Chameleon, la couleur la plus présente sur le jardin) et *Heritage Sprout* (celle du sac). Égalité : la graine garde sa couleur ; rien à compter : idem. Jamais proposés pour un Joker (`GetCandidateTilesFor`) ni appliqués à un Joker. Ids ajoutés en fin d'enum (`PieceTraitKind` 101 et 102).
+
+- **Crop Rotation, Scythe Sprout et Tally Sprout (2026-11-04)**
+  - Idées de l'auteur. *Crop Rotation* (fertilizer, Formes, 6 Pollen) : +0,1 Mult cumulé à chaque pose dont la forme diffère de la précédente, dans la manche (compteur remis à zéro à chaque manche, la pose qui change la forme compte pour elle-même ; une pose de même forme n'ajoute rien et ne remet rien à zéro).
+  - *Scythe Sprout* (Grid, Rare) : après le décompte, détruit tout le rang de sa tuile même s'il n'est pas plein (cases verrouillées ou gelées épargnées). Le rang compte comme une ligne cassée (`PlacementResult.ForcedLineBreaks`, ajouté au compteur de lignes de la manche) mais ne rapporte ni Pollen ni bonus de récolte. Un Mimic voisin peut le copier. Choix de conception : le rang, pas la colonne.
+  - *Tally Sprout* (Grid, Uncommon) : +5 points par ligne récoltée dans la manche, y compris les lignes cassées et la récolte de la pose en cours.
+  - Ids en fin d'enum : `ModifierId.CropRotation`, `PieceTraitKind.Scythe` = 103 et `Tally` = 104.
