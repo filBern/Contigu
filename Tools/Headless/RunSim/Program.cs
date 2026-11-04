@@ -34,6 +34,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
                 else if (args[i] == "--study") { studyMode = true; }
+                else if (args[i] == "--ranked" && i + 1 < args.Length) { Bot.LoadScores(args[++i]); }
                 else if (args[i] == "--challenge" && i + 1 < args.Length)
                 {
                     string wanted = args[++i];

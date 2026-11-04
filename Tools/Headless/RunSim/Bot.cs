@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Contigu.Core;
 using UnityEngine;
@@ -48,6 +49,35 @@ namespace Contigu.RunSim
 
         /// <summary>Called on the fresh run before the first move (QA smoke tests give every run one specific fertilizer or upgrade).</summary>
         public System.Action<RunManager> Setup;
+
+        /// <summary>
+        /// Item scores from the balance study (mean rounds gained, keyed "fertilizer:Id" / "sprout:Id"). When set, the shop is played by the
+        /// ranking: the best-scored fertilizers and sprouts are bought first, duds are skipped, and pack choices take the best-scored option.
+        /// </summary>
+        public static Dictionary<string, double> Scores;
+
+        private static double ScoreOfModifier(ModifierId id)
+        {
+            double v;
+            return Scores != null && Scores.TryGetValue("fertilizer:" + id, out v) ? v : 0.0;
+        }
+
+        private static double ScoreOfUpgrade(UpgradeDefinition def)
+        {
+            double v;
+            return Scores != null && def != null && Scores.TryGetValue("sprout:" + def.Id, out v) ? v : 0.0;
+        }
+
+        public static void LoadScores(string csvPath)
+        {
+            Scores = new Dictionary<string, double>();
+            foreach (var line in System.IO.File.ReadAllLines(csvPath).Skip(1))
+            {
+                var f = line.Split(',');
+                if (f.Length < 4) { continue; }
+                Scores[f[0] + ":" + f[1]] = double.Parse(f[3], System.Globalization.CultureInfo.InvariantCulture);
+            }
+        }
 
         public Bot(int seed, BotPolicy policy, ChallengeDefinition challenge = null, bool endless = false)
         {
@@ -345,8 +375,24 @@ namespace Contigu.RunSim
                     options.Add((false, 1000 + i, run.GetUpgradeSlotPrice(i)));
                 }
             }
+            if (Scores != null)
+            {
+                // Ranked: the study's best items first; items the study found useless are not bought (they only take a slot).
+                double Value((bool Modifier, int Index, int Price) o)
+                {
+                    if (o.Index >= 1000)
+                    {
+                        // Workshop packs and services: the best option a pack could show, scaled down (the pick is a gamble).
+                        return 0.5;
+                    }
+                    var slot = run.ShopBlisterSlots[o.Index];
+                    return slot.Kind == ShopSlotKind.Modifier ? ScoreOfModifier(slot.ModifierId) : ScoreOfUpgrade(slot.HiddenUpgrade);
+                }
+                options.RemoveAll(o => Value(o) < 0.1);
+                options.Sort((a, b) => Value(b).CompareTo(Value(a)));
+            }
             // Greedy: modifiers (blister) first, cheapest first. Random: shuffled.
-            if (_policy != BotPolicy.Random)
+            else if (_policy != BotPolicy.Random)
             {
                 options.Sort((a, b) =>
                 {
@@ -396,7 +442,17 @@ namespace Contigu.RunSim
                 }
                 else if (pending.Id == UpgradeId.SproutPack || pending.Id == UpgradeId.Forge)
                 {
-                    ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(_rng.Next(run.PendingPackUpgrades.Count));
+                    int upgradePick = _rng.Next(Math.Max(1, run.PendingPackUpgrades.Count));
+                    if (Scores != null)
+                    {
+                        double best = double.MinValue;
+                        for (int i = 0; i < run.PendingPackUpgrades.Count; i++)
+                        {
+                            double v = ScoreOfUpgrade(run.PendingPackUpgrades[i]);
+                            if (v > best) { best = v; upgradePick = i; }
+                        }
+                    }
+                    ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(upgradePick);
                     if (!ok) { ok = run.SkipPack(); }
                 }
                 else if (pending.Id == UpgradeId.Transplant)
@@ -413,7 +469,17 @@ namespace Contigu.RunSim
                 }
                 else if (pending.Id == UpgradeId.FertilizerPack)
                 {
-                    ok = run.PendingPackModifiers.Count > 0 && run.ResolvePackModifierChoice(_rng.Next(run.PendingPackModifiers.Count));
+                    int modifierPick = _rng.Next(Math.Max(1, run.PendingPackModifiers.Count));
+                    if (Scores != null)
+                    {
+                        double best = double.MinValue;
+                        for (int i = 0; i < run.PendingPackModifiers.Count; i++)
+                        {
+                            double v = ScoreOfModifier(run.PendingPackModifiers[i]);
+                            if (v > best) { best = v; modifierPick = i; }
+                        }
+                    }
+                    ok = run.PendingPackModifiers.Count > 0 && run.ResolvePackModifierChoice(modifierPick);
                     if (!ok && run.PendingUpgrade == pending) { ok = run.SkipPack(); }
                 }
                 else if (pending.Id == UpgradeId.ModifierUpgrade)
