@@ -104,6 +104,36 @@ namespace Contigu.Tests
             Assert.AreEqual(PieceTraitKind.Bombe, traits[0].Kind);
         }
 
+        private static PlacementResult PlantJoker(RunManager run, params ModifierId[] mods)
+        {
+            foreach (var id in mods) { Assert.IsTrue(run.DebugGrantModifier(id), id.ToString()); }
+            int slot = HandSlotWith(run, new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            var outcome = run.PlacePiece(slot, 2, 2);
+            Assert.IsTrue(outcome.Placement.Success);
+            return outcome.Placement;
+        }
+
+        [Test]
+        public void WildFertilizers_ReadTheJokersOfTheGroupAndTheBag()
+        {
+            // Wild Cluster: +0.5 Mult per Joker tile in the scored group (one Joker planted, one in the bag from the token added here).
+            var cluster = PlantJoker(NewRun(), ModifierId.WildCluster);
+            Assert.AreEqual(ScoringConstants.WildClusterMultPerJoker, cluster.ProgressiveAdditiveMult, 1e-3f);
+            Assert.AreEqual(1, PlantAt(NewRun(), PieceTraitKind.Pip, PieceColor.Coral, 2, 2).ModifierMultiplier, "control: no fertilizer, no multiplier");
+
+            // Wild Surge: x2 when the group holds a Joker, nothing for an ordinary seed.
+            Assert.AreEqual(ScoringConstants.WildSurgeMultiplier, PlantJoker(NewRun(), ModifierId.WildSurge).ModifierMultiplier);
+            var plainRun = NewRun();
+            plainRun.DebugGrantModifier(ModifierId.WildSurge);
+            Assert.AreEqual(1, PlantAt(plainRun, PieceTraitKind.Pip, PieceColor.Coral, 2, 2).ModifierMultiplier, "no Joker in the group");
+
+            // Wild Reserve: +0.1 Mult per Joker seed in the bag (the one planted is still in the bag).
+            var reserveRun = NewRun();
+            reserveRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+            var reserve = PlantJoker(reserveRun, ModifierId.WildReserve);
+            Assert.AreEqual(2 * ScoringConstants.WildReserveMultPerJoker, reserve.ProgressiveAdditiveMult, 1e-3f);
+        }
+
         [Test]
         public void Collector_Resonance_Pouch_Compound_CountTheGardenAndTheBag()
         {

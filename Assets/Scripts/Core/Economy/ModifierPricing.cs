@@ -174,6 +174,9 @@ namespace Contigu.Core
                 case ModifierId.QuatriemeEmplacement: return 9; // permanent extra hand slot — more flexibility on every single placement for the rest of the run
 
                 case ModifierId.CharmedPatch: return 6;
+                case ModifierId.WildCluster: return 6; // needs Jokers in the bag AND in the group
+                case ModifierId.WildReserve: return 5; // small per Joker, grows with the bag
+                case ModifierId.WildSurge: return 8; // x2, but only when a Joker is in the group
                 case ModifierId.Grafter: return 5;
                 case ModifierId.TwinGraft: return 6;
                 case ModifierId.Botanist: return 6;

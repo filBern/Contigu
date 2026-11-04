@@ -10,7 +10,8 @@ namespace Contigu.Core
         {
             ModifierId.Saisons, ModifierId.Outsider, ModifierId.CoupFinal, ModifierId.DerniereGraine, ModifierId.PremiereGraine,
             ModifierId.Tirelire, ModifierId.BanqueGraines, ModifierId.SousBois, ModifierId.DanseDePluie, ModifierId.DanseDuSoleil,
-            ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur
+            ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur,
+            ModifierId.WildCluster, ModifierId.WildReserve, ModifierId.WildSurge
         };
 
         private bool HoldsAnyNewRunStateModifier()
@@ -110,7 +111,48 @@ namespace Contigu.Core
                         AddRunStateMultiplier(placement, events, id, index, ScoringConstants.BossbaneMultiplier);
                     }
                     break;
+                case ModifierId.WildCluster:
+                    AddRunStateMultBonus(placement, events, id, index, CountJokerTilesInGroup(placement) * ScoringConstants.WildClusterMultPerJoker * level, whole: false);
+                    break;
+                case ModifierId.WildReserve:
+                    AddRunStateMultBonus(placement, events, id, index, CountJokerSeedsInBag() * ScoringConstants.WildReserveMultPerJoker * level, whole: false);
+                    break;
+                case ModifierId.WildSurge:
+                    if (CountJokerTilesInGroup(placement) > 0)
+                    {
+                        AddRunStateMultiplier(placement, events, id, index, ScoringConstants.WildSurgeMultiplier);
+                    }
+                    break;
             }
+        }
+
+        /// <summary>The Joker tiles of the scored group (a tile harvested by this very placement still counts).</summary>
+        private int CountJokerTilesInGroup(PlacementResult placement)
+        {
+            int count = 0;
+            for (int i = 0; i < placement.GroupCells.Count; i++)
+            {
+                var color = ColorAsPlaced(placement.GroupCells[i], placement);
+                if (color.HasValue && color.Value == PieceColor.Joker)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private int CountJokerSeedsInBag()
+        {
+            int count = 0;
+            var tokens = Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                if (tokens[i].Color == PieceColor.Joker)
+                {
+                    count++;
+                }
+            }
+            return count;
         }
 
         /// <summary>An xN contribution at <paramref name="index"/>'s place in the fold (scaled by that slot's level, never below x1).</summary>
@@ -170,6 +212,12 @@ namespace Contigu.Core
                     return CurrentRoundIndex < ScoringConstants.EarlyBirdRounds ? "Active: +" + Mathf.RoundToInt(ScoringConstants.EarlyBirdMultBonus * level) + " Mult" : "Inactive: past round " + ScoringConstants.EarlyBirdRounds;
                 case ModifierId.Marathonien:
                     return CurrentRoundIndex >= ScoringConstants.MarathonerFirstRoundIndex ? "Active: +" + Mathf.RoundToInt(ScoringConstants.MarathonerMultBonus * level) + " Mult" : "Inactive: before round " + (ScoringConstants.MarathonerFirstRoundIndex + 1);
+                case ModifierId.WildCluster:
+                    return "Per Joker tile in the group: +" + FormatMultDisplay(ScoringConstants.WildClusterMultPerJoker * level) + " Mult";
+                case ModifierId.WildReserve:
+                    return "Currently +" + FormatMultDisplay(CountJokerSeedsInBag() * ScoringConstants.WildReserveMultPerJoker * level) + " Mult";
+                case ModifierId.WildSurge:
+                    return "Active when the scored group holds a Joker tile: x" + ScoringConstants.WildSurgeMultiplier;
                 case ModifierId.Pourfendeur:
                     return IsBossRound ? "Active: x" + ScoringConstants.BossbaneMultiplier : "Inactive: not a boss round";
                 default:

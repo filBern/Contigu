@@ -588,6 +588,18 @@ namespace Contigu.Core
             ModifierId.Gleaner, ModifierCategory.Destruction, "Gleaner",
             "+2 Mult per upgraded tile harvested by this placement.");
 
+        public static readonly ModifierDefinition WildCluster = new ModifierDefinition(
+            ModifierId.WildCluster, ModifierCategory.Roguelike, "Wild Cluster",
+            "+0.5 Mult per Joker tile in the scored group.");
+
+        public static readonly ModifierDefinition WildReserve = new ModifierDefinition(
+            ModifierId.WildReserve, ModifierCategory.Roguelike, "Wild Reserve",
+            "+0.1 Mult per Joker seed in your bag.");
+
+        public static readonly ModifierDefinition WildSurge = new ModifierDefinition(
+            ModifierId.WildSurge, ModifierCategory.Roguelike, "Wild Surge",
+            "x2 Mult when the scored group contains a Joker tile.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -612,7 +624,7 @@ namespace Contigu.Core
             Mosaique, Foule, Prairie, Guirlande, MoissonCroisee,
             Faucheur, TableRase, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
             Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
-            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner, WildCluster, WildReserve, WildSurge
         };
 
         /// <summary>The fertilizer a retired id turns into when an old save is loaded (the color Glows become their Devotion); null for every other id.</summary>

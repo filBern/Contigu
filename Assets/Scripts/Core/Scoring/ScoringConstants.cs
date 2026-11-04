@@ -456,6 +456,15 @@ namespace Contigu.Core
 
         // ---- fertilizers that read the upgraded tiles (all Mult)
         public const int CharmedPatchMultPerTile = 1;
+
+        /// <summary>Wild Cluster: +Mult per Joker tile in the scored group.</summary>
+        public const float WildClusterMultPerJoker = 0.5f;
+
+        /// <summary>Wild Reserve: +Mult per Joker seed in the bag.</summary>
+        public const float WildReserveMultPerJoker = 0.1f;
+
+        /// <summary>Wild Surge: xN when the scored group contains a Joker tile.</summary>
+        public const int WildSurgeMultiplier = 2;
         public const int GrafterMultBonus = 3;
         public const int TwinGraftMultBonus = 5;
         public const int BotanistMultPerKind = 1;

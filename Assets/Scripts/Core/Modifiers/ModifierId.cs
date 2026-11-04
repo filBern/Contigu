@@ -305,6 +305,15 @@ namespace Contigu.Core
         /// <summary>+2 Mult per upgraded tile harvested by this placement.</summary>
         Gleaner,
 
+        /// <summary>+0.5 Mult per Joker tile in the scored group.</summary>
+        WildCluster,
+
+        /// <summary>+0.1 Mult per Joker seed in the Seed Bag.</summary>
+        WildReserve,
+
+        /// <summary>x2 Mult when the scored group contains a Joker tile.</summary>
+        WildSurge,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }
