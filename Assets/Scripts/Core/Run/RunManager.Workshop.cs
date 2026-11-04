@@ -191,7 +191,16 @@ namespace Contigu.Core
             var picked = new List<ModifierId>();
             while (picked.Count < count && available.Count > 0)
             {
-                int pick = _rng.Next(available.Count);
+                // Weighted: the rare fertilizers come up a quarter as often.
+                int total = 0;
+                for (int i = 0; i < available.Count; i++) { total += EconomyConstants.ModifierDrawWeight(available[i]); }
+                int roll = _rng.Next(total);
+                int pick = 0;
+                for (int i = 0; i < available.Count; i++)
+                {
+                    roll -= EconomyConstants.ModifierDrawWeight(available[i]);
+                    if (roll < 0) { pick = i; break; }
+                }
                 picked.Add(available[pick]);
                 available.RemoveAt(pick);
             }

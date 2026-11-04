@@ -44,6 +44,12 @@ namespace Contigu.Core
         /// </summary>
         public const int BlisterModifierWeight = 16;
 
+        /// <summary>How likely a fertilizer is to be drawn (Blister and Fertilizer Pack): the usual weight, a quarter of it for the few rare ones.</summary>
+        public static int ModifierDrawWeight(ModifierId id)
+        {
+            return id == ModifierId.Tirelire ? BlisterModifierWeight / 4 : BlisterModifierWeight;
+        }
+
         /// <summary>
         /// How many "Casino" slots the shop offers per visit — only the
         /// UpgradePool is shown, the specific UpgradeDefinition underneath

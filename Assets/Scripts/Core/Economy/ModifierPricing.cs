@@ -61,7 +61,7 @@ namespace Contigu.Core
                 case ModifierId.CoupFinal: return 6;
                 case ModifierId.DerniereGraine: return 6;
                 case ModifierId.PremiereGraine: return 5;
-                case ModifierId.Tirelire: return 6;
+                case ModifierId.Tirelire: return 12; // rare and dear: the balance study found it far above every other fertilizer
                 case ModifierId.BanqueGraines: return 6;
                 case ModifierId.SousBois: return 5;
                 case ModifierId.DanseDePluie: return 4;

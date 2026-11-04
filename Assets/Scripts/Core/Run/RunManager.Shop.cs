@@ -98,8 +98,11 @@ namespace Contigu.Core
                 upgradeCandidates.Add(candidate);
             }
 
-            const int ModifierBlisterWeight = EconomyConstants.BlisterModifierWeight;
-            int totalWeight = modifierCandidates.Count * ModifierBlisterWeight;
+            int totalWeight = 0;
+            for (int i = 0; i < modifierCandidates.Count; i++)
+            {
+                totalWeight += EconomyConstants.ModifierDrawWeight(modifierCandidates[i].Id);
+            }
             for (int i = 0; i < upgradeCandidates.Count; i++)
             {
                 totalWeight += UpgradeRarityUtility.GetDraftWeight(upgradeCandidates[i].Rarity) * EconomyConstants.BlisterUpgradeWeightMultiplier;
@@ -124,7 +127,7 @@ namespace Contigu.Core
             int cumulative = 0;
             for (int i = 0; i < modifierCandidates.Count; i++)
             {
-                cumulative += ModifierBlisterWeight;
+                cumulative += EconomyConstants.ModifierDrawWeight(modifierCandidates[i].Id);
                 if (roll < cumulative)
                 {
                     return ShopSlot.ForModifier(modifierCandidates[i].Id);
