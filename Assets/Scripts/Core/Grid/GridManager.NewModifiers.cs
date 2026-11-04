@@ -261,38 +261,6 @@ namespace Contigu.Core
             return bonus;
         }
 
-        /// <summary>Pollinator: Pollen when the placement touches 2+ different colors.</summary>
-        private int ApplyPollinisateur(List<Vector2Int> placed, List<ScoreEvent> events)
-        {
-            var colors = CollectTouchingColors(placed);
-            colors.Remove(PieceColor.Joker);
-            if (colors.Count < 2)
-            {
-                return 0;
-            }
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placed[0], EconomyConstants.PollinatorLueur));
-            return EconomyConstants.PollinatorLueur;
-        }
-
-        /// <summary>Honey: Pollen per 3 cells in the scored group.</summary>
-        private int ApplyMiel(List<Vector2Int> group, List<Vector2Int> placed, List<ScoreEvent> events)
-        {
-            int lueur = group.Count / EconomyConstants.HoneyCellsPerLueur;
-            if (lueur <= 0)
-            {
-                return 0;
-            }
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placed[0], lueur));
-            return lueur;
-        }
-
-        /// <summary>Nectar: Pollen on every seed.</summary>
-        private int ApplyNectar(List<Vector2Int> placed, List<ScoreEvent> events)
-        {
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placed[0], EconomyConstants.NectarLueurPerSeed));
-            return EconomyConstants.NectarLueurPerSeed;
-        }
-
         // ------------------------------------------------------------------ post-clear
 
         /// <summary>Cross Harvest: +Mult when one seed completes a row and a column at once.</summary>
@@ -329,18 +297,6 @@ namespace Contigu.Core
         private int ApplyTableRase(ClearInfo info, List<Vector2Int> placed, List<ScoreEvent> events)
         {
             return info.GridEmptied ? Multiplied(events, placed[0], ScoringConstants.CleanSlateMultiplier) : 1;
-        }
-
-        /// <summary>Tithe: Pollen per line harvested.</summary>
-        private int ApplyDime(ClearInfo info, List<Vector2Int> placed, List<ScoreEvent> events)
-        {
-            int lueur = info.ClearedLineCount * EconomyConstants.TitheLueurPerLine;
-            if (lueur <= 0)
-            {
-                return 0;
-            }
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placed[0], lueur));
-            return lueur;
         }
 
         /// <summary>Row Crop / Column Crop: xN when at least one harvested line is a row / a column.</summary>

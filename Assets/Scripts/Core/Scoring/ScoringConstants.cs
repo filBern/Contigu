@@ -333,9 +333,6 @@ namespace Contigu.Core
         /// <summary>Enemy tricks that also fire on a timer: every this many seeds placed in a round (see RunManager.ResolveEnemyTickEffects).</summary>
         public const int EnemyTickInterval = 6;
 
-        /// <summary>Hard cap on the Pollen a single Siphon trigger can grant, so a huge score can't flood the economy.</summary>
-        public const int SiphonLueurCapPerTrigger = 10;
-
         /// <summary>Pair: xN multiplier (see GridManager.ApplyParitePaire) when the placement's scored group has an EVEN total cell count.</summary>
         public const int PairMultiplier = 2;
 
@@ -356,9 +353,6 @@ namespace Contigu.Core
 
         /// <summary>Cadence: xN multiplier (see GridManager.ApplyCadence) when this placement's group parity matches a held Pair/Impair modifier AND its piece size matches a held Format* Specialist tier, both at once.</summary>
         public const int CadenceMultiplier = 2;
-
-        /// <summary>Siphon: fraction of Joker-combat damage (see RunManager.ApplyJokerCombatOrDefaultDamage) converted into bonus Lueur (floored) — fires alongside every combat kind.</summary>
-        public const float SiphonLueurFraction = 0.04f;
 
         // Fertilizers whose text says "+1 Mult per X" are worth exactly PointsPerMult points per X, so the points-to-Mult conversion of their (aggregated) event gives +1 Mult per X.
         // ---- the 40 fertilizers added in one batch (see GridManager.NewModifiers.cs and RunManager.NewModifiers.cs) ----

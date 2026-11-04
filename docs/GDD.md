@@ -39,8 +39,8 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 
 ## 6. Économie et boutique
 
-- **Pollen** : la monnaie. Gagné par les groupes de couleur, certaines météos et fertilizers, la fin de manche en Autumn.
-- **Fertilizers** (modificateurs, 145) : jusqu'à **4 actifs**, rangés dans le panneau Fertilizers ; chacun a un prix, une catégorie (Couleurs, Voisinage, Connexions, Formes, Destruction, Roguelike) et un niveau améliorable. On peut les vendre ou les réordonner.
+- **Pollen** : la monnaie. Gagné par les groupes de couleur, les lignes récoltées, les graines inutilisées, certaines météos et la fin de manche en Autumn. Plus aucun fertilizer n'en produit : ceux qui le faisaient ont été retirés (voir DECISIONS).
+- **Fertilizers** (modificateurs, 128) : jusqu'à **4 actifs**, rangés dans le panneau Fertilizers ; chacun a un prix, une catégorie (Couleurs, Voisinage, Connexions, Formes, Destruction, Roguelike) et un niveau améliorable. On peut les vendre ou les réordonner.
 - **La boutique** montre deux étagères :
   - **Blister** (3 emplacements) : fertilizers et tile upgrades à l'achat direct. Seul le Blister se re-tire contre du Pollen (Reroll).
   - **Workshop** (4 emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), le Compost et la Forge.

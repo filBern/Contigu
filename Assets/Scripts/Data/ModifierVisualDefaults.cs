@@ -27,13 +27,9 @@ namespace Contigu.Data
             { ModifierId.Foule, "CW" },
             { ModifierId.Prairie, "WM" },
             { ModifierId.Guirlande, "WR" },
-            { ModifierId.Pollinisateur, "PL" },
-            { ModifierId.Miel, "HY" },
-            { ModifierId.Nectar, "NC" },
             { ModifierId.MoissonCroisee, "XH" },
             { ModifierId.Faucheur, "RP" },
             { ModifierId.TableRase, "CL" },
-            { ModifierId.Dime, "TT" },
             { ModifierId.CultureRang, "RW" },
             { ModifierId.CultureColonne, "CU" },
             { ModifierId.Prime, "BN" },
@@ -53,8 +49,6 @@ namespace Contigu.Data
             { ModifierId.Matinal, "EA" },
             { ModifierId.Marathonien, "MR" },
             { ModifierId.Pourfendeur, "BB" },
-            { ModifierId.Tonneau, "RB" },
-            { ModifierId.Grange, "GN" },
             { ModifierId.Barometre, "BR" },
             { ModifierId.ChasseurTempete, "SC" },
             { ModifierId.Impermeable, "WP" },
@@ -117,11 +111,6 @@ namespace Contigu.Data
             { ModifierId.Minimaliste, "MN" },
             { ModifierId.Joker, "JK" },
             { ModifierId.Densite, "DS" },
-            { ModifierId.ArcEnCielLueur, "RG" },
-            { ModifierId.AlternanceLueur, "GA" },
-            { ModifierId.MonochromeLigneLueur, "RD" },
-            { ModifierId.CollectionneurLueur, "GC" },
-            { ModifierId.RepetitionLueur, "GL" },
             { ModifierId.MultUn, "M1" },
             { ModifierId.MultDeux, "M2" },
             { ModifierId.MultQuatre, "M4" },
@@ -155,7 +144,6 @@ namespace Contigu.Data
             { ModifierId.CollectionChromatique, "CC" },
             { ModifierId.Cadence, "CD" },
             { ModifierId.Echo, "EC" },
-            { ModifierId.Siphon, "SI" }
         };
 
         // One accent per category — kept as its own literal set here rather than

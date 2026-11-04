@@ -69,18 +69,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void AllFortyAreInTheCatalog_WithAPriceAndAnAbbreviation()
+        public void TheBatchIsInTheCatalog_WithAPriceAndAnAbbreviation()
         {
             var ids = new[]
             {
                 ModifierId.Haie, ModifierId.Coeur, ModifierId.Treillis, ModifierId.Sillon, ModifierId.Haricot, ModifierId.Patchwork, ModifierId.Racines, ModifierId.Emboite,
-                ModifierId.Mosaique, ModifierId.Foule, ModifierId.Prairie, ModifierId.Guirlande, ModifierId.Pollinisateur, ModifierId.Miel, ModifierId.Nectar, ModifierId.MoissonCroisee,
-                ModifierId.Faucheur, ModifierId.TableRase, ModifierId.Dime, ModifierId.CultureRang, ModifierId.CultureColonne, ModifierId.Prime, ModifierId.BriseGlace, ModifierId.Saisons,
+                ModifierId.Mosaique, ModifierId.Foule, ModifierId.Prairie, ModifierId.Guirlande, ModifierId.MoissonCroisee,
+                ModifierId.Faucheur, ModifierId.TableRase, ModifierId.CultureRang, ModifierId.CultureColonne, ModifierId.Prime, ModifierId.BriseGlace, ModifierId.Saisons,
                 ModifierId.Outsider, ModifierId.CoupFinal, ModifierId.DerniereGraine, ModifierId.PremiereGraine, ModifierId.Tirelire, ModifierId.BanqueGraines, ModifierId.SousBois,
-                ModifierId.DanseDePluie, ModifierId.DanseDuSoleil, ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur,
-                ModifierId.Tonneau, ModifierId.Grange
+                ModifierId.DanseDePluie, ModifierId.DanseDuSoleil, ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur
             };
-            Assert.AreEqual(40, ids.Length);
+            Assert.AreEqual(34, ids.Length);
             foreach (var id in ids)
             {
                 var def = ModifierCatalog.Get(id);
@@ -230,22 +229,6 @@ namespace Contigu.Tests
             Assert.AreEqual(0, Place(two, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Guirlande).AdditiveMultBonus);
         }
 
-        [Test]
-        public void Pollinator_Honey_AndNectar_PayPollen()
-        {
-            var grid = new GridManager();
-            Fill(grid, PieceColor.Teal, (1, 2));
-            Fill(grid, PieceColor.Violet, (3, 2));
-            Assert.AreEqual(EconomyConstants.PollinatorLueur, Place(grid, ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Pollinisateur).ModifierLueurBonus);
-            Assert.AreEqual(0, Place(new GridManager(), ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Pollinisateur).ModifierLueurBonus);
-
-            var line = new GridManager();
-            Fill(line, PieceColor.Coral, (0, 0), (1, 0), (2, 0), (4, 0));
-            Assert.AreEqual(5 / EconomyConstants.HoneyCellsPerLueur, Place(line, ShapeId.Single, PieceColor.Coral, 3, 0, ModifierId.Miel).ModifierLueurBonus);
-
-            Assert.AreEqual(EconomyConstants.NectarLueurPerSeed, Place(new GridManager(), ShapeId.Single, PieceColor.Coral, 2, 2, ModifierId.Nectar).ModifierLueurBonus);
-        }
-
         /// <summary>Fills row 0 except the last plot, then completes it: one row cleared.</summary>
         private static PlacementResult HarvestOneRow(ModifierId mod)
         {
@@ -278,10 +261,9 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Reaper_Tithe_Bounty_AndCleanSlate_ReadTheHarvest()
+        public void Reaper_Bounty_AndCleanSlate_ReadTheHarvest()
         {
             Assert.AreEqual(ScoringConstants.ReaperMultPerLine, HarvestOneRow(ModifierId.Faucheur).AdditiveMultBonus);
-            Assert.AreEqual(EconomyConstants.TitheLueurPerLine, HarvestOneRow(ModifierId.Dime).ModifierLueurBonus);
             Assert.AreEqual(ScoringConstants.PointsToMult(GridManager.Size * ScoringConstants.BountyBonusPerTile), HarvestOneRow(ModifierId.Prime).AdditiveMultBonus);
             // The lone row was the only thing planted: the garden is empty after the harvest.
             int baseline = HarvestOneRow(ModifierId.Chaine).ModifierMultiplier;
@@ -451,18 +433,6 @@ namespace Contigu.Tests
             }
             Assert.IsTrue(run.IsBossRound);
             Assert.AreEqual(ScoringConstants.BossbaneMultiplier, PlaceAny(run).ModifierMultiplier);
-        }
-
-        [Test]
-        public void RainBarrelAndGranary_PayPollenWhenARoundIsCleared()
-        {
-            var run = NewRun(ModifierId.Tonneau, ModifierId.Grange);
-            run.DebugSetShufflesRemaining(3);
-            run.DebugSetLueur(0);
-            int budgetLeft = run.PiecesRemainingThisRound;
-            run.DebugForceRoundComplete();
-            int expected = budgetLeft + 3 * EconomyConstants.RainBarrelLueurPerShuffle + 2 * EconomyConstants.GranaryLueurPerFertilizer;
-            Assert.AreEqual(expected, run.LastRoundEndLueurBonus);
         }
 
         [Test]

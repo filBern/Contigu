@@ -70,11 +70,6 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Minimaliste` | Lone Bloom | Voisinage |
 | `Joker` | Wildcard | Roguelike |
 | `Densite` | Root Density | Roguelike |
-| `ArcEnCielLueur` | Rainbow Glow | Couleurs |
-| `AlternanceLueur` | Glowing Alternation | Couleurs |
-| `MonochromeLigneLueur` | Radiant Line | Couleurs |
-| `CollectionneurLueur` | Glowing Hoarder | Roguelike |
-| `RepetitionLueur` | Golden Repetition | Roguelike |
 | `MultUn` | Mult +1 | Roguelike |
 | `MultDeux` | Mult +2 | Roguelike |
 | `MultQuatre` | Mult +4 | Roguelike |
@@ -106,7 +101,6 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
 | `Cadence` | Cadence | Roguelike |
 | `Echo` | Echo | Roguelike |
-| `Siphon` | Siphon | Roguelike |
 | `QuatriemeEmplacement` | Fourth Slot | Roguelike |
 | `Barometre` | Barometer | Roguelike |
 | `ChasseurTempete` | Storm Chaser | Roguelike |
@@ -197,13 +191,9 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Foule` | Crowd | Voisinage |
 | `Prairie` | Wildflower Meadow | Couleurs |
 | `Guirlande` | Wreath | Voisinage |
-| `Pollinisateur` | Pollinator | Couleurs |
-| `Miel` | Honey | Connexions |
-| `Nectar` | Nectar | Roguelike |
 | `MoissonCroisee` | Cross Harvest | Destruction |
 | `Faucheur` | Reaper | Destruction |
 | `TableRase` | Clean Slate | Destruction |
-| `Dime` | Tithe | Destruction |
 | `CultureRang` | Row Crop | Destruction |
 | `CultureColonne` | Column Crop | Destruction |
 | `Prime` | Bounty | Destruction |
@@ -223,8 +213,6 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Matinal` | Early Bird | Roguelike |
 | `Marathonien` | Marathoner | Roguelike |
 | `Pourfendeur` | Bossbane | Roguelike |
-| `Tonneau` | Rain Barrel | Roguelike |
-| `Grange` | Granary | Roguelike |
 
 ## Challenges (id in code, name on screen)
 

@@ -201,6 +201,21 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Restore_DropsARetiredFertilizerFromAnOldSave()
+        {
+            var original = RichRun();
+            var snapshot = RunSnapshot.FromText(original.RoundStartSnapshot.ToText());
+            int before = snapshot.Modifiers.Count;
+            snapshot.Modifiers.Add(ModifierId.Siphon);
+            snapshot.ModifierLevels.Add(1);
+            snapshot.ModifierAges.Add(0);
+            var restored = RunManager.Restore(RunSnapshot.FromText(snapshot.ToText()), new SystemRandomProvider(3));
+            Assert.IsNotNull(restored);
+            Assert.AreEqual(before, restored.ActiveModifiers.Count, "the retired fertilizer is gone");
+            Assert.IsFalse(System.Linq.Enumerable.Contains(restored.ActiveModifiers, ModifierId.Siphon));
+        }
+
+        [Test]
         public void Restore_ConvertsARetiredOfferAndLoadsAnUnknownTraitAsNothing()
         {
             var original = RichRun();

@@ -289,26 +289,6 @@ namespace Contigu.Core
         // an existing score modifier but paying Lueur (shop currency)
         // instead of points or a multiplier.
 
-        public static readonly ModifierDefinition ArcEnCielLueur = new ModifierDefinition(
-            ModifierId.ArcEnCielLueur, ModifierCategory.Couleurs, "Rainbow Glow",
-            "+6 Pollen per harvested line with every color of the run, stacking.");
-
-        public static readonly ModifierDefinition AlternanceLueur = new ModifierDefinition(
-            ModifierId.AlternanceLueur, ModifierCategory.Couleurs, "Glowing Alternation",
-            "+4 Pollen per harvested line alternating between 2 colors, stacking (a joker breaks it).");
-
-        public static readonly ModifierDefinition MonochromeLigneLueur = new ModifierDefinition(
-            ModifierId.MonochromeLigneLueur, ModifierCategory.Couleurs, "Radiant Line",
-            "+4 Pollen per harvested line that's a single color, stacking.");
-
-        public static readonly ModifierDefinition CollectionneurLueur = new ModifierDefinition(
-            ModifierId.CollectionneurLueur, ModifierCategory.Roguelike, "Glowing Hoarder",
-            "+2 Pollen per distinct color in harvested cells.");
-
-        public static readonly ModifierDefinition RepetitionLueur = new ModifierDefinition(
-            ModifierId.RepetitionLueur, ModifierCategory.Roguelike, "Golden Repetition",
-            "+5 Pollen when this seed matches the last one's shape.");
-
         public static readonly ModifierDefinition MultUn = new ModifierDefinition(
             ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
             "+1 Mult. No condition.");
@@ -407,10 +387,6 @@ namespace Contigu.Core
             ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
             "Replays the fertilizer right before it in your order, as if you held a second copy of it. No effect if that fertilizer is also Echo.");
 
-        public static readonly ModifierDefinition Siphon = new ModifierDefinition(
-            ModifierId.Siphon, ModifierCategory.Roguelike, "Siphon",
-            "Converts 4% of the damage from any Joker combat trait into bonus Pollen (max 10).");
-
         /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
         public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(
             ModifierId.QuatriemeEmplacement, ModifierCategory.Roguelike, "Fourth Slot",
@@ -496,18 +472,6 @@ namespace Contigu.Core
             ModifierId.Guirlande, ModifierCategory.Voisinage, "Wreath",
             "+1 Mult per tile of the seed touching 3 or more planted plots (the seed's own other tiles count).");
 
-        public static readonly ModifierDefinition Pollinisateur = new ModifierDefinition(
-            ModifierId.Pollinisateur, ModifierCategory.Couleurs, "Pollinator",
-            "+2 Pollen when the seed touches a plot of another color.");
-
-        public static readonly ModifierDefinition Miel = new ModifierDefinition(
-            ModifierId.Miel, ModifierCategory.Connexions, "Honey",
-            "+1 Pollen per 3 cells in the scored group.");
-
-        public static readonly ModifierDefinition Nectar = new ModifierDefinition(
-            ModifierId.Nectar, ModifierCategory.Roguelike, "Nectar",
-            "+1 Pollen every time you plant a seed.");
-
         public static readonly ModifierDefinition MoissonCroisee = new ModifierDefinition(
             ModifierId.MoissonCroisee, ModifierCategory.Destruction, "Cross Harvest",
             "+6 Mult when one seed harvests a row and a column at once.");
@@ -519,10 +483,6 @@ namespace Contigu.Core
         public static readonly ModifierDefinition TableRase = new ModifierDefinition(
             ModifierId.TableRase, ModifierCategory.Destruction, "Clean Slate",
             "x3 Mult when the seed harvests the last planted tile in the garden.");
-
-        public static readonly ModifierDefinition Dime = new ModifierDefinition(
-            ModifierId.Dime, ModifierCategory.Destruction, "Tithe",
-            "+2 Pollen per line harvested.");
 
         public static readonly ModifierDefinition CultureRang = new ModifierDefinition(
             ModifierId.CultureRang, ModifierCategory.Destruction, "Row Crop",
@@ -600,14 +560,6 @@ namespace Contigu.Core
             ModifierId.Pourfendeur, ModifierCategory.Roguelike, "Bossbane",
             "x2 Mult during boss rounds.");
 
-        public static readonly ModifierDefinition Tonneau = new ModifierDefinition(
-            ModifierId.Tonneau, ModifierCategory.Roguelike, "Rain Barrel",
-            "+1 Pollen per Shuffle left when you clear a round.");
-
-        public static readonly ModifierDefinition Grange = new ModifierDefinition(
-            ModifierId.Grange, ModifierCategory.Roguelike, "Granary",
-            "+1 Pollen per fertilizer held when you clear a round.");
-
         public static readonly ModifierDefinition CharmedPatch = new ModifierDefinition(
             ModifierId.CharmedPatch, ModifierCategory.Roguelike, "Charmed Patch",
             "+1 Mult per upgraded tile in the scored group.");
@@ -647,7 +599,6 @@ namespace Contigu.Core
             Diagonale, Nid, Solitaire, EspaceLibre, Rafale, PetitFormat, Fraicheur,
             Pont, Encerclement, Boucher, GrosseFamille, Repetition, AlternancePieces, Combo, Precision, Surpopulation, Minimaliste, Joker,
             Densite,
-            ArcEnCielLueur, AlternanceLueur, MonochromeLigneLueur, CollectionneurLueur, RepetitionLueur,
             MultUn, MultDeux, MultQuatre,
             Solidarite, Copieur, MultCinqRisque, CartesEnchantees, Epuisement, Multitude,
             Experience,
@@ -655,14 +606,13 @@ namespace Contigu.Core
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
             Pair, Impair,
             Polyvalence, RenfortJoker, Arsenal,
-            CollectionChromatique, Cadence, Echo, Siphon, QuatriemeEmplacement,
+            CollectionChromatique, Cadence, Echo, QuatriemeEmplacement,
             Barometre, ChasseurTempete, Impermeable, Epines, Exterminateur, Hate, Tourbillon, PierreAngulaire,
             Haie, Coeur, Treillis, Sillon, Haricot, Patchwork, Racines, Emboite,
-            Mosaique, Foule, Prairie, Guirlande, Pollinisateur, Miel, Nectar, MoissonCroisee,
-            Faucheur, TableRase, Dime, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
+            Mosaique, Foule, Prairie, Guirlande, MoissonCroisee,
+            Faucheur, TableRase, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
             Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
-            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, Tonneau, Grange,
-            CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner
         };
 
         /// <summary>The fertilizer a retired id turns into when an old save is loaded (the color Glows become their Devotion); null for every other id.</summary>
@@ -675,6 +625,29 @@ namespace Contigu.Core
                 case ModifierId.EclatViolet: return ModifierId.DevotionViolet;
                 case ModifierId.EclatLime: return ModifierId.DevotionLime;
                 default: return null;
+            }
+        }
+
+        /// <summary>Fertilizers removed from the game (the ones that only paid Pollen: the balance study found them useless). Their ids stay in the enum for old saves, which drop them on load.</summary>
+        public static bool IsRetired(ModifierId id)
+        {
+            switch (id)
+            {
+                case ModifierId.ArcEnCielLueur:
+                case ModifierId.AlternanceLueur:
+                case ModifierId.MonochromeLigneLueur:
+                case ModifierId.CollectionneurLueur:
+                case ModifierId.RepetitionLueur:
+                case ModifierId.Siphon:
+                case ModifierId.Pollinisateur:
+                case ModifierId.Miel:
+                case ModifierId.Nectar:
+                case ModifierId.Dime:
+                case ModifierId.Tonneau:
+                case ModifierId.Grange:
+                    return true;
+                default:
+                    return false;
             }
         }
 

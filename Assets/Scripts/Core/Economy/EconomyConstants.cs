@@ -136,29 +136,6 @@ namespace Contigu.Core
         // worth more than a single color group since it needs a specific
         // pattern, not just any clear.
 
-        /// <summary>Rainbow Glow (adapted from Arc-en-ciel): Lueur PER cleared row/column containing all 4 base colors, stacking.</summary>
-        public const int ArcEnCielLueurPerLine = 6;
-
-        // ---- the 40 fertilizers added in one batch: the Pollen ones ----
-        public const int PollinatorLueur = 2;
-        public const int HoneyCellsPerLueur = 3;
-        public const int NectarLueurPerSeed = 1;
-        public const int TitheLueurPerLine = 2;
-        public const int RainBarrelLueurPerShuffle = 1;
-        public const int GranaryLueurPerFertilizer = 1;
-
-        /// <summary>Glowing Alternation (adapted from Alternance): Lueur PER cleared row/column whose colors strictly alternate between exactly 2 colors, stacking.</summary>
-        public const int AlternanceLueurPerLine = 4;
-
-        /// <summary>Radiant Line (adapted from Monochrome Ligne): Lueur PER cleared row/column that is entirely a single color, stacking — the odd one out among these, rewarding the opposite of what Lueur normally favors (a monochrome line is worth the least base Lueur), as a deliberate counter-play option.</summary>
-        public const int MonochromeLigneLueurPerLine = 4;
-
-        /// <summary>Glowing Collector (adapted from Collectionneur): Lueur per distinct color among this placement's cleared cells.</summary>
-        public const int CollectionneurLueurPerColor = 2;
-
-        /// <summary>Golden Repetition (adapted from Repetition): flat Lueur when this piece is the same shape as the immediately previous placement this round — unlike its score counterpart, not progressive.</summary>
-        public const int RepetitionLueurBonus = 5;
-
         /// <summary>Risky Mult: 1-in-this-many chance, rolled once per round at round end (see RunManager.EvaluateRoundEnd), to lose one held copy of the modifier.</summary>
         public const int MultCinqRisqueLossChanceDenominator = 5;
     }

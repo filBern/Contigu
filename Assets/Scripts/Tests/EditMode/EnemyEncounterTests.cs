@@ -1447,25 +1447,6 @@ namespace Contigu.Tests
             Assert.IsFalse(enemy.IsDead);
         }
 
-        [Test]
-        public void Siphon_ConvertsAFractionOfAnyCombatKindsDamageIntoLueur()
-        {
-            // Siphon converts a fraction of any combat kind's damage into Lueur.
-            var run = new RunManager(new SystemRandomProvider(1));
-            run.DebugSetEncounter(EnemyId.Basic);
-            run.DebugGrantModifier(ModifierId.Siphon);
-            int lueurBefore = run.Lueur;
-
-            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Sq2, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
-            int slot = ChurnUntilHandMatches(run, t => t.Color == PieceColor.Joker && t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Range);
-            var outcome = run.PlacePiece(slot, 0, 0);
-            Assert.IsTrue(outcome.Placement.Success);
-
-            int totalScore = outcome.Placement.TotalScore;
-            int expectedLueurGain = Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(totalScore * ScoringConstants.SiphonLueurFraction));
-            Assert.AreEqual(lueurBefore + expectedLueurGain, run.Lueur);
-        }
-
         /// <summary>Fills every cell of some free row but its last, then returns the anchor where a Single-shaped piece would complete it — null if the grid has no free row to set up this way (shouldn't happen on a fresh board).</summary>
         private static Vector2Int? FindRowCompletingAnchor(GridManager grid)
         {

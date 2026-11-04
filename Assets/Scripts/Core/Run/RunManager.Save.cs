@@ -42,6 +42,10 @@ namespace Contigu.Core
             }
             if (d.IsModifier)
             {
+                if (ModifierCatalog.IsRetired((ModifierId)d.Id))
+                {
+                    return null; // removed from the game
+                }
                 // A shop offer saved before a fertilizer was retired is offered as its replacement.
                 return ShopSlot.ForModifier(ModifierCatalog.RetiredReplacement((ModifierId)d.Id) ?? (ModifierId)d.Id);
             }
@@ -119,6 +123,10 @@ namespace Contigu.Core
             for (int i = 0; i < s.Modifiers.Count; i++)
             {
                 var id = s.Modifiers[i];
+                if (ModifierCatalog.IsRetired(id))
+                {
+                    continue; // removed from the game
+                }
                 // A retired fertilizer (the color Glows) becomes its Devotion; dropped when that Devotion is already held.
                 if (ModifierCatalog.RetiredReplacement(id) is ModifierId replacement)
                 {

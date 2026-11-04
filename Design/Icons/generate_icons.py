@@ -231,8 +231,6 @@ F = {
  'AlternancePieces': ('swap', 'm', '+2', 'Couleurs'), 'Combo': ('combo', 'm', '×2', 'Destruction'), 'Precision': ('target', 'm', '+1', 'Voisinage'),
  'Surpopulation': ('thicket', 'm', '+1', 'Voisinage'), 'Minimaliste': ('lonebloom', 'm', '×2', 'Voisinage'), 'Joker': ('wildcard', None, None, 'Roguelike'),
  'Densite': ('density', 'm', '+n', 'Roguelike'),
- 'ArcEnCielLueur': ('rainbow', 'l', '+6', 'Couleurs'), 'AlternanceLueur': ('alternation', 'l', '+4', 'Couleurs'), 'MonochromeLigneLueur': ('monoline', 'l', '+4', 'Couleurs'),
- 'CollectionneurLueur': ('hoarder', 'l', '+2', 'Roguelike'), 'RepetitionLueur': ('repeat', 'l', '+5', 'Roguelike'),
  'MultUn': ('n1', None, None, 'Roguelike'), 'MultDeux': ('n2', None, None, 'Roguelike'), 'MultQuatre': ('n4', None, None, 'Roguelike'),
  'Solidarite': ('pots', 'm', '+1', 'Roguelike'), 'Copieur': ('copy', None, None, 'Roguelike'), 'MultCinqRisque': ('brew', 'm', '+5', 'Roguelike'),
  'CartesEnchantees': ('enchseed', 'm', '+0.1', 'Roguelike'), 'Epuisement': ('hourglass', 'm', '+13', 'Roguelike'), 'Multitude': ('multitude', 'm', '+1', 'Roguelike'),
@@ -263,13 +261,9 @@ F = {
  'Foule': ('n_crowd', 'm', '×2', 'Voisinage'),
  'Prairie': ('n_meadow', 'm', '+4', 'Couleurs'),
  'Guirlande': ('n_wreath', 'm', '+1', 'Voisinage'),
- 'Pollinisateur': ('n_bee', 'l', '+2', 'Couleurs'),
- 'Miel': ('n_honey', 'l', '+1', 'Connexions'),
- 'Nectar': ('n_nectar', 'l', '+1', 'Roguelike'),
  'MoissonCroisee': ('n_cross', 'm', '+6', 'Destruction'),
  'Faucheur': ('n_sickle', 'm', '+3', 'Destruction'),
  'TableRase': ('n_clean', 'm', '×3', 'Destruction'),
- 'Dime': ('n_tithe', 'l', '+2', 'Destruction'),
  'CultureRang': ('n_rowcrop', 'm', '×2', 'Destruction'),
  'CultureColonne': ('n_colcrop', 'm', '×2', 'Destruction'),
  'Prime': ('n_bounty', 'm', '+1', 'Destruction'),
@@ -289,9 +283,7 @@ F = {
  'Matinal': ('n_bird', 'm', '+6', 'Roguelike'),
  'Marathonien': ('n_flag', 'm', '+4', 'Roguelike'),
  'Pourfendeur': ('n_bossbane', 'm', '×2', 'Roguelike'),
- 'Tonneau': ('n_barrel', 'l', '+1', 'Roguelike'),
- 'Grange': ('n_granary', 'l', '+1', 'Roguelike'),
- 'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'Siphon': ('siphon', 'l', '4%', 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
+ 'Cadence': ('metronome', 'm', '×2', 'Roguelike'), 'Echo': ('echo', None, None, 'Roguelike'), 'QuatriemeEmplacement': ('slot4', None, None, 'Roguelike'),
 }
 for k in ('scythe', 'wheel', 'ashbound', 'dissonant', 'momentum', 'cocoon', 'trowel', 'rainbow', 'alternation'):
     pass

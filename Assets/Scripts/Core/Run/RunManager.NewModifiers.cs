@@ -203,35 +203,6 @@ namespace Contigu.Core
             _roundFertilizerPollen[id] = current + amount;
         }
 
-        /// <summary>Rain Barrel and Granary: Pollen banked when a round is cleared (also tallied per fertilizer into the round summary).</summary>
-        private int RoundEndFertilizerPollen()
-        {
-            int pollen = 0;
-            for (int i = 0; i < _activeModifiers.Count; i++)
-            {
-                if (_blightedModifiers.Contains(i))
-                {
-                    continue;
-                }
-                float level = GetModifierLevelFactor(i);
-                int gained = 0;
-                if (_activeModifiers[i] == ModifierId.Tonneau)
-                {
-                    gained = Mathf.RoundToInt(ShufflesRemaining * EconomyConstants.RainBarrelLueurPerShuffle * level);
-                }
-                else if (_activeModifiers[i] == ModifierId.Grange)
-                {
-                    gained = Mathf.RoundToInt(_activeModifiers.Count * EconomyConstants.GranaryLueurPerFertilizer * level);
-                }
-                if (gained > 0)
-                {
-                    pollen += gained;
-                    AddRoundFertilizerPollen(_activeModifiers[i], gained);
-                }
-            }
-            return pollen;
-        }
-
         private List<PollenSource> BuildFertilizerPollenList()
         {
             var list = new List<PollenSource>();

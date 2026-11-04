@@ -55,7 +55,9 @@ for m in re.finditer(r'ModifierId\.(\w+), ModifierCategory\.\w+, "([^"]+)",\s*"(
 all_array = re.search(r'ModifierDefinition\[\] All\s*=\s*\{(.*?)\};', mod_defs, re.S).group(1)
 in_all = set(re.findall(r'\b(\w+)\b', all_array))
 # Ids that are state markers rather than content (no card, no price, no icon).
-NOT_CONTENT = {'Blighted', 'EclatCoral', 'EclatTeal', 'EclatViolet', 'EclatLime'}  # state marker; retired Glow fertilizers (ids kept for saves)
+NOT_CONTENT = {'Blighted', 'EclatCoral', 'EclatTeal', 'EclatViolet', 'EclatLime',
+               'ArcEnCielLueur', 'AlternanceLueur', 'MonochromeLigneLueur', 'CollectionneurLueur', 'RepetitionLueur', 'Siphon',
+               'Pollinisateur', 'Miel', 'Nectar', 'Dime', 'Tonneau', 'Grange'}  # state marker; retired fertilizers (ids kept for saves)
 for mid in modifier_ids:
     if mid in NOT_CONTENT:
         continue

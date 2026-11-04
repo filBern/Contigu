@@ -9320,3 +9320,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - **Piggy Bank rare et chère (2026-11-04)**
   - L'étude de puissance (`docs/qa/etude-objets-2026-11-04.md`) montre Piggy Bank (+0,1 Mult par Pollen tenu) très au-dessus de tous les autres objets (+8,4 manches, 96 % de victoires pour le bot). Choix de l'auteur : le garder tel quel mais le rendre rare.
   - Prix 6 → 12 Pollen. Poids de tirage divisé par 4 (`EconomyConstants.ModifierDrawWeight`) dans le Blister et le Fertilizer Pack (≈ 5 % des runs au lieu de ≈ 20 %). Le test de prix admet 12 pour les fertilizers rares.
+
+- **Retrait des 12 fertilizers de Pollen (2026-11-04)**
+  - Rainbow Glow, Glowing Alternation, Radiant Line, Glowing Hoarder, Golden Repetition, Siphon, Pollinator, Honey, Nectar, Tithe, Rain Barrel, Granary : l'étude de puissance (`docs/qa/etude-objets-2026-11-04.md`) ne mesure aucun gain, et le Pollen est abondant (≈ 283 gagnés pour 111 dépensés). Décision de l'auteur : les enlever, les sauvegardes n'étant pas une contrainte à ce stade.
+  - Retirés du catalogue, des prix, des abréviations, des icônes et du code de score (y compris le bonus de fin de manche de Rain Barrel/Granary et la conversion de Siphon). Les ids restent dans l'enum (`ModifierCatalog.IsRetired`) : une ancienne sauvegarde les saute à la reprise et une offre de boutique sauvegardée devient un emplacement vide. Le catalogue passe à 128 fertilizers. Piggy Bank, qui consomme le Pollen, reste.

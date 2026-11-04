@@ -25,9 +25,6 @@ namespace Contigu.Core
                 { ModifierId.Foule, ctx => { ctx.Multiplier *= ApplyFoule(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prairie, ctx => { ctx.AdditiveMult += ApplyPrairie(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Guirlande, ctx => PointsToMult(ctx, () => ApplyGuirlande(ctx.PlacedCells, ctx.Events)) },
-                { ModifierId.Pollinisateur, ctx => { ctx.Lueur += ApplyPollinisateur(ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Miel, ctx => { ctx.Lueur += ApplyMiel(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Nectar, ctx => { ctx.Lueur += ApplyNectar(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.PierreAngulaire, ctx => { ctx.Multiplier *= ApplyPierreAngulaire(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prisme, ctx => { ctx.Multiplier *= ApplyPrisme(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Chaine, ctx => PointsToMult(ctx, () => ApplyChaine(ctx.GroupCells, ctx.PlacedCells, ctx.Events)) },
@@ -68,7 +65,6 @@ namespace Contigu.Core
                 { ModifierId.Boucher, ctx => PointsToMult(ctx, () => ApplyBoucher(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.GrosseFamille, ctx => { ctx.Multiplier *= ApplyGrosseFamille(ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Repetition, ctx => { ctx.Multiplier *= ApplyRepetition(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.RepetitionLueur, ctx => { ctx.Lueur += ApplyRepetitionLueur(ctx.RepetitionStreak, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.AlternancePieces, ctx => { ctx.AdditiveMult += ApplyAlternancePieces(ctx.OwnColor, ctx.PreviousPlacedColor, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Precision, ctx => PointsToMult(ctx, () => ApplyPrecision(ctx.PlacedCells, ctx.Events)) },
                 { ModifierId.Surpopulation, ctx => PointsToMult(ctx, () => ApplySurpopulation(ctx.PlacedCells, ctx.Events)) },
@@ -87,7 +83,6 @@ namespace Contigu.Core
                 // GridManager has no reference for).
                 { ModifierId.RenfortJoker, ctx => 0 },
                 { ModifierId.Arsenal, ctx => 0 },
-                { ModifierId.Siphon, ctx => 0 },
                 { ModifierId.CollectionChromatique, ctx => { ctx.AdditiveMult += ApplyCollectionChromatique(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Cadence, ctx => { ctx.Multiplier *= ApplyCadence(ctx.ActiveModifiers, ctx.Shape, ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Echo, ctx => ApplyEcho(ctx) },
@@ -855,18 +850,6 @@ namespace Contigu.Core
 
             events.Add(new ScoreEvent(ScoreEventType.ModifierMultiplier, placedCells[0], repetitionStreak));
             return repetitionStreak;
-        }
-
-        /// <summary>Golden Repetition (RepetitionLueur): flat Lueur (see EconomyConstants.RepetitionLueurBonus) when this piece is the same shape as the immediately previous placement this round — the Lueur-earning sibling of Repetition, on the same "does this streak continue" condition but unlike it, not progressive (repeats the same flat amount every time it fires rather than scaling with streak length). Returns 0 (no-op) on the first placement of a new streak.</summary>
-        private static int ApplyRepetitionLueur(int repetitionStreak, List<Vector2Int> placedCells, List<ScoreEvent> events)
-        {
-            if (repetitionStreak < 2)
-            {
-                return 0;
-            }
-
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], EconomyConstants.RepetitionLueurBonus));
-            return EconomyConstants.RepetitionLueurBonus;
         }
 
         /// <summary>Shared by the 3 flat, unconditional +Mult modifiers (Mult +1/+2/+4) and Risky Mult — always fires, adds <paramref name="amount"/> to PlacementResult.AdditiveMultBonus (a genuine additive pool, unlike every ModifierMultiplier modifier above).</summary>

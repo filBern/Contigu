@@ -45,13 +45,9 @@ namespace Contigu.Core
                 case ModifierId.Foule: return 6;
                 case ModifierId.Prairie: return 7;
                 case ModifierId.Guirlande: return 5;
-                case ModifierId.Pollinisateur: return 5;
-                case ModifierId.Miel: return 5;
-                case ModifierId.Nectar: return 6;
                 case ModifierId.MoissonCroisee: return 6;
                 case ModifierId.Faucheur: return 6;
                 case ModifierId.TableRase: return 6;
-                case ModifierId.Dime: return 5;
                 case ModifierId.CultureRang: return 6;
                 case ModifierId.CultureColonne: return 6;
                 case ModifierId.Prime: return 5;
@@ -71,8 +67,6 @@ namespace Contigu.Core
                 case ModifierId.Matinal: return 5;
                 case ModifierId.Marathonien: return 6;
                 case ModifierId.Pourfendeur: return 6;
-                case ModifierId.Tonneau: return 5;
-                case ModifierId.Grange: return 5;
                 case ModifierId.Barometre: return 5;
                 case ModifierId.ChasseurTempete: return 6;
                 case ModifierId.Impermeable: return 4;
@@ -143,12 +137,6 @@ namespace Contigu.Core
 
                 case ModifierId.Densite: return 8;
 
-                case ModifierId.ArcEnCielLueur: return 5;
-                case ModifierId.AlternanceLueur: return 5;
-                case ModifierId.MonochromeLigneLueur: return 5;
-                case ModifierId.CollectionneurLueur: return 4;
-                case ModifierId.RepetitionLueur: return 4;
-
                 case ModifierId.MultUn: return 5; // +1 Mult, unconditional
                 case ModifierId.MultDeux: return 7; // +2 Mult, unconditional
                 case ModifierId.MultQuatre: return 10; // +4 Mult, unconditional — the strongest flat effect in the game
@@ -182,7 +170,6 @@ namespace Contigu.Core
                 case ModifierId.CollectionChromatique: return 8; // needs 2 other modifiers held PER color to scale at all
                 case ModifierId.Cadence: return 6; // x2, but needs 2 other specific modifiers held to ever fire
                 case ModifierId.Echo: return 9; // doubles whatever comes right before it — build-order dependent, potentially huge
-                case ModifierId.Siphon: return 6; // fires alongside every combat kind
 
                 case ModifierId.QuatriemeEmplacement: return 9; // permanent extra hand slot — more flexibility on every single placement for the rest of the run
 

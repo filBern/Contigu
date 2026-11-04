@@ -888,9 +888,7 @@ namespace Contigu.Presentation
 
             yield return PlayVenomHits(placement);
 
-            // Siphon converts the damage just dealt into Pollen inside RunManager without any score
-            // event, so the counter only caught up on the next refresh. Fold the remainder in right here, as
-            // part of this same count — a round-ending bonus is excluded, the shop sequence animates that one.
+            // Keep the counter in step with the model's Pollen, folded into this same count — a round-ending bonus is excluded, the shop sequence animates that one.
             int expectedLueur = _run.Lueur - (_run.State == RunState.AwaitingShop ? _run.LastRoundEndLueurBonus : 0);
             // The Locust Swarm's bite (auto-refill) is already off the model's Pollen, but is only shown once the count is over (PlayDeferredShuffleActs).
             if (handWasAboutToAutoRefill)

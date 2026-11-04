@@ -128,7 +128,7 @@ namespace Contigu.Core
             // Lueur itself is already final here, same "core computes the end
             // state instantly, presentation fakes the gradual reveal"
             // convention as every other scoring event in PlacePiece.
-            LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus + RoundEndFertilizerPollen();
+            LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus;
             Lueur += LastRoundEndLueurBonus;
             LastRoundSummary = new RoundSummary
             {
@@ -304,13 +304,6 @@ namespace Contigu.Core
             for (int i = 0; i < kindsFound.Count; i++)
             {
                 ApplyJokerCombatDamage(kindsFound[i], boostedDamage);
-            }
-
-            // Siphon: fires once per placement off the same boosted damage total,
-            // regardless of how many enemies it actually reached.
-            if (boostedDamage > 0 && HasEffectiveModifier(ModifierId.Siphon))
-            {
-                Lueur += Mathf.Min(ScoringConstants.SiphonLueurCapPerTrigger, Mathf.FloorToInt(boostedDamage * ScoringConstants.SiphonLueurFraction));
             }
         }
 

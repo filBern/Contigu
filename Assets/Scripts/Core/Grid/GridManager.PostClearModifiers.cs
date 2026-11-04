@@ -14,25 +14,20 @@ namespace Contigu.Core
             return new Dictionary<ModifierId, PostClearModifierEffect>
             {
                 { ModifierId.Collectionneur, ctx => PointsToMult(ctx, () => ApplyCollectionneur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events)) },
-                { ModifierId.CollectionneurLueur, ctx => { ctx.Lueur += ApplyCollectionneurLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Macon, ctx => { ctx.AdditiveMult += ApplyMaconBonus(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Demolisseur, ctx => { ctx.Multiplier *= ApplyDemolisseur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.ArcEnCiel, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, ScoringConstants.ArcEnCielMultiplierPerLine); return 0; } },
-                { ModifierId.ArcEnCielLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, ContainsAllBaseColors, EconomyConstants.ArcEnCielLueurPerLine); return 0; } },
                 { ModifierId.Alternance, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAlternatingTwoColors, ScoringConstants.AlternanceMultiplierPerLine); return 0; } },
-                { ModifierId.AlternanceLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAlternatingTwoColors, EconomyConstants.AlternanceLueurPerLine); return 0; } },
                 { ModifierId.Palindrome, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsPalindrome, ScoringConstants.PalindromeMultiplierPerLine); return 0; } },
                 { ModifierId.Gradient, ctx => { ctx.Multiplier *= ApplyGradient(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Bloc, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsAllBlocksOfAtLeastTwo, ScoringConstants.BlocMultiplierPerLine); return 0; } },
                 { ModifierId.MonochromeLigne, ctx => { ctx.Multiplier *= ApplyPerLineMultiplier(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, ScoringConstants.MonochromeLigneMultiplierPerLine); return 0; } },
-                { ModifierId.MonochromeLigneLueur, ctx => { ctx.Lueur += ApplyPerLineLueur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events, IsMonochromeLine, EconomyConstants.MonochromeLigneLueurPerLine); return 0; } },
                 { ModifierId.EspaceLibre, ctx => { ctx.Multiplier *= ApplyEspaceLibre(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Rafale, ctx => { ctx.Multiplier *= ApplyRafale(ctx.ClearedByPreviousPlacement, ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.MoissonCroisee, ctx => { ctx.AdditiveMult += ApplyMoissonCroisee(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Gleaner, ctx => { ctx.AdditiveMult += ApplyGleaner(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Faucheur, ctx => { ctx.AdditiveMult += ApplyFaucheur(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.TableRase, ctx => { ctx.Multiplier *= ApplyTableRase(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
-                { ModifierId.Dime, ctx => { ctx.Lueur += ApplyDime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.CultureRang, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, true, ScoringConstants.RowCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.CultureColonne, ctx => { ctx.Multiplier *= ApplyCrop(ctx.ClearInfo, false, ScoringConstants.ColumnCropMultiplier, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Prime, ctx => PointsToMult(ctx, () => ApplyPrime(ctx.ClearInfo, ctx.PlacedCells, ctx.Events)) },
@@ -291,33 +286,6 @@ namespace Contigu.Core
             int bonus = distinctColors.Count * ScoringConstants.CollectionneurBonusPerColor;
             events.Add(new ScoreEvent(ScoreEventType.Modifier, placedCells[0], bonus));
             return bonus;
-        }
-
-        /// <summary>Glowing Collector (CollectionneurLueur): Lueur (see EconomyConstants.CollectionneurLueurPerColor) per distinct color among this placement's cleared cells — the Lueur-earning sibling of Collectionneur, same distinct-color count, same trigger condition (no cleared cells this placement = 0, no event).</summary>
-        private int ApplyCollectionneurLueur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events)
-        {
-            if (clearInfo.ClearedCellColors.Count == 0)
-            {
-                return 0;
-            }
-
-            var distinctColors = new HashSet<PieceColor>();
-            for (int i = 0; i < clearInfo.ClearedCellColors.Count; i++)
-            {
-                // A broken-free frozen plot had no piece, so it has no color to count.
-                if (!clearInfo.ClearedCellFrozen[i])
-                {
-                    distinctColors.Add(clearInfo.ClearedCellColors[i]);
-                }
-            }
-            if (distinctColors.Count == 0)
-            {
-                return 0;
-            }
-
-            int lueur = distinctColors.Count * EconomyConstants.CollectionneurLueurPerColor;
-            events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], lueur));
-            return lueur;
         }
 
         /// <summary>Tricolore: xN multiplier (see ScoringConstants.TricoloreMultiplier) when the placement (itself + its direct neighbors) touches exactly TricoloreExactDistinctColors distinct non-joker colors. Returns 1 (no-op) otherwise.</summary>
@@ -712,24 +680,6 @@ namespace Contigu.Core
                 multiplier *= multiplierPerLine;
             }
             return multiplier;
-        }
-
-        /// <summary>Shared driver for the 3 Lueur-earning line-pattern modifiers (ArcEnCielLueur/AlternanceLueur/MonochromeLigneLueur) — same idea as ApplyPerLineMultiplier above, reusing the exact same predicates, but adds flat Lueur per qualifying cleared line instead of multiplying a score factor.</summary>
-        private int ApplyPerLineLueur(ClearInfo clearInfo, List<Vector2Int> placedCells, List<ScoreEvent> events, System.Func<IReadOnlyList<PieceColor>, bool> predicate, int lueurPerLine)
-        {
-            int total = 0;
-            var lines = clearInfo.ClearedLines;
-            for (int i = 0; i < lines.Count; i++)
-            {
-                if (!predicate(lines[i].Colors))
-                {
-                    continue;
-                }
-
-                events.Add(new ScoreEvent(ScoreEventType.LueurBonus, placedCells[0], lueurPerLine));
-                total += lueurPerLine;
-            }
-            return total;
         }
 
         /// <summary>

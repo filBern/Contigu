@@ -171,3 +171,7 @@ Pruner (après le score, déracine les tuiles voisines d'une autre couleur : +8 
 ## 7 fertilizers qui lisent les tuiles améliorées (tous en Mult)
 
 Charmed Patch (+1 Mult par tuile améliorée du groupe scoré, la copie d'un Wildroot compte), Grafter (+3 Mult si la graine plantée porte une upgrade), Twin Graft (+5 Mult si elle en porte 2 ou plus), Botanist (+1 Mult par type d'upgrade différent dans le jardin), Hothouse (+1 Mult par 2 tuiles améliorées dans le jardin), Good Neighbors (+2 Mult par tuile améliorée qui touche la graine plantée), Gleaner (+2 Mult par tuile améliorée récoltée par la ligne). Prix 5 à 7 Pollen.
+
+## Retrait des fertilizers de Pollen (2026-11-04)
+
+Rainbow Glow, Glowing Alternation, Radiant Line, Glowing Hoarder, Golden Repetition, Siphon, Pollinator, Honey, Nectar, Tithe, Rain Barrel et Granary sont retirés du jeu (l'étude de puissance ne leur trouve aucun effet : le Pollen est déjà abondant). Leurs ids restent dans `ModifierId` ; une ancienne sauvegarde les ignore (`ModifierCatalog.IsRetired`). Les entrées ci-dessus qui les mentionnent décrivent l'état d'avant.
