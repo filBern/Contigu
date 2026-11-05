@@ -162,6 +162,19 @@ ${tile('fern', 1740, 150, 150, 6)}${tile('poppy', 1590, 230, 150, -5)}${tile('ir
 ${enemy('Thief', 1540, 520, 250, true)}${enemy('Leech', 1690, 760, 200)}
 ` };
 
+
+// The picture behind the embed itself (what the visitor sees in the 980x620 frame before the game launches). The centre-bottom stays clear: itch puts its launch button there.
+pages['embed-background-980x620'] = { w: 980, h: 620, scales: [1, 2], html: `
+${bg('Spring', 0.12)}
+${ground(70)}
+${logo(145, 38, 690)}
+<div class="abs tag" style="left:0;right:0;top:232px;text-align:center;font-size:34px;color:#ffe9a8">A garden-puzzle roguelike</div>
+${sprig('Cheer', 40, 300, 260)}
+${tile('poppy', 700, 290, 120, -6)}${tile('iris', 815, 330, 120, 5)}${tile('sun', 740, 420, 120, 3)}
+<div class="abs" style="left:290px;right:290px;top:400px;height:130px;border-radius:40px;background:radial-gradient(ellipse,rgba(8,16,28,.45),rgba(8,16,28,0) 70%)"></div>
+<div class="abs tag" style="left:0;right:0;bottom:14px;text-align:center;font-size:22px;color:#fff7e8">${tagline}</div>
+` };
+
 // ---- how the finished page is arranged (a layout guide, not a copy of itch.io's own UI)
 const SHOTS = { 1: 'screenshot-1-place-and-chain', 2: 'screenshot-2-fertilizers', 3: 'screenshot-3-pests', 4: 'screenshot-4-seasons', 5: 'screenshot-5-touch' };
 const shot = (n, w) => `<img src="file://${OUT}/${SHOTS[n]}.png" style="width:${w}px;border-radius:14px;border:4px solid #13212e;box-shadow:0 8px 0 rgba(10,20,30,.45)">`;

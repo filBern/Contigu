@@ -26,7 +26,7 @@ Tout ce qui est dans `out/` est généré par `build_itch.js` à partir des asse
 ## Réglages du projet
 
 - Kind of project : **HTML**, archive du build WebGL (compression **Disabled**, voir `docs/IPAD.md`).
-- Embed options : *Click to launch in fullscreen* + *Mobile friendly* (orientation paysage), viewport **1280×800** (ratio 16:10), *SharedArrayBuffer support* **désactivé**.
+- Embed options : *Click to launch in fullscreen* + *Mobile friendly* (orientation paysage), viewport **980×620**, *SharedArrayBuffer support* **désactivé**.
 - Prix : gratuit (ou « pay what you want »). Genre : **Puzzle**. Plateforme : HTML5 (tablet friendly).
 
 ## Texte à coller

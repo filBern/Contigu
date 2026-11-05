@@ -25,7 +25,7 @@ Les noms de menus d'itch.io viennent de ma connaissance de leur tableau de bord,
 1. Clique **Upload files** et choisis `lastbloom-web.zip`.
 2. Une fois envoyé, coche **This file will be played in the browser**.
 3. Réglages d'embed (juste dessous) :
-   - **Viewport dimensions** : `1280` × `800`
+   - **Viewport dimensions** : `980` × `620` (le cadre du jeu sur la page ; le jeu s'y adapte en gardant ses proportions, il peut avoir de fines marges)
    - **Mobile friendly** : coché, orientation **Landscape**
    - **Fullscreen button** : coché
    - **Automatically start on page load** : **décoché** (le premier toucher doit lancer le son sur iPad)
@@ -61,6 +61,9 @@ Le texte est dans **`description.html`** (même dossier), prêt à coller, balis
 - **Background image** : `03b-background-embed-1920x1080.png`, répétition **none**, position **top center**, attachement **fixed**. Le centre est volontairement sombre et calme : c'est là que se placent le jeu et le texte ; le logo, Sprig, les tuiles et les nuisibles sont sur les côtés.
 - **Background color** `#12304a` (visible si l'écran est plus grand que l'image) · **Text color** `#fff7e8` · **Links** `#ffe9a8` · **Buttons** `#4e9a45`
 - Si tu préfères un bandeau en haut plutôt que ce fond, utilise `02-banner-1920x500.png` et `03-background-1920x1080.png` (fond sobre).
+
+## 7b. Image de l'embed (980×620)
+`03c-embed-background-980x620.png` (et la version nette `03c-embed-background-1960x1240.png`) est l'image faite pour **remplir le cadre du jeu** avant le lancement : logo, Sprig, tuiles, et le **bas du centre laissé libre** pour le bouton de lancement d'itch. Je ne connais pas de champ d'itch dédié à cette image : si tu en vois un (ou si tu l'utilises comme image de couverture ou comme fond de ta page), mets-la là. Dis-moi ce que propose ton tableau de bord et j'ajuste.
 
 ## 8. Visibilité : ne publie pas tout de suite
 1. En bas de la page de modification, choisis **Draft** ou **Restricted** (accessible seulement avec un lien), puis **Save**.
