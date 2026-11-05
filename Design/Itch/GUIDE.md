@@ -38,6 +38,7 @@ Le texte est dans **`description.html`** (même dossier), prêt à coller, balis
 2. Colle tout le contenu de `description.html` (sans le commentaire du début si l'éditeur le montre).
 3. Les images : téléverse `04` à `08` avec le bouton image de l'éditeur, copie l'URL de chacune, puis remplace `IMAGE_04` à `IMAGE_08` dans le HTML par ces URL.
 4. Enregistre et regarde l'aperçu : les images doivent être pleine largeur, les titres sur leur propre ligne.
+5. **Si les images ne se chargent pas dans la description** : utilise `description-text-only.html` (même texte, sans images) et mets les 5 visuels dans la galerie **Screenshots** (étape 6), qu'itch affiche sous le jeu. Les images restent visibles, seulement pas au milieu du texte.
 
 ## 5. Metadata
 | Champ | À mettre |
