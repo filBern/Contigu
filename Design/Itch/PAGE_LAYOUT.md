@@ -6,7 +6,7 @@ Le schéma `out/page-layout-guide.png` montre la page finie. Les numéros ci-des
 
 | N° | Bloc | Quoi mettre | Où (itch.io) |
 |---|---|---|---|
-| 1 | **Banner** | `banner-1920x500.png` | Edit game → Theme → Banner |
+| 1 | **Fond qui encadre le jeu** (à la place du banner) | `background-embed-1920x1080.png` : logo, Sprig, tuiles et nuisibles sur les côtés, colonne centrale sombre | Edit game → Theme → Background image (none, top center, fixed) ; banner laissé vide |
 | 2 | **Le jeu** | Embed HTML5 (1280×800, plein écran au clic) | Uploads + Embed options |
 | 3 | **Colonne de droite** | Cover `cover-630x500@2x.png`, statut, plateformes, genre, tags | Cover image, Metadata, Tags |
 | 4 | **Accroche** (les 2 premières lignes sont ce qu'on lit avant de défiler) | Titre, devise, 2 phrases | Description |

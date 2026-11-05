@@ -56,10 +56,11 @@ Le texte est dans **`description.html`** (même dossier), prêt à coller, balis
 2. **Screenshots** : ajoute `04` à `08` **dans cet ordre** (le premier est celui qu'on voit en grand).
 3. Rappel : ces 5 images sont des illustrations. **Remplace les n° 04 et 05 par de vraies captures du build** avant de rendre la page publique.
 
-## 7. Thème (Edit theme)
-- **Banner** : `02-banner-1920x500.png`
-- **Background image** : `03-background-1920x1080.png`, répétition **none**, position **top center**, **fixed**
-- **Background color** `#12304a` · **Text color** `#fff7e8` · **Links** `#ffe9a8` · **Buttons** `#4e9a45`
+## 7. Thème (Edit theme) : pas de banner, un fond qui encadre le jeu
+- **Banner** : laisse **vide** (le fond fait le travail).
+- **Background image** : `03b-background-embed-1920x1080.png`, répétition **none**, position **top center**, attachement **fixed**. Le centre est volontairement sombre et calme : c'est là que se placent le jeu et le texte ; le logo, Sprig, les tuiles et les nuisibles sont sur les côtés.
+- **Background color** `#12304a` (visible si l'écran est plus grand que l'image) · **Text color** `#fff7e8` · **Links** `#ffe9a8` · **Buttons** `#4e9a45`
+- Si tu préfères un bandeau en haut plutôt que ce fond, utilise `02-banner-1920x500.png` et `03-background-1920x1080.png` (fond sobre).
 
 ## 8. Visibilité : ne publie pas tout de suite
 1. En bas de la page de modification, choisis **Draft** ou **Restricted** (accessible seulement avec un lien), puis **Save**.

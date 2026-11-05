@@ -145,6 +145,23 @@ ${tile('poppy', 540, 590, 120, -6)}${tile('iris', 690, 606, 120, 5)}${tile('sun'
 ` };
 
 
+
+// Page background that frames the game embed: art on both sides, a calm dark column in the middle (itch's content column, ~1000px).
+pages['background-embed-1920x1080'] = { w: 1920, h: 1080, scales: [1], html: `
+<div class="bg" style="background-image:url('${R}Backgrounds/Spring.png');background-size:cover"></div>
+<div class="bg" style="background:linear-gradient(180deg,rgba(8,16,28,.35),rgba(8,16,28,.15) 55%,rgba(8,16,28,.45))"></div>
+<!-- the calm column: the embed and the text sit here -->
+<div class="abs" style="left:420px;right:420px;top:0;bottom:0;background:linear-gradient(90deg,rgba(8,16,28,0) 0%,rgba(8,16,28,.78) 14%,rgba(8,16,28,.78) 86%,rgba(8,16,28,0) 100%)"></div>
+${ground(120)}
+<!-- left: wordmark, Sprig and flowers -->
+${logo(30, 90, 400)}
+${sprig('Cheer', 70, 330, 300)}
+${tile('poppy', 40, 680, 140, -6)}${tile('iris', 190, 720, 140, 5)}${tile('sun', 100, 840, 140, 3)}
+<!-- right: tiles and two pests peeking -->
+${tile('fern', 1740, 150, 150, 6)}${tile('poppy', 1590, 230, 150, -5)}${tile('iris', 1700, 360, 150, 4)}
+${enemy('Thief', 1540, 520, 250, true)}${enemy('Leech', 1690, 760, 200)}
+` };
+
 // ---- how the finished page is arranged (a layout guide, not a copy of itch.io's own UI)
 const SHOTS = { 1: 'screenshot-1-place-and-chain', 2: 'screenshot-2-fertilizers', 3: 'screenshot-3-pests', 4: 'screenshot-4-seasons', 5: 'screenshot-5-touch' };
 const shot = (n, w) => `<img src="file://${OUT}/${SHOTS[n]}.png" style="width:${w}px;border-radius:14px;border:4px solid #13212e;box-shadow:0 8px 0 rgba(10,20,30,.45)">`;
