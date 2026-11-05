@@ -63,7 +63,9 @@ Le texte est dans **`description.html`** (même dossier), prêt à coller, balis
 - Si tu préfères un bandeau en haut plutôt que ce fond, utilise `02-banner-1920x500.png` et `03-background-1920x1080.png` (fond sobre).
 
 ## 7b. Image de l'embed (980×620)
-`03c-embed-background-980x620.png` (et la version nette `03c-embed-background-1960x1240.png`) est l'image faite pour **remplir le cadre du jeu** avant le lancement : logo, Sprig, tuiles, et le **bas du centre laissé libre** pour le bouton de lancement d'itch. Je ne connais pas de champ d'itch dédié à cette image : si tu en vois un (ou si tu l'utilises comme image de couverture ou comme fond de ta page), mets-la là. Dis-moi ce que propose ton tableau de bord et j'ajuste.
+`03c-embed-background-980x620.png` est l'image faite pour **remplir le cadre du jeu** avant le lancement : logo, Sprig, tuiles, et le **centre dégagé** pour le bouton « Run game » d'itch.
+
+**Utilise exactement ce fichier, en 980×620.** Itch affiche cette image à sa **taille réelle** et la recadre : une image deux fois plus grande (par exemple 1960×1240) apparaît zoomée deux fois et coupée, avec seulement le milieu visible. Le cadre du jeu doit aussi être réglé à `980` × `620` (étape 3).
 
 ## 8. Visibilité : ne publie pas tout de suite
 1. En bas de la page de modification, choisis **Draft** ou **Restricted** (accessible seulement avec un lien), puis **Save**.
