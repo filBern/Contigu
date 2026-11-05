@@ -144,6 +144,49 @@ ${sprig('Happy', 70, 230, 400)}
 ${tile('poppy', 540, 590, 120, -6)}${tile('iris', 690, 606, 120, 5)}${tile('sun', 840, 590, 120, -4)}${tile('fern', 990, 606, 120, 6)}
 ` };
 
+
+// ---- how the finished page is arranged (a layout guide, not a copy of itch.io's own UI)
+const SHOTS = { 1: 'screenshot-1-place-and-chain', 2: 'screenshot-2-fertilizers', 3: 'screenshot-3-pests', 4: 'screenshot-4-seasons', 5: 'screenshot-5-touch' };
+const shot = (n, w) => `<img src="file://${OUT}/${SHOTS[n]}.png" style="width:${w}px;border-radius:14px;border:4px solid #13212e;box-shadow:0 8px 0 rgba(10,20,30,.45)">`;
+pages['page-layout-guide'] = { w: 1400, h: 2600, scales: [1], html: `
+<style>
+  body { background:#12304a url('${R}Backgrounds/Spring.png') center top / cover no-repeat; font-family: Arial, sans-serif; }
+  .col { position:absolute; left:100px; width:1200px; }
+  .num { position:absolute; width:46px; height:46px; border-radius:50%; background:#e8a82e; color:#13212e; border:4px solid #13212e; font:900 26px/38px Digitalt, Arial; text-align:center; z-index:5 }
+  .note { position:absolute; width:300px; font:22px/1.3 Hand, cursive; color:#ffe9a8; text-shadow:0 2px 0 #000 }
+  h2 { font-family: Digitalt; font-size:44px; color:#ffe9a8; margin:0 0 12px; letter-spacing:1px }
+  p, li { font-size:23px; line-height:1.5; color:#fff7e8 }
+  ul { margin:8px 0 0 28px }
+</style>
+<div class="bg" style="background:linear-gradient(180deg,rgba(8,16,28,.6),rgba(8,16,28,.82))"></div>
+<div class="col" style="top:30px"><img src="file://${OUT}/banner-1920x500.png" style="width:1200px;border-radius:0 0 18px 18px;border:4px solid #13212e"></div>
+<div class="num" style="left:52px;top:130px">1</div><div class="note" style="left:1310px;top:60px;width:80px"></div>
+<div class="col" style="top:340px;height:640px">
+  <div class="abs" style="left:0;top:0;width:880px;height:550px;background:#0a1420;border:4px solid #13212e;border-radius:16px;text-align:center;line-height:550px;font:44px Digitalt;color:#ffe9a8">▶ CLICK TO LAUNCH IN FULLSCREEN</div>
+  <div class="abs" style="left:0;top:560px;width:880px;color:#fff7e8;font:20px Arial;opacity:.8;text-align:center">Game embed — viewport 1280×800, mobile friendly, landscape</div>
+  <div class="abs" style="left:910px;top:0;width:290px;background:#0f2538;border:4px solid #13212e;border-radius:14px;padding:18px;font:20px/1.6 Arial;color:#fff7e8">
+    <img src="file://${OUT}/cover-630x500@2x.png" style="width:100%;border-radius:10px;margin-bottom:12px">
+    <b>Status:</b> In development<br><b>Platforms:</b> HTML5<br><b>Genre:</b> Puzzle<br><b>Made with:</b> Unity<br><b>Tags:</b> puzzle, roguelike, deckbuilder, cute, touch-friendly<br><b>Input:</b> Touchscreen, mouse
+  </div>
+</div>
+<div class="num" style="left:52px;top:350px">2</div><div class="num" style="left:1005px;top:350px">3</div>
+<div class="col" style="top:1010px">
+  <h2>LASTBLOOM</h2>
+  <p><i>The last garden still blooms, at the edge of ruin.</i></p>
+  <p>A block-placing puzzle with the run structure of a deckbuilding roguelike. Drop flower seeds on a small garden, connect groups of one color, harvest lines, and turn every placement into damage against the pests.</p>
+</div>
+<div class="num" style="left:52px;top:1020px">4</div>
+<div class="col" style="top:1300px">${shot(1, 1200)}</div>
+<div class="num" style="left:52px;top:1310px">5</div>
+<div class="col" style="top:2090px">
+  <h2>What you do</h2>
+  <ul><li>Plant seeds, chain colors, harvest lines</li><li>Build a bag of seeds and a rack of fertilizers</li><li>Beat 12 rounds, a boss every four, drawn differently every run</li><li>Unlock six seasons</li></ul>
+</div>
+<div class="num" style="left:52px;top:2100px">6</div>
+<div class="col" style="top:2380px;display:flex;gap:16px">${shot(2, 290)}${shot(3, 290)}${shot(4, 290)}${shot(5, 290)}</div>
+<div class="num" style="left:52px;top:2390px">7</div>
+` };
+
 (async () => {
   const browser = await chromium.launch();
   const only = process.argv[2];

@@ -1,5 +1,7 @@
 # Page itch.io de LASTBLOOM : kit visuel et texte
 
+Voir aussi `PAGE_LAYOUT.md` pour l'ordre des blocs de la page et le texte bloc par bloc.
+
 Tout ce qui est dans `out/` est généré par `build_itch.js` à partir des assets du jeu (logo, Sprig, tuiles, ennemis, icônes, fonds) :
 `NODE_PATH=$(npm root -g) node build_itch.js` (une seule image : `... node build_itch.js cover`).
 
