@@ -38,7 +38,7 @@ Tout ce qui est dans `out/` est généré par `build_itch.js` à partir des asse
 
 **Tags** (10 max) : `puzzle`, `roguelike`, `deckbuilder`, `block-puzzle`, `cute`, `casual`, `strategy`, `touch-friendly`, `singleplayer`, `short`
 
-**Description** :
+**Description** (version HTML prête à coller : `description.html`) :
 
 ```markdown
 *The last garden still blooms, at the edge of ruin.*

@@ -1,6 +1,6 @@
 # Agencement de la page itch.io
 
-Le schéma `out/page-layout-guide.png` montre la page finie. Les numéros ci-dessous sont ceux du schéma. Le texte à coller est en anglais (le jeu l'est), dans l'ordre de la page.
+Le schéma `out/page-layout-guide.png` montre la page finie. Les numéros ci-dessous sont ceux du schéma. Le texte à coller est en anglais (le jeu l'est), dans l'ordre de la page. **Version prête à coller en HTML : `description.html`** (les extraits Markdown ci-dessous ne servent qu'à lire le contenu bloc par bloc).
 
 ## De haut en bas
 

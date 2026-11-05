@@ -32,52 +32,12 @@ Les noms de menus d'itch.io viennent de ma connaissance de leur tableau de bord,
    - **Enable scrollbars** : décoché
    - **SharedArrayBuffer** : **décoché**
 
-## 4. Description
-Colle le texte final dans « Description » (éditeur riche : les titres `##` se font avec le menu de style). Les images 04 à 08 se placent à l'endroit indiqué dans `PAGE_LAYOUT.md` (bloc 5 et bloc 7).
-
-```markdown
-# LASTBLOOM
-
-*The last garden still blooms, at the edge of ruin.*
-
-A block-placing puzzle with the run structure of a deckbuilding roguelike. Drop flower seeds on a small garden, connect groups of one color, harvest lines, and turn every placement into damage against the pests.
-
-[image 04-screenshot-place-and-chain.png]
-Plant a seed, chain its color, harvest the line. Bigger chains, bigger Mult.
-
-## What you do
-- **Plant** flower seeds and **chain** colors on a 6×6 garden
-- **Build** a bag of seeds and a rack of fertilizers worth bragging about
-- **Beat** 12 rounds, with a boss every four. Enemies are drawn differently every run
-- **Unlock** six seasons, from gentle Spring to the cramped Greenhouse
-
-## Grow your build
-Over a hundred fertilizers and sprout upgrades: stack Mult, bend the rules, break the score.
-[image 05-screenshot-fertilizers.png]
-
-## Pests strike back
-Locks, poison and thieves fight on the board itself, and bosses wait at the end of every act.
-[image 06-screenshot-pests.png]
-
-## Six seasons
-Harsher weather, fewer colors, tighter budgets. Earn Stars to unlock each season.
-[image 07-screenshot-seasons.png]
-
-## Made for touch
-One finger, no hover, no tiny buttons. Plays in your browser on iPad or desktop: add it to your home screen for fullscreen.
-[image 08-screenshot-touch.png]
-
-## Controls
-- Drag a seed onto the garden. Tap a seed or a tile to read it.
-- Shuffle redraws your hand (a few per run).
-- Desktop: Tab opens the Seed Bag, Esc opens Settings.
-
-## Notes
-LASTBLOOM is an early, evolving build. Saves live in your browser. Feedback is very welcome in the comments.
-
-## Credits
-Design, code and art: Félix Bernier. Fonts: Digitalt and Patrick Hand (SIL Open Font License).
-```
+## 4. Description (en HTML)
+Le texte est dans **`description.html`** (même dossier), prêt à coller, balises `h1`, `h2`, `p`, `ul`, `img`.
+1. Dans l'éditeur de la description, passe en **mode source / HTML** (bouton `<>` ou « Source » dans la barre).
+2. Colle tout le contenu de `description.html` (sans le commentaire du début si l'éditeur le montre).
+3. Les images : téléverse `04` à `08` avec le bouton image de l'éditeur, copie l'URL de chacune, puis remplace `IMAGE_04` à `IMAGE_08` dans le HTML par ces URL.
+4. Enregistre et regarde l'aperçu : les images doivent être pleine largeur, les titres sur leur propre ligne.
 
 ## 5. Metadata
 | Champ | À mettre |
