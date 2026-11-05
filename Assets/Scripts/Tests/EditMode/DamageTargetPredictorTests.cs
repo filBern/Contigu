@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Contigu.Core;
 using NUnit.Framework;
-using UnityEngine;
 
 namespace Contigu.Tests
 {
@@ -14,91 +12,49 @@ namespace Contigu.Tests
             return run;
         }
 
-        /// <summary>Puts a prepared token in hand slot 0 (only slot 0 is used), returning the slot index.</summary>
-        private static int HandWith(RunManager run, ShapeId shape, PieceColor color, PieceTraitKind? trait)
-        {
-            var token = trait.HasValue ? new PieceToken(shape, color, new PieceTrait(trait.Value, 0)) : new PieceToken(shape, color);
-            run.Deck.AddPreparedToken(token);
-            int nextSlotToPlay = 0;
-            for (int guard = 0; guard < 300; guard++)
-            {
-                for (int i = 0; i < DeckManager.HandSize; i++)
-                {
-                    var slot = run.Deck.Hand[i];
-                    if (slot.HasValue && slot.Value.Shape == shape && slot.Value.Color == color
-                        && (slot.Value.Trait.HasValue ? slot.Value.Trait.Value.Kind : (PieceTraitKind?)null) == trait)
-                    {
-                        return i;
-                    }
-                }
-                run.Deck.PlayFromHand(nextSlotToPlay);
-                nextSlotToPlay = (nextSlotToPlay + 1) % DeckManager.HandSize;
-            }
-            Assert.Fail("prepared token never reached the hand");
-            return -1;
-        }
-
         [Test]
-        public void NoCombatTrait_TargetsOnlyTheFrontAliveEnemy()
+        public void PlacementDamage_TargetsOnlyTheFrontAliveEnemy()
         {
             var run = RunWithEncounter(EnemyId.Basic, EnemyId.Locker, EnemyId.Poisoner);
-            int slot = HandWith(run, ShapeId.Single, PieceColor.Coral, null);
-
-            var indices = DamageTargetPredictor.FindDamagedEnemyIndices(run, slot, 0, 0, out var kind);
-
-            Assert.IsNull(kind);
-            CollectionAssert.AreEqual(new[] { 0 }, indices);
+            CollectionAssert.AreEqual(new[] { 0 }, DamageTargetPredictor.FindDamagedEnemyIndices(run));
         }
 
         [Test]
-        public void RangeToken_TargetsTheBackEnemy_EvenOnItsFirstPlacement()
+        public void ADeadFrontEnemy_IsSkipped()
         {
             var run = RunWithEncounter(EnemyId.Basic, EnemyId.Locker, EnemyId.Poisoner);
-            int slot = HandWith(run, ShapeId.Single, PieceColor.Joker, PieceTraitKind.Range);
-
-            var indices = DamageTargetPredictor.FindDamagedEnemyIndices(run, slot, 0, 0, out var kind);
-
-            Assert.AreEqual(PieceTraitKind.Range, kind);
-            CollectionAssert.AreEqual(new[] { 2 }, indices);
+            run.CurrentEncounter[0].ApplyDamage(run.CurrentEncounter[0].CurrentHp);
+            CollectionAssert.AreEqual(new[] { 1 }, DamageTargetPredictor.FindDamagedEnemyIndices(run));
         }
 
         [Test]
-        public void PrecisionToken_TargetsTheWeakestAliveEnemy()
-        {
-            var run = RunWithEncounter(EnemyId.Poisoner, EnemyId.Basic, EnemyId.Locker);
-            int slot = HandWith(run, ShapeId.Single, PieceColor.Joker, PieceTraitKind.Precision);
-
-            var indices = DamageTargetPredictor.FindDamagedEnemyIndices(run, slot, 0, 0, out var kind);
-
-            Assert.AreEqual(PieceTraitKind.Precision, kind);
-            CollectionAssert.AreEqual(new[] { 1 }, indices, "Basic (250 HP) is the weakest");
-        }
-
-        [Test]
-        public void BombeToken_ListsEveryAliveEnemy()
-        {
-            var run = RunWithEncounter(EnemyId.Basic, EnemyId.Locker, EnemyId.Poisoner);
-            int slot = HandWith(run, ShapeId.Single, PieceColor.Joker, PieceTraitKind.Bombe);
-
-            var indices = DamageTargetPredictor.FindDamagedEnemyIndices(run, slot, 0, 0, out var kind);
-
-            Assert.AreEqual(PieceTraitKind.Bombe, kind);
-            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, indices);
-        }
-
-        [Test]
-        public void Prediction_MatchesTheEnemyThatActuallyTakesTheDamage_ForRange()
+        public void Prediction_MatchesTheEnemyThatActuallyTakesTheDamage()
         {
             var run = RunWithEncounter(EnemyId.Basic, EnemyId.Locker);
-            int slot = HandWith(run, ShapeId.Sq2, PieceColor.Joker, PieceTraitKind.Range);
-            var predicted = DamageTargetPredictor.FindDamagedEnemyIndices(run, slot, 0, 0, out _);
+            var predicted = DamageTargetPredictor.FindDamagedEnemyIndices(run);
             int hpBefore = run.CurrentEncounter[predicted[0]].CurrentHp;
-
-            var outcome = run.PlacePiece(slot, 0, 0);
-
-            Assert.IsTrue(outcome.Placement.Success);
+            int slot = 0;
+            for (int s = 0; s < run.Deck.Hand.Count; s++) { if (run.Deck.Hand[s].HasValue) { slot = s; break; } }
+            var shape = PieceShapeCatalog.GetRotated(run.Deck.Hand[slot].Value.Shape, run.Deck.HandRotations[slot]);
+            Vector2IntFinder.Place(run, slot, shape);
             Assert.Less(run.CurrentEncounter[predicted[0]].CurrentHp, hpBefore, "the predicted target is the one that lost HP");
-            Assert.AreEqual(run.CurrentEncounter[0].CurrentMaxHp, run.CurrentEncounter[0].CurrentHp, "the front enemy is untouched");
+        }
+    }
+
+    internal static class Vector2IntFinder
+    {
+        public static void Place(RunManager run, int slot, PieceShape shape)
+        {
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (run.Grid.CanPlace(shape, pos.x, pos.y))
+                {
+                    var outcome = run.PlacePiece(slot, pos.x, pos.y);
+                    Assert.IsTrue(outcome.Placement.Success);
+                    return;
+                }
+            }
+            Assert.Fail("no placement found");
         }
     }
 }

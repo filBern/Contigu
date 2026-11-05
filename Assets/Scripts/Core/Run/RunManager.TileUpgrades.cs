@@ -116,7 +116,7 @@ namespace Contigu.Core
 
         /// <summary>
         /// Mimic Sprout: replays, at its own plot, the upgrade of every orthogonal neighbour that belongs to the scored group (Amplifier, Echo, other
-        /// Mimics and the Joker's combat traits are never copied). Runs before Amplifier/Echo, which can then read what it scored.
+        /// Mimics and Scythe Sprouts are never copied). Runs before Amplifier/Echo, which can then read what it scored.
         /// </summary>
         private void ApplyMimicUpgrades(PlacementResult placement, int streakBeforePlacement)
         {
@@ -147,7 +147,7 @@ namespace Contigu.Core
 
         private static bool IsMimicCopyable(PieceTraitKind kind)
         {
-            return kind != PieceTraitKind.Scythe && kind != PieceTraitKind.Mimic && kind != PieceTraitKind.Amplifier && kind != PieceTraitKind.Echo && !PieceTrait.IsJokerCombatKind(kind);
+            return kind != PieceTraitKind.Scythe && kind != PieceTraitKind.Mimic && kind != PieceTraitKind.Amplifier && kind != PieceTraitKind.Echo;
         }
 
         /// <summary>The upgraded tiles already on the garden, with their upgrade, as they stand right before a placement.</summary>
@@ -157,7 +157,7 @@ namespace Contigu.Core
             foreach (var pos in GridManager.AllPositions())
             {
                 var cell = Grid.GetCell(pos);
-                if (cell.IsFilled && cell.OriginTrait.HasValue && !PieceTrait.IsJokerCombatKind(cell.OriginTrait.Value.Kind))
+                if (cell.IsFilled && cell.OriginTrait.HasValue)
                 {
                     list.Add((pos, cell.OriginTrait.Value));
                 }

@@ -342,12 +342,6 @@ namespace Contigu.Core
         /// <summary>Polyvalence: +N Mult (additive), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — see GridManager.ApplyPolyvalence. Capped at 6 in practice (ModifierCategory's own value count).</summary>
         public const int PolyvalenceMultPerCategory = 1;
 
-        /// <summary>Renfort Joker: percentage damage bonus applied only to a placement whose scored group carries at least one Joker-exclusive combat trait (see RunManager.ApplyJokerCombatOrDefaultDamage) — no effect otherwise.</summary>
-        public const int RenfortJokerDamageBonusPercent = 25;
-
-        /// <summary>Arsenal: +N Mult (additive), N = the number of DISTINCT Joker combat trait kinds (see PieceTrait.JokerCombatKinds) currently anywhere in the deck — see RunManager.CountDistinctCombatKindsInDeck. Capped at 4 in practice (JokerCombatKinds' own length); two tokens sharing the same kind count once.</summary>
-        public const int ArsenalMultPerDistinctCombatKind = 1;
-
         /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which Devotion is currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>
         public const int CollectionChromatiqueMultPerColor = 2;
 

@@ -213,11 +213,6 @@ namespace Contigu.Core
                 }
                 traits.Add(new PieceTrait((PieceTraitKind)ParseInt(f[0]), ParseInt(f[1]), tint >= 0 ? (PieceColor?)(PieceColor)tint : null));
             }
-            // Every Joker carries exactly one combat trait: one that lost it to a retired trait gets the plainest one back.
-            if (color == PieceColor.Joker && !traits.Exists(t => PieceTrait.IsJokerCombatKind(t.Kind)))
-            {
-                traits.Insert(0, new PieceTrait(PieceTraitKind.Bombe, 0));
-            }
             if (traits.Count == 0)
             {
                 return new PieceToken(shape, color);

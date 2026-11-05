@@ -34,19 +34,8 @@ namespace Contigu.Presentation
             // Snapshot the targeted enemy/enemies' HP before the placement
             // mutates it, so damage can be held back and drained in
             // alongside the combo total instead of jumping instantly.
-            // Index 0 is the primary target — the default front enemy, or
-            // whichever a Joker combat trait retargets (back for Range,
-            // weakest for Précision, spread for Bombe/Éclat) — see
-            // DamageTargetPredictor.FindDamagedEnemyIndices, which mirrors RunManager.
-            // ApplyJokerCombatOrDefaultDamage's targeting read-only. Only
-            // index 0 gets the smooth drain below; any further index is a
-            // Bombe/Éclat candidate snapped to its final value by
-            // DrainSecondaryEnemyHits.
-            var damagedEnemyIndices = DamageTargetPredictor.FindDamagedEnemyIndices(_run, handIndex, x, y, out var damageCombatKind);
-            // Range/Précision pick a different enemy than the usual front one — a visual cue (see
-            // FeedbackLayer.SpawnImpactLine) makes that redirection actually readable instead of the player
-            // having to notice which HP bar moved. Bombe/Éclat's spread already reads as "everyone" without one.
-            bool isRetargetHit = damageCombatKind == PieceTraitKind.Range || damageCombatKind == PieceTraitKind.Precision;
+            // The front alive enemy takes the whole hit (see DamageTargetPredictor).
+            var damagedEnemyIndices = DamageTargetPredictor.FindDamagedEnemyIndices(_run);
             var enemyHpBeforeList = new List<int>(damagedEnemyIndices.Count);
             var enemyIdList = new List<EnemyId>(damagedEnemyIndices.Count);
             for (int i = 0; i < damagedEnemyIndices.Count; i++)
@@ -276,7 +265,7 @@ namespace Contigu.Presentation
             // from a reorder would otherwise rebuild every badge out from
             // under it.
             _modifierPanelView.SetInteractable(false);
-            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit, hasDeferredGridChange, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
+            StartCoroutine(PlayPlacementSequence(outcome, roundScoreBefore, lueurBefore, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, hasDeferredGridChange, deferredNewMalusCells, deferredReleasedLockedCells, deferredReleasedPoisonedCells, thiefStoleThisPlacement, handWasAboutToAutoRefill, leechIndex, leechHealAmount, secondaryDrainTargets));
         }
 
         /// <summary>True when playing the hand slot at <paramref name="handIndex"/> is about to leave every slot empty, which RunManager.PlacePiece auto-refills (and resolves enemy Shuffle effects for) synchronously before returning — see OnCellClicked's own snapshot comment.</summary>
@@ -469,7 +458,7 @@ namespace Contigu.Presentation
         /// </summary>
 
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
-            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp, bool isRetargetHit,
+            int damagedEnemyIndex, EnemyId damagedEnemyId, int enemyHpBefore, int enemyHpAfter, int enemyMaxHp,
             bool hasDeferredGridChange, List<Vector2Int> deferredNewMalusCells, List<Vector2Int> deferredReleasedLockedCells, List<Vector2Int> deferredReleasedPoisonedCells,
             bool thiefStoleThisPlacement, bool handWasAboutToAutoRefill,
             int leechIndex, int leechHealAmount,
@@ -872,7 +861,7 @@ namespace Contigu.Presentation
             if (damagedEnemyIndex >= 0 && placement.TotalScore > 0)
             {
                 yield return new WaitForSeconds(PostComboReadDelaySeconds);
-                yield return DrainComboIntoDamage(placement.TotalScore, placement.Chips, placement.Mult, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp, isRetargetHit);
+                yield return DrainComboIntoDamage(placement.TotalScore, placement.Chips, placement.Mult, damagedEnemyIndex, damagedEnemyId, enemyHpBefore, enemyHpAfter, enemyMaxHp);
                 BreakPendingShield();
                 // Bombe/Éclat's further targets snap straight to their final
                 // value right after the primary target's smooth drain
@@ -1350,8 +1339,8 @@ namespace Contigu.Presentation
         }
 
 
-        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. That countdown only starts once the flying damage orb has actually landed and its "-X" is shown (see FeedbackLayer.SpawnFlyingDamageOrb's onArrival), not while it's still mid-flight. <paramref name="isRetargetHit"/> is true for Range/Précision, which hit a different enemy than the usual front one.</summary>
-        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int startChips, float startMult, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp, bool isRetargetHit)
+        /// <summary>Counts the combo total down from <paramref name="startTotal"/> to 0 while the targeted enemy's HP ticks down from <paramref name="hpBefore"/> to <paramref name="hpAfter"/> in lockstep — the visual "transfer" of combo score into damage. That countdown only starts once the flying damage orb has actually landed and its "-X" is shown (see FeedbackLayer.SpawnFlyingDamageOrb's onArrival), not while it's still mid-flight.</summary>
+        private System.Collections.IEnumerator DrainComboIntoDamage(int startTotal, int startChips, float startMult, int enemyIndex, EnemyId identity, int hpBefore, int hpAfter, int maxHp)
         {
             var enemyAnchor = _hudView.GetEnemyIconTransform(enemyIndex);
             int damage = hpBefore - hpAfter;
@@ -1368,14 +1357,6 @@ namespace Contigu.Presentation
                     ShakeScreen(damage, maxHp);
                     damageShown = true;
                 });
-                if (isRetargetHit)
-                {
-                    var originAnchor = _gridView.GetCellTransform(GridManager.Size / 2, GridManager.Size / 2);
-                    if (originAnchor != null)
-                    {
-                        _feedbackLayer.SpawnImpactLine(originAnchor.position, enemyAnchor.position, UITheme.Danger);
-                    }
-                }
                 // The HP bar (and combo total) only start draining once the orb has actually landed and the
                 // damage number is shown — draining them earlier, while the orb is still mid-flight, would
                 // move the HP bar before the player has seen what hit it.

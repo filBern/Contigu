@@ -75,12 +75,8 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// <paramref name="pieceShape"/>/<paramref name="pieceColor"/> is the
-        /// specific piece Joker added (see RunManager.LastJokerShapeAdded),
-        /// previewed below the card. <paramref name="trait"/> is Joker's
-        /// combat trait (see RunManager.LastJokerCombatKindAdded), passed
-        /// through to ShapePreviewFactory, which badges every cell of the
-        /// preview for a Joker-exclusive kind.
+        /// <paramref name="pieceShape"/>/<paramref name="pieceColor"/> is the specific piece Joker added (see RunManager.LastJokerShapeAdded),
+        /// previewed below the card. <paramref name="trait"/> is an upgrade the previewed seed carries, if any.
         /// </summary>
         public void Show(UpgradeDefinition def, ShapeId pieceShape, PieceColor pieceColor, PieceTrait? trait = null)
         {

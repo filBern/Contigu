@@ -91,23 +91,24 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void SproutOnAOneCellJoker_NeverReplacesItsCombatTrait()
+        public void AJoker_TakesRegularUpgrades_ExceptTheOnesThatNeedARealColor()
         {
             var run = NewRun();
-            var deck = run.Deck;
-            deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0), null));
-            int jokerIndex = deck.Deck.Count - 1;
-            Assert.IsTrue(PieceTrait.IsJokerCombatKind(deck.Deck[jokerIndex].Traits[0].Kind));
-            deck.TagSpecificTokens(new[] { jokerIndex }, PieceTraitKind.Mimic, new SystemRandomProvider(3));
-            var traits = deck.Deck[jokerIndex].Traits;
-            Assert.AreEqual(1, traits.Count);
-            Assert.AreEqual(PieceTraitKind.Bombe, traits[0].Kind);
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker));
+            int jokerIndex = run.Deck.DeckCount - 1;
+            CollectionAssert.Contains(run.Upgrades.GetCandidateTilesFor(UpgradeCatalog.PipTile, run.Deck, 500), jokerIndex, "a Joker is offered an ordinary upgrade");
+            foreach (var upgrade in new[] { UpgradeCatalog.DominantTile, UpgradeCatalog.HeritageTile, UpgradeCatalog.ChameleonTile })
+            {
+                CollectionAssert.DoesNotContain(run.Upgrades.GetCandidateTilesFor(upgrade, run.Deck, 500), jokerIndex, upgrade.Name + " would recolor a Joker for good");
+            }
+            run.Deck.TagSpecificTokens(new[] { jokerIndex }, PieceTraitKind.Pip, new SystemRandomProvider(3));
+            Assert.AreEqual(PieceTraitKind.Pip, run.Deck.Deck[jokerIndex].Traits[0].Kind);
         }
 
         private static PlacementResult PlantJoker(RunManager run, params ModifierId[] mods)
         {
             foreach (var id in mods) { Assert.IsTrue(run.DebugGrantModifier(id), id.ToString()); }
-            int slot = HandSlotWith(run, new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            int slot = HandSlotWith(run, new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Pip, 0)));
             var outcome = run.PlacePiece(slot, 2, 2);
             Assert.IsTrue(outcome.Placement.Success);
             return outcome.Placement;
@@ -129,7 +130,7 @@ namespace Contigu.Tests
 
             // Wild Reserve: +0.1 Mult per Joker seed in the bag (the one planted is still in the bag).
             var reserveRun = NewRun();
-            reserveRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Range, 0)));
+            reserveRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Pip, 0)));
             var reserve = PlantJoker(reserveRun, ModifierId.WildReserve);
             Assert.AreEqual(2 * ScoringConstants.WildReserveMultPerJoker, reserve.ProgressiveAdditiveMult, 1e-3f);
         }
@@ -165,7 +166,7 @@ namespace Contigu.Tests
 
             // A Joker is never offered a recoloring upgrade.
             var jokerRun = NewRun();
-            jokerRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Bombe, 0)));
+            jokerRun.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker, new PieceTrait(PieceTraitKind.Pip, 0)));
             var jokerIndex = jokerRun.Deck.DeckCount - 1;
             var offered = jokerRun.Upgrades.GetCandidateTilesFor(UpgradeCatalog.DominantTile, jokerRun.Deck, 500);
             CollectionAssert.DoesNotContain(offered, jokerIndex);

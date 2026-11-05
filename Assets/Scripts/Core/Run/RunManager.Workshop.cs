@@ -105,7 +105,8 @@ namespace Contigu.Core
             var tokens = Deck.Deck;
             for (int i = 0; i < tokens.Count; i++)
             {
-                if (i != chosen.DeckIndex && DeckManager.FirstFreeCell(tokens[i]) >= 0) { receivers.Add(i); }
+                bool jokerCannotTakeIt = tokens[i].Color == PieceColor.Joker && PieceTrait.IsIncompatibleWithJoker(tokens[chosen.DeckIndex].Traits[chosen.TraitIndex].Kind);
+                if (i != chosen.DeckIndex && !jokerCannotTakeIt && DeckManager.FirstFreeCell(tokens[i]) >= 0) { receivers.Add(i); }
             }
             if (receivers.Count == 0)
             {

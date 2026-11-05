@@ -100,8 +100,6 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `WildReserve` | Wild Reserve | Roguelike |
 | `WildSurge` | Wild Surge | Roguelike |
 | `CropRotation` | Crop Rotation | Formes |
-| `RenfortJoker` | Battle Tonic | Roguelike |
-| `Arsenal` | Arsenal | Roguelike |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
 | `Cadence` | Cadence | Roguelike |
 | `Echo` | Echo | Roguelike |

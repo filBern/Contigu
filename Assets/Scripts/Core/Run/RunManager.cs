@@ -438,8 +438,6 @@ namespace Contigu.Core
         /// <summary>The shape most recently rolled by a Joker purchase - read once by the presentation layer right after the purchase. Meaningless before any Joker purchase this run.</summary>
         public ShapeId LastJokerShapeAdded { get; private set; }
 
-        /// <summary>The Joker-exclusive combat trait that same purchase also rolled (see <see cref="PieceTrait.JokerCombatKinds"/>). Meaningless before any Joker purchase this run.</summary>
-        public PieceTraitKind LastJokerCombatKindAdded { get; private set; }
 
         /// <summary>The modifier most recently granted by a "Random Modifier" purchase - read once by the presentation layer. Null if the gamble granted nothing (already at the cap, or every modifier already held). Meaningless before any such purchase this run.</summary>
         public ModifierId? LastRandomModifierGranted { get; private set; }
@@ -524,8 +522,6 @@ namespace Contigu.Core
                     return "Currently +" + FormatMultDisplay((1 + CountUpgradedDeckCards()) / (float)ScoringConstants.CartesEnchanteesUpgradedCardsPerMultStep * levelFactor) + " Mult";
                 case ModifierId.Experience:
                     return "Currently +" + FormatMultDisplay((1 + _specialPiecesPlayedCount) / (float)ScoringConstants.ExperienceSpecialPiecesPlayedPerMultStep * levelFactor) + " Mult";
-                case ModifierId.Arsenal:
-                    return "Currently +" + Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * levelFactor) + " Mult";
                 case ModifierId.Hate:
                     return "Currently +" + FormatMultDisplay(PiecesRemainingThisRound * ScoringConstants.HasteMultPerSeedLeft * levelFactor) + " Mult";
                 case ModifierId.Tourbillon:
@@ -972,12 +968,7 @@ namespace Contigu.Core
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
             if (HasActiveEncounter)
             {
-                // A Joker piece carrying a combat trait retargets (or splits) this
-                // placement's damage instead of the ordinary front-alive-enemy hit -
-                // and the same applies whenever an older Joker piece's stamped cells
-                // get pulled into this placement's scored group, so this scans the
-                // whole group rather than just this token's own trait.
-                ApplyJokerCombatOrDefaultDamage(placement.GroupCells, placement.TotalScore);
+                ApplyDamageToEncounter(placement.TotalScore);
                 if (placement.ClearedLineCount > 0)
                 {
                     HealLeech(placement.ClearedLineCount);

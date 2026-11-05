@@ -20,10 +20,7 @@ namespace Contigu.Presentation
         /// pixel budget; cell size is computed to fit inside it unless
         /// <paramref name="fixedCellSize"/> is supplied) with one square per
         /// cell of <paramref name="shape"/>. When <paramref name="trait"/> is
-        /// given, its enchanted cell also gets a small corner badge; every
-        /// cell gets one instead for a Joker-exclusive combat kind (see
-        /// PieceTrait.IsJokerCombatKind), since those tag the whole piece
-        /// rather than one specific cell. Hovering a badge shows
+        /// given, its enchanted cell also gets a small corner badge. Hovering a badge shows
         /// <paramref name="tooltip"/>; clicking it forwards the click to
         /// <paramref name="clickForwardTarget"/> so the badge never swallows
         /// a click meant for a bigger clickable element it sits inside.
@@ -97,18 +94,10 @@ namespace Contigu.Presentation
                 ? fixedCellSize.Value
                 : Mathf.Min(container.sizeDelta.x / cols, container.sizeDelta.y / rows, VisualDefaults.GridCellSize);
 
-            PieceTrait? everyCellTrait = null;
             var traitAt = new Dictionary<Vector2Int, PieceTrait>();
             for (int t = 0; traits != null && t < traits.Count; t++)
             {
-                if (PieceTrait.IsJokerCombatKind(traits[t].Kind))
-                {
-                    everyCellTrait = traits[t];
-                }
-                else
-                {
-                    traitAt[shape.Cells[traits[t].LocalCellIndex]] = traits[t];
-                }
+                traitAt[shape.Cells[traits[t].LocalCellIndex]] = traits[t];
             }
 
             float startX = -(cols * cell) / 2f + cell / 2f;
@@ -134,12 +123,8 @@ namespace Contigu.Presentation
                     img.rectTransform.anchoredPosition = new Vector2(startX + x * cell, startY + y * cell);
 
                     PieceTrait cellTrait = default(PieceTrait);
-                    bool hasCellTrait = everyCellTrait.HasValue;
-                    if (hasCellTrait)
-                    {
-                        cellTrait = everyCellTrait.Value;
-                    }
-                    else if (traitAt.TryGetValue(new Vector2Int(x, y), out var found))
+                    bool hasCellTrait = false;
+                    if (traitAt.TryGetValue(new Vector2Int(x, y), out var found))
                     {
                         hasCellTrait = true;
                         cellTrait = found;

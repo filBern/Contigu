@@ -110,7 +110,7 @@ namespace Contigu.Presentation
                 // (LastRandomModifierGranted null — already at the cap).
                 if (revealedUpgrade.Id == UpgradeId.JokerPiece)
                 {
-                    _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker, new PieceTrait(_run.LastJokerCombatKindAdded, 0));
+                    _upgradeRevealView.Show(revealedUpgrade, _run.LastJokerShapeAdded, PieceColor.Joker);
                 }
                 else if (revealedUpgrade.Id == UpgradeId.PermanentBonusSquare)
                 {

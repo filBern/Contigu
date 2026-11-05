@@ -170,15 +170,13 @@ namespace Contigu.Tests
             var system = new UpgradeSystem(new SystemRandomProvider(1));
             int before = deck.DeckCount;
 
-            ShapeId addedShape = system.ApplyJoker(deck, out var combatKind);
+            ShapeId addedShape = system.ApplyJoker(deck);
 
             Assert.AreEqual(before + 1, deck.DeckCount);
             var addedToken = deck.Deck[deck.Deck.Count - 1];
             Assert.AreEqual(addedShape, addedToken.Shape);
             Assert.AreEqual(PieceColor.Joker, addedToken.Color);
-            Assert.IsTrue(PieceTrait.IsJokerCombatKind(combatKind));
-            Assert.IsTrue(addedToken.Trait.HasValue);
-            Assert.AreEqual(combatKind, addedToken.Trait.Value.Kind);
+            Assert.AreEqual(0, addedToken.TraitCount);
         }
 
         [Test]

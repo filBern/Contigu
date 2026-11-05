@@ -219,30 +219,6 @@ namespace Contigu.Core
         /// <summary>"Locksmith Sprout" — Each time it scores, frees one locked, frozen or poisoned plot anywhere.</summary>
         Locksmith,
 
-        // Joker-exclusive combat traits — unlike every trait above, these
-        // never score anything on their own: they only change which enemy
-        // (or enemies) this placement's damage lands on during an active
-        // encounter (see RunManager.ApplyJokerCombatDamage), and are never
-        // offered through the ordinary tile-upgrade shop — every Joker
-        // piece is tagged with exactly one, rolled at random the moment
-        // it's added to the deck (see DeckManager.AddJoker). Visually,
-        // every cell of the piece shows the badge (not just one, like the
-        // scoring traits above — see ShapePreviewFactory.Build/IsJokerCombatKind),
-        // but the effect itself still only fires once per placement
-        // regardless of the piece's cell count.
-
-        /// <summary>"Bombe" — splits this placement's damage EQUALLY across every alive enemy instead of just the front one.</summary>
-        Bombe,
-
-        /// <summary>"Range" — damages the LAST alive enemy in encounter order instead of the front one.</summary>
-        Range,
-
-        /// <summary>"Éclat" — damages the front alive enemy same as the default rule, but any OVERKILL (damage beyond its remaining HP) cascades onto the next alive enemy, and so on down the line.</summary>
-        Eclat,
-
-        /// <summary>"Précision" — always damages whichever ALIVE enemy currently has the LOWEST HP, ignoring the usual front-to-back order — a finishing blow instead of chipping at the front.</summary>
-        Precision,
-
         /// <summary>"Mimic Sprout" — replays the upgrade of every tile of its group touching it (orthogonally), as if it carried those upgrades itself. Explicit id 100: 76 belonged to the retired Sap Drain, which old saves still carry (converted on restore).</summary>
         Mimic = 100,
 
@@ -283,12 +259,6 @@ namespace Contigu.Core
             TintedColor = tintedColor;
         }
 
-        /// <summary>Every Joker-exclusive combat kind (see their own doc comments on <see cref="PieceTraitKind"/>) — DeckManager.AddJoker rolls uniformly from this array, and ShapePreviewFactory/RunManager.ApplyTokenTrait check membership in it to badge every cell instead of just <see cref="LocalCellIndex"/>.</summary>
-        public static readonly PieceTraitKind[] JokerCombatKinds =
-        {
-            PieceTraitKind.Bombe, PieceTraitKind.Range, PieceTraitKind.Eclat, PieceTraitKind.Precision
-        };
-
         /// <summary>The color a freshly tagged trait of <paramref name="kind"/> is pinned to: Tinted keeps its token's own, Companion looks for the next color of the run after it (so a Companion Sprout always wants a different color); null for every other kind.</summary>
         public static PieceColor? TargetColorFor(PieceTraitKind kind, PieceColor tokenColor)
         {
@@ -312,10 +282,13 @@ namespace Contigu.Core
             return colors[(own + 1) % colors.Count];
         }
 
-        public static bool IsJokerCombatKind(PieceTraitKind kind)
+        /// <summary>
+        /// Upgrades a Joker seed cannot carry: the ones that need a real color (Tinted) or that would turn the seed into a plain colored one for
+        /// good (Chameleon, Dominant, Heritage). A Joker takes every other upgrade like any seed.
+        /// </summary>
+        public static bool IsIncompatibleWithJoker(PieceTraitKind kind)
         {
-            return kind == PieceTraitKind.Bombe || kind == PieceTraitKind.Range || kind == PieceTraitKind.Eclat
-                || kind == PieceTraitKind.Precision;
+            return kind == PieceTraitKind.Tinted || kind == PieceTraitKind.Chameleon || kind == PieceTraitKind.Dominant || kind == PieceTraitKind.Heritage;
         }
     }
 }

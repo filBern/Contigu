@@ -57,7 +57,7 @@ in_all = set(re.findall(r'\b(\w+)\b', all_array))
 # Ids that are state markers rather than content (no card, no price, no icon).
 NOT_CONTENT = {'Blighted', 'EclatCoral', 'EclatTeal', 'EclatViolet', 'EclatLime',
                'ArcEnCielLueur', 'AlternanceLueur', 'MonochromeLigneLueur', 'CollectionneurLueur', 'RepetitionLueur', 'Siphon',
-               'Pollinisateur', 'Miel', 'Nectar', 'Dime', 'Tonneau', 'Grange'}  # state marker; retired fertilizers (ids kept for saves)
+               'Pollinisateur', 'Miel', 'Nectar', 'Dime', 'Tonneau', 'Grange', 'RenfortJoker', 'Arsenal'}  # state marker; retired fertilizers (ids kept for saves)
 for mid in modifier_ids:
     if mid in NOT_CONTENT:
         continue

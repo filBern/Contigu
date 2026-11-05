@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """One tiny bold icon per sprout trait (tile upgrade) + the poison marker. 64px target, so: one chip color, one glyph.
-Joker combat traits share the purple chip. Output: traits/<PieceTraitKind>.svg and traits/Poison.svg"""
+Output: traits/<PieceTraitKind>.svg and traits/Poison.svg"""
 import math, os
 O = '#13212e'; W = '#fff7e8'
 
@@ -37,10 +37,6 @@ T['Bastion'] = ('#614363', g('<path d="M32 8 L52 15 V32 C52 45 42 52 32 56 C22 5
 T['Kamikaze'] = ('#b56d7f', g('<circle cx="30" cy="38" r="17"/>', '#3a3a44') + g('<path d="M40 24 Q48 18 50 10"/>', 'none', 3.5).replace('fill="none"', 'fill="none"') + g(star(52, 9, 8, 6, 0.5), '#ffd84d', 2.5) + '<circle cx="24" cy="32" r="4" fill="#fff" opacity="0.8"/>')
 T['Venom'] = ('#5f9f5f', g('<path d="M32 8 C44 24 50 34 44 46 C40 54 24 54 20 46 C14 34 20 24 32 8Z"/>', '#b8e04a') + '<circle cx="28" cy="42" r="4" fill="#3a5a1a"/><circle cx="38" cy="38" r="3" fill="#3a5a1a"/>')
 P = '#8c63b0'
-T['Bombe'] = (P, g(star(32, 32, 22, 8, 0.45), W) + g('<circle cx="32" cy="32" r="5"/>', P, 3))
-T['Range'] = (P, g('<path d="M8 32 H46 M36 20 L50 32 L36 44" fill="none"/>', 'none', 6).replace(O, W) + '<path d="M8 32 H46 M36 20 L50 32 L36 44" fill="none" stroke="%s" stroke-width="2" stroke-linecap="round"/>' % O + '<path d="M54 14 V50" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
-T['Eclat'] = (P, g('<rect x="12" y="10" width="40" height="12" rx="4"/>', W) + g('<path d="M32 26 V48 M22 40 L32 52 L42 40" fill="none"/>', 'none', 6).replace(O, W))
-T['Precision'] = (P, g('<circle cx="32" cy="32" r="19" fill="none"/>', 'none', 5).replace(O, W) + g('<circle cx="32" cy="32" r="5"/>', W, 2.5) + '<path d="M32 6 V18 M32 46 V58 M6 32 H18 M46 32 H58" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % W)
 
 # ---- placement-point tile upgrades
 def dots3(cells_fill):

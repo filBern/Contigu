@@ -78,11 +78,6 @@ namespace Contigu.Core
                 { ModifierId.Hothouse, ctx => { ctx.AdditiveMult += ApplyHothouse(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.GoodNeighbors, ctx => { ctx.AdditiveMult += ApplyGoodNeighbors(ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Polyvalence, ctx => { ctx.AdditiveMult += ApplyPolyvalence(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
-                // Renfort Joker/Arsenal/Siphon are resolved in RunManager
-                // instead (enemy damage/Lueur scaling, or deck scanning that
-                // GridManager has no reference for).
-                { ModifierId.RenfortJoker, ctx => 0 },
-                { ModifierId.Arsenal, ctx => 0 },
                 { ModifierId.CollectionChromatique, ctx => { ctx.AdditiveMult += ApplyCollectionChromatique(ctx.ActiveModifiers, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Cadence, ctx => { ctx.Multiplier *= ApplyCadence(ctx.ActiveModifiers, ctx.Shape, ctx.GroupCells, ctx.PlacedCells, ctx.Events); return 0; } },
                 { ModifierId.Echo, ctx => ApplyEcho(ctx) },

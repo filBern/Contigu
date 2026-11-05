@@ -670,10 +670,7 @@ namespace Contigu.Presentation
 
         /// <summary>
         /// Brief fading streak drawn straight from <paramref name="fromWorldPosition"/> to
-        /// <paramref name="toWorldPosition"/> — used when a Joker combat trait retargets damage away from
-        /// the default front enemy (Range/Précision), so the player can actually see where the hit went
-        /// instead of having to notice which HP bar moved. Not used for Bombe/Éclat's spread, which already
-        /// reads as "everyone" without needing a directional cue.
+        /// <paramref name="toWorldPosition"/> — used to show where a hit went when it is not the front enemy (no current upgrade retargets damage).
         /// </summary>
         public void SpawnImpactLine(Vector3 fromWorldPosition, Vector3 toWorldPosition, Color color)
         {

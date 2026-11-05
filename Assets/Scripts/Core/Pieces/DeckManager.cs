@@ -269,7 +269,7 @@ namespace Contigu.Core
             var candidates = new List<(ShapeId Shape, PieceColor Color)>();
             foreach (var kvp in GetDeckComposition())
             {
-                // Jokers are never offered: duplicating or recoloring one would make a Joker without its combat trait.
+                // Jokers are never offered as a type to duplicate, replace or recolor.
                 if (kvp.Key.Color != PieceColor.Joker && (eligible == null || eligible(kvp.Key)))
                 {
                     candidates.Add(kvp.Key);
@@ -393,18 +393,11 @@ namespace Contigu.Core
             return true;
         }
 
-        /// <summary>
-        /// Adds a joker-colored piece in a uniformly random shape, tagged
-        /// with one of the Joker-exclusive combat traits rolled uniformly
-        /// from <see cref="PieceTrait.JokerCombatKinds"/> — every Joker gets
-        /// exactly one, never none. Returns the shape actually rolled;
-        /// <paramref name="combatKind"/> carries the trait roll.
-        /// </summary>
-        public ShapeId AddJoker(IRandomProvider rng, out PieceTraitKind combatKind)
+        /// <summary>Adds a plain Joker seed of a random shape (it takes upgrades like any other seed). Returns the shape rolled.</summary>
+        public ShapeId AddJoker(IRandomProvider rng)
         {
             var shape = InitialDeckFactory.ShapeOrder[rng.Next(InitialDeckFactory.ShapeOrder.Length)];
-            combatKind = PieceTrait.JokerCombatKinds[rng.Next(PieceTrait.JokerCombatKinds.Length)];
-            AddToken(new PieceToken(shape, PieceColor.Joker, new PieceTrait(combatKind, 0)));
+            AddToken(new PieceToken(shape, PieceColor.Joker));
             return shape;
         }
 
@@ -510,7 +503,7 @@ namespace Contigu.Core
             var token = _deck[deckIndex];
             var traits = token.Traits;
             if (traitIndex < 0 || traitIndex >= traits.Count) { return false; }
-            return !(token.Color == PieceColor.Joker && PieceTrait.IsJokerCombatKind(traits[traitIndex].Kind));
+            return true;
         }
 
         /// <summary>
@@ -531,6 +524,10 @@ namespace Contigu.Core
                 return false;
             }
             var moved = from.Traits[traitIndex];
+            if (to.Color == PieceColor.Joker && PieceTrait.IsIncompatibleWithJoker(moved.Kind))
+            {
+                return false;
+            }
             var tint = PieceTrait.TargetColorFor(moved.Kind, to.Color);
             var fromAfter = from.WithoutTraitAt(traitIndex);
             var toAfter = to.WithAddedTrait(new PieceTrait(moved.Kind, freeCell, tint));
@@ -800,23 +797,7 @@ namespace Contigu.Core
                 }
                 else
                 {
-                    // Never the Joker's combat trait: it is what makes the piece a Joker.
-                    var replaceable = new List<int>();
-                    var current = token.Traits;
-                    for (int c = 0; c < cellCount; c++)
-                    {
-                        bool combat = false;
-                        for (int k = 0; k < current.Count; k++)
-                        {
-                            if (current[k].LocalCellIndex == c && PieceTrait.IsJokerCombatKind(current[k].Kind)) { combat = true; }
-                        }
-                        if (!combat) { replaceable.Add(c); }
-                    }
-                    if (replaceable.Count == 0)
-                    {
-                        continue;
-                    }
-                    int localIndex = replaceable[rng.Next(replaceable.Count)];
+                    int localIndex = rng.Next(cellCount);
                     trait = new PieceTrait(kind, localIndex, PieceTrait.TargetColorFor(kind, token.Color));
                     taggedToken = ReplaceTraitOnCell(token, trait);
                 }

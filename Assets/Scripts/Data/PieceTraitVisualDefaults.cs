@@ -29,10 +29,6 @@ namespace Contigu.Data
         // The flat placement-point tile upgrades share one warm badge color; the glyph on the badge tells them apart.
         private static readonly Color PlacementPointBadgeColor = new Color(0.910f, 0.659f, 0.180f); // #e8a82e
 
-        // Joker-exclusive combat traits all share Joker's own color
-        // (VisualDefaults.ColorMap[PieceColor.Joker]); the hover tooltip
-        // is what distinguishes them from each other.
-        private static readonly Color JokerCombatBadgeColor = new Color(0.549f, 0.388f, 0.690f); // #8c63b0
 
         public static string GetName(PieceTraitKind kind)
         {
@@ -115,10 +111,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Heritage: return "Heritage Sprout";
                 case PieceTraitKind.Scythe: return "Scythe Sprout";
                 case PieceTraitKind.Tally: return "Tally Sprout";
-                case PieceTraitKind.Bombe: return "Spore Burst";
-                case PieceTraitKind.Range: return "Long Reach";
-                case PieceTraitKind.Eclat: return "Overflow";
-                case PieceTraitKind.Precision: return "Pruning";
                 default: return kind.ToString();
             }
         }
@@ -127,7 +119,7 @@ namespace Contigu.Data
         public static string GetDescription(PieceTrait trait)
         {
             string text = GetBaseDescription(trait);
-            return PieceTrait.IsJokerCombatKind(trait.Kind) || text.Length == 0 ? text : text + " Counts again every time this tile is scored.";
+            return text.Length == 0 ? text : text + " Counts again every time this tile is scored.";
         }
 
         private static string GetBaseDescription(PieceTrait trait)
@@ -289,14 +281,6 @@ namespace Contigu.Data
                     return "Replays the upgrade of every tile of its group touching it, as if it carried them itself.";
                 case PieceTraitKind.Locksmith:
                     return "Each time it scores, frees one locked, frozen or poisoned plot anywhere in the garden.";
-                case PieceTraitKind.Bombe:
-                    return "Splits this placement's damage equally across every enemy currently alive, instead of just the front one.";
-                case PieceTraitKind.Range:
-                    return "Damages the LAST alive enemy in the encounter order instead of the front one.";
-                case PieceTraitKind.Eclat:
-                    return "Damages the front alive enemy, but any overkill beyond its remaining HP cascades onto the next alive enemy, and so on.";
-                case PieceTraitKind.Precision:
-                    return "Always damages whichever alive enemy currently has the lowest HP, instead of the front one - a finishing blow.";
                 default:
                     return string.Empty;
             }
@@ -507,11 +491,6 @@ namespace Contigu.Data
                 case PieceTraitKind.Scythe:
                 case PieceTraitKind.Tally:
                     return PlacementPointBadgeColor;
-                case PieceTraitKind.Bombe:
-                case PieceTraitKind.Range:
-                case PieceTraitKind.Eclat:
-                case PieceTraitKind.Precision:
-                    return JokerCombatBadgeColor;
                 default:
                     return Color.gray;
             }

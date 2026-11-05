@@ -491,8 +491,7 @@ namespace Contigu.Core
             // instead of just naming the upgrade.
             if (upgrade.Id == UpgradeId.JokerPiece)
             {
-                LastJokerShapeAdded = Upgrades.ApplyJoker(Deck, out var combatKind);
-                LastJokerCombatKindAdded = combatKind;
+                LastJokerShapeAdded = Upgrades.ApplyJoker(Deck);
             }
             else if (upgrade.Id == UpgradeId.PieceMastery)
             {

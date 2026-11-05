@@ -357,7 +357,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition WildPack = new UpgradeDefinition(
             UpgradeId.WildPack, UpgradePool.Workshop, "Wild Pack",
-            "Reveals 3 Wild Seeds, each with its own combat trait. Keep 1.", false, UpgradeRarity.Rare);
+            "Reveals 3 Wild Seeds (Jokers), each with a regular upgrade. Keep 1.", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition Compost = new UpgradeDefinition(
             UpgradeId.Compost, UpgradePool.Workshop, "Compost",

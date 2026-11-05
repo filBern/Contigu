@@ -367,14 +367,6 @@ namespace Contigu.Core
             ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
             "+1 Mult per distinct fertilizer category you hold at least one of.");
 
-        public static readonly ModifierDefinition RenfortJoker = new ModifierDefinition(
-            ModifierId.RenfortJoker, ModifierCategory.Roguelike, "Battle Tonic",
-            "+25% damage on placements that trigger a Joker combat trait (Spore Burst/Long Reach/Overflow/Pruning). No effect otherwise.");
-
-        public static readonly ModifierDefinition Arsenal = new ModifierDefinition(
-            ModifierId.Arsenal, ModifierCategory.Roguelike, "Arsenal",
-            "+1 Mult per distinct Joker combat trait kind currently in your seed bag.");
-
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
             ModifierId.CollectionChromatique, ModifierCategory.Couleurs, "Chromatic Hoard",
             "+2 Mult per color for which you hold its Devotion fertilizer.");
@@ -621,7 +613,7 @@ namespace Contigu.Core
             FormatPetitSpecialiste, FormatMoyenSpecialiste, FormatGrandSpecialiste,
             FormatPetitGlow, FormatMoyenGlow, FormatGrandGlow,
             Pair, Impair,
-            Polyvalence, RenfortJoker, Arsenal,
+            Polyvalence,
             CollectionChromatique, Cadence, Echo, QuatriemeEmplacement,
             Barometre, ChasseurTempete, Impermeable, Epines, Exterminateur, Hate, Tourbillon, PierreAngulaire,
             Haie, Coeur, Treillis, Sillon, Haricot, Patchwork, Racines, Emboite,
@@ -661,6 +653,8 @@ namespace Contigu.Core
                 case ModifierId.Dime:
                 case ModifierId.Tonneau:
                 case ModifierId.Grange:
+                case ModifierId.RenfortJoker:
+                case ModifierId.Arsenal:
                     return true;
                 default:
                     return false;

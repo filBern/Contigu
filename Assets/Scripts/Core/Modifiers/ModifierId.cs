@@ -118,8 +118,8 @@ namespace Contigu.Core
         Impair,
 
         // Modifiers that reward owning other specific things (a matching
-        // Devotion fertilizer per color, a spread of modifier categories,
-        // a spread of Joker combat trait kinds) instead of each one scoring
+        // Devotion fertilizer per color, a spread of modifier categories)
+        // instead of each one scoring
         // in isolation off its own fixed condition.
         Polyvalence,
         RenfortJoker,
@@ -134,7 +134,7 @@ namespace Contigu.Core
         /// <summary>Replays whatever modifier sits immediately before it in the player's held order, for this placement only — "as if holding a second copy of it" (see GridManager.ApplyEcho). Never chains into another Écho.</summary>
         Echo,
 
-        /// <summary>Lueur siphon that fires alongside ANY Joker combat trait kind (see RunManager.ApplyJokerCombatOrDefaultDamage).</summary>
+        /// <summary>Retired (Pollen fertilizer).</summary>
         Siphon,
 
         /// <summary>Grows the hand by one extra slot (see DeckManager.SetEffectiveHandSize/MaxHandSize), applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt rather than scored on placement like every other modifier.</summary>

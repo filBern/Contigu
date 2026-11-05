@@ -51,7 +51,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void WildPack_OffersThreeWildSeeds_EachWithExactlyOneCombatTrait()
+        public void WildPack_OffersThreeWildSeeds_EachWithARegularUpgrade()
         {
             var run = ShopRun();
             run.DebugSetWorkshopSlot(0, UpgradeCatalog.WildPack);
@@ -62,7 +62,7 @@ namespace Contigu.Tests
             {
                 Assert.AreEqual(PieceColor.Joker, token.Color);
                 Assert.AreEqual(1, token.TraitCount);
-                Assert.IsTrue(PieceTrait.IsJokerCombatKind(token.Trait.Value.Kind));
+                Assert.IsFalse(PieceTrait.IsIncompatibleWithJoker(token.Trait.Value.Kind), "a Wild Seed never carries an upgrade a Joker cannot use");
             }
             Assert.IsTrue(run.ResolveUpgradePieceChoice(2));
             Assert.AreEqual(before + 1, run.Deck.DeckCount);
@@ -461,13 +461,17 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Transplant_NeverMovesAJokersCombatTrait()
+        public void Transplant_NeverPutsARecoloringUpgradeOnAJoker()
         {
             var run = ShopRun(10);
-            var rng = new SystemRandomProvider(4);
-            run.Deck.AddJoker(rng, out _);
-            int joker = run.Deck.Deck.Count - 1;
-            Assert.IsFalse(run.Deck.CanTransplantFrom(joker, 0));
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Joker));
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Dominant, 0)));
+            int joker = run.Deck.Deck.Count - 2;
+            int dominant = run.Deck.Deck.Count - 1;
+            Assert.IsFalse(run.Deck.TransplantTrait(dominant, 0, joker), "a Joker cannot recolor itself for good");
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Pip, 0)));
+            int pip = run.Deck.Deck.Count - 1;
+            Assert.IsTrue(run.Deck.TransplantTrait(pip, 0, joker), "any other upgrade can move onto a Joker");
         }
 
         [Test]

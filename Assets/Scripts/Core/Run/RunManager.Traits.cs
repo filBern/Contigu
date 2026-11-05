@@ -62,22 +62,6 @@ namespace Contigu.Core
             // kind - not added to transientCells (see Cell.OriginTrait).
             cell.OriginTrait = trait.Value;
 
-            // Joker's own combat traits badge every cell of the piece, not just
-            // this one - purely cosmetic; the one-shot combat effect still
-            // resolves once per placement regardless (see
-            // RunManager.ApplyJokerCombatDamage).
-            if (PieceTrait.IsJokerCombatKind(trait.Value.Kind))
-            {
-                for (int i = 0; i < shape.Cells.Count; i++)
-                {
-                    var otherPos = new Vector2Int(anchorX, anchorY) + shape.Cells[i];
-                    if (otherPos != pos)
-                    {
-                        Grid.GetCell(otherPos.x, otherPos.y).OriginTrait = trait.Value;
-                    }
-                }
-            }
-
             switch (trait.Value.Kind)
             {
                 case PieceTraitKind.Golden:
@@ -212,16 +196,6 @@ namespace Contigu.Core
                     // it.
                     break;
 
-                case PieceTraitKind.Bombe:
-                case PieceTraitKind.Range:
-                case PieceTraitKind.Eclat:
-                case PieceTraitKind.Precision:
-                    // Joker-exclusive combat traits never score anything of their own
-                    // (the OriginTrait stamp is purely cosmetic); their effect is
-                    // resolved from PlacePiece's own HasActiveEncounter block, after
-                    // Grid.PlacePiece returns the final TotalScore to redirect (see
-                    // ApplyJokerCombatDamage).
-                    break;
             }
             return transientCells;
         }
@@ -314,7 +288,7 @@ namespace Contigu.Core
         private void AddDistinctNeighborColor(int x, int y, List<PieceColor> candidates)
         {
             var color = TryGetFilledNeighborColor(x, y);
-            // A Joker plot is never copied: the seed would turn into a Joker for good, without the combat trait every Joker carries.
+            // A Joker plot is never copied: the seed would turn into a Joker for good.
             if (color.HasValue && color.Value != PieceColor.Joker && !candidates.Contains(color.Value))
             {
                 candidates.Add(color.Value);
@@ -663,18 +637,6 @@ namespace Contigu.Core
                 {
                     AddRunStateMultBonus(placement, events, ModifierId.Tourbillon, i, ShufflesRemaining * ScoringConstants.WhirlwindMultPerShuffle * GetModifierLevelFactor(i), whole: false);
                 }
-                else if (_activeModifiers[i] == ModifierId.Arsenal)
-                {
-                    // Whole-number count (at most 5), so this joins the regular
-                    // AdditiveMultBonus pool like Solidarite/MultUn, not the fractional
-                    // ProgressiveAdditiveMult pool CartesEnchantees/Experience use.
-                    int bonus = Mathf.RoundToInt(CountDistinctCombatKindsInDeck() * ScoringConstants.ArsenalMultPerDistinctCombatKind * GetModifierLevelFactor(i));
-                    placement.AdditiveMultBonus += bonus;
-                    var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], bonus);
-                    multEvent.TriggeringModifier = ModifierId.Arsenal;
-                    multEvent.TriggeringModifierIndex = i;
-                    events.Add(multEvent);
-                }
                 else
                 {
                     ApplyNewRunStateModifier(placement, events, i, _activeModifiers[i]);
@@ -752,24 +714,6 @@ namespace Contigu.Core
                 }
             }
             return count;
-        }
-
-        /// <summary>Arsenal's driver: how many distinct Joker-exclusive combat trait kinds (see PieceTrait.JokerCombatKinds) are currently anywhere in the deck - duplicates of the same kind count once.</summary>
-        private int CountDistinctCombatKindsInDeck()
-        {
-            var kindsSeen = new HashSet<PieceTraitKind>();
-            var deck = Deck.Deck;
-            for (int i = 0; i < deck.Count; i++)
-            {
-                foreach (var trait in deck[i].Traits)
-                {
-                    if (PieceTrait.IsJokerCombatKind(trait.Kind))
-                    {
-                        kindsSeen.Add(trait.Kind);
-                    }
-                }
-            }
-            return kindsSeen.Count;
         }
 
         /// <summary>Polyvalence's tooltip driver - same distinct-category count as GridManager.ApplyPolyvalence, duplicated here for this read-only "currently" display.</summary>

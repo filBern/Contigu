@@ -110,16 +110,12 @@ namespace Contigu.Core
         }
 
         /// <summary>
-        /// Applies Joker — returns the shape actually rolled (see
-        /// DeckManager.AddJoker) so RunManager can surface it as
-        /// LastJokerShapeAdded, letting the reveal (UpgradeRevealView) show
-        /// the real piece that got added instead of just naming the
-        /// upgrade. <paramref name="combatKind"/> carries the combat trait
-        /// AddJoker also rolled, surfaced the same way as LastJokerCombatKindAdded.
+        /// Applies Joker — returns the shape actually rolled (see DeckManager.AddJoker) so RunManager can surface it as LastJokerShapeAdded,
+        /// letting the reveal (UpgradeRevealView) show the real piece that got added instead of just naming the upgrade.
         /// </summary>
-        public ShapeId ApplyJoker(DeckManager deck, out PieceTraitKind combatKind)
+        public ShapeId ApplyJoker(DeckManager deck)
         {
-            return deck.AddJoker(_rng, out combatKind);
+            return deck.AddJoker(_rng);
         }
 
         /// <summary>
@@ -185,15 +181,24 @@ namespace Contigu.Core
             return candidates;
         }
 
-        /// <summary>A Wild Seed: a Joker of a random shape carrying exactly one random combat trait.</summary>
+        /// <summary>A Wild Seed: a Joker of a random shape carrying one regular upgrade, rolled like a Seed Pack seed's (rarity-weighted, never one a Joker cannot carry).</summary>
         private PieceToken RollWildSeed()
         {
             var shape = InitialDeckFactory.ShapeOrder[_rng.Next(InitialDeckFactory.ShapeOrder.Length)];
-            var kind = PieceTrait.JokerCombatKinds[_rng.Next(PieceTrait.JokerCombatKinds.Length)];
-            return new PieceToken(shape, PieceColor.Joker, new PieceTrait(kind, 0));
+            var plain = new PieceToken(shape, PieceColor.Joker);
+            int cellCount = PieceShapeCatalog.Get(shape).Cells.Count;
+            for (int attempt = 0; attempt < 60; attempt++)
+            {
+                var rolled = RollCandidateTrait(PieceColor.Joker, plain, cellCount);
+                if (rolled.HasValue && !PieceTrait.IsIncompatibleWithJoker(rolled.Value.Kind))
+                {
+                    return plain.WithAddedTrait(rolled.Value);
+                }
+            }
+            return plain;
         }
 
-        /// <summary>The Wild Pack's seeds: Wild Seeds that differ from each other by shape or combat trait.</summary>
+        /// <summary>The Wild Pack's seeds: Wild Seeds that differ from each other by shape or upgrade.</summary>
         private PieceToken[] RollWildSeeds(int count)
         {
             var seeds = new PieceToken[count];
@@ -286,10 +291,9 @@ namespace Contigu.Core
             {
                 return System.Array.Empty<int>();
             }
-            bool tinted = kind.Value == PieceTraitKind.Tinted || kind.Value == PieceTraitKind.Dominant || kind.Value == PieceTraitKind.Heritage; // a recoloring upgrade is never offered for a Joker
-            // A Joker whose every cell is taken (a one-cell Joker, whose only cell holds its combat trait) has nothing to give up: not offered.
-            System.Func<PieceToken, bool> eligible = token =>
-                (!tinted || token.Color != PieceColor.Joker) && !HasOnlyCombatCells(token);
+            // An upgrade that needs a real color or recolors the seed for good is never offered for a Joker.
+            bool jokerCannot = PieceTrait.IsIncompatibleWithJoker(kind.Value);
+            System.Func<PieceToken, bool> eligible = token => !jokerCannot || token.Color != PieceColor.Joker;
             return deck.GetCandidateTokenIndices(count, _rng, eligible);
         }
 
@@ -335,28 +339,6 @@ namespace Contigu.Core
                 return candidates;
             }
             return deck.GetCandidateTypes(EconomyConstants.ShopTileCandidateCount, _rng);
-        }
-
-        /// <summary>True when no cell of the piece is free or holds an ordinary upgrade, i.e. every cell carries a Joker combat trait.</summary>
-        private static bool HasOnlyCombatCells(PieceToken token)
-        {
-            int cellCount = PieceShapeCatalog.Get(token.Shape).Cells.Count;
-            var traits = token.Traits;
-            for (int c = 0; c < cellCount; c++)
-            {
-                if (!token.UsesCell(c))
-                {
-                    return false;
-                }
-                for (int k = 0; k < traits.Count; k++)
-                {
-                    if (traits[k].LocalCellIndex == c && !PieceTrait.IsJokerCombatKind(traits[k].Kind))
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
 
         /// <summary>Public so Presentation can preview a Grid upgrade's trait on a candidate piece before it's actually applied (see TileChoiceView) — everything else about resolving/applying an upgrade still goes through an UpgradeSystem instance.</summary>

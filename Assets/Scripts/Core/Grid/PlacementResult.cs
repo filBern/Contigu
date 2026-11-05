@@ -18,10 +18,8 @@ namespace Contigu.Core
         /// Every cell in this placement's resulting connected same-color
         /// group (see GridManager.FindConnectedGroup) — a superset of <see
         /// cref="PlacedCells"/> once this placement merges into a
-        /// pre-existing group. Used by RunManager to find any Joker-exclusive
-        /// combat trait (see PieceTrait.JokerCombatKinds) stamped on an
-        /// older cell that this placement's merge just pulled back into a
-        /// scored group, so its combat effect retriggers too.
+        /// pre-existing group. Used by RunManager to find the older upgraded tiles
+        /// that this placement's merge just pulled back into a scored group.
         /// </summary>
         public IReadOnlyList<Vector2Int> GroupCells = System.Array.Empty<Vector2Int>();
 

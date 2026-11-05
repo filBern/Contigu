@@ -33,13 +33,6 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            // Joker-exclusive combat kinds never go through the shop's rarity-weighted draft (every Joker piece is tagged at random when added; see DeckManager.AddJoker), so "Common · Grid pool" would be misleading here.
-            if (PieceTrait.IsJokerCombatKind(_trait.Kind))
-            {
-                var jokerColor = VisualDefaults.GetColor(PieceColor.Joker);
-                _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, "Joker-exclusive", jokerColor);
-                return;
-            }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
             string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
             _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));

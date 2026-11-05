@@ -18,7 +18,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 ## 3. Plateau et pièces
 
 - **Grille** 6×6 (5×5 en Greenhouse). Une case s'appelle une *plot* ; une tuile posée, un *sprout*.
-- **Seeds** : 8 formes de 1 à 4 cases (pion, dominos, trominos, carré, trois tétrominos), rotation possible, de 4 couleurs : Poppy, Iris, Sunflower, Fern (2 seulement en Orchard). Le *Joker* prend la couleur utile et porte toujours exactement un trait de combat.
+- **Seeds** : 8 formes de 1 à 4 cases (pion, dominos, trominos, carré, trois tétrominos), rotation possible, de 4 couleurs : Poppy, Iris, Sunflower, Fern (2 seulement en Orchard). Le *Joker* prend la couleur utile et porte des tile upgrades ordinaires, comme n'importe quelle graine (sauf celles qui exigent une vraie couleur ou recolorent la graine : Tinted, Chameleon, Dominant, Heritage).
 - **Seed Bag** (le deck) : 10 graines au minimum ; on en pioche une **main de 3** (4 avec un fertilizer). Un *Shuffle* limité renouvelle la main. Si aucune graine de la main ne peut être posée et plus de Shuffle, le run se termine.
 - **Harvest** : une ligne ou colonne pleine est récoltée (les tuiles disparaissent). Plusieurs lignes d'une même pose valent de plus en plus (3, 6, 9 points par case). Vider toute la grille double le score de la pose.
 - **Plots spéciales** : dorées (bonus fixe), zones de multiplicateur, teintées, verrouillées, gelées, empoisonnées (effets des ennemis et de la météo).
@@ -27,7 +27,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 ## 4. Score et dégâts
 
 - Chaque pose produit un total de **points (chips) × Mult**. Les groupes de même couleur connectés rapportent un bonus par case ; les lignes récoltées, les plots dorées et les tile upgrades ajoutent des points ; les fertilizers ajoutent surtout du **Mult** (additif, ou multiplicatif ×2, ×3…). Les points se convertissent en Mult à raison de 12 points pour 1 Mult quand un effet est exprimé en Mult.
-- Le score de la pose est infligé comme **dégâts** à l'ennemi de devant ; les surplus passent au suivant selon les effets. Les traits de combat (Spore Burst, Long Reach, Overflow, Pruning) modifient qui est touché.
+- Le score de la pose est infligé comme **dégâts** à l'ennemi de devant ; les surplus passent au suivant selon les effets.
 - **Mastery** : chaque forme et chaque couleur a un niveau qui renforce les graines correspondantes ; les upgrades et packs de Mastery les font monter.
 
 ## 5. Ennemis, météo, challenges
@@ -44,12 +44,12 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **La boutique** montre deux étagères :
   - **Blister** (3 emplacements) : fertilizers et tile upgrades à l'achat direct. Seul le Blister se re-tire contre du Pollen (Reroll).
   - **Workshop** (4 emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), le Compost et la Forge.
-    - *Seed Pack* : 3 graines améliorées, on en garde 1 ; chaque graine a 12 % de chances d'être une *Wild Seed* (un Joker de forme aléatoire avec son trait de combat visible).
+    - *Seed Pack* : 3 graines améliorées, on en garde 1 ; chaque graine a 12 % de chances d'être une *Wild Seed* (un Joker de forme aléatoire avec une tile upgrade ordinaire).
     - *Wild Pack* (rare : 12 % des visites, jamais deux) : 3 Wild Seeds, chacune avec son trait de combat, on en garde 1. Prix 6.
     - *Sprout Pack* : 5 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
     - *Fertilizer Pack* : 3 fertilizers, on en garde 1 gratuitement.
     - *Mastery Pack* : 3 masteries, on en garde 1.
-    - *Transplant* : déplace une tile upgrade d'une graine vers une autre (on choisit l'upgrade, puis la graine qui la reçoit) ; proposé seulement si une graine porte une upgrade déplaçable. Le Joker garde son trait de combat.
+    - *Transplant* : déplace une tile upgrade d'une graine vers une autre (on choisit l'upgrade, puis la graine qui la reçoit) ; proposé seulement si une graine porte une upgrade déplaçable. 
     - *Compost* : retire une graine du sac pour l'alléger (prix qui remonte dans la visite, remis à zéro à chaque manche).
     - *Forge* : 3 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
 - Chaque achat de la visite renchérit les autres de 50 %. Les objets du Workshop restent achetables mais plus chers à chaque fois. Les choix (packs, Forge, Compost) se font sur les mêmes étagères que la boutique, avec leurs animations (vol vers l'enclume, effritement du Compost, vol du fertilizer vers son emplacement, célébration d'une mastery).
