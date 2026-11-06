@@ -403,6 +403,12 @@ M['u_dominant'] = lambda: _trait_motif('Dominant')
 M['u_heritage'] = lambda: _trait_motif('Heritage')
 M['u_scythe'] = lambda: _trait_motif('Scythe')
 M['u_tally'] = lambda: _trait_motif('Tally')
+M['u_sunbeam'] = lambda: _trait_motif('Sunbeam')
+M['u_antidote'] = lambda: _trait_motif('Antidote')
+M['u_lull'] = lambda: _trait_motif('Lull')
+M['u_dazzle'] = lambda: _trait_motif('Dazzle')
+M['u_wilt'] = lambda: _trait_motif('Wilt')
+M['u_cleanse'] = lambda: _trait_motif('Cleanse')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -505,7 +511,7 @@ U = {
  'LocksmithTile': ('u_locksmith', 'Grid'),
  'MimicTile': ('u_mimic', 'Grid'),
  'DominantTile': ('u_dominant', 'Grid'), 'HeritageTile': ('u_heritage', 'Grid'),
- 'ScytheTile': ('u_scythe', 'Grid'), 'TallyTile': ('u_tally', 'Grid'),
+ 'ScytheTile': ('u_scythe', 'Grid'), 'TallyTile': ('u_tally', 'Grid'), 'SunbeamTile': ('u_sunbeam', 'Grid'), 'AntidoteTile': ('u_antidote', 'Grid'), 'LullTile': ('u_lull', 'Grid'), 'DazzleTile': ('u_dazzle', 'Grid'), 'WiltTile': ('u_wilt', 'Grid'), 'CleanseTile': ('u_cleanse', 'Grid'),
  'WildPack': ('u_joker', 'Workshop'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),

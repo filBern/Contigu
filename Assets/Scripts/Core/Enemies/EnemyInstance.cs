@@ -55,6 +55,12 @@ namespace Contigu.Core
         /// </summary>
         public bool HasShield;
 
+        /// <summary>Lull Sprout: this enemy's next Shuffle trick is skipped (consumed by RunManager.ResolveEnemyShuffleEffects / the Thief steal).</summary>
+        public bool SkipNextShuffle;
+
+        /// <summary>Dazzle Sprout: its color/shape hatred is switched off for the rest of the round.</summary>
+        public bool Dazzled;
+
         private readonly List<Vector2Int> _poisonedCells = new List<Vector2Int>();
 
         /// <summary>Poisoner/Plague: every cell THIS instance has poisoned so far, including any extra cell "contamination" spread onto a neighbor in between Shuffles (see RunManager.ContaminateAdjacentCell) — unlike Locker's single roaming lock, poison accumulates until this instance's next Shuffle releases the whole list at once, or until it dies (see RunManager.ResolvePoisonerShuffleEffect/CleanUpDefeatedEnemy).</summary>

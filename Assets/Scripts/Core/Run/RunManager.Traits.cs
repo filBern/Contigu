@@ -187,6 +187,12 @@ namespace Contigu.Core
                 case PieceTraitKind.Seedpod:
                 case PieceTraitKind.Locksmith:
                 case PieceTraitKind.Mimic:
+                case PieceTraitKind.Sunbeam:
+                case PieceTraitKind.Antidote:
+                case PieceTraitKind.Lull:
+                case PieceTraitKind.Dazzle:
+                case PieceTraitKind.Wilt:
+                case PieceTraitKind.Cleanse:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -396,6 +402,12 @@ namespace Contigu.Core
                 case PieceTraitKind.Venom:
                     ApplyVenomEffect(traitCellPos, placement);
                     break;
+                case PieceTraitKind.Lull:
+                    ApplyLullEffect(placement);
+                    break;
+                case PieceTraitKind.Dazzle:
+                    ApplyDazzleEffect(traitCellPos, placement);
+                    break;
                 case PieceTraitKind.Pip:
                 case PieceTraitKind.Lucky:
                 case PieceTraitKind.Companion:
@@ -453,6 +465,10 @@ namespace Contigu.Core
                 case PieceTraitKind.Heritage:
                 case PieceTraitKind.Scythe:
                 case PieceTraitKind.Tally:
+                case PieceTraitKind.Sunbeam:
+                case PieceTraitKind.Antidote:
+                case PieceTraitKind.Wilt:
+                case PieceTraitKind.Cleanse:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }
@@ -982,6 +998,53 @@ namespace Contigu.Core
                     CleanUpDefeatedEnemy(enemy);
                 }
             }
+        }
+
+        /// <summary>"Lull Sprout": every alive enemy skips its next Shuffle trick (see <see cref="EnemyInstance.SkipNextShuffle"/>). Idempotent, a no-op outside an encounter.</summary>
+        private void ApplyLullEffect(PlacementResult placement)
+        {
+            if (!HasActiveEncounter)
+            {
+                return;
+            }
+            var lulled = new List<int>(placement.LulledEnemies);
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead || enemy.SkipNextShuffle)
+                {
+                    continue;
+                }
+                enemy.SkipNextShuffle = true;
+                lulled.Add(i);
+            }
+            placement.LulledEnemies = lulled;
+        }
+
+        /// <summary>"Dazzle Sprout": every alive enemy loses its shield and its color/shape hatred for the rest of the round. Runs before the hater rules and the damage of this same placement.</summary>
+        private void ApplyDazzleEffect(Vector2Int traitCellPos, PlacementResult placement)
+        {
+            if (!HasActiveEncounter)
+            {
+                return;
+            }
+            var dazzled = new List<(Vector2Int Position, int EnemyIndex)>(placement.DazzledEnemies);
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                var enemy = _currentEncounter[i];
+                if (enemy.IsDead)
+                {
+                    continue;
+                }
+                bool changed = enemy.HasShield || !enemy.Dazzled && (enemy.HatedColor.HasValue || enemy.HatedShape.HasValue);
+                enemy.HasShield = false;
+                enemy.Dazzled = true;
+                if (changed)
+                {
+                    dazzled.Add((traitCellPos, i));
+                }
+            }
+            placement.DazzledEnemies = dazzled;
         }
     }
 }

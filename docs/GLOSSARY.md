@@ -146,6 +146,12 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `HeritageTile` | Heritage Sprout | Grid |
 | `ScytheTile` | Scythe Sprout | Grid |
 | `TallyTile` | Tally Sprout | Grid |
+| `SunbeamTile` | Sunbeam Sprout | Grid |
+| `AntidoteTile` | Antidote Sprout | Grid |
+| `LullTile` | Lull Sprout | Grid |
+| `DazzleTile` | Dazzle Sprout | Grid |
+| `WiltTile` | Wilt Sprout | Grid |
+| `CleanseTile` | Cleanse Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |

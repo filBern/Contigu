@@ -1245,6 +1245,90 @@ namespace Contigu.Tests
             Assert.AreEqual(hpBefore - expectedTotalDamage, enemy.CurrentHp);
         }
 
+        private static PlacementResult PlaceUpgradedSingle(RunManager run, PieceTraitKind kind, int x, int y)
+        {
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(kind, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Trait.Value.Kind == kind);
+            var outcome = run.PlacePiece(slot, x, y);
+            Assert.IsTrue(outcome.Placement.Success);
+            return outcome.Placement;
+        }
+
+        [Test]
+        public void LullTile_MakesEnemiesSkipExactlyTheirNextShuffle()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Locker);
+            var locker = run.CurrentEncounter[0];
+            var placed = PlaceUpgradedSingle(run, PieceTraitKind.Lull, 2, 2);
+            CollectionAssert.Contains(placed.LulledEnemies, 0);
+            Assert.IsTrue(locker.SkipNextShuffle);
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsTrue(run.LastShuffleLulled, "The skipped Shuffle is reported");
+            Assert.IsFalse(locker.SkipNextShuffle, "The skip is spent");
+            Assert.IsFalse(locker.LockedCell.HasValue, "Bramble did not lock anything on the skipped Shuffle");
+
+            Assert.IsTrue(run.ShuffleHand());
+            Assert.IsFalse(run.LastShuffleLulled);
+            Assert.IsTrue(locker.LockedCell.HasValue, "Next Shuffle it acts again");
+        }
+
+        [Test]
+        public void DazzleTile_BreaksTheShield_AndSwitchesOffTheColorHatred()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.ColorHater);
+            var hater = run.CurrentEncounter[0];
+            hater.HatedColor = PieceColor.Coral;
+            hater.HasShield = true;
+            var placed = PlaceUpgradedSingle(run, PieceTraitKind.Dazzle, 2, 2);
+            Assert.AreEqual(1, placed.DazzledEnemies.Count);
+            Assert.IsFalse(hater.HasShield);
+            Assert.IsTrue(hater.Dazzled);
+            Assert.AreEqual(0, placed.CancelledPoints.Count, "Coral points are not cancelled any more");
+            Assert.Greater(placed.TotalScore, 0);
+        }
+
+        [Test]
+        public void WiltTile_StopsAPoisonedScoreFromHealingTheEnemy()
+        {
+            // Control: a plain tile on a poisoned plot scores negative, which heals the front enemy.
+            var control = new RunManager(new SystemRandomProvider(1));
+            control.DebugSetEncounter(EnemyId.Basic);
+            var hurt = control.CurrentEncounter[0];
+            hurt.ApplyDamage(hurt.CurrentHp / 2);
+            int hpBefore = hurt.CurrentHp;
+            var poisonedPos = new Vector2Int(2, 2);
+            control.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            hurt.AddPoisonedCell(poisonedPos);
+            PlaceUpgradedSingle(control, PieceTraitKind.Pip, poisonedPos.x, poisonedPos.y);
+            Assert.Greater(hurt.CurrentHp, hpBefore, "control: the poisoned score heals");
+
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            var enemy = run.CurrentEncounter[0];
+            enemy.ApplyDamage(enemy.CurrentHp / 2);
+            int before = enemy.CurrentHp;
+            run.Grid.GetCell(poisonedPos).IsPoisoned = true;
+            enemy.AddPoisonedCell(poisonedPos);
+            PlaceUpgradedSingle(run, PieceTraitKind.Wilt, poisonedPos.x, poisonedPos.y);
+            Assert.AreEqual(before, enemy.CurrentHp, "With a Wilt Sprout scoring, nothing heals");
+        }
+
+        [Test]
+        public void CleanseTile_FreesOneAfflictedPlot_AtEveryShuffle_AfterTheEnemiesActed()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            PlaceUpgradedSingle(run, PieceTraitKind.Cleanse, 2, 2);
+            var plot = new Vector2Int(0, GridManager.Size - 1);
+            run.Grid.GetCell(plot).IsLocked = true;
+            Assert.IsTrue(run.ShuffleHand());
+            CollectionAssert.Contains(run.LastShuffleCleansedPlots, plot);
+            Assert.IsFalse(run.Grid.GetCell(plot).IsLocked);
+        }
+
         [Test]
         public void HealOrGrow_NeverWrapsPastTheHpCeiling()
         {

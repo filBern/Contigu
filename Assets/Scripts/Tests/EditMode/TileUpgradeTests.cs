@@ -417,6 +417,33 @@ namespace Contigu.Tests
             Assert.IsFalse(smith.Grid.GetCell(0, GridManager.Size - 1).IsLocked);
         }
 
+        [Test]
+        public void Sunbeam_ThawsEveryFrozenPlot_Antidote_CuresEveryBlight_WiltIsReported()
+        {
+            int last = GridManager.Size - 1;
+            var sun = NewRun();
+            foreach (var p in new[] { new Vector2Int(0, last), new Vector2Int(last, 0) })
+            {
+                sun.Grid.GetCell(p).IsFrozen = true;
+                sun.Grid.GetCell(p).IsLocked = true;
+            }
+            var thawed = PlantAt(sun, PieceTraitKind.Sunbeam, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(2, thawed.ThawedPlots.Count);
+            Assert.IsFalse(sun.Grid.GetCell(0, last).IsFrozen);
+            Assert.IsFalse(sun.Grid.GetCell(last, 0).IsLocked);
+
+            var cure = NewRun();
+            cure.Grid.GetCell(0, last).IsPoisoned = true;
+            cure.Grid.GetCell(last, 0).IsPoisoned = true;
+            var cured = PlantAt(cure, PieceTraitKind.Antidote, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(2, cured.CuredPlots.Count);
+            Assert.IsFalse(cure.Grid.GetCell(0, last).IsPoisoned);
+            Assert.IsFalse(cure.Grid.GetCell(last, 0).IsPoisoned);
+
+            var wilt = PlantAt(NewRun(), PieceTraitKind.Wilt, PieceColor.Coral, 2, 2);
+            CollectionAssert.Contains(wilt.WiltedBy, new Vector2Int(2, 2));
+        }
+
         private static PlacementResult PlantUpgraded(GridManager grid, int x, int y, PieceColor color, PieceTraitKind? kind, params ModifierId[] modifiers)
         {
             if (kind.HasValue)

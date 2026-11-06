@@ -77,6 +77,33 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>After a Shuffle: a Lull Sprout's skipped trick ("Lulled" over the enemies) and the plots the Cleanse Sprouts freed once the enemies acted.</summary>
+        private void PlayShuffleSproutNotes()
+        {
+            if (_run.LastShuffleLulled)
+            {
+                for (int i = 0; i < _run.CurrentEncounter.Count; i++)
+                {
+                    if (!_run.CurrentEncounter[i].IsDead)
+                    {
+                        var anchor = _hudView.GetEnemyIconTransform(i);
+                        if (anchor != null)
+                        {
+                            _feedbackLayer.SpawnPopup(anchor, "Lulled", UITheme.LightBlue);
+                        }
+                    }
+                }
+                SetStatusText("A Lull Sprout keeps the enemies still this Shuffle.");
+            }
+            var cleansed = _run.LastShuffleCleansedPlots;
+            for (int i = 0; i < cleansed.Count; i++)
+            {
+                _gridView.RefreshCells(new List<Vector2Int> { cleansed[i] });
+                _gridView.PlayClearBurst(cleansed[i].x, cleansed[i].y, UITheme.LightBlue);
+                _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(cleansed[i].x, cleansed[i].y), "Cleansed", UITheme.LightBlue);
+            }
+        }
+
         // What the placement's auto-refill Shuffle did, waiting for the score count to finish before it is shown.
         private bool _pendingShuffleActs;
         private string _pendingBlightBefore;
@@ -97,6 +124,7 @@ namespace Contigu.Presentation
             }
             _pendingShuffleActs = false;
             PlayWorldEnemyActIfAny();
+            PlayShuffleSproutNotes();
             if (_pendingWorldChange.HasValue)
             {
                 var change = _pendingWorldChange.Value;

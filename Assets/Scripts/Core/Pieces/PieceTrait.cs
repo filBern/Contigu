@@ -232,7 +232,25 @@ namespace Contigu.Core
         Scythe = 103,
 
         /// <summary>"Tally Sprout" — scores +5 points per line harvested this round (forced breaks included).</summary>
-        Tally = 104
+        Tally = 104,
+
+        /// <summary>"Sunbeam Sprout" — each time it scores, thaws every frozen plot.</summary>
+        Sunbeam = 105,
+
+        /// <summary>"Antidote Sprout" — each time it scores, cures every blighted plot and the blighted fertilizer.</summary>
+        Antidote = 106,
+
+        /// <summary>"Lull Sprout" — when placed, enemies skip their next Shuffle trick.</summary>
+        Lull = 107,
+
+        /// <summary>"Dazzle Sprout" — when placed, enemies lose their shield and their color/shape hatred for the round.</summary>
+        Dazzle = 108,
+
+        /// <summary>"Wilt Sprout" — on a turn where it scores, enemies cannot heal or grow.</summary>
+        Wilt = 109,
+
+        /// <summary>"Cleanse Sprout" — at every Shuffle, once the enemies have acted, it frees one afflicted plot.</summary>
+        Cleanse = 110
     }
 
     /// <summary>

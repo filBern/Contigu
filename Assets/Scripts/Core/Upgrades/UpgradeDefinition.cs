@@ -501,6 +501,30 @@ namespace Contigu.Core
             UpgradeId.TallyTile, UpgradePool.Grid, "Tally Sprout",
             "+5 pts per line harvested this round, forced harvests included.", false, UpgradeRarity.Uncommon);
 
+        public static readonly UpgradeDefinition SunbeamTile = new UpgradeDefinition(
+            UpgradeId.SunbeamTile, UpgradePool.Grid, "Sunbeam Sprout",
+            "Each time it scores, thaws every frozen plot.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition AntidoteTile = new UpgradeDefinition(
+            UpgradeId.AntidoteTile, UpgradePool.Grid, "Antidote Sprout",
+            "Each time it scores, cures every blighted plot and the blighted fertilizer.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition LullTile = new UpgradeDefinition(
+            UpgradeId.LullTile, UpgradePool.Grid, "Lull Sprout",
+            "When placed, enemies skip their next Shuffle trick.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition DazzleTile = new UpgradeDefinition(
+            UpgradeId.DazzleTile, UpgradePool.Grid, "Dazzle Sprout",
+            "When placed, enemies lose their shield and their color or shape hatred for the round.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition WiltTile = new UpgradeDefinition(
+            UpgradeId.WiltTile, UpgradePool.Grid, "Wilt Sprout",
+            "On a turn where it scores, enemies cannot heal or grow.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition CleanseTile = new UpgradeDefinition(
+            UpgradeId.CleanseTile, UpgradePool.Grid, "Cleanse Sprout",
+            "At every Shuffle, once the enemies have acted, frees one locked, frozen or blighted plot.", false, UpgradeRarity.Uncommon);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -512,7 +536,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -542,7 +566,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile
         };
     }
 }

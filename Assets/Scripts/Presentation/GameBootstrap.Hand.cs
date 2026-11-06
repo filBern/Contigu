@@ -161,6 +161,7 @@ namespace Contigu.Presentation
             yield return PlayEnemyEffectsSequentially(affectedCellsNow);
 
             PlayWorldEnemyActIfAny();
+            PlayShuffleSproutNotes();
             var pendingWorld = _run.LastWorldGridChange;
             if (pendingWorld.HasValue)
             {

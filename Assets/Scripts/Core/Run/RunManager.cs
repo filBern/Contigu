@@ -968,12 +968,14 @@ namespace Contigu.Core
             Lueur += placement.LueurEarned + placement.ModifierLueurBonus;
             if (HasActiveEncounter)
             {
-                ApplyDamageToEncounter(placement.TotalScore);
-                if (placement.ClearedLineCount > 0)
+                // Wilt Sprout: on a turn where one scores, nothing heals or grows (a negative score would heal the front enemy).
+                bool healingBlocked = placement.WiltedBy.Count > 0;
+                ApplyDamageToEncounter(healingBlocked ? Mathf.Max(0, placement.TotalScore) : placement.TotalScore);
+                if (placement.ClearedLineCount > 0 && !healingBlocked)
                 {
                     HealLeech(placement.ClearedLineCount);
                 }
-                if (poisonMagnitudeForReclaimer > 0)
+                if (poisonMagnitudeForReclaimer > 0 && !healingBlocked)
                 {
                     HealReclaimer(poisonMagnitudeForReclaimer);
                 }

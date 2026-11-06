@@ -70,12 +70,76 @@ namespace Contigu.Core
         /// </summary>
         private void DrawFreshHand()
         {
+            LastShuffleLulled = false;
+            LastShuffleCleansedPlots = System.Array.Empty<Vector2Int>();
             if (HasActiveEncounter)
             {
                 ResolveEnemyShuffleEffects();
             }
             Deck.DrawNewHand();
             ThiefStoleOnLastShuffle = HasActiveEncounter && ResolveThiefShuffleEffect();
+            if (HasActiveEncounter)
+            {
+                ConsumeShuffleSkips();
+                ResolveCleanseShuffle();
+            }
+        }
+
+        /// <summary>True when a Lull Sprout made at least one enemy skip the most recent Shuffle.</summary>
+        public bool LastShuffleLulled { get; private set; }
+
+        /// <summary>Plots the Cleanse Sprouts freed on the most recent Shuffle, after the enemies acted.</summary>
+        public IReadOnlyList<Vector2Int> LastShuffleCleansedPlots { get; private set; } = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Lull Sprout: the skip is spent once the whole Shuffle (grid tricks and the Thief's steal) has resolved.</summary>
+        private void ConsumeShuffleSkips()
+        {
+            for (int i = 0; i < _currentEncounter.Count; i++)
+            {
+                if (_currentEncounter[i].SkipNextShuffle)
+                {
+                    _currentEncounter[i].SkipNextShuffle = false;
+                    if (!_currentEncounter[i].IsDead)
+                    {
+                        LastShuffleLulled = true;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Cleanse Sprout: every one on the garden frees one locked, frozen or blighted plot at random, after the enemies have acted.</summary>
+        private void ResolveCleanseShuffle()
+        {
+            int cleansers = 0;
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var cell = Grid.GetCell(pos);
+                if (cell.IsFilled && cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.Cleanse)
+                {
+                    cleansers++;
+                }
+            }
+            var freed = new List<Vector2Int>();
+            for (int c = 0; c < cleansers; c++)
+            {
+                var afflicted = new List<Vector2Int>();
+                foreach (var pos in GridManager.AllPositions())
+                {
+                    var plot = Grid.GetCell(pos);
+                    if ((plot.IsLocked && !plot.IsBastion) || plot.IsFrozen || plot.IsPoisoned)
+                    {
+                        afflicted.Add(pos);
+                    }
+                }
+                if (afflicted.Count == 0)
+                {
+                    break;
+                }
+                var target = afflicted[_rng.Next(afflicted.Count)];
+                FreePlot(target);
+                freed.Add(target);
+            }
+            LastShuffleCleansedPlots = freed;
         }
 
         private void EvaluateRoundEnd()
@@ -337,7 +401,7 @@ namespace Contigu.Core
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
-                if (enemy.IsDead)
+                if (enemy.IsDead || enemy.SkipNextShuffle)
                 {
                     continue;
                 }
@@ -635,7 +699,7 @@ namespace Contigu.Core
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
-                if (!enemy.IsDead && enemy.Definition.Id == EnemyId.Thief)
+                if (!enemy.IsDead && !enemy.SkipNextShuffle && enemy.Definition.Id == EnemyId.Thief)
                 {
                     // Soulslike-style stage change, playtest request: "Boss avec plusieurs stages ...
                     // qui force le joueur a jouer différemment" — below half HP, Thief steals twice per

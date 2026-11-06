@@ -117,6 +117,13 @@ T['Heritage'] = ('#8a6a3a', g('<path d="M20 22 H44 L48 54 H16 Z"/>', '#d8b574') 
 T['Scythe'] = ('#b5483f', g('<path d="M12 52 C14 22 36 8 56 14 C40 18 28 30 26 52 Z"/>', '#d4d8de') + g('<path d="M12 52 L8 60"/>', 'none', 5).replace(O, W))
 T['Tally'] = ('#7a6fb0', g('<path d="M14 14 V50 M26 14 V50 M38 14 V50 M50 14 V50" fill="none"/>', 'none', 5).replace(O, W) + g('<path d="M8 40 L56 24" fill="none"/>', 'none', 5).replace(O, '#ffd84d'))
 
+T['Sunbeam'] = ('#e8a82e', g('<circle cx="32" cy="32" r="11"/>', '#fff1b0') + g('<path d="M32 6 V15 M32 49 V58 M6 32 H15 M49 32 H58 M14 14 L20 20 M44 44 L50 50 M50 14 L44 20 M20 44 L14 50" fill="none"/>', 'none', 4).replace(O, W))
+T['Antidote'] = ('#4fa89a', g('<path d="M24 8 H40 V16 H36 V24 L50 50 Q52 56 46 56 H18 Q12 56 14 50 L28 24 V16 H24 Z"/>', '#e6f4ff') + g('<path d="M19 44 H45 L49 54 H15 Z"/>', '#7ad07a', 3) + g('<path d="M32 30 V42 M26 36 H38" fill="none"/>', 'none', 4).replace(O, W))
+T['Lull'] = ('#5f699c', g('<path d="M40 8 C24 10 14 22 14 36 C14 48 24 56 36 56 C44 56 50 52 54 46 C50 48 46 48 42 46 C32 42 30 22 40 8 Z"/>', '#fff1b0') + g('<path d="M44 14 H54 L44 26 H54" fill="none"/>', 'none', 4).replace(O, W))
+T['Dazzle'] = ('#f4efe0', g(star(32, 32, 26, 4, 0.3), '#ffd84d') + g('<circle cx="32" cy="32" r="7"/>', '#ffffff', 2.5))
+T['Wilt'] = ('#8a6a3a', g('<path d="M32 56 V30 C32 22 26 18 22 12" fill="none"/>', 'none', 5).replace(O, '#7ad07a') + g('<path d="M32 36 C40 36 48 40 52 50 C42 52 34 46 32 36 Z"/>', '#c8a45a') + g('<path d="M32 28 C24 28 16 30 12 20 C22 16 30 20 32 28 Z"/>', '#9a7a3a'))
+T['Cleanse'] = ('#7ad0e8', g('<path d="M32 6 C46 24 50 34 44 44 C40 52 24 52 20 44 C14 34 18 24 32 6Z"/>', '#ffffff') + g(star(46, 14, 8, 4, 0.4) + star(16, 44, 6, 4, 0.4), '#fff1b0', 2.5))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

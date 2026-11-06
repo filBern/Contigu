@@ -203,7 +203,7 @@ namespace Contigu.Core
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];
-                if (enemy.IsDead)
+                if (enemy.IsDead || enemy.Dazzled)
                 {
                     continue;
                 }

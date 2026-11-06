@@ -217,6 +217,24 @@ namespace Contigu.Core
         /// <summary>The Pruner Sprout's tile that uprooted each one (same order as <see cref="UprootedTiles"/>).</summary>
         public IReadOnlyList<Vector2Int> UprootedBy = System.Array.Empty<Vector2Int>();
 
+        /// <summary>Plots a Sunbeam Sprout thawed on this placement.</summary>
+        public IReadOnlyList<Vector2Int> ThawedPlots = System.Array.Empty<Vector2Int>();
+
+        /// <summary>Plots an Antidote Sprout cured of blight on this placement.</summary>
+        public IReadOnlyList<Vector2Int> CuredPlots = System.Array.Empty<Vector2Int>();
+
+        /// <summary>True when an Antidote Sprout cured the blighted fertilizer on this placement.</summary>
+        public bool CuredFertilizer;
+
+        /// <summary>Indexes (in the encounter) of the enemies a Lull Sprout put to sleep on this placement.</summary>
+        public IReadOnlyList<int> LulledEnemies = System.Array.Empty<int>();
+
+        /// <summary>Indexes (in the encounter) of the enemies a Dazzle Sprout dazzled on this placement, and the tile that did it.</summary>
+        public IReadOnlyList<(Vector2Int Position, int EnemyIndex)> DazzledEnemies = System.Array.Empty<(Vector2Int, int)>();
+
+        /// <summary>Tiles of Wilt Sprouts that scored on this placement: enemies cannot heal or grow on this turn.</summary>
+        public IReadOnlyList<Vector2Int> WiltedBy = System.Array.Empty<Vector2Int>();
+
         /// <summary>Plots a Locksmith Sprout freed from an enemy effect on this placement.</summary>
         public IReadOnlyList<Vector2Int> FreedPlots = System.Array.Empty<Vector2Int>();
 

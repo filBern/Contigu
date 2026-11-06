@@ -638,6 +638,20 @@ namespace Contigu.Core
                         }
                     }
                     break;
+                case PieceTraitKind.Sunbeam:
+                    ThawEveryFrozenPlot(placement);
+                    break;
+                case PieceTraitKind.Antidote:
+                    CureEveryBlight(placement);
+                    break;
+                case PieceTraitKind.Wilt:
+                    var wilted = new List<Vector2Int>(placement.WiltedBy);
+                    wilted.Add(pos);
+                    placement.WiltedBy = wilted;
+                    break;
+                case PieceTraitKind.Cleanse:
+                    // Passive: frees a plot at every Shuffle (see RunManager.ResolveCleanseShuffle).
+                    break;
                 case PieceTraitKind.Locksmith:
                     var afflicted = new List<Vector2Int>();
                     foreach (var any2 in GridManager.AllPositions())
@@ -833,6 +847,58 @@ namespace Contigu.Core
                 cleansed.Add(pos);
             }
             placement.CleansedCells = cleansed;
+        }
+
+        /// <summary>Sunbeam Sprout: thaws every frozen plot, whichever enemy froze it.</summary>
+        private void ThawEveryFrozenPlot(PlacementResult placement)
+        {
+            var thawed = new List<Vector2Int>(placement.ThawedPlots);
+            foreach (var pos in GridManager.AllPositions())
+            {
+                if (!Grid.GetCell(pos).IsFrozen)
+                {
+                    continue;
+                }
+                ThawCell(pos);
+                for (int i = 0; i < _currentEncounter.Count; i++)
+                {
+                    _currentEncounter[i].FrozenCells.Remove(pos);
+                }
+                if (!thawed.Contains(pos))
+                {
+                    thawed.Add(pos);
+                }
+            }
+            placement.ThawedPlots = thawed;
+        }
+
+        /// <summary>Antidote Sprout: cures every blighted plot and lifts the blight from the fertilizer.</summary>
+        private void CureEveryBlight(PlacementResult placement)
+        {
+            var cured = new List<Vector2Int>(placement.CuredPlots);
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var cell = Grid.GetCell(pos);
+                if (!cell.IsPoisoned)
+                {
+                    continue;
+                }
+                cell.IsPoisoned = false;
+                for (int i = 0; i < _currentEncounter.Count; i++)
+                {
+                    _currentEncounter[i].RemovePoisonedCell(pos);
+                }
+                if (!cured.Contains(pos))
+                {
+                    cured.Add(pos);
+                }
+            }
+            placement.CuredPlots = cured;
+            if (_blightedModifiers.Count > 0)
+            {
+                _blightedModifiers.Clear();
+                placement.CuredFertilizer = true;
+            }
         }
     }
 }

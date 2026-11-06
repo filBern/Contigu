@@ -111,6 +111,12 @@ namespace Contigu.Data
                 case PieceTraitKind.Heritage: return "Heritage Sprout";
                 case PieceTraitKind.Scythe: return "Scythe Sprout";
                 case PieceTraitKind.Tally: return "Tally Sprout";
+                case PieceTraitKind.Sunbeam: return "Sunbeam Sprout";
+                case PieceTraitKind.Antidote: return "Antidote Sprout";
+                case PieceTraitKind.Lull: return "Lull Sprout";
+                case PieceTraitKind.Dazzle: return "Dazzle Sprout";
+                case PieceTraitKind.Wilt: return "Wilt Sprout";
+                case PieceTraitKind.Cleanse: return "Cleanse Sprout";
                 default: return kind.ToString();
             }
         }
@@ -271,6 +277,18 @@ namespace Contigu.Data
                     return "When its tile is harvested by a line, plants 2 free tiles of its color on the empty plots around it.";
                 case PieceTraitKind.Scythe:
                     return "When its seed is planted, harvests the row AND the column of its tile after the count, even if they are not full, with the usual harvest bonuses.";
+                case PieceTraitKind.Sunbeam:
+                    return "Each time it scores, thaws every frozen plot.";
+                case PieceTraitKind.Antidote:
+                    return "Each time it scores, cures every blighted plot and the blighted fertilizer.";
+                case PieceTraitKind.Lull:
+                    return "When placed, enemies skip their next Shuffle trick.";
+                case PieceTraitKind.Dazzle:
+                    return "When placed, enemies lose their shield and their color or shape hatred for the round.";
+                case PieceTraitKind.Wilt:
+                    return "On a turn where it scores, enemies cannot heal or grow.";
+                case PieceTraitKind.Cleanse:
+                    return "At every Shuffle, once the enemies have acted, frees one locked, frozen or blighted plot.";
                 case PieceTraitKind.Tally:
                     return "Scores +" + ScoringConstants.TallyBonusPerLine + " pts for every line harvested this round (forced harvests count too).";
                 case PieceTraitKind.Dominant:
@@ -349,6 +367,12 @@ namespace Contigu.Data
                 case PieceTraitKind.Heritage: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Scythe: return UpgradeRarity.Rare;
                 case PieceTraitKind.Tally: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Sunbeam: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Antidote: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Lull: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Dazzle: return UpgradeRarity.Rare;
+                case PieceTraitKind.Wilt: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Cleanse: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -490,6 +514,12 @@ namespace Contigu.Data
                 case PieceTraitKind.Mimic:
                 case PieceTraitKind.Scythe:
                 case PieceTraitKind.Tally:
+                case PieceTraitKind.Sunbeam:
+                case PieceTraitKind.Antidote:
+                case PieceTraitKind.Lull:
+                case PieceTraitKind.Dazzle:
+                case PieceTraitKind.Wilt:
+                case PieceTraitKind.Cleanse:
                     return PlacementPointBadgeColor;
                 default:
                     return Color.gray;

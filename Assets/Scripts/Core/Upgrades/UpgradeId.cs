@@ -136,6 +136,12 @@ namespace Contigu.Core
         DominantTile,
         HeritageTile,
         ScytheTile,
-        TallyTile
+        TallyTile,
+        SunbeamTile,
+        AntidoteTile,
+        LullTile,
+        DazzleTile,
+        WiltTile,
+        CleanseTile
     }
 }

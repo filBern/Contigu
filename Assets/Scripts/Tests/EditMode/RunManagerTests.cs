@@ -283,7 +283,8 @@ namespace Contigu.Tests
         [Test]
         public void ShopBlisterSlots_NeverOffersAModifierAlreadyActive()
         {
-            var run = new RunManager(new SystemRandomProvider(1));
+            // Seed 0: the blind round bot (PlayRoundToAwaitingShop) loses a run on roughly one seed in six, so a seed that survives 5 rounds is picked (it moves whenever the pools change).
+            var run = new RunManager(new SystemRandomProvider(0));
 
             for (int i = 0; i < 5; i++)
             {

@@ -868,7 +868,7 @@ namespace Contigu.Presentation
                 // finishes, rather than a second parallel lerp.
                 yield return DrainSecondaryEnemyHits(secondaryDrainTargets);
             }
-            else if (damagedEnemyIndex >= 0 && placement.TotalScore < 0)
+            else if (damagedEnemyIndex >= 0 && placement.TotalScore < 0 && placement.WiltedBy.Count == 0)
             {
                 // A negative score (poison) heals the enemy: same flight as an attack, in green.
                 yield return new WaitForSeconds(PostComboReadDelaySeconds);
@@ -876,6 +876,7 @@ namespace Contigu.Presentation
             }
 
             yield return PlayVenomHits(placement);
+            yield return PlayEnemyDebuffs(placement);
 
             // Keep the counter in step with the model's Pollen, folded into this same count — a round-ending bonus is excluded, the shop sequence animates that one.
             int expectedLueur = _run.Lueur - (_run.State == RunState.AwaitingShop ? _run.LastRoundEndLueurBonus : 0);
@@ -1138,6 +1139,45 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Lull, Dazzle and Wilt Sprouts: "Lulled" / "Dazzled" float up on each enemy they affect, and "Wilted" on the Wilt tile itself (nothing heals this turn).</summary>
+        private System.Collections.IEnumerator PlayEnemyDebuffs(PlacementResult placement)
+        {
+            bool any = false;
+            for (int i = 0; i < placement.LulledEnemies.Count; i++)
+            {
+                var anchor = _hudView.GetEnemyIconTransform(placement.LulledEnemies[i]);
+                if (anchor != null)
+                {
+                    _hudView.PlayEnemyEffectPulse(placement.LulledEnemies[i]);
+                    _feedbackLayer.SpawnPopup(anchor, "Lulled", UITheme.LightBlue);
+                    any = true;
+                }
+            }
+            for (int i = 0; i < placement.DazzledEnemies.Count; i++)
+            {
+                var dazzled = placement.DazzledEnemies[i];
+                _gridView.PulseCell(dazzled.Position.x, dazzled.Position.y);
+                var anchor = _hudView.GetEnemyIconTransform(dazzled.EnemyIndex);
+                if (anchor != null)
+                {
+                    _hudView.PlayEnemyEffectPulse(dazzled.EnemyIndex);
+                    _feedbackLayer.SpawnPopup(anchor, "Dazzled", UITheme.ScorePollen);
+                    any = true;
+                }
+            }
+            for (int i = 0; i < placement.WiltedBy.Count; i++)
+            {
+                var tile = placement.WiltedBy[i];
+                _gridView.PulseCell(tile.x, tile.y);
+                _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(tile.x, tile.y), "Wilted", VenomGreen);
+                any = true;
+            }
+            if (any)
+            {
+                yield return new WaitForSeconds(0.35f);
+            }
+        }
+
         /// <summary>The ice of frozen plots this placement's lines broke: held on screen through the whole count and enemy reveals, then shattered here, last.</summary>
         private System.Collections.IEnumerator PlayFrozenShatters(PlacementResult placement)
         {
@@ -1253,6 +1293,29 @@ namespace Contigu.Presentation
                     _gridView.RefreshCells(new List<Vector2Int> { plot });
                     _gridView.PlayClearBurst(plot.x, plot.y, UITheme.LightBlue);
                     _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(plot.x, plot.y), "Freed", UITheme.LightBlue);
+                }
+                any = true;
+            }
+            if (placement.ThawedPlots.Count > 0 || placement.CuredPlots.Count > 0 || placement.CuredFertilizer)
+            {
+                // Sunbeam Sprout: the thawed plots flash; Antidote Sprout: the cured plots (and fertilizer) flash.
+                for (int i = 0; i < placement.ThawedPlots.Count; i++)
+                {
+                    var plot = placement.ThawedPlots[i];
+                    _gridView.RefreshCells(new List<Vector2Int> { plot });
+                    _gridView.PlayClearBurst(plot.x, plot.y, UITheme.ScorePollen);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(plot.x, plot.y), "Thawed", UITheme.ScorePollen);
+                }
+                for (int i = 0; i < placement.CuredPlots.Count; i++)
+                {
+                    var plot = placement.CuredPlots[i];
+                    _gridView.RefreshCells(new List<Vector2Int> { plot });
+                    _gridView.PlayClearBurst(plot.x, plot.y, VenomGreen);
+                    _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(plot.x, plot.y), "Cured", VenomGreen);
+                }
+                if (placement.CuredFertilizer)
+                {
+                    _modifierPanelView.Refresh(_run.ActiveModifiers);
                 }
                 any = true;
             }
