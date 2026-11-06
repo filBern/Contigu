@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="plate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5a3f27"/><stop offset="1" stop-color="#2a1c12"/></radialGradient>
+    <clipPath id="clip"><rect x="8" y="8" width="240" height="240" rx="44"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="url(#plate)" stroke="#13212e" stroke-width="6"/>
+  <g clip-path="url(#clip)" stroke-linejoin="round" stroke-linecap="round">
+<path d="M60 150 C30 120 36 70 96 56 C140 46 196 70 218 112 C196 100 150 90 112 110 Z" fill="#cfd98a" stroke="#13212e" stroke-width="5"/><path d="M96 70 L150 62 M100 86 L170 80 M108 100 L186 98" fill="none" stroke="#8a9a3a" stroke-width="4"/><path d="M62 150 C70 120 120 110 176 130 C200 140 214 156 220 176 L196 176 C186 160 160 150 120 156 C100 160 80 168 62 150 Z" fill="#7fae3a" stroke="#13212e" stroke-width="5"/><path d="M150 134 L186 196 L220 196 L224 210 L170 210 L132 150 Z" fill="#5f8a2a" stroke="#13212e" stroke-width="5"/><path d="M80 160 L72 204 M104 162 L100 206" fill="none" stroke="#13212e" stroke-width="7"/><ellipse cx="56" cy="148" rx="28" ry="24" fill="#8fc24a" stroke="#13212e" stroke-width="5"/><path d="M42 128 C20 100 8 92 8 74 M54 124 C48 92 52 78 60 62" fill="none" stroke="#13212e" stroke-width="5"/><circle cx="50" cy="142" r="9" fill="#ffe14a" stroke="#13212e" stroke-width="3"/><circle cx="48" cy="143" r="4.5" fill="#13212e"/><path d="M38 130.9 L62 139.9" stroke="#13212e" stroke-width="5"/><path d="M30 162 L40 176 L52 164 M44 168 L52 182" fill="none" stroke="#13212e" stroke-width="5"/>
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="#13212e" stroke-width="6"/>
+</svg>

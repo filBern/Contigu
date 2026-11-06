@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="plate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5a3f27"/><stop offset="1" stop-color="#2a1c12"/></radialGradient>
+    <clipPath id="clip"><rect x="8" y="8" width="240" height="240" rx="44"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="url(#plate)" stroke="#13212e" stroke-width="6"/>
+  <g clip-path="url(#clip)" stroke-linejoin="round" stroke-linecap="round">
+<g fill="#3f7a35" stroke="#13212e" stroke-width="4"><path d="M112 140 L128 30 L144 140 Z" transform="rotate(-70 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(-38 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(0 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(38 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(70 128 150)"/></g><rect x="76" y="110" width="104" height="104" rx="18" fill="#6fb04f" stroke="#13212e" stroke-width="5"/><path d="M92 128 L120 142 L92 152Z M164 128 L136 142 L164 152Z" fill="#fff7e8" stroke="#13212e" stroke-width="3"/><circle cx="104" cy="143" r="3.5" fill="#13212e"/><circle cx="152" cy="143" r="3.5" fill="#13212e"/><path d="M98 186 L112 176 L128 186 L144 176 L158 186" fill="none" stroke="#13212e" stroke-width="5"/>
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="#13212e" stroke-width="6"/>
+</svg>

@@ -44,6 +44,8 @@
 ExportedObj/
 .consulo/
 *.csproj
+# The headless Core/test/simulator projects are hand-written (not Unity-generated): CI needs them.
+!Tools/Headless/**/*.csproj
 *.unityproj
 *.sln
 *.slnx
@@ -104,3 +106,8 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+Tools/qa/web/qa-shots/
+
+# iOS / WebGL release builds
+/iOSBuild/
+/WebBuild/

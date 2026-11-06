@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="plate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#5a3f27"/><stop offset="1" stop-color="#2a1c12"/></radialGradient>
+    <clipPath id="clip"><rect x="8" y="8" width="240" height="240" rx="44"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="url(#plate)" stroke="#13212e" stroke-width="6"/>
+  <g clip-path="url(#clip)" stroke-linejoin="round" stroke-linecap="round">
+<g fill="#2c3a1f" stroke="#13212e" stroke-width="3"><path d="M120 60 L128 38 L136 60 Z" transform="rotate(0 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(36 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(72 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(108 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(144 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(180 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(216 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(252 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(288 128 128)"/><path d="M120 60 L128 38 L136 60 Z" transform="rotate(324 128 128)"/></g><path d="M56 128 C56 70 200 70 200 128 C200 186 56 186 56 128Z" fill="none" stroke="#13212e" stroke-width="23"/><path d="M56 128 C56 70 200 70 200 128 C200 186 56 186 56 128Z" fill="none" stroke="#4d6a35" stroke-width="15"/><path d="M70 80 C110 120 150 140 190 180 M190 80 C150 120 110 140 70 180" fill="none" stroke="#13212e" stroke-width="20"/><path d="M70 80 C110 120 150 140 190 180 M190 80 C150 120 110 140 70 180" fill="none" stroke="#5a7c3c" stroke-width="12"/><circle cx="128" cy="128" r="30" fill="#1b2412" stroke="#13212e" stroke-width="4"/><ellipse cx="116" cy="126" rx="8" ry="11" fill="#ffd84d" transform="rotate(-12 116 126)"/><ellipse cx="140" cy="126" rx="8" ry="11" fill="#ffd84d" transform="rotate(12 140 126)"/><ellipse cx="116" cy="128" rx="2.5" ry="7" fill="#13212e"/><ellipse cx="140" cy="128" rx="2.5" ry="7" fill="#13212e"/>
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="44" fill="none" stroke="#13212e" stroke-width="6"/>
+</svg>

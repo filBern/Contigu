@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Builds the game's Core logic (plus tiny UnityEngine stand-ins) as a plain .NET library: no Unity needed. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Contigu.Core</RootNamespace>
+    <AssemblyName>Contigu.Core</AssemblyName>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>CS1591;CS0649;CS0414;CS0169</NoWarn>
+    <DefineConstants>$(DefineConstants);CONTIGU_DEBUG</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../Assets/Scripts/Core/**/*.cs" />
+    <Compile Include="../Stubs/*.cs" />
+  </ItemGroup>
+</Project>
