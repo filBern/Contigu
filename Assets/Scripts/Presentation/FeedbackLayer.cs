@@ -96,14 +96,14 @@ namespace Contigu.Presentation
             _root.SetAsLastSibling();
 
             float scale = (float)fontSize / DefaultFlyingPopupFontSize;
-            // A dark pill behind the number: gold on a golden or pale tile has no contrast of its own.
-            var backdrop = UIFactory.CreatePanel(_root, "FlyingBackdrop", UITheme.Border);
+            // The same small spinning diamond as the points popups (a plain square rotating on itself) behind the number.
+            var backdrop = UIFactory.CreatePanel(_root, "FlyingBackdrop", UITheme.Panel);
             backdrop.raycastTarget = false;
             var backdropColor = backdrop.color;
-            backdropColor.a = 0.72f;
+            backdropColor.a = ScoreBackdropOpacity;
             backdrop.color = backdropColor;
             backdrop.rectTransform.position = fromWorldPosition;
-            backdrop.rectTransform.sizeDelta = new Vector2(24f + 22f * text.Length, 48f) * scale;
+            backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f) * ((float)fontSize / DefaultPopupFontSize);
             var popup = UIFactory.CreateText(_root, "FlyingPopup", text, fontSize, color);
             AddPopupOutline(popup);
             popup.rectTransform.position = fromWorldPosition;
@@ -460,6 +460,7 @@ namespace Contigu.Presentation
                 {
                     backdrop.rectTransform.position = rect.position;
                     backdrop.rectTransform.localScale = rect.localScale;
+                    backdrop.rectTransform.Rotate(0f, 0f, ScoreBackdropSpinDegreesPerSecond * Time.deltaTime);
                     var bc = backdrop.color;
                     bc.a = backdropAlpha * alpha;
                     backdrop.color = bc;
