@@ -449,12 +449,13 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Plays a placement's full feedback sequence in order: each Lueur
-        /// group (pulsing its cells, flying a popup to the Lueur label,
-        /// advancing that display), then each golden/group score popup
-        /// (advancing the score bar as it goes), then any completed line/
-        /// column clearing one cell at a time, and only then advances the
-        /// run state — so nothing interrupts the player mid-readout.
+        /// Plays a placement's full feedback sequence in order: each golden/group
+        /// score popup and fertilizer (advancing the score bar as it goes), any
+        /// completed line/column clearing one cell at a time, the Mult catch-up and
+        /// the enemy damage, THEN the Pollen (each harvested group, then every
+        /// fertilizer/tile Pollen bonus), and last the sprouts that change the grid
+        /// (PlayTileUpgradeWorldEffects), before advancing the run state — so nothing
+        /// interrupts the player mid-readout.
         /// </summary>
 
         private System.Collections.IEnumerator PlayPlacementSequence(PlacementOutcome outcome, int roundScoreBefore, int lueurBefore,
@@ -503,45 +504,10 @@ namespace Contigu.Presentation
             // non-combat placement's tiles still clear inline as usual.
             bool deferTileClear = damagedEnemyIndex >= 0 && placement.TotalScore > 0;
 
-            // Lueur groups play first, ahead of the score cascade — each
-            // group pulses its own cells, flies a "+N" popup from the
-            // group's own center to the Lueur label
-            // (see FeedbackLayer.SpawnFlyingPopup), and only then bumps the
-            // displayed Lueur total, so it visibly climbs one group at a
-            // time instead of jumping straight to the final value.
+            // Pollen is shown AFTER the points and the fertilizers (see the end of this sequence): the harvest's Pollen groups and every
+            // Pollen bonus are held back here, then played one after the other once the score and the enemy's damage are done.
             int displayedLueur = lueurBefore;
-            for (int i = 0; i < placement.LueurGroups.Count; i++)
-            {
-                var group = placement.LueurGroups[i];
-                Vector3 centerSum = Vector3.zero;
-                int cellsWithTransform = 0;
-                var cellPositions = new List<Vector3>();
-                for (int c = 0; c < group.Cells.Count; c++)
-                {
-                    var cell = group.Cells[c];
-                    _gridView.PulseCell(cell.x, cell.y);
-                    var cellRect = _gridView.GetCellTransform(cell.x, cell.y);
-                    if (cellRect != null)
-                    {
-                        centerSum += cellRect.position;
-                        cellsWithTransform++;
-                        cellPositions.Add(cellRect.position);
-                    }
-                }
-                // Pollen motes sweep from every harvested cell to the counter, trailing golden specks.
-                _feedbackLayer.SpawnPollenStream(cellPositions, _hudView.LueurLabelTransform);
-                if (cellsWithTransform > 0)
-                {
-                    Vector3 center = centerSum / cellsWithTransform;
-                    _feedbackLayer.SpawnPollenFlight(center, _hudView.LueurLabelTransform, "+" + group.Amount, UITheme.ScorePollen);
-                }
-                SfxManager.Play(SfxId.LueurGain);
-
-                displayedLueur += group.Amount;
-                _hudView.SetLueur(displayedLueur);
-
-                yield return new WaitForSeconds(LueurGroupStaggerSeconds);
-            }
+            var deferredPollenEvents = new List<ScoreEvent>();
 
             int displayedRoundScore = roundScoreBefore;
             // Mirrors PlacementResult.Chips/.Mult progressively: chipsTotal
@@ -602,28 +568,8 @@ namespace Contigu.Presentation
 
                 if (scoreEvent.Type == ScoreEventType.LueurBonus)
                 {
-                    // Lueur (not score) from an active modifier (see
-                    // PlacementResult.ModifierLueurBonus) — reuses the same
-                    // flying-popup visual as the LueurGroups loop above,
-                    // plus the usual badge pulse.
-                    if (scoreEvent.TriggeringModifier.HasValue)
-                    {
-                        var badgeAnchor = _modifierPanelView.GetBadgeTransform(scoreEvent.TriggeringModifier.Value, scoreEvent.TriggeringModifierIndex)
-                            ?? _gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPollenFlight(badgeAnchor.position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, UITheme.ScorePollen);
-                        _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
-                    }
-                    else
-                    {
-                        // A tile upgrade's Pollen (Honeycomb, Dewdrop): its badge pulses and the Pollen flies from its tile.
-                        _gridView.PulseTraitBadge(scoreEvent.Position.x, scoreEvent.Position.y);
-                        _feedbackLayer.SpawnPollenFlight(_gridView.GetCellTransform(scoreEvent.Position.x, scoreEvent.Position.y).position, _hudView.LueurLabelTransform, "+" + scoreEvent.Amount, UITheme.ScorePollen);
-                    }
-                    SfxManager.Play(SfxId.LueurGain);
-                    displayedLueur += scoreEvent.Amount;
-                    _hudView.SetLueur(displayedLueur);
-                    yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
-                    staggerSpeed *= ComboSpeedupFactor;
+                    // Pollen from a fertilizer or a tile upgrade: played with the rest of the Pollen once the points are done.
+                    deferredPollenEvents.Add(scoreEvent);
                     continue;
                 }
 
@@ -877,6 +823,68 @@ namespace Contigu.Presentation
 
             yield return PlayVenomHits(placement);
             yield return PlayEnemyDebuffs(placement);
+
+            // The Pollen, after the points and the fertilizers: first each harvested group (its cells pulse, a "+N" rises and the grains
+            // fly to the counter), then every Pollen bonus of a fertilizer or a tile upgrade, in the order they were earned.
+            for (int pg = 0; pg < placement.LueurGroups.Count; pg++)
+            {
+                var pollenGroup = placement.LueurGroups[pg];
+                Vector3 pollenCenterSum = Vector3.zero;
+                int pollenCellsWithTransform = 0;
+                var pollenCellPositions = new List<Vector3>();
+                for (int gc = 0; gc < pollenGroup.Cells.Count; gc++)
+                {
+                    var pollenCell = pollenGroup.Cells[gc];
+                    _gridView.PulseCell(pollenCell.x, pollenCell.y);
+                    var pollenCellRect = _gridView.GetCellTransform(pollenCell.x, pollenCell.y);
+                    if (pollenCellRect != null)
+                    {
+                        pollenCenterSum += pollenCellRect.position;
+                        pollenCellsWithTransform++;
+                        pollenCellPositions.Add(pollenCellRect.position);
+                    }
+                }
+                // Pollen motes sweep from every harvested cell to the counter, trailing golden specks.
+                _feedbackLayer.SpawnPollenStream(pollenCellPositions, _hudView.LueurLabelTransform);
+                if (pollenCellsWithTransform > 0)
+                {
+                    Vector3 pollenCenter = pollenCenterSum / pollenCellsWithTransform;
+                    _feedbackLayer.SpawnPollenFlight(pollenCenter, _hudView.LueurLabelTransform, "+" + pollenGroup.Amount, UITheme.ScorePollen);
+                }
+                SfxManager.Play(SfxId.LueurGain);
+
+                displayedLueur += pollenGroup.Amount;
+                _hudView.SetLueur(displayedLueur);
+
+                yield return new WaitForSeconds(LueurGroupStaggerSeconds);
+            }
+
+            for (int pe = 0; pe < deferredPollenEvents.Count; pe++)
+            {
+                var pollenEvent = deferredPollenEvents[pe];
+                // Lueur (not score) from an active modifier (see
+                // PlacementResult.ModifierLueurBonus) — reuses the same
+                // flying-popup visual as the LueurGroups loop above,
+                // plus the usual badge pulse.
+                if (pollenEvent.TriggeringModifier.HasValue)
+                {
+                    var pollenBadgeAnchor = _modifierPanelView.GetBadgeTransform(pollenEvent.TriggeringModifier.Value, pollenEvent.TriggeringModifierIndex)
+                        ?? _gridView.GetCellTransform(pollenEvent.Position.x, pollenEvent.Position.y);
+                    _feedbackLayer.SpawnPollenFlight(pollenBadgeAnchor.position, _hudView.LueurLabelTransform, "+" + pollenEvent.Amount, UITheme.ScorePollen);
+                    _modifierPanelView.Pulse(pollenEvent.TriggeringModifier.Value);
+                }
+                else
+                {
+                    // A tile upgrade's Pollen (Honeycomb, Dewdrop): its badge pulses and the Pollen flies from its tile.
+                    _gridView.PulseTraitBadge(pollenEvent.Position.x, pollenEvent.Position.y);
+                    _feedbackLayer.SpawnPollenFlight(_gridView.GetCellTransform(pollenEvent.Position.x, pollenEvent.Position.y).position, _hudView.LueurLabelTransform, "+" + pollenEvent.Amount, UITheme.ScorePollen);
+                }
+                SfxManager.Play(SfxId.LueurGain);
+                displayedLueur += pollenEvent.Amount;
+                _hudView.SetLueur(displayedLueur);
+                yield return new WaitForSeconds(LueurGroupStaggerSeconds);
+            }
+
 
             // Keep the counter in step with the model's Pollen, folded into this same count — a round-ending bonus is excluded, the shop sequence animates that one.
             int expectedLueur = _run.Lueur - (_run.State == RunState.AwaitingShop ? _run.LastRoundEndLueurBonus : 0);
