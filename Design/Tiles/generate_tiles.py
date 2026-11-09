@@ -72,7 +72,8 @@ def star(cx, cy, r, fill):
     k = r * 0.3
     return '<path d="M%g %g L%g %g L%g %g L%g %g L%g %g L%g %g L%g %g L%g %g Z" fill="%s" stroke="%s" stroke-width="4"/>' % (
         cx, cy - r, cx + k, cy - k, cx + r, cy, cx + k, cy + k, cx, cy + r, cx - k, cy + k, cx - r, cy, cx - k, cy - k, fill, O)
-tiles['Golden'] = tile('#a8863e', '#5a4220', '#7a5a1a', star(128, 128, 62, '#fff1b0') + star(70, 74, 20, '#ffe08a') + star(190, 182, 22, '#ffe08a'))
+# A golden plot is still EMPTY: it keeps the empty plot's grey stone border (a colored, bright border means a planted tile); only the soil and the stars are golden.
+tiles['Golden'] = tile('#9a9080', '#6f6558', '#5e4a1c', star(128, 128, 52, '#f1c84a') + star(72, 76, 16, '#d9a83a') + star(188, 180, 18, '#d9a83a'))
 
 arms = ''.join('M128 128 L%.1f %.1f ' % (128 + 62 * math.cos(math.radians(60 * k - 90)), 128 + 62 * math.sin(math.radians(60 * k - 90))) for k in range(6))
 tiles['Frozen'] = tile('#d7eefb', '#6fa6cf', '#8cc6e6',
