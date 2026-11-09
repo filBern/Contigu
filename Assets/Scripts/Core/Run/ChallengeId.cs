@@ -3,7 +3,7 @@ namespace Contigu.Core
     /// <summary>
     /// Selectable pre-run challenges — see ChallengeCatalog for what each
     /// one actually varies. Classic is always available; the others are
-    /// unlocked with Stars (see MetaStats/MetaStatsRecorder).
+    /// unlocked by playing (see UnlockCatalog).
     /// </summary>
     public enum ChallengeId
     {

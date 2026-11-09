@@ -40,8 +40,8 @@ namespace Contigu.Presentation
                     FillSandboxStats();
                     RefreshAll();
                     _endScreenView.SetRunStats(_run.Stats, TopFertilizerLine());
-                    if (screen == SandboxScreen.Victory) { _endScreenView.ShowVictory(48250, _metaStats, true, 9); }
-                    else { _endScreenView.ShowDefeat(9, 31200, _metaStats, false, false, 8, true); }
+                    if (screen == SandboxScreen.Victory) { _endScreenView.ShowVictory(48250, _metaStats, true, "New in your collection (3): Scythe Sprout, Greenhouse Lamp, Mult +4"); }
+                    else { _endScreenView.ShowDefeat(9, 31200, _metaStats, false, false, "New in your collection (2): Clone Sprout, Seed Library", true); }
                     break;
                 default:
                     OpenSandboxShop(screen);
