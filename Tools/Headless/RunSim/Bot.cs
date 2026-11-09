@@ -88,9 +88,22 @@ namespace Contigu.RunSim
             _planner = new Planner(_rng);
         }
 
+        /// <summary>Shared across every run of a simulation when --coverage or --locked is on: what the simulated player has unlocked so far.</summary>
+        public static UnlockState Unlocks;
+
+        /// <summary>--calibrate: every run starts from a fresh state, and its tracker keeps the best value reached by each condition.</summary>
+        public static bool Calibrating;
+        public static UnlockTracker LastTracker;
+
+        /// <summary>Which run (1-based) first earned each unlock, for the coverage report.</summary>
+        public static readonly Dictionary<string, int> FirstEarnedInRun = new Dictionary<string, int>();
+        private static int _runsPlayedWithUnlocks;
+
         public RunResult PlayRun(int seed)
         {
             var run = new RunManager(new SystemRandomProvider(seed), _challenge);
+            if (Calibrating) { run.AttachUnlocks(new UnlockState(everythingAvailable: true)); LastTracker = run.Unlocks; }
+            else if (Unlocks != null) { run.AttachUnlocks(Unlocks); }
             if (Setup != null) { Setup(run); }
             var result = new RunResult();
             int placementsThisRound = 0;
@@ -99,6 +112,10 @@ namespace Contigu.RunSim
 
             while (run.State != RunState.RunDefeat && (run.State != RunState.RunVictory || _endless))
             {
+                if (Unlocks != null && run.Unlocks != null && System.Environment.GetEnvironmentVariable("UNLOCK_TRACE") == "1")
+                {
+                    foreach (var fresh in run.Unlocks.DrainNewlyUnlocked()) { System.Console.WriteLine("  [trace] round " + run.CurrentRoundNumber + " " + fresh.Key + " " + fresh.Condition.Text); }
+                }
                 if (Invariants.Enabled)
                 {
                     string violation = Invariants.Check(run);
@@ -186,6 +203,14 @@ namespace Contigu.RunSim
             }
             result.TotalScore = run.TotalScore;
             result.FinalModifiers.AddRange(run.ActiveModifiers);
+            if (Unlocks != null)
+            {
+                _runsPlayedWithUnlocks++;
+                foreach (var entry in UnlockCatalog.All)
+                {
+                    if (Unlocks.IsEarned(entry.Key) && !FirstEarnedInRun.ContainsKey(entry.Key)) { FirstEarnedInRun[entry.Key] = _runsPlayedWithUnlocks; }
+                }
+            }
             return result;
         }
 

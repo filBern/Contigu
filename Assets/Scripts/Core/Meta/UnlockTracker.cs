@@ -8,6 +8,17 @@ namespace Contigu.Core
     /// </summary>
     public sealed class UnlockTracker
     {
+        /// <summary>Calibration (RunSim --calibrate): nothing is unlocked or removed from the watch lists, and the best value each condition reached is recorded instead.</summary>
+        public static bool CalibrationMode;
+
+        /// <summary>Calibration only: per catalog entry key, the per-run best of the compared value (the maximum, or the minimum for an at-most condition).</summary>
+        public readonly Dictionary<string, int> Best = new Dictionary<string, int>();
+
+        /// <summary>How many things one run can unlock; further conditions met in that run are queued and arrive at the start of the next runs (so one great run never unlocks half the game).</summary>
+        public const int MaxUnlocksPerRun = 8;
+
+        private int _unlockedThisRun;
+
         private readonly UnlockState _state;
         private readonly int _metricCount = System.Enum.GetValues(typeof(UnlockMetric)).Length;
         private readonly int[] _round;
@@ -72,6 +83,22 @@ namespace Contigu.Core
         public void StartRun()
         {
             System.Array.Clear(_run, 0, _run.Length);
+            _unlockedThisRun = 0;
+            // What the last runs earned beyond the limit arrives now.
+            while (_unlockedThisRun < MaxUnlocksPerRun && !CalibrationMode)
+            {
+                string key = _state.ReleaseNextQueued();
+                if (key == null)
+                {
+                    break;
+                }
+                var entry = UnlockCatalog.FindByKey(key);
+                if (entry != null)
+                {
+                    _fresh.Add(entry);
+                    _unlockedThisRun++;
+                }
+            }
             StartRound();
         }
 
@@ -107,15 +134,30 @@ namespace Contigu.Core
                 {
                     case UnlockScope.Round: compared = _round[m]; break;
                     case UnlockScope.Run: compared = _run[m]; break;
-                    case UnlockScope.Total: compared = _state.Total(metric); break;
+                    case UnlockScope.Total: compared = CalibrationMode ? _run[m] : _state.Total(metric); break;
                     default: compared = value; break;
+                }
+                if (CalibrationMode)
+                {
+                    int bestSoFar;
+                    if (!Best.TryGetValue(entry.Key, out bestSoFar)
+                        || (entry.Condition.AtMost ? compared < bestSoFar : compared > bestSoFar))
+                    {
+                        Best[entry.Key] = compared;
+                    }
+                    continue;
                 }
                 if (entry.Condition.IsMet(compared))
                 {
                     watchers.RemoveAt(i);
-                    if (_state.Unlock(entry.Key))
+                    if (_unlockedThisRun >= MaxUnlocksPerRun)
+                    {
+                        _state.Enqueue(entry.Key);
+                    }
+                    else if (_state.Unlock(entry.Key))
                     {
                         _fresh.Add(entry);
+                        _unlockedThisRun++;
                     }
                 }
             }

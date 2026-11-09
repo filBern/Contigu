@@ -22,6 +22,7 @@ namespace Contigu.RunSim
             bool failOnError = false;
             bool endless = false;
             bool studyMode = false;
+            string calibrationOut = null;
             var challenge = ChallengeCatalog.Classic;
             for (int i = 0; i < args.Length; i++)
             {
@@ -34,6 +35,10 @@ namespace Contigu.RunSim
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
                 else if (args[i] == "--study") { studyMode = true; }
+                else if (args[i] == "--calibration-out" && i + 1 < args.Length) { calibrationOut = args[++i]; }
+                else if (args[i] == "--calibrate") { Bot.Calibrating = true; UnlockTracker.CalibrationMode = true; }
+                else if (args[i] == "--coverage") { Bot.Unlocks = new UnlockState(everythingAvailable: true); }
+                else if (args[i] == "--locked") { Bot.Unlocks = new UnlockState(everythingAvailable: false); }
                 else if (args[i] == "--ranked" && i + 1 < args.Length) { Bot.LoadScores(args[++i]); }
                 else if (args[i] == "--challenge" && i + 1 < args.Length)
                 {
@@ -99,6 +104,7 @@ namespace Contigu.RunSim
                         Console.Error.WriteLine("seed " + runSeed + " (" + policy + "): " + e);
                     }
                     results.Add(res);
+                    if (Bot.Calibrating && Bot.LastTracker != null) { Calibration.Add(Bot.LastTracker); }
                     if (res.Stuck) { errorCount++; }
                     csv.AppendLine(string.Join(",", policy, runSeed, res.Victory ? 1 : 0, res.RoundsCleared, res.TotalScore, res.PlacementsMade, res.ShufflesUsed,
                         res.PollenSpent, res.PollenEarnedEstimate, res.Stuck ? res.StuckReason.Replace(',', ';') : "", string.Join("|", res.DeathEncounter), string.Join("|", res.FinalModifiers)));
@@ -106,12 +112,45 @@ namespace Contigu.RunSim
                 watch.Stop();
                 Report(policy, results, watch.Elapsed);
             }
+            if (Bot.Calibrating) { Calibration.Write(calibrationOut); }
+            if (Bot.Unlocks != null)
+            {
+                ReportUnlockCoverage();
+            }
             if (csvPath != null)
             {
                 System.IO.File.WriteAllText(csvPath, csv.ToString());
                 Console.WriteLine("\nCSV written to " + csvPath);
             }
             return failOnError && errorCount > 0 ? 1 : 0;
+        }
+
+        /// <summary>--coverage / --locked: which unlocks the simulated player earned, and after how many runs; the ones never earned are the suspects (too hard or not measurable).</summary>
+        private static void ReportUnlockCoverage()
+        {
+            var all = UnlockCatalog.All;
+            int earned = all.Count(e => Bot.FirstEarnedInRun.ContainsKey(e.Key));
+            Console.WriteLine();
+            Console.WriteLine("=== Unlocks: " + earned + " of " + all.Count + " earned ===");
+            foreach (int milestone in new[] { 1, 2, 5, 10, 25, 50, 100, 200, 500, 1000 })
+            {
+                int by = all.Count(e => Bot.FirstEarnedInRun.TryGetValue(e.Key, out int run) && run <= milestone);
+                Console.WriteLine("  after " + milestone.ToString().PadLeft(4) + " runs: " + by.ToString().PadLeft(3) + " unlocked");
+            }
+            if (Environment.GetEnvironmentVariable("UNLOCK_VERBOSE") == "1")
+            {
+                foreach (var entry in all.Where(e => Bot.FirstEarnedInRun.TryGetValue(e.Key, out int run) && run >= 3 && run <= 5)) { Console.WriteLine("  [run " + Bot.FirstEarnedInRun[entry.Key] + "] " + entry.Condition.Scope + " " + entry.Key.PadRight(5) + " " + entry.Condition.Text); }
+            }
+            Console.WriteLine("Never earned:");
+            foreach (var entry in all.Where(e => !Bot.FirstEarnedInRun.ContainsKey(e.Key)))
+            {
+                Console.WriteLine("  " + entry.Key.PadRight(5) + " " + entry.Condition.Text);
+            }
+            Console.WriteLine("Earned late (after the 50th run):");
+            foreach (var entry in all.Where(e => Bot.FirstEarnedInRun.TryGetValue(e.Key, out int run) && run > 50))
+            {
+                Console.WriteLine("  " + entry.Key.PadRight(5) + " run " + Bot.FirstEarnedInRun[entry.Key] + ": " + entry.Condition.Text);
+            }
         }
 
         private static void Report(BotPolicy policy, List<RunResult> results, TimeSpan elapsed)

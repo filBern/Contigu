@@ -11,6 +11,7 @@ namespace Contigu.Core
     {
         private readonly HashSet<string> _unlocked = new HashSet<string>();
         private readonly Dictionary<UnlockMetric, int> _totals = new Dictionary<UnlockMetric, int>();
+        private readonly List<string> _queued = new List<string>();
 
         /// <summary>When true everything counts as available (tests, simulator, the dev shortcut) while unlocks are still recorded, so coverage can be measured.</summary>
         public bool EverythingAvailable { get; private set; }
@@ -41,6 +42,35 @@ namespace Contigu.Core
             return _unlocked.Add(key);
         }
 
+        /// <summary>Conditions already met whose unlock is held back (a run only releases so many, see <see cref="UnlockTracker.MaxUnlocksPerRun"/>); they arrive at the start of the next runs, oldest first.</summary>
+        public IReadOnlyList<string> Queued
+        {
+            get { return _queued; }
+        }
+
+        public void Enqueue(string key)
+        {
+            if (!_unlocked.Contains(key) && !_queued.Contains(key))
+            {
+                _queued.Add(key);
+            }
+        }
+
+        /// <summary>Takes the oldest held-back unlock out of the queue and unlocks it; null when the queue is empty.</summary>
+        public string ReleaseNextQueued()
+        {
+            while (_queued.Count > 0)
+            {
+                string key = _queued[0];
+                _queued.RemoveAt(0);
+                if (_unlocked.Add(key))
+                {
+                    return key;
+                }
+            }
+            return null;
+        }
+
         public int EarnedCount
         {
             get { return _unlocked.Count; }
@@ -64,6 +94,7 @@ namespace Contigu.Core
             {
                 _unlocked.Add(entry.Key);
             }
+            _queued.Clear();
         }
 
         public string ToText()
@@ -72,6 +103,7 @@ namespace Contigu.Core
             keys.Sort(System.StringComparer.Ordinal);
             var sb = new StringBuilder();
             sb.Append("U=").Append(string.Join(",", keys.ToArray())).Append('\n');
+            sb.Append("Q=").Append(string.Join(",", _queued.ToArray())).Append('\n');
             sb.Append("T=");
             bool first = true;
             foreach (var pair in _totals)
@@ -101,6 +133,16 @@ namespace Contigu.Core
                         if (UnlockCatalog.FindByKey(part) != null)
                         {
                             state._unlocked.Add(part);
+                        }
+                    }
+                }
+                else if (line.StartsWith("Q="))
+                {
+                    foreach (var part in line.Substring(2).Split(','))
+                    {
+                        if (UnlockCatalog.FindByKey(part) != null && !state._queued.Contains(part))
+                        {
+                            state._queued.Add(part);
                         }
                     }
                 }
