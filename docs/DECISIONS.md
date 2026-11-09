@@ -9353,3 +9353,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - **Wilt** (Uncommon) : un tour où il score, rien ne soigne ni ne fait grossir les ennemis (un score négatif sur parcelle infectée ne soigne plus ; Leech et Reclaimer ne gagnent rien). « Tour » = la pose en cours, comme pour tous les effets « quand il score ».
   - **Cleanse** (Uncommon) : passif. À chaque Shuffle, *après* que les ennemis ont agi, chaque Cleanse sur la grille libère une parcelle verrouillée, gelée ou infectée au hasard (`RunManager.ResolveCleanseShuffle`, `LastShuffleCleansedPlots`).
   - Test fragile corrigé : `ShopBlisterSlots_NeverOffersAModifierAlreadyActive` perdait un run sur environ une graine sur six avant même ce changement (7 graines sur 40) ; le tirage change quand les pools changent, la graine est passée de 1 à 0.
+
+- **Clone Sprout (2026-11-09)**
+  - Idée de l'auteur : « faible pourcentage de créer une copie de la pièce, Rare ». Trait id 111, `CloneTile`, Rare, pool Grid.
+  - À la pose, 10 % (`ScoringConstants.CloneChancePercent`) d'ajouter au Seed Bag une copie de la graine plantée, avec ses autres upgrades mais **sans Clone** (sinon les copies se multiplieraient seules). Ne joue qu'à la pose de la graine : une vieille tuile re-comptée ne relance pas le tirage (la graine d'origine n'est plus connue).
+  - Interprétation : « copie de la pièce » = une graine de plus dans le sac, pas une tuile posée gratuitement sur la grille. À confirmer avec l'auteur.

@@ -1296,6 +1296,14 @@ namespace Contigu.Presentation
                 }
                 any = true;
             }
+            if (placement.ClonedSeed.HasValue)
+            {
+                // Clone Sprout: the seed was copied into the bag.
+                var cloned = placement.ClonedSeed.Value;
+                _gridView.PlayClearBurst(cloned.Position.x, cloned.Position.y, UITheme.ScorePollen);
+                _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(cloned.Position.x, cloned.Position.y), "Cloned!", UITheme.ScorePollen);
+                any = true;
+            }
             if (placement.ThawedPlots.Count > 0 || placement.CuredPlots.Count > 0 || placement.CuredFertilizer)
             {
                 // Sunbeam Sprout: the thawed plots flash; Antidote Sprout: the cured plots (and fertilizer) flash.

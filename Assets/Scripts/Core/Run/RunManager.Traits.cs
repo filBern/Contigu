@@ -193,6 +193,7 @@ namespace Contigu.Core
                 case PieceTraitKind.Dazzle:
                 case PieceTraitKind.Wilt:
                 case PieceTraitKind.Cleanse:
+                case PieceTraitKind.Clone:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -1045,6 +1046,34 @@ namespace Contigu.Core
                 }
             }
             placement.DazzledEnemies = dazzled;
+        }
+
+        /// <summary>"Clone Sprout": rolls <see cref="ScoringConstants.CloneChancePercent"/>% to add a copy of the planted seed (its upgrades kept, Clone dropped so copies never snowball) to the Seed Bag.</summary>
+        private void ApplyCloneEffect(PieceToken token, Vector2Int traitCellPos, PlacementResult placement)
+        {
+            if (_rng.Next(100) >= ScoringConstants.CloneChancePercent)
+            {
+                return;
+            }
+            PieceTrait? first = null;
+            var rest = new List<PieceTrait>();
+            foreach (var trait in token.Traits)
+            {
+                if (trait.Kind == PieceTraitKind.Clone)
+                {
+                    continue;
+                }
+                if (!first.HasValue)
+                {
+                    first = trait;
+                }
+                else
+                {
+                    rest.Add(trait);
+                }
+            }
+            Deck.AddPreparedToken(new PieceToken(token.Shape, token.Color, first, rest.ToArray()));
+            placement.ClonedSeed = (traitCellPos, token.Shape, token.Color);
         }
     }
 }

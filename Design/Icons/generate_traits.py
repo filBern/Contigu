@@ -124,6 +124,8 @@ T['Dazzle'] = ('#f4efe0', g(star(32, 32, 26, 4, 0.3), '#ffd84d') + g('<circle cx
 T['Wilt'] = ('#8a6a3a', g('<path d="M32 56 V30 C32 22 26 18 22 12" fill="none"/>', 'none', 5).replace(O, '#7ad07a') + g('<path d="M32 36 C40 36 48 40 52 50 C42 52 34 46 32 36 Z"/>', '#c8a45a') + g('<path d="M32 28 C24 28 16 30 12 20 C22 16 30 20 32 28 Z"/>', '#9a7a3a'))
 T['Cleanse'] = ('#7ad0e8', g('<path d="M32 6 C46 24 50 34 44 44 C40 52 24 52 20 44 C14 34 18 24 32 6Z"/>', '#ffffff') + g(star(46, 14, 8, 4, 0.4) + star(16, 44, 6, 4, 0.4), '#fff1b0', 2.5))
 
+T['Clone'] = ('#9ad37a', g('<ellipse cx="24" cy="38" rx="11" ry="16" transform="rotate(20 24 38)"/>', '#d8b574') + g('<ellipse cx="42" cy="30" rx="11" ry="16" transform="rotate(20 42 30)"/>', '#fff1b0') + g('<path d="M50 8 V22 M43 15 H57" fill="none"/>', 'none', 4).replace(O, W))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

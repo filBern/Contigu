@@ -142,6 +142,7 @@ namespace Contigu.Core
         LullTile,
         DazzleTile,
         WiltTile,
-        CleanseTile
+        CleanseTile,
+        CloneTile
     }
 }

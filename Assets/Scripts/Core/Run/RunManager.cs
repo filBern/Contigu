@@ -935,6 +935,13 @@ namespace Contigu.Core
             {
                 ApplyPostPlacementTraitBonus(tokenTraits[t].Trait, tokenTraits[t].Pos, sparkStreakBeforePlacement, placement);
             }
+            for (int t = 0; t < tokenTraits.Count; t++)
+            {
+                if (tokenTraits[t].Trait.Kind == PieceTraitKind.Clone && !placement.ClonedSeed.HasValue)
+                {
+                    ApplyCloneEffect(token, tokenTraits[t].Pos, placement);
+                }
+            }
             ApplyPersistentTraitBonuses(persistentTraits, streakBeforePlacement, placement);
             ApplyNeighborCopyUpgrades(placement, streakBeforePlacement);
             ApplyHandSlotModifierBonus(handIndex, placement);

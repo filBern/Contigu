@@ -217,6 +217,9 @@ namespace Contigu.Core
         /// <summary>The Pruner Sprout's tile that uprooted each one (same order as <see cref="UprootedTiles"/>).</summary>
         public IReadOnlyList<Vector2Int> UprootedBy = System.Array.Empty<Vector2Int>();
 
+        /// <summary>The seed a Clone Sprout copied into the Seed Bag on this placement (null when the roll failed), and the tile that did it.</summary>
+        public (Vector2Int Position, ShapeId Shape, PieceColor Color)? ClonedSeed;
+
         /// <summary>Plots a Sunbeam Sprout thawed on this placement.</summary>
         public IReadOnlyList<Vector2Int> ThawedPlots = System.Array.Empty<Vector2Int>();
 

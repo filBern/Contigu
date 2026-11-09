@@ -117,6 +117,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Dazzle: return "Dazzle Sprout";
                 case PieceTraitKind.Wilt: return "Wilt Sprout";
                 case PieceTraitKind.Cleanse: return "Cleanse Sprout";
+                case PieceTraitKind.Clone: return "Clone Sprout";
                 default: return kind.ToString();
             }
         }
@@ -287,6 +288,8 @@ namespace Contigu.Data
                     return "When placed, enemies lose their shield and their color or shape hatred for the round.";
                 case PieceTraitKind.Wilt:
                     return "On a turn where it scores, enemies cannot heal or grow.";
+                case PieceTraitKind.Clone:
+                    return "When planted, " + ScoringConstants.CloneChancePercent + "% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).";
                 case PieceTraitKind.Cleanse:
                     return "At every Shuffle, once the enemies have acted, frees one locked, frozen or blighted plot.";
                 case PieceTraitKind.Tally:
@@ -373,6 +376,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Dazzle: return UpgradeRarity.Rare;
                 case PieceTraitKind.Wilt: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Cleanse: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Clone: return UpgradeRarity.Rare;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -520,6 +524,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Dazzle:
                 case PieceTraitKind.Wilt:
                 case PieceTraitKind.Cleanse:
+                case PieceTraitKind.Clone:
                     return PlacementPointBadgeColor;
                 default:
                     return Color.gray;

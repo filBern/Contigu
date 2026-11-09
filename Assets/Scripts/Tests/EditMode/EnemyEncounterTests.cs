@@ -1317,6 +1317,30 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void CloneTile_SometimesCopiesTheSeedIntoTheBag_WithoutTheCloneUpgrade()
+        {
+            int copies = 0;
+            for (int seed = 0; seed < 300; seed++)
+            {
+                var run = new RunManager(new SystemRandomProvider(seed));
+                int before = run.Deck.DeckCount;
+                var placed = PlaceUpgradedSingle(run, PieceTraitKind.Clone, 2, 2);
+                // The tile itself was added to the bag by the test, so one more means a copy.
+                int added = run.Deck.DeckCount - before - 1;
+                if (placed.ClonedSeed.HasValue)
+                {
+                    copies++;
+                    Assert.AreEqual(1, added);
+                }
+                else
+                {
+                    Assert.AreEqual(0, added);
+                }
+            }
+            Assert.That(copies, Is.InRange(8, 60), "Around " + ScoringConstants.CloneChancePercent + "% of 300 plantings");
+        }
+
+        [Test]
         public void CleanseTile_FreesOneAfflictedPlot_AtEveryShuffle_AfterTheEnemiesActed()
         {
             var run = new RunManager(new SystemRandomProvider(1));

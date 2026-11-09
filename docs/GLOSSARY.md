@@ -152,6 +152,7 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `DazzleTile` | Dazzle Sprout | Grid |
 | `WiltTile` | Wilt Sprout | Grid |
 | `CleanseTile` | Cleanse Sprout | Grid |
+| `CloneTile` | Clone Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |

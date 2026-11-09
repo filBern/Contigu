@@ -250,7 +250,10 @@ namespace Contigu.Core
         Wilt = 109,
 
         /// <summary>"Cleanse Sprout" — at every Shuffle, once the enemies have acted, it frees one afflicted plot.</summary>
-        Cleanse = 110
+        Cleanse = 110,
+
+        /// <summary>"Clone Sprout" — when its seed is planted, a small chance to add a copy of that seed (without Clone) to the Seed Bag.</summary>
+        Clone = 111
     }
 
     /// <summary>

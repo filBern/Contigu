@@ -525,6 +525,10 @@ namespace Contigu.Core
             UpgradeId.CleanseTile, UpgradePool.Grid, "Cleanse Sprout",
             "At every Shuffle, once the enemies have acted, frees one locked, frozen or blighted plot.", false, UpgradeRarity.Uncommon);
 
+        public static readonly UpgradeDefinition CloneTile = new UpgradeDefinition(
+            UpgradeId.CloneTile, UpgradePool.Grid, "Clone Sprout",
+            "When planted, 10% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -536,7 +540,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -566,7 +570,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile
         };
     }
 }
