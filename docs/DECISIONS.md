@@ -9356,5 +9356,5 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 - **Clone Sprout (2026-11-09)**
   - Idée de l'auteur : « faible pourcentage de créer une copie de la pièce, Rare ». Trait id 111, `CloneTile`, Rare, pool Grid.
-  - À la pose, 10 % (`ScoringConstants.CloneChancePercent`) d'ajouter au Seed Bag une copie de la graine plantée, avec ses autres upgrades mais **sans Clone** (sinon les copies se multiplieraient seules). Ne joue qu'à la pose de la graine : une vieille tuile re-comptée ne relance pas le tirage (la graine d'origine n'est plus connue).
+  - À la pose, 25 % (`ScoringConstants.CloneChancePercent`, 10 % au départ) d'ajouter au Seed Bag une copie de la graine plantée, avec ses autres upgrades mais **sans Clone** (sinon les copies se multiplieraient seules). Ne joue qu'à la pose de la graine : une vieille tuile re-comptée ne relance pas le tirage (la graine d'origine n'est plus connue).
   - Interprétation : « copie de la pièce » = une graine de plus dans le sac, pas une tuile posée gratuitement sur la grille. À confirmer avec l'auteur.

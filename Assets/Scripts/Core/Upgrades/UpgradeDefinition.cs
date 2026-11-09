@@ -527,7 +527,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition CloneTile = new UpgradeDefinition(
             UpgradeId.CloneTile, UpgradePool.Grid, "Clone Sprout",
-            "When planted, 10% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).", false, UpgradeRarity.Rare);
+            "When planted, 25% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).", false, UpgradeRarity.Rare);
 
         public static readonly UpgradeDefinition[] All =
         {

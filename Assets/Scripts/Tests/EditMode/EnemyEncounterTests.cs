@@ -1337,7 +1337,7 @@ namespace Contigu.Tests
                     Assert.AreEqual(0, added);
                 }
             }
-            Assert.That(copies, Is.InRange(8, 60), "Around " + ScoringConstants.CloneChancePercent + "% of 300 plantings");
+            Assert.That(copies, Is.InRange(40, 110), "Around " + ScoringConstants.CloneChancePercent + "% of 300 plantings");
         }
 
         [Test]

@@ -464,7 +464,7 @@ namespace Contigu.Core
         public const int TallyBonusPerLine = 5;
 
         /// <summary>Clone Sprout: percent chance, each time its seed is planted, to add a copy of that seed to the Seed Bag.</summary>
-        public const int CloneChancePercent = 10;
+        public const int CloneChancePercent = 25;
 
         /// <summary>Wild Surge: xN when the scored group contains a Joker tile.</summary>
         public const int WildSurgeMultiplier = 2;
