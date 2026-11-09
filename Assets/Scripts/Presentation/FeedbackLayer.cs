@@ -638,26 +638,74 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>Overshooting ease-out: goes past 1 and settles back, the classic "pop".</summary>
+        private static float EaseOutBack(float x)
+        {
+            const float c1 = 2.2f;
+            const float c3 = c1 + 1f;
+            float k = x - 1f;
+            return 1f + c3 * k * k * k + c1 * k * k;
+        }
+
+        /// <summary>A popup's size bonus from the number it shows: 1 for a handful of points, up to +40 % from a thousand on. Anything that is not a number stays at 1.</summary>
+        private static float PopupMagnitudeScale(string text)
+        {
+            string digits = text.Trim().TrimStart('+', '-');
+            if (!int.TryParse(digits, out int value) || value <= 1)
+            {
+                return 1f;
+            }
+            return 1f + Mathf.Clamp01(Mathf.Log10(value) / 3f) * 0.4f;
+        }
+
+        /// <summary>
+        /// Float-and-fade, with some juice: the popup pops in with an overshoot (bigger for bigger numbers), flashes white before
+        /// settling on its color, wobbles a few degrees, rises with an ease-out and shrinks away as it fades. Reduced motion keeps the plain float and fade.
+        /// </summary>
         private IEnumerator AnimatePopup(RectTransform container, Image backdrop, Text text, bool floatDown)
         {
             const float duration = 1.3f;
             const float holdFraction = 0.35f; // stay fully opaque before fading
+            const float popDuration = 0.22f;
+            const float flashDuration = 0.14f;
+            const float wobbleDuration = 0.4f;
+            bool reduced = MotionSettings.Reduced;
             float t = 0f;
             Vector3 startPos = container.position;
             Color textColor = text.color;
             Color backdropColor = backdrop.color;
             float verticalSign = floatDown ? -1f : 1f;
+            float magnitude = reduced ? 1f : PopupMagnitudeScale(text.text);
+            float tilt = Random.Range(-9f, 9f);
+            float drift = Random.Range(-10f, 10f);
+            if (!reduced)
+            {
+                container.localScale = Vector3.one * 0.2f;
+            }
 
             while (t < duration)
             {
                 t += Time.deltaTime;
                 float p = Mathf.Clamp01(t / duration);
-                container.position = startPos + new Vector3(0f, verticalSign * 60f * p, 0f);
+                float rise = reduced ? p : 1f - (1f - p) * (1f - p) * (1f - p);
+                container.position = startPos + new Vector3(reduced ? 0f : drift * rise, verticalSign * 70f * rise, 0f);
 
                 float fadeP = Mathf.Clamp01((p - holdFraction) / (1f - holdFraction));
                 float alpha = Mathf.Lerp(1f, 0f, fadeP);
 
+                if (!reduced)
+                {
+                    float pop = EaseOutBack(Mathf.Clamp01(t / popDuration));
+                    float shrink = Mathf.Lerp(1f, 0.8f, fadeP);
+                    container.localScale = Vector3.one * (pop * magnitude * shrink);
+                    container.localRotation = Quaternion.Euler(0f, 0f, tilt * Mathf.Max(0f, 1f - t / wobbleDuration));
+                }
+
                 var tc = textColor;
+                if (!reduced && t < flashDuration)
+                {
+                    tc = Color.Lerp(Color.white, textColor, t / flashDuration);
+                }
                 tc.a = alpha;
                 text.color = tc;
 
