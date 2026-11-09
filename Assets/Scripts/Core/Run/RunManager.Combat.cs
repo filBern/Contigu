@@ -87,6 +87,7 @@ namespace Contigu.Core
                     ConsumeShuffleSkips();
                 }
                 ResolveCleanseShuffle();
+                ObserveShuffleForUnlocks();
             }
         }
 
@@ -188,6 +189,7 @@ namespace Contigu.Core
         /// </summary>
         private void CompleteRoundSuccessfully()
         {
+            ObserveRoundClearedForUnlocks();
             // Heirloom Sprout: each one still on the garden adds a plain copy of its seed to the bag.
             _heirloomSeedsThisClear = new List<(Vector2Int, ShapeId, PieceColor)>();
             foreach (var pos in GridManager.AllPositions())
@@ -234,6 +236,7 @@ namespace Contigu.Core
             // RoundCount - 1, can't recur).
             if (!IsEndless && CurrentRoundIndex == _challenge.RoundCount - 1)
             {
+                ObserveRunWonForUnlocks();
                 State = RunState.RunVictory;
                 return;
             }
@@ -370,6 +373,7 @@ namespace Contigu.Core
         /// <summary>When an enemy dies, its active effects are cancelled/cleaned up immediately: Locker's current lock is released, and every tile Poisoner poisoned is normalized. Every cell released this way is also recorded in <see cref="_deathReleasedCellsThisPlacement"/>, so Presentation can tell a death-caused release apart from an ordinary Shuffle-move release (RunManager.ResolveLockerShuffleEffect/ResolvePoisonerShuffleEffect) and play a different reveal for it (see PlacePiece's own DeathReleasedCells on the returned PlacementOutcome).</summary>
         private void CleanUpDefeatedEnemy(EnemyInstance enemy)
         {
+            ObserveEnemyDefeatedForUnlocks(enemy);
             if (enemy.LockedCell.HasValue)
             {
                 var lockedCell = Grid.GetCell(enemy.LockedCell.Value);

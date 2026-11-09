@@ -786,6 +786,7 @@ namespace Contigu.Core
             _roundFertilizerPollen.Clear();
             PiecesRemainingThisRound = CurrentBudget;
             LastRoundEndLueurBonus = 0;
+            UnlocksStartRound();
             State = RunState.InProgress;
             RoundStartSnapshot = CaptureSnapshot();
             CheckpointSnapshot = RoundStartSnapshot;
@@ -947,6 +948,7 @@ namespace Contigu.Core
                 }
             }
             if (forcedRows.Count > 0) { Grid.SetForcedLines(forcedRows, forcedColumns); }
+            var plantingFacts = ReadPlantingFacts(shape, x, y, placementColor);
             PlacementResult placement;
             try
             {
@@ -1029,6 +1031,11 @@ namespace Contigu.Core
             // player has picked this round's upgrade (see StartRound).
             Deck.PlayFromHand(handIndex, refillIfEmpty: false);
             PiecesRemainingThisRound--;
+            ObservePlacementForUnlocks(placement, plantingFacts, token, shape, handIndex, poisonMagnitudeForReclaimer > 0);
+            if (Deck.IsHandFullyEmpty())
+            {
+                ObserveHandEmptied(placement);
+            }
 
             IReadOnlyList<Vector2Int> bossLockedCells = System.Array.Empty<Vector2Int>();
             bool cellLockActive = CurrentBossEffect == BossEffect.ProgressiveCellLock;

@@ -10,6 +10,9 @@ namespace Contigu.Core
     {
         private readonly IRandomProvider _rng;
 
+        /// <summary>When set, an upgrade for which it returns false is never rolled (not unlocked yet, see UnlockCatalog).</summary>
+        public System.Func<UpgradeDefinition, bool> Filter;
+
         public UpgradeSystem(IRandomProvider rng)
         {
             _rng = rng;
@@ -39,6 +42,21 @@ namespace Contigu.Core
                 default:
                     options = UpgradeCatalog.GridPool;
                     break;
+            }
+            if (Filter != null)
+            {
+                var available = new List<UpgradeDefinition>(options.Count);
+                for (int i = 0; i < options.Count; i++)
+                {
+                    if (Filter(options[i]))
+                    {
+                        available.Add(options[i]);
+                    }
+                }
+                if (available.Count > 0)
+                {
+                    options = available;
+                }
             }
             return PickWeighted(options, _rng);
         }

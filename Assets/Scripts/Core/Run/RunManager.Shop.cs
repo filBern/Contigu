@@ -33,6 +33,10 @@ namespace Contigu.Core
         /// </summary>
         public bool IsModifierUsableThisRun(ModifierId id)
         {
+            if (!IsFertilizerAvailable(id))
+            {
+                return false;
+            }
             if (!IsNewModifierUsable(id))
             {
                 return false;
@@ -173,6 +177,10 @@ namespace Contigu.Core
         /// <summary>Whether <paramref name="candidate"/> could actually be applied right now - see RollBlisterSlot's own doc comment for why this only matters for Blister, not Casino.</summary>
         private bool IsUpgradeEligibleForOffer(UpgradeDefinition candidate)
         {
+            if (!IsUpgradeAvailable(candidate.Id))
+            {
+                return false;
+            }
             if (candidate.Id == UpgradeId.RandomModifier && _activeModifiers.Count >= EconomyConstants.MaxActiveModifiers)
             {
                 return false;
