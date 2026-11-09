@@ -9358,3 +9358,14 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - Idée de l'auteur : « faible pourcentage de créer une copie de la pièce, Rare ». Trait id 111, `CloneTile`, Rare, pool Grid.
   - À la pose, 25 % (`ScoringConstants.CloneChancePercent`, 10 % au départ) d'ajouter au Seed Bag une copie de la graine plantée, avec ses autres upgrades mais **sans Clone** (sinon les copies se multiplieraient seules). Ne joue qu'à la pose de la graine : une vieille tuile re-comptée ne relance pas le tirage (la graine d'origine n'est plus connue).
   - Interprétation : « copie de la pièce » = une graine de plus dans le sac, pas une tuile posée gratuitement sur la grille. À confirmer avec l'auteur.
+
+- **Cinq Sprouts et trois fertilizers de plus (2026-11-09)**
+  - Choix de l'auteur dans la deuxième liste de propositions. Traits 112 à 116 (`MirrorWard`, `Seedsack`, `Heirloom`, `Anchor`, `LateBloom`), fertilizers `GreenhouseLamp`, `SeedLibrary`, `TwinBloom`.
+  - **Mirror Ward** (Rare) : une parcelle infectée adjacente à un Mirror Ward (déjà posé ou posé par la même pose) score normalement, ses points ne sont pas négatifs. Son bonus x2/teinte reste désactivé par l'infection.
+  - **Seedsack** (Uncommon, variante de l'auteur) : si sa graine est la dernière de la main, le remplissage automatique ne déclenche pas les ennemis (ni leurs tricks de Shuffle, ni le vol du Thief, ni ne consomme un skip de Lull). Cleanse reste actif. Le Shuffle manuel n'est pas touché.
+  - **Heirloom** (Rare) : si sa tuile est encore sur la grille quand la manche est gagnée, une copie simple (forme + couleur, sans upgrade) de sa graine rejoint le sac. Interprétation : ma proposition parlait d'« une graine de la main » ; j'ai préféré lier l'effet à la tuile, ce qui crée de la tension (il faut la protéger des récoltes).
+  - **Anchor** (Uncommon) : sa tuile ne peut être ni recolorée, ni échangée, ni déplacée, ni brûlée (ennemis et météo : `GridManager.MovableFilledCells`). Recoupe un peu Aegis (qui libère et immunise la parcelle) mais protège la tuile et pas la parcelle.
+  - **Late Bloom** (Rare, variante de l'auteur) : compteur par tuile ; à partir du 3e déclenchement, +1 Mult à chaque fois. Remis à zéro dès qu'une ligne est récoltée (n'importe laquelle) et au début de manche.
+  - **Greenhouse Lamp** : +0,5 Mult par Shuffle restant, à chaque pose (0,1 était trop faible avec 3 ou 4 Shuffles).
+  - **Seed Library** (« sans plafond ») : +0,5 Mult par forme différente dans le sac. Il n'y a que 8 formes et le sac de départ les contient toutes, donc c'est en pratique un +4 permanent tant qu'aucune forme ne disparaît du sac (Forge, Compost). À surveiller à l'équilibrage.
+  - **Twin Bloom** (variante de l'auteur) : +1 Mult à la 2e graine de même couleur de suite, +2 à la 3e, etc., sans limite ; une autre couleur remet à zéro.

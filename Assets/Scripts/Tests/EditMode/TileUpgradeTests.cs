@@ -444,6 +444,27 @@ namespace Contigu.Tests
             CollectionAssert.Contains(wilt.WiltedBy, new Vector2Int(2, 2));
         }
 
+        [Test]
+        public void GreenhouseLamp_SeedLibrary_TwinBloom_PayTheirMult()
+        {
+            var lamp = NewRun();
+            lamp.DebugGrantModifier(ModifierId.GreenhouseLamp);
+            var lamped = PlantAt(lamp, PieceTraitKind.Pip, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(lamp.ShufflesRemaining * ScoringConstants.GreenhouseLampMultPerShuffle, lamped.ProgressiveAdditiveMult, 0.001f);
+
+            var library = NewRun();
+            library.DebugGrantModifier(ModifierId.SeedLibrary);
+            var shelved = PlantAt(library, PieceTraitKind.Pip, PieceColor.Coral, 2, 2);
+            Assert.AreEqual(8 * ScoringConstants.SeedLibraryMultPerShape, shelved.ProgressiveAdditiveMult, 0.001f, "The starting bag holds all 8 shapes");
+
+            var twin = NewRun();
+            twin.DebugGrantModifier(ModifierId.TwinBloom);
+            Assert.AreEqual(0f, PlantAt(twin, PieceTraitKind.Pip, PieceColor.Coral, 0, 0).ProgressiveAdditiveMult, 0.001f, "1st seed: no streak yet");
+            Assert.AreEqual(1f, PlantAt(twin, PieceTraitKind.Pip, PieceColor.Coral, 3, 3).ProgressiveAdditiveMult, 0.001f, "2nd same color: +1");
+            Assert.AreEqual(2f, PlantAt(twin, PieceTraitKind.Pip, PieceColor.Coral, 0, 3).ProgressiveAdditiveMult, 0.001f, "3rd same color: +2, stacking");
+            Assert.AreEqual(0f, PlantAt(twin, PieceTraitKind.Pip, PieceColor.Teal, 3, 0).ProgressiveAdditiveMult, 0.001f, "a different color breaks the streak");
+        }
+
         private static PlacementResult PlantUpgraded(GridManager grid, int x, int y, PieceColor color, PieceTraitKind? kind, params ModifierId[] modifiers)
         {
             if (kind.HasValue)

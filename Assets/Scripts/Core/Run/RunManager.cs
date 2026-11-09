@@ -424,6 +424,19 @@ namespace Contigu.Core
         /// <summary>Crop Rotation's counter: placements this round whose shape differed from the one before.</summary>
         private int _shapeChangesThisRound;
         private ShapeId? _lastShapeThisRound;
+
+        /// <summary>Twin Bloom's counter: how many placements in a row (this round) were the same color as the one before, the first of the streak excluded.</summary>
+        private int _sameColorStreak;
+        private PieceColor? _lastColorThisRound;
+
+        /// <summary>Late Bloom Sprout: how many times each tile (by plot) has triggered since the last harvest.</summary>
+        private readonly Dictionary<Vector2Int, int> _lateBloomTriggers = new Dictionary<Vector2Int, int>();
+
+        /// <summary>Heirloom Sprout: the seeds added to the bag when the most recent round was cleared.</summary>
+        private List<(Vector2Int Position, ShapeId Shape, PieceColor Color)> _heirloomSeedsThisClear = new List<(Vector2Int, ShapeId, PieceColor)>();
+
+        /// <summary>True while the hand is being refilled after a placement whose seed carried a Seedsack Sprout.</summary>
+        private bool _refillQuiet;
         private int _roundPollen;
         private int _roundLinesPollen;
         private int _roundTilePollen;
@@ -763,6 +776,10 @@ namespace Contigu.Core
             _roundLines = 0;
             _shapeChangesThisRound = 0;
             _lastShapeThisRound = null;
+            _sameColorStreak = 0;
+            _lastColorThisRound = null;
+            _lateBloomTriggers.Clear();
+            _heirloomSeedsThisClear = new List<(Vector2Int, ShapeId, PieceColor)>();
             _roundPollen = 0;
             _roundLinesPollen = 0;
             _roundTilePollen = 0;
@@ -894,6 +911,17 @@ namespace Contigu.Core
             }
             _lastShapeThisRound = token.Shape;
 
+            // Twin Bloom: the streak of same-colored seeds in a row, counted for the placement that extends it.
+            if (_lastColorThisRound.HasValue && _lastColorThisRound.Value == token.Color)
+            {
+                _sameColorStreak++;
+            }
+            else
+            {
+                _sameColorStreak = 0;
+            }
+            _lastColorThisRound = token.Color;
+
             StampMasteryBonuses(shape, placementColor, x, y);
             var transientTraitCells = new List<Cell>();
             for (int t = 0; t < tokenTraits.Count; t++)
@@ -958,6 +986,11 @@ namespace Contigu.Core
             int poisonMagnitudeForReclaimer = 0;
             if (poisonedPositions != null && poisonedPositions.Count > 0)
             {
+                // Mirror Ward Sprout: blight next to one scores normally.
+                RemoveWardedPositions(poisonedPositions, tokenTraits);
+            }
+            if (poisonedPositions != null && poisonedPositions.Count > 0)
+            {
                 poisonMagnitudeForReclaimer = ApplyPoisonScoreRule(placement, poisonedPositions);
             }
             CountModifierUsage(placement);
@@ -968,6 +1001,10 @@ namespace Contigu.Core
             _roundPlacements++;
             _roundBestPlacement = Mathf.Max(_roundBestPlacement, placement.TotalScore);
             _roundLines += placement.ClearedLineCount;
+            if (placement.ClearedLineCount > 0)
+            {
+                _lateBloomTriggers.Clear();
+            }
             _roundPollen += placement.LueurEarned + placement.ModifierLueurBonus;
             TallyRoundPollen(placement);
             // ModifierLueurBonus is a second, independent source of Lueur, on top
@@ -1016,13 +1053,31 @@ namespace Contigu.Core
 
             if (State == RunState.InProgress && Deck.IsHandFullyEmpty())
             {
-                DrawFreshHand();
+                bool quiet = false;
+                foreach (var ownTrait in token.Traits)
+                {
+                    if (ownTrait.Kind == PieceTraitKind.Seedsack)
+                    {
+                        quiet = true;
+                    }
+                }
+                _refillQuiet = quiet && HasActiveEncounter;
+                placement.QuietRefill = _refillQuiet;
+                try
+                {
+                    DrawFreshHand();
+                }
+                finally
+                {
+                    _refillQuiet = false;
+                }
                 // EvaluateRoundEnd's stuck-check above deliberately skips an empty
                 // hand - but the fresh hand just drawn might itself have no legal
                 // placement anywhere on the board, so it needs its own check here.
                 EvaluateRoundEnd();
             }
 
+            placement.HeirloomSeeds = _heirloomSeedsThisClear;
             return new PlacementOutcome(placement, State, RoundScore, TotalScore, PiecesRemainingThisRound, bossLockedCells, chameleonOriginalColor, new List<Vector2Int>(_deathReleasedCellsThisPlacement), weatherMovedTiles);
         }
     }

@@ -100,6 +100,9 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `WildReserve` | Wild Reserve | Roguelike |
 | `WildSurge` | Wild Surge | Roguelike |
 | `CropRotation` | Crop Rotation | Formes |
+| `GreenhouseLamp` | Greenhouse Lamp | Roguelike |
+| `SeedLibrary` | Seed Library | Formes |
+| `TwinBloom` | Twin Bloom | Couleurs |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
 | `Cadence` | Cadence | Roguelike |
 | `Echo` | Echo | Roguelike |
@@ -153,6 +156,11 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `WiltTile` | Wilt Sprout | Grid |
 | `CleanseTile` | Cleanse Sprout | Grid |
 | `CloneTile` | Clone Sprout | Grid |
+| `MirrorWardTile` | Mirror Ward Sprout | Grid |
+| `SeedsackTile` | Seedsack Sprout | Grid |
+| `HeirloomTile` | Heirloom Sprout | Grid |
+| `AnchorTile` | Anchor Sprout | Grid |
+| `LateBloomTile` | Late Bloom Sprout | Grid |
 | `PermanentBonusSquare` | Permanent Bonus Square | Grid |
 | `PieceMastery` | Seed Mastery | Mastery |
 | `ColorMastery` | Color Mastery | Mastery |

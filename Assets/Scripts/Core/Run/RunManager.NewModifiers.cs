@@ -11,7 +11,8 @@ namespace Contigu.Core
             ModifierId.Saisons, ModifierId.Outsider, ModifierId.CoupFinal, ModifierId.DerniereGraine, ModifierId.PremiereGraine,
             ModifierId.Tirelire, ModifierId.BanqueGraines, ModifierId.SousBois, ModifierId.DanseDePluie, ModifierId.DanseDuSoleil,
             ModifierId.Rustique, ModifierId.CavalierVent, ModifierId.Matinal, ModifierId.Marathonien, ModifierId.Pourfendeur,
-            ModifierId.WildCluster, ModifierId.WildReserve, ModifierId.WildSurge, ModifierId.CropRotation
+            ModifierId.WildCluster, ModifierId.WildReserve, ModifierId.WildSurge, ModifierId.CropRotation,
+            ModifierId.GreenhouseLamp, ModifierId.SeedLibrary, ModifierId.TwinBloom
         };
 
         private bool HoldsAnyNewRunStateModifier()
@@ -120,6 +121,15 @@ namespace Contigu.Core
                 case ModifierId.CropRotation:
                     AddRunStateMultBonus(placement, events, id, index, _shapeChangesThisRound * ScoringConstants.CropRotationMultPerChange * level, whole: false);
                     break;
+                case ModifierId.GreenhouseLamp:
+                    AddRunStateMultBonus(placement, events, id, index, ShufflesRemaining * ScoringConstants.GreenhouseLampMultPerShuffle * level, whole: false);
+                    break;
+                case ModifierId.SeedLibrary:
+                    AddRunStateMultBonus(placement, events, id, index, CountDistinctShapesInBag() * ScoringConstants.SeedLibraryMultPerShape * level, whole: false);
+                    break;
+                case ModifierId.TwinBloom:
+                    AddRunStateMultBonus(placement, events, id, index, TwinBloomMult() * level, whole: false);
+                    break;
                 case ModifierId.WildSurge:
                     if (CountJokerTilesInGroup(placement) > 0)
                     {
@@ -221,6 +231,12 @@ namespace Contigu.Core
                     return "Currently +" + FormatMultDisplay(CountJokerSeedsInBag() * ScoringConstants.WildReserveMultPerJoker * level) + " Mult";
                 case ModifierId.CropRotation:
                     return "Currently +" + FormatMultDisplay(_shapeChangesThisRound * ScoringConstants.CropRotationMultPerChange * level) + " Mult (" + _shapeChangesThisRound + " shape changes this round)";
+                case ModifierId.GreenhouseLamp:
+                    return "Currently +" + FormatMultDisplay(ShufflesRemaining * ScoringConstants.GreenhouseLampMultPerShuffle * level) + " Mult (" + ShufflesRemaining + " Shuffles left)";
+                case ModifierId.SeedLibrary:
+                    return "Currently +" + FormatMultDisplay(CountDistinctShapesInBag() * ScoringConstants.SeedLibraryMultPerShape * level) + " Mult (" + CountDistinctShapesInBag() + " shapes in the bag)";
+                case ModifierId.TwinBloom:
+                    return "Currently +" + FormatMultDisplay(TwinBloomMult() * level) + " Mult (" + (_sameColorStreak + 1) + " of the same color in a row)";
                 case ModifierId.WildSurge:
                     return "Active when the scored group holds a Joker tile: x" + ScoringConstants.WildSurgeMultiplier;
                 case ModifierId.Pourfendeur:
@@ -284,6 +300,24 @@ namespace Contigu.Core
                 default:
                     return true;
             }
+        }
+
+        /// <summary>Seed Library: how many different shapes the Seed Bag holds.</summary>
+        private int CountDistinctShapesInBag()
+        {
+            var shapes = new HashSet<ShapeId>();
+            var tokens = Deck.Deck;
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                shapes.Add(tokens[i].Shape);
+            }
+            return shapes.Count;
+        }
+
+        /// <summary>Twin Bloom: +1 for the 2nd seed of a same-color streak, +2 for the 3rd, and so on, without limit.</summary>
+        private float TwinBloomMult()
+        {
+            return _sameColorStreak * ScoringConstants.TwinBloomMultPerStreakStep;
         }
     }
 }

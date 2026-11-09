@@ -72,15 +72,20 @@ namespace Contigu.Core
         {
             LastShuffleLulled = false;
             LastShuffleCleansedPlots = System.Array.Empty<Vector2Int>();
-            if (HasActiveEncounter)
+            // Seedsack Sprout: a refill after its seed does not trigger the enemies (and does not spend a Lull skip).
+            bool enemiesAct = HasActiveEncounter && !_refillQuiet;
+            if (enemiesAct)
             {
                 ResolveEnemyShuffleEffects();
             }
             Deck.DrawNewHand();
-            ThiefStoleOnLastShuffle = HasActiveEncounter && ResolveThiefShuffleEffect();
+            ThiefStoleOnLastShuffle = enemiesAct && ResolveThiefShuffleEffect();
             if (HasActiveEncounter)
             {
-                ConsumeShuffleSkips();
+                if (enemiesAct)
+                {
+                    ConsumeShuffleSkips();
+                }
                 ResolveCleanseShuffle();
             }
         }
@@ -183,6 +188,18 @@ namespace Contigu.Core
         /// </summary>
         private void CompleteRoundSuccessfully()
         {
+            // Heirloom Sprout: each one still on the garden adds a plain copy of its seed to the bag.
+            _heirloomSeedsThisClear = new List<(Vector2Int, ShapeId, PieceColor)>();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var plot = Grid.GetCell(pos);
+                if (plot.IsFilled && plot.OriginTrait.HasValue && plot.OriginTrait.Value.Kind == PieceTraitKind.Heirloom
+                    && plot.FilledShapeId.HasValue && plot.FilledColor.HasValue)
+                {
+                    Deck.AddPreparedToken(new PieceToken(plot.FilledShapeId.Value, plot.FilledColor.Value));
+                    _heirloomSeedsThisClear.Add((pos, plot.FilledShapeId.Value, plot.FilledColor.Value));
+                }
+            }
             // Converting every unused piece into +1 Lueur means finishing a
             // round fast still pays out close to what grinding it out fully
             // would have. LastRoundEndLueurBonus is read once by the

@@ -253,7 +253,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (cell.IsFilled && cell.FilledColor.HasValue && !cell.IsLocked && !cell.IsBastion)
+                if (cell.IsFilled && cell.FilledColor.HasValue && !cell.IsLocked && !cell.IsBastion && !(cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.Anchor))
                 {
                     cells.Add(pos);
                 }

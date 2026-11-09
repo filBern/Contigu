@@ -466,6 +466,19 @@ namespace Contigu.Core
         /// <summary>Clone Sprout: percent chance, each time its seed is planted, to add a copy of that seed to the Seed Bag.</summary>
         public const int CloneChancePercent = 25;
 
+        /// <summary>Late Bloom Sprout: Mult added on each trigger from the 3rd one on.</summary>
+        public const int LateBloomMult = 1;
+        public const int LateBloomTriggersNeeded = 3;
+
+        /// <summary>Greenhouse Lamp: Mult per Shuffle left, on every placement.</summary>
+        public const float GreenhouseLampMultPerShuffle = 0.5f;
+
+        /// <summary>Seed Library: Mult per different shape in the Seed Bag.</summary>
+        public const float SeedLibraryMultPerShape = 0.5f;
+
+        /// <summary>Twin Bloom: Mult per previous placement in the current same-color streak (2nd +1, 3rd +2, ...).</summary>
+        public const float TwinBloomMultPerStreakStep = 1f;
+
         /// <summary>Wild Surge: xN when the scored group contains a Joker tile.</summary>
         public const int WildSurgeMultiplier = 2;
         public const int GrafterMultBonus = 3;

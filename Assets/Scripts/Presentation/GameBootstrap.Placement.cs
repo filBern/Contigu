@@ -1165,6 +1165,27 @@ namespace Contigu.Presentation
                     any = true;
                 }
             }
+            if (placement.QuietRefill)
+            {
+                // Seedsack Sprout: the refill did not wake the enemies.
+                for (int i = 0; i < _run.CurrentEncounter.Count; i++)
+                {
+                    var anchor = _run.CurrentEncounter[i].IsDead ? null : _hudView.GetEnemyIconTransform(i);
+                    if (anchor != null)
+                    {
+                        _feedbackLayer.SpawnPopup(anchor, "Quiet", UITheme.LightBlue);
+                        any = true;
+                    }
+                }
+                SetStatusText("A Seedsack Sprout keeps the enemies quiet through the refill.");
+            }
+            for (int i = 0; i < placement.HeirloomSeeds.Count; i++)
+            {
+                // Heirloom Sprout: its seed joined the bag as the round was cleared.
+                var heirloom = placement.HeirloomSeeds[i];
+                _feedbackLayer.SpawnPopup(_gridView.GetCellTransform(heirloom.Position.x, heirloom.Position.y), "Heirloom +1 seed", UITheme.ScorePollen);
+                any = true;
+            }
             for (int i = 0; i < placement.WiltedBy.Count; i++)
             {
                 var tile = placement.WiltedBy[i];

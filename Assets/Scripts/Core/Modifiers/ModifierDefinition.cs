@@ -596,6 +596,18 @@ namespace Contigu.Core
             ModifierId.CropRotation, ModifierCategory.Formes, "Crop Rotation",
             "+0.1 Mult each time you plant a different shape than the last seed this round, stacking.");
 
+        public static readonly ModifierDefinition GreenhouseLamp = new ModifierDefinition(
+            ModifierId.GreenhouseLamp, ModifierCategory.Roguelike, "Greenhouse Lamp",
+            "+0.5 Mult per Shuffle you have left.");
+
+        public static readonly ModifierDefinition SeedLibrary = new ModifierDefinition(
+            ModifierId.SeedLibrary, ModifierCategory.Formes, "Seed Library",
+            "+0.5 Mult per different shape in your Seed Bag.");
+
+        public static readonly ModifierDefinition TwinBloom = new ModifierDefinition(
+            ModifierId.TwinBloom, ModifierCategory.Couleurs, "Twin Bloom",
+            "Plant the same color as the last seed: +1 Mult, then +2, +3... for each seed in a row.");
+
         public static readonly ModifierDefinition[] All =
         {
             Prisme, Chaine, MegaChaine, Forteresse, Prisonnier, Architecte, Collectionneur,
@@ -620,7 +632,7 @@ namespace Contigu.Core
             Mosaique, Foule, Prairie, Guirlande, MoissonCroisee,
             Faucheur, TableRase, CultureRang, CultureColonne, Prime, BriseGlace, Saisons,
             Outsider, CoupFinal, DerniereGraine, PremiereGraine, Tirelire, BanqueGraines, SousBois, DanseDePluie,
-            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner, WildCluster, WildReserve, WildSurge, CropRotation
+            DanseDuSoleil, Rustique, CavalierVent, Matinal, Marathonien, Pourfendeur, CharmedPatch, Grafter, TwinGraft, Botanist, Hothouse, GoodNeighbors, Gleaner, WildCluster, WildReserve, WildSurge, CropRotation, GreenhouseLamp, SeedLibrary, TwinBloom
         };
 
         /// <summary>The fertilizer a retired id turns into when an old save is loaded (the color Glows become their Devotion); null for every other id.</summary>

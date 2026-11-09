@@ -175,6 +175,9 @@ namespace Contigu.Core
                 case ModifierId.WildCluster: return 6; // needs Jokers in the bag AND in the group
                 case ModifierId.WildReserve: return 5; // small per Joker, grows with the bag
                 case ModifierId.CropRotation: return 6; // grows with variety, reset every round
+                case ModifierId.GreenhouseLamp: return 6; // pays for Shuffles you did not spend
+                case ModifierId.SeedLibrary: return 7; // up to +4 with all 8 shapes in the bag
+                case ModifierId.TwinBloom: return 7; // grows without limit while the color repeats
                 case ModifierId.WildSurge: return 8; // x2, but only when a Joker is in the group
                 case ModifierId.Grafter: return 5;
                 case ModifierId.TwinGraft: return 6;

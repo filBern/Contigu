@@ -217,6 +217,12 @@ namespace Contigu.Core
         /// <summary>The Pruner Sprout's tile that uprooted each one (same order as <see cref="UprootedTiles"/>).</summary>
         public IReadOnlyList<Vector2Int> UprootedBy = System.Array.Empty<Vector2Int>();
 
+        /// <summary>True when this placement emptied the hand and a Seedsack Sprout made the refill skip the enemies' Shuffle tricks.</summary>
+        public bool QuietRefill;
+
+        /// <summary>The tiles whose Heirloom Sprout added a plain copy of their seed to the bag when this placement cleared the round.</summary>
+        public IReadOnlyList<(Vector2Int Position, ShapeId Shape, PieceColor Color)> HeirloomSeeds = System.Array.Empty<(Vector2Int, ShapeId, PieceColor)>();
+
         /// <summary>The seed a Clone Sprout copied into the Seed Bag on this placement (null when the roll failed), and the tile that did it.</summary>
         public (Vector2Int Position, ShapeId Shape, PieceColor Color)? ClonedSeed;
 

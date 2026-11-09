@@ -529,6 +529,26 @@ namespace Contigu.Core
             UpgradeId.CloneTile, UpgradePool.Grid, "Clone Sprout",
             "When planted, 25% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).", false, UpgradeRarity.Rare);
 
+        public static readonly UpgradeDefinition MirrorWardTile = new UpgradeDefinition(
+            UpgradeId.MirrorWardTile, UpgradePool.Grid, "Mirror Ward Sprout",
+            "Blighted plots next to it score normally: their points are not negated.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition SeedsackTile = new UpgradeDefinition(
+            UpgradeId.SeedsackTile, UpgradePool.Grid, "Seedsack Sprout",
+            "If it is the last seed of your hand, the refill does not trigger the enemies.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition HeirloomTile = new UpgradeDefinition(
+            UpgradeId.HeirloomTile, UpgradePool.Grid, "Heirloom Sprout",
+            "If it is still on the garden when the round is cleared, a plain copy of its seed joins your Seed Bag.", false, UpgradeRarity.Rare);
+
+        public static readonly UpgradeDefinition AnchorTile = new UpgradeDefinition(
+            UpgradeId.AnchorTile, UpgradePool.Grid, "Anchor Sprout",
+            "Enemies and weather cannot recolor, swap, move or burn this tile.", false, UpgradeRarity.Uncommon);
+
+        public static readonly UpgradeDefinition LateBloomTile = new UpgradeDefinition(
+            UpgradeId.LateBloomTile, UpgradePool.Grid, "Late Bloom Sprout",
+            "From its 3rd trigger on, +1 Mult each time. Resets when a line is harvested or the round ends.", false, UpgradeRarity.Rare);
+
         public static readonly UpgradeDefinition[] All =
         {
             ReplacePiece, DuplicatePiece, JokerPiece, RecolorPiece, RandomModifier, RandomPiece, ModifierUpgrade,
@@ -540,7 +560,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile, MirrorWardTile, SeedsackTile, HeirloomTile, AnchorTile, LateBloomTile
         };
 
         public static readonly UpgradeDefinition[] BankPool =
@@ -570,7 +590,7 @@ namespace Contigu.Core
             ClusterTile, CrossfireTile, EvenTile, RainbowRowTile, SunseekerTile, HunterTile, ExecutionerTile, SpilloverTile, HoneycombTile, DewdropTile, KeystoneTile, GrowthTile, GamblerTile, WardenTile, AegisTile, SowerTile,
             KinTile, AmplifierTile, EchoTile, CollectorTile, ResonanceTile, PouchTile, PerennialTile, CrescendoTile, ScholarTile, FullHouseTile, CompoundTile,
             GapTile, WildrootTile, DyeTile, FertileTile, EvergreenTile,
-            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile
+            PrunerTile, GlowTile, BridgeTile, SeedpodTile, LocksmithTile, MimicTile, DominantTile, HeritageTile, ScytheTile, TallyTile, SunbeamTile, AntidoteTile, LullTile, DazzleTile, WiltTile, CleanseTile, CloneTile, MirrorWardTile, SeedsackTile, HeirloomTile, AnchorTile, LateBloomTile
         };
     }
 }

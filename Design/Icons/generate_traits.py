@@ -126,6 +126,12 @@ T['Cleanse'] = ('#7ad0e8', g('<path d="M32 6 C46 24 50 34 44 44 C40 52 24 52 20 
 
 T['Clone'] = ('#9ad37a', g('<ellipse cx="24" cy="38" rx="11" ry="16" transform="rotate(20 24 38)"/>', '#d8b574') + g('<ellipse cx="42" cy="30" rx="11" ry="16" transform="rotate(20 42 30)"/>', '#fff1b0') + g('<path d="M50 8 V22 M43 15 H57" fill="none"/>', 'none', 4).replace(O, W))
 
+T['MirrorWard'] = ('#5f699c', g('<path d="M32 6 L54 15 V32 C54 45 44 54 32 60 C20 54 10 45 10 32 V15 Z"/>', W) + g('<path d="M32 6 L54 15 V32 C54 45 44 54 32 60 Z"/>', '#b8e04a') + '<path d="M32 8 V58" stroke="%s" stroke-width="3.5"/>' % O)
+T['Seedsack'] = ('#c58a4a', g('<path d="M22 22 C10 34 10 54 22 56 H42 C54 54 54 34 42 22 Z"/>', '#e8c98a') + g('<path d="M22 22 L26 12 H38 L42 22"/>', '#d8b574') + g('<path d="M24 20 H40" fill="none"/>', 'none', 4).replace(O, '#8a5a2b') + g('<ellipse cx="32" cy="40" rx="5" ry="8"/>', '#8a5a2b', 3))
+T['Heirloom'] = ('#8a6a3a', g('<path d="M16 30 C16 58 48 58 48 30 Z"/>', '#e8a82e') + g('<path d="M12 30 C12 12 52 12 52 30 Z"/>', '#a5703a') + g('<path d="M32 12 V6" fill="none"/>', 'none', 4).replace(O, W) + g(star(32, 44, 7, 4, 0.4), '#fff1b0', 2.5))
+T['Anchor'] = ('#2f4f8c', g('<circle cx="32" cy="14" r="6"/>', 'none', 4).replace(O, W) + g('<path d="M32 20 V54 M20 30 H44 M12 40 C12 52 22 56 32 56 C42 56 52 52 52 40" fill="none"/>', 'none', 5).replace(O, W))
+T['LateBloom'] = ('#d86fb0', g('<path d="M32 58 V34" fill="none"/>', 'none', 5).replace(O, '#7ad07a') + g('<path d="M32 46 C42 46 48 40 50 34 C40 32 34 38 32 46 Z"/>', '#7ad07a', 3) + g('<path d="M32 34 C20 30 20 8 32 6 C44 8 44 30 32 34 Z"/>', '#fff1b0') + g('<path d="M32 34 C26 24 28 14 32 8 C36 14 38 24 32 34 Z"/>', '#ffd84d', 2.5))
+
 # Poison marker: a toothy green skull on a dark violet chip
 skull = (g('<path d="M32 8 C18 8 11 18 11 28 C11 35 15 39 18 41 V50 H46 V41 C49 39 53 35 53 28 C53 18 46 8 32 8Z"/>', '#b8e04a')
          + '<circle cx="23" cy="29" r="6" fill="%s"/><circle cx="41" cy="29" r="6" fill="%s"/>' % (O, O)

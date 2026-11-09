@@ -649,6 +649,16 @@ namespace Contigu.Core
                     wilted.Add(pos);
                     placement.WiltedBy = wilted;
                     break;
+                case PieceTraitKind.LateBloom:
+                    // The count is per tile, from the 3rd trigger on it adds Mult each time; a harvest or the round's end resets it (see PlacePiece / StartRound).
+                    _lateBloomTriggers.TryGetValue(pos, out int triggers);
+                    triggers++;
+                    _lateBloomTriggers[pos] = triggers;
+                    if (triggers >= ScoringConstants.LateBloomTriggersNeeded)
+                    {
+                        AddTileMult(placement, pos, ScoringConstants.LateBloomMult);
+                    }
+                    break;
                 case PieceTraitKind.Cleanse:
                     // Passive: frees a plot at every Shuffle (see RunManager.ResolveCleanseShuffle).
                     break;

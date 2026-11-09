@@ -1341,6 +1341,111 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void SeedsackTile_AsTheLastSeed_MakesTheRefillSkipTheEnemies()
+        {
+            // Control: refilling an emptied hand wakes Bramble (it locks a plot).
+            var control = new RunManager(new SystemRandomProvider(1));
+            control.DebugSetEncounter(EnemyId.Locker);
+            EmptyTheHandExceptOne(control, out int controlSlot);
+            Assert.IsTrue(control.PlacePiece(controlSlot, 2, 2).Placement.Success);
+            Assert.IsTrue(control.CurrentEncounter[0].LockedCell.HasValue, "control: the refill triggered the Locker");
+
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Locker);
+            run.Deck.AddPreparedToken(new PieceToken(ShapeId.Single, PieceColor.Coral, new PieceTrait(PieceTraitKind.Seedsack, 0)));
+            int slot = ChurnUntilHandMatches(run, t => t.Trait.HasValue && t.Trait.Value.Kind == PieceTraitKind.Seedsack);
+            EmptyTheHandExceptSlot(run, slot);
+            var outcome = run.PlacePiece(slot, 2, 2);
+            Assert.IsTrue(outcome.Placement.Success);
+            Assert.IsTrue(outcome.Placement.QuietRefill);
+            Assert.IsFalse(run.CurrentEncounter[0].LockedCell.HasValue, "The quiet refill did not wake the Locker");
+        }
+
+        private static void EmptyTheHandExceptOne(RunManager run, out int keptSlot)
+        {
+            keptSlot = -1;
+            for (int i = 0; i < run.Deck.Hand.Count; i++)
+            {
+                if (run.Deck.Hand[i].HasValue)
+                {
+                    keptSlot = i;
+                    break;
+                }
+            }
+            EmptyTheHandExceptSlot(run, keptSlot);
+        }
+
+        private static void EmptyTheHandExceptSlot(RunManager run, int keep)
+        {
+            for (int i = 0; i < run.Deck.Hand.Count; i++)
+            {
+                if (i != keep && run.Deck.Hand[i].HasValue)
+                {
+                    run.Deck.PlayFromHand(i, refillIfEmpty: false);
+                }
+            }
+        }
+
+        [Test]
+        public void MirrorWardTile_KeepsNeighboringBlightPositive()
+        {
+            Vector2Int blight = new Vector2Int(2, 2);
+            // Control: a plain tile on a blighted plot scores negative.
+            var control = new RunManager(new SystemRandomProvider(1));
+            control.DebugSetEncounter(EnemyId.Basic);
+            control.Grid.GetCell(blight).IsPoisoned = true;
+            control.CurrentEncounter[0].AddPoisonedCell(blight);
+            Assert.Less(PlaceUpgradedSingle(control, PieceTraitKind.Pip, blight.x, blight.y).TotalScore, 0);
+
+            // A Mirror Ward already on the garden next to the blight: the tile planted on the blight scores positive.
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            PlaceUpgradedSingle(run, PieceTraitKind.MirrorWard, blight.x + 1, blight.y);
+            run.Grid.GetCell(blight).IsPoisoned = true;
+            run.CurrentEncounter[0].AddPoisonedCell(blight);
+            Assert.Greater(PlaceUpgradedSingle(run, PieceTraitKind.Pip, blight.x, blight.y).TotalScore, 0);
+        }
+
+        [Test]
+        public void HeirloomTile_AddsAPlainCopyOfItsSeed_WhenTheRoundIsCleared()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            PlaceUpgradedSingle(run, PieceTraitKind.Heirloom, 2, 2);
+            int before = run.Deck.DeckCount;
+            run.DebugForceRoundComplete();
+            Assert.AreEqual(before + 1, run.Deck.DeckCount, "One plain copy joined the bag");
+        }
+
+        [Test]
+        public void AnchorTile_CannotBeRecoloredOrSwapped()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Fruitworm);
+            PlaceUpgradedSingle(run, PieceTraitKind.Anchor, 2, 2);
+            var before = run.Grid.GetCell(2, 2).FilledColor;
+            for (int i = 0; i < 20; i++)
+            {
+                Assert.IsNull(run.Grid.RecolorRandomTile(new SystemRandomProvider(i)), "The only tile is anchored");
+            }
+            Assert.AreEqual(before, run.Grid.GetCell(2, 2).FilledColor);
+        }
+
+        [Test]
+        public void LateBloomTile_AddsMultFromItsThirdTrigger_AndResetsOnHarvest()
+        {
+            var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugSetEncounter(EnemyId.Basic);
+            // Triggers on the placement itself (1), then each time an older neighbor group scores it again.
+            var first = PlaceUpgradedSingle(run, PieceTraitKind.LateBloom, 2, 2);
+            Assert.AreEqual(0, first.AdditiveMultBonus, "1st trigger: nothing yet");
+            var second = PlaceUpgradedSingle(run, PieceTraitKind.Pip, 2, 3);
+            Assert.AreEqual(0, second.AdditiveMultBonus, "2nd trigger: still nothing");
+            var third = PlaceUpgradedSingle(run, PieceTraitKind.Pip, 3, 2);
+            Assert.AreEqual(ScoringConstants.LateBloomMult, third.AdditiveMultBonus, "3rd trigger: +1 Mult");
+        }
+
+        [Test]
         public void CleanseTile_FreesOneAfflictedPlot_AtEveryShuffle_AfterTheEnemiesActed()
         {
             var run = new RunManager(new SystemRandomProvider(1));

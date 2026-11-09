@@ -118,6 +118,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Wilt: return "Wilt Sprout";
                 case PieceTraitKind.Cleanse: return "Cleanse Sprout";
                 case PieceTraitKind.Clone: return "Clone Sprout";
+                case PieceTraitKind.MirrorWard: return "Mirror Ward Sprout";
+                case PieceTraitKind.Seedsack: return "Seedsack Sprout";
+                case PieceTraitKind.Heirloom: return "Heirloom Sprout";
+                case PieceTraitKind.Anchor: return "Anchor Sprout";
+                case PieceTraitKind.LateBloom: return "Late Bloom Sprout";
                 default: return kind.ToString();
             }
         }
@@ -288,6 +293,16 @@ namespace Contigu.Data
                     return "When placed, enemies lose their shield and their color or shape hatred for the round.";
                 case PieceTraitKind.Wilt:
                     return "On a turn where it scores, enemies cannot heal or grow.";
+                case PieceTraitKind.MirrorWard:
+                    return "Blighted plots next to it score normally: their points are not negated.";
+                case PieceTraitKind.Seedsack:
+                    return "If it is the last seed of your hand, the refill does not trigger the enemies.";
+                case PieceTraitKind.Heirloom:
+                    return "If it is still on the garden when the round is cleared, a plain copy of its seed joins your Seed Bag.";
+                case PieceTraitKind.Anchor:
+                    return "Enemies and weather cannot recolor, swap, move or burn this tile.";
+                case PieceTraitKind.LateBloom:
+                    return "From its 3rd trigger on, +" + ScoringConstants.LateBloomMult + " Mult each time. Resets when a line is harvested or the round ends.";
                 case PieceTraitKind.Clone:
                     return "When planted, " + ScoringConstants.CloneChancePercent + "% chance to add a copy of this seed to your Seed Bag (the copy has no Clone).";
                 case PieceTraitKind.Cleanse:
@@ -377,6 +392,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Wilt: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Cleanse: return UpgradeRarity.Uncommon;
                 case PieceTraitKind.Clone: return UpgradeRarity.Rare;
+                case PieceTraitKind.MirrorWard: return UpgradeRarity.Rare;
+                case PieceTraitKind.Seedsack: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.Heirloom: return UpgradeRarity.Rare;
+                case PieceTraitKind.Anchor: return UpgradeRarity.Uncommon;
+                case PieceTraitKind.LateBloom: return UpgradeRarity.Rare;
                 case PieceTraitKind.Pip: return UpgradeRarity.Common;
                 case PieceTraitKind.Lucky: return UpgradeRarity.Common;
                 case PieceTraitKind.Companion: return UpgradeRarity.Uncommon;
@@ -525,6 +545,11 @@ namespace Contigu.Data
                 case PieceTraitKind.Wilt:
                 case PieceTraitKind.Cleanse:
                 case PieceTraitKind.Clone:
+                case PieceTraitKind.MirrorWard:
+                case PieceTraitKind.Seedsack:
+                case PieceTraitKind.Heirloom:
+                case PieceTraitKind.Anchor:
+                case PieceTraitKind.LateBloom:
                     return PlacementPointBadgeColor;
                 default:
                     return Color.gray;

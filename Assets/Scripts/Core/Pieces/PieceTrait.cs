@@ -253,7 +253,22 @@ namespace Contigu.Core
         Cleanse = 110,
 
         /// <summary>"Clone Sprout" — when its seed is planted, a small chance to add a copy of that seed (without Clone) to the Seed Bag.</summary>
-        Clone = 111
+        Clone = 111,
+
+        /// <summary>"Mirror Ward Sprout" — blighted plots next to it score normally (their points are not negated).</summary>
+        MirrorWard = 112,
+
+        /// <summary>"Seedsack Sprout" — when it is the last seed of the hand, the refill does not trigger the enemies.</summary>
+        Seedsack = 113,
+
+        /// <summary>"Heirloom Sprout" — when the round is cleared with its tile still on the garden, a plain copy of its seed joins the Seed Bag.</summary>
+        Heirloom = 114,
+
+        /// <summary>"Anchor Sprout" — enemies and weather cannot recolor, swap, move or burn this tile.</summary>
+        Anchor = 115,
+
+        /// <summary>"Late Bloom Sprout" — from its 3rd trigger on, +1 Mult each time; the count resets when a line is harvested or the round ends.</summary>
+        LateBloom = 116
     }
 
     /// <summary>

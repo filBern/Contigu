@@ -317,6 +317,15 @@ namespace Contigu.Core
         /// <summary>+0.1 Mult each time a seed of a different shape than the previous one is planted this round, stacking.</summary>
         CropRotation,
 
+        /// <summary>+0.5 Mult per Shuffle left, on every placement.</summary>
+        GreenhouseLamp,
+
+        /// <summary>+0.5 Mult per different shape in the Seed Bag.</summary>
+        SeedLibrary,
+
+        /// <summary>+1 Mult, then +2, +3... for each seed in a row of the same color.</summary>
+        TwinBloom,
+
         /// <summary>Scoring-only placeholder for a modifier slot currently blighted by Blightmoth (see RunManager.EffectiveModifiers): it has no effect, never appears in the catalog or the player's own list.</summary>
         Blighted
     }

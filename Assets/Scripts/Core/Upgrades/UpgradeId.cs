@@ -143,6 +143,11 @@ namespace Contigu.Core
         DazzleTile,
         WiltTile,
         CleanseTile,
-        CloneTile
+        CloneTile,
+        MirrorWardTile,
+        SeedsackTile,
+        HeirloomTile,
+        AnchorTile,
+        LateBloomTile
     }
 }

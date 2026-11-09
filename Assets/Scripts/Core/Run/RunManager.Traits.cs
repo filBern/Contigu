@@ -194,6 +194,11 @@ namespace Contigu.Core
                 case PieceTraitKind.Wilt:
                 case PieceTraitKind.Cleanse:
                 case PieceTraitKind.Clone:
+                case PieceTraitKind.MirrorWard:
+                case PieceTraitKind.Seedsack:
+                case PieceTraitKind.Heirloom:
+                case PieceTraitKind.Anchor:
+                case PieceTraitKind.LateBloom:
                     // None of these stamp a Cell flag before placement - each is either
                     // resolved before Grid.PlacePiece runs (Chameleon, via
                     // placementColor above) or computed after it returns (see
@@ -470,6 +475,7 @@ namespace Contigu.Core
                 case PieceTraitKind.Antidote:
                 case PieceTraitKind.Wilt:
                 case PieceTraitKind.Cleanse:
+                case PieceTraitKind.LateBloom:
                     ApplyTileUpgradeBonus(trait, traitCellPos, placement);
                     break;
             }
@@ -1074,6 +1080,42 @@ namespace Contigu.Core
             }
             Deck.AddPreparedToken(new PieceToken(token.Shape, token.Color, first, rest.ToArray()));
             placement.ClonedSeed = (traitCellPos, token.Shape, token.Color);
+        }
+
+        /// <summary>Mirror Ward Sprout: drops from <paramref name="poisoned"/> every blighted plot touching a Mirror Ward tile (one already on the garden or planted by this very placement).</summary>
+        private void RemoveWardedPositions(HashSet<Vector2Int> poisoned, List<(PieceTrait Trait, Vector2Int Pos)> tokenTraits)
+        {
+            var wards = new List<Vector2Int>();
+            foreach (var pos in GridManager.AllPositions())
+            {
+                var cell = Grid.GetCell(pos);
+                if (cell.IsFilled && cell.OriginTrait.HasValue && cell.OriginTrait.Value.Kind == PieceTraitKind.MirrorWard)
+                {
+                    wards.Add(pos);
+                }
+            }
+            for (int i = 0; i < tokenTraits.Count; i++)
+            {
+                if (tokenTraits[i].Trait.Kind == PieceTraitKind.MirrorWard && !wards.Contains(tokenTraits[i].Pos))
+                {
+                    wards.Add(tokenTraits[i].Pos);
+                }
+            }
+            if (wards.Count == 0)
+            {
+                return;
+            }
+            poisoned.RemoveWhere(p =>
+            {
+                for (int s = 0; s < TileUpgradeSteps.Length; s++)
+                {
+                    if (wards.Contains(p + TileUpgradeSteps[s]))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
         }
     }
 }

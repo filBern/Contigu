@@ -239,7 +239,7 @@ F = {
  'FormatPetitGlow': ('sh2g', 'm', '+1', 'Formes'), 'FormatMoyenGlow': ('sh3g', 'm', '+1', 'Formes'), 'FormatGrandGlow': ('sh4g', 'm', '+1', 'Formes'),
  'Pair': ('waxing', 'm', '×2', 'Roguelike'), 'Impair': ('waning', 'm', '×2', 'Roguelike'), 'Polyvalence': ('cactus', 'm', '+1', 'Roguelike'),
  'CharmedPatch': ('f_charmedpatch', 'm', '+1', 'Roguelike'),
- 'CropRotation': ('f_croprotation', 'm', '+0.1', 'Formes'), 'WildCluster': ('f_wildcluster', 'm', '+0.5', 'Roguelike'), 'WildReserve': ('f_wildreserve', 'm', '+0.1', 'Roguelike'), 'WildSurge': ('f_wildsurge', 'm', '×2', 'Roguelike'),
+ 'CropRotation': ('f_croprotation', 'm', '+0.1', 'Formes'), 'GreenhouseLamp': ('f_greenhouselamp', 'm', '+0.5', 'Roguelike'), 'SeedLibrary': ('f_seedlibrary', 'm', '+0.5', 'Formes'), 'TwinBloom': ('f_twinbloom', 'm', '+1', 'Couleurs'), 'WildCluster': ('f_wildcluster', 'm', '+0.5', 'Roguelike'), 'WildReserve': ('f_wildreserve', 'm', '+0.1', 'Roguelike'), 'WildSurge': ('f_wildsurge', 'm', '×2', 'Roguelike'),
  'Grafter': ('f_grafter', 'm', '+3', 'Roguelike'),
  'TwinGraft': ('f_twingraft', 'm', '+5', 'Roguelike'),
  'Botanist': ('f_botanist', 'm', '+1', 'Roguelike'),
@@ -410,6 +410,11 @@ M['u_dazzle'] = lambda: _trait_motif('Dazzle')
 M['u_wilt'] = lambda: _trait_motif('Wilt')
 M['u_cleanse'] = lambda: _trait_motif('Cleanse')
 M['u_clone'] = lambda: _trait_motif('Clone')
+M['u_mirrorward'] = lambda: _trait_motif('MirrorWard')
+M['u_seedsack'] = lambda: _trait_motif('Seedsack')
+M['u_heirloom'] = lambda: _trait_motif('Heirloom')
+M['u_anchor'] = lambda: _trait_motif('Anchor')
+M['u_latebloom'] = lambda: _trait_motif('LateBloom')
 
 M['u_cluster'] = lambda: _trait_motif('Cluster')
 M['u_crossfire'] = lambda: _trait_motif('Crossfire')
@@ -438,6 +443,9 @@ M['u_forge'] = lambda: path('M20 56 L80 56 L74 70 L26 70 Z', '#6b7280', 4) + rec
 M['f_charmedpatch'] = lambda: _trait_motif('Cluster')
 M['f_croprotation'] = lambda: seed(26, 66, 1.5, '#d8b574') + rect(54, 40, 32, 32, '#e8a82e', 6, 3.5) + arrow(28, 30, 70, 26, G, 5)
 M['f_wildcluster'] = lambda: seed(30, 62, 1.5, P) + seed(62, 56, 1.5, P) + star(46, 24, 11, '#fff1b0', 0.4, 5, 3)
+M['f_greenhouselamp'] = lambda: path('M50 14 C32 14 24 28 28 42 C30 50 36 54 38 62 H62 C64 54 70 50 72 42 C76 28 68 14 50 14 Z', '#fff1b0', 4) + rect(38, 62, 24, 12, '#8a5a2b', 4, 3.5) + path('M50 2 V8 M22 16 L27 21 M78 16 L73 21 M12 40 H18 M82 40 H88', 'none', 4)
+M['f_seedlibrary'] = lambda: rect(14, 34, 20, 52, '#4f7fd0', 4, 3.5) + rect(37, 26, 22, 60, '#e8a82e', 4, 3.5) + rect(62, 36, 22, 50, '#b5483f', 4, 3.5) + seed(48, 14, 1.2, '#d8b574')
+M['f_twinbloom'] = lambda: tile(10, 32, 34, '#d86fb0') + tile(56, 32, 34, '#d86fb0') + path('M44 49 H56', 'none', 5) + star(50, 22, 9, '#fff1b0', 0.4, 4, 3)
 M['f_wildreserve'] = lambda: path('M30 30 C16 42 12 64 18 76 C22 86 34 90 50 90 C66 90 78 86 82 76 C88 64 84 42 70 30 Z', '#d8b574', 4) + rect(30, 24, 40, 8, '#8a5a2b', 4, 3.5) + star(50, 62, 15, '#fff1b0', 0.4, 5, 3)
 M['f_wildsurge'] = lambda: seed(50, 62, 2.2, P) + star(50, 36, 18, '#ffd84d', 0.4, 5, 3)
 M['f_grafter'] = lambda: _trait_motif('Pip')
@@ -512,7 +520,7 @@ U = {
  'LocksmithTile': ('u_locksmith', 'Grid'),
  'MimicTile': ('u_mimic', 'Grid'),
  'DominantTile': ('u_dominant', 'Grid'), 'HeritageTile': ('u_heritage', 'Grid'),
- 'ScytheTile': ('u_scythe', 'Grid'), 'TallyTile': ('u_tally', 'Grid'), 'SunbeamTile': ('u_sunbeam', 'Grid'), 'AntidoteTile': ('u_antidote', 'Grid'), 'LullTile': ('u_lull', 'Grid'), 'DazzleTile': ('u_dazzle', 'Grid'), 'WiltTile': ('u_wilt', 'Grid'), 'CleanseTile': ('u_cleanse', 'Grid'), 'CloneTile': ('u_clone', 'Grid'),
+ 'ScytheTile': ('u_scythe', 'Grid'), 'TallyTile': ('u_tally', 'Grid'), 'SunbeamTile': ('u_sunbeam', 'Grid'), 'AntidoteTile': ('u_antidote', 'Grid'), 'LullTile': ('u_lull', 'Grid'), 'DazzleTile': ('u_dazzle', 'Grid'), 'WiltTile': ('u_wilt', 'Grid'), 'CleanseTile': ('u_cleanse', 'Grid'), 'CloneTile': ('u_clone', 'Grid'), 'MirrorWardTile': ('u_mirrorward', 'Grid'), 'SeedsackTile': ('u_seedsack', 'Grid'), 'HeirloomTile': ('u_heirloom', 'Grid'), 'AnchorTile': ('u_anchor', 'Grid'), 'LateBloomTile': ('u_latebloom', 'Grid'),
  'WildPack': ('u_joker', 'Workshop'),
  'SeedPack': ('u_seedpack', 'Workshop'), 'SproutPack': ('u_sproutpack', 'Workshop'), 'FertilizerPack': ('u_fertpack', 'Workshop'),
  'MasteryPack': ('u_masterypack', 'Workshop'), 'Compost': ('u_compost', 'Workshop'), 'Forge': ('u_forge', 'Workshop'),
