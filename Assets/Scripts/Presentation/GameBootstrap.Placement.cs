@@ -675,7 +675,7 @@ namespace Contigu.Presentation
                 }
                 bool negative = displayAmount < 0;
                 // Every points popup is blue, whatever produced it (group, golden tile, fertilizer, tile upgrade, line...); a flipped (poisoned) one stays red.
-                Color color = negative ? UITheme.Danger : UITheme.ScorePoints;
+                Color color = negative ? UITheme.Danger : UITheme.ScorePointsPopup;
                 _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + displayAmount, color, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 SfxManager.PlayComboTick();
 
@@ -714,7 +714,7 @@ namespace Contigu.Presentation
                 int amount = clearedCellAmounts.TryGetValue(pos, out int signed) ? signed : ScoringConstants.LineClearBonusPerCell;
                 bool negative = amount < 0;
                 var anchor = _gridView.GetCellTransform(pos.x, pos.y);
-                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.ScorePoints, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
+                _feedbackLayer.SpawnPopup(anchor, (negative ? "" : "+") + amount, negative ? UITheme.Danger : UITheme.ScorePointsPopup, fontSize: negative ? SubtractionPopupFontSize : FeedbackLayer.DefaultPopupFontSize);
                 _gridView.PulseCell(pos.x, pos.y);
                 SfxManager.Play(SfxId.LineClear);
 

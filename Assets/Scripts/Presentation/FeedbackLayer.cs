@@ -24,6 +24,14 @@ namespace Contigu.Presentation
             return root;
         }
 
+        /// <summary>A dark outline around a popup's text, so a blue or light number stays readable over blue tiles and panels alike.</summary>
+        private static void AddPopupOutline(Text popup)
+        {
+            var outline = popup.gameObject.AddComponent<Outline>();
+            outline.effectColor = UITheme.Border;
+            outline.effectDistance = new Vector2(2.5f, -2.5f);
+        }
+
         public const int DefaultPopupFontSize = 33;
         public const int DefaultFlyingPopupFontSize = 30;
 
@@ -67,6 +75,7 @@ namespace Contigu.Presentation
 
             var popup = UIFactory.CreateText(container, "Popup", text, fontSize, color);
             UIFactory.StretchFull(popup.rectTransform);
+            AddPopupOutline(popup);
 
             StartCoroutine(AnimatePopup(container, backdrop, popup, floatDown));
         }
@@ -88,6 +97,7 @@ namespace Contigu.Presentation
 
             float scale = (float)fontSize / DefaultFlyingPopupFontSize;
             var popup = UIFactory.CreateText(_root, "FlyingPopup", text, fontSize, color);
+            AddPopupOutline(popup);
             popup.rectTransform.position = fromWorldPosition;
             popup.rectTransform.sizeDelta = new Vector2(120f, 36f) * scale;
             StartCoroutine(AnimateFlyingPopup(popup, toAnchor));

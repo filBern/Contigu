@@ -33,6 +33,8 @@ namespace Contigu.Presentation
         public static readonly Color HoverValid = new Color(0.643f, 0.922f, 0.800f, 0.85f); // #a4ebcc
         public static readonly Color HoverInvalid = new Color(1f, 0.420f, 0.341f, 0.85f); // #ff6b57
         // One color per kind of score, everywhere a score shows up (popups, tooltips, pills): points blue, Mult red, Pollen gold.
+        /// <summary>The points popups' blue: lighter than <see cref="ScorePoints"/> so it stays readable over blue tiles (the HUD chips keep the deeper blue).</summary>
+        public static readonly Color ScorePointsPopup = new Color(0.45f, 0.75f, 1f); // #73BFFF
         public static readonly Color ScorePoints = new Color(0.184f, 0.561f, 0.878f); // #2F8FE0
         public static readonly Color ScoreMult = new Color(0.910f, 0.302f, 0.271f); // #e84d45
         public static readonly Color ScorePollen = new Color(0.910f, 0.659f, 0.180f); // #e8a82e
