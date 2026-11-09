@@ -33,7 +33,7 @@ namespace Contigu.Presentation
         }
 
         public const int DefaultPopupFontSize = 33;
-        public const int DefaultFlyingPopupFontSize = 38;
+        public const int DefaultFlyingPopupFontSize = 30;
 
         /// <summary>
         /// <paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for
@@ -49,6 +49,12 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            SpawnPopupAt(anchor.position, text, color, floatDown, fontSize);
+        }
+
+        /// <summary>The same popup, anchored at a world position instead of a transform.</summary>
+        public void SpawnPopupAt(Vector3 worldPosition, string text, Color color, bool floatDown = false, int fontSize = DefaultPopupFontSize)
+        {
 
             // Always render above everything else on screen, so a popup anchored behind an opaque panel still shows.
             _root.SetAsLastSibling();
@@ -59,7 +65,7 @@ namespace Contigu.Presentation
             // same cell (e.g. two group-bonus hits in a row) stay legible
             // instead of perfectly overlapping.
             float jitterX = Random.Range(-16f, 16f);
-            container.position = anchor.position + new Vector3(jitterX, 0f, 0f);
+            container.position = worldPosition + new Vector3(jitterX, 0f, 0f);
             container.sizeDelta = new Vector2(160f, 40f) * scale;
 
             // Plain square backdrop — the 45°-rotated "diamond" shape is reserved for HudView/ShopView's Lueur icon.
@@ -81,38 +87,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>
-        /// Spawns a popup at <paramref name="fromWorldPosition"/> that flies toward <paramref name="toAnchor"/>
-        /// and fades out on arrival, unlike <see cref="SpawnPopup"/>'s float-up-in-place.
-        /// <paramref name="fontSize"/> defaults to <see cref="DefaultFlyingPopupFontSize"/> — see SpawnPopup's
-        /// own doc comment for why callers size red subtraction text up.
-        /// </summary>
-        public void SpawnFlyingPopup(Vector3 fromWorldPosition, RectTransform toAnchor, string text, Color color, int fontSize = DefaultFlyingPopupFontSize)
-        {
-            if (toAnchor == null)
-            {
-                return;
-            }
-
-            _root.SetAsLastSibling();
-
-            float scale = (float)fontSize / DefaultFlyingPopupFontSize;
-            // The same small spinning diamond as the points popups (a plain square rotating on itself) behind the number.
-            var backdrop = UIFactory.CreatePanel(_root, "FlyingBackdrop", UITheme.Panel);
-            backdrop.raycastTarget = false;
-            var backdropColor = backdrop.color;
-            backdropColor.a = ScoreBackdropOpacity;
-            backdrop.color = backdropColor;
-            backdrop.rectTransform.position = fromWorldPosition;
-            backdrop.rectTransform.sizeDelta = new Vector2(26f, 26f) * ((float)fontSize / DefaultPopupFontSize);
-            var popup = UIFactory.CreateText(_root, "FlyingPopup", text, fontSize, color);
-            AddPopupOutline(popup);
-            popup.rectTransform.position = fromWorldPosition;
-            popup.rectTransform.sizeDelta = new Vector2(120f, 36f) * scale;
-            StartCoroutine(AnimateFlyingPopup(popup, backdrop, toAnchor));
-        }
-
-        /// <summary>
-        /// A Pollen gain: the usual <see cref="SpawnFlyingPopup"/> plus a small swarm of pollen grains that
+        /// A Pollen gain: the usual <see cref="SpawnPopupAt"/> (it floats up in place, it does not fly) plus a small swarm of pollen grains that
         /// puff outward from <paramref name="fromWorldPosition"/> and then get pulled into the Pollen counter
         /// at <paramref name="toAnchor"/>.
         /// </summary>
@@ -123,7 +98,7 @@ namespace Contigu.Presentation
                 return;
             }
 
-            SpawnFlyingPopup(fromWorldPosition, toAnchor, text, color);
+            SpawnPopupAt(fromWorldPosition, text, color);
             for (int i = 0; i < grains; i++)
             {
                 var grain = UIFactory.CreatePanel(_root, "PollenGrain", Color.white);
@@ -371,7 +346,7 @@ namespace Contigu.Presentation
         /// Thief's steal: spawns a non-interactive preview of the stolen piece at <paramref name="fromWorldPosition"/>
         /// (its hand slot — already empty by the time this plays, see GameBootstrap.PlayThiefStealEffect) that
         /// flies toward <paramref name="toAnchor"/> (Thief's own icon) and fades out on arrival, same flight
-        /// curve as <see cref="SpawnFlyingPopup"/>. Uses ShapePreviewFactory.Build with no trait/tooltip — the
+        /// curve as the damage orb. Uses ShapePreviewFactory.Build with no trait/tooltip — the
         /// ghost is purely visual, never clickable or hoverable.
         /// </summary>
         public void SpawnFlyingPiece(Vector3 fromWorldPosition, RectTransform toAnchor, PieceShape shape, PieceColor color)
@@ -419,63 +394,6 @@ namespace Contigu.Presentation
             if (rect != null)
             {
                 Destroy(rect.gameObject);
-            }
-        }
-
-        private IEnumerator AnimateFlyingPopup(Text text, Image backdrop, RectTransform toAnchor)
-        {
-            var rect = text.rectTransform;
-            bool reduced = MotionSettings.Reduced;
-            // It first pops in place and stays put long enough to be read, then is pulled toward its destination (ease-in).
-            float hold = reduced ? 0.15f : 0.3f;
-            const float flight = 0.45f;
-            float duration = hold + flight;
-            float t = 0f;
-            Vector3 startPos = rect.position;
-            Color startColor = text.color;
-            float backdropAlpha = backdrop != null ? backdrop.color.a : 0f;
-
-            while (t < duration)
-            {
-                if (rect == null || toAnchor == null)
-                {
-                    break;
-                }
-                t += Time.deltaTime;
-                float p = Mathf.Clamp01((t - hold) / flight);
-                float eased = p * p;
-                rect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
-
-                // Pop-in with an overshoot while it holds, then it shrinks a little as it is pulled in.
-                float scale = reduced ? 1f : EaseOutBack(Mathf.Clamp01(t / 0.2f)) * Mathf.Lerp(1f, 0.7f, eased);
-                rect.localScale = Vector3.one * scale;
-
-                // Only starts fading in the final stretch, so it reads clearly for most of the flight and just disappears on arrival.
-                float fadeP = Mathf.Clamp01((p - 0.7f) / 0.3f);
-                float alpha = Mathf.Lerp(1f, 0f, fadeP);
-                var c = startColor;
-                c.a = alpha;
-                text.color = c;
-                if (backdrop != null)
-                {
-                    backdrop.rectTransform.position = rect.position;
-                    backdrop.rectTransform.localScale = rect.localScale;
-                    backdrop.rectTransform.Rotate(0f, 0f, ScoreBackdropSpinDegreesPerSecond * Time.deltaTime);
-                    var bc = backdrop.color;
-                    bc.a = backdropAlpha * alpha;
-                    backdrop.color = bc;
-                }
-
-                yield return null;
-            }
-
-            if (backdrop != null)
-            {
-                Destroy(backdrop.gameObject);
-            }
-            if (text != null)
-            {
-                Destroy(text.gameObject);
             }
         }
 
