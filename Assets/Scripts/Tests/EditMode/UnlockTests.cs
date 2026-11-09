@@ -44,6 +44,7 @@ namespace Contigu.Tests
         {
             var state = new UnlockState();
             var tracker = new UnlockTracker(state);
+            tracker.MaxPerRun = int.MaxValue;
             tracker.StartRun();
 
             // Single: the best single observation counts (Multiplier Zone: 400 points with one seed).

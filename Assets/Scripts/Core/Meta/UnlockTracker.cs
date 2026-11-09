@@ -17,6 +17,9 @@ namespace Contigu.Core
         /// <summary>How many things one run can unlock; further conditions met in that run are queued and arrive at the start of the next runs (so one great run never unlocks half the game).</summary>
         public const int MaxUnlocksPerRun = 8;
 
+        /// <summary>The limit actually applied (tests lift it to look at single conditions).</summary>
+        public int MaxPerRun = MaxUnlocksPerRun;
+
         private int _unlockedThisRun;
 
         private readonly UnlockState _state;
@@ -85,7 +88,7 @@ namespace Contigu.Core
             System.Array.Clear(_run, 0, _run.Length);
             _unlockedThisRun = 0;
             // What the last runs earned beyond the limit arrives now.
-            while (_unlockedThisRun < MaxUnlocksPerRun && !CalibrationMode)
+            while (_unlockedThisRun < MaxPerRun && !CalibrationMode)
             {
                 string key = _state.ReleaseNextQueued();
                 if (key == null)
@@ -150,7 +153,7 @@ namespace Contigu.Core
                 if (entry.Condition.IsMet(compared))
                 {
                     watchers.RemoveAt(i);
-                    if (_unlockedThisRun >= MaxUnlocksPerRun)
+                    if (_unlockedThisRun >= MaxPerRun)
                     {
                         _state.Enqueue(entry.Key);
                     }
