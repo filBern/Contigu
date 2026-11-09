@@ -51,10 +51,10 @@ namespace Contigu.Tests
                 Assert.IsNotEmpty(challenge.Name);
                 Assert.IsNotEmpty(challenge.Description);
                 Assert.AreSame(challenge, ChallengeCatalog.Get(challenge.Id));
-                Assert.IsTrue(new MetaStats().IsUnlocked(challenge.Id) == (challenge.UnlockCost == 0));
-                var unlocked = MetaStatsRecorder.TryUnlockChallenge(new MetaStats { Stars = 99 }, challenge);
-                Assert.IsTrue(unlocked.Success);
-                Assert.IsTrue(unlocked.Updated.IsUnlocked(challenge.Id), challenge.Name);
+                bool hasCondition = UnlockCatalog.Find(UnlockKind.Challenge, (int)challenge.Id) != null;
+                Assert.AreEqual(challenge.Id != ChallengeId.Classic, hasCondition, challenge.Name + ": every challenge but Spring is earned");
+                Assert.AreEqual(!hasCondition, new MetaStats().IsUnlocked(challenge.Id));
+                Assert.IsTrue(MetaStatsRecorder.UnlockAll(new MetaStats()).IsUnlocked(challenge.Id), challenge.Name);
             }
             Assert.AreEqual(6, ChallengeCatalog.All.Length);
         }
@@ -372,31 +372,38 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void UnlockAllChallenges_OpensEveryChallenge_WithoutTouchingStarsOrRecords()
-        {
-            var before = new MetaStats { Stars = 3, BestScore = 777, TotalVictories = 2 };
-            var after = MetaStatsRecorder.UnlockAllChallenges(before);
-            foreach (var challenge in ChallengeCatalog.All)
-            {
-                Assert.IsTrue(after.IsUnlocked(challenge.Id), challenge.Name);
-            }
-            Assert.AreEqual(3, after.Stars);
-            Assert.AreEqual(777, after.BestScore);
-            Assert.AreEqual(2, after.TotalVictories);
-            Assert.IsFalse(before.MarathonUnlocked, "the original is left alone");
-        }
-
-        [Test]
-        public void EndlessEnd_PaysOneStarPerExtraRound_WithoutCountingTheRunTwice()
+        public void EndlessEnd_RefreshesTheBests_WithoutCountingTheRunTwice()
         {
             var afterVictory = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 5000, RunConfig.RoundCount, victory: true);
             var afterEndless = MetaStatsRecorder.RecordEndlessEnd(afterVictory, 90000, RunConfig.RoundCount + 4);
 
             Assert.AreEqual(afterVictory.TotalRunsPlayed, afterEndless.TotalRunsPlayed);
             Assert.AreEqual(afterVictory.TotalVictories, afterEndless.TotalVictories);
-            Assert.AreEqual(afterVictory.Stars + 3, afterEndless.Stars, "died in round 19: rounds 16, 17 and 18 were cleared");
             Assert.AreEqual(90000, afterEndless.BestScore);
             Assert.AreEqual(RunConfig.RoundCount + 4, afterEndless.BestRoundReached);
+        }
+
+        [Test]
+        public void DifficultyLevels_AddOneRuleEach_AndSurviveASave()
+        {
+            var spring = ChallengeCatalog.Classic;
+            Assert.AreSame(spring, spring.AtLevel(1), "level 1 is the challenge itself");
+            Assert.AreEqual(spring.EnemyHpMultiplier * 1.15f, spring.AtLevel(2).EnemyHpMultiplier, 0.001f);
+            Assert.AreEqual(0, spring.AtLevel(2).ShuffleDelta);
+            Assert.AreEqual(-1, spring.AtLevel(3).ShuffleDelta);
+            Assert.AreEqual(spring.PieceBudgetBonus - 1, spring.AtLevel(4).PieceBudgetBonus);
+            Assert.AreEqual(spring.EnemyHpMultiplier * 1.15f * 1.15f, spring.AtLevel(4).EnemyHpMultiplier, 0.001f);
+            Assert.AreEqual(0, spring.AtLevel(4).FertilizerPriceDelta);
+            Assert.AreEqual(1, spring.AtLevel(5).FertilizerPriceDelta);
+            Assert.AreEqual(DifficultyLevels.Max, spring.AtLevel(99).Level, "levels past the maximum are capped");
+            Assert.AreEqual(spring.EnemyHpMultiplier, spring.EnemyHpMultiplier, "the catalog challenge is never modified");
+
+            var normal = new RunManager(new SystemRandomProvider(3), spring);
+            var hard = new RunManager(new SystemRandomProvider(3), spring.AtLevel(3));
+            Assert.AreEqual(normal.ShufflesRemaining - 1, hard.ShufflesRemaining);
+
+            var restored = RunManager.Restore(RunSnapshot.FromText(hard.RoundStartSnapshot.ToText()), new SystemRandomProvider(4));
+            Assert.AreEqual(3, restored.Challenge.Level, "the difficulty level is saved with the run");
         }
     }
 }

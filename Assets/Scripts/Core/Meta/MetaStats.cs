@@ -1,15 +1,17 @@
 namespace Contigu.Core
 {
     /// <summary>
-    /// Persistent, cross-run stats, including gameplay-affecting meta-
-    /// progression (see Stars/ChallengeUnlocked* below and ChallengeCatalog).
-    /// Plain public-field data so Unity's JsonUtility can (de)serialize it
-    /// directly; see <see cref="IMetaStatsStore"/> for how it's actually
-    /// persisted.
+    /// Persistent, cross-run stats: records and the progression state (what is unlocked, see <see cref="UnlockState"/>, and how hard each
+    /// challenge has been won). Plain public-field data so Unity's JsonUtility can (de)serialize it directly; see <see cref="IMetaStatsStore"/>
+    /// for how it's actually persisted.
     /// </summary>
     [System.Serializable]
     public sealed class MetaStats
     {
+        /// <summary>The save format. A save of another version is dropped (the game is not out yet, nothing is migrated).</summary>
+        public const int CurrentVersion = 2;
+
+        public int SaveVersion;
         public int TotalRunsPlayed;
         public int TotalVictories;
         public int BestScore;
@@ -17,42 +19,46 @@ namespace Contigu.Core
         /// <summary>Highest round NUMBER (1-based, see RunManager.CurrentRoundNumber) ever reached across every run — at least RunConfig.RoundCount on any past victory, since clearing the final round means reaching it.</summary>
         public int BestRoundReached;
 
-        /// <summary>Cross-run currency (see MetaStatsRecorder.RecordRunOutcome for how a run earns it, TryUnlockChallenge for how it's spent). A dedicated field per non-Classic challenge rather than a generic collection — JsonUtility doesn't serialize a HashSet/Dictionary cleanly.</summary>
-        public int Stars;
-        public bool MarathonUnlocked;
-        public bool SummerUnlocked;
-        public bool AutumnUnlocked;
-        public bool OrchardUnlocked;
-        public bool GreenhouseUnlocked;
+        /// <summary>The unlocked sprouts, fertilizers and challenges, and the totals their conditions count (see <see cref="UnlockState.ToText"/>).</summary>
+        public string UnlockData = string.Empty;
+
+        /// <summary>Per challenge (indexed by <see cref="ChallengeId"/>), the highest difficulty level (1 to <see cref="DifficultyLevels.Max"/>) won so far; 0 when never won.</summary>
+        public int[] BestLevelWon = new int[8];
+
         /// <summary>The default challenge (Spring) has been won at least once: unlocks the optional pledges.</summary>
         public bool ClassicVictory;
 
         /// <summary>A field-by-field copy, so a pure update never forgets a field it didn't touch.</summary>
         public MetaStats Copy()
         {
-            return (MetaStats)MemberwiseClone();
+            var copy = (MetaStats)MemberwiseClone();
+            copy.BestLevelWon = BestLevelWon == null ? new int[8] : (int[])BestLevelWon.Clone();
+            return copy;
         }
 
-        /// <summary>Classic is always available; every other challenge needs its own unlock flag.</summary>
+        /// <summary>The unlock state saved here (a fresh one when nothing was saved yet).</summary>
+        public UnlockState ReadUnlocks()
+        {
+            return UnlockState.FromText(UnlockData);
+        }
+
+        /// <summary>Classic is always open; every other challenge needs its own condition (see <see cref="UnlockCatalog"/>).</summary>
         public bool IsUnlocked(ChallengeId id)
         {
-            switch (id)
-            {
-                case ChallengeId.Classic:
-                    return true;
-                case ChallengeId.Marathon:
-                    return MarathonUnlocked;
-                case ChallengeId.Summer:
-                    return SummerUnlocked;
-                case ChallengeId.Autumn:
-                    return AutumnUnlocked;
-                case ChallengeId.Orchard:
-                    return OrchardUnlocked;
-                case ChallengeId.Greenhouse:
-                    return GreenhouseUnlocked;
-                default:
-                    return false;
-            }
+            return ReadUnlocks().IsUnlocked(UnlockKind.Challenge, (int)id);
+        }
+
+        /// <summary>The highest difficulty level won on <paramref name="id"/>; 0 when it was never won.</summary>
+        public int BestLevel(ChallengeId id)
+        {
+            int index = (int)id;
+            return BestLevelWon != null && index >= 0 && index < BestLevelWon.Length ? BestLevelWon[index] : 0;
+        }
+
+        /// <summary>The highest level the player may pick on <paramref name="id"/>: one more than the best level won, up to the maximum.</summary>
+        public int HighestPlayableLevel(ChallengeId id)
+        {
+            return System.Math.Min(DifficultyLevels.Max, BestLevel(id) + 1);
         }
     }
 }

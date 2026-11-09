@@ -401,8 +401,8 @@ namespace Contigu.Core
             }
         }
 
-        /// <summary>How many of the chosen pledges are kept right now: the extra Stars a victory pays.</summary>
-        public int PledgeBonusStars
+        /// <summary>How many of the chosen pledges are kept right now (shown on the end screen).</summary>
+        public int PledgesKept
         {
             get
             {
@@ -727,7 +727,7 @@ namespace Contigu.Core
             PendingUpgradeTileCandidates = System.Array.Empty<int>();
             PendingUpgradeTypeCandidates = System.Array.Empty<(ShapeId, PieceColor)>();
             PendingUpgradePieceCandidates = System.Array.Empty<PieceToken>();
-            ShufflesRemaining = RunConfig.StartingShuffleCount;
+            ShufflesRemaining = RunConfig.StartingShuffleCount + _challenge.ShuffleDelta;
             CurrentRoundIndex = 0;
             StartRound();
             RollWeatherForRun();

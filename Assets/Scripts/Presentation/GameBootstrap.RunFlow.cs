@@ -12,6 +12,7 @@ namespace Contigu.Presentation
     {
         private void HandleStateTransition(RunState state)
         {
+            CollectNewUnlocks();
             // Stops a Shuffle-button pulse left running from a selected
             // piece that had nowhere to go, in case the run ends (or moves
             // to the shop) before the player ever clears that selection
@@ -57,11 +58,10 @@ namespace Contigu.Presentation
                 {
                     _unrecordedRun = false;
                     RunSaveStore.Delete();
-                    int starsBefore = _metaStats.Stars;
                     bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
                     SfxManager.Play(SfxId.Victory);
                     _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
-                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, _metaStats.Stars - starsBefore);
+                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, UnlockedSummary());
                     break;
                 }
 
@@ -70,13 +70,12 @@ namespace Contigu.Presentation
                     _unrecordedRun = false;
                     RunSaveStore.Delete();
                     bool isNewBestScore;
-                    int starsBeforeDefeat = _metaStats.Stars;
                     if (_run.IsEndless)
                     {
                         // The win was already counted when the finale was cleared: only the extra rounds and records are new.
                         isNewBestScore = _run.TotalScore > _metaStats.BestScore;
                         _metaStats = MetaStatsRecorder.RecordEndlessEnd(_metaStats, _run.TotalScore, _run.CurrentRoundNumber);
-                        _metaStatsStore.Save(_metaStats);
+                        PersistMeta();
                     }
                     else
                     {
@@ -84,7 +83,7 @@ namespace Contigu.Presentation
                     }
                     SfxManager.Play(SfxId.Defeat);
                     _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
-                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, _metaStats.Stars - starsBeforeDefeat, _run.PiecesRemainingThisRound <= 0);
+                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, UnlockedSummary(), _run.PiecesRemainingThisRound <= 0);
                     break;
                 }
             }
@@ -211,12 +210,54 @@ namespace Contigu.Presentation
             _roundSummaryView.Show(_run.LastRoundSummary, () => _shopView.Show(_run));
         }
 
+        /// <summary>Saves the stats together with what is unlocked so far.</summary>
+        private void PersistMeta()
+        {
+            _metaStats = MetaStatsRecorder.WithUnlocks(_metaStats, _unlockState);
+            _metaStatsStore.Save(_metaStats);
+        }
+
+        /// <summary>Takes what the run just unlocked (its tracker unlocks into the shared state), keeps it for the end screen and saves right away.</summary>
+        private void CollectNewUnlocks()
+        {
+            if (_run == null || _run.Unlocks == null || !_run.Unlocks.HasNewlyUnlocked)
+            {
+                return;
+            }
+            _runUnlocks.AddRange(_run.Unlocks.DrainNewlyUnlocked());
+            PersistMeta();
+        }
+
+        /// <summary>The name of something that was unlocked, as the player knows it.</summary>
+        private static string UnlockName(UnlockEntry entry)
+        {
+            switch (entry.Kind)
+            {
+                case UnlockKind.Challenge: return ChallengeCatalog.Get((ChallengeId)entry.Id).Name + " (challenge)";
+                case UnlockKind.Sprout: return UpgradeCatalog.Get((UpgradeId)entry.Id).Name;
+                default: return ModifierCatalog.Get((ModifierId)entry.Id).Name;
+            }
+        }
+
+        /// <summary>"Unlocked: A, B, C" for the end screen, empty when this run unlocked nothing.</summary>
+        private string UnlockedSummary()
+        {
+            CollectNewUnlocks();
+            if (_runUnlocks.Count == 0)
+            {
+                return string.Empty;
+            }
+            var names = new List<string>();
+            foreach (var entry in _runUnlocks) { names.Add(UnlockName(entry)); }
+            return "New in your collection (" + names.Count + "): " + string.Join(", ", names);
+        }
+
         /// <summary>Folds this run's outcome into the persisted MetaStats and saves immediately — there's no guaranteed exit hook in a WebGL/browser build. Returns whether this run's score is a new all-time best, for the end screen's "new record" callout.</summary>
         private bool RecordRunOutcome(bool victory, int roundReached)
         {
             bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
-            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, victory ? _run.PledgeBonusStars : 0, _run.Challenge.Id);
-            _metaStatsStore.Save(_metaStats);
+            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, _run.Challenge.Id, _run.Challenge.Level);
+            PersistMeta();
             return isNewBestScore;
         }
 
@@ -311,9 +352,9 @@ namespace Contigu.Presentation
             }
             else
             {
-                _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, _run.CurrentRoundNumber, victory: false);
+                _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, _run.CurrentRoundNumber, victory: false, challenge: _run.Challenge.Id, level: _run.Challenge.Level);
             }
-            _metaStatsStore.Save(_metaStats);
+            PersistMeta();
         }
 
         /// <summary>Settings → "Abandon run": the run is scored as a defeat, and the scene reloads straight onto the challenge picker (a fresh scene is the one sure way to drop whatever overlay, animation or pending choice was in flight).</summary>
@@ -344,22 +385,20 @@ namespace Contigu.Presentation
         /// <summary>Dev/testing shortcut (F10 in the editor, or the picker's "Unlock all (dev)" button): every challenge becomes playable at once, persisted like any unlock.</summary>
         private void OnUnlockAllChallengesRequested()
         {
-            _metaStats = MetaStatsRecorder.UnlockAllChallenges(_metaStats);
+            _metaStats = MetaStatsRecorder.UnlockAll(_metaStats);
+            _unlockState = _metaStats.ReadUnlocks();
             _metaStatsStore.Save(_metaStats);
             _challengeSelectView.Refresh(_metaStats);
         }
 
-        /// <summary>Spends Stars to unlock <paramref name="challenge"/> if it isn't already (a no-op charge for Classic/an already-unlocked one — see MetaStatsRecorder.TryUnlockChallenge), persists immediately, then starts the run. Re-checked here rather than trusted blindly, since this is the one thing in this flow that spends currency.</summary>
+        /// <summary>Starts the chosen challenge, already built at the chosen difficulty level. Re-checked here rather than trusted blindly: a locked challenge never starts.</summary>
         private void OnChallengeChosen(ChallengeDefinition challenge)
         {
-            var (updated, success) = MetaStatsRecorder.TryUnlockChallenge(_metaStats, challenge);
-            if (!success)
+            if (!_metaStats.IsUnlocked(challenge.Id))
             {
                 _challengeSelectView.Refresh(_metaStats);
                 return;
             }
-            _metaStats = updated;
-            _metaStatsStore.Save(_metaStats);
 
             _challengeSelectView.Hide();
             StartNewRun(challenge, _challengeSelectView.SelectedPledges);
@@ -430,11 +469,11 @@ namespace Contigu.Presentation
         {
             if (firstTime && (_run.Pledges & pledge) != Pledge.None)
             {
-                SetStatusText("Pledge broken: " + PledgeCatalog.Name(pledge) + ". No bonus Star for it this run.");
+                SetStatusText("Pledge broken: " + PledgeCatalog.Name(pledge) + ".");
             }
         }
 
-        /// <summary>The pledges of the run for the end screen: "Pledge kept: X (+1 Star)" / "Pledge broken: Y", one line, empty when none were taken.</summary>
+        /// <summary>The pledges of the run for the end screen: "Pledges kept: X" / "Broken: Y", one line, empty when none were taken.</summary>
         private string PledgeSummaryLine()
         {
             var kept = new List<string>();
@@ -445,7 +484,7 @@ namespace Contigu.Presentation
                 (_run.IsPledgeKept(pledge) ? kept : broken).Add(PledgeCatalog.Name(pledge));
             }
             var parts = new List<string>();
-            if (kept.Count > 0) { parts.Add("Pledges kept: " + string.Join(", ", kept) + " (+" + kept.Count + " Star" + (kept.Count > 1 ? "s" : "") + " on victory)"); }
+            if (kept.Count > 0) { parts.Add("Pledges kept: " + string.Join(", ", kept)); }
             if (broken.Count > 0) { parts.Add("Broken: " + string.Join(", ", broken)); }
             return string.Join("   ·   ", parts);
         }
@@ -493,6 +532,9 @@ namespace Contigu.Presentation
         {
             _isPlayingPlacementSequence = false;
             _run = run;
+            _run.AttachUnlocks(_unlockState);
+            _runUnlocks.Clear();
+            CollectNewUnlocks();
             SfxManager.PlayPad(challenge.Id.ToString());
             _unrecordedRun = true;
             SaveCheckpoint();

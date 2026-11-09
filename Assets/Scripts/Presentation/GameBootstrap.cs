@@ -64,6 +64,12 @@ namespace Contigu.Presentation
         private IMetaStatsStore _metaStatsStore;
         private MetaStats _metaStats;
 
+        /// <summary>What the player has unlocked, shared with the run in progress (its tracker unlocks into it).</summary>
+        private UnlockState _unlockState = new UnlockState();
+
+        /// <summary>What this run (and the queue of earlier ones) unlocked, for the end screen.</summary>
+        private readonly List<UnlockEntry> _runUnlocks = new List<UnlockEntry>();
+
         private GridView _gridView;
         private HandView _handView;
         private HudView _hudView;
@@ -126,6 +132,7 @@ namespace Contigu.Presentation
             TileUpgradePreview.Provider = kind => _run != null ? _run.GetTileUpgradePreviewText(kind) : null;
             _metaStatsStore = new MetaStatsFileStore();
             _metaStats = _metaStatsStore.Load();
+            _unlockState = _metaStats.ReadUnlocks();
 
             BuildUI(canvasRect);
             WireEvents();
@@ -192,10 +199,6 @@ namespace Contigu.Presentation
             if (Input.GetKeyDown(KeyCode.F10))
             {
                 DebugGrantLueurShortcut();
-            }
-            if (Input.GetKeyDown(KeyCode.F11))
-            {
-                DebugGrantStarsShortcut();
             }
             if (Input.GetKeyDown(KeyCode.F10))
             {
@@ -328,13 +331,6 @@ namespace Contigu.Presentation
             _shopView.Refresh(_run);
         }
 
-        /// <summary>Editor-only debug shortcut (F11): grants 100 Stars instantly and saves. Refreshing the picker is harmless even while hidden — it re-reads current state next time it's shown.</summary>
-        private void DebugGrantStarsShortcut()
-        {
-            _metaStats.Stars += 100;
-            _metaStatsStore.Save(_metaStats);
-            _challengeSelectView.Refresh(_metaStats);
-        }
 #endif
 
         /// <summary>Starts/stops the idle-prompt pulse depending on whether <paramref name="text"/> is the default idle message; other callers leave it off. <paramref name="emphasize"/> bumps the font size to <see cref="EmphasizedStatusFontSize"/>.</summary>

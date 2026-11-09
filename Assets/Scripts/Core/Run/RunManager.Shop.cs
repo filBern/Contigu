@@ -257,7 +257,7 @@ namespace Contigu.Core
             }
             var slot = _blisterSlots[index];
             int basePrice = slot.Kind == ShopSlotKind.Modifier
-                ? ModifierPricing.GetPrice(slot.ModifierId)
+                ? ModifierPricing.GetPrice(slot.ModifierId) + _challenge.FertilizerPriceDelta
                 : (slot.Pool == UpgradePool.Grid ? EconomyConstants.GridUpgradeShopBasePrice : EconomyConstants.BankUpgradeShopBasePrice);
             return ComputePrice(basePrice);
         }

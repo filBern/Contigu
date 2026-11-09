@@ -15,6 +15,7 @@ namespace Contigu.Core
         public const int CurrentVersion = 1;
 
         public ChallengeId Challenge;
+        public int Level = 1;
         public int RoundIndex;
         public int TotalScore;
         public int Lueur;
@@ -63,6 +64,7 @@ namespace Contigu.Core
             var sb = new StringBuilder();
             Line(sb, "version", CurrentVersion);
             Line(sb, "challenge", (int)Challenge);
+            Line(sb, "level", Level);
             Line(sb, "round", RoundIndex);
             Line(sb, "score", TotalScore);
             Line(sb, "lueur", Lueur);
@@ -134,6 +136,7 @@ namespace Contigu.Core
                 }
                 var s = new RunSnapshot();
                 s.Challenge = (ChallengeId)Int(values, "challenge");
+                s.Level = values.ContainsKey("level") ? Int(values, "level") : 1;
                 s.RoundIndex = Int(values, "round");
                 s.TotalScore = Int(values, "score");
                 s.Lueur = Int(values, "lueur");

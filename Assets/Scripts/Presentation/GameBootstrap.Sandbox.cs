@@ -15,8 +15,8 @@ namespace Contigu.Presentation
             if (screen == SandboxScreen.ChallengeSelect)
             {
                 // Every challenge unlocked and the pledges available, so the whole card can be looked at.
-                _metaStats = MetaStatsRecorder.UnlockAllChallenges(_metaStats);
-                _metaStats.Stars = 12;
+                _metaStats = MetaStatsRecorder.UnlockAll(_metaStats);
+                _unlockState = _metaStats.ReadUnlocks();
                 _challengeSelectView.Show(_metaStats);
                 return;
             }

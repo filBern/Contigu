@@ -98,7 +98,6 @@ namespace Contigu.Core
         public int PollenFromPlacements;
         public int SeedsLeft;
         public int EndOfRoundPollen;
-        public int StarsEarned;
         /// <summary>Pollen earned from the color groups of harvested lines.</summary>
         public int LinesPollen;
         /// <summary>Pollen from tile upgrades (Honeycomb, Dewdrop...), i.e. Pollen events no fertilizer claimed.</summary>

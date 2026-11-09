@@ -223,7 +223,6 @@ namespace Contigu.Core
                 PollenFromPlacements = _roundPollen,
                 SeedsLeft = PiecesRemainingThisRound,
                 EndOfRoundPollen = LastRoundEndLueurBonus,
-                StarsEarned = 1,
                 LinesPollen = _roundLinesPollen,
                 TilePollen = _roundTilePollen,
                 UnusedSeedsPollen = PiecesRemainingThisRound,

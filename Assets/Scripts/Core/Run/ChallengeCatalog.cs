@@ -2,8 +2,7 @@ namespace Contigu.Core
 {
     /// <summary>
     /// The selectable challenges. Classic is always available;
-    /// the others need Stars (see MetaStats.Stars/IsUnlocked,
-    /// MetaStatsRecorder.TryUnlockChallenge).
+    /// the others are unlocked by playing (see UnlockCatalog).
     /// </summary>
     public static class ChallengeCatalog
     {
@@ -13,7 +12,6 @@ namespace Contigu.Core
             Id = ChallengeId.Classic,
             Name = "Spring",
             Description = "The gentle start: 12 rounds, each its own enemy encounter. The place to learn the garden.",
-            UnlockCost = 0,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -30,7 +28,6 @@ namespace Contigu.Core
             Name = "Winter",
             WeatherProfile = WeatherProfile.Winter,
             Description = "A smaller starting seed bag and tighter seed budgets. Same 12 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
-            UnlockCost = 5,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
@@ -47,7 +44,6 @@ namespace Contigu.Core
             Id = ChallengeId.Summer,
             Name = "Summer",
             Description = "Every round brings real weather - never calm skies - and it hits 1.5x harder. Plan around the forecast. Home of the Locust Swarm.",
-            UnlockCost = 8,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -67,7 +63,6 @@ namespace Contigu.Core
             Name = "Autumn",
             WeatherProfile = WeatherProfile.Autumn,
             Description = "Fertilizers wither after 4 rounds - a random new one sprouts in their place - and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
-            UnlockCost = 12,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -87,7 +82,6 @@ namespace Contigu.Core
             Name = "Orchard",
             WeatherProfile = WeatherProfile.Orchard,
             Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier. Home of the Fruitworm.",
-            UnlockCost = 15,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -106,7 +100,6 @@ namespace Contigu.Core
             Name = "Greenhouse",
             WeatherProfile = WeatherProfile.Greenhouse,
             Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare. Home of the Whitefly Cloud.",
-            UnlockCost = 18,
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,

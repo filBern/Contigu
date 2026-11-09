@@ -81,7 +81,7 @@ namespace Contigu.Presentation
             _extraText.rectTransform.anchoredPosition = new Vector2(0f, -98f - (RecordCellHeight * 4f + 24f) - 8f);
             _extraText.rectTransform.sizeDelta = new Vector2(CardWidth - 60f, 60f);
 
-            // Best score, best round, runs, Stars.
+            // Best score, best round, runs, and what the run unlocked.
             _metaStatsText = UIFactory.CreateText(card, "MetaStats", "", 19, UITheme.TextOnBackground);
             _metaStatsText.rectTransform.anchorMin = new Vector2(0.5f, 0f);
             _metaStatsText.rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -178,12 +178,12 @@ namespace Contigu.Presentation
             _sprigText.text = line;
         }
 
-        public void ShowVictory(int totalScore, MetaStats metaStats, bool isNewBestScore, int starsEarned = 0)
+        public void ShowVictory(int totalScore, MetaStats metaStats, bool isNewBestScore, string unlockedText = "")
         {
             _titleText.text = "Victory!";
             _banner.color = VictoryBanner;
             _subtitleText.text = "Run complete - total score: " + totalScore;
-            SetMetaStatsText(metaStats, isNewBestScore, starsEarned);
+            SetMetaStatsText(metaStats, isNewBestScore, unlockedText);
             SprigComment(true, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(190f, 20f);
             _endlessButtonRect.anchoredPosition = new Vector2(-120f, 20f);
@@ -192,13 +192,13 @@ namespace Contigu.Presentation
         }
 
         /// <param name="outOfSeeds">True when the seeds ran out with pests still alive; false when no seed of the hand could be placed any more.</param>
-        public void ShowDefeat(int roundNumber, int totalScore, MetaStats metaStats, bool isNewBestScore, bool endless = false, int starsEarned = 0, bool outOfSeeds = true)
+        public void ShowDefeat(int roundNumber, int totalScore, MetaStats metaStats, bool isNewBestScore, bool endless = false, string unlockedText = "", bool outOfSeeds = true)
         {
             _endlessButtonRect.gameObject.SetActive(false);
             _titleText.text = endless ? "Endless - fell in Round " + roundNumber : "Defeat - Round " + roundNumber;
             _banner.color = DefeatBanner;
             _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " - " : (outOfSeeds ? "Out of seeds - " : "No seed can be planted - ")) + "total score: " + totalScore;
-            SetMetaStatsText(metaStats, isNewBestScore, starsEarned);
+            SetMetaStatsText(metaStats, isNewBestScore, unlockedText);
             SprigComment(false, isNewBestScore);
             _restartButtonRect.anchoredPosition = new Vector2(0f, 20f);
             _root.gameObject.SetActive(true);
@@ -209,7 +209,7 @@ namespace Contigu.Presentation
         /// cross-run stats persisted via MetaStatsFileStore. "New record"
         /// is highlighted in Success color; the rest stays muted.
         /// </summary>
-        private void SetMetaStatsText(MetaStats metaStats, bool isNewBestScore, int starsEarned = 0)
+        private void SetMetaStatsText(MetaStats metaStats, bool isNewBestScore, string unlockedText = "")
         {
             string bestScoreLine = isNewBestScore
                 ? "Best score: " + metaStats.BestScore + " - new record!"
@@ -218,7 +218,7 @@ namespace Contigu.Presentation
                 + "\nBest round reached: " + metaStats.BestRoundReached
                 + "   ·   Runs played: " + metaStats.TotalRunsPlayed
                 + "   ·   Victories: " + metaStats.TotalVictories
-                + (starsEarned > 0 ? "\nStars earned: +" + starsEarned + " (total " + metaStats.Stars + ")" : "");
+                + (string.IsNullOrEmpty(unlockedText) ? "" : "\n" + unlockedText);
             _metaStatsText.color = isNewBestScore ? new Color(0.62f, 0.9f, 0.45f) : UITheme.TextOnBackground;
         }
 

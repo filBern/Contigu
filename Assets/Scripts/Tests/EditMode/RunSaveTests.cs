@@ -193,7 +193,6 @@ namespace Contigu.Tests
             run.DebugForceRoundComplete();
             Assert.AreEqual(RunState.AwaitingShop, run.State);
             Assert.AreEqual(1, run.LastRoundSummary.RoundNumber);
-            Assert.AreEqual(1, run.LastRoundSummary.StarsEarned);
             var s = run.LastRoundSummary;
             int fertilizerPollen = 0;
             if (s.FertilizerPollen != null) { foreach (var f in s.FertilizerPollen) { fertilizerPollen += f.Amount; } }
@@ -241,28 +240,22 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void Pledges_AreKeptUntilBroken_AndPayOneStarEachOnVictory()
+        public void Pledges_AreKeptUntilBroken()
         {
             var run = new RunManager(new SystemRandomProvider(21), null, Pledge.NoShuffle | Pledge.NoReroll | Pledge.Minimalist);
             run.DebugDisableWeather();
-            Assert.AreEqual(3, run.PledgeBonusStars);
+            Assert.AreEqual(3, run.PledgesKept);
 
             Assert.IsTrue(run.ShuffleHand());
             Assert.IsFalse(run.IsPledgeKept(Pledge.NoShuffle));
-            Assert.AreEqual(2, run.PledgeBonusStars);
+            Assert.AreEqual(2, run.PledgesKept);
 
             run.DebugGrantModifier(ModifierId.DevotionCoral);
             run.DebugGrantModifier(ModifierId.DevotionTeal);
             Assert.IsTrue(run.IsPledgeKept(Pledge.Minimalist), "two fertilizers is the limit");
             run.DebugGrantModifier(ModifierId.DevotionLime);
             Assert.IsFalse(run.IsPledgeKept(Pledge.Minimalist));
-            Assert.AreEqual(1, run.PledgeBonusStars);
-
-            var withBonus = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, RunConfig.RoundCount, victory: true, pledgeBonusStars: 2);
-            var without = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, RunConfig.RoundCount, victory: true);
-            Assert.AreEqual(without.Stars + 2, withBonus.Stars);
-            var defeat = MetaStatsRecorder.RecordRunOutcome(new MetaStats(), 100, 4, victory: false, pledgeBonusStars: 2);
-            Assert.AreEqual(3, defeat.Stars, "a lost run never pays a pledge bonus");
+            Assert.AreEqual(1, run.PledgesKept);
         }
 
         [Test]

@@ -10,9 +10,9 @@ Garde ce fichier court : seulement ce qui change la façon de travailler. L'éta
 - Le jeu est testé sur iPad via des builds itch.io : le tactile prime (pas de survol, cibles ≥ 56, un doigt).
 
 ## Commandes
-- Tests Core : `cd Tools/Headless/Tests && dotnet test` (≈ 626 tests).
+- Tests Core : `cd Tools/Headless/Tests && dotnet test` (≈ 642 tests). Ne pas enchaîner `dotnet test | grep && git commit` : le code de sortie est celui de grep, il faut lire le résultat avant de committer.
 - Audits : `python3 Tools/qa/content_audit.py`, `python3 Tools/qa/glyph_audit.py`, `python3 Tools/check_icon_tags.py` (ce dernier est dans le CI).
-- Simulateur : `cd Tools/Headless/RunSim && dotnet run -- --check --runs N --policy random|planner --seed S` (`PLAN_DEPTH=2`, `--challenge`, `--endless`, `--each`).
+- Simulateur : `cd Tools/Headless/RunSim && dotnet run -- --check --runs N --policy random|planner --seed S` (`PLAN_DEPTH=2`, `--challenge`, `--endless`, `--each`). Progression : `--locked` (rythme de déblocage d'un nouveau joueur), `--coverage`, `--calibrate --calibration-out f.csv` (voir `docs/PROGRESSION.md`).
 - Art : SVG générés par les scripts de `Design/` ; PNG rendus avec Chromium/Playwright (`NODE_PATH=$(npm root -g) node …`). Tout nouvel asset ou `.cs` a besoin d'un `.meta` avec un nouveau guid.
 
 ## Conventions de code

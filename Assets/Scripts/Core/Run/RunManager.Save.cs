@@ -57,6 +57,7 @@ namespace Contigu.Core
         {
             var s = new RunSnapshot();
             s.Challenge = _challenge.Id;
+            s.Level = _challenge.Level;
             s.RoundIndex = CurrentRoundIndex;
             s.TotalScore = TotalScore;
             s.Lueur = Lueur;
@@ -99,7 +100,7 @@ namespace Contigu.Core
             {
                 return null;
             }
-            var run = new RunManager(rng, ChallengeCatalog.Get(snapshot.Challenge));
+            var run = new RunManager(rng, ChallengeCatalog.Get(snapshot.Challenge).AtLevel(snapshot.Level));
             run.ApplySnapshot(snapshot);
             return run;
         }

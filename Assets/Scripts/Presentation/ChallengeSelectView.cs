@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// Pre-run challenge picker shown at every launch and every "New Run" (see ChallengeCatalog/MetaStats.Stars/
-    /// MetaStatsRecorder.TryUnlockChallenge). A single-card carousel, stepped left/right, rather than one card
+    /// Pre-run challenge picker shown at every launch and every "New Run" (see ChallengeCatalog/UnlockCatalog/
+    /// UnlockCatalog). A single-card carousel, stepped left/right, rather than one card
     /// per entry laid out side by side, since its width stays constant regardless of how many challenges exist.
     /// One card's UI is built once and rebound to whichever entry is shown (see ShowChallengeAt). A locked
     /// challenge unlocks and plays in the same click once affordable — no separate confirm step.
@@ -35,7 +35,7 @@ namespace Contigu.Presentation
         /// <summary>Dev/testing: the picker's "Unlock all" button was pressed (only built in the editor and development builds).</summary>
         public event Action UnlockAllRequested;
 
-        /// <summary>Fired once a challenge is actually ready to play — after any auto-unlock spend already happened and was persisted by the caller.</summary>
+        /// <summary>Fired once a challenge is ready to play, already built at the chosen difficulty level.</summary>
         public event Action<ChallengeDefinition> ChallengeChosen;
 
         /// <summary>The "Continue" button: resume the saved run.</summary>
@@ -48,7 +48,6 @@ namespace Contigu.Presentation
         private RectTransform _root;
         private CanvasGroup _canvasGroup;
         private Coroutine _fadeCoroutine;
-        private Text _starsLabel;
         private MetaStats _metaStats;
         private int _currentIndex;
 
@@ -59,12 +58,17 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private bool _playArmed;
-        private const string PledgeHeading = "Optional pledges: +1 Star each if kept to the victory";
+        private const string PledgeHeading = "Optional pledges: keep them all the way to the victory";
         private Text _pledgeTitle;
         private Pledge _selectedPledges;
+        private int _selectedLevel = 1;
+        private int _lastLevelChallenge = -1;
+        private Text _levelLabel;
+        private Button _levelDown;
+        private Button _levelUp;
         private readonly Dictionary<Pledge, Image> _pledgeChips = new Dictionary<Pledge, Image>();
 
-        /// <summary>The optional pledges ticked for the run about to start (one extra Star each, if still kept at the victory).</summary>
+        /// <summary>The optional pledges ticked for the run about to start.</summary>
         public Pledge SelectedPledges { get { return _selectedPledges; } }
         private Image _banner;
         private Image _bannerIcon;
@@ -109,20 +113,6 @@ namespace Contigu.Presentation
             header.rectTransform.anchoredPosition = new Vector2(0f, -48f);
             header.rectTransform.sizeDelta = new Vector2(1000f, 56f);
 
-            _starsLabel = UIFactory.CreateText(_root, "Stars", "", 26, VisualDefaults.GoldenColor);
-            _starsLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            _starsLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            _starsLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _starsLabel.rectTransform.anchoredPosition = new Vector2(0f, -108f);
-            _starsLabel.rectTransform.sizeDelta = new Vector2(1000f, 34f);
-
-            var hint = UIFactory.CreateText(_root, "StarsHint", "1 per round cleared, +2 for a victory. Stars unlock the other challenges.", 15, UITheme.TextMutedOnBackground);
-            hint.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            hint.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            hint.rectTransform.pivot = new Vector2(0.5f, 1f);
-            hint.rectTransform.anchoredPosition = new Vector2(0f, -142f);
-            hint.rectTransform.sizeDelta = new Vector2(1000f, 24f);
-
             BuildCard(_root);
             BuildArrowButton(_root, "LeftArrow", "<", -(CardWidth / 2f + ArrowGap + ArrowButtonSize / 2f), Step(-1));
             BuildArrowButton(_root, "RightArrow", ">", CardWidth / 2f + ArrowGap + ArrowButtonSize / 2f, Step(1));
@@ -166,8 +156,7 @@ namespace Contigu.Presentation
         private RectTransform _pledgeGroup;
 
         /// <summary>
-        /// Optional pledges inside the card, above Play (2 x 2 chips): tick the rules you want to play by; each one still kept at the victory
-        /// pays one extra Star. Only shown once the default challenge has been won.
+        /// Optional pledges inside the card, above Play (2 x 2 chips): tick the rules you want to play by. Only shown once the default challenge has been won.
         /// </summary>
         private void BuildPledgeRow(Transform card)
         {
@@ -257,12 +246,22 @@ namespace Contigu.Presentation
             _statsLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 20f);
             _statsLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 24f, 28f);
 
+            // The difficulty level: winning a challenge at level N opens level N+1.
+            _levelLabel = UIFactory.CreateText(_card.transform, "Level", "", 17, UITheme.TextPrimary);
+            _levelLabel.raycastTarget = false;
+            _levelLabel.rectTransform.anchorMin = _levelLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _levelLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _levelLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 58f);
+            _levelLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 170f, 34f);
+            _levelDown = BuildLevelButton(_card.transform, "LevelDown", "-", -(CardWidth / 2f - 46f), -1);
+            _levelUp = BuildLevelButton(_card.transform, "LevelUp", "+", CardWidth / 2f - 46f, 1);
+
             _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 19, UITheme.TextMuted);
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 62f);
-            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 100f);
+            _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 100f);
+            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 96f);
 
             // Coral rather than gold: gold has poor contrast against this card's light fill, and coral already reads as "blocked" elsewhere (see UITheme.Danger/HoverInvalid).
             _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 16, UITheme.Danger);
@@ -303,6 +302,38 @@ namespace Contigu.Presentation
             collectionButton.onClick.AddListener(() => { if (CollectionRequested != null) { CollectionRequested(); } });
         }
 
+        private Button BuildLevelButton(Transform card, string name, string label, float x, int direction)
+        {
+            var button = UIFactory.CreateButton(card, name, label, UISprites.ChooseButtonBackground, 26);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            float size = MobileSetup.TouchMin(44f);
+            rect.sizeDelta = new Vector2(size, size);
+            rect.anchoredPosition = new Vector2(x, -BannerHeight - 52f);
+            button.onClick.AddListener(() =>
+            {
+                SfxManager.Play(SfxId.CarouselTick);
+                _selectedLevel += direction;
+                RefreshLevelRow(ChallengeCatalog.All[_currentIndex]);
+            });
+            return button;
+        }
+
+        /// <summary>The level row: "LEVEL 3 / 3 - what it adds", with - and + to pick any level up to the highest one the player may play.</summary>
+        private void RefreshLevelRow(ChallengeDefinition challenge)
+        {
+            int highest = _metaStats != null ? _metaStats.HighestPlayableLevel(challenge.Id) : 1;
+            _selectedLevel = Mathf.Clamp(_selectedLevel, 1, highest);
+            bool unlocked = _metaStats != null && _metaStats.IsUnlocked(challenge.Id);
+            _levelLabel.gameObject.SetActive(unlocked);
+            _levelDown.gameObject.SetActive(unlocked && highest > 1);
+            _levelUp.gameObject.SetActive(unlocked && highest > 1);
+            _levelDown.interactable = _selectedLevel > 1;
+            _levelUp.interactable = _selectedLevel < highest;
+            _levelLabel.text = "LEVEL " + _selectedLevel + (highest > 1 ? " / " + highest : "") + "   -   " + DifficultyLevels.Describe(_selectedLevel);
+        }
+
         private void BuildArrowButton(Transform parent, string name, string label, float x, Action onClick)
         {
             var button = UIFactory.CreateButton(parent, name, label, UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 36);
@@ -335,13 +366,14 @@ namespace Contigu.Presentation
                 return;
             }
             _playArmed = false;
-            ChallengeChosen?.Invoke(ChallengeCatalog.All[_currentIndex]);
+            ChallengeChosen?.Invoke(ChallengeCatalog.All[_currentIndex].AtLevel(_selectedLevel));
         }
 
         public void Show(MetaStats metaStats)
         {
             SfxManager.Play(SfxId.Overlay);
             _metaStats = metaStats;
+            _lastLevelChallenge = -1;
             ShowChallengeAt(0);
             _selectedPledges = Pledge.None;
             RefreshPledgeChips();
@@ -377,7 +409,7 @@ namespace Contigu.Presentation
             _root.gameObject.SetActive(false);
         }
 
-        /// <summary>Re-renders the currently shown card's lock state/cost/button label against the current Stars balance — called right after a successful unlock-and-play, so a re-opened screen (via a later "New Run") always reflects the latest balance.</summary>
+        /// <summary>Re-renders the currently shown card's lock state/cost/button label against what is unlocked now, so a re-opened screen (via a later "New Run") always reflects the latest progress.</summary>
         public void Refresh(MetaStats metaStats)
         {
             _metaStats = metaStats;
@@ -443,8 +475,6 @@ namespace Contigu.Presentation
                 return;
             }
 
-            _starsLabel.text = "STARS: " + _metaStats.Stars;
-
             _playArmed = false;
             var challenge = ChallengeCatalog.All[_currentIndex];
             _nameLabel.text = challenge.Name.ToUpperInvariant();
@@ -466,6 +496,13 @@ namespace Contigu.Presentation
             }
 
             bool unlocked = _metaStats.IsUnlocked(challenge.Id);
+            // Starting level: the highest one the player may play on this challenge.
+            if (_lastLevelChallenge != _currentIndex)
+            {
+                _selectedLevel = _metaStats.HighestPlayableLevel(challenge.Id);
+                _lastLevelChallenge = _currentIndex;
+            }
+            RefreshLevelRow(challenge);
             if (unlocked)
             {
                 _statusLabel.text = "";
@@ -474,12 +511,10 @@ namespace Contigu.Presentation
             }
             else
             {
-                bool affordable = _metaStats.Stars >= challenge.UnlockCost;
-                _statusLabel.text = affordable
-                    ? "Locked - " + challenge.UnlockCost + " Stars to unlock"
-                    : "Locked - needs " + challenge.UnlockCost + " Stars (you have " + _metaStats.Stars + ")";
-                _playButtonLabel.text = affordable ? "Unlock & Play" : "Locked";
-                _playButton.interactable = affordable;
+                var entry = UnlockCatalog.Find(UnlockKind.Challenge, (int)challenge.Id);
+                _statusLabel.text = "Locked - " + (entry != null ? entry.Condition.Text : "play more to unlock it");
+                _playButtonLabel.text = "Locked";
+                _playButton.interactable = false;
             }
         }
     }

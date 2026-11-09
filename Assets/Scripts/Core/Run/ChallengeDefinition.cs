@@ -45,9 +45,6 @@ namespace Contigu.Core
         public string Name;
         public string Description;
 
-        /// <summary>Stars cost to unlock (see MetaStats.Stars) — 0 for Classic, which is always available.</summary>
-        public int UnlockCost;
-
         public int RoundCount;
         public int[] Quotas;
         public int[] PieceBudgets;
@@ -84,6 +81,15 @@ namespace Contigu.Core
         /// <summary>Extra seeds added to every round's budget.</summary>
         public int PieceBudgetBonus;
 
+        /// <summary>The difficulty level this definition was built for (1 = Normal, see <see cref="DifficultyLevels"/>).</summary>
+        public int Level = 1;
+
+        /// <summary>Shuffles added to (negative: taken from) the run's starting Shuffles.</summary>
+        public int ShuffleDelta;
+
+        /// <summary>Pollen added to every fertilizer's price in the shop.</summary>
+        public int FertilizerPriceDelta;
+
         /// <summary>Multiplies only Act 1's enemies (rounds 1-8), on top of <see cref="EnemyHpMultiplier"/> — eases the early filter without softening the finale.</summary>
         public float ActOneHpMultiplier = 1f;
 
@@ -112,6 +118,30 @@ namespace Contigu.Core
         public ChallengeDefinition Clone()
         {
             return (ChallengeDefinition)MemberwiseClone();
+        }
+
+        /// <summary>
+        /// The same challenge at difficulty <paramref name="level"/> (1 to <see cref="DifficultyLevels.Max"/>): each level adds a rule to the
+        /// previous ones (see <see cref="DifficultyLevels"/>). Level 1 returns the definition itself.
+        /// </summary>
+        public ChallengeDefinition AtLevel(int level)
+        {
+            level = System.Math.Max(1, System.Math.Min(DifficultyLevels.Max, level));
+            if (level == 1)
+            {
+                return this;
+            }
+            var harder = Clone();
+            harder.Level = level;
+            harder.EnemyHpMultiplier = EnemyHpMultiplier * 1.15f;
+            if (level >= 3) { harder.ShuffleDelta = ShuffleDelta - 1; }
+            if (level >= 4)
+            {
+                harder.EnemyHpMultiplier *= 1.15f;
+                harder.PieceBudgetBonus = PieceBudgetBonus - 1;
+            }
+            if (level >= 5) { harder.FertilizerPriceDelta = FertilizerPriceDelta + 1; }
+            return harder;
         }
 
         public int BossRoundIndex

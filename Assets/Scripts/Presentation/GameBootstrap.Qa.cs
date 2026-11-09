@@ -145,18 +145,13 @@ namespace Contigu.Presentation
             return list.ToArray();
         }
 
-        /// <summary>Debug commands for tests: unlockAll, stars, forceRoundWin, grantPollen (arg: amount). The ones that change the run need the CONTIGU_DEBUG scripting define in the build.</summary>
+        /// <summary>Debug commands for tests: unlockAll, forceRoundWin, grantPollen (arg: amount). The ones that change the run need the CONTIGU_DEBUG scripting define in the build.</summary>
         private string RunQaCommand(string cmd, string arg)
         {
             switch (cmd)
             {
                 case "unlockAll":
                     OnUnlockAllChallengesRequested();
-                    return "ok";
-                case "stars":
-                    _metaStats.Stars += 100;
-                    _metaStatsStore.Save(_metaStats);
-                    _challengeSelectView.Refresh(_metaStats);
                     return "ok";
 #if UNITY_EDITOR || CONTIGU_DEBUG
                 case "forceRoundWin":

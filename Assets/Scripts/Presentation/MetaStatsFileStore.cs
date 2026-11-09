@@ -34,7 +34,8 @@ namespace Contigu.Presentation
             {
                 string json = File.ReadAllText(_filePath);
                 var stats = JsonUtility.FromJson<MetaStats>(json);
-                return stats ?? new MetaStats();
+                // A save of another format (the game is not out yet) is dropped: everything starts over.
+                return stats != null && stats.SaveVersion == MetaStats.CurrentVersion ? stats : new MetaStats();
             }
             catch (Exception)
             {
@@ -54,6 +55,7 @@ namespace Contigu.Presentation
 
         public void Save(MetaStats stats)
         {
+            stats.SaveVersion = MetaStats.CurrentVersion;
             string json = JsonUtility.ToJson(stats);
             File.WriteAllText(_filePath, json);
             WebFileSync.Flush();
