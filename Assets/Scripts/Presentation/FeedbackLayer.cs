@@ -33,7 +33,7 @@ namespace Contigu.Presentation
         }
 
         public const int DefaultPopupFontSize = 33;
-        public const int DefaultFlyingPopupFontSize = 30;
+        public const int DefaultFlyingPopupFontSize = 38;
 
         /// <summary>
         /// <paramref name="floatDown"/> flips the usual float-up direction to float down instead — used for
@@ -96,11 +96,19 @@ namespace Contigu.Presentation
             _root.SetAsLastSibling();
 
             float scale = (float)fontSize / DefaultFlyingPopupFontSize;
+            // A dark pill behind the number: gold on a golden or pale tile has no contrast of its own.
+            var backdrop = UIFactory.CreatePanel(_root, "FlyingBackdrop", UITheme.Border);
+            backdrop.raycastTarget = false;
+            var backdropColor = backdrop.color;
+            backdropColor.a = 0.72f;
+            backdrop.color = backdropColor;
+            backdrop.rectTransform.position = fromWorldPosition;
+            backdrop.rectTransform.sizeDelta = new Vector2(24f + 22f * text.Length, 48f) * scale;
             var popup = UIFactory.CreateText(_root, "FlyingPopup", text, fontSize, color);
             AddPopupOutline(popup);
             popup.rectTransform.position = fromWorldPosition;
             popup.rectTransform.sizeDelta = new Vector2(120f, 36f) * scale;
-            StartCoroutine(AnimateFlyingPopup(popup, toAnchor));
+            StartCoroutine(AnimateFlyingPopup(popup, backdrop, toAnchor));
         }
 
         /// <summary>
@@ -414,14 +422,18 @@ namespace Contigu.Presentation
             }
         }
 
-        private IEnumerator AnimateFlyingPopup(Text text, RectTransform toAnchor)
+        private IEnumerator AnimateFlyingPopup(Text text, Image backdrop, RectTransform toAnchor)
         {
             var rect = text.rectTransform;
-            // Ease-in (accelerating) rather than a linear float — reads as being pulled toward a fixed destination.
-            const float duration = 0.5f;
+            bool reduced = MotionSettings.Reduced;
+            // It first pops in place and stays put long enough to be read, then is pulled toward its destination (ease-in).
+            float hold = reduced ? 0.15f : 0.3f;
+            const float flight = 0.45f;
+            float duration = hold + flight;
             float t = 0f;
             Vector3 startPos = rect.position;
             Color startColor = text.color;
+            float backdropAlpha = backdrop != null ? backdrop.color.a : 0f;
 
             while (t < duration)
             {
@@ -430,20 +442,36 @@ namespace Contigu.Presentation
                     break;
                 }
                 t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / duration);
+                float p = Mathf.Clamp01((t - hold) / flight);
                 float eased = p * p;
                 rect.position = Vector3.Lerp(startPos, toAnchor.position, eased);
 
-                // Only starts fading in the final stretch, so it reads clearly
-                // for most of the flight and just disappears on arrival.
+                // Pop-in with an overshoot while it holds, then it shrinks a little as it is pulled in.
+                float scale = reduced ? 1f : EaseOutBack(Mathf.Clamp01(t / 0.2f)) * Mathf.Lerp(1f, 0.7f, eased);
+                rect.localScale = Vector3.one * scale;
+
+                // Only starts fading in the final stretch, so it reads clearly for most of the flight and just disappears on arrival.
                 float fadeP = Mathf.Clamp01((p - 0.7f) / 0.3f);
+                float alpha = Mathf.Lerp(1f, 0f, fadeP);
                 var c = startColor;
-                c.a = Mathf.Lerp(1f, 0f, fadeP);
+                c.a = alpha;
                 text.color = c;
+                if (backdrop != null)
+                {
+                    backdrop.rectTransform.position = rect.position;
+                    backdrop.rectTransform.localScale = rect.localScale;
+                    var bc = backdrop.color;
+                    bc.a = backdropAlpha * alpha;
+                    backdrop.color = bc;
+                }
 
                 yield return null;
             }
 
+            if (backdrop != null)
+            {
+                Destroy(backdrop.gameObject);
+            }
             if (text != null)
             {
                 Destroy(text.gameObject);
