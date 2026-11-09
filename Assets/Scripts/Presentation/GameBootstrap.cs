@@ -697,7 +697,7 @@ namespace Contigu.Presentation
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;
             _challengeSelectView.ContinueRequested += OnContinueRequested;
-            _challengeSelectView.CollectionRequested += _collectionView.Show;
+            _challengeSelectView.CollectionRequested += () => { _collectionView.Unlocks = _unlockState; _collectionView.Show(); };
             _challengeSelectView.UnlockAllRequested += OnUnlockAllChallengesRequested;
             _settingsView.AbandonRunRequested += OnAbandonRunRequested;
             _settingsView.MainMenuRequested += OnMainMenuRequested;

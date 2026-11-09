@@ -23,6 +23,8 @@ namespace Contigu.Presentation
             public string Subtitle;
             public Sprite Icon;
             public int Id;
+            /// <summary>Sprouts and fertilizers that start locked: how they are earned (see UnlockCatalog); null for everything else.</summary>
+            public UnlockEntry Unlock;
         }
 
         private static readonly CollectionCategory[] Tabs = { CollectionCategory.Fertilizer, CollectionCategory.Sprout, CollectionCategory.Enemy, CollectionCategory.Weather };
@@ -101,6 +103,9 @@ namespace Contigu.Presentation
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
         }
+
+        /// <summary>What the player has unlocked: a locked sprout or fertilizer shows how to earn it instead of its description.</summary>
+        public UnlockState Unlocks;
 
         public void Show()
         {
@@ -212,15 +217,20 @@ namespace Contigu.Presentation
                 icon.rectTransform.offsetMin = new Vector2(3f, 3f);
                 icon.rectTransform.offsetMax = new Vector2(-3f, -3f);
             }
+            bool locked = entry.Unlock != null && Unlocks != null && !Unlocks.IsUnlocked(entry.Unlock.Kind, entry.Unlock.Id);
             if (!discovered)
             {
-                var mark = UIFactory.CreateText(cell.transform, "Mark", "?", Mathf.RoundToInt(size * 0.5f), new Color(1f, 1f, 1f, 0.55f));
+                var mark = UIFactory.CreateText(cell.transform, "Mark", locked ? "X" : "?", Mathf.RoundToInt(size * 0.5f), new Color(1f, 1f, 1f, 0.55f));
                 mark.raycastTarget = false;
                 UIFactory.StretchFull(mark.rectTransform);
             }
 
             var hover = cell.gameObject.AddComponent<HoverTooltip>();
-            if (discovered)
+            if (entry.Unlock != null && Unlocks != null && !Unlocks.IsUnlocked(entry.Unlock.Kind, entry.Unlock.Id))
+            {
+                hover.Init(_tooltip, entry.Name + " (locked)", "Locked. To unlock it: " + entry.Unlock.Condition.Text + ".", entry.Subtitle, UITheme.TextMuted);
+            }
+            else if (discovered)
             {
                 hover.Init(_tooltip, entry.Name, DescriptionTextFormatter.Colorize(entry.Description, 14), entry.Subtitle, UITheme.TextMuted);
             }
@@ -243,7 +253,7 @@ namespace Contigu.Presentation
                 case CollectionCategory.Fertilizer:
                     foreach (var def in ModifierCatalog.All)
                     {
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Fertilizer, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Sprout:
@@ -253,7 +263,7 @@ namespace Contigu.Presentation
                         {
                             continue;
                         }
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Icon = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Icon = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Sprout, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Enemy:
