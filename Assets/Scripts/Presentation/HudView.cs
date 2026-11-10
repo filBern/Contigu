@@ -143,8 +143,7 @@ namespace Contigu.Presentation
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
             _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
-            var lueurHit = _lueurContainer.gameObject.AddComponent<Image>();
-            lueurHit.color = new Color(0f, 0f, 0f, 0f);
+            // The pill behind the Pollen is also what catches the pointer for the tooltip below (a GameObject holds only one Image).
             _lueurContainer.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Pollen",
                 "Your money. You earn it by harvesting lines with several colors, from seeds left unplanted at the end of a round, and from some fertilizers. Spend it in the shop between rounds.", "Currency", UITheme.TextMuted);
         }
