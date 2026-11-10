@@ -18,7 +18,8 @@ namespace Contigu.Core
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 1.62f
+            EnemyHpMultiplier = 1.62f,
+            LateHpMultiplier = 1.5f
         };
 
         /// <summary>Smaller starting deck (see InitialDeckFactory.BuildMarathon), tighter piece budgets every round — a tenser run from the very first placement instead of Classic's single late-run spike.</summary>
@@ -35,6 +36,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
             EnemyHpMultiplier = 2.6f,
+            LateHpMultiplier = 1.7f,
             WorldEnemy = EnemyId.Hoarfrost,
             EnemySwaps = new[] { new EnemySwap(EnemyId.Poisoner, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.HeavyLocker), new EnemySwap(EnemyId.Blightmoth, EnemyId.Thief), new EnemySwap(EnemyId.Reclaimer, EnemyId.Leech) }
         };
@@ -54,6 +56,7 @@ namespace Contigu.Core
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
             EnemyHpMultiplier = 1.4f,
+            LateHpMultiplier = 1.9f,
             WorldEnemy = EnemyId.Locust,
             EnemySwaps = new[] { new EnemySwap(EnemyId.Locker, EnemyId.Poisoner), new EnemySwap(EnemyId.HeavyLocker, EnemyId.Plague), new EnemySwap(EnemyId.Thief, EnemyId.Blightmoth), new EnemySwap(EnemyId.Leech, EnemyId.Reclaimer) }
         };
@@ -73,6 +76,7 @@ namespace Contigu.Core
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
             EnemyHpMultiplier = 1.7f,
+            LateHpMultiplier = 1.65f,
             PieceBudgetBonus = 12,
             WorldEnemy = EnemyId.Rotgrub,
             EnemySwaps = new[] { new EnemySwap(EnemyId.HeavyLocker, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.Poisoner), new EnemySwap(EnemyId.Thief, EnemyId.Blightmoth) }
@@ -92,6 +96,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             ActiveColorCount = 2,
             EnemyHpMultiplier = 4.8f,
+            LateHpMultiplier = 1.7f,
             PieceBudgetBonus = 6,
             WorldEnemy = EnemyId.Fruitworm,
             EnemySwaps = new[] { new EnemySwap(EnemyId.ColorHater, EnemyId.Reclaimer), new EnemySwap(EnemyId.Poisoner, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.HeavyLocker) }
@@ -111,6 +116,7 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
             EnemyHpMultiplier = 1.25f,
+            LateHpMultiplier = 1.45f,
             PieceBudgetBonus = 10,
             WorldEnemy = EnemyId.Whitefly,
             EnemySwaps = new[] { new EnemySwap(EnemyId.Locker, EnemyId.Poisoner), new EnemySwap(EnemyId.HeavyLocker, EnemyId.Plague), new EnemySwap(EnemyId.Reclaimer, EnemyId.Blightmoth) }
