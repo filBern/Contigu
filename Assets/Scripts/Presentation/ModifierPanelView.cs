@@ -90,6 +90,8 @@ namespace Contigu.Presentation
 
         // Which row the pointer currently rests over, -1 when none.
         private int _hoveredRowIndex = -1;
+        // The Roots links drawn between neighboring badges (sap, resonance); rebuilt at every Refresh.
+        private readonly List<GameObject> _rootLinks = new List<GameObject>();
 
         // Which row is tinted gold as the drag's live drop-target preview,
         // -1 when none — only ever set while _draggingRowIndex >= 0, tracked
@@ -361,6 +363,11 @@ namespace Contigu.Presentation
             _selectedRowIndex = -1;
             _draggingRowIndex = -1;
             _hoveredRowIndex = -1;
+            for (int c = 0; c < _rootLinks.Count; c++)
+            {
+                if (_rootLinks[c] != null) { Destroy(_rootLinks[c]); }
+            }
+            _rootLinks.Clear();
             _dropTargetRowIndex = -1;
 
             for (int i = 0; i < activeModifiers.Count; i++)
@@ -519,6 +526,65 @@ namespace Contigu.Presentation
                 var dragHandler = badge.gameObject.AddComponent<ModifierBadgeDragHandler>();
                 dragHandler.Init(this, i);
             }
+            BuildRootLinks(activeModifiers);
+        }
+
+        private static readonly Color SapBloomTint = new Color(1f, 0.72f, 0.84f, 1f);
+        private static readonly Color SapFruitTint = new Color(1f, 0.88f, 0.42f, 1f);
+
+        /// <summary>
+        /// Roots: a small chip in the gap between two neighboring badges where the Roots act: a drop and an arrow (sap, tinted by the giver's stage)
+        /// when the left one is a Bloom or a Fruit, linked rings (resonance) when both are of one category. Hover or tap explains it.
+        /// </summary>
+        private void BuildRootLinks(IReadOnlyList<ModifierId> mods)
+        {
+            if (mods.Count < 2 || _rowBadges.Count < mods.Count)
+            {
+                return;
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
+            float scale = _rowsContainer.lossyScale.x;
+            for (int i = 0; i < mods.Count - 1; i++)
+            {
+                float sap = SapProvider != null ? SapProvider(i + 1) : 0f;
+                bool resonate = ModifierCatalog.Get(mods[i]).Category == ModifierCatalog.Get(mods[i + 1]).Category;
+                if (sap <= 0f && !resonate)
+                {
+                    continue;
+                }
+                var a = _rowBadges[i].rectTransform;
+                var b = _rowBadges[i + 1].rectTransform;
+                Vector3 mid = (a.TransformPoint(a.rect.center) + b.TransformPoint(b.rect.center)) * 0.5f;
+                string giver = ModifierCatalog.Get(mods[i]).Name;
+                string receiver = ModifierCatalog.Get(mods[i + 1]).Name;
+                float offset = sap > 0f && resonate ? 15f * scale : 0f;
+                if (sap > 0f)
+                {
+                    bool fruit = FertilizerGrowth.StageOf(GrowthProvider != null ? GrowthProvider(i) : 0) == GrowthStage.Fruit;
+                    string body = giver + " is a " + (fruit ? "Fruit" : "Bloom") + ": its sap feeds " + receiver + " on its right, +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
+                    AddRootLink("Sap", Resources.Load<Sprite>("Icons/Growth/Roots_Sap"), fruit ? SapFruitTint : SapBloomTint, mid + new Vector3(0f, offset, 0f), "Sap", body);
+                }
+                if (resonate)
+                {
+                    string body = giver + " and " + receiver + " are of the same kind: each gets +" + FertilizerGrowth.ResonancePerNeighbor.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
+                    AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, mid - new Vector3(0f, offset, 0f), "Resonance", body);
+                }
+            }
+        }
+
+        private void AddRootLink(string name, Sprite sprite, Color tint, Vector3 worldPosition, string title, string body)
+        {
+            var chip = UIFactory.CreatePanel(_rowsContainer, "Root" + name, tint);
+            chip.sprite = sprite;
+            chip.enabled = sprite != null;
+            chip.preserveAspect = true;
+            chip.rectTransform.sizeDelta = new Vector2(30f, 30f);
+            chip.rectTransform.position = worldPosition;
+            chip.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            chip.gameObject.AddComponent<GrowthGlowPulse>();
+            var hover = chip.gameObject.AddComponent<HoverTooltip>();
+            hover.Init(_tooltip, title, body);
+            _rootLinks.Add(chip.gameObject);
         }
 
         /// <summary>Blocks reordering (tap-select/swap and drag-and-drop) while a placement's score sequence is animating — mirrors HandView.SetInteractable, since a mid-animation Refresh() would otherwise pull the rug out from under a badge popup/pulse still in flight.</summary>

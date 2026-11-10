@@ -9437,3 +9437,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-10 — Fruit mûr sur l'étagère de choix
 - Sur l'étagère « Fertilizer Upgrade », un sac au stade Fruit (récolté à la fin de la prochaine manche) respire doucement (léger écrasement) et laisse monter de temps en temps un petit fruit et quelques grains de Pollen (`RipeFruitLoop`, `FeedbackLayer.SpawnRipePuff`). Aucune récolte réelle n'a lieu sur l'étagère : c'est un signal « mûr ». Mouvement réduit : immobile. Non vérifié dans Unity.
+
+## 2026-11-10 — Racines : visuels
+- Deux nouvelles icônes (`Design/Icons/generate_growth.py` → `Assets/Resources/Icons/Growth/Roots_Sap.png`, `Roots_Resonance.png`) : une goutte + flèche (sève) et deux anneaux liés (résonance).
+- Dans le panneau des fertilizers, une pastille est posée à l'endroit où les Racines agissent, dans l'espace entre deux sacs voisins (`ModifierPanelView.BuildRootLinks`) : goutte-flèche teintée par le stade du donneur (rose pour une Fleur, or pour un Fruit) quand celui de gauche nourrit celui de droite, anneaux liés quand les deux sont de la même catégorie ; les deux sur la même paire sont superposées verticalement. Elles respirent doucement (`GrowthGlowPulse`, immobiles en mouvement réduit). Survol ou appui : infobulle qui dit qui donne quoi et de combien. La pastille « +x » reste sur le sac receveur.
+- Les voisins sont ceux de la liste : dans la grille 2×2, la liaison entre le 2e et le 3e sac se place au centre de la grille. Non vérifié dans Unity.
