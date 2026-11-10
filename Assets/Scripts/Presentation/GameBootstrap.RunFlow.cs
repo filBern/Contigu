@@ -210,8 +210,18 @@ namespace Contigu.Presentation
         private IReadOnlyList<GrowthStep> _growthHold;
         private readonly HashSet<int> _growthReleased = new HashSet<int>();
 
+        private readonly List<GrowthStep> _harvestsToPlay = new List<GrowthStep>();
+
         private void BeginGrowthHold()
         {
+            _harvestsToPlay.Clear();
+            if (_run != null)
+            {
+                for (int i = 0; i < _run.LastGrowthSteps.Count; i++)
+                {
+                    if (_run.LastGrowthSteps[i].Harvested) { _harvestsToPlay.Add(_run.LastGrowthSteps[i]); }
+                }
+            }
             _growthReleased.Clear();
             _growthHold = _run != null && _run.LastGrowthSteps.Count > 0 ? new List<GrowthStep>(_run.LastGrowthSteps) : null;
         }
@@ -245,14 +255,54 @@ namespace Contigu.Presentation
             }
             _growthReleased.Add(index);
             _modifierPanelView.Refresh(_run.ActiveModifiers);
-            if (step.Harvested)
+        }
+
+        /// <summary>The shop opens and each harvested fertilizer's sack squashes, pops a fruit and scatters Pollen, one after the other (popup and status only with reduced motion).</summary>
+        private System.Collections.IEnumerator PlayShopHarvest()
+        {
+            var steps = new List<GrowthStep>(_harvestsToPlay);
+            _harvestsToPlay.Clear();
+            yield return null; // the shop (and the panel's layout) is up
+            var names = new List<string>();
+            for (int i = 0; i < steps.Count; i++)
             {
-                var anchor = _modifierPanelView.GetBadgeTransform(step.Id, index);
+                names.Add(ModifierCatalog.Get(steps[i].Id).Name);
+                var anchor = FindHarvestedBadge(steps[i].Id);
                 if (anchor != null)
                 {
+                    SfxManager.Play(SfxId.Harvest);
                     _feedbackLayer.SpawnPopup(anchor, "Harvest +" + FertilizerGrowth.HarvestPollen, UITheme.ScorePollen);
+                    if (!MotionSettings.Reduced)
+                    {
+                        _feedbackLayer.SpawnHarvestBurst(anchor.position, GrowthVisuals.StageSprite(GrowthStage.Fruit), VisualDefaults.PollenSprite);
+                        yield return SquashBadge(anchor);
+                    }
                 }
+                yield return new WaitForSeconds(MotionSettings.Reduced ? 0.1f : 0.25f);
             }
+            SetStatusText("Harvested: " + string.Join(", ", names) + " (+" + FertilizerGrowth.HarvestPollen * steps.Count + " Pollen).");
+        }
+
+        private RectTransform FindHarvestedBadge(ModifierId id)
+        {
+            return _modifierPanelView != null ? _modifierPanelView.GetBadgeTransform(id, 0) : null;
+        }
+
+        private static System.Collections.IEnumerator SquashBadge(RectTransform badge)
+        {
+            float t = 0f;
+            const float Duration = 0.45f;
+            while (t < Duration)
+            {
+                if (badge == null) { yield break; }
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / Duration);
+                // Crouch, spring up past its size, settle.
+                float s = p < 0.25f ? Mathf.Lerp(1f, 0.86f, p / 0.25f) : p < 0.6f ? Mathf.Lerp(0.86f, 1.18f, (p - 0.25f) / 0.35f) : Mathf.Lerp(1.18f, 1f, (p - 0.6f) / 0.4f);
+                badge.localScale = new Vector3(s, s, 1f);
+                yield return null;
+            }
+            if (badge != null) { badge.localScale = Vector3.one; }
         }
 
         private void OnGrowthFinished()
@@ -268,7 +318,11 @@ namespace Contigu.Presentation
 
         private void ShowRoundSummaryThenShop()
         {
-            _roundSummaryView.Show(_run.LastRoundSummary, () => _shopView.Show(_run));
+            _roundSummaryView.Show(_run.LastRoundSummary, () =>
+            {
+                _shopView.Show(_run);
+                if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
+            });
         }
 
         /// <summary>Saves the stats together with what is unlocked so far.</summary>

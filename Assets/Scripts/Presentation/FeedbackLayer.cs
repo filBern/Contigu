@@ -261,6 +261,51 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>
+        /// Harvest: a fruit pops up out of the spot and rises with a little overshoot, then fades, while Pollen grains and small fruits scatter
+        /// around it — all in place (nothing flies to a counter).
+        /// </summary>
+        public void SpawnHarvestBurst(Vector3 worldPosition, Sprite fruitSprite, Sprite grainSprite)
+        {
+            _root.SetAsLastSibling();
+            if (fruitSprite != null)
+            {
+                var fruit = UIFactory.CreatePanel(_root, "HarvestFruit", Color.white);
+                fruit.raycastTarget = false;
+                fruit.sprite = fruitSprite;
+                fruit.preserveAspect = true;
+                fruit.rectTransform.sizeDelta = new Vector2(64f, 64f);
+                fruit.rectTransform.position = worldPosition;
+                StartCoroutine(AnimateHarvestFruit(fruit, worldPosition));
+            }
+            SpawnFloatingPetals(worldPosition, grainSprite, 10, 14f, 24f, 0.9f, 260f);
+            SpawnFloatingPetals(worldPosition, fruitSprite, 4, 16f, 22f, 0.8f, 200f);
+        }
+
+        private IEnumerator AnimateHarvestFruit(Image fruit, Vector3 origin)
+        {
+            const float life = 1.1f;
+            float t = 0f;
+            while (t < life)
+            {
+                if (fruit == null)
+                {
+                    yield break;
+                }
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / life);
+                float pop = p < 0.2f ? Mathf.Lerp(0f, 1.4f, p / 0.2f) : Mathf.Lerp(1.4f, 1f, Mathf.Clamp01((p - 0.2f) / 0.2f));
+                fruit.rectTransform.localScale = Vector3.one * pop;
+                fruit.rectTransform.position = origin + new Vector3(0f, 90f * (1f - (1f - p) * (1f - p)), 0f);
+                fruit.color = new Color(1f, 1f, 1f, p < 0.6f ? 1f : 1f - (p - 0.6f) / 0.4f);
+                yield return null;
+            }
+            if (fruit != null)
+            {
+                Destroy(fruit.gameObject);
+            }
+        }
+
         private IEnumerator AnimateFloatingPetal(Image img, Vector3 velocity, float spin, float life)
         {
             float t = 0f;
