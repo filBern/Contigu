@@ -9384,3 +9384,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
   - **Équilibrage par simulation** : les remplacements changeaient fortement la difficulté (Summer et Greenhouse bien plus durs, Orchard bien plus facile). Les `EnemyHpMultiplier` ont été recalés (bot glouton, 400 à 600 runs, manches franchies en moyenne comme avant) : Winter 1,85→2,6, Summer 1,7→1,4, Autumn 1,5→1,7, Orchard 3,4→4,8, Greenhouse 1,55→1,25. Ces valeurs viennent d'un bot : à reprendre avec de vrais joueurs.
   - **Bug trouvé par la simulation** : avec plusieurs Thieves (Winter en a jusqu'à trois par manche) la main pouvait être vidée par les vols ; sans Shuffle restant pour rendre les graines, la run restait bloquée (`InProgress`, aucune pose possible), un état qui existait déjà en Endless. Un Thief ne prend désormais jamais la dernière graine de la main (`RunManager.CountSeedsInHand`, test `SeveralEnragedThieves_NeverEmptyTheHand`).
   - Reste à faire : un boss de finale propre à chaque challenge (pas fait : les swaps et l'ennemi résident suffisent pour l'instant).
+
+## 2026-11-10 — Fertilizer Upgrade : choix sur l'étagère de la boutique
+- Le choix « Fertilizer Upgrade » n'a plus son overlay propre (`ModifierUpgradeChoiceView`, supprimé) : les fertilizers possédés se posent sur l'étagère de la boutique comme tous les autres choix (`ShelfChoiceView`), avec le décor, les tablettes, Confirm sous l'étagère et Skip. Tooltip = description, sous-titre « Level N → N+1 ».
+- Présentation non vérifiée dans Unity (compilée par le CI seulement).

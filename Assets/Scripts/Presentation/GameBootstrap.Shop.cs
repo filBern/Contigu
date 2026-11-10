@@ -174,9 +174,7 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.ModifierUpgrade)
             {
-                // Like every other choice: the stall (backdrop, tablets) stays, the shelves step aside.
-                _shopView.SetSelectionMode(true);
-                _modifierUpgradeChoiceView.Show(_run.ActiveModifiers, index => _run.GetModifierLevel(index), pending);
+                ShowModifierUpgradeChoice(pending);
             }
             else
             {
@@ -310,6 +308,34 @@ namespace Contigu.Presentation
                 });
             }
             ShowShelfChoice(ShelfStage.ForWorkshop(pack), Loc.T("choice.sproutPackHint"), entries, true, OnPackOptionChosen, flyToSource: true);
+        }
+
+        /// <summary>Fertilizer Upgrade: the owned fertilizers stand on the shop's shelf like every other choice (pick one, then Confirm).</summary>
+        private void ShowModifierUpgradeChoice(UpgradeDefinition pending)
+        {
+            var entries = new List<ChoiceEntry>();
+            var ids = new List<ModifierId>(_run.ActiveModifiers);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var def = ModifierCatalog.Get(ids[i]);
+                int level = _run.GetModifierLevel(i);
+                entries.Add(new ChoiceEntry
+                {
+                    BuildVisual = (host, size) =>
+                    {
+                        var badge = ModifierBadgeFactory.Create(host, def, size, _tooltipView, showBackground: false, attachTooltip: false);
+                        badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                        badge.rectTransform.anchoredPosition = Vector2.zero;
+                    },
+                    Name = level > 1 ? def.Name + " (Lv " + level + ")" : def.Name,
+                    Body = DescriptionTextFormatter.Colorize(def.Description, 14),
+                    Subtitle = "Level " + level + " → " + (level + 1),
+                    FillCell = true
+                });
+            }
+            ShowShelfChoice(ShelfStage.ForUpgrade(pending, null), "Choose a fertilizer to upgrade", entries, true, OnModifierUpgradeChoiceConfirmed);
         }
 
         private void ShowPackOfModifiers(UpgradeDefinition pack)
@@ -608,7 +634,6 @@ namespace Contigu.Presentation
             _run.AbandonPending();
             _shelfChoiceView.Hide();
             _tileChoiceView.Hide();
-            _modifierUpgradeChoiceView.Hide();
             _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);

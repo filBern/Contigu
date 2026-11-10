@@ -80,7 +80,6 @@ namespace Contigu.Presentation
         private ShelfChoiceView _shelfChoiceView;
         private Button _abandonButton;
         private Text _abandonLabel;
-        private ModifierUpgradeChoiceView _modifierUpgradeChoiceView;
         private UpgradeRevealView _upgradeRevealView;
         private ModifierCarouselView _modifierCarouselView;
         private ShapeCarouselView _shapeCarouselView;
@@ -584,8 +583,6 @@ namespace Contigu.Presentation
             _abandonButton.onClick.AddListener(RequestAbandonPurchase);
             _abandonButton.gameObject.SetActive(false);
 
-            _modifierUpgradeChoiceView = gameObject.AddComponent<ModifierUpgradeChoiceView>();
-            _modifierUpgradeChoiceView.Build(mainRoot, _tooltipView);
 
             _upgradeRevealView = gameObject.AddComponent<UpgradeRevealView>();
             _upgradeRevealView.Build(mainRoot, _tooltipView);
@@ -702,7 +699,6 @@ namespace Contigu.Presentation
             _shopView.LeaveRequested += OnLeaveShopRequested;
             _tileChoiceView.TileChoiceConfirmed += OnTileChoiceConfirmed;
             _shopView.SeedBagRequested += () => _deckView.Show();
-            _modifierUpgradeChoiceView.ModifierUpgradeChoiceConfirmed += OnModifierUpgradeChoiceConfirmed;
             _endScreenView.RestartRequested += OnRestartRequested;
             _endScreenView.EndlessRequested += OnEndlessRequested;
             _challengeSelectView.ChallengeChosen += OnChallengeChosen;

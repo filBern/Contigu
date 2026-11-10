@@ -82,7 +82,7 @@ namespace Contigu.Core
         /// this picks a slot the player already owns — RunManager.ActiveModifiers
         /// itself is the full candidate list, so there's no Pending*Candidates
         /// list to populate, just RunManager.ResolveModifierUpgradeChoice(slotIndex)
-        /// once Presentation.ModifierUpgradeChoiceView shows the picker.
+        /// once the shop shelf (GameBootstrap.ShowModifierUpgradeChoice) shows the picker.
         /// Refused outright (see RunManager.BuyUpgradeSlot) if the player
         /// owns no modifiers yet.
         /// </summary>
