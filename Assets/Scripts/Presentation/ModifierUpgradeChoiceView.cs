@@ -21,6 +21,10 @@ namespace Contigu.Presentation
     {
         private const int Columns = 5;
         private const float CellSize = 100f;
+        // Each choice is a cream tray like the hand's slots (rounded, outlined), with the fertilizer's name under its sack.
+        private const float CellHeight = 124f;
+        private static readonly Color CellIdle = new Color(1f, 0.969f, 0.910f, 1f);
+        private static readonly Color CellSelected = new Color(1f, 0.89f, 0.58f, 1f);
         private const float CellSpacing = 10f;
         private const float TitleHeight = 40f;
         private const float ConfirmHeight = 46f;
@@ -73,7 +77,7 @@ namespace Contigu.Presentation
             _pickerContainer.anchorMax = new Vector2(0.5f, 1f);
             _pickerContainer.pivot = new Vector2(0.5f, 1f);
             var layout = _pickerContainer.gameObject.AddComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2(CellSize, CellSize);
+            layout.cellSize = new Vector2(CellSize, CellHeight);
             layout.spacing = new Vector2(CellSpacing, CellSpacing);
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -127,7 +131,7 @@ namespace Contigu.Presentation
             // guess" discipline as every other card+block layout in this
             // game (see PieceChoiceView/TileChoiceView.LayoutBlock).
             int rows = Mathf.CeilToInt(_candidateIds.Count / (float)Columns);
-            float pickerHeight = rows * CellSize + Mathf.Max(0, rows - 1) * CellSpacing;
+            float pickerHeight = rows * CellHeight + Mathf.Max(0, rows - 1) * CellSpacing;
 
             LayoutBlock(card.sizeDelta.y, pickerHeight);
 
@@ -155,16 +159,19 @@ namespace Contigu.Presentation
 
         private void BuildCell(int index, int level)
         {
-            var cell = UIFactory.CreatePanel(_pickerContainer, "ModifierCell_" + index, UITheme.ButtonIdle);
-            cell.rectTransform.sizeDelta = new Vector2(CellSize, CellSize);
+            var cell = UIFactory.CreateSlicedImage(_pickerContainer, "ModifierCell_" + index, UISprites.CardBackground);
+            cell.color = CellIdle;
+            UIFactory.AddThickOutline(cell, UITheme.Border, 2f);
+            cell.rectTransform.sizeDelta = new Vector2(CellSize, CellHeight);
             _cellBackgroundByIndex[index] = cell;
 
             const float badgeSize = 80f;
-            var badge = ModifierBadgeFactory.Create(cell.transform, ModifierCatalog.Get(_candidateIds[index]), badgeSize, _tooltip);
-            badge.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            badge.rectTransform.anchoredPosition = Vector2.zero;
+            var definition = ModifierCatalog.Get(_candidateIds[index]);
+            var badge = ModifierBadgeFactory.Create(cell.transform, definition, badgeSize, _tooltip);
+            badge.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            badge.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            badge.rectTransform.pivot = new Vector2(0.5f, 1f);
+            badge.rectTransform.anchoredPosition = new Vector2(0f, -8f);
             // Click handling lives on the BADGE's own Image (already a
             // raycast target, same GameObject ModifierBadgeFactory's own
             // tooltip hover component sits on) rather than the surrounding
@@ -181,15 +188,31 @@ namespace Contigu.Presentation
             cellBtn.targetGraphic = badge;
             cellBtn.onClick.AddListener(() => OnCellClicked(index));
 
+            // The fertilizer's name under the sack (the sack alone does not say which one it is).
+            var nameLabel = UIFactory.CreateText(cell.transform, "Name", definition.Name, 14, UITheme.TextPrimary);
+            nameLabel.raycastTarget = false;
+            nameLabel.resizeTextForBestFit = true;
+            nameLabel.resizeTextMinSize = 9;
+            nameLabel.resizeTextMaxSize = 14;
+            nameLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            nameLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+            nameLabel.rectTransform.pivot = new Vector2(0.5f, 0f);
+            nameLabel.rectTransform.anchoredPosition = new Vector2(0f, 4f);
+            nameLabel.rectTransform.sizeDelta = new Vector2(-8f, 30f);
+
             if (level > 1)
             {
-                var levelLabel = UIFactory.CreateText(cell.transform, "Level", "Lv" + level, 16, UITheme.TextPrimary);
+                // Level pill, top-right, like the fertilizer panel's.
+                var pill = UIFactory.CreatePanel(cell.transform, "LevelPill", UITheme.Success);
+                pill.raycastTarget = false;
+                UIFactory.AddThickOutline(pill, UITheme.Border, 1.5f);
+                pill.rectTransform.anchorMin = pill.rectTransform.anchorMax = new Vector2(1f, 1f);
+                pill.rectTransform.pivot = new Vector2(1f, 1f);
+                pill.rectTransform.anchoredPosition = new Vector2(-4f, -4f);
+                pill.rectTransform.sizeDelta = new Vector2(38f, 22f);
+                var levelLabel = UIFactory.CreateText(pill.transform, "Level", "Lv" + level, 14, UITheme.TextPrimary);
                 levelLabel.raycastTarget = false;
-                levelLabel.rectTransform.anchorMin = new Vector2(1f, 0f);
-                levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
-                levelLabel.rectTransform.pivot = new Vector2(1f, 0f);
-                levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f);
-                levelLabel.rectTransform.sizeDelta = new Vector2(40f, 20f);
+                UIFactory.StretchFull(levelLabel.rectTransform);
             }
         }
 
@@ -197,10 +220,10 @@ namespace Contigu.Presentation
         {
             if (_selectedIndex >= 0 && _cellBackgroundByIndex.TryGetValue(_selectedIndex, out var previous))
             {
-                previous.color = UITheme.ButtonIdle;
+                previous.color = CellIdle;
             }
             _selectedIndex = index;
-            _cellBackgroundByIndex[index].color = UITheme.ButtonSelected;
+            _cellBackgroundByIndex[index].color = CellSelected;
             RefreshConfirmInteractable();
         }
 
