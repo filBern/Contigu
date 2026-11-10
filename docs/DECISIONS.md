@@ -9431,3 +9431,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-10 — Maturation : animation de récolte dans la boutique
 - Quand on passe du résumé de manche à la boutique, chaque fertilizer récolté joue sa récolte sur son sac du panneau de gauche, l'un après l'autre : le sac s'écrase puis rebondit, un fruit en jaillit et monte en s'effaçant, des grains de Pollen et des petits fruits se dispersent autour, popup « Harvest +8 » (`FeedbackLayer.SpawnHarvestBurst`, `GameBootstrap.PlayShopHarvest`) et son de récolte. Tout reste sur place : rien ne vole vers le compteur de Pollen (décision de l'auteur pour les +Pollen). La popup de la colonne du résumé disparaît (le résumé garde son propre « +8 »).
 - Mouvement réduit : popup, son et ligne d'état seulement. Non vérifié dans Unity.
+
+## 2026-11-10 — Stades sur l'étagère « Fertilizer Upgrade »
+- Les sacs de l'étagère de choix montrent le stade comme sur le panneau de gauche : médaillon (Bourgeon / Fleur / Fruit) en bas à gauche, halo doré qui respire pour un Fruit, et la ligne de croissance dans l'infobulle (stade, progression, récoltes). Le code du médaillon et de la ligne d'infobulle est partagé (`GrowthVisuals.AttachStage`, `GrowthVisuals.TooltipLine`). Non vérifié dans Unity.

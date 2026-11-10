@@ -392,7 +392,7 @@ namespace Contigu.Presentation
                 if (GrowthProvider != null)
                 {
                     var baseGrowthState = rowLevelState;
-                    string growthLine = GrowthTooltipLine(growth, harvests);
+                    string growthLine = GrowthVisuals.TooltipLine(growth, harvests);
                     rowLevelState = rowId => growthLine + (baseGrowthState != null ? "\n" + baseGrowthState(rowId) : string.Empty);
                 }
                 float sap = SapProvider != null ? SapProvider(i) : 0f;
@@ -497,7 +497,7 @@ namespace Contigu.Presentation
 
                 if (GrowthProvider != null)
                 {
-                    BuildStageMedallion(badge, growth);
+                    GrowthVisuals.AttachStage(badge, growth, StageMedallionSize, 150f);
                 }
                 if (rootsBonus > 0f)
                 {
@@ -518,57 +518,6 @@ namespace Contigu.Presentation
                 // same forwarding pattern as HandSlotDragHandler.
                 var dragHandler = badge.gameObject.AddComponent<ModifierBadgeDragHandler>();
                 dragHandler.Init(this, i);
-            }
-        }
-
-        private static string GrowthTooltipLine(int growth, int harvests)
-        {
-            var stage = FertilizerGrowth.StageOf(growth);
-            string line;
-            switch (stage)
-            {
-                case GrowthStage.Fruit:
-                    line = "FRUIT: +" + FertilizerGrowth.FruitBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect, harvested at the end of the round (+" + FertilizerGrowth.HarvestPollen + " Pollen).";
-                    break;
-                case GrowthStage.Bloom:
-                    line = "Bloom: +" + FertilizerGrowth.BloomBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
-                    break;
-                default:
-                    line = "Bud. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
-                    break;
-            }
-            if (harvests > 0)
-            {
-                line += "\nHarvested x" + harvests + ": +" + (harvests * FertilizerGrowth.BonusPerHarvest).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect for good.";
-            }
-            return line;
-        }
-
-        /// <summary>The stage medallion (sprout / flower / fruit) at the foot of a badge; a Fruit also glows behind the sack. The progression itself plays on the round summary.</summary>
-        private static void BuildStageMedallion(Image badge, int growth)
-        {
-            var stage = FertilizerGrowth.StageOf(growth);
-            var medallion = UIFactory.CreatePanel(badge.transform, "StageMedallion", Color.white);
-            medallion.raycastTarget = false;
-            medallion.preserveAspect = true;
-            medallion.sprite = GrowthVisuals.StageSprite(stage);
-            medallion.enabled = medallion.sprite != null;
-            medallion.rectTransform.anchorMin = medallion.rectTransform.anchorMax = new Vector2(0f, 0f);
-            medallion.rectTransform.pivot = new Vector2(0f, 0f);
-            medallion.rectTransform.anchoredPosition = new Vector2(1f, 1f);
-            medallion.rectTransform.sizeDelta = new Vector2(StageMedallionSize, StageMedallionSize);
-            if (stage == GrowthStage.Fruit)
-            {
-                var glow = UIFactory.CreatePanel(badge.transform, "FruitGlow", new Color(1f, 1f, 1f, 0.8f));
-                glow.raycastTarget = false;
-                glow.sprite = GrowthVisuals.FruitGlow;
-                glow.enabled = glow.sprite != null;
-                glow.rectTransform.anchorMin = glow.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                glow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                glow.rectTransform.anchoredPosition = Vector2.zero;
-                glow.rectTransform.sizeDelta = new Vector2(150f, 150f);
-                glow.transform.SetAsFirstSibling();
-                glow.gameObject.AddComponent<GrowthGlowPulse>();
             }
         }
 

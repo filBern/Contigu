@@ -319,6 +319,8 @@ namespace Contigu.Presentation
             {
                 var def = ModifierCatalog.Get(ids[i]);
                 int level = _run.GetModifierLevel(i);
+                int growth = _run.GetModifierGrowth(i);
+                int harvests = _run.GetModifierHarvests(i);
                 entries.Add(new ChoiceEntry
                 {
                     BuildVisual = (host, size) =>
@@ -328,6 +330,8 @@ namespace Contigu.Presentation
                         badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                         badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                         badge.rectTransform.anchoredPosition = Vector2.zero;
+                        // Its stage (Bud / Bloom / Fruit) and, for a Fruit, its halo: the same look as on the panel.
+                        GrowthVisuals.AttachStage(badge, growth, size * 0.36f, size * 1.7f);
                         if (level > 1)
                         {
                             // Same level pill as the fertilizer panel (bottom-right), scaled to the sack.
@@ -344,7 +348,7 @@ namespace Contigu.Presentation
                         }
                     },
                     Name = level > 1 ? def.Name + " (Lv " + level + ")" : def.Name,
-                    Body = DescriptionTextFormatter.Colorize(def.Description, 14),
+                    Body = DescriptionTextFormatter.Colorize(def.Description, 14) + "\n" + GrowthVisuals.TooltipLine(growth, harvests),
                     Subtitle = "Level " + level + " → " + (level + 1),
                     FillCell = true
                 });
