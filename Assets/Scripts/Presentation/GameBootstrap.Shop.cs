@@ -328,6 +328,20 @@ namespace Contigu.Presentation
                         badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                         badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                         badge.rectTransform.anchoredPosition = Vector2.zero;
+                        if (level > 1)
+                        {
+                            // Same level pill as the fertilizer panel (bottom-right), scaled to the sack.
+                            float pill = size * 0.4f;
+                            var levelBg = UIFactory.CreatePanel(badge.transform, "LevelBg", UITheme.Success);
+                            levelBg.raycastTarget = false;
+                            levelBg.rectTransform.anchorMin = levelBg.rectTransform.anchorMax = new Vector2(1f, 0f);
+                            levelBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                            levelBg.rectTransform.anchoredPosition = new Vector2(-pill * 0.45f, pill * 0.45f);
+                            levelBg.rectTransform.sizeDelta = new Vector2(pill, pill);
+                            var levelLabel = UIFactory.CreateText(levelBg.transform, "Level", "Lv" + level, Mathf.RoundToInt(pill * 0.5f), UITheme.TextPrimary);
+                            levelLabel.raycastTarget = false;
+                            UIFactory.StretchFull(levelLabel.rectTransform);
+                        }
                     },
                     Name = level > 1 ? def.Name + " (Lv " + level + ")" : def.Name,
                     Body = DescriptionTextFormatter.Colorize(def.Description, 14),
