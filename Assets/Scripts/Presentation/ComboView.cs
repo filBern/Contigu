@@ -143,7 +143,7 @@ namespace Contigu.Presentation
         public void SetRound(int roundNumber, int roundCount, Color accent)
         {
             _banner.color = accent;
-            _bannerText.text = roundCount > 0 ? "ROUND " + roundNumber + " / " + roundCount : "ROUND " + roundNumber;
+            _bannerText.text = roundCount > 0 ? "ROUND " + roundNumber + " / " + roundCount : "ROUND " + roundNumber + " - ENDLESS";
         }
 
         /// <summary>

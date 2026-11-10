@@ -187,14 +187,16 @@ namespace Contigu.Presentation
 
             _roundChipLabel = UIFactory.CreateText(chip.transform, "RoundChipLabel", "Round " + _roundNumber + "/" + _roundCount, 24, UITheme.TextPrimary);
             UIFactory.StretchFull(_roundChipLabel.rectTransform);
+            // The round now sits in the banner of the left column's score card: no second readout up here (the label stays, hidden, so SetRound keeps working).
+            chip.gameObject.SetActive(false);
 
-            // This round's weather, right of the round chip; hover for what it does.
+            // This round's weather, in the top-left corner; hover for what it does.
             var weatherChip = UIFactory.CreatePanel(parent, "WeatherChip", UITheme.PanelLight);
             UIFactory.AddThickOutline(weatherChip, UITheme.Border);
             weatherChip.rectTransform.anchorMin = new Vector2(0f, 1f);
             weatherChip.rectTransform.anchorMax = new Vector2(0f, 1f);
             weatherChip.rectTransform.pivot = new Vector2(0f, 1f);
-            weatherChip.rectTransform.anchoredPosition = new Vector2(174f, -16f);
+            weatherChip.rectTransform.anchoredPosition = new Vector2(16f, -16f);
             weatherChip.rectTransform.sizeDelta = new Vector2(40f, 40f);
             _weatherChipIcon = UIFactory.CreatePanel(weatherChip.transform, "WeatherIcon", Color.white);
             _weatherChipIcon.preserveAspect = true;
