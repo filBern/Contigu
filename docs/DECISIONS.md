@@ -9434,3 +9434,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-10 — Stades sur l'étagère « Fertilizer Upgrade »
 - Les sacs de l'étagère de choix montrent le stade comme sur le panneau de gauche : médaillon (Bourgeon / Fleur / Fruit) en bas à gauche, halo doré qui respire pour un Fruit, et la ligne de croissance dans l'infobulle (stade, progression, récoltes). Le code du médaillon et de la ligne d'infobulle est partagé (`GrowthVisuals.AttachStage`, `GrowthVisuals.TooltipLine`). Non vérifié dans Unity.
+
+## 2026-11-10 — Fruit mûr sur l'étagère de choix
+- Sur l'étagère « Fertilizer Upgrade », un sac au stade Fruit (récolté à la fin de la prochaine manche) respire doucement (léger écrasement) et laisse monter de temps en temps un petit fruit et quelques grains de Pollen (`RipeFruitLoop`, `FeedbackLayer.SpawnRipePuff`). Aucune récolte réelle n'a lieu sur l'étagère : c'est un signal « mûr ». Mouvement réduit : immobile. Non vérifié dans Unity.

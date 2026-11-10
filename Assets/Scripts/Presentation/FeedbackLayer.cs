@@ -282,9 +282,25 @@ namespace Contigu.Presentation
             SpawnFloatingPetals(worldPosition, fruitSprite, 4, 16f, 22f, 0.8f, 200f);
         }
 
-        private IEnumerator AnimateHarvestFruit(Image fruit, Vector3 origin)
+        /// <summary>A small fruit and a few Pollen grains rising from a ripe Fruit's sack (the idle loop on the choice shelf).</summary>
+        public void SpawnRipePuff(Vector3 worldPosition, Sprite fruitSprite, Sprite grainSprite)
         {
-            const float life = 1.1f;
+            _root.SetAsLastSibling();
+            if (fruitSprite != null)
+            {
+                var fruit = UIFactory.CreatePanel(_root, "RipeFruit", Color.white);
+                fruit.raycastTarget = false;
+                fruit.sprite = fruitSprite;
+                fruit.preserveAspect = true;
+                fruit.rectTransform.sizeDelta = new Vector2(40f, 40f);
+                fruit.rectTransform.position = worldPosition;
+                StartCoroutine(AnimateHarvestFruit(fruit, worldPosition, 0.9f, 60f));
+            }
+            SpawnFloatingPetals(worldPosition, grainSprite, 4, 10f, 16f, 0.7f, 120f);
+        }
+
+        private IEnumerator AnimateHarvestFruit(Image fruit, Vector3 origin, float life = 1.1f, float rise = 90f)
+        {
             float t = 0f;
             while (t < life)
             {
@@ -296,7 +312,7 @@ namespace Contigu.Presentation
                 float p = Mathf.Clamp01(t / life);
                 float pop = p < 0.2f ? Mathf.Lerp(0f, 1.4f, p / 0.2f) : Mathf.Lerp(1.4f, 1f, Mathf.Clamp01((p - 0.2f) / 0.2f));
                 fruit.rectTransform.localScale = Vector3.one * pop;
-                fruit.rectTransform.position = origin + new Vector3(0f, 90f * (1f - (1f - p) * (1f - p)), 0f);
+                fruit.rectTransform.position = origin + new Vector3(0f, rise * (1f - (1f - p) * (1f - p)), 0f);
                 fruit.color = new Color(1f, 1f, 1f, p < 0.6f ? 1f : 1f - (p - 0.6f) / 0.4f);
                 yield return null;
             }

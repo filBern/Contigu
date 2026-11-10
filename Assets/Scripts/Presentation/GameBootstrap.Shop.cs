@@ -332,6 +332,12 @@ namespace Contigu.Presentation
                         badge.rectTransform.anchoredPosition = Vector2.zero;
                         // Its stage (Bud / Bloom / Fruit) and, for a Fruit, its halo: the same look as on the panel.
                         GrowthVisuals.AttachStage(badge, growth, size * 0.36f, size * 1.7f);
+                        if (FertilizerGrowth.StageOf(growth) == GrowthStage.Fruit)
+                        {
+                            // A ripe Fruit (harvested at the end of the next round) breathes and lets a small fruit rise from time to time.
+                            var ripe = badge.gameObject.AddComponent<RipeFruitLoop>();
+                            ripe.Puff = at => _feedbackLayer.SpawnRipePuff(at, GrowthVisuals.StageSprite(GrowthStage.Fruit), VisualDefaults.PollenSprite);
+                        }
                         if (level > 1)
                         {
                             // Same level pill as the fertilizer panel (bottom-right), scaled to the sack.
