@@ -48,6 +48,11 @@ namespace Contigu.Presentation
             public Text Label;
             public HoverTooltip MedallionTip;
             public CanvasGroup SackFade;
+            // Roots: the links between this fertilizer and the one on its right (sap: it feeds it while a Bloom/Fruit; resonance: same category).
+            public Image SapChip;
+            public HoverTooltip SapTip;
+            public string Giver;
+            public string Receiver;
         }
         private TooltipView _tooltip;
         private readonly List<GardenCell> _gardenCells = new List<GardenCell>();
@@ -243,10 +248,16 @@ namespace Contigu.Presentation
                 cell.Label.rectTransform.anchoredPosition = new Vector2(0f, 0f);
                 cell.Label.rectTransform.sizeDelta = new Vector2(0f, 20f);
 
+                cell.Giver = ModifierCatalog.Get(step.Id).Name;
                 _gardenCells.Add(cell);
                 // Starting point: the state before the round.
                 ShowGrowth(cell, step.Before, step.Scored || step.Harvested ? 1f : 0.6f);
                 cell.Label.text = "";
+            }
+            BuildRootLinks(steps, cellWidth, startX);
+            for (int i = 0; i < _gardenCells.Count; i++)
+            {
+                UpdateSapChip(_gardenCells[i], _gardenCells[i].Step.Before);
             }
             if (MotionSettings.Reduced)
             {
@@ -259,6 +270,69 @@ namespace Contigu.Presentation
             else
             {
                 _growthPlay = StartCoroutine(PlayGrowth());
+            }
+        }
+
+        private static readonly Color SapBloomTint = new Color(1f, 0.72f, 0.84f, 1f);
+        private static readonly Color SapFruitTint = new Color(1f, 0.88f, 0.42f, 1f);
+
+        /// <summary>Roots between neighboring columns: a resonance chip (same category, always there) and a sap chip (shown while the left one is a Bloom or a Fruit).</summary>
+        private void BuildRootLinks(List<GrowthStep> steps, float cellWidth, float startX)
+        {
+            for (int i = 0; i < steps.Count - 1; i++)
+            {
+                var cell = _gardenCells[i];
+                cell.Receiver = ModifierCatalog.Get(steps[i + 1].Id).Name;
+                bool resonate = ModifierCatalog.Get(steps[i].Id).Category == ModifierCatalog.Get(steps[i + 1].Id).Category;
+                float x = startX + (i + 0.5f) * cellWidth;
+                const float SackCenterY = 14f; // the sack's centre, in the garden's own coordinates
+                float offset = resonate ? 16f : 0f;
+                cell.SapChip = MakeChip("Sap", "Icons/Growth/Roots_Sap", new Vector2(x, SackCenterY + offset), "Sap", out cell.SapTip);
+                if (resonate)
+                {
+                    HoverTooltip tip;
+                    MakeChip("Resonance", "Icons/Growth/Roots_Resonance", new Vector2(x, SackCenterY - offset), "Resonance", out tip);
+                    if (tip != null)
+                    {
+                        tip.Init(_tooltip, "Resonance", cell.Giver + " and " + cell.Receiver + " are of the same kind: each gets +" + FertilizerGrowth.ResonancePerNeighbor.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.");
+                    }
+                }
+            }
+        }
+
+        private Image MakeChip(string name, string spritePath, Vector2 position, string title, out HoverTooltip tip)
+        {
+            var chip = UIFactory.CreatePanel(_garden, "Root" + name, Color.white);
+            chip.sprite = Resources.Load<Sprite>(spritePath);
+            chip.enabled = chip.sprite != null;
+            chip.preserveAspect = true;
+            chip.raycastTarget = _tooltip != null;
+            chip.rectTransform.anchorMin = chip.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            chip.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            chip.rectTransform.anchoredPosition = position;
+            chip.rectTransform.sizeDelta = new Vector2(30f, 30f);
+            tip = _tooltip != null ? chip.gameObject.AddComponent<HoverTooltip>() : null;
+            return chip;
+        }
+
+        /// <summary>The sap chip shows (tinted by the giver's stage) while the fertilizer on its left is a Bloom or a Fruit; hidden otherwise.</summary>
+        private void UpdateSapChip(GardenCell cell, int growth)
+        {
+            if (cell.SapChip == null)
+            {
+                return;
+            }
+            var stage = FertilizerGrowth.StageOf(growth);
+            bool visible = stage != GrowthStage.Bud;
+            cell.SapChip.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                return;
+            }
+            cell.SapChip.color = stage == GrowthStage.Fruit ? SapFruitTint : SapBloomTint;
+            if (cell.SapTip != null)
+            {
+                cell.SapTip.Init(_tooltip, "Sap", cell.Giver + " is a " + (stage == GrowthStage.Fruit ? "Fruit" : "Bloom") + ": its sap feeds " + cell.Receiver + " on its right, +" + FertilizerGrowth.SapFrom(growth).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.");
             }
         }
 
@@ -280,6 +354,7 @@ namespace Contigu.Presentation
             {
                 cell.Pips[p].color = p < growth ? PipColorFor(growth) : PipEmpty;
             }
+            UpdateSapChip(cell, growth);
             // Dimmed through a CanvasGroup: the badge's own Image color is transparent (no background), writing alpha on it would paint it black.
             cell.SackFade.alpha = alpha;
         }
@@ -324,6 +399,7 @@ namespace Contigu.Presentation
                     ShowGrowth(cell, 0, 1f);
                     cell.Label.text = FinalLabel(step);
                     RaiseStepPlayed(i, step);
+                    if (cell.SapChip != null) { StartCoroutine(PopRect(cell.SapChip.rectTransform, 1.4f, 0.25f)); }
                     yield return SwapMedallion(cell, before, after, PipFruit);
                 }
                 else
@@ -337,6 +413,7 @@ namespace Contigu.Presentation
                     if (before != after)
                     {
                         SfxManager.Play(SfxId.RoundClear);
+                        if (cell.SapChip != null && cell.SapChip.gameObject.activeSelf) { StartCoroutine(PopRect(cell.SapChip.rectTransform, 1.6f, 0.3f)); }
                         yield return SwapMedallion(cell, before, after, PipColorFor(step.After));
                     }
                     else
