@@ -9403,3 +9403,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Ces bonus s'ajoutent au facteur d'effet avec le niveau, le stade et les récoltes (`RunManager.GetModifierTotalBonus`). `DebugDisableRoots` neutralise les racines pour les tests qui lisent les chiffres propres d'un fertilizer.
 - Présentation (non vérifiée dans Unity) : pastille « +x » brune en haut à droite du sac, détail dans l'infobulle. Les voisins sont ceux de la liste (la grille 2×2 du panneau passe à la ligne : 2 et 3 sont voisins).
 - À faire : recalibrer l'équilibre au simulateur (le bot range ses fertilizers dans l'ordre d'achat, ce qui sous-estime B).
+
+## 2026-11-10 — Maturation : visuels des stades
+- Trois médaillons (Bourgeon vert/pousse, Fleur rose/fleur, Fruit or/fruit rouge) et un halo doré, générés par `Design/Icons/generate_growth.py` (SVG dans `Design/Icons/growth`, PNG 256 px rendus avec Playwright dans `Assets/Resources/Icons/Growth`).
+- Sur chaque sac : médaillon du stade en bas à gauche, bande de croissance à 3 segments à sa droite ; un Fruit a en plus un halo doré qui respire derrière le sac (`GrowthGlowPulse`, immobile en mouvement réduit). Récolte : popup « Harvest +8 » sur le sac et ligne d'état à l'ouverture de la boutique.
+- Non vérifié dans Unity (compilé par le CI seulement).

@@ -44,6 +44,25 @@ namespace Contigu.Presentation
                         }
                         SetStatusText("Withered away: " + string.Join(", ", names) + (sprouts.Count > 0 ? ". Sprouted: " + string.Join(", ", sprouts) + "." : "."));
                     }
+                    if (_run.LastHarvestedModifiers.Count > 0)
+                    {
+                        // Maturation: a Fruit was harvested at the end of the round; its sack pops "Harvest" and the status says which.
+                        _modifierPanelView.Refresh(_run.ActiveModifiers);
+                        var harvested = new List<string>();
+                        for (int i = 0; i < _run.LastHarvestedModifiers.Count; i++)
+                        {
+                            harvested.Add(ModifierCatalog.Get(_run.LastHarvestedModifiers[i]).Name);
+                            var anchor = _modifierPanelView.GetBadgeTransform(_run.LastHarvestedModifiers[i], i);
+                            if (anchor != null)
+                            {
+                                _feedbackLayer.SpawnPopup(anchor, "Harvest +" + FertilizerGrowth.HarvestPollen, UITheme.ScorePollen);
+                            }
+                        }
+                        if (_run.LastWitheredModifiers.Count == 0)
+                        {
+                            SetStatusText("Harvested: " + string.Join(", ", harvested) + " (+" + FertilizerGrowth.HarvestPollen * harvested.Count + " Pollen).");
+                        }
+                    }
                     if (_run.LastRoundEndLueurBonus > 0)
                     {
                         StartCoroutine(PlayRoundEndLueurBonusSequence());
