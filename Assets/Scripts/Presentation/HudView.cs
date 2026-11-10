@@ -30,7 +30,6 @@ namespace Contigu.Presentation
         // keeps showing during an encounter (when _isEncounterMode hides the score bar entirely).
         private Text _roundChipLabel;
         private Image _weatherChipIcon;
-        private HoverTooltip _weatherChipTooltip;
         // Defaults match round 1 so the first SetScores call (before Refresh's own SetRound runs) never shows a stale 0/0.
         private int _roundNumber = 1;
         private int _roundCount = RunConfig.RoundCount;
@@ -208,7 +207,7 @@ namespace Contigu.Presentation
             WeatherCard = card.rectTransform;
             card.rectTransform.anchorMin = card.rectTransform.anchorMax = card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             card.rectTransform.sizeDelta = new Vector2(280f, WeatherCardHeight);
-            _weatherChipTooltip = card.gameObject.AddComponent<HoverTooltip>();
+            // No tooltip: the card already says everything the tooltip used to.
 
             // The icon in a dark rounded frame on the left (this frame is what pulses when the weather's effect triggers).
             var frame = UIFactory.CreateSlicedImage(card.transform, "WeatherIconFrame", UISprites.CardBackground);
@@ -312,7 +311,6 @@ namespace Contigu.Presentation
             _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
             _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.Colorize(weatherDescription, 13);
             _weatherCardImage.color = weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
-            _weatherChipTooltip.Init(_tooltip, weatherName, weatherDescription, "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
         }
 
         /// <summary>
