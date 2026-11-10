@@ -252,6 +252,12 @@ namespace Contigu.Presentation
         private static readonly Color WeatherCalmTint = new Color(1f, 0.969f, 0.910f, 1f);
         private static readonly Color WeatherHarshTint = new Color(1f, 0.84f, 0.78f, 1f);
         private static readonly Color WeatherGoodTint = new Color(0.86f, 0.96f, 0.84f, 1f);
+        /// <summary>The tint of a weather card: neutral for clear skies, red-ish for a harsh weather, green-ish for the others (shared with the shop's "Coming up" box).</summary>
+        internal static Color WeatherTint(WeatherId weather)
+        {
+            return weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
+        }
+
         private Image _weatherCardImage;
         private Text _weatherNameLabel;
         private Text _weatherEffectLabel;
@@ -310,7 +316,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.supportRichText = true;
             _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
             _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.Colorize(weatherDescription, 13);
-            _weatherCardImage.color = weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
+            _weatherCardImage.color = WeatherTint(weather);
         }
 
         /// <summary>

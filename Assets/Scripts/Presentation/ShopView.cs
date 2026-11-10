@@ -131,9 +131,10 @@ namespace Contigu.Presentation
         private Text _upcomingRoundLabel;
         private RectTransform _weatherRow;
         private Image _weatherIcon;
-        private Text _weatherLabel;
-        private HoverTooltip _weatherTooltip;
-        private const float WeatherRowHeight = 44f;
+        private Image _weatherCardImage;
+        private Text _weatherNameLabel;
+        private Text _weatherEffectLabel;
+        private const float WeatherRowHeight = 84f;
         private GridLayoutGroup _upcomingEncounterGrid;
         private RectTransform _blisterCardsContainer;
         /// <summary>Fires when the player asks to see their seed bag from the shop.</summary>
@@ -265,29 +266,52 @@ namespace Contigu.Presentation
             _upcomingEncounterGrid.childAlignment = TextAnchor.UpperCenter;
             _upcomingEncounterGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 
-            // Next round's weather, at the bottom of the box; hover for what it does.
-            _weatherRow = UIFactory.CreateUIObject("WeatherRow", _upcomingEncounterBox);
+            // Next round's weather, at the bottom of the box, as the same card as on the board: icon, name and what it does (no tooltip needed).
+            var weatherCard = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "WeatherRow", UISprites.CardBackground);
+            _weatherCardImage = weatherCard;
+            weatherCard.raycastTarget = false;
+            UIFactory.AddThickOutline(weatherCard, UITheme.Border, 2f);
+            _weatherRow = weatherCard.rectTransform;
             _weatherRow.anchorMin = new Vector2(0.5f, 0f);
             _weatherRow.anchorMax = new Vector2(0.5f, 0f);
             _weatherRow.pivot = new Vector2(0.5f, 0f);
             _weatherRow.anchoredPosition = new Vector2(0f, UpcomingBoxBottomPadding);
             _weatherRow.sizeDelta = new Vector2(UpcomingSlotWidth, WeatherRowHeight);
-            var weatherHit = _weatherRow.gameObject.AddComponent<Image>();
-            weatherHit.color = new Color(0f, 0f, 0f, 0.07f);
-            _weatherTooltip = _weatherRow.gameObject.AddComponent<HoverTooltip>();
-            _weatherIcon = UIFactory.CreatePanel(_weatherRow, "WeatherIcon", Color.white);
+            var weatherFrame = UIFactory.CreateSlicedImage(_weatherRow, "WeatherIconFrame", UISprites.CardBackground);
+            weatherFrame.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            weatherFrame.raycastTarget = false;
+            UIFactory.AddThickOutline(weatherFrame, UITheme.Border, 2f);
+            weatherFrame.rectTransform.anchorMin = weatherFrame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            weatherFrame.rectTransform.pivot = new Vector2(0f, 0.5f);
+            weatherFrame.rectTransform.anchoredPosition = new Vector2(8f, 0f);
+            weatherFrame.rectTransform.sizeDelta = new Vector2(56f, 56f);
+            _weatherIcon = UIFactory.CreatePanel(weatherFrame.transform, "WeatherIcon", Color.white);
             _weatherIcon.raycastTarget = false;
             _weatherIcon.preserveAspect = true;
-            _weatherIcon.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            _weatherIcon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-            _weatherIcon.rectTransform.pivot = new Vector2(0f, 0.5f);
-            _weatherIcon.rectTransform.anchoredPosition = new Vector2(8f, 0f);
-            _weatherIcon.rectTransform.sizeDelta = new Vector2(36f, 36f);
-            _weatherLabel = UIFactory.CreateText(_weatherRow, "WeatherLabel", "", 16, UITheme.TextPrimary, TextAnchor.MiddleLeft);
-            _weatherLabel.raycastTarget = false;
-            UIFactory.StretchFull(_weatherLabel.rectTransform);
-            _weatherLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
-            _weatherLabel.rectTransform.offsetMax = new Vector2(-6f, 0f);
+            UIFactory.StretchFull(_weatherIcon.rectTransform);
+            _weatherIcon.rectTransform.offsetMin = new Vector2(4f, 4f);
+            _weatherIcon.rectTransform.offsetMax = new Vector2(-4f, -4f);
+            _weatherNameLabel = UIFactory.CreateText(_weatherRow, "WeatherName", "", 17, UITheme.TextPrimary, TextAnchor.MiddleLeft);
+            _weatherNameLabel.raycastTarget = false;
+            _weatherNameLabel.supportRichText = true;
+            _weatherNameLabel.resizeTextForBestFit = true;
+            _weatherNameLabel.resizeTextMinSize = 11;
+            _weatherNameLabel.resizeTextMaxSize = 17;
+            _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            _weatherNameLabel.rectTransform.offsetMin = new Vector2(72f, -28f);
+            _weatherNameLabel.rectTransform.offsetMax = new Vector2(-6f, -4f);
+            _weatherEffectLabel = UIFactory.CreateText(_weatherRow, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
+            _weatherEffectLabel.raycastTarget = false;
+            _weatherEffectLabel.supportRichText = true;
+            _weatherEffectLabel.resizeTextForBestFit = true;
+            _weatherEffectLabel.resizeTextMinSize = 9;
+            _weatherEffectLabel.resizeTextMaxSize = 12;
+            _weatherEffectLabel.rectTransform.anchorMin = Vector2.zero;
+            _weatherEffectLabel.rectTransform.anchorMax = Vector2.one;
+            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(72f, 4f);
+            _weatherEffectLabel.rectTransform.offsetMax = new Vector2(-6f, -28f);
 
             _blisterPlaque = BuildSectionPlaque("BlisterPlaque", Loc.T("shop.blister"));
 
@@ -894,8 +918,12 @@ namespace Contigu.Presentation
             {
                 _weatherIcon.sprite = VisualDefaults.GetWeatherSprite(nextWeather.Value);
                 _weatherIcon.enabled = _weatherIcon.sprite != null;
-                _weatherLabel.text = DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor));
-                _weatherTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(nextWeather.Value, run.NextWeatherColor), VisualDefaults.GetWeatherDescription(nextWeather.Value, run.NextWeatherColor, run.WeatherIntensity), "Next round's weather · " + WeatherCatalog.GetRarityLabel(nextWeather.Value), UITheme.TextMuted);
+                var weatherId = nextWeather.Value;
+                _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(weatherId, run.NextWeatherColor));
+                _weatherEffectLabel.text = weatherId == WeatherId.Clear
+                    ? "Nothing to plan around."
+                    : DescriptionTextFormatter.Colorize(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12);
+                _weatherCardImage.color = HudView.WeatherTint(weatherId);
             }
 
             int count = upcoming.Count;
