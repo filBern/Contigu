@@ -9388,3 +9388,11 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-10 — Fertilizer Upgrade : choix sur l'étagère de la boutique
 - Le choix « Fertilizer Upgrade » n'a plus son overlay propre (`ModifierUpgradeChoiceView`, supprimé) : les fertilizers possédés se posent sur l'étagère de la boutique comme tous les autres choix (`ShelfChoiceView`), avec le décor, les tablettes, Confirm sous l'étagère et Skip. Tooltip = description, sous-titre « Level N → N+1 ».
 - Présentation non vérifiée dans Unity (compilée par le CI seulement).
+
+## 2026-11-10 — Fertilizers : Maturation (A)
+- **Idée** : des fertilizers « en profondeur » sans copier les éditions de Balatro (foil/holo/negative) : un fertilizer **grandit** (Bourgeon → Fleur → Fruit) et se **récolte**. B (Racines : ordre et voisinage) viendra dans un second temps.
+- **Règles** : un fertilizer gagne un cran à la fin de chaque manche gagnée où il a marqué au moins une fois (évènement de score rattaché à son slot). Crans : Fleur dès 2 (+0,25 d'effet), Fruit dès 3 (+0,5). À la fin de la manche suivante où il est Fruit, il est **récolté** : +8 Pollen, retour au Bourgeon, +0,10 d'effet **permanent** (cumulable **sans plafond**, décision de l'auteur), et son âge de flétrissement (Autumn) est remis à zéro. Cycle de 4 manches.
+- **Chiffres** : facteur d'effet = 1 + 0,5 × (niveau − 1) + bonus de stade + 0,10 × récoltes (`FertilizerGrowth`, `RunManager.GetModifierLevelFactor`, `GridManager` via `modifierBonuses`).
+- Le compteur suit le fertilizer (échange, déplacement) ; vendu/remplacé = remis à zéro. Sauvegarde : lignes `growth` et `harvests` du snapshot (tolérant à leur absence, sans changer la version).
+- **Présentation** (non vérifiée dans Unity) : bande de croissance à 3 segments au pied de chaque sac, toujours visible (vert/rose/or), ligne dans l'infobulle. Le Pollen de récolte apparaît dans le résumé de manche (sources de fertilizers).
+- À faire : recalibrer l'équilibre au simulateur (le bot range ses fertilizers dans l'ordre d'achat), puis B.

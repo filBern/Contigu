@@ -14,6 +14,8 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 
 ## Fertilizers (modificateurs)
 
+- **Maturation** : un fertilizer qui a marqué pendant une manche gagnée gagne un cran. Bourgeon (0-1), Fleur (2, +0,25 d'effet), Fruit (3, +0,5). Un Fruit est **récolté** à la fin de la manche : +8 Pollen, retour au Bourgeon, +0,10 d'effet définitif par récolte, sans plafond. Bande de croissance sous le sac.
+
 | Code | Affiché | Groupe interne |
 |---|---|---|
 | `Prisme` | Prism | Couleurs |

@@ -68,6 +68,8 @@ namespace Contigu.Core
             s.Modifiers.AddRange(_activeModifiers);
             s.ModifierLevels.AddRange(_modifierLevels);
             s.ModifierAges.AddRange(_modifierAges);
+            s.ModifierGrowth.AddRange(_modifierGrowth);
+            s.ModifierHarvests.AddRange(_modifierHarvests);
             foreach (var kv in _modifierUsageCounts) { s.ModifierUsage[kv.Key] = kv.Value; }
             foreach (var kv in _shapeMasteryLevels) { s.ShapeMastery[kv.Key] = kv.Value; }
             foreach (var kv in _colorMasteryLevels) { s.ColorMastery[kv.Key] = kv.Value; }
@@ -120,6 +122,9 @@ namespace Contigu.Core
             _activeModifiers.Clear();
             _modifierLevels.Clear();
             _modifierAges.Clear();
+            _modifierGrowth.Clear();
+            _modifierHarvests.Clear();
+            _modifierTriggered.Clear();
             int kept = 0;
             for (int i = 0; i < s.Modifiers.Count; i++)
             {
@@ -140,6 +145,8 @@ namespace Contigu.Core
                 AddActiveModifier(id);
                 _modifierLevels[kept] = s.ModifierLevels[i];
                 _modifierAges[kept] = s.ModifierAges[i];
+                _modifierGrowth[kept] = i < s.ModifierGrowth.Count ? s.ModifierGrowth[i] : 0;
+                _modifierHarvests[kept] = i < s.ModifierHarvests.Count ? s.ModifierHarvests[i] : 0;
                 kept++;
             }
             _modifierUsageCounts.Clear();

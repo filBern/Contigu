@@ -768,6 +768,10 @@ namespace Contigu.Core
                     continue;
                 }
 
+                if (scoreEvent.TriggeringModifierIndex >= 0 && scoreEvent.TriggeringModifierIndex < _modifierTriggered.Count)
+                {
+                    _modifierTriggered[scoreEvent.TriggeringModifierIndex] = true; // it scored: it grows at the end of the round
+                }
                 var id = scoreEvent.TriggeringModifier.Value;
                 _modifierUsageCounts.TryGetValue(id, out var count);
                 _modifierUsageCounts[id] = count + 1;

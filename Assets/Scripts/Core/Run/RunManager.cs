@@ -90,6 +90,76 @@ namespace Contigu.Core
         // Also parallel to _activeModifiers: how many full rounds each fertilizer has been held (Autumn withers them, see AgeAndWitherModifiers).
         private readonly List<int> _modifierAges = new List<int>();
 
+        // Maturation (see FertilizerGrowth), also parallel to _activeModifiers: growth steps, past harvests, and whether the fertilizer scored this round.
+        private readonly List<int> _modifierGrowth = new List<int>();
+        private readonly List<int> _modifierHarvests = new List<int>();
+        private readonly List<bool> _modifierTriggered = new List<bool>();
+
+        /// <summary>Growth steps of the fertilizer at <paramref name="index"/> (0 = fresh Bud).</summary>
+        public int GetModifierGrowth(int index)
+        {
+            return index >= 0 && index < _modifierGrowth.Count ? _modifierGrowth[index] : 0;
+        }
+
+        /// <summary>How many times the fertilizer at <paramref name="index"/> has been harvested.</summary>
+        public int GetModifierHarvests(int index)
+        {
+            return index >= 0 && index < _modifierHarvests.Count ? _modifierHarvests[index] : 0;
+        }
+
+        public GrowthStage GetModifierStage(int index)
+        {
+            return FertilizerGrowth.StageOf(GetModifierGrowth(index));
+        }
+
+        /// <summary>The effect factor the fertilizer's growth adds on top of its level (current stage + permanent harvest bonus).</summary>
+        public float GetModifierGrowthBonus(int index)
+        {
+            return FertilizerGrowth.Bonus(GetModifierGrowth(index), GetModifierHarvests(index));
+        }
+
+        private List<float> ModifierBonuses()
+        {
+            var bonuses = new List<float>(_activeModifiers.Count);
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                bonuses.Add(GetModifierGrowthBonus(i));
+            }
+            return bonuses;
+        }
+
+        /// <summary>Fertilizers harvested at the end of the round just cleared (their Pollen is already paid), in slot order. Presentation plays their harvest once the shop opens.</summary>
+        public IReadOnlyList<ModifierId> LastHarvestedModifiers { get; private set; } = new List<ModifierId>();
+
+        /// <summary>
+        /// End of a cleared round: a Fruit is harvested (Pollen, back to Bud, +permanent bonus, and a withering fertilizer's age is renewed); any other
+        /// fertilizer that scored this round grows one step. Returns the Pollen paid.
+        /// </summary>
+        private int GrowModifiers()
+        {
+            var harvested = new List<ModifierId>();
+            int pollen = 0;
+            for (int i = 0; i < _activeModifiers.Count; i++)
+            {
+                if (FertilizerGrowth.StageOf(_modifierGrowth[i]) == GrowthStage.Fruit)
+                {
+                    harvested.Add(_activeModifiers[i]);
+                    pollen += FertilizerGrowth.HarvestPollen;
+                    AddRoundFertilizerPollen(_activeModifiers[i], FertilizerGrowth.HarvestPollen);
+                    _modifierGrowth[i] = 0;
+                    _modifierHarvests[i]++;
+                    _modifierAges[i] = 0;
+                }
+                else if (_modifierTriggered[i])
+                {
+                    _modifierGrowth[i]++;
+                }
+                _modifierTriggered[i] = false;
+            }
+            LastHarvestedModifiers = harvested;
+            return pollen;
+        }
+
         /// <summary>How many cleared rounds the fertilizer at <paramref name="index"/> has been held (0 for a fresh one).</summary>
         public int GetModifierAge(int index)
         {
@@ -182,7 +252,21 @@ namespace Contigu.Core
         /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> (see <see cref="ModifierLevelUtility"/>).</summary>
         private float GetModifierLevelFactor(int index)
         {
-            return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index));
+            return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index)) + GetModifierGrowthBonus(index);
+        }
+
+        private static void SwapAt<T>(List<T> list, int a, int b)
+        {
+            var temp = list[a];
+            list[a] = list[b];
+            list[b] = temp;
+        }
+
+        private static void MoveAt<T>(List<T> list, int from, int to)
+        {
+            var moved = list[from];
+            list.RemoveAt(from);
+            list.Insert(to, moved);
         }
 
         /// <summary>The only place that adds a slot to <see cref="_activeModifiers"/> - keeps a fresh slot's level in sync. Also grows the hand by one slot the moment QuatriemeEmplacement is gained (see DeckManager.SetEffectiveHandSize), rather than waiting for the next DrawNewHand.</summary>
@@ -192,6 +276,9 @@ namespace Contigu.Core
             Stats.MaxFertilizersHeld = Mathf.Max(Stats.MaxFertilizersHeld, _activeModifiers.Count);
             _modifierLevels.Add(1);
             _modifierAges.Add(0);
+            _modifierGrowth.Add(0);
+            _modifierHarvests.Add(0);
+            _modifierTriggered.Add(false);
             if (id == ModifierId.QuatriemeEmplacement)
             {
                 Deck.SetEffectiveHandSize(DeckManager.MaxHandSize);
@@ -205,6 +292,9 @@ namespace Contigu.Core
             _activeModifiers.RemoveAt(index);
             _modifierLevels.RemoveAt(index);
             _modifierAges.RemoveAt(index);
+            _modifierGrowth.RemoveAt(index);
+            _modifierHarvests.RemoveAt(index);
+            _modifierTriggered.RemoveAt(index);
             RemapBlightAfterRemove(index);
             if (id == ModifierId.QuatriemeEmplacement && !_activeModifiers.Contains(ModifierId.QuatriemeEmplacement))
             {
@@ -235,6 +325,9 @@ namespace Contigu.Core
             var tempAge = _modifierAges[indexA];
             _modifierAges[indexA] = _modifierAges[indexB];
             _modifierAges[indexB] = tempAge;
+            SwapAt(_modifierGrowth, indexA, indexB);
+            SwapAt(_modifierHarvests, indexA, indexB);
+            SwapAt(_modifierTriggered, indexA, indexB);
 
             // The blight travels with the modifier too.
             bool blightA = _blightedModifiers.Remove(indexA);
@@ -266,6 +359,9 @@ namespace Contigu.Core
             var movedAge = _modifierAges[fromIndex];
             _modifierAges.RemoveAt(fromIndex);
             _modifierAges.Insert(toIndex, movedAge);
+            MoveAt(_modifierGrowth, fromIndex, toIndex);
+            MoveAt(_modifierHarvests, fromIndex, toIndex);
+            MoveAt(_modifierTriggered, fromIndex, toIndex);
 
             if (_blightedModifiers.Count > 0)
             {
@@ -952,7 +1048,7 @@ namespace Contigu.Core
             PlacementResult placement;
             try
             {
-                placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels);
+                placement = Grid.PlacePiece(shape, placementColor, x, y, EffectiveModifiers(), _modifierLevels, ModifierBonuses());
             }
             finally
             {

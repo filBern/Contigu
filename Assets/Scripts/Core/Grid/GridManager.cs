@@ -253,7 +253,7 @@ namespace Contigu.Core
             return false;
         }
 
-        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null, IReadOnlyList<int> modifierLevels = null)
+        public PlacementResult PlacePiece(PieceShape shape, PieceColor color, int anchorX, int anchorY, IReadOnlyList<ModifierId> activeModifiers = null, IReadOnlyList<int> modifierLevels = null, IReadOnlyList<float> modifierBonuses = null)
         {
             if (!CanPlace(shape, anchorX, anchorY))
             {
@@ -367,7 +367,7 @@ namespace Contigu.Core
             int modifierAdditiveMultBonus = 0;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur, out int preAdditiveMult, modifierLevels);
+                modifierBonus += ApplyPreClearModifiers(activeModifiers, shape, groupCells, placedCells, groupBonus, events, previousGroupSize, _repetitionStreak, previousPlacedColor, out int preMultiplier, out int preLueur, out int preAdditiveMult, modifierLevels, modifierBonuses);
                 modifierMultiplier *= preMultiplier;
                 modifierLueurBonus += preLueur;
                 modifierAdditiveMultBonus += preAdditiveMult;
@@ -419,7 +419,7 @@ namespace Contigu.Core
             float modifierProgressiveAdditiveMult = 0f;
             if (activeModifiers != null && activeModifiers.Count > 0)
             {
-                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveAdditiveMult, out int postAdditiveMult, modifierLevels);
+                modifierBonus += ApplyPostClearModifiers(activeModifiers, clearInfo, placedCells, clearedByPreviousPlacement, events, out int postMultiplier, out int postLueur, out float postProgressiveAdditiveMult, out int postAdditiveMult, modifierLevels, modifierBonuses);
                 modifierMultiplier *= postMultiplier;
                 modifierLueurBonus += postLueur;
                 modifierProgressiveAdditiveMult += postProgressiveAdditiveMult;

@@ -70,6 +70,17 @@ namespace Contigu.Presentation
         /// <summary>Rounds the fertilizer at a slot has left before it withers (Autumn); 0 or null means it never withers.</summary>
         public System.Func<int, int> RoundsLeftProvider;
 
+        /// <summary>Growth steps and past harvests of the fertilizer at a slot (Maturation, see FertilizerGrowth); null means no growth bar.</summary>
+        public System.Func<int, int> GrowthProvider;
+        public System.Func<int, int> HarvestsProvider;
+
+        // The growth strip along the foot of each badge.
+        private const float GrowthStripHeight = 8f;
+        private static readonly Color StripEmpty = new Color(0.10f, 0.13f, 0.17f, 0.92f);
+        private static readonly Color StripBud = new Color(0.45f, 0.80f, 0.35f, 1f);
+        private static readonly Color StripBloom = new Color(0.95f, 0.50f, 0.68f, 1f);
+        private static readonly Color StripFruit = new Color(1f, 0.82f, 0.22f, 1f);
+
         // Tap-to-swap: the first-tapped badge's row, armed and waiting for
         // a second tap on a different badge to swap with — -1 when nothing
         // is armed. Drag-to-move: the row currently being dragged, -1 when
@@ -376,6 +387,14 @@ namespace Contigu.Presentation
                     var baseLevelState = rowLevelState;
                     rowLevelState = rowId => "BLIGHTED: no effect until the next Shuffle." + (baseLevelState != null ? "\n" + baseLevelState(rowId) : string.Empty);
                 }
+                int growth = GrowthProvider != null ? GrowthProvider(i) : 0;
+                int harvests = HarvestsProvider != null ? HarvestsProvider(i) : 0;
+                if (GrowthProvider != null)
+                {
+                    var baseGrowthState = rowLevelState;
+                    string growthLine = GrowthTooltipLine(growth, harvests);
+                    rowLevelState = rowId => growthLine + (baseGrowthState != null ? "\n" + baseGrowthState(rowId) : string.Empty);
+                }
                 int roundsLeft = RoundsLeftProvider != null ? RoundsLeftProvider(i) : 0;
                 if (roundsLeft > 0)
                 {
@@ -417,7 +436,7 @@ namespace Contigu.Presentation
                     pill.rectTransform.anchorMin = new Vector2(0f, 0f);
                     pill.rectTransform.anchorMax = new Vector2(0f, 0f);
                     pill.rectTransform.pivot = new Vector2(0f, 0f);
-                    pill.rectTransform.anchoredPosition = new Vector2(2f, 2f);
+                    pill.rectTransform.anchoredPosition = new Vector2(2f, 2f + GrowthStripHeight);
                     pill.rectTransform.sizeDelta = new Vector2(24f, 24f);
                     var pillLabel = UIFactory.CreateText(pill.transform, "WitherLeft", roundsLeft.ToString(), 18, Color.white);
                     pillLabel.raycastTarget = false;
@@ -453,7 +472,7 @@ namespace Contigu.Presentation
                     levelBg.rectTransform.anchorMin = new Vector2(1f, 0f);
                     levelBg.rectTransform.anchorMax = new Vector2(1f, 0f);
                     levelBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f);
+                    levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f + GrowthStripHeight);
                     levelBg.rectTransform.sizeDelta = new Vector2(34f, 34f);
 
                     var levelLabel = UIFactory.CreateText(badge.transform, "Level", "Lv" + level, Mathf.RoundToInt(IndexLabelSize * 0.8f), UITheme.TextPrimary);
@@ -461,14 +480,67 @@ namespace Contigu.Presentation
                     levelLabel.rectTransform.anchorMin = new Vector2(1f, 0f);
                     levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
                     levelLabel.rectTransform.pivot = new Vector2(1f, 0f);
-                    levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f);
+                    levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f + GrowthStripHeight);
                     levelLabel.rectTransform.sizeDelta = new Vector2(30f, 20f);
+                }
+
+                if (GrowthProvider != null)
+                {
+                    BuildGrowthStrip(badge, growth);
                 }
 
                 // Supports both drag-and-drop and tap-tap swap reordering,
                 // same forwarding pattern as HandSlotDragHandler.
                 var dragHandler = badge.gameObject.AddComponent<ModifierBadgeDragHandler>();
                 dragHandler.Init(this, i);
+            }
+        }
+
+        private static string GrowthTooltipLine(int growth, int harvests)
+        {
+            var stage = FertilizerGrowth.StageOf(growth);
+            string line;
+            switch (stage)
+            {
+                case GrowthStage.Fruit:
+                    line = "FRUIT: +" + FertilizerGrowth.FruitBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect, harvested at the end of the round (+" + FertilizerGrowth.HarvestPollen + " Pollen).";
+                    break;
+                case GrowthStage.Bloom:
+                    line = "Bloom: +" + FertilizerGrowth.BloomBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
+                    break;
+                default:
+                    line = "Bud. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
+                    break;
+            }
+            if (harvests > 0)
+            {
+                line += "\nHarvested x" + harvests + ": +" + (harvests * FertilizerGrowth.BonusPerHarvest).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect for good.";
+            }
+            return line;
+        }
+
+        /// <summary>Growth strip along the foot of a badge: one segment per growth step, green (Bud), pink (Bloom), gold (Fruit). Always visible (no hover on iPad).</summary>
+        private static void BuildGrowthStrip(Image badge, int growth)
+        {
+            var stage = FertilizerGrowth.StageOf(growth);
+            Color fill = stage == GrowthStage.Fruit ? StripFruit : stage == GrowthStage.Bloom ? StripBloom : StripBud;
+            var strip = UIFactory.CreatePanel(badge.transform, "GrowthStrip", StripEmpty);
+            strip.raycastTarget = false;
+            strip.rectTransform.anchorMin = new Vector2(0f, 0f);
+            strip.rectTransform.anchorMax = new Vector2(1f, 0f);
+            strip.rectTransform.pivot = new Vector2(0.5f, 0f);
+            strip.rectTransform.anchoredPosition = new Vector2(0f, 3f);
+            strip.rectTransform.sizeDelta = new Vector2(-10f, GrowthStripHeight);
+            UIFactory.AddThickOutline(strip, UITheme.Border, 1.5f);
+            int steps = FertilizerGrowth.FruitAt;
+            for (int s = 0; s < steps; s++)
+            {
+                var seg = UIFactory.CreatePanel(strip.transform, "Seg" + s, s < growth ? fill : new Color(0f, 0f, 0f, 0f));
+                seg.raycastTarget = false;
+                seg.rectTransform.anchorMin = new Vector2(s / (float)steps, 0f);
+                seg.rectTransform.anchorMax = new Vector2((s + 1) / (float)steps, 1f);
+                seg.rectTransform.offsetMin = new Vector2(s == 0 ? 0f : 1f, 0f);
+                seg.rectTransform.offsetMax = new Vector2(s == steps - 1 ? 0f : -1f, 0f);
             }
         }
 

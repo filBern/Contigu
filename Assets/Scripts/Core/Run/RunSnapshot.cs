@@ -26,6 +26,8 @@ namespace Contigu.Core
         public List<ModifierId> Modifiers = new List<ModifierId>();
         public List<int> ModifierLevels = new List<int>();
         public List<int> ModifierAges = new List<int>();
+        public List<int> ModifierGrowth = new List<int>();
+        public List<int> ModifierHarvests = new List<int>();
         public Dictionary<ModifierId, int> ModifierUsage = new Dictionary<ModifierId, int>();
         public Dictionary<ShapeId, int> ShapeMastery = new Dictionary<ShapeId, int>();
         public Dictionary<PieceColor, int> ColorMastery = new Dictionary<PieceColor, int>();
@@ -75,6 +77,8 @@ namespace Contigu.Core
             Line(sb, "mods", Join(Modifiers, m => ((int)m).ToString(CultureInfo.InvariantCulture)));
             Line(sb, "levels", Join(ModifierLevels, i => i.ToString(CultureInfo.InvariantCulture)));
             Line(sb, "ages", Join(ModifierAges, i => i.ToString(CultureInfo.InvariantCulture)));
+            Line(sb, "growth", Join(ModifierGrowth, i => i.ToString(CultureInfo.InvariantCulture)));
+            Line(sb, "harvests", Join(ModifierHarvests, i => i.ToString(CultureInfo.InvariantCulture)));
             Line(sb, "usage", JoinPairs(ModifierUsage, k => (int)k));
             Line(sb, "shapemastery", JoinPairs(ShapeMastery, k => (int)k));
             Line(sb, "colormastery", JoinPairs(ColorMastery, k => (int)k));
@@ -147,6 +151,10 @@ namespace Contigu.Core
                 foreach (var v in Split(values, "mods", ',')) { s.Modifiers.Add((ModifierId)ParseInt(v)); }
                 foreach (var v in Split(values, "levels", ',')) { s.ModifierLevels.Add(ParseInt(v)); }
                 foreach (var v in Split(values, "ages", ',')) { s.ModifierAges.Add(ParseInt(v)); }
+                foreach (var v in Split(values, "growth", ',')) { s.ModifierGrowth.Add(ParseInt(v)); }
+                foreach (var v in Split(values, "harvests", ',')) { s.ModifierHarvests.Add(ParseInt(v)); }
+                while (s.ModifierGrowth.Count < s.Modifiers.Count) { s.ModifierGrowth.Add(0); }
+                while (s.ModifierHarvests.Count < s.Modifiers.Count) { s.ModifierHarvests.Add(0); }
                 foreach (var p in Pairs(values, "usage"))
                 {
                     var usageId = ModifierCatalog.RetiredReplacement((ModifierId)p.Key) ?? (ModifierId)p.Key;

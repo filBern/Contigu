@@ -603,6 +603,8 @@ namespace Contigu.Presentation
             var modifierPanelRect = _modifierPanelView.Build(mainRoot, _tooltipView, id => _run.GetModifierUsageCount(id), (id, index) => _run.GetProgressiveModifierStateText(id, index), index => _run.GetModifierLevel(index), -sidePanelCenterX);
             _modifierPanelView.BlightProvider = index => _run.IsModifierBlighted(index);
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
+            _modifierPanelView.GrowthProvider = index => _run.GetModifierGrowth(index);
+            _modifierPanelView.HarvestsProvider = index => _run.GetModifierHarvests(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             modifierPanelRect.anchoredPosition = new Vector2(leftColumnX, fertilizerY);
             _shopView.SetBoardPanels(modifierPanelRect, leftColumnX, fertilizerY, pollenX, pollenY, BoardPollenScale);

@@ -37,7 +37,7 @@ namespace Contigu.Core
         }
 
         /// <summary>Collectionneur/Maçon/Démolisseur/the 8 line-pattern modifiers all need the outcome of this placement's line clears, so they can only be evaluated after <see cref="CheckAndClearLines"/> runs.</summary>
-        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveAdditiveMult, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)
+        private int ApplyPostClearModifiers(IReadOnlyList<ModifierId> activeModifiers, ClearInfo clearInfo, List<Vector2Int> placedCells, bool clearedByPreviousPlacement, List<ScoreEvent> events, out int modifierMultiplier, out int lueurBonus, out float progressiveAdditiveMult, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null, IReadOnlyList<float> modifierBonuses = null)
         {
             var ctx = new PostClearModifierContext
             {
@@ -60,7 +60,7 @@ namespace Contigu.Core
                 // ctx.Multiplier/ctx.ProgressiveAdditiveMult/ctx.AdditiveMult
                 // are left alone since Mult is events-derived, not read from
                 // them.
-                float levelFactor = GetModifierLevelFactor(modifierLevels, i);
+                float levelFactor = GetModifierLevelFactor(modifierLevels, i, modifierBonuses);
                 if (levelFactor != 1f)
                 {
                     bonus = Mathf.RoundToInt(bonus * levelFactor);
@@ -105,13 +105,14 @@ namespace Contigu.Core
         }
 
         /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> — 1f (no-op) when <paramref name="modifierLevels"/> is null or doesn't cover that index. See ModifierLevelUtility.</summary>
-        private static float GetModifierLevelFactor(IReadOnlyList<int> modifierLevels, int index)
+        private static float GetModifierLevelFactor(IReadOnlyList<int> modifierLevels, int index, IReadOnlyList<float> modifierBonuses = null)
         {
             if (modifierLevels == null || index < 0 || index >= modifierLevels.Count)
             {
                 return 1f;
             }
-            return ModifierLevelUtility.LevelToFactor(modifierLevels[index]);
+            float bonus = modifierBonuses != null && index < modifierBonuses.Count ? modifierBonuses[index] : 0f;
+            return ModifierLevelUtility.LevelToFactor(modifierLevels[index]) + bonus;
         }
 
         /// <summary>Prisme: xN multiplier (see ScoringConstants.PrismeMultiplier) when the placement (itself + its direct neighbors) touches 4 distinct non-joker colors (or 3 + a joker). Returns 1 (no-op) when it doesn't qualify.</summary>

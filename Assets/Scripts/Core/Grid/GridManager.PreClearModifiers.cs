@@ -139,7 +139,7 @@ namespace Contigu.Core
             return added;
         }
 
-        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null)
+        private int ApplyPreClearModifiers(IReadOnlyList<ModifierId> activeModifiers, PieceShape shape, List<Vector2Int> groupCells, List<Vector2Int> placedCells, int groupBonus, List<ScoreEvent> events, int? previousGroupSize, int repetitionStreak, PieceColor? previousPlacedColor, out int modifierMultiplier, out int lueurBonus, out int additiveMultBonus, IReadOnlyList<int> modifierLevels = null, IReadOnlyList<float> modifierBonuses = null)
         {
             var ownColor = _cells[placedCells[0].x, placedCells[0].y].FilledColor.Value;
             // A Joker piece's own cell(s) stay PieceColor.Joker in storage
@@ -179,7 +179,7 @@ namespace Contigu.Core
                 // ctx.AdditiveMult are left untouched: PlacementResult.Mult
                 // reads ScoreEvents exclusively, and TagNewEvents' event-level
                 // rescale below is sufficient for every xN/+Mult modifier.
-                float levelFactor = GetModifierLevelFactor(modifierLevels, i);
+                float levelFactor = GetModifierLevelFactor(modifierLevels, i, modifierBonuses);
                 if (levelFactor != 1f)
                 {
                     bonus = Mathf.RoundToInt(bonus * levelFactor);

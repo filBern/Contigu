@@ -95,6 +95,13 @@ namespace Contigu.Core
             AddActiveModifier(modifierId);
             return true;
         }
+
+        /// <summary>Debug-only helper: sets a held fertilizer's growth steps and harvest count (Maturation tests).</summary>
+        public void DebugSetModifierGrowth(int index, int growth, int harvests = 0)
+        {
+            _modifierGrowth[index] = growth;
+            _modifierHarvests[index] = harvests;
+        }
 #endif
 
 #if UNITY_EDITOR || CONTIGU_DEBUG
