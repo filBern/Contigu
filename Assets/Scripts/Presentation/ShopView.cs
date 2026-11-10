@@ -81,7 +81,8 @@ namespace Contigu.Presentation
         // rather than a wide band like HudView's enemy row.
         private const float UpcomingBoxCenterX = -225f;
         private const float UpcomingBoxWidth = ModifierPanelView.PanelWidth;
-        private const float UpcomingBoxHeight = ModifierPanelView.PanelHeight;
+        // Taller than the fertilizer panel: the weather card takes room, and the enemies now sit three to a row at a bigger size.
+        private const float UpcomingBoxHeight = ModifierPanelView.PanelHeight + 64f;
         // The box is vertically centered on screen (anchoredPosition.y = 0, see Build) at a fixed height,
         // so its top edge sits exactly half its height above that center line.
         private const float UpcomingBoxTopY = UpcomingBoxHeight / 2f;
@@ -98,7 +99,7 @@ namespace Contigu.Presentation
         // and still does). BuildUpcomingEncounterPreview scales all three down together, proportionally,
         // only when the actual enemy count for this round wouldn't otherwise fit the box's fixed content
         // height, so every enemy the next round has is always shown — none clipped by the box's RectMask2D.
-        private const float UpcomingIconSize = ModifierCardFactory.BadgeSize;
+        private const float UpcomingIconSize = 72f;
         private const float UpcomingSlotWidth = UpcomingBoxWidth - 16f;
         private const float UpcomingRowGap = ModifierCardFactory.Gap;
         // Never shrink the icon below this, however many enemies a round has — past this point the
@@ -252,7 +253,7 @@ namespace Contigu.Presentation
             _upcomingRoundLabel.rectTransform.anchoredPosition = new Vector2(0f, -(UpcomingBannerHeight + 4f));
             _upcomingRoundLabel.rectTransform.sizeDelta = new Vector2(UpcomingBoxWidth - 24f, UpcomingRoundLineHeight);
 
-            // One enemy per cell, one column while count<=2 (reads as a plain vertical stack), two columns
+            // One enemy per cell, three columns per row (one row up to 3 enemies),
             // side by side beyond that (see BuildUpcomingEncounterPreview, which sets constraintCount/
             // cellSize/spacing each Refresh based on the next round's actual enemy count) — same
             // GridLayoutGroup technique as ModifierPanelView's own badge grid.
@@ -927,7 +928,7 @@ namespace Contigu.Presentation
             }
 
             int count = upcoming.Count;
-            int columns = 2;
+            int columns = 3;
             int rows = (count + columns - 1) / columns;
             float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding - WeatherRowHeight - 6f;
             float maxSlotHeight = (availableHeight - (rows - 1) * UpcomingRowGap) / rows;
