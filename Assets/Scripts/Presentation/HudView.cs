@@ -107,6 +107,13 @@ namespace Contigu.Presentation
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", lueurParent);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 19f;
+            lueurLayout.padding = new RectOffset(26, 32, 12, 12);
+            // A dark pill behind the Pollen, like the boxes of the side columns, so it reads as a real counter and not a loose icon.
+            var lueurPill = _lueurContainer.gameObject.AddComponent<Image>();
+            lueurPill.sprite = UISprites.CardBackground;
+            lueurPill.type = Image.Type.Sliced;
+            lueurPill.color = new Color(0.12f, 0.16f, 0.21f, 0.92f);
+            UIFactory.AddThickOutline(lueurPill, UITheme.Border, 2f);
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childControlWidth = true;
             lueurLayout.childControlHeight = true;

@@ -513,12 +513,14 @@ namespace Contigu.Presentation
             float scoreBottomY = gridTopY - comboRect.rect.height;
             // Between the score card and the fertilizers: the weather card, so the day's weather is always in plain view.
             const float WeatherGap = 8f;
-            var weatherRect = _hudView.WeatherCard;
-            weatherRect.sizeDelta = new Vector2(leftColumnWidth, HudView.WeatherCardHeight);
-            weatherRect.anchoredPosition = new Vector2(leftColumnX, scoreBottomY - WeatherGap - HudView.WeatherCardHeight * 0.5f);
-            float weatherBottomY = scoreBottomY - WeatherGap - HudView.WeatherCardHeight;
             float buttonsTopY = deckY + UtilityButtonHeight * 0.5f;
-            float fertilizerY = (weatherBottomY + buttonsTopY) * 0.5f;
+            // The card takes what the column has left once the score card, the fertilizer panel, the buttons and three gaps are in (never overlapping: it shrinks, down to a minimum).
+            float weatherHeight = Mathf.Clamp(scoreBottomY - buttonsTopY - ModifierPanelView.PanelHeight - 3f * WeatherGap, 64f, HudView.WeatherCardHeight);
+            var weatherRect = _hudView.WeatherCard;
+            weatherRect.sizeDelta = new Vector2(leftColumnWidth, weatherHeight);
+            weatherRect.anchoredPosition = new Vector2(leftColumnX, scoreBottomY - WeatherGap - weatherHeight * 0.5f);
+            float weatherBottomY = scoreBottomY - WeatherGap - weatherHeight;
+            float fertilizerY = weatherBottomY - WeatherGap - ModifierPanelView.PanelHeight * 0.5f;
 
             // Pollen is a small chip in the top-left HUD, on the speed button's row (right of it), growing rightwards as the count does;
             // the shop moves it back above its own panel and then restores it here.
@@ -528,10 +530,10 @@ namespace Contigu.Presentation
             lueurRect.pivot = new Vector2(0f, 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(lueurRect);
             // Sized to be about as tall as the x1 button beside it (44): no pill behind it any more, the band is dark.
-            const float BoardPollenScale = 0.45f;
+            const float BoardPollenScale = 0.7f;
             lueurRect.localScale = Vector3.one * BoardPollenScale;
             float pollenX = -halfCanvasWidth + 16f; // the speed button moved to Settings: the chip takes its place
-            float pollenY = canvasHeight * 0.5f - 16f - MobileSetup.TouchMin(44f) * 0.5f; // the weather chip left this corner: Pollen takes the top row
+            float pollenY = canvasHeight * 0.5f - 14f - 28f; // top-left corner (the weather chip moved to the left column): a pill about 55 tall
             lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
 
             // The hand: a tall column on the right, as tall as the grid.
