@@ -635,7 +635,7 @@ namespace Contigu.Presentation
             _deckView.Build(mainRoot, _run, _tooltipView);
 
             _roundSummaryView = gameObject.AddComponent<RoundSummaryView>();
-            _roundSummaryView.Build(mainRoot);
+            _roundSummaryView.Build(mainRoot, _tooltipView);
             _roundSummaryView.GrowthStepPlayed += OnGrowthStepPlayed;
             _roundSummaryView.GrowthFinished += OnGrowthFinished;
             _endScreenView = gameObject.AddComponent<EndScreenView>();

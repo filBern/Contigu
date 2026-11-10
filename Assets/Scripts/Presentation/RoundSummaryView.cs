@@ -46,7 +46,10 @@ namespace Contigu.Presentation
             public Image Medallion;
             public Image[] Pips;
             public Text Label;
+            public HoverTooltip MedallionTip;
+            public CanvasGroup SackFade;
         }
+        private TooltipView _tooltip;
         private readonly List<GardenCell> _gardenCells = new List<GardenCell>();
 
         /// <summary>Raised when a fertilizer's growth has just been played (slot index): the panel on the left then shows its new stage, not before.</summary>
@@ -54,8 +57,9 @@ namespace Contigu.Presentation
         /// <summary>Raised when the garden animation is over or skipped (all the new stages may show).</summary>
         public event Action GrowthFinished;
 
-        public RectTransform Build(Transform parent)
+        public RectTransform Build(Transform parent, TooltipView tooltip = null)
         {
+            _tooltip = tooltip;
             var overlay = UIFactory.CreatePanel(parent, "RoundSummaryOverlay", new Color(0f, 0f, 0f, 0.55f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
@@ -200,13 +204,19 @@ namespace Contigu.Presentation
 
                 cell.Sack = ModifierBadgeFactory.Create(root, ModifierCatalog.Get(step.Id), 60f, null, showBackground: false, attachTooltip: false);
                 cell.Sack.raycastTarget = false;
+                cell.SackFade = cell.Sack.gameObject.AddComponent<CanvasGroup>();
+                cell.SackFade.blocksRaycasts = false;
                 cell.Sack.rectTransform.anchorMin = cell.Sack.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 cell.Sack.rectTransform.pivot = new Vector2(0.5f, 1f);
                 cell.Sack.rectTransform.anchoredPosition = new Vector2(0f, -2f);
 
                 cell.Medallion = UIFactory.CreatePanel(root, "Stage", Color.white);
-                cell.Medallion.raycastTarget = false;
+                cell.Medallion.raycastTarget = _tooltip != null; // hover/tap explains what this icon means
                 cell.Medallion.preserveAspect = true;
+                if (_tooltip != null)
+                {
+                    cell.MedallionTip = cell.Medallion.gameObject.AddComponent<HoverTooltip>();
+                }
                 cell.Medallion.rectTransform.anchorMin = cell.Medallion.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 cell.Medallion.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 cell.Medallion.rectTransform.anchoredPosition = new Vector2(30f, -12f);
@@ -258,17 +268,20 @@ namespace Contigu.Presentation
             return stage == GrowthStage.Fruit ? PipFruit : stage == GrowthStage.Bloom ? PipBloom : PipBud;
         }
 
-        private static void ShowGrowth(GardenCell cell, int growth, float alpha)
+        private void ShowGrowth(GardenCell cell, int growth, float alpha)
         {
+            if (cell.MedallionTip != null)
+            {
+                cell.MedallionTip.Init(_tooltip, GrowthVisuals.StageName(FertilizerGrowth.StageOf(growth), growth), GrowthVisuals.StageBody());
+            }
             cell.Medallion.sprite = GrowthVisuals.StageSprite(FertilizerGrowth.StageOf(growth));
             cell.Medallion.enabled = cell.Medallion.sprite != null;
             for (int p = 0; p < cell.Pips.Length; p++)
             {
                 cell.Pips[p].color = p < growth ? PipColorFor(growth) : PipEmpty;
             }
-            var sack = cell.Sack.color;
-            sack.a = alpha;
-            cell.Sack.color = sack;
+            // Dimmed through a CanvasGroup: the badge's own Image color is transparent (no background), writing alpha on it would paint it black.
+            cell.SackFade.alpha = alpha;
         }
 
         private static string FinalLabel(GrowthStep step)

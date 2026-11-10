@@ -9417,3 +9417,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-10 — Maturation : la boîte de gauche attend l'animation, transition d'icône
 - Le panneau de gauche affichait déjà le nouveau stade (Core à jour dès la fin de manche) avant l'animation du résumé. `GameBootstrap` « retient » maintenant l'ancien état (`_growthHold`, copie de `LastGrowthSteps`) : médaillon, récoltes et pastille de sève restent ceux d'avant la manche, et chaque fertilizer passe à son nouveau stade au moment précis où le résumé le joue (`GrowthStepPlayed`), le reste à la fin ou si on passe (`GrowthFinished`). La popup « Harvest +8 » part avec la colonne qui le récolte.
 - Dans le résumé, un changement de stade est une vraie transition : l'ancien médaillon rétrécit et s'efface, un anneau coloré flashe, le nouveau grossit avec dépassement (`SwapMedallion`) ; médaillon agrandi (40 px). Non vérifié dans Unity.
+
+## 2026-11-10 — Maturation : tooltip du médaillon, carré noir du résumé
+- Le médaillon de stade du résumé (haut droite du sac) a une infobulle (survol / appui) : nom du stade et progression (« Bloom (2/3) ») et la règle complète (croissance, bonus par stade, récolte). Le sac du panneau de gauche garde son infobulle habituelle, qui contient déjà la ligne de croissance.
+- Correctif : un carré noir apparaissait derrière les sacs du résumé (l'alpha était écrit sur la couleur de l'image du badge, transparente par construction) ; l'atténuation « Dormant » passe par un `CanvasGroup`. Non vérifié dans Unity.
