@@ -174,6 +174,8 @@ namespace Contigu.Presentation
             }
             else if (pending.Id == UpgradeId.ModifierUpgrade)
             {
+                // Like every other choice: the stall (backdrop, tablets) stays, the shelves step aside.
+                _shopView.SetSelectionMode(true);
                 _modifierUpgradeChoiceView.Show(_run.ActiveModifiers, index => _run.GetModifierLevel(index), pending);
             }
             else
@@ -747,6 +749,7 @@ namespace Contigu.Presentation
         private void OnModifierUpgradeChoiceConfirmed(int slotIndex)
         {
             _run.ResolveModifierUpgradeChoice(slotIndex);
+            _shopView.SetSelectionMode(false);
             RefreshAll();
             _shopView.Refresh(_run);
         }

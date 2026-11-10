@@ -54,7 +54,7 @@ namespace Contigu.Presentation
         {
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "ModifierUpgradeChoiceOverlay", new Color(0f, 0f, 0f, 0.88f));
+            var overlay = UIFactory.CreatePanel(parent, "ModifierUpgradeChoiceOverlay", new Color(0f, 0f, 0f, 0f));
             _root = overlay.rectTransform;
             overlay.gameObject.AddComponent<OverlayLift>();
             UIFactory.StretchFull(_root);
