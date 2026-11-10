@@ -53,12 +53,17 @@ namespace Contigu.Presentation
             return line;
         }
 
-        /// <summary>The stage medallion (sprout / flower / fruit) at the foot of a badge; a Fruit also glows behind the sack.</summary>
-        public static void AttachStage(UnityEngine.UI.Image badge, int growth, float medallionSize, float glowSize)
+        /// <summary>The stage medallion (sprout / flower / fruit) at the foot of a badge, with its own tooltip when a <paramref name="tooltip"/> is given; a Fruit also glows behind the sack.</summary>
+        public static void AttachStage(UnityEngine.UI.Image badge, int growth, int harvests, float medallionSize, float glowSize, TooltipView tooltip = null)
         {
             var stage = FertilizerGrowth.StageOf(growth);
             var medallion = UIFactory.CreatePanel(badge.transform, "StageMedallion", Color.white);
-            medallion.raycastTarget = false;
+            // The growth has a tooltip of its own, apart from the fertilizer's (hover or touch on the medallion). Pointer-downs and drags it does not handle bubble up to the sack.
+            medallion.raycastTarget = tooltip != null;
+            if (tooltip != null)
+            {
+                medallion.gameObject.AddComponent<HoverTooltip>().Init(tooltip, StageName(stage, growth), TooltipLine(growth, harvests) + "\n\n" + StageBody());
+            }
             medallion.preserveAspect = true;
             medallion.sprite = StageSprite(stage);
             medallion.enabled = medallion.sprite != null;

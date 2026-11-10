@@ -331,7 +331,7 @@ namespace Contigu.Presentation
                         badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                         badge.rectTransform.anchoredPosition = Vector2.zero;
                         // Its stage (Bud / Bloom / Fruit) and, for a Fruit, its halo: the same look as on the panel.
-                        GrowthVisuals.AttachStage(badge, growth, size * 0.36f, size * 1.7f);
+                        GrowthVisuals.AttachStage(badge, growth, harvests, size * 0.36f, size * 1.7f, _tooltipView);
                         if (FertilizerGrowth.StageOf(growth) == GrowthStage.Fruit)
                         {
                             // A ripe Fruit (harvested at the end of the next round) breathes and lets a small fruit rise from time to time.
@@ -354,7 +354,7 @@ namespace Contigu.Presentation
                         }
                     },
                     Name = level > 1 ? def.Name + " (Lv " + level + ")" : def.Name,
-                    Body = DescriptionTextFormatter.Colorize(def.Description, 14) + "\n" + GrowthVisuals.TooltipLine(growth, harvests),
+                    Body = DescriptionTextFormatter.Colorize(def.Description, 14),
                     Subtitle = "Level " + level + " → " + (level + 1),
                     FillCell = true
                 });

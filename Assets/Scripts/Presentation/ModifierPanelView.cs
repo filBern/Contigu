@@ -396,12 +396,6 @@ namespace Contigu.Presentation
                 }
                 int growth = GrowthProvider != null ? GrowthProvider(i) : 0;
                 int harvests = HarvestsProvider != null ? HarvestsProvider(i) : 0;
-                if (GrowthProvider != null)
-                {
-                    var baseGrowthState = rowLevelState;
-                    string growthLine = GrowthVisuals.TooltipLine(growth, harvests);
-                    rowLevelState = rowId => growthLine + (baseGrowthState != null ? "\n" + baseGrowthState(rowId) : string.Empty);
-                }
                 float sap = SapProvider != null ? SapProvider(i) : 0f;
                 int resonating = ResonanceProvider != null ? ResonanceProvider(i) : 0;
                 float rootsBonus = sap + resonating * FertilizerGrowth.ResonancePerNeighbor;
@@ -504,7 +498,7 @@ namespace Contigu.Presentation
 
                 if (GrowthProvider != null)
                 {
-                    GrowthVisuals.AttachStage(badge, growth, StageMedallionSize, 150f);
+                    GrowthVisuals.AttachStage(badge, growth, harvests, StageMedallionSize, 150f, _tooltip);
                 }
                 if (rootsBonus > 0f)
                 {

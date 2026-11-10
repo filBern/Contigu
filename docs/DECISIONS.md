@@ -9448,3 +9448,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-10 — Racines : la pastille suit les sacs
 - Sur une capture, la pastille de sève apparaissait bien trop bas (placée une fois, en coordonnées du monde, avant que la mise en page du panneau ne se stabilise). Elle suit maintenant le milieu des deux sacs à chaque image (`RootLinkFollower`), ce qui tient aussi après un échange de sacs. Non vérifié dans Unity.
+
+## 2026-11-10 — Tooltip de la croissance séparé de celui du fertilizer
+- L'infobulle d'un fertilizer ne parle plus de sa croissance. Le médaillon de stade (Bourgeon / Fleur / Fruit) a sa propre infobulle : « Fruit (3/3) », la progression et les récoltes, puis la règle complète. Même chose sur le panneau de gauche et sur l'étagère « Fertilizer Upgrade » (`GrowthVisuals.AttachStage`), le résumé de manche l'avait déjà. Le médaillon reçoit le survol / l'appui ; l'appui long et le glisser qu'il ne traite pas remontent au sac (tap-échange et glisser-déposer inchangés). Non vérifié dans Unity.
