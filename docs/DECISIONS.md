@@ -9451,3 +9451,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-10 — Tooltip de la croissance séparé de celui du fertilizer
 - L'infobulle d'un fertilizer ne parle plus de sa croissance. Le médaillon de stade (Bourgeon / Fleur / Fruit) a sa propre infobulle : « Fruit (3/3) », la progression et les récoltes, puis la règle complète. Même chose sur le panneau de gauche et sur l'étagère « Fertilizer Upgrade » (`GrowthVisuals.AttachStage`), le résumé de manche l'avait déjà. Le médaillon reçoit le survol / l'appui ; l'appui long et le glisser qu'il ne traite pas remontent au sac (tap-échange et glisser-déposer inchangés). Non vérifié dans Unity.
+
+## 2026-11-10 — Écran de choix : « Continue saved run » en bouton principal
+- Quand une partie est sauvegardée, « Continue saved run » devient le bouton principal : grand, doré (comme Play), il se gonfle doucement (`AttentionPulse`, immobile en mouvement réduit). Le bouton de la carte passe en vert, plus petit, « New run » (et garde la confirmation « Replace save? »). Sans sauvegarde, rien ne change : Play garde la place principale.
+- La description d'un challenge se réduit pour tenir dans sa boîte (elle recouvrait la ligne des engagements). Non vérifié dans Unity.

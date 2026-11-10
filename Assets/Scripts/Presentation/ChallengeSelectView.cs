@@ -257,6 +257,10 @@ namespace Contigu.Presentation
             _levelUp = BuildLevelButton(_card.transform, "LevelUp", "+", CardWidth / 2f - 46f, 1);
 
             _descriptionLabel = UIFactory.CreateText(_card.transform, "Description", "", 19, UITheme.TextMuted);
+            // Long descriptions shrink to fit their box instead of running into the pledges below.
+            _descriptionLabel.resizeTextForBestFit = true;
+            _descriptionLabel.resizeTextMinSize = 12;
+            _descriptionLabel.resizeTextMaxSize = 19;
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -282,13 +286,14 @@ namespace Contigu.Presentation
             _playButton.onClick.AddListener(OnPlayClicked);
 
             // Under the card: resume the run saved by Save and quit (or the start of the last round), shown only when there is one.
-            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue saved run", UISprites.ChooseButtonBackground, 18);
+            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue saved run", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 26);
             var continueRect = _continueButton.GetComponent<RectTransform>();
             continueRect.anchorMin = new Vector2(0.5f, 0f);
             continueRect.anchorMax = new Vector2(0.5f, 0f);
             continueRect.pivot = new Vector2(0.5f, 0f);
-            continueRect.anchoredPosition = new Vector2(0f, 36f);
-            continueRect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(50f));
+            continueRect.anchoredPosition = new Vector2(0f, 26f);
+            continueRect.sizeDelta = new Vector2(CardWidth - 60f, MobileSetup.TouchMin(64f));
+            _continueButton.gameObject.AddComponent<AttentionPulse>();
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);
 
@@ -369,6 +374,23 @@ namespace Contigu.Presentation
             ChallengeChosen?.Invoke(ChallengeCatalog.All[_currentIndex].AtLevel(_selectedLevel));
         }
 
+        /// <summary>
+        /// With a saved run, "Continue saved run" is the main button (big, gold, gently swelling) and starting over steps back: the card's button turns green,
+        /// smaller, "New run". Without one, Play keeps the main spot.
+        /// </summary>
+        private void ApplySaveEmphasis()
+        {
+            bool hasSave = RunSaveStore.Exists;
+            var playImage = _playButton.GetComponent<Image>();
+            var playRect = _playButton.GetComponent<RectTransform>();
+            var gold = UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground;
+            var green = UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground;
+            if (playImage != null) { playImage.sprite = hasSave ? green : gold; }
+            playRect.sizeDelta = new Vector2(hasSave ? CardWidth - 140f : CardWidth - 60f, hasSave ? 44f : 56f);
+            _playButtonLabel.fontSize = hasSave ? 20 : 26;
+            if (_playButton.interactable && !_playArmed) { _playButtonLabel.text = hasSave ? "New run" : "Play"; }
+        }
+
         public void Show(MetaStats metaStats)
         {
             SfxManager.Play(SfxId.Overlay);
@@ -381,6 +403,7 @@ namespace Contigu.Presentation
             // Pledges are a reward for having won the default challenge once.
             if (_pledgeGroup != null) { _pledgeGroup.gameObject.SetActive(metaStats != null && metaStats.ClassicVictory); }
             _continueButton.gameObject.SetActive(RunSaveStore.Exists);
+            ApplySaveEmphasis();
             _root.gameObject.SetActive(true);
             if (_fadeCoroutine != null)
             {
@@ -506,7 +529,7 @@ namespace Contigu.Presentation
             if (unlocked)
             {
                 _statusLabel.text = "";
-                _playButtonLabel.text = "Play";
+                _playButtonLabel.text = RunSaveStore.Exists ? "New run" : "Play";
                 _playButton.interactable = true;
             }
             else
