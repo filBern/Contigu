@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check] [--each] [--study]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check] [--each] [--study] [--no-order]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -35,6 +35,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
                 else if (args[i] == "--study") { studyMode = true; }
+                else if (args[i] == "--no-order") { Bot.OrderFertilizers = false; }
                 else if (args[i] == "--calibration-out" && i + 1 < args.Length) { calibrationOut = args[++i]; }
                 else if (args[i] == "--calibrate") { Bot.Calibrating = true; UnlockTracker.CalibrationMode = true; }
                 else if (args[i] == "--coverage") { Bot.Unlocks = new UnlockState(everythingAvailable: true); }

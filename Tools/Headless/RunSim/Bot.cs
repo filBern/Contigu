@@ -56,6 +56,9 @@ namespace Contigu.RunSim
         /// </summary>
         public static Dictionary<string, double> Scores;
 
+        /// <summary>Before leaving the shop the bot arranges its fertilizers for the Roots (sap flows left to right, neighbors of one category resonate). --no-order turns it off for comparisons.</summary>
+        public static bool OrderFertilizers = true;
+
         private static double ScoreOfModifier(ModifierId id)
         {
             double v;
@@ -384,7 +387,70 @@ namespace Contigu.RunSim
                     return false;
                 }
             }
+            if (OrderFertilizers) { ArrangeFertilizers(run); }
             return run.LeaveShop();
+        }
+
+        /// <summary>What an arrangement of the held fertilizers earns from the Roots: each one's sap (from its left neighbor's growth) and resonance (neighbors of its category), in effect factor.</summary>
+        private static float RootsValue(RunManager run, int[] order)
+        {
+            float total = 0f;
+            for (int pos = 0; pos < order.Length; pos++)
+            {
+                var category = ModifierCatalog.Get(run.ActiveModifiers[order[pos]]).Category;
+                if (pos > 0)
+                {
+                    total += FertilizerGrowth.SapFrom(run.GetModifierGrowth(order[pos - 1]));
+                    if (ModifierCatalog.Get(run.ActiveModifiers[order[pos - 1]]).Category == category) { total += FertilizerGrowth.ResonancePerNeighbor; }
+                }
+                if (pos + 1 < order.Length && ModifierCatalog.Get(run.ActiveModifiers[order[pos + 1]]).Category == category) { total += FertilizerGrowth.ResonancePerNeighbor; }
+            }
+            return total;
+        }
+
+        /// <summary>Tries every arrangement (at most 4! = 24) and keeps the best for the Roots; on a tie the current order stays (least movement).</summary>
+        private static void ArrangeFertilizers(RunManager run)
+        {
+            int n = run.ActiveModifiers.Count;
+            if (n < 2) { return; }
+            var current = new int[n];
+            for (int i = 0; i < n; i++) { current[i] = i; }
+            var best = (int[])current.Clone();
+            float bestValue = RootsValue(run, best);
+            int bestMoved = 0;
+            Permute(current, 0, perm =>
+            {
+                float value = RootsValue(run, perm);
+                int moved = 0;
+                for (int i = 0; i < perm.Length; i++) { if (perm[i] != i) { moved++; } }
+                if (value > bestValue + 1e-4f || (System.Math.Abs(value - bestValue) <= 1e-4f && moved < bestMoved))
+                {
+                    bestValue = value;
+                    bestMoved = moved;
+                    best = (int[])perm.Clone();
+                }
+            });
+            // Put them in order with swaps; slotOf[k] = where the fertilizer that started at slot k stands now.
+            var at = new int[n]; // at[slot] = original index standing there
+            for (int i = 0; i < n; i++) { at[i] = i; }
+            for (int pos = 0; pos < n; pos++)
+            {
+                if (at[pos] == best[pos]) { continue; }
+                int from = System.Array.IndexOf(at, best[pos]);
+                run.SwapModifiers(pos, from);
+                int temp = at[pos]; at[pos] = at[from]; at[from] = temp;
+            }
+        }
+
+        private static void Permute(int[] items, int start, System.Action<int[]> visit)
+        {
+            if (start == items.Length) { visit(items); return; }
+            for (int i = start; i < items.Length; i++)
+            {
+                (items[start], items[i]) = (items[i], items[start]);
+                Permute(items, start + 1, visit);
+                (items[start], items[i]) = (items[i], items[start]);
+            }
         }
 
         private bool TryBuyOne(RunManager run, RunResult result)
