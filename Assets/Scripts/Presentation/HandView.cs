@@ -276,7 +276,7 @@ namespace Contigu.Presentation
         {
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
 
-            // Seeds left: caption, big "30 / 30", and a progress bar underneath.
+            // Seeds left: the big "30 / 30" and a thick progress bar underneath.
             var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.CardBackground);
             box.color = new Color(0.12f, 0.16f, 0.21f, 1f);
             box.raycastTarget = false;
@@ -288,31 +288,25 @@ namespace Contigu.Presentation
             boxRect.anchoredPosition = new Vector2(0f, HandBoxPadding + ShuffleButtonHeight + FooterGap);
             SeedsLeftBox = boxRect;
 
-            var caption = UIFactory.CreateText(box.transform, "Caption", "SEEDS LEFT", 13, UITheme.TextMuted);
-            caption.raycastTarget = false;
-            caption.rectTransform.anchorMin = new Vector2(0f, 1f);
-            caption.rectTransform.anchorMax = new Vector2(1f, 1f);
-            caption.rectTransform.pivot = new Vector2(0.5f, 1f);
-            caption.rectTransform.anchoredPosition = new Vector2(0f, -4f);
-            caption.rectTransform.sizeDelta = new Vector2(0f, 16f);
-
+            // The count on top, a thick progress bar under it (same box, same place: the bar takes the room the small caption used to have).
             SeedsLeftLabel = UIFactory.CreateText(box.transform, "Value", "0 / 0", 28, Color.white);
             SeedsLeftLabel.raycastTarget = false;
             SeedsLeftLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             SeedsLeftLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-            SeedsLeftLabel.rectTransform.offsetMin = new Vector2(0f, 14f);
-            SeedsLeftLabel.rectTransform.offsetMax = new Vector2(0f, -18f);
+            SeedsLeftLabel.rectTransform.offsetMin = new Vector2(0f, 28f);
+            SeedsLeftLabel.rectTransform.offsetMax = new Vector2(0f, -3f);
             var valueOutline = SeedsLeftLabel.gameObject.AddComponent<Outline>();
             valueOutline.effectColor = UITheme.Border;
             valueOutline.effectDistance = new Vector2(2f, -2f);
 
-            var track = UIFactory.CreatePanel(box.transform, "BarTrack", new Color(0f, 0f, 0f, 0.45f));
+            var track = UIFactory.CreatePanel(box.transform, "BarTrack", new Color(0.04f, 0.06f, 0.09f, 1f));
             track.raycastTarget = false;
+            UIFactory.AddThickOutline(track, new Color(0.62f, 0.70f, 0.78f, 0.9f), 1.5f);
             track.rectTransform.anchorMin = new Vector2(0f, 0f);
             track.rectTransform.anchorMax = new Vector2(1f, 0f);
             track.rectTransform.pivot = new Vector2(0.5f, 0f);
-            track.rectTransform.anchoredPosition = new Vector2(0f, 6f);
-            track.rectTransform.sizeDelta = new Vector2(-16f, 7f);
+            track.rectTransform.anchoredPosition = new Vector2(0f, 7f);
+            track.rectTransform.sizeDelta = new Vector2(-18f, 20f);
             var fill = UIFactory.CreatePanel(track.transform, "BarFill", UITheme.Success);
             fill.raycastTarget = false;
             fill.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -320,6 +314,13 @@ namespace Contigu.Presentation
             fill.rectTransform.offsetMin = Vector2.zero;
             fill.rectTransform.offsetMax = Vector2.zero;
             SeedsLeftFill = fill.rectTransform;
+            // A glossy highlight along the top half of the fill, so the bar reads as a thick glass tube.
+            var shine = UIFactory.CreatePanel(fill.transform, "Shine", new Color(1f, 1f, 1f, 0.32f));
+            shine.raycastTarget = false;
+            shine.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            shine.rectTransform.anchorMax = new Vector2(1f, 1f);
+            shine.rectTransform.offsetMin = Vector2.zero;
+            shine.rectTransform.offsetMax = Vector2.zero;
 
             // Shuffle: a wide blue button at the very bottom, icon on the left and "SHUFFLE 10" beside it.
             _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.Garden("Blue") ?? UISprites.HandUtilityButtonBackground, 14);
