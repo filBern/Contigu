@@ -707,6 +707,16 @@ namespace Contigu.Core
         /// </summary>
         private const int ThiefEnragedStealCount = 2;
 
+        private int CountSeedsInHand()
+        {
+            int count = 0;
+            for (int i = 0; i < Deck.Hand.Count; i++)
+            {
+                if (Deck.Hand[i].HasValue) { count++; }
+            }
+            return count;
+        }
+
         private bool ResolveThiefShuffleEffect()
         {
             bool stole = false;
@@ -735,6 +745,11 @@ namespace Contigu.Core
                     // simplification ThiefStoleOnLastShuffle's own plain bool already makes for "how many".
                     for (int s = 0; s < stealCount; s++)
                     {
+                        // A Thief never takes the last seed of the hand: with several Thieves (or none of the Shuffles left to bring the seeds back) an emptied hand would soft-lock the run.
+                        if (CountSeedsInHand() <= 1)
+                        {
+                            break;
+                        }
                         if (Deck.StealRandomHandTile(_rng, out var stolenIndex, out var stolenToken, out var stolenRotation))
                         {
                             stole = true;

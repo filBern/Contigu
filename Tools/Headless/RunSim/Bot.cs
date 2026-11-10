@@ -166,6 +166,13 @@ namespace Contigu.RunSim
                     {
                         result.Stuck = true;
                         result.StuckReason = "no move";
+                        if (System.Environment.GetEnvironmentVariable("STUCK_DUMP") == "1")
+                        {
+                            System.Console.WriteLine("STUCK seed " + seed + " round " + run.CurrentRoundNumber + " shuffles " + run.ShufflesRemaining + " pieces " + run.PiecesRemainingThisRound + " state " + run.State);
+                            for (int i = 0; i < run.Deck.Hand.Count; i++) { var t = run.Deck.Hand[i]; System.Console.WriteLine("  hand " + i + ": " + (t.HasValue ? t.Value.Shape + "/" + t.Value.Color : "empty") + " locked=" + run.IsHandSlotLocked(i)); }
+                            foreach (var en in run.CurrentEncounter) { System.Console.WriteLine("  enemy " + en.Definition.Id + " hp " + en.CurrentHp + " dead " + en.IsDead); }
+                            for (int y = 0; y < GridManager.Size; y++) { var row = ""; for (int x = 0; x < GridManager.Size; x++) { var c = run.Grid.GetCell(x, y); row += c.IsFrozen ? "F" : c.IsLocked ? "L" : c.IsFilled ? "#" : "."; } System.Console.WriteLine("  " + row); }
+                        }
                         break;
                     }
                     continue;

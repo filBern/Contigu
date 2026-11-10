@@ -1,6 +1,6 @@
 # Progression : déblocages et difficulté
 
-Statut : **implémenté dans le Core et branché dans la présentation** (à vérifier dans Unity). Décisions de l'auteur (2026-11-09) : objets à débloquer par conditions comme Balatro, Stars supprimées, challenges en parallèle avec des conditions différentes, niveaux de difficulté, annonce des nouveautés en fin de run, anciennes sauvegardes oubliées (reset forcé), ennemis par challenge à traiter plus tard.
+Statut : **implémenté dans le Core et branché dans la présentation** (à vérifier dans Unity). Décisions de l'auteur (2026-11-09) : objets à débloquer par conditions comme Balatro, Stars supprimées, challenges en parallèle avec des conditions différentes, niveaux de difficulté, annonce des nouveautés en fin de run, anciennes sauvegardes oubliées (reset forcé), ennemis par challenge traités ensuite (voir DECISIONS, 2026-11-10).
 
 ## Principes
 
@@ -209,5 +209,4 @@ Au départ : Mult +1, Mult +2, Chain, Prisoner, Crown, Mason, Nest, Diagonal, le
 ## À régler plus tard
 
 - Les valeurs de conditions et de niveaux avec de vrais joueurs (la calibration vient d'un bot).
-- Des pools d'ennemis propres à chaque challenge (décision de l'auteur : plus tard).
 - La Collection devrait afficher la condition des objets verrouillés (pas encore fait).

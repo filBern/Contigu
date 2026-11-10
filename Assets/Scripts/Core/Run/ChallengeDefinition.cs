@@ -64,6 +64,12 @@ namespace Contigu.Core
         /// <summary>This challenge's own resident enemy (null for Spring): it joins every third round's roster (see EncounterCatalog.GetEncounter).</summary>
         public EnemyId? WorldEnemy;
 
+        /// <summary>
+        /// Which pests this challenge swaps for others in the authored rosters (the leading Basic is never touched): it is what makes each
+        /// challenge meet its own enemies instead of the same ones as Spring. Empty for Spring.
+        /// </summary>
+        public EnemySwap[] EnemySwaps = System.Array.Empty<EnemySwap>();
+
         public WeatherProfile WeatherProfile = WeatherProfile.Normal;
 
         /// <summary>Scales every weather bonus/penalty amount (Summer's weather hits harder).</summary>
@@ -147,6 +153,19 @@ namespace Contigu.Core
         public int BossRoundIndex
         {
             get { return RoundCount - 1; }
+        }
+    }
+
+    /// <summary>One substitution of a pest for another in a challenge's rosters (see <see cref="ChallengeDefinition.EnemySwaps"/>).</summary>
+    public struct EnemySwap
+    {
+        public readonly EnemyId From;
+        public readonly EnemyId To;
+
+        public EnemySwap(EnemyId from, EnemyId to)
+        {
+            From = from;
+            To = to;
         }
     }
 }

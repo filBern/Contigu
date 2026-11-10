@@ -27,15 +27,16 @@ namespace Contigu.Core
             Id = ChallengeId.Marathon,
             Name = "Winter",
             WeatherProfile = WeatherProfile.Winter,
-            Description = "A smaller starting seed bag and tighter seed budgets. Same 12 enemy rounds as Spring, with far less room for error. Home of the Hoarfrost.",
+            Description = "A smaller starting seed bag and tighter seed budgets. 12 enemy rounds with far less room for error, against locks, thieves and ice: no blight at all. Home of the Hoarfrost.",
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = new[] { 20, 20, 22, 22, 24, 24, 24, 18, 24, 24, 24, 26, 26, 28, 30 },
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             PieceBudgetBonus = 10,
-            EnemyHpMultiplier = 1.85f,
-            WorldEnemy = EnemyId.Hoarfrost
+            EnemyHpMultiplier = 2.6f,
+            WorldEnemy = EnemyId.Hoarfrost,
+            EnemySwaps = new[] { new EnemySwap(EnemyId.Poisoner, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.HeavyLocker), new EnemySwap(EnemyId.Blightmoth, EnemyId.Thief), new EnemySwap(EnemyId.Reclaimer, EnemyId.Leech) }
         };
 
         /// <summary>Weather every round, never calm — and it hits 1.5x harder. Rewards planning around the forecast shown in the shop.</summary>
@@ -43,7 +44,7 @@ namespace Contigu.Core
         {
             Id = ChallengeId.Summer,
             Name = "Summer",
-            Description = "Every round brings real weather - never calm skies - and it hits 1.5x harder. Plan around the forecast. Home of the Locust Swarm.",
+            Description = "Every round brings real weather - never calm skies - and it hits 1.5x harder. Plan around the forecast. Blight and fertilizer pests, no locks. Home of the Locust Swarm.",
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -52,8 +53,9 @@ namespace Contigu.Core
             WeatherProfile = WeatherProfile.Extreme,
             WeatherIntensity = 1.5f,
             PieceBudgetBonus = 6,
-            EnemyHpMultiplier = 1.7f,
-            WorldEnemy = EnemyId.Locust
+            EnemyHpMultiplier = 1.4f,
+            WorldEnemy = EnemyId.Locust,
+            EnemySwaps = new[] { new EnemySwap(EnemyId.Locker, EnemyId.Poisoner), new EnemySwap(EnemyId.HeavyLocker, EnemyId.Plague), new EnemySwap(EnemyId.Thief, EnemyId.Blightmoth), new EnemySwap(EnemyId.Leech, EnemyId.Reclaimer) }
         };
 
         /// <summary>Fertilizers wither away after 4 rounds and a random new one sprouts in each slot; the shop pays more Pollen and the enemies are far gentler, so builds are rebuilt on the fly.</summary>
@@ -62,7 +64,7 @@ namespace Contigu.Core
             Id = ChallengeId.Autumn,
             Name = "Autumn",
             WeatherProfile = WeatherProfile.Autumn,
-            Description = "Fertilizers wither after 4 rounds - a random new one sprouts in their place - and every round pays extra Pollen. Enemies are gentler. Home of the Rotgrub.",
+            Description = "Fertilizers wither after 4 rounds - a random new one sprouts in their place - and every round pays extra Pollen. Enemies are gentler, with fewer big locks and blights, and pests that gnaw at fertilizers. Home of the Rotgrub.",
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
@@ -70,9 +72,10 @@ namespace Contigu.Core
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             FertilizerLifespanRounds = 4,
             RoundEndPollenBonus = 10,
-            EnemyHpMultiplier = 1.5f,
+            EnemyHpMultiplier = 1.7f,
             PieceBudgetBonus = 12,
-            WorldEnemy = EnemyId.Rotgrub
+            WorldEnemy = EnemyId.Rotgrub,
+            EnemySwaps = new[] { new EnemySwap(EnemyId.HeavyLocker, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.Poisoner), new EnemySwap(EnemyId.Thief, EnemyId.Blightmoth) }
         };
 
         /// <summary>Only 2 of the 4 seed colors exist this run (drawn at the start): big groups come easily, so the enemies are sturdier.</summary>
@@ -81,16 +84,17 @@ namespace Contigu.Core
             Id = ChallengeId.Orchard,
             Name = "Orchard",
             WeatherProfile = WeatherProfile.Orchard,
-            Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier. Home of the Fruitworm.",
+            Description = "Only 2 seed colors exist this run. Groups connect easily, but the enemies are sturdier. Fewer haters of colors, more shields and locks. Home of the Fruitworm.",
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             ActiveColorCount = 2,
-            EnemyHpMultiplier = 3.4f,
+            EnemyHpMultiplier = 4.8f,
             PieceBudgetBonus = 6,
-            WorldEnemy = EnemyId.Fruitworm
+            WorldEnemy = EnemyId.Fruitworm,
+            EnemySwaps = new[] { new EnemySwap(EnemyId.ColorHater, EnemyId.Reclaimer), new EnemySwap(EnemyId.Poisoner, EnemyId.Locker), new EnemySwap(EnemyId.Plague, EnemyId.HeavyLocker) }
         };
 
         /// <summary>A snug 5x5 plot: lines are short and frequent, but there is no room to spare.</summary>
@@ -99,16 +103,17 @@ namespace Contigu.Core
             Id = ChallengeId.Greenhouse,
             Name = "Greenhouse",
             WeatherProfile = WeatherProfile.Greenhouse,
-            Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare. Home of the Whitefly Cloud.",
+            Description = "A snug 5x5 plot. Lines are short and frequent, but there is no room to spare. Blight and blighted fertilizers instead of locks, which would choke a plot this small. Home of the Whitefly Cloud.",
             RoundCount = RunConfig.RoundCount,
             Quotas = RunConfig.Quotas,
             PieceBudgets = RunConfig.PieceBudgets,
             BossLockPiecesInterval = RunConfig.BossLockPiecesInterval,
             BossLockCellsPerInterval = RunConfig.BossLockCellsPerInterval,
             GridSize = 5,
-            EnemyHpMultiplier = 1.55f,
+            EnemyHpMultiplier = 1.25f,
             PieceBudgetBonus = 10,
-            WorldEnemy = EnemyId.Whitefly
+            WorldEnemy = EnemyId.Whitefly,
+            EnemySwaps = new[] { new EnemySwap(EnemyId.Locker, EnemyId.Poisoner), new EnemySwap(EnemyId.HeavyLocker, EnemyId.Plague), new EnemySwap(EnemyId.Reclaimer, EnemyId.Blightmoth) }
         };
 
         public static readonly ChallengeDefinition[] All = { Classic, Marathon, Summer, Autumn, Orchard, Greenhouse };

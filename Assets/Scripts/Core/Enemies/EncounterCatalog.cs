@@ -129,6 +129,7 @@ namespace Contigu.Core
                 return System.Array.Empty<EnemyId>();
             }
             var roster = roundIndex >= challenge.RoundCount && roundIndex >= RunConfig.RoundCount ? EndlessEncounter(roundIndex) : GetAuthored(schedule != null && roundIndex < schedule.Length ? schedule[roundIndex] : roundIndex);
+            roster = ApplySwaps(roster, challenge);
             // Each challenge is its own world: its resident enemy joins every third round (rounds 3, 6, 9, ... — Endless included), right
             // behind the leading Basic. A full roster loses its last enemy to make room.
             if (challenge.WorldEnemy.HasValue && roundIndex % ScoringConstants.WorldEnemyRoundInterval == ScoringConstants.WorldEnemyRoundInterval - 1)
@@ -142,6 +143,28 @@ namespace Contigu.Core
                 return withResident;
             }
             return roster;
+        }
+
+        /// <summary>The roster with the challenge's own pest substitutions applied (the leading Basic never changes).</summary>
+        private static IReadOnlyList<EnemyId> ApplySwaps(IReadOnlyList<EnemyId> roster, ChallengeDefinition challenge)
+        {
+            if (challenge.EnemySwaps == null || challenge.EnemySwaps.Length == 0)
+            {
+                return roster;
+            }
+            var swapped = new List<EnemyId>(roster);
+            for (int i = 1; i < swapped.Count; i++)
+            {
+                for (int s = 0; s < challenge.EnemySwaps.Length; s++)
+                {
+                    if (swapped[i] == challenge.EnemySwaps[s].From)
+                    {
+                        swapped[i] = challenge.EnemySwaps[s].To;
+                        break;
+                    }
+                }
+            }
+            return swapped;
         }
 
         // Boss rounds (every 4th) draw their roster from a pool of heavier ones instead of always meeting the same boss.

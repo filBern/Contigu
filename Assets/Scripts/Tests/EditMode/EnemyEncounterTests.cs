@@ -914,6 +914,25 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void SeveralEnragedThieves_NeverEmptyTheHand()
+        {
+            var run = new RunManager(new SystemRandomProvider(2));
+            run.DebugSetEncounter(EnemyId.Basic, EnemyId.Thief, EnemyId.Thief, EnemyId.Thief);
+            foreach (var enemy in run.CurrentEncounter)
+            {
+                if (enemy.Definition.Id == EnemyId.Thief) { enemy.ApplyDamage(enemy.CurrentHp * 6 / 10); }
+            }
+            run.DebugSetShufflesRemaining(60);
+            for (int i = 0; i < 30; i++)
+            {
+                Assert.IsTrue(run.ShuffleHand());
+                int seeds = 0;
+                for (int slot = 0; slot < run.Deck.Hand.Count; slot++) { if (run.Deck.Hand[slot].HasValue) { seeds++; } }
+                Assert.GreaterOrEqual(seeds, 1, "Thieves steal, but never the last seed (shuffle " + i + ")");
+            }
+        }
+
+        [Test]
         public void Thief_StealsOneRandomHandTileOnShuffle_WithoutShrinkingTheDeck()
         {
             var run = new RunManager(new SystemRandomProvider(1));

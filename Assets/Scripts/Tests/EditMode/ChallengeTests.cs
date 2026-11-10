@@ -405,5 +405,47 @@ namespace Contigu.Tests
             var restored = RunManager.Restore(RunSnapshot.FromText(hard.RoundStartSnapshot.ToText()), new SystemRandomProvider(4));
             Assert.AreEqual(3, restored.Challenge.Level, "the difficulty level is saved with the run");
         }
+
+        private static bool EverEncounters(ChallengeDefinition challenge, EnemyId enemy)
+        {
+            for (int seed = 0; seed < 25; seed++)
+            {
+                var schedule = EncounterCatalog.RollSchedule(new SystemRandomProvider(seed), challenge.RoundCount);
+                for (int round = 0; round < challenge.RoundCount; round++)
+                {
+                    if (new List<EnemyId>(EncounterCatalog.GetEncounter(challenge, round, schedule)).Contains(enemy)) { return true; }
+                }
+            }
+            return false;
+        }
+
+        [Test]
+        public void EachChallenge_MeetsItsOwnPests()
+        {
+            Assert.AreEqual(0, ChallengeCatalog.Classic.EnemySwaps.Length, "Spring keeps the authored enemies");
+            foreach (var challenge in ChallengeCatalog.All)
+            {
+                for (int seed = 0; seed < 10; seed++)
+                {
+                    var schedule = EncounterCatalog.RollSchedule(new SystemRandomProvider(seed), challenge.RoundCount);
+                    for (int round = 0; round < challenge.RoundCount; round++)
+                    {
+                        var roster = EncounterCatalog.GetEncounter(challenge, round, schedule);
+                        Assert.AreEqual(EnemyId.Basic, roster[0], challenge.Name + ": the leading Basic never changes");
+                        Assert.LessOrEqual(roster.Count, ScoringConstants.MaxEnemiesPerRound, challenge.Name);
+                    }
+                }
+            }
+            Assert.IsTrue(EverEncounters(ChallengeCatalog.Classic, EnemyId.Poisoner));
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Marathon, EnemyId.Poisoner), "Winter has no blight");
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Marathon, EnemyId.Plague));
+            Assert.IsTrue(EverEncounters(ChallengeCatalog.Marathon, EnemyId.Thief));
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Summer, EnemyId.Locker), "Summer has no locks");
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Summer, EnemyId.HeavyLocker));
+            Assert.IsTrue(EverEncounters(ChallengeCatalog.Summer, EnemyId.Blightmoth));
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Orchard, EnemyId.ColorHater), "two colors: a color hater would cancel half of everything");
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Greenhouse, EnemyId.Locker), "locks would choke a 5x5 plot");
+            Assert.IsFalse(EverEncounters(ChallengeCatalog.Autumn, EnemyId.Thief));
+        }
     }
 }
