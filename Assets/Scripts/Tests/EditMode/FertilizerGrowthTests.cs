@@ -131,5 +131,63 @@ namespace Contigu.Tests
             Assert.AreEqual(run.GetModifierGrowth(0), restored.GetModifierGrowth(0));
             Assert.AreEqual(run.GetModifierHarvests(0), restored.GetModifierHarvests(0));
         }
+
+        [Test]
+        public void Sap_FlowsFromABloomOrFruitToItsRightNeighbor()
+        {
+            // Barometer (Roguelike?) and Haste are in different categories as far as resonance goes; only the sap is checked here.
+            var run = NewRun(WeatherId.Rain, ModifierId.Hate, ModifierId.Barometre);
+            Assert.AreEqual(0f, run.GetModifierSapBonus(1), 1e-4f, "a Bud gives nothing");
+            run.DebugSetModifierGrowth(0, FertilizerGrowth.BloomAt);
+            Assert.AreEqual(FertilizerGrowth.SapFromBloom, run.GetModifierSapBonus(1), 1e-4f);
+            run.DebugSetModifierGrowth(0, FertilizerGrowth.FruitAt);
+            Assert.AreEqual(FertilizerGrowth.SapFromFruit, run.GetModifierSapBonus(1), 1e-4f);
+            Assert.AreEqual(0f, run.GetModifierSapBonus(0), 1e-4f, "nothing flows into the first slot, nor leftwards");
+        }
+
+        [Test]
+        public void Sap_StrengthensTheReceiverAndOrderMatters()
+        {
+            var run = NewRun(WeatherId.Rain, ModifierId.Hate, ModifierId.Barometre);
+            run.DebugSetModifierGrowth(0, FertilizerGrowth.FruitAt); // the Fruit feeds the Barometer on its right
+            Assert.AreEqual(FertilizerGrowth.SapFromFruit, run.GetModifierSapBonus(1), 1e-4f);
+            run.SwapModifiers(0, 1); // the Fruit now stands on the right: nothing flows leftwards
+            Assert.AreEqual(0f, run.GetModifierSapBonus(0), 1e-4f);
+            Assert.AreEqual(0f, run.GetModifierSapBonus(1), 1e-4f);
+        }
+
+        [Test]
+        public void Resonance_CountsNeighborsOfTheSameCategory_NoCeiling()
+        {
+            // Three fertilizers of one category in a row: the middle one has two matching neighbors, the ends one.
+            ModifierId a = default, b = default, c = default;
+            ModifierCategory? found = null;
+            var byCategory = new System.Collections.Generic.Dictionary<ModifierCategory, System.Collections.Generic.List<ModifierId>>();
+            foreach (var def in ModifierCatalog.All)
+            {
+                if (ModifierCatalog.IsRetired(def.Id)) { continue; }
+                if (!byCategory.ContainsKey(def.Category)) { byCategory[def.Category] = new System.Collections.Generic.List<ModifierId>(); }
+                byCategory[def.Category].Add(def.Id);
+            }
+            foreach (var pair in byCategory)
+            {
+                if (pair.Value.Count >= 3) { found = pair.Key; a = pair.Value[0]; b = pair.Value[1]; c = pair.Value[2]; break; }
+            }
+            Assert.IsTrue(found.HasValue);
+            var run = NewRun(WeatherId.Clear, a, b, c);
+            Assert.AreEqual(1, run.GetModifierResonanceNeighbors(0));
+            Assert.AreEqual(2, run.GetModifierResonanceNeighbors(1));
+            Assert.AreEqual(2 * FertilizerGrowth.ResonancePerNeighbor, run.GetModifierResonanceBonus(1), 1e-4f);
+        }
+
+        [Test]
+        public void TheTotalBonusAddsGrowthSapAndResonance()
+        {
+            var run = NewRun(WeatherId.Clear, ModifierId.Hate, ModifierId.Barometre);
+            run.DebugSetModifierGrowth(0, FertilizerGrowth.BloomAt);
+            run.DebugSetModifierGrowth(1, FertilizerGrowth.FruitAt, 2);
+            float expected = FertilizerGrowth.FruitBonus + 2 * FertilizerGrowth.BonusPerHarvest + FertilizerGrowth.SapFromBloom + run.GetModifierResonanceBonus(1);
+            Assert.AreEqual(expected, run.GetModifierTotalBonus(1), 1e-4f);
+        }
     }
 }

@@ -3144,6 +3144,7 @@ namespace Contigu.Tests
         public void Multitude_StacksWhenHeldTwice_ViaCopieur()
         {
             var run = new RunManager(new SystemRandomProvider(1));
+            run.DebugDisableRoots(); // reads the stack's own numbers, not the neighbors' resonance
             PlayRoundToAwaitingShop(run);
             BuyModifierByIdViaShop(run, ModifierId.Multitude);
             BuyModifierByIdViaShop(run, ModifierId.Copieur);

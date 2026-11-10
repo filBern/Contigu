@@ -25,6 +25,7 @@ namespace Contigu.Tests
         {
             var run = new RunManager(new SystemRandomProvider(5));
             run.DebugDisableWeather();
+            run.DebugDisableRoots(); // these tests read each fertilizer's own numbers
             foreach (var id in held)
             {
                 Assert.IsTrue(run.DebugGrantModifier(id), id.ToString());

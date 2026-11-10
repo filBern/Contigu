@@ -605,6 +605,8 @@ namespace Contigu.Presentation
             _modifierPanelView.RoundsLeftProvider = index => _run.GetModifierRoundsLeft(index);
             _modifierPanelView.GrowthProvider = index => _run.GetModifierGrowth(index);
             _modifierPanelView.HarvestsProvider = index => _run.GetModifierHarvests(index);
+            _modifierPanelView.SapProvider = index => _run.GetModifierSapBonus(index);
+            _modifierPanelView.ResonanceProvider = index => _run.GetModifierResonanceNeighbors(index);
             _shopView.SetSidePanelCenterX(sidePanelCenterX);
             modifierPanelRect.anchoredPosition = new Vector2(leftColumnX, fertilizerY);
             _shopView.SetBoardPanels(modifierPanelRect, leftColumnX, fertilizerY, pollenX, pollenY, BoardPollenScale);

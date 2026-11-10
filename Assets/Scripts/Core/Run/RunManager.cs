@@ -118,12 +118,51 @@ namespace Contigu.Core
             return FertilizerGrowth.Bonus(GetModifierGrowth(index), GetModifierHarvests(index));
         }
 
+        // Debug switch: tests of a fertilizer's own numbers turn the neighbors' effect off.
+        private bool _rootsDisabled;
+
+        /// <summary>Roots: the sap the fertilizer at <paramref name="index"/> receives from the Bloom/Fruit on its left (see <see cref="FertilizerGrowth.SapFrom"/>).</summary>
+        public float GetModifierSapBonus(int index)
+        {
+            return !_rootsDisabled && index >= 1 && index < _activeModifiers.Count ? FertilizerGrowth.SapFrom(GetModifierGrowth(index - 1)) : 0f;
+        }
+
+        /// <summary>Number of neighbors (left and right) holding a fertilizer of the same category as the one at <paramref name="index"/> (0-2).</summary>
+        public int GetModifierResonanceNeighbors(int index)
+        {
+            if (_rootsDisabled || index < 0 || index >= _activeModifiers.Count)
+            {
+                return 0;
+            }
+            var category = ModifierCatalog.Get(_activeModifiers[index]).Category;
+            int count = 0;
+            for (int n = index - 1; n <= index + 1; n += 2)
+            {
+                if (n >= 0 && n < _activeModifiers.Count && ModifierCatalog.Get(_activeModifiers[n]).Category == category)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public float GetModifierResonanceBonus(int index)
+        {
+            return GetModifierResonanceNeighbors(index) * FertilizerGrowth.ResonancePerNeighbor;
+        }
+
+        /// <summary>Everything the fertilizer at <paramref name="index"/> adds to its effect factor on top of its level: its own growth, and the roots (sap + resonance) its neighbors give it.</summary>
+        public float GetModifierTotalBonus(int index)
+        {
+            return GetModifierGrowthBonus(index) + GetModifierSapBonus(index) + GetModifierResonanceBonus(index);
+        }
+
         private List<float> ModifierBonuses()
         {
             var bonuses = new List<float>(_activeModifiers.Count);
             for (int i = 0; i < _activeModifiers.Count; i++)
             {
-                bonuses.Add(GetModifierGrowthBonus(i));
+                bonuses.Add(GetModifierTotalBonus(i));
             }
             return bonuses;
         }
@@ -252,7 +291,7 @@ namespace Contigu.Core
         /// <summary>The scoring multiplier for modifier slot <paramref name="index"/> (see <see cref="ModifierLevelUtility"/>).</summary>
         private float GetModifierLevelFactor(int index)
         {
-            return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index)) + GetModifierGrowthBonus(index);
+            return ModifierLevelUtility.LevelToFactor(GetModifierLevel(index)) + GetModifierTotalBonus(index);
         }
 
         private static void SwapAt<T>(List<T> list, int a, int b)

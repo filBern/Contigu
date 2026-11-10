@@ -9396,3 +9396,10 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Le compteur suit le fertilizer (échange, déplacement) ; vendu/remplacé = remis à zéro. Sauvegarde : lignes `growth` et `harvests` du snapshot (tolérant à leur absence, sans changer la version).
 - **Présentation** (non vérifiée dans Unity) : bande de croissance à 3 segments au pied de chaque sac, toujours visible (vert/rose/or), ligne dans l'infobulle. Le Pollen de récolte apparaît dans le résumé de manche (sources de fertilizers).
 - À faire : recalibrer l'équilibre au simulateur (le bot range ses fertilizers dans l'ordre d'achat), puis B.
+
+## 2026-11-10 — Fertilizers : Racines (B)
+- **Sève** : un fertilizer Fleur donne +0,15 d'effet à son voisin de **droite**, un Fruit +0,30 (l'ordre des slots devient une chaîne, gauche → droite).
+- **Résonance** : chaque voisin (gauche, droite) de la **même catégorie** donne +0,20 (jusqu'à 2 voisins, donc +0,40), sans plafond d'aucune sorte (décision de l'auteur).
+- Ces bonus s'ajoutent au facteur d'effet avec le niveau, le stade et les récoltes (`RunManager.GetModifierTotalBonus`). `DebugDisableRoots` neutralise les racines pour les tests qui lisent les chiffres propres d'un fertilizer.
+- Présentation (non vérifiée dans Unity) : pastille « +x » brune en haut à droite du sac, détail dans l'infobulle. Les voisins sont ceux de la liste (la grille 2×2 du panneau passe à la ligne : 2 et 3 sont voisins).
+- À faire : recalibrer l'équilibre au simulateur (le bot range ses fertilizers dans l'ordre d'achat, ce qui sous-estime B).

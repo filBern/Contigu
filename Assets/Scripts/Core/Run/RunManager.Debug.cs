@@ -96,6 +96,12 @@ namespace Contigu.Core
             return true;
         }
 
+        /// <summary>Debug-only helper: neighbors stop affecting each other (sap and resonance), so a test can read one fertilizer's own numbers.</summary>
+        public void DebugDisableRoots()
+        {
+            _rootsDisabled = true;
+        }
+
         /// <summary>Debug-only helper: sets a held fertilizer's growth steps and harvest count (Maturation tests).</summary>
         public void DebugSetModifierGrowth(int index, int growth, int harvests = 0)
         {

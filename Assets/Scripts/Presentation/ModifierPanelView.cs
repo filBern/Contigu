@@ -74,6 +74,11 @@ namespace Contigu.Presentation
         public System.Func<int, int> GrowthProvider;
         public System.Func<int, int> HarvestsProvider;
 
+        /// <summary>Roots (see FertilizerGrowth): the sap a slot receives from its left neighbor, and how many neighbors of its category resonate with it.</summary>
+        public System.Func<int, float> SapProvider;
+        public System.Func<int, int> ResonanceProvider;
+        private static readonly Color RootsBg = new Color(0.55f, 0.36f, 0.20f, 1f);
+
         // The growth strip along the foot of each badge.
         private const float GrowthStripHeight = 8f;
         private static readonly Color StripEmpty = new Color(0.10f, 0.13f, 0.17f, 0.92f);
@@ -395,6 +400,17 @@ namespace Contigu.Presentation
                     string growthLine = GrowthTooltipLine(growth, harvests);
                     rowLevelState = rowId => growthLine + (baseGrowthState != null ? "\n" + baseGrowthState(rowId) : string.Empty);
                 }
+                float sap = SapProvider != null ? SapProvider(i) : 0f;
+                int resonating = ResonanceProvider != null ? ResonanceProvider(i) : 0;
+                float rootsBonus = sap + resonating * FertilizerGrowth.ResonancePerNeighbor;
+                if (rootsBonus > 0f)
+                {
+                    var baseRootsState = rowLevelState;
+                    string rootsLine = "Roots: +" + rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect";
+                    if (sap > 0f) { rootsLine += "\n  sap from the left neighbor +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
+                    if (resonating > 0) { rootsLine += "\n  resonance x" + resonating + " +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
+                    rowLevelState = rowId => rootsLine + (baseRootsState != null ? "\n" + baseRootsState(rowId) : string.Empty);
+                }
                 int roundsLeft = RoundsLeftProvider != null ? RoundsLeftProvider(i) : 0;
                 if (roundsLeft > 0)
                 {
@@ -487,6 +503,20 @@ namespace Contigu.Presentation
                 if (GrowthProvider != null)
                 {
                     BuildGrowthStrip(badge, growth);
+                }
+                if (rootsBonus > 0f)
+                {
+                    // Roots pill, top-right: what the neighbors add to this fertilizer's effect (sap + resonance).
+                    var rootsPill = UIFactory.CreatePanel(badge.transform, "RootsPill", RootsBg);
+                    rootsPill.raycastTarget = false;
+                    UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);
+                    rootsPill.rectTransform.anchorMin = rootsPill.rectTransform.anchorMax = new Vector2(1f, 1f);
+                    rootsPill.rectTransform.pivot = new Vector2(1f, 1f);
+                    rootsPill.rectTransform.anchoredPosition = new Vector2(-2f, -2f);
+                    rootsPill.rectTransform.sizeDelta = new Vector2(44f, 22f);
+                    var rootsLabel = UIFactory.CreateText(rootsPill.transform, "Roots", "+" + rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture), 15, Color.white);
+                    rootsLabel.raycastTarget = false;
+                    UIFactory.StretchFull(rootsLabel.rectTransform);
                 }
 
                 // Supports both drag-and-drop and tap-tap swap reordering,

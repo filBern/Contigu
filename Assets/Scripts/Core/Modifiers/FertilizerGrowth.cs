@@ -26,6 +26,23 @@ namespace Contigu.Core
         public const float BonusPerHarvest = 0.10f;
         public const int HarvestPollen = 8;
 
+        /// <summary>Roots: what a Bloom / a Fruit gives its right-hand neighbor (sap flows left to right).</summary>
+        public const float SapFromBloom = 0.15f;
+        public const float SapFromFruit = 0.30f;
+        /// <summary>Roots: what each neighbor of the same category gives a fertilizer (up to two neighbors, no ceiling).</summary>
+        public const float ResonancePerNeighbor = 0.20f;
+
+        /// <summary>The sap a fertilizer receives from its left-hand neighbor, given that neighbor's growth steps.</summary>
+        public static float SapFrom(int leftGrowth)
+        {
+            switch (StageOf(leftGrowth))
+            {
+                case GrowthStage.Fruit: return SapFromFruit;
+                case GrowthStage.Bloom: return SapFromBloom;
+                default: return 0f;
+            }
+        }
+
         public static GrowthStage StageOf(int growth)
         {
             if (growth >= FruitAt) { return GrowthStage.Fruit; }
