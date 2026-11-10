@@ -543,7 +543,6 @@ namespace Contigu.Presentation
                 return;
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
-            float scale = _rowsContainer.lossyScale.x;
             for (int i = 0; i < mods.Count - 1; i++)
             {
                 float sap = SapProvider != null ? SapProvider(i + 1) : 0f;
@@ -554,33 +553,36 @@ namespace Contigu.Presentation
                 }
                 var a = _rowBadges[i].rectTransform;
                 var b = _rowBadges[i + 1].rectTransform;
-                Vector3 mid = (a.TransformPoint(a.rect.center) + b.TransformPoint(b.rect.center)) * 0.5f;
                 string giver = ModifierCatalog.Get(mods[i]).Name;
                 string receiver = ModifierCatalog.Get(mods[i + 1]).Name;
-                float offset = sap > 0f && resonate ? 15f * scale : 0f;
+                float offset = sap > 0f && resonate ? 15f : 0f;
                 if (sap > 0f)
                 {
                     bool fruit = FertilizerGrowth.StageOf(GrowthProvider != null ? GrowthProvider(i) : 0) == GrowthStage.Fruit;
                     string body = giver + " is a " + (fruit ? "Fruit" : "Bloom") + ": its sap feeds " + receiver + " on its right, +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
-                    AddRootLink("Sap", Resources.Load<Sprite>("Icons/Growth/Roots_Sap"), fruit ? SapFruitTint : SapBloomTint, mid + new Vector3(0f, offset, 0f), "Sap", body);
+                    AddRootLink("Sap", Resources.Load<Sprite>("Icons/Growth/Roots_Sap"), fruit ? SapFruitTint : SapBloomTint, a, b, offset, "Sap", body);
                 }
                 if (resonate)
                 {
                     string body = giver + " and " + receiver + " are of the same kind: each gets +" + FertilizerGrowth.ResonancePerNeighbor.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
-                    AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, mid - new Vector3(0f, offset, 0f), "Resonance", body);
+                    AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, a, b, -offset, "Resonance", body);
                 }
             }
         }
 
-        private void AddRootLink(string name, Sprite sprite, Color tint, Vector3 worldPosition, string title, string body)
+        private void AddRootLink(string name, Sprite sprite, Color tint, RectTransform a, RectTransform b, float offset, string title, string body)
         {
             var chip = UIFactory.CreatePanel(_rowsContainer, "Root" + name, tint);
             chip.sprite = sprite;
             chip.enabled = sprite != null;
             chip.preserveAspect = true;
             chip.rectTransform.sizeDelta = new Vector2(30f, 30f);
-            chip.rectTransform.position = worldPosition;
             chip.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var follower = chip.gameObject.AddComponent<RootLinkFollower>();
+            follower.A = a;
+            follower.B = b;
+            follower.Offset = offset;
+            chip.transform.SetAsLastSibling();
             chip.gameObject.AddComponent<GrowthGlowPulse>();
             var hover = chip.gameObject.AddComponent<HoverTooltip>();
             hover.Init(_tooltip, title, body);

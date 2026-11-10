@@ -9445,3 +9445,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-10 — Racines : visuels dans le résumé de manche
 - Entre deux colonnes voisines de « Garden growth », les mêmes pastilles que sur le panneau : anneaux liés (résonance, toujours là quand les deux sont de la même catégorie) et goutte-flèche (sève), visible tant que le fertilizer de gauche est une Fleur ou un Fruit, teintée par son stade. Quand une colonne change de stade, sa pastille de sève apparaît, change de teinte et rebondit en même temps que le médaillon ; à la récolte elle disparaît. Infobulle sur chaque pastille. Non vérifié dans Unity.
+
+## 2026-11-10 — Racines : la pastille suit les sacs
+- Sur une capture, la pastille de sève apparaissait bien trop bas (placée une fois, en coordonnées du monde, avant que la mise en page du panneau ne se stabilise). Elle suit maintenant le milieu des deux sacs à chaque image (`RootLinkFollower`), ce qui tient aussi après un échange de sacs. Non vérifié dans Unity.
