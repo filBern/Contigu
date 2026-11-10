@@ -281,7 +281,8 @@ namespace Contigu.Core
         public float EnemyHpScaleFor(int roundIndex)
         {
             float actOne = roundIndex < ScoringConstants.EnemyHpGrowthFirstRoundIndex ? _challenge.ActOneHpMultiplier : 1f;
-            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier * actOne;
+            float late = roundIndex >= ScoringConstants.LateHpFirstRoundIndex ? _challenge.LateHpMultiplier : 1f;
+            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier * actOne * late;
         }
 
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)

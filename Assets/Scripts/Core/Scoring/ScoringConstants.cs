@@ -279,6 +279,9 @@ namespace Contigu.Core
         /// <summary>Zero-based index of the first round whose enemies get the HP growth (8 = round 9, the start of Act 2).</summary>
         public const int EnemyHpGrowthFirstRoundIndex = 8;
 
+        /// <summary>The first round (0-based index) <see cref="ChallengeDefinition.LateHpMultiplier"/> applies to (the 4th round).</summary>
+        public const int LateHpFirstRoundIndex = 3;
+
         /// <summary>Weather: Pollen granted per line cleared on a dewy round.</summary>
         public const int DewPollenPerLine = 2;
 

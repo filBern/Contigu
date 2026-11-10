@@ -8,7 +8,7 @@ using Contigu.Core;
 namespace Contigu.RunSim
 {
     /// <summary>
-    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check] [--each] [--study] [--no-order]
+    /// dotnet run -- [--runs N] [--seed S] [--policy greedy|random|planner|both] [--csv path] [--fail-on-error] [--challenge name] [--endless] [--check] [--each] [--study] [--no-order] [--late X]
     /// Plays N full Classic runs per policy against the real Core rules and prints balance statistics.
     /// </summary>
     public static class Program
@@ -16,6 +16,7 @@ namespace Contigu.RunSim
         public static int Main(string[] args)
         {
             int runs = 200;
+            float lateHp = 1f; // --late X: extra enemy HP multiplier from round 4 on (balance sweeps)
             int seed = 1;
             string policyArg = "both";
             string csvPath = null;
@@ -35,6 +36,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--check") { Invariants.Enabled = true; }
                 else if (args[i] == "--each") { return Smoke.Run(runs, seed); }
                 else if (args[i] == "--study") { studyMode = true; }
+                else if (args[i] == "--late" && i + 1 < args.Length) { lateHp = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); }
                 else if (args[i] == "--no-order") { Bot.OrderFertilizers = false; }
                 else if (args[i] == "--calibration-out" && i + 1 < args.Length) { calibrationOut = args[++i]; }
                 else if (args[i] == "--calibrate") { Bot.Calibrating = true; UnlockTracker.CalibrationMode = true; }
@@ -72,6 +74,12 @@ namespace Contigu.RunSim
                     challenge = challenge.Clone();
                     challenge.EnemyHpMultiplier = float.Parse(args[i + 1], System.Globalization.CultureInfo.InvariantCulture);
                 }
+            }
+
+            if (lateHp != 1f)
+            {
+                challenge = challenge.Clone();
+                challenge.LateHpMultiplier = lateHp;
             }
 
             if (studyMode)

@@ -99,6 +99,9 @@ namespace Contigu.Core
         /// <summary>Multiplies only Act 1's enemies (rounds 1-8), on top of <see cref="EnemyHpMultiplier"/> — eases the early filter without softening the finale.</summary>
         public float ActOneHpMultiplier = 1f;
 
+        /// <summary>Multiplies the enemies from round <see cref="ScoringConstants.LateHpFirstRoundIndex"/> + 1 on, on top of <see cref="EnemyHpMultiplier"/>: the fertilizers' Maturation and Roots build up over the rounds, so the answer to their power belongs to the mid-game, not to the opening filter.</summary>
+        public float LateHpMultiplier = 1f;
+
         /// <summary>Multiplies every round's score target (quota challenges: Winter).</summary>
         public float QuotaMultiplier = 1f;
 
