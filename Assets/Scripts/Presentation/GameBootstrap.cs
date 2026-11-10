@@ -767,9 +767,12 @@ namespace Contigu.Presentation
         /// <summary>The seed bag and the menu (settings and the rules): stacked, full width, at the bottom of the left column.</summary>
         private void BuildComboUtilityButtons(Transform parent, float centerX, float deckY, float rulesY, float width, float height)
         {
-            var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.HandUtilityButtonBackground, 12);
+            var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.Garden("Blue") ?? UISprites.HandUtilityButtonBackground, 12);
             var deckLabel = deckButton.GetComponentInChildren<Text>();
-            deckLabel.color = Color.black;
+            deckLabel.color = Color.white;
+            var deckOutline = deckLabel.gameObject.AddComponent<Outline>();
+            deckOutline.effectColor = UITheme.Border;
+            deckOutline.effectDistance = new Vector2(2f, -2f);
             deckLabel.fontSize = 25;
             var deckRect = deckButton.GetComponent<RectTransform>();
             deckRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -779,9 +782,12 @@ namespace Contigu.Presentation
             deckRect.sizeDelta = new Vector2(width, height);
             deckButton.onClick.AddListener(() => _deckView.Show());
 
-            var menuColumnButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.HandUtilityButtonBackground, 12);
+            var menuColumnButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.Garden("Gold") ?? UISprites.HandUtilityButtonBackground, 12);
             var menuColumnLabel = menuColumnButton.GetComponentInChildren<Text>();
-            menuColumnLabel.color = Color.black;
+            menuColumnLabel.color = Color.white;
+            var menuOutline = menuColumnLabel.gameObject.AddComponent<Outline>();
+            menuOutline.effectColor = UITheme.Border;
+            menuOutline.effectDistance = new Vector2(2f, -2f);
             menuColumnLabel.fontSize = 25;
             var menuColumnRect = menuColumnButton.GetComponent<RectTransform>();
             menuColumnRect.anchorMin = new Vector2(0.5f, 0.5f);

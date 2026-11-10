@@ -433,7 +433,7 @@ namespace Contigu.Presentation
             }
         }
 
-        private static Color AccentFor(ChallengeDefinition challenge)
+        internal static Color AccentFor(ChallengeDefinition challenge)
         {
             string name = challenge.Name.ToLowerInvariant();
             if (name.Contains("spring")) return new Color(0.36f, 0.66f, 0.28f);

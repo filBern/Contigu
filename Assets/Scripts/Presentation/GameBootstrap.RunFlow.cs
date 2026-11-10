@@ -549,6 +549,7 @@ namespace Contigu.Presentation
             _handView.Refresh();
             RefreshShuffleButton();
             _hudView.Refresh(_run);
+            _comboView.SetRound(_run.CurrentRoundNumber, _run.IsEndless ? 0 : _run.Challenge.RoundCount, ChallengeSelectView.AccentFor(_run.Challenge));
             if (refreshModifierPanel)
             {
                 _modifierPanelView.Refresh(_run.ActiveModifiers);

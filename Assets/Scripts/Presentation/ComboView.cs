@@ -28,6 +28,8 @@ namespace Contigu.Presentation
 
         private RectTransform _root;
         private Text _totalText;
+        private Image _banner;
+        private Text _bannerText;
         private Text _chipsText;
         private Text _multText;
         private RectTransform _chipsPill;
@@ -61,11 +63,31 @@ namespace Contigu.Presentation
             rootFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             rootFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // Running total (chips x mult).
-            _totalText = UIFactory.CreateText(_root, "TotalText", "0", 58, UITheme.TextPrimary);
-            var totalLayout = _totalText.gameObject.AddComponent<LayoutElement>();
-            totalLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
-            totalLayout.preferredHeight = 62f;
+            // Header banner in the challenge's color, like the blind's name in a card game: which round this is.
+            _banner = UIFactory.CreateSlicedImage(_root, "RoundBanner", UISprites.CardBackground);
+            _banner.color = UITheme.ScorePoints;
+            _banner.raycastTarget = false;
+            UIFactory.AddThickOutline(_banner, UITheme.Border, 2f);
+            var bannerLayout = _banner.gameObject.AddComponent<LayoutElement>();
+            bannerLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
+            bannerLayout.preferredHeight = 34f;
+            _bannerText = UIFactory.CreateText(_banner.transform, "RoundBannerText", "ROUND 1 / 12", 22, Color.white);
+            _bannerText.raycastTarget = false;
+            UIFactory.StretchFull(_bannerText.rectTransform);
+            AddTextOutline(_bannerText);
+
+            // Running total (chips x mult), in a dark inset box.
+            var totalBox = UIFactory.CreateSlicedImage(_root, "TotalBox", UISprites.CardBackground);
+            totalBox.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            totalBox.raycastTarget = false;
+            UIFactory.AddThickOutline(totalBox, UITheme.Border, 2f);
+            var totalBoxLayout = totalBox.gameObject.AddComponent<LayoutElement>();
+            totalBoxLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
+            totalBoxLayout.preferredHeight = 58f;
+            _totalText = UIFactory.CreateText(totalBox.transform, "TotalText", "0", 46, Color.white);
+            _totalText.raycastTarget = false;
+            UIFactory.StretchFull(_totalText.rectTransform);
+            AddTextOutline(_totalText);
 
             var row = UIFactory.CreateUIObject("Row", _root);
             var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -87,10 +109,12 @@ namespace Contigu.Presentation
             chipsLayout.preferredWidth = PillWidth;
             chipsLayout.preferredHeight = PillHeight;
             _chipsPill = chipsPill.rectTransform;
-            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 38, Color.white);
+            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 40, Color.white);
             UIFactory.StretchFull(_chipsText.rectTransform);
+            AddTextOutline(_chipsText);
 
-            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 32, UITheme.TextPrimary);
+            var xLabel = UIFactory.CreateText(row, "XLabel", "x", 40, UITheme.ScoreMult);
+            AddTextOutline(xLabel);
             var xLayout = xLabel.gameObject.AddComponent<LayoutElement>();
             xLayout.preferredWidth = XLabelWidth;
             xLayout.preferredHeight = PillHeight;
@@ -101,10 +125,25 @@ namespace Contigu.Presentation
             multLayout.preferredWidth = PillWidth;
             multLayout.preferredHeight = PillHeight;
             _multPill = multPill.rectTransform;
-            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 38, Color.white);
+            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 40, Color.white);
             UIFactory.StretchFull(_multText.rectTransform);
+            AddTextOutline(_multText);
 
             return _root;
+        }
+
+        private static void AddTextOutline(Text text)
+        {
+            var outline = text.gameObject.AddComponent<Outline>();
+            outline.effectColor = UITheme.Border;
+            outline.effectDistance = new Vector2(2f, -2f);
+        }
+
+        /// <summary>The banner at the top of the card: which round this is, in the challenge's color.</summary>
+        public void SetRound(int roundNumber, int roundCount, Color accent)
+        {
+            _banner.color = accent;
+            _bannerText.text = roundCount > 0 ? "ROUND " + roundNumber + " / " + roundCount : "ROUND " + roundNumber;
         }
 
         /// <summary>
