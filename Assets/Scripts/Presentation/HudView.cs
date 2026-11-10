@@ -306,8 +306,11 @@ namespace Contigu.Presentation
             _weatherChipIcon.enabled = _weatherChipIcon.sprite != null;
             string weatherName = VisualDefaults.GetWeatherName(weather, color);
             string weatherDescription = VisualDefaults.GetWeatherDescription(weather, color, intensity);
-            _weatherNameLabel.text = weatherName;
-            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : weatherDescription;
+            // Same colored keywords as everywhere else: the flower's color on its name, Pollen / pts / Mult in theirs.
+            _weatherNameLabel.supportRichText = true;
+            _weatherEffectLabel.supportRichText = true;
+            _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
+            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.Colorize(weatherDescription, 13);
             _weatherCardImage.color = weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
             _weatherChipTooltip.Init(_tooltip, weatherName, weatherDescription, "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
         }
