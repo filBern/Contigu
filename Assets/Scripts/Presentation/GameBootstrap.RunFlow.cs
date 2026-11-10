@@ -28,6 +28,7 @@ namespace Contigu.Presentation
             {
                 case RunState.AwaitingShop:
                     SaveCheckpoint();
+                    BeginGrowthHold();
                     if (_run.LastWitheredModifiers.Count > 0)
                     {
                         // Autumn: the fertilizers that just withered shrink away from the panel, and the status says which.
@@ -43,25 +44,6 @@ namespace Contigu.Presentation
                             sprouts.Add(ModifierCatalog.Get(_run.LastSproutedModifiers[i]).Name);
                         }
                         SetStatusText("Withered away: " + string.Join(", ", names) + (sprouts.Count > 0 ? ". Sprouted: " + string.Join(", ", sprouts) + "." : "."));
-                    }
-                    if (_run.LastHarvestedModifiers.Count > 0)
-                    {
-                        // Maturation: a Fruit was harvested at the end of the round; its sack pops "Harvest" and the status says which.
-                        _modifierPanelView.Refresh(_run.ActiveModifiers);
-                        var harvested = new List<string>();
-                        for (int i = 0; i < _run.LastHarvestedModifiers.Count; i++)
-                        {
-                            harvested.Add(ModifierCatalog.Get(_run.LastHarvestedModifiers[i]).Name);
-                            var anchor = _modifierPanelView.GetBadgeTransform(_run.LastHarvestedModifiers[i], i);
-                            if (anchor != null)
-                            {
-                                _feedbackLayer.SpawnPopup(anchor, "Harvest +" + FertilizerGrowth.HarvestPollen, UITheme.ScorePollen);
-                            }
-                        }
-                        if (_run.LastWitheredModifiers.Count == 0)
-                        {
-                            SetStatusText("Harvested: " + string.Join(", ", harvested) + " (+" + FertilizerGrowth.HarvestPollen * harvested.Count + " Pollen).");
-                        }
                     }
                     if (_run.LastRoundEndLueurBonus > 0)
                     {
@@ -224,6 +206,66 @@ namespace Contigu.Presentation
         }
 
         /// <summary>How the round just cleared went (score, biggest placement, harvests, Pollen), then the shop opens.</summary>
+        // Maturation: the left panel keeps showing each fertilizer's stage from before the round until the summary's garden animation reaches it.
+        private IReadOnlyList<GrowthStep> _growthHold;
+        private readonly HashSet<int> _growthReleased = new HashSet<int>();
+
+        private void BeginGrowthHold()
+        {
+            _growthReleased.Clear();
+            _growthHold = _run != null && _run.LastGrowthSteps.Count > 0 ? new List<GrowthStep>(_run.LastGrowthSteps) : null;
+        }
+
+        private bool IsHeld(int index)
+        {
+            return _growthHold != null && index >= 0 && index < _growthHold.Count && index < _run.ActiveModifiers.Count
+                && !_growthReleased.Contains(index) && _growthHold[index].Id == _run.ActiveModifiers[index];
+        }
+
+        private int DisplayedGrowth(int index)
+        {
+            return IsHeld(index) ? _growthHold[index].Before : _run.GetModifierGrowth(index);
+        }
+
+        private int DisplayedHarvests(int index)
+        {
+            return IsHeld(index) ? _growthHold[index].Harvests - (_growthHold[index].Harvested ? 1 : 0) : _run.GetModifierHarvests(index);
+        }
+
+        private float DisplayedSap(int index)
+        {
+            return index >= 1 && index < _run.ActiveModifiers.Count ? FertilizerGrowth.SapFrom(DisplayedGrowth(index - 1)) : 0f;
+        }
+
+        private void OnGrowthStepPlayed(int index, GrowthStep step)
+        {
+            if (_growthHold == null)
+            {
+                return;
+            }
+            _growthReleased.Add(index);
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+            if (step.Harvested)
+            {
+                var anchor = _modifierPanelView.GetBadgeTransform(step.Id, index);
+                if (anchor != null)
+                {
+                    _feedbackLayer.SpawnPopup(anchor, "Harvest +" + FertilizerGrowth.HarvestPollen, UITheme.ScorePollen);
+                }
+            }
+        }
+
+        private void OnGrowthFinished()
+        {
+            if (_growthHold == null)
+            {
+                return;
+            }
+            _growthHold = null;
+            _growthReleased.Clear();
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+        }
+
         private void ShowRoundSummaryThenShop()
         {
             _roundSummaryView.Show(_run.LastRoundSummary, () => _shopView.Show(_run));

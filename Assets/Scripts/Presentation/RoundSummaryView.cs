@@ -49,6 +49,11 @@ namespace Contigu.Presentation
         }
         private readonly List<GardenCell> _gardenCells = new List<GardenCell>();
 
+        /// <summary>Raised when a fertilizer's growth has just been played (slot index): the panel on the left then shows its new stage, not before.</summary>
+        public event Action<int, GrowthStep> GrowthStepPlayed;
+        /// <summary>Raised when the garden animation is over or skipped (all the new stages may show).</summary>
+        public event Action GrowthFinished;
+
         public RectTransform Build(Transform parent)
         {
             var overlay = UIFactory.CreatePanel(parent, "RoundSummaryOverlay", new Color(0f, 0f, 0f, 0.55f));
@@ -204,8 +209,8 @@ namespace Contigu.Presentation
                 cell.Medallion.preserveAspect = true;
                 cell.Medallion.rectTransform.anchorMin = cell.Medallion.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 cell.Medallion.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                cell.Medallion.rectTransform.anchoredPosition = new Vector2(26f, -10f);
-                cell.Medallion.rectTransform.sizeDelta = new Vector2(30f, 30f);
+                cell.Medallion.rectTransform.anchoredPosition = new Vector2(30f, -12f);
+                cell.Medallion.rectTransform.sizeDelta = new Vector2(40f, 40f);
 
                 cell.Pips = new Image[FertilizerGrowth.FruitAt];
                 for (int p = 0; p < cell.Pips.Length; p++)
@@ -239,6 +244,7 @@ namespace Contigu.Presentation
                 {
                     ShowFinalGrowth(_gardenCells[i]);
                 }
+                FinishGrowth();
             }
             else
             {
@@ -290,40 +296,107 @@ namespace Contigu.Presentation
                 if (!step.Scored && !step.Harvested)
                 {
                     cell.Label.text = FinalLabel(step);
+                    RaiseStepPlayed(i, step);
                     yield return Wait(0.12f);
                     continue;
                 }
+                var before = FertilizerGrowth.StageOf(step.Before);
+                var after = FertilizerGrowth.StageOf(step.After);
                 if (step.Harvested)
                 {
-                    // The Fruit is picked: the sack pops, the Pollen rises, and it starts again as a Bud.
+                    // The Fruit is picked: the sack pops, the Pollen rises, the fruit gives way to a new Bud.
                     yield return PopRect(cell.Sack.rectTransform, 1.25f, 0.22f);
                     SfxManager.Play(SfxId.RoundClear);
                     StartCoroutine(RiseText(cell, "+" + FertilizerGrowth.HarvestPollen));
                     ShowGrowth(cell, 0, 1f);
                     cell.Label.text = FinalLabel(step);
-                    yield return PopRect(cell.Medallion.rectTransform, 1.5f, 0.25f);
+                    RaiseStepPlayed(i, step);
+                    yield return SwapMedallion(cell, before, after, PipFruit);
                 }
                 else
                 {
-                    // One more step: the next pip fills; a change of stage swaps the medallion with a bigger pop.
+                    // One more step: the next pip fills; a change of stage turns one medallion into the next.
                     ShowGrowth(cell, step.After, 1f);
                     cell.Label.text = FinalLabel(step);
-                    bool newStage = FertilizerGrowth.StageOf(step.After) != FertilizerGrowth.StageOf(step.Before);
                     var pip = cell.Pips[Mathf.Clamp(step.After - 1, 0, cell.Pips.Length - 1)].rectTransform;
                     StartCoroutine(PopRect(pip, 1.6f, 0.2f));
-                    if (newStage)
+                    RaiseStepPlayed(i, step);
+                    if (before != after)
                     {
                         SfxManager.Play(SfxId.RoundClear);
-                        yield return PopRect(cell.Medallion.rectTransform, 1.6f, 0.28f);
+                        yield return SwapMedallion(cell, before, after, PipColorFor(step.After));
                     }
                     else
                     {
                         yield return PopRect(cell.Sack.rectTransform, 1.12f, 0.18f);
                     }
                 }
-                yield return Wait(0.18f);
+                yield return Wait(0.25f);
             }
             _growthPlay = null;
+            FinishGrowth();
+        }
+
+        private void RaiseStepPlayed(int index, GrowthStep step)
+        {
+            if (GrowthStepPlayed != null) { GrowthStepPlayed(index, step); }
+        }
+
+        private void FinishGrowth()
+        {
+            if (GrowthFinished != null) { GrowthFinished(); }
+        }
+
+        /// <summary>The old medallion shrinks and fades out while a ring flashes, then the new one grows in with an overshoot: one icon visibly becomes the next.</summary>
+        private System.Collections.IEnumerator SwapMedallion(GardenCell cell, GrowthStage from, GrowthStage to, Color flash)
+        {
+            var host = cell.Medallion.rectTransform;
+            // cell.Medallion already holds the new sprite (ShowGrowth); an overlay carries the old one away.
+            var old = UIFactory.CreatePanel(cell.Root, "OldStage", Color.white);
+            old.raycastTarget = false;
+            old.preserveAspect = true;
+            old.sprite = GrowthVisuals.StageSprite(from);
+            old.enabled = old.sprite != null;
+            old.rectTransform.anchorMin = host.anchorMin;
+            old.rectTransform.anchorMax = host.anchorMax;
+            old.rectTransform.pivot = host.pivot;
+            old.rectTransform.anchoredPosition = host.anchoredPosition;
+            old.rectTransform.sizeDelta = host.sizeDelta;
+            var ring = UIFactory.CreatePanel(cell.Root, "Flash", new Color(flash.r, flash.g, flash.b, 0f));
+            ring.raycastTarget = false;
+            ring.sprite = GrowthVisuals.FruitGlow;
+            ring.enabled = ring.sprite != null;
+            ring.rectTransform.anchorMin = host.anchorMin;
+            ring.rectTransform.anchorMax = host.anchorMax;
+            ring.rectTransform.pivot = host.pivot;
+            ring.rectTransform.anchoredPosition = host.anchoredPosition;
+            ring.rectTransform.sizeDelta = host.sizeDelta * 2f;
+            host.localScale = Vector3.zero;
+            float t = 0f;
+            const float Out = 0.2f;
+            while (t < Out)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / Out);
+                old.rectTransform.localScale = Vector3.one * (1f - p);
+                var c = old.color; c.a = 1f - p; old.color = c;
+                yield return null;
+            }
+            Destroy(old.gameObject);
+            t = 0f;
+            const float In = 0.35f;
+            while (t < In)
+            {
+                t += GameSpeed.AnimationDelta;
+                float p = Mathf.Clamp01(t / In);
+                float s = p < 0.6f ? Mathf.Lerp(0f, 1.5f, p / 0.6f) : Mathf.Lerp(1.5f, 1f, (p - 0.6f) / 0.4f);
+                host.localScale = Vector3.one * s;
+                ring.rectTransform.localScale = Vector3.one * (0.6f + 1.2f * p);
+                ring.color = new Color(flash.r, flash.g, flash.b, 0.9f * (1f - p));
+                yield return null;
+            }
+            host.localScale = Vector3.one;
+            Destroy(ring.gameObject);
         }
 
         private static System.Collections.IEnumerator Wait(float seconds)
@@ -429,7 +502,7 @@ namespace Contigu.Presentation
 
         private void OnContinue()
         {
-            if (_growthPlay != null) { StopCoroutine(_growthPlay); _growthPlay = null; }
+            if (_growthPlay != null) { StopCoroutine(_growthPlay); _growthPlay = null; FinishGrowth(); }
             _root.gameObject.SetActive(false);
             var next = _onContinue;
             _onContinue = null;
@@ -438,7 +511,7 @@ namespace Contigu.Presentation
 
         public void Hide()
         {
-            if (_growthPlay != null) { StopCoroutine(_growthPlay); _growthPlay = null; }
+            if (_growthPlay != null) { StopCoroutine(_growthPlay); _growthPlay = null; FinishGrowth(); }
             _root.gameObject.SetActive(false);
         }
     }
