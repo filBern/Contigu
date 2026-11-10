@@ -58,8 +58,11 @@ namespace Contigu.Presentation
         private static float SlotWidth { get { return UITweaks.Current.handSlotSize; } }
         private static float SlotHeight { get { return UITweaks.Current.handSlotSize; } }
         private static float SlotSpacing { get { return UITweaks.Current.handSlotSpacing; } }
-        private const float ShuffleButtonWidth = 46f;
-        private const float ShuffleButtonHeight = 48f;
+        private const float ShuffleButtonHeight = 50f;
+        private const float SeedsBoxHeight = 66f;
+        private const float FooterGap = 8f;
+        /// <summary>Room kept under the trays for the seeds-left box and the Shuffle button.</summary>
+        private const float FooterHeight = SeedsBoxHeight + ShuffleButtonHeight + FooterGap * 2f;
         // The ghost hides fully over a valid spot since the grid's own
         // footprint preview (GridCellView.SetHoverTint) already covers that
         // case; it stays faded elsewhere as a "not placed yet" cue.
@@ -265,25 +268,86 @@ namespace Contigu.Presentation
             return container;
         }
 
-        /// <summary>Builds the Shuffle button in the hand box's upper-right corner, with the remaining-use count centered over the icon.</summary>
+        /// <summary>
+        /// Builds the footer of the column: the seeds-left counter (with a thin bar) and, under it, the wide Shuffle button with its remaining uses.
+        /// They replace the bar that used to run along the bottom of the screen and the small Shuffle icon in the corner.
+        /// </summary>
         private void BuildShuffleButton(Transform container)
         {
-            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.ShuffleIcon, 15);
-            var shuffleImage = _shuffleButton.GetComponent<Image>();
-            shuffleImage.type = Image.Type.Simple;
-            shuffleImage.color = UITheme.LightBlue;
+            float innerWidth = ColumnWidth - HandBoxPadding * 2f;
+
+            // Seeds left: caption, big "30 / 30", and a progress bar underneath.
+            var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.CardBackground);
+            box.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            box.raycastTarget = false;
+            UIFactory.AddThickOutline(box, BoardDark, 2f);
+            var boxRect = box.rectTransform;
+            boxRect.anchorMin = boxRect.anchorMax = new Vector2(0.5f, 0f);
+            boxRect.pivot = new Vector2(0.5f, 0f);
+            boxRect.sizeDelta = new Vector2(innerWidth, SeedsBoxHeight);
+            boxRect.anchoredPosition = new Vector2(0f, HandBoxPadding + ShuffleButtonHeight + FooterGap);
+            SeedsLeftBox = boxRect;
+
+            var caption = UIFactory.CreateText(box.transform, "Caption", "SEEDS LEFT", 13, UITheme.TextMuted);
+            caption.raycastTarget = false;
+            caption.rectTransform.anchorMin = new Vector2(0f, 1f);
+            caption.rectTransform.anchorMax = new Vector2(1f, 1f);
+            caption.rectTransform.pivot = new Vector2(0.5f, 1f);
+            caption.rectTransform.anchoredPosition = new Vector2(0f, -4f);
+            caption.rectTransform.sizeDelta = new Vector2(0f, 16f);
+
+            SeedsLeftLabel = UIFactory.CreateText(box.transform, "Value", "0 / 0", 28, Color.white);
+            SeedsLeftLabel.raycastTarget = false;
+            SeedsLeftLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            SeedsLeftLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            SeedsLeftLabel.rectTransform.offsetMin = new Vector2(0f, 14f);
+            SeedsLeftLabel.rectTransform.offsetMax = new Vector2(0f, -18f);
+            var valueOutline = SeedsLeftLabel.gameObject.AddComponent<Outline>();
+            valueOutline.effectColor = UITheme.Border;
+            valueOutline.effectDistance = new Vector2(2f, -2f);
+
+            var track = UIFactory.CreatePanel(box.transform, "BarTrack", new Color(0f, 0f, 0f, 0.45f));
+            track.raycastTarget = false;
+            track.rectTransform.anchorMin = new Vector2(0f, 0f);
+            track.rectTransform.anchorMax = new Vector2(1f, 0f);
+            track.rectTransform.pivot = new Vector2(0.5f, 0f);
+            track.rectTransform.anchoredPosition = new Vector2(0f, 6f);
+            track.rectTransform.sizeDelta = new Vector2(-16f, 7f);
+            var fill = UIFactory.CreatePanel(track.transform, "BarFill", UITheme.Success);
+            fill.raycastTarget = false;
+            fill.rectTransform.anchorMin = new Vector2(0f, 0f);
+            fill.rectTransform.anchorMax = new Vector2(1f, 1f);
+            fill.rectTransform.offsetMin = Vector2.zero;
+            fill.rectTransform.offsetMax = Vector2.zero;
+            SeedsLeftFill = fill.rectTransform;
+
+            // Shuffle: a wide blue button at the very bottom, icon on the left and "SHUFFLE 10" beside it.
+            _shuffleButton = UIFactory.CreateButton(container, "ShuffleButton", "", UISprites.Garden("Blue") ?? UISprites.HandUtilityButtonBackground, 14);
             var buttonRect = _shuffleButton.GetComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(1f, 1f);
-            buttonRect.anchorMax = new Vector2(1f, 1f);
-            buttonRect.pivot = new Vector2(1f, 1f);
-            buttonRect.anchoredPosition = new Vector2(20f, 20f);
-            buttonRect.sizeDelta = new Vector2(ShuffleButtonWidth, ShuffleButtonHeight);
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0f);
+            buttonRect.pivot = new Vector2(0.5f, 0f);
+            buttonRect.anchoredPosition = new Vector2(0f, HandBoxPadding);
+            buttonRect.sizeDelta = new Vector2(innerWidth, ShuffleButtonHeight);
+
+            var icon = UIFactory.CreatePanel(_shuffleButton.transform, "ShuffleIcon", Color.white);
+            icon.sprite = UISprites.ShuffleIcon;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            icon.rectTransform.pivot = new Vector2(0f, 0.5f);
+            icon.rectTransform.anchoredPosition = new Vector2(12f, 0f);
+            icon.rectTransform.sizeDelta = new Vector2(32f, 32f);
 
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
-            _shuffleCountLabel.text = _run.ShufflesRemaining.ToString();
-            _shuffleCountLabel.color = UITheme.TextPrimary;
+            _shuffleCountLabel.text = "SHUFFLE  " + _run.ShufflesRemaining;
+            _shuffleCountLabel.color = Color.white;
+            _shuffleCountLabel.fontSize = 22;
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);
+            _shuffleCountLabel.rectTransform.offsetMin = new Vector2(40f, 0f);
+            var labelOutline = _shuffleCountLabel.gameObject.AddComponent<Outline>();
+            labelOutline.effectColor = UITheme.Border;
+            labelOutline.effectDistance = new Vector2(2f, -2f);
 
             _shuffleButton.onClick.AddListener(() =>
             {
@@ -294,10 +358,15 @@ namespace Contigu.Presentation
             });
         }
 
+        /// <summary>The seeds-left counter in the footer: its box (the anchor round-end popups fly from), the "30 / 30" text and the bar fill (HudView drives them, see HudView.UsePiecesDisplay).</summary>
+        public RectTransform SeedsLeftBox { get; private set; }
+        public Text SeedsLeftLabel { get; private set; }
+        public RectTransform SeedsLeftFill { get; private set; }
+
         /// <summary>Updates the Shuffle icon's remaining-use count and enabled state.</summary>
         public void SetShuffleState(int remaining, bool canShuffle)
         {
-            _shuffleCountLabel.text = remaining.ToString();
+            _shuffleCountLabel.text = "SHUFFLE  " + remaining;
             _shuffleAllowed = canShuffle;
             _shuffleButton.interactable = _interactable && _shuffleAllowed;
         }
@@ -1047,8 +1116,8 @@ namespace Contigu.Presentation
             }
             // Slots are stacked in the column, sharing its height equally (three slots, or four with the fourth-slot upgrade).
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
-            // The wooden "Seeds" sign hangs at the top of the card; the trays fill the rest.
-            float innerHeight = _columnHeight - ModifierPanelView.HeaderHeight - HandBoxPadding;
+            // The wooden "Seeds" sign hangs at the top of the card, the seeds-left box and the Shuffle button sit at the bottom; the trays fill the rest.
+            float innerHeight = _columnHeight - ModifierPanelView.HeaderHeight - HandBoxPadding - FooterHeight;
             float slotHeight = (innerHeight - (activeCount - 1) * SlotSpacing) / Mathf.Max(1, activeCount);
             for (int i = 0; i < activeCount; i++)
             {

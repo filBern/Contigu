@@ -475,7 +475,8 @@ namespace Contigu.Presentation
             float ColumnGap = UITweaks.Current.columnGap;
             float ScreenMargin = UITweaks.Current.screenMargin;
             float zoneTopY = canvasHeight * 0.5f - (HudView.EnemyBandHeight + ZoneMargin);
-            float zoneBottomY = -canvasHeight * 0.5f + HudView.BarHeight + ZoneMargin;
+            // The seeds-left bar that used to run along the bottom moved into the hand column: the play area now reaches the bottom of the screen.
+            float zoneBottomY = -canvasHeight * 0.5f + ZoneMargin;
             float leftColumnWidth = ModifierPanelView.PanelWidth; // the score card, the fertilizers and the two buttons are all this wide
             const float PlotSpacing = 2f; // GridView.CellSpacing
             int plots = GridManager.Size;
@@ -537,6 +538,7 @@ namespace Contigu.Presentation
             handRect.anchoredPosition = new Vector2(handColumnX, gridCenterY);
             // Now that the column is placed, let it size its slots.
             _handView.Refresh();
+            _hudView.UsePiecesDisplay(_handView.SeedsLeftLabel, _handView.SeedsLeftFill, _handView.SeedsLeftBox);
             BuildComboUtilityButtons(mainRoot, leftColumnX, deckY, rulesY, leftColumnWidth, UtilityButtonHeight);
             BuildLeftColumnFrame(mainRoot, comboRect, leftColumnX, gridTopY, gridBottomY, leftColumnWidth);
             // While the player thinks, the board keeps sparkling (above the board, under the shop and every overlay built after it).

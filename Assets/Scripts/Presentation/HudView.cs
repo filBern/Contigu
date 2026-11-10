@@ -19,6 +19,7 @@ namespace Contigu.Presentation
         private Text _scoreLabel;
         private RectTransform _piecesFillRect;
         private Text _piecesLabel;
+        private RectTransform _piecesAnchor;
         private Coroutine _lowPiecesPulseCoroutine;
         private const float LowPiecesWarningRatio = 0.2f;
         private const float LowPiecesPulseAmplitude = 0.1f;
@@ -408,7 +409,7 @@ namespace Contigu.Presentation
         /// <summary>Anchor on the pieces bar — the presentation layer flies each round-end "unused piece -> Lueur" popup from this point (see GameBootstrap.PlayRoundEndLueurBonusSequence).</summary>
         public RectTransform PiecesBarTransform
         {
-            get { return _piecesLabel.rectTransform; }
+            get { return _piecesAnchor != null ? _piecesAnchor : _piecesLabel.rectTransform; }
         }
 
         public void Refresh(RunManager run)
@@ -970,6 +971,21 @@ namespace Contigu.Presentation
         /// a slow breathing pulse (same technique as HandView.SetShufflePulsing) — a clear "you're running
         /// out" cue the player doesn't have to do the ratio math on themselves.
         /// </summary>
+        /// <summary>
+        /// The seeds-left counter now lives in the hand column (see HandView.SeedsLeftBox): the bar along the bottom of the screen is hidden and
+        /// every update of the pieces count goes to that box instead, anchor of the round-end popups included.
+        /// </summary>
+        public void UsePiecesDisplay(Text label, RectTransform fill, RectTransform anchor)
+        {
+            if (_piecesFillRect != null && _piecesFillRect.parent != null)
+            {
+                _piecesFillRect.parent.gameObject.SetActive(false);
+            }
+            _piecesLabel = label;
+            _piecesFillRect = fill;
+            _piecesAnchor = anchor;
+        }
+
         public void SetPieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;
