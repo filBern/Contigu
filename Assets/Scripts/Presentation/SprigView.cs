@@ -368,16 +368,6 @@ namespace Contigu.Presentation
 
         // ---------- Lines ----------
 
-        private static readonly string[] RunStartLines =
-        {
-            "Fresh soil, fresh start. Let's grow something!",
-            "The pests are hungry today. Plant smart!",
-            "Same-colored seeds love to sit together.",
-            "Tip: a full row or column is a harvest. Easy Pollen!",
-            "Don't forget your fertilizers - they stack up nicely.",
-            "Shuffle is free of shame when you're stuck.",
-        };
-
         private static readonly string[] VictoryLines =
         {
             "The whole garden is in bloom! Wow!",
@@ -393,11 +383,6 @@ namespace Contigu.Presentation
         };
 
         private const string NewRecordLine = "A new record! The soil is proud of you!";
-
-        public static string RunStartLine()
-        {
-            return RunStartLines[_rng.Next(RunStartLines.Length)];
-        }
 
         public static string EndLine(bool victory, bool newRecord, out SprigMood mood)
         {

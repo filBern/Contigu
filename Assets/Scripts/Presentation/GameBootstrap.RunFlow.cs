@@ -410,13 +410,10 @@ namespace Contigu.Presentation
                 _hudView.PulseWeather();
             }
 
+            // The tutorial is shown once; after it, a new run starts without any tip.
             if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
             {
                 StartCoroutine(RunSprigGuideAfterDelay());
-            }
-            else
-            {
-                StartCoroutine(SprigRunStartComment());
             }
         }
 
@@ -424,12 +421,6 @@ namespace Contigu.Presentation
         {
             yield return new WaitForSeconds(2.1f);
             _sprigView.RunGuide(BuildSprigGuide());
-        }
-
-        private System.Collections.IEnumerator SprigRunStartComment()
-        {
-            yield return new WaitForSeconds(2.2f);
-            _sprigView.Say(SprigView.RunStartLine(), SprigMood.Happy, 5f);
         }
 
         private void OnModifierCarouselDismissed()

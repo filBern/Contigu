@@ -80,7 +80,8 @@ namespace Contigu.Presentation
             rowLayoutElement.preferredWidth = PillWidth * 2f + XLabelWidth + PillSpacing * 2f;
             rowLayoutElement.preferredHeight = PillHeight;
 
-            var chipsPill = UIFactory.CreateSlicedImage(row, "ChipsPill", UISprites.ChooseButtonBackground);
+            // The points are blue everywhere (popups, HUD): the chips pill is blue too (the Choose button art is green).
+            var chipsPill = UIFactory.CreateSlicedImage(row, "ChipsPill", UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground);
             chipsPill.rectTransform.sizeDelta = new Vector2(PillWidth, PillHeight);
             var chipsLayout = chipsPill.gameObject.AddComponent<LayoutElement>();
             chipsLayout.preferredWidth = PillWidth;
