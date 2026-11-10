@@ -228,7 +228,8 @@ namespace Contigu.Core
                 TilePollen = _roundTilePollen,
                 UnusedSeedsPollen = PiecesRemainingThisRound,
                 ChallengePollen = _challenge.RoundEndPollenBonus,
-                FertilizerPollen = BuildFertilizerPollenList()
+                FertilizerPollen = BuildFertilizerPollenList(),
+                Growth = new List<GrowthStep>(LastGrowthSteps)
             };
             ApplyMultCinqRisqueLossChance();
             AgeAndWitherModifiers();

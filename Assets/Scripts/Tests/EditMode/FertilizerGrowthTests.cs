@@ -189,5 +189,26 @@ namespace Contigu.Tests
             float expected = FertilizerGrowth.FruitBonus + 2 * FertilizerGrowth.BonusPerHarvest + FertilizerGrowth.SapFromBloom + run.GetModifierResonanceBonus(1);
             Assert.AreEqual(expected, run.GetModifierTotalBonus(1), 1e-4f);
         }
+
+        [Test]
+        public void TheRoundSummaryReportsEachFertilizersGrowth()
+        {
+            var run = NewRun(WeatherId.Rain, ModifierId.Barometre, ModifierId.ChasseurTempete, ModifierId.Hate);
+            run.DebugSetModifierGrowth(2, FertilizerGrowth.FruitAt, 0);
+            PlaceAny(run);
+            run.DebugForceRoundComplete();
+            var steps = run.LastRoundSummary.Growth;
+            Assert.AreEqual(3, steps.Count);
+            Assert.AreEqual(ModifierId.Barometre, steps[0].Id);
+            Assert.IsTrue(steps[0].Scored);
+            Assert.AreEqual(0, steps[0].Before);
+            Assert.AreEqual(1, steps[0].After);
+            Assert.IsFalse(steps[1].Scored);
+            Assert.AreEqual(steps[1].Before, steps[1].After);
+            Assert.IsTrue(steps[2].Harvested);
+            Assert.AreEqual(FertilizerGrowth.FruitAt, steps[2].Before);
+            Assert.AreEqual(0, steps[2].After);
+            Assert.AreEqual(1, steps[2].Harvests);
+        }
     }
 }

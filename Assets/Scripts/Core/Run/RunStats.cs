@@ -108,6 +108,23 @@ namespace Contigu.Core
         public int ChallengePollen;
         /// <summary>Pollen per fertilizer: during placements and at the end of the round, merged by fertilizer.</summary>
         public List<PollenSource> FertilizerPollen;
+        /// <summary>How each held fertilizer grew at the end of this round (Maturation), in slot order; shown as an animation on the summary.</summary>
+        public List<GrowthStep> Growth;
+    }
+
+    /// <summary>One fertilizer's Maturation at the end of a round.</summary>
+    public struct GrowthStep
+    {
+        public ModifierId Id;
+        /// <summary>Growth steps before and after the round (After is 0 after a harvest).</summary>
+        public int Before;
+        public int After;
+        /// <summary>It scored this round, so it grew (a Fruit being harvested does not need to).</summary>
+        public bool Scored;
+        /// <summary>It was a Fruit and has just been harvested.</summary>
+        public bool Harvested;
+        /// <summary>Total harvests so far, this one included.</summary>
+        public int Harvests;
     }
 
     /// <summary>One fertilizer's Pollen contribution to a round.</summary>

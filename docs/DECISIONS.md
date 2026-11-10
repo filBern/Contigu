@@ -9408,3 +9408,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Trois médaillons (Bourgeon vert/pousse, Fleur rose/fleur, Fruit or/fruit rouge) et un halo doré, générés par `Design/Icons/generate_growth.py` (SVG dans `Design/Icons/growth`, PNG 256 px rendus avec Playwright dans `Assets/Resources/Icons/Growth`).
 - Sur chaque sac : médaillon du stade en bas à gauche, bande de croissance à 3 segments à sa droite ; un Fruit a en plus un halo doré qui respire derrière le sac (`GrowthGlowPulse`, immobile en mouvement réduit). Récolte : popup « Harvest +8 » sur le sac et ligne d'état à l'ouverture de la boutique.
 - Non vérifié dans Unity (compilé par le CI seulement).
+
+## 2026-11-10 — Maturation : plus de bande, animation dans le résumé de manche
+- La bande de croissance à 3 segments sous les sacs n'était pas claire : retirée. Sur le sac il reste le médaillon du stade (et le halo du Fruit).
+- La progression se joue à la fin de la manche, sur le résumé : une section « Garden growth » sous les chiffres, une colonne par fertilizer (sac, médaillon du stade, 3 pastilles, libellé). Chaque colonne s'anime à tour de rôle : la pastille se remplit (+1), un changement de stade fait pivoter le médaillon (Bloom!, Fruit!), une récolte fait sauter le sac, monte « +8 » et repart en Bourgeon (Harvested!), un fertilizer qui n'a pas marqué reste grisé (Dormant). Mouvement réduit : état final affiché directement.
+- Core : `RoundSummary.Growth` (liste de `GrowthStep` : avant, après, a marqué, récolté, récoltes). Non vérifié dans Unity.

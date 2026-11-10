@@ -170,6 +170,9 @@ namespace Contigu.Core
         /// <summary>Fertilizers harvested at the end of the round just cleared (their Pollen is already paid), in slot order. Presentation plays their harvest once the shop opens.</summary>
         public IReadOnlyList<ModifierId> LastHarvestedModifiers { get; private set; } = new List<ModifierId>();
 
+        /// <summary>How each fertilizer grew at the end of the round just cleared (see <see cref="GrowthStep"/>).</summary>
+        public IReadOnlyList<GrowthStep> LastGrowthSteps { get; private set; } = new List<GrowthStep>();
+
         /// <summary>
         /// End of a cleared round: a Fruit is harvested (Pollen, back to Bud, +permanent bonus, and a withering fertilizer's age is renewed); any other
         /// fertilizer that scored this round grows one step. Returns the Pollen paid.
@@ -177,9 +180,11 @@ namespace Contigu.Core
         private int GrowModifiers()
         {
             var harvested = new List<ModifierId>();
+            var steps = new List<GrowthStep>();
             int pollen = 0;
             for (int i = 0; i < _activeModifiers.Count; i++)
             {
+                var step = new GrowthStep { Id = _activeModifiers[i], Before = _modifierGrowth[i], After = _modifierGrowth[i], Scored = _modifierTriggered[i] };
                 if (FertilizerGrowth.StageOf(_modifierGrowth[i]) == GrowthStage.Fruit)
                 {
                     harvested.Add(_activeModifiers[i]);
@@ -188,13 +193,19 @@ namespace Contigu.Core
                     _modifierGrowth[i] = 0;
                     _modifierHarvests[i]++;
                     _modifierAges[i] = 0;
+                    step.Harvested = true;
+                    step.After = 0;
                 }
                 else if (_modifierTriggered[i])
                 {
                     _modifierGrowth[i]++;
+                    step.After = _modifierGrowth[i];
                 }
+                step.Harvests = _modifierHarvests[i];
+                steps.Add(step);
                 _modifierTriggered[i] = false;
             }
+            LastGrowthSteps = steps;
             LastHarvestedModifiers = harvested;
             return pollen;
         }

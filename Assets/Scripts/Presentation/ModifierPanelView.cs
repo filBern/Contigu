@@ -79,13 +79,7 @@ namespace Contigu.Presentation
         public System.Func<int, int> ResonanceProvider;
         private static readonly Color RootsBg = new Color(0.55f, 0.36f, 0.20f, 1f);
 
-        // The growth strip along the foot of each badge.
-        private const float GrowthStripHeight = 8f;
         private const float StageMedallionSize = 30f;
-        private static readonly Color StripEmpty = new Color(0.10f, 0.13f, 0.17f, 0.92f);
-        private static readonly Color StripBud = new Color(0.45f, 0.80f, 0.35f, 1f);
-        private static readonly Color StripBloom = new Color(0.95f, 0.50f, 0.68f, 1f);
-        private static readonly Color StripFruit = new Color(1f, 0.82f, 0.22f, 1f);
 
         // Tap-to-swap: the first-tapped badge's row, armed and waiting for
         // a second tap on a different badge to swap with — -1 when nothing
@@ -489,7 +483,7 @@ namespace Contigu.Presentation
                     levelBg.rectTransform.anchorMin = new Vector2(1f, 0f);
                     levelBg.rectTransform.anchorMax = new Vector2(1f, 0f);
                     levelBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f + GrowthStripHeight + 5f);
+                    levelBg.rectTransform.anchoredPosition = new Vector2(-15f, 15f);
                     levelBg.rectTransform.sizeDelta = new Vector2(34f, 34f);
 
                     var levelLabel = UIFactory.CreateText(badge.transform, "Level", "Lv" + level, Mathf.RoundToInt(IndexLabelSize * 0.8f), UITheme.TextPrimary);
@@ -497,13 +491,13 @@ namespace Contigu.Presentation
                     levelLabel.rectTransform.anchorMin = new Vector2(1f, 0f);
                     levelLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
                     levelLabel.rectTransform.pivot = new Vector2(1f, 0f);
-                    levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f + GrowthStripHeight + 5f);
+                    levelLabel.rectTransform.anchoredPosition = new Vector2(-4f, 4f);
                     levelLabel.rectTransform.sizeDelta = new Vector2(30f, 20f);
                 }
 
                 if (GrowthProvider != null)
                 {
-                    BuildGrowthStrip(badge, growth);
+                    BuildStageMedallion(badge, growth);
                 }
                 if (rootsBonus > 0f)
                 {
@@ -550,24 +544,14 @@ namespace Contigu.Presentation
             return line;
         }
 
-        /// <summary>Growth strip along the foot of a badge: one segment per growth step, green (Bud), pink (Bloom), gold (Fruit). Always visible (no hover on iPad).</summary>
-        private static void BuildGrowthStrip(Image badge, int growth)
+        /// <summary>The stage medallion (sprout / flower / fruit) at the foot of a badge; a Fruit also glows behind the sack. The progression itself plays on the round summary.</summary>
+        private static void BuildStageMedallion(Image badge, int growth)
         {
             var stage = FertilizerGrowth.StageOf(growth);
-            Color fill = stage == GrowthStage.Fruit ? StripFruit : stage == GrowthStage.Bloom ? StripBloom : StripBud;
-            var strip = UIFactory.CreatePanel(badge.transform, "GrowthStrip", StripEmpty);
-            strip.raycastTarget = false;
-            strip.rectTransform.anchorMin = new Vector2(0f, 0f);
-            strip.rectTransform.anchorMax = new Vector2(1f, 0f);
-            strip.rectTransform.pivot = new Vector2(0.5f, 0f);
-            strip.rectTransform.anchoredPosition = new Vector2((StageMedallionSize - 4f) * 0.5f + 2f, 3f);
-            strip.rectTransform.sizeDelta = new Vector2(-10f - StageMedallionSize + 4f, GrowthStripHeight);
-            UIFactory.AddThickOutline(strip, UITheme.Border, 1.5f);
-            // The stage's medallion (sprout / flower / fruit) sits at the strip's left end; a Fruit also glows behind the sack.
             var medallion = UIFactory.CreatePanel(badge.transform, "StageMedallion", Color.white);
             medallion.raycastTarget = false;
             medallion.preserveAspect = true;
-            medallion.sprite = Resources.Load<Sprite>("Icons/Growth/" + (stage == GrowthStage.Fruit ? "Stage_Fruit" : stage == GrowthStage.Bloom ? "Stage_Bloom" : "Stage_Bud"));
+            medallion.sprite = GrowthVisuals.StageSprite(stage);
             medallion.enabled = medallion.sprite != null;
             medallion.rectTransform.anchorMin = medallion.rectTransform.anchorMax = new Vector2(0f, 0f);
             medallion.rectTransform.pivot = new Vector2(0f, 0f);
@@ -577,7 +561,7 @@ namespace Contigu.Presentation
             {
                 var glow = UIFactory.CreatePanel(badge.transform, "FruitGlow", new Color(1f, 1f, 1f, 0.8f));
                 glow.raycastTarget = false;
-                glow.sprite = Resources.Load<Sprite>("Icons/Growth/Fruit_Glow");
+                glow.sprite = GrowthVisuals.FruitGlow;
                 glow.enabled = glow.sprite != null;
                 glow.rectTransform.anchorMin = glow.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 glow.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -585,16 +569,6 @@ namespace Contigu.Presentation
                 glow.rectTransform.sizeDelta = new Vector2(150f, 150f);
                 glow.transform.SetAsFirstSibling();
                 glow.gameObject.AddComponent<GrowthGlowPulse>();
-            }
-            int steps = FertilizerGrowth.FruitAt;
-            for (int s = 0; s < steps; s++)
-            {
-                var seg = UIFactory.CreatePanel(strip.transform, "Seg" + s, s < growth ? fill : new Color(0f, 0f, 0f, 0f));
-                seg.raycastTarget = false;
-                seg.rectTransform.anchorMin = new Vector2(s / (float)steps, 0f);
-                seg.rectTransform.anchorMax = new Vector2((s + 1) / (float)steps, 1f);
-                seg.rectTransform.offsetMin = new Vector2(s == 0 ? 0f : 1f, 0f);
-                seg.rectTransform.offsetMax = new Vector2(s == steps - 1 ? 0f : -1f, 0f);
             }
         }
 
