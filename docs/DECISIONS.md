@@ -9421,3 +9421,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-10 — Maturation : tooltip du médaillon, carré noir du résumé
 - Le médaillon de stade du résumé (haut droite du sac) a une infobulle (survol / appui) : nom du stade et progression (« Bloom (2/3) ») et la règle complète (croissance, bonus par stade, récolte). Le sac du panneau de gauche garde son infobulle habituelle, qui contient déjà la ligne de croissance.
 - Correctif : un carré noir apparaissait derrière les sacs du résumé (l'alpha était écrit sur la couleur de l'image du badge, transparente par construction) ; l'atténuation « Dormant » passe par un `CanvasGroup`. Non vérifié dans Unity.
+
+## 2026-11-10 — Équilibre après la Maturation et les Racines
+- Mesure (planner profondeur 2, 400 parties, `Release`) : la Maturation, les Racines et le bot qui range ses fertilizers doublaient presque les victoires (Spring 12 → 26 %, Winter 12 → 23 %, Summer 6 → 19 %, Autumn 17 → 33 %, Orchard 9 → 17 %, Greenhouse 6 → 14 %). Le surplus vient des manches 4 et suivantes (les manches 1 à 3 sont inchangées : les fertilizers n'ont pas encore mûri).
+- Réglage : un nouveau champ `ChallengeDefinition.LateHpMultiplier` multiplie les PV des ennemis dès la manche 4 (`ScoringConstants.LateHpFirstRoundIndex = 3`), au lieu d'alourdir le filtre du début avec `EnemyHpMultiplier`. Valeurs : Spring ×1,5, Winter ×1,7, Summer ×1,9, Autumn ×1,65, Orchard ×1,7, Greenhouse ×1,45.
+- Vérification sur une autre graine (400 parties, avant → maintenant) : Spring 11,3 → 11,5 %, Winter 12,0 → 11,3 %, Summer 6,5 → 6,0 %, Autumn 16,8 → 17,5 %, Orchard 8,8 → 7,3 %, Greenhouse 6,0 → 6,0 %. `--check` : aucune erreur sur les 6 challenges.
+- Limite : le bot range ses fertilizers au mieux pour les Racines (24 arrangements) ; un humain y arrivera plus ou moins bien. À re-régler avec de vrais joueurs.
