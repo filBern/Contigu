@@ -142,6 +142,9 @@ namespace Contigu.Presentation
 
             _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
+            // A fixed width for the number (room for three digits): the pill behind it never grows or shrinks while the count rolls up.
+            var lueurLabelLayout = _lueurLabel.gameObject.AddComponent<LayoutElement>();
+            lueurLabelLayout.minWidth = 150f;
             _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
             // The pill behind the Pollen is also what catches the pointer for the tooltip below (a GameObject holds only one Image).
             _lueurContainer.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Pollen",
