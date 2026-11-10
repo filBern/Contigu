@@ -191,21 +191,65 @@ namespace Contigu.Presentation
             // The round now sits in the banner of the left column's score card: no second readout up here (the label stays, hidden, so SetRound keeps working).
             chip.gameObject.SetActive(false);
 
-            // This round's weather, in the top-left corner; hover for what it does.
-            var weatherChip = UIFactory.CreatePanel(parent, "WeatherChip", UITheme.PanelLight);
-            UIFactory.AddThickOutline(weatherChip, UITheme.Border);
-            weatherChip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            weatherChip.rectTransform.anchorMax = new Vector2(0f, 1f);
-            weatherChip.rectTransform.pivot = new Vector2(0f, 1f);
-            weatherChip.rectTransform.anchoredPosition = new Vector2(16f, -16f);
-            weatherChip.rectTransform.sizeDelta = new Vector2(40f, 40f);
-            _weatherChipIcon = UIFactory.CreatePanel(weatherChip.transform, "WeatherIcon", Color.white);
+            // This round's weather, as a card of its own (placed in the left column by GameBootstrap): big icon, name and what it does.
+            var card = UIFactory.CreateSlicedImage(parent, "WeatherCard", UISprites.CardBackground);
+            _weatherCardImage = card;
+            card.color = WeatherCalmTint;
+            UIFactory.AddThickOutline(card, UITheme.Border);
+            WeatherCard = card.rectTransform;
+            card.rectTransform.anchorMin = card.rectTransform.anchorMax = card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            card.rectTransform.sizeDelta = new Vector2(280f, WeatherCardHeight);
+            _weatherChipTooltip = card.gameObject.AddComponent<HoverTooltip>();
+
+            // The icon in a dark rounded frame on the left (this frame is what pulses when the weather's effect triggers).
+            var frame = UIFactory.CreateSlicedImage(card.transform, "WeatherIconFrame", UISprites.CardBackground);
+            frame.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            frame.raycastTarget = false;
+            UIFactory.AddThickOutline(frame, UITheme.Border, 2f);
+            frame.rectTransform.anchorMin = frame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            frame.rectTransform.pivot = new Vector2(0f, 0.5f);
+            frame.rectTransform.anchoredPosition = new Vector2(10f, 0f);
+            frame.rectTransform.sizeDelta = new Vector2(64f, 64f);
+            _weatherChipIcon = UIFactory.CreatePanel(frame.transform, "WeatherIcon", Color.white);
             _weatherChipIcon.preserveAspect = true;
+            _weatherChipIcon.raycastTarget = false;
             UIFactory.StretchFull(_weatherChipIcon.rectTransform);
-            _weatherChipIcon.rectTransform.offsetMin = new Vector2(3f, 3f);
-            _weatherChipIcon.rectTransform.offsetMax = new Vector2(-3f, -3f);
-            _weatherChipTooltip = weatherChip.gameObject.AddComponent<HoverTooltip>();
+            _weatherChipIcon.rectTransform.offsetMin = new Vector2(5f, 5f);
+            _weatherChipIcon.rectTransform.offsetMax = new Vector2(-5f, -5f);
+
+            _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, UITheme.TextPrimary, TextAnchor.MiddleLeft);
+            _weatherNameLabel.raycastTarget = false;
+            _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
+            _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
+            _weatherNameLabel.rectTransform.offsetMin = new Vector2(84f, -34f);
+            _weatherNameLabel.rectTransform.offsetMax = new Vector2(-8f, -6f);
+            _weatherNameLabel.resizeTextForBestFit = true;
+            _weatherNameLabel.resizeTextMinSize = 12;
+            _weatherNameLabel.resizeTextMaxSize = 21;
+
+            _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
+            _weatherEffectLabel.raycastTarget = false;
+            _weatherEffectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
+            _weatherEffectLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
+            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(84f, 6f);
+            _weatherEffectLabel.rectTransform.offsetMax = new Vector2(-8f, -34f);
+            _weatherEffectLabel.resizeTextForBestFit = true;
+            _weatherEffectLabel.resizeTextMinSize = 9;
+            _weatherEffectLabel.resizeTextMaxSize = 13;
         }
+
+        /// <summary>Height of the weather card in the left column.</summary>
+        public const float WeatherCardHeight = 96f;
+        private static readonly Color WeatherCalmTint = new Color(1f, 0.969f, 0.910f, 1f);
+        private static readonly Color WeatherHarshTint = new Color(1f, 0.84f, 0.78f, 1f);
+        private static readonly Color WeatherGoodTint = new Color(0.86f, 0.96f, 0.84f, 1f);
+        private Image _weatherCardImage;
+        private Text _weatherNameLabel;
+        private Text _weatherEffectLabel;
+
+        /// <summary>The weather card: GameBootstrap sizes it to the left column and puts it between the score card and the fertilizers.</summary>
+        public RectTransform WeatherCard { get; private set; }
 
         private Coroutine _weatherPulseCoroutine;
 
@@ -242,7 +286,7 @@ namespace Contigu.Presentation
             _weatherPulseCoroutine = null;
         }
 
-        /// <summary>Shows this round's weather in the chip next to the round number.</summary>
+        /// <summary>Shows this round's weather on the weather card.</summary>
         public void SetWeather(WeatherId weather, PieceColor? color = null, float intensity = 1f)
         {
             if (_weatherChipIcon == null)
@@ -251,7 +295,12 @@ namespace Contigu.Presentation
             }
             _weatherChipIcon.sprite = VisualDefaults.GetWeatherSprite(weather);
             _weatherChipIcon.enabled = _weatherChipIcon.sprite != null;
-            _weatherChipTooltip.Init(_tooltip, VisualDefaults.GetWeatherName(weather, color), VisualDefaults.GetWeatherDescription(weather, color, intensity), "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
+            string weatherName = VisualDefaults.GetWeatherName(weather, color);
+            string weatherDescription = VisualDefaults.GetWeatherDescription(weather, color, intensity);
+            _weatherNameLabel.text = weatherName;
+            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : weatherDescription;
+            _weatherCardImage.color = weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
+            _weatherChipTooltip.Init(_tooltip, weatherName, weatherDescription, "Weather this round · " + WeatherCatalog.GetRarityLabel(weather), UITheme.TextMuted);
         }
 
         /// <summary>

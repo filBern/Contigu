@@ -505,14 +505,20 @@ namespace Contigu.Presentation
             // Left column, top: the score card.
             comboRect.anchoredPosition = new Vector2(leftColumnX, gridTopY - comboRect.rect.height * 0.5f);
             // Left column, bottom: Seed bag over Rules, full width.
-            const float UtilityButtonHeight = 56f;
+            const float UtilityButtonHeight = 48f;
             const float UtilityButtonGap = 8f;
             float rulesY = gridBottomY + UtilityButtonHeight * 0.5f;
             float deckY = rulesY + UtilityButtonHeight + UtilityButtonGap;
             // Left column, between: the fertilizer panel, centered in what is left.
             float scoreBottomY = gridTopY - comboRect.rect.height;
+            // Between the score card and the fertilizers: the weather card, so the day's weather is always in plain view.
+            const float WeatherGap = 8f;
+            var weatherRect = _hudView.WeatherCard;
+            weatherRect.sizeDelta = new Vector2(leftColumnWidth, HudView.WeatherCardHeight);
+            weatherRect.anchoredPosition = new Vector2(leftColumnX, scoreBottomY - WeatherGap - HudView.WeatherCardHeight * 0.5f);
+            float weatherBottomY = scoreBottomY - WeatherGap - HudView.WeatherCardHeight;
             float buttonsTopY = deckY + UtilityButtonHeight * 0.5f;
-            float fertilizerY = (scoreBottomY + buttonsTopY) * 0.5f;
+            float fertilizerY = (weatherBottomY + buttonsTopY) * 0.5f;
 
             // Pollen is a small chip in the top-left HUD, on the speed button's row (right of it), growing rightwards as the count does;
             // the shop moves it back above its own panel and then restores it here.
@@ -525,7 +531,7 @@ namespace Contigu.Presentation
             const float BoardPollenScale = 0.45f;
             lueurRect.localScale = Vector3.one * BoardPollenScale;
             float pollenX = -halfCanvasWidth + 16f; // the speed button moved to Settings: the chip takes its place
-            float pollenY = canvasHeight * 0.5f - 62f - MobileSetup.TouchMin(44f) * 0.5f;
+            float pollenY = canvasHeight * 0.5f - 16f - MobileSetup.TouchMin(44f) * 0.5f; // the weather chip left this corner: Pollen takes the top row
             lueurRect.anchoredPosition = new Vector2(pollenX, pollenY);
 
             // The hand: a tall column on the right, as tall as the grid.
