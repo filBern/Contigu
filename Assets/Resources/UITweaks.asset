@@ -49,7 +49,7 @@ MonoBehaviour:
   sprigSize: 130
   sprigHopEvery: 5.5
   challengeCardWidth: 380
-  challengeCardHeight: 480
+  challengeCardHeight: 520
   challengeBannerHeight: 92
   glintAfterIdle: 8
   fertilizerFlightSeconds: 0.65

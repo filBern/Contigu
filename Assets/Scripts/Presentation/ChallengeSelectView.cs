@@ -265,7 +265,7 @@ namespace Contigu.Presentation
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchoredPosition = new Vector2(0f, -BannerHeight - 100f);
-            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 96f);
+            _descriptionLabel.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 84f);
 
             // Coral rather than gold: gold has poor contrast against this card's light fill, and coral already reads as "blocked" elsewhere (see UITheme.Danger/HoverInvalid).
             _statusLabel = UIFactory.CreateText(_card.transform, "Status", "", 16, UITheme.Danger);
@@ -286,13 +286,17 @@ namespace Contigu.Presentation
             _playButton.onClick.AddListener(OnPlayClicked);
 
             // Under the card: resume the run saved by Save and quit (or the start of the last round), shown only when there is one.
-            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue saved run", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 26);
+            _continueButton = UIFactory.CreateButton(_root, "Continue", "Continue saved run", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 22);
             var continueRect = _continueButton.GetComponent<RectTransform>();
             continueRect.anchorMin = new Vector2(0.5f, 0f);
             continueRect.anchorMax = new Vector2(0.5f, 0f);
             continueRect.pivot = new Vector2(0.5f, 0f);
             continueRect.anchoredPosition = new Vector2(0f, 26f);
-            continueRect.sizeDelta = new Vector2(CardWidth - 60f, MobileSetup.TouchMin(64f));
+            continueRect.sizeDelta = new Vector2(CardWidth, MobileSetup.TouchMin(64f));
+            var continueLabel = _continueButton.GetComponentInChildren<Text>();
+            continueLabel.resizeTextForBestFit = true;
+            continueLabel.resizeTextMinSize = 14;
+            continueLabel.resizeTextMaxSize = 22;
             _continueButton.gameObject.AddComponent<AttentionPulse>();
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);

@@ -9467,3 +9467,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Tooltips : la croissance et les Racines disent de quoi elles parlent
 - « +0.5 effect » ne disait pas en quoi. Les bonus sont maintenant en pourcentage de l'effet du fertilizer, dans son unité et sa couleur : « +50% Mult » (rouge), « +50% pts » (bleu), « +50% Pollen » (or). L'unité est lue dans la description du fertilizer (`DescriptionTextFormatter.EffectUnitOf` : une seule unité nommée, sinon « effect » en texte simple). Valable pour le médaillon de croissance, la pastille de Racines (« +30% ») et ses infobulles, les pastilles de liaison (la sève s'exprime dans l'unité du fertilizer qui la reçoit, la résonance en « effect » car les deux voisins peuvent compter autrement). Non vérifié dans Unity.
+
+## 2026-11-11 — Écran de choix : deux défauts vus sur capture
+- « Continue saved run » passait sur deux lignes dans le bouton doré : police 22 (réduite à l'ajustement automatique si besoin, 14 minimum), bouton de la largeur de la carte.
+- La description d'un challenge recouvrait encore la ligne des engagements (l'ajustement de la police ne servait à rien : la boîte débordait sur la ligne). La carte passe de 480 à 520 de haut (`UITweaks.challengeCardHeight`, valeur par défaut et asset) et la boîte de description à 84, ce qui laisse 16 de marge sous elle. Non vérifié dans Unity.
