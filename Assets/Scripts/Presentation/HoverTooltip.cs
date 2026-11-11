@@ -16,6 +16,9 @@ namespace Contigu.Presentation
         private string _footer;
         private bool _pinned;
 
+        /// <summary>The element whose tooltip is up right now. A parent that re-pushes its own tooltip every frame (a fertilizer's sack) stands aside while one of its children (growth, Roots) owns it.</summary>
+        public static HoverTooltip Active { get; private set; }
+
         /// <summary>Touch: keeps the tooltip up after the finger lifts (a release normally counts as the pointer leaving), with a hint line at its foot. <see cref="Unpin"/> hides it.</summary>
         public void Pin(string footer)
         {
@@ -50,6 +53,11 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            // Unity sends the enter to the deepest element first, then to its parents: a child's tooltip is already up, keep it.
+            if (Active != null && Active != this && Active.transform.IsChildOf(transform))
+            {
+                return;
+            }
             ShowNow();
         }
 
@@ -58,12 +66,14 @@ namespace Contigu.Presentation
         {
             if (_tooltip != null)
             {
+                Active = this;
                 _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, footer: _footer, placeAbove: true);
             }
         }
 
         public void HideNow()
         {
+            if (Active == this) { Active = null; }
             if (_tooltip != null)
             {
                 _tooltip.Hide();
@@ -76,6 +86,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            if (Active == this) { Active = null; }
             if (_tooltip != null)
             {
                 _tooltip.Hide();
@@ -87,6 +98,7 @@ namespace Contigu.Presentation
         {
             _pinned = false;
             _footer = null;
+            if (Active == this) { Active = null; }
             if (_tooltip != null)
             {
                 _tooltip.Hide();

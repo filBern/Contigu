@@ -65,6 +65,12 @@ namespace Contigu.Presentation
         public void OnPointerEnter(PointerEventData eventData)
         {
             _hovering = true;
+            // Unity sends the enter to the deepest element first, then to its parents: a child tooltip (growth, Roots) is already up, keep it.
+            var child = HoverTooltip.Active;
+            if (child != null && child.transform.IsChildOf(transform))
+            {
+                return;
+            }
             ShowTooltip();
         }
 
@@ -82,6 +88,12 @@ namespace Contigu.Presentation
         {
             if (_hovering || _pinned)
             {
+                // A child's own tooltip (growth, Roots) keeps the tooltip while the pointer is on it.
+                var child = HoverTooltip.Active;
+                if (child != null && child.transform.IsChildOf(transform))
+                {
+                    return;
+                }
                 ShowTooltip();
             }
         }

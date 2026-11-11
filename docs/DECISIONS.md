@@ -9458,3 +9458,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Tooltip des Racines séparé de celui du fertilizer
 - L'infobulle d'un fertilizer ne contient plus les lignes « Roots : +x » (sève, résonance). La pastille brune « +x » en haut à droite du sac a la sienne : « Roots +0.3 », avec la part de la sève de gauche et celle de la résonance. Même principe que pour le médaillon de croissance : le survol / l'appui est pris par la pastille, le reste remonte au sac. Non vérifié dans Unity.
+
+## 2026-11-11 — Le tooltip de croissance et celui des Racines apparaissent enfin
+- Cause : `ModifierBadgeView` (le sac) réaffiche son infobulle à chaque image tant que le pointeur est dessus, et le pointeur sur le médaillon / la pastille compte comme étant encore sur le sac ; en plus Unity envoie l'« enter » à l'élément le plus profond d'abord, puis à ses parents, qui écrasaient donc celui de l'enfant. Correctif : `HoverTooltip.Active` (l'élément dont l'infobulle est affichée) ; le sac et la cellule de l'étagère s'effacent tant qu'un de leurs enfants la possède, et la reprennent quand le pointeur quitte l'enfant. Non vérifié dans Unity.
