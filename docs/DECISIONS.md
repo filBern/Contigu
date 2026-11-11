@@ -9471,3 +9471,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-11 — Écran de choix : deux défauts vus sur capture
 - « Continue saved run » passait sur deux lignes dans le bouton doré : police 22 (réduite à l'ajustement automatique si besoin, 14 minimum), bouton de la largeur de la carte.
 - La description d'un challenge recouvrait encore la ligne des engagements (l'ajustement de la police ne servait à rien : la boîte débordait sur la ligne). La carte passe de 480 à 520 de haut (`UITweaks.challengeCardHeight`, valeur par défaut et asset) et la boîte de description à 84, ce qui laisse 16 de marge sous elle. Non vérifié dans Unity.
+
+## 2026-11-11 — Engagements : ON / OFF visible d'un coup d'œil
+- Les puces d'engagement (No shuffle, No reroll, Lean bag, Minimalist) ne montraient pas leur état (une simple teinte, invisible sur le vert). Chaque puce a maintenant un interrupteur à gauche (piste + bouton qui glisse : sombre et à gauche = OFF, vert et à droite = ON) et change de corps : doré quand elle est active, bois quand elle ne l'est pas. Le libellé se réduit pour tenir à côté de l'interrupteur. Non vérifié dans Unity.

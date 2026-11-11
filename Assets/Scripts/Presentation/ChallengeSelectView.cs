@@ -58,6 +58,10 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private bool _playArmed;
+        private readonly Dictionary<Pledge, Image> _pledgeTracks = new Dictionary<Pledge, Image>();
+        private readonly Dictionary<Pledge, RectTransform> _pledgeKnobs = new Dictionary<Pledge, RectTransform>();
+        private static readonly Color PledgeTrackOn = new Color(0.30f, 0.72f, 0.30f, 1f);
+        private static readonly Color PledgeTrackOff = new Color(0.12f, 0.16f, 0.21f, 1f);
         private const string PledgeHeading = "Optional pledges: keep them all the way to the victory";
         private Text _pledgeTitle;
         private Pledge _selectedPledges;
@@ -152,7 +156,6 @@ namespace Contigu.Presentation
 
         private const float PledgeChipWidth = 170f;
         private static readonly Color PledgeOff = new Color(0.62f, 0.62f, 0.62f, 1f);
-        private static readonly Color PledgeOn = new Color(1f, 0.9f, 0.5f, 1f);
         private RectTransform _pledgeGroup;
 
         /// <summary>
@@ -185,6 +188,29 @@ namespace Contigu.Presentation
                 rect.anchoredPosition = new Vector2((column == 0 ? -1f : 1f) * (PledgeChipWidth * 0.5f + 6f), 118f + (1 - row) * (height + 6f));
                 var image = chip.GetComponent<Image>();
                 _pledgeChips[pledge] = image;
+                // A switch on the chip's left says ON or OFF at a glance (track + knob), next to the label.
+                var track = UIFactory.CreatePanel(chip.transform, "Switch", PledgeTrackOff);
+                track.raycastTarget = false;
+                UIFactory.AddThickOutline(track, UITheme.Border, 1.5f);
+                track.rectTransform.anchorMin = track.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                track.rectTransform.pivot = new Vector2(0f, 0.5f);
+                track.rectTransform.anchoredPosition = new Vector2(12f, 0f);
+                track.rectTransform.sizeDelta = new Vector2(44f, 24f);
+                var knob = UIFactory.CreatePanel(track.transform, "Knob", Color.white);
+                knob.raycastTarget = false;
+                knob.rectTransform.anchorMin = knob.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                knob.rectTransform.pivot = new Vector2(0f, 0.5f);
+                knob.rectTransform.sizeDelta = new Vector2(20f, 20f);
+                _pledgeTracks[pledge] = track;
+                _pledgeKnobs[pledge] = knob.rectTransform;
+                var chipLabel = chip.GetComponentInChildren<Text>();
+                if (chipLabel != null)
+                {
+                    chipLabel.rectTransform.offsetMin = new Vector2(62f, chipLabel.rectTransform.offsetMin.y);
+                    chipLabel.resizeTextForBestFit = true;
+                    chipLabel.resizeTextMinSize = 11;
+                    chipLabel.resizeTextMaxSize = 16;
+                }
                 chip.onClick.AddListener(() =>
                 {
                     _selectedPledges ^= pledge;
@@ -201,7 +227,11 @@ namespace Contigu.Presentation
             foreach (var chip in _pledgeChips)
             {
                 bool on = (_selectedPledges & chip.Key) != Pledge.None;
-                chip.Value.color = on ? PledgeOn : Color.white;
+                // ON: a gold chip, a green switch thrown to the right. OFF: a plain wooden chip, a dark switch to the left.
+                chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? chip.Value.sprite) : (UISprites.Garden("Wood") ?? chip.Value.sprite);
+                chip.Value.color = Color.white;
+                if (_pledgeTracks.TryGetValue(chip.Key, out var track)) { track.color = on ? PledgeTrackOn : PledgeTrackOff; }
+                if (_pledgeKnobs.TryGetValue(chip.Key, out var knob)) { knob.anchoredPosition = new Vector2(on ? 22f : 2f, 0f); }
             }
         }
 
