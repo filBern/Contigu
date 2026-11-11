@@ -9474,3 +9474,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Engagements : ON / OFF visible d'un coup d'œil
 - Les puces d'engagement (No shuffle, No reroll, Lean bag, Minimalist) ne montraient pas leur état (une simple teinte, invisible sur le vert). Chaque puce a maintenant un interrupteur à gauche (piste + bouton qui glisse : sombre et à gauche = OFF, vert et à droite = ON) et change de corps : doré quand elle est active, bois quand elle ne l'est pas. Le libellé se réduit pour tenir à côté de l'interrupteur. Non vérifié dans Unity.
+
+## 2026-11-11 — Engagements : l'interrupteur remplacé par une coche
+- L'interrupteur (piste + bouton) était laid à l'écran. Remplacé par un état plus simple : une puce active est dorée avec un petit badge vert à coche (dessinée avec deux barres, sans glyphe) dans son coin ; une puce inactive garde son corps vert d'origine, assombri, avec un libellé estompé. Le libellé reprend toute la largeur de la puce. Non vérifié dans Unity.

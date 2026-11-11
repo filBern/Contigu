@@ -58,10 +58,11 @@ namespace Contigu.Presentation
         private Button _playButton;
         private Text _playButtonLabel;
         private bool _playArmed;
-        private readonly Dictionary<Pledge, Image> _pledgeTracks = new Dictionary<Pledge, Image>();
-        private readonly Dictionary<Pledge, RectTransform> _pledgeKnobs = new Dictionary<Pledge, RectTransform>();
+        private readonly Dictionary<Pledge, GameObject> _pledgeChecks = new Dictionary<Pledge, GameObject>();
+        private readonly Dictionary<Pledge, Text> _pledgeLabels = new Dictionary<Pledge, Text>();
+        private readonly Dictionary<Pledge, Sprite> _pledgeOffSprites = new Dictionary<Pledge, Sprite>();
         private static readonly Color PledgeTrackOn = new Color(0.30f, 0.72f, 0.30f, 1f);
-        private static readonly Color PledgeTrackOff = new Color(0.12f, 0.16f, 0.21f, 1f);
+        private static readonly Color PledgeOffTint = new Color(0.55f, 0.58f, 0.55f, 1f);
         private const string PledgeHeading = "Optional pledges: keep them all the way to the victory";
         private Text _pledgeTitle;
         private Pledge _selectedPledges;
@@ -188,29 +189,20 @@ namespace Contigu.Presentation
                 rect.anchoredPosition = new Vector2((column == 0 ? -1f : 1f) * (PledgeChipWidth * 0.5f + 6f), 118f + (1 - row) * (height + 6f));
                 var image = chip.GetComponent<Image>();
                 _pledgeChips[pledge] = image;
-                // A switch on the chip's left says ON or OFF at a glance (track + knob), next to the label.
-                var track = UIFactory.CreatePanel(chip.transform, "Switch", PledgeTrackOff);
-                track.raycastTarget = false;
-                UIFactory.AddThickOutline(track, UITheme.Border, 1.5f);
-                track.rectTransform.anchorMin = track.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-                track.rectTransform.pivot = new Vector2(0f, 0.5f);
-                track.rectTransform.anchoredPosition = new Vector2(12f, 0f);
-                track.rectTransform.sizeDelta = new Vector2(44f, 24f);
-                var knob = UIFactory.CreatePanel(track.transform, "Knob", Color.white);
-                knob.raycastTarget = false;
-                knob.rectTransform.anchorMin = knob.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-                knob.rectTransform.pivot = new Vector2(0f, 0.5f);
-                knob.rectTransform.sizeDelta = new Vector2(20f, 20f);
-                _pledgeTracks[pledge] = track;
-                _pledgeKnobs[pledge] = knob.rectTransform;
-                var chipLabel = chip.GetComponentInChildren<Text>();
-                if (chipLabel != null)
-                {
-                    chipLabel.rectTransform.offsetMin = new Vector2(62f, chipLabel.rectTransform.offsetMin.y);
-                    chipLabel.resizeTextForBestFit = true;
-                    chipLabel.resizeTextMinSize = 11;
-                    chipLabel.resizeTextMaxSize = 16;
-                }
+                // ON: the chip turns gold and a small green check badge sits on its corner. OFF: the chip is dimmed.
+                var badge = UIFactory.CreateSlicedImage(chip.transform, "Check", UISprites.CardBackground);
+                badge.color = PledgeTrackOn;
+                badge.raycastTarget = false;
+                UIFactory.AddThickOutline(badge, UITheme.Border, 1.5f);
+                badge.rectTransform.anchorMin = badge.rectTransform.anchorMax = new Vector2(1f, 1f);
+                badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                badge.rectTransform.anchoredPosition = new Vector2(-8f, -4f);
+                badge.rectTransform.sizeDelta = new Vector2(26f, 26f);
+                // The check mark: two white bars, drawn rather than typed (no glyph needed).
+                AddCheckBar(badge.transform, new Vector2(-3.5f, -2.5f), 8f, -45f);
+                AddCheckBar(badge.transform, new Vector2(3f, 0f), 15f, 45f);
+                _pledgeChecks[pledge] = badge.gameObject;
+                _pledgeLabels[pledge] = chip.GetComponentInChildren<Text>();
                 chip.onClick.AddListener(() =>
                 {
                     _selectedPledges ^= pledge;
@@ -222,16 +214,38 @@ namespace Contigu.Presentation
             RefreshPledgeChips();
         }
 
+        // The chip's own sprite (what it was built with), kept so OFF can go back to it after ON swapped it for the gold one.
+        private Sprite PledgeOffSprite(Pledge pledge, Image image)
+        {
+            if (!_pledgeOffSprites.TryGetValue(pledge, out var sprite))
+            {
+                sprite = image.sprite;
+                _pledgeOffSprites[pledge] = sprite;
+            }
+            return sprite;
+        }
+
+        private static void AddCheckBar(Transform parent, Vector2 position, float length, float angle)
+        {
+            var bar = UIFactory.CreatePanel(parent, "CheckBar", Color.white);
+            bar.raycastTarget = false;
+            bar.rectTransform.anchorMin = bar.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            bar.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            bar.rectTransform.anchoredPosition = position;
+            bar.rectTransform.sizeDelta = new Vector2(length, 3.5f);
+            bar.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
+        }
+
         private void RefreshPledgeChips()
         {
             foreach (var chip in _pledgeChips)
             {
                 bool on = (_selectedPledges & chip.Key) != Pledge.None;
-                // ON: a gold chip, a green switch thrown to the right. OFF: a plain wooden chip, a dark switch to the left.
-                chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? chip.Value.sprite) : (UISprites.Garden("Wood") ?? chip.Value.sprite);
-                chip.Value.color = Color.white;
-                if (_pledgeTracks.TryGetValue(chip.Key, out var track)) { track.color = on ? PledgeTrackOn : PledgeTrackOff; }
-                if (_pledgeKnobs.TryGetValue(chip.Key, out var knob)) { knob.anchoredPosition = new Vector2(on ? 22f : 2f, 0f); }
+                // ON: gold chip with its check badge. OFF: the same chip dimmed, its label faded.
+                chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? PledgeOffSprite(chip.Key, chip.Value)) : PledgeOffSprite(chip.Key, chip.Value);
+                chip.Value.color = on ? Color.white : PledgeOffTint;
+                if (_pledgeChecks.TryGetValue(chip.Key, out var check)) { check.SetActive(on); }
+                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? Color.white : new Color(1f, 1f, 1f, 0.6f); }
             }
         }
 
