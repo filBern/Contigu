@@ -290,6 +290,44 @@ namespace Contigu.Presentation
             return true;
         }
 
+        /// <summary>
+        /// The unit a fertilizer's effect is counted in, read from its description: "Mult", "pts" or "Pollen" when it names exactly one of them,
+        /// "effect" otherwise (several units, or none).
+        /// </summary>
+        public static string EffectUnitOf(string description)
+        {
+            if (string.IsNullOrEmpty(description))
+            {
+                return "effect";
+            }
+            string found = null;
+            foreach (var raw in description.Split(' ', '\n'))
+            {
+                string unit = null;
+                string lower = StripPunctuation(raw).ToLowerInvariant();
+                if (lower == "pts" || lower == "pt" || lower == "points" || lower == "point") { unit = "pts"; }
+                else if (lower == "multiplier" || lower == "multipliers" || lower == "mult") { unit = "Mult"; }
+                else if (lower == "pollen" || lower == "lueur") { unit = "Pollen"; }
+                if (unit == null) { continue; }
+                if (found != null && found != unit) { return "effect"; }
+                found = unit;
+            }
+            return found ?? "effect";
+        }
+
+        /// <summary>A bonus as a percentage of a fertilizer's effect, in the unit's own color: "+50% Mult" (Mult red, pts blue, Pollen gold; plain for "effect").</summary>
+        public static string Amount(float bonus, string unit)
+        {
+            string text = "+" + Mathf.RoundToInt(bonus * 100f) + "% " + unit;
+            switch (unit)
+            {
+                case "Mult": return Wrap(text, MultiplierColorHex);
+                case "pts": return Wrap(text, PointsColorHex);
+                case "Pollen": return Wrap(text, PollenColorHex);
+                default: return text;
+            }
+        }
+
         private static string Wrap(string text, string colorHex)
         {
             return "<color=#" + colorHex + ">" + text + "</color>";

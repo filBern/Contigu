@@ -18,18 +18,18 @@ namespace Contigu.Presentation
             return name + " " + System.Math.Min(growth, FertilizerGrowth.FruitAt) + "/" + FertilizerGrowth.FruitAt;
         }
 
-        /// <summary>The growth tooltip's text: short, one idea per line.</summary>
-        public static string TooltipLine(int growth, int harvests)
+        /// <summary>The growth tooltip's text: short, one idea per line; the effect is said in the unit the fertilizer counts in (Mult red, pts blue, Pollen gold).</summary>
+        public static string TooltipLine(int growth, int harvests, string unit)
         {
-            var inv = System.Globalization.CultureInfo.InvariantCulture;
             string line;
             switch (FertilizerGrowth.StageOf(growth))
             {
                 case GrowthStage.Fruit:
-                    line = "+" + FertilizerGrowth.FruitBonus.ToString("0.##", inv) + " effect.\nHarvested at the end of the round: +" + FertilizerGrowth.HarvestPollen + " Pollen.";
+                    line = DescriptionTextFormatter.Amount(FertilizerGrowth.FruitBonus, unit) + "\n"
+                        + DescriptionTextFormatter.Colorize("Harvested at the end of the round: +" + FertilizerGrowth.HarvestPollen + " Pollen.", 14);
                     break;
                 case GrowthStage.Bloom:
-                    line = "+" + FertilizerGrowth.BloomBonus.ToString("0.##", inv) + " effect.\nFruit after one more round it scores.";
+                    line = DescriptionTextFormatter.Amount(FertilizerGrowth.BloomBonus, unit) + "\nFruit after one more round it scores.";
                     break;
                 default:
                     line = "Grows each round it scores.";
@@ -37,13 +37,13 @@ namespace Contigu.Presentation
             }
             if (harvests > 0)
             {
-                line += "\nHarvested x" + harvests + ": +" + (harvests * FertilizerGrowth.BonusPerHarvest).ToString("0.##", inv) + " for good.";
+                line += "\nHarvested x" + harvests + ": " + DescriptionTextFormatter.Amount(harvests * FertilizerGrowth.BonusPerHarvest, unit) + " for good.";
             }
             return line;
         }
 
         /// <summary>The stage medallion (sprout / flower / fruit) at the foot of a badge, with its own tooltip when a <paramref name="tooltip"/> is given; a Fruit also glows behind the sack.</summary>
-        public static void AttachStage(UnityEngine.UI.Image badge, int growth, int harvests, float medallionSize, float glowSize, TooltipView tooltip = null)
+        public static void AttachStage(UnityEngine.UI.Image badge, int growth, int harvests, float medallionSize, float glowSize, TooltipView tooltip = null, string unit = "effect")
         {
             var stage = FertilizerGrowth.StageOf(growth);
             var medallion = UIFactory.CreatePanel(badge.transform, "StageMedallion", Color.white);
@@ -51,7 +51,7 @@ namespace Contigu.Presentation
             medallion.raycastTarget = tooltip != null;
             if (tooltip != null)
             {
-                medallion.gameObject.AddComponent<HoverTooltip>().Init(tooltip, StageName(stage, growth), TooltipLine(growth, harvests));
+                medallion.gameObject.AddComponent<HoverTooltip>().Init(tooltip, StageName(stage, growth), TooltipLine(growth, harvests, unit));
             }
             medallion.preserveAspect = true;
             medallion.sprite = StageSprite(stage);

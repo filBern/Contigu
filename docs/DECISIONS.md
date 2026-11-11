@@ -9464,3 +9464,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Tooltips de croissance et de Racines plus courts
 - Croissance : titre « Fruit 3/3 », puis une ou deux lignes courtes (Bourgeon : « Grows each round it scores. » ; Fleur : « +0.25 effect. Fruit after one more round it scores. » ; Fruit : « +0.5 effect. Harvested at the end of the round: +8 Pollen. ») et, s'il y en a, « Harvested x2: +0.2 for good. ». La règle complète a disparu des infobulles. Racines : « Sap from the left: +0.3 » et « Same kind next to it x2: +0.4 », sans phrase d'introduction. Non vérifié dans Unity.
+
+## 2026-11-11 — Tooltips : la croissance et les Racines disent de quoi elles parlent
+- « +0.5 effect » ne disait pas en quoi. Les bonus sont maintenant en pourcentage de l'effet du fertilizer, dans son unité et sa couleur : « +50% Mult » (rouge), « +50% pts » (bleu), « +50% Pollen » (or). L'unité est lue dans la description du fertilizer (`DescriptionTextFormatter.EffectUnitOf` : une seule unité nommée, sinon « effect » en texte simple). Valable pour le médaillon de croissance, la pastille de Racines (« +30% ») et ses infobulles, les pastilles de liaison (la sève s'exprime dans l'unité du fertilizer qui la reçoit, la résonance en « effect » car les deux voisins peuvent compter autrement). Non vérifié dans Unity.

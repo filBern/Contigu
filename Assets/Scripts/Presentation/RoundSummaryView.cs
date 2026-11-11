@@ -53,6 +53,7 @@ namespace Contigu.Presentation
             public HoverTooltip SapTip;
             public string Giver;
             public string Receiver;
+            public string ReceiverUnit = "effect";
         }
         private TooltipView _tooltip;
         private readonly List<GardenCell> _gardenCells = new List<GardenCell>();
@@ -283,6 +284,7 @@ namespace Contigu.Presentation
             {
                 var cell = _gardenCells[i];
                 cell.Receiver = ModifierCatalog.Get(steps[i + 1].Id).Name;
+                cell.ReceiverUnit = DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(steps[i + 1].Id).Description);
                 bool resonate = ModifierCatalog.Get(steps[i].Id).Category == ModifierCatalog.Get(steps[i + 1].Id).Category;
                 float x = startX + (i + 0.5f) * cellWidth;
                 const float SackCenterY = 14f; // the sack's centre, in the garden's own coordinates
@@ -294,7 +296,7 @@ namespace Contigu.Presentation
                     MakeChip("Resonance", "Icons/Growth/Roots_Resonance", new Vector2(x, SackCenterY - offset), "Resonance", out tip);
                     if (tip != null)
                     {
-                        tip.Init(_tooltip, "Resonance", cell.Giver + " and " + cell.Receiver + " are of the same kind: each gets +" + FertilizerGrowth.ResonancePerNeighbor.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.");
+                        tip.Init(_tooltip, "Resonance", cell.Giver + " and " + cell.Receiver + " are of the same kind.\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.");
                     }
                 }
             }
@@ -332,7 +334,7 @@ namespace Contigu.Presentation
             cell.SapChip.color = stage == GrowthStage.Fruit ? SapFruitTint : SapBloomTint;
             if (cell.SapTip != null)
             {
-                cell.SapTip.Init(_tooltip, "Sap", cell.Giver + " is a " + (stage == GrowthStage.Fruit ? "Fruit" : "Bloom") + ": its sap feeds " + cell.Receiver + " on its right, +" + FertilizerGrowth.SapFrom(growth).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.");
+                cell.SapTip.Init(_tooltip, "Sap", cell.Giver + " (" + (stage == GrowthStage.Fruit ? "Fruit" : "Bloom") + ") feeds " + cell.Receiver + " on its right.\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.SapFrom(growth), cell.ReceiverUnit));
             }
         }
 
@@ -346,7 +348,7 @@ namespace Contigu.Presentation
         {
             if (cell.MedallionTip != null)
             {
-                cell.MedallionTip.Init(_tooltip, GrowthVisuals.StageName(FertilizerGrowth.StageOf(growth), growth), GrowthVisuals.TooltipLine(growth, cell.Step.Harvested && growth == cell.Step.After ? cell.Step.Harvests : cell.Step.Harvests - (cell.Step.Harvested ? 1 : 0)));
+                cell.MedallionTip.Init(_tooltip, GrowthVisuals.StageName(FertilizerGrowth.StageOf(growth), growth), GrowthVisuals.TooltipLine(growth, cell.Step.Harvested && growth == cell.Step.After ? cell.Step.Harvests : cell.Step.Harvests - (cell.Step.Harvested ? 1 : 0), DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(cell.Step.Id).Description)));
             }
             cell.Medallion.sprite = GrowthVisuals.StageSprite(FertilizerGrowth.StageOf(growth));
             cell.Medallion.enabled = cell.Medallion.sprite != null;

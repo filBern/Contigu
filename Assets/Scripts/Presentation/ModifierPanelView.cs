@@ -490,7 +490,7 @@ namespace Contigu.Presentation
 
                 if (GrowthProvider != null)
                 {
-                    GrowthVisuals.AttachStage(badge, growth, harvests, StageMedallionSize, 150f, _tooltip);
+                    GrowthVisuals.AttachStage(badge, growth, harvests, StageMedallionSize, 150f, _tooltip, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description));
                 }
                 if (rootsBonus > 0f)
                 {
@@ -500,18 +500,17 @@ namespace Contigu.Presentation
                     rootsPill.raycastTarget = _tooltip != null;
                     if (_tooltip != null)
                     {
-                        string inv0 = rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
-                        var invc = System.Globalization.CultureInfo.InvariantCulture;
-                        string rootsBody = sap > 0f ? "Sap from the left: +" + sap.ToString("0.##", invc) : string.Empty;
-                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + "Same kind next to it x" + resonating + ": +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", invc); }
-                        rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + inv0, rootsBody);
+                        string myUnit = DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description);
+                        string rootsBody = sap > 0f ? "Sap from the left: " + DescriptionTextFormatter.Amount(sap, myUnit) : string.Empty;
+                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + "Same kind next to it x" + resonating + ": " + DescriptionTextFormatter.Amount(resonating * FertilizerGrowth.ResonancePerNeighbor, myUnit); }
+                        rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + Mathf.RoundToInt(rootsBonus * 100f) + "%", rootsBody);
                     }
                     UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);
                     rootsPill.rectTransform.anchorMin = rootsPill.rectTransform.anchorMax = new Vector2(1f, 1f);
                     rootsPill.rectTransform.pivot = new Vector2(1f, 1f);
                     rootsPill.rectTransform.anchoredPosition = new Vector2(-2f, -2f);
                     rootsPill.rectTransform.sizeDelta = new Vector2(44f, 22f);
-                    var rootsLabel = UIFactory.CreateText(rootsPill.transform, "Roots", "+" + rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture), 15, Color.white);
+                    var rootsLabel = UIFactory.CreateText(rootsPill.transform, "Roots", "+" + Mathf.RoundToInt(rootsBonus * 100f) + "%", 15, Color.white);
                     rootsLabel.raycastTarget = false;
                     UIFactory.StretchFull(rootsLabel.rectTransform);
                 }
@@ -554,12 +553,12 @@ namespace Contigu.Presentation
                 if (sap > 0f)
                 {
                     bool fruit = FertilizerGrowth.StageOf(GrowthProvider != null ? GrowthProvider(i) : 0) == GrowthStage.Fruit;
-                    string body = giver + " is a " + (fruit ? "Fruit" : "Bloom") + ": its sap feeds " + receiver + " on its right, +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
+                    string body = giver + " (" + (fruit ? "Fruit" : "Bloom") + ") feeds " + receiver + " on its right.\n" + DescriptionTextFormatter.Amount(sap, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(mods[i + 1]).Description));
                     AddRootLink("Sap", Resources.Load<Sprite>("Icons/Growth/Roots_Sap"), fruit ? SapFruitTint : SapBloomTint, a, b, offset, "Sap", body);
                 }
                 if (resonate)
                 {
-                    string body = giver + " and " + receiver + " are of the same kind: each gets +" + FertilizerGrowth.ResonancePerNeighbor.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect.";
+                    string body = giver + " and " + receiver + " are of the same kind.\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.";
                     AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, a, b, -offset, "Resonance", body);
                 }
             }
