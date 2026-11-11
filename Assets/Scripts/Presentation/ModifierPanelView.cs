@@ -501,9 +501,9 @@ namespace Contigu.Presentation
                     if (_tooltip != null)
                     {
                         string inv0 = rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
-                        string rootsBody = "What its neighbors add to this fertilizer's effect.";
-                        if (sap > 0f) { rootsBody += "\nSap from the left neighbor: +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
-                        if (resonating > 0) { rootsBody += "\nResonance (" + resonating + (resonating == 1 ? " neighbor" : " neighbors") + " of the same kind): +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
+                        var invc = System.Globalization.CultureInfo.InvariantCulture;
+                        string rootsBody = sap > 0f ? "Sap from the left: +" + sap.ToString("0.##", invc) : string.Empty;
+                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + "Same kind next to it x" + resonating + ": +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", invc); }
                         rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + inv0, rootsBody);
                     }
                     UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);

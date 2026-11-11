@@ -15,40 +15,29 @@ namespace Contigu.Presentation
         public static string StageName(GrowthStage stage, int growth)
         {
             string name = stage == GrowthStage.Fruit ? "Fruit" : stage == GrowthStage.Bloom ? "Bloom" : "Bud";
-            return name + " (" + System.Math.Min(growth, FertilizerGrowth.FruitAt) + "/" + FertilizerGrowth.FruitAt + ")";
+            return name + " " + System.Math.Min(growth, FertilizerGrowth.FruitAt) + "/" + FertilizerGrowth.FruitAt;
         }
 
-        /// <summary>What the growth icon means: how a fertilizer grows, what each stage gives, and what a harvest pays.</summary>
-        public static string StageBody()
-        {
-            var inv = System.Globalization.CultureInfo.InvariantCulture;
-            return "A fertilizer grows one step at the end of each round it scored in.\n"
-                + "Bloom (" + FertilizerGrowth.BloomAt + " steps): +" + FertilizerGrowth.BloomBonus.ToString("0.##", inv) + " effect.\n"
-                + "Fruit (" + FertilizerGrowth.FruitAt + " steps): +" + FertilizerGrowth.FruitBonus.ToString("0.##", inv) + " effect, harvested at the end of the next round: +"
-                + FertilizerGrowth.HarvestPollen + " Pollen, back to a Bud, and +" + FertilizerGrowth.BonusPerHarvest.ToString("0.##", inv) + " effect for good.";
-        }
-
-        /// <summary>The line a fertilizer's tooltip shows about its growth: its stage and progress, and what its harvests gave for good.</summary>
+        /// <summary>The growth tooltip's text: short, one idea per line.</summary>
         public static string TooltipLine(int growth, int harvests)
         {
             var inv = System.Globalization.CultureInfo.InvariantCulture;
-            var stage = FertilizerGrowth.StageOf(growth);
             string line;
-            switch (stage)
+            switch (FertilizerGrowth.StageOf(growth))
             {
                 case GrowthStage.Fruit:
-                    line = "FRUIT: +" + FertilizerGrowth.FruitBonus.ToString("0.##", inv) + " effect, harvested at the end of the round (+" + FertilizerGrowth.HarvestPollen + " Pollen).";
+                    line = "+" + FertilizerGrowth.FruitBonus.ToString("0.##", inv) + " effect.\nHarvested at the end of the round: +" + FertilizerGrowth.HarvestPollen + " Pollen.";
                     break;
                 case GrowthStage.Bloom:
-                    line = "Bloom: +" + FertilizerGrowth.BloomBonus.ToString("0.##", inv) + " effect. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
+                    line = "+" + FertilizerGrowth.BloomBonus.ToString("0.##", inv) + " effect.\nFruit after one more round it scores.";
                     break;
                 default:
-                    line = "Bud. Grows each round it scores (" + growth + "/" + FertilizerGrowth.FruitAt + ").";
+                    line = "Grows each round it scores.";
                     break;
             }
             if (harvests > 0)
             {
-                line += "\nHarvested x" + harvests + ": +" + (harvests * FertilizerGrowth.BonusPerHarvest).ToString("0.##", inv) + " effect for good.";
+                line += "\nHarvested x" + harvests + ": +" + (harvests * FertilizerGrowth.BonusPerHarvest).ToString("0.##", inv) + " for good.";
             }
             return line;
         }
@@ -62,7 +51,7 @@ namespace Contigu.Presentation
             medallion.raycastTarget = tooltip != null;
             if (tooltip != null)
             {
-                medallion.gameObject.AddComponent<HoverTooltip>().Init(tooltip, StageName(stage, growth), TooltipLine(growth, harvests) + "\n\n" + StageBody());
+                medallion.gameObject.AddComponent<HoverTooltip>().Init(tooltip, StageName(stage, growth), TooltipLine(growth, harvests));
             }
             medallion.preserveAspect = true;
             medallion.sprite = StageSprite(stage);

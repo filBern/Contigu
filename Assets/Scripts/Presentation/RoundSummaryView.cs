@@ -346,7 +346,7 @@ namespace Contigu.Presentation
         {
             if (cell.MedallionTip != null)
             {
-                cell.MedallionTip.Init(_tooltip, GrowthVisuals.StageName(FertilizerGrowth.StageOf(growth), growth), GrowthVisuals.StageBody());
+                cell.MedallionTip.Init(_tooltip, GrowthVisuals.StageName(FertilizerGrowth.StageOf(growth), growth), GrowthVisuals.TooltipLine(growth, cell.Step.Harvested && growth == cell.Step.After ? cell.Step.Harvests : cell.Step.Harvests - (cell.Step.Harvested ? 1 : 0)));
             }
             cell.Medallion.sprite = GrowthVisuals.StageSprite(FertilizerGrowth.StageOf(growth));
             cell.Medallion.enabled = cell.Medallion.sprite != null;

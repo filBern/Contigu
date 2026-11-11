@@ -9461,3 +9461,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Le tooltip de croissance et celui des Racines apparaissent enfin
 - Cause : `ModifierBadgeView` (le sac) réaffiche son infobulle à chaque image tant que le pointeur est dessus, et le pointeur sur le médaillon / la pastille compte comme étant encore sur le sac ; en plus Unity envoie l'« enter » à l'élément le plus profond d'abord, puis à ses parents, qui écrasaient donc celui de l'enfant. Correctif : `HoverTooltip.Active` (l'élément dont l'infobulle est affichée) ; le sac et la cellule de l'étagère s'effacent tant qu'un de leurs enfants la possède, et la reprennent quand le pointeur quitte l'enfant. Non vérifié dans Unity.
+
+## 2026-11-11 — Tooltips de croissance et de Racines plus courts
+- Croissance : titre « Fruit 3/3 », puis une ou deux lignes courtes (Bourgeon : « Grows each round it scores. » ; Fleur : « +0.25 effect. Fruit after one more round it scores. » ; Fruit : « +0.5 effect. Harvested at the end of the round: +8 Pollen. ») et, s'il y en a, « Harvested x2: +0.2 for good. ». La règle complète a disparu des infobulles. Racines : « Sap from the left: +0.3 » et « Same kind next to it x2: +0.4 », sans phrase d'introduction. Non vérifié dans Unity.
