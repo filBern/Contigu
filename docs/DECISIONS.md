@@ -9455,3 +9455,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-10 — Écran de choix : « Continue saved run » en bouton principal
 - Quand une partie est sauvegardée, « Continue saved run » devient le bouton principal : grand, doré (comme Play), il se gonfle doucement (`AttentionPulse`, immobile en mouvement réduit). Le bouton de la carte passe en vert, plus petit, « New run » (et garde la confirmation « Replace save? »). Sans sauvegarde, rien ne change : Play garde la place principale.
 - La description d'un challenge se réduit pour tenir dans sa boîte (elle recouvrait la ligne des engagements). Non vérifié dans Unity.
+
+## 2026-11-11 — Tooltip des Racines séparé de celui du fertilizer
+- L'infobulle d'un fertilizer ne contient plus les lignes « Roots : +x » (sève, résonance). La pastille brune « +x » en haut à droite du sac a la sienne : « Roots +0.3 », avec la part de la sève de gauche et celle de la résonance. Même principe que pour le médaillon de croissance : le survol / l'appui est pris par la pastille, le reste remonte au sac. Non vérifié dans Unity.

@@ -399,14 +399,6 @@ namespace Contigu.Presentation
                 float sap = SapProvider != null ? SapProvider(i) : 0f;
                 int resonating = ResonanceProvider != null ? ResonanceProvider(i) : 0;
                 float rootsBonus = sap + resonating * FertilizerGrowth.ResonancePerNeighbor;
-                if (rootsBonus > 0f)
-                {
-                    var baseRootsState = rowLevelState;
-                    string rootsLine = "Roots: +" + rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " effect";
-                    if (sap > 0f) { rootsLine += "\n  sap from the left neighbor +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
-                    if (resonating > 0) { rootsLine += "\n  resonance x" + resonating + " +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
-                    rowLevelState = rowId => rootsLine + (baseRootsState != null ? "\n" + baseRootsState(rowId) : string.Empty);
-                }
                 int roundsLeft = RoundsLeftProvider != null ? RoundsLeftProvider(i) : 0;
                 if (roundsLeft > 0)
                 {
@@ -504,7 +496,16 @@ namespace Contigu.Presentation
                 {
                     // Roots pill, top-right: what the neighbors add to this fertilizer's effect (sap + resonance).
                     var rootsPill = UIFactory.CreatePanel(badge.transform, "RootsPill", RootsBg);
-                    rootsPill.raycastTarget = false;
+                    // The Roots have a tooltip of their own, apart from the fertilizer's (pointer-downs and drags it does not handle bubble up to the sack).
+                    rootsPill.raycastTarget = _tooltip != null;
+                    if (_tooltip != null)
+                    {
+                        string inv0 = rootsBonus.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                        string rootsBody = "What its neighbors add to this fertilizer's effect.";
+                        if (sap > 0f) { rootsBody += "\nSap from the left neighbor: +" + sap.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
+                        if (resonating > 0) { rootsBody += "\nResonance (" + resonating + (resonating == 1 ? " neighbor" : " neighbors") + " of the same kind): +" + (resonating * FertilizerGrowth.ResonancePerNeighbor).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); }
+                        rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + inv0, rootsBody);
+                    }
                     UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);
                     rootsPill.rectTransform.anchorMin = rootsPill.rectTransform.anchorMax = new Vector2(1f, 1f);
                     rootsPill.rectTransform.pivot = new Vector2(1f, 1f);
