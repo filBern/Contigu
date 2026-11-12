@@ -9606,3 +9606,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Étiquette de prix : hauteur fixe (deuxième tentative)
 - Le `minHeight` ajouté plus tôt n'a pas aligné « Full (4) » (capture : toujours ~18 plus haut). L'étiquette a maintenant une hauteur fixe (max(police × 1,35 ; icône) + 6) : plus de hauteur verticale pilotée par le contenu (`verticalFit` libre), `childForceExpandHeight` : le texte et l'icône sont centrés dans la même hauteur pour tous les prix, « Full » et « Sold » compris. La cause exacte du décalage n'a pas été reproduite (Unity ne tourne pas ici). Non vérifié dans Unity.
+
+## 2026-11-12 — Étiquette de prix : plus de retour à la ligne
+- Hypothèse la plus probable du décalage : « Full (4) » passait sur deux lignes (le `Text` des étiquettes était en `Wrap`) et l'étiquette, ancrée par son bord bas, montait. Le texte est maintenant en `Overflow` horizontal, sans retour à la ligne. Non vérifié dans Unity.

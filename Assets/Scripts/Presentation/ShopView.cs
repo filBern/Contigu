@@ -1214,6 +1214,10 @@ namespace Contigu.Presentation
             }
             var text = UIFactory.CreateText(tag, "PriceLabel", label, tweaks.priceTagFontSize, affordable ? tweaks.priceTextColor : tweaks.priceTextUnaffordable);
             text.raycastTarget = false;
+            // Never wrap: "Full (4)" is wider than a number, and a tag that wraps into two lines grows upward from its bottom edge (the middle slot's price stood higher).
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.alignment = TextAnchor.MiddleCenter;
             var outline = text.gameObject.AddComponent<Outline>();
             outline.effectColor = tweaks.priceTagOutline;
             outline.effectDistance = new Vector2(2.5f, -2.5f);
