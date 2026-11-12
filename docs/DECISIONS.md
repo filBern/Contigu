@@ -9550,3 +9550,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Titres des boîtes et des étagères : plaques parcelles
 - Les panneaux de bois suspendus (cordes, clous, liseré) de « Fertilizers » et « Coming up », et les plaques « Blister » / « Workshop », paraissaient datés à côté des parcelles. `ShopSign` fabrique maintenant des plaques-parcelles (`BuildPlaque`) : lit coloré autour d'une terre sombre, titre dans la teinte claire du lit, une petite fleur de chaque côté, ombre portée, non interactives. Fertilizers et les étagères : lit de bois (texte crème) ; Coming up : lit bleu (texte bleu clair, comme sa boîte). La plaque s'étire avec la largeur de sa boîte (avant : largeur figée au moment de la construction). Hauteur des plaques d'étagère 36 → 42. Non vérifié dans Unity.
+
+## 2026-11-12 — « Coming up » : la météo sans carte, texte coloré lisible sur fond clair
+- La carte de météo à l'intérieur de la boîte « Coming up » (une boîte dans une boîte) disparaît : l'icône, le nom et l'effet de la météo se posent directement sur la terre bleu pâle, séparés des ennemis par un trait fin (bleu foncé translucide).
+- Le « +2 Pollen » jaune ne se lisait pas sur du vert pâle (ni sur du clair en général) : `DescriptionTextFormatter.ColorizeOnLight` utilise des teintes plus profondes (Pollen #A8680A, Mult #C03028, points #2C78AE) ; employé pour la description de la météo de « Coming up » et de la carte de la colonne de gauche (terre beige). Non vérifié dans Unity.

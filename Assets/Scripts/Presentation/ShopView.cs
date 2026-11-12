@@ -270,8 +270,10 @@ namespace Contigu.Presentation
             _upcomingEncounterGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 
             // Next round's weather, at the bottom of the box, as the same card as on the board: icon, name and what it does (no tooltip needed).
-            var weatherCard = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "WeatherRow", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            // No card of its own any more: the weather sits directly on the box's soil, under a thin line that separates it from the enemies above.
+            var weatherCard = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "WeatherRow", UISprites.CardBackground);
             _weatherCardImage = weatherCard;
+            weatherCard.color = new Color(1f, 1f, 1f, 0f);
             weatherCard.raycastTarget = false;
             _weatherRow = weatherCard.rectTransform;
             _weatherRow.anchorMin = new Vector2(0.5f, 0f);
@@ -279,6 +281,13 @@ namespace Contigu.Presentation
             _weatherRow.pivot = new Vector2(0.5f, 0f);
             _weatherRow.anchoredPosition = new Vector2(0f, UpcomingBoxBottomPadding);
             _weatherRow.sizeDelta = new Vector2(UpcomingSlotWidth, WeatherRowHeight);
+            var divider = UIFactory.CreatePanel(_weatherRow, "Divider", new Color(0.10f, 0.20f, 0.36f, 0.5f));
+            divider.raycastTarget = false;
+            divider.rectTransform.anchorMin = new Vector2(0f, 1f);
+            divider.rectTransform.anchorMax = new Vector2(1f, 1f);
+            divider.rectTransform.pivot = new Vector2(0.5f, 0f);
+            divider.rectTransform.anchoredPosition = new Vector2(0f, 4f);
+            divider.rectTransform.sizeDelta = new Vector2(-16f, 3f);
             var weatherFrame = UIFactory.CreateSlicedImage(_weatherRow, "WeatherIconFrame", UISprites.CardBackground);
             // No dark frame around the weather icon (same as the left column's card).
             weatherFrame.color = new Color(1f, 1f, 1f, 0f);
@@ -906,9 +915,7 @@ namespace Contigu.Presentation
                 _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(weatherId, run.NextWeatherColor));
                 _weatherEffectLabel.text = weatherId == WeatherId.Clear
                     ? "Nothing to plan around."
-                    : DescriptionTextFormatter.Colorize(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12);
-                _weatherCardImage.sprite = HudView.WeatherPlot(weatherId);
-                _weatherCardImage.color = Color.white;
+                    : DescriptionTextFormatter.ColorizeOnLight(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12);
             }
 
             int count = upcoming.Count;

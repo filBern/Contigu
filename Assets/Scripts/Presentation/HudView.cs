@@ -323,7 +323,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.supportRichText = true;
             _weatherEffectLabel.supportRichText = true;
             _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
-            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.Colorize(weatherDescription, 13);
+            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.ColorizeOnLight(weatherDescription, 13);
             _weatherCardImage.sprite = WeatherPlot(weather);
             _weatherCardImage.color = Color.white;
         }

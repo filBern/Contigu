@@ -21,10 +21,12 @@ namespace Contigu.Presentation
     /// </summary>
     public static class DescriptionTextFormatter
     {
-        private const string PointsColorHex = "65AED6"; // UITheme.ButtonSelected
-        private const string MultiplierColorHex = "E84D45"; // UITheme.ScoreMult
+        // The unit colors; deeper variants for text on a light background (a pale gold or light blue does not read on pale soil).
+        private static bool _onLight;
+        private static string PointsColorHex { get { return _onLight ? "2C78AE" : "65AED6"; } } // UITheme.ButtonSelected
+        private static string MultiplierColorHex { get { return _onLight ? "C03028" : "E84D45"; } } // UITheme.ScoreMult
         private const string DiamondColorHex = "F0B38D"; // VisualDefaults.GoldenColor
-        private const string PollenColorHex = "E8A82E"; // the Pollen gold (matches the counter's icon)
+        private static string PollenColorHex { get { return _onLight ? "A8680A" : "E8A82E"; } } // the Pollen gold (matches the counter's icon)
         private const string DiamondGlyph = "◆";
         private const float DiamondSizeMultiplier = 1.5f;
 
@@ -57,6 +59,20 @@ namespace Contigu.Presentation
                 return text;
             }
             return Rebuild(text, word => ColorizeFlowerWord(word, null));
+        }
+
+        /// <summary><see cref="Colorize"/> for text on a light background (deeper unit colors).</summary>
+        public static string ColorizeOnLight(string description, int fontSize)
+        {
+            _onLight = true;
+            try
+            {
+                return Colorize(description, fontSize);
+            }
+            finally
+            {
+                _onLight = false;
+            }
         }
 
         public static string Colorize(string description, int fontSize)
