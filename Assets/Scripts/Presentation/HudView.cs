@@ -113,6 +113,7 @@ namespace Contigu.Presentation
             lueurPill.type = Image.Type.Sliced;
             lueurPill.color = new Color(0.12f, 0.16f, 0.21f, 0.92f);
             UIFactory.AddThickOutline(lueurPill, UITheme.Border, 2f);
+            UIFactory.AddDropShadow(lueurPill, 6f, 0.4f);
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childControlWidth = true;
             lueurLayout.childControlHeight = true;
@@ -204,6 +205,7 @@ namespace Contigu.Presentation
             _weatherCardImage = card;
             card.color = WeatherCalmTint;
             UIFactory.AddThickOutline(card, UITheme.Border);
+            UIFactory.AddDropShadow(card, 6f, 0.4f);
             WeatherCard = card.rectTransform;
             card.rectTransform.anchorMin = card.rectTransform.anchorMax = card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             card.rectTransform.sizeDelta = new Vector2(280f, WeatherCardHeight);

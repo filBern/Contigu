@@ -282,20 +282,7 @@ namespace Contigu.Presentation
             board.raycastTarget = false;
             var rect = board.rectTransform;
             TopCenter(rect);
-            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
-            lip.raycastTarget = false;
-            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
-            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
-            lip.rectTransform.anchoredPosition = Vector2.zero;
-            lip.rectTransform.sizeDelta = new Vector2(0f, 5f);
-            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(0f, 0f, 0f, 0.35f));
-            shadow.raycastTarget = false;
-            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
-            shadow.rectTransform.anchorMax = new Vector2(1f, 0f);
-            shadow.rectTransform.pivot = new Vector2(0.5f, 1f);
-            shadow.rectTransform.anchoredPosition = Vector2.zero;
-            shadow.rectTransform.sizeDelta = new Vector2(0f, 14f);
+            ShelfArt.Decorate(rect);
             return rect;
         }
     }

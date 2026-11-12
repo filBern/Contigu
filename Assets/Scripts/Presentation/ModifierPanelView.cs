@@ -152,6 +152,7 @@ namespace Contigu.Presentation
             _levelProvider = levelProvider;
             // Garden parchment card (its own dark outline, so no extra outline component).
             var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.CardBackground);
+            UIFactory.AddDropShadow(panel, 8f, 0.42f);
             _root = panel.rectTransform;
             // Static size, centered vertically and horizontally in the gap
             // between the grid and screen edge; never resizes at runtime.

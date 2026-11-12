@@ -227,6 +227,7 @@ namespace Contigu.Presentation
             // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty
             // until the shop is actually open (it only ever reads the catalog, no RNG, see RunManager).
             var upcomingBox = UIFactory.CreateSlicedImage(_root, "UpcomingEncounterBox", UISprites.CardBackground);
+            UIFactory.AddDropShadow(upcomingBox, 8f, 0.42f);
             _upcomingEncounterBox = upcomingBox.rectTransform;
             // Same anchor/pivot/position recipe as ModifierPanelView.Build (anchor+pivot both (0.5,0.5),
             // vertically centered at y=0) — matching its exact recipe, not just eyeballing a Y offset, is
@@ -396,6 +397,19 @@ namespace Contigu.Presentation
             awningEdge.rectTransform.pivot = new Vector2(0.5f, 1f);
             awningEdge.rectTransform.anchoredPosition = new Vector2(0f, -30f);
             awningEdge.rectTransform.sizeDelta = new Vector2(0f, 8f);
+            // The awning throws a soft shadow on the back wall (three steps of black).
+            float[] shadowHeights = { 10f, 20f, 34f };
+            float[] shadowAlphas = { 0.26f, 0.16f, 0.08f };
+            for (int i = shadowHeights.Length - 1; i >= 0; i--)
+            {
+                var step = UIFactory.CreatePanel(_root, "AwningShadow" + i, new Color(0f, 0f, 0f, shadowAlphas[i]));
+                step.raycastTarget = false;
+                step.rectTransform.anchorMin = new Vector2(0f, 1f);
+                step.rectTransform.anchorMax = new Vector2(1f, 1f);
+                step.rectTransform.pivot = new Vector2(0.5f, 1f);
+                step.rectTransform.anchoredPosition = new Vector2(0f, -38f);
+                step.rectTransform.sizeDelta = new Vector2(0f, shadowHeights[i]);
+            }
         }
 
         /// <summary>A small carved wooden sign naming a section ("Blister", "Workshop"), hung above its shelf.</summary>
@@ -405,6 +419,7 @@ namespace Contigu.Presentation
             plaque.color = new Color(0.55f, 0.37f, 0.20f, 1f);
             plaque.raycastTarget = false;
             UIFactory.AddThickOutline(plaque, new Color(0.13f, 0.09f, 0.06f, 1f));
+            UIFactory.AddDropShadow(plaque, 6f, 0.45f);
             var rect = plaque.rectTransform;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -437,20 +452,7 @@ namespace Contigu.Presentation
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 1f);
             rect.sizeDelta = new Vector2(600f, 16f);
-            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.62f, 0.43f, 0.24f, 1f));
-            lip.raycastTarget = false;
-            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
-            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
-            lip.rectTransform.anchoredPosition = Vector2.zero;
-            lip.rectTransform.sizeDelta = new Vector2(0f, 5f);
-            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(0f, 0f, 0f, 0.35f));
-            shadow.raycastTarget = false;
-            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
-            shadow.rectTransform.anchorMax = new Vector2(1f, 0f);
-            shadow.rectTransform.pivot = new Vector2(0.5f, 1f);
-            shadow.rectTransform.anchoredPosition = Vector2.zero;
-            shadow.rectTransform.sizeDelta = new Vector2(0f, 14f);
+            ShelfArt.Decorate(rect);
             return rect;
         }
 
@@ -1034,6 +1036,9 @@ namespace Contigu.Presentation
             var layout = root.gameObject.AddComponent<LayoutElement>();
             layout.preferredWidth = size;
             layout.preferredHeight = size;
+
+            // The item's foot rests on the shelf: a soft contact shadow under it.
+            ShelfArt.AddContactShadow(root.rectTransform, size * 0.78f, size * 0.2f, 2f);
 
             // A soft golden halo behind the item, only visible while it has keyboard/controller focus.
             var halo = UIFactory.CreateSlicedImage(root.rectTransform, "FocusHalo", UISprites.CardBackground);
