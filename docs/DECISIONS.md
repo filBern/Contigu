@@ -9625,3 +9625,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-12 — Écran de choix de challenge : carte en bac de bois
 - La carte passe sur `PlotWoodLight` (bac comme les autres boîtes, sans contour ajouté) et le bandeau devient un plot de la couleur de la saison (Spring/Greenhouse vert, Winter bleu, Summer/Autumn or, Orchard rouge), nom en teinte claire du plot, inset 14. Les icônes de saison, au contour sombre, se détachent moins sur le fond sombre du plot : à juger sur capture. Non vérifié dans Unity.
 - Correction : une couleur de bandeau par challenge (Spring vert, Winter bleu, Summer or, Autumn bois, Orchard rouge, Greenhouse vert clair avec texte sombre).
+
+## 2026-11-12 — Résumé de manche (écran de victoire de manche) en bacs de bois
+- Carte `PlotWood` avec ombre portée, parchemin des chiffres et jardin de croissance en `PlotWoodLight` avec ombre (plus de contours ajoutés ; repli sur les anciennes couleurs si l'art manque). L'écran de fin de run avait déjà été converti. Non vérifié dans Unity (marges internes des bacs à juger).

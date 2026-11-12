@@ -70,9 +70,10 @@ namespace Contigu.Presentation
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 
-            var board = UIFactory.CreateSlicedImage(_root, "Card", UISprites.CardBackground);
-            board.color = Wood;
-            UIFactory.AddThickOutline(board, Dark);
+            // Wooden planters like the other screens: a dark board, a light bed for the figures and another for the garden (their own rims, no outline component).
+            var board = UIFactory.CreateSlicedImage(_root, "Card", UISprites.Garden("Wood") ?? UISprites.CardBackground);
+            board.color = UISprites.Garden("Wood") != null ? Color.white : Wood;
+            UIFactory.AddDropShadow(board, 10f, 0.45f);
             _card = board.rectTransform;
             _card.anchorMin = _card.anchorMax = _card.pivot = new Vector2(0.5f, 0.5f);
             _card.sizeDelta = new Vector2(CardWidth, 420f);
@@ -85,9 +86,9 @@ namespace Contigu.Presentation
             _title.rectTransform.sizeDelta = new Vector2(CardWidth - 30f, 46f);
 
             // A cream parchment holds the figures.
-            var paper = UIFactory.CreateSlicedImage(_card, "Paper", UISprites.CardBackground);
-            paper.color = UITheme.Panel;
-            UIFactory.AddThickOutline(paper, Dark);
+            var paper = UIFactory.CreateSlicedImage(_card, "Paper", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            paper.color = UISprites.Garden("WoodLight") != null ? Color.white : UITheme.Panel;
+            UIFactory.AddDropShadow(paper, 5f, 0.35f);
             paper.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             paper.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             paper.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -96,9 +97,9 @@ namespace Contigu.Presentation
             _rows = paper.rectTransform;
 
             // Below the figures: how each held fertilizer grew this round (Maturation), played as a short animation.
-            var garden = UIFactory.CreateSlicedImage(_card, "Garden", UISprites.CardBackground);
-            garden.color = UITheme.Panel;
-            UIFactory.AddThickOutline(garden, Dark);
+            var garden = UIFactory.CreateSlicedImage(_card, "Garden", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            garden.color = UISprites.Garden("WoodLight") != null ? Color.white : UITheme.Panel;
+            UIFactory.AddDropShadow(garden, 5f, 0.35f);
             garden.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             garden.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             garden.rectTransform.pivot = new Vector2(0.5f, 1f);
