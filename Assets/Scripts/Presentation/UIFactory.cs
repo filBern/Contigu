@@ -73,8 +73,27 @@ namespace Contigu.Presentation
 
         public static Button CreateButton(Transform parent, string name, string label, Color bgColor, int fontSize = 16)
         {
+            // Every button is a plot now: a flat-colored request becomes the wooden plot (its tint is the caller's to change later).
+            var plot = UISprites.Garden("Wood");
+            if (plot != null)
+            {
+                return CreateButton(parent, name, label, plot, fontSize);
+            }
             var img = CreatePanel(parent, name, bgColor);
             return FinishButton(img, label, fontSize);
+        }
+
+        /// <summary>The text color of a plot button: the light shade of its bed (green, gold, blue, red) or cream for the wooden one.</summary>
+        private static Color PlotTextColor(string spriteName)
+        {
+            switch (spriteName)
+            {
+                case "PlotGreen": return new Color(0.72f, 0.94f, 0.54f, 1f);
+                case "PlotGold": return new Color(1f, 0.89f, 0.48f, 1f);
+                case "PlotBlue": return new Color(0.67f, 0.83f, 1f, 1f);
+                case "PlotRed": return new Color(1f, 0.64f, 0.58f, 1f);
+                default: return new Color(0.96f, 0.89f, 0.75f, 1f);
+            }
         }
 
         /// <summary>Same as the Color overload, but skinned with a "Colorful UI" pack sprite (see UISprites) instead of a flat fill.</summary>
@@ -92,8 +111,19 @@ namespace Contigu.Presentation
             }
             // Garden-bodied buttons (Resources/Buttons/Garden/Btn*) whose label changes at runtime (price, "Sold", "Reroll (n)",
             // "Unlock & Play") get the title's lettering look instead: cream letters with a dark outline, plus hover/click feedback.
-            bool gardenBody = bgSprite != null && bgSprite.name.StartsWith("Btn");
+            bool plotBody = bgSprite != null && bgSprite.name.StartsWith("Plot");
+            bool gardenBody = plotBody || (bgSprite != null && bgSprite.name.StartsWith("Btn"));
             var button = FinishButton(img, label, fontSize, lettered: gardenBody);
+            if (plotBody)
+            {
+                // A plot button: the text sits on the dark soil in the bed's own color, with a few small flowers either side.
+                var text = button.GetComponentInChildren<Text>();
+                text.color = PlotTextColor(bgSprite.name);
+                text.resizeTextForBestFit = true;
+                text.resizeTextMinSize = 10;
+                text.resizeTextMaxSize = text.fontSize;
+                PlotButtonDecor.Attach(img, text, Mathf.Abs(name.GetHashCode()));
+            }
             if (gardenBody)
             {
                 button.gameObject.AddComponent<ButtonFeedback>().BuildGlow();

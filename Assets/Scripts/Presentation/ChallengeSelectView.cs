@@ -245,7 +245,7 @@ namespace Contigu.Presentation
                 chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? PledgeOffSprite(chip.Key, chip.Value)) : PledgeOffSprite(chip.Key, chip.Value);
                 chip.Value.color = on ? Color.white : PledgeOffTint;
                 if (_pledgeChecks.TryGetValue(chip.Key, out var check)) { check.SetActive(on); }
-                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? Color.white : new Color(1f, 1f, 1f, 0.6f); }
+                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? new Color(1f, 0.89f, 0.48f, 1f) : new Color(0.72f, 0.94f, 0.54f, 0.65f); }
             }
         }
 
@@ -436,6 +436,8 @@ namespace Contigu.Presentation
             if (playImage != null) { playImage.sprite = hasSave ? green : gold; }
             playRect.sizeDelta = new Vector2(hasSave ? CardWidth - 140f : CardWidth - 60f, hasSave ? 44f : 56f);
             _playButtonLabel.fontSize = hasSave ? 20 : 26;
+            _playButtonLabel.resizeTextMaxSize = _playButtonLabel.fontSize;
+            _playButtonLabel.color = hasSave ? new Color(0.72f, 0.94f, 0.54f, 1f) : new Color(1f, 0.89f, 0.48f, 1f);
             if (_playButton.interactable && !_playArmed) { _playButtonLabel.text = hasSave ? "New run" : "Play"; }
         }
 

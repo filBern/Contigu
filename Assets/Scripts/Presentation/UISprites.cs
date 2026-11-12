@@ -30,7 +30,8 @@ namespace Contigu.Presentation
         {
             if (!_garden.TryGetValue(name, out var sprite))
             {
-                sprite = Resources.Load<Sprite>(ButtonsPath + "Garden/Btn" + name);
+                // The rectangular "garden plot" bodies (Resources/Buttons/Plot, see Design/Buttons/generate_plot_buttons.py), the older pill bodies as a fallback.
+                sprite = Resources.Load<Sprite>(ButtonsPath + "Plot/Plot" + name) ?? Resources.Load<Sprite>(ButtonsPath + "Garden/Btn" + name);
                 _garden[name] = sprite;
             }
             return sprite;
