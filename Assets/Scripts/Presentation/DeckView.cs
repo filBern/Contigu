@@ -62,22 +62,25 @@ namespace Contigu.Presentation
             _deck = run.Deck;
             _tooltip = tooltip;
 
-            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", UITheme.Background);
+            // The shop's back wall (the same dark planks), so the seed bag reads as part of the same stall.
+            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", new Color(0.17f, 0.115f, 0.085f, 1f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            StallBackdrop.AddPlanks(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "Your Seed Bag", 26, UITheme.TextOnBackground);
-            header.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            header.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            header.rectTransform.pivot = new Vector2(0.5f, 1f);
-            header.rectTransform.anchoredPosition = new Vector2(0f, -30f);
-            header.rectTransform.sizeDelta = new Vector2(900f, 40f);
+            // The title as a plaque (a plot, like the shop's), the seed count under it.
+            var header = ShopSign.BuildPlaque(_root, "HeaderPlaque", "Your Seed Bag", 26, "Wood");
+            header.anchorMin = new Vector2(0.5f, 1f);
+            header.anchorMax = new Vector2(0.5f, 1f);
+            header.pivot = new Vector2(0.5f, 1f);
+            header.anchoredPosition = new Vector2(0f, -22f);
+            header.sizeDelta = new Vector2(360f, 48f);
 
-            _countLabel = UIFactory.CreateText(_root, "Count", "", 22, UITheme.TextOnBackground);
+            _countLabel = UIFactory.CreateText(_root, "Count", "", 22, new Color(0.96f, 0.89f, 0.75f, 1f));
             _countLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _countLabel.rectTransform.anchoredPosition = new Vector2(0f, -70f);
+            _countLabel.rectTransform.anchoredPosition = new Vector2(0f, -78f);
             _countLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
 
             // Top-pivoted (not centered) since sections are positioned by a
@@ -257,28 +260,22 @@ namespace Contigu.Presentation
         /// <summary>Same look as the shop seed-type choice, minus the Button/onClick — this view is purely informational, never a picker. Positioned explicitly at (x, y) within _listContainer rather than through a LayoutGroup, since each color section wraps its own row count.</summary>
         private void BuildTypeCard(float x, float y, ShapeId shape, PieceColor color, int count)
         {
-            var row = UIFactory.CreatePanel(_listContainer, "Type_" + shape + "_" + color, UITheme.ButtonIdle);
+            // A planter in the seed's own color (red / blue / gold / green bed around pale soil; a wooden one for the Joker).
+            var row = UIFactory.CreateSlicedImage(_listContainer, "Type_" + shape + "_" + color, UISprites.Garden(PlanterFor(color)) ?? UISprites.CardBackground);
+            row.color = Color.white;
+            UIFactory.AddDropShadow(row, 5f, 0.4f);
             row.rectTransform.anchorMin = new Vector2(0f, 1f);
             row.rectTransform.anchorMax = new Vector2(0f, 1f);
             row.rectTransform.pivot = new Vector2(0f, 1f);
             row.rectTransform.anchoredPosition = new Vector2(x, y);
             row.rectTransform.sizeDelta = new Vector2(_cardWidth, _cardHeight);
 
-            // A thin bar in the seed's color on top, so a card is recognised before it is read.
-            var bar = UIFactory.CreatePanel(row.transform, "ColorBar", VisualDefaults.GetColor(color));
-            bar.raycastTarget = false;
-            bar.rectTransform.anchorMin = new Vector2(0f, 1f);
-            bar.rectTransform.anchorMax = new Vector2(1f, 1f);
-            bar.rectTransform.pivot = new Vector2(0.5f, 1f);
-            bar.rectTransform.anchoredPosition = Vector2.zero;
-            bar.rectTransform.sizeDelta = new Vector2(0f, 6f);
-
             // The piece sits centered above the footer line (level on the left, count on the right).
             var previewContainer = UIFactory.CreateUIObject("Preview", row.transform);
             previewContainer.anchorMin = previewContainer.anchorMax = new Vector2(0.5f, 1f);
             previewContainer.pivot = new Vector2(0.5f, 0.5f);
-            float previewAreaHeight = _cardHeight - FooterHeight - 6f;
-            previewContainer.anchoredPosition = new Vector2(0f, -(6f + previewAreaHeight / 2f));
+            float previewAreaHeight = _cardHeight - FooterHeight - 14f;
+            previewContainer.anchoredPosition = new Vector2(0f, -(10f + previewAreaHeight / 2f));
             previewContainer.sizeDelta = new Vector2(_cardWidth - 20f, previewAreaHeight);
 
             var trait = FindRepresentativeTrait(shape, color);
@@ -292,15 +289,28 @@ namespace Contigu.Presentation
             levelLabel.raycastTarget = false;
             levelLabel.rectTransform.anchorMin = levelLabel.rectTransform.anchorMax = new Vector2(0f, 0f);
             levelLabel.rectTransform.pivot = new Vector2(0f, 0f);
-            levelLabel.rectTransform.anchoredPosition = new Vector2(10f, 4f);
+            levelLabel.rectTransform.anchoredPosition = new Vector2(16f, 8f);
             levelLabel.rectTransform.sizeDelta = new Vector2(70f, FooterHeight);
 
             var countLabel = UIFactory.CreateText(row.transform, "Count", "x" + count, 26, UITheme.TextPrimary, TextAnchor.MiddleRight);
             countLabel.raycastTarget = false;
             countLabel.rectTransform.anchorMin = countLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
             countLabel.rectTransform.pivot = new Vector2(1f, 0f);
-            countLabel.rectTransform.anchoredPosition = new Vector2(-10f, 3f);
+            countLabel.rectTransform.anchoredPosition = new Vector2(-16f, 7f);
             countLabel.rectTransform.sizeDelta = new Vector2(60f, FooterHeight + 2f);
+        }
+
+        /// <summary>The planter sprite name for a seed color: the bed takes the flower's color.</summary>
+        private static string PlanterFor(PieceColor color)
+        {
+            switch (color)
+            {
+                case PieceColor.Coral: return "RedLight";
+                case PieceColor.Teal: return "BlueLight";
+                case PieceColor.Violet: return "GoldLight";
+                case PieceColor.Lime: return "GreenLight";
+                default: return "WoodLight";
+            }
         }
 
         /// <summary>Same representative-sample approach as GameBootstrap.RepresentativeTraits — see there for why a per-type row can't show more than one sample trait.</summary>
