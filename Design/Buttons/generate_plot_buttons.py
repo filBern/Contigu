@@ -17,10 +17,15 @@ ROLES = {
     'Blue':  ('#7fb0ee', '#2f64b4', '#1b2f4c'),
     'Red':   ('#e8665b', '#a93030', '#4a1d1d'),
     'Wood':  ('#b78552', '#74492a', '#3a2a1c'),
+    # Lighter soil, for the hand slots and the fertilizer box (lots of art sits on them).
+    'WoodLight': ('#b78552', '#74492a', '#8a6a47'),
+    'GoldLight': ('#f6cf62', '#c8871a', '#a8842f'),
+    'RedLight':  ('#e8665b', '#a93030', '#a65048'),
 }
 GUIDS = {
     'Green': '2d71a0c4e9b3485f8a16d3c07e52b9f1', 'Gold': '6f08c3b7a1e4492d9b35e0d8a74c1f26', 'Blue': 'b3e5d927c0a84f16a97d2c48e1f06b53',
     'Red': '91c4f7a2d6e0453b8c1a5e79b3d02f68', 'Wood': 'e72a5b1c9d38406fb4e0a1c6d85f3927',
+    'WoodLight': '3f81d2a6c5b94e07a0d3b8f1e64c2975', 'GoldLight': 'd09a4e7b1c3f4825b6e1a9d2f07c8b34', 'RedLight': '58b2c9e0a4d74f13b7a6d1e8c3f92a60',
 }
 FLOWER_GUIDS = {
     'Red': '5c19e8a3b7d24f60a2c4d9e1f8b30675', 'Blue': 'a8d3f0b6c1e94725b7a2e4c8d0f13961',

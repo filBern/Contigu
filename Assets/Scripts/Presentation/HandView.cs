@@ -189,7 +189,7 @@ namespace Contigu.Presentation
             {
                 int idx = i;
                 // A wooden planter (a plot: dark soil in a wooden bed); selection, hover and boss locks change its bed (gold / red), see UpdateSelectionVisuals.
-                var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.Garden("Wood") ?? UISprites.CardBackground);
+                var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.Garden("WoodLight") ?? UISprites.Garden("Wood") ?? UISprites.CardBackground);
                 slot.color = SlotClear;
                 slot.rectTransform.sizeDelta = new Vector2(SlotWidth, SlotHeight);
                 // Plain Image/Button has no ILayoutElement; the row's HorizontalLayoutGroup needs explicit preferred dimensions.
@@ -1008,7 +1008,7 @@ namespace Contigu.Presentation
             {
                 bool selected = i == _selectedIndex;
                 bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
-                _slotBackgrounds[i].sprite = (lockedByBoss ? UISprites.Garden("Red") : selected && _interactable ? UISprites.Garden("Gold") : UISprites.Garden("Wood")) ?? _slotBackgrounds[i].sprite;
+                _slotBackgrounds[i].sprite = (lockedByBoss ? (UISprites.Garden("RedLight") ?? UISprites.Garden("Red")) : selected && _interactable ? (UISprites.Garden("GoldLight") ?? UISprites.Garden("Gold")) : (UISprites.Garden("WoodLight") ?? UISprites.Garden("Wood"))) ?? _slotBackgrounds[i].sprite;
                 _slotBackgrounds[i].color = lockedByBoss ? SlotLockedColor
                     : selected && _interactable ? SlotSelectedColor
                     : IsHoverActive(i) ? SlotHoverColor

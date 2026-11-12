@@ -152,7 +152,7 @@ namespace Contigu.Presentation
             _levelProvider = levelProvider;
             // Garden parchment card (its own dark outline, so no extra outline component).
             // A wooden planter like the hand slots and the buttons: a wooden bed around dark soil.
-            var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.Garden("Wood") ?? UISprites.CardBackground);
+            var panel = UIFactory.CreateSlicedImage(parent, "ModifierPanel", UISprites.Garden("WoodLight") ?? UISprites.Garden("Wood") ?? UISprites.CardBackground);
             UIFactory.AddDropShadow(panel, 8f, 0.42f);
             _root = panel.rectTransform;
             // Static size, centered vertically and horizontally in the gap
@@ -166,7 +166,7 @@ namespace Contigu.Presentation
             // A wooden sign hanging from the top of the card, not a glossy pill (that reads as a button).
             ShopSign.Build(_root, "Fertilizers", 24);
 
-            _emptyHint = UIFactory.CreateText(_root, "EmptyHint", "No fertilizer yet.\nBuy a sack in the Blister.", 16, new Color(0.96f, 0.89f, 0.75f, 0.8f), TextAnchor.UpperCenter);
+            _emptyHint = UIFactory.CreateText(_root, "EmptyHint", "No fertilizer yet.\nBuy a sack in the Blister.", 16, new Color(0.16f, 0.10f, 0.05f, 0.9f), TextAnchor.UpperCenter);
             _emptyHint.rectTransform.anchorMin = new Vector2(0f, 1f);
             _emptyHint.rectTransform.anchorMax = new Vector2(1f, 1f);
             _emptyHint.rectTransform.pivot = new Vector2(0.5f, 1f);
