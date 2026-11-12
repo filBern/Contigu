@@ -9500,3 +9500,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Les boutons illustrés deviennent des parcelles aussi
 - Les boutons « ronds » (Seed bag, Menu, Next round, Play, Settings, Exit, Close, Confirm, OK, Got it, Rules, Collection, New run…) portaient une illustration complète (corps en pilule, lettrage du titre, plantes) choisie d'après leur libellé (`ButtonArt.Find`). Ils passent maintenant par la parcelle rectangulaire comme tous les autres : `ButtonArt.UseIllustratedButtons = false` (le code et les images restent en place, on peut les rallumer). Ils prennent donc le texte coloré et les petites fleurs ; la taille du texte vient de la police demandée par l'appelant. Non vérifié dans Unity : le menu principal (grands boutons, plantes de l'illustration en moins) et les boutons de la boutique et de la main.
+
+## 2026-11-12 — Écran de choix : carte plus large pour les boutons parcelles
+- « No shuffle » passait sur deux lignes (les fleurs mangent 32 de marge de chaque côté du texte). La carte passe de 380 à 460 de large (`UITweaks.challengeCardWidth`, défaut et asset), les puces d'engagement de 170 à 210 : le texte d'une puce dispose d'environ 146 de large. Le bouton principal et « New run » suivent la largeur de la carte. Non vérifié dans Unity (flèches et boutons de niveau se recalent sur la nouvelle largeur).

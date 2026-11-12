@@ -155,7 +155,7 @@ namespace Contigu.Presentation
             return _root;
         }
 
-        private const float PledgeChipWidth = 170f;
+        private const float PledgeChipWidth = 210f;
         private static readonly Color PledgeOff = new Color(0.62f, 0.62f, 0.62f, 1f);
         private RectTransform _pledgeGroup;
 

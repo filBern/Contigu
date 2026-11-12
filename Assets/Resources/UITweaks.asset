@@ -48,7 +48,7 @@ MonoBehaviour:
   sprigY: -134
   sprigSize: 130
   sprigHopEvery: 5.5
-  challengeCardWidth: 380
+  challengeCardWidth: 460
   challengeCardHeight: 520
   challengeBannerHeight: 92
   glintAfterIdle: 8

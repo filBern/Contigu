@@ -57,7 +57,7 @@ namespace Contigu.Presentation
         [Range(2f, 20f)] public float sprigHopEvery = 5.5f;
 
         [Header("Sélecteur de challenge")]
-        [Range(300f, 520f)] public float challengeCardWidth = 380f;
+        [Range(300f, 520f)] public float challengeCardWidth = 460f;
         [Range(380f, 640f)] public float challengeCardHeight = 520f;
         [Range(60f, 140f)] public float challengeBannerHeight = 92f;
 
