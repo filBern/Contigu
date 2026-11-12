@@ -271,8 +271,8 @@ namespace Contigu.Presentation
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
 
             // Seeds left: the big "30 / 30" and a thick progress bar underneath.
-            // A planter like the slots above it (wooden bed, beige soil): the counter is dark lettering on the soil.
-            var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            // A planter like the slots above it, but with a green bed so the counter is told apart from the slots: the count is dark lettering on the soil.
+            var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.Garden("GreenLight") ?? UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
             box.color = Color.white;
             box.raycastTarget = false;
             var boxRect = box.rectTransform;
