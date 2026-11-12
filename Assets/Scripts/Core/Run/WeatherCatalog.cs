@@ -228,17 +228,17 @@ namespace Contigu.Core
             {
                 case WeatherId.Snowfall: return "Soft snow muffles the garden.";
                 case WeatherId.Blizzard: return "A howling whiteout.";
-                case WeatherId.Aurora: return "Green lights dance over the snow.";
-                case WeatherId.IndianSummer: return "A last scorching week of summer.";
-                case WeatherId.Sprinkler: return "The sprinklers come on right on schedule.";
-                case WeatherId.GrowLamp: return "The grow lamps hum at full power.";
-                case WeatherId.VentFan: return "The ventilation fan whirs up.";
+                case WeatherId.Aurora: return "Green lights over the snow.";
+                case WeatherId.IndianSummer: return "A last scorching week.";
+                case WeatherId.Sprinkler: return "The sprinklers come on.";
+                case WeatherId.GrowLamp: return "The grow lamps hum.";
+                case WeatherId.VentFan: return "The fan whirs up.";
                 case WeatherId.Condensation: return "The glass is dripping.";
-                case WeatherId.Thermostat: return "The thermostat is stuck on maximum.";
-                case WeatherId.RogueCat: return "The cat got in again and is zooming around.";
-                case WeatherId.FreezerLeak: return "Someone left the cold room open.";
-                case WeatherId.Compost: return "A fresh load of compost is wheeled in.";
-                case WeatherId.DiscoLights: return "The grow lights start strobing gold.";
+                case WeatherId.Thermostat: return "The thermostat is stuck.";
+                case WeatherId.RogueCat: return "The cat got in again.";
+                case WeatherId.FreezerLeak: return "The cold room is open.";
+                case WeatherId.Compost: return "Fresh compost arrives.";
+                case WeatherId.DiscoLights: return "The grow lights strobe gold.";
                 default: return "";
             }
         }
@@ -251,13 +251,13 @@ namespace Contigu.Core
             {
                 case WeatherId.Rain: return "+" + Scale(ScoringConstants.RainPollenPerSeed, intensity) + " Pollen each time you plant a " + color + " seed.";
                 case WeatherId.Sunshine: return "+" + Scale(ScoringConstants.SunshinePointsPerCell, intensity) + " pts per cell of every " + color + " seed you plant.";
-                case WeatherId.Wind: return "A gust blows in a free Shuffle at the start of the round.";
-                case WeatherId.Frost: return Scale(ScoringConstants.FrostFrozenPlots, intensity) + " empty plots start frozen (harvest their row or column to break the ice).";
+                case WeatherId.Wind: return "A free Shuffle at the start of the round.";
+                case WeatherId.Frost: return Scale(ScoringConstants.FrostFrozenPlots, intensity) + " empty plots start frozen. Harvest their line to break the ice.";
                 case WeatherId.Dew: return "+" + Scale(ScoringConstants.DewPollenPerLine, intensity) + " Pollen for every line you clear.";
-                case WeatherId.GoldenHour: return Scale(ScoringConstants.GoldenHourPlots, intensity) + " empty plots turn golden for the round, and golden again each time their tile is harvested.";
+                case WeatherId.GoldenHour: return Scale(ScoringConstants.GoldenHourPlots, intensity) + " empty plots turn golden for the round.";
                 case WeatherId.PollenShower: return "Start the round with +" + Scale(ScoringConstants.PollenShowerPollen, intensity) + " Pollen.";
-                case WeatherId.Heatwave: return "Each Shuffle you spend scorches one planted tile (it burns away, no points).";
-                case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds you plant, the storm blows " + Scale(ScoringConstants.HurricaneTilesMoved, intensity) + " planted tiles to other plots.";
+                case WeatherId.Heatwave: return "Each Shuffle burns away one planted tile (no points).";
+                case WeatherId.Hurricane: return "Every " + ScoringConstants.HurricaneInterval + " seeds, the storm moves " + Scale(ScoringConstants.HurricaneTilesMoved, intensity) + " planted tiles.";
                 default: return "Calm skies. No effect.";
             }
         }
