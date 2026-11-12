@@ -9594,3 +9594,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Écran « Your Seed Bag » au nouveau style
 - Le fond bleu uni devient le mur de planches de la boutique (`StallBackdrop`), le titre une plaque-parcelle de bois (`ShopSign.BuildPlaque`), le compteur de graines en crème. Chaque carte de forme passe de crème à bandeau de couleur à une parcelle dont le lit prend la couleur de la fleur (rouge pour Poppy, bleu pour Iris, or pour Sunflower, vert pour Fern, bois pour le Joker : `PlotRedLight`, `BlueLight`, `GoldLight`, `GreenLight`, `WoodLight`) avec une ombre portée ; l'aperçu de la pièce et les lignes « Lv. » et « x N » sont recalés dans la terre (9 de bois autour). Les titres de section gardent la couleur de leur fleur. Non vérifié dans Unity : lisibilité des titres de section sur les planches, taille des pièces dans des cartes plus étroites de 9 de chaque côté.
+
+## 2026-11-12 — Reroll : l'icône après le prix
+- « Reroll [icône] 5 » devient « Reroll 5 [icône] » (clé de texte « Reroll {0} Pollen »), comme les autres prix de la boutique. L'icône de Pollen se pose bien dans une étiquette centrée de bouton (capture). Non vérifié dans Unity pour la nouvelle place.
