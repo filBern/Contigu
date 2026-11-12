@@ -452,22 +452,12 @@ namespace Contigu.Presentation
                 // Visual position number: scoring order follows this exact
                 // list order (see PlacementResult.Mult), so the player needs
                 // to see it to arrange x-modifiers after +modifiers. Top-left
-                // corner, on a small square backdrop for legibility over any
+                // corner, on a small round backdrop for legibility over any
                 // badge color/icon underneath.
-                var indexBg = UIFactory.CreatePanel(badge.transform, "IndexBg", UITheme.Success);
-                indexBg.rectTransform.anchorMin = new Vector2(0f, 1f);
-                indexBg.rectTransform.anchorMax = new Vector2(0f, 1f);
-                indexBg.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                indexBg.rectTransform.anchoredPosition = new Vector2(15f, -15f);
-                indexBg.rectTransform.sizeDelta = new Vector2(30f, 30f);
-
-                var indexLabel = UIFactory.CreateText(badge.transform, "Index", (i + 1).ToString(), Mathf.RoundToInt(IndexLabelSize), UITheme.TextPrimary);
-                indexLabel.raycastTarget = false;
-                indexLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
-                indexLabel.rectTransform.anchorMax = new Vector2(0f, 1f);
-                indexLabel.rectTransform.pivot = new Vector2(0f, 1f);
-                indexLabel.rectTransform.anchoredPosition = new Vector2(2f, -2f);
-                indexLabel.rectTransform.sizeDelta = new Vector2(26f, 26f);
+                var indexBadge = NumberBadge.Create(badge.transform, (i + 1).ToString(), 30f, Mathf.RoundToInt(IndexLabelSize * 0.85f));
+                indexBadge.anchorMin = indexBadge.anchorMax = new Vector2(0f, 1f);
+                indexBadge.pivot = new Vector2(0.5f, 0.5f);
+                indexBadge.anchoredPosition = new Vector2(15f, -15f);
 
                 // Level badge (see ModifierLevelUtility), bottom-right
                 // corner, shown only once a slot is leveled past 1 to avoid

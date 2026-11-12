@@ -212,15 +212,10 @@ namespace Contigu.Presentation
                 // Wraps just the piece's preview, not the slot's background/level/lock chrome, so a shuffle can fade the piece alone (see FadeSlotPieces).
                 var previewCanvasGroup = previewContainer.gameObject.AddComponent<CanvasGroup>();
 
-                // Small mint number tag in the tray's corner, like the fertilizer slots'.
-                var tag = UIFactory.CreatePanel(slot.transform, "SlotNumber", UITheme.Success);
-                tag.raycastTarget = false;
-                tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = tag.rectTransform.pivot = new Vector2(0f, 1f);
-                tag.rectTransform.anchoredPosition = new Vector2(6f, -6f);
-                tag.rectTransform.sizeDelta = new Vector2(24f, 24f);
-                var tagText = UIFactory.CreateText(tag.transform, "Number", (i + 1).ToString(), 16, UITheme.TextPrimary);
-                tagText.raycastTarget = false;
-                UIFactory.StretchFull(tagText.rectTransform);
+                // The slot's number: a small round gold badge in the corner, like the fertilizers' (see NumberBadge).
+                var tag = NumberBadge.Create(slot.transform, (i + 1).ToString(), 30f, 17);
+                tag.anchorMin = tag.anchorMax = tag.pivot = new Vector2(0f, 1f);
+                tag.anchoredPosition = new Vector2(8f, -8f);
 
                 var levelLabel = UIFactory.CreateText(slot.transform, "PieceLevel", "", 14, Color.black);
                 levelLabel.raycastTarget = false;

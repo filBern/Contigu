@@ -55,7 +55,18 @@ def flower(petal, center, n=6):
 
 FLOWERS = {'Red': ('#e5534b', '#2a1418', 5), 'Blue': ('#6f9ae6', '#ffd45a', 6), 'Yellow': ('#f5c542', '#6b4020', 8), 'White': ('#fff3e0', '#e8a82e', 6)}
 
+BADGE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><defs>'
+         '<linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6cf62"/><stop offset="1" stop-color="#c8871a"/></linearGradient>'
+         '<linearGradient id="h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.6"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+         '<linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0.6"/><stop offset="0.55" stop-color="#000" stop-opacity="0"/></linearGradient></defs>'
+         '<circle cx="64" cy="64" r="60" fill="url(#b)" stroke="%s" stroke-width="6"/>'
+         '<circle cx="64" cy="64" r="53" fill="none" stroke="url(#h)" stroke-width="4"/>'
+         '<circle cx="64" cy="64" r="41" fill="#45330f" stroke="%s" stroke-width="5"/>'
+         '<circle cx="64" cy="64" r="38" fill="none" stroke="url(#s)" stroke-width="6"/></svg>') % (O, O)
+open('%s/SlotBadge.svg' % SVG, 'w').write(BADGE)
+
 jobs = []  # (svg name, png path, size)
+jobs.append(('SlotBadge', '%s/SlotBadge.png' % RES, (128, 128)))
 for name, (top, bot, soil) in ROLES.items():
     open('%s/Plot%s.svg' % (SVG, name), 'w').write(body(top, bot, soil))
     jobs.append(('Plot' + name, '%s/Plot%s.png' % (RES, name), (384, 160)))
@@ -91,6 +102,7 @@ for name in ROLES:
     write_meta('%s/Plot%s.png' % (RES, name), GUIDS[name], 36, 400)
 for name in FLOWERS:
     write_meta('%s/Flowers/Flower%s.png' % (RES, name), FLOWER_GUIDS[name], 0, 100)
+write_meta('%s/SlotBadge.png' % RES, '6e1d93b4a0c74f25b8e3d7a1c9f06b42', 0, 100)
 def folder_meta(path, guid):
     open(path + '.meta', 'w').write('fileFormatVersion: 2\nguid: %s\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n' % guid)
 folder_meta('../../Assets/Resources/Buttons/Plot', '7a30c5e8b2d14f96a1e7c3b09d8f4a25')

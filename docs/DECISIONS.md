@@ -9531,3 +9531,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Compteur de graines restantes en parcelle
 - La boîte « 30 / 30 » (fond sombre, texte blanc) ne s'accordait pas avec les emplacements au-dessus : elle prend le même lit de bois à terre beige (`PlotWoodLight`), le chiffre est en sombre (plus de contour clair), la piste de la barre est brun foncé et rentre dans la terre (marges recalées, barre de 16). La barre reste verte, rouge quand il reste peu de graines. Non vérifié dans Unity.
+
+## 2026-11-12 — Numéros des emplacements et des fertilizers
+- Les numéros (carrés menthe, texte sombre) détonnaient. Remplacés par un badge rond : lit doré, terre sombre, chiffre en lettrage doré, avec une petite ombre (`NumberBadge`, sprite `Buttons/Plot/SlotBadge.png` généré par `generate_plot_buttons.py`) : même recette que les boutons parcelles. Valable pour les trois emplacements de la main (30, coin haut gauche) et pour l'index des fertilizers du panneau (30, coin haut gauche du sac). Non vérifié dans Unity (seul le PNG a été vu).
