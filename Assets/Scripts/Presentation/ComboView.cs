@@ -43,8 +43,8 @@ namespace Contigu.Presentation
             var backgroundRect = UIFactory.CreateUIObject("Background", _root);
             UIFactory.StretchFull(backgroundRect);
             var background = backgroundRect.gameObject.AddComponent<Image>();
-            // The same parchment card as the Fertilizers panel under it, so the column reads as one set.
-            background.sprite = UISprites.CardBackground;
+            // The same wooden planter as the Fertilizers panel under it, so the column reads as one set.
+            background.sprite = UISprites.Garden("WoodLight") ?? UISprites.CardBackground;
             background.type = Image.Type.Sliced;
             background.color = Color.white;
             background.raycastTarget = false;

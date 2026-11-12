@@ -9513,3 +9513,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Terre plus claire pour les emplacements et la boîte des fertilizers
 - La terre sombre des parcelles de bois (#3a2a1c) était trop sombre pour les emplacements de la main et le panneau des fertilizers. Trois variantes à terre plus claire dans `generate_plot_buttons.py` : `PlotWoodLight` (#8a6a47, repos et panneau), `PlotGoldLight` (#a8842f, emplacement sélectionné), `PlotRedLight` (#a65048, verrouillé). Les boutons gardent leur terre sombre (le texte coloré y reste lisible). Le texte du panneau vide repasse en brun foncé. Non vérifié dans Unity.
+
+## 2026-11-12 — Carte de score et carte de météo de la colonne de gauche en parcelles
+- La boîte du haut (manche, total, pastilles de points et de Mult) prend le même lit de bois à terre claire que la boîte des fertilizers (`PlotWoodLight`) ; la carte de météo aussi, mais son lit suit la météo (bois pour un ciel dégagé, rouge pour une météo dure, vert pour les autres : `PlotRedLight`, nouvelle `PlotGreenLight`, au lieu de la teinte sur crème) et son texte passe en crème (nom, effet). Le contour épais ajouté à la carte de météo disparaît (le sprite a le sien). La rangée de météo de « Coming up » (boutique) reste crème. Non vérifié dans Unity : lisibilité du texte coloré (Mult rouge, points bleus) sur la terre claire.

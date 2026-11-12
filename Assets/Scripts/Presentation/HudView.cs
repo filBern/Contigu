@@ -201,10 +201,10 @@ namespace Contigu.Presentation
             chip.gameObject.SetActive(false);
 
             // This round's weather, as a card of its own (placed in the left column by GameBootstrap): big icon, name and what it does.
-            var card = UIFactory.CreateSlicedImage(parent, "WeatherCard", UISprites.CardBackground);
+            // A planter whose bed follows the weather (wood for clear skies, red for a harsh one, green for the others; see WeatherPlot).
+            var card = UIFactory.CreateSlicedImage(parent, "WeatherCard", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
             _weatherCardImage = card;
-            card.color = WeatherCalmTint;
-            UIFactory.AddThickOutline(card, UITheme.Border);
+            card.color = Color.white;
             UIFactory.AddDropShadow(card, 6f, 0.4f);
             WeatherCard = card.rectTransform;
             card.rectTransform.anchorMin = card.rectTransform.anchorMax = card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -227,7 +227,7 @@ namespace Contigu.Presentation
             _weatherChipIcon.rectTransform.offsetMin = new Vector2(5f, 5f);
             _weatherChipIcon.rectTransform.offsetMax = new Vector2(-5f, -5f);
 
-            _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, UITheme.TextPrimary, TextAnchor.MiddleLeft);
+            _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, new Color(0.98f, 0.93f, 0.82f, 1f), TextAnchor.MiddleLeft);
             _weatherNameLabel.raycastTarget = false;
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -238,7 +238,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.resizeTextMinSize = 12;
             _weatherNameLabel.resizeTextMaxSize = 21;
 
-            _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
+            _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, new Color(0.95f, 0.90f, 0.80f, 1f), TextAnchor.UpperLeft);
             _weatherEffectLabel.raycastTarget = false;
             _weatherEffectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             _weatherEffectLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -255,6 +255,13 @@ namespace Contigu.Presentation
         private static readonly Color WeatherHarshTint = new Color(1f, 0.84f, 0.78f, 1f);
         private static readonly Color WeatherGoodTint = new Color(0.86f, 0.96f, 0.84f, 1f);
         /// <summary>The tint of a weather card: neutral for clear skies, red-ish for a harsh weather, green-ish for the others (shared with the shop's "Coming up" box).</summary>
+        /// <summary>The planter of a weather card in the left column: wood for clear skies, red for a harsh weather, green for the others.</summary>
+        private static Sprite WeatherPlot(WeatherId weather)
+        {
+            string name = weather == WeatherId.Clear ? "WoodLight" : WeatherCatalog.IsHarsh(weather) ? "RedLight" : "GreenLight";
+            return UISprites.Garden(name) ?? UISprites.Garden("WoodLight") ?? UISprites.CardBackground;
+        }
+
         internal static Color WeatherTint(WeatherId weather)
         {
             return weather == WeatherId.Clear ? WeatherCalmTint : WeatherCatalog.IsHarsh(weather) ? WeatherHarshTint : WeatherGoodTint;
@@ -318,7 +325,8 @@ namespace Contigu.Presentation
             _weatherEffectLabel.supportRichText = true;
             _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
             _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.Colorize(weatherDescription, 13);
-            _weatherCardImage.color = WeatherTint(weather);
+            _weatherCardImage.sprite = WeatherPlot(weather);
+            _weatherCardImage.color = Color.white;
         }
 
         /// <summary>
