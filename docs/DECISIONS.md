@@ -9600,3 +9600,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Écrans de victoire et de défaite au nouveau style
 - Fond : le mur de planches de la boutique (opaque, plus le jardin assombri derrière), une grande parcelle de bois comme carte (ombre portée, plus de contour épais), les records sur une parcelle à terre beige, et le résultat sur une plaque dont le lit dit comment ça s'est passé : vert pour la victoire, rouge pour la défaite, le titre dans la teinte claire du lit (`EndScreenView.SetBanner`). Les boutons « New Run » et « Keep Growing » étaient déjà des parcelles. Non vérifié dans Unity : le texte clair de la carte (sous-titre, ligne de fertilizer, records cumulés) sur la terre sombre, et la bulle de Sprig en bas à gauche sur les planches.
+
+## 2026-11-12 — Étiquette de prix : même hauteur avec ou sans icône
+- Capture : « Full (4) » (sac central) était plus haut que les prix voisins. L'étiquette de prix se pose sur son bord bas et se dimensionne sur son contenu : sans icône de Pollen elle est plus courte, donc son texte monte. `LayoutElement.minHeight` = taille de l'icône + 4 sur l'étiquette : même hauteur pour tous (« Full », « Sold », prix). Non vérifié dans Unity.

@@ -1194,6 +1194,9 @@ namespace Contigu.Presentation
             var fitter = tag.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // Same height with or without the Pollen icon: a word-only tag ("Full (4)", "Sold") would otherwise be shorter, and its text (the tag stands on its bottom edge) would sit higher than the numbers of its neighbors.
+            var tagHeight = tag.gameObject.AddComponent<LayoutElement>();
+            tagHeight.minHeight = tweaks.priceTagIconSize + 4f;
 
             if (showIcon && VisualDefaults.PollenSprite != null)
             {
