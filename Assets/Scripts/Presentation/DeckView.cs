@@ -153,6 +153,11 @@ namespace Contigu.Presentation
         {
             ClearChildren(_listContainer);
             _countLabel.text = _deck.DeckCount + " seeds";
+            // The Lean Bag pledge only counts at the end of the run, so the bag starts above its limit: say so here, where the player looks at the bag.
+            if (_run != null && (_run.Pledges & Pledge.LeanBag) != Pledge.None)
+            {
+                _countLabel.text += "   -   Lean Bag pledge: win with " + PledgeCatalog.LeanBagMaxSeeds + " or fewer";
+            }
 
             var composition = _deck.GetDeckComposition();
             var sections = new List<(PieceColor Color, List<(ShapeId Shape, int Count)> Types)>();

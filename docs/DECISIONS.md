@@ -9628,3 +9628,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Résumé de manche (écran de victoire de manche) en bacs de bois
 - Carte `PlotWood` avec ombre portée, parchemin des chiffres et jardin de croissance en `PlotWoodLight` avec ombre (plus de contours ajoutés ; repli sur les anciennes couleurs si l'art manque). L'écran de fin de run avait déjà été converti. Non vérifié dans Unity (marges internes des bacs à juger).
+
+## 2026-11-12 — Lean Bag : rappelé dans l'écran du sac de graines
+- Retour joueur : partie lancée avec Lean Bag mais un sac de 32 graines, rien n'indiquait que le pledge était actif. C'est voulu (il ne se juge qu'à la victoire : au plus 14 graines), mais invisible en cours de run. L'écran du sac affiche maintenant « N seeds - Lean Bag pledge: win with 14 or fewer » quand le pledge est pris. Simple rappel de la règle choisie, pas un indice. Non vérifié dans Unity.
