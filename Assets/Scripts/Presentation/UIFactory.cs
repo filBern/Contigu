@@ -162,6 +162,9 @@ namespace Contigu.Presentation
             var punch = img.gameObject.AddComponent<ButtonPunchEffect>();
             btn.onClick.AddListener(punch.Punch);
 
+            // Faux 3D: a thickness under the face, and a press that sinks onto it (see ButtonDepth).
+            ButtonDepth.Attach(img);
+
             // Buttons get no thick "comic" outline; every other card/panel/
             // badge still gets one via its own direct AddThickOutline call.
 
@@ -179,6 +182,15 @@ namespace Contigu.Presentation
             return btn;
         }
 
+        /// <summary>A soft drop shadow under an icon (faux depth): a darkened copy of the graphic, offset downward, drawn behind it.</summary>
+        public static void AddDropShadow(Graphic target, float distance, float alpha = 0.32f)
+        {
+            var shadow = target.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, alpha);
+            shadow.effectDistance = new Vector2(distance * 0.35f, -distance);
+            shadow.useGraphicAlpha = true;
+        }
+
         /// <summary>
         /// Thick "comic" outline around a panel/card: a single Outline
         /// component, not a hand-rolled 4-bar frame like GridView.
@@ -189,15 +201,6 @@ namespace Contigu.Presentation
         /// sprite's rounded corners automatically. Not called from
         /// <see cref="FinishButton"/>; buttons get no outline.
         /// </summary>
-        /// <summary>A soft drop shadow under an icon (faux depth): a darkened copy of the graphic, offset downward, drawn behind it.</summary>
-        public static void AddDropShadow(Graphic target, float distance, float alpha = 0.32f)
-        {
-            var shadow = target.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, alpha);
-            shadow.effectDistance = new Vector2(distance * 0.35f, -distance);
-            shadow.useGraphicAlpha = true;
-        }
-
         public static void AddThickOutline(Image target, Color color, float thickness = 3f)
         {
             var outline = target.gameObject.AddComponent<Outline>();
