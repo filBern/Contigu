@@ -213,9 +213,9 @@ namespace Contigu.Presentation
 
             // The icon in a dark rounded frame on the left (this frame is what pulses when the weather's effect triggers).
             var frame = UIFactory.CreateSlicedImage(card.transform, "WeatherIconFrame", UISprites.CardBackground);
-            frame.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            // No dark frame around the icon any more (invisible, kept as the thing that pulses when the weather's effect triggers).
+            frame.color = new Color(1f, 1f, 1f, 0f);
             frame.raycastTarget = false;
-            UIFactory.AddThickOutline(frame, UITheme.Border, 2f);
             frame.rectTransform.anchorMin = frame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             frame.rectTransform.pivot = new Vector2(0f, 0.5f);
             frame.rectTransform.anchoredPosition = new Vector2(10f, 0f);
@@ -224,8 +224,8 @@ namespace Contigu.Presentation
             _weatherChipIcon.preserveAspect = true;
             _weatherChipIcon.raycastTarget = false;
             UIFactory.StretchFull(_weatherChipIcon.rectTransform);
-            _weatherChipIcon.rectTransform.offsetMin = new Vector2(5f, 5f);
-            _weatherChipIcon.rectTransform.offsetMax = new Vector2(-5f, -5f);
+            _weatherChipIcon.rectTransform.offsetMin = Vector2.zero;
+            _weatherChipIcon.rectTransform.offsetMax = Vector2.zero;
 
             _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, UITheme.TextPrimary, TextAnchor.MiddleLeft);
             _weatherNameLabel.raycastTarget = false;

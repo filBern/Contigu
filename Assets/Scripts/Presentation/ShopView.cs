@@ -280,9 +280,9 @@ namespace Contigu.Presentation
             _weatherRow.anchoredPosition = new Vector2(0f, UpcomingBoxBottomPadding);
             _weatherRow.sizeDelta = new Vector2(UpcomingSlotWidth, WeatherRowHeight);
             var weatherFrame = UIFactory.CreateSlicedImage(_weatherRow, "WeatherIconFrame", UISprites.CardBackground);
-            weatherFrame.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            // No dark frame around the weather icon (same as the left column's card).
+            weatherFrame.color = new Color(1f, 1f, 1f, 0f);
             weatherFrame.raycastTarget = false;
-            UIFactory.AddThickOutline(weatherFrame, UITheme.Border, 2f);
             weatherFrame.rectTransform.anchorMin = weatherFrame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             weatherFrame.rectTransform.pivot = new Vector2(0f, 0.5f);
             weatherFrame.rectTransform.anchoredPosition = new Vector2(8f, 0f);
@@ -291,8 +291,8 @@ namespace Contigu.Presentation
             _weatherIcon.raycastTarget = false;
             _weatherIcon.preserveAspect = true;
             UIFactory.StretchFull(_weatherIcon.rectTransform);
-            _weatherIcon.rectTransform.offsetMin = new Vector2(4f, 4f);
-            _weatherIcon.rectTransform.offsetMax = new Vector2(-4f, -4f);
+            _weatherIcon.rectTransform.offsetMin = Vector2.zero;
+            _weatherIcon.rectTransform.offsetMax = Vector2.zero;
             _weatherNameLabel = UIFactory.CreateText(_weatherRow, "WeatherName", "", 17, UITheme.TextPrimary, TextAnchor.MiddleLeft);
             _weatherNameLabel.raycastTarget = false;
             _weatherNameLabel.supportRichText = true;

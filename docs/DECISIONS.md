@@ -9522,3 +9522,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Colonne des graines : plus de panneau « Seeds », emplacements plus grands
 - Le panneau « Seeds » en haut de la colonne disparaît : sa hauteur (58) retourne aux emplacements, qui gagnent environ 15 chacun (une marge de 14 reste en haut). Le budget de taille d'une pièce dans un emplacement passe de « hauteur − 10 » à « hauteur − 24 » pour qu'elle reste dans la terre (la pièce en croix de 4 tuiles débordait sur le lit). Non vérifié dans Unity : à juger sur capture avec 3 et 4 emplacements.
+
+## 2026-11-12 — Icône de météo sans cadre
+- Le cadre sombre à contour épais autour de l'icône de météo disparaît (carte de la colonne de gauche et rangée de « Coming up » en boutique) : le cadre reste, invisible, comme élément qui pulse quand l'effet de la météo se déclenche, et l'icône (qui a déjà son propre carré arrondi) occupe toute sa place. Non vérifié dans Unity.
