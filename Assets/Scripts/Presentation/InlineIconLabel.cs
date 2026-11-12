@@ -140,7 +140,7 @@ namespace Contigu.Presentation
                 float left = chars[start].cursorPos.x;
                 float centerX = (left + width * 0.5f) * unit;
                 float centerY = (lines[line].topY - lines[line].height * 0.5f) * unit;
-                float size = lines[line].height * unit * 0.9f;
+                float size = lines[line].height * unit * 1.35f; // 0.9 of the line, plus half again
                 var icon = IconAt(n);
                 icon.gameObject.SetActive(true);
                 icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = rect.pivot;

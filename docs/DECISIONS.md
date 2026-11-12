@@ -9563,3 +9563,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Icône de Pollen en ligne : bon caractère
 - Sur capture, l'icône apparaissait avant « +2 » au lieu de se poser sur le blanc qui le suit : le tableau des caractères du générateur compte aussi les balises de texte enrichi (chaque balise est une entrée, à l'abscisse courante), alors que je l'indexais sans les balises. `InlineIconLabel` calcule maintenant les deux indices (avec et sans balises) et choisit selon la longueur du tableau (`characters.Count ≥ longueur du texte`). Non vérifié dans Unity.
+
+## 2026-11-12 — Icône de Pollen en ligne 50 % plus grosse
+- Taille de l'icône : 0,9 → 1,35 de la hauteur de ligne ; le blanc qu'elle occupe passe de quatre à six espaces insécables pour que le texte ne la touche pas. Non vérifié dans Unity.
