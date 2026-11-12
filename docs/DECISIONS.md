@@ -9597,3 +9597,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Reroll : l'icône après le prix
 - « Reroll [icône] 5 » devient « Reroll 5 [icône] » (clé de texte « Reroll {0} Pollen »), comme les autres prix de la boutique. L'icône de Pollen se pose bien dans une étiquette centrée de bouton (capture). Non vérifié dans Unity pour la nouvelle place.
+
+## 2026-11-12 — Écrans de victoire et de défaite au nouveau style
+- Fond : le mur de planches de la boutique (opaque, plus le jardin assombri derrière), une grande parcelle de bois comme carte (ombre portée, plus de contour épais), les records sur une parcelle à terre beige, et le résultat sur une plaque dont le lit dit comment ça s'est passé : vert pour la victoire, rouge pour la défaite, le titre dans la teinte claire du lit (`EndScreenView.SetBanner`). Les boutons « New Run » et « Keep Growing » étaient déjà des parcelles. Non vérifié dans Unity : le texte clair de la carte (sous-titre, ligne de fertilizer, records cumulés) sur la terre sombre, et la bulle de Sprig en bas à gauche sur les planches.

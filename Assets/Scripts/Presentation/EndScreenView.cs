@@ -33,22 +33,24 @@ namespace Contigu.Presentation
 
         public RectTransform Build(Transform parent)
         {
-            // The garden stays visible, dimmed, behind one wooden card: the same look as the round summary and the challenge screen.
-            var overlay = UIFactory.CreatePanel(parent, "EndScreen", new Color(0.04f, 0.04f, 0.06f, 0.72f));
+            // The shop's back wall (dark planks), one big planter on it, and the outcome as a plaque: the same look as the seed bag and the shop.
+            var overlay = UIFactory.CreatePanel(parent, "EndScreen", new Color(0.17f, 0.115f, 0.085f, 1f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            StallBackdrop.AddPlanks(_root);
 
-            var board = UIFactory.CreateSlicedImage(_root, "Card", UISprites.CardBackground);
-            board.color = Wood;
-            UIFactory.AddThickOutline(board, Dark);
+            var board = UIFactory.CreateSlicedImage(_root, "Card", UISprites.Garden("Wood") ?? UISprites.CardBackground);
+            board.color = Color.white;
+            UIFactory.AddDropShadow(board, 8f, 0.45f);
             var card = board.rectTransform;
             card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0f);
             card.anchoredPosition = new Vector2(0f, 160f);
             card.sizeDelta = new Vector2(CardWidth, CardHeight);
 
             // The outcome on a colored banner that overlaps the card's top edge.
-            _banner = UIFactory.CreateSlicedImage(card, "Banner", UISprites.CardBackground);
-            UIFactory.AddThickOutline(_banner, Dark);
+            _banner = UIFactory.CreateSlicedImage(card, "Banner", UISprites.Garden("Green") ?? UISprites.CardBackground);
+            _banner.color = Color.white;
+            UIFactory.AddDropShadow(_banner, 6f, 0.45f);
             _banner.rectTransform.anchorMin = _banner.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _banner.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _banner.rectTransform.anchoredPosition = new Vector2(0f, 4f);
@@ -64,9 +66,8 @@ namespace Contigu.Presentation
             _subtitleText.rectTransform.sizeDelta = new Vector2(CardWidth - 40f, 36f);
 
             // The run's records sit on a cream parchment, two columns of label over value.
-            var paper = UIFactory.CreateSlicedImage(card, "Records", UISprites.CardBackground);
-            paper.color = UITheme.Panel;
-            UIFactory.AddThickOutline(paper, Dark);
+            var paper = UIFactory.CreateSlicedImage(card, "Records", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            paper.color = Color.white;
             _recordsPaper = paper.rectTransform;
             _recordsPaper.anchorMin = _recordsPaper.anchorMax = new Vector2(0.5f, 1f);
             _recordsPaper.pivot = new Vector2(0.5f, 1f);
@@ -171,6 +172,14 @@ namespace Contigu.Presentation
             v.rectTransform.sizeDelta = new Vector2(width, 34f);
         }
 
+        /// <summary>The outcome plaque is a planter whose bed says how it went (green: victory, red: defeat), its title in the bed's light color.</summary>
+        private void SetBanner(string plot)
+        {
+            _banner.sprite = UISprites.Garden(plot) ?? _banner.sprite;
+            _banner.color = Color.white;
+            _titleText.color = UIFactory.PlotTextColor("Plot" + plot);
+        }
+
         private void SprigComment(bool victory, bool isNewBestScore)
         {
             string line = SprigView.EndLine(victory, isNewBestScore, out var mood);
@@ -181,7 +190,7 @@ namespace Contigu.Presentation
         public void ShowVictory(int totalScore, MetaStats metaStats, bool isNewBestScore, string unlockedText = "")
         {
             _titleText.text = "Victory!";
-            _banner.color = VictoryBanner;
+            SetBanner("Green");
             _subtitleText.text = "Run complete - total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore, unlockedText);
             SprigComment(true, isNewBestScore);
@@ -196,7 +205,7 @@ namespace Contigu.Presentation
         {
             _endlessButtonRect.gameObject.SetActive(false);
             _titleText.text = endless ? "Endless - fell in Round " + roundNumber : "Defeat - Round " + roundNumber;
-            _banner.color = DefeatBanner;
+            SetBanner("Red");
             _subtitleText.text = (endless ? "Rounds cleared past the finale: " + System.Math.Max(0, roundNumber - 1 - RunConfig.RoundCount) + " - " : (outOfSeeds ? "Out of seeds - " : "No seed can be planted - ")) + "total score: " + totalScore;
             SetMetaStatsText(metaStats, isNewBestScore, unlockedText);
             SprigComment(false, isNewBestScore);
