@@ -243,6 +243,8 @@ namespace Contigu.Presentation
             _weatherEffectLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _weatherEffectLabel.rectTransform.offsetMin = new Vector2(76f, 6f);
             _weatherEffectLabel.rectTransform.offsetMax = new Vector2(-8f, -34f);
+            // Best fit only shrinks the text when its height is bounded (with "overflow" a long description just runs out of the card).
+            _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
             _weatherEffectLabel.resizeTextMaxSize = 13;

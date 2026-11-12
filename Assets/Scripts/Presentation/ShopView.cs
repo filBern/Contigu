@@ -316,6 +316,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel = UIFactory.CreateText(_weatherRow, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
             _weatherEffectLabel.raycastTarget = false;
             _weatherEffectLabel.supportRichText = true;
+            _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate; // best fit only shrinks a bounded text
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
             _weatherEffectLabel.resizeTextMaxSize = 12;

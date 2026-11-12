@@ -9579,3 +9579,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Plaques d'étagère : plus haut pour libérer les prix
 - Sur capture, le libellé « FULL (4) » (prix) du sac central passait sous la plaque « Blister » : la plaque était passée de 36 à 42 de haut et son bord bas descendait de 6 de plus sur la rangée. Les plaques (Blister et Workshop) sont relevées de 16 (`PlaqueLift` 20 → 36). Non vérifié dans Unity : l'espace entre la plaque et la ligne « Every purchase makes the other prices rise… » est de l'ordre de 30.
+
+## 2026-11-12 — Effet de météo trop long : le texte se réduit enfin
+- Capture « Golden Hour » : la description (quatre lignes) sortait de la carte. Le texte de l'effet demandait une taille automatique (9 à 13) mais son débordement vertical était réglé sur « overflow » (`UIFactory.CreateText`), et dans ce cas l'ajustement ne réduit rien. Le débordement vertical de l'étiquette d'effet est mis sur `Truncate` (carte de la colonne de gauche et rangée de « Coming up ») : le texte rétrécit jusqu'à 9 pour tenir. Les autres étiquettes à taille automatique créées par `CreateText` ont peut-être le même défaut ; je ne les ai pas toutes revues. Non vérifié dans Unity.
