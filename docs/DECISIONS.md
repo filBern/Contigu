@@ -9540,3 +9540,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Compteur de graines : trois états
 - La boîte « 30 / 30 » (et sa barre) a trois versions selon la part de graines restantes : plus de 66 % : lit vert ; entre 33 % et 66 % : lit jaune (`PlotGoldLight`) ; moins de 33 % : lit rouge (`PlotRedLight`). La barre suit (vert, jaune, rouge). La respiration du chiffre reste réservée au dernier cinquième (≤ 20 %). Non vérifié dans Unity.
+
+## 2026-11-12 — Boîte de Pollen en parcelle dorée
+- La boîte de Pollen en haut à gauche (fond sombre, grand chiffre doré) prend le même traitement que les boîtes de la colonne de gauche : lit doré, terre or pâle (`PlotGoldLight`), chiffre en brun foncé (de l'or sur de l'or ne se lisait pas), contour épais retiré (le sprite a le sien), ombre portée gardée. Les effets de Pollen (halo, éclats, popups) restent ceux d'avant. Non vérifié dans Unity : les marges (26/32/12/12) tiennent peut-être mal avec le lit de bois (9 de chaque côté), et le halo doré a moins de contraste sur la terre claire.

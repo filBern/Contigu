@@ -107,12 +107,11 @@ namespace Contigu.Presentation
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
             lueurLayout.spacing = 19f;
             lueurLayout.padding = new RectOffset(26, 32, 12, 12);
-            // A dark pill behind the Pollen, like the boxes of the side columns, so it reads as a real counter and not a loose icon.
+            // A golden planter behind the Pollen (gold bed, pale-gold soil), like the boxes of the left column, so it reads as a real counter and not a loose icon.
             var lueurPill = _lueurContainer.gameObject.AddComponent<Image>();
-            lueurPill.sprite = UISprites.CardBackground;
+            lueurPill.sprite = UISprites.Garden("GoldLight") ?? UISprites.CardBackground;
             lueurPill.type = Image.Type.Sliced;
-            lueurPill.color = new Color(0.12f, 0.16f, 0.21f, 0.92f);
-            UIFactory.AddThickOutline(lueurPill, UITheme.Border, 2f);
+            lueurPill.color = Color.white;
             UIFactory.AddDropShadow(lueurPill, 6f, 0.4f);
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childControlWidth = true;
@@ -140,7 +139,7 @@ namespace Contigu.Presentation
             lueurIconLayout.preferredWidth = 54f;
             lueurIconLayout.preferredHeight = 54f;
 
-            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, VisualDefaults.GoldenColor);
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, new Color(0.30f, 0.19f, 0.05f, 1f));
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
             // A fixed width for the number (room for three digits): the pill behind it never grows or shrinks while the count rolls up.
             var lueurLabelLayout = _lueurLabel.gameObject.AddComponent<LayoutElement>();
