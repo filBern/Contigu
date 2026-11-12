@@ -1061,13 +1061,23 @@ namespace Contigu.Presentation
             _piecesAnchor = anchor;
         }
 
+        private static readonly Color PiecesYellow = new Color(0.96f, 0.78f, 0.20f, 1f);
+
         public void SetPieces(int piecesRemaining, int budget)
         {
             _piecesLabel.text = piecesRemaining + " / " + budget;
             float ratio = budget > 0 ? (float)piecesRemaining / budget : 0f;
             SetRatio(_piecesFillRect, ratio);
             bool isLow = budget > 0 && ratio <= LowPiecesWarningRatio;
-            _piecesFillRect.GetComponent<Image>().color = isLow ? UITheme.Danger : UITheme.Success;
+            // Three states for the box and its bar: more than two thirds of the seeds left (green), between a third and two thirds (yellow), under a third (red).
+            string bed = ratio > 2f / 3f ? "GreenLight" : ratio > 1f / 3f ? "GoldLight" : "RedLight";
+            var fillColor = ratio > 2f / 3f ? UITheme.Success : ratio > 1f / 3f ? PiecesYellow : UITheme.Danger;
+            _piecesFillRect.GetComponent<Image>().color = fillColor;
+            var boxImage = _piecesAnchor != null ? _piecesAnchor.GetComponent<Image>() : null;
+            if (boxImage != null)
+            {
+                boxImage.sprite = UISprites.Garden(bed) ?? boxImage.sprite;
+            }
             if (isLow)
             {
                 if (_lowPiecesPulseCoroutine == null)

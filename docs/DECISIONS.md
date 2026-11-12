@@ -9537,3 +9537,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Compteur de graines : lit vert
 - La boîte « 30 / 30 » avait le même lit de bois que les emplacements au-dessus et se confondait avec eux : son lit passe au vert (`PlotGreenLight`, terre vert pâle), le chiffre reste sombre, la piste de la barre brun foncé. Non vérifié dans Unity.
+
+## 2026-11-12 — Compteur de graines : trois états
+- La boîte « 30 / 30 » (et sa barre) a trois versions selon la part de graines restantes : plus de 66 % : lit vert ; entre 33 % et 66 % : lit jaune (`PlotGoldLight`) ; moins de 33 % : lit rouge (`PlotRedLight`). La barre suit (vert, jaune, rouge). La respiration du chiffre reste réservée au dernier cinquième (≤ 20 %). Non vérifié dans Unity.
