@@ -913,9 +913,10 @@ namespace Contigu.Presentation
                 _weatherIcon.enabled = _weatherIcon.sprite != null;
                 var weatherId = nextWeather.Value;
                 _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(VisualDefaults.GetWeatherName(weatherId, run.NextWeatherColor));
-                _weatherEffectLabel.text = weatherId == WeatherId.Clear
+                // "Pollen" in a weather's effect is the Pollen icon (see InlineIconLabel).
+                InlineIconLabel.Set(_weatherEffectLabel, weatherId == WeatherId.Clear
                     ? "Nothing to plan around."
-                    : DescriptionTextFormatter.ColorizeOnLight(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12);
+                    : DescriptionTextFormatter.ColorizeOnLight(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12), VisualDefaults.PollenSprite);
             }
 
             int count = upcoming.Count;

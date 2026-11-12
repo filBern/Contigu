@@ -323,7 +323,8 @@ namespace Contigu.Presentation
             _weatherNameLabel.supportRichText = true;
             _weatherEffectLabel.supportRichText = true;
             _weatherNameLabel.text = DescriptionTextFormatter.ColorizeFlowers(weatherName);
-            _weatherEffectLabel.text = weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.ColorizeOnLight(weatherDescription, 13);
+            // "Pollen" in a weather's effect is the Pollen icon (see InlineIconLabel).
+            InlineIconLabel.Set(_weatherEffectLabel, weather == WeatherId.Clear ? "Nothing to plan around today." : DescriptionTextFormatter.ColorizeOnLight(weatherDescription, 13), VisualDefaults.PollenSprite);
             _weatherCardImage.sprite = WeatherPlot(weather);
             _weatherCardImage.color = Color.white;
         }
