@@ -16,12 +16,20 @@ namespace Contigu.Presentation
         private const float AuthoredScale = 4f;
         private static System.Collections.Generic.Dictionary<string, Vector3> _layouts;
 
+        /// <summary>False: buttons named like one of Resources/Buttons/Full no longer wear its illustration; they are plot buttons like the others.</summary>
+        public const bool UseIllustratedButtons = false;
+
         private Sprite _sprite;
         private RectTransform _art;
 
         /// <summary>The art for a button labelled <paramref name="label"/> ("Next round" -> Resources/Buttons/Full/Nextround), or null.</summary>
         public static Sprite Find(string label)
         {
+            // Every button is a garden plot now (see UIFactory / PlotButtonDecor): the illustrated pill buttons are retired, their art kept for reference.
+            if (!UseIllustratedButtons)
+            {
+                return null;
+            }
             if (string.IsNullOrEmpty(label))
             {
                 return null;
