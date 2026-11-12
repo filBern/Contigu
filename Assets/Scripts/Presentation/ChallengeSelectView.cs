@@ -510,13 +510,15 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>The plot bed of a challenge's banner: green, blue, gold or red like the buttons.</summary>
+        /// <summary>The plot bed of a challenge's banner: one bed per season: green, blue, gold, wood, red and pale green.</summary>
         private static string PlotNameFor(ChallengeDefinition challenge)
         {
             string name = challenge.Name.ToLowerInvariant();
             if (name.Contains("winter")) return "Blue";
-            if (name.Contains("summer") || name.Contains("autumn")) return "Gold";
+            if (name.Contains("summer")) return "Gold";
+            if (name.Contains("autumn")) return "Wood";
             if (name.Contains("orchard")) return "Red";
+            if (name.Contains("greenhouse")) return "GreenLight"; // the pale green bed, so it differs from Spring's
             return "Green";
         }
 
@@ -571,7 +573,7 @@ namespace Contigu.Presentation
             var plot = UISprites.Garden(PlotNameFor(challenge));
             _banner.sprite = plot ?? UISprites.CardBackground;
             _banner.color = plot != null ? Color.white : accent;
-            _nameLabel.color = plot != null ? UIFactory.PlotTextColor(plot.name) : UITheme.TextOnBackground;
+            _nameLabel.color = plot == null ? UITheme.TextOnBackground : plot.name.EndsWith("Light") ? new Color(0.10f, 0.20f, 0.10f, 1f) : UIFactory.PlotTextColor(plot.name);
             var icon = Resources.Load<Sprite>("Icons/Challenges/" + challenge.Name);
             _bannerIcon.sprite = icon;
             _bannerIcon.enabled = icon != null;
