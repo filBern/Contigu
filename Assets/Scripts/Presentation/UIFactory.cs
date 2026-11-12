@@ -84,7 +84,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>The text color of a plot button: the light shade of its bed (green, gold, blue, red) or cream for the wooden one.</summary>
-        private static Color PlotTextColor(string spriteName)
+        internal static Color PlotTextColor(string spriteName)
         {
             switch (spriteName)
             {

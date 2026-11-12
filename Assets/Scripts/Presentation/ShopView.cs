@@ -62,7 +62,7 @@ namespace Contigu.Presentation
         private ShopZoom _zoom;
         // Section plaque (36) + the air under it.
         private const float LabelToCardsGap = 54f;
-        private const float PlaqueHeight = 36f;
+        private const float PlaqueHeight = 42f;
         // How far the plaques hang above the items' own slot (they do not move the items).
         private const float PlaqueLift = 20f;
 
@@ -245,7 +245,7 @@ namespace Contigu.Presentation
             _upcomingEncounterBox.gameObject.AddComponent<RectMask2D>();
 
             // Same hanging wooden sign as the Fertilizers panel (it must not read as a button, nor share the name of the green "Next round" button).
-            ShopSign.Build(_upcomingEncounterBox, "Coming up", 24);
+            ShopSign.Build(_upcomingEncounterBox, "Coming up", 24, "Blue");
             // Which round the next one is, right under the sign.
             _upcomingRoundLabel = UIFactory.CreateText(_upcomingEncounterBox, "RoundLabel", "", 20, UITheme.TextPrimary);
             _upcomingRoundLabel.raycastTarget = false;
@@ -412,33 +412,14 @@ namespace Contigu.Presentation
             }
         }
 
-        /// <summary>A small carved wooden sign naming a section ("Blister", "Workshop"), hung above its shelf.</summary>
+        /// <summary>A small plaque (a plot, like the buttons) naming a section ("Blister", "Workshop"), hung above its shelf.</summary>
         private RectTransform BuildSectionPlaque(string name, string title)
         {
-            var plaque = UIFactory.CreateSlicedImage(_root, name, UISprites.CardBackground);
-            plaque.color = new Color(0.55f, 0.37f, 0.20f, 1f);
-            plaque.raycastTarget = false;
-            UIFactory.AddThickOutline(plaque, new Color(0.13f, 0.09f, 0.06f, 1f));
-            UIFactory.AddDropShadow(plaque, 6f, 0.45f);
-            var rect = plaque.rectTransform;
+            var rect = ShopSign.BuildPlaque(_root, name, title, 20, "Wood");
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 1f);
             rect.sizeDelta = new Vector2(190f, PlaqueHeight);
-            // Two small nails, like the upgrade signs.
-            for (int i = 0; i < 2; i++)
-            {
-                var nail = UIFactory.CreatePanel(rect, "Nail" + i, new Color(0.13f, 0.09f, 0.06f, 1f));
-                nail.raycastTarget = false;
-                nail.rectTransform.anchorMin = new Vector2(i == 0 ? 0f : 1f, 0.5f);
-                nail.rectTransform.anchorMax = new Vector2(i == 0 ? 0f : 1f, 0.5f);
-                nail.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                nail.rectTransform.anchoredPosition = new Vector2(i == 0 ? 12f : -12f, 0f);
-                nail.rectTransform.sizeDelta = new Vector2(6f, 6f);
-            }
-            var label = UIFactory.CreateText(rect, "Title", title, 20, new Color(1f, 0.96f, 0.84f));
-            label.raycastTarget = false;
-            UIFactory.StretchFull(label.rectTransform);
             return rect;
         }
 
