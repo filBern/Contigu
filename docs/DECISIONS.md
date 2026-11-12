@@ -9615,3 +9615,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Menu : bouton « Back », Menu du shop recouvert
 - Le menu passe au-dessus du bouton Menu du shop (tri 110 > 100), qui restait visible à côté ; « Resume » devient « Back ». Colonne resserrée (pas de ~60 sur un canvas de ~700 de haut) : Reset data chevauchait Back. Non vérifié dans Unity.
+
+## 2026-11-12 — Faux 3D : logo du titre et Sprig
+- `Design/extrude.py` couvre aussi `Characters` (4 Sprig) et `Title` (LastBloom) : même bloc extrudé que les icônes (art réduit de 7 %, copie sombre empilée dessous). Les PNG gardent leur taille et leurs `.meta`. Rendu vérifié sur PNG (Chromium), pas dans Unity (l'animation du logo et les étincelles ne sont pas revues).

@@ -14,6 +14,8 @@ SETS = [
     ('Icons/glyphs', '../Assets/Resources/Icons/UpgradeGlyphs'),
     ('Icons/upgrades', '../Assets/Resources/Icons/Upgrades'),
     ('UI', '../Assets/Resources/Icons', ['Shield', 'ShieldShard']),
+    ('Characters', '../Assets/Resources/Characters'),
+    ('Title', '../Assets/Resources/Title'),
 ]
 OUT = 'extruded'
 os.makedirs(OUT, exist_ok=True)
