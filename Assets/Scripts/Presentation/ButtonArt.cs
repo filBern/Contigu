@@ -17,7 +17,7 @@ namespace Contigu.Presentation
         private static System.Collections.Generic.Dictionary<string, Vector3> _layouts;
 
         /// <summary>False: buttons named like one of Resources/Buttons/Full no longer wear its illustration; they are plot buttons like the others.</summary>
-        public const bool UseIllustratedButtons = false;
+        public static readonly bool UseIllustratedButtons = false;
 
         private Sprite _sprite;
         private RectTransform _art;
