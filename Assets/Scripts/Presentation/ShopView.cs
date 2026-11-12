@@ -923,7 +923,7 @@ namespace Contigu.Presentation
             int count = upcoming.Count;
             int columns = 3;
             int rows = (count + columns - 1) / columns;
-            float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding - WeatherRowHeight - 6f;
+            float availableHeight = UpcomingBoxHeight - UpcomingBannerHeight - UpcomingBoxTopPadding - UpcomingBoxBottomPadding - WeatherRowHeight - 20f; // room for the divider line under the last row of enemies (and their drop shadow)
             float maxSlotHeight = (availableHeight - (rows - 1) * UpcomingRowGap) / rows;
             float maxSlotWidth = (UpcomingSlotWidth - (columns - 1) * UpcomingRowGap) / columns;
             float iconSize = Mathf.Max(UpcomingMinIconSize, Mathf.Min(UpcomingIconSize, maxSlotHeight, maxSlotWidth));

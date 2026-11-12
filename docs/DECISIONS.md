@@ -9585,3 +9585,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Descriptions de météo raccourcies
 - Golden Hour : « 2 empty plots turn golden for the round. » (la reprise de l'or à chaque récolte est implicite). Les autres descriptions sont raccourcies pour tenir dans la carte de météo sans réduire la police : phrases d'ambiance à quatre ou cinq mots (« The sprinklers come on. », « The cat got in again. »…) et mécaniques resserrées (Wind : « A free Shuffle at the start of the round. » ; Frost : « … start frozen. Harvest their line to break the ice. » ; Heatwave : « Each Shuffle burns away one planted tile (no points). » ; Hurricane : « Every N seeds, the storm moves M planted tiles. »). Les règles n'ont pas changé.
+
+## 2026-11-12 — « Coming up » : de l'air entre les ennemis et le trait de séparation
+- Capture (4 ennemis sur deux rangées) : la lèvre et l'ombre de la deuxième rangée touchaient le trait qui sépare la météo. La place réservée sous la dernière rangée passe de 6 à 20 (`UpcomingBox…`, calcul de la hauteur disponible) ; les icônes rétrécissent un peu quand il y a deux rangées. Non vérifié dans Unity.
