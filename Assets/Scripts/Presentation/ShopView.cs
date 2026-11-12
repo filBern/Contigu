@@ -226,7 +226,8 @@ namespace Contigu.Presentation
             // "Prochain combat" preview — sits right under the (now-raised) Lueur readout, same corner.
             // Contents rebuilt every Refresh from run.UpcomingEncounterIds, since that's still null/empty
             // until the shop is actually open (it only ever reads the catalog, no RNG, see RunManager).
-            var upcomingBox = UIFactory.CreateSlicedImage(_root, "UpcomingEncounterBox", UISprites.CardBackground);
+            // A planter like the left column's boxes, with a blue bed (what is coming): pale-blue soil, dark lettering.
+            var upcomingBox = UIFactory.CreateSlicedImage(_root, "UpcomingEncounterBox", UISprites.Garden("BlueLight") ?? UISprites.CardBackground);
             UIFactory.AddDropShadow(upcomingBox, 8f, 0.42f);
             _upcomingEncounterBox = upcomingBox.rectTransform;
             // Same anchor/pivot/position recipe as ModifierPanelView.Build (anchor+pivot both (0.5,0.5),
@@ -269,10 +270,9 @@ namespace Contigu.Presentation
             _upcomingEncounterGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
 
             // Next round's weather, at the bottom of the box, as the same card as on the board: icon, name and what it does (no tooltip needed).
-            var weatherCard = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "WeatherRow", UISprites.CardBackground);
+            var weatherCard = UIFactory.CreateSlicedImage(_upcomingEncounterBox, "WeatherRow", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
             _weatherCardImage = weatherCard;
             weatherCard.raycastTarget = false;
-            UIFactory.AddThickOutline(weatherCard, UITheme.Border, 2f);
             _weatherRow = weatherCard.rectTransform;
             _weatherRow.anchorMin = new Vector2(0.5f, 0f);
             _weatherRow.anchorMax = new Vector2(0.5f, 0f);
@@ -926,7 +926,8 @@ namespace Contigu.Presentation
                 _weatherEffectLabel.text = weatherId == WeatherId.Clear
                     ? "Nothing to plan around."
                     : DescriptionTextFormatter.Colorize(VisualDefaults.GetWeatherDescription(weatherId, run.NextWeatherColor, run.WeatherIntensity), 12);
-                _weatherCardImage.color = HudView.WeatherTint(weatherId);
+                _weatherCardImage.sprite = HudView.WeatherPlot(weatherId);
+                _weatherCardImage.color = Color.white;
             }
 
             int count = upcoming.Count;

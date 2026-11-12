@@ -255,7 +255,7 @@ namespace Contigu.Presentation
         private static readonly Color WeatherGoodTint = new Color(0.86f, 0.96f, 0.84f, 1f);
         /// <summary>The tint of a weather card: neutral for clear skies, red-ish for a harsh weather, green-ish for the others (shared with the shop's "Coming up" box).</summary>
         /// <summary>The planter of a weather card in the left column: wood for clear skies, red for a harsh weather, green for the others.</summary>
-        private static Sprite WeatherPlot(WeatherId weather)
+        internal static Sprite WeatherPlot(WeatherId weather)
         {
             string name = weather == WeatherId.Clear ? "WoodLight" : WeatherCatalog.IsHarsh(weather) ? "RedLight" : "GreenLight";
             return UISprites.Garden(name) ?? UISprites.Garden("WoodLight") ?? UISprites.CardBackground;

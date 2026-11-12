@@ -9543,3 +9543,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Boîte de Pollen en parcelle dorée
 - La boîte de Pollen en haut à gauche (fond sombre, grand chiffre doré) prend le même traitement que les boîtes de la colonne de gauche : lit doré, terre or pâle (`PlotGoldLight`), chiffre en brun foncé (de l'or sur de l'or ne se lisait pas), contour épais retiré (le sprite a le sien), ombre portée gardée. Les effets de Pollen (halo, éclats, popups) restent ceux d'avant. Non vérifié dans Unity : les marges (26/32/12/12) tiennent peut-être mal avec le lit de bois (9 de chaque côté), et le halo doré a moins de contraste sur la terre claire.
+
+## 2026-11-12 — Boîte « Coming up » en parcelle ; bouton « To the shop »
+- La boîte « Coming up » (boutique) devient une parcelle à lit bleu et terre bleu pâle (`PlotBlueLight`, nouvelle variante) : le bleu dit « ce qui vient ». Sa rangée de météo prend, comme la carte de la colonne de gauche, le lit de la météo (`HudView.WeatherPlot` : bois, rouge, vert) et perd son contour épais. Le panneau de bois « Coming up » et les icônes d'ennemis restent.
+- Sur le résumé de manche, « To the shop » passait sur deux lignes (police 24 × 1,5 dans 260 de large avec les marges des fleurs) : bouton de 340 et police 20. Non vérifié dans Unity.

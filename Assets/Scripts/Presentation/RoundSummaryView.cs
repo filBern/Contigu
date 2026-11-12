@@ -107,12 +107,12 @@ namespace Contigu.Presentation
             _garden = garden.rectTransform;
             _garden.gameObject.SetActive(false);
 
-            _continue = UIFactory.CreateButton(_card, "Continue", "To the shop", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 24);
+            _continue = UIFactory.CreateButton(_card, "Continue", "To the shop", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 20);
             var rect = _continue.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 18f);
-            rect.sizeDelta = new Vector2(260f, 58f);
+            rect.sizeDelta = new Vector2(340f, 58f);
             _continue.onClick.AddListener(OnContinue);
 
             _root.gameObject.SetActive(false);
