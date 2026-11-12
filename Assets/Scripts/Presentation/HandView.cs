@@ -276,10 +276,10 @@ namespace Contigu.Presentation
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
 
             // Seeds left: the big "30 / 30" and a thick progress bar underneath.
-            var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.CardBackground);
-            box.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            // A planter like the slots above it (wooden bed, beige soil): the counter is dark lettering on the soil.
+            var box = UIFactory.CreateSlicedImage(container, "SeedsLeftBox", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            box.color = Color.white;
             box.raycastTarget = false;
-            UIFactory.AddThickOutline(box, BoardDark, 2f);
             var boxRect = box.rectTransform;
             boxRect.anchorMin = boxRect.anchorMax = new Vector2(0.5f, 0f);
             boxRect.pivot = new Vector2(0.5f, 0f);
@@ -288,24 +288,21 @@ namespace Contigu.Presentation
             SeedsLeftBox = boxRect;
 
             // The count on top, a thick progress bar under it (same box, same place: the bar takes the room the small caption used to have).
-            SeedsLeftLabel = UIFactory.CreateText(box.transform, "Value", "0 / 0", 28, Color.white);
+            SeedsLeftLabel = UIFactory.CreateText(box.transform, "Value", "0 / 0", 28, UITheme.TextPrimary);
             SeedsLeftLabel.raycastTarget = false;
             SeedsLeftLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             SeedsLeftLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-            SeedsLeftLabel.rectTransform.offsetMin = new Vector2(0f, 28f);
-            SeedsLeftLabel.rectTransform.offsetMax = new Vector2(0f, -3f);
-            var valueOutline = SeedsLeftLabel.gameObject.AddComponent<Outline>();
-            valueOutline.effectColor = UITheme.Border;
-            valueOutline.effectDistance = new Vector2(2f, -2f);
+            SeedsLeftLabel.rectTransform.offsetMin = new Vector2(0f, 30f);
+            SeedsLeftLabel.rectTransform.offsetMax = new Vector2(0f, -6f);
 
-            var track = UIFactory.CreatePanel(box.transform, "BarTrack", new Color(0.04f, 0.06f, 0.09f, 1f));
+            var track = UIFactory.CreatePanel(box.transform, "BarTrack", new Color(0.30f, 0.20f, 0.12f, 1f));
             track.raycastTarget = false;
-            UIFactory.AddThickOutline(track, new Color(0.62f, 0.70f, 0.78f, 0.9f), 1.5f);
+            UIFactory.AddThickOutline(track, new Color(0.13f, 0.09f, 0.06f, 1f), 1.5f);
             track.rectTransform.anchorMin = new Vector2(0f, 0f);
             track.rectTransform.anchorMax = new Vector2(1f, 0f);
             track.rectTransform.pivot = new Vector2(0.5f, 0f);
-            track.rectTransform.anchoredPosition = new Vector2(0f, 7f);
-            track.rectTransform.sizeDelta = new Vector2(-18f, 20f);
+            track.rectTransform.anchoredPosition = new Vector2(0f, 12f);
+            track.rectTransform.sizeDelta = new Vector2(-34f, 16f);
             var fill = UIFactory.CreatePanel(track.transform, "BarFill", UITheme.Success);
             fill.raycastTarget = false;
             fill.rectTransform.anchorMin = new Vector2(0f, 0f);

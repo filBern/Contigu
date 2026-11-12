@@ -9528,3 +9528,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Icône de météo un peu plus petite
 - Carte de la colonne de gauche : 64 → 54 (décalée de 12 du bord, textes à 76) ; rangée de « Coming up » : 56 → 48 (décalée de 10, textes à 66). Non vérifié dans Unity.
+
+## 2026-11-12 — Compteur de graines restantes en parcelle
+- La boîte « 30 / 30 » (fond sombre, texte blanc) ne s'accordait pas avec les emplacements au-dessus : elle prend le même lit de bois à terre beige (`PlotWoodLight`), le chiffre est en sombre (plus de contour clair), la piste de la barre est brun foncé et rentre dans la terre (marges recalées, barre de 16). La barre reste verte, rouge quand il reste peu de graines. Non vérifié dans Unity.
