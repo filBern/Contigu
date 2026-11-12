@@ -9557,3 +9557,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — « Pollen » est l'icône de Pollen dans les effets de météo
 - Dans la description d'une météo (carte de la colonne de gauche et « Coming up »), le mot « Pollen » est remplacé par l'icône de Pollen. Le `Text` classique d'uGUI ne sait pas dessiner d'image dans une ligne : `InlineIconLabel` remplace le mot par quatre espaces insécables et place l'icône là où le générateur de texte dit que ces espaces sont tombés (position et hauteur de ligne lues après la mise en page du cadre, recalculées si la taille du texte change). Si le générateur ne rend pas ce qu'on attend, le mot revient tel quel (jamais de trou dans le texte). Seules les descriptions de météo y passent pour l'instant. Non vérifié dans Unity : le calage de l'icône (position, taille) n'a jamais tourné.
+
+## 2026-11-12 — Icône de Pollen en ligne : correction du calage
+- Sur capture, le blanc de l'icône de Pollen restait vide : j'avais ajouté au calcul un point de référence (coin du cadre) qui n'existe pas pour ce générateur de texte : `Text` le configure avec le pivot du rectangle comme origine, ses coordonnées sont donc déjà locales une fois mises à l'échelle (`InlineIconLabel`). L'icône était posée hors du texte. Non vérifié dans Unity.

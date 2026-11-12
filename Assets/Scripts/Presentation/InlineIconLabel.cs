@@ -114,9 +114,7 @@ namespace Contigu.Presentation
                 }
             }
             var rect = _text.rectTransform;
-            var pivot = AnchorPivot(_text.alignment);
-            // The same reference point the Text itself uses to put its glyphs in its rectangle.
-            var reference = new Vector2(pivot.x == 1f ? rect.rect.xMax : rect.rect.xMin, pivot.y == 0f ? rect.rect.yMin : rect.rect.yMax);
+            // The text generator lays glyphs out around the rectangle's own pivot (Text sets that as its generation pivot), so its coordinates are local ones once scaled.
             float unit = 1f / _text.pixelsPerUnit;
             for (int n = 0; n < _starts.Count; n++)
             {
@@ -132,8 +130,8 @@ namespace Contigu.Presentation
                     if (lines[l].startCharIdx <= start) { line = l; }
                 }
                 float left = chars[start].cursorPos.x;
-                float centerX = reference.x + (left + width * 0.5f) * unit;
-                float centerY = reference.y + (lines[line].topY - lines[line].height * 0.5f) * unit;
+                float centerX = (left + width * 0.5f) * unit;
+                float centerY = (lines[line].topY - lines[line].height * 0.5f) * unit;
                 float size = lines[line].height * unit * 0.9f;
                 var icon = IconAt(n);
                 icon.gameObject.SetActive(true);
@@ -141,23 +139,6 @@ namespace Contigu.Presentation
                 icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 icon.rectTransform.anchoredPosition = new Vector2(centerX, centerY);
                 icon.rectTransform.sizeDelta = new Vector2(size, size);
-            }
-        }
-
-        /// <summary>The pivot a text anchor stands for (left/center/right and upper/middle/lower as 0, 0.5, 1).</summary>
-        private static Vector2 AnchorPivot(TextAnchor anchor)
-        {
-            switch (anchor)
-            {
-                case TextAnchor.UpperLeft: return new Vector2(0f, 1f);
-                case TextAnchor.UpperCenter: return new Vector2(0.5f, 1f);
-                case TextAnchor.UpperRight: return new Vector2(1f, 1f);
-                case TextAnchor.MiddleLeft: return new Vector2(0f, 0.5f);
-                case TextAnchor.MiddleCenter: return new Vector2(0.5f, 0.5f);
-                case TextAnchor.MiddleRight: return new Vector2(1f, 0.5f);
-                case TextAnchor.LowerLeft: return new Vector2(0f, 0f);
-                case TextAnchor.LowerCenter: return new Vector2(0.5f, 0f);
-                default: return new Vector2(1f, 0f);
             }
         }
 
