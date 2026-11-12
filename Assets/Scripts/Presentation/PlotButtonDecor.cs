@@ -14,6 +14,7 @@ namespace Contigu.Presentation
         private Image _left;
         private Image _right;
         private RectTransform _label;
+        private bool _suppressed;
 
         private static Sprite[] Flowers()
         {
@@ -44,6 +45,19 @@ namespace Contigu.Presentation
             decor.Refresh();
         }
 
+        /// <summary>For a button that lays out its own contents (an icon beside the text): no flowers, and the label margins are the caller's.</summary>
+        public static void Suppress(Button button)
+        {
+            var decor = button.GetComponent<PlotButtonDecor>();
+            if (decor == null)
+            {
+                return;
+            }
+            decor._suppressed = true;
+            decor._left.gameObject.SetActive(false);
+            decor._right.gameObject.SetActive(false);
+        }
+
         private static Image MakeFlower(Transform parent, string name, Sprite sprite, float anchorX, float angle)
         {
             var flower = UIFactory.CreatePanel(parent, name, Color.white);
@@ -67,6 +81,10 @@ namespace Contigu.Presentation
 
         private void Refresh()
         {
+            if (_suppressed)
+            {
+                return;
+            }
             float width = _rect.rect.width;
             float height = _rect.rect.height;
             bool show = width >= MinWidth && height >= MinHeight;

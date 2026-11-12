@@ -47,10 +47,10 @@ namespace Contigu.Presentation
         // Same look as the left column: slots are cream cards on a dark wooden board.
         private static Color BoardWood { get { return UITweaks.Current.boardWood; } }
         private static Color BoardDark { get { return UITweaks.Current.boardDark; } }
-        private static readonly Color SlotClear = new Color(1f, 0.969f, 0.910f, 1f);
-        private static readonly Color SlotHoverColor = new Color(1f, 0.95f, 0.80f, 1f);
-        private static readonly Color SlotSelectedColor = new Color(1f, 0.89f, 0.58f, 1f);
-        private static readonly Color SlotLockedColor = new Color(0.88f, 0.60f, 0.55f, 1f);
+        private static readonly Color SlotClear = new Color(0.9f, 0.88f, 0.86f, 1f);
+        private static readonly Color SlotHoverColor = Color.white;
+        private static readonly Color SlotSelectedColor = Color.white;
+        private static readonly Color SlotLockedColor = Color.white;
         // The widest/tallest a piece is drawn (shrinks when four slots share the column).
         private float _previewBudget = SlotPreviewBudget;
         /// <summary>Largest side a slot preview may span: the slot minus its border and a little breathing room.</summary>
@@ -188,10 +188,9 @@ namespace Contigu.Presentation
             for (int i = 0; i < DeckManager.MaxHandSize; i++)
             {
                 int idx = i;
-                var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.CardBackground);
-                // No card art: the slot is an invisible hit area that only tints for selection/feedback (see UpdateSelectionVisuals).
+                // A wooden planter (a plot: dark soil in a wooden bed); selection, hover and boss locks change its bed (gold / red), see UpdateSelectionVisuals.
+                var slot = UIFactory.CreateSlicedImage(slotsRow, "Slot" + i, UISprites.Garden("Wood") ?? UISprites.CardBackground);
                 slot.color = SlotClear;
-                UIFactory.AddThickOutline(slot, BoardDark);
                 slot.rectTransform.sizeDelta = new Vector2(SlotWidth, SlotHeight);
                 // Plain Image/Button has no ILayoutElement; the row's HorizontalLayoutGroup needs explicit preferred dimensions.
                 var slotLayout = slot.gameObject.AddComponent<LayoutElement>();
@@ -339,12 +338,17 @@ namespace Contigu.Presentation
             icon.rectTransform.anchoredPosition = new Vector2(12f, 0f);
             icon.rectTransform.sizeDelta = new Vector2(32f, 32f);
 
+            // The icon sits beside the text: no flowers on this one, and the label gets the room right of the icon on a single line.
+            PlotButtonDecor.Suppress(_shuffleButton);
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
-            _shuffleCountLabel.text = "SHUFFLE  " + _run.ShufflesRemaining;
-            _shuffleCountLabel.fontSize = 22;
+            _shuffleCountLabel.text = "SHUFFLE " + _run.ShufflesRemaining;
+            _shuffleCountLabel.fontSize = 20;
+            _shuffleCountLabel.resizeTextMaxSize = 20;
+            _shuffleCountLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);
-            _shuffleCountLabel.rectTransform.offsetMin = new Vector2(40f, 0f);
+            _shuffleCountLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
+            _shuffleCountLabel.rectTransform.offsetMax = new Vector2(-12f, 0f);
             var labelOutline = _shuffleCountLabel.gameObject.AddComponent<Outline>();
             labelOutline.effectColor = UITheme.Border;
             labelOutline.effectDistance = new Vector2(2f, -2f);
@@ -366,7 +370,7 @@ namespace Contigu.Presentation
         /// <summary>Updates the Shuffle icon's remaining-use count and enabled state.</summary>
         public void SetShuffleState(int remaining, bool canShuffle)
         {
-            _shuffleCountLabel.text = "SHUFFLE  " + remaining;
+            _shuffleCountLabel.text = "SHUFFLE " + remaining;
             _shuffleAllowed = canShuffle;
             _shuffleButton.interactable = _interactable && _shuffleAllowed;
         }
@@ -1004,6 +1008,7 @@ namespace Contigu.Presentation
             {
                 bool selected = i == _selectedIndex;
                 bool lockedByBoss = _bossLockedSlotIndex.HasValue && _bossLockedSlotIndex.Value == i;
+                _slotBackgrounds[i].sprite = (lockedByBoss ? UISprites.Garden("Red") : selected && _interactable ? UISprites.Garden("Gold") : UISprites.Garden("Wood")) ?? _slotBackgrounds[i].sprite;
                 _slotBackgrounds[i].color = lockedByBoss ? SlotLockedColor
                     : selected && _interactable ? SlotSelectedColor
                     : IsHoverActive(i) ? SlotHoverColor
