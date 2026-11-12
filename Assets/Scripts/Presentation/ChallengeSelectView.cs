@@ -259,6 +259,8 @@ namespace Contigu.Presentation
             _card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _card.rectTransform.sizeDelta = new Vector2(CardWidth, CardHeight);
             _card.rectTransform.anchoredPosition = new Vector2(0f, CardY);
+            // Faux 3D: the card is a thick board resting on the table.
+            UIFactory.AddDropShadow(_card, 12f, 0.4f);
 
             // A banner in the challenge's own color carries its name.
             _banner = UIFactory.CreatePanel(_card.transform, "Banner", Color.white);
@@ -268,6 +270,7 @@ namespace Contigu.Presentation
             _banner.rectTransform.pivot = new Vector2(0.5f, 1f);
             _banner.rectTransform.offsetMin = new Vector2(6f, -BannerHeight - 6f);
             _banner.rectTransform.offsetMax = new Vector2(-6f, -6f);
+            UIFactory.AddDropShadow(_banner, 5f, 0.45f);
 
             _bannerIcon = UIFactory.CreatePanel(_banner.transform, "SeasonIcon", Color.white);
             _bannerIcon.raycastTarget = false;
@@ -281,6 +284,7 @@ namespace Contigu.Presentation
             _nameLabel = UIFactory.CreateText(_banner.transform, "Name", "", 38, UITheme.TextOnBackground);
             _nameLabel.raycastTarget = false;
             UIFactory.StretchFull(_nameLabel.rectTransform);
+            UIFactory.AddDropShadow(_nameLabel, 3f, 0.5f);
 
             _statsLabel = UIFactory.CreateText(_card.transform, "Stats", "", 18, UITheme.TextPrimary);
             _statsLabel.raycastTarget = false;

@@ -9618,3 +9618,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Faux 3D : logo du titre et Sprig
 - `Design/extrude.py` couvre aussi `Characters` (4 Sprig) et `Title` (LastBloom) : même bloc extrudé que les icônes (art réduit de 7 %, copie sombre empilée dessous). Les PNG gardent leur taille et leurs `.meta`. Rendu vérifié sur PNG (Chromium), pas dans Unity (l'animation du logo et les étincelles ne sont pas revues).
+
+## 2026-11-12 — Faux 3D : écran de choix de challenge
+- Icônes de saison (`Icons/Challenges`, sans SVG source) extrudées par `Design/extrude_png.py` à partir des PNG d'origine gardés dans `Design/Icons/challenges/` (idempotent). Carte, bandeau et nom du challenge reçoivent une ombre portée (`UIFactory.AddDropShadow`). Boutons, flèches et pastilles de pledge étaient déjà des plots à relief. Icônes vérifiées en PNG ; la carte n'est pas vérifiée dans Unity.
