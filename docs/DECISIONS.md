@@ -9516,3 +9516,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Carte de score et carte de météo de la colonne de gauche en parcelles
 - La boîte du haut (manche, total, pastilles de points et de Mult) prend le même lit de bois à terre claire que la boîte des fertilizers (`PlotWoodLight`) ; la carte de météo aussi, mais son lit suit la météo (bois pour un ciel dégagé, rouge pour une météo dure, vert pour les autres : `PlotRedLight`, nouvelle `PlotGreenLight`, au lieu de la teinte sur crème) et son texte passe en crème (nom, effet). Le contour épais ajouté à la carte de météo disparaît (le sprite a le sien). La rangée de météo de « Coming up » (boutique) reste crème. Non vérifié dans Unity : lisibilité du texte coloré (Mult rouge, points bleus) sur la terre claire.
+
+## 2026-11-12 — Terre beige pour les boîtes claires
+- Encore plus clair, « presque un beige » : la terre des variantes claires passe à un beige (`PlotWoodLight` #d9c3a0, `PlotGoldLight` #ecd9a0, `PlotRedLight` #e3b4ab, `PlotGreenLight` #c5d9ab) ; le lit coloré les distingue toujours. Le texte de la carte de météo repasse en sombre (comme sur le crème), celui du panneau vide aussi. Les boutons gardent leur terre sombre. Non vérifié dans Unity.

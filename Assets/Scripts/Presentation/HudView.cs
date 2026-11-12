@@ -227,7 +227,7 @@ namespace Contigu.Presentation
             _weatherChipIcon.rectTransform.offsetMin = new Vector2(5f, 5f);
             _weatherChipIcon.rectTransform.offsetMax = new Vector2(-5f, -5f);
 
-            _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, new Color(0.98f, 0.93f, 0.82f, 1f), TextAnchor.MiddleLeft);
+            _weatherNameLabel = UIFactory.CreateText(card.transform, "WeatherName", "", 21, UITheme.TextPrimary, TextAnchor.MiddleLeft);
             _weatherNameLabel.raycastTarget = false;
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -238,7 +238,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.resizeTextMinSize = 12;
             _weatherNameLabel.resizeTextMaxSize = 21;
 
-            _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, new Color(0.95f, 0.90f, 0.80f, 1f), TextAnchor.UpperLeft);
+            _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
             _weatherEffectLabel.raycastTarget = false;
             _weatherEffectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             _weatherEffectLabel.rectTransform.anchorMax = new Vector2(1f, 1f);

@@ -17,11 +17,11 @@ ROLES = {
     'Blue':  ('#7fb0ee', '#2f64b4', '#1b2f4c'),
     'Red':   ('#e8665b', '#a93030', '#4a1d1d'),
     'Wood':  ('#b78552', '#74492a', '#3a2a1c'),
-    # Lighter soil, for the hand slots and the fertilizer box (lots of art sits on them).
-    'WoodLight': ('#b78552', '#74492a', '#8a6a47'),
-    'GoldLight': ('#f6cf62', '#c8871a', '#a8842f'),
-    'RedLight':  ('#e8665b', '#a93030', '#a65048'),
-    'GreenLight': ('#7fcb5a', '#3e8a35', '#5f8a4a'),
+    # Beige soil, for the hand slots and the boxes of the left column (art and dark text sit on them).
+    'WoodLight': ('#b78552', '#74492a', '#d9c3a0'),
+    'GoldLight': ('#f6cf62', '#c8871a', '#ecd9a0'),
+    'RedLight':  ('#e8665b', '#a93030', '#e3b4ab'),
+    'GreenLight': ('#7fcb5a', '#3e8a35', '#c5d9ab'),
 }
 GUIDS = {
     'Green': '2d71a0c4e9b3485f8a16d3c07e52b9f1', 'Gold': '6f08c3b7a1e4492d9b35e0d8a74c1f26', 'Blue': 'b3e5d927c0a84f16a97d2c48e1f06b53',
