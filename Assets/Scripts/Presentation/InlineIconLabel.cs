@@ -19,10 +19,12 @@ namespace Contigu.Presentation
 
         private Text _text;
         private string _withWord;
-        private readonly List<int> _starts = new List<int>();
+        private readonly List<int> _starts = new List<int>();     // where each run of blanks starts among the characters that are drawn (tags excluded)
+        private readonly List<int> _rawStarts = new List<int>();  // the same, counting the rich-text tags too
         private readonly List<Image> _icons = new List<Image>();
         private Sprite _sprite;
         private Coroutine _place;
+        private bool _generatorCountsTags;
 
         /// <summary>Shows <paramref name="richText"/> in <paramref name="label"/> with "Pollen" replaced by the icon (the word itself when there is no icon art).</summary>
         public static void Set(Text label, string richText, Sprite pollenIcon)
@@ -41,6 +43,7 @@ namespace Contigu.Presentation
             _sprite = sprite;
             _withWord = richText ?? string.Empty;
             _starts.Clear();
+            _rawStarts.Clear();
             for (int i = 0; i < _icons.Count; i++)
             {
                 _icons[i].gameObject.SetActive(false);
@@ -57,6 +60,7 @@ namespace Contigu.Presentation
             {
                 sb.Append(_withWord, last, m.Index - last);
                 _starts.Add(Tags.Replace(sb.ToString(), string.Empty).Length);
+                _rawStarts.Add(sb.Length);
                 sb.Append(Blanks);
                 last = m.Index + m.Length;
             }
@@ -105,9 +109,13 @@ namespace Contigu.Presentation
             var gen = _text.cachedTextGenerator;
             var chars = gen.characters;
             var lines = gen.lines;
+            // Depending on the Unity version the characters array holds one entry per character of the string (rich-text tags included) or only
+            // per drawn character: tell them apart by its length, and index it accordingly.
+            _generatorCountsTags = chars.Count >= _text.text.Length;
+            var starts = _generatorCountsTags ? _rawStarts : _starts;
             for (int n = 0; n < _starts.Count; n++)
             {
-                if (_starts[n] + Blanks.Length >= chars.Count || lines.Count == 0)
+                if (starts[n] + Blanks.Length >= chars.Count || lines.Count == 0)
                 {
                     GiveBackTheWord();
                     yield break;
@@ -118,7 +126,7 @@ namespace Contigu.Presentation
             float unit = 1f / _text.pixelsPerUnit;
             for (int n = 0; n < _starts.Count; n++)
             {
-                int start = _starts[n];
+                int start = starts[n];
                 float width = 0f;
                 for (int k = 0; k < Blanks.Length; k++)
                 {
@@ -145,6 +153,7 @@ namespace Contigu.Presentation
         private void GiveBackTheWord()
         {
             _starts.Clear();
+            _rawStarts.Clear();
             for (int i = 0; i < _icons.Count; i++)
             {
                 _icons[i].gameObject.SetActive(false);

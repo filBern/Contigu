@@ -9560,3 +9560,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Icône de Pollen en ligne : correction du calage
 - Sur capture, le blanc de l'icône de Pollen restait vide : j'avais ajouté au calcul un point de référence (coin du cadre) qui n'existe pas pour ce générateur de texte : `Text` le configure avec le pivot du rectangle comme origine, ses coordonnées sont donc déjà locales une fois mises à l'échelle (`InlineIconLabel`). L'icône était posée hors du texte. Non vérifié dans Unity.
+
+## 2026-11-12 — Icône de Pollen en ligne : bon caractère
+- Sur capture, l'icône apparaissait avant « +2 » au lieu de se poser sur le blanc qui le suit : le tableau des caractères du générateur compte aussi les balises de texte enrichi (chaque balise est une entrée, à l'abscisse courante), alors que je l'indexais sans les balises. `InlineIconLabel` calcule maintenant les deux indices (avec et sans balises) et choisit selon la longueur du tableau (`characters.Count ≥ longueur du texte`). Non vérifié dans Unity.
