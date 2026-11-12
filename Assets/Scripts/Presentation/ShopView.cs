@@ -64,7 +64,7 @@ namespace Contigu.Presentation
         private const float LabelToCardsGap = 54f;
         private const float PlaqueHeight = 42f;
         // How far the plaques hang above the items' own slot (they do not move the items).
-        private const float PlaqueLift = 20f;
+        private const float PlaqueLift = 36f;
 
         // Slow, gentle scale wobble on the Lueur readout, same sine-wave
         // technique as GameBootstrap's PulseStatusText.
