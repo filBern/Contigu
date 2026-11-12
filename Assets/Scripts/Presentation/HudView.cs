@@ -406,6 +406,8 @@ namespace Contigu.Presentation
                 var icon = UIFactory.CreatePanel(iconBackground.transform, "EnemyIcon" + i, Color.white);
                 icon.preserveAspect = true;
                 UIFactory.StretchFull(icon.rectTransform);
+                // Faux 3D: the portrait is a block (see Design/Enemies/add_depth.py); a soft shadow under it sets it down on the board.
+                UIFactory.AddDropShadow(icon, 5f, 0.45f);
 
                 // Hover tooltip with this enemy's On-Shuffle effect — Init'd fresh each SetEncounter call below.
                 var iconView = icon.gameObject.AddComponent<EnemyIconView>();

@@ -940,6 +940,7 @@ namespace Contigu.Presentation
                 var icon = UIFactory.CreatePanel(slot, "Sprite" + i, Color.white);
                 icon.preserveAspect = true;
                 UIFactory.StretchFull(icon.rectTransform);
+                UIFactory.AddDropShadow(icon, 4f, 0.4f);
                 icon.sprite = HudView.EnemyIconSprite(upcoming[i]);
 
                 // Same hover-tooltip component as HudView's own enemy band (see EnemyIconView), just fed
