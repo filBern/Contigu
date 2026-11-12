@@ -71,16 +71,16 @@ namespace Contigu.Presentation
             var rulesBtn = UIFactory.CreateButton(_root, "Rules", "How to play", UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(rulesBtn);
             var rulesRect = rulesBtn.GetComponent<RectTransform>();
-            rulesRect.anchorMin = new Vector2(0.5f, 0f);
-            rulesRect.anchorMax = new Vector2(0.5f, 0f);
-            rulesRect.pivot = new Vector2(0.5f, 0f);
-            rulesRect.anchoredPosition = new Vector2(0f, 372f);
+            rulesRect.anchorMin = new Vector2(0.5f, 1f);
+            rulesRect.anchorMax = new Vector2(0.5f, 1f);
+            rulesRect.pivot = new Vector2(0.5f, 1f);
+            rulesRect.anchoredPosition = new Vector2(0f, -330f);
             rulesRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             rulesBtn.onClick.AddListener(() => { Hide(); if (RulesRequested != null) RulesRequested(); });
 
             BuildVolumeRow(_root, -140f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
-            BuildVolumeRow(_root, -230f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
-            BuildVolumeRow(_root, -320f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
+            BuildVolumeRow(_root, -206f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
+            BuildVolumeRow(_root, -272f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
 
             var closeBtn = UIFactory.CreateButton(_root, "Close", "Resume", UISprites.ChooseButtonBackground, 18);
             var closeRect = closeBtn.GetComponent<RectTransform>();
@@ -93,10 +93,10 @@ namespace Contigu.Presentation
 
             if (inRun)
             {
-                BuildConfirmButton(_root, "AbandonRun", "Abandon run", 170f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
-                BuildConfirmButton(_root, "MainMenu", "Save & quit", 240f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
+                BuildConfirmButton(_root, "AbandonRun", "Abandon run", -540f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
+                BuildConfirmButton(_root, "MainMenu", "Save & quit", -470f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
             }
-            BuildResetButton(_root);
+            BuildResetButton(_root, inRun ? -610f : -470f);
             BuildMotionToggle(_root);
             BuildSpeedToggle(_root);
 
@@ -110,10 +110,10 @@ namespace Contigu.Presentation
             var button = UIFactory.CreateButton(parent, "AnimationSpeed", "", UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(button);
             var rect = button.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(165f, 310f);
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(165f, -400f);
             rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = "Animation speed: " + GameSpeed.Label;
@@ -130,10 +130,10 @@ namespace Contigu.Presentation
             var button = UIFactory.CreateButton(parent, "ReducedMotion", "", UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(button);
             var rect = button.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(-165f, 310f);
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(-165f, -400f);
             rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");
@@ -150,9 +150,9 @@ namespace Contigu.Presentation
             var button = UIFactory.CreateButton(parent, name, text, UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(button);
             var rect = button.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
             rect.anchoredPosition = new Vector2(0f, y);
             rect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
@@ -183,15 +183,15 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Two-click "Reset data": wipes saved stats and every preference (tutorial seen, volume), then reloads the scene so the next launch behaves like a first one.</summary>
-        private static void BuildResetButton(Transform parent)
+        private static void BuildResetButton(Transform parent, float y)
         {
             var resetBtn = UIFactory.CreateButton(parent, "ResetData", "Reset data", UISprites.CancelButtonBackground, 16);
             UIFactory.DisablePlants(resetBtn);
             var rect = resetBtn.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 100f);
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, y);
             rect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             var label = resetBtn.GetComponentInChildren<Text>();
             bool armed = false;
