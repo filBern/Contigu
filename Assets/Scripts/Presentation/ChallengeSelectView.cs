@@ -251,9 +251,9 @@ namespace Contigu.Presentation
 
         private void BuildCard(Transform parent)
         {
-            _card = UIFactory.CreateSlicedImage(parent, "Card", UISprites.CardBackground);
-            _card.color = UITheme.Panel;
-            UIFactory.AddThickOutline(_card, UITheme.Border);
+            // A wooden planter like the other boxes (its own dark rim, so no outline component).
+            _card = UIFactory.CreateSlicedImage(parent, "Card", UISprites.Garden("WoodLight") ?? UISprites.CardBackground);
+            _card.color = Color.white;
             _card.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
             _card.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             _card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -263,13 +263,13 @@ namespace Contigu.Presentation
             UIFactory.AddDropShadow(_card, 12f, 0.4f);
 
             // A banner in the challenge's own color carries its name.
-            _banner = UIFactory.CreatePanel(_card.transform, "Banner", Color.white);
+            _banner = UIFactory.CreateSlicedImage(_card.transform, "Banner", UISprites.Garden("Green") ?? UISprites.CardBackground);
             _banner.raycastTarget = false;
             _banner.rectTransform.anchorMin = new Vector2(0f, 1f);
             _banner.rectTransform.anchorMax = new Vector2(1f, 1f);
             _banner.rectTransform.pivot = new Vector2(0.5f, 1f);
-            _banner.rectTransform.offsetMin = new Vector2(6f, -BannerHeight - 6f);
-            _banner.rectTransform.offsetMax = new Vector2(-6f, -6f);
+            _banner.rectTransform.offsetMin = new Vector2(14f, -BannerHeight - 14f);
+            _banner.rectTransform.offsetMax = new Vector2(-14f, -14f);
             UIFactory.AddDropShadow(_banner, 5f, 0.45f);
 
             _bannerIcon = UIFactory.CreatePanel(_banner.transform, "SeasonIcon", Color.white);
@@ -510,6 +510,16 @@ namespace Contigu.Presentation
             }
         }
 
+        /// <summary>The plot bed of a challenge's banner: green, blue, gold or red like the buttons.</summary>
+        private static string PlotNameFor(ChallengeDefinition challenge)
+        {
+            string name = challenge.Name.ToLowerInvariant();
+            if (name.Contains("winter")) return "Blue";
+            if (name.Contains("summer") || name.Contains("autumn")) return "Gold";
+            if (name.Contains("orchard")) return "Red";
+            return "Green";
+        }
+
         internal static Color AccentFor(ChallengeDefinition challenge)
         {
             string name = challenge.Name.ToLowerInvariant();
@@ -557,7 +567,11 @@ namespace Contigu.Presentation
             _nameLabel.text = challenge.Name.ToUpperInvariant();
             _descriptionLabel.text = challenge.Description;
             var accent = AccentFor(challenge);
-            _banner.color = accent;
+            // The banner is a plot bed in the season's color (the flat accent only if the plot art is missing).
+            var plot = UISprites.Garden(PlotNameFor(challenge));
+            _banner.sprite = plot ?? UISprites.CardBackground;
+            _banner.color = plot != null ? Color.white : accent;
+            _nameLabel.color = plot != null ? UIFactory.PlotTextColor(plot.name) : UITheme.TextOnBackground;
             var icon = Resources.Load<Sprite>("Icons/Challenges/" + challenge.Name);
             _bannerIcon.sprite = icon;
             _bannerIcon.enabled = icon != null;

@@ -9621,3 +9621,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Faux 3D : écran de choix de challenge
 - Icônes de saison (`Icons/Challenges`, sans SVG source) extrudées par `Design/extrude_png.py` à partir des PNG d'origine gardés dans `Design/Icons/challenges/` (idempotent). Carte, bandeau et nom du challenge reçoivent une ombre portée (`UIFactory.AddDropShadow`). Boutons, flèches et pastilles de pledge étaient déjà des plots à relief. Icônes vérifiées en PNG ; la carte n'est pas vérifiée dans Unity.
+
+## 2026-11-12 — Écran de choix de challenge : carte en bac de bois
+- La carte passe sur `PlotWoodLight` (bac comme les autres boîtes, sans contour ajouté) et le bandeau devient un plot de la couleur de la saison (Spring/Greenhouse vert, Winter bleu, Summer/Autumn or, Orchard rouge), nom en teinte claire du plot, inset 14. Les icônes de saison, au contour sombre, se détachent moins sur le fond sombre du plot : à juger sur capture. Non vérifié dans Unity.
