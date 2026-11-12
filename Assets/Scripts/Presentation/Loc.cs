@@ -14,7 +14,7 @@ namespace Contigu.Presentation
             { "shop.header", "The Pollen Shop" },
             { "shop.blister", "Blister" },
             { "shop.workshop", "Workshop" },
-            { "shop.reroll", "Reroll ({0})" },
+            { "shop.reroll", "Reroll Pollen {0}" }, // "Pollen" is drawn as the Pollen icon (see InlineIconLabel)
             { "shop.nextRound", "Next round" },
             { "shop.seedBag", "Show seed bag (Tab)" },
             { "shop.sold", "Sold" },

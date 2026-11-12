@@ -9588,3 +9588,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — « Coming up » : de l'air entre les ennemis et le trait de séparation
 - Capture (4 ennemis sur deux rangées) : la lèvre et l'ombre de la deuxième rangée touchaient le trait qui sépare la météo. La place réservée sous la dernière rangée passe de 6 à 20 (`UpcomingBox…`, calcul de la hauteur disponible) ; les icônes rétrécissent un peu quand il y a deux rangées. Non vérifié dans Unity.
+
+## 2026-11-12 — Reroll : la monnaie en icône
+- Le bouton « Reroll (5) » devient « Reroll [icône de Pollen] 5 » : la clé de texte est « Reroll Pollen {0} » et `InlineIconLabel` remplace le mot par l'icône. Non vérifié dans Unity (étiquette centrée dans un bouton à texte automatique, calage de l'icône pas encore vu sur ce cas).

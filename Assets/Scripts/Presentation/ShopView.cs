@@ -868,7 +868,8 @@ namespace Contigu.Presentation
             }
 
             int rerollPrice = run.GetRerollPrice();
-            _rerollLabel.text = Loc.T("shop.reroll", rerollPrice);
+            // "Reroll <Pollen icon> 5": the currency is the icon, not parentheses.
+            InlineIconLabel.Set(_rerollLabel, Loc.T("shop.reroll", rerollPrice), VisualDefaults.PollenSprite);
             _rerollButton.interactable = run.PendingUpgrade == null && run.Lueur >= rerollPrice;
             _leaveButton.interactable = run.PendingUpgrade == null;
         }
