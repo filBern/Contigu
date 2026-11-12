@@ -218,8 +218,8 @@ namespace Contigu.Presentation
             frame.raycastTarget = false;
             frame.rectTransform.anchorMin = frame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             frame.rectTransform.pivot = new Vector2(0f, 0.5f);
-            frame.rectTransform.anchoredPosition = new Vector2(10f, 0f);
-            frame.rectTransform.sizeDelta = new Vector2(64f, 64f);
+            frame.rectTransform.anchoredPosition = new Vector2(12f, 0f);
+            frame.rectTransform.sizeDelta = new Vector2(54f, 54f);
             _weatherChipIcon = UIFactory.CreatePanel(frame.transform, "WeatherIcon", Color.white);
             _weatherChipIcon.preserveAspect = true;
             _weatherChipIcon.raycastTarget = false;
@@ -232,7 +232,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _weatherNameLabel.rectTransform.offsetMin = new Vector2(84f, -34f);
+            _weatherNameLabel.rectTransform.offsetMin = new Vector2(76f, -34f);
             _weatherNameLabel.rectTransform.offsetMax = new Vector2(-8f, -6f);
             _weatherNameLabel.resizeTextForBestFit = true;
             _weatherNameLabel.resizeTextMinSize = 12;
@@ -242,7 +242,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.raycastTarget = false;
             _weatherEffectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             _weatherEffectLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(84f, 6f);
+            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(76f, 6f);
             _weatherEffectLabel.rectTransform.offsetMax = new Vector2(-8f, -34f);
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;

@@ -9525,3 +9525,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Icône de météo sans cadre
 - Le cadre sombre à contour épais autour de l'icône de météo disparaît (carte de la colonne de gauche et rangée de « Coming up » en boutique) : le cadre reste, invisible, comme élément qui pulse quand l'effet de la météo se déclenche, et l'icône (qui a déjà son propre carré arrondi) occupe toute sa place. Non vérifié dans Unity.
+
+## 2026-11-12 — Icône de météo un peu plus petite
+- Carte de la colonne de gauche : 64 → 54 (décalée de 12 du bord, textes à 76) ; rangée de « Coming up » : 56 → 48 (décalée de 10, textes à 66). Non vérifié dans Unity.

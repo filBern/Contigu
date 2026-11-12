@@ -285,8 +285,8 @@ namespace Contigu.Presentation
             weatherFrame.raycastTarget = false;
             weatherFrame.rectTransform.anchorMin = weatherFrame.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             weatherFrame.rectTransform.pivot = new Vector2(0f, 0.5f);
-            weatherFrame.rectTransform.anchoredPosition = new Vector2(8f, 0f);
-            weatherFrame.rectTransform.sizeDelta = new Vector2(56f, 56f);
+            weatherFrame.rectTransform.anchoredPosition = new Vector2(10f, 0f);
+            weatherFrame.rectTransform.sizeDelta = new Vector2(48f, 48f);
             _weatherIcon = UIFactory.CreatePanel(weatherFrame.transform, "WeatherIcon", Color.white);
             _weatherIcon.raycastTarget = false;
             _weatherIcon.preserveAspect = true;
@@ -302,7 +302,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
-            _weatherNameLabel.rectTransform.offsetMin = new Vector2(72f, -28f);
+            _weatherNameLabel.rectTransform.offsetMin = new Vector2(66f, -28f);
             _weatherNameLabel.rectTransform.offsetMax = new Vector2(-6f, -4f);
             _weatherEffectLabel = UIFactory.CreateText(_weatherRow, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
             _weatherEffectLabel.raycastTarget = false;
@@ -312,7 +312,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.resizeTextMaxSize = 12;
             _weatherEffectLabel.rectTransform.anchorMin = Vector2.zero;
             _weatherEffectLabel.rectTransform.anchorMax = Vector2.one;
-            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(72f, 4f);
+            _weatherEffectLabel.rectTransform.offsetMin = new Vector2(66f, 4f);
             _weatherEffectLabel.rectTransform.offsetMax = new Vector2(-6f, -28f);
 
             _blisterPlaque = BuildSectionPlaque("BlisterPlaque", Loc.T("shop.blister"));
