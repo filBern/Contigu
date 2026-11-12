@@ -163,7 +163,7 @@ namespace Contigu.Presentation
             container.sizeDelta = new Vector2(ColumnWidth, _columnHeight);
             _handContainer = containerImage;
             AddBoardTrim(container);
-            ShopSign.Build(container, "Seeds", 24);
+            // No "Seeds" sign any more: the room goes to the slots.
 
             var slotsRow = UIFactory.CreateUIObject("SlotsRow", container);
             slotsRow.anchorMin = new Vector2(0.5f, 0.5f);
@@ -1121,8 +1121,8 @@ namespace Contigu.Presentation
             }
             // Slots are stacked in the column, sharing its height equally (three slots, or four with the fourth-slot upgrade).
             float innerWidth = ColumnWidth - HandBoxPadding * 2f;
-            // The wooden "Seeds" sign hangs at the top of the card, the seeds-left box and the Shuffle button sit at the bottom; the trays fill the rest.
-            float innerHeight = _columnHeight - ModifierPanelView.HeaderHeight - HandBoxPadding - FooterHeight;
+            // The seeds-left box and the Shuffle button sit at the bottom; the trays fill the rest (a small margin on top, no sign).
+            float innerHeight = _columnHeight - HandBoxPadding - HandBoxPadding - FooterHeight;
             float slotHeight = (innerHeight - (activeCount - 1) * SlotSpacing) / Mathf.Max(1, activeCount);
             for (int i = 0; i < activeCount; i++)
             {
@@ -1133,8 +1133,9 @@ namespace Contigu.Presentation
                 _previewContainers[i].sizeDelta = new Vector2(innerWidth - 4f, slotHeight - 4f);
             }
             _slotsRow.sizeDelta = new Vector2(innerWidth, innerHeight);
-            _slotsRow.anchoredPosition = new Vector2(0f, _columnHeight * 0.5f - ModifierPanelView.HeaderHeight - innerHeight * 0.5f);
-            _previewBudget = Mathf.Min(SlotPreviewBudget, slotHeight - 10f);
+            _slotsRow.anchoredPosition = new Vector2(0f, _columnHeight * 0.5f - HandBoxPadding - innerHeight * 0.5f);
+            // A piece stays inside the planter's soil (its bed takes about 9 on each side).
+            _previewBudget = Mathf.Min(SlotPreviewBudget, slotHeight - 24f);
             if (_slotDividers != null)
             {
                 for (int i = 0; i < _slotDividers.Length; i++)

@@ -9519,3 +9519,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Terre beige pour les boîtes claires
 - Encore plus clair, « presque un beige » : la terre des variantes claires passe à un beige (`PlotWoodLight` #d9c3a0, `PlotGoldLight` #ecd9a0, `PlotRedLight` #e3b4ab, `PlotGreenLight` #c5d9ab) ; le lit coloré les distingue toujours. Le texte de la carte de météo repasse en sombre (comme sur le crème), celui du panneau vide aussi. Les boutons gardent leur terre sombre. Non vérifié dans Unity.
+
+## 2026-11-12 — Colonne des graines : plus de panneau « Seeds », emplacements plus grands
+- Le panneau « Seeds » en haut de la colonne disparaît : sa hauteur (58) retourne aux emplacements, qui gagnent environ 15 chacun (une marge de 14 reste en haut). Le budget de taille d'une pièce dans un emplacement passe de « hauteur − 10 » à « hauteur − 24 » pour qu'elle reste dans la terre (la pièce en croix de 4 tuiles débordait sur le lit). Non vérifié dans Unity : à juger sur capture avec 3 et 4 emplacements.
