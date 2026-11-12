@@ -9503,3 +9503,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Écran de choix : carte plus large pour les boutons parcelles
 - « No shuffle » passait sur deux lignes (les fleurs mangent 32 de marge de chaque côté du texte). La carte passe de 380 à 460 de large (`UITweaks.challengeCardWidth`, défaut et asset), les puces d'engagement de 170 à 210 : le texte d'une puce dispose d'environ 146 de large. Le bouton principal et « New run » suivent la largeur de la carte. Non vérifié dans Unity (flèches et boutons de niveau se recalent sur la nouvelle largeur).
+
+## 2026-11-12 — Onglets de la Collection et textes forcés en blanc
+- Capture : les onglets de la Collection étaient illisibles (texte sombre sur la terre sombre de la parcelle) et le premier passait sur deux lignes. Le texte d'un onglet prend maintenant la couleur de son état (or sur le corps doré pour l'onglet choisi, crème sur le bois pour les autres), les onglets passent de 260 à 310 de large (écart 320) et ne se teintent plus (le corps change : doré / bois). Les boutons « Show deck », « Menu » (colonne de gauche) et « Shuffle » ne forcent plus leur texte en blanc : ils gardent la couleur de leur parcelle. Non vérifié dans Unity.

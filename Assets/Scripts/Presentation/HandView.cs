@@ -341,7 +341,6 @@ namespace Contigu.Presentation
 
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
             _shuffleCountLabel.text = "SHUFFLE  " + _run.ShufflesRemaining;
-            _shuffleCountLabel.color = Color.white;
             _shuffleCountLabel.fontSize = 22;
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);

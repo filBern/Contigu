@@ -70,10 +70,9 @@ namespace Contigu.Presentation
                 var category = Tabs[i];
                 var tab = UIFactory.CreateButton(_root, "Tab_" + category, "", UITheme.PanelLight, 18);
                 var rect = (RectTransform)tab.transform;
-                Place(rect, new Vector2(0.5f, 1f), new Vector2((i - (Tabs.Length - 1) / 2f) * 270f, -128f), new Vector2(260f, 44f));
+                Place(rect, new Vector2(0.5f, 1f), new Vector2((i - (Tabs.Length - 1) / 2f) * 320f, -128f), new Vector2(310f, 48f));
                 _tabImages.Add(tab.GetComponent<Image>());
                 var label = tab.GetComponentInChildren<Text>();
-                label.color = UITheme.TextPrimary;
                 _tabLabels.Add(label);
                 tab.onClick.AddListener(() => { SfxManager.Play(SfxId.CarouselTick); SelectTab(category); });
             }
@@ -149,7 +148,11 @@ namespace Contigu.Presentation
                 found += count;
                 total += size;
                 _tabLabels[i].text = TabName(Tabs[i]) + "  " + count + "/" + size;
-                _tabImages[i].color = Tabs[i] == _current ? UITheme.ButtonSelected : UITheme.PanelLight;
+                // The chosen tab is a gold plot with gold lettering, the others wooden plots with cream lettering (text sits on the dark soil).
+                bool chosen = Tabs[i] == _current;
+                _tabImages[i].sprite = (chosen ? UISprites.Garden("Gold") : UISprites.Garden("Wood")) ?? _tabImages[i].sprite;
+                _tabImages[i].color = Color.white;
+                _tabLabels[i].color = chosen ? new Color(1f, 0.89f, 0.48f, 1f) : new Color(0.96f, 0.89f, 0.75f, 1f);
             }
             int percent = total > 0 ? Mathf.FloorToInt(100f * found / total) : 0;
             _overallLabel.text = "Discovered " + found + " / " + total + "  (" + percent + "%)";
