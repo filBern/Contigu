@@ -1189,14 +1189,16 @@ namespace Contigu.Presentation
             layout.spacing = 2f;
             layout.padding = new RectOffset(6, 6, 2, 2);
             layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
+            // Every tag has the same fixed height and its contents are centered in it (a word-only tag such as "Full (4)" or "Sold" has no icon to hold it up,
+            // and a tag sized by its contents stood on its bottom edge with its text higher than its neighbors' numbers).
+            layout.childForceExpandHeight = true;
             var fitter = tag.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            // Same height with or without the Pollen icon: a word-only tag ("Full (4)", "Sold") would otherwise be shorter, and its text (the tag stands on its bottom edge) would sit higher than the numbers of its neighbors.
-            var tagHeight = tag.gameObject.AddComponent<LayoutElement>();
-            tagHeight.minHeight = tweaks.priceTagIconSize + 4f;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            tag.sizeDelta = new Vector2(tag.sizeDelta.x, Mathf.Max(tweaks.priceTagFontSize * 1.35f, tweaks.priceTagIconSize) + 6f);
 
             if (showIcon && VisualDefaults.PollenSprite != null)
             {

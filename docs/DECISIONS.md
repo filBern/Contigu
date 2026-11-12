@@ -9603,3 +9603,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Étiquette de prix : même hauteur avec ou sans icône
 - Capture : « Full (4) » (sac central) était plus haut que les prix voisins. L'étiquette de prix se pose sur son bord bas et se dimensionne sur son contenu : sans icône de Pollen elle est plus courte, donc son texte monte. `LayoutElement.minHeight` = taille de l'icône + 4 sur l'étiquette : même hauteur pour tous (« Full », « Sold », prix). Non vérifié dans Unity.
+
+## 2026-11-12 — Étiquette de prix : hauteur fixe (deuxième tentative)
+- Le `minHeight` ajouté plus tôt n'a pas aligné « Full (4) » (capture : toujours ~18 plus haut). L'étiquette a maintenant une hauteur fixe (max(police × 1,35 ; icône) + 6) : plus de hauteur verticale pilotée par le contenu (`verticalFit` libre), `childForceExpandHeight` : le texte et l'icône sont centrés dans la même hauteur pour tous les prix, « Full » et « Sold » compris. La cause exacte du décalage n'a pas été reproduite (Unity ne tourne pas ici). Non vérifié dans Unity.
