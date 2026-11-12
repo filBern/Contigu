@@ -9477,3 +9477,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-11 — Engagements : l'interrupteur remplacé par une coche
 - L'interrupteur (piste + bouton) était laid à l'écran. Remplacé par un état plus simple : une puce active est dorée avec un petit badge vert à coche (dessinée avec deux barres, sans glyphe) dans son coin ; une puce inactive garde son corps vert d'origine, assombri, avec un libellé estompé. Le libellé reprend toute la largeur de la puce. Non vérifié dans Unity.
+
+## 2026-11-12 — Faux 3D (option A) : première passe
+- Pistes étudiées pour la 3D : (A) faux 3D en 2D, (B) 3D réelle hybride, (C) jeu entièrement 3D. On commence par A ; B ne viendra qu'après un essai mesuré sur iPad (WebGL : mémoire, appels de rendu, modèles à produire pour les formes, couleurs et plus de cent fertilizers).
+- **Tuiles et pièces** (`Design/Tiles/generate_tiles.py`, rendu avec Playwright, copies 128 px dans `Assets/Resources/Tiles`) : chaque tuile devient un bloc vu d'un peu au-dessus : face avant plus sombre (l'épaisseur), face du dessus biseautée avec un liseré clair en haut à gauche, terre en creux avec une ombre intérieure. L'emblème est inchangé (remonté de 4 px). Valable pour les parcelles (Empty, Golden, Frozen, Bonus) comme pour les pièces (une couleur par fleur, Joker).
+- **Sacs de fertilizers et panneaux d'upgrades** : une ombre portée douce sous l'icône (`UIFactory.AddDropShadow`, composant `Shadow` à décalage vers le bas), sur le sac du panneau et de l'étagère, sur le panneau d'upgrade de la carte et celui des étagères. Aucun asset modifié.
+- Non vérifié dans Unity : seule une planche des PNG a été regardée. À contrôler sur capture : la lèvre du bas des tuiles dans la grille (espacement, lecture des lignes), et l'ombre des icônes.

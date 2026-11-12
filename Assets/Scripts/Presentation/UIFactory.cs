@@ -189,6 +189,15 @@ namespace Contigu.Presentation
         /// sprite's rounded corners automatically. Not called from
         /// <see cref="FinishButton"/>; buttons get no outline.
         /// </summary>
+        /// <summary>A soft drop shadow under an icon (faux depth): a darkened copy of the graphic, offset downward, drawn behind it.</summary>
+        public static void AddDropShadow(Graphic target, float distance, float alpha = 0.32f)
+        {
+            var shadow = target.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, alpha);
+            shadow.effectDistance = new Vector2(distance * 0.35f, -distance);
+            shadow.useGraphicAlpha = true;
+        }
+
         public static void AddThickOutline(Image target, Color color, float thickness = 3f)
         {
             var outline = target.gameObject.AddComponent<Outline>();

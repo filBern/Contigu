@@ -51,6 +51,7 @@ namespace Contigu.Presentation
                 iconImage.preserveAspect = true;
                 iconImage.raycastTarget = false;
                 iconImage.sprite = icon;
+                UIFactory.AddDropShadow(iconImage, Mathf.Max(2f, size * 0.045f));
             }
             else if (colorTileColor.HasValue)
             {

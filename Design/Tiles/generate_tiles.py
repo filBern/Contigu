@@ -7,13 +7,29 @@ O = '#13212e'
 CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 RES = '../../Assets/Resources'
 
+def darken(hexcolor, k):
+    h = hexcolor.lstrip('#')
+    r, g, b = (int(h[n:n + 2], 16) for n in (0, 2, 4))
+    return '#%02x%02x%02x' % (int(r * k), int(g * k), int(b * k))
+
 def tile(b_top, b_bot, soil, emblem, extra_defs=''):
+    """A chunky block seen from slightly above (faux 3D): a darker front face (the block's thickness), a beveled top face with a soft
+    light edge on its top-left, and a sunken soil bed with an inner shadow. The emblem is unchanged, drawn on the soil."""
+    side = darken(b_bot, 0.58)
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">'
-            '<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient>%s'
-            '<clipPath id="c"><rect x="32" y="32" width="192" height="192" rx="14"/></clipPath></defs>'
-            '<rect x="6" y="6" width="244" height="244" rx="28" fill="url(#b)" stroke="%s" stroke-width="6"/>'
-            '<rect x="32" y="32" width="192" height="192" rx="14" fill="%s" stroke="%s" stroke-width="5"/>'
-            '<g clip-path="url(#c)" stroke-linejoin="round" stroke-linecap="round">%s</g></svg>') % (b_top, b_bot, extra_defs, O, soil, O, emblem)
+            '<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient>'
+            '<linearGradient id="h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>'
+            '<linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0.55"/><stop offset="0.55" stop-color="#000000" stop-opacity="0"/></linearGradient>'
+            '<linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.28"/></linearGradient>%s'
+            '<clipPath id="c"><rect x="32" y="32" width="192" height="184" rx="14"/></clipPath></defs>'
+            '<rect x="6" y="20" width="244" height="230" rx="28" fill="%s" stroke="%s" stroke-width="6"/>'
+            '<rect x="6" y="6" width="244" height="228" rx="28" fill="url(#b)" stroke="%s" stroke-width="6"/>'
+            '<rect x="12" y="12" width="232" height="216" rx="23" fill="none" stroke="url(#h)" stroke-width="5"/>'
+            '<rect x="32" y="32" width="192" height="184" rx="14" fill="%s" stroke="%s" stroke-width="5"/>'
+            '<rect x="35.5" y="35.5" width="185" height="177" rx="12" fill="none" stroke="url(#s)" stroke-width="7"/>'
+            '<rect x="35.5" y="35.5" width="185" height="177" rx="12" fill="none" stroke="url(#r)" stroke-width="3"/>'
+            '<g clip-path="url(#c)"><g transform="translate(0,-4)" stroke-linejoin="round" stroke-linecap="round">%s</g></g></svg>') % (
+                b_top, b_bot, extra_defs, side, O, O, soil, O, emblem)
 
 def petals(n, r, w, fill, stroke, sw=5, phase=0, cx=128, cy=128, r_in=10):
     s = ''
@@ -113,10 +129,28 @@ tiles['Locked'] = tile('#7a6650', '#443626', '#2e2118', vd)
 os.makedirs('%s/Tiles' % RES, exist_ok=True)
 for name, svg in tiles.items():
     open(name + '.svg', 'w').write(svg)
-    open('_t.html', 'w').write('<html><body style="margin:0;background:transparent">%s</body></html>' % svg)
-    subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000',
-                    '--window-size=256,556', '--screenshot=_t.png', 'file://' + os.path.abspath('_t.html')], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(['convert', '_t.png', '-crop', '256x256+0+0', '+repage', name + '_256.png'])
+names = list(tiles.keys())
+js = """
+const { chromium } = require('playwright');
+const fs = require('fs');
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 256, height: 256 }, deviceScaleFactor: 1 });
+  for (const name of %s) {
+    const svg = fs.readFileSync(name + '.svg', 'utf8');
+    await p.setContent('<html><body style="margin:0;background:transparent">' + svg + '</body></html>');
+    await p.screenshot({ path: name + '_256.png', omitBackground: true, clip: { x: 0, y: 0, width: 256, height: 256 } });
+  }
+  await b.close();
+})();
+""" % names
+open('_render.js', 'w').write(js)
+env = dict(os.environ, NODE_PATH=subprocess.check_output(['npm', 'root', '-g']).decode().strip())
+subprocess.run(['node', '_render.js'], check=True, env=env)
+os.remove('_render.js')
+for name in names:
     subprocess.run(['convert', name + '_256.png', '-resize', '52x52', name + '_52.png'])
+    # The game loads 128 px copies (Resources/Tiles/<Name>.png, with their .meta already in place); Locked has none there.
+    if os.path.exists('%s/Tiles/%s.png' % (RES, name)):
+        subprocess.run(['convert', name + '_256.png', '-resize', '128x128', '%s/Tiles/%s.png' % (RES, name)])
     print('wrote', name)
-os.remove('_t.html'); os.remove('_t.png')

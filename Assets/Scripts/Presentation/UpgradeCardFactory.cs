@@ -40,6 +40,7 @@ namespace Contigu.Presentation
                 icon.sprite = signIcon;
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
+                UIFactory.AddDropShadow(icon, Mathf.Max(2f, IconSize * 0.04f));
                 icon.rectTransform.anchorMin = new Vector2(0.5f, 1f);
                 icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 icon.rectTransform.pivot = new Vector2(0.5f, 1f);
