@@ -45,7 +45,7 @@ namespace Contigu.Presentation
             // Above the shop's choice screens, which bring themselves to the front when they open (Menu, at 100, stays above this).
             var settingsCanvas = overlay.gameObject.AddComponent<Canvas>();
             settingsCanvas.overrideSorting = true;
-            settingsCanvas.sortingOrder = 90;
+            settingsCanvas.sortingOrder = 110;
             overlay.gameObject.AddComponent<GraphicRaycaster>();
 
             var header = UIFactory.CreateText(_root, "Header", "Menu", 32, UITheme.TextOnBackground);
@@ -74,15 +74,15 @@ namespace Contigu.Presentation
             rulesRect.anchorMin = new Vector2(0.5f, 1f);
             rulesRect.anchorMax = new Vector2(0.5f, 1f);
             rulesRect.pivot = new Vector2(0.5f, 1f);
-            rulesRect.anchoredPosition = new Vector2(0f, -330f);
+            rulesRect.anchoredPosition = new Vector2(0f, -300f);
             rulesRect.sizeDelta = new Vector2(220f, MobileSetup.TouchMin(46f));
             rulesBtn.onClick.AddListener(() => { Hide(); if (RulesRequested != null) RulesRequested(); });
 
-            BuildVolumeRow(_root, -140f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
-            BuildVolumeRow(_root, -206f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
-            BuildVolumeRow(_root, -272f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
+            BuildVolumeRow(_root, -130f, "Master Volume", UISprites.ScoreBarFill, VolumeSettings.MasterVolume, VolumeSettings.SetMasterVolume);
+            BuildVolumeRow(_root, -185f, "Music Volume", UISprites.PiecesBarFill, VolumeSettings.MusicVolume, VolumeSettings.SetMusicVolume);
+            BuildVolumeRow(_root, -240f, "SFX Volume", UISprites.SfxBarFill, VolumeSettings.SfxVolume, VolumeSettings.SetSfxVolume);
 
-            var closeBtn = UIFactory.CreateButton(_root, "Close", "Resume", UISprites.ChooseButtonBackground, 18);
+            var closeBtn = UIFactory.CreateButton(_root, "Close", "Back", UISprites.ChooseButtonBackground, 18);
             var closeRect = closeBtn.GetComponent<RectTransform>();
             closeRect.anchorMin = new Vector2(0.5f, 0f);
             closeRect.anchorMax = new Vector2(0.5f, 0f);
@@ -93,10 +93,10 @@ namespace Contigu.Presentation
 
             if (inRun)
             {
-                BuildConfirmButton(_root, "AbandonRun", "Abandon run", -540f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
-                BuildConfirmButton(_root, "MainMenu", "Save & quit", -470f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
+                BuildConfirmButton(_root, "AbandonRun", "Abandon run", -486f, () => { Hide(); if (AbandonRunRequested != null) AbandonRunRequested(); });
+                BuildConfirmButton(_root, "MainMenu", "Save & quit", -424f, () => { Hide(); if (MainMenuRequested != null) MainMenuRequested(); }, requireConfirm: false);
             }
-            BuildResetButton(_root, inRun ? -610f : -470f);
+            BuildResetButton(_root, inRun ? -548f : -424f);
             BuildMotionToggle(_root);
             BuildSpeedToggle(_root);
 
@@ -113,7 +113,7 @@ namespace Contigu.Presentation
             rect.anchorMin = new Vector2(0.5f, 1f);
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(165f, -400f);
+            rect.anchoredPosition = new Vector2(165f, -362f);
             rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = "Animation speed: " + GameSpeed.Label;
@@ -133,7 +133,7 @@ namespace Contigu.Presentation
             rect.anchorMin = new Vector2(0.5f, 1f);
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(-165f, -400f);
+            rect.anchoredPosition = new Vector2(-165f, -362f);
             rect.sizeDelta = new Vector2(300f, MobileSetup.TouchMin(46f));
             var label = button.GetComponentInChildren<Text>();
             label.text = Loc.T(MotionSettings.Reduced ? "settings.motionOn" : "settings.motionOff");

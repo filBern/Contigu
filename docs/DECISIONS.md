@@ -9612,3 +9612,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Menu : tout ancré depuis le haut
 - Les curseurs étaient ancrés en haut et les boutons en bas : sur l'écran du shop, « How to play » chevauchait le curseur SFX et les deux boutons de réglage se chevauchaient. Tout est maintenant ancré en haut, en colonne (curseurs −140/−206/−272, How to play −330, réglages −400, Save & quit −470, Abandon −540, Reset −610 ; sans run : Reset −470), Resume reste en bas. Non vérifié dans Unity.
+
+## 2026-11-12 — Menu : bouton « Back », Menu du shop recouvert
+- Le menu passe au-dessus du bouton Menu du shop (tri 110 > 100), qui restait visible à côté ; « Resume » devient « Back ». Colonne resserrée (pas de ~60 sur un canvas de ~700 de haut) : Reset data chevauchait Back. Non vérifié dans Unity.
