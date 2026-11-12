@@ -39,9 +39,15 @@ namespace Contigu.Presentation
 
         private void Apply(Text label, string richText, Sprite sprite)
         {
+            // A tooltip pushes the same text again every frame while it is hovered: when nothing changed, leave the text and the icons as they are.
+            string incoming = richText ?? string.Empty;
+            if (_text == label && _withWord == incoming && _sprite == sprite)
+            {
+                return;
+            }
             _text = label;
             _sprite = sprite;
-            _withWord = richText ?? string.Empty;
+            _withWord = incoming;
             _starts.Clear();
             _rawStarts.Clear();
             for (int i = 0; i < _icons.Count; i++)

@@ -9566,3 +9566,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Icône de Pollen en ligne 50 % plus grosse
 - Taille de l'icône : 0,9 → 1,35 de la hauteur de ligne ; le blanc qu'elle occupe passe de quatre à six espaces insécables pour que le texte ne la touche pas. Non vérifié dans Unity.
+
+## 2026-11-12 — « Pollen » devient l'icône dans les autres textes
+- `InlineIconLabel` (déjà employé pour les effets de météo) est appliqué à l'étiquette de description de **toutes les infobulles** (`TooltipView` : fertilizers, sprouts, traits, tuiles, météo, croissance…), à la description des **cartes d'upgrade** (`UpgradeCardFactory`) et à celle des **cartes de fertilizer** (`ModifierCardFactory`). Une infobulle réaffiche son texte à chaque image tant qu'elle est survolée : `InlineIconLabel.Set` ne fait rien quand le texte n'a pas changé, pour que l'icône ne clignote pas. Pas appliqué : les textes courts de la boutique (prix), les puces « +Pollen » des popups (déjà une icône), le tutoriel. Non vérifié dans Unity : une infobulle calcule sa hauteur avec les blancs (six espaces insécables) à la place du mot.

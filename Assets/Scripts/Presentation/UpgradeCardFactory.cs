@@ -65,6 +65,7 @@ namespace Contigu.Presentation
             }
 
             var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description, 23), 23, Color.white);
+            InlineIconLabel.Set(descLabel, descLabel.text, Contigu.Data.VisualDefaults.PollenSprite);
             float descHeight = PreferredHeight(descLabel, Width);
             PositionRow(descLabel, descY, descHeight);
 

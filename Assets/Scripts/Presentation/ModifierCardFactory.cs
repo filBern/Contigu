@@ -47,6 +47,7 @@ namespace Contigu.Presentation
 
             float descWidth = width - 16f;
             var descLabel = UIFactory.CreateText(cardTransform, "Desc", DescriptionTextFormatter.Colorize(def.Description, descFontSize), descFontSize, UITheme.TextPrimary);
+            InlineIconLabel.Set(descLabel, descLabel.text, Contigu.Data.VisualDefaults.PollenSprite);
             descLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             descLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             descLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
