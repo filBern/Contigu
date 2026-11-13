@@ -44,10 +44,10 @@ namespace Contigu.Core
         /// </summary>
         public const int BlisterModifierWeight = 21;
 
-        /// <summary>How likely a fertilizer is to be drawn (Blister and Fertilizer Pack): by its rarity (see <see cref="ModifierRarityUtility.DrawWeight"/>), and a quarter of the usual weight for the Piggy Bank.</summary>
+        /// <summary>How likely a fertilizer is to be drawn (Blister and Fertilizer Pack): by its rarity (see <see cref="ModifierRarityUtility.DrawWeight"/>); the Legendary ones get a quarter of the base weight.</summary>
         public static int ModifierDrawWeight(ModifierId id)
         {
-            return id == ModifierId.Tirelire ? BlisterModifierWeight / 4 : ModifierRarityUtility.DrawWeight(ModifierRarityUtility.Of(id));
+            return ModifierRarityUtility.DrawWeight(ModifierRarityUtility.Of(id));
         }
 
         /// <summary>
