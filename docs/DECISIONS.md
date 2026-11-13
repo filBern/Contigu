@@ -9640,3 +9640,4 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-13 — Résonance : dire la catégorie commune
 - Retour joueur : Momentum et Seed Bank résonnent sans synergie apparente. Ils sont tous deux de la catégorie « Run » (Roguelike), fourre-tout d'effets sans rapport ; l'infobulle disait seulement « same kind ». Les infobulles (pastille Roots, lien de résonance, résumé de manche) nomment maintenant la catégorie (« both Run fertilizers (same category) »). La règle elle-même (même catégorie) n'est pas changée : à rediscuter si « Run » reste trop hétérogène. Non vérifié dans Unity.
+- Mesure complète après la règle de la case commune (planner, profondeur 2, 400 parties, graine 1) : Spring 11,8 %, Winter 10,5 %, Summer 5,0 %, Autumn 18,8 %, Orchard 8,0 %, Greenhouse 4,5 % (avant : 11 / 12 / 6 / 17 / 8 / 6). Écarts dans le bruit : `LateHpMultiplier` inchangé.
