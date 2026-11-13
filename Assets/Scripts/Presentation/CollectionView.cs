@@ -23,6 +23,8 @@ namespace Contigu.Presentation
             public string Subtitle;
             public Sprite Icon;
             public int Id;
+            /// <summary>Set for a fertilizer: its tooltip uses the fertilizer card (rarity box, category pill).</summary>
+            public ModifierDefinition Modifier;
             /// <summary>Sprouts and fertilizers that start locked: how they are earned (see UnlockCatalog); null for everything else.</summary>
             public UnlockEntry Unlock;
         }
@@ -248,6 +250,10 @@ namespace Contigu.Presentation
             else if (discovered)
             {
                 hover.Init(_tooltip, entry.Name, DescriptionTextFormatter.Colorize(entry.Description, 14), entry.Subtitle, UITheme.TextMuted);
+                if (entry.Modifier != null)
+                {
+                    hover.SetModifierCard(entry.Modifier);
+                }
             }
             else
             {
@@ -268,7 +274,7 @@ namespace Contigu.Presentation
                 case CollectionCategory.Fertilizer:
                     foreach (var def in ModifierCatalog.All)
                     {
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetRarityLabel(def.Id) + " · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Fertilizer, (int)def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetRarityLabel(def.Id) + " · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id), Modifier = def, Unlock = UnlockCatalog.Find(UnlockKind.Fertilizer, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Sprout:

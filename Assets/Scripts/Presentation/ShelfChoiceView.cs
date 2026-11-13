@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,6 +17,8 @@ namespace Contigu.Presentation
         public string Name;
         public string Body;
         public string Subtitle;
+        /// <summary>For a fertilizer option: its tooltip gets the fertilizer card (rarity box, category pill).</summary>
+        public ModifierDefinition Modifier;
         /// <summary>Icon-like options (fertilizers, upgrade glyphs, masteries) fill their whole cell and may use bigger cells than seed previews.</summary>
         public bool FillCell;
         /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
@@ -147,6 +150,10 @@ namespace Contigu.Presentation
             {
                 var hover = cell.gameObject.AddComponent<HoverTooltip>();
                 hover.Init(_tooltip, entry.Name, entry.Body, entry.Subtitle, UITheme.TextMuted);
+                if (entry.Modifier != null)
+                {
+                    hover.SetModifierCard(entry.Modifier);
+                }
             }
         }
 

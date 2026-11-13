@@ -382,6 +382,7 @@ namespace Contigu.Presentation
                     Name = def.Name,
                     Body = DescriptionTextFormatter.Colorize(def.Description, 14),
                     Subtitle = Loc.T("choice.fertilizerTag", ModifierVisualDefaults.GetCategoryLabel(def.Category)),
+                    Modifier = def,
                     FillCell = true
                 });
             }

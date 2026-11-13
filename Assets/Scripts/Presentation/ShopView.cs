@@ -996,6 +996,8 @@ namespace Contigu.Presentation
                 badge.rectTransform.anchoredPosition = Vector2.zero;
                 hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14),
                     ShopReason(Loc.T("shop.fertilizer", ModifierVisualDefaults.GetRarityLabel(modifierDef.Id) + " · " + ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category)), blocked ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : null, price - run.Lueur), UITheme.TextMuted);
+                // Same card as an owned fertilizer's: rarity box, category pill, and the reason it cannot be bought (blocked or short of Pollen) as a red pill.
+                hover.SetModifierCard(modifierDef, blocked ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : price > run.Lueur ? Loc.T("shop.needPollen", price - run.Lueur) : null);
             }
             else
             {

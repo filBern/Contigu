@@ -1,3 +1,4 @@
+using Contigu.Core;
 using Contigu.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -15,6 +16,9 @@ namespace Contigu.Presentation
 
         private string _footer;
         private bool _pinned;
+        // A fertilizer's card: category pill (+ a reason pill) under the title, rarity box in the title band (see SetModifierCard).
+        private System.Collections.Generic.List<TooltipChip> _chips;
+        private TooltipChip? _badge;
 
         /// <summary>The element whose tooltip is up right now. A parent that re-pushes its own tooltip every frame (a fertilizer's sack) stands aside while one of its children (growth, Roots) owns it.</summary>
         public static HoverTooltip Active { get; private set; }
@@ -36,6 +40,20 @@ namespace Contigu.Presentation
             _pinned = false;
             _footer = null;
             HideNow();
+        }
+
+        /// <summary>Gives this tooltip the fertilizer layout shared by every place a fertilizer is shown: its rarity in a colored box at the title's corner, its category as a pill, and (optionally) why it cannot be bought as a red pill.</summary>
+        public void SetModifierCard(ModifierDefinition def, string reason = null)
+        {
+            _chips = new System.Collections.Generic.List<TooltipChip>
+            {
+                new TooltipChip(ModifierVisualDefaults.GetCategoryLabel(def.Category), ModifierVisualDefaults.GetCategoryColor(def.Category))
+            };
+            if (!string.IsNullOrEmpty(reason))
+            {
+                _chips.Add(new TooltipChip(reason, UITheme.Danger));
+            }
+            _badge = new TooltipChip(ModifierVisualDefaults.GetRarityLabel(def.Id), ModifierVisualDefaults.GetRarityColor(def.Id));
         }
 
         public void Init(TooltipView tooltip, string name, string description, string subtitle = null, Color? subtitleColor = null)
@@ -67,7 +85,7 @@ namespace Contigu.Presentation
             if (_tooltip != null)
             {
                 Active = this;
-                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, footer: _footer, placeAbove: true);
+                _tooltip.Show(_name, _description, (RectTransform)transform, _subtitle, _subtitleColor, footer: _footer, placeAbove: true, chips: _chips, badge: _badge);
             }
         }
 
