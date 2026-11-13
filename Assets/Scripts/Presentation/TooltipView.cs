@@ -368,7 +368,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Dark lettering on a light box, cream on a dark one.</summary>
-        private static Color InkOn(Color box)
+        internal static Color InkOn(Color box)
         {
             float luminance = 0.299f * box.r + 0.587f * box.g + 0.114f * box.b;
             return luminance > 0.5f ? new Color(box.r * 0.25f, box.g * 0.25f, box.b * 0.25f, 1f) : new Color(1f, 0.96f, 0.86f, 1f);
