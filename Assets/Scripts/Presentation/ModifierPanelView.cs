@@ -693,9 +693,12 @@ namespace Contigu.Presentation
             live.Gap = UIFactory.CreateUIObject("DragGap", _rowsContainer);
             live.Gap.sizeDelta = rect.sizeDelta;
             live.Gap.SetSiblingIndex(rect.GetSiblingIndex());
-            var layoutElement = badge.GetComponent<LayoutElement>() ?? badge.gameObject.AddComponent<LayoutElement>();
+            // Explicit == null (Unity's own check): in the Editor GetComponent returns a fake non-null object when the component is missing, which ?? would let through.
+            var layoutElement = badge.GetComponent<LayoutElement>();
+            if (layoutElement == null) { layoutElement = badge.gameObject.AddComponent<LayoutElement>(); }
             layoutElement.ignoreLayout = true;
-            var group = badge.GetComponent<CanvasGroup>() ?? badge.gameObject.AddComponent<CanvasGroup>();
+            var group = badge.GetComponent<CanvasGroup>();
+            if (group == null) { group = badge.gameObject.AddComponent<CanvasGroup>(); }
             group.blocksRaycasts = false;
             rect.SetAsLastSibling();
             if (!MotionSettings.Reduced)
