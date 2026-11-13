@@ -35,7 +35,9 @@ namespace Contigu.Presentation
             }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
             string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
-            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity));
+            var chips = new System.Collections.Generic.List<TooltipChip> { new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid), UpgradeVisualDefaults.GetPoolColor(UpgradePool.Grid)) };
+            var rarityBadge = new TooltipChip(UpgradeVisualDefaults.GetRarityLabel(rarity), UpgradeVisualDefaults.GetRarityColor(rarity));
+            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity), chips: chips, badge: rarityBadge);
         }
 
         public void OnPointerExit(PointerEventData eventData)

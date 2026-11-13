@@ -23,6 +23,8 @@ namespace Contigu.Presentation
         public string Name;
         public string Body;
         public string Subtitle;
+        /// <summary>For a tile upgrade source: its tooltip gets the upgrade card (rarity box, pool box).</summary>
+        public UpgradeDefinition Upgrade;
     }
 
     /// <summary>
@@ -205,6 +207,10 @@ namespace Contigu.Presentation
                 UpgradeVisualDefaults.PlaceGlyph(_sourceGlyph.rectTransform, source.Surface, SourceSize);
             }
             _sourceTooltip.Init(_tooltip, source.Name, source.Body, source.Subtitle, UITheme.TextMuted);
+            if (source.Upgrade != null)
+            {
+                _sourceTooltip.SetUpgradeCard(source.Upgrade);
+            }
 
             var confirmRect = ConfirmButton.GetComponent<RectTransform>();
             ConfirmButton.gameObject.SetActive(withConfirm);
@@ -220,6 +226,7 @@ namespace Contigu.Presentation
                 Name = def.Name,
                 Body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(def.Description, 14), def.Id),
                 Subtitle = Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(def.Rarity), UpgradeVisualDefaults.GetPoolLabel(def.Pool).Replace(" Upgrade", "")),
+                Upgrade = def,
                 Art = from == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
                     : from == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")
                     : (UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id))

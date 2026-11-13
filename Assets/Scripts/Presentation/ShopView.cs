@@ -1013,6 +1013,7 @@ namespace Contigu.Presentation
                 sign.rectTransform.offsetMin = sign.rectTransform.offsetMax = Vector2.zero;
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);
+                hover.SetUpgradeCard(upgradeDef, blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : price > run.Lueur ? Loc.T("shop.needPollen", price - run.Lueur) : null);
             }
             string blockedLabel = slot.Kind == ShopSlotKind.Upgrade && !gardenFull ? Loc.T("shop.unavailable") : Loc.T("shop.full", EconomyConstants.MaxActiveModifiers);
             BuildPriceBadge(item, blocked ? blockedLabel : price.ToString(), run.Lueur >= price || blocked, !blocked);

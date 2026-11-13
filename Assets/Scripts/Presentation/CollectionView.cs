@@ -25,6 +25,8 @@ namespace Contigu.Presentation
             public int Id;
             /// <summary>Set for a fertilizer: its tooltip uses the fertilizer card (rarity box, category pill).</summary>
             public ModifierDefinition Modifier;
+            /// <summary>Set for a sprout: its tooltip uses the upgrade card (rarity box, pool box).</summary>
+            public UpgradeDefinition Upgrade;
             /// <summary>Sprouts and fertilizers that start locked: how they are earned (see UnlockCatalog); null for everything else.</summary>
             public UnlockEntry Unlock;
         }
@@ -254,6 +256,10 @@ namespace Contigu.Presentation
                 {
                     hover.SetModifierCard(entry.Modifier);
                 }
+                if (entry.Upgrade != null)
+                {
+                    hover.SetUpgradeCard(entry.Upgrade);
+                }
             }
             else
             {
@@ -284,7 +290,7 @@ namespace Contigu.Presentation
                         {
                             continue;
                         }
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Icon = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Sprout, (int)def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Upgrade = def, Icon = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Sprout, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Enemy:

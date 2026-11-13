@@ -56,6 +56,20 @@ namespace Contigu.Presentation
             _badge = new TooltipChip(ModifierVisualDefaults.GetRarityLabel(def.Id), ModifierVisualDefaults.GetRarityColor(def.Id));
         }
 
+        /// <summary>The upgrade (sprout) version of <see cref="SetModifierCard"/>: rarity in a colored box at the title's corner, the pool as a colored box under it, and the reason it cannot be bought as a red one.</summary>
+        public void SetUpgradeCard(UpgradeDefinition def, string reason = null)
+        {
+            _chips = new System.Collections.Generic.List<TooltipChip>
+            {
+                new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(def.Pool), UpgradeVisualDefaults.GetPoolColor(def.Pool))
+            };
+            if (!string.IsNullOrEmpty(reason))
+            {
+                _chips.Add(new TooltipChip(reason, UITheme.Danger));
+            }
+            _badge = new TooltipChip(UpgradeVisualDefaults.GetRarityLabel(def.Rarity), UpgradeVisualDefaults.GetRarityColor(def.Rarity));
+        }
+
         public void Init(TooltipView tooltip, string name, string description, string subtitle = null, Color? subtitleColor = null)
         {
             _tooltip = tooltip;

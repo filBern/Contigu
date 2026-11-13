@@ -304,6 +304,7 @@ namespace Contigu.Presentation
                     Name = upgrade.Name,
                     Body = body,
                     Subtitle = Loc.T("choice.sproutTag", UpgradeVisualDefaults.GetRarityLabel(upgrade.Rarity)),
+                    Upgrade = upgrade,
                     FillCell = true
                 });
             }

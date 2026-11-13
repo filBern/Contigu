@@ -107,6 +107,20 @@ namespace Contigu.Data
             }
         }
 
+        /// <summary>The color of an upgrade pool's box in tooltips (the same hues as the pools' signs: seed red, sprout blue, mastery purple, fertilizer amber, workshop green).</summary>
+        public static Color GetPoolColor(UpgradePool pool)
+        {
+            switch (pool)
+            {
+                case UpgradePool.Bank: return new Color(0.86f, 0.45f, 0.42f);
+                case UpgradePool.Grid: return new Color(0.42f, 0.60f, 0.88f);
+                case UpgradePool.Mastery: return new Color(0.66f, 0.50f, 0.80f);
+                case UpgradePool.Modifier: return new Color(0.93f, 0.72f, 0.30f);
+                case UpgradePool.Workshop: return new Color(0.35f, 0.68f, 0.48f);
+                default: return Color.gray;
+            }
+        }
+
         /// <summary>Player-facing label for an UpgradePool. "Bank"/"Grid" are internal names from an earlier design (see README); the pool itself is unchanged, only how it's labeled here.</summary>
         public static string GetPoolLabel(UpgradePool pool)
         {

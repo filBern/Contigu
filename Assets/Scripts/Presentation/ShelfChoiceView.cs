@@ -19,6 +19,8 @@ namespace Contigu.Presentation
         public string Subtitle;
         /// <summary>For a fertilizer option: its tooltip gets the fertilizer card (rarity box, category pill).</summary>
         public ModifierDefinition Modifier;
+        /// <summary>For a sprout option: its tooltip gets the upgrade card (rarity box, pool box).</summary>
+        public UpgradeDefinition Upgrade;
         /// <summary>Icon-like options (fertilizers, upgrade glyphs, masteries) fill their whole cell and may use bigger cells than seed previews.</summary>
         public bool FillCell;
         /// <summary>For a seed option: how many tiles wide the piece is (0 for the icon-like options), so the shelf can space the pieces evenly whatever their width.</summary>
@@ -153,6 +155,10 @@ namespace Contigu.Presentation
                 if (entry.Modifier != null)
                 {
                     hover.SetModifierCard(entry.Modifier);
+                }
+                if (entry.Upgrade != null)
+                {
+                    hover.SetUpgradeCard(entry.Upgrade);
                 }
             }
         }
