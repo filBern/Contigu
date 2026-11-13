@@ -428,7 +428,7 @@ namespace Contigu.Core
             /// </summary>
             public readonly IReadOnlyList<Vector2Int> BastionBonusCells;
 
-            /// <summary>Line-clear points per cell (cleared AND Bastion cells): each cell scores <see cref="ScoringConstants.LineClearBonusPerCell"/> times the 1-based order of the first completed line containing it (1st line 3/cell, 2nd 6/cell, 3rd 9/cell...), so breaking several lines in one placement snowballs.</summary>
+            /// <summary>Line-clear points per cell (cleared AND Bastion cells): each cell scores <see cref="ScoringConstants.LineClearBonusPerCell"/> times the 1-based order of each completed line containing it (1st line 3/cell, 2nd 6/cell, 3rd 9/cell...), so breaking several lines in one placement snowballs; a cell shared by a row and a column earns both (3 + 6 = 9).</summary>
             public readonly IReadOnlyDictionary<Vector2Int, int> LineAmounts;
 
             /// <summary>True when this placement's line clear left no filled cell on the whole grid.</summary>

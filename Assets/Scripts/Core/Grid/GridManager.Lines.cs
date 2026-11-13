@@ -87,7 +87,7 @@ namespace Contigu.Core
                 }
             }
 
-            // Escalating per-cell value by line order (rows first, then columns); a cell shared by two lines keeps the first line's value.
+            // Escalating per-cell value by line order (rows first, then columns); a cell shared by two lines earns the value of each of them (row +3 and column +6 = +9).
             var lineAmounts = new Dictionary<Vector2Int, int>();
             for (int k = 0; k < clearedLines.Count; k++)
             {
@@ -95,9 +95,11 @@ namespace Contigu.Core
                 for (int i = 0; i < Size; i++)
                 {
                     var pos = line.IsRow ? new Vector2Int(i, line.Index) : new Vector2Int(line.Index, i);
-                    if ((cellsToClear.Contains(pos) || bastionBonus.Contains(pos)) && !lineAmounts.ContainsKey(pos))
+                    if (cellsToClear.Contains(pos) || bastionBonus.Contains(pos))
                     {
-                        lineAmounts[pos] = ScoringConstants.LineClearBonusPerCell * (k + 1);
+                        int before;
+                        lineAmounts.TryGetValue(pos, out before);
+                        lineAmounts[pos] = before + ScoringConstants.LineClearBonusPerCell * (k + 1);
                     }
                 }
             }

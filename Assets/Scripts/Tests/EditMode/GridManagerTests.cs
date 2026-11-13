@@ -1167,7 +1167,7 @@ namespace Contigu.Tests
         }
 
         [Test]
-        public void PlacePiece_RowAndColumnAtOnce_TheSharedCellScoresOnlyOnce()
+        public void PlacePiece_RowAndColumnAtOnce_TheSharedCellScoresBothLines()
         {
             var grid = new GridManager();
             var single = PieceShapeCatalog.Get(ShapeId.Single);
@@ -1180,14 +1180,16 @@ namespace Contigu.Tests
             var result = grid.PlacePiece(single, PieceColor.Lime, 0, 0);
 
             int atSharedCell = 0;
+            int sharedAmount = 0;
             int total = 0;
             foreach (var e in result.ScoreEvents)
             {
                 if (e.Type != ScoreEventType.LineClear) continue;
                 total++;
-                if (e.Position == new Vector2Int(0, 0)) atSharedCell++;
+                if (e.Position == new Vector2Int(0, 0)) { atSharedCell++; sharedAmount = e.Amount; }
             }
-            Assert.AreEqual(1, atSharedCell, "line-clear events on the shared cell");
+            Assert.AreEqual(1, atSharedCell, "one event on the shared cell");
+            Assert.AreEqual(ScoringConstants.LineClearBonusPerCell * 3, sharedAmount, "row (+3) and column (+6) both count");
             Assert.AreEqual(GridManager.Size * 2 - 1, total, "one event per cleared cell");
             Assert.AreEqual(GridManager.Size * 2 - 1, result.ClearedCells.Count);
         }

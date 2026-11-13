@@ -9634,3 +9634,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-13 — Collection : étal de bacs de bois
 - Fond de planches de la boutique (`StallBackdrop`), titre en plaque (`ShopSign.BuildPlaque`), barre de progression cerclée avec ombre, chaque entrée en petit bac (`PlotWoodLight` découverte, `PlotWood` sombre à découvrir) avec ombre portée et icône ombrée ; repli sur l'ancien rendu si l'art manque. Onglets et bouton Close étaient déjà des plots. Non vérifié dans Unity (cellules de 58 px : à juger sur capture).
+
+## 2026-11-13 — Case commune à une rangée et une colonne : les deux lignes comptent
+- Avant : une case partagée gardait la valeur de la première ligne (+3). Maintenant elle gagne la valeur de chaque ligne qu'elle ferme (rangée +3 et colonne +6 = +9), en un seul popup. Règle des tutoriels mise à jour. Mesure du planner (profondeur 2, 400 parties, graine 1) : Spring 11,8 %, Winter 10,5 % (avant 11 et 12) ; les autres challenges sont en cours de mesure, voir la suite.
