@@ -106,12 +106,12 @@ namespace Contigu.Presentation
             // same badge instance stays on screen.
             string categoryLabel = ModifierVisualDefaults.GetCategoryLabel(_def.Category);
             string subtitle = ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel;
-            // The fertilizer's card in pills: its rarity (the tooltip's accent) and its category (colored).
+            // The category as a colored pill under the title; the rarity is a small colored box in the title band's corner (where the sell value used to be).
             var chips = new System.Collections.Generic.List<TooltipChip>
             {
-                new TooltipChip(ModifierVisualDefaults.GetRarityLabel(_def.Id), ModifierVisualDefaults.GetRarityColor(_def.Id)),
                 new TooltipChip(categoryLabel, ModifierVisualDefaults.GetCategoryColor(_def.Category)),
             };
+            var rarityBadge = new TooltipChip(ModifierVisualDefaults.GetRarityLabel(_def.Id), ModifierVisualDefaults.GetRarityColor(_def.Id));
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
             // Progressive/incremental modifiers get an extra line showing
             // their current effective state, appended to the description
@@ -135,12 +135,7 @@ namespace Contigu.Presentation
                     description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
                 }
             }
-            // Same formula as RunManager.SellModifier (base price minus 1),
-            // shown only for badges the side panel builds (already owned
-            // and sellable); draft/shop-candidate badges never pass
-            // showSellValue.
-            int? sellValue = _showSellValue ? ModifierPricing.GetPrice(_def.Id) - 1 : (int?)null;
-            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, sellValue: sellValue, chips: chips);
+            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, chips: chips, badge: rarityBadge);
         }
     }
 }

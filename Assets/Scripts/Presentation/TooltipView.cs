@@ -61,6 +61,9 @@ namespace Contigu.Presentation
         private const float ChipRowGap = 5f;
         private Text _descLabel;
         private Text _sellValueLabel;
+        // Optional small colored box at the top-right of the title band (a fertilizer's rarity).
+        private Image _badgeBox;
+        private Text _badgeLabel;
         // Optional third section (enemy story line): a thin divider plus an italic muted sentence under the description.
         private Image _loreDivider;
         private Text _loreLabel;
@@ -138,6 +141,17 @@ namespace Contigu.Presentation
             _sellValueLabel.rectTransform.sizeDelta = new Vector2(SellValueWidth, 22f);
             _sellValueLabel.gameObject.SetActive(false);
 
+            _badgeBox = UIFactory.CreatePanel(_panel, "BadgeBox", Color.white);
+            _badgeBox.raycastTarget = false;
+            _badgeBox.rectTransform.anchorMin = _badgeBox.rectTransform.anchorMax = _badgeBox.rectTransform.pivot = new Vector2(1f, 1f);
+            _badgeBox.rectTransform.anchoredPosition = new Vector2(-Padding - 4f, -BandInset - (HeaderHeight - 24f) * 0.5f);
+            UIFactory.AddThickOutline(_badgeBox, UITheme.Border, 1.5f);
+            _badgeLabel = UIFactory.CreateText(_badgeBox.transform, "Text", "", 14, UITheme.TextPrimary, TextAnchor.MiddleCenter);
+            _badgeLabel.raycastTarget = false;
+            _badgeLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            UIFactory.StretchFull(_badgeLabel.rectTransform);
+            _badgeBox.gameObject.SetActive(false);
+
             // Subtitle (rarity / category): a small pill tinted with its own color, under the title band.
             _subtitleChip = UIFactory.CreatePanel(_panel, "SubtitleChip", new Color(0f, 0f, 0f, 0.1f));
             _subtitleChip.raycastTarget = false;
@@ -203,7 +217,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false, System.Collections.Generic.IReadOnlyList<TooltipChip> chips = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false, System.Collections.Generic.IReadOnlyList<TooltipChip> chips = null, TooltipChip? badge = null)
         {
             _nameLabel.text = DescriptionTextFormatter.ColorizeFlowers(name);
 
@@ -213,7 +227,20 @@ namespace Contigu.Presentation
             {
                 _sellValueLabel.text = MobileSetup.IsTouchDevice ? "Tap, then Sell +" + sellValue.Value : "Sell +" + sellValue.Value + " (X)";
             }
-            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f), HeaderHeight);
+            bool hasBadge = badge.HasValue;
+            float badgeWidth = 0f;
+            _badgeBox.gameObject.SetActive(hasBadge);
+            if (hasBadge)
+            {
+                // A small box in the rarity's color, in the title band's right corner.
+                _badgeLabel.text = badge.Value.Text;
+                var tint = badge.Value.Color;
+                _badgeBox.color = new Color(tint.r, tint.g, tint.b, 1f);
+                _badgeLabel.color = new Color(tint.r * 0.3f, tint.g * 0.3f, tint.b * 0.3f, 1f);
+                badgeWidth = Mathf.Ceil(_badgeLabel.preferredWidth + 20f);
+                _badgeBox.rectTransform.sizeDelta = new Vector2(badgeWidth, 24f);
+            }
+            _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f) - (hasBadge ? badgeWidth + 6f : 0f), HeaderHeight);
 
             bool hasChips = chips != null && chips.Count > 0;
             bool hasSubtitle = !hasChips && !string.IsNullOrEmpty(subtitle);
@@ -243,7 +270,7 @@ namespace Contigu.Presentation
             if (hasChips)
             {
                 // The pills take the subtitle's place: rows of rounded tints, wrapped at the panel's width.
-                accent = chips[0].Color;
+                accent = hasBadge ? badge.Value.Color : chips[0].Color;
                 _accentLine.color = new Color(accent.r, accent.g, accent.b, 1f);
                 contentTop = BandInset + HeaderHeight + AccentHeight + ChipTopGap;
                 float cursorX = Padding;
