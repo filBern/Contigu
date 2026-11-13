@@ -105,20 +105,13 @@ namespace Contigu.Presentation
             // progressive line every placement at all) for as long as this
             // same badge instance stays on screen.
             string categoryLabel = ModifierVisualDefaults.GetCategoryLabel(_def.Category);
-            string subtitle = _usageCountProvider != null
-                ? ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel + " · Used " + _usageCountProvider(_def.Id) + "x this run"
-                : ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel;
-            // The fertilizer's card in pills: its rarity (the tooltip's accent), its category (colored), what it costs in the shop, and how often it has triggered this run.
+            string subtitle = ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel;
+            // The fertilizer's card in pills: its rarity (the tooltip's accent) and its category (colored).
             var chips = new System.Collections.Generic.List<TooltipChip>
             {
                 new TooltipChip(ModifierVisualDefaults.GetRarityLabel(_def.Id), ModifierVisualDefaults.GetRarityColor(_def.Id)),
                 new TooltipChip(categoryLabel, ModifierVisualDefaults.GetCategoryColor(_def.Category)),
-                new TooltipChip("Cost " + ModifierPricing.GetPrice(_def.Id), VisualDefaults.GoldenColor),
             };
-            if (_usageCountProvider != null)
-            {
-                chips.Add(new TooltipChip("Used " + _usageCountProvider(_def.Id) + "x", UITheme.TextMuted));
-            }
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
             // Progressive/incremental modifiers get an extra line showing
             // their current effective state, appended to the description
