@@ -7,10 +7,28 @@ namespace Contigu.Core
         Voisinage,
         Connexions,
         Destruction,
+        /// <summary>Retired: the catch-all "Run" category was split into the eight below (kept so saved or old references still resolve; no fertilizer uses it).</summary>
         Roguelike,
 
-        /// <summary>The per-shape modifiers (Formes.*).</summary>
-        Formes
+        /// <summary>The per-shape modifiers (Formes.*), and the ones that care about a seed's size or shape.</summary>
+        Formes,
+
+        /// <summary>Weather-driven fertilizers.</summary>
+        Weather,
+        /// <summary>Fertilizers that read the enemies (alive, defeated, HP, bosses, locks).</summary>
+        Enemies,
+        /// <summary>Fertilizers that read the round's timing (first/last seed, round number, seeds or Shuffles left, sequences).</summary>
+        Tempo,
+        /// <summary>Fertilizers that read upgraded sprouts and tiles.</summary>
+        Upgrades,
+        /// <summary>Fertilizers that read the seed bag and hand slots.</summary>
+        SeedBag,
+        /// <summary>Joker (Wild) sprouts.</summary>
+        Wild,
+        /// <summary>Flat Mult with little or no condition.</summary>
+        Flat,
+        /// <summary>Fertilizers that read other fertilizers.</summary>
+        Synergy
     }
 
     /// <summary>
@@ -66,11 +84,11 @@ namespace Contigu.Core
             "+1 Mult per group cell with all 4 sides filled.");
 
         public static readonly ModifierDefinition Architecte = new ModifierDefinition(
-            ModifierId.Architecte, ModifierCategory.Roguelike, "Architect",
+            ModifierId.Architecte, ModifierCategory.Formes, "Architect",
             "x2 Mult when a 2x2 block is placed.");
 
         public static readonly ModifierDefinition Collectionneur = new ModifierDefinition(
-            ModifierId.Collectionneur, ModifierCategory.Roguelike, "Hoarder",
+            ModifierId.Collectionneur, ModifierCategory.Couleurs, "Hoarder",
             "+1 Mult per distinct color in harvested cells.");
 
         public static readonly ModifierDefinition Tricolore = new ModifierDefinition(
@@ -107,7 +125,7 @@ namespace Contigu.Core
             "+4 Mult per group cell surrounded by all 4 colors.");
 
         public static readonly ModifierDefinition Monochrome = new ModifierDefinition(
-            ModifierId.Monochrome, ModifierCategory.Roguelike, "Ashbound",
+            ModifierId.Monochrome, ModifierCategory.Couleurs, "Ashbound",
             "+0.5 Mult per group cell if the group has no jokers.");
 
         public static readonly ModifierDefinition Contraste = new ModifierDefinition(
@@ -115,7 +133,7 @@ namespace Contigu.Core
             "+1 Mult per placed cell next to a different color.");
 
         public static readonly ModifierDefinition Degrade = new ModifierDefinition(
-            ModifierId.Degrade, ModifierCategory.Roguelike, "Momentum",
+            ModifierId.Degrade, ModifierCategory.Tempo, "Momentum",
             "x2 Mult when this group is bigger than the last one scored.");
 
         public static readonly ModifierDefinition Emmitouflee = new ModifierDefinition(
@@ -123,7 +141,7 @@ namespace Contigu.Core
             "+1 Mult per group cell with all 4 diagonals filled.");
 
         public static readonly ModifierDefinition Jardinier = new ModifierDefinition(
-            ModifierId.Jardinier, ModifierCategory.Roguelike, "Gardener",
+            ModifierId.Jardinier, ModifierCategory.Voisinage, "Gardener",
             "+1 Mult per group cell next to an upgraded sprout.");
 
         public static readonly ModifierDefinition ArcEnCiel = new ModifierDefinition(
@@ -172,23 +190,23 @@ namespace Contigu.Core
         // RunManager (see RunManager.ApplyHandSlotModifierBonus).
 
         public static readonly ModifierDefinition SlotUn = new ModifierDefinition(
-            ModifierId.SlotUn, ModifierCategory.Roguelike, "Slot 1 Loyalty",
+            ModifierId.SlotUn, ModifierCategory.SeedBag, "Slot 1 Loyalty",
             "+3 Mult when played from hand slot 1.");
 
         public static readonly ModifierDefinition SlotDeux = new ModifierDefinition(
-            ModifierId.SlotDeux, ModifierCategory.Roguelike, "Slot 2 Loyalty",
+            ModifierId.SlotDeux, ModifierCategory.SeedBag, "Slot 2 Loyalty",
             "+3 Mult when played from hand slot 2.");
 
         public static readonly ModifierDefinition SlotTrois = new ModifierDefinition(
-            ModifierId.SlotTrois, ModifierCategory.Roguelike, "Slot 3 Loyalty",
+            ModifierId.SlotTrois, ModifierCategory.SeedBag, "Slot 3 Loyalty",
             "+3 Mult when played from hand slot 3.");
 
         public static readonly ModifierDefinition GrandFormat = new ModifierDefinition(
-            ModifierId.GrandFormat, ModifierCategory.Roguelike, "Overgrowth",
+            ModifierId.GrandFormat, ModifierCategory.Formes, "Overgrowth",
             "+1 Mult per cell for seeds with 3+ cells.");
 
         public static readonly ModifierDefinition HorsNorme = new ModifierDefinition(
-            ModifierId.HorsNorme, ModifierCategory.Roguelike, "Mutant Growth",
+            ModifierId.HorsNorme, ModifierCategory.Formes, "Mutant Growth",
             "+2 Mult if the seed isn't exactly 3 cells.");
 
         // Retired: the four color "Glow" fertilizers (EclatCoral/Teal/Violet/Lime) did what Devotion already does. They stay defined so an old
@@ -222,7 +240,7 @@ namespace Contigu.Core
             "x2 Mult when the group is only this seed (2+ cells) - nothing merged in.");
 
         public static readonly ModifierDefinition EspaceLibre = new ModifierDefinition(
-            ModifierId.EspaceLibre, ModifierCategory.Roguelike, "Fallow Ground",
+            ModifierId.EspaceLibre, ModifierCategory.Voisinage, "Fallow Ground",
             "x2 Mult when the board ends up with 16 plots filled or fewer.");
 
         public static readonly ModifierDefinition Rafale = new ModifierDefinition(
@@ -230,7 +248,7 @@ namespace Contigu.Core
             "x3 Mult when this AND the last placement both harvested a line.");
 
         public static readonly ModifierDefinition PetitFormat = new ModifierDefinition(
-            ModifierId.PetitFormat, ModifierCategory.Roguelike, "Seedling",
+            ModifierId.PetitFormat, ModifierCategory.Formes, "Seedling",
             "+1 Mult per cell for seeds with 2 or fewer cells.");
 
         public static readonly ModifierDefinition Fraicheur = new ModifierDefinition(
@@ -254,7 +272,7 @@ namespace Contigu.Core
             "x2 Mult when this color forms only one connected group on the board.");
 
         public static readonly ModifierDefinition Repetition = new ModifierDefinition(
-            ModifierId.Repetition, ModifierCategory.Roguelike, "Repetition",
+            ModifierId.Repetition, ModifierCategory.Formes, "Repetition",
             "xn Mult for n consecutive same-shape placements (x2 on the 2nd, x3 on the 3rd...); resets on a different shape.");
 
         public static readonly ModifierDefinition AlternancePieces = new ModifierDefinition(
@@ -278,11 +296,11 @@ namespace Contigu.Core
             "x2 Mult when the seed touches exactly 1 filled sprout, total.");
 
         public static readonly ModifierDefinition Joker = new ModifierDefinition(
-            ModifierId.Joker, ModifierCategory.Roguelike, "Wildcard",
+            ModifierId.Joker, ModifierCategory.Wild, "Wildcard",
             "Joker sprouts count as the color of one of your Devotion fertilizers.");
 
         public static readonly ModifierDefinition Densite = new ModifierDefinition(
-            ModifierId.Densite, ModifierCategory.Roguelike, "Root Density",
+            ModifierId.Densite, ModifierCategory.Voisinage, "Root Density",
             "+n Mult, n = filled cells on the board ÷ 10 - scales with how full the board is.");
 
         // Lueur-earning modifiers, each using the same trigger condition as
@@ -290,43 +308,43 @@ namespace Contigu.Core
         // instead of points or a multiplier.
 
         public static readonly ModifierDefinition MultUn = new ModifierDefinition(
-            ModifierId.MultUn, ModifierCategory.Roguelike, "Mult +1",
+            ModifierId.MultUn, ModifierCategory.Flat, "Mult +1",
             "+1 Mult. No condition.");
 
         public static readonly ModifierDefinition MultDeux = new ModifierDefinition(
-            ModifierId.MultDeux, ModifierCategory.Roguelike, "Mult +2",
+            ModifierId.MultDeux, ModifierCategory.Flat, "Mult +2",
             "+2 Mult. No condition.");
 
         public static readonly ModifierDefinition MultQuatre = new ModifierDefinition(
-            ModifierId.MultQuatre, ModifierCategory.Roguelike, "Mult +4",
+            ModifierId.MultQuatre, ModifierCategory.Flat, "Mult +4",
             "+4 Mult. No condition.");
 
         public static readonly ModifierDefinition Solidarite = new ModifierDefinition(
-            ModifierId.Solidarite, ModifierCategory.Roguelike, "Solidarity",
+            ModifierId.Solidarite, ModifierCategory.Synergy, "Solidarity",
             "+1 Mult per 2 fertilizers held, this one included.");
 
         public static readonly ModifierDefinition Copieur = new ModifierDefinition(
-            ModifierId.Copieur, ModifierCategory.Roguelike, "Mimic",
+            ModifierId.Copieur, ModifierCategory.Synergy, "Mimic",
             "Instantly copies whatever fertilizer you bought right before it. Does nothing on your first purchase.");
 
         public static readonly ModifierDefinition MultCinqRisque = new ModifierDefinition(
-            ModifierId.MultCinqRisque, ModifierCategory.Roguelike, "Volatile Brew",
+            ModifierId.MultCinqRisque, ModifierCategory.Flat, "Volatile Brew",
             "+5 Mult, but 1-in-5 chance to lose it at the end of every round.");
 
         public static readonly ModifierDefinition CartesEnchantees = new ModifierDefinition(
-            ModifierId.CartesEnchantees, ModifierCategory.Roguelike, "Enchanted Seeds",
+            ModifierId.CartesEnchantees, ModifierCategory.Upgrades, "Enchanted Seeds",
             "+0.1 Mult per upgraded seed in your seed bag, starting from a baseline of 1.");
 
         public static readonly ModifierDefinition Epuisement = new ModifierDefinition(
-            ModifierId.Epuisement, ModifierCategory.Roguelike, "Dwindling",
+            ModifierId.Epuisement, ModifierCategory.Flat, "Dwindling",
             "+13 Mult, shrinking a little with every placement for the rest of the run - destroyed once it hits 0.");
 
         public static readonly ModifierDefinition Multitude = new ModifierDefinition(
-            ModifierId.Multitude, ModifierCategory.Roguelike, "Multitude",
+            ModifierId.Multitude, ModifierCategory.SeedBag, "Multitude",
             "+1 Mult per 10 seeds currently in your seed bag.");
 
         public static readonly ModifierDefinition Experience = new ModifierDefinition(
-            ModifierId.Experience, ModifierCategory.Roguelike, "Seasoned Growth",
+            ModifierId.Experience, ModifierCategory.Upgrades, "Seasoned Growth",
             "+0.1 Mult per upgraded seed you've PLAYED this run, starting from a baseline of 1.");
 
         // Per-size-tier pairs; values from ScoringConstants.FormeSpecialistMultiplier/FormeGlowBonusPerCell.
@@ -356,15 +374,15 @@ namespace Contigu.Core
             "+1 Mult per group cell on 4-cell seeds (Square or any Tetromino).");
 
         public static readonly ModifierDefinition Pair = new ModifierDefinition(
-            ModifierId.Pair, ModifierCategory.Roguelike, "Waxing",
+            ModifierId.Pair, ModifierCategory.Formes, "Waxing",
             "x2 Mult when the scored group has an even number of cells.");
 
         public static readonly ModifierDefinition Impair = new ModifierDefinition(
-            ModifierId.Impair, ModifierCategory.Roguelike, "Waning",
+            ModifierId.Impair, ModifierCategory.Formes, "Waning",
             "x2 Mult when the scored group has an odd number of cells.");
 
         public static readonly ModifierDefinition Polyvalence = new ModifierDefinition(
-            ModifierId.Polyvalence, ModifierCategory.Roguelike, "Hardy Growth",
+            ModifierId.Polyvalence, ModifierCategory.Synergy, "Hardy Growth",
             "+1 Mult per distinct fertilizer category you hold at least one of.");
 
         public static readonly ModifierDefinition CollectionChromatique = new ModifierDefinition(
@@ -372,44 +390,44 @@ namespace Contigu.Core
             "+2 Mult per color for which you hold its Devotion fertilizer.");
 
         public static readonly ModifierDefinition Cadence = new ModifierDefinition(
-            ModifierId.Cadence, ModifierCategory.Roguelike, "Cadence",
+            ModifierId.Cadence, ModifierCategory.Formes, "Cadence",
             "x2 Mult when this placement matches BOTH a held Pair/Impair condition AND a held Format Specialist tier at once.");
 
         public static readonly ModifierDefinition Echo = new ModifierDefinition(
-            ModifierId.Echo, ModifierCategory.Roguelike, "Echo",
+            ModifierId.Echo, ModifierCategory.Synergy, "Echo",
             "Replays the fertilizer right before it in your order, as if you held a second copy of it. No effect if that fertilizer is also Echo.");
 
         /// <summary>Playtest request: "Ce serait cool un modifier qui rajoute une un 4e slot" — applied/reverted from RunManager.AddActiveModifier/RemoveActiveModifierAt (see DeckManager.SetEffectiveHandSize), unlike every other modifier above which only ever reads state, never grants a standing structural change.</summary>
         public static readonly ModifierDefinition QuatriemeEmplacement = new ModifierDefinition(
-            ModifierId.QuatriemeEmplacement, ModifierCategory.Roguelike, "Fourth Slot",
+            ModifierId.QuatriemeEmplacement, ModifierCategory.SeedBag, "Fourth Slot",
             "Adds a 4th hand slot.");
 
         public static readonly ModifierDefinition Barometre = new ModifierDefinition(
-            ModifierId.Barometre, ModifierCategory.Roguelike, "Barometer",
+            ModifierId.Barometre, ModifierCategory.Weather, "Barometer",
             "+3 Mult whenever the round's weather isn't Clear skies.");
 
         public static readonly ModifierDefinition ChasseurTempete = new ModifierDefinition(
-            ModifierId.ChasseurTempete, ModifierCategory.Roguelike, "Storm Chaser",
+            ModifierId.ChasseurTempete, ModifierCategory.Weather, "Storm Chaser",
             "x2 Mult while the weather is Frost, Heatwave or Hurricane.");
 
         public static readonly ModifierDefinition Impermeable = new ModifierDefinition(
-            ModifierId.Impermeable, ModifierCategory.Roguelike, "Weatherproof",
+            ModifierId.Impermeable, ModifierCategory.Weather, "Weatherproof",
             "Frost, Heatwave and Hurricane have no effect on your garden.");
 
         public static readonly ModifierDefinition Epines = new ModifierDefinition(
-            ModifierId.Epines, ModifierCategory.Roguelike, "Thorns",
+            ModifierId.Epines, ModifierCategory.Enemies, "Thorns",
             "+4 Mult while any enemy has a lock or blight on your plots.");
 
         public static readonly ModifierDefinition Exterminateur = new ModifierDefinition(
-            ModifierId.Exterminateur, ModifierCategory.Roguelike, "Pest Control",
+            ModifierId.Exterminateur, ModifierCategory.Enemies, "Pest Control",
             "+1 Mult per enemy already defeated this round.");
 
         public static readonly ModifierDefinition Hate = new ModifierDefinition(
-            ModifierId.Hate, ModifierCategory.Roguelike, "Haste",
+            ModifierId.Hate, ModifierCategory.Tempo, "Haste",
             "+0.1 Mult per seed still left to play this round.");
 
         public static readonly ModifierDefinition Tourbillon = new ModifierDefinition(
-            ModifierId.Tourbillon, ModifierCategory.Roguelike, "Whirlwind",
+            ModifierId.Tourbillon, ModifierCategory.Tempo, "Whirlwind",
             "+0.25 Mult per Shuffle you still have.");
 
         public static readonly ModifierDefinition PierreAngulaire = new ModifierDefinition(
@@ -493,83 +511,83 @@ namespace Contigu.Core
             "+6 Mult when the seed breaks a frozen plot free.");
 
         public static readonly ModifierDefinition Saisons = new ModifierDefinition(
-            ModifierId.Saisons, ModifierCategory.Roguelike, "Seasoned",
+            ModifierId.Saisons, ModifierCategory.Tempo, "Seasoned",
             "+0.5 Mult per round already cleared this run.");
 
         public static readonly ModifierDefinition Outsider = new ModifierDefinition(
-            ModifierId.Outsider, ModifierCategory.Roguelike, "Underdog",
+            ModifierId.Outsider, ModifierCategory.Enemies, "Underdog",
             "+3 Mult while the enemies still have more than half of their total HP.");
 
         public static readonly ModifierDefinition CoupFinal = new ModifierDefinition(
-            ModifierId.CoupFinal, ModifierCategory.Roguelike, "Finishing Blow",
+            ModifierId.CoupFinal, ModifierCategory.Enemies, "Finishing Blow",
             "+6 Mult while the enemies are down to a quarter of their total HP or less.");
 
         public static readonly ModifierDefinition DerniereGraine = new ModifierDefinition(
-            ModifierId.DerniereGraine, ModifierCategory.Roguelike, "Last Seed",
+            ModifierId.DerniereGraine, ModifierCategory.Tempo, "Last Seed",
             "x3 Mult on the last seed of the round.");
 
         public static readonly ModifierDefinition PremiereGraine = new ModifierDefinition(
-            ModifierId.PremiereGraine, ModifierCategory.Roguelike, "First Seed",
+            ModifierId.PremiereGraine, ModifierCategory.Tempo, "First Seed",
             "x2 Mult on the first seed of the round.");
 
         public static readonly ModifierDefinition Tirelire = new ModifierDefinition(
-            ModifierId.Tirelire, ModifierCategory.Roguelike, "Piggy Bank",
+            ModifierId.Tirelire, ModifierCategory.Flat, "Piggy Bank",
             "+0.1 Mult per Pollen you hold.");
 
         public static readonly ModifierDefinition BanqueGraines = new ModifierDefinition(
-            ModifierId.BanqueGraines, ModifierCategory.Roguelike, "Seed Bank",
+            ModifierId.BanqueGraines, ModifierCategory.SeedBag, "Seed Bank",
             "+0.05 Mult per seed in your bag.");
 
         public static readonly ModifierDefinition SousBois = new ModifierDefinition(
-            ModifierId.SousBois, ModifierCategory.Roguelike, "Underbrush",
+            ModifierId.SousBois, ModifierCategory.Enemies, "Underbrush",
             "+1 Mult per enemy still alive.");
 
         public static readonly ModifierDefinition DanseDePluie = new ModifierDefinition(
-            ModifierId.DanseDePluie, ModifierCategory.Roguelike, "Rain Dancer",
+            ModifierId.DanseDePluie, ModifierCategory.Weather, "Rain Dancer",
             "+4 Mult while it rains (Rain, Snowfall, Sprinkler Shower).");
 
         public static readonly ModifierDefinition DanseDuSoleil = new ModifierDefinition(
-            ModifierId.DanseDuSoleil, ModifierCategory.Roguelike, "Sun Dancer",
+            ModifierId.DanseDuSoleil, ModifierCategory.Weather, "Sun Dancer",
             "+4 Mult on Sunshine and Golden Hour days (and their indoor variants).");
 
         public static readonly ModifierDefinition Rustique = new ModifierDefinition(
-            ModifierId.Rustique, ModifierCategory.Roguelike, "Frost Hardy",
+            ModifierId.Rustique, ModifierCategory.Weather, "Frost Hardy",
             "+4 Mult while the weather is Frost (or the Freezer Door Ajar).");
 
         public static readonly ModifierDefinition CavalierVent = new ModifierDefinition(
-            ModifierId.CavalierVent, ModifierCategory.Roguelike, "Windrider",
+            ModifierId.CavalierVent, ModifierCategory.Weather, "Windrider",
             "+4 Mult in Wind and Hurricane weather (and their indoor variants).");
 
         public static readonly ModifierDefinition Matinal = new ModifierDefinition(
-            ModifierId.Matinal, ModifierCategory.Roguelike, "Early Bird",
+            ModifierId.Matinal, ModifierCategory.Tempo, "Early Bird",
             "+6 Mult during the first 5 rounds.");
 
         public static readonly ModifierDefinition Marathonien = new ModifierDefinition(
-            ModifierId.Marathonien, ModifierCategory.Roguelike, "Marathoner",
+            ModifierId.Marathonien, ModifierCategory.Tempo, "Marathoner",
             "+4 Mult from round 9 onwards.");
 
         public static readonly ModifierDefinition Pourfendeur = new ModifierDefinition(
-            ModifierId.Pourfendeur, ModifierCategory.Roguelike, "Bossbane",
+            ModifierId.Pourfendeur, ModifierCategory.Enemies, "Bossbane",
             "x2 Mult during boss rounds.");
 
         public static readonly ModifierDefinition CharmedPatch = new ModifierDefinition(
-            ModifierId.CharmedPatch, ModifierCategory.Roguelike, "Charmed Patch",
+            ModifierId.CharmedPatch, ModifierCategory.Upgrades, "Charmed Patch",
             "+1 Mult per upgraded tile in the scored group.");
 
         public static readonly ModifierDefinition Grafter = new ModifierDefinition(
-            ModifierId.Grafter, ModifierCategory.Roguelike, "Grafter",
+            ModifierId.Grafter, ModifierCategory.Upgrades, "Grafter",
             "+3 Mult when the seed you plant carries an upgrade.");
 
         public static readonly ModifierDefinition TwinGraft = new ModifierDefinition(
-            ModifierId.TwinGraft, ModifierCategory.Roguelike, "Twin Graft",
+            ModifierId.TwinGraft, ModifierCategory.Upgrades, "Twin Graft",
             "+5 Mult when the seed you plant carries 2 or more upgrades.");
 
         public static readonly ModifierDefinition Botanist = new ModifierDefinition(
-            ModifierId.Botanist, ModifierCategory.Roguelike, "Botanist",
+            ModifierId.Botanist, ModifierCategory.Upgrades, "Botanist",
             "+1 Mult per different kind of upgrade in the garden.");
 
         public static readonly ModifierDefinition Hothouse = new ModifierDefinition(
-            ModifierId.Hothouse, ModifierCategory.Roguelike, "Hothouse",
+            ModifierId.Hothouse, ModifierCategory.Upgrades, "Hothouse",
             "+1 Mult per 2 upgraded tiles in the garden.");
 
         public static readonly ModifierDefinition GoodNeighbors = new ModifierDefinition(
@@ -581,15 +599,15 @@ namespace Contigu.Core
             "+2 Mult per upgraded tile harvested by this placement.");
 
         public static readonly ModifierDefinition WildCluster = new ModifierDefinition(
-            ModifierId.WildCluster, ModifierCategory.Roguelike, "Wild Cluster",
+            ModifierId.WildCluster, ModifierCategory.Wild, "Wild Cluster",
             "+0.5 Mult per Joker tile in the scored group.");
 
         public static readonly ModifierDefinition WildReserve = new ModifierDefinition(
-            ModifierId.WildReserve, ModifierCategory.Roguelike, "Wild Reserve",
+            ModifierId.WildReserve, ModifierCategory.Wild, "Wild Reserve",
             "+0.1 Mult per Joker seed in your bag.");
 
         public static readonly ModifierDefinition WildSurge = new ModifierDefinition(
-            ModifierId.WildSurge, ModifierCategory.Roguelike, "Wild Surge",
+            ModifierId.WildSurge, ModifierCategory.Wild, "Wild Surge",
             "x2 Mult when the scored group contains a Joker tile.");
 
         public static readonly ModifierDefinition CropRotation = new ModifierDefinition(
@@ -597,7 +615,7 @@ namespace Contigu.Core
             "+0.1 Mult each time you plant a different shape than the last seed this round, stacking.");
 
         public static readonly ModifierDefinition GreenhouseLamp = new ModifierDefinition(
-            ModifierId.GreenhouseLamp, ModifierCategory.Roguelike, "Greenhouse Lamp",
+            ModifierId.GreenhouseLamp, ModifierCategory.Tempo, "Greenhouse Lamp",
             "+0.5 Mult per Shuffle you have left.");
 
         public static readonly ModifierDefinition SeedLibrary = new ModifierDefinition(

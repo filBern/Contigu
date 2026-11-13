@@ -342,7 +342,7 @@ namespace Contigu.Core
         /// <summary>Impair: xN multiplier (see GridManager.ApplyPariteImpaire) when the placement's scored group has an ODD total cell count — Pair's exact mirror.</summary>
         public const int ImpairMultiplier = 2;
 
-        /// <summary>Polyvalence: +N Mult (additive), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own Roguelike category included) — see GridManager.ApplyPolyvalence. Capped at 6 in practice (ModifierCategory's own value count).</summary>
+        /// <summary>Polyvalence: +N Mult (additive), N = the number of DISTINCT ModifierCategory values among currently held modifiers (this one's own category included) — see GridManager.ApplyPolyvalence. Capped at 4 in practice (at most 4 fertilizers held).</summary>
         public const int PolyvalenceMultPerCategory = 1;
 
         /// <summary>Collection Chromatique: +N Mult (additive), N = the number of the 4 base colors for which Devotion is currently held — see GridManager.ApplyCollectionChromatique. Capped at 4 in practice.</summary>

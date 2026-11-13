@@ -160,7 +160,15 @@ namespace Contigu.Data
             { ModifierCategory.Connexions, new Color(0.643f, 0.922f, 0.800f) }, // #a4ebcc
             { ModifierCategory.Destruction, new Color(0.710f, 0.427f, 0.498f) }, // #b56d7f
             { ModifierCategory.Roguelike, new Color(0.216f, 0.180f, 0.302f) }, // #372e4d
-            { ModifierCategory.Formes, new Color(0.380f, 0.263f, 0.388f) } // #614363
+            { ModifierCategory.Formes, new Color(0.380f, 0.263f, 0.388f) }, // #614363
+            { ModifierCategory.Weather, new Color(0.35f, 0.80f, 0.88f) },
+            { ModifierCategory.Enemies, new Color(0.89f, 0.42f, 0.36f) },
+            { ModifierCategory.Tempo, new Color(0.93f, 0.78f, 0.35f) },
+            { ModifierCategory.Upgrades, new Color(0.55f, 0.80f, 0.40f) },
+            { ModifierCategory.SeedBag, new Color(0.72f, 0.56f, 0.38f) },
+            { ModifierCategory.Wild, new Color(0.90f, 0.55f, 0.80f) },
+            { ModifierCategory.Flat, new Color(0.70f, 0.72f, 0.78f) },
+            { ModifierCategory.Synergy, new Color(0.62f, 0.45f, 0.78f) }
         };
 
         /// <summary>The player-facing name of a fertilizer's group (shown in its tooltip).</summary>
@@ -191,6 +199,14 @@ namespace Contigu.Data
                 case ModifierCategory.Destruction: return "Destruction";
                 case ModifierCategory.Roguelike: return "Run";
                 case ModifierCategory.Formes: return "Shapes";
+                case ModifierCategory.Weather: return "Weather";
+                case ModifierCategory.Enemies: return "Enemies";
+                case ModifierCategory.Tempo: return "Tempo";
+                case ModifierCategory.Upgrades: return "Upgrades";
+                case ModifierCategory.SeedBag: return "Seed Bag";
+                case ModifierCategory.Wild: return "Wild";
+                case ModifierCategory.Flat: return "Flat";
+                case ModifierCategory.Synergy: return "Synergy";
                 default: return category.ToString();
             }
         }

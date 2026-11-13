@@ -23,8 +23,8 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `MegaChaine` | Mega Chain | Connexions |
 | `Forteresse` | Fortress | Voisinage |
 | `Prisonnier` | Prisoner | Voisinage |
-| `Architecte` | Architect | Roguelike |
-| `Collectionneur` | Hoarder | Roguelike |
+| `Architecte` | Architect | Formes |
+| `Collectionneur` | Hoarder | Couleurs |
 | `Tricolore` | Triad Bloom | Couleurs |
 | `Complementaire` | Companion Bloom | Couleurs |
 | `Ilot` | Islet | Voisinage |
@@ -33,11 +33,11 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Macon` | Mason | Destruction |
 | `Demolisseur` | Demolisher | Destruction |
 | `CercleChromatique` | Alchemist's Wheel | Voisinage |
-| `Monochrome` | Ashbound | Roguelike |
+| `Monochrome` | Ashbound | Couleurs |
 | `Contraste` | Dissonant Bloom | Couleurs |
-| `Degrade` | Momentum | Roguelike |
+| `Degrade` | Momentum | Tempo |
 | `Emmitouflee` | Cocooned | Voisinage |
-| `Jardinier` | Gardener | Roguelike |
+| `Jardinier` | Gardener | Voisinage |
 | `ArcEnCiel` | Rainbow | Couleurs |
 | `Alternance` | Alternation | Couleurs |
 | `Palindrome` | Palindrome | Connexions |
@@ -48,74 +48,74 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `DevotionTeal` | Iris Devotion | Couleurs |
 | `DevotionViolet` | Sunflower Devotion | Couleurs |
 | `DevotionLime` | Fern Devotion | Couleurs |
-| `SlotUn` | Slot 1 Loyalty | Roguelike |
-| `SlotDeux` | Slot 2 Loyalty | Roguelike |
-| `SlotTrois` | Slot 3 Loyalty | Roguelike |
-| `GrandFormat` | Overgrowth | Roguelike |
-| `HorsNorme` | Mutant Growth | Roguelike |
+| `SlotUn` | Slot 1 Loyalty | SeedBag |
+| `SlotDeux` | Slot 2 Loyalty | SeedBag |
+| `SlotTrois` | Slot 3 Loyalty | SeedBag |
+| `GrandFormat` | Overgrowth | Formes |
+| `HorsNorme` | Mutant Growth | Formes |
 | `Diagonale` | Diagonal | Voisinage |
 | `Nid` | Nest | Voisinage |
 | `Solitaire` | Solitaire | Connexions |
-| `EspaceLibre` | Fallow Ground | Roguelike |
+| `EspaceLibre` | Fallow Ground | Voisinage |
 | `Rafale` | Burst | Destruction |
-| `PetitFormat` | Seedling | Roguelike |
+| `PetitFormat` | Seedling | Formes |
 | `Fraicheur` | New Growth | Couleurs |
 | `Pont` | Bridge | Connexions |
 | `Encerclement` | Encirclement | Voisinage |
 | `Boucher` | Sealer | Voisinage |
 | `GrosseFamille` | Thriving Colony | Couleurs |
-| `Repetition` | Repetition | Roguelike |
+| `Repetition` | Repetition | Formes |
 | `AlternancePieces` | Changeling Bloom | Couleurs |
 | `Combo` | Combo | Destruction |
 | `Precision` | Precision | Voisinage |
 | `Surpopulation` | Thicket | Voisinage |
 | `Minimaliste` | Lone Bloom | Voisinage |
-| `Joker` | Wildcard | Roguelike |
-| `Densite` | Root Density | Roguelike |
-| `MultUn` | Mult +1 | Roguelike |
-| `MultDeux` | Mult +2 | Roguelike |
-| `MultQuatre` | Mult +4 | Roguelike |
-| `Solidarite` | Solidarity | Roguelike |
-| `Copieur` | Mimic | Roguelike |
-| `MultCinqRisque` | Volatile Brew | Roguelike |
-| `CartesEnchantees` | Enchanted Seeds | Roguelike |
-| `Epuisement` | Dwindling | Roguelike |
-| `Multitude` | Multitude | Roguelike |
-| `Experience` | Seasoned Growth | Roguelike |
+| `Joker` | Wildcard | Wild |
+| `Densite` | Root Density | Voisinage |
+| `MultUn` | Mult +1 | Flat |
+| `MultDeux` | Mult +2 | Flat |
+| `MultQuatre` | Mult +4 | Flat |
+| `Solidarite` | Solidarity | Synergy |
+| `Copieur` | Mimic | Synergy |
+| `MultCinqRisque` | Volatile Brew | Flat |
+| `CartesEnchantees` | Enchanted Seeds | Upgrades |
+| `Epuisement` | Dwindling | Flat |
+| `Multitude` | Multitude | SeedBag |
+| `Experience` | Seasoned Growth | Upgrades |
 | `FormatPetitSpecialiste` | Seedling Specialist | Formes |
 | `FormatMoyenSpecialiste` | Sapling Specialist | Formes |
 | `FormatGrandSpecialiste` | Overgrowth Specialist | Formes |
 | `FormatPetitGlow` | Seedling Glow | Formes |
 | `FormatMoyenGlow` | Sapling Glow | Formes |
 | `FormatGrandGlow` | Overgrowth Glow | Formes |
-| `Pair` | Waxing | Roguelike |
-| `Impair` | Waning | Roguelike |
-| `Polyvalence` | Hardy Growth | Roguelike |
-| `CharmedPatch` | Charmed Patch | Roguelike |
-| `Grafter` | Grafter | Roguelike |
-| `TwinGraft` | Twin Graft | Roguelike |
-| `Botanist` | Botanist | Roguelike |
-| `Hothouse` | Hothouse | Roguelike |
+| `Pair` | Waxing | Formes |
+| `Impair` | Waning | Formes |
+| `Polyvalence` | Hardy Growth | Synergy |
+| `CharmedPatch` | Charmed Patch | Upgrades |
+| `Grafter` | Grafter | Upgrades |
+| `TwinGraft` | Twin Graft | Upgrades |
+| `Botanist` | Botanist | Upgrades |
+| `Hothouse` | Hothouse | Upgrades |
 | `GoodNeighbors` | Good Neighbors | Voisinage |
 | `Gleaner` | Gleaner | Destruction |
-| `WildCluster` | Wild Cluster | Roguelike |
-| `WildReserve` | Wild Reserve | Roguelike |
-| `WildSurge` | Wild Surge | Roguelike |
+| `WildCluster` | Wild Cluster | Wild |
+| `WildReserve` | Wild Reserve | Wild |
+| `WildSurge` | Wild Surge | Wild |
 | `CropRotation` | Crop Rotation | Formes |
-| `GreenhouseLamp` | Greenhouse Lamp | Roguelike |
+| `GreenhouseLamp` | Greenhouse Lamp | Tempo |
 | `SeedLibrary` | Seed Library | Formes |
 | `TwinBloom` | Twin Bloom | Couleurs |
 | `CollectionChromatique` | Chromatic Hoard | Couleurs |
-| `Cadence` | Cadence | Roguelike |
-| `Echo` | Echo | Roguelike |
-| `QuatriemeEmplacement` | Fourth Slot | Roguelike |
-| `Barometre` | Barometer | Roguelike |
-| `ChasseurTempete` | Storm Chaser | Roguelike |
-| `Impermeable` | Weatherproof | Roguelike |
-| `Epines` | Thorns | Roguelike |
-| `Exterminateur` | Pest Control | Roguelike |
-| `Hate` | Haste | Roguelike |
-| `Tourbillon` | Whirlwind | Roguelike |
+| `Cadence` | Cadence | Formes |
+| `Echo` | Echo | Synergy |
+| `QuatriemeEmplacement` | Fourth Slot | SeedBag |
+| `Barometre` | Barometer | Weather |
+| `ChasseurTempete` | Storm Chaser | Weather |
+| `Impermeable` | Weatherproof | Weather |
+| `Epines` | Thorns | Enemies |
+| `Exterminateur` | Pest Control | Enemies |
+| `Hate` | Haste | Tempo |
+| `Tourbillon` | Whirlwind | Tempo |
 | `PierreAngulaire` | Cornerstone | Voisinage |
 
 ## Upgrades
@@ -221,21 +221,21 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `CultureColonne` | Column Crop | Destruction |
 | `Prime` | Bounty | Destruction |
 | `BriseGlace` | Frostbreaker | Destruction |
-| `Saisons` | Seasoned | Roguelike |
-| `Outsider` | Underdog | Roguelike |
-| `CoupFinal` | Finishing Blow | Roguelike |
-| `DerniereGraine` | Last Seed | Roguelike |
-| `PremiereGraine` | First Seed | Roguelike |
-| `Tirelire` | Piggy Bank | Roguelike |
-| `BanqueGraines` | Seed Bank | Roguelike |
-| `SousBois` | Underbrush | Roguelike |
-| `DanseDePluie` | Rain Dancer | Roguelike |
-| `DanseDuSoleil` | Sun Dancer | Roguelike |
-| `Rustique` | Frost Hardy | Roguelike |
-| `CavalierVent` | Windrider | Roguelike |
-| `Matinal` | Early Bird | Roguelike |
-| `Marathonien` | Marathoner | Roguelike |
-| `Pourfendeur` | Bossbane | Roguelike |
+| `Saisons` | Seasoned | Tempo |
+| `Outsider` | Underdog | Enemies |
+| `CoupFinal` | Finishing Blow | Enemies |
+| `DerniereGraine` | Last Seed | Tempo |
+| `PremiereGraine` | First Seed | Tempo |
+| `Tirelire` | Piggy Bank | Flat |
+| `BanqueGraines` | Seed Bank | SeedBag |
+| `SousBois` | Underbrush | Enemies |
+| `DanseDePluie` | Rain Dancer | Weather |
+| `DanseDuSoleil` | Sun Dancer | Weather |
+| `Rustique` | Frost Hardy | Weather |
+| `CavalierVent` | Windrider | Weather |
+| `Matinal` | Early Bird | Tempo |
+| `Marathonien` | Marathoner | Tempo |
+| `Pourfendeur` | Bossbane | Enemies |
 
 ## Challenges (id in code, name on screen)
 
