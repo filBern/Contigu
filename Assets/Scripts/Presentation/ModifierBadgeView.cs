@@ -108,6 +108,16 @@ namespace Contigu.Presentation
             string subtitle = _usageCountProvider != null
                 ? categoryLabel + " · Used " + _usageCountProvider(_def.Id) + "x this run"
                 : categoryLabel;
+            // The fertilizer's card in pills: its category (colored), what it costs in the shop, and how often it has triggered this run.
+            var chips = new System.Collections.Generic.List<TooltipChip>
+            {
+                new TooltipChip(categoryLabel, ModifierVisualDefaults.GetCategoryColor(_def.Category)),
+                new TooltipChip("Cost " + ModifierPricing.GetPrice(_def.Id), VisualDefaults.GoldenColor),
+            };
+            if (_usageCountProvider != null)
+            {
+                chips.Add(new TooltipChip("Used " + _usageCountProvider(_def.Id) + "x", UITheme.TextMuted));
+            }
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
             // Progressive/incremental modifiers get an extra line showing
             // their current effective state, appended to the description
@@ -136,7 +146,7 @@ namespace Contigu.Presentation
             // and sellable); draft/shop-candidate badges never pass
             // showSellValue.
             int? sellValue = _showSellValue ? ModifierPricing.GetPrice(_def.Id) - 1 : (int?)null;
-            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, sellValue: sellValue);
+            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, sellValue: sellValue, chips: chips);
         }
     }
 }

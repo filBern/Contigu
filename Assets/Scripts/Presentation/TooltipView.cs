@@ -10,13 +10,26 @@ namespace Contigu.Presentation
     /// rows) — badges only carry a 2-letter abbreviation, so this is where a
     /// modifier's full name and description actually show, on hover.
     /// </summary>
+    /// <summary>One small pill of a tooltip (category, cost, usage...): its text and the color that tints it.</summary>
+    public struct TooltipChip
+    {
+        public string Text;
+        public Color Color;
+
+        public TooltipChip(string text, Color color)
+        {
+            Text = text;
+            Color = color;
+        }
+    }
+
     public sealed class TooltipView : MonoBehaviour
     {
         private const float Width = 320f;
         // Dark title band across the top, with a thin accent line (the subtitle's color) under it.
         private const float HeaderHeight = 36f;
         // How far the band sits inside the card frame on the top and sides (kept small so it fills the frame).
-        private const float BandInset = 2f;
+        private static float BandInset { get { return UISprites.Garden("WoodLight") != null ? 8f : 2f; } }
         private const float AccentHeight = 3f;
         private const float ChipHeight = 26f;
         private const float ChipGap = 8f;
@@ -43,6 +56,9 @@ namespace Contigu.Presentation
         private Image _accentLine;
         private Image _subtitleChip;
         private Coroutine _popRoutine;
+        // Extra pills (fertilizer category, cost, usage...) laid out in rows under the title; created on demand and reused.
+        private readonly System.Collections.Generic.List<(Image Back, Text Label)> _chips = new System.Collections.Generic.List<(Image, Text)>();
+        private const float ChipRowGap = 5f;
         private Text _descLabel;
         private Text _sellValueLabel;
         // Optional third section (enemy story line): a thin divider plus an italic muted sentence under the description.
@@ -59,12 +75,14 @@ namespace Contigu.Presentation
             _root = UIFactory.CreateUIObject("Tooltip", parent);
             UIFactory.StretchFull(_root);
 
-            var panelImg = UIFactory.CreateSlicedImage(_root, "Panel", UISprites.CardBackground);
-            panelImg.color = UITheme.Panel;
+            // A light wooden planter like the boxes of the garden (its own dark rim), with a deeper drop shadow.
+            var bed = UISprites.Garden("WoodLight");
+            var panelImg = UIFactory.CreateSlicedImage(_root, "Panel", bed ?? UISprites.CardBackground);
+            panelImg.color = bed != null ? Color.white : UITheme.Panel;
             panelImg.raycastTarget = false;
             var shadow = panelImg.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.38f);
-            shadow.effectDistance = new Vector2(3f, -5f);
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
+            shadow.effectDistance = new Vector2(4f, -8f);
             _panel = panelImg.rectTransform;
             // Anchored to _root's CENTER (matching the center-origin local
             // space that ScreenPointToLocalPointInRectangle returns points in
@@ -77,7 +95,10 @@ namespace Contigu.Presentation
             _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0f, 1f);
             _panel.sizeDelta = new Vector2(Width, InitialHeight);
-            UIFactory.AddThickOutline(panelImg, UITheme.Border);
+            if (bed == null)
+            {
+                UIFactory.AddThickOutline(panelImg, UITheme.Border);
+            }
 
             // Title band: dark strip across the top (clipped by nothing; inset so it hugs the card's rounded frame), accent line below.
             _headerBand = UIFactory.CreatePanel(_panel, "HeaderBand", UITheme.Background);
@@ -182,7 +203,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false, System.Collections.Generic.IReadOnlyList<TooltipChip> chips = null)
         {
             _nameLabel.text = DescriptionTextFormatter.ColorizeFlowers(name);
 
@@ -194,7 +215,8 @@ namespace Contigu.Presentation
             }
             _nameLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f - 8f - (hasSellValue ? SellValueWidth : 0f), HeaderHeight);
 
-            bool hasSubtitle = !string.IsNullOrEmpty(subtitle);
+            bool hasChips = chips != null && chips.Count > 0;
+            bool hasSubtitle = !hasChips && !string.IsNullOrEmpty(subtitle);
             _subtitleChip.gameObject.SetActive(hasSubtitle);
             Color accent = subtitleColor ?? VisualDefaults.GoldenColor;
             if (hasSubtitle && !subtitleColor.HasValue)
@@ -216,6 +238,49 @@ namespace Contigu.Presentation
                 _subtitleChip.rectTransform.sizeDelta = new Vector2(chipWidth, ChipHeight);
                 _subtitleChip.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
                 contentTop += ChipHeight + ChipGap;
+            }
+
+            if (hasChips)
+            {
+                // The pills take the subtitle's place: rows of rounded tints, wrapped at the panel's width.
+                accent = chips[0].Color;
+                _accentLine.color = new Color(accent.r, accent.g, accent.b, 1f);
+                contentTop = BandInset + HeaderHeight + AccentHeight + ChipTopGap;
+                float cursorX = Padding;
+                float rowTop = contentTop;
+                for (int i = 0; i < chips.Count; i++)
+                {
+                    while (_chips.Count <= i)
+                    {
+                        var back = UIFactory.CreatePanel(_panel, "Chip" + _chips.Count, Color.white);
+                        back.raycastTarget = false;
+                        back.rectTransform.anchorMin = back.rectTransform.anchorMax = back.rectTransform.pivot = new Vector2(0f, 1f);
+                        var label = UIFactory.CreateText(back.transform, "Text", "", 14, UITheme.TextPrimary, TextAnchor.MiddleCenter);
+                        label.raycastTarget = false;
+                        UIFactory.StretchFull(label.rectTransform);
+                        _chips.Add((back, label));
+                    }
+                    var chip = _chips[i];
+                    chip.Back.gameObject.SetActive(true);
+                    chip.Label.text = chips[i].Text;
+                    var tint = chips[i].Color;
+                    chip.Label.color = new Color(tint.r * 0.45f, tint.g * 0.45f, tint.b * 0.45f, 1f);
+                    chip.Back.color = new Color(tint.r, tint.g, tint.b, 0.4f);
+                    float chipW = Mathf.Ceil(chip.Label.preferredWidth + 22f);
+                    if (cursorX > Padding && cursorX + chipW > Width - Padding)
+                    {
+                        cursorX = Padding;
+                        rowTop += ChipHeight + ChipRowGap;
+                    }
+                    chip.Back.rectTransform.sizeDelta = new Vector2(chipW, ChipHeight);
+                    chip.Back.rectTransform.anchoredPosition = new Vector2(cursorX, -rowTop);
+                    cursorX += chipW + 6f;
+                }
+                contentTop = rowTop + ChipHeight + ChipGap;
+            }
+            for (int i = hasChips ? chips.Count : 0; i < _chips.Count; i++)
+            {
+                _chips[i].Back.gameObject.SetActive(false);
             }
 
             float usedHeight = contentTop - Padding;
