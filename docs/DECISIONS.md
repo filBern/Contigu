@@ -9637,3 +9637,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-13 — Case commune à une rangée et une colonne : les deux lignes comptent
 - Avant : une case partagée gardait la valeur de la première ligne (+3). Maintenant elle gagne la valeur de chaque ligne qu'elle ferme (rangée +3 et colonne +6 = +9), en un seul popup. Règle des tutoriels mise à jour. Mesure du planner (profondeur 2, 400 parties, graine 1) : Spring 11,8 %, Winter 10,5 % (avant 11 et 12) ; les autres challenges sont en cours de mesure, voir la suite.
+
+## 2026-11-13 — Résonance : dire la catégorie commune
+- Retour joueur : Momentum et Seed Bank résonnent sans synergie apparente. Ils sont tous deux de la catégorie « Run » (Roguelike), fourre-tout d'effets sans rapport ; l'infobulle disait seulement « same kind ». Les infobulles (pastille Roots, lien de résonance, résumé de manche) nomment maintenant la catégorie (« both Run fertilizers (same category) »). La règle elle-même (même catégorie) n'est pas changée : à rediscuter si « Run » reste trop hétérogène. Non vérifié dans Unity.

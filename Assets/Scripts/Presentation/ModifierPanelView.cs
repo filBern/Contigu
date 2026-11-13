@@ -494,7 +494,7 @@ namespace Contigu.Presentation
                     {
                         string myUnit = DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description);
                         string rootsBody = sap > 0f ? "Sap from the left: " + DescriptionTextFormatter.Amount(sap, myUnit) : string.Empty;
-                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + "Same kind next to it x" + resonating + ": " + DescriptionTextFormatter.Amount(resonating * FertilizerGrowth.ResonancePerNeighbor, myUnit); }
+                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + ModifierVisualDefaults.GetCategoryLabel(ModifierCatalog.Get(activeModifiers[i]).Category) + " fertilizer next to it x" + resonating + ": " + DescriptionTextFormatter.Amount(resonating * FertilizerGrowth.ResonancePerNeighbor, myUnit); }
                         rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + Mathf.RoundToInt(rootsBonus * 100f) + "%", rootsBody);
                     }
                     UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);
@@ -550,7 +550,8 @@ namespace Contigu.Presentation
                 }
                 if (resonate)
                 {
-                    string body = giver + " and " + receiver + " are of the same kind.\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.";
+                    string kind = ModifierVisualDefaults.GetCategoryLabel(ModifierCatalog.Get(mods[i]).Category);
+                    string body = giver + " and " + receiver + " are both " + kind + " fertilizers (same category).\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.";
                     AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, a, b, -offset, "Resonance", body);
                 }
             }

@@ -297,7 +297,7 @@ namespace Contigu.Presentation
                     MakeChip("Resonance", "Icons/Growth/Roots_Resonance", new Vector2(x, SackCenterY - offset), "Resonance", out tip);
                     if (tip != null)
                     {
-                        tip.Init(_tooltip, "Resonance", cell.Giver + " and " + cell.Receiver + " are of the same kind.\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.");
+                        tip.Init(_tooltip, "Resonance", cell.Giver + " and " + cell.Receiver + " are both " + ModifierVisualDefaults.GetCategoryLabel(ModifierCatalog.Get(steps[i].Id).Category) + " fertilizers (same category).\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.");
                     }
                 }
             }
