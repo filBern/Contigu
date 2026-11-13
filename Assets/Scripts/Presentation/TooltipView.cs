@@ -236,7 +236,7 @@ namespace Contigu.Presentation
                 _badgeLabel.text = badge.Value.Text;
                 var tint = badge.Value.Color;
                 _badgeBox.color = new Color(tint.r, tint.g, tint.b, 1f);
-                _badgeLabel.color = new Color(tint.r * 0.3f, tint.g * 0.3f, tint.b * 0.3f, 1f);
+                _badgeLabel.color = InkOn(tint);
                 badgeWidth = Mathf.Ceil(_badgeLabel.preferredWidth + 20f);
                 _badgeBox.rectTransform.sizeDelta = new Vector2(badgeWidth, 24f);
             }
@@ -282,6 +282,7 @@ namespace Contigu.Presentation
                         var back = UIFactory.CreatePanel(_panel, "Chip" + _chips.Count, Color.white);
                         back.raycastTarget = false;
                         back.rectTransform.anchorMin = back.rectTransform.anchorMax = back.rectTransform.pivot = new Vector2(0f, 1f);
+                        UIFactory.AddThickOutline(back, UITheme.Border, 1.5f);
                         var label = UIFactory.CreateText(back.transform, "Text", "", 14, UITheme.TextPrimary, TextAnchor.MiddleCenter);
                         label.raycastTarget = false;
                         UIFactory.StretchFull(label.rectTransform);
@@ -291,8 +292,9 @@ namespace Contigu.Presentation
                     chip.Back.gameObject.SetActive(true);
                     chip.Label.text = chips[i].Text;
                     var tint = chips[i].Color;
-                    chip.Label.color = new Color(tint.r * 0.45f, tint.g * 0.45f, tint.b * 0.45f, 1f);
-                    chip.Back.color = new Color(tint.r, tint.g, tint.b, 0.4f);
+                    // A solid box in the chip's own color (like the rarity box), its lettering dark or cream by how light the color is.
+                    chip.Label.color = InkOn(tint);
+                    chip.Back.color = new Color(tint.r, tint.g, tint.b, 1f);
                     float chipW = Mathf.Ceil(chip.Label.preferredWidth + 22f);
                     if (cursorX > Padding && cursorX + chipW > Width - Padding)
                     {
@@ -363,6 +365,13 @@ namespace Contigu.Presentation
             _root.SetAsLastSibling();
             PositionNear(anchor, placeAbove);
             _popRoutine = StartCoroutine(PopIn());
+        }
+
+        /// <summary>Dark lettering on a light box, cream on a dark one.</summary>
+        private static Color InkOn(Color box)
+        {
+            float luminance = 0.299f * box.r + 0.587f * box.g + 0.114f * box.b;
+            return luminance > 0.5f ? new Color(box.r * 0.25f, box.g * 0.25f, box.b * 0.25f, 1f) : new Color(1f, 0.96f, 0.86f, 1f);
         }
 
         /// <summary>A quick scale-up from slightly smaller so the tooltip settles into place instead of blinking on.</summary>

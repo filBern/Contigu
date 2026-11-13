@@ -9665,3 +9665,4 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-13 — Fiche de fertilizer partout (boutique, packs, Collection)
 - `HoverTooltip.SetModifierCard(def, reason)` donne la même fiche qu'un fertilizer possédé : rareté en boîte colorée au coin du titre, catégorie en pastille, et (boutique) la raison d'un achat impossible (jardin plein, Pollen manquant) en pastille rouge à la place du sous-titre texte. Utilisée par les articles du Blister, le choix du Fertilizer Pack (`ChoiceEntry.Modifier`) et les entrées découvertes de la Collection. Non vérifié dans Unity (la raison, texte long, passe sur sa propre ligne).
+- Pastilles de l'infobulle (catégorie, raison) : boîtes pleines de leur couleur avec contour, comme la boîte de rareté ; texte sombre sur une couleur claire, crème sur une sombre (`TooltipView.InkOn`). Non vérifié dans Unity.
