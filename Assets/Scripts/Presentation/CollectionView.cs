@@ -47,17 +47,21 @@ namespace Contigu.Presentation
         public RectTransform Build(Transform parent, TooltipView tooltip)
         {
             _tooltip = tooltip;
-            var overlay = UIFactory.CreatePanel(parent, "CollectionOverlay", UITheme.Background);
+            // The shop's back wall (dark planks), like the seed bag: the collection is a shelf of planters in the same stall.
+            var overlay = UIFactory.CreatePanel(parent, "CollectionOverlay", new Color(0.17f, 0.115f, 0.085f, 1f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
+            StallBackdrop.AddPlanks(_root);
 
-            var header = UIFactory.CreateText(_root, "Header", "COLLECTION", 34, UITheme.TextOnBackground);
-            Place(header.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -22f), new Vector2(700f, 46f));
+            var header = ShopSign.BuildPlaque(_root, "HeaderPlaque", "Collection", 26, "Wood");
+            Place(header, new Vector2(0.5f, 1f), new Vector2(0f, -22f), new Vector2(360f, 48f));
 
             _overallLabel = UIFactory.CreateText(_root, "Overall", "", 20, UITheme.TextMutedOnBackground);
             Place(_overallLabel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(700f, 28f));
 
             var barBack = UIFactory.CreatePanel(_root, "OverallBack", new Color(0f, 0f, 0f, 0.35f));
+            UIFactory.AddThickOutline(barBack, new Color(0.96f, 0.89f, 0.75f, 0.55f), 2f);
+            UIFactory.AddDropShadow(barBack, 4f, 0.4f);
             Place(barBack.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -102f), new Vector2(520f, 14f));
             _overallFill = UIFactory.CreatePanel(barBack.transform, "OverallFill", UITheme.ButtonSelected);
             _overallFill.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -199,13 +203,17 @@ namespace Contigu.Presentation
 
         private void BuildCell(Entry entry, bool discovered, Vector2 center, float size)
         {
-            var cell = UIFactory.CreatePanel(_gridHost, "Cell", discovered ? UITheme.PanelLight : new Color(0f, 0f, 0f, 0.28f));
+            // A little planter per entry: a light bed for a discovered one, the dark wooden bed for one still to find.
+            var bed = UISprites.Garden(discovered ? "WoodLight" : "Wood");
+            var cell = UIFactory.CreateSlicedImage(_gridHost, "Cell", bed ?? UISprites.CardBackground);
+            cell.color = bed != null ? Color.white : discovered ? UITheme.PanelLight : new Color(0f, 0f, 0f, 0.28f);
+            UIFactory.AddDropShadow(cell, 3f, 0.4f);
             cell.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             cell.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             cell.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cell.rectTransform.anchoredPosition = center;
             cell.rectTransform.sizeDelta = new Vector2(size, size);
-            if (discovered)
+            if (discovered && bed == null)
             {
                 UIFactory.AddThickOutline(cell, UITheme.Border, 2f);
             }
@@ -217,8 +225,12 @@ namespace Contigu.Presentation
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
                 UIFactory.StretchFull(icon.rectTransform);
-                icon.rectTransform.offsetMin = new Vector2(3f, 3f);
-                icon.rectTransform.offsetMax = new Vector2(-3f, -3f);
+                icon.rectTransform.offsetMin = new Vector2(8f, 8f);
+                icon.rectTransform.offsetMax = new Vector2(-8f, -8f);
+                if (discovered)
+                {
+                    UIFactory.AddDropShadow(icon, 2.5f, 0.4f);
+                }
             }
             bool locked = entry.Unlock != null && Unlocks != null && !Unlocks.IsUnlocked(entry.Unlock.Kind, entry.Unlock.Id);
             if (!discovered)

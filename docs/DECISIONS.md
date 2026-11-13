@@ -9631,3 +9631,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-12 — Lean Bag : rappelé dans l'écran du sac de graines
 - Retour joueur : partie lancée avec Lean Bag mais un sac de 32 graines, rien n'indiquait que le pledge était actif. C'est voulu (il ne se juge qu'à la victoire : au plus 14 graines), mais invisible en cours de run. L'écran du sac affiche maintenant « N seeds - Lean Bag pledge: win with 14 or fewer » quand le pledge est pris. Simple rappel de la règle choisie, pas un indice. Non vérifié dans Unity.
+
+## 2026-11-13 — Collection : étal de bacs de bois
+- Fond de planches de la boutique (`StallBackdrop`), titre en plaque (`ShopSign.BuildPlaque`), barre de progression cerclée avec ombre, chaque entrée en petit bac (`PlotWoodLight` découverte, `PlotWood` sombre à découvrir) avec ombre portée et icône ombrée ; repli sur l'ancien rendu si l'art manque. Onglets et bouton Close étaient déjà des plots. Non vérifié dans Unity (cellules de 58 px : à juger sur capture).
