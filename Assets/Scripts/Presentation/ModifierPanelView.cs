@@ -274,6 +274,7 @@ namespace Contigu.Presentation
         /// <summary>The Sell button shows only while a badge is armed by a tap (and says what it would pay).</summary>
         private void Update()
         {
+            UpdateLiveTilt();
             DisarmOnOutsideTap();
             if (_sellButton == null)
             {
@@ -674,10 +675,29 @@ namespace Contigu.Presentation
             public int From;
             public int Target;
             public Vector3 RestScale;
+            public Outline Glow;
+            public Shadow Shadow;
         }
 
         private LiveDrag _live;
         private const float DragLiftScale = 1.1f;
+        // The held fertilizer leans into the motion (like a held card) and settles back when the pointer rests.
+        private float _liveTilt;
+        private float _liveTiltTarget;
+        private const float MaxDragTilt = 12f;
+        private static readonly Color HeldGlow = new Color(1f, 0.82f, 0.30f, 0.95f);
+
+        private void UpdateLiveTilt()
+        {
+            var live = _live;
+            if (live == null || live.Badge == null || MotionSettings.Reduced)
+            {
+                return;
+            }
+            _liveTiltTarget = Mathf.MoveTowards(_liveTiltTarget, 0f, 60f * Time.unscaledDeltaTime);
+            _liveTilt = Mathf.Lerp(_liveTilt, _liveTiltTarget, Mathf.Clamp01(12f * Time.unscaledDeltaTime));
+            live.Badge.rectTransform.localRotation = Quaternion.Euler(0f, 0f, _liveTilt);
+        }
 
         private void BeginLiveDrag(int index, PointerEventData eventData)
         {
@@ -705,6 +725,15 @@ namespace Contigu.Presentation
             {
                 rect.localScale = live.RestScale * DragLiftScale;
             }
+            // "Held" look: a golden glow around the fertilizer and a deeper shadow under it (both still, so they stay with reduced motion).
+            live.Glow = badge.gameObject.AddComponent<Outline>();
+            live.Glow.effectColor = HeldGlow;
+            live.Glow.effectDistance = new Vector2(3f, -3f);
+            live.Shadow = badge.gameObject.AddComponent<Shadow>();
+            live.Shadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
+            live.Shadow.effectDistance = new Vector2(4f, -12f);
+            _liveTilt = 0f;
+            _liveTiltTarget = 0f;
             if (_tooltip != null) { _tooltip.Hide(); }
             for (int c = 0; c < _rootLinks.Count; c++)
             {
@@ -726,6 +755,8 @@ namespace Contigu.Presentation
             }
             RectTransformUtility.ScreenPointToWorldPointInRectangle(_rowsContainer, eventData.position, eventData.pressEventCamera, out var world);
             live.Badge.rectTransform.position = world + live.GrabOffset;
+            // Lean with the horizontal motion.
+            _liveTiltTarget = Mathf.Clamp(_liveTiltTarget - eventData.delta.x * 0.5f, -MaxDragTilt, MaxDragTilt);
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rowsContainer, eventData.position, eventData.pressEventCamera, out var local))
             {
                 return;
@@ -769,6 +800,9 @@ namespace Contigu.Presentation
             {
                 var rect = live.Badge.rectTransform;
                 rect.localScale = live.RestScale;
+                rect.localRotation = Quaternion.identity;
+                if (live.Glow != null) { Destroy(live.Glow); }
+                if (live.Shadow != null) { Destroy(live.Shadow); }
                 var layoutElement = live.Badge.GetComponent<LayoutElement>();
                 if (layoutElement != null) { layoutElement.ignoreLayout = false; }
                 var group = live.Badge.GetComponent<CanvasGroup>();
