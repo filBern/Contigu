@@ -620,7 +620,7 @@ namespace Contigu.Presentation
         {
             _hoveredRowIndex = index;
 
-            if (_draggingRowIndex >= 0 && index != _draggingRowIndex)
+            if (_draggingRowIndex >= 0 && index != _draggingRowIndex && _live == null)
             {
                 _dropTargetRowIndex = index;
                 ApplyRestingColor(index);
@@ -643,7 +643,7 @@ namespace Contigu.Presentation
         }
 
         /// <summary>Drag start — fades the dragged badge so its own row still reads as an available drop target underneath the cursor, and disarms any tap-selection in progress (avoids a confusing "armed AND dragging" combined state).</summary>
-        public void OnBadgeBeginDrag(int index)
+        public void OnBadgeBeginDrag(int index, PointerEventData eventData)
         {
             if (!_interactable || index < 0 || index >= _rowBadges.Count)
             {
@@ -659,14 +659,134 @@ namespace Contigu.Presentation
             }
 
             _draggingRowIndex = index;
-            var c = _rowBadges[index].color;
-            _rowBadges[index].color = new Color(c.r, c.g, c.b, DraggingAlpha);
+            BeginLiveDrag(index, eventData);
+        }
+
+        /// <summary>Balatro-style drag: the held fertilizer leaves the grid, rises a little and follows the pointer; a gap in the grid shows where it would land, and the others slide aside as it moves over them. Released, it lands in the gap (a move) or, if the gap never changed, settles back.</summary>
+        private sealed class LiveDrag
+        {
+            public Image Badge;
+            public RectTransform Gap;
+            public List<Vector2> Centers = new List<Vector2>();
+            public List<Image> Others = new List<Image>();
+            public Vector3 GrabOffset;
+            public int From;
+            public int Target;
+            public Vector3 RestScale;
+        }
+
+        private LiveDrag _live;
+        private const float DragLiftScale = 1.1f;
+
+        private void BeginLiveDrag(int index, PointerEventData eventData)
+        {
+            var badge = _rowBadges[index];
+            var rect = badge.rectTransform;
+            var live = new LiveDrag { Badge = badge, From = index, Target = index, RestScale = rect.localScale };
+            for (int i = 0; i < _rowBadges.Count; i++)
+            {
+                live.Centers.Add(_rowBadges[i] != null ? (Vector2)_rowBadges[i].rectTransform.localPosition : Vector2.zero);
+                if (i != index && _rowBadges[i] != null) { live.Others.Add(_rowBadges[i]); }
+            }
+            // The gap keeps the grabbed fertilizer's cell while it is away.
+            live.Gap = UIFactory.CreateUIObject("DragGap", _rowsContainer);
+            live.Gap.sizeDelta = rect.sizeDelta;
+            live.Gap.SetSiblingIndex(rect.GetSiblingIndex());
+            var layoutElement = badge.GetComponent<LayoutElement>() ?? badge.gameObject.AddComponent<LayoutElement>();
+            layoutElement.ignoreLayout = true;
+            var group = badge.GetComponent<CanvasGroup>() ?? badge.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            rect.SetAsLastSibling();
+            if (!MotionSettings.Reduced)
+            {
+                rect.localScale = live.RestScale * DragLiftScale;
+            }
+            if (_tooltip != null) { _tooltip.Hide(); }
+            for (int c = 0; c < _rootLinks.Count; c++)
+            {
+                if (_rootLinks[c] != null) { _rootLinks[c].SetActive(false); }
+            }
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(_rowsContainer, eventData.position, eventData.pressEventCamera, out var world);
+            live.GrabOffset = rect.position - world;
+            _live = live;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
+        }
+
+        /// <summary>The pointer moved during a drag: the held fertilizer follows it, and the gap moves to the slot nearest the pointer.</summary>
+        public void OnBadgeDrag(PointerEventData eventData)
+        {
+            var live = _live;
+            if (live == null || live.Badge == null)
+            {
+                return;
+            }
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(_rowsContainer, eventData.position, eventData.pressEventCamera, out var world);
+            live.Badge.rectTransform.position = world + live.GrabOffset;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_rowsContainer, eventData.position, eventData.pressEventCamera, out var local))
+            {
+                return;
+            }
+            int nearest = live.Target;
+            float best = float.MaxValue;
+            for (int i = 0; i < live.Centers.Count; i++)
+            {
+                float distance = (live.Centers[i] - local).sqrMagnitude;
+                if (distance < best) { best = distance; nearest = i; }
+            }
+            if (nearest == live.Target)
+            {
+                return;
+            }
+            live.Target = nearest;
+            // The gap sits where the held fertilizer would land: before the one now at that slot, or after the last.
+            live.Gap.SetAsLastSibling();
+            if (nearest < live.Others.Count && live.Others[nearest] != null)
+            {
+                live.Gap.SetSiblingIndex(live.Others[nearest].rectTransform.GetSiblingIndex());
+            }
+            else if (live.Others.Count > 0 && live.Others[live.Others.Count - 1] != null)
+            {
+                live.Gap.SetSiblingIndex(live.Others[live.Others.Count - 1].rectTransform.GetSiblingIndex() + 1);
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
+            SfxManager.Play(SfxId.CarouselTick);
+        }
+
+        /// <summary>Ends a live drag: back in the grid at the gap's place; if the slot changed, asks for the move.</summary>
+        private void EndLiveDrag()
+        {
+            var live = _live;
+            _live = null;
+            if (live == null)
+            {
+                return;
+            }
+            if (live.Badge != null)
+            {
+                var rect = live.Badge.rectTransform;
+                rect.localScale = live.RestScale;
+                var layoutElement = live.Badge.GetComponent<LayoutElement>();
+                if (layoutElement != null) { layoutElement.ignoreLayout = false; }
+                var group = live.Badge.GetComponent<CanvasGroup>();
+                if (group != null) { group.blocksRaycasts = true; }
+                if (live.Gap != null) { rect.SetSiblingIndex(live.Gap.GetSiblingIndex()); }
+            }
+            if (live.Gap != null) { Destroy(live.Gap.gameObject); }
+            for (int c = 0; c < _rootLinks.Count; c++)
+            {
+                if (_rootLinks[c] != null) { _rootLinks[c].SetActive(true); }
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
+            if (live.Target != live.From && MoveRequested != null)
+            {
+                MoveRequested(live.From, live.Target);
+            }
         }
 
         /// <summary>Fired by ModifierBadgeDragHandler.OnDrop when a drag lands on badge <paramref name="targetIndex"/>. Clears the drag state immediately so the OnEndDrag cleanup that follows is always a safe no-op, even if Refresh() has already torn down every row.</summary>
         public void OnBadgeDrop(int targetIndex)
         {
-            if (!_interactable || _draggingRowIndex < 0 || _draggingRowIndex == targetIndex)
+            if (!_interactable || _draggingRowIndex < 0 || _draggingRowIndex == targetIndex || _live != null)
             {
                 return;
             }
@@ -682,6 +802,7 @@ namespace Contigu.Presentation
         /// <summary>Always fires after a drag ends, whether or not it landed on a valid drop target. Restores opacity if the drag didn't result in a move, and cleans up a leftover drop-target preview if the pointer was released outside the panel.</summary>
         public void OnBadgeEndDrag()
         {
+            EndLiveDrag();
             if (_draggingRowIndex >= 0 && _draggingRowIndex < _rowBadges.Count)
             {
                 ApplyRestingColor(_draggingRowIndex);

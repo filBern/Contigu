@@ -42,11 +42,12 @@ namespace Contigu.Presentation
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            _owner.OnBadgeBeginDrag(_index);
+            _owner.OnBadgeBeginDrag(_index, eventData);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
+            _owner.OnBadgeDrag(eventData);
         }
 
         public void OnEndDrag(PointerEventData eventData)
