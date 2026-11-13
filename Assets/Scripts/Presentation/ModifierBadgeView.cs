@@ -106,11 +106,12 @@ namespace Contigu.Presentation
             // same badge instance stays on screen.
             string categoryLabel = ModifierVisualDefaults.GetCategoryLabel(_def.Category);
             string subtitle = _usageCountProvider != null
-                ? categoryLabel + " · Used " + _usageCountProvider(_def.Id) + "x this run"
-                : categoryLabel;
-            // The fertilizer's card in pills: its category (colored), what it costs in the shop, and how often it has triggered this run.
+                ? ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel + " · Used " + _usageCountProvider(_def.Id) + "x this run"
+                : ModifierVisualDefaults.GetRarityLabel(_def.Id) + " · " + categoryLabel;
+            // The fertilizer's card in pills: its rarity (the tooltip's accent), its category (colored), what it costs in the shop, and how often it has triggered this run.
             var chips = new System.Collections.Generic.List<TooltipChip>
             {
+                new TooltipChip(ModifierVisualDefaults.GetRarityLabel(_def.Id), ModifierVisualDefaults.GetRarityColor(_def.Id)),
                 new TooltipChip(categoryLabel, ModifierVisualDefaults.GetCategoryColor(_def.Category)),
                 new TooltipChip("Cost " + ModifierPricing.GetPrice(_def.Id), VisualDefaults.GoldenColor),
             };

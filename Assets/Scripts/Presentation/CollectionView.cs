@@ -268,7 +268,7 @@ namespace Contigu.Presentation
                 case CollectionCategory.Fertilizer:
                     foreach (var def in ModifierCatalog.All)
                     {
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Fertilizer, (int)def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Fertilizer · " + ModifierVisualDefaults.GetRarityLabel(def.Id) + " · " + ModifierVisualDefaults.GetCategoryLabel(def.Category), Icon = ModifierVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Fertilizer, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Sprout:

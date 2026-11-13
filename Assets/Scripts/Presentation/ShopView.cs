@@ -995,7 +995,7 @@ namespace Contigu.Presentation
                 badge.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 badge.rectTransform.anchoredPosition = Vector2.zero;
                 hover.Init(_tooltip, modifierDef.Name, DescriptionTextFormatter.Colorize(modifierDef.Description, 14),
-                    ShopReason(Loc.T("shop.fertilizer", ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category)), blocked ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : null, price - run.Lueur), UITheme.TextMuted);
+                    ShopReason(Loc.T("shop.fertilizer", ModifierVisualDefaults.GetRarityLabel(modifierDef.Id) + " · " + ModifierVisualDefaults.GetCategoryLabel(modifierDef.Category)), blocked ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : null, price - run.Lueur), UITheme.TextMuted);
             }
             else
             {

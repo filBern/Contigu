@@ -164,6 +164,27 @@ namespace Contigu.Data
         };
 
         /// <summary>The player-facing name of a fertilizer's group (shown in its tooltip).</summary>
+        /// <summary>A fertilizer's rarity, worded like the upgrades' (Wild, Cultivated, Heirloom).</summary>
+        public static string GetRarityLabel(ModifierId id)
+        {
+            return UpgradeVisualDefaults.GetRarityLabel(ToUpgradeRarity(id));
+        }
+
+        public static Color GetRarityColor(ModifierId id)
+        {
+            return UpgradeVisualDefaults.GetRarityColor(ToUpgradeRarity(id));
+        }
+
+        private static UpgradeRarity ToUpgradeRarity(ModifierId id)
+        {
+            switch (ModifierRarityUtility.Of(id))
+            {
+                case ModifierRarity.Common: return UpgradeRarity.Common;
+                case ModifierRarity.Uncommon: return UpgradeRarity.Uncommon;
+                default: return UpgradeRarity.Rare;
+            }
+        }
+
         public static string GetCategoryLabel(ModifierCategory category)
         {
             switch (category)

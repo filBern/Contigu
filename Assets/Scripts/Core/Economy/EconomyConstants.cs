@@ -39,15 +39,15 @@ namespace Contigu.Core
 
         /// <summary>
         /// Weight of every fertilizer in a Blister roll (an upgrade weighs its rarity weight times
-        /// <see cref="BlisterUpgradeWeightMultiplier"/>: 24 common, 12 uncommon, 6 rare). Raised from 8 to 16 so a Blister slot is a fertilizer
+        /// <see cref="BlisterUpgradeWeightMultiplier"/>: 24 common, 12 uncommon, 6 rare). Raised from 8 to 16, then to 21 when fertilizers got rarity tiers (the average weight stays about 16: 21 common, 14 uncommon, 7 rare), so a Blister slot is a fertilizer
         /// about two times out of three instead of one in two.
         /// </summary>
-        public const int BlisterModifierWeight = 16;
+        public const int BlisterModifierWeight = 21;
 
-        /// <summary>How likely a fertilizer is to be drawn (Blister and Fertilizer Pack): the usual weight, a quarter of it for the few rare ones.</summary>
+        /// <summary>How likely a fertilizer is to be drawn (Blister and Fertilizer Pack): by its rarity (see <see cref="ModifierRarityUtility.DrawWeight"/>), and a quarter of the usual weight for the Piggy Bank.</summary>
         public static int ModifierDrawWeight(ModifierId id)
         {
-            return id == ModifierId.Tirelire ? BlisterModifierWeight / 4 : BlisterModifierWeight;
+            return id == ModifierId.Tirelire ? BlisterModifierWeight / 4 : ModifierRarityUtility.DrawWeight(ModifierRarityUtility.Of(id));
         }
 
         /// <summary>

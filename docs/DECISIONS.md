@@ -9645,3 +9645,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-13 — Infobulles : bac de bois et pastilles
 - `TooltipView` : fond `PlotWoodLight` avec son rebord (bande de titre rentrée de 8), ombre plus profonde, et `chips` (liste de `TooltipChip`) : des pastilles teintées en rangées sous le titre, qui remplacent le sous-titre quand elles sont données ; la ligne d'accent prend la couleur de la première.
 - Fertilizers (`ModifierBadgeView`) : pastilles Catégorie (sa couleur), Cost N (or, prix de base de la boutique) et Used Nx (quand le compteur existe). Il n'y a pas de rareté pour les fertilizers (seulement la catégorie et le prix) : pas inventée. Les autres infobulles (sous-titre texte) gardent leur contenu, avec le nouveau fond. Non vérifié dans Unity.
+
+## 2026-11-13 — Rareté des fertilizers
+- Nouvelle rareté `ModifierRarity` (Common / Uncommon / Rare, affichée Wild / Cultivated / Heirloom comme les upgrades), **dérivée du prix de base** : ≤ 5 Common (46 fertilizers), 6-7 Uncommon (69), ≥ 8 Rare (18). Rareté et prix ne peuvent donc pas se contredire.
+- Elle règle aussi le tirage (Blister et Fertilizer Pack) : poids 21 / 14 / 7 (`BlisterModifierWeight` passe de 16 à 21 pour garder un poids moyen ≈ 16, donc la même part de fertilizers dans le Blister) ; la Tirelire garde son poids spécial (quart du poids de base). Avant : tous au même poids sauf la Tirelire.
+- Affichée en première pastille de l'infobulle (elle donne la couleur de la ligne d'accent), dans le sous-titre des infobulles de boutique et dans celui de la Collection. Non vérifié dans Unity. Équilibre à remesurer (voir suite).
