@@ -8,6 +8,7 @@ Recognizable at a glance by SILHOUETTE:
 Output: fertilizers/<ModifierId>.svg, upgrades/<UpgradeId>.svg  (viewBox 256).
 """
 import math, os
+from outline import strip_outline
 
 O = '#13212e'
 CREAM = '#fff7e8'
@@ -294,9 +295,10 @@ def tag(kind, txt, cx, cy):
     if not kind: return ''
     bg, fg = TAGCOL[kind]
     w = max(52, 17 * len(txt) + 14)
-    return '<g><rect x="%g" y="%g" width="%g" height="30" rx="15" fill="%s" stroke="%s" stroke-width="4"/>%s</g>' % (cx - w / 2, cy - 15, w, bg, O, text(cx, cy + 8, txt, 22, fg))
+    # No dark outline: a thin light rim and a soft shadow (the filter lives in the sack's defs).
+    return '<g filter="url(#lab)"><rect x="%g" y="%g" width="%g" height="30" rx="15" fill="%s" stroke="#ffffff" stroke-opacity="0.4" stroke-width="2.5"/>%s</g>' % (cx - w / 2, cy - 15, w, bg, text(cx, cy + 8, txt, 22, fg))
 
-def sack(motif_svg, catcol, tagkind, tagtxt):
+def classic_sack(motif_svg, catcol, tagkind, tagtxt):
     s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
     s += '<defs><clipPath id="sk"><path d="M96 60 C52 78 26 140 38 198 C44 226 74 238 128 238 C182 238 212 226 218 198 C230 140 204 78 160 60 Z"/></clipPath></defs>\n'
     # gathered neck (frilled top of the tied sack)
@@ -312,6 +314,58 @@ def sack(motif_svg, catcol, tagkind, tagtxt):
     s += '<g transform="translate(75.5 111.5) scale(1.05)">%s</g>\n' % motif_svg
     s += tag(tagkind, tagtxt, 176, 214)
     return s + '</svg>\n'
+
+
+# ---------------------------------------------------------------- the fertilizer sack, garden style (no dark outline)
+# A burlap sack with soft shading, tied with twine, standing on its own shadow. The label is a plaque of the tiles' own brown soil, rimmed in the
+# category's color (the same colors as the category boxes of the tooltips), so the motif's light shapes stand out without needing an outline.
+SACK_BODY = 'M96 60 C52 78 26 140 38 198 C44 226 74 238 128 238 C182 238 212 226 218 198 C230 140 204 78 160 60 Z'
+SOIL_LABEL = '#f6e8c8'   # a cream plaque (the motifs are drawn dark-on-light); the motif's soft shadow stands in for its old outline
+CAT_COLORS = {'Couleurs': '#f0b38d', 'Voisinage': '#65aed6', 'Connexions': '#a4ebcc', 'Destruction': '#b56d7f', 'Roguelike': '#9a8fb5', 'Formes': '#614363',
+              'Weather': '#59cce0', 'Enemies': '#e36b5c', 'Tempo': '#edc759', 'Upgrades': '#8ccc66', 'SeedBag': '#b88f61', 'Wild': '#e68ccc',
+              'Flat': '#b3b8c7', 'Synergy': '#9e73c7'}
+
+def sack(motif_svg, catcol, tagkind, tagtxt):
+    s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
+    s += ('<defs>'
+          '<clipPath id="sk"><path d="%s"/></clipPath>'
+          '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ecd29a"/><stop offset="0.55" stop-color="#d8b574"/><stop offset="1" stop-color="#b98d4e"/></linearGradient>'
+          '<linearGradient id="ng" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9b676"/><stop offset="1" stop-color="#a98048"/></linearGradient>'
+          '<filter id="soft" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#2a1a0c" flood-opacity="0.45"/></filter>'
+          '<filter id="lab" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#2a1a0c" flood-opacity="0.5"/></filter>'
+          '<filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#4a2e10" flood-opacity="0.6"/></filter>'
+          '</defs>\n') % SACK_BODY
+    # contact shadow under the sack
+    s += '<ellipse cx="128" cy="240" rx="92" ry="10" fill="#2a1a0c" opacity="0.28"/>\n'
+    # neck (the gathered, frilled top)
+    s += '<path d="M92 64 C84 40 100 26 128 26 C156 26 172 40 164 64 Z" fill="url(#ng)"/><path d="M112 60 C108 46 112 38 118 32 M128 60 V32 M144 60 C148 46 144 38 138 32" fill="none" stroke="#8c6830" stroke-width="3" stroke-linecap="round" opacity="0.7"/>\n'
+    # body with its shading
+    s += '<g filter="url(#soft)"><path d="%s" fill="url(#bg)"/></g>\n' % SACK_BODY
+    s += '<g clip-path="url(#sk)">'
+    s += '<g stroke="#a47a3c" stroke-width="2.2" opacity="0.45">' + ''.join('<path d="M20 %d H240"/>' % y for y in range(80, 240, 11)) + ''.join('<path d="M%d 60 V240"/>' % x for x in range(40, 220, 13)) + '</g>'
+    s += '<path d="M150 60 C206 90 234 150 214 218 C204 232 176 238 150 238 C196 200 190 120 150 60 Z" fill="#5a3a14" opacity="0.22"/>'   # shaded right side
+    s += '<path d="M60 108 C44 150 48 202 66 230" fill="none" stroke="#fff6d8" stroke-width="9" stroke-linecap="round" opacity="0.3"/>'      # highlight on the left
+    s += '<path d="M40 214 C70 226 186 226 216 214" fill="none" stroke="#7a5420" stroke-width="3" stroke-dasharray="7 6" opacity="0.5"/>'    # stitched hem
+    s += '</g>\n'
+    # twine and knot
+    s += '<rect x="88" y="54" width="80" height="15" rx="7.5" fill="#8a5a2b"/><path d="M92 58 H164" stroke="#b07c42" stroke-width="3" stroke-linecap="round" opacity="0.8"/><circle cx="128" cy="62" r="10" fill="#a8723a"/><circle cx="125" cy="59" r="3.5" fill="#d9a465" opacity="0.8"/>\n'
+    s += '<path d="M128 70 C120 84 112 88 106 100 M128 70 C138 84 146 90 150 98" fill="none" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/>\n'
+    # label: a cream plaque rimmed in the category color
+    s += '<g filter="url(#lab)"><rect x="64" y="104" width="128" height="110" rx="16" fill="%s"/></g><rect x="70" y="110" width="116" height="98" rx="11" fill="%s"/>\n' % (catcol, SOIL_LABEL)
+    s += '<g filter="url(#ms)"><g transform="translate(75.5 111.5) scale(1.05)">%s</g></g>\n' % motif_svg
+    s += tag(tagkind, tagtxt, 176, 214)
+    return s + '</svg>\n'
+
+
+def sack_category(key, fallback):
+    """The fertilizer's category as the game knows it (Core/Modifiers/ModifierDefinition.cs), so the sack's rim matches the category box of its tooltip."""
+    global _CATEGORY_OF
+    if _CATEGORY_OF is None:
+        import re
+        src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../Assets/Scripts/Core/Modifiers/ModifierDefinition.cs')).read()
+        _CATEGORY_OF = dict(re.findall(r'ModifierId\.(\w+), ModifierCategory\.(\w+),', src))
+    return _CATEGORY_OF.get(key, fallback)
+_CATEGORY_OF = None
 
 # ---------------------------------------------------------------- upgrades: UpgradeId -> (motif, pool)
 POOL = {'Workshop': '#3f9a6a', 'Bank': '#c8403f', 'Grid': '#4f7fd0', 'Mastery': '#8c63b0', 'Modifier': '#e8a82e'}
@@ -541,7 +595,7 @@ def sign(motif_svg, poolcol):
 if __name__ == '__main__':
     os.makedirs('fertilizers', exist_ok=True); os.makedirs('upgrades', exist_ok=True)
     for k, (m, kind, txt, cat) in F.items():
-        open('fertilizers/%s.svg' % k, 'w').write(sack(M[m](), CAT[cat], kind, txt))
+        open('fertilizers/%s.svg' % k, 'w').write(strip_outline(sack(M[m](), CAT_COLORS[sack_category(k, cat)], kind, txt)))
     for k, (m, pool) in U.items():
         open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
     print(len(F), 'fertilizers,', len(U), 'upgrades')
@@ -570,7 +624,7 @@ def mystery_sign(motif_svg, poolcol):
     return svg.replace('</svg>', _sparkles(128, 106) + _qmark(128, 100) + '</svg>')
 
 def mystery_sack(motif_svg, catcol):
-    svg = sack(motif_svg, catcol, None, None)
+    svg = classic_sack(motif_svg, catcol, None, None)
     svg = svg.replace('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n' + SIL_DEFS + '\n', 1)
     svg = svg.replace('<rect x="64" y="104" width="128" height="110" rx="16" fill="%s"' % CREAM, '<rect x="64" y="104" width="128" height="110" rx="16" fill="%s"' % MYSTERY_BG, 1)
     svg = svg.replace('<g transform="translate(75.5 111.5) scale(1.05)">', '<g filter="url(#sil)" transform="translate(75.5 111.5) scale(1.05)">', 1)
