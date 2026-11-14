@@ -147,10 +147,8 @@ namespace Contigu.Presentation
             // Proportional to the plot (about a third of it, like the badges on the hand's pieces), never smaller than 20.
             float traitBadgeSize = Mathf.Max(20f, _builtCellSize * 0.34f);
             badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(traitBadgeSize, traitBadgeSize);
-            badgeTraitOrigin.rectTransform.anchoredPosition = new Vector2(-3f, -3f);
-            var badgeTraitOriginOutline = badgeTraitOrigin.gameObject.AddComponent<Outline>();
-            badgeTraitOriginOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            badgeTraitOriginOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            // Flush in the plot's top-right corner (it floated 3 units in from it), and without the black rim of the old chips: the badge art is its own medallion now.
+            badgeTraitOrigin.rectTransform.anchoredPosition = Vector2.zero;
             badgeTraitOrigin.gameObject.SetActive(false);
 
             var badgeSpecial = UIFactory.CreatePanel(cellGo, "BadgeSpecial", Color.magenta);
