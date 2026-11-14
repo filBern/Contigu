@@ -8,7 +8,7 @@ Recognizable at a glance by SILHOUETTE:
 Output: fertilizers/<ModifierId>.svg, upgrades/<UpgradeId>.svg  (viewBox 256).
 """
 import math, os
-from outline import strip_outline
+from outline import strip_outline, lighten_lines
 
 O = '#13212e'
 CREAM = '#fff7e8'
@@ -326,30 +326,15 @@ PLAQUE = '#f6e8c8'
 POT_BODY = 'M58 108 H198 C198 108 190 190 184 224 C182 234 176 238 166 238 H90 C80 238 74 234 72 224 C66 190 58 108 58 108 Z'
 
 def sack(motif_svg, catcol, tagkind, tagtxt):
+    """The fertilizer's icon, bare: just its motif (no bag, no pot, no background, no outline), softly shadowed, and the effect pill at the bottom right."""
     s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
-    s += ('<defs>'
-          '<clipPath id="pb"><path d="%s"/></clipPath>'
-          '<linearGradient id="pot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9946a"/><stop offset="0.6" stop-color="#d27a4e"/><stop offset="1" stop-color="#b25a34"/></linearGradient>'
-          '<linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0a67c"/><stop offset="1" stop-color="#cf7348"/></linearGradient>'
-          '<linearGradient id="leaf" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#8fd25a"/></linearGradient>'
-          '<filter id="soft" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#2a1a0c" flood-opacity="0.45"/></filter>'
-          '<filter id="lab" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#2a1a0c" flood-opacity="0.5"/></filter>'
-          '<filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="2" stdDeviation="1.4" flood-color="#4a2e10" flood-opacity="0.6"/></filter>'
-          '</defs>\n') % POT_BODY
-    s += '<ellipse cx="128" cy="242" rx="84" ry="9" fill="#2a1a0c" opacity="0.28"/>\n'
-    # the sprout (behind the rim): a stem and two leaves
-    s += '<g filter="url(#soft)"><path d="M128 84 C126 64 126 50 128 38" fill="none" stroke="#4f9a3c" stroke-width="7" stroke-linecap="round"/>'
-    s += '<path d="M128 56 C108 56 90 44 86 24 C108 20 126 32 128 56 Z" fill="url(#leaf)"/><path d="M128 48 C148 48 166 36 172 16 C150 14 130 26 128 48 Z" fill="url(#leaf)"/></g>\n'
-    s += '<path d="M118 42 C112 38 104 34 98 30" fill="none" stroke="#d6f5a8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>\n'
-    # the pot: body, then rim
-    s += '<g filter="url(#soft)"><path d="%s" fill="url(#pot)"/></g>\n' % POT_BODY
-    s += '<g clip-path="url(#pb)"><path d="M170 108 H198 C198 108 190 190 184 224 C182 234 176 238 166 238 H150 C160 200 168 150 170 108 Z" fill="#6a2e12" opacity="0.2"/><path d="M70 120 C72 160 78 200 82 226" fill="none" stroke="#ffd9bd" stroke-width="7" stroke-linecap="round" opacity="0.35"/></g>\n'
-    s += '<rect x="44" y="76" width="168" height="38" rx="14" fill="url(#rim)"/><rect x="50" y="80" width="156" height="9" rx="4.5" fill="#ffd9bd" opacity="0.45"/>\n'
-    s += '<rect x="48" y="104" width="160" height="10" rx="5" fill="%s"/>\n' % catcol
-    # the plaque on the belly
-    s += '<g filter="url(#lab)"><rect x="80" y="122" width="96" height="90" rx="14" fill="%s"/></g><rect x="85" y="127" width="86" height="80" rx="10" fill="%s"/>\n' % (catcol, PLAQUE)
-    s += '<g filter="url(#ms)"><g transform="translate(86.5 128) scale(0.84)">%s</g></g>\n' % motif_svg
-    s += tag(tagkind, tagtxt, 166, 216)
+    s += ('<defs><filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#2a1a0c" flood-opacity="0.5"/></filter>'
+          '<filter id="lab" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#2a1a0c" flood-opacity="0.5"/></filter></defs>\n')
+    scale = 2.3   # the motif box is about 100 x 92
+    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(%g)">%s</g></g>\n' % (128 - 50 * scale, 112 - 46 * scale, scale, motif_svg)
+    if tagkind:
+        w = max(52, 17 * len(tagtxt) + 14)
+        s += tag(tagkind, tagtxt, 248 - w / 2, 230)
     return s + '</svg>\n'
 
 def sack_category(key, fallback):
@@ -590,7 +575,7 @@ def sign(motif_svg, poolcol):
 if __name__ == '__main__':
     os.makedirs('fertilizers', exist_ok=True); os.makedirs('upgrades', exist_ok=True)
     for k, (m, kind, txt, cat) in F.items():
-        open('fertilizers/%s.svg' % k, 'w').write(strip_outline(sack(M[m](), CAT_COLORS[sack_category(k, cat)], kind, txt)))
+        open('fertilizers/%s.svg' % k, 'w').write(lighten_lines(strip_outline(sack(M[m](), CAT_COLORS[sack_category(k, cat)], kind, txt))))
     for k, (m, pool) in U.items():
         open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
     print(len(F), 'fertilizers,', len(U), 'upgrades')

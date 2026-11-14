@@ -13,3 +13,19 @@ def strip_outline(svg):
             attrs = _STROKE_ATTRS.sub('', attrs)
         return '<%s%s>' % (m.group(1), attrs)
     return _TAG.sub(fix, svg)
+
+
+CREAM = '#fff3d6'
+_ATTR = re.compile(r'\b(fill|stroke)="%s"' % O)
+
+def lighten_lines(svg):
+    """For icons that stand directly on a dark background: text and stroke-only lines drawn in the dark ink (fill="none" + stroke) become cream so they stay visible.
+    Dark filled shapes (eyes, dice pips...) keep their color, since they sit on light shapes of the same icon."""
+    def fix(m):
+        tag, attrs = m.group(1), m.group(2)
+        if tag == 'text' and 'fill="%s"' % O in attrs:
+            attrs = attrs.replace('fill="%s"' % O, 'fill="%s"' % CREAM)
+        elif 'fill="none"' in attrs and 'stroke="%s"' % O in attrs:
+            attrs = attrs.replace('stroke="%s"' % O, 'stroke="%s"' % CREAM)
+        return '<%s%s>' % (tag, attrs)
+    return _TAG.sub(fix, svg)
