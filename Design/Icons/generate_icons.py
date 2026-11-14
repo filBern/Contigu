@@ -340,16 +340,130 @@ CAT_COLORS = {'Couleurs': '#f0b38d', 'Voisinage': '#65aed6', 'Connexions': '#a4e
               'Weather': '#59cce0', 'Enemies': '#e36b5c', 'Tempo': '#edc759', 'Upgrades': '#8ccc66', 'SeedBag': '#b88f61', 'Wild': '#e68ccc',
               'Flat': '#b3b8c7', 'Synergy': '#9e73c7'}
 PLAQUE = '#f6e8c8'
+CAT_LABELS = {'Couleurs': 'Colors', 'Voisinage': 'Neighbors', 'Connexions': 'Connections', 'Destruction': 'Destruction', 'Roguelike': 'Run', 'Formes': 'Shapes', 'Weather': 'Weather', 'Enemies': 'Enemies', 'Tempo': 'Tempo', 'Upgrades': 'Upgrades', 'SeedBag': 'Seed Bag', 'Wild': 'Wild', 'Flat': 'Flat', 'Synergy': 'Synergy'}
 POT_BODY = 'M58 108 H198 C198 108 190 190 184 224 C182 234 176 238 166 238 H90 C80 238 74 234 72 224 C66 190 58 108 58 108 Z'
 
-def sack(motif_svg, catcol, tagkind, tagtxt):
-    """The fertilizer's icon, bare: just its motif (no bag, no pot, no background, no outline, no effect pill), softly shadowed. The tag arguments stay so the
-    table and Tools/check_icon_tags.py keep working, but the pill is not drawn any more."""
+# ---- the fertilizer as a bag of fertilizer (garden-center style): a flat plastic bag with crimped ends, a name plate, a picture window holding the motif and a
+# category band. The bag's color is its RARITY (Common cream, Uncommon blue, Rare orange, Legendary gold); the plate, the window and the band vary with the
+# fertilizer (deterministically), so every bag has its own design.
+RARITY_BAG = {'Common': ('#f1ead6', '#cdc3a6'), 'Uncommon': ('#4f93d4', '#2c6aa8'), 'Rare': ('#e8803f', '#bd5a1f'), 'Legendary': ('#eab63c', '#c08a22')}
+INK = '#3a2a1c'
+CREAMY = '#fff8e8'
+
+def _luma(hexcol):
+    r, g, b = int(hexcol[1:3], 16), int(hexcol[3:5], 16), int(hexcol[5:7], 16)
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+def _mix(hexcol, other, t):
+    a = [int(hexcol[k:k + 2], 16) for k in (1, 3, 5)]
+    b = [int(other[k:k + 2], 16) for k in (1, 3, 5)]
+    return '#%02x%02x%02x' % tuple(int(x + (y - x) * t) for x, y in zip(a, b))
+
+def _fit_name(name):
+    """Lines and font size for the bag's name plate."""
+    name = name.upper().replace("'", '')
+    words = name.split()
+    if len(name) <= 11 or len(words) == 1:
+        lines = [name]
+    else:
+        best = None
+        for k in range(1, len(words)):
+            a, b = ' '.join(words[:k]), ' '.join(words[k:])
+            if best is None or max(len(a), len(b)) < max(len(best[0]), len(best[1])):
+                best = (a, b)
+        lines = list(best)
+    longest = max(len(l) for l in lines)
+    size = min(22.0 if len(lines) == 1 else 17.0, 118.0 / (0.66 * longest))
+    return lines, size
+
+def _plate(shape, x, y, w, h, fill):
+    if shape == 0:
+        return '<rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="%s"/>' % (x, y, w, h, h * 0.3, fill)
+    if shape == 1:
+        return '<ellipse cx="%g" cy="%g" rx="%g" ry="%g" fill="%s"/>' % (x + w / 2, y + h / 2, w / 2, h / 2, fill)
+    if shape == 2:   # a ribbon with notched ends
+        return '<path d="M%g %g H%g L%g %g L%g %g H%g L%g %g Z" fill="%s"/>' % (x, y, x + w, x + w - 8, y + h / 2, x + w, y + h, x, x + 8, y + h / 2, fill)
+    return '<path d="M%g %g H%g V%g Q%g %g %g %g Q%g %g %g %g Z" fill="%s"/>' % (x, y, x + w, y + h * 0.55, x + w, y + h, x + w / 2, y + h + 4, x, y + h, x, y + h * 0.55, fill)   # a shield
+
+def _window(shape, cx, cy, r):
+    if shape == 0:
+        return '<circle cx="%g" cy="%g" r="%g"/>' % (cx, cy, r)
+    if shape == 1:
+        return '<rect x="%g" y="%g" width="%g" height="%g" rx="%g"/>' % (cx - r, cy - r, 2 * r, 2 * r, r * 0.32)
+    if shape == 2:   # a hexagon
+        import math as _m
+        return '<path d="M%s Z"/>' % ' L'.join('%.1f %.1f' % (cx + r * _m.cos(_m.radians(60 * k - 90)), cy + r * _m.sin(_m.radians(60 * k - 90))) for k in range(6))
+    return '<ellipse cx="%g" cy="%g" rx="%g" ry="%g"/>' % (cx, cy, r, r * 0.9)
+
+def bag(motif_svg, key, name, category_color, category_label, rarity):
+    h = sum(ord(c) * (k + 7) for k, c in enumerate(key))
+    plate_shape, window_shape, band_style = h % 4, (h // 4) % 4, (h // 16) % 3
+    base, edge = RARITY_BAG[rarity]
+    light = _mix(base, '#ffffff', 0.35)
+    body = 'M48 12 H208 L212 34 C221 100 221 160 212 226 L208 246 H48 L44 226 C35 160 35 100 44 34 Z'
+    lines, size = _fit_name(name)
+    if plate_shape in (1, 3):
+        size *= 0.82   # an ellipse or a shield has less room for the lettering than a rectangle
     s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
-    s += ('<defs><filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#2a1a0c" flood-opacity="0.5"/></filter></defs>\n')
-    scale = 2.5   # the motif box is about 100 x 92
-    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(%g)">%s</g></g>\n' % (128 - 50 * scale, 128 - 46 * scale, scale, motif_svg)
+    s += ('<defs><clipPath id="bagclip"><path d="%s"/></clipPath>'
+          '<linearGradient id="bagfill" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="%s"/><stop offset="0.35" stop-color="%s"/><stop offset="0.65" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient>'
+          '<filter id="soft" x="-20%%" y="-10%%" width="140%%" height="125%%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#1a0f08" flood-opacity="0.5"/></filter>'
+          '<filter id="lab" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="2.5" stdDeviation="1.8" flood-color="#2a1a0c" flood-opacity="0.45"/></filter>'
+          '<filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="2" stdDeviation="1.4" flood-color="#4a2e10" flood-opacity="0.55"/></filter></defs>\n') % (body, edge, light, light, edge)
+    s += '<g filter="url(#soft)"><path d="%s" fill="url(#bagfill)"/></g>\n' % body
+    s += '<g clip-path="url(#bagclip)">'
+    # the crimped seals at both ends (ridges) and a soft crease under each
+    for y0, y1 in ((12, 34), (226, 246)):
+        s += '<rect x="40" y="%d" width="176" height="%d" fill="%s" opacity="0.35"/>' % (y0, y1 - y0, edge)
+        s += ''.join('<path d="M%d %d V%d" stroke="%s" stroke-width="1.6" opacity="0.5"/>' % (x, y0, y1, _mix(edge, '#000000', 0.35)) for x in range(48, 210, 5))
+    s += '<path d="M44 35 H212" stroke="%s" stroke-width="2" opacity="0.35"/><path d="M44 225 H212" stroke="%s" stroke-width="2" opacity="0.35"/>' % (_mix(edge, '#000000', 0.4), _mix(edge, '#000000', 0.4))
+    # band styles (the category's color)
+    ink_band = INK if _luma(category_color) > 150 else '#fff8e8'
+    if band_style == 0:
+        s += '<rect x="40" y="204" width="176" height="22" fill="%s"/><text x="128" y="220" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" text-anchor="middle" fill="%s">%s</text>' % (category_color, ink_band, category_label.upper())
+    elif band_style == 1:
+        s += '<rect x="40" y="34" width="176" height="7" fill="%s"/><rect x="40" y="206" width="176" height="20" fill="%s" opacity="0.92"/>' % (category_color, category_color)
+        s += ''.join('<circle cx="%d" cy="216" r="3" fill="%s"/>' % (x, ink_band) for x in (70, 100, 128, 156, 186))
+    else:
+        s += '<rect x="40" y="34" width="22" height="192" fill="%s"/><rect x="194" y="34" width="22" height="192" fill="%s"/>' % (category_color, category_color)
+    # glossy streaks, like the plastic of a real bag
+    s += '<path d="M60 40 L88 40 L66 226 L50 226 Z" fill="#ffffff" opacity="0.18"/><path d="M178 40 L190 40 L174 226 L168 226 Z" fill="#ffffff" opacity="0.12"/>'
+    s += '</g>\n'
+    # the name plate
+    px, py, pw, ph = 60, 44, 136, 40
+    s += '<g filter="url(#lab)">%s</g>\n' % _plate(plate_shape, px, py, pw, ph, CREAMY)
+    if len(lines) == 1:
+        s += '<text x="128" y="%g" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="%g" text-anchor="middle" fill="%s">%s</text>\n' % (py + ph / 2 + size * 0.36, size, INK, lines[0])
+    else:
+        for n, line in enumerate(lines):
+            s += '<text x="128" y="%g" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="%g" text-anchor="middle" fill="%s">%s</text>\n' % (py + 16 + n * (size + 1.5) + (2 if plate_shape == 3 else 0), size, INK, line)
+    # the picture window with the motif
+    cx, cy, r = 128, 146, 50
+    s += '<g filter="url(#lab)"><g fill="%s">%s</g></g>\n' % (category_color, _window(window_shape, cx, cy, r + 5))
+    s += '<g fill="%s">%s</g>\n' % (CREAMY, _window(window_shape, cx, cy, r))
+    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(0.86)">%s</g></g>\n' % (cx - 50 * 0.86, cy - 46 * 0.86, motif_svg)
     return s + '</svg>\n'
+
+def sack(motif_svg, catcol, tagkind, tagtxt, key=None, name=None, category=None, rarity='Common'):
+    """The fertilizer's icon: a bag of fertilizer (see `bag`)."""
+    return bag(motif_svg, key or 'X', name or key or '', catcol, category or '', rarity)
+
+_GAME = None
+def game_info(key):
+    """(display name, category, rarity) of a fertilizer from the game's own sources (ModifierDefinition.cs, ModifierPricing.cs)."""
+    global _GAME
+    if _GAME is None:
+        import re
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../Assets/Scripts/Core/')
+        defs = open(base + 'Modifiers/ModifierDefinition.cs').read()
+        names = {m.group(1): (m.group(3), m.group(2)) for m in re.finditer(r'ModifierId\.(\w+), ModifierCategory\.(\w+), "([^"]+)"', defs)}
+        prices = {m.group(1): int(m.group(2)) for m in re.finditer(r'case ModifierId\.(\w+):\s*return (\d+);', open(base + 'Economy/ModifierPricing.cs').read())}
+        _GAME = (names, prices)
+    names, prices = _GAME
+    price = prices.get(key, 6)
+    rarity = 'Common' if price <= 5 else 'Uncommon' if price <= 7 else 'Rare' if price <= 9 else 'Legendary'
+    name, category = names.get(key, (key, 'Roguelike'))
+    return name, category, rarity
 
 def sack_category(key, fallback):
     """The fertilizer's category as the game knows it (Core/Modifiers/ModifierDefinition.cs), so the sack's rim matches the category box of its tooltip."""
@@ -591,7 +705,7 @@ def sign(motif_svg, poolcol):
 if __name__ == '__main__':
     os.makedirs('fertilizers', exist_ok=True); os.makedirs('upgrades', exist_ok=True)
     for k, (m, kind, txt, cat) in F.items():
-        open('fertilizers/%s.svg' % k, 'w').write(lighten_lines(strip_outline(sack(M[m](), CAT_COLORS[sack_category(k, cat)], kind, txt))))
+        open('fertilizers/%s.svg' % k, 'w').write(lighten_lines(strip_outline(sack(M[m](), CAT_COLORS[sack_category(k, cat)], kind, txt, key=k, name=game_info(k)[0], category=CAT_LABELS.get(sack_category(k, cat), sack_category(k, cat)), rarity=game_info(k)[2]))))
     for k, (m, pool) in U.items():
         open('upgrades/%s.svg' % k, 'w').write(sign(M[m](), POOL[pool]))
     print(len(F), 'fertilizers,', len(U), 'upgrades')
