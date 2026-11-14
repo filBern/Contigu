@@ -142,7 +142,11 @@ M['whirl'] = lambda: path('M50 46 C50 38 60 38 60 46 C60 58 40 60 38 46 C36 30 6
 M['cornerstone'] = lambda: ''.join(tile(14 + (i % 3) * 25, 12 + (i // 3) * 25, 22, '#d8c9a0') for i in range(9) if i != 2) + tile(64, 12, 22, GOLD) + star(80, 20, 9, '#fff1b0', 0.4, 4, 2.5)
 M['pollen'] = lambda: pollen_grain(50, 46, 26) + pollen_grain(22, 70, 12) + pollen_grain(80, 24, 13)
 def bignum(s): return lambda: num(50, 64, s, 58) + star(80, 18, 10, '#fff1b0', 0.4, 4, 3)
-M['n1'] = bignum('+1'); M['n2'] = bignum('+2'); M['n4'] = bignum('+4')
+# The flat Mult fertilizers: red blooms (Mult is red), one, two or four of them, instead of a bare number (the pill that used to say it is gone).
+def _bloom(cx, cy, r): return flower(cx, cy, r, R, 6, '#f6c445') + circ(cx - r * 0.1, cy - r * 0.1, r * 0.1, '#fff1b0', 1)
+M['n1'] = lambda: _bloom(50, 48, 36) + star(84, 14, 9, '#fff1b0', 0.4, 4, 2.5)
+M['n2'] = lambda: _bloom(28, 60, 25) + _bloom(68, 38, 27) + star(88, 12, 9, '#fff1b0', 0.4, 4, 2.5)
+M['n4'] = lambda: _bloom(27, 31, 19) + _bloom(71, 29, 20) + _bloom(26, 69, 19) + _bloom(72, 68, 20) + star(50, 50, 9, '#fff1b0', 0.4, 4, 2.5)
 M['pots'] = lambda: path('M20 62 L80 62 L72 84 L28 84 Z', '#c8603f') + rect(18, 54, 64, 10, '#d9745a', 3) + path('M30 54 L70 54 L64 36 L36 36 Z', '#c8603f') + rect(28, 28, 44, 9, '#d9745a', 3) + sprout(50, 28, 0.7)
 M['copy'] = lambda: rect(14, 22, 40, 50, '#d8b574', 8) + rect(44, 14, 40, 50, '#e8c98a', 8) + arrow(30, 82, 70, 82, O, 5)
 M['brew'] = lambda: flask(50, 44, '#b469e0') + text(76, 32, '?', 26, O)
