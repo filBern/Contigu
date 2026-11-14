@@ -380,7 +380,7 @@ M['u_randseed'] = lambda: seed(38, 54, 1.8, '#d8b574') + rect(54, 20, 34, 34, CR
 M['u_fertup'] = lambda: M['pots']() + arrow(80, 44, 80, 14, G, 6)
 M['u_goldtile'] = lambda: tile(22, 22, 56, GOLD) + star(50, 50, 18, '#fff1b0', 0.4, 4, 3)
 M['u_tint'] = lambda: tile(22, 30, 50, '#e0d6bf') + drop(66, 26, 20, R) + line(30, 44, 56, 44, R, 6)
-M['u_mult'] = lambda: tile(14, 16, 54, '#ffe9a6') + num(42, 58, '×2', 34) 
+M['u_mult'] = lambda: ''.join(tile(12 + (i % 3) * 28, 8 + (i // 3) * 28, 24, '#e8584f' if i == 4 else '#f0b44a') for i in range(9)) + star(50, 46, 13, '#fff', 0.4, 4, 3)   # a zone of tiles, its middle one lit
 M['u_blast'] = lambda: star(50, 46, 40, '#ff8a3d', 0.5, 8) + circ(50, 46, 14, '#3a2a1c', 3)
 M['u_beacon'] = lambda: poly([(38, 82), (44, 30), (56, 30), (62, 82)], '#f4efe0') + rect(38, 18, 24, 14, GOLD, 3) + ''.join(line(50, 25, 50 + dx, 25 + dy, GOLD, 4) for dx, dy in ((-34, -10), (34, -10), (-30, 16), (30, 16)))
 M['u_mirror'] = lambda: tile(14, 28, 30, B) + tile(56, 28, 30, B) + line(50, 14, 50, 78, O, 3)
