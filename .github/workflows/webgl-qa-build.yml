@@ -1,0 +1,47 @@
+name: WebGL QA build
+
+# Manual: builds the WebGL player for the QA bench (docs/QA.md, Tools/qa/web) on GitHub's Unity runner, since Unity does not run in the cloud sessions.
+# Run it from the Actions tab (Run workflow), download the "QaBuild" artifact and put its content in the QaBuild folder of the repo.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webgl:
+    name: WebGL development build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-WebGL-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-WebGL-${{ runner.os }}-
+
+      - name: Build WebGL
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 2022.3.62f3
+          targetPlatform: WebGL
+          buildMethod: Contigu.EditorTools.QaWebGLBuild.Build
+          buildsPath: build
+          allowDirtyBuild: true
+
+      - name: Upload the build
+        uses: actions/upload-artifact@v4
+        with:
+          name: QaBuild
+          path: build/WebGL
+          if-no-files-found: error
