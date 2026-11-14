@@ -420,7 +420,7 @@ def bag(motif_svg, key, name, category_color, category_label, rarity):
     # band styles (the category's color)
     ink_band = INK if _luma(category_color) > 150 else '#fff8e8'
     if band_style == 0:
-        s += '<rect x="40" y="204" width="176" height="22" fill="%s"/><text x="128" y="220" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" text-anchor="middle" fill="%s">%s</text>' % (category_color, ink_band, category_label.upper())
+        s += '<rect x="40" y="204" width="176" height="22" fill="%s"/><rect x="40" y="204" width="176" height="3" fill="#ffffff" opacity="0.35"/>' % category_color
     elif band_style == 1:
         s += '<rect x="40" y="34" width="176" height="7" fill="%s"/><rect x="40" y="206" width="176" height="20" fill="%s" opacity="0.92"/>' % (category_color, category_color)
         s += ''.join('<circle cx="%d" cy="216" r="3" fill="%s"/>' % (x, ink_band) for x in (70, 100, 128, 156, 186))
@@ -432,11 +432,9 @@ def bag(motif_svg, key, name, category_color, category_label, rarity):
     # the name plate
     px, py, pw, ph = 60, 44, 136, 40
     s += '<g filter="url(#lab)">%s</g>\n' % _plate(plate_shape, px, py, pw, ph, CREAMY)
-    if len(lines) == 1:
-        s += '<text x="128" y="%g" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="%g" text-anchor="middle" fill="%s">%s</text>\n' % (py + ph / 2 + size * 0.36, size, INK, lines[0])
-    else:
-        for n, line in enumerate(lines):
-            s += '<text x="128" y="%g" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="%g" text-anchor="middle" fill="%s">%s</text>\n' % (py + 16 + n * (size + 1.5) + (2 if plate_shape == 3 else 0), size, INK, line)
+    # (no lettering on the bag: a small seedling emblem sits on the plate, like a brand's logo)
+    s += ('<g transform="translate(128 %g)"><path d="M0 12 V-2" stroke="#4f9a3c" stroke-width="3.2" stroke-linecap="round" fill="none"/>'
+          '<path d="M0 3 C-14 4 -19 -4 -17 -11 C-7 -11 -1 -5 0 3 Z" fill="#6fb04f"/><path d="M0 0 C13 1 19 -7 17 -14 C7 -14 1 -8 0 0 Z" fill="#4f9440"/></g>\n') % (py + ph / 2 + 2)
     # the picture window with the motif
     cx, cy, r = 128, 146, 50
     s += '<g filter="url(#lab)"><g fill="%s">%s</g></g>\n' % (category_color, _window(window_shape, cx, cy, r + 5))
