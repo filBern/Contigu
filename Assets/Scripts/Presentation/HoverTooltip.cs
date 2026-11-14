@@ -53,16 +53,23 @@ namespace Contigu.Presentation
             {
                 _chips.Add(new TooltipChip(reason, UITheme.Danger));
             }
+            _subtitle = null;
+            _subtitleColor = ModifierVisualDefaults.GetRarityColor(def.Id);
             _badge = new TooltipChip(ModifierVisualDefaults.GetRarityLabel(def.Id), ModifierVisualDefaults.GetRarityColor(def.Id));
         }
 
         /// <summary>The upgrade (sprout) version of <see cref="SetModifierCard"/>: rarity in a colored box at the title's corner, the pool as a colored box under it, and the reason it cannot be bought as a red one.</summary>
         public void SetUpgradeCard(UpgradeDefinition def, string reason = null)
         {
-            _chips = new System.Collections.Generic.List<TooltipChip>
+            _chips = new System.Collections.Generic.List<TooltipChip>();
+            // The pool box says what kind of upgrade it is, except for a sprout (the Grid pool), which is implicit.
+            if (def.Pool != UpgradePool.Grid)
             {
-                new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(def.Pool), UpgradeVisualDefaults.GetPoolColor(def.Pool))
-            };
+                _chips.Add(new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(def.Pool), UpgradeVisualDefaults.GetPoolColor(def.Pool)));
+            }
+            // The card replaces the plain text subtitle; the rarity colors the line under the title.
+            _subtitle = null;
+            _subtitleColor = UpgradeVisualDefaults.GetRarityColor(def.Rarity);
             if (!string.IsNullOrEmpty(reason))
             {
                 _chips.Add(new TooltipChip(reason, UITheme.Danger));
