@@ -182,10 +182,15 @@ namespace Contigu.Presentation
             badge.rectTransform.anchorMax = new Vector2(1f, 1f);
             badge.rectTransform.pivot = new Vector2(1f, 1f);
             badge.rectTransform.sizeDelta = new Vector2(size, size);
-            badge.rectTransform.anchoredPosition = new Vector2(-1f, -1f);
-            var outline = badge.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(size * 0.09f, -size * 0.09f);
+            // Flush in the corner and without a black rim, like the badge on the grid (the medallion art has its own shape).
+            badge.rectTransform.anchoredPosition = Vector2.zero;
+            if (badgeSprite == null)
+            {
+                // The flat color chip used when the art is missing keeps a dark rim so it reads on any tile color.
+                var outline = badge.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                outline.effectDistance = new Vector2(size * 0.09f, -size * 0.09f);
+            }
 
             var badgeView = badge.gameObject.AddComponent<TraitBadgeView>();
             badgeView.Init(tooltip, trait, clickForwardTarget);
