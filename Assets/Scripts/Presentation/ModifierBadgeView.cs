@@ -14,6 +14,8 @@ namespace Contigu.Presentation
         private System.Func<ModifierId, string> _progressiveStateProvider;
         private System.Func<ModifierId, string> _levelStateProvider;
         private bool _showSellValue;
+        // "With bonus: +70% Mult": the effect as it is right now with level, growth and Roots (empty when there is no bonus).
+        private System.Func<ModifierId, string> _bonusLineProvider;
 
         // Whether the pointer is currently resting over this badge — while
         // true, Update() below keeps re-pushing fresh content into the
@@ -52,8 +54,9 @@ namespace Contigu.Presentation
             }
         }
 
-        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
+        public void Init(TooltipView tooltip, ModifierDefinition def, System.Func<ModifierId, int> usageCountProvider = null, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false, System.Func<ModifierId, string> bonusLineProvider = null)
         {
+            _bonusLineProvider = bonusLineProvider;
             _tooltip = tooltip;
             _def = def;
             _usageCountProvider = usageCountProvider;
@@ -134,6 +137,11 @@ namespace Contigu.Presentation
                 {
                     description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
                 }
+            }
+            string bonusLine = _bonusLineProvider != null ? _bonusLineProvider(_def.Id) : null;
+            if (!string.IsNullOrEmpty(bonusLine))
+            {
+                description = description + "\n\n" + DescriptionTextFormatter.Colorize(bonusLine, 14);
             }
             _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, chips: chips, badge: rarityBadge);
         }

@@ -410,7 +410,16 @@ namespace Contigu.Presentation
                     string witherLine = "Withers away in " + roundsLeft + (roundsLeft == 1 ? " round (this one)." : " rounds.");
                     rowLevelState = rowId => witherLine + (baseWitherState != null ? "\n" + baseWitherState(rowId) : string.Empty);
                 }
-                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState, showSellValue: true);
+                // "With bonus": the whole effect as it stands (level + growth + Roots), against the base numbers of the description.
+                string bonusLine = null;
+                float growthBonus = FertilizerGrowth.Bonus(growth, harvests);
+                if (!blighted && growthBonus + rootsBonus > 0f)
+                {
+                    float total = ModifierLevelUtility.LevelToFactor(level) + growthBonus + rootsBonus;
+                    bonusLine = "With bonus: " + DescriptionTextFormatter.Amount(total - 1f, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description));
+                }
+                System.Func<ModifierId, string> rowBonusLine = bonusLine != null ? (rowId => bonusLine) : (System.Func<ModifierId, string>)null;
+                var badge = ModifierBadgeFactory.Create(_rowsContainer, ModifierCatalog.Get(activeModifiers[i]), BadgeSize, _tooltip, _usageCountProvider, progressiveStateProvider: rowProgressiveState, levelStateProvider: rowLevelState, showSellValue: true, bonusLineProvider: rowBonusLine);
                 _rowIds.Add(activeModifiers[i]);
                 _rowBadges.Add(badge);
                 _rowBaseColors.Add(badge.color);

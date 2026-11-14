@@ -25,7 +25,7 @@ namespace Contigu.Presentation
         /// or leveled state instead of its static Description. <paramref name="showSellValue"/> defaults to
         /// false; only the side panel passes true, since only modifiers in that list are sellable.
         /// </summary>
-        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false)
+        public static Image Create(Transform parent, ModifierDefinition def, float size, TooltipView tooltip, System.Func<ModifierId, int> usageCountProvider = null, bool showBackground = true, bool attachTooltip = true, System.Func<ModifierId, string> progressiveStateProvider = null, System.Func<ModifierId, string> levelStateProvider = null, bool showSellValue = false, System.Func<ModifierId, string> bonusLineProvider = null)
         {
             // A fertilizer with its own sack art carries its own background, so the category-colored chip is dropped.
             bool hasSack = ModifierVisualDefaults.GetSackIcon(def.Id) != null;
@@ -73,7 +73,7 @@ namespace Contigu.Presentation
             if (attachTooltip)
             {
                 var hover = badge.gameObject.AddComponent<ModifierBadgeView>();
-                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider, levelStateProvider, showSellValue);
+                hover.Init(tooltip, def, usageCountProvider, progressiveStateProvider, levelStateProvider, showSellValue, bonusLineProvider);
             }
 
             return badge;
