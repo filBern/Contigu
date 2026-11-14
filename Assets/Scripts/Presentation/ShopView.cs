@@ -1004,7 +1004,7 @@ namespace Contigu.Presentation
                 var upgradeDef = slot.HiddenUpgrade;
                 var sign = UIFactory.CreatePanel(artRoot, "UpgradeSign", Color.white);
                 // Just the icon, without the signpost around it.
-                sign.sprite = UpgradeVisualDefaults.GetGlyph(upgradeDef.Id) ?? UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
+                sign.sprite = UpgradeVisualDefaults.GetMarker(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
                 // A bit smaller than the cell: the glyphs fill their whole square, the fertilizer sacks do not, so they looked bigger.

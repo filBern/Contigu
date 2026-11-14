@@ -229,7 +229,7 @@ namespace Contigu.Presentation
                 Upgrade = def,
                 Art = from == UpgradeId.Forge ? UpgradeVisualDefaults.GetWorkshopArt("Anvil")
                     : from == UpgradeId.SproutPack ? UpgradeVisualDefaults.GetWorkshopArt("SproutPack")
-                    : (UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id))
+                    : UpgradeVisualDefaults.GetMarker(def.Id)
             };
             if (from.HasValue)
             {

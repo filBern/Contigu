@@ -290,7 +290,7 @@ namespace Contigu.Presentation
                         {
                             continue;
                         }
-                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Upgrade = def, Icon = UpgradeVisualDefaults.GetGlyph(def.Id) ?? UpgradeVisualDefaults.GetIcon(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Sprout, (int)def.Id) });
+                        list.Add(new Entry { Id = (int)def.Id, Name = def.Name, Description = def.Description, Subtitle = "Sprout · " + UpgradeVisualDefaults.GetRarityLabel(def.Rarity), Upgrade = def, Icon = UpgradeVisualDefaults.GetMarker(def.Id), Unlock = UnlockCatalog.Find(UnlockKind.Sprout, (int)def.Id) });
                     }
                     break;
                 case CollectionCategory.Enemy:
